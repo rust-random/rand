@@ -1,7 +1,0 @@
-/* this is for run-pass/syntax-extension-source-utils.rs */
-
-{
-    assert!(file!().ends_with("includeme.fragment"));
-    assert!(line!() == 5u);
-    format!("victory robot {}", line!())
-}
