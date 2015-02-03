@@ -38,10 +38,10 @@ use distributions::{Sample, IndependentSample};
 /// use rand::distributions::{IndependentSample, Range};
 ///
 /// fn main() {
-///     let between = Range::new(10u, 10000u);
+///     let between = Range::new(10, 10000);
 ///     let mut rng = rand::thread_rng();
 ///     let mut sum = 0;
-///     for _ in 0u..1000 {
+///     for _ in 0..1000 {
 ///         sum += between.ind_sample(&mut rng);
 ///     }
 ///     println!("{}", sum);
@@ -134,12 +134,12 @@ integer_impl! { i8, u8 }
 integer_impl! { i16, u16 }
 integer_impl! { i32, u32 }
 integer_impl! { i64, u64 }
-integer_impl! { int, uint }
+integer_impl! { isize, usize }
 integer_impl! { u8, u8 }
 integer_impl! { u16, u16 }
 integer_impl! { u32, u32 }
 integer_impl! { u64, u64 }
-integer_impl! { uint, uint }
+integer_impl! { usize, usize }
 
 macro_rules! float_impl {
     ($ty:ty) => {
@@ -190,7 +190,7 @@ mod tests {
                                             (Int::min_value(), Int::max_value())];
                    for &(low, high) in v.iter() {
                         let mut sampler: Range<$ty> = Range::new(low, high);
-                        for _ in 0u..1000 {
+                        for _ in 0..1000 {
                             let v = sampler.sample(&mut rng);
                             assert!(low <= v && v < high);
                             let v = sampler.ind_sample(&mut rng);
@@ -200,8 +200,8 @@ mod tests {
                  )*
             }}
         }
-        t!(i8, i16, i32, i64, int,
-           u8, u16, u32, u64, uint)
+        t!(i8, i16, i32, i64, isize,
+           u8, u16, u32, u64, usize)
     }
 
     #[test]
@@ -216,7 +216,7 @@ mod tests {
                                             (-1e35, 1e35)];
                    for &(low, high) in v.iter() {
                         let mut sampler: Range<$ty> = Range::new(low, high);
-                        for _ in 0u..1000 {
+                        for _ in 0..1000 {
                             let v = sampler.sample(&mut rng);
                             assert!(low <= v && v < high);
                             let v = sampler.ind_sample(&mut rng);

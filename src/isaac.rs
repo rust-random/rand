@@ -17,8 +17,8 @@ use core::iter::{range_step, repeat};
 use {Rng, SeedableRng, Rand};
 
 const RAND_SIZE_LEN: u32 = 8;
-const RAND_SIZE: u32 = 1 << (RAND_SIZE_LEN as uint);
-const RAND_SIZE_UINT: uint = 1 << (RAND_SIZE_LEN as uint);
+const RAND_SIZE: u32 = 1 << RAND_SIZE_LEN;
+const RAND_SIZE_USIZE: usize = 1 << RAND_SIZE_LEN;
 
 /// A random number generator that uses the ISAAC algorithm[1].
 ///
@@ -32,8 +32,8 @@ const RAND_SIZE_UINT: uint = 1 << (RAND_SIZE_LEN as uint);
 #[derive(Copy)]
 pub struct IsaacRng {
     cnt: u32,
-    rsl: [u32; RAND_SIZE_UINT],
-    mem: [u32; RAND_SIZE_UINT],
+    rsl: [u32; RAND_SIZE_USIZE],
+    mem: [u32; RAND_SIZE_USIZE],
     a: u32,
     b: u32,
     c: u32
@@ -41,8 +41,8 @@ pub struct IsaacRng {
 
 static EMPTY: IsaacRng = IsaacRng {
     cnt: 0,
-    rsl: [0; RAND_SIZE_UINT],
-    mem: [0; RAND_SIZE_UINT],
+    rsl: [0; RAND_SIZE_USIZE],
+    mem: [0; RAND_SIZE_USIZE],
     a: 0, b: 0, c: 0
 };
 
@@ -82,14 +82,14 @@ impl IsaacRng {
             }}
         }
 
-        for _ in 0u..4 {
+        for _ in 0..4 {
             mix!();
         }
 
         if use_rsl {
             macro_rules! memloop {
                 ($arr:expr) => {{
-                    for i in range_step(0, RAND_SIZE as uint, 8) {
+                    for i in range_step(0, RAND_SIZE_USIZE, 8) {
                         a+=$arr[i  ]; b+=$arr[i+1];
                         c+=$arr[i+2]; d+=$arr[i+3];
                         e+=$arr[i+4]; f+=$arr[i+5];
@@ -106,7 +106,7 @@ impl IsaacRng {
             memloop!(self.rsl);
             memloop!(self.mem);
         } else {
-            for i in range_step(0, RAND_SIZE as uint, 8) {
+            for i in range_step(0, RAND_SIZE_USIZE, 8) {
                 mix!();
                 self.mem[i  ]=a; self.mem[i+1]=b;
                 self.mem[i+2]=c; self.mem[i+3]=d;
@@ -127,10 +127,10 @@ impl IsaacRng {
         let mut a = self.a;
         let mut b = self.b + self.c;
 
-        static MIDPOINT: uint = (RAND_SIZE / 2) as uint;
+        static MIDPOINT: usize = RAND_SIZE_USIZE / 2;
 
         macro_rules! ind {
-            ($x:expr) => ( self.mem[(($x >> 2) as uint & ((RAND_SIZE - 1) as uint))] )
+            ($x:expr) => ( self.mem[($x >> 2) as usize & (RAND_SIZE_USIZE - 1)] )
         }
 
         let r = [(0, MIDPOINT), (MIDPOINT, 0)];
@@ -139,14 +139,14 @@ impl IsaacRng {
             macro_rules! rngstepp {
                 ($j:expr, $shift:expr) => {{
                     let base = $j;
-                    let mix = a << $shift as uint;
+                    let mix = a << $shift;
 
                     let x = self.mem[base  + mr_offset];
                     a = (a ^ mix) + self.mem[base + m2_offset];
                     let y = ind!(x) + a + b;
                     self.mem[base + mr_offset] = y;
 
-                    b = ind!(y >> RAND_SIZE_LEN as uint) + x;
+                    b = ind!(y >> RAND_SIZE_LEN) + x;
                     self.rsl[base + mr_offset] = b;
                 }}
             }
@@ -154,19 +154,19 @@ impl IsaacRng {
             macro_rules! rngstepn {
                 ($j:expr, $shift:expr) => {{
                     let base = $j;
-                    let mix = a >> $shift as uint;
+                    let mix = a >> $shift;
 
                     let x = self.mem[base  + mr_offset];
                     a = (a ^ mix) + self.mem[base + m2_offset];
                     let y = ind!(x) + a + b;
                     self.mem[base + mr_offset] = y;
 
-                    b = ind!(y >> RAND_SIZE_LEN as uint) + x;
+                    b = ind!(y >> RAND_SIZE_LEN) + x;
                     self.rsl[base + mr_offset] = b;
                 }}
             }
 
-            for i in range_step(0u, MIDPOINT, 4) {
+            for i in range_step(0, MIDPOINT, 4) {
                 rngstepp!(i + 0, 13);
                 rngstepn!(i + 1, 6);
                 rngstepp!(i + 2, 2);
@@ -207,7 +207,7 @@ impl Rng for IsaacRng {
         // (the % is cheaply telling the optimiser that we're always
         // in bounds, without unsafe. NB. this is a power of two, so
         // it optimises to a bitwise mask).
-        self.rsl[(self.cnt % RAND_SIZE) as uint]
+        self.rsl[(self.cnt % RAND_SIZE) as usize]
     }
 }
 
@@ -246,7 +246,7 @@ impl Rand for IsaacRng {
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;
 
-            let slice = slice::from_raw_mut_buf(&ptr, (RAND_SIZE * 4) as uint);
+            let slice = slice::from_raw_mut_buf(&ptr, (RAND_SIZE * 4) as usize);
             other.fill_bytes(slice);
         }
         ret.cnt = 0;
@@ -259,8 +259,8 @@ impl Rand for IsaacRng {
     }
 }
 
-const RAND_SIZE_64_LEN: uint = 8;
-const RAND_SIZE_64: uint = 1 << RAND_SIZE_64_LEN;
+const RAND_SIZE_64_LEN: usize = 8;
+const RAND_SIZE_64: usize = 1 << RAND_SIZE_64_LEN;
 
 /// A random number generator that uses ISAAC-64[1], the 64-bit
 /// variant of the ISAAC algorithm.
@@ -274,7 +274,7 @@ const RAND_SIZE_64: uint = 1 << RAND_SIZE_64_LEN;
 /// generator*](http://www.burtleburtle.net/bob/rand/isaacafa.html)
 #[derive(Copy)]
 pub struct Isaac64Rng {
-    cnt: uint,
+    cnt: usize,
     rsl: [u64; RAND_SIZE_64],
     mem: [u64; RAND_SIZE_64],
     a: u64,
@@ -323,7 +323,7 @@ impl Isaac64Rng {
             }}
         }
 
-        for _ in 0u..4 {
+        for _ in 0..4 {
             mix!();
         }
 
@@ -365,11 +365,11 @@ impl Isaac64Rng {
         // abbreviations
         let mut a = self.a;
         let mut b = self.b + self.c;
-        const MIDPOINT: uint =  RAND_SIZE_64 / 2;
-        const MP_VEC: [(uint, uint); 2] = [(0,MIDPOINT), (MIDPOINT, 0)];
+        const MIDPOINT: usize =  RAND_SIZE_64 / 2;
+        const MP_VEC: [(usize, usize); 2] = [(0,MIDPOINT), (MIDPOINT, 0)];
         macro_rules! ind {
             ($x:expr) => {
-                *self.mem.get_unchecked(($x as uint >> 3) & (RAND_SIZE_64 - 1))
+                *self.mem.get_unchecked(($x as usize >> 3) & (RAND_SIZE_64 - 1))
             }
         }
 
@@ -379,7 +379,7 @@ impl Isaac64Rng {
                 macro_rules! rngstepp {
                     ($j:expr, $shift:expr) => {{
                         let base = base + $j;
-                        let mix = a ^ (a << $shift as uint);
+                        let mix = a ^ (a << $shift);
                         let mix = if $j == 0 {!mix} else {mix};
 
                         unsafe {
@@ -397,7 +397,7 @@ impl Isaac64Rng {
                 macro_rules! rngstepn {
                     ($j:expr, $shift:expr) => {{
                         let base = base + $j;
-                        let mix = a ^ (a >> $shift as uint);
+                        let mix = a ^ (a >> $shift);
                         let mix = if $j == 0 {!mix} else {mix};
 
                         unsafe {
@@ -412,10 +412,10 @@ impl Isaac64Rng {
                     }}
                 }
 
-                rngstepp!(0u, 21);
-                rngstepn!(1u, 5);
-                rngstepp!(2u, 12);
-                rngstepn!(3u, 33);
+                rngstepp!(0, 21);
+                rngstepn!(1, 5);
+                rngstepp!(2, 12);
+                rngstepn!(3, 33);
             }
         }
 
@@ -450,7 +450,7 @@ impl Rng for Isaac64Rng {
         // See corresponding location in IsaacRng.next_u32 for
         // explanation.
         debug_assert!(self.cnt < RAND_SIZE_64);
-        self.rsl[(self.cnt % RAND_SIZE_64) as uint]
+        self.rsl[(self.cnt % RAND_SIZE_64) as usize]
     }
 }
 
@@ -489,7 +489,7 @@ impl Rand for Isaac64Rng {
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;
 
-            let slice = slice::from_raw_mut_buf(&ptr, (RAND_SIZE_64 * 8) as uint);
+            let slice = slice::from_raw_mut_buf(&ptr, (RAND_SIZE_64 * 8) as usize);
             other.fill_bytes(slice);
         }
         ret.cnt = 0;
@@ -581,7 +581,7 @@ mod test {
         let seed: &[_] = &[12345, 67890, 54321, 9876];
         let mut rb: IsaacRng = SeedableRng::from_seed(seed);
         // skip forward to the 10000th number
-        for _ in 0u..10000 { rb.next_u32(); }
+        for _ in 0..10000 { rb.next_u32(); }
 
         let v = (0..10).map(|_| rb.next_u32()).collect::<Vec<_>>();
         assert_eq!(v,
@@ -603,7 +603,7 @@ mod test {
         let seed: &[_] = &[12345, 67890, 54321, 9876];
         let mut rb: Isaac64Rng = SeedableRng::from_seed(seed);
         // skip forward to the 10000th number
-        for _ in 0u..10000 { rb.next_u64(); }
+        for _ in 0..10000 { rb.next_u64(); }
 
         let v = (0..10).map(|_| rb.next_u64()).collect::<Vec<_>>();
         assert_eq!(v,
@@ -618,7 +618,7 @@ mod test {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
         let mut rng: Isaac64Rng = SeedableRng::from_seed(seed);
         let mut clone = rng.clone();
-        for _ in 0u..16 {
+        for _ in 0..16 {
             assert_eq!(rng.next_u64(), clone.next_u64());
         }
     }

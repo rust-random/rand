@@ -369,7 +369,7 @@ mod test {
     fn test_os_rng_tasks() {
 
         let mut txs = vec!();
-        for _ in 0u..20 {
+        for _ in 0..20 {
             let (tx, rx) = channel();
             txs.push(tx);
 
@@ -383,7 +383,7 @@ mod test {
                 Thread::yield_now();
                 let mut v = [0u8; 1000];
 
-                for _ in 0u..100 {
+                for _ in 0..100 {
                     r.next_u32();
                     Thread::yield_now();
                     r.next_u64();

@@ -71,7 +71,7 @@ impl<Sup: Rand> IndependentSample<Sup> for RandSample<Sup> {
 /// A value with a particular weight for use with `WeightedChoice`.
 pub struct Weighted<T> {
     /// The numerical weight of this item
-    pub weight: uint,
+    pub weight: usize,
     /// The actual item which is being weighted
     pub item: T,
 }
@@ -83,7 +83,7 @@ pub struct Weighted<T> {
 ///
 /// The `Clone` restriction is a limitation of the `Sample` and
 /// `IndependentSample` traits. Note that `&T` is (cheaply) `Clone` for
-/// all `T`, as is `uint`, so one can store references or indices into
+/// all `T`, as is `usize`, so one can store references or indices into
 /// another vector.
 ///
 /// # Example
@@ -96,14 +96,14 @@ pub struct Weighted<T> {
 ///                      Weighted { weight: 1, item: 'c' });
 /// let wc = WeightedChoice::new(items.as_mut_slice());
 /// let mut rng = rand::thread_rng();
-/// for _ in 0u..16 {
+/// for _ in 0..16 {
 ///      // on average prints 'a' 4 times, 'b' 8 and 'c' twice.
 ///      println!("{}", wc.ind_sample(&mut rng));
 /// }
 /// ```
 pub struct WeightedChoice<'a, T:'a> {
     items: &'a mut [Weighted<T>],
-    weight_range: Range<uint>
+    weight_range: Range<usize>
 }
 
 impl<'a, T: Clone> WeightedChoice<'a, T> {
@@ -112,12 +112,12 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
     /// Panics if:
     /// - `v` is empty
     /// - the total weight is 0
-    /// - the total weight is larger than a `uint` can contain.
+    /// - the total weight is larger than a `usize` can contain.
     pub fn new(items: &'a mut [Weighted<T>]) -> WeightedChoice<'a, T> {
         // strictly speaking, this is subsumed by the total weight == 0 case
         assert!(!items.is_empty(), "WeightedChoice::new called with no items");
 
-        let mut running_total = 0u;
+        let mut running_total = 0;
 
         // we convert the list from individual weights to cumulative
         // weights so we can binary search. This *could* drop elements
@@ -126,7 +126,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
             running_total = match running_total.checked_add(item.weight) {
                 Some(n) => n,
                 None => panic!("WeightedChoice::new called with a total weight \
-                               larger than a uint can contain")
+                               larger than a usize can contain")
             };
 
             item.weight = running_total;
@@ -231,7 +231,7 @@ fn ziggurat<R: Rng, P, Z>(
         // this may be slower than it would be otherwise.)
         // FIXME: investigate/optimise for the above.
         let bits: u64 = rng.gen();
-        let i = (bits & 0xff) as uint;
+        let i = (bits & 0xff) as usize;
         let f = (bits >> 11) as f64 / SCALE;
 
         // u is either U(-1, 1) or U(0, 1) depending on if this is a
@@ -263,7 +263,7 @@ mod tests {
     use super::{RandSample, WeightedChoice, Weighted, Sample, IndependentSample};
 
     #[derive(PartialEq, Debug)]
-    struct ConstRand(uint);
+    struct ConstRand(usize);
     impl Rand for ConstRand {
         fn rand<R: Rng>(_: &mut R) -> ConstRand {
             ConstRand(0)
@@ -345,7 +345,7 @@ mod tests {
 
     #[test] #[should_fail]
     fn test_weighted_choice_no_items() {
-        WeightedChoice::<int>::new(&mut []);
+        WeightedChoice::<isize>::new(&mut []);
     }
     #[test] #[should_fail]
     fn test_weighted_choice_zero_weight() {
@@ -354,7 +354,7 @@ mod tests {
     }
     #[test] #[should_fail]
     fn test_weighted_choice_weight_overflows() {
-        let x = (-1) as uint / 2; // x + x + 2 is the overflow
+        let x = !0us / 2; // x + x + 2 is the overflow
         WeightedChoice::new(&mut [Weighted { weight: x, item: 0 },
                                   Weighted { weight: 1, item: 1 },
                                   Weighted { weight: x, item: 2 },
