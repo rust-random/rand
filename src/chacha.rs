@@ -14,9 +14,9 @@ use core::prelude::*;
 use core::num::Int;
 use {Rng, SeedableRng, Rand};
 
-const KEY_WORDS    : uint =  8; // 8 words for the 256-bit key
-const STATE_WORDS  : uint = 16;
-const CHACHA_ROUNDS: uint = 20; // Cryptographically secure from 8 upwards as of this writing
+const KEY_WORDS    : usize =  8; // 8 words for the 256-bit key
+const STATE_WORDS  : usize = 16;
+const CHACHA_ROUNDS: usize = 20; // Cryptographically secure from 8 upwards as of this writing
 
 /// A random number generator that uses the ChaCha20 algorithm [1].
 ///
@@ -31,7 +31,7 @@ const CHACHA_ROUNDS: uint = 20; // Cryptographically secure from 8 upwards as of
 pub struct ChaChaRng {
     buffer:  [u32; STATE_WORDS], // Internal buffer of output
     state:   [u32; STATE_WORDS], // Initial state
-    index:   uint,                 // Index into state
+    index:   usize,                 // Index into state
 }
 
 static EMPTY: ChaChaRng = ChaChaRng {
@@ -268,9 +268,9 @@ mod test {
         // Store the 17*i-th 32-bit word,
         // i.e., the i-th word of the i-th 16-word block
         let mut v : Vec<u32> = Vec::new();
-        for _ in 0u..16 {
+        for _ in 0..16 {
             v.push(ra.next_u32());
-            for _ in 0u..16 {
+            for _ in 0..16 {
                 ra.next_u32();
             }
         }
@@ -287,7 +287,7 @@ mod test {
         let seed : &[_] = &[0u32; 8];
         let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
         let mut clone = rng.clone();
-        for _ in 0u..16 {
+        for _ in 0..16 {
             assert_eq!(rng.next_u64(), clone.next_u64());
         }
     }

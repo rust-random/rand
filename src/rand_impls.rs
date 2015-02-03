@@ -12,18 +12,18 @@
 
 use core::prelude::*;
 use core::char;
-use core::int;
-use core::uint;
+use core::isize;
+use core::usize;
 
 use {Rand,Rng};
 
-impl Rand for int {
+impl Rand for isize {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> int {
-        if int::BITS == 32 {
-            rng.gen::<i32>() as int
+    fn rand<R: Rng>(rng: &mut R) -> isize {
+        if isize::BITS == 32 {
+            rng.gen::<i32>() as isize
         } else {
-            rng.gen::<i64>() as int
+            rng.gen::<i64>() as isize
         }
     }
 }
@@ -56,13 +56,13 @@ impl Rand for i64 {
     }
 }
 
-impl Rand for uint {
+impl Rand for usize {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> uint {
-        if uint::BITS == 32 {
-            rng.gen::<u32>() as uint
+    fn rand<R: Rng>(rng: &mut R) -> usize {
+        if usize::BITS == 32 {
+            rng.gen::<u32>() as usize
         } else {
-            rng.gen::<u64>() as uint
+            rng.gen::<u64>() as usize
         }
     }
 }
@@ -240,7 +240,7 @@ mod tests {
         // this is unlikely to catch an incorrect implementation that
         // generates exactly 0 or 1, but it keeps it sane.
         let mut rng = thread_rng();
-        for _ in 0u..1_000 {
+        for _ in 0..1_000 {
             // strict inequalities
             let Open01(f) = rng.gen::<Open01<f64>>();
             assert!(0.0 < f && f < 1.0);
@@ -253,7 +253,7 @@ mod tests {
     #[test]
     fn rand_closed() {
         let mut rng = thread_rng();
-        for _ in 0u..1_000 {
+        for _ in 0..1_000 {
             // strict inequalities
             let Closed01(f) = rng.gen::<Closed01<f64>>();
             assert!(0.0 <= f && f <= 1.0);
