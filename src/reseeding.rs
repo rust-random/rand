@@ -103,8 +103,8 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
 /// # Example
 ///
 /// ```rust
-/// use std::rand::{Rng, SeedableRng, StdRng};
-/// use std::rand::reseeding::{Reseeder, ReseedingRng};
+/// use rand::{Rng, SeedableRng, StdRng};
+/// use rand::reseeding::{Reseeder, ReseedingRng};
 ///
 /// struct TickTockReseeder { tick: bool }
 /// impl Reseeder<StdRng> for TickTockReseeder {

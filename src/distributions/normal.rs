@@ -76,8 +76,7 @@ impl Rand for StandardNormal {
 /// # Example
 ///
 /// ```rust
-/// use std::rand;
-/// use std::rand::distributions::{Normal, IndependentSample};
+/// use rand::distributions::{Normal, IndependentSample};
 ///
 /// // mean 2, standard deviation 3
 /// let normal = Normal::new(2.0, 3.0);
@@ -124,8 +123,7 @@ impl IndependentSample<f64> for Normal {
 /// # Example
 ///
 /// ```rust
-/// use std::rand;
-/// use std::rand::distributions::{LogNormal, IndependentSample};
+/// use rand::distributions::{LogNormal, IndependentSample};
 ///
 /// // mean 2, standard deviation 3
 /// let log_normal = LogNormal::new(2.0, 3.0);
