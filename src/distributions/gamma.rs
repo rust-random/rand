@@ -319,8 +319,6 @@ impl IndependentSample<f64> for StudentT {
 
 #[cfg(test)]
 mod test {
-    use std::prelude::v1::*;
-
     use distributions::{Sample, IndependentSample};
     use super::{ChiSquared, StudentT, FisherF};
 

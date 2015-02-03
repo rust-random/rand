@@ -12,3 +12,6 @@ description = """
 Random number generators and other randomness functionality.
 """
 
+[dependencies]
+log = "0.2.1"
+libc = "0.1.1"

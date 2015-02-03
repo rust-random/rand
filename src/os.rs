@@ -19,14 +19,11 @@ mod imp {
 
     use self::OsRngInner::*;
 
-    use old_io::{IoResult, File};
-    use path::Path;
-    use rand::Rng;
-    use rand::reader::ReaderRng;
-    use result::Result::Ok;
-    use slice::SliceExt;
-    use mem;
-    use os::errno;
+    use std::old_io::{IoResult, File};
+    use Rng;
+    use reader::ReaderRng;
+    use std::mem;
+    use std::os::errno;
 
     #[cfg(all(target_os = "linux",
               any(target_arch = "x86_64",
@@ -98,7 +95,7 @@ mod imp {
                   target_arch = "aarch64",
                   target_arch = "powerpc")))]
     fn is_getrandom_available() -> bool {
-        use sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
+        use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
 
         static GETRANDOM_CHECKED: AtomicBool = ATOMIC_BOOL_INIT;
         static GETRANDOM_AVAILABLE: AtomicBool = ATOMIC_BOOL_INIT;
@@ -187,14 +184,12 @@ mod imp {
 mod imp {
     extern crate libc;
 
-    use old_io::{IoResult};
-    use marker::Sync;
-    use mem;
-    use os;
-    use rand::Rng;
-    use result::Result::{Ok};
+    use std::old_io::{IoResult};
+    use std::marker::Sync;
+    use std::mem;
+    use std::os;
+    use Rng;
     use self::libc::{c_int, size_t};
-    use slice::SliceExt;
 
     /// A random number generator that retrieves randomness straight from
     /// the operating system. Platform sources:
@@ -259,15 +254,13 @@ mod imp {
 mod imp {
     extern crate libc;
 
-    use old_io::{IoResult, IoError};
-    use mem;
-    use ops::Drop;
-    use os;
-    use rand::Rng;
-    use result::Result::{Ok, Err};
+    use std::old_io::{IoResult, IoError};
+    use std::mem;
+    use std::ops::Drop;
+    use std::os;
+    use Rng;
     use self::libc::{DWORD, BYTE, LPCSTR, BOOL};
     use self::libc::types::os::arch::extra::{LONG_PTR};
-    use slice::SliceExt;
 
     type HCRYPTPROV = LONG_PTR;
 
@@ -356,12 +349,10 @@ mod imp {
 
 #[cfg(test)]
 mod test {
-    use prelude::v1::*;
-
-    use sync::mpsc::channel;
-    use rand::Rng;
-    use super::OsRng;
-    use thread::Thread;
+    use std::sync::mpsc::channel;
+    use Rng;
+    use OsRng;
+    use std::thread::Thread;
 
     #[test]
     fn test_os_rng() {

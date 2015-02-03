@@ -10,10 +10,8 @@
 
 //! A wrapper around any Reader to treat it as an RNG.
 
-use old_io::Reader;
-use rand::Rng;
-use result::Result::{Ok, Err};
-use slice::SliceExt;
+use std::old_io::Reader;
+use Rng;
 
 /// An RNG that reads random bytes straight from a `Reader`. This will
 /// work best with an infinite reader, but this is not required.
@@ -74,12 +72,10 @@ impl<R: Reader> Rng for ReaderRng<R> {
 
 #[cfg(test)]
 mod test {
-    use prelude::v1::*;
-
     use super::ReaderRng;
-    use old_io::MemReader;
-    use num::Int;
-    use rand::Rng;
+    use std::old_io::MemReader;
+    use std::num::Int;
+    use Rng;
 
     #[test]
     fn test_reader_rng_u64() {

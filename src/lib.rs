@@ -220,7 +220,7 @@
 #![feature(int_uint)]
 #![feature(core, os, libc, path, io)]
 
-#![cfg_attr(test, feature(rustc_private, test, std_misc))]
+#![cfg_attr(test, feature(test, std_misc))]
 
 extern crate core;
 #[cfg(test)] #[macro_use] extern crate log;

@@ -158,8 +158,6 @@ impl IndependentSample<f64> for LogNormal {
 
 #[cfg(test)]
 mod tests {
-    use std::prelude::v1::*;
-
     use distributions::{Sample, IndependentSample};
     use super::{Normal, LogNormal};
 

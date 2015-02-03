@@ -93,8 +93,6 @@ impl IndependentSample<f64> for Exp {
 
 #[cfg(test)]
 mod test {
-    use std::prelude::v1::*;
-
     use distributions::{Sample, IndependentSample};
     use super::Exp;
 
