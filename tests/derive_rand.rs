@@ -1,0 +1,30 @@
+#![feature(plugin)]
+
+#[plugin] #[no_link] extern crate derive_rand;
+extern crate rand;
+
+use rand::Rng;
+
+
+#[derive_Rand]
+struct Foo {
+    x: u8,
+    y: isize
+}
+
+#[derive_Rand]
+enum Bar {
+    X(char),
+    Y(f64)
+}
+
+#[test]
+fn smoke() {
+    let mut rng = rand::XorShiftRng::new_unseeded();
+
+    // check nothing horrible happens internally:
+    for _ in 0..100 {
+        let _: Foo = rng.gen();
+        let _: Bar = rng.gen();
+    }
+}
