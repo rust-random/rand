@@ -60,8 +60,7 @@ impl Rand for Exp1 {
 /// # Example
 ///
 /// ```rust
-/// use std::rand;
-/// use std::rand::distributions::{Exp, IndependentSample};
+/// use rand::distributions::{Exp, IndependentSample};
 ///
 /// let exp = Exp::new(2.0);
 /// let v = exp.ind_sample(&mut rand::thread_rng());

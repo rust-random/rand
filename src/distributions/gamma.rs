@@ -40,8 +40,7 @@ use super::{IndependentSample, Sample, Exp};
 /// # Example
 ///
 /// ```rust
-/// use std::rand;
-/// use std::rand::distributions::{IndependentSample, Gamma};
+/// use rand::distributions::{IndependentSample, Gamma};
 ///
 /// let gamma = Gamma::new(2.0, 5.0);
 /// let v = gamma.ind_sample(&mut rand::thread_rng());
@@ -187,8 +186,7 @@ impl IndependentSample<f64> for GammaLargeShape {
 /// # Example
 ///
 /// ```rust
-/// use std::rand;
-/// use std::rand::distributions::{ChiSquared, IndependentSample};
+/// use rand::distributions::{ChiSquared, IndependentSample};
 ///
 /// let chi = ChiSquared::new(11.0);
 /// let v = chi.ind_sample(&mut rand::thread_rng());
@@ -244,8 +242,7 @@ impl IndependentSample<f64> for ChiSquared {
 /// # Example
 ///
 /// ```rust
-/// use std::rand;
-/// use std::rand::distributions::{FisherF, IndependentSample};
+/// use rand::distributions::{FisherF, IndependentSample};
 ///
 /// let f = FisherF::new(2.0, 32.0);
 /// let v = f.ind_sample(&mut rand::thread_rng());
@@ -288,8 +285,7 @@ impl IndependentSample<f64> for FisherF {
 /// # Example
 ///
 /// ```rust
-/// use std::rand;
-/// use std::rand::distributions::{StudentT, IndependentSample};
+/// use rand::distributions::{StudentT, IndependentSample};
 ///
 /// let t = StudentT::new(11.0);
 /// let v = t.ind_sample(&mut rand::thread_rng());

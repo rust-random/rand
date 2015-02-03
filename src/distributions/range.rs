@@ -35,11 +35,11 @@ use distributions::{Sample, IndependentSample};
 /// # Example
 ///
 /// ```rust
-/// use std::rand::distributions::{IndependentSample, Range};
+/// use rand::distributions::{IndependentSample, Range};
 ///
 /// fn main() {
 ///     let between = Range::new(10u, 10000u);
-///     let mut rng = std::rand::thread_rng();
+///     let mut rng = rand::thread_rng();
 ///     let mut sum = 0;
 ///     for _ in 0u..1000 {
 ///         sum += between.ind_sample(&mut rng);

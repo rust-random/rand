@@ -23,7 +23,7 @@ use Rng;
 /// # Example
 ///
 /// ```rust
-/// use std::rand::{reader, Rng};
+/// use rand::{reader, Rng};
 /// use std::old_io::MemReader;
 ///
 /// let mut rng = reader::ReaderRng::new(MemReader::new(vec!(1,2,3,4,5,6,7,8)));

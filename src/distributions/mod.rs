@@ -89,8 +89,7 @@ pub struct Weighted<T> {
 /// # Example
 ///
 /// ```rust
-/// use std::rand;
-/// use std::rand::distributions::{Weighted, WeightedChoice, IndependentSample};
+/// use rand::distributions::{Weighted, WeightedChoice, IndependentSample};
 ///
 /// let mut items = vec!(Weighted { weight: 2, item: 'a' },
 ///                      Weighted { weight: 4, item: 'b' },
