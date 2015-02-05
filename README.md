@@ -13,7 +13,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.1.0"
+rand = "0.1"
 ```
 
 and this to your crate root:
