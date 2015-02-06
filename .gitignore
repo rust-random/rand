@@ -1,4 +1,2 @@
-/target
-/Cargo.lock
-/derive_rand/target
-/derive_rand/Cargo.lock
+target
+Cargo.lock

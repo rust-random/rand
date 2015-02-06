@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![feature(plugin, core)]
 
-#[plugin] #[no_link] extern crate derive_rand;
+#[plugin] #[no_link] extern crate rand_macros;
 extern crate rand;
 
 use rand::Rng;
