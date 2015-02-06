@@ -17,5 +17,5 @@ keywords = ["random"]
 log = "0.2.1"
 libc = "0.1.1"
 
-[dev-dependencies.derive_rand]
-path = "derive_rand"
+[dev-dependencies.rand_macros]
+path = "rand_macros"
