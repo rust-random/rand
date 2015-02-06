@@ -12,8 +12,8 @@
 
 // this is surprisingly complicated to be both generic & correct
 
-use core::prelude::{PartialOrd};
 use core::num::Int;
+use core::ops::Range;
 
 use Rng;
 use distributions::{Sample, IndependentSample};
@@ -35,10 +35,10 @@ use distributions::{Sample, IndependentSample};
 /// # Example
 ///
 /// ```rust
-/// use rand::distributions::{IndependentSample, Range};
+/// use rand::distributions::IndependentSample;
 ///
 /// fn main() {
-///     let between = Range::new(10, 10000);
+///     let between = 10..10000;
 ///     let mut rng = rand::thread_rng();
 ///     let mut sum = 0;
 ///     for _ in 0..1000 {
@@ -47,20 +47,6 @@ use distributions::{Sample, IndependentSample};
 ///     println!("{}", sum);
 /// }
 /// ```
-pub struct Range<X> {
-    low: X,
-    range: X,
-    accept_zone: X
-}
-
-impl<X: SampleRange + PartialOrd> Range<X> {
-    /// Create a new `Range` instance that samples uniformly from
-    /// `[low, high)`. Panics if `low >= high`.
-    pub fn new(low: X, high: X) -> Range<X> {
-        assert!(low < high, "Range::new called with `low >= high`");
-        SampleRange::construct_range(low, high)
-    }
-}
 
 impl<Sup: SampleRange> Sample<Sup> for Range<Sup> {
     #[inline]
@@ -76,11 +62,6 @@ impl<Sup: SampleRange> IndependentSample<Sup> for Range<Sup> {
 /// uniformly between two values. This should not be used directly,
 /// and is only to facilitate `Range`.
 pub trait SampleRange {
-    /// Construct the `Range` object that `sample_range`
-    /// requires. This should not ever be called directly, only via
-    /// `Range::new`, which will check that `low < high`, so this
-    /// function doesn't have to repeat the check.
-    fn construct_range(low: Self, high: Self) -> Range<Self>;
 
     /// Sample a value from the given `Range` with the given `Rng` as
     /// a source of randomness.
@@ -96,8 +77,10 @@ macro_rules! integer_impl {
             // "bit-equal", so casting between them is a no-op & a
             // bijection.
 
-            fn construct_range(low: $ty, high: $ty) -> Range<$ty> {
-                let range = high as $unsigned - low as $unsigned;
+            #[inline]
+            fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
+                assert!(r.start < r.end, "Rng.sample_range called with low >= high");
+                let range = r.end as $unsigned - r.start as $unsigned;
                 let unsigned_max: $unsigned = Int::max_value();
 
                 // this is the largest number that fits into $unsigned
@@ -105,24 +88,15 @@ macro_rules! integer_impl {
                 // `n` uniformly from this region, then `n % range` is
                 // uniform in [0, range)
                 let zone = unsigned_max - unsigned_max % range;
-
-                Range {
-                    low: low,
-                    range: range as $ty,
-                    accept_zone: zone as $ty
-                }
-            }
-            #[inline]
-            fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
                 loop {
                     // rejection sample
                     let v = rng.gen::<$unsigned>();
                     // until we find something that fits into the
                     // region which r.range evenly divides (this will
                     // be uniformly distributed)
-                    if v < r.accept_zone as $unsigned {
+                    if v < zone {
                         // and return it, with some adjustments
-                        return r.low + (v % r.range as $unsigned) as $ty;
+                        return r.start + (v % range as $unsigned) as $ty;
                     }
                 }
             }
@@ -144,15 +118,10 @@ integer_impl! { usize, usize }
 macro_rules! float_impl {
     ($ty:ty) => {
         impl SampleRange for $ty {
-            fn construct_range(low: $ty, high: $ty) -> Range<$ty> {
-                Range {
-                    low: low,
-                    range: high - low,
-                    accept_zone: 0.0 // unused
-                }
-            }
+            #[inline]
             fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
-                r.low + r.range * rng.gen()
+                assert!(r.start < r.end, "Rng.gen_range called with low >= high");
+                r.start + (r.end - r.start) * rng.gen()
             }
         }
     }
@@ -166,17 +135,18 @@ mod tests {
     use std::num::Int;
     use std::prelude::v1::*;
     use distributions::{Sample, IndependentSample};
-    use super::Range as Range;
 
     #[should_fail]
     #[test]
     fn test_range_bad_limits_equal() {
-        Range::new(10, 10);
+        let mut rng = ::test::rng();
+        (10..10).sample(&mut rng);
     }
     #[should_fail]
     #[test]
     fn test_range_bad_limits_flipped() {
-        Range::new(10, 5);
+        let mut rng = ::test::rng();
+        (10..5).sample(&mut rng);
     }
 
     #[test]
@@ -189,11 +159,10 @@ mod tests {
                                             (10, 127),
                                             (Int::min_value(), Int::max_value())];
                    for &(low, high) in v.iter() {
-                        let mut sampler: Range<$ty> = Range::new(low, high);
                         for _ in 0..1000 {
-                            let v = sampler.sample(&mut rng);
+                            let v = (low..high).sample(&mut rng);
                             assert!(low <= v && v < high);
-                            let v = sampler.ind_sample(&mut rng);
+                            let v = (low..high).ind_sample(&mut rng);
                             assert!(low <= v && v < high);
                         }
                     }
@@ -215,11 +184,10 @@ mod tests {
                                             (1e-35, 1e-25),
                                             (-1e35, 1e35)];
                    for &(low, high) in v.iter() {
-                        let mut sampler: Range<$ty> = Range::new(low, high);
                         for _ in 0..1000 {
-                            let v = sampler.sample(&mut rng);
+                            let v = (low..high).sample(&mut rng);
                             assert!(low <= v && v < high);
-                            let v = sampler.ind_sample(&mut rng);
+                            let v = (low..high).ind_sample(&mut rng);
                             assert!(low <= v && v < high);
                         }
                     }

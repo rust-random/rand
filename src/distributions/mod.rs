@@ -18,10 +18,10 @@
 //! that do not need to record state.
 use core::prelude::*;
 use core::num::{Float, Int};
+use std::ops::Range;
 
 use {Rng, Rand};
 
-pub use self::range::Range;
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal};
 pub use self::exponential::Exp;
@@ -134,7 +134,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
             items: items,
             // we're likely to be generating numbers in this range
             // relatively often, so might as well cache it
-            weight_range: Range::new(0, running_total)
+            weight_range: 0..running_total
         }
     }
 }
