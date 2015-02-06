@@ -92,10 +92,10 @@
 //! and multiply this fraction by 4.
 //!
 //! ```
-//! use rand::distributions::{IndependentSample, Range};
+//! use rand::distributions::IndependentSample;
 //!
 //! fn main() {
-//!    let between = Range::new(-1f64, 1.);
+//!    let between = -1f64..1.;
 //!    let mut rng = rand::thread_rng();
 //!
 //!    let total = 1_000_000;
@@ -135,7 +135,8 @@
 //!
 //! ```
 //! use rand::Rng;
-//! use rand::distributions::{IndependentSample, Range};
+//! use rand::distributions::IndependentSample;
+//! use std::ops::Range;
 //!
 //! struct SimulationResult {
 //!     win: bool,
@@ -183,7 +184,7 @@
 //!     let num_simulations = 10000;
 //!
 //!     let mut rng = rand::thread_rng();
-//!     let random_door = Range::new(0, 3);
+//!     let random_door = 0..3;
 //!
 //!     let (mut switch_wins, mut switch_losses) = (0, 0);
 //!     let (mut keep_wins, mut keep_losses) = (0, 0);
@@ -243,7 +244,7 @@ use IsaacRng as IsaacWordRng;
 #[cfg(target_pointer_width = "64")]
 use Isaac64Rng as IsaacWordRng;
 
-use distributions::{Range, IndependentSample};
+use distributions::IndependentSample;
 use distributions::range::SampleRange;
 
 pub mod distributions;
@@ -408,11 +409,7 @@ pub trait Rng : Sized {
 
     /// Generate a random value in the range [`low`, `high`).
     ///
-    /// This is a convenience wrapper around
-    /// `distributions::Range`. If this function will be called
-    /// repeatedly with the same arguments, one should use `Range`, as
-    /// that will amortize the computations that allow for perfect
-    /// uniformity, as they only happen on initialization.
+    /// This is a convenience function
     ///
     /// # Panics
     ///
@@ -430,8 +427,7 @@ pub trait Rng : Sized {
     /// println!("{}", m);
     /// ```
     fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T {
-        assert!(low < high, "Rng.gen_range called with low >= high");
-        Range::new(low, high).ind_sample(self)
+        (low..high).ind_sample(self)
     }
 
     /// Return a bool with a 1 in n chance of true
