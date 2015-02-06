@@ -1104,7 +1104,7 @@ static RAND_BENCH_N: u64 = 100;
 #[cfg(test)]
 mod bench {
     extern crate test;
-    use self::test::Bencher;
+    use self::test::{black_box, Bencher};
     use super::{XorShiftRng, StdRng, IsaacRng, Isaac64Rng, Rng, RAND_BENCH_N};
     use super::{OsRng, weak_rng};
     use std::mem::size_of;
@@ -1114,7 +1114,7 @@ mod bench {
         let mut rng: XorShiftRng = OsRng::new().unwrap().gen();
         b.iter(|| {
             for _ in 0..RAND_BENCH_N {
-                rng.gen::<usize>();
+                black_box(rng.gen::<usize>());
             }
         });
         b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -1125,7 +1125,7 @@ mod bench {
         let mut rng: IsaacRng = OsRng::new().unwrap().gen();
         b.iter(|| {
             for _ in 0..RAND_BENCH_N {
-                rng.gen::<usize>();
+                black_box(rng.gen::<usize>());
             }
         });
         b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -1136,7 +1136,7 @@ mod bench {
         let mut rng: Isaac64Rng = OsRng::new().unwrap().gen();
         b.iter(|| {
             for _ in 0..RAND_BENCH_N {
-                rng.gen::<usize>();
+                black_box(rng.gen::<usize>());
             }
         });
         b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -1147,7 +1147,7 @@ mod bench {
         let mut rng = StdRng::new().unwrap();
         b.iter(|| {
             for _ in 0..RAND_BENCH_N {
-                rng.gen::<usize>();
+                black_box(rng.gen::<usize>());
             }
         });
         b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
