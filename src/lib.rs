@@ -38,22 +38,25 @@
 //! *Note*: many Unix systems provide `/dev/random` as well as `/dev/urandom`.
 //! This module uses `/dev/urandom` for the following reasons:
 //!
-//! -   On Linux, `/dev/random` may block if entropy pool is empty; `/dev/urandom` will not block.
-//!     This does not mean that `/dev/random` provides better output than
-//!     `/dev/urandom`; the kernel internally runs a cryptographically secure pseudorandom
-//!     number generator (CSPRNG) based on entropy pool for random number generation,
-//!     so the "quality" of `/dev/random` is not better than `/dev/urandom` in most cases.
-//!     However, this means that `/dev/urandom` can yield somewhat predictable randomness
-//!     if the entropy pool is very small, such as immediately after first booting.
-//!     Linux 3.17 added the `getrandom(2)` system call which solves the issue: it blocks if entropy
-//!     pool is not initialized yet, but it does not block once initialized.
-//!     `OsRng` tries to use `getrandom(2)` if available, and use `/dev/urandom` fallback if not.
-//!     If an application does not have `getrandom` and likely to be run soon after first booting,
-//!     or on a system with very few entropy sources, one should consider using `/dev/random` via
-//!     `ReaderRng`.
-//! -   On some systems (e.g. FreeBSD, OpenBSD and Mac OS X) there is no difference
-//!     between the two sources. (Also note that, on some systems e.g. FreeBSD, both `/dev/random`
-//!     and `/dev/urandom` may block once if the CSPRNG has not seeded yet.)
+//! -   On Linux, `/dev/random` may block if entropy pool is empty;
+//!     `/dev/urandom` will not block.  This does not mean that `/dev/random`
+//!     provides better output than `/dev/urandom`; the kernel internally runs a
+//!     cryptographically secure pseudorandom number generator (CSPRNG) based on
+//!     entropy pool for random number generation, so the "quality" of
+//!     `/dev/random` is not better than `/dev/urandom` in most cases.  However,
+//!     this means that `/dev/urandom` can yield somewhat predictable randomness
+//!     if the entropy pool is very small, such as immediately after first
+//!     booting.  Linux 3.17 added the `getrandom(2)` system call which solves
+//!     the issue: it blocks if entropy pool is not initialized yet, but it does
+//!     not block once initialized.  `OsRng` tries to use `getrandom(2)` if
+//!     available, and use `/dev/urandom` fallback if not.  If an application
+//!     does not have `getrandom` and likely to be run soon after first booting,
+//!     or on a system with very few entropy sources, one should consider using
+//!     `/dev/random` via `ReaderRng`.
+//! -   On some systems (e.g. FreeBSD, OpenBSD and Mac OS X) there is no
+//!     difference between the two sources. (Also note that, on some systems
+//!     e.g.  FreeBSD, both `/dev/random` and `/dev/urandom` may block once if
+//!     the CSPRNG has not seeded yet.)
 //!
 //! # Examples
 //!
@@ -84,9 +87,9 @@
 //! So if we sample many points randomly from the square, roughly π / 4 of them
 //! should be inside the circle.
 //!
-//! We can use the above fact to estimate the value of π: pick many points in the
-//! square at random, calculate the fraction that fall within the circle, and
-//! multiply this fraction by 4.
+//! We can use the above fact to estimate the value of π: pick many points in
+//! the square at random, calculate the fraction that fall within the circle,
+//! and multiply this fraction by 4.
 //!
 //! ```
 //! use rand::distributions::{IndependentSample, Range};
@@ -121,11 +124,12 @@
 //! > which has a goat. He then says to you, "Do you want to pick door No. 2?"
 //! > Is it to your advantage to switch your choice?
 //!
-//! The rather unintuitive answer is that you will have a 2/3 chance of winning if
-//! you switch and a 1/3 chance of winning if you don't, so it's better to switch.
+//! The rather unintuitive answer is that you will have a 2/3 chance of winning
+//! if you switch and a 1/3 chance of winning if you don't, so it's better to
+//! switch.
 //!
-//! This program will simulate the game show and with large enough simulation steps
-//! it will indeed confirm that it is better to switch.
+//! This program will simulate the game show and with large enough simulation
+//! steps it will indeed confirm that it is better to switch.
 //!
 //! [Monty Hall Problem]: http://en.wikipedia.org/wiki/Monty_Hall_problem
 //!
@@ -217,7 +221,7 @@
 #![doc(html_logo_url = "http://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "http://www.rust-lang.org/favicon.ico",
        html_root_url = "http://doc.rust-lang.org/rand/")]
-#![feature(core, os, libc, path, io)]
+#![feature(core, os, path, io)]
 
 #![cfg_attr(test, feature(test, std_misc))]
 
@@ -1156,7 +1160,7 @@ mod bench {
     #[bench]
     fn rand_shuffle_100(b: &mut Bencher) {
         let mut rng = weak_rng();
-        let x : &mut[uint] = &mut [1; 100];
+        let x : &mut [usize] = &mut [1; 100];
         b.iter(|| {
             rng.shuffle(x);
         })

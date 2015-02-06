@@ -1,4 +1,5 @@
-#![feature(plugin)]
+#![allow(dead_code)]
+#![feature(plugin, core)]
 
 #[plugin] #[no_link] extern crate derive_rand;
 extern crate rand;
