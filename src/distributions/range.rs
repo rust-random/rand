@@ -199,3 +199,38 @@ mod tests {
     }
 
 }
+
+#[cfg(test)]
+mod bench {
+    extern crate test;
+    use std::prelude::v1::*;
+    use self::test::Bencher;
+    use std::mem::size_of;
+    use distributions::IndependentSample;
+
+    #[bench]
+    fn rand_float(b: &mut Bencher) {
+        let mut rng = ::test::weak_rng();
+        let range = -2.71828..3.14159;
+
+        b.iter(|| {
+            for _ in 0..::RAND_BENCH_N {
+                range.ind_sample(&mut rng);
+            }
+        });
+        b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
+    }
+
+    #[bench]
+    fn rand_int(b: &mut Bencher) {
+        let mut rng = ::test::weak_rng();
+        let range = -99..6418i32;
+
+        b.iter(|| {
+            for _ in 0..::RAND_BENCH_N {
+                range.ind_sample(&mut rng);
+            }
+        });
+        b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
+    }
+}
