@@ -697,7 +697,7 @@ pub struct Closed01<F>(pub F);
 
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct StdRng {
     rng: IsaacWordRng,
 }
