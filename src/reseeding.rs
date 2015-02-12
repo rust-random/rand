@@ -103,12 +103,12 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
 /// # Example
 ///
 /// ```rust
-/// use rand::{Rng, SeedableRng, StdRng};
+/// use rand::{Rng, SeedableRng, ChaChaRng};
 /// use rand::reseeding::{Reseeder, ReseedingRng};
 ///
 /// struct TickTockReseeder { tick: bool }
-/// impl Reseeder<StdRng> for TickTockReseeder {
-///     fn reseed(&mut self, rng: &mut StdRng) {
+/// impl Reseeder<ChaChaRng> for TickTockReseeder {
+///     fn reseed(&mut self, rng: &mut ChaChaRng) {
 ///         let val = if self.tick {0} else {1};
 ///         rng.reseed(&[val]);
 ///         self.tick = !self.tick;
@@ -117,7 +117,7 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
 /// fn main() {
 ///     let rsdr = TickTockReseeder { tick: true };
 ///
-///     let inner = StdRng::new().unwrap();
+///     let inner: ChaChaRng = rand::random();
 ///     let mut rng = ReseedingRng::new(inner, 10, rsdr);
 ///
 ///     // this will repeat, because it gets reseeded very regularly.

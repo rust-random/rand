@@ -228,8 +228,6 @@
 extern crate core;
 #[cfg(test)] #[macro_use] extern crate log;
 
-use std::old_io::IoResult;
-use std::mem;
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -237,11 +235,6 @@ pub use os::OsRng;
 
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
-
-#[cfg(target_pointer_width = "32")]
-use IsaacRng as IsaacWordRng;
-#[cfg(target_pointer_width = "64")]
-use Isaac64Rng as IsaacWordRng;
 
 use distributions::{Range, IndependentSample};
 use distributions::range::SampleRange;
@@ -551,10 +544,10 @@ pub trait SeedableRng<Seed>: Rng {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{Rng, SeedableRng, StdRng};
+    /// use rand::{Rng, SeedableRng, ChaChaRng};
     ///
     /// let seed: &[_] = &[1, 2, 3, 4];
-    /// let mut rng: StdRng = SeedableRng::from_seed(seed);
+    /// let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
     /// println!("{}", rng.gen::<f64>());
     /// rng.reseed(&[5, 6, 7, 8]);
     /// println!("{}", rng.gen::<f64>());
@@ -566,10 +559,10 @@ pub trait SeedableRng<Seed>: Rng {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{Rng, SeedableRng, StdRng};
+    /// use rand::{Rng, SeedableRng, ChaChaRng};
     ///
     /// let seed: &[_] = &[1, 2, 3, 4];
-    /// let mut rng: StdRng = SeedableRng::from_seed(seed);
+    /// let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
     /// println!("{}", rng.gen::<f64>());
     /// ```
     fn from_seed(seed: Seed) -> Self;
@@ -695,67 +688,19 @@ pub struct Open01<F>(pub F);
 /// ```
 pub struct Closed01<F>(pub F);
 
-/// The standard RNG. This is designed to be efficient on the current
-/// platform.
-#[derive(Clone)]
-pub struct StdRng {
-    rng: IsaacWordRng,
-}
-
-impl StdRng {
-    /// Create a randomly seeded instance of `StdRng`.
-    ///
-    /// This is a very expensive operation as it has to read
-    /// randomness from the operating system and use this in an
-    /// expensive seeding operation. If one is only generating a small
-    /// number of random numbers, or doesn't need the utmost speed for
-    /// generating each number, `thread_rng` and/or `random` may be more
-    /// appropriate.
-    ///
-    /// Reading the randomness from the OS may fail, and any error is
-    /// propagated via the `IoResult` return value.
-    pub fn new() -> IoResult<StdRng> {
-        OsRng::new().map(|mut r| StdRng { rng: r.gen() })
-    }
-}
-
-impl Rng for StdRng {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        self.rng.next_u32()
-    }
-
-    #[inline]
-    fn next_u64(&mut self) -> u64 {
-        self.rng.next_u64()
-    }
-}
-
-impl<'a> SeedableRng<&'a [usize]> for StdRng {
-    fn reseed(&mut self, seed: &'a [usize]) {
-        // the internal RNG can just be seeded from the above
-        // randomness.
-        self.rng.reseed(unsafe {mem::transmute(seed)})
-    }
-
-    fn from_seed(seed: &'a [usize]) -> StdRng {
-        StdRng { rng: SeedableRng::from_seed(unsafe {mem::transmute(seed)}) }
-    }
-}
-
 /// Controls how the thread-local RNG is reseeded.
 struct ThreadRngReseeder;
 
-impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
-    fn reseed(&mut self, rng: &mut StdRng) {
-        *rng = match StdRng::new() {
-            Ok(r) => r,
+impl reseeding::Reseeder<ChaChaRng> for ThreadRngReseeder {
+    fn reseed(&mut self, rng: &mut ChaChaRng) {
+        *rng = match OsRng::new() {
+            Ok(mut r) => r.gen(),
             Err(e) => panic!("could not reseed thread_rng: {}", e)
         }
     }
 }
 static THREAD_RNG_RESEED_THRESHOLD: usize = 32_768;
-type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
+type ThreadRngInner = reseeding::ReseedingRng<ChaChaRng, ThreadRngReseeder>;
 
 /// The thread-local RNG.
 #[derive(Clone)]
@@ -773,12 +718,12 @@ pub struct ThreadRng {
 /// The internal RNG used is platform and architecture dependent, even
 /// if the operating system random number generator is rigged to give
 /// the same sequence always. If absolute consistency is required,
-/// explicitly select an RNG, e.g. `IsaacRng` or `Isaac64Rng`.
+/// explicitly select an RNG, e.g. `IsaacRng` or `ChaChaRng`.
 pub fn thread_rng() -> ThreadRng {
     // used to make space in TLS for a random number generator
     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
-        let r = match StdRng::new() {
-            Ok(r) => r,
+        let r = match OsRng::new() {
+            Ok(r) => r.gen(),
             Err(e) => panic!("could not initialize thread_rng: {}", e)
         };
         let rng = reseeding::ReseedingRng::new(r,
@@ -878,7 +823,7 @@ pub fn sample<T, I: Iterator<Item=T>, R: Rng>(rng: &mut R,
 
 #[cfg(test)]
 mod test {
-    use super::{Rng, thread_rng, random, SeedableRng, StdRng, sample};
+    use super::{Rng, thread_rng, random, SeedableRng, ChaChaRng, sample};
     use std::iter::{order, repeat};
 
     pub struct MyRng<R> { inner: R }
@@ -1066,17 +1011,17 @@ mod test {
 
     #[test]
     fn test_std_rng_seeded() {
-        let s = thread_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
-        let mut ra: StdRng = SeedableRng::from_seed(s.as_slice());
-        let mut rb: StdRng = SeedableRng::from_seed(s.as_slice());
+        let s = thread_rng().gen_iter::<u32>().take(256).collect::<Vec<_>>();
+        let mut ra: ChaChaRng = SeedableRng::from_seed(s.as_slice());
+        let mut rb: ChaChaRng = SeedableRng::from_seed(s.as_slice());
         assert!(order::equals(ra.gen_ascii_chars().take(100),
                               rb.gen_ascii_chars().take(100)));
     }
 
     #[test]
     fn test_std_rng_reseed() {
-        let s = thread_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
-        let mut r: StdRng = SeedableRng::from_seed(s.as_slice());
+        let s = thread_rng().gen_iter::<u32>().take(256).collect::<Vec<_>>();
+        let mut r: ChaChaRng = SeedableRng::from_seed(s.as_slice());
         let string1 = r.gen_ascii_chars().take(100).collect::<String>();
 
         r.reseed(s.as_slice());
@@ -1093,7 +1038,7 @@ static RAND_BENCH_N: u64 = 100;
 mod bench {
     extern crate test;
     use self::test::{black_box, Bencher};
-    use super::{random, XorShiftRng, StdRng, IsaacRng, Isaac64Rng, OsRng, Rng, RAND_BENCH_N};
+    use super::{random, XorShiftRng, ChaChaRng, IsaacRng, Isaac64Rng, OsRng, Rng, RAND_BENCH_N};
     use std::mem::size_of;
 
     #[bench]
@@ -1130,8 +1075,8 @@ mod bench {
     }
 
     #[bench]
-    fn rand_std(b: &mut Bencher) {
-        let mut rng = StdRng::new().unwrap();
+    fn rand_chacha(b: &mut Bencher) {
+        let mut rng: ChaChaRng = OsRng::new().unwrap().gen();
         b.iter(|| {
             for _ in 0..RAND_BENCH_N {
                 black_box(rng.gen::<usize>());
