@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-#![feature(plugin, core)]
+#![feature(plugin)]
 #![plugin(rand_macros)]
 
 extern crate rand;
