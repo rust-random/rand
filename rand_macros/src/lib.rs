@@ -58,7 +58,7 @@ pub fn expand_deriving_rand(cx: &mut ExtCtxt,
                     Ptr(Box::new(Literal(Path::new_local("R"))),
                         Borrowed(None, ast::MutMutable))
                 ),
-                ret_ty: Self,
+                ret_ty: Self_,
                 attributes: Vec::new(),
                 combine_substructure: combine_substructure(Box::new(|a, b, c| {
                     rand_substructure(a, b, c)
