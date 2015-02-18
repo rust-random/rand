@@ -5,7 +5,8 @@
 ```rust
 #![feature(plugin)]
 
-#[plugin] #[no_link] extern crate rand_macros;
+#![plugin(rand_macros)]
+
 extern crate rand;
 
 #[derive_Rand]
