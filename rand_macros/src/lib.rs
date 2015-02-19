@@ -38,7 +38,7 @@ pub fn expand_deriving_rand(cx: &mut ExtCtxt,
                             span: Span,
                             mitem: &MetaItem,
                             item: &Item,
-                            mut push: Box<FnMut(P<Item>)>) {
+                            push: &mut FnMut(P<Item>)) {
     let trait_def = TraitDef {
         span: span,
         attributes: Vec::new(),
