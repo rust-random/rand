@@ -352,7 +352,7 @@ mod test {
     use std::sync::mpsc::channel;
     use Rng;
     use OsRng;
-    use std::thread::Thread;
+    use std::thread;
 
     #[test]
     fn test_os_rng() {
@@ -373,23 +373,23 @@ mod test {
             let (tx, rx) = channel();
             txs.push(tx);
 
-            Thread::spawn(move|| {
+            thread::spawn(move|| {
                 // wait until all the tasks are ready to go.
                 rx.recv().unwrap();
 
                 // deschedule to attempt to interleave things as much
                 // as possible (XXX: is this a good test?)
                 let mut r = OsRng::new().unwrap();
-                Thread::yield_now();
+                thread::yield_now();
                 let mut v = [0u8; 1000];
 
                 for _ in 0..100 {
                     r.next_u32();
-                    Thread::yield_now();
+                    thread::yield_now();
                     r.next_u64();
-                    Thread::yield_now();
+                    thread::yield_now();
                     r.fill_bytes(&mut v);
-                    Thread::yield_now();
+                    thread::yield_now();
                 }
             });
         }
