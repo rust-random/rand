@@ -16,8 +16,10 @@
 //! general, and allows for generating values that change some state
 //! internally. The `IndependentSample` trait is for generating values
 //! that do not need to record state.
-use core::prelude::*;
+
 use core::num::{Float, Int};
+use core::prelude::*;
+use std::marker;
 
 use {Rng, Rand};
 
@@ -53,7 +55,9 @@ pub trait IndependentSample<Support>: Sample<Support> {
 
 /// A wrapper for generating types that implement `Rand` via the
 /// `Sample` & `IndependentSample` traits.
-pub struct RandSample<Sup>;
+pub struct RandSample<Sup> {
+    _marker: marker::PhantomData<fn() -> Sup>,
+}
 
 impl<Sup: Rand> Sample<Sup> for RandSample<Sup> {
     fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup { self.ind_sample(rng) }
@@ -62,6 +66,12 @@ impl<Sup: Rand> Sample<Sup> for RandSample<Sup> {
 impl<Sup: Rand> IndependentSample<Sup> for RandSample<Sup> {
     fn ind_sample<R: Rng>(&self, rng: &mut R) -> Sup {
         rng.gen()
+    }
+}
+
+impl<Sup> RandSample<Sup> {
+    pub fn new() -> RandSample<Sup> {
+        RandSample { _marker: marker::PhantomData }
     }
 }
 
@@ -281,7 +291,7 @@ mod tests {
 
     #[test]
     fn test_rand_sample() {
-        let mut rand_sample = RandSample::<ConstRand>;
+        let mut rand_sample = RandSample::<ConstRand>::new();
 
         assert_eq!(rand_sample.sample(&mut ::test::rng()), ConstRand(0));
         assert_eq!(rand_sample.ind_sample(&mut ::test::rng()), ConstRand(0));
@@ -351,7 +361,7 @@ mod tests {
     }
     #[test] #[should_fail]
     fn test_weighted_choice_weight_overflows() {
-        let x = !0us / 2; // x + x + 2 is the overflow
+        let x = !0usize / 2; // x + x + 2 is the overflow
         WeightedChoice::new(&mut [Weighted { weight: x, item: 0 },
                                   Weighted { weight: 1, item: 1 },
                                   Weighted { weight: x, item: 2 },
