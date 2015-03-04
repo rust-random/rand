@@ -233,6 +233,7 @@ use std::marker;
 use std::mem;
 use std::old_io::IoResult;
 use std::rc::Rc;
+use std::num::wrapping::Wrapping as w;
 
 pub use os::OsRng;
 
@@ -254,6 +255,11 @@ pub mod reseeding;
 mod rand_impls;
 pub mod os;
 pub mod reader;
+
+#[allow(bad_style)]
+type w64 = w<u64>;
+#[allow(bad_style)]
+type w32 = w<u32>;
 
 /// A type that can be randomly generated using an `Rng`.
 pub trait Rand : Sized {
@@ -590,10 +596,10 @@ pub trait SeedableRng<Seed>: Rng {
 #[allow(missing_copy_implementations)]
 #[derive(Clone)]
 pub struct XorShiftRng {
-    x: u32,
-    y: u32,
-    z: u32,
-    w: u32,
+    x: w32,
+    y: w32,
+    z: w32,
+    w: w32,
 }
 
 impl XorShiftRng {
@@ -605,10 +611,10 @@ impl XorShiftRng {
     /// this function
     pub fn new_unseeded() -> XorShiftRng {
         XorShiftRng {
-            x: 0x193a6754,
-            y: 0xa8a7d469,
-            z: 0x97830e05,
-            w: 0x113ba7bb,
+            x: w(0x193a6754),
+            y: w(0xa8a7d469),
+            z: w(0x97830e05),
+            w: w(0x113ba7bb),
         }
     }
 }
@@ -621,9 +627,9 @@ impl Rng for XorShiftRng {
         self.x = self.y;
         self.y = self.z;
         self.z = self.w;
-        let w = self.w;
-        self.w = w ^ (w >> 19) ^ (t ^ (t >> 8));
-        self.w
+        let w_ = self.w;
+        self.w = w_ ^ (w_ >> 19) ^ (t ^ (t >> 8));
+        self.w.0
     }
 }
 
@@ -633,10 +639,10 @@ impl SeedableRng<[u32; 4]> for XorShiftRng {
         assert!(!seed.iter().all(|&x| x == 0),
                 "XorShiftRng.reseed called with an all zero seed.");
 
-        self.x = seed[0];
-        self.y = seed[1];
-        self.z = seed[2];
-        self.w = seed[3];
+        self.x = w(seed[0]);
+        self.y = w(seed[1]);
+        self.z = w(seed[2]);
+        self.w = w(seed[3]);
     }
 
     /// Create a new XorShiftRng. This will panic if `seed` is entirely 0.
@@ -645,10 +651,10 @@ impl SeedableRng<[u32; 4]> for XorShiftRng {
                 "XorShiftRng::from_seed called with an all zero seed.");
 
         XorShiftRng {
-            x: seed[0],
-            y: seed[1],
-            z: seed[2],
-            w: seed[3]
+            x: w(seed[0]),
+            y: w(seed[1]),
+            z: w(seed[2]),
+            w: w(seed[3]),
         }
     }
 }
@@ -659,8 +665,8 @@ impl Rand for XorShiftRng {
         while tuple == (0, 0, 0, 0) {
             tuple = rng.gen();
         }
-        let (x, y, z, w) = tuple;
-        XorShiftRng { x: x, y: y, z: z, w: w }
+        let (x, y, z, w_) = tuple;
+        XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) }
     }
 }
 
