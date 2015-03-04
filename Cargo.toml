@@ -19,3 +19,4 @@ libc = "0.1.1"
 
 [dev-dependencies.rand_macros]
 path = "rand_macros"
+version = "*"
