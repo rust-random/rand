@@ -10,10 +10,11 @@
 
 //! Utilities for random number generation
 //!
-//! The key functions are `random()` and `Rng::gen()`. These are polymorphic
-//! and so can be used to generate any type that implements `Rand`. Type inference
+//! The key functions are `random()` and `Rng::gen()`. These are polymorphic and
+//! so can be used to generate any type that implements `Rand`. Type inference
 //! means that often a simple call to `rand::random()` or `rng.gen()` will
-//! suffice, but sometimes an annotation is required, e.g. `rand::random::<f64>()`.
+//! suffice, but sometimes an annotation is required, e.g.
+//! `rand::random::<f64>()`.
 //!
 //! See the `distributions` submodule for sampling random numbers from
 //! distributions like normal and exponential.
@@ -31,7 +32,8 @@
 //!
 //! An application that requires an entropy source for cryptographic purposes
 //! must use `OsRng`, which reads randomness from the source that the operating
-//! system provides (e.g. `/dev/urandom` on Unixes or `CryptGenRandom()` on Windows).
+//! system provides (e.g. `/dev/urandom` on Unixes or `CryptGenRandom()` on
+//! Windows).
 //! The other random number generators provided by this module are not suitable
 //! for such purposes.
 //!
@@ -52,7 +54,7 @@
 //!     available, and use `/dev/urandom` fallback if not.  If an application
 //!     does not have `getrandom` and likely to be run soon after first booting,
 //!     or on a system with very few entropy sources, one should consider using
-//!     `/dev/random` via `ReaderRng`.
+//!     `/dev/random` via `ReadRng`.
 //! -   On some systems (e.g. FreeBSD, OpenBSD and Mac OS X) there is no
 //!     difference between the two sources. (Also note that, on some systems
 //!     e.g.  FreeBSD, both `/dev/random` and `/dev/urandom` may block once if
@@ -119,10 +121,10 @@
 //! This is a simulation of the [Monty Hall Problem][]:
 //!
 //! > Suppose you're on a game show, and you're given the choice of three doors:
-//! > Behind one door is a car; behind the others, goats. You pick a door, say No. 1,
-//! > and the host, who knows what's behind the doors, opens another door, say No. 3,
-//! > which has a goat. He then says to you, "Do you want to pick door No. 2?"
-//! > Is it to your advantage to switch your choice?
+//! > Behind one door is a car; behind the others, goats. You pick a door, say
+//! > No. 1, and the host, who knows what's behind the doors, opens another
+//! > door, say No. 3, which has a goat. He then says to you, "Do you want to
+//! > pick door No. 2?" Is it to your advantage to switch your choice?
 //!
 //! The rather unintuitive answer is that you will have a 2/3 chance of winning
 //! if you switch and a 1/3 chance of winning if you don't, so it's better to
@@ -143,7 +145,8 @@
 //! }
 //!
 //! // Run a single simulation of the Monty Hall problem.
-//! fn simulate<R: Rng>(random_door: &Range<usize>, rng: &mut R) -> SimulationResult {
+//! fn simulate<R: Rng>(random_door: &Range<usize>, rng: &mut R)
+//!                     -> SimulationResult {
 //!     let car = random_door.ind_sample(rng);
 //!
 //!     // This is our initial choice
@@ -221,9 +224,10 @@
 #![doc(html_logo_url = "http://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "http://www.rust-lang.org/favicon.ico",
        html_root_url = "http://doc.rust-lang.org/rand/")]
-#![feature(core, os, old_path, old_io)]
+#![feature(core, os, old_path, io, fs)]
 
 #![cfg_attr(test, feature(test))]
+#![cfg_attr(test, deny(warnings))]
 
 extern crate core;
 #[cfg(test)] #[macro_use] extern crate log;
@@ -231,7 +235,7 @@ extern crate core;
 use std::cell::RefCell;
 use std::marker;
 use std::mem;
-use std::old_io::IoResult;
+use std::io;
 use std::rc::Rc;
 use std::num::wrapping::Wrapping as w;
 
@@ -254,7 +258,7 @@ pub mod chacha;
 pub mod reseeding;
 mod rand_impls;
 pub mod os;
-pub mod reader;
+pub mod read;
 
 #[allow(bad_style)]
 type w64 = w<u64>;
@@ -721,8 +725,8 @@ impl StdRng {
     /// appropriate.
     ///
     /// Reading the randomness from the OS may fail, and any error is
-    /// propagated via the `IoResult` return value.
-    pub fn new() -> IoResult<StdRng> {
+    /// propagated via the `io::Result` return value.
+    pub fn new() -> io::Result<StdRng> {
         OsRng::new().map(|mut r| StdRng { rng: r.gen() })
     }
 }

@@ -19,9 +19,10 @@ mod imp {
 
     use self::OsRngInner::*;
 
-    use std::old_io::{IoResult, File};
+    use std::io;
+    use std::fs::File;
     use Rng;
-    use reader::ReaderRng;
+    use read::ReadRng;
     use std::mem;
     use std::os::errno;
 
@@ -141,20 +142,20 @@ mod imp {
 
     enum OsRngInner {
         OsGetrandomRng,
-        OsReaderRng(ReaderRng<File>),
+        OsReadRng(ReadRng<File>),
     }
 
     impl OsRng {
         /// Create a new `OsRng`.
-        pub fn new() -> IoResult<OsRng> {
+        pub fn new() -> io::Result<OsRng> {
             if is_getrandom_available() {
                 return Ok(OsRng { inner: OsGetrandomRng });
             }
 
             let reader = try!(File::open(&Path::new("/dev/urandom")));
-            let reader_rng = ReaderRng::new(reader);
+            let reader_rng = ReadRng::new(reader);
 
-            Ok(OsRng { inner: OsReaderRng(reader_rng) })
+            Ok(OsRng { inner: OsReadRng(reader_rng) })
         }
     }
 
@@ -162,19 +163,19 @@ mod imp {
         fn next_u32(&mut self) -> u32 {
             match self.inner {
                 OsGetrandomRng => getrandom_next_u32(),
-                OsReaderRng(ref mut rng) => rng.next_u32(),
+                OsReadRng(ref mut rng) => rng.next_u32(),
             }
         }
         fn next_u64(&mut self) -> u64 {
             match self.inner {
                 OsGetrandomRng => getrandom_next_u64(),
-                OsReaderRng(ref mut rng) => rng.next_u64(),
+                OsReadRng(ref mut rng) => rng.next_u64(),
             }
         }
         fn fill_bytes(&mut self, v: &mut [u8]) {
             match self.inner {
                 OsGetrandomRng => getrandom_fill_bytes(v),
-                OsReaderRng(ref mut rng) => rng.fill_bytes(v)
+                OsReadRng(ref mut rng) => rng.fill_bytes(v)
             }
         }
     }
@@ -184,7 +185,7 @@ mod imp {
 mod imp {
     extern crate libc;
 
-    use std::old_io::{IoResult};
+    use std::io;
     use std::marker::Sync;
     use std::mem;
     use std::os;
@@ -223,7 +224,7 @@ mod imp {
 
     impl OsRng {
         /// Create a new `OsRng`.
-        pub fn new() -> IoResult<OsRng> {
+        pub fn new() -> io::Result<OsRng> {
             Ok(OsRng { _dummy: () })
         }
     }
@@ -254,7 +255,7 @@ mod imp {
 mod imp {
     extern crate libc;
 
-    use std::old_io::{IoResult, IoError};
+    use std::io;
     use std::mem;
     use std::ops::Drop;
     use std::os;
@@ -297,7 +298,7 @@ mod imp {
 
     impl OsRng {
         /// Create a new `OsRng`.
-        pub fn new() -> IoResult<OsRng> {
+        pub fn new() -> io::Result<OsRng> {
             let mut hcp = 0;
             let ret = unsafe {
                 CryptAcquireContextA(&mut hcp, 0 as LPCSTR, 0 as LPCSTR,
@@ -306,7 +307,7 @@ mod imp {
             };
 
             if ret == 0 {
-                Err(IoError::last_error())
+                Err(io::Error::last_os_error())
             } else {
                 Ok(OsRng { hcryptprov: hcp })
             }
