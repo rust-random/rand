@@ -17,14 +17,14 @@ use {Rng, SeedableRng};
 
 /// How many bytes of entropy the underling RNG is allowed to generate
 /// before it is reseeded.
-static DEFAULT_GENERATION_THRESHOLD: usize = 32 * 1024;
+static DEFAULT_GENERATION_THRESHOLD: u64 = 32 * 1024;
 
 /// A wrapper around any RNG which reseeds the underlying RNG after it
 /// has generated a certain number of random bytes.
 pub struct ReseedingRng<R, Rsdr> {
     rng: R,
-    generation_threshold: usize,
-    bytes_generated: usize,
+    generation_threshold: u64,
+    bytes_generated: u64,
     /// Controls the behaviour when reseeding the RNG.
     pub reseeder: Rsdr,
 }
@@ -37,7 +37,7 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
     /// * `rng`: the random number generator to use.
     /// * `generation_threshold`: the number of bytes of entropy at which to reseed the RNG.
     /// * `reseeder`: the reseeding object to use.
-    pub fn new(rng: R, generation_threshold: usize, reseeder: Rsdr) -> ReseedingRng<R,Rsdr> {
+    pub fn new(rng: R, generation_threshold: u64, reseeder: Rsdr) -> ReseedingRng<R,Rsdr> {
         ReseedingRng {
             rng: rng,
             generation_threshold: generation_threshold,
@@ -72,7 +72,7 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.reseed_if_necessary();
-        self.bytes_generated += dest.len();
+        self.bytes_generated += dest.len() as u64;
         self.rng.fill_bytes(dest)
     }
 }
