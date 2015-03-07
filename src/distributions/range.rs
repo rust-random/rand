@@ -12,9 +12,8 @@
 
 // this is surprisingly complicated to be both generic & correct
 
-use core::prelude::{PartialOrd};
-use core::num::Int;
-use core::num::wrapping::Wrapping as w;
+use std::num::Int;
+use std::num::wrapping::Wrapping as w;
 
 use Rng;
 use distributions::{Sample, IndependentSample};
