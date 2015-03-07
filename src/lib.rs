@@ -546,7 +546,7 @@ impl<'a, R: Rng> Iterator for AsciiGenerator<'a, R> {
     type Item = char;
 
     fn next(&mut self) -> Option<char> {
-        static GEN_ASCII_STR_CHARSET: &'static [u8] =
+        const GEN_ASCII_STR_CHARSET: &'static [u8] =
             b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
               abcdefghijklmnopqrstuvwxyz\
               0123456789";
@@ -781,7 +781,7 @@ impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
         }
     }
 }
-static THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
+const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
 type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
 
 /// The thread-local RNG.
@@ -1114,7 +1114,7 @@ mod test {
 }
 
 #[cfg(test)]
-static RAND_BENCH_N: u64 = 100;
+const RAND_BENCH_N: u64 = 100;
 
 #[cfg(test)]
 mod bench {
