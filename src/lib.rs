@@ -145,7 +145,7 @@
 //! }
 //!
 //! // Run a single simulation of the Monty Hall problem.
-//! fn simulate<R: Rng>(random_door: &Range<usize>, rng: &mut R)
+//! fn simulate<R: Rng>(random_door: &Range<u32>, rng: &mut R)
 //!                     -> SimulationResult {
 //!     let car = random_door.ind_sample(rng);
 //!
@@ -166,18 +166,18 @@
 //!
 //! // Returns the door the game host opens given our choice and knowledge of
 //! // where the car is. The game host will never open the door with the car.
-//! fn game_host_open<R: Rng>(car: usize, choice: usize, rng: &mut R) -> usize {
+//! fn game_host_open<R: Rng>(car: u32, choice: u32, rng: &mut R) -> u32 {
 //!     let choices = free_doors(&[car, choice]);
 //!     rand::sample(rng, choices.into_iter(), 1)[0]
 //! }
 //!
 //! // Returns the door we switch to, given our current choice and
 //! // the open door. There will only be one valid door.
-//! fn switch_door(choice: usize, open: usize) -> usize {
+//! fn switch_door(choice: u32, open: u32) -> u32 {
 //!     free_doors(&[choice, open])[0]
 //! }
 //!
-//! fn free_doors(blocked: &[usize]) -> Vec<usize> {
+//! fn free_doors(blocked: &[u32]) -> Vec<u32> {
 //!     (0..3).filter(|x| !blocked.contains(x)).collect()
 //! }
 //!
@@ -301,8 +301,8 @@ pub trait Rng : Sized {
     /// See `Closed01` for the closed interval `[0,1]`, and
     /// `Open01` for the open interval `(0,1)`.
     fn next_f32(&mut self) -> f32 {
-        const MANTISSA_BITS: usize = 24;
-        const IGNORED_BITS: usize = 8;
+        const MANTISSA_BITS: u32 = 24;
+        const IGNORED_BITS: u32 = 8;
         const SCALE: f32 = (1u64 << MANTISSA_BITS) as f32;
 
         // using any more than `MANTISSA_BITS` bits will
@@ -323,8 +323,8 @@ pub trait Rng : Sized {
     /// See `Closed01` for the closed interval `[0,1]`, and
     /// `Open01` for the open interval `(0,1)`.
     fn next_f64(&mut self) -> f64 {
-        const MANTISSA_BITS: usize = 53;
-        const IGNORED_BITS: usize = 11;
+        const MANTISSA_BITS: u32 = 53;
+        const IGNORED_BITS: u32 = 11;
         const SCALE: f64 = (1u64 << MANTISSA_BITS) as f64;
 
         (self.next_u64() >> IGNORED_BITS) as f64 / SCALE
@@ -454,7 +454,7 @@ pub trait Rng : Sized {
     /// let mut rng = thread_rng();
     /// println!("{}", rng.gen_weighted_bool(3));
     /// ```
-    fn gen_weighted_bool(&mut self, n: usize) -> bool {
+    fn gen_weighted_bool(&mut self, n: u32) -> bool {
         n <= 1 || self.gen_range(0, n) == 0
     }
 
@@ -781,7 +781,7 @@ impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
         }
     }
 }
-static THREAD_RNG_RESEED_THRESHOLD: usize = 32_768;
+static THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
 type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
 
 /// The thread-local RNG.
