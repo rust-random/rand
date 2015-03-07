@@ -12,10 +12,9 @@
 
 #![allow(non_camel_case_types)]
 
-use core::prelude::*;
-use core::slice;
-use core::iter::{range_step, repeat};
-use core::num::wrapping::Wrapping as w;
+use std::slice;
+use std::iter::{range_step, repeat};
+use std::num::wrapping::Wrapping as w;
 
 use {Rng, SeedableRng, Rand, w32, w64};
 
@@ -508,9 +507,7 @@ impl Rand for Isaac64Rng {
 
 #[cfg(test)]
 mod test {
-    use std::prelude::v1::*;
-
-    use core::iter::order;
+    use std::iter::order;
     use {Rng, SeedableRng};
     use super::{IsaacRng, Isaac64Rng};
 

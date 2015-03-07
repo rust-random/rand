@@ -11,10 +11,9 @@
 //! A wrapper around another RNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use core::prelude::*;
+use std::default::Default;
 
 use {Rng, SeedableRng};
-use core::default::Default;
 
 /// How many bytes of entropy the underling RNG is allowed to generate
 /// before it is reseeded.
@@ -147,11 +146,9 @@ impl Default for ReseedWithDefault {
 
 #[cfg(test)]
 mod test {
-    use std::prelude::v1::*;
-
-    use core::iter::{order, repeat};
-    use super::{ReseedingRng, ReseedWithDefault};
     use std::default::Default;
+    use std::iter::{order, repeat};
+    use super::{ReseedingRng, ReseedWithDefault};
     use {SeedableRng, Rng};
 
     struct Counter {

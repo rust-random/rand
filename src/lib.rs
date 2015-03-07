@@ -224,12 +224,11 @@
 #![doc(html_logo_url = "http://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "http://www.rust-lang.org/favicon.ico",
        html_root_url = "http://doc.rust-lang.org/rand/")]
-#![feature(core, os, old_path, io, fs)]
+#![feature(core, os, io)]
 
 #![cfg_attr(test, feature(test))]
 #![cfg_attr(test, deny(warnings))]
 
-extern crate core;
 #[cfg(test)] #[macro_use] extern crate log;
 
 use std::cell::RefCell;
@@ -356,7 +355,7 @@ pub trait Rng : Sized {
     ///
     /// let mut v = [0u8; 13579];
     /// thread_rng().fill_bytes(&mut v);
-    /// println!("{:?}", v.as_slice());
+    /// println!("{:?}", &v[..]);
     /// ```
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         // this could, in theory, be done by transmuting dest to a
@@ -505,9 +504,9 @@ pub trait Rng : Sized {
     /// let mut rng = thread_rng();
     /// let mut y = [1, 2, 3];
     /// rng.shuffle(&mut y);
-    /// println!("{:?}", y.as_slice());
+    /// println!("{:?}", y);
     /// rng.shuffle(&mut y);
-    /// println!("{:?}", y.as_slice());
+    /// println!("{:?}", y);
     /// ```
     fn shuffle<T>(&mut self, values: &mut [T]) {
         let mut i = values.len();
@@ -1095,8 +1094,8 @@ mod test {
     #[test]
     fn test_std_rng_seeded() {
         let s = thread_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
-        let mut ra: StdRng = SeedableRng::from_seed(s.as_slice());
-        let mut rb: StdRng = SeedableRng::from_seed(s.as_slice());
+        let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
+        let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
         assert!(order::equals(ra.gen_ascii_chars().take(100),
                               rb.gen_ascii_chars().take(100)));
     }
@@ -1104,10 +1103,10 @@ mod test {
     #[test]
     fn test_std_rng_reseed() {
         let s = thread_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
-        let mut r: StdRng = SeedableRng::from_seed(s.as_slice());
+        let mut r: StdRng = SeedableRng::from_seed(&s[..]);
         let string1 = r.gen_ascii_chars().take(100).collect::<String>();
 
-        r.reseed(s.as_slice());
+        r.reseed(&s);
 
         let string2 = r.gen_ascii_chars().take(100).collect::<String>();
         assert_eq!(string1, string2);

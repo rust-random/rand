@@ -10,10 +10,8 @@
 
 //! The ChaCha random number generator.
 
-use core::prelude::*;
-
-use core::num::Int;
-use core::num::wrapping::Wrapping as w;
+use std::num::Int;
+use std::num::wrapping::Wrapping as w;
 use {Rng, SeedableRng, Rand, w32};
 
 const KEY_WORDS    : usize =  8; // 8 words for the 256-bit key
@@ -199,16 +197,14 @@ impl Rand for ChaChaRng {
         for word in key.iter_mut() {
             *word = other.gen();
         }
-        SeedableRng::from_seed(key.as_slice())
+        SeedableRng::from_seed(&key[..])
     }
 }
 
 
 #[cfg(test)]
 mod test {
-    use std::prelude::v1::*;
-
-    use core::iter::order;
+    use std::iter::order;
     use {Rng, SeedableRng};
     use super::ChaChaRng;
 
