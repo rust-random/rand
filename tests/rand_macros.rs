@@ -7,13 +7,13 @@ extern crate rand;
 use rand::Rng;
 
 
-#[derive_Rand]
+#[derive(Rand)]
 struct Foo {
     x: u8,
     y: isize
 }
 
-#[derive_Rand]
+#[derive(Rand)]
 enum Bar {
     X(char),
     Y(f64)
