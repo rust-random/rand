@@ -77,7 +77,7 @@ impl<Sup> RandSample<Sup> {
 /// A value with a particular weight for use with `WeightedChoice`.
 pub struct Weighted<T> {
     /// The numerical weight of this item
-    pub weight: usize,
+    pub weight: u32,
     /// The actual item which is being weighted
     pub item: T,
 }
@@ -89,7 +89,7 @@ pub struct Weighted<T> {
 ///
 /// The `Clone` restriction is a limitation of the `Sample` and
 /// `IndependentSample` traits. Note that `&T` is (cheaply) `Clone` for
-/// all `T`, as is `usize`, so one can store references or indices into
+/// all `T`, as is `u32`, so one can store references or indices into
 /// another vector.
 ///
 /// # Example
@@ -109,7 +109,7 @@ pub struct Weighted<T> {
 /// ```
 pub struct WeightedChoice<'a, T:'a> {
     items: &'a mut [Weighted<T>],
-    weight_range: Range<usize>
+    weight_range: Range<u32>
 }
 
 impl<'a, T: Clone> WeightedChoice<'a, T> {
@@ -118,7 +118,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
     /// Panics if:
     /// - `v` is empty
     /// - the total weight is 0
-    /// - the total weight is larger than a `usize` can contain.
+    /// - the total weight is larger than a `u32` can contain.
     pub fn new(items: &'a mut [Weighted<T>]) -> WeightedChoice<'a, T> {
         // strictly speaking, this is subsumed by the total weight == 0 case
         assert!(!items.is_empty(), "WeightedChoice::new called with no items");
@@ -132,7 +132,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
             running_total = match running_total.checked_add(item.weight) {
                 Some(n) => n,
                 None => panic!("WeightedChoice::new called with a total weight \
-                               larger than a usize can contain")
+                               larger than a u32 can contain")
             };
 
             item.weight = running_total;
@@ -221,7 +221,7 @@ fn ziggurat<R: Rng, P, Z>(
             mut pdf: P,
             mut zero_case: Z)
             -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
-    static SCALE: f64 = (1u64 << 53) as f64;
+    const SCALE: f64 = (1u64 << 53) as f64;
     loop {
         // reimplement the f64 generation as an optimisation suggested
         // by the Doornik paper: we have a lot of precision-space
@@ -360,7 +360,7 @@ mod tests {
     }
     #[test] #[should_fail]
     fn test_weighted_choice_weight_overflows() {
-        let x = !0usize / 2; // x + x + 2 is the overflow
+        let x = !0 / 2; // x + x + 2 is the overflow
         WeightedChoice::new(&mut [Weighted { weight: x, item: 0 },
                                   Weighted { weight: 1, item: 1 },
                                   Weighted { weight: x, item: 2 },
