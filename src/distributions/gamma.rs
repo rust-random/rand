@@ -350,7 +350,7 @@ mod test {
         }
     }
     #[test]
-    #[should_fail]
+    #[should_panic]
     fn test_chi_squared_invalid_dof() {
         ChiSquared::new(-1.0);
     }
