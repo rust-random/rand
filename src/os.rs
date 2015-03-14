@@ -24,7 +24,6 @@ mod imp {
     use Rng;
     use read::ReadRng;
     use std::mem;
-    use std::os::errno;
 
     #[cfg(all(target_os = "linux",
               any(target_arch = "x86_64",
@@ -65,9 +64,9 @@ mod imp {
         while read < len {
             let result = getrandom(&mut v[read..]);
             if result == -1 {
-                let err = errno() as libc::c_int;
-                if err == libc::EINTR {
-                    continue;
+                let err = io::Error::last_os_error();
+                if err.kind() == io::ErrorKind::Interrupted {
+                    continue
                 } else {
                     panic!("unexpected getrandom error: {}", err);
                 }
@@ -95,6 +94,7 @@ mod imp {
                   target_arch = "arm",
                   target_arch = "aarch64",
                   target_arch = "powerpc")))]
+    #[allow(deprecated)] // errno usage
     fn is_getrandom_available() -> bool {
         use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
 
@@ -105,7 +105,7 @@ mod imp {
             let mut buf: [u8; 0] = [];
             let result = getrandom(&mut buf);
             let available = if result == -1 {
-                let err = errno() as libc::c_int;
+                let err = ::std::os::errno() as libc::c_int;
                 err != libc::ENOSYS
             } else {
                 true
