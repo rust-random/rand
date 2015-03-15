@@ -188,7 +188,6 @@ mod imp {
     use std::io;
     use std::marker::Sync;
     use std::mem;
-    use std::os;
     use Rng;
     use self::libc::{c_int, size_t};
 
@@ -245,7 +244,7 @@ mod imp {
                 SecRandomCopyBytes(kSecRandomDefault, v.len() as size_t, v.as_mut_ptr())
             };
             if ret == -1 {
-                panic!("couldn't generate random bytes: {}", os::last_os_error());
+                panic!("couldn't generate random bytes: {}", io::Error::last_os_error());
             }
         }
     }
