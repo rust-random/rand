@@ -94,7 +94,6 @@ mod imp {
                   target_arch = "arm",
                   target_arch = "aarch64",
                   target_arch = "powerpc")))]
-    #[allow(deprecated)] // errno usage
     fn is_getrandom_available() -> bool {
         use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
 
@@ -200,7 +199,6 @@ mod imp {
     /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
     ///
     /// This does not block.
-    #[allow(missing_copy_implementations)]
     pub struct OsRng {
         // dummy field to ensure that this struct cannot be constructed outside of this module
         _dummy: (),

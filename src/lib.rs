@@ -227,7 +227,6 @@
 #![feature(core, io)]
 
 #![cfg_attr(test, feature(test))]
-#![cfg_attr(test, deny(warnings))]
 
 #[cfg(test)] #[macro_use] extern crate log;
 
