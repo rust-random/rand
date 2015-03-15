@@ -94,7 +94,6 @@ mod imp {
                   target_arch = "arm",
                   target_arch = "aarch64",
                   target_arch = "powerpc")))]
-    #[allow(deprecated)] // errno usage
     fn is_getrandom_available() -> bool {
         use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
 
@@ -186,9 +185,7 @@ mod imp {
     extern crate libc;
 
     use std::io;
-    use std::marker::Sync;
     use std::mem;
-    use std::os;
     use Rng;
     use self::libc::{c_int, size_t};
 
@@ -202,7 +199,6 @@ mod imp {
     /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
     ///
     /// This does not block.
-    #[allow(missing_copy_implementations)]
     pub struct OsRng {
         // dummy field to ensure that this struct cannot be constructed outside of this module
         _dummy: (),
@@ -211,10 +207,8 @@ mod imp {
     #[repr(C)]
     struct SecRandom;
 
-    unsafe impl Sync for *const SecRandom {}
-
     #[allow(non_upper_case_globals)]
-    static kSecRandomDefault: *const SecRandom = 0 as *const SecRandom;
+    const kSecRandomDefault: *const SecRandom = 0 as *const SecRandom;
 
     #[link(name = "Security", kind = "framework")]
     extern "C" {
@@ -245,7 +239,7 @@ mod imp {
                 SecRandomCopyBytes(kSecRandomDefault, v.len() as size_t, v.as_mut_ptr())
             };
             if ret == -1 {
-                panic!("couldn't generate random bytes: {}", os::last_os_error());
+                panic!("couldn't generate random bytes: {}", io::Error::last_os_error());
             }
         }
     }

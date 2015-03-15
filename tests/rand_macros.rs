@@ -6,7 +6,6 @@ extern crate rand;
 
 use rand::Rng;
 
-
 #[derive_Rand]
 struct Foo {
     x: u8,
