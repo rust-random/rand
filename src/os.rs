@@ -186,7 +186,6 @@ mod imp {
     extern crate libc;
 
     use std::io;
-    use std::marker::Sync;
     use std::mem;
     use Rng;
     use self::libc::{c_int, size_t};
@@ -210,10 +209,8 @@ mod imp {
     #[repr(C)]
     struct SecRandom;
 
-    unsafe impl Sync for *const SecRandom {}
-
     #[allow(non_upper_case_globals)]
-    static kSecRandomDefault: *const SecRandom = 0 as *const SecRandom;
+    const kSecRandomDefault: *const SecRandom = 0 as *const SecRandom;
 
     #[link(name = "Security", kind = "framework")]
     extern "C" {
