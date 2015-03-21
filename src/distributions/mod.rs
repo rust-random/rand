@@ -58,6 +58,8 @@ pub struct RandSample<Sup> {
     _marker: marker::PhantomData<fn() -> Sup>,
 }
 
+impl<Sup> Copy for RandSample<Sup> {}
+
 impl<Sup: Rand> Sample<Sup> for RandSample<Sup> {
     fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup { self.ind_sample(rng) }
 }
@@ -75,6 +77,7 @@ impl<Sup> RandSample<Sup> {
 }
 
 /// A value with a particular weight for use with `WeightedChoice`.
+#[derive(Copy)]
 pub struct Weighted<T> {
     /// The numerical weight of this item
     pub weight: u32,
