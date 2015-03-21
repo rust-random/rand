@@ -65,6 +65,27 @@ impl<T> RandDistribution<T> {
     }
 }
 
+/// A distribution that always returns the same value.
+///
+/// # Example
+///
+/// ```rust
+/// use rand::distributions::{Distribution, Constant};
+///
+/// let d = Constant(42);
+/// let v = d.sample(&mut rand::thread_rng());
+/// assert_eq!(v, 42);
+/// ```
+pub struct Constant<T>(pub T);
+
+impl<T: Clone> Distribution for Constant<T> {
+    type Output = T;
+
+    fn sample<R: Rng>(&self, _: &mut R) -> T {
+        self.0.clone()
+    }
+}
+
 /// A value with a particular weight for use with `WeightedChoice`.
 #[derive(Copy)]
 #[derive(Clone)]
@@ -255,7 +276,7 @@ fn ziggurat<R: Rng, P, Z>(
 mod tests {
 
     use {Rng, Rand};
-    use super::{RandDistribution, WeightedChoice, Weighted, Distribution};
+    use super::{RandDistribution, WeightedChoice, Weighted, Distribution, Constant};
 
     #[derive(PartialEq, Debug)]
     struct ConstRand(usize);
@@ -283,6 +304,16 @@ mod tests {
 
         assert_eq!(rand_sample.sample(&mut ::test::rng()), ConstRand(0));
     }
+
+    #[test]
+    fn test_constant() {
+        let d = Constant(11);
+
+        assert_eq!(d.sample(&mut ::test::rng()), 11);
+        assert_eq!(d.sample(&mut ::test::rng()), 11);
+        assert_eq!(d.sample(&mut ::test::rng()), 11);
+    }
+
     #[test]
     fn test_weighted_choice() {
         // this makes assumptions about the internal implementation of
