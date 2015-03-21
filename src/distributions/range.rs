@@ -47,6 +47,7 @@ use distributions::{Sample, IndependentSample};
 ///     println!("{}", sum);
 /// }
 /// ```
+#[derive(Copy)]
 pub struct Range<X> {
     low: X,
     range: X,
