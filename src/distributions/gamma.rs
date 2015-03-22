@@ -379,7 +379,6 @@ mod test {
 #[cfg(test)]
 mod bench {
     extern crate test;
-    use std::prelude::v1::*;
     use self::test::Bencher;
     use std::mem::size_of;
     use distributions::IndependentSample;

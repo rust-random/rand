@@ -104,8 +104,8 @@ mod imp {
             let mut buf: [u8; 0] = [];
             let result = getrandom(&mut buf);
             let available = if result == -1 {
-                let err = ::std::os::errno() as libc::c_int;
-                err != libc::ENOSYS
+                let err = io::Error::last_os_error().raw_os_error();
+                err != Some(libc::ENOSYS)
             } else {
                 true
             };
