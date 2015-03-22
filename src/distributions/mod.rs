@@ -263,7 +263,6 @@ fn ziggurat<R: Rng, P, Z>(
 
 #[cfg(test)]
 mod tests {
-    use std::prelude::v1::*;
 
     use {Rng, Rand};
     use super::{RandSample, WeightedChoice, Weighted, Sample, IndependentSample};
