@@ -85,6 +85,20 @@ pub struct Weighted<T> {
     pub item: T,
 }
 
+//implementation of Clone for Weighted
+impl<T> Clone for Weighted<T> where T:Clone{
+    fn clone(&self) -> Self {
+        Weighted {
+            weight: self.weight.clone(),
+            item: self.item.clone()
+        }
+    }
+    fn clone_from(&mut self, source: &Self) {
+        self.weight = source.weight.clone();
+        self.item = source.item.clone();
+    }
+}
+
 /// A distribution that selects from a finite collection of weighted items.
 ///
 /// Each item has an associated weight that influences how likely it
