@@ -251,8 +251,6 @@ mod imp {
 
     use std::io;
     use std::mem;
-    use std::ops::Drop;
-    use std::os;
     use Rng;
     use self::libc::{DWORD, BYTE, LPCSTR, BOOL};
     use self::libc::types::os::arch::extra::{LONG_PTR};
