@@ -365,6 +365,31 @@ mod tests {
            [50, 51, 52, 53, 54, 55, 56]);
     }
 
+    #[test]
+    fn test_weighted_clone_initialization() {
+        let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
+        let mut clone = initial.clone();
+        assert_eq!(initial.weight, clone.weight);
+        assert_eq!(initial.item, clone.item);
+    }
+
+    #[test] #[should_panic]
+    fn test_weighted_clone_change_weight() {
+        let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
+        let mut clone = initial.clone();
+        clone.weight = 5;
+        assert_eq!(initial.weight, clone.weight);
+    }
+
+    #[test] #[should_panic]
+    fn test_weighted_clone_change_item() {
+        let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
+        let mut clone = initial.clone();
+        clone.item = 5;
+        assert_eq!(initial.item, clone.item);
+
+    }
+
     #[test] #[should_panic]
     fn test_weighted_choice_no_items() {
         WeightedChoice::<isize>::new(&mut []);
