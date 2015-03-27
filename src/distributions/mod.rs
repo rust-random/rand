@@ -78,25 +78,12 @@ impl<Sup> RandSample<Sup> {
 
 /// A value with a particular weight for use with `WeightedChoice`.
 #[derive(Copy)]
+#[derive(Clone)]
 pub struct Weighted<T> {
     /// The numerical weight of this item
     pub weight: u32,
     /// The actual item which is being weighted
     pub item: T,
-}
-
-//implementation of Clone for Weighted
-impl<T> Clone for Weighted<T> where T:Clone{
-    fn clone(&self) -> Self {
-        Weighted {
-            weight: self.weight.clone(),
-            item: self.item.clone()
-        }
-    }
-    fn clone_from(&mut self, source: &Self) {
-        self.weight = source.weight.clone();
-        self.item = source.item.clone();
-    }
 }
 
 /// A distribution that selects from a finite collection of weighted items.
