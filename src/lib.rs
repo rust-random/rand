@@ -943,7 +943,7 @@ mod test {
                        80, 81, 82, 83, 84, 85, 86, 87];
         for &n in lengths.iter() {
             let mut v = repeat(0u8).take(n).collect::<Vec<_>>();
-            r.fill_bytes(v.as_mut_slice());
+            r.fill_bytes(&mut v);
 
             // use this to get nicer error messages.
             for (i, &byte) in v.iter().enumerate() {

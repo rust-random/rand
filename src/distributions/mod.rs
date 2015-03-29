@@ -104,7 +104,7 @@ pub struct Weighted<T> {
 /// let mut items = vec!(Weighted { weight: 2, item: 'a' },
 ///                      Weighted { weight: 4, item: 'b' },
 ///                      Weighted { weight: 1, item: 'c' });
-/// let wc = WeightedChoice::new(items.as_mut_slice());
+/// let wc = WeightedChoice::new(&mut items);
 /// let mut rng = rand::thread_rng();
 /// for _ in 0..16 {
 ///      // on average prints 'a' 4 times, 'b' 8 and 'c' twice.
@@ -308,7 +308,7 @@ mod tests {
         macro_rules! t {
             ($items:expr, $expected:expr) => {{
                 let mut items = $items;
-                let wc = WeightedChoice::new(items.as_mut_slice());
+                let wc = WeightedChoice::new(&mut items);
                 let expected = $expected;
 
                 let mut rng = CountingRng { i: 0 };
@@ -355,7 +355,7 @@ mod tests {
     #[test]
     fn test_weighted_clone_initialization() {
         let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
-        let mut clone = initial.clone();
+        let clone = initial.clone();
         assert_eq!(initial.weight, clone.weight);
         assert_eq!(initial.item, clone.item);
     }
