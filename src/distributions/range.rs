@@ -13,7 +13,7 @@
 // this is surprisingly complicated to be both generic & correct
 
 use std::num::Int;
-use std::num::wrapping::Wrapping as w;
+use std::num::Wrapping as w;
 
 use Rng;
 use distributions::{Sample, IndependentSample};
