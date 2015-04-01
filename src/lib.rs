@@ -235,7 +235,7 @@ use std::marker;
 use std::mem;
 use std::io;
 use std::rc::Rc;
-use std::num::wrapping::Wrapping as w;
+use std::num::Wrapping as w;
 
 pub use os::OsRng;
 
