@@ -10,8 +10,6 @@
 
 //! The exponential distribution.
 
-use std::num::Float;
-
 use {Rng, Rand};
 use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 

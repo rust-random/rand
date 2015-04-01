@@ -14,7 +14,7 @@
 
 use std::slice;
 use std::iter::repeat;
-use std::num::wrapping::Wrapping as w;
+use std::num::Wrapping as w;
 
 use {Rng, SeedableRng, Rand, w32, w64};
 
