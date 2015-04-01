@@ -78,7 +78,6 @@ fn fill(r: &mut Read, mut buf: &mut [u8]) -> io::Result<()> {
 #[cfg(test)]
 mod test {
     use super::ReadRng;
-    use std::num::Int;
     use Rng;
 
     #[test]
