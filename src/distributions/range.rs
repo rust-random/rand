@@ -12,7 +12,6 @@
 
 // this is surprisingly complicated to be both generic & correct
 
-use std::num::Int;
 use std::num::Wrapping as w;
 
 use Rng;
@@ -99,7 +98,7 @@ macro_rules! integer_impl {
 
             fn construct_range(low: $ty, high: $ty) -> Range<$ty> {
                 let range = (w(high as $unsigned) - w(low as $unsigned)).0;
-                let unsigned_max: $unsigned = Int::max_value();
+                let unsigned_max: $unsigned = -1 as $unsigned;
 
                 // this is the largest number that fits into $unsigned
                 // that `range` divides evenly, so, if we've sampled

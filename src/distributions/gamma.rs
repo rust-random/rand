@@ -15,8 +15,6 @@
 use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
 
-use std::num::Float;
-
 use {Rng, Open01};
 use super::normal::StandardNormal;
 use super::{IndependentSample, Sample, Exp};
