@@ -10,7 +10,6 @@
 
 //! The ChaCha random number generator.
 
-use std::num::Int;
 use std::num::Wrapping as w;
 use {Rng, SeedableRng, Rand, w32};
 
