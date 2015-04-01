@@ -10,8 +10,6 @@
 
 //! The normal and derived distributions.
 
-use std::num::Float;
-
 use {Rng, Rand, Open01};
 use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 
