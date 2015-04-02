@@ -388,7 +388,7 @@ mod tests {
     }
     #[test] #[should_panic]
     fn test_weighted_choice_weight_overflows() {
-        let x = !0 / 2; // x + x + 2 is the overflow
+        let x = ::std::u32::MAX / 2; // x + x + 2 is the overflow
         WeightedChoice::new(&mut [Weighted { weight: x, item: 0 },
                                   Weighted { weight: 1, item: 1 },
                                   Weighted { weight: x, item: 2 },

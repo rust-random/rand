@@ -224,9 +224,9 @@
 #![doc(html_logo_url = "http://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "http://www.rust-lang.org/favicon.ico",
        html_root_url = "http://doc.rust-lang.org/rand/")]
-#![feature(core, io, step_by)]
+#![feature(step_by)]
 
-#![cfg_attr(test, feature(test))]
+#![cfg_attr(test, feature(test, core))]
 
 #[cfg(test)] #[macro_use] extern crate log;
 
