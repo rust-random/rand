@@ -68,7 +68,7 @@ fn fill(r: &mut Read, mut buf: &mut [u8]) -> io::Result<()> {
     while buf.len() > 0 {
         match try!(r.read(buf)) {
             0 => return Err(io::Error::new(io::ErrorKind::Other,
-                                           "end of file reached", None)),
+                                           "end of file reached")),
             n => buf = &mut mem::replace(&mut buf, &mut [])[n..],
         }
     }
