@@ -59,6 +59,9 @@ pub struct RandSample<Sup> {
 }
 
 impl<Sup> Copy for RandSample<Sup> {}
+impl<Sup> Clone for RandSample<Sup> {
+    fn clone(&self) -> Self { *self }
+}
 
 impl<Sup: Rand> Sample<Sup> for RandSample<Sup> {
     fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup { self.ind_sample(rng) }
