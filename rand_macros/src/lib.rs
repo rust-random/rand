@@ -67,7 +67,7 @@ pub fn expand_deriving_rand(cx: &mut ExtCtxt,
         ),
         associated_types: Vec::new(),
     };
-    trait_def.expand(cx, mitem, item, |i| push(i))
+    trait_def.expand(cx, mitem, item, &mut |i| push(i))
 }
 
 fn rand_substructure(cx: &mut ExtCtxt, trait_span: Span, substr: &Substructure) -> P<Expr> {
