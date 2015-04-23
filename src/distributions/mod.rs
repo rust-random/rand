@@ -17,7 +17,6 @@
 //! internally. The `IndependentSample` trait is for generating values
 //! that do not need to record state.
 
-use std::num::{Float, Int};
 use std::marker;
 
 use {Rng, Rand};
@@ -130,7 +129,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
         // strictly speaking, this is subsumed by the total weight == 0 case
         assert!(!items.is_empty(), "WeightedChoice::new called with no items");
 
-        let mut running_total = 0;
+        let mut running_total: u32 = 0;
 
         // we convert the list from individual weights to cumulative
         // weights so we can binary search. This *could* drop elements
