@@ -54,6 +54,7 @@
 //!     available, and use `/dev/urandom` fallback if not.  If an application
 //!     does not have `getrandom` and likely to be run soon after first booting,
 //!     or on a system with very few entropy sources, one should consider using
+//!
 //!     `/dev/random` via `ReadRng`.
 //! -   On some systems (e.g. FreeBSD, OpenBSD and Mac OS X) there is no
 //!     difference between the two sources. (Also note that, on some systems
