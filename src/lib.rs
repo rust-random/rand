@@ -19,6 +19,22 @@
 //! See the `distributions` submodule for sampling random numbers from
 //! distributions like normal and exponential.
 //!
+//! # Usage
+//!
+//! This crates is [on crates.io](https://crates.io/crates/rand) and can be
+//! used by adding `rand` to your dependencies in your project's `Cargo.toml`.
+//!
+//! ```toml
+//! [dependencies]
+//! rand = "0.3"
+//! ```
+//! 
+//! and this to your crate root:
+//! 
+//! ```rust
+//! extern crate rand;
+//! ```
+//!
 //! # Thread-local RNG
 //!
 //! There is built-in support for a RNG associated with each thread stored
