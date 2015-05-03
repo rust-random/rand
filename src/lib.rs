@@ -21,16 +21,16 @@
 //!
 //! # Usage
 //!
-//! This crates is [on crates.io](https://crates.io/crates/rand) and can be
-//! used by adding `rand` to your dependencies in your project's `Cargo.toml`.
+//! This crate is [on crates.io](https://crates.io/crates/rand) and can be
+//! used by adding `rand` to the dependencies in your project's `Cargo.toml`.
 //!
 //! ```toml
 //! [dependencies]
 //! rand = "0.3"
 //! ```
-//! 
+//!
 //! and this to your crate root:
-//! 
+//!
 //! ```rust
 //! extern crate rand;
 //! ```
