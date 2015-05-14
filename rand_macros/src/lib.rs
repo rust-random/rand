@@ -13,11 +13,11 @@
 extern crate syntax;
 extern crate rustc;
 
-use syntax::ast::{MetaItem, Item, Expr};
+use syntax::ast::{MetaItem, Expr};
 use syntax::ast;
 use syntax::codemap::Span;
 use syntax::ext::base;
-use syntax::ext::base::ExtCtxt;
+use syntax::ext::base::{ExtCtxt, Annotatable};
 use syntax::ext::build::AstBuilder;
 use syntax::ext::deriving::generic::*;
 use syntax::ext::deriving::generic::ty::*;
@@ -28,7 +28,7 @@ use rustc::plugin::Registry;
 #[plugin_registrar]
 pub fn plugin_registrar(reg: &mut Registry) {
     reg.register_syntax_extension(token::intern("derive_Rand"),
-                                  base::Decorator(Box::new(expand_deriving_rand)));
+                                  base::MultiDecorator(Box::new(expand_deriving_rand)));
 }
 
 
@@ -37,8 +37,8 @@ pub fn plugin_registrar(reg: &mut Registry) {
 pub fn expand_deriving_rand(cx: &mut ExtCtxt,
                             span: Span,
                             mitem: &MetaItem,
-                            item: &Item,
-                            push: &mut FnMut(P<Item>)) {
+                            item: Annotatable,
+                            push: &mut FnMut(Annotatable)) {
     let trait_def = TraitDef {
         span: span,
         attributes: Vec::new(),
@@ -67,7 +67,7 @@ pub fn expand_deriving_rand(cx: &mut ExtCtxt,
         ),
         associated_types: Vec::new(),
     };
-    trait_def.expand(cx, mitem, item, &mut |i| push(i))
+    trait_def.expand(cx, mitem, &item, &mut |i| push(i))
 }
 
 fn rand_substructure(cx: &mut ExtCtxt, trait_span: Span, substr: &Substructure) -> P<Expr> {
