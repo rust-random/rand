@@ -11,7 +11,7 @@
 //! The exponential distribution.
 
 use {Rng, Rand};
-use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
+use distributions::{ziggurat, ziggurat_tables, Distribution};
 
 /// A wrapper around an `f64` to generate Exp(1) random numbers.
 ///
@@ -58,10 +58,10 @@ impl Rand for Exp1 {
 /// # Example
 ///
 /// ```rust
-/// use rand::distributions::{Exp, IndependentSample};
+/// use rand::distributions::{Exp, Distribution};
 ///
 /// let exp = Exp::new(2.0);
-/// let v = exp.ind_sample(&mut rand::thread_rng());
+/// let v = exp.sample(&mut rand::thread_rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
 #[derive(Clone, Copy)]
@@ -79,11 +79,10 @@ impl Exp {
     }
 }
 
-impl Sample<f64> for Exp {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
-impl IndependentSample<f64> for Exp {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
+impl Distribution for Exp {
+    type Output = f64;
+
+    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         let Exp1(n) = rng.gen::<Exp1>();
         n * self.lambda_inverse
     }
@@ -91,16 +90,15 @@ impl IndependentSample<f64> for Exp {
 
 #[cfg(test)]
 mod test {
-    use distributions::{Sample, IndependentSample};
+    use distributions::Distribution;
     use super::Exp;
 
     #[test]
     fn test_exp() {
-        let mut exp = Exp::new(10.0);
+        let exp = Exp::new(10.0);
         let mut rng = ::test::rng();
         for _ in 0..1000 {
             assert!(exp.sample(&mut rng) >= 0.0);
-            assert!(exp.ind_sample(&mut rng) >= 0.0);
         }
     }
     #[test]
@@ -122,12 +120,12 @@ mod bench {
     use self::test::Bencher;
     use std::mem::size_of;
     use super::Exp;
-    use distributions::Sample;
+    use distributions::Distribution;
 
     #[bench]
     fn rand_exp(b: &mut Bencher) {
         let mut rng = ::test::weak_rng();
-        let mut exp = Exp::new(2.71828 * 3.14159);
+        let exp = Exp::new(2.71828 * 3.14159);
 
         b.iter(|| {
             for _ in 0..::RAND_BENCH_N {
