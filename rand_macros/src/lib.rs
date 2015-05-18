@@ -48,6 +48,7 @@ pub fn expand_deriving_rand(cx: &mut ExtCtxt,
         methods: vec!(
             MethodDef {
                 name: "rand",
+                is_unsafe: false,
                 generics: LifetimeBounds {
                     lifetimes: Vec::new(),
                     bounds: vec!(("R",
