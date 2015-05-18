@@ -241,8 +241,6 @@
        html_favicon_url = "http://www.rust-lang.org/favicon.ico",
        html_root_url = "http://doc.rust-lang.org/rand/")]
 
-#![cfg_attr(test, feature(core, test))]
-
 #[cfg(test)] #[macro_use] extern crate log;
 
 use std::cell::RefCell;
@@ -920,7 +918,7 @@ pub fn sample<T, I: Iterator<Item=T>, R: Rng>(rng: &mut R,
 #[cfg(test)]
 mod test {
     use super::{Rng, thread_rng, random, SeedableRng, StdRng, sample};
-    use std::iter::{order, repeat};
+    use std::iter::repeat;
 
     pub struct MyRng<R> { inner: R }
 
@@ -937,16 +935,20 @@ mod test {
         MyRng { inner: ::thread_rng() }
     }
 
-    pub fn weak_rng() -> MyRng<::XorShiftRng> {
-        MyRng { inner: ::weak_rng() }
-    }
-
     struct ConstRng { i: u64 }
     impl Rng for ConstRng {
         fn next_u32(&mut self) -> u32 { self.i as u32 }
         fn next_u64(&mut self) -> u64 { self.i }
 
         // no fill_bytes on purpose
+    }
+
+    pub fn iter_eq<I, J>(i: I, j: J) -> bool
+        where I: Iterator,
+              J: Iterator<Item=I::Item>,
+              I::Item: Eq
+    {
+        i.zip(j).all(|(i, j)| i == j)
     }
 
     #[test]
@@ -1110,8 +1112,8 @@ mod test {
         let s = thread_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
         let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
         let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
-        assert!(order::equals(ra.gen_ascii_chars().take(100),
-                              rb.gen_ascii_chars().take(100)));
+        assert!(iter_eq(ra.gen_ascii_chars().take(100),
+                        rb.gen_ascii_chars().take(100)));
     }
 
     #[test]
@@ -1124,70 +1126,5 @@ mod test {
 
         let string2 = r.gen_ascii_chars().take(100).collect::<String>();
         assert_eq!(string1, string2);
-    }
-}
-
-#[cfg(test)]
-const RAND_BENCH_N: u64 = 100;
-
-#[cfg(test)]
-mod bench {
-    extern crate test;
-    use self::test::{black_box, Bencher};
-    use super::{XorShiftRng, StdRng, IsaacRng, Isaac64Rng, Rng, RAND_BENCH_N};
-    use super::{OsRng, weak_rng};
-    use std::mem::size_of;
-
-    #[bench]
-    fn rand_xorshift(b: &mut Bencher) {
-        let mut rng: XorShiftRng = OsRng::new().unwrap().gen();
-        b.iter(|| {
-            for _ in 0..RAND_BENCH_N {
-                black_box(rng.gen::<usize>());
-            }
-        });
-        b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
-    }
-
-    #[bench]
-    fn rand_isaac(b: &mut Bencher) {
-        let mut rng: IsaacRng = OsRng::new().unwrap().gen();
-        b.iter(|| {
-            for _ in 0..RAND_BENCH_N {
-                black_box(rng.gen::<usize>());
-            }
-        });
-        b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
-    }
-
-    #[bench]
-    fn rand_isaac64(b: &mut Bencher) {
-        let mut rng: Isaac64Rng = OsRng::new().unwrap().gen();
-        b.iter(|| {
-            for _ in 0..RAND_BENCH_N {
-                black_box(rng.gen::<usize>());
-            }
-        });
-        b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
-    }
-
-    #[bench]
-    fn rand_std(b: &mut Bencher) {
-        let mut rng = StdRng::new().unwrap();
-        b.iter(|| {
-            for _ in 0..RAND_BENCH_N {
-                black_box(rng.gen::<usize>());
-            }
-        });
-        b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
-    }
-
-    #[bench]
-    fn rand_shuffle_100(b: &mut Bencher) {
-        let mut rng = weak_rng();
-        let x : &mut [usize] = &mut [1; 100];
-        b.iter(|| {
-            rng.shuffle(x);
-        })
     }
 }
