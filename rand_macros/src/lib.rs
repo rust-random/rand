@@ -37,7 +37,7 @@ pub fn plugin_registrar(reg: &mut Registry) {
 pub fn expand_deriving_rand(cx: &mut ExtCtxt,
                             span: Span,
                             mitem: &MetaItem,
-                            item: Annotatable,
+                            item: &Annotatable,
                             push: &mut FnMut(Annotatable)) {
     let trait_def = TraitDef {
         span: span,
