@@ -170,6 +170,7 @@ mod tests {
     }
     #[test]
     #[should_panic]
+    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_normal_invalid_sd() {
         Normal::new(10.0, -1.0);
     }
@@ -186,6 +187,7 @@ mod tests {
     }
     #[test]
     #[should_panic]
+    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_log_normal_invalid_sd() {
         LogNormal::new(10.0, -1.0);
     }

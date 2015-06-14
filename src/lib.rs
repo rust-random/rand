@@ -992,6 +992,7 @@ mod test {
 
     #[test]
     #[should_panic]
+    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_gen_range_panic_int() {
         let mut r = thread_rng();
         r.gen_range(5, -2);
@@ -999,6 +1000,7 @@ mod test {
 
     #[test]
     #[should_panic]
+    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_gen_range_panic_usize() {
         let mut r = thread_rng();
         r.gen_range(5, 2);
