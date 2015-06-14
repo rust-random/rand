@@ -357,6 +357,7 @@ mod test {
     }
     #[test]
     #[should_panic]
+    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_chi_squared_invalid_dof() {
         ChiSquared::new(-1.0);
     }
