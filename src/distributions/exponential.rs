@@ -15,9 +15,7 @@ use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 
 /// A wrapper around an `f64` to generate Exp(1) random numbers.
 ///
-/// See `Exp` for the general exponential distribution.Note that this
- // has to be unwrapped before use as an `f64` (using either
-/// `*` or `mem::transmute` is safe).
+/// See `Exp` for the general exponential distribution.
 ///
 /// Implemented via the ZIGNOR variant[1] of the Ziggurat method. The
 /// exact description in the paper was adjusted to use tables for the
@@ -27,6 +25,15 @@ use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 /// Generate Normal Random
 /// Samples*](http://www.doornik.com/research/ziggurat.pdf). Nuffield
 /// College, Oxford
+///
+/// # Example
+///
+/// ```rust
+/// use rand::distributions::exponential::Exp1;
+///
+/// let Exp1(x) = rand::random();
+/// println!("{}", x);
+/// ```
 #[derive(Clone, Copy)]
 pub struct Exp1(pub f64);
 

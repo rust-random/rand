@@ -16,9 +16,7 @@ use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 /// A wrapper around an `f64` to generate N(0, 1) random numbers
 /// (a.k.a.  a standard normal, or Gaussian).
 ///
-/// See `Normal` for the general normal distribution. That this has to
-/// be unwrapped before use as an `f64` (using either `*` or
-/// `mem::transmute` is safe).
+/// See `Normal` for the general normal distribution.
 ///
 /// Implemented via the ZIGNOR variant[1] of the Ziggurat method.
 ///
@@ -26,6 +24,15 @@ use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 /// Generate Normal Random
 /// Samples*](http://www.doornik.com/research/ziggurat.pdf). Nuffield
 /// College, Oxford
+///
+/// # Example
+///
+/// ```rust
+/// use rand::distributions::normal::StandardNormal;
+///
+/// let StandardNormal(x) = rand::random();
+/// println!("{}", x);
+/// ```
 #[derive(Clone, Copy)]
 pub struct StandardNormal(pub f64);
 
