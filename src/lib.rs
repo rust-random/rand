@@ -944,11 +944,20 @@ mod test {
     }
 
     pub fn iter_eq<I, J>(i: I, j: J) -> bool
-        where I: Iterator,
-              J: Iterator<Item=I::Item>,
+        where I: IntoIterator,
+              J: IntoIterator<Item=I::Item>,
               I::Item: Eq
     {
-        i.zip(j).all(|(i, j)| i == j)
+        // make sure the iterators have equal length
+        let mut i = i.into_iter();
+        let mut j = j.into_iter();
+        loop {
+            match (i.next(), j.next()) {
+                (Some(ref ei), Some(ref ej)) if ei == ej => { }
+                (None, None) => return true,
+                _ => return false,
+            }
+        }
     }
 
     #[test]
