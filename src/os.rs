@@ -246,15 +246,15 @@ mod imp {
 
 #[cfg(windows)]
 mod imp {
-    extern crate libc;
+    extern crate winapi;
+    extern crate advapi32;
 
     use std::io;
     use std::mem;
+    use std::ptr;
     use Rng;
-    use self::libc::{DWORD, BYTE, LPCSTR, BOOL};
-    use self::libc::types::os::arch::extra::{LONG_PTR};
-
-    type HCRYPTPROV = LONG_PTR;
+    use self::winapi::{CRYPT_SILENT, CRYPT_VERIFYCONTEXT, DWORD, HCRYPTPROV, PROV_RSA_FULL};
+    use self::advapi32::{CryptAcquireContextA, CryptGenRandom, CryptReleaseContext};
 
     /// A random number generator that retrieves randomness straight from
     /// the operating system. Platform sources:
@@ -270,29 +270,12 @@ mod imp {
         hcryptprov: HCRYPTPROV
     }
 
-    const PROV_RSA_FULL: DWORD = 1;
-    const CRYPT_SILENT: DWORD = 64;
-    const CRYPT_VERIFYCONTEXT: DWORD = 0xF0000000;
-
-    #[allow(non_snake_case)]
-    extern "system" {
-        fn CryptAcquireContextA(phProv: *mut HCRYPTPROV,
-                                pszContainer: LPCSTR,
-                                pszProvider: LPCSTR,
-                                dwProvType: DWORD,
-                                dwFlags: DWORD) -> BOOL;
-        fn CryptGenRandom(hProv: HCRYPTPROV,
-                          dwLen: DWORD,
-                          pbBuffer: *mut BYTE) -> BOOL;
-        fn CryptReleaseContext(hProv: HCRYPTPROV, dwFlags: DWORD) -> BOOL;
-    }
-
     impl OsRng {
         /// Create a new `OsRng`.
         pub fn new() -> io::Result<OsRng> {
             let mut hcp = 0;
             let ret = unsafe {
-                CryptAcquireContextA(&mut hcp, 0 as LPCSTR, 0 as LPCSTR,
+                CryptAcquireContextA(&mut hcp, ptr::null(), ptr::null(),
                                      PROV_RSA_FULL,
                                      CRYPT_VERIFYCONTEXT | CRYPT_SILENT)
             };
