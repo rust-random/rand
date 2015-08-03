@@ -13,7 +13,8 @@
 
 pub use self::imp::OsRng;
 
-#[cfg(all(unix, not(target_os = "ios")))]
+#[cfg(all(unix, not(target_os = "ios"),
+          not(target_os = "nacl")))]
 mod imp {
     extern crate libc;
 
@@ -134,6 +135,7 @@ mod imp {
     /// - Windows: calls `CryptGenRandom`, using the default cryptographic
     ///   service provider with the `PROV_RSA_FULL` type.
     /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
+    /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
     ///
     /// This does not block.
     pub struct OsRng {
@@ -198,6 +200,7 @@ mod imp {
     /// - Windows: calls `CryptGenRandom`, using the default cryptographic
     ///   service provider with the `PROV_RSA_FULL` type.
     /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
+    /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
     ///
     /// This does not block.
     pub struct OsRng {
@@ -266,6 +269,7 @@ mod imp {
     /// - Windows: calls `CryptGenRandom`, using the default cryptographic
     ///   service provider with the `PROV_RSA_FULL` type.
     /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
+    /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
     ///
     /// This does not block.
     pub struct OsRng {
@@ -325,6 +329,96 @@ mod imp {
         }
     }
 }
+
+#[cfg(target_os = "nacl")]
+mod imp {
+    extern crate libc;
+
+    use std::io;
+    use std::mem;
+    use Rng;
+
+    /// A random number generator that retrieves randomness straight from
+    /// the operating system. Platform sources:
+    ///
+    /// - Unix-like systems (Linux, Android, Mac OSX): read directly from
+    ///   `/dev/urandom`, or from `getrandom(2)` system call if available.
+    /// - Windows: calls `CryptGenRandom`, using the default cryptographic
+    ///   service provider with the `PROV_RSA_FULL` type.
+    /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
+    /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
+    ///
+    /// This does not block.
+    pub struct OsRng(extern fn(dest: *mut libc::c_void,
+                               bytes: libc::size_t,
+                               read: *mut libc::size_t) -> libc::c_int);
+
+    extern {
+        fn nacl_interface_query(name: *const libc::c_char,
+                                table: *mut libc::c_void,
+                                table_size: libc::size_t) -> libc::size_t;
+    }
+
+    const INTERFACE: &'static [u8] = b"nacl-irt-random-0.1\0";
+
+    #[repr(C)]
+    struct NaClIRTRandom {
+        get_random_bytes: Option<extern fn(dest: *mut libc::c_void,
+                                           bytes: libc::size_t,
+                                           read: *mut libc::size_t) -> libc::c_int>,
+    }
+
+    impl OsRng {
+        /// Create a new `OsRng`.
+        pub fn new() -> io::Result<OsRng> {
+            let mut iface = NaClIRTRandom {
+                get_random_bytes: None,
+            };
+            let result = unsafe {
+                nacl_interface_query(INTERFACE.as_ptr() as *const _,
+                                     mem::transmute(&mut iface),
+                                     mem::size_of::<NaClIRTRandom>() as libc::size_t)
+            };
+            if result != 0 {
+                assert!(iface.get_random_bytes.is_some());
+                let result = OsRng(iface.get_random_bytes.take().unwrap());
+                Ok(result)
+            } else {
+                let error = io::ErrorKind::NotFound;
+                let error = io::Error::new(error, "IRT random interface missing");
+                Err(error)
+            }
+        }
+    }
+
+    impl Rng for OsRng {
+        fn next_u32(&mut self) -> u32 {
+            let mut v = [0u8; 4];
+            self.fill_bytes(&mut v);
+            unsafe { mem::transmute(v) }
+        }
+        fn next_u64(&mut self) -> u64 {
+            let mut v = [0u8; 8];
+            self.fill_bytes(&mut v);
+            unsafe { mem::transmute(v) }
+        }
+        fn fill_bytes(&mut self, v: &mut [u8]) {
+            let mut read = 0;
+            loop {
+                let mut r: libc::size_t = 0;
+                let len = v.len();
+                let error = (self.0)(v[read..].as_mut_ptr() as *mut _,
+                                     (len - read) as libc::size_t,
+                                     &mut r as *mut _);
+                assert!(error == 0, "`get_random_bytes` failed!");
+                read += r as usize;
+
+                if read >= v.len() { break; }
+            }
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod test {
