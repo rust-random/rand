@@ -11,7 +11,34 @@
 //! Interfaces to the operating system provided random number
 //! generators.
 
-pub use self::imp::OsRng;
+use std::io;
+use Rng;
+
+/// A random number generator that retrieves randomness straight from
+/// the operating system. Platform sources:
+///
+/// - Unix-like systems (Linux, Android, Mac OSX): read directly from
+///   `/dev/urandom`, or from `getrandom(2)` system call if available.
+/// - Windows: calls `CryptGenRandom`, using the default cryptographic
+///   service provider with the `PROV_RSA_FULL` type.
+/// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
+/// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
+///
+/// This does not block.
+pub struct OsRng(imp::OsRng);
+
+impl OsRng {
+    /// Create a new `OsRng`.
+    pub fn new() -> io::Result<OsRng> {
+        imp::OsRng::new().map(OsRng)
+    }
+}
+
+impl Rng for OsRng {
+    fn next_u32(&mut self) -> u32 { self.0.next_u32() }
+    fn next_u64(&mut self) -> u64 { self.0.next_u64() }
+    fn fill_bytes(&mut self, v: &mut [u8]) { self.0.fill_bytes(v) }
+}
 
 #[cfg(all(unix, not(target_os = "ios"),
           not(target_os = "nacl")))]
@@ -127,17 +154,6 @@ mod imp {
                       target_arch = "powerpc"))))]
     fn is_getrandom_available() -> bool { false }
 
-    /// A random number generator that retrieves randomness straight from
-    /// the operating system. Platform sources:
-    ///
-    /// - Unix-like systems (Linux, Android, Mac OSX): read directly from
-    ///   `/dev/urandom`, or from `getrandom(2)` system call if available.
-    /// - Windows: calls `CryptGenRandom`, using the default cryptographic
-    ///   service provider with the `PROV_RSA_FULL` type.
-    /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
-    /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
-    ///
-    /// This does not block.
     pub struct OsRng {
         inner: OsRngInner,
     }
@@ -148,7 +164,6 @@ mod imp {
     }
 
     impl OsRng {
-        /// Create a new `OsRng`.
         pub fn new() -> io::Result<OsRng> {
             if is_getrandom_available() {
                 return Ok(OsRng { inner: OsGetrandomRng });
@@ -192,38 +207,22 @@ mod imp {
     use Rng;
     use self::libc::{c_int, size_t};
 
-    /// A random number generator that retrieves randomness straight from
-    /// the operating system. Platform sources:
-    ///
-    /// - Unix-like systems (Linux, Android, Mac OSX): read directly from
-    ///   `/dev/urandom`, or from `getrandom(2)` system call if available.
-    /// - Windows: calls `CryptGenRandom`, using the default cryptographic
-    ///   service provider with the `PROV_RSA_FULL` type.
-    /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
-    /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
-    ///
-    /// This does not block.
-    pub struct OsRng {
-        // dummy field to ensure that this struct cannot be constructed outside of this module
-        _dummy: (),
-    }
+    pub struct OsRng;
 
-    #[repr(C)]
-    struct SecRandom;
+    enum SecRandom {}
 
     #[allow(non_upper_case_globals)]
     const kSecRandomDefault: *const SecRandom = 0 as *const SecRandom;
 
     #[link(name = "Security", kind = "framework")]
-    extern "C" {
+    extern {
         fn SecRandomCopyBytes(rnd: *const SecRandom,
                               count: size_t, bytes: *mut u8) -> c_int;
     }
 
     impl OsRng {
-        /// Create a new `OsRng`.
         pub fn new() -> io::Result<OsRng> {
-            Ok(OsRng { _dummy: () })
+            Ok(OsRng)
         }
     }
 
@@ -261,23 +260,11 @@ mod imp {
     use self::winapi::{CRYPT_SILENT, CRYPT_VERIFYCONTEXT, DWORD, HCRYPTPROV, PROV_RSA_FULL};
     use self::advapi32::{CryptAcquireContextA, CryptGenRandom, CryptReleaseContext};
 
-    /// A random number generator that retrieves randomness straight from
-    /// the operating system. Platform sources:
-    ///
-    /// - Unix-like systems (Linux, Android, Mac OSX): read directly from
-    ///   `/dev/urandom`, or from `getrandom(2)` system call if available.
-    /// - Windows: calls `CryptGenRandom`, using the default cryptographic
-    ///   service provider with the `PROV_RSA_FULL` type.
-    /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
-    /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
-    ///
-    /// This does not block.
     pub struct OsRng {
         hcryptprov: HCRYPTPROV
     }
 
     impl OsRng {
-        /// Create a new `OsRng`.
         pub fn new() -> io::Result<OsRng> {
             let mut hcp = 0;
             let ret = unsafe {
@@ -338,17 +325,6 @@ mod imp {
     use std::mem;
     use Rng;
 
-    /// A random number generator that retrieves randomness straight from
-    /// the operating system. Platform sources:
-    ///
-    /// - Unix-like systems (Linux, Android, Mac OSX): read directly from
-    ///   `/dev/urandom`, or from `getrandom(2)` system call if available.
-    /// - Windows: calls `CryptGenRandom`, using the default cryptographic
-    ///   service provider with the `PROV_RSA_FULL` type.
-    /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
-    /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
-    ///
-    /// This does not block.
     pub struct OsRng(extern fn(dest: *mut libc::c_void,
                                bytes: libc::size_t,
                                read: *mut libc::size_t) -> libc::c_int);
@@ -369,7 +345,6 @@ mod imp {
     }
 
     impl OsRng {
-        /// Create a new `OsRng`.
         pub fn new() -> io::Result<OsRng> {
             let mut iface = NaClIRTRandom {
                 get_random_bytes: None,
