@@ -284,7 +284,7 @@ pub trait Rand : Sized {
 }
 
 /// A random number generator.
-pub trait Rng : Sized {
+pub trait Rng {
     /// Return the next random u32.
     ///
     /// This rarely needs to be called directly, prefer `r.gen()` to
@@ -406,7 +406,7 @@ pub trait Rng : Sized {
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
     #[inline(always)]
-    fn gen<T: Rand>(&mut self) -> T {
+    fn gen<T: Rand>(&mut self) -> T where Self: Sized {
         Rand::rand(self)
     }
 
@@ -424,7 +424,7 @@ pub trait Rng : Sized {
     /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
-    fn gen_iter<'a, T: Rand>(&'a mut self) -> Generator<'a, T, Self> {
+    fn gen_iter<'a, T: Rand>(&'a mut self) -> Generator<'a, T, Self> where Self: Sized {
         Generator { rng: self, _marker: marker::PhantomData }
     }
 
@@ -451,7 +451,7 @@ pub trait Rng : Sized {
     /// let m: f64 = rng.gen_range(-40.0f64, 1.3e5f64);
     /// println!("{}", m);
     /// ```
-    fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T {
+    fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T where Self: Sized {
         assert!(low < high, "Rng.gen_range called with low >= high");
         Range::new(low, high).ind_sample(self)
     }
@@ -466,7 +466,7 @@ pub trait Rng : Sized {
     /// let mut rng = thread_rng();
     /// println!("{}", rng.gen_weighted_bool(3));
     /// ```
-    fn gen_weighted_bool(&mut self, n: u32) -> bool {
+    fn gen_weighted_bool(&mut self, n: u32) -> bool where Self: Sized {
         n <= 1 || self.gen_range(0, n) == 0
     }
 
@@ -480,7 +480,7 @@ pub trait Rng : Sized {
     /// let s: String = thread_rng().gen_ascii_chars().take(10).collect();
     /// println!("{}", s);
     /// ```
-    fn gen_ascii_chars<'a>(&'a mut self) -> AsciiGenerator<'a, Self> {
+    fn gen_ascii_chars<'a>(&'a mut self) -> AsciiGenerator<'a, Self> where Self: Sized {
         AsciiGenerator { rng: self }
     }
 
@@ -498,7 +498,7 @@ pub trait Rng : Sized {
     /// println!("{:?}", rng.choose(&choices));
     /// assert_eq!(rng.choose(&choices[..0]), None);
     /// ```
-    fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
+    fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> where Self: Sized {
         if values.is_empty() {
             None
         } else {
@@ -520,7 +520,7 @@ pub trait Rng : Sized {
     /// rng.shuffle(&mut y);
     /// println!("{:?}", y);
     /// ```
-    fn shuffle<T>(&mut self, values: &mut [T]) {
+    fn shuffle<T>(&mut self, values: &mut [T]) where Self: Sized {
         let mut i = values.len();
         while i >= 2 {
             // invariant: elements with index >= i have been locked in place.
@@ -528,6 +528,50 @@ pub trait Rng : Sized {
             // lock element i in place.
             values.swap(i, self.gen_range(0, i + 1));
         }
+    }
+}
+
+impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
+    fn next_u32(&mut self) -> u32 {
+        (**self).next_u32()
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        (**self).next_u64()
+    }
+
+    fn next_f32(&mut self) -> f32 {
+        (**self).next_f32()
+    }
+
+    fn next_f64(&mut self) -> f64 {
+        (**self).next_f64()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        (**self).fill_bytes(dest)
+    }
+}
+
+impl<R: ?Sized> Rng for Box<R> where R: Rng {
+    fn next_u32(&mut self) -> u32 {
+        (**self).next_u32()
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        (**self).next_u64()
+    }
+
+    fn next_f32(&mut self) -> f32 {
+        (**self).next_f32()
+    }
+
+    fn next_f64(&mut self) -> f64 {
+        (**self).next_f64()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        (**self).fill_bytes(dest)
     }
 }
 
