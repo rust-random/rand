@@ -1131,6 +1131,31 @@ mod test {
     }
 
     #[test]
+    fn test_rng_trait_object() {
+        let mut rng = thread_rng();
+        {
+            let mut r = &mut rng as &mut Rng;
+            r.next_u32();
+            (&mut r).gen::<i32>();
+            let mut v = [1, 1, 1];
+            (&mut r).shuffle(&mut v);
+            let b: &[_] = &[1, 1, 1];
+            assert_eq!(v, b);
+            assert_eq!((&mut r).gen_range(0, 1), 0);
+        }
+        {
+            let mut r = Box::new(rng) as Box<Rng>;
+            r.next_u32();
+            r.gen::<i32>();
+            let mut v = [1, 1, 1];
+            r.shuffle(&mut v);
+            let b: &[_] = &[1, 1, 1];
+            assert_eq!(v, b);
+            assert_eq!(r.gen_range(0, 1), 0);
+        }
+    }
+
+    #[test]
     fn test_random() {
         // not sure how to test this aside from just getting some values
         let _n : usize = random();
