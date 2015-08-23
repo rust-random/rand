@@ -952,8 +952,8 @@ pub fn sample<T, I: Iterator<Item=T>, R: Rng>(rng: &mut R,
     let mut reservoir: Vec<T> = iter.by_ref().take(amount).collect();
     for (i, elem) in iter.enumerate() {
         let k = rng.gen_range(0, i + 1 + amount);
-        if k < amount {
-            reservoir[k] = elem;
+        if let Some(spot) = reservoir.get_mut(k) {
+            *spot = elem;
         }
     }
     return reservoir;
