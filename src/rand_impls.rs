@@ -200,8 +200,8 @@ tuple_impl!{A, B, C, D, E, F, G, H, I, J, K}
 tuple_impl!{A, B, C, D, E, F, G, H, I, J, K, L}
 
 macro_rules! array_impl {
-    {$n:expr, $t:ident $($ts:ident)*} => {
-        array_impl!{($n - 1), $($ts)*}
+    {$n:expr, $t:ident, $($ts:ident,)*} => {
+        array_impl!{($n - 1), $($ts,)*}
 
         impl<T> Rand for [T; $n] where T: Rand {
             #[inline]
@@ -217,7 +217,7 @@ macro_rules! array_impl {
     };
 }
 
-array_impl!{32, T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T}
+array_impl!{32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
 
 impl<T:Rand> Rand for Option<T> {
     #[inline]
