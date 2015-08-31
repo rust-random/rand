@@ -199,6 +199,26 @@ tuple_impl!{A, B, C, D, E, F, G, H, I, J}
 tuple_impl!{A, B, C, D, E, F, G, H, I, J, K}
 tuple_impl!{A, B, C, D, E, F, G, H, I, J, K, L}
 
+macro_rules! array_impl {
+    {$n:expr, $t:ident, $($ts:ident,)*} => {
+        array_impl!{($n - 1), $($ts,)*}
+
+        impl<T> Rand for [T; $n] where T: Rand {
+            #[inline]
+            fn rand<R: Rng>(_rng: &mut R) -> [T; $n] {
+                [_rng.gen::<$t>(), $(_rng.gen::<$ts>()),*]
+            }
+        }
+    };
+    {$n:expr,} => {
+        impl<T> Rand for [T; $n] {
+            fn rand<R: Rng>(_rng: &mut R) -> [T; $n] { [] }
+        }
+    };
+}
+
+array_impl!{32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
+
 impl<T:Rand> Rand for Option<T> {
     #[inline]
     fn rand<R: Rng>(rng: &mut R) -> Option<T> {
