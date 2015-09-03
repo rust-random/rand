@@ -11,7 +11,7 @@ homepage = "https://github.com/rust-lang/rand"
 description = """
 Random number generators and other randomness functionality.
 """
-keywords = ["random"]
+keywords = ["random", "rng", "rand"]
 
 [dependencies]
 libc = "0.1.1"
