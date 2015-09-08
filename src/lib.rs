@@ -946,17 +946,22 @@ pub fn random<T: Rand>() -> T {
 /// let sample = sample(&mut rng, 1..100, 5);
 /// println!("{:?}", sample);
 /// ```
-pub fn sample<T, I: Iterator<Item=T>, R: Rng>(rng: &mut R,
-                                         mut iter: I,
-                                         amount: usize) -> Vec<T> {
+pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
+    where I: IntoIterator<Item=T>,
+          R: Rng,
+{
+    let mut iter = iterable.into_iter();
     let mut reservoir: Vec<T> = iter.by_ref().take(amount).collect();
-    for (i, elem) in iter.enumerate() {
-        let k = rng.gen_range(0, i + 1 + amount);
-        if let Some(spot) = reservoir.get_mut(k) {
-            *spot = elem;
+    // continue unless the iterator was exhausted
+    if reservoir.len() == amount {
+        for (i, elem) in iter.enumerate() {
+            let k = rng.gen_range(0, i + 1 + amount);
+            if let Some(spot) = reservoir.get_mut(k) {
+                *spot = elem;
+            }
         }
     }
-    return reservoir;
+    reservoir
 }
 
 #[cfg(test)]
