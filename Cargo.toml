@@ -16,6 +16,7 @@ keywords = ["random"]
 [dependencies]
 log = "0.3.0"
 libc = "0.1.1"
+num = "0.1.27"
 
 [dev-dependencies.rand_macros]
 path = "rand_macros"
