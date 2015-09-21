@@ -6,7 +6,7 @@ A Rust library for random number generators and other randomness functionality.
 [![Build Status](https://travis-ci.org/rust-lang/rand.svg?branch=master)](https://travis-ci.org/rust-lang/rand)
 [![Build status](https://ci.appveyor.com/api/projects/status/rm5c9o33k3jhchbw?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
 
-[Documentation](http://doc.rust-lang.org/rand)
+[Documentation](https://doc.rust-lang.org/rand)
 
 ## Usage
 
