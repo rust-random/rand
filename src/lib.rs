@@ -305,6 +305,21 @@ pub trait Rng {
     /// Return the next random f32 selected from the half-open
     /// interval `[0, 1)`.
     ///
+    /// This uses a technique described by Saito and Matsumoto at
+    /// MCQMC'08. Given that the IEEE floating point numbers are
+    /// uniformly distributed over [1,2), we generate a number in
+    /// this range and then offset it onto the range [0,1). Our
+    /// choice of bits (masking v. shifting) is arbitrary and
+    /// should be immaterial for high quality generators. For low
+    /// quality generators (ex. LCG), prefer bitshifting due to
+    /// correlation between sequential low order bits.
+    ///
+    /// See:
+    /// A PRNG specialized in double precision floating point numbers using
+    /// an affine transition
+    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf
+    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf
+    ///
     /// By default this is implemented in terms of `next_u32`, but a
     /// random number generator which can generate numbers satisfying
     /// the requirements directly can overload this for performance.
@@ -313,15 +328,11 @@ pub trait Rng {
     /// See `Closed01` for the closed interval `[0,1]`, and
     /// `Open01` for the open interval `(0,1)`.
     fn next_f32(&mut self) -> f32 {
-        const MANTISSA_BITS: u32 = 24;
-        const IGNORED_BITS: u32 = 8;
-        const SCALE: f32 = (1u64 << MANTISSA_BITS) as f32;
-
-        // using any more than `MANTISSA_BITS` bits will
-        // cause (e.g.) 0xffff_ffff to correspond to 1
-        // exactly, so we need to drop some (8 for f32, 11
-        // for f64) to guarantee the open end.
-        (self.next_u32() >> IGNORED_BITS) as f32 / SCALE
+        const UPPER_MASK: u32 = 0x3F800000;
+        const LOWER_MASK: u32 = 0x7FFFFF;
+        let tmp = UPPER_MASK | (self.next_u32() & LOWER_MASK);
+        let result: f32 = unsafe { mem::transmute(tmp) };
+        result - 1.0
     }
 
     /// Return the next random f64 selected from the half-open
@@ -335,11 +346,11 @@ pub trait Rng {
     /// See `Closed01` for the closed interval `[0,1]`, and
     /// `Open01` for the open interval `(0,1)`.
     fn next_f64(&mut self) -> f64 {
-        const MANTISSA_BITS: u32 = 53;
-        const IGNORED_BITS: u32 = 11;
-        const SCALE: f64 = (1u64 << MANTISSA_BITS) as f64;
-
-        (self.next_u64() >> IGNORED_BITS) as f64 / SCALE
+        const UPPER_MASK: u64 = 0x3FF0000000000000;
+        const LOWER_MASK: u64 = 0xFFFFFFFFFFFFF;
+        let tmp = UPPER_MASK | (self.next_u64() & LOWER_MASK);
+        let result: f64 = unsafe { mem::transmute(tmp) };
+        result - 1.0
     }
 
     /// Fill `dest` with random data.
