@@ -11,7 +11,7 @@
 #![feature(rustc_private, plugin_registrar)]
 
 extern crate syntax;
-extern crate rustc;
+extern crate rustc_plugin;
 
 use syntax::ast::{MetaItem, Expr};
 use syntax::ast;
@@ -23,7 +23,7 @@ use syntax::ext::deriving::generic::*;
 use syntax::ext::deriving::generic::ty::*;
 use syntax::parse::token;
 use syntax::ptr::P;
-use rustc::plugin::Registry;
+use rustc_plugin::Registry;
 
 #[plugin_registrar]
 pub fn plugin_registrar(reg: &mut Registry) {
