@@ -11,6 +11,7 @@
 #![feature(rustc_private, plugin_registrar)]
 
 extern crate syntax;
+extern crate syntax_ext;
 extern crate rustc_plugin;
 
 use syntax::ast::{MetaItem, Expr};
@@ -19,8 +20,8 @@ use syntax::codemap::Span;
 use syntax::ext::base;
 use syntax::ext::base::{ExtCtxt, Annotatable};
 use syntax::ext::build::AstBuilder;
-use syntax::ext::deriving::generic::*;
-use syntax::ext::deriving::generic::ty::*;
+use syntax_ext::deriving::generic::*;
+use syntax_ext::deriving::generic::ty::*;
 use syntax::parse::token;
 use syntax::ptr::P;
 use rustc_plugin::Registry;
