@@ -250,15 +250,33 @@ mod imp {
 
 #[cfg(windows)]
 mod imp {
-    extern crate winapi;
-    extern crate advapi32;
-
     use std::io;
     use std::mem;
     use std::ptr;
     use Rng;
-    use self::winapi::{CRYPT_SILENT, CRYPT_VERIFYCONTEXT, DWORD, HCRYPTPROV, PROV_RSA_FULL};
-    use self::advapi32::{CryptAcquireContextA, CryptGenRandom, CryptReleaseContext};
+
+    type BOOL = i32;
+    type LPCSTR = *const i8;
+    type DWORD = u32;
+    type HCRYPTPROV = usize;
+    type BYTE = u8;
+
+    const PROV_RSA_FULL: DWORD = 1;
+    const CRYPT_SILENT: DWORD = 0x00000040;
+    const CRYPT_VERIFYCONTEXT: DWORD = 0xF0000000;
+
+    #[link(name = "advapi32")]
+    extern "system" {
+        fn CryptAcquireContextA(phProv: *mut HCRYPTPROV,
+                                szContainer: LPCSTR,
+                                szProvider: LPCSTR,
+                                dwProvType: DWORD,
+                                dwFlags: DWORD) -> BOOL;
+        fn CryptGenRandom(hProv: HCRYPTPROV,
+                          dwLen: DWORD,
+                          pbBuffer: *mut BYTE) -> BOOL;
+        fn CryptReleaseContext(hProv: HCRYPTPROV, dwFlags: DWORD) -> BOOL;
+    }
 
     pub struct OsRng {
         hcryptprov: HCRYPTPROV
