@@ -311,13 +311,17 @@ mod imp {
             unsafe { mem::transmute(v) }
         }
         fn fill_bytes(&mut self, v: &mut [u8]) {
-            let ret = unsafe {
-                CryptGenRandom(self.hcryptprov, v.len() as DWORD,
-                               v.as_mut_ptr())
-            };
-            if ret == 0 {
-                panic!("couldn't generate random bytes: {}",
-                       io::Error::last_os_error());
+            // CryptGenRandom takes a DWORD (u32) for the length so we need to
+            // split up the buffer.
+            for slice in v.chunks_mut(<DWORD>::max_value() as usize) {
+                let ret = unsafe {
+                    CryptGenRandom(self.hcryptprov, slice.len() as DWORD,
+                                   slice.as_mut_ptr())
+                };
+                if ret == 0 {
+                    panic!("couldn't generate random bytes: {}",
+                           io::Error::last_os_error());
+                }
             }
         }
     }
