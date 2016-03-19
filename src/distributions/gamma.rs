@@ -97,6 +97,7 @@ impl Gamma {
     /// distribution.
     ///
     /// Panics if `shape <= 0` or `scale <= 0`.
+    #[inline]
     pub fn new(shape: f64, scale: f64) -> Gamma {
         assert!(shape > 0.0, "Gamma::new called with shape <= 0");
         assert!(scale > 0.0, "Gamma::new called with scale <= 0");
