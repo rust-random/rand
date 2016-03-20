@@ -80,6 +80,7 @@ pub struct Exp {
 impl Exp {
     /// Construct a new `Exp` with the given shape parameter
     /// `lambda`. Panics if `lambda <= 0`.
+    #[inline]
     pub fn new(lambda: f64) -> Exp {
         assert!(lambda > 0.0, "Exp::new called with `lambda` <= 0");
         Exp { lambda_inverse: 1.0 / lambda }
