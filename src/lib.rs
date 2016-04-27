@@ -517,6 +517,18 @@ pub trait Rng {
         }
     }
 
+    /// Return a mutable pointer to a random element from `values`.
+    ///
+    /// Return `None` if `values` is empty.
+    fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> where Self: Sized {
+        if values.is_empty() {
+            None
+        } else {
+            let len = values.len();
+            Some(&mut values[self.gen_range(0, len)])
+        }
+    }
+
     /// Shuffle a mutable slice in place.
     ///
     /// # Example
