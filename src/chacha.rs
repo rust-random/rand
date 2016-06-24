@@ -95,6 +95,7 @@ impl ChaChaRng {
     /// Since this equivalent to a RNG with a fixed seed, repeated executions
     /// of an unseeded RNG will produce the same result. This code sample will
     /// consistently produce:
+    ///
     /// - 2917185654
     /// - 2419978656
     pub fn new_unseeded() -> ChaChaRng {
@@ -114,7 +115,7 @@ impl ChaChaRng {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use rand::{Rng, ChaChaRng};
     ///
     /// let mut ra = ChaChaRng::new_unseeded();
