@@ -363,7 +363,6 @@ mod tests {
     }
 
     #[test] #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_weighted_clone_change_weight() {
         let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
         let mut clone = initial.clone();
@@ -372,7 +371,6 @@ mod tests {
     }
 
     #[test] #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_weighted_clone_change_item() {
         let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
         let mut clone = initial.clone();
@@ -382,18 +380,15 @@ mod tests {
     }
 
     #[test] #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_weighted_choice_no_items() {
         WeightedChoice::<isize>::new(&mut []);
     }
     #[test] #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_weighted_choice_zero_weight() {
         WeightedChoice::new(&mut [Weighted { weight: 0, item: 0},
                                   Weighted { weight: 0, item: 1}]);
     }
     #[test] #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_weighted_choice_weight_overflows() {
         let x = ::std::u32::MAX / 2; // x + x + 2 is the overflow
         WeightedChoice::new(&mut [Weighted { weight: x, item: 0 },

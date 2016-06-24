@@ -167,13 +167,11 @@ mod tests {
     use super::Range as Range;
 
     #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     #[test]
     fn test_range_bad_limits_equal() {
         Range::new(10, 10);
     }
     #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     #[test]
     fn test_range_bad_limits_flipped() {
         Range::new(10, 5);
