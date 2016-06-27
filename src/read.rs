@@ -114,7 +114,6 @@ mod test {
 
     #[test]
     #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_reader_rng_insufficient_bytes() {
         let mut rng = ReadRng::new(&[][..]);
         let mut v = [0u8; 3];
