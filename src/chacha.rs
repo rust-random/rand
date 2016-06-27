@@ -81,6 +81,23 @@ impl ChaChaRng {
 
     /// Create an ChaCha random number generator using the default
     /// fixed key of 8 zero words.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rand::{Rng, ChaChaRng};
+    ///
+    /// let mut ra = ChaChaRng::new_unseeded();
+    /// println!("{:?}", ra.next_u32());
+    /// println!("{:?}", ra.next_u32());
+    /// ```
+    ///
+    /// Since this equivalent to a RNG with a fixed seed, repeated executions
+    /// of an unseeded RNG will produce the same result. This code sample will
+    /// consistently produce:
+    ///
+    /// - 2917185654
+    /// - 2419978656
     pub fn new_unseeded() -> ChaChaRng {
         let mut rng = EMPTY;
         rng.init(&[0; KEY_WORDS]);
@@ -95,6 +112,17 @@ impl ChaChaRng {
     /// users wishing to obtain the conventional ChaCha pseudorandom stream
     /// associated with a particular nonce can call this function with
     /// arguments `0, desired_nonce`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rand::{Rng, ChaChaRng};
+    ///
+    /// let mut ra = ChaChaRng::new_unseeded();
+    /// ra.set_counter(0u64, 1234567890u64);
+    /// println!("{:?}", ra.next_u32());
+    /// println!("{:?}", ra.next_u32());
+    /// ```
     pub fn set_counter(&mut self, counter_low: u64, counter_high: u64) {
         self.state[12] = w((counter_low >>  0) as u32);
         self.state[13] = w((counter_low >> 32) as u32);
