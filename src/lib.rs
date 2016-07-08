@@ -600,7 +600,10 @@ impl<R: ?Sized> Rng for Box<R> where R: Rng {
 
 /// Iterator which will generate a stream of random items.
 ///
-/// This iterator is created via the `gen_iter` method on `Rng`.
+/// This iterator is created via the [`gen_iter`] method on [`Rng`].
+///
+/// [`gen_iter`]: trait.Rng.html#method.gen_iter
+/// [`Rng`]: trait.Rng.html
 pub struct Generator<'a, T, R:'a> {
     rng: &'a mut R,
     _marker: marker::PhantomData<fn() -> T>,
@@ -616,7 +619,10 @@ impl<'a, T: Rand, R: Rng> Iterator for Generator<'a, T, R> {
 
 /// Iterator which will continuously generate random ascii characters.
 ///
-/// This iterator is created via the `gen_ascii_chars` method on `Rng`.
+/// This iterator is created via the [`gen_ascii_chars`] method on [`Rng`].
+///
+/// [`gen_ascii_chars`]: trait.Rng.html#method.gen_ascii_chars
+/// [`Rng`]: trait.Rng.html
 pub struct AsciiGenerator<'a, R:'a> {
     rng: &'a mut R,
 }
