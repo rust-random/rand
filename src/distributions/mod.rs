@@ -17,19 +17,19 @@
 //! internally. The `IndependentSample` trait is for generating values
 //! that do not need to record state.
 
-use std::marker;
+use core::marker;
 
 use {Rng, Rand};
 
 pub use self::range::Range;
-pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
-pub use self::normal::{Normal, LogNormal};
-pub use self::exponential::Exp;
+#[cfg(not(feature="no_std"))] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
+#[cfg(not(feature="no_std"))] pub use self::normal::{Normal, LogNormal};
+#[cfg(not(feature="no_std"))] pub use self::exponential::Exp;
 
 pub mod range;
-pub mod gamma;
-pub mod normal;
-pub mod exponential;
+#[cfg(not(feature="no_std"))] pub mod gamma;
+#[cfg(not(feature="no_std"))] pub mod normal;
+#[cfg(not(feature="no_std"))] pub mod exponential;
 
 /// Types that can be used to create a random instance of `Support`.
 pub trait Sample<Support> {
@@ -201,7 +201,7 @@ impl<'a, T: Clone> IndependentSample<T> for WeightedChoice<'a, T> {
     }
 }
 
-mod ziggurat_tables;
+#[cfg(not(feature="no_std"))] mod ziggurat_tables;
 
 /// Sample a random number using the Ziggurat method (specifically the
 /// ZIGNOR variant from Doornik 2005). Most of the arguments are
@@ -218,6 +218,7 @@ mod ziggurat_tables;
 
 // the perf improvement (25-50%) is definitely worth the extra code
 // size from force-inlining.
+#[cfg(not(feature="no_std"))]
 #[inline(always)]
 fn ziggurat<R: Rng, P, Z>(
             rng: &mut R,

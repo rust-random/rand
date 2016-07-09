@@ -14,7 +14,12 @@ Random number generators and other randomness functionality.
 keywords = ["random", "rng"]
 
 [dependencies]
-libc = "0.2"
+libc = { version = "0.2", optional = true }
+core_io = { version = "0.0", optional = true }
+
+[features]
+default = ["libc"]
+no_std = ["core_io"]
 
 [dev-dependencies]
 log = "0.3.0"

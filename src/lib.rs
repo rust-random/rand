@@ -241,16 +241,26 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://doc.rust-lang.org/rand/")]
 
+#![cfg_attr(feature="no_std",no_std)]
+#![cfg_attr(feature="no_std",feature(alloc,collections))]
+
 #[cfg(test)] #[macro_use] extern crate log;
 
-use std::cell::RefCell;
-use std::marker;
-use std::mem;
-use std::io;
-use std::rc::Rc;
-use std::num::Wrapping as w;
+#[cfg(not(feature="no_std"))] extern crate core;
+#[cfg(feature="no_std")] extern crate core_io as io;
+#[cfg(feature="no_std")] extern crate alloc;
+#[cfg(feature="no_std")] extern crate collections;
 
-pub use os::OsRng;
+#[cfg(not(feature="no_std"))] use core::cell::RefCell;
+use core::marker;
+use core::mem;
+#[cfg(not(feature="no_std"))] use std::io;
+#[cfg(not(feature="no_std"))] use std::rc::Rc;
+use core::num::Wrapping as w;
+#[cfg(feature="no_std")] use alloc::boxed::Box;
+#[cfg(feature="no_std")] use collections::vec::Vec;
+
+#[cfg(not(feature="no_std"))] pub use os::OsRng;
 
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
@@ -268,7 +278,7 @@ pub mod isaac;
 pub mod chacha;
 pub mod reseeding;
 mod rand_impls;
-pub mod os;
+#[cfg(not(feature="no_std"))] pub mod os;
 pub mod read;
 
 #[allow(bad_style)]
@@ -810,6 +820,7 @@ impl StdRng {
     ///
     /// Reading the randomness from the OS may fail, and any error is
     /// propagated via the `io::Result` return value.
+    #[cfg(not(feature="no_std"))]
     pub fn new() -> io::Result<StdRng> {
         OsRng::new().map(|mut r| StdRng { rng: r.gen() })
     }
@@ -848,6 +859,7 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 ///
 /// This will read randomness from the operating system to seed the
 /// generator.
+#[cfg(not(feature="no_std"))]
 pub fn weak_rng() -> XorShiftRng {
     match OsRng::new() {
         Ok(mut r) => r.gen(),
@@ -856,8 +868,10 @@ pub fn weak_rng() -> XorShiftRng {
 }
 
 /// Controls how the thread-local RNG is reseeded.
+#[cfg(not(feature="no_std"))]
 struct ThreadRngReseeder;
 
+#[cfg(not(feature="no_std"))]
 impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
     fn reseed(&mut self, rng: &mut StdRng) {
         *rng = match StdRng::new() {
@@ -866,11 +880,14 @@ impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
         }
     }
 }
+#[cfg(not(feature="no_std"))]
 const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
+#[cfg(not(feature="no_std"))]
 type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
 
 /// The thread-local RNG.
 #[derive(Clone)]
+#[cfg(not(feature="no_std"))]
 pub struct ThreadRng {
     rng: Rc<RefCell<ThreadRngInner>>,
 }
@@ -886,6 +903,7 @@ pub struct ThreadRng {
 /// if the operating system random number generator is rigged to give
 /// the same sequence always. If absolute consistency is required,
 /// explicitly select an RNG, e.g. `IsaacRng` or `Isaac64Rng`.
+#[cfg(not(feature="no_std"))]
 pub fn thread_rng() -> ThreadRng {
     // used to make space in TLS for a random number generator
     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
@@ -902,6 +920,7 @@ pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
 }
 
+#[cfg(not(feature="no_std"))]
 impl Rng for ThreadRng {
     fn next_u32(&mut self) -> u32 {
         self.rng.borrow_mut().next_u32()
@@ -959,6 +978,7 @@ impl Rng for ThreadRng {
 ///     *x = rng.gen();
 /// }
 /// ```
+#[cfg(not(feature="no_std"))]
 #[inline]
 pub fn random<T: Rand>() -> T {
     thread_rng().gen()

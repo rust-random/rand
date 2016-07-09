@@ -10,8 +10,9 @@
 
 //! A wrapper around any Read to treat it as an RNG.
 
-use std::io::{self, Read};
-use std::mem;
+#[cfg(not(feature="no_std"))] use std::io::{self, Read};
+#[cfg(feature="no_std")] use io::{self, Read};
+use core::mem;
 use Rng;
 
 /// An RNG that reads random bytes straight from a `Read`. This will
