@@ -22,6 +22,7 @@ default = ["std"]
 std = ["libc"]
 box = [] # enable use of Box on not(std), requires alloc crate and feature
 vec = [] # enable use of Vec on not(std), requires collections crate and feature
+rdrand = []
 
 [dev-dependencies]
 log = "0.3.0"

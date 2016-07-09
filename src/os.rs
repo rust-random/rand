@@ -11,7 +11,8 @@
 //! Interfaces to the operating system provided random number
 //! generators.
 
-use std::io;
+#[cfg(not(feature="std"))] use io;
+#[cfg(feature="std")] use std::io;
 use Rng;
 
 /// A random number generator that retrieves randomness straight from
@@ -41,7 +42,7 @@ impl Rng for OsRng {
 }
 
 #[cfg(all(unix, not(target_os = "ios"),
-          not(target_os = "nacl")))]
+          not(target_os = "nacl"), not(feature = "rdrand")))]
 mod imp {
     extern crate libc;
 
@@ -198,7 +199,7 @@ mod imp {
     }
 }
 
-#[cfg(target_os = "ios")]
+#[cfg(all(target_os = "ios", not(feature = "rdrand")))]
 mod imp {
     extern crate libc;
 
@@ -248,7 +249,7 @@ mod imp {
     }
 }
 
-#[cfg(windows)]
+#[cfg(all(windows, not(feature = "rdrand")))]
 mod imp {
     use std::io;
     use std::mem;
@@ -339,7 +340,7 @@ mod imp {
     }
 }
 
-#[cfg(target_os = "nacl")]
+#[cfg(all(target_os = "nacl", not(feature = "rdrand")))]
 mod imp {
     extern crate libc;
 
@@ -416,6 +417,36 @@ mod imp {
     }
 }
 
+
+#[cfg(feature = "rdrand")]
+mod imp {
+    #[cfg(not(feature="std"))] use io;
+    #[cfg(feature="std")] use std::io;
+
+    use Rng;
+
+    pub struct OsRng;
+
+    impl OsRng {
+        pub fn new() -> io::Result<OsRng> {
+            Ok(OsRng)
+        }
+    }
+
+    impl Rng for OsRng {
+        fn next_u32(&mut self) -> u32 {
+            let ret;
+            unsafe{asm!("rdrand $0":"=r"(ret):::"volatile")};
+            ret
+        }
+        #[cfg(target_arch="x86_64")]
+        fn next_u64(&mut self) -> u64 {
+            let ret;
+            unsafe{asm!("rdrand $0":"=r"(ret):::"volatile")};
+            ret
+        }
+    }
+}
 
 #[cfg(test)]
 mod test {
