@@ -253,6 +253,9 @@
 #[cfg(all(feature="box",not(feature="std")))] extern crate alloc;
 #[cfg(all(feature="vec",not(feature="std")))] extern crate collections;
 
+#[cfg(all(not(feature="std"),feature="rdrand",not(feature="core_io")))]
+use using::rdrand::feature::without::std::feature::requires::core_io::feature;
+
 #[cfg(all(feature="std",not(feature="rdrand")))] use core::cell::RefCell;
 use core::marker;
 use core::mem;
