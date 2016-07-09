@@ -246,7 +246,7 @@
 
 #[cfg(test)] #[macro_use] extern crate log;
 
-#[cfg(not(feature="no_std"))] extern crate core;
+#[cfg(not(feature="no_std"))] extern crate std as core;
 #[cfg(feature="no_std")] extern crate core_io as io;
 #[cfg(feature="no_std")] extern crate alloc;
 #[cfg(feature="no_std")] extern crate collections;
