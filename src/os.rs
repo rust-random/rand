@@ -436,13 +436,31 @@ mod imp {
     impl Rng for OsRng {
         fn next_u32(&mut self) -> u32 {
             let ret;
-            unsafe{asm!("rdrand $0":"=r"(ret):::"volatile")};
+            let mut retry=10;
+            unsafe{asm!("
+1:
+                rdrand $0
+                jc 2f
+                dec $1
+                jnz 1b
+2:
+            ":"=r"(ret),"=r"(retry):"1"(retry)::"volatile")};
+            if retry==0 { panic!("RDRAND failure") }
             ret
         }
         #[cfg(target_arch="x86_64")]
         fn next_u64(&mut self) -> u64 {
             let ret;
-            unsafe{asm!("rdrand $0":"=r"(ret):::"volatile")};
+            let mut retry=10;
+            unsafe{asm!("
+1:
+                rdrand $0
+                jc 2f
+                dec $1
+                jnz 1b
+2:
+            ":"=r"(ret),"=r"(retry):"1"(retry)::"volatile")};
+            if retry==0 { panic!("RDRAND failure") }
             ret
         }
     }
