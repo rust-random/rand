@@ -242,14 +242,15 @@
        html_root_url = "https://doc.rust-lang.org/rand/")]
 
 #![cfg_attr(feature="no_std",no_std)]
-#![cfg_attr(feature="no_std",feature(alloc,collections))]
+#![cfg_attr(feature="box",feature(alloc))]
+#![cfg_attr(feature="vec",feature(collections))]
 
 #[cfg(test)] #[macro_use] extern crate log;
 
 #[cfg(not(feature="no_std"))] extern crate std as core;
-#[cfg(feature="no_std")] extern crate core_io as io;
-#[cfg(feature="no_std")] extern crate alloc;
-#[cfg(feature="no_std")] extern crate collections;
+#[cfg(feature="core_io")] extern crate core_io as io;
+#[cfg(feature="box")] extern crate alloc;
+#[cfg(feature="vec")] extern crate collections;
 
 #[cfg(not(feature="no_std"))] use core::cell::RefCell;
 use core::marker;
@@ -257,8 +258,8 @@ use core::mem;
 #[cfg(not(feature="no_std"))] use std::io;
 #[cfg(not(feature="no_std"))] use std::rc::Rc;
 use core::num::Wrapping as w;
-#[cfg(feature="no_std")] use alloc::boxed::Box;
-#[cfg(feature="no_std")] use collections::vec::Vec;
+#[cfg(feature="box")] use alloc::boxed::Box;
+#[cfg(feature="vec")] use collections::vec::Vec;
 
 #[cfg(not(feature="no_std"))] pub use os::OsRng;
 
@@ -279,7 +280,7 @@ pub mod chacha;
 pub mod reseeding;
 mod rand_impls;
 #[cfg(not(feature="no_std"))] pub mod os;
-pub mod read;
+#[cfg(any(not(feature="no_std"),feature="core_io"))] pub mod read;
 
 #[allow(bad_style)]
 type w64 = w<u64>;
@@ -586,6 +587,7 @@ impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
     }
 }
 
+#[cfg(any(feature="box",not(feature="no_std")))]
 impl<R: ?Sized> Rng for Box<R> where R: Rng {
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
@@ -995,6 +997,7 @@ pub fn random<T: Rand>() -> T {
 /// let sample = sample(&mut rng, 1..100, 5);
 /// println!("{:?}", sample);
 /// ```
+#[cfg(any(feature="vec",not(feature="no_std")))]
 pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     where I: IntoIterator<Item=T>,
           R: Rng,

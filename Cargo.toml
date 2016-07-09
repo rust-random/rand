@@ -15,11 +15,13 @@ keywords = ["random", "rng"]
 
 [dependencies]
 libc = { version = "0.2", optional = true }
-core_io = { version = "0.0", optional = true }
+core_io = { version = "0.0", optional = true } # enable use of read module on no_std
 
 [features]
 default = ["libc"]
-no_std = ["core_io"]
+no_std = []
+box = [] # enable use of Box on no_std, requires alloc crate and feature
+vec = [] # enable use of Vec on no_std, requires collections crate and feature
 
 [dev-dependencies]
 log = "0.3.0"
