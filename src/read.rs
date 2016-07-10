@@ -10,8 +10,8 @@
 
 //! A wrapper around any Read to treat it as an RNG.
 
-#[cfg(not(feature="no_std"))] use std::io::{self, Read};
-#[cfg(feature="no_std")] use io::{self, Read};
+#[cfg(not(feature="std"))] use io::{self, Read};
+#[cfg(feature="std")] use std::io::{self, Read};
 use core::mem;
 use Rng;
 

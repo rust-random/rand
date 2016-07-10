@@ -22,14 +22,14 @@ use core::marker;
 use {Rng, Rand};
 
 pub use self::range::Range;
-#[cfg(not(feature="no_std"))] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
-#[cfg(not(feature="no_std"))] pub use self::normal::{Normal, LogNormal};
-#[cfg(not(feature="no_std"))] pub use self::exponential::Exp;
+#[cfg(feature="std")] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
+#[cfg(feature="std")] pub use self::normal::{Normal, LogNormal};
+#[cfg(feature="std")] pub use self::exponential::Exp;
 
 pub mod range;
-#[cfg(not(feature="no_std"))] pub mod gamma;
-#[cfg(not(feature="no_std"))] pub mod normal;
-#[cfg(not(feature="no_std"))] pub mod exponential;
+#[cfg(feature="std")] pub mod gamma;
+#[cfg(feature="std")] pub mod normal;
+#[cfg(feature="std")] pub mod exponential;
 
 /// Types that can be used to create a random instance of `Support`.
 pub trait Sample<Support> {
@@ -201,7 +201,7 @@ impl<'a, T: Clone> IndependentSample<T> for WeightedChoice<'a, T> {
     }
 }
 
-#[cfg(not(feature="no_std"))] mod ziggurat_tables;
+#[cfg(feature="std")] mod ziggurat_tables;
 
 /// Sample a random number using the Ziggurat method (specifically the
 /// ZIGNOR variant from Doornik 2005). Most of the arguments are
@@ -218,7 +218,7 @@ impl<'a, T: Clone> IndependentSample<T> for WeightedChoice<'a, T> {
 
 // the perf improvement (25-50%) is definitely worth the extra code
 // size from force-inlining.
-#[cfg(not(feature="no_std"))]
+#[cfg(feature="std")]
 #[inline(always)]
 fn ziggurat<R: Rng, P, Z>(
             rng: &mut R,
