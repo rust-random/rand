@@ -10,7 +10,7 @@
 
 //! The ChaCha random number generator.
 
-use std::num::Wrapping as w;
+use core::num::Wrapping as w;
 use {Rng, SeedableRng, Rand, w32};
 
 const KEY_WORDS    : usize =  8; // 8 words for the 256-bit key

@@ -241,16 +241,31 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://doc.rust-lang.org/rand/")]
 
+#![cfg_attr(not(feature="std"),no_std)]
+#![cfg_attr(all(feature="box",not(feature="std")),feature(alloc))]
+#![cfg_attr(all(feature="vec",not(feature="std")),feature(collections))]
+#![cfg_attr(feature="rdrand",feature(asm))]
+
 #[cfg(test)] #[macro_use] extern crate log;
 
-use std::cell::RefCell;
-use std::marker;
-use std::mem;
-use std::io;
-use std::rc::Rc;
-use std::num::Wrapping as w;
+#[cfg(feature="std")] extern crate std as core;
+#[cfg(all(feature="core_io",not(feature="std")))] extern crate core_io as io;
+#[cfg(all(feature="box",not(feature="std")))] extern crate alloc;
+#[cfg(all(feature="vec",not(feature="std")))] extern crate collections;
 
-pub use os::OsRng;
+#[cfg(all(not(feature="std"),feature="rdrand",not(feature="core_io")))]
+use using::rdrand::feature::without::std::feature::requires::core_io::feature;
+
+#[cfg(all(feature="std",not(feature="rdrand")))] use core::cell::RefCell;
+use core::marker;
+use core::mem;
+#[cfg(feature="std")] use std::io;
+#[cfg(all(feature="std",not(feature="rdrand")))] use std::rc::Rc;
+use core::num::Wrapping as w;
+#[cfg(all(feature="box",not(feature="std")))] use alloc::boxed::Box;
+#[cfg(all(feature="vec",not(feature="std")))] use collections::vec::Vec;
+
+#[cfg(any(feature="std",feature="rdrand"))] pub use os::OsRng;
 
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
@@ -268,8 +283,8 @@ pub mod isaac;
 pub mod chacha;
 pub mod reseeding;
 mod rand_impls;
-pub mod os;
-pub mod read;
+#[cfg(any(feature="std",feature="rdrand"))] pub mod os;
+#[cfg(any(feature="std",feature="core_io"))] pub mod read;
 
 #[allow(bad_style)]
 type w64 = w<u64>;
@@ -576,6 +591,7 @@ impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
     }
 }
 
+#[cfg(any(feature="box",feature="std"))]
 impl<R: ?Sized> Rng for Box<R> where R: Rng {
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
@@ -810,6 +826,7 @@ impl StdRng {
     ///
     /// Reading the randomness from the OS may fail, and any error is
     /// propagated via the `io::Result` return value.
+    #[cfg(any(feature="std",feature="rdrand"))]
     pub fn new() -> io::Result<StdRng> {
         OsRng::new().map(|mut r| StdRng { rng: r.gen() })
     }
@@ -848,6 +865,7 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 ///
 /// This will read randomness from the operating system to seed the
 /// generator.
+#[cfg(any(feature="std",feature="rdrand"))]
 pub fn weak_rng() -> XorShiftRng {
     match OsRng::new() {
         Ok(mut r) => r.gen(),
@@ -856,8 +874,10 @@ pub fn weak_rng() -> XorShiftRng {
 }
 
 /// Controls how the thread-local RNG is reseeded.
+#[cfg(all(feature="std",not(feature="rdrand")))]
 struct ThreadRngReseeder;
 
+#[cfg(all(feature="std",not(feature="rdrand")))]
 impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
     fn reseed(&mut self, rng: &mut StdRng) {
         *rng = match StdRng::new() {
@@ -866,10 +886,13 @@ impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
         }
     }
 }
+#[cfg(all(feature="std",not(feature="rdrand")))]
 const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
+#[cfg(all(feature="std",not(feature="rdrand")))]
 type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
 
 /// The thread-local RNG.
+#[cfg(all(feature="std",not(feature="rdrand")))]
 #[derive(Clone)]
 pub struct ThreadRng {
     rng: Rc<RefCell<ThreadRngInner>>,
@@ -886,6 +909,7 @@ pub struct ThreadRng {
 /// if the operating system random number generator is rigged to give
 /// the same sequence always. If absolute consistency is required,
 /// explicitly select an RNG, e.g. `IsaacRng` or `Isaac64Rng`.
+#[cfg(all(feature="std",not(feature="rdrand")))]
 pub fn thread_rng() -> ThreadRng {
     // used to make space in TLS for a random number generator
     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
@@ -902,6 +926,7 @@ pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
 }
 
+#[cfg(all(feature="std",not(feature="rdrand")))]
 impl Rng for ThreadRng {
     fn next_u32(&mut self) -> u32 {
         self.rng.borrow_mut().next_u32()
@@ -915,6 +940,14 @@ impl Rng for ThreadRng {
     fn fill_bytes(&mut self, bytes: &mut [u8]) {
         self.rng.borrow_mut().fill_bytes(bytes)
     }
+}
+
+#[cfg(feature="rdrand")]
+pub use os::OsRng as ThreadRng;
+
+#[cfg(feature="rdrand")]
+pub fn thread_rng() -> ThreadRng {
+    OsRng::new().unwrap()
 }
 
 /// Generates a random value using the thread-local random number generator.
@@ -959,6 +992,7 @@ impl Rng for ThreadRng {
 ///     *x = rng.gen();
 /// }
 /// ```
+#[cfg(any(feature="std",feature="rdrand"))]
 #[inline]
 pub fn random<T: Rand>() -> T {
     thread_rng().gen()
@@ -975,6 +1009,7 @@ pub fn random<T: Rand>() -> T {
 /// let sample = sample(&mut rng, 1..100, 5);
 /// println!("{:?}", sample);
 /// ```
+#[cfg(any(feature="vec",feature="std"))]
 pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     where I: IntoIterator<Item=T>,
           R: Rng,
