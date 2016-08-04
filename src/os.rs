@@ -180,13 +180,13 @@ mod imp {
     impl Rng for OsRng {
         fn next_u32(&mut self) -> u32 {
             match self.inner {
-                OsGetrandomRng => getrandom_next_u32(),
+                OsGetrandomRng => next_u32(&mut getrandom_fill_bytes),
                 OsReadRng(ref mut rng) => rng.next_u32(),
             }
         }
         fn next_u64(&mut self) -> u64 {
             match self.inner {
-                OsGetrandomRng => getrandom_next_u64(),
+                OsGetrandomRng => next_u64(&mut getrandom_fill_bytes),
                 OsReadRng(ref mut rng) => rng.next_u64(),
             }
         }
@@ -295,6 +295,8 @@ mod imp {
     use std::ptr;
     use Rng;
 
+    use super::{next_u32, next_u64};
+
     type BOOL = i32;
     type LPCSTR = *const i8;
     type DWORD = u32;
@@ -340,6 +342,12 @@ mod imp {
     }
 
     impl Rng for OsRng {
+        fn next_u32(&mut self) -> u32 {
+            next_u32(&mut |v| self.fill_bytes(v))
+        }
+        fn next_u64(&mut self) -> u64 {
+            next_u64(&mut |v| self.fill_bytes(v))
+        }
         fn fill_bytes(&mut self, v: &mut [u8]) {
             // CryptGenRandom takes a DWORD (u32) for the length so we need to
             // split up the buffer.
@@ -376,6 +384,8 @@ mod imp {
     use std::io;
     use std::mem;
     use Rng;
+
+    use super::{next_u32, next_u64};
 
     pub struct OsRng(extern fn(dest: *mut libc::c_void,
                                bytes: libc::size_t,
@@ -419,6 +429,12 @@ mod imp {
     }
 
     impl Rng for OsRng {
+        fn next_u32(&mut self) -> u32 {
+            next_u32(&mut |v| self.fill_bytes(v))
+        }
+        fn next_u64(&mut self) -> u64 {
+            next_u64(&mut |v| self.fill_bytes(v))
+        }
         fn fill_bytes(&mut self, v: &mut [u8]) {
             let mut read = 0;
             loop {
