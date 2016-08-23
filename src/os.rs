@@ -11,7 +11,7 @@
 //! Interfaces to the operating system provided random number
 //! generators.
 
-use std::io;
+use std::{io, mem};
 use Rng;
 
 /// A random number generator that retrieves randomness straight from
@@ -40,18 +40,31 @@ impl Rng for OsRng {
     fn fill_bytes(&mut self, v: &mut [u8]) { self.0.fill_bytes(v) }
 }
 
+fn next_u32(mut fill_buf: &mut FnMut(&mut [u8])) -> u32 {
+    let mut buf: [u8; 4] = [0; 4];
+    fill_buf(&mut buf);
+    unsafe { mem::transmute::<[u8; 4], u32>(buf) }
+}
+
+fn next_u64(mut fill_buf: &mut FnMut(&mut [u8])) -> u64 {
+    let mut buf: [u8; 8] = [0; 8];
+    fill_buf(&mut buf);
+    unsafe { mem::transmute::<[u8; 8], u64>(buf) }
+}
+
 #[cfg(all(unix, not(target_os = "ios"),
-          not(target_os = "nacl")))]
+          not(target_os = "nacl"),
+          not(target_os = "freebsd")))]
 mod imp {
     extern crate libc;
 
+    use super::{next_u32, next_u64};
     use self::OsRngInner::*;
 
     use std::io;
     use std::fs::File;
     use Rng;
     use read::ReadRng;
-    use std::mem;
 
     #[cfg(all(target_os = "linux",
               any(target_arch = "x86_64",
@@ -104,18 +117,6 @@ mod imp {
                 read += result as usize;
             }
         }
-    }
-
-    fn getrandom_next_u32() -> u32 {
-        let mut buf: [u8; 4] = [0u8; 4];
-        getrandom_fill_bytes(&mut buf);
-        unsafe { mem::transmute::<[u8; 4], u32>(buf) }
-    }
-
-    fn getrandom_next_u64() -> u64 {
-        let mut buf: [u8; 8] = [0u8; 8];
-        getrandom_fill_bytes(&mut buf);
-        unsafe { mem::transmute::<[u8; 8], u64>(buf) }
     }
 
     #[cfg(all(target_os = "linux",
@@ -179,13 +180,13 @@ mod imp {
     impl Rng for OsRng {
         fn next_u32(&mut self) -> u32 {
             match self.inner {
-                OsGetrandomRng => getrandom_next_u32(),
+                OsGetrandomRng => next_u32(&mut getrandom_fill_bytes),
                 OsReadRng(ref mut rng) => rng.next_u32(),
             }
         }
         fn next_u64(&mut self) -> u64 {
             match self.inner {
-                OsGetrandomRng => getrandom_next_u64(),
+                OsGetrandomRng => next_u64(&mut getrandom_fill_bytes),
                 OsReadRng(ref mut rng) => rng.next_u64(),
             }
         }
@@ -202,8 +203,9 @@ mod imp {
 mod imp {
     extern crate libc;
 
+    use super::{next_u32, next_u64};
+
     use std::io;
-    use std::mem;
     use Rng;
     use self::libc::{c_int, size_t};
 
@@ -228,14 +230,10 @@ mod imp {
 
     impl Rng for OsRng {
         fn next_u32(&mut self) -> u32 {
-            let mut v = [0u8; 4];
-            self.fill_bytes(&mut v);
-            unsafe { mem::transmute(v) }
+            next_u32(&mut |v| self.fill_bytes(v))
         }
         fn next_u64(&mut self) -> u64 {
-            let mut v = [0u8; 8];
-            self.fill_bytes(&mut v);
-            unsafe { mem::transmute(v) }
+            next_u64(&mut |v| self.fill_bytes(v))
         }
         fn fill_bytes(&mut self, v: &mut [u8]) {
             let ret = unsafe {
@@ -248,12 +246,56 @@ mod imp {
     }
 }
 
+#[cfg(target_os = "freebsd")]
+mod imp {
+    extern crate libc;
+
+    use std::{io, ptr};
+    use Rng;
+
+    use super::{next_u32, next_u64};
+
+    pub struct OsRng;
+
+    impl OsRng {
+        pub fn new() -> io::Result<OsRng> {
+            Ok(OsRng)
+        }
+    }
+
+    impl Rng for OsRng {
+        fn next_u32(&mut self) -> u32 {
+            next_u32(&mut |v| self.fill_bytes(v))
+        }
+        fn next_u64(&mut self) -> u64 {
+            next_u64(&mut |v| self.fill_bytes(v))
+        }
+        fn fill_bytes(&mut self, v: &mut [u8]) {
+            let mib = [libc::CTL_KERN, libc::KERN_ARND];
+            // kern.arandom permits a maximum buffer size of 256 bytes
+            for s in v.chunks_mut(256) {
+                let mut s_len = s.len();
+                let ret = unsafe {
+                    libc::sysctl(mib.as_ptr(), mib.len() as libc::c_uint,
+                                 s.as_mut_ptr() as *mut _, &mut s_len,
+                                 ptr::null(), 0)
+                };
+                if ret == -1 || s_len != s.len() {
+                    panic!("kern.arandom sysctl failed! (returned {}, s.len() {}, oldlenp {})",
+                           ret, s.len(), s_len);
+                }
+            }
+        }
+    }
+}
+
 #[cfg(windows)]
 mod imp {
     use std::io;
-    use std::mem;
     use std::ptr;
     use Rng;
+
+    use super::{next_u32, next_u64};
 
     type BOOL = i32;
     type LPCSTR = *const i8;
@@ -301,14 +343,10 @@ mod imp {
 
     impl Rng for OsRng {
         fn next_u32(&mut self) -> u32 {
-            let mut v = [0u8; 4];
-            self.fill_bytes(&mut v);
-            unsafe { mem::transmute(v) }
+            next_u32(&mut |v| self.fill_bytes(v))
         }
         fn next_u64(&mut self) -> u64 {
-            let mut v = [0u8; 8];
-            self.fill_bytes(&mut v);
-            unsafe { mem::transmute(v) }
+            next_u64(&mut |v| self.fill_bytes(v))
         }
         fn fill_bytes(&mut self, v: &mut [u8]) {
             // CryptGenRandom takes a DWORD (u32) for the length so we need to
@@ -346,6 +384,8 @@ mod imp {
     use std::io;
     use std::mem;
     use Rng;
+
+    use super::{next_u32, next_u64};
 
     pub struct OsRng(extern fn(dest: *mut libc::c_void,
                                bytes: libc::size_t,
@@ -390,14 +430,10 @@ mod imp {
 
     impl Rng for OsRng {
         fn next_u32(&mut self) -> u32 {
-            let mut v = [0u8; 4];
-            self.fill_bytes(&mut v);
-            unsafe { mem::transmute(v) }
+            next_u32(&mut |v| self.fill_bytes(v))
         }
         fn next_u64(&mut self) -> u64 {
-            let mut v = [0u8; 8];
-            self.fill_bytes(&mut v);
-            unsafe { mem::transmute(v) }
+            next_u64(&mut |v| self.fill_bytes(v))
         }
         fn fill_bytes(&mut self, v: &mut [u8]) {
             let mut read = 0;
