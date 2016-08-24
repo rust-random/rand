@@ -155,7 +155,13 @@ impl Rand for char {
 impl Rand for bool {
     #[inline]
     fn rand<R: Rng>(rng: &mut R) -> bool {
-        rng.gen::<u8>() & 1 == 1
+        // Generate a 32-bit value and test the sign.
+        // Many PRNGs exhibit non-uniform random quality across their bits. The
+        // low order bit of LCGs, for example, flips 0/1. Even some high
+        // quality PRNGs, like Xoroshiro128+, have strange low order bit
+        // behavior. Testing the sign offers protection against these common
+        // pathologies.
+        rng.gen::<i32>() < 0
     }
 }
 
