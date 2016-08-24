@@ -50,7 +50,7 @@ use distributions::{Sample, IndependentSample};
 pub struct Range<X> {
     low: X,
     range: X,
-    accept_zone: X
+    lz: X,
 }
 
 impl<X: SampleRange + PartialOrd> Range<X> {
@@ -98,31 +98,22 @@ macro_rules! integer_impl {
 
             fn construct_range(low: $ty, high: $ty) -> Range<$ty> {
                 let range = (w(high as $unsigned) - w(low as $unsigned)).0;
-                let unsigned_max: $unsigned = ::std::$unsigned::MAX;
-
-                // this is the largest number that fits into $unsigned
-                // that `range` divides evenly, so, if we've sampled
-                // `n` uniformly from this region, then `n % range` is
-                // uniform in [0, range)
-                let zone = unsigned_max - unsigned_max % range;
 
                 Range {
                     low: low,
                     range: range as $ty,
-                    accept_zone: zone as $ty
+                    lz: range.leading_zeros() as $ty,
                 }
             }
             #[inline]
             fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
                 loop {
-                    // rejection sample
-                    let v = rng.gen::<$unsigned>();
-                    // until we find something that fits into the
-                    // region which r.range evenly divides (this will
-                    // be uniformly distributed)
-                    if v < r.accept_zone as $unsigned {
-                        // and return it, with some adjustments
-                        return (w(r.low) + w((v % r.range as $unsigned) as $ty)).0;
+                    // rejection sample. Slough off the low bits so the maximum
+                    // generated value is the next largest power of 2.
+                    let v = rng.gen::<$unsigned>() >> r.lz;
+                    if v < r.range as $unsigned {
+                        // offset the value onto our range.
+                        return (w(r.low) + w((v as $unsigned) as $ty)).0;
                     }
                 }
             }
@@ -148,7 +139,7 @@ macro_rules! float_impl {
                 Range {
                     low: low,
                     range: high - low,
-                    accept_zone: 0.0 // unused
+                    lz: 0.0,
                 }
             }
             fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
