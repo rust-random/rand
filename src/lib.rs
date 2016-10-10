@@ -705,6 +705,14 @@ impl XorShiftRng {
             w: w(0x113ba7bb),
         }
     }
+
+    /// Extracts the seed of the XorShiftRng.
+    ///
+    /// This function is useful if you want to store the state of the PRNG somewhere on the disk
+    /// and reload it later.
+    pub fn extract_seed(&self) -> [u32; 4] {
+        [self.x.0, self.y.0, self.z.0, self.w.0]
+    }
 }
 
 impl Rng for XorShiftRng {
