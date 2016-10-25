@@ -23,6 +23,8 @@ use Rng;
 ///   service provider with the `PROV_RSA_FULL` type.
 /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
 /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
+/// - FreeBSD: use the `kernel.arandom` `sysctl(2)` interface
+/// - OpenBSD: use the `getentropy(2)` system call
 ///
 /// This does not block.
 pub struct OsRng(imp::OsRng);
