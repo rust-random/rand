@@ -54,7 +54,8 @@ fn next_u64(mut fill_buf: &mut FnMut(&mut [u8])) -> u64 {
 
 #[cfg(all(unix, not(target_os = "ios"),
           not(target_os = "nacl"),
-          not(target_os = "freebsd")))]
+          not(target_os = "freebsd"),
+          not(target_os = "openbsd")))]
 mod imp {
     extern crate libc;
 
@@ -283,6 +284,47 @@ mod imp {
                 if ret == -1 || s_len != s.len() {
                     panic!("kern.arandom sysctl failed! (returned {}, s.len() {}, oldlenp {})",
                            ret, s.len(), s_len);
+                }
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "openbsd")]
+mod imp {
+    extern crate libc;
+
+    use std::io;
+    use Rng;
+
+    use super::{next_u32, next_u64};
+
+    pub struct OsRng;
+
+    impl OsRng {
+        pub fn new() -> io::Result<OsRng> {
+            Ok(OsRng)
+        }
+    }
+
+    impl Rng for OsRng {
+        fn next_u32(&mut self) -> u32 {
+            next_u32(&mut |v| self.fill_bytes(v))
+        }
+        fn next_u64(&mut self) -> u64 {
+            next_u64(&mut |v| self.fill_bytes(v))
+        }
+        fn fill_bytes(&mut self, v: &mut [u8]) {
+            // getentropy operates on a maximum of 256 byte chunks
+            for s in v.chunks_mut(256) {
+                let s_len = s.len();
+                let ret = unsafe {
+                    libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s_len)
+                };
+
+                if ret == -1 {
+                    let err = io::Error::last_os_error();
+                    panic!("getentropy failed: {}", err);
                 }
             }
         }
