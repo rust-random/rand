@@ -19,6 +19,8 @@ use Rng;
 ///
 /// - Unix-like systems (Linux, Android, Mac OSX): read directly from
 ///   `/dev/urandom`, or from `getrandom(2)` system call if available.
+/// - OpenBSD: calls `getentropy(2)`
+/// - FreeBSD: uses the `kern.arandom` `sysctl(2)` mib
 /// - Windows: calls `CryptGenRandom`, using the default cryptographic
 ///   service provider with the `PROV_RSA_FULL` type.
 /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
