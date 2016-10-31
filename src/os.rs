@@ -57,7 +57,6 @@ fn next_u64(mut fill_buf: &mut FnMut(&mut [u8])) -> u64 {
 #[cfg(all(unix, not(target_os = "ios"),
           not(target_os = "nacl"),
           not(target_os = "freebsd"),
-          not(target_os = "netbsd"),
           not(target_os = "openbsd")))]
 mod imp {
     extern crate libc;
