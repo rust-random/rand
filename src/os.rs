@@ -19,6 +19,8 @@ use Rng;
 ///
 /// - Unix-like systems (Linux, Android, Mac OSX): read directly from
 ///   `/dev/urandom`, or from `getrandom(2)` system call if available.
+/// - OpenBSD: calls `getentropy(2)`
+/// - FreeBSD: uses the `kern.arandom` `sysctl(2)` mib
 /// - Windows: calls `CryptGenRandom`, using the default cryptographic
 ///   service provider with the `PROV_RSA_FULL` type.
 /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
@@ -54,7 +56,9 @@ fn next_u64(mut fill_buf: &mut FnMut(&mut [u8])) -> u64 {
 
 #[cfg(all(unix, not(target_os = "ios"),
           not(target_os = "nacl"),
-          not(target_os = "freebsd")))]
+          not(target_os = "freebsd"),
+          not(target_os = "netbsd"),
+          not(target_os = "openbsd")))]
 mod imp {
     extern crate libc;
 
@@ -283,6 +287,45 @@ mod imp {
                 if ret == -1 || s_len != s.len() {
                     panic!("kern.arandom sysctl failed! (returned {}, s.len() {}, oldlenp {})",
                            ret, s.len(), s_len);
+                }
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "openbsd")]
+mod imp {
+    extern crate libc;
+
+    use std::io;
+    use Rng;
+
+    use super::{next_u32, next_u64};
+
+    pub struct OsRng;
+
+    impl OsRng {
+        pub fn new() -> io::Result<OsRng> {
+            Ok(OsRng)
+        }
+    }
+
+    impl Rng for OsRng {
+        fn next_u32(&mut self) -> u32 {
+            next_u32(&mut |v| self.fill_bytes(v))
+        }
+        fn next_u64(&mut self) -> u64 {
+            next_u64(&mut |v| self.fill_bytes(v))
+        }
+        fn fill_bytes(&mut self, v: &mut [u8]) {
+            // getentropy(2) permits a maximum buffer size of 256 bytes
+            for s in v.chunks_mut(256) {
+                let ret = unsafe {
+                    libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s.len())
+                };
+                if ret == -1 {
+                    let err = io::Error::last_os_error();
+                    panic!("getentropy failed: {}", err);
                 }
             }
         }
