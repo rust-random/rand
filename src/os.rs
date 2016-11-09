@@ -57,7 +57,8 @@ fn next_u64(mut fill_buf: &mut FnMut(&mut [u8])) -> u64 {
 #[cfg(all(unix, not(target_os = "ios"),
           not(target_os = "nacl"),
           not(target_os = "freebsd"),
-          not(target_os = "openbsd")))]
+          not(target_os = "openbsd"),
+          not(target_os = "redox")))]
 mod imp {
     extern crate libc;
 
@@ -327,6 +328,39 @@ mod imp {
                     panic!("getentropy failed: {}", err);
                 }
             }
+        }
+    }
+}
+
+#[cfg(target_os = "redox")]
+mod imp {
+    use std::io;
+    use std::fs::File;
+    use Rng;
+    use read::ReadRng;
+
+    pub struct OsRng {
+        inner: ReadRng<File>,
+    }
+
+    impl OsRng {
+        pub fn new() -> io::Result<OsRng> {
+            let reader = try!(File::open("rand:"));
+            let reader_rng = ReadRng::new(reader);
+
+            Ok(OsRng { inner: reader_rng })
+        }
+    }
+
+    impl Rng for OsRng {
+        fn next_u32(&mut self) -> u32 {
+            self.inner.next_u32()
+        }
+        fn next_u64(&mut self) -> u64 {
+            self.inner.next_u64()
+        }
+        fn fill_bytes(&mut self, v: &mut [u8]) {
+            self.inner.fill_bytes(v)
         }
     }
 }
