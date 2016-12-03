@@ -12,7 +12,7 @@
 
 // this is surprisingly complicated to be both generic & correct
 
-use std::num::Wrapping as w;
+use core::num::Wrapping as w;
 
 use Rng;
 use distributions::{Sample, IndependentSample};
@@ -99,7 +99,7 @@ macro_rules! integer_impl {
             #[inline]
             fn construct_range(low: $ty, high: $ty) -> Range<$ty> {
                 let range = (w(high as $unsigned) - w(low as $unsigned)).0;
-                let unsigned_max: $unsigned = ::std::$unsigned::MAX;
+                let unsigned_max: $unsigned = ::core::$unsigned::MAX;
 
                 // this is the largest number that fits into $unsigned
                 // that `range` divides evenly, so, if we've sampled
@@ -187,7 +187,7 @@ mod tests {
                 $(
                    let v: &[($ty, $ty)] = &[(0, 10),
                                             (10, 127),
-                                            (::std::$ty::MIN, ::std::$ty::MAX)];
+                                            (::core::$ty::MIN, ::core::$ty::MAX)];
                    for &(low, high) in v.iter() {
                         let mut sampler: Range<$ty> = Range::new(low, high);
                         for _ in 0..1000 {

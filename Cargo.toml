@@ -14,7 +14,14 @@ Random number generators and other randomness functionality.
 keywords = ["random", "rng"]
 
 [dependencies]
-libc = "0.2"
+libc = { version = "0.2", optional = true }
+core_io = { version = "0.1", optional = true } # enable use of read module on not(std)
+
+[features]
+default = ["std"]
+std = ["libc"]
+box = [] # enable use of Box on not(std), requires alloc crate and feature
+vec = [] # enable use of Vec on not(std), requires collections crate and feature
 
 [dev-dependencies]
 log = "0.3.0"
