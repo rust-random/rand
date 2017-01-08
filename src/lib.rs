@@ -39,10 +39,9 @@
 //!
 //! There is built-in support for a RNG associated with each thread stored
 //! in thread-local storage. This RNG can be accessed via `thread_rng`, or
-//! used implicitly via `random`. This RNG is normally randomly seeded
-//! from an operating-system source of randomness, e.g. `/dev/urandom` on
-//! Unix systems, and will automatically reseed itself from this source
-//! after generating 32 KiB of random data.
+//! used implicitly via `random`. This RNG normally uses
+//! an operating-system source of randomness, e.g. `/dev/urandom` on
+//! Unix systems.
 //!
 //! # Cryptographic security
 //!
@@ -871,11 +870,10 @@ pub struct ThreadRng {
 }
 
 /// Retrieve the lazily-initialized thread-local random number
-/// generator, seeded by the system. Intended to be used in method
+/// generator. Intended to be used in method
 /// chaining style, e.g. `thread_rng().gen::<i32>()`.
 ///
-/// The RNG provided will reseed itself from the operating system
-/// after generating a certain amount of randomness.
+/// The RNG provided will use an operating-system source of randomness.
 pub fn thread_rng() -> ThreadRng {
     // used to make space in TLS for a random number generator
     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
