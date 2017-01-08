@@ -26,7 +26,9 @@ use Rng;
 /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
 /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
 ///
-/// This does not block.
+/// This usually does not block. On some systems (e.g. FreeBSD, OpenBSD,
+/// Max OS X, and modern Linux) this may block very early in the init
+/// process, if the CSPRNG has not seeded yet.
 pub struct OsRng(imp::OsRng);
 
 impl OsRng {
