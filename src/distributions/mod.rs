@@ -17,6 +17,8 @@
 //! internally. The `IndependentSample` trait is for generating values
 //! that do not need to record state.
 
+#![allow(missing_debug_implementations)]
+
 use std::marker;
 
 use {Rng, Rand};

@@ -11,7 +11,7 @@
 //! Interfaces to the operating system provided random number
 //! generators.
 
-use std::{io, mem};
+use std::{io, mem, fmt};
 use Rng;
 
 /// A random number generator that retrieves randomness straight from
@@ -40,6 +40,12 @@ impl Rng for OsRng {
     fn next_u32(&mut self) -> u32 { self.0.next_u32() }
     fn next_u64(&mut self) -> u64 { self.0.next_u64() }
     fn fill_bytes(&mut self, v: &mut [u8]) { self.0.fill_bytes(v) }
+}
+
+impl fmt::Debug for OsRng {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "OsRng {{}}")
+    }
 }
 
 fn next_u32(mut fill_buf: &mut FnMut(&mut [u8])) -> u32 {
@@ -213,6 +219,7 @@ mod imp {
     use Rng;
     use self::libc::{c_int, size_t};
 
+    #[derive(Debug)]
     pub struct OsRng;
 
     enum SecRandom {}
@@ -259,6 +266,7 @@ mod imp {
 
     use super::{next_u32, next_u64};
 
+    #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
@@ -302,6 +310,7 @@ mod imp {
 
     use super::{next_u32, next_u64};
 
+    #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
@@ -339,6 +348,7 @@ mod imp {
     use Rng;
     use read::ReadRng;
 
+    #[derive(Debug)]
     pub struct OsRng {
         inner: ReadRng<File>,
     }
@@ -396,6 +406,7 @@ mod imp {
         fn CryptReleaseContext(hProv: HCRYPTPROV, dwFlags: DWORD) -> BOOL;
     }
 
+    #[derive(Debug)]
     pub struct OsRng {
         hcryptprov: HCRYPTPROV
     }
@@ -463,6 +474,7 @@ mod imp {
 
     use super::{next_u32, next_u64};
 
+    #[derive(Debug)]
     pub struct OsRng(extern fn(dest: *mut libc::c_void,
                                bytes: libc::size_t,
                                read: *mut libc::size_t) -> libc::c_int);
