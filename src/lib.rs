@@ -241,7 +241,10 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://doc.rust-lang.org/rand/")]
 
+#![deny(missing_debug_implementations)]
+
 #[cfg(test)] #[macro_use] extern crate log;
+
 
 use std::cell::RefCell;
 use std::marker;
@@ -604,6 +607,7 @@ impl<R: ?Sized> Rng for Box<R> where R: Rng {
 ///
 /// [`gen_iter`]: trait.Rng.html#method.gen_iter
 /// [`Rng`]: trait.Rng.html
+#[derive(Debug)]
 pub struct Generator<'a, T, R:'a> {
     rng: &'a mut R,
     _marker: marker::PhantomData<fn() -> T>,
@@ -623,6 +627,7 @@ impl<'a, T: Rand, R: Rng> Iterator for Generator<'a, T, R> {
 ///
 /// [`gen_ascii_chars`]: trait.Rng.html#method.gen_ascii_chars
 /// [`Rng`]: trait.Rng.html
+#[derive(Debug)]
 pub struct AsciiGenerator<'a, R:'a> {
     rng: &'a mut R,
 }
@@ -682,7 +687,7 @@ pub trait SeedableRng<Seed>: Rng {
 /// RNGs"](http://www.jstatsoft.org/v08/i14/paper). *Journal of
 /// Statistical Software*. Vol. 8 (Issue 14).
 #[allow(missing_copy_implementations)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct XorShiftRng {
     x: w32,
     y: w32,
@@ -772,6 +777,7 @@ impl Rand for XorShiftRng {
 /// let Open01(val) = random::<Open01<f32>>();
 /// println!("f32 from (0,1): {}", val);
 /// ```
+#[derive(Debug)]
 pub struct Open01<F>(pub F);
 
 /// A wrapper for generating floating point numbers uniformly in the
@@ -789,11 +795,12 @@ pub struct Open01<F>(pub F);
 /// let Closed01(val) = random::<Closed01<f32>>();
 /// println!("f32 from [0,1]: {}", val);
 /// ```
+#[derive(Debug)]
 pub struct Closed01<F>(pub F);
 
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct StdRng {
     rng: IsaacWordRng,
 }
@@ -856,6 +863,7 @@ pub fn weak_rng() -> XorShiftRng {
 }
 
 /// Controls how the thread-local RNG is reseeded.
+#[derive(Debug)]
 struct ThreadRngReseeder;
 
 impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
@@ -870,7 +878,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
 type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
 
 /// The thread-local RNG.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ThreadRng {
     rng: Rc<RefCell<ThreadRngInner>>,
 }
