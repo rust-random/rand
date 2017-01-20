@@ -12,6 +12,7 @@ description = """
 Random number generators and other randomness functionality.
 """
 keywords = ["random", "rng"]
+categories = ["algorithms"]
 
 [dependencies]
 libc = "0.2"
