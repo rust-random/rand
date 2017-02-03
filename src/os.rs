@@ -28,7 +28,10 @@ use Rng;
 ///
 /// This usually does not block. On some systems (e.g. FreeBSD, OpenBSD,
 /// Max OS X, and modern Linux) this may block very early in the init
-/// process, if the CSPRNG has not seeded yet.
+/// process, if the CSPRNG has not been seeded yet.[1]
+///
+/// [1] See https://www.python.org/dev/peps/pep-0524/ for a more in-depth
+///     discussion.
 pub struct OsRng(imp::OsRng);
 
 impl OsRng {
