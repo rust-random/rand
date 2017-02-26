@@ -292,7 +292,7 @@ pub trait Rng {
     ///
     /// This rarely needs to be called directly, prefer `r.gen()` to
     /// `r.next_u32()`.
-    // FIXME #7771: Should be implemented in terms of next_u64
+    // FIXME #rust-lang/rfcs#628: Should be implemented in terms of next_u64
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random u64.
