@@ -9,8 +9,10 @@ before_script:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
 script:
   - cargo build --verbose
+  - ([ $TRAVIS_RUST_VERSION != nightly ] || cargo build --verbose --features nightly)
   - cargo test --verbose
-  - cargo doc --no-deps
+  - ([ $TRAVIS_RUST_VERSION != nightly ] || cargo test --verbose --features nightly)
+  - ([ $TRAVIS_RUST_VERSION != nightly ] || cargo doc --no-deps --features nightly)
 after_success:
   - travis-cargo --only nightly doc-upload
 env:
