@@ -536,6 +536,9 @@ pub trait Rng {
 
     /// Shuffle a mutable slice in place.
     ///
+    /// This applies Durstenfeld's algorithm for the [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm) 
+    /// which produces an unbiased permutation.
+    ///
     /// # Example
     ///
     /// ```rust
