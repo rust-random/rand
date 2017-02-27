@@ -14,6 +14,10 @@ Random number generators and other randomness functionality.
 keywords = ["random", "rng"]
 categories = ["algorithms"]
 
+[features]
+i128_support = []
+nightly = ["i128_support"]
+
 [dependencies]
 libc = "0.2"
 
