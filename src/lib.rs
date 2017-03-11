@@ -977,7 +977,8 @@ pub fn random<T: Rand>() -> T {
     thread_rng().gen()
 }
 
-/// Randomly sample up to `amount` elements from an iterator.
+/// Randomly sample up to `amount` elements from a finite iterator.
+/// The order of elements in the sample is not random.
 ///
 /// # Example
 ///
