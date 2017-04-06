@@ -241,6 +241,7 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://doc.rust-lang.org/rand/")]
 
+#![feature(zero_one)]
 #![deny(missing_debug_implementations)]
 
 #![cfg_attr(feature = "i128_support", feature(i128_type))]
@@ -1007,6 +1008,45 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     reservoir
 }
 
+
+/// Produce a random "combination" of elements from a range without
+/// repitition.  The order of elements is not random.
+///
+/// This differs from `sample(rng, range, amount)` in that it uses
+/// [Robert Floyd's algorithm](http://fermatslibrary.com/s/a-sample-of-brilliance) 
+/// so it only make `amount` calls to the random number generator
+/// instead of `range.len()` calls.  It does `amount^2 / 2` extra
+/// comparisons however, so `sample` may be faster when `amount` is
+/// large.  See [correctness arguments](https://math.stackexchange.com/questions/178690/whats-the-proof-of-correctness-for-robert-floyds-algorithm-for-selecting-a-sin).
+///
+/// # Example
+///
+/// ```rust
+/// use rand::{thread_rng, combination};
+///
+/// let mut rng = thread_rng();
+/// let sample = combination(&mut rng, 1..100, 5);
+/// println!("{:?}", sample);
+/// ```
+pub fn combination<T, R>(rng: &mut R, range: std::ops::Range<T>, amount: T) -> Vec<T>
+    where T: Ord + SampleRange + std::ops::Sub<Output=T> + std::ops::Add<Output=T> + std::num::One + std::num::Zero + Clone + Copy + std::fmt::Debug,
+          std::ops::Range<T>: Iterator<Item=T> + ExactSizeIterator,
+          R: Rng,
+{
+    use std::num::{One,Zero};
+    let mut s = Vec::with_capacity((Zero::zero()..amount).len());
+    let n = range.end;
+    let m = std::cmp::min(amount,n-One::one());
+    // Should use #![feature(inclusive_range_syntax)] here in future.
+    for j in n-m+One::one() .. n+One::one() {
+        let t = rng.gen_range(range.start,j);
+        let t = if s.contains(&t) { j-One::one() } else { t };
+        s.push( t );
+    }
+    s
+}
+
+
 #[cfg(test)]
 mod test {
     use super::{Rng, thread_rng, random, SeedableRng, StdRng, sample};
@@ -1230,6 +1270,24 @@ mod test {
 
         assert!(small_sample.iter().all(|e| {
             **e >= min_val && **e < max_val
+        }));
+    }
+
+    #[test]
+    fn test_combination() {
+        use super::combination;
+        let min_val = 1i32;
+        let max_val = 100i32;
+
+        let mut r = thread_rng();
+        let small_sample = combination(&mut r, min_val..max_val, 5);
+        let large_sample = combination(&mut r, min_val..max_val, max_val + 5);
+
+        assert_eq!(small_sample.len(), 5);
+        assert_eq!(large_sample.len(), (min_val..max_val).len());
+
+        assert!(small_sample.iter().all(|e| {
+            *e >= min_val && *e < max_val
         }));
     }
 
