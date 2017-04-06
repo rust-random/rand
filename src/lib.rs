@@ -1229,7 +1229,7 @@ mod test {
         assert_eq!(large_sample.len(), vals.len());
 
         assert!(small_sample.iter().all(|e| {
-            **e >= min_val && **e <= max_val
+            **e >= min_val && **e < max_val
         }));
     }
 
