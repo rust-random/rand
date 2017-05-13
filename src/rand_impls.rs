@@ -10,8 +10,25 @@
 
 //! The implementations of `Rand` for the built-in types.
 
+use std::borrow::Cow;
+use std::cell::{Cell, RefCell};
 use std::char;
+use std::cmp::Ordering;
+use std::marker::PhantomData;
 use std::mem;
+use std::net::{Ipv4Addr, Ipv6Addr};
+
+use std::num::Wrapping;
+use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
+use std::rc::Rc;
+use std::sync::Arc;
+
+#[cfg(feature = "duration")]
+use std::time::Duration;
+#[cfg(feature = "ip_addr")]
+use std::net::IpAddr;
+#[cfg(feature = "bound")]
+use std::collections::Bound;
 
 use {Rand,Rng};
 
@@ -109,6 +126,13 @@ impl Rand for u128 {
     }
 }
 
+impl<T: Rand> Rand for Wrapping<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Wrapping<T> {
+        Wrapping(rng.gen())
+    }
+}
+
 
 macro_rules! float_impls {
     ($mod_name:ident, $ty:ty, $mantissa_bits:expr, $method_name:ident) => {
@@ -152,6 +176,13 @@ macro_rules! float_impls {
 float_impls! { f64_rand_impls, f64, 53, next_f64 }
 float_impls! { f32_rand_impls, f32, 24, next_f32 }
 
+impl<T: ?Sized> Rand for PhantomData<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> PhantomData<T> {
+        PhantomData
+    }
+}
+
 impl Rand for char {
     #[inline]
     fn rand<R: Rng>(rng: &mut R) -> char {
@@ -173,6 +204,94 @@ impl Rand for bool {
     #[inline]
     fn rand<R: Rng>(rng: &mut R) -> bool {
         rng.gen::<u8>() & 1 == 1
+    }
+}
+
+impl Rand for Ordering {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Ordering {
+        match rng.gen_range(0, 3) {
+            0 => Ordering::Less,
+            1 => Ordering::Equal,
+            2 => Ordering::Greater,
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[cfg(feature = "duration")]
+impl Rand for Duration {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Duration {
+        Duration::new(rng.gen(), rng.gen_range(0, 1_000_000_000))
+    }
+}
+
+impl Rand for RangeFull {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> RangeFull {
+        ..
+    }
+}
+
+impl<T: Rand + PartialOrd> Rand for Range<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Range<T> {
+        Range { start: rng.gen(), end: rng.gen() }
+    }
+}
+
+impl<T: Rand> Rand for RangeFrom<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> RangeFrom<T> {
+        RangeFrom { start: rng.gen() }
+    }
+}
+
+impl<T: Rand> Rand for RangeTo<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> RangeTo<T> {
+        RangeTo { end: rng.gen() }
+    }
+}
+
+#[cfg(feature = "bound")]
+impl<T: Rand> Rand for Bound<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Bound<T> {
+        match rng.gen_range(0, 3) {
+            0 => Bound::Included(rng.gen()),
+            1 => Bound::Excluded(rng.gen()),
+            2 => Bound::Unbounded,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Rand for Ipv4Addr {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Ipv4Addr {
+        Ipv4Addr::new(rng.gen(), rng.gen(), rng.gen(), rng.gen())
+    }
+}
+
+impl Rand for Ipv6Addr {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Ipv6Addr {
+        Ipv6Addr::new(rng.gen(), rng.gen(), rng.gen(), rng.gen(),
+                      rng.gen(), rng.gen(), rng.gen(), rng.gen())
+    }
+}
+
+#[cfg(feature = "ip_addr")]
+impl Rand for IpAddr {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> IpAddr {
+        if rng.gen() {
+            IpAddr::V4(rng.gen())
+        } else {
+            IpAddr::V6(rng.gen())
+        }
     }
 }
 
@@ -236,7 +355,7 @@ macro_rules! array_impl {
 
 array_impl!{32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
 
-impl<T:Rand> Rand for Option<T> {
+impl<T: Rand> Rand for Option<T> {
     #[inline]
     fn rand<R: Rng>(rng: &mut R) -> Option<T> {
         if rng.gen() {
@@ -246,6 +365,64 @@ impl<T:Rand> Rand for Option<T> {
         }
     }
 }
+
+impl<T: Rand, E: Rand> Rand for Result<T, E> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Result<T, E> {
+        if rng.gen() {
+            Ok(rng.gen())
+        } else {
+            Err(rng.gen())
+        }
+    }
+}
+
+impl<T: Rand> Rand for Box<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Box<T> {
+        Box::new(rng.gen())
+    }
+}
+
+impl<T: Rand> Rand for Rc<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Rc<T> {
+        Rc::new(rng.gen())
+    }
+}
+
+impl<T: Rand> Rand for Arc<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Arc<T> {
+        Arc::new(rng.gen())
+    }
+}
+
+// TODO: remove Copy
+impl<T: Copy + Rand> Rand for Cell<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Cell<T> {
+        Cell::new(rng.gen())
+    }
+}
+
+impl<T: Rand> Rand for RefCell<T> {
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> RefCell<T> {
+        RefCell::new(rng.gen())
+    }
+}
+
+impl<'a, T: ToOwned> Rand for Cow<'a, T>
+where
+    <T as ToOwned>::Owned: Rand
+{
+    #[inline]
+    fn rand<R: Rng>(rng: &mut R) -> Cow<'a, T> {
+        Cow::Owned(rng.gen())
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
