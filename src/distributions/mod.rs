@@ -79,7 +79,7 @@ impl<Sup> RandSample<Sup> {
     }
 }
 
-/// A value with a particular weight for use with `WeightedChoice`.
+/// A value with a particular weight for use with `WeightedChoice` and `WeightedChoiceOwned`.
 #[derive(Copy, Clone, Debug)]
 pub struct Weighted<T> {
     /// The numerical weight of this item
@@ -123,34 +123,16 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
     /// Create a new `WeightedChoice`.
     ///
     /// Panics if:
-    /// - `v` is empty
+    /// - `items` is empty
     /// - the total weight is 0
     /// - the total weight is larger than a `u32` can contain.
     pub fn new(items: &'a mut [Weighted<T>]) -> WeightedChoice<'a, T> {
-        // strictly speaking, this is subsumed by the total weight == 0 case
-        assert!(!items.is_empty(), "WeightedChoice::new called with no items");
-
-        let mut running_total: u32 = 0;
-
-        // we convert the list from individual weights to cumulative
-        // weights so we can binary search. This *could* drop elements
-        // with weight == 0 as an optimisation.
-        for item in items.iter_mut() {
-            running_total = match running_total.checked_add(item.weight) {
-                Some(n) => n,
-                None => panic!("WeightedChoice::new called with a total weight \
-                               larger than a u32 can contain")
-            };
-
-            item.weight = running_total;
-        }
-        assert!(running_total != 0, "WeightedChoice::new called with a total weight of 0");
-
+        let total_weight = compute_cumulative_and_total_weights(items);
         WeightedChoice {
             items: items,
             // we're likely to be generating numbers in this range
             // relatively often, so might as well cache it
-            weight_range: Range::new(0, running_total)
+            weight_range: Range::new(0, total_weight)
         }
     }
 }
@@ -160,46 +142,141 @@ impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
 }
 
 impl<'a, T: Clone> IndependentSample<T> for WeightedChoice<'a, T> {
+    #[inline]
     fn ind_sample<R: Rng>(&self, rng: &mut R) -> T {
-        // we want to find the first element that has cumulative
-        // weight > sample_weight, which we do by binary since the
-        // cumulative weights of self.items are sorted.
-
-        // choose a weight in [0, total_weight)
-        let sample_weight = self.weight_range.ind_sample(rng);
-
-        // short circuit when it's the first item
-        if sample_weight < self.items[0].weight {
-            return self.items[0].item.clone();
-        }
-
-        let mut idx = 0;
-        let mut modifier = self.items.len();
-
-        // now we know that every possibility has an element to the
-        // left, so we can just search for the last element that has
-        // cumulative weight <= sample_weight, then the next one will
-        // be "it". (Note that this greatest element will never be the
-        // last element of the vector, since sample_weight is chosen
-        // in [0, total_weight) and the cumulative weight of the last
-        // one is exactly the total weight.)
-        while modifier > 1 {
-            let i = idx + modifier / 2;
-            if self.items[i].weight <= sample_weight {
-                // we're small, so look to the right, but allow this
-                // exact element still.
-                idx = i;
-                // we need the `/ 2` to round up otherwise we'll drop
-                // the trailing elements when `modifier` is odd.
-                modifier += 1;
-            } else {
-                // otherwise we're too big, so go left. (i.e. do
-                // nothing)
-            }
-            modifier /= 2;
-        }
-        return self.items[idx + 1].item.clone();
+        weighted_choice_sample(self.items, self.weight_range, rng)
     }
+}
+
+/// A distribution that selects from a finite collection of weighted items.
+///
+/// Each item has an associated weight that influences how likely it
+/// is to be chosen: higher weight is more likely.
+///
+/// The `Clone` restriction is a limitation of the `Sample` and
+/// `IndependentSample` traits. Note that `&T` is (cheaply) `Clone` for
+/// all `T`, as is `u32`, so one can store references or indices into
+/// another vector.
+///
+/// This is the same as `WeightedChoice` except that it owns the list of items
+/// and weights instead of borrowing it.
+///
+/// # Example
+///
+/// ```rust
+/// use rand::distributions::{Weighted, WeightedChoiceOwned, IndependentSample};
+///
+/// let mut items = vec!(Weighted { weight: 2, item: 'a' },
+///                      Weighted { weight: 4, item: 'b' },
+///                      Weighted { weight: 1, item: 'c' });
+/// let wc = WeightedChoiceOwned::new(items);
+/// let mut rng = rand::thread_rng();
+/// for _ in 0..16 {
+///      // on average prints 'a' 4 times, 'b' 8 and 'c' twice.
+///      println!("{}", wc.ind_sample(&mut rng));
+/// }
+/// ```
+#[derive(Debug)]
+pub struct WeightedChoiceOwned<T> {
+    items: Vec<Weighted<T>>,
+    weight_range: Range<u32>
+}
+
+impl<T: Clone> WeightedChoiceOwned<T> {
+    /// Create a new `WeightedChoiceOwned`.
+    ///
+    /// Panics if:
+    /// - `items` is empty
+    /// - the total weight is 0
+    /// - the total weight is larger than a `u32` can contain.
+    pub fn new(mut items: Vec<Weighted<T>>) -> WeightedChoiceOwned<T> {
+        let total_weight = compute_cumulative_and_total_weights(&mut items);
+        WeightedChoiceOwned {
+            items: items,
+            // we're likely to be generating numbers in this range
+            // relatively often, so might as well cache it
+            weight_range: Range::new(0, total_weight)
+        }
+    }
+}
+
+
+impl<T: Clone> Sample<T> for WeightedChoiceOwned<T> {
+    fn sample<R: Rng>(&mut self, rng: &mut R) -> T { self.ind_sample(rng) }
+}
+
+impl<T: Clone> IndependentSample<T> for WeightedChoiceOwned<T> {
+    #[inline]
+    fn ind_sample<R: Rng>(&self, rng: &mut R) -> T {
+        weighted_choice_sample(&self.items, self.weight_range, rng)
+    }
+}
+
+/// Convert the list from individual weights to cumulative weights so we can binary search.
+/// Returns the sum of the weights.
+fn compute_cumulative_and_total_weights<T>(items: &mut [Weighted<T>]) -> u32 {
+    // strictly speaking, this is subsumed by the total weight == 0 case
+    assert!(!items.is_empty(), "WeightedChoiceOwned::new called with no items");
+
+    let mut running_total: u32 = 0;
+
+    // we convert the list from individual weights to cumulative
+    // weights so we can binary search. This *could* drop elements
+    // with weight == 0 as an optimisation.
+    for item in items.iter_mut() {
+        running_total = match running_total.checked_add(item.weight) {
+            Some(n) => n,
+            None => panic!("WeightedChoiceOwned::new called with a total weight \
+                           larger than a u32 can contain")
+        };
+
+        item.weight = running_total;
+    }
+    assert!(running_total != 0, "WeightedChoiceOwned::new called with a total weight of 0");
+    running_total
+}
+
+fn weighted_choice_sample<T: Clone, R: Rng>(items: &[Weighted<T>],
+                                            weight_range: Range<u32>,
+                                            rng: &mut R) -> T {
+    // we want to find the first element that has cumulative
+    // weight > sample_weight, which we do by binary since the
+    // cumulative weights of items are sorted.
+
+    // choose a weight in [0, total_weight)
+    let sample_weight = weight_range.ind_sample(rng);
+
+    // short circuit when it's the first item
+    if sample_weight < items[0].weight {
+        return items[0].item.clone();
+    }
+
+    let mut idx = 0;
+    let mut modifier = items.len();
+
+    // now we know that every possibility has an element to the
+    // left, so we can just search for the last element that has
+    // cumulative weight <= sample_weight, then the next one will
+    // be "it". (Note that this greatest element will never be the
+    // last element of the vector, since sample_weight is chosen
+    // in [0, total_weight) and the cumulative weight of the last
+    // one is exactly the total weight.)
+    while modifier > 1 {
+        let i = idx + modifier / 2;
+        if items[i].weight <= sample_weight {
+            // we're small, so look to the right, but allow this
+            // exact element still.
+            idx = i;
+            // we need the `/ 2` to round up otherwise we'll drop
+            // the trailing elements when `modifier` is odd.
+            modifier += 1;
+        } else {
+            // otherwise we're too big, so go left. (i.e. do
+            // nothing)
+        }
+        modifier /= 2;
+    }
+    return items[idx + 1].item.clone();
 }
 
 mod ziggurat_tables;
@@ -272,7 +349,8 @@ fn ziggurat<R: Rng, P, Z>(
 mod tests {
 
     use {Rng, Rand};
-    use super::{RandSample, WeightedChoice, Weighted, Sample, IndependentSample};
+    use super::{RandSample, WeightedChoice, WeightedChoiceOwned, Weighted};
+    use super::{Sample, IndependentSample};
 
     #[derive(PartialEq, Debug)]
     struct ConstRand(usize);
@@ -310,9 +388,21 @@ mod tests {
 
         macro_rules! t {
             ($items:expr, $expected:expr) => {{
+                let expected = $expected;
+
+                // Borrowed
                 let mut items = $items;
                 let wc = WeightedChoice::new(&mut items);
-                let expected = $expected;
+
+                let mut rng = CountingRng { i: 0 };
+
+                for &val in expected.iter() {
+                    assert_eq!(wc.ind_sample(&mut rng), val)
+                }
+
+                // Owned
+                let items = $items;
+                let wc = WeightedChoiceOwned::new(items);
 
                 let mut rng = CountingRng { i: 0 };
 
