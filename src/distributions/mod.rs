@@ -51,6 +51,20 @@ pub trait IndependentSample<Support>: Sample<Support> {
     fn ind_sample<R: Rng>(&self, &mut R) -> Support;
 }
 
+impl<Support, T: IndependentSample<Support>> Sample<Support> for T {
+    #[inline]
+    fn sample<R: Rng>(&mut self, rng: &mut R) -> Support {
+        self.ind_sample(rng)
+    }
+}
+
+impl<'a, Support, T: IndependentSample<Support>> IndependentSample<Support> for &'a T {
+    #[inline]
+    fn ind_sample<R: Rng>(&self, rng: &mut R) -> Support {
+        (*self).ind_sample(rng)
+    }
+}
+
 /// A wrapper for generating types that implement `Rand` via the
 /// `Sample` & `IndependentSample` traits.
 #[derive(Debug)]
@@ -61,10 +75,6 @@ pub struct RandSample<Sup> {
 impl<Sup> Copy for RandSample<Sup> {}
 impl<Sup> Clone for RandSample<Sup> {
     fn clone(&self) -> Self { *self }
-}
-
-impl<Sup: Rand> Sample<Sup> for RandSample<Sup> {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup { self.ind_sample(rng) }
 }
 
 impl<Sup: Rand> IndependentSample<Sup> for RandSample<Sup> {
@@ -153,10 +163,6 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
             weight_range: Range::new(0, running_total)
         }
     }
-}
-
-impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> T { self.ind_sample(rng) }
 }
 
 impl<'a, T: Clone> IndependentSample<T> for WeightedChoice<'a, T> {

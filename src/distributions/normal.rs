@@ -11,7 +11,7 @@
 //! The normal and derived distributions.
 
 use {Rng, Rand, Open01};
-use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
+use distributions::{ziggurat, ziggurat_tables, IndependentSample};
 
 /// A wrapper around an `f64` to generate N(0, 1) random numbers
 /// (a.k.a.  a standard normal, or Gaussian).
@@ -110,9 +110,6 @@ impl Normal {
         }
     }
 }
-impl Sample<f64> for Normal {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
 impl IndependentSample<f64> for Normal {
     fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
         let StandardNormal(n) = rng.gen::<StandardNormal>();
@@ -153,9 +150,6 @@ impl LogNormal {
         assert!(std_dev >= 0.0, "LogNormal::new called with `std_dev` < 0");
         LogNormal { norm: Normal::new(mean, std_dev) }
     }
-}
-impl Sample<f64> for LogNormal {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 impl IndependentSample<f64> for LogNormal {
     fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
