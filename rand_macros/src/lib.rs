@@ -69,6 +69,7 @@ pub fn expand_deriving_rand(cx: &mut ExtCtxt,
             }
         ),
         associated_types: Vec::new(),
+        is_unsafe: false,
     };
     trait_def.expand(cx, mitem, &item, &mut |i| push(i))
 }
