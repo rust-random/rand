@@ -48,9 +48,9 @@ use distributions::{Sample, IndependentSample};
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Range<X> {
-    low: X,
-    range: X,
-    accept_zone: X
+    pub low: X,
+    pub range: X,
+    pub accept_zone: X
 }
 
 impl<X: SampleRange + PartialOrd> Range<X> {
