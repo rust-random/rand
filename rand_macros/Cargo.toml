@@ -9,12 +9,15 @@ repository = "https://github.com/rust-lang/rand"
 documentation = "http://doc.rust-lang.org/rand"
 homepage = "https://github.com/rust-lang/rand"
 description = """
-`#[derive]`-like functionality for the `rand::Rand` trait.
+`#[derive(Rand)]` functionality for the `rand::Rand` trait.
 """
 
 [lib]
-name = "rand_macros"
-plugin = true
+proc-macro = true
+
+[dependencies]
+quote = "0.3"
+syn = "0.11"
 
 [dev-dependencies]
 rand = { path = "..", version = "0.3" }
