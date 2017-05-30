@@ -1,21 +1,28 @@
 #![allow(dead_code)]
-#![feature(plugin, custom_derive)]
-#![plugin(rand_macros)]
 
 extern crate rand;
+#[macro_use]
+extern crate rand_macros;
 
 use rand::Rng;
 
-#[derive_Rand]
-struct Foo {
-    x: u8,
-    y: isize
+#[derive(Rand)]
+struct Struct {
+    x: u16,
+    y: Option<f64>,
 }
 
-#[derive_Rand]
-enum Bar {
-    X(char),
-    Y(f64)
+#[derive(Rand)]
+struct Tuple(i16, Option<f64>);
+
+#[derive(Rand)]
+struct Unit;
+
+#[derive(Rand)]
+enum Enum {
+    X { x: u8, y: isize },
+    Y([bool; 4]),
+    Z,
 }
 
 #[test]
@@ -24,7 +31,9 @@ fn smoke() {
 
     // check nothing horrible happens internally:
     for _ in 0..100 {
-        let _: Foo = rng.gen();
-        let _: Bar = rng.gen();
+        let _ = rng.gen::<Struct>();
+        let _ = rng.gen::<Tuple>();
+        let _ = rng.gen::<Unit>();
+        let _ = rng.gen::<Enum>();
     }
 }
