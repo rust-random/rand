@@ -22,14 +22,14 @@ fn impl_rand_derive(ast: &syn::MacroInput) -> quote::Tokens {
             let fields = body
                 .iter()
                 .filter_map(|field| field.ident.as_ref())
-                .map(|ident| quote! { #ident: rng.gen() })
+                .map(|ident| quote! { #ident: __rng.gen() })
                 .collect::<Vec<_>>();
 
             quote! { #name { #(#fields,)* } }
         },
         syn::Body::Struct(syn::VariantData::Tuple(ref body)) => {
             let fields = (0..body.len())
-                .map(|_| quote! { rng.gen() })
+                .map(|_| quote! { __rng.gen() })
                 .collect::<Vec<_>>();
 
             quote! { #name (#(#fields),*) }
@@ -53,13 +53,13 @@ fn impl_rand_derive(ast: &syn::MacroInput) -> quote::Tokens {
                             let fields = body
                                 .iter()
                                 .filter_map(|field| field.ident.as_ref())
-                                .map(|ident| quote! { #ident: rng.gen() })
+                                .map(|ident| quote! { #ident: __rng.gen() })
                                 .collect::<Vec<_>>();
                             quote! { #name::#ident { #(#fields,)* } }
                         },
                         syn::VariantData::Tuple(ref body) => {
                             let fields = (0..body.len())
-                                .map(|_| quote! { rng.gen() })
+                                .map(|_| quote! { __rng.gen() })
                                 .collect::<Vec<_>>();
 
                             quote! { #name::#ident (#(#fields),*) }
@@ -71,14 +71,14 @@ fn impl_rand_derive(ast: &syn::MacroInput) -> quote::Tokens {
                 })
                 .collect::<Vec<_>>();
             variants.push(quote! { _ => unreachable!() });
-            quote! { match rng.gen_range(0, #len) { #(#variants,)* } }
+            quote! { match __rng.gen_range(0, #len) { #(#variants,)* } }
         }
     };
 
     quote! {
         impl #impl_generics ::rand::Rand for #name #ty_generics #where_clause {
             #[inline]
-            fn rand<R: ::rand::Rng>(rng: &mut R) -> Self {
+            fn rand<__R: ::rand::Rng>(__rng: &mut __R) -> Self {
                 #rand
             }
         }
