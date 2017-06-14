@@ -1,3 +1,23 @@
+//! Support for `#[derive(Rand)]`
+//!
+//! # Examples
+//!
+//! ```
+//! extern crate rand;
+//! #[macro_use]
+//! extern crate rand_derive;
+//!
+//! #[derive(Rand, Debug)]
+//! struct MyStruct {
+//!     a: i32,
+//!     b: u32,
+//! }
+//!
+//! fn main() {
+//!     println!("{:?}", rand::random::<MyStruct>());
+//! }
+//! ```
+
 extern crate proc_macro;
 #[macro_use]
 extern crate quote;
