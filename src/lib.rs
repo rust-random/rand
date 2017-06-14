@@ -239,7 +239,7 @@
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://doc.rust-lang.org/rand/")]
+       html_root_url = "https://docs.rs/rand/0.3")]
 
 #![deny(missing_debug_implementations)]
 
@@ -536,7 +536,7 @@ pub trait Rng {
 
     /// Shuffle a mutable slice in place.
     ///
-    /// This applies Durstenfeld's algorithm for the [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm) 
+    /// This applies Durstenfeld's algorithm for the [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
     /// which produces an unbiased permutation.
     ///
     /// # Example
