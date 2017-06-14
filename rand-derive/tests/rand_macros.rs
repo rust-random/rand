@@ -2,7 +2,7 @@
 
 extern crate rand;
 #[macro_use]
-extern crate rand_macros;
+extern crate rand_derive;
 
 use rand::Rng;
 
