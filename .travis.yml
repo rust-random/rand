@@ -14,11 +14,11 @@ matrix:
       script:
         - cargo test
         - cargo test --features nightly
-        - cargo test --manifest-path rand_macros/Cargo.toml
+        - cargo test --manifest-path rand-derive/Cargo.toml
         - cargo doc --no-deps --features nightly
 script:
   - cargo test
-  - cargo test --manifest-path rand_macros/Cargo.toml
+  - cargo test --manifest-path rand-derive/Cargo.toml
 after_success:
   - travis-cargo --only nightly doc-upload
 env:
