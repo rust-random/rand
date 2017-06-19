@@ -282,6 +282,38 @@ type w64 = w<u64>;
 type w32 = w<u32>;
 
 /// A type that can be randomly generated using an `Rng`.
+///
+/// ## Built-in Implementations
+///
+/// This crate implements `Rand` for various primitive types.  Assuming the
+/// provided `Rng` is well-behaved, these implementations generate values with
+/// the following ranges and distributions:
+///
+/// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
+///   over all values of the type.
+/// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
+///   code points in the range `0...0x10_FFFF`, except for the range
+///   `0xD800...0xDFFF` (the surrogate code points).  This includes
+///   unassigned/reserved code points.
+/// * `bool`: Generates `false` or `true`, each with probability 0.5.
+/// * Floating point types (`f32` and `f64`): Uniformly distributed in the
+///   half-open range `[0, 1)`.  (The [`Open01`], [`Closed01`], [`Exp1`], and
+///   [`StandardNormal`] wrapper types produce floating point numbers with
+///   alternative ranges or distributions.)
+///
+/// [`Open01`]: struct.Open01.html
+/// [`Closed01`]: struct.Closed01.html
+/// [`Exp1`]: struct.Exp1.html
+/// [`StandardNormal`]: struct.StandardNormal.html
+///
+/// The following aggregate types also implement `Rand` as long as their
+/// component types implement it:
+///
+/// * Tuples and arrays: Each element of the tuple or array is generated
+///   independently, using its own `Rand` implementation.
+/// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
+///   random `T` and returns `Some(T)`.
+
 pub trait Rand : Sized {
     /// Generates a random instance of this type using the specified source of
     /// randomness.
