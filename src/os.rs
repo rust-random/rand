@@ -21,8 +21,8 @@ use Rng;
 ///   `/dev/urandom`, or from `getrandom(2)` system call if available.
 /// - OpenBSD: calls `getentropy(2)`
 /// - FreeBSD: uses the `kern.arandom` `sysctl(2)` mib
-/// - Windows: calls `CryptGenRandom`, using the default cryptographic
-///   service provider with the `PROV_RSA_FULL` type.
+/// - Windows: calls `RtlGenRandom`, exported from `advapi32.dll` as
+///   `SystemFunction036`.
 /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
 /// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
 ///
@@ -383,53 +383,25 @@ mod imp {
 #[cfg(windows)]
 mod imp {
     use std::io;
-    use std::ptr;
     use Rng;
 
     use super::{next_u32, next_u64};
 
-    type BOOL = i32;
-    type LPCSTR = *const i8;
-    type DWORD = u32;
-    type HCRYPTPROV = usize;
-    type BYTE = u8;
-
-    const PROV_RSA_FULL: DWORD = 1;
-    const CRYPT_SILENT: DWORD = 0x00000040;
-    const CRYPT_VERIFYCONTEXT: DWORD = 0xF0000000;
+    type BOOLEAN = u8;
+    type ULONG = u32;
 
     #[link(name = "advapi32")]
     extern "system" {
-        fn CryptAcquireContextA(phProv: *mut HCRYPTPROV,
-                                szContainer: LPCSTR,
-                                szProvider: LPCSTR,
-                                dwProvType: DWORD,
-                                dwFlags: DWORD) -> BOOL;
-        fn CryptGenRandom(hProv: HCRYPTPROV,
-                          dwLen: DWORD,
-                          pbBuffer: *mut BYTE) -> BOOL;
-        fn CryptReleaseContext(hProv: HCRYPTPROV, dwFlags: DWORD) -> BOOL;
+        // This function's real name is `RtlGenRandom`.
+        fn SystemFunction036(RandomBuffer: *mut u8, RandomBufferLength: ULONG) -> BOOLEAN;
     }
 
     #[derive(Debug)]
-    pub struct OsRng {
-        hcryptprov: HCRYPTPROV
-    }
+    pub struct OsRng;
 
     impl OsRng {
         pub fn new() -> io::Result<OsRng> {
-            let mut hcp = 0;
-            let ret = unsafe {
-                CryptAcquireContextA(&mut hcp, ptr::null(), ptr::null(),
-                                     PROV_RSA_FULL,
-                                     CRYPT_VERIFYCONTEXT | CRYPT_SILENT)
-            };
-
-            if ret == 0 {
-                Err(io::Error::last_os_error())
-            } else {
-                Ok(OsRng { hcryptprov: hcp })
-            }
+            Ok(OsRng)
         }
     }
 
@@ -441,29 +413,16 @@ mod imp {
             next_u64(&mut |v| self.fill_bytes(v))
         }
         fn fill_bytes(&mut self, v: &mut [u8]) {
-            // CryptGenRandom takes a DWORD (u32) for the length so we need to
+            // RtlGenRandom takes an ULONG (u32) for the length so we need to
             // split up the buffer.
-            for slice in v.chunks_mut(<DWORD>::max_value() as usize) {
+            for slice in v.chunks_mut(<ULONG>::max_value() as usize) {
                 let ret = unsafe {
-                    CryptGenRandom(self.hcryptprov, slice.len() as DWORD,
-                                   slice.as_mut_ptr())
+                    SystemFunction036(slice.as_mut_ptr(), slice.len() as ULONG)
                 };
                 if ret == 0 {
                     panic!("couldn't generate random bytes: {}",
                            io::Error::last_os_error());
                 }
-            }
-        }
-    }
-
-    impl Drop for OsRng {
-        fn drop(&mut self) {
-            let ret = unsafe {
-                CryptReleaseContext(self.hcryptprov, 0)
-            };
-            if ret == 0 {
-                panic!("couldn't release context: {}",
-                       io::Error::last_os_error());
             }
         }
     }
