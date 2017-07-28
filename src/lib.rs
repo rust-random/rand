@@ -257,14 +257,10 @@ use std::rc::Rc;
 pub use read::ReadRng;
 pub use os::OsRng;
 
-#[cfg(target_pointer_width = "32")]
-use prng::IsaacRng as IsaacWordRng;
-#[cfg(target_pointer_width = "64")]
-use prng::Isaac64Rng as IsaacWordRng;
-
 use distributions::{Range, Sample};
 use distributions::range::SampleRange;
 
+use prng::IsaacWordRng;
 use prng::XorShiftRng;
 
 pub mod distributions;
@@ -683,10 +679,11 @@ pub trait SeedableRng<Seed>: Rng {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{Rng, SeedableRng, StdRng};
+    /// use rand::{Rng, SeedableRng};
+    /// use rand::prng::IsaacWordRng;
     ///
     /// let seed: &[_] = &[1, 2, 3, 4];
-    /// let mut rng: StdRng = SeedableRng::from_seed(seed);
+    /// let mut rng: IsaacWordRng = SeedableRng::from_seed(seed);
     /// println!("{}", rng.gen::<f64>());
     /// rng.reseed(&[5, 6, 7, 8]);
     /// println!("{}", rng.gen::<f64>());
@@ -698,10 +695,11 @@ pub trait SeedableRng<Seed>: Rng {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{Rng, SeedableRng, StdRng};
+    /// use rand::{Rng, SeedableRng};
+    /// use rand::prng::ChaChaRng;
     ///
     /// let seed: &[_] = &[1, 2, 3, 4];
-    /// let mut rng: StdRng = SeedableRng::from_seed(seed);
+    /// let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
     /// println!("{}", rng.gen::<f64>());
     /// ```
     fn from_seed(seed: Seed) -> Self;

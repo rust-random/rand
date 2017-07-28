@@ -19,6 +19,12 @@ use std::fmt;
 
 use {Rng, SeedableRng, Rand};
 
+/// Select 32- or 64-bit variant dependent on pointer size.
+#[cfg(target_pointer_width = "32")]
+pub use prng::IsaacRng as IsaacWordRng;
+#[cfg(target_pointer_width = "64")]
+pub use prng::Isaac64Rng as IsaacWordRng;
+
 #[allow(bad_style)]
 type w64 = w<u64>;
 #[allow(bad_style)]

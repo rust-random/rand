@@ -45,5 +45,5 @@ mod isaac;
 mod xorshift;
 
 pub use self::chacha::ChaChaRng;
-pub use self::isaac::{IsaacRng, Isaac64Rng};
+pub use self::isaac::{IsaacRng, Isaac64Rng, IsaacWordRng};
 pub use self::xorshift::XorShiftRng;
