@@ -110,7 +110,7 @@
 //! and multiply this fraction by 4.
 //!
 //! ```
-//! use rand::distributions::{IndependentSample, Range};
+//! use rand::distributions::{Sample, Range};
 //!
 //! fn main() {
 //!    let between = Range::new(-1f64, 1.);
@@ -120,8 +120,8 @@
 //!    let mut in_circle = 0;
 //!
 //!    for _ in 0..total {
-//!        let a = between.ind_sample(&mut rng);
-//!        let b = between.ind_sample(&mut rng);
+//!        let a = between.sample(&mut rng);
+//!        let b = between.sample(&mut rng);
 //!        if a*a + b*b <= 1. {
 //!            in_circle += 1;
 //!        }
@@ -153,7 +153,7 @@
 //!
 //! ```
 //! use rand::Rng;
-//! use rand::distributions::{IndependentSample, Range};
+//! use rand::distributions::{Sample, Range};
 //!
 //! struct SimulationResult {
 //!     win: bool,
@@ -163,10 +163,10 @@
 //! // Run a single simulation of the Monty Hall problem.
 //! fn simulate<R: Rng>(random_door: &Range<u32>, rng: &mut R)
 //!                     -> SimulationResult {
-//!     let car = random_door.ind_sample(rng);
+//!     let car = random_door.sample(rng);
 //!
 //!     // This is our initial choice
-//!     let mut choice = random_door.ind_sample(rng);
+//!     let mut choice = random_door.sample(rng);
 //!
 //!     // The game host opens a door
 //!     let open = game_host_open(car, choice, rng);
@@ -265,7 +265,7 @@ use IsaacRng as IsaacWordRng;
 #[cfg(target_pointer_width = "64")]
 use Isaac64Rng as IsaacWordRng;
 
-use distributions::{Range, IndependentSample};
+use distributions::{Range, Sample};
 use distributions::range::SampleRange;
 
 pub mod distributions;
@@ -501,7 +501,7 @@ pub trait Rng {
     /// ```
     fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T where Self: Sized {
         assert!(low < high, "Rng.gen_range called with low >= high");
-        Range::new(low, high).ind_sample(self)
+        Range::new(low, high).sample(self)
     }
 
     /// Return a bool with a 1 in n chance of true

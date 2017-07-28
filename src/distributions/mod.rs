@@ -10,12 +10,10 @@
 
 //! Sampling from random distributions.
 //!
-//! This is a generalization of `Rand` to allow parameters to control the
-//! exact properties of the generated values, e.g. the mean and standard
-//! deviation of a normal distribution. The `Sample` trait is the most
-//! general, and allows for generating values that change some state
-//! internally. The `IndependentSample` trait is for generating values
-//! that do not need to record state.
+//! A distribution may have internal state describing the distribution of
+//! generated values; for example `Range` needs to know its upper and lower
+//! bounds. Distributions use the `Sample` trait to yield values: call
+//! `dist.sample(&mut rng)` to get a random variable.
 
 use std::marker;
 
@@ -31,50 +29,34 @@ pub mod gamma;
 pub mod normal;
 pub mod exponential;
 
-/// Types that can be used to create a random instance of `Support`.
-pub trait Sample<Support> {
-    /// Generate a random value of `Support`, using `rng` as the
+/// Types (distributions) that can be used to create a random instance of `T`.
+pub trait Sample<T> {
+    /// Generate a random value of `T`, using `rng` as the
     /// source of randomness.
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> Support;
+    fn sample<R: Rng>(&self, rng: &mut R) -> T;
 }
 
-/// `Sample`s that do not require keeping track of state.
-///
-/// Since no state is recorded, each sample is (statistically)
-/// independent of all others, assuming the `Rng` used has this
-/// property.
-// FIXME maybe having this separate is overkill (the only reason is to
-// take &self rather than &mut self)? or maybe this should be the
-// trait called `Sample` and the other should be `DependentSample`.
-pub trait IndependentSample<Support>: Sample<Support> {
-    /// Generate a random value.
-    fn ind_sample<R: Rng>(&self, &mut R) -> Support;
-}
 
 /// A wrapper for generating types that implement `Rand` via the
-/// `Sample` & `IndependentSample` traits.
+/// `Sample` trait.
 #[derive(Debug)]
-pub struct RandSample<Sup> {
-    _marker: marker::PhantomData<fn() -> Sup>,
+pub struct RandSample<T> {
+    _marker: marker::PhantomData<fn() -> T>,
 }
 
-impl<Sup> Copy for RandSample<Sup> {}
-impl<Sup> Clone for RandSample<Sup> {
+impl<T> Copy for RandSample<T> {}
+impl<T> Clone for RandSample<T> {
     fn clone(&self) -> Self { *self }
 }
 
-impl<Sup: Rand> Sample<Sup> for RandSample<Sup> {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup { self.ind_sample(rng) }
-}
-
-impl<Sup: Rand> IndependentSample<Sup> for RandSample<Sup> {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> Sup {
+impl<T: Rand> Sample<T> for RandSample<T> {
+    fn sample<R: Rng>(&self, rng: &mut R) -> T {
         rng.gen()
     }
 }
 
-impl<Sup> RandSample<Sup> {
-    pub fn new() -> RandSample<Sup> {
+impl<T> RandSample<T> {
+    pub fn new() -> RandSample<T> {
         RandSample { _marker: marker::PhantomData }
     }
 }
@@ -93,15 +75,15 @@ pub struct Weighted<T> {
 /// Each item has an associated weight that influences how likely it
 /// is to be chosen: higher weight is more likely.
 ///
-/// The `Clone` restriction is a limitation of the `Sample` and
-/// `IndependentSample` traits. Note that `&T` is (cheaply) `Clone` for
+/// The `Clone` restriction is a limitation of the `Sample` trait.
+/// Note that `&T` is (cheaply) `Clone` for
 /// all `T`, as is `u32`, so one can store references or indices into
 /// another vector.
 ///
 /// # Example
 ///
 /// ```rust
-/// use rand::distributions::{Weighted, WeightedChoice, IndependentSample};
+/// use rand::distributions::{Weighted, WeightedChoice, Sample};
 ///
 /// let mut items = vec!(Weighted { weight: 2, item: 'a' },
 ///                      Weighted { weight: 4, item: 'b' },
@@ -110,7 +92,7 @@ pub struct Weighted<T> {
 /// let mut rng = rand::thread_rng();
 /// for _ in 0..16 {
 ///      // on average prints 'a' 4 times, 'b' 8 and 'c' twice.
-///      println!("{}", wc.ind_sample(&mut rng));
+///      println!("{}", wc.sample(&mut rng));
 /// }
 /// ```
 #[derive(Debug)]
@@ -156,17 +138,13 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
 }
 
 impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> T { self.ind_sample(rng) }
-}
-
-impl<'a, T: Clone> IndependentSample<T> for WeightedChoice<'a, T> {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> T {
+    fn sample<R: Rng>(&self, rng: &mut R) -> T {
         // we want to find the first element that has cumulative
         // weight > sample_weight, which we do by binary since the
         // cumulative weights of self.items are sorted.
 
         // choose a weight in [0, total_weight)
-        let sample_weight = self.weight_range.ind_sample(rng);
+        let sample_weight = self.weight_range.sample(rng);
 
         // short circuit when it's the first item
         if sample_weight < self.items[0].weight {
@@ -272,7 +250,7 @@ fn ziggurat<R: Rng, P, Z>(
 mod tests {
 
     use {Rng, Rand};
-    use super::{RandSample, WeightedChoice, Weighted, Sample, IndependentSample};
+    use super::{RandSample, WeightedChoice, Weighted, Sample};
 
     #[derive(PartialEq, Debug)]
     struct ConstRand(usize);
@@ -296,10 +274,9 @@ mod tests {
 
     #[test]
     fn test_rand_sample() {
-        let mut rand_sample = RandSample::<ConstRand>::new();
+        let rand_sample = RandSample::<ConstRand>::new();
 
         assert_eq!(rand_sample.sample(&mut ::test::rng()), ConstRand(0));
-        assert_eq!(rand_sample.ind_sample(&mut ::test::rng()), ConstRand(0));
     }
     #[test]
     fn test_weighted_choice() {
@@ -317,7 +294,7 @@ mod tests {
                 let mut rng = CountingRng { i: 0 };
 
                 for &val in expected.iter() {
-                    assert_eq!(wc.ind_sample(&mut rng), val)
+                    assert_eq!(wc.sample(&mut rng), val)
                 }
             }}
         }
