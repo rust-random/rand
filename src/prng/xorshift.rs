@@ -91,9 +91,12 @@ impl SeedableRng<[u32; 4]> for XorShiftRng {
 
 impl Rand for XorShiftRng {
     fn rand<R: Rng>(rng: &mut R) -> XorShiftRng {
-        let mut tuple: (u32, u32, u32, u32) = rng.gen();
-        while tuple == (0, 0, 0, 0) {
-            tuple = rng.gen();
+        let mut tuple: (u32, u32, u32, u32);
+        loop {
+            tuple = (rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32());
+            if tuple != (0, 0, 0, 0) {
+                break;
+            }
         }
         let (x, y, z, w_) = tuple;
         XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) }

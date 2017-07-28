@@ -107,7 +107,7 @@ fn ziggurat<R: Rng, P, Z>(
         // efficiently and overload next_f32/f64, so by not calling it
         // this may be slower than it would be otherwise.)
         // FIXME: investigate/optimise for the above.
-        let bits: u64 = rng.gen();
+        let bits: u64 = uniform(rng);
         let i = (bits & 0xff) as usize;
         let f = (bits >> 11) as f64 / SCALE;
 

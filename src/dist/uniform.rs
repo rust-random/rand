@@ -33,9 +33,9 @@ impl SampleUniform for isize {
     #[inline]
     fn sample_uniform<R: Rng>(rng: &mut R) -> isize {
         if mem::size_of::<isize>() == 4 {
-            rng.gen::<i32>() as isize
+            i32::sample_uniform(rng) as isize
         } else {
-            rng.gen::<i64>() as isize
+            i64::sample_uniform(rng) as isize
         }
     }
 }
@@ -80,9 +80,9 @@ impl SampleUniform for usize {
     #[inline]
     fn sample_uniform<R: Rng>(rng: &mut R) -> usize {
         if mem::size_of::<usize>() == 4 {
-            rng.gen::<u32>() as usize
+            u32::sample_uniform(rng) as usize
         } else {
-            rng.gen::<u64>() as usize
+            u64::sample_uniform(rng) as usize
         }
     }
 }

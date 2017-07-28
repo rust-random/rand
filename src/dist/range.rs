@@ -112,9 +112,10 @@ macro_rules! integer_impl {
 
             #[inline]
             fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
+                use $crate::dist::uniform;
                 loop {
                     // rejection sample
-                    let v = rng.gen::<$unsigned>();
+                    let v: $unsigned = uniform(rng);
                     // until we find something that fits into the
                     // region which r.range evenly divides (this will
                     // be uniformly distributed)
