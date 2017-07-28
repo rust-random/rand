@@ -253,7 +253,6 @@ use std::marker;
 use std::mem;
 use std::io;
 use std::rc::Rc;
-use std::num::Wrapping as w;
 
 pub use jitter::JitterRng;
 pub use os::OsRng;
@@ -281,11 +280,6 @@ pub mod os;
 pub mod read;
 pub mod seq;
 mod prng;
-
-#[allow(bad_style)]
-type w64 = w<u64>;
-#[allow(bad_style)]
-type w32 = w<u32>;
 
 /// A type that can be randomly generated using an `Rng`.
 ///
