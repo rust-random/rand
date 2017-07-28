@@ -40,6 +40,10 @@
 //! same algorithm, it is possible that both will yield the same sequence of
 //! values (with some lag).
 
+mod chacha;
+mod isaac;
 mod xorshift;
 
+pub use self::chacha::ChaChaRng;
+pub use self::isaac::{IsaacRng, Isaac64Rng};
 pub use self::xorshift::XorShiftRng;
