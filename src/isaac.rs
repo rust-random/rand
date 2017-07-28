@@ -17,7 +17,12 @@ use std::iter::repeat;
 use std::num::Wrapping as w;
 use std::fmt;
 
-use {Rng, SeedableRng, Rand, w32, w64};
+use {Rng, SeedableRng, Rand};
+
+#[allow(bad_style)]
+type w64 = w<u64>;
+#[allow(bad_style)]
+type w32 = w<u32>;
 
 const RAND_SIZE_LEN: usize = 8;
 const RAND_SIZE: u32 = 1 << RAND_SIZE_LEN;
