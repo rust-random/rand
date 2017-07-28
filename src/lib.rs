@@ -257,13 +257,10 @@ use std::rc::Rc;
 pub use jitter::JitterRng;
 pub use os::OsRng;
 
-pub use isaac::{IsaacRng, Isaac64Rng};
-pub use chacha::ChaChaRng;
-
 #[cfg(target_pointer_width = "32")]
-use IsaacRng as IsaacWordRng;
+use prng::IsaacRng as IsaacWordRng;
 #[cfg(target_pointer_width = "64")]
-use Isaac64Rng as IsaacWordRng;
+use prng::Isaac64Rng as IsaacWordRng;
 
 use distributions::{Range, IndependentSample};
 use distributions::range::SampleRange;
@@ -271,8 +268,6 @@ use distributions::range::SampleRange;
 pub use prng::XorShiftRng;
 
 pub mod distributions;
-pub mod isaac;
-pub mod chacha;
 pub mod reseeding;
 mod rand_impls;
 pub mod jitter;
