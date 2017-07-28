@@ -14,16 +14,20 @@
 //! generated values; for example `Range` needs to know its upper and lower
 //! bounds. Distributions use the `Sample` trait to yield values: call
 //! `dist.sample(&mut rng)` to get a random variable.
+//!
+//! TODO: is it worth exposing both submodules and re-exporting their members?
 
 use std::marker;
 
 use {Rng, Rand};
 
+pub use self::uniform::{Uniform, uniform};
 pub use self::range::Range;
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal};
 pub use self::exponential::Exp;
 
+pub mod uniform;
 pub mod range;
 pub mod gamma;
 pub mod normal;
