@@ -254,6 +254,7 @@ use std::mem;
 use std::io;
 use std::rc::Rc;
 
+pub use read::ReadRng;
 pub use os::OsRng;
 
 #[cfg(target_pointer_width = "32")]
@@ -267,11 +268,12 @@ use distributions::range::SampleRange;
 use prng::XorShiftRng;
 
 pub mod distributions;
-pub mod reseeding;
-mod rand_impls;
-pub mod os;
-pub mod read;
 pub mod prng;
+pub mod reseeding;
+
+mod rand_impls;
+mod read;
+mod os;
 
 /// A type that can be randomly generated using an `Rng`.
 ///

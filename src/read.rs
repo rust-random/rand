@@ -24,10 +24,10 @@ use Rng;
 /// # Example
 ///
 /// ```rust
-/// use rand::{read, Rng};
+/// use rand::{ReadRng, Rng};
 ///
 /// let data = vec![1, 2, 3, 4, 5, 6, 7, 8];
-/// let mut rng = read::ReadRng::new(&data[..]);
+/// let mut rng = ReadRng::new(&data[..]);
 /// println!("{:x}", rng.gen::<u32>());
 /// ```
 #[derive(Debug)]
