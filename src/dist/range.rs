@@ -15,7 +15,7 @@
 use std::num::Wrapping as w;
 
 use Rng;
-use distributions::{Sample};
+use dist::{Sample};
 
 /// Sample values uniformly between two bounds.
 ///
@@ -34,7 +34,7 @@ use distributions::{Sample};
 /// # Example
 ///
 /// ```rust
-/// use rand::distributions::{Sample, Range};
+/// use rand::dist::{Sample, Range};
 ///
 /// fn main() {
 ///     let between = Range::new(10, 10000);
@@ -161,7 +161,7 @@ float_impl! { f64 }
 
 #[cfg(test)]
 mod tests {
-    use distributions::{Sample};
+    use dist::{Sample};
     use super::Range as Range;
 
     #[should_panic]

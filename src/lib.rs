@@ -16,7 +16,7 @@
 //! suffice, but sometimes an annotation is required, e.g.
 //! `rand::random::<f64>()`.
 //!
-//! See the `distributions` submodule for sampling random numbers from
+//! See the `dist` submodule for sampling random numbers from
 //! distributions like normal and exponential.
 //!
 //! # Usage
@@ -110,7 +110,7 @@
 //! and multiply this fraction by 4.
 //!
 //! ```
-//! use rand::distributions::{Sample, Range};
+//! use rand::dist::{Sample, Range};
 //!
 //! fn main() {
 //!    let between = Range::new(-1f64, 1.);
@@ -153,7 +153,7 @@
 //!
 //! ```
 //! use rand::Rng;
-//! use rand::distributions::{Sample, Range};
+//! use rand::dist::{Sample, Range};
 //!
 //! struct SimulationResult {
 //!     win: bool,
@@ -257,13 +257,13 @@ use std::rc::Rc;
 pub use read::ReadRng;
 pub use os::OsRng;
 
-use distributions::{Range, Sample};
-use distributions::range::SampleRange;
+use dist::{Range, Sample};
+use dist::range::SampleRange;
 
 use prng::IsaacWordRng;
 use prng::XorShiftRng;
 
-pub mod distributions;
+pub mod dist;
 pub mod prng;
 pub mod reseeding;
 
@@ -469,7 +469,7 @@ pub trait Rng {
     /// Generate a random value in the range [`low`, `high`).
     ///
     /// This is a convenience wrapper around
-    /// `distributions::Range`. If this function will be called
+    /// `dist::Range`. If this function will be called
     /// repeatedly with the same arguments, one should use `Range`, as
     /// that will amortize the computations that allow for perfect
     /// uniformity, as they only happen on initialization.

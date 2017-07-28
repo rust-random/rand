@@ -1,8 +1,8 @@
 use std::mem::size_of;
 use test::Bencher;
 use rand;
-use rand::distributions::Sample;
-use rand::distributions::normal::Normal;
+use rand::dist::Sample;
+use rand::dist::normal::Normal;
 
 #[bench]
 fn rand_normal(b: &mut Bencher) {

@@ -1,8 +1,8 @@
 use std::mem::size_of;
 use test::Bencher;
 use rand;
-use rand::distributions::exponential::Exp;
-use rand::distributions::Sample;
+use rand::dist::exponential::Exp;
+use rand::dist::Sample;
 
 #[bench]
 fn rand_exp(b: &mut Bencher) {

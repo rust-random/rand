@@ -5,7 +5,7 @@ extern crate rand;
 
 const RAND_BENCH_N: u64 = 1000;
 
-mod distributions;
+mod dist;
 
 use std::mem::size_of;
 use test::{black_box, Bencher};
