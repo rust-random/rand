@@ -249,7 +249,6 @@
 
 
 use std::cell::RefCell;
-use std::marker;
 use std::mem;
 use std::io;
 use std::rc::Rc;
@@ -448,22 +447,32 @@ pub trait Rng {
         Rand::rand(self)
     }
 
-    /// Return an iterator that will yield an infinite number of randomly
-    /// generated items.
-    ///
+    /// Yield an iterator applying some function to self.
+    /// 
+    /// Unfortunately this is only possible with static dispatch (i.e. where
+    /// `Self: Sized`). [Why? Because the method must be generic, to support
+    /// the lifetime bound on the `&mut Rng` field of the returned object, if
+    /// not also for types `T` and `F`; representing this field requires that
+    /// `Rng` trait objects can be constructed, but trait objects cannot be
+    /// constructed for traits with generic methods without a `Sized` bound.
+    /// But the starting point was wanting a dynamic version of this method,
+    /// i.e. not requiring the `Sized` bound.
+    /// See `rustc --explain E0038` for more.]
+    /// 
     /// # Example
     ///
     /// ```
     /// use rand::{thread_rng, Rng};
+    /// use rand::dist::uniform;
     ///
     /// let mut rng = thread_rng();
-    /// let x = rng.gen_iter::<u32>().take(10).collect::<Vec<u32>>();
+    /// let x = rng.iter_map(|rng| uniform(rng)).take(10).collect::<Vec<u32>>();
     /// println!("{:?}", x);
-    /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
-    ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
-    fn gen_iter<'a, T: Rand>(&'a mut self) -> Generator<'a, T, Self> where Self: Sized {
-        Generator { rng: self, _marker: marker::PhantomData }
+    fn iter_map<'a, T, F>(&'a mut self, f: F) -> RngIterator<'a, Self, T, F>
+        where Self: Sized, F: Fn(&mut Self) -> T
+    {
+        RngIterator { rng: self, f: f }
     }
 
     /// Generate a random value in the range [`low`, `high`).
@@ -628,23 +637,21 @@ impl<R: ?Sized> Rng for Box<R> where R: Rng {
     }
 }
 
-/// Iterator which will generate a stream of random items.
-///
-/// This iterator is created via the [`gen_iter`] method on [`Rng`].
-///
-/// [`gen_iter`]: trait.Rng.html#method.gen_iter
-/// [`Rng`]: trait.Rng.html
+/// Pseudo-Iterator encapsulating a random number generator.
+/// See [`Rng::iter`](trait.Rng.html#method.iter).
+/// 
+/// This only implements a [`map`](struct.RngIterator.html#method.map) method.
 #[derive(Debug)]
-pub struct Generator<'a, T, R:'a> {
+pub struct RngIterator<'a, R:'a, T, F: Fn(&mut R) -> T> {
     rng: &'a mut R,
-    _marker: marker::PhantomData<fn() -> T>,
+    f: F
 }
 
-impl<'a, T: Rand, R: Rng> Iterator for Generator<'a, T, R> {
+impl<'a, R:'a, T, F: Fn(&mut R) -> T> Iterator for RngIterator<'a, R, T, F> {
     type Item = T;
-
+    
     fn next(&mut self) -> Option<T> {
-        Some(self.rng.gen())
+        Some((self.f)(self.rng))
     }
 }
 
@@ -946,7 +953,8 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 
 #[cfg(test)]
 mod test {
-    use super::{Rng, thread_rng, random, SeedableRng, StdRng, sample};
+    use {Rng, thread_rng, random, SeedableRng, StdRng, sample};
+    use dist::uniform;
     use std::iter::repeat;
 
     pub struct MyRng<R> { inner: R }
@@ -1068,9 +1076,9 @@ mod test {
     #[test]
     fn test_gen_vec() {
         let mut r = thread_rng();
-        assert_eq!(r.gen_iter::<u8>().take(0).count(), 0);
-        assert_eq!(r.gen_iter::<u8>().take(10).count(), 10);
-        assert_eq!(r.gen_iter::<f64>().take(16).count(), 16);
+        assert_eq!(r.iter_map(|rng| rng.next_u32()).take(0).count(), 0);
+        assert_eq!(r.iter_map(|rng| uniform::<u8, _>(rng)).take(10).count(), 10);
+        assert_eq!(r.iter_map(|rng| rng.gen::<f64>()).take(16).count(), 16);
     }
 
     #[test]
@@ -1172,7 +1180,7 @@ mod test {
 
     #[test]
     fn test_std_rng_seeded() {
-        let s = thread_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
+        let s = thread_rng().iter_map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
         let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
         let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
         assert!(iter_eq(ra.gen_ascii_chars().take(100),
@@ -1181,7 +1189,7 @@ mod test {
 
     #[test]
     fn test_std_rng_reseed() {
-        let s = thread_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
+        let s = thread_rng().iter_map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
         let mut r: StdRng = SeedableRng::from_seed(&s[..]);
         let string1 = r.gen_ascii_chars().take(100).collect::<String>();
 
