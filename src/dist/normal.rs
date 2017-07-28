@@ -10,10 +10,10 @@
 
 //! The normal and derived distributions.
 
-use {Rng, Rand, Open01};
+use {Rng, Open01};
 use dist::{ziggurat, ziggurat_tables, Sample};
 
-/// A wrapper around an `f64` to generate N(0, 1) random numbers
+/// Generates N(0, 1) random numbers
 /// (a.k.a.  a standard normal, or Gaussian).
 ///
 /// See `Normal` for the general normal distribution.
@@ -28,55 +28,50 @@ use dist::{ziggurat, ziggurat_tables, Sample};
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::normal::StandardNormal;
+/// use rand::dist::normal::standard_normal;
 ///
-/// let StandardNormal(x) = rand::random();
+/// let x = standard_normal(&mut rand::thread_rng());
 /// println!("{}", x);
 /// ```
-#[derive(Clone, Copy, Debug)]
-pub struct StandardNormal(pub f64);
-
-impl Rand for StandardNormal {
-    fn rand<R:Rng>(rng: &mut R) -> StandardNormal {
-        #[inline]
-        fn pdf(x: f64) -> f64 {
-            (-x*x/2.0).exp()
-        }
-        #[inline]
-        fn zero_case<R:Rng>(rng: &mut R, u: f64) -> f64 {
-            // compute a random number in the tail by hand
-
-            // strange initial conditions, because the loop is not
-            // do-while, so the condition should be true on the first
-            // run, they get overwritten anyway (0 < 1, so these are
-            // good).
-            let mut x = 1.0f64;
-            let mut y = 0.0f64;
-
-            while -2.0 * y < x * x {
-                let Open01(x_) = rng.gen::<Open01<f64>>();
-                let Open01(y_) = rng.gen::<Open01<f64>>();
-
-                x = x_.ln() / ziggurat_tables::ZIG_NORM_R;
-                y = y_.ln();
-            }
-
-            if u < 0.0 { x - ziggurat_tables::ZIG_NORM_R } else { ziggurat_tables::ZIG_NORM_R - x }
-        }
-
-        StandardNormal(ziggurat(
-            rng,
-            true, // this is symmetric
-            &ziggurat_tables::ZIG_NORM_X,
-            &ziggurat_tables::ZIG_NORM_F,
-            pdf, zero_case))
+pub fn standard_normal<R:Rng>(rng: &mut R) -> f64 {
+    #[inline]
+    fn pdf(x: f64) -> f64 {
+        (-x*x/2.0).exp()
     }
+    #[inline]
+    fn zero_case<R:Rng>(rng: &mut R, u: f64) -> f64 {
+        // compute a random number in the tail by hand
+
+        // strange initial conditions, because the loop is not
+        // do-while, so the condition should be true on the first
+        // run, they get overwritten anyway (0 < 1, so these are
+        // good).
+        let mut x = 1.0f64;
+        let mut y = 0.0f64;
+
+        while -2.0 * y < x * x {
+            let Open01(x_) = rng.gen::<Open01<f64>>();
+            let Open01(y_) = rng.gen::<Open01<f64>>();
+
+            x = x_.ln() / ziggurat_tables::ZIG_NORM_R;
+            y = y_.ln();
+        }
+
+        if u < 0.0 { x - ziggurat_tables::ZIG_NORM_R } else { ziggurat_tables::ZIG_NORM_R - x }
+    }
+
+    ziggurat(
+        rng,
+        true, // this is symmetric
+        &ziggurat_tables::ZIG_NORM_X,
+        &ziggurat_tables::ZIG_NORM_F,
+        pdf, zero_case)
 }
 
 /// The normal distribution `N(mean, std_dev**2)`.
 ///
 /// This uses the ZIGNOR variant of the Ziggurat method, see
-/// `StandardNormal` for more details.
+/// `standard_normal` for more details.
 ///
 /// # Example
 ///
@@ -112,8 +107,7 @@ impl Normal {
 }
 impl Sample<f64> for Normal {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let StandardNormal(n) = rng.gen::<StandardNormal>();
-        self.mean + self.std_dev * n
+        self.mean + self.std_dev * standard_normal(rng)
     }
 }
 

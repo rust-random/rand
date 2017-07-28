@@ -16,7 +16,7 @@ use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
 
 use {Rng, Open01};
-use super::normal::StandardNormal;
+use super::normal::standard_normal;
 use super::{Sample, Exp};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
@@ -153,7 +153,7 @@ impl Sample<f64> for GammaSmallShape {
 impl Sample<f64> for GammaLargeShape {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         loop {
-            let StandardNormal(x) = rng.gen::<StandardNormal>();
+            let x = standard_normal(rng);
             let v_cbrt = 1.0 + self.c * x;
             if v_cbrt <= 0.0 { // a^3 <= 0 iff a <= 0
                 continue
@@ -220,7 +220,7 @@ impl Sample<f64> for ChiSquared {
         match self.repr {
             DoFExactlyOne => {
                 // k == 1 => N(0,1)^2
-                let StandardNormal(norm) = rng.gen::<StandardNormal>();
+                let norm = standard_normal(rng);
                 norm * norm
             }
             DoFAnythingElse(ref g) => g.sample(rng)
@@ -303,7 +303,7 @@ impl StudentT {
 }
 impl Sample<f64> for StudentT {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let StandardNormal(norm) = rng.gen::<StandardNormal>();
+        let norm = standard_normal(rng);
         norm * (self.dof / self.chi.sample(rng)).sqrt()
     }
 }
