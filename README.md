@@ -33,7 +33,7 @@ thread_rng.
 use rand::thread_rng;
 
 let x: u32 = thread_rng().next_u32();
-println!("{}", u32)
+println!("{}", x)
 ```
 
 ```rust
