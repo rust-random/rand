@@ -5,19 +5,21 @@ extern crate rand;
 
 const RAND_BENCH_N: u64 = 1000;
 
-mod dist;
+mod distributions;
 
 use std::mem::size_of;
 use test::{black_box, Bencher};
-use rand::{XorShiftRng, StdRng, IsaacRng, Isaac64Rng, Rng};
-use rand::{OsRng, sample, weak_rng};
+use rand::{Rng, StdRng, OsRng, weak_rng};
+use rand::prng::{XorShiftRng, IsaacRng, Isaac64Rng};
+use rand::{sample, Shuffle};
+use rand::dist::uniform;
 
 #[bench]
 fn rand_xorshift(b: &mut Bencher) {
-    let mut rng: XorShiftRng = OsRng::new().unwrap().gen();
+    let mut rng = XorShiftRng::new_from_rng(&mut OsRng::new().unwrap());
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
-            black_box(rng.gen::<usize>());
+            black_box(uniform::<usize, _>(&mut rng));
         }
     });
     b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -25,10 +27,10 @@ fn rand_xorshift(b: &mut Bencher) {
 
 #[bench]
 fn rand_isaac(b: &mut Bencher) {
-    let mut rng: IsaacRng = OsRng::new().unwrap().gen();
+    let mut rng = IsaacRng::new_from_rng(&mut OsRng::new().unwrap());
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
-            black_box(rng.gen::<usize>());
+            black_box(uniform::<usize, _>(&mut rng));
         }
     });
     b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -36,10 +38,10 @@ fn rand_isaac(b: &mut Bencher) {
 
 #[bench]
 fn rand_isaac64(b: &mut Bencher) {
-    let mut rng: Isaac64Rng = OsRng::new().unwrap().gen();
+    let mut rng = Isaac64Rng::new_from_rng(&mut OsRng::new().unwrap());
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
-            black_box(rng.gen::<usize>());
+            black_box(uniform::<usize, _>(&mut rng));
         }
     });
     b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -50,7 +52,7 @@ fn rand_std(b: &mut Bencher) {
     let mut rng = StdRng::new().unwrap();
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
-            black_box(rng.gen::<usize>());
+            black_box(uniform::<usize, _>(&mut rng));
         }
     });
     b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -83,7 +85,7 @@ fn rand_shuffle_100(b: &mut Bencher) {
     let mut rng = weak_rng();
     let x : &mut [usize] = &mut [1; 100];
     b.iter(|| {
-        rng.shuffle(x);
+        x.shuffle(&mut rng);
     })
 }
 
