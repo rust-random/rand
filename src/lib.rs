@@ -255,6 +255,7 @@ use std::rc::Rc;
 
 pub use read::ReadRng;
 pub use os::OsRng;
+pub use self::sequence::{Choose, Shuffle};
 
 use dist::range::range;
 
@@ -265,6 +266,7 @@ pub mod dist;
 pub mod iter;
 pub mod prng;
 pub mod reseeding;
+pub mod sequence;
 
 mod read;
 mod os;
@@ -414,67 +416,6 @@ pub trait Rng {
     /// ```
     fn iter<'a>(&'a mut self) -> iter::RngIterator<'a, Self> where Self: Sized     {
         iter::RngIterator { rng: self, len: None }
-    }
-
-    /// Return a random element from `values`.
-    ///
-    /// Return `None` if `values` is empty.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let choices = [1, 2, 4, 8, 16, 32];
-    /// let mut rng = thread_rng();
-    /// println!("{:?}", rng.choose(&choices));
-    /// assert_eq!(rng.choose(&choices[..0]), None);
-    /// ```
-    fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> where Self: Sized {
-        if values.is_empty() {
-            None
-        } else {
-            Some(&values[range(0, values.len(), self)])
-        }
-    }
-
-    /// Return a mutable pointer to a random element from `values`.
-    ///
-    /// Return `None` if `values` is empty.
-    fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> where Self: Sized {
-        if values.is_empty() {
-            None
-        } else {
-            let len = values.len();
-            Some(&mut values[range(0, len, self)])
-        }
-    }
-
-    /// Shuffle a mutable slice in place.
-    ///
-    /// This applies Durstenfeld's algorithm for the [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
-    /// which produces an unbiased permutation.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
-    /// let mut y = [1, 2, 3];
-    /// rng.shuffle(&mut y);
-    /// println!("{:?}", y);
-    /// rng.shuffle(&mut y);
-    /// println!("{:?}", y);
-    /// ```
-    fn shuffle<T>(&mut self, values: &mut [T]) where Self: Sized {
-        let mut i = values.len();
-        while i >= 2 {
-            // invariant: elements with index >= i have been locked in place.
-            i -= 1;
-            // lock element i in place.
-            values.swap(i, range(0, i + 1, self));
-        }
     }
 }
 
@@ -719,7 +660,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, SeedableRng, StdRng, sample};
+    use {Rng, thread_rng, SeedableRng, StdRng, sample, Shuffle};
     use dist::{uniform, uniform01, range, ascii_word_char};
     use std::iter::repeat;
 
@@ -792,40 +733,11 @@ mod test {
     }
 
     #[test]
-    fn test_choose() {
-        let mut r = thread_rng();
-        assert_eq!(r.choose(&[1, 1, 1]).map(|&x|x), Some(1));
-
-        let v: &[isize] = &[];
-        assert_eq!(r.choose(v), None);
-    }
-
-    #[test]
-    fn test_shuffle() {
-        let mut r = thread_rng();
-        let empty: &mut [isize] = &mut [];
-        r.shuffle(empty);
-        let mut one = [1];
-        r.shuffle(&mut one);
-        let b: &[_] = &[1];
-        assert_eq!(one, b);
-
-        let mut two = [1, 2];
-        r.shuffle(&mut two);
-        assert!(two == [1, 2] || two == [2, 1]);
-
-        let mut x = [1, 1, 1];
-        r.shuffle(&mut x);
-        let b: &[_] = &[1, 1, 1];
-        assert_eq!(x, b);
-    }
-
-    #[test]
     fn test_thread_rng() {
         let mut r = thread_rng();
         uniform::<i32, _>(&mut r);
         let mut v = [1, 1, 1];
-        r.shuffle(&mut v);
+        v.shuffle(&mut r);
         let b: &[_] = &[1, 1, 1];
         assert_eq!(v, b);
         assert_eq!(range(0, 1, &mut r), 0);
@@ -838,20 +750,26 @@ mod test {
             let mut r = &mut rng as &mut Rng;
             r.next_u32();
             uniform::<i32, _>(&mut r);
+            // FIXME: dynamic dispatch?
+            /*
             let mut v = [1, 1, 1];
-            (&mut r).shuffle(&mut v);
+            v[..].shuffle(r);
             let b: &[_] = &[1, 1, 1];
             assert_eq!(v, b);
+            */
             assert_eq!(range(0, 1, &mut r), 0);
         }
         {
             let mut r = Box::new(rng) as Box<Rng>;
             r.next_u32();
             uniform::<i32, _>(&mut r);
+            // FIXME: dynamic dispatch?
+            /*
             let mut v = [1, 1, 1];
-            r.shuffle(&mut v);
+            v[..].shuffle(r);
             let b: &[_] = &[1, 1, 1];
             assert_eq!(v, b);
+            */
             assert_eq!(range(0, 1, &mut r), 0);
         }
     }

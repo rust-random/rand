@@ -72,11 +72,12 @@ pub fn codepoint<R: Rng>(rng: &mut R) -> char {
 /// a-z, A-Z and 0-9.
 #[inline]
 pub fn ascii_word_char<R: Rng>(rng: &mut R) -> char {
+    use Choose;
     const GEN_ASCII_STR_CHARSET: &'static [u8] =
         b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
             abcdefghijklmnopqrstuvwxyz\
             0123456789";
-    *rng.choose(GEN_ASCII_STR_CHARSET).unwrap() as char
+    *GEN_ASCII_STR_CHARSET.choose(rng).unwrap() as char
 }
 
 
