@@ -10,8 +10,8 @@
 
 //! The normal and derived distributions.
 
-use {Rng, Open01};
-use dist::{ziggurat, ziggurat_tables, Sample};
+use {Rng};
+use dist::{ziggurat, ziggurat_tables, Sample, open01};
 
 /// Generates N(0, 1) random numbers
 /// (a.k.a.  a standard normal, or Gaussian).
@@ -50,8 +50,8 @@ pub fn standard_normal<R:Rng>(rng: &mut R) -> f64 {
         let mut y = 0.0f64;
 
         while -2.0 * y < x * x {
-            let Open01(x_) = rng.gen::<Open01<f64>>();
-            let Open01(y_) = rng.gen::<Open01<f64>>();
+            let x_: f64 = open01(rng);
+            let y_: f64 = open01(rng);
 
             x = x_.ln() / ziggurat_tables::ZIG_NORM_R;
             y = y_.ln();

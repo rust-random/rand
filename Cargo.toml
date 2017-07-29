@@ -20,9 +20,6 @@ nightly = ["i128_support"]
 [dependencies]
 libc = "0.2"
 
-[dev-dependencies]
-log = "0.3.0"
-
 [workspace]
 members = ["rand-derive"]
 

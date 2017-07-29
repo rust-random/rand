@@ -21,7 +21,7 @@ use std::marker;
 
 use {Rng, Rand};
 
-pub use self::uniform::{Uniform, uniform};
+pub use self::uniform::{uniform, uniform01, open01, closed01};
 pub use self::range::Range;
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal};
@@ -126,7 +126,7 @@ fn ziggurat<R: Rng, P, Z>(
             return zero_case(rng, u);
         }
         // algebraically equivalent to f1 + DRanU()*(f0 - f1) < 1
-        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * rng.gen::<f64>() < pdf(x) {
+        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * uniform01::<f64, _>(rng) < pdf(x) {
             return x;
         }
     }

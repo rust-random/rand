@@ -9,8 +9,6 @@
 // except according to those terms.
 
 //! Generating uniformly distributed numbers
-//! 
-//! TODO: is there value in having both `uniform` and `Uniform`?
 
 use std::mem;
 use std::marker::PhantomData;
@@ -18,16 +16,97 @@ use std::marker::PhantomData;
 use Rng;
 use dist::Sample;
 
+// ----- convenience functions -----
+
 /// Sample values uniformly over the whole range supported by the type
+/// 
+/// This method has precisely two template parameters. To fix the output type,
+/// use the syntax `uniform::<u32, _>(rng)`.
 pub fn uniform<T: SampleUniform, R: Rng>(rng: &mut R) -> T {
     T::sample_uniform(rng)
 }
+
+/// Sample values uniformly over the half-open range [0, 1)
+/// 
+/// This method has precisely two template parameters. To fix the output type,
+/// use the syntax `uniform01::<f64, _>(rng)`.
+pub fn uniform01<T: SampleUniform01, R: Rng>(rng: &mut R) -> T {
+    T::sample_uniform01(rng)
+}
+
+/// Sample values uniformly over the open range (0, 1)
+/// 
+/// This method has precisely two template parameters. To fix the output type,
+/// use the syntax `open01::<f64, _>(rng)`.
+pub fn open01<T: SampleOpen01, R: Rng>(rng: &mut R) -> T {
+    T::sample_open01(rng)
+}
+
+/// Sample values uniformly over the closed range [0, 1]
+/// 
+/// This method has precisely two template parameters. To fix the output type,
+/// use the syntax `closed01::<f64, _>(rng)`.
+pub fn closed01<T: SampleClosed01, R: Rng>(rng: &mut R) -> T {
+    T::sample_closed01(rng)
+}
+
+
+// ----- Sample implementations -----
+// TODO: do we want these? If so, implement for other ranges.
+
+/// Sample values uniformly over the whole range supported by the type.
+/// 
+/// No internal state.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Uniform<T: SampleUniform> {
+    _marker: PhantomData<T>,
+}
+
+impl<T: SampleUniform> Uniform<T> {
+    /// Create an instance. Should optimise to nothing, since there is no
+    /// internal state.
+    pub fn new() -> Self {
+        Uniform {
+            _marker: PhantomData
+        }
+    }
+}
+
+impl<T: SampleUniform> Sample<T> for Uniform<T> {
+    fn sample<R: Rng>(&self, rng: &mut R) -> T {
+        T::sample_uniform(rng)
+    }
+}
+
+
+// ----- Sampling traits -----
 
 /// Sample values uniformly over the whole range supported by the type
 pub trait SampleUniform: Sized {
     /// Sample a value from a RNG
     fn sample_uniform<R: Rng>(rng: &mut R) -> Self;
 }
+
+/// Sample values uniformly over the half-open range [0, 1)
+pub trait SampleUniform01: Sized {
+    /// Sample a value from a RNG
+    fn sample_uniform01<R: Rng>(rng: &mut R) -> Self;
+}
+
+/// Sample values uniformly over the open range (0, 1)
+pub trait SampleOpen01: Sized {
+    /// Sample a value from a RNG
+    fn sample_open01<R: Rng>(rng: &mut R) -> Self;
+}
+
+/// Sample values uniformly over the closed range [0, 1]
+pub trait SampleClosed01: Sized {
+    /// Sample a value from a RNG
+    fn sample_closed01<R: Rng>(rng: &mut R) -> Self;
+}
+
+
+// ----- actual implementations -----
 
 impl SampleUniform for isize {
     #[inline]
@@ -123,35 +202,47 @@ impl SampleUniform for u128 {
     }
 }
 
-/// Sample values uniformly over the whole range supported by the type.
-/// 
-/// No internal state.
-#[derive(Clone, Copy, Debug, Default)]
-pub struct Uniform<T: SampleUniform> {
-    _marker: PhantomData<T>,
-}
 
-impl<T: SampleUniform> Uniform<T> {
-    /// Create an instance. Should optimise to nothing, since there is no
-    /// internal state.
-    pub fn new() -> Self {
-        Uniform {
-            _marker: PhantomData
+macro_rules! float_impls {
+    ($scale_name:ident, $ty:ty, $mantissa_bits:expr, $method_name:ident) => {
+        const $scale_name: $ty = (1u64 << $mantissa_bits) as $ty;
+        
+        impl SampleUniform01 for $ty {
+            #[inline]
+            fn sample_uniform01<R: Rng>(rng: &mut R) -> $ty {
+                rng.$method_name()
+            }
+        }
+        impl SampleOpen01 for $ty {
+            #[inline]
+            fn sample_open01<R: Rng>(rng: &mut R) -> $ty {
+                // add a small amount (specifically 2 bits below
+                // the precision of f64/f32 at 1.0), so that small
+                // numbers are larger than 0, but large numbers
+                // aren't pushed to/above 1.
+                uniform01::<$ty, _>(rng) + 0.25 / $scale_name
+            }
+        }
+        impl SampleClosed01 for $ty {
+            #[inline]
+            fn sample_closed01<R: Rng>(rng: &mut R) -> $ty {
+                // rescale so that 1.0 - epsilon becomes 1.0
+                // precisely.
+                uniform01::<$ty, _>(rng) * $scale_name / ($scale_name - 1.0)
+            }
         }
     }
 }
-
-impl<T: SampleUniform> Sample<T> for Uniform<T> {
-    fn sample<R: Rng>(&self, rng: &mut R) -> T {
-        T::sample_uniform(rng)
-    }
-}
+float_impls! { SCALE_F64, f64, 53, next_f64 }
+float_impls! { SCALE_F32, f32, 24, next_f32 }
 
 
 #[cfg(test)]
 mod tests {
-    use dist::{uniform, Uniform, Sample};
-    use dist::uniform::SampleUniform;
+    use {Rng, thread_rng};
+    use dist::{uniform, Sample};
+    use dist::uniform::{SampleUniform, Uniform};
+    use dist::{uniform01, open01, closed01};
     
     #[test]
     fn test_integers() {
@@ -178,5 +269,63 @@ mod tests {
         
         let dist = Uniform::<u8>::new();
         let _ = dist.sample(&mut rng);
+    }
+
+    struct ConstantRng(u64);
+    impl Rng for ConstantRng {
+        fn next_u32(&mut self) -> u32 {
+            let ConstantRng(v) = *self;
+            v as u32
+        }
+        fn next_u64(&mut self) -> u64 {
+            let ConstantRng(v) = *self;
+            v
+        }
+    }
+
+    #[test]
+    fn test_f64() {
+        let mut r = thread_rng();
+        let a: f64 = uniform01(&mut r);
+        let b = uniform01::<f64, _>(&mut r);
+        assert!(0.0 <= a && a < 1.0);
+        assert!(0.0 <= b && b < 1.0);
+    }
+
+    #[test]
+    fn floating_point_edge_cases() {
+        // FIXME: this message and test predates this repo; message suggests
+        // test is supposed to be ==; using != is pretty useless
+        // the test for exact equality is correct here.
+        assert!(uniform01::<f64, _>(&mut ConstantRng(0xffff_ffff)) != 1.0);
+        assert!(uniform01::<f64, _>(&mut ConstantRng(0xffff_ffff_ffff_ffff)) != 1.0);
+    }
+
+    #[test]
+    fn rand_open() {
+        // this is unlikely to catch an incorrect implementation that
+        // generates exactly 0 or 1, but it keeps it sane.
+        let mut rng = thread_rng();
+        for _ in 0..1_000 {
+            // strict inequalities
+            let f = open01::<f64, _>(&mut rng);
+            assert!(0.0 < f && f < 1.0);
+
+            let f = open01::<f32, _>(&mut rng);
+            assert!(0.0 < f && f < 1.0);
+        }
+    }
+
+    #[test]
+    fn rand_closed() {
+        let mut rng = thread_rng();
+        for _ in 0..1_000 {
+            // strict inequalities
+            let f = closed01::<f64, _>(&mut rng);
+            assert!(0.0 <= f && f <= 1.0);
+
+            let f = closed01::<f32, _>(&mut rng);
+            assert!(0.0 <= f && f <= 1.0);
+        }
     }
 }

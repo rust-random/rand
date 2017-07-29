@@ -15,7 +15,7 @@
 use std::num::Wrapping as w;
 
 use Rng;
-use dist::{Sample};
+use dist::{Sample, uniform01};
 
 /// Sample values uniformly between two bounds.
 ///
@@ -151,7 +151,7 @@ macro_rules! float_impl {
                 }
             }
             fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
-                r.low + r.range * rng.gen::<$ty>()
+                r.low + r.range * uniform01::<$ty, _>(rng)
             }
         }
     }

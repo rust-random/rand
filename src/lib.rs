@@ -88,7 +88,10 @@
 //! ```
 //!
 //! ```rust
-//! let tuple = rand::random::<(f64, char)>();
+//! use rand::thread_rng;
+//! use rand::dist::{uniform, uniform01};
+//! let mut rng = thread_rng();
+//! let tuple: (f64, u8) = (uniform01(&mut rng), uniform(&mut rng));
 //! println!("{:?}", tuple)
 //! ```
 //!
@@ -245,8 +248,6 @@
 
 #![cfg_attr(feature = "i128_support", feature(i128_type))]
 
-#[cfg(test)] #[macro_use] extern crate log;
-
 
 use std::cell::RefCell;
 use std::mem;
@@ -351,8 +352,8 @@ pub trait Rng {
     /// the requirements directly can overload this for performance.
     /// It is required that the return value lies in `[0, 1)`.
     ///
-    /// See `Closed01` for the closed interval `[0,1]`, and
-    /// `Open01` for the open interval `(0,1)`.
+    /// See `closed01` for the closed interval `[0,1]`, and
+    /// `open01` for the open interval `(0,1)`.
     fn next_f32(&mut self) -> f32 {
         const UPPER_MASK: u32 = 0x3F800000;
         const LOWER_MASK: u32 = 0x7FFFFF;
@@ -369,8 +370,8 @@ pub trait Rng {
     /// the requirements directly can overload this for performance.
     /// It is required that the return value lies in `[0, 1)`.
     ///
-    /// See `Closed01` for the closed interval `[0,1]`, and
-    /// `Open01` for the open interval `(0,1)`.
+    /// See `closed01` for the closed interval `[0,1]`, and
+    /// `open01` for the open interval `(0,1)`.
     fn next_f64(&mut self) -> f64 {
         const UPPER_MASK: u64 = 0x3FF0000000000000;
         const LOWER_MASK: u64 = 0xFFFFFFFFFFFFF;
@@ -436,11 +437,14 @@ pub trait Rng {
     ///
     /// ```rust
     /// use rand::{thread_rng, Rng};
+    /// use rand::dist::{uniform, uniform01};
     ///
     /// let mut rng = thread_rng();
-    /// let x: u32 = rng.gen();
+    /// let x: u32 = uniform(&mut rng);
+    /// let y: f64 = uniform01(&mut rng);
     /// println!("{}", x);
-    /// println!("{:?}", rng.gen::<(f64, bool)>());
+    /// println!("{}", y);
+    /// println!("{}", rng.gen::<bool>());
     /// ```
     #[inline(always)]
     fn gen<T: Rand>(&mut self) -> T where Self: Sized {
@@ -688,12 +692,13 @@ pub trait SeedableRng<Seed>: Rng {
     /// ```rust
     /// use rand::{Rng, SeedableRng};
     /// use rand::prng::IsaacWordRng;
+    /// use rand::dist::uniform01;
     ///
     /// let seed: &[_] = &[1, 2, 3, 4];
     /// let mut rng: IsaacWordRng = SeedableRng::from_seed(seed);
-    /// println!("{}", rng.gen::<f64>());
+    /// println!("{}", uniform01::<f64, _>(&mut rng));
     /// rng.reseed(&[5, 6, 7, 8]);
-    /// println!("{}", rng.gen::<f64>());
+    /// println!("{}", uniform01::<f64, _>(&mut rng));
     /// ```
     fn reseed(&mut self, Seed);
 
@@ -704,48 +709,14 @@ pub trait SeedableRng<Seed>: Rng {
     /// ```rust
     /// use rand::{Rng, SeedableRng};
     /// use rand::prng::ChaChaRng;
+    /// use rand::dist::uniform01;
     ///
     /// let seed: &[_] = &[1, 2, 3, 4];
     /// let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
-    /// println!("{}", rng.gen::<f64>());
+    /// println!("{}", uniform01::<f64, _>(&mut rng));
     /// ```
     fn from_seed(seed: Seed) -> Self;
 }
-
-/// A wrapper for generating floating point numbers uniformly in the
-/// open interval `(0,1)` (not including either endpoint).
-///
-/// Use `Closed01` for the closed interval `[0,1]`, and the default
-/// `Rand` implementation for `f32` and `f64` for the half-open
-/// `[0,1)`.
-///
-/// # Example
-/// ```rust
-/// use rand::{random, Open01};
-///
-/// let Open01(val) = random::<Open01<f32>>();
-/// println!("f32 from (0,1): {}", val);
-/// ```
-#[derive(Debug)]
-pub struct Open01<F>(pub F);
-
-/// A wrapper for generating floating point numbers uniformly in the
-/// closed interval `[0,1]` (including both endpoints).
-///
-/// Use `Open01` for the closed interval `(0,1)`, and the default
-/// `Rand` implementation of `f32` and `f64` for the half-open
-/// `[0,1)`.
-///
-/// # Example
-///
-/// ```rust
-/// use rand::{random, Closed01};
-///
-/// let Closed01(val) = random::<Closed01<f32>>();
-/// println!("f32 from [0,1]: {}", val);
-/// ```
-#[derive(Debug)]
-pub struct Closed01<F>(pub F);
 
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
@@ -889,9 +860,6 @@ impl Rng for ThreadRng {
 /// let x = rand::random::<u8>();
 /// println!("{}", x);
 ///
-/// let y = rand::random::<f64>();
-/// println!("{}", y);
-///
 /// if rand::random() { // generates a boolean
 ///     println!("Better lucky than good!");
 /// }
@@ -954,7 +922,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 #[cfg(test)]
 mod test {
     use {Rng, thread_rng, random, SeedableRng, StdRng, sample};
-    use dist::uniform;
+    use dist::{uniform, uniform01};
     use std::iter::repeat;
 
     pub struct MyRng<R> { inner: R }
@@ -1051,14 +1019,6 @@ mod test {
     }
 
     #[test]
-    fn test_gen_f64() {
-        let mut r = thread_rng();
-        let a = r.gen::<f64>();
-        let b = r.gen::<f64>();
-        debug!("{:?}", (a, b));
-    }
-
-    #[test]
     fn test_gen_weighted_bool() {
         let mut r = thread_rng();
         assert_eq!(r.gen_weighted_bool(0), true);
@@ -1078,7 +1038,7 @@ mod test {
         let mut r = thread_rng();
         assert_eq!(r.iter_map(|rng| rng.next_u32()).take(0).count(), 0);
         assert_eq!(r.iter_map(|rng| uniform::<u8, _>(rng)).take(10).count(), 10);
-        assert_eq!(r.iter_map(|rng| rng.gen::<f64>()).take(16).count(), 16);
+        assert_eq!(r.iter_map(|rng| uniform01::<f64, _>(rng)).take(16).count(), 16);
     }
 
     #[test]
@@ -1150,14 +1110,13 @@ mod test {
     fn test_random() {
         // not sure how to test this aside from just getting some values
         let _n : usize = random();
-        let _f : f32 = random();
         let _o : Option<Option<i8>> = random();
         let _many : ((),
                      (usize,
                       isize,
                       Option<(u32, (bool,))>),
-                     (u8, i8, u16, i16, u32, i32, u64, i64),
-                     (f32, (f64, (f64,)))) = random();
+                     (u8, i8, u16, i16, u32, i32, u64, i64))
+                    = random();
     }
 
     #[test]
