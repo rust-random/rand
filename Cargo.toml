@@ -20,8 +20,5 @@ nightly = ["i128_support"]
 [dependencies]
 libc = "0.2"
 
-[workspace]
-members = ["rand-derive"]
-
 [target.'cfg(target_os = "fuchsia")'.dependencies]
 magenta = "^0.1.1"
