@@ -11,7 +11,7 @@
 //! The normal and derived distributions.
 
 use {Rng};
-use dist::{ziggurat, ziggurat_tables, Sample, open01};
+use dist::{ziggurat, ziggurat_tables, Distribution, open01};
 
 /// Generates N(0, 1) random numbers
 /// (a.k.a.  a standard normal, or Gaussian).
@@ -76,7 +76,7 @@ pub fn standard_normal<R:Rng>(rng: &mut R) -> f64 {
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{Normal, Sample};
+/// use rand::dist::{Normal, Distribution};
 ///
 /// // mean 2, standard deviation 3
 /// let normal = Normal::new(2.0, 3.0);
@@ -105,7 +105,7 @@ impl Normal {
         }
     }
 }
-impl Sample<f64> for Normal {
+impl Distribution<f64> for Normal {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         self.mean + self.std_dev * standard_normal(rng)
     }
@@ -120,7 +120,7 @@ impl Sample<f64> for Normal {
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{LogNormal, Sample};
+/// use rand::dist::{LogNormal, Distribution};
 ///
 /// // mean 2, standard deviation 3
 /// let log_normal = LogNormal::new(2.0, 3.0);
@@ -145,7 +145,7 @@ impl LogNormal {
         LogNormal { norm: Normal::new(mean, std_dev) }
     }
 }
-impl Sample<f64> for LogNormal {
+impl Distribution<f64> for LogNormal {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         self.norm.sample(rng).exp()
     }
@@ -153,7 +153,7 @@ impl Sample<f64> for LogNormal {
 
 #[cfg(test)]
 mod tests {
-    use dist::{Sample};
+    use dist::{Distribution};
     use super::{Normal, LogNormal};
 
     #[test]

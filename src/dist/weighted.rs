@@ -14,7 +14,7 @@
 //! adapted, or removed entirely.
 
 use Rng;
-use dist::{Range, Sample};
+use dist::{Range, Distribution};
 
 /// A value with a particular weight for use with `WeightedChoice`.
 #[derive(Copy, Clone, Debug)]
@@ -30,41 +30,36 @@ pub struct Weighted<T> {
 /// Each item has an associated weight that influences how likely it
 /// is to be chosen: higher weight is more likely.
 ///
-/// The `Clone` restriction is a limitation of the `Sample` trait.
-/// Note that `&T` is (cheaply) `Clone` for
-/// all `T`, as is `u32`, so one can store references or indices into
-/// another vector.
-///
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::Sample;
+/// use rand::dist::Distribution;
 /// use rand::dist::weighted::{Weighted, WeightedChoice};
 ///
-/// let mut items = vec!(Weighted { weight: 2, item: 'a' },
+/// let items = vec!(Weighted { weight: 2, item: 'a' },
 ///                      Weighted { weight: 4, item: 'b' },
 ///                      Weighted { weight: 1, item: 'c' });
-/// let wc = WeightedChoice::new(&mut items);
+/// let wc = WeightedChoice::new(items);
 /// let mut rng = rand::thread_rng();
 /// for _ in 0..16 {
 ///      // on average prints 'a' 4 times, 'b' 8 and 'c' twice.
 ///      println!("{}", wc.sample(&mut rng));
 /// }
 /// ```
-#[derive(Debug)]
-pub struct WeightedChoice<'a, T:'a> {
-    items: &'a mut [Weighted<T>],
+#[derive(Clone, Debug)]
+pub struct WeightedChoice<T: Clone> {
+    items: Vec<Weighted<T>>,
     weight_range: Range<u32>
 }
 
-impl<'a, T: Clone> WeightedChoice<'a, T> {
+impl<T: Clone> WeightedChoice<T> {
     /// Create a new `WeightedChoice`.
     ///
     /// Panics if:
     /// - `v` is empty
     /// - the total weight is 0
     /// - the total weight is larger than a `u32` can contain.
-    pub fn new(items: &'a mut [Weighted<T>]) -> WeightedChoice<'a, T> {
+    pub fn new(mut items: Vec<Weighted<T>>) -> WeightedChoice<T> {
         // strictly speaking, this is subsumed by the total weight == 0 case
         assert!(!items.is_empty(), "WeightedChoice::new called with no items");
 
@@ -73,7 +68,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
         // we convert the list from individual weights to cumulative
         // weights so we can binary search. This *could* drop elements
         // with weight == 0 as an optimisation.
-        for item in items.iter_mut() {
+        for ref mut item in items.iter_mut() {
             running_total = match running_total.checked_add(item.weight) {
                 Some(n) => n,
                 None => panic!("WeightedChoice::new called with a total weight \
@@ -93,7 +88,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
     }
 }
 
-impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
+impl<T: Clone> Distribution<T> for WeightedChoice<T> {
     fn sample<R: Rng>(&self, rng: &mut R) -> T {
         // we want to find the first element that has cumulative
         // weight > sample_weight, which we do by binary since the
@@ -139,7 +134,7 @@ impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
 #[cfg(test)]
 mod tests {
     use Rng;
-    use dist::Sample;
+    use dist::Distribution;
     use super::{WeightedChoice, Weighted};
 
     #[derive(PartialEq, Debug)]
@@ -166,8 +161,8 @@ mod tests {
 
         macro_rules! t {
             ($items:expr, $expected:expr) => {{
-                let mut items = $items;
-                let wc = WeightedChoice::new(&mut items);
+                let items = $items;
+                let wc = WeightedChoice::new(items);
                 let expected = $expected;
 
                 let mut rng = CountingRng { i: 0 };
@@ -238,17 +233,17 @@ mod tests {
 
     #[test] #[should_panic]
     fn test_weighted_choice_no_items() {
-        WeightedChoice::<isize>::new(&mut []);
+        WeightedChoice::<isize>::new(vec![]);
     }
     #[test] #[should_panic]
     fn test_weighted_choice_zero_weight() {
-        WeightedChoice::new(&mut [Weighted { weight: 0, item: 0},
+        WeightedChoice::new(vec![Weighted { weight: 0, item: 0},
                                   Weighted { weight: 0, item: 1}]);
     }
     #[test] #[should_panic]
     fn test_weighted_choice_weight_overflows() {
         let x = ::std::u32::MAX / 2; // x + x + 2 is the overflow
-        WeightedChoice::new(&mut [Weighted { weight: x, item: 0 },
+        WeightedChoice::new(vec![Weighted { weight: x, item: 0 },
                                   Weighted { weight: 1, item: 1 },
                                   Weighted { weight: x, item: 2 },
                                   Weighted { weight: 1, item: 3 }]);

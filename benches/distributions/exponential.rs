@@ -2,7 +2,7 @@ use std::mem::size_of;
 use test::Bencher;
 use rand;
 use rand::dist::exponential::Exp;
-use rand::dist::Sample;
+use rand::dist::Distribution;
 
 #[bench]
 fn rand_exp(b: &mut Bencher) {

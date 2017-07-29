@@ -1,7 +1,7 @@
 use std::mem::size_of;
 use test::Bencher;
 use rand;
-use rand::dist::Sample;
+use rand::dist::Distribution;
 use rand::dist::normal::Normal;
 
 #[bench]

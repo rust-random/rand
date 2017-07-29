@@ -17,7 +17,7 @@ use self::ChiSquaredRepr::*;
 
 use {Rng};
 use dist::normal::standard_normal;
-use dist::{Sample, Exp, open01};
+use dist::{Distribution, Exp, open01};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -38,7 +38,7 @@ use dist::{Sample, Exp, open01};
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{Sample, Gamma};
+/// use rand::dist::{Distribution, Gamma};
 ///
 /// let gamma = Gamma::new(2.0, 5.0);
 /// let v = gamma.sample(&mut rand::thread_rng());
@@ -134,7 +134,7 @@ impl GammaLargeShape {
 }
 
 
-impl Sample<f64> for Gamma {
+impl Distribution<f64> for Gamma {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         match self.repr {
             Small(ref g) => g.sample(rng),
@@ -143,14 +143,14 @@ impl Sample<f64> for Gamma {
         }
     }
 }
-impl Sample<f64> for GammaSmallShape {
+impl Distribution<f64> for GammaSmallShape {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         let u: f64 = open01(rng);
 
         self.large_shape.sample(rng) * u.powf(self.inv_shape)
     }
 }
-impl Sample<f64> for GammaLargeShape {
+impl Distribution<f64> for GammaLargeShape {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         loop {
             let x = standard_normal(rng);
@@ -182,7 +182,7 @@ impl Sample<f64> for GammaLargeShape {
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{ChiSquared, Sample};
+/// use rand::dist::{ChiSquared, Distribution};
 ///
 /// let chi = ChiSquared::new(11.0);
 /// let v = chi.sample(&mut rand::thread_rng());
@@ -215,7 +215,7 @@ impl ChiSquared {
         ChiSquared { repr: repr }
     }
 }
-impl Sample<f64> for ChiSquared {
+impl Distribution<f64> for ChiSquared {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         match self.repr {
             DoFExactlyOne => {
@@ -237,7 +237,7 @@ impl Sample<f64> for ChiSquared {
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{FisherF, Sample};
+/// use rand::dist::{FisherF, Distribution};
 ///
 /// let f = FisherF::new(2.0, 32.0);
 /// let v = f.sample(&mut rand::thread_rng());
@@ -266,7 +266,7 @@ impl FisherF {
         }
     }
 }
-impl Sample<f64> for FisherF {
+impl Distribution<f64> for FisherF {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         self.numer.sample(rng) / self.denom.sample(rng) * self.dof_ratio
     }
@@ -278,7 +278,7 @@ impl Sample<f64> for FisherF {
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{StudentT, Sample};
+/// use rand::dist::{StudentT, Distribution};
 ///
 /// let t = StudentT::new(11.0);
 /// let v = t.sample(&mut rand::thread_rng());
@@ -301,7 +301,7 @@ impl StudentT {
         }
     }
 }
-impl Sample<f64> for StudentT {
+impl Distribution<f64> for StudentT {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         let norm = standard_normal(rng);
         norm * (self.dof / self.chi.sample(rng)).sqrt()
@@ -310,7 +310,7 @@ impl Sample<f64> for StudentT {
 
 #[cfg(test)]
 mod test {
-    use dist::{Sample};
+    use dist::{Distribution};
     use super::{ChiSquared, StudentT, FisherF};
 
     #[test]

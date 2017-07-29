@@ -12,7 +12,7 @@
 //!
 //! A distribution may have internal state describing the distribution of
 //! generated values; for example `Range` needs to know its upper and lower
-//! bounds. Distributions use the `Sample` trait to yield values: call
+//! bounds. Distributions use the `Distribution` trait to yield values: call
 //! `dist.sample(&mut rng)` to get a random variable.
 //!
 //! TODO: is it worth exposing both submodules and re-exporting their members?
@@ -33,7 +33,7 @@ pub mod exponential;
 pub mod weighted;
 
 /// Types (distributions) that can be used to create a random instance of `T`.
-pub trait Sample<T> {
+pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the
     /// source of randomness.
     fn sample<R: Rng>(&self, rng: &mut R) -> T;

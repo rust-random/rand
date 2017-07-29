@@ -112,7 +112,7 @@
 //! and multiply this fraction by 4.
 //!
 //! ```
-//! use rand::dist::{Sample, Range};
+//! use rand::dist::{Distribution, Range};
 //!
 //! fn main() {
 //!    let between = Range::new(-1f64, 1.);
@@ -155,7 +155,7 @@
 //!
 //! ```
 //! use rand::Rng;
-//! use rand::dist::{Sample, Range, uniform};
+//! use rand::dist::{Distribution, Range, uniform};
 //!
 //! struct SimulationResult {
 //!     win: bool,
@@ -256,7 +256,7 @@ use std::rc::Rc;
 pub use read::ReadRng;
 pub use os::OsRng;
 
-use dist::{Range, Sample};
+use dist::{Range, Distribution};
 use dist::range::SampleRange;
 
 use prng::IsaacWordRng;

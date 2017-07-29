@@ -15,7 +15,7 @@
 use std::num::Wrapping as w;
 
 use Rng;
-use dist::{Sample, uniform01};
+use dist::{Distribution, uniform01};
 
 /// Sample values uniformly between two bounds.
 ///
@@ -34,7 +34,7 @@ use dist::{Sample, uniform01};
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{Sample, Range};
+/// use rand::dist::{Distribution, Range};
 ///
 /// fn main() {
 ///     let between = Range::new(10, 10000);
@@ -62,7 +62,7 @@ impl<X: SampleRange + PartialOrd> Range<X> {
     }
 }
 
-impl<T: SampleRange> Sample<T> for Range<T> {
+impl<T: SampleRange> Distribution<T> for Range<T> {
     fn sample<R: Rng>(&self, rng: &mut R) -> T {
         SampleRange::sample_range(self, rng)
     }
@@ -162,7 +162,7 @@ float_impl! { f64 }
 
 #[cfg(test)]
 mod tests {
-    use dist::{Sample};
+    use dist::{Distribution};
     use super::Range as Range;
 
     #[should_panic]
