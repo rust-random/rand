@@ -76,11 +76,13 @@
 //! # Examples
 //!
 //! ```rust
-//! use rand::Rng;
+//! use rand::dist::uniform;
 //!
 //! let mut rng = rand::thread_rng();
-//! if rng.gen() { // random bool
-//!     println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
+//! if uniform(&mut rng) { // random bool
+//!     let a: i32 = uniform(&mut rng);
+//!     let b: u32 = uniform(&mut rng);
+//!     println!("i32: {}, u32: {}", a, b)
 //! }
 //! ```
 //!
@@ -153,7 +155,7 @@
 //!
 //! ```
 //! use rand::Rng;
-//! use rand::dist::{Sample, Range};
+//! use rand::dist::{Sample, Range, uniform};
 //!
 //! struct SimulationResult {
 //!     win: bool,
@@ -172,7 +174,7 @@
 //!     let open = game_host_open(car, choice, rng);
 //!
 //!     // Shall we switch?
-//!     let switch = rng.gen();
+//!     let switch = uniform(rng);
 //!     if switch {
 //!         choice = switch_door(choice, open);
 //!     }
@@ -439,9 +441,10 @@ pub trait Rng {
     /// let mut rng = thread_rng();
     /// let x: u32 = uniform(&mut rng);
     /// let y: f64 = uniform01(&mut rng);
+    /// let z: bool = uniform(&mut rng);
     /// println!("{}", x);
     /// println!("{}", y);
-    /// println!("{}", rng.gen::<bool>());
+    /// println!("{}", z);
     /// ```
     #[inline(always)]
     fn gen<T: Rand>(&mut self) -> T where Self: Sized {

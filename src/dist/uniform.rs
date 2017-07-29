@@ -222,6 +222,13 @@ impl SampleUniform for u128 {
     }
 }
 
+impl SampleUniform for bool {
+    #[inline]
+    fn sample_uniform<R: Rng>(rng: &mut R) -> bool {
+        rng.next_u32() & 1 == 1
+    }
+}
+
 
 macro_rules! float_impls {
     ($scale_name:ident, $ty:ty, $mantissa_bits:expr, $method_name:ident) => {

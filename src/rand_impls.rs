@@ -107,11 +107,3 @@ impl Rand for u128 {
         ((rng.next_u64() as u128) << 64) | (rng.next_u64() as u128)
     }
 }
-
-
-impl Rand for bool {
-    #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> bool {
-        rng.gen::<u8>() & 1 == 1
-    }
-}
