@@ -21,7 +21,7 @@ use std::marker;
 
 use {Rng, Rand};
 
-pub use self::uniform::{uniform, uniform01, open01, closed01};
+pub use self::uniform::{uniform, uniform01, open01, closed01, codepoint};
 pub use self::range::Range;
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal};

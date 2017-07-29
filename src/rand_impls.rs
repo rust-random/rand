@@ -10,7 +10,6 @@
 
 //! The implementations of `Rand` for the built-in types.
 
-use std::char;
 use std::mem;
 
 use {Rand,Rng};
@@ -109,23 +108,6 @@ impl Rand for u128 {
     }
 }
 
-
-impl Rand for char {
-    #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> char {
-        // a char is 21 bits
-        const CHAR_MASK: u32 = 0x001f_ffff;
-        loop {
-            // Rejection sampling. About 0.2% of numbers with at most
-            // 21-bits are invalid codepoints (surrogates), so this
-            // will succeed first go almost every time.
-            match char::from_u32(rng.next_u32() & CHAR_MASK) {
-                Some(c) => return c,
-                None => {}
-            }
-        }
-    }
-}
 
 impl Rand for bool {
     #[inline]

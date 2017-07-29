@@ -10,6 +10,7 @@
 
 //! Generating uniformly distributed numbers
 
+use std::char;
 use std::mem;
 use std::marker::PhantomData;
 
@@ -48,6 +49,25 @@ pub fn open01<T: SampleOpen01, R: Rng>(rng: &mut R) -> T {
 /// use the syntax `closed01::<f64, _>(rng)`.
 pub fn closed01<T: SampleClosed01, R: Rng>(rng: &mut R) -> T {
     T::sample_closed01(rng)
+}
+
+/// Sample a `char`, uniformly distributed over all Unicode scalar values,
+/// i.e. all code points in the range `0...0x10_FFFF`, except for the range
+/// `0xD800...0xDFFF` (the surrogate code points).  This includes
+/// unassigned/reserved code points.
+#[inline]
+pub fn codepoint<R: Rng>(rng: &mut R) -> char {
+    // a char is 21 bits
+    const CHAR_MASK: u32 = 0x001f_ffff;
+    loop {
+        // Rejection sampling. About 0.2% of numbers with at most
+        // 21-bits are invalid codepoints (surrogates), so this
+        // will succeed first go almost every time.
+        match char::from_u32(rng.next_u32() & CHAR_MASK) {
+            Some(c) => return c,
+            None => {}
+        }
+    }
 }
 
 
