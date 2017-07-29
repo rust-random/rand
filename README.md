@@ -25,29 +25,36 @@ extern crate rand;
 
 ## Examples
 
-There is built-in support for a random number generator (RNG) associated with each thread stored in thread-local storage. This RNG can be accessed via thread_rng, or used implicitly via random. This RNG is normally randomly seeded from an operating-system source of randomness, e.g. /dev/urandom on Unix systems, and will automatically reseed itself from this source after generating 32 KiB of random data.
+There is built-in support for a random number generator (RNG) associated with
+each thread stored in thread-local storage. This RNG can be accessed via
+thread_rng.
 
 ```rust
-let tuple = rand::random::<(f64, char)>();
-println!("{:?}", tuple)
+use rand::thread_rng;
+
+let x: u32 = thread_rng().next_u32();
+println!("{}", u32)
 ```
 
 ```rust
+use rand::dist::{uniform};
 use rand::Rng;
 
 let mut rng = rand::thread_rng();
-if rng.gen() { // random bool
-    println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
+if uniform(&mut rng) { // random bool
+    let x: i32 = uniform(&mut rng);
+    let y: u32 = uniform(&mut rng);
+    println!("i32: {}, u32: {}", x, y);
 }
 ```
 
-It is also possible to use other RNG types, which have a similar interface. The following uses the "ChaCha" algorithm instead of the default.
+It is also possible to use other generators types, which have a similar interface. The following uses the "ChaCha" algorithm instead of the default.
 
 ```rust
 use rand::{Rng, ChaChaRng};
 
-let mut rng = rand::ChaChaRng::new_unseeded();
-println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
+let mut rng = rand::ChaChaRng::new_from_rng(&mut thread_rng());
+println!("random between 0-9: {}", Range::new(0, 10).sample(&mut rng));
 ```
 
 
