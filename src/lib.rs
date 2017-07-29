@@ -262,6 +262,7 @@ use prng::IsaacWordRng;
 use prng::XorShiftRng;
 
 pub mod dist;
+pub mod iter;
 pub mod prng;
 pub mod reseeding;
 
@@ -389,7 +390,7 @@ pub trait Rng {
         }
     }
 
-    /// Yield an iterator applying some function to self.
+    /// Yield an iterator.
     /// 
     /// Unfortunately this is only possible with static dispatch (i.e. where
     /// `Self: Sized`). [Why? Because the method must be generic, to support
@@ -408,13 +409,11 @@ pub trait Rng {
     /// use rand::dist::uniform;
     ///
     /// let mut rng = thread_rng();
-    /// let x = rng.iter_map(|rng| uniform(rng)).take(10).collect::<Vec<u32>>();
+    /// let x = rng.iter().take(10).map(|rng| uniform(rng)).collect::<Vec<u32>>();
     /// println!("{:?}", x);
     /// ```
-    fn iter_map<'a, T, F>(&'a mut self, f: F) -> RngIterator<'a, Self, T, F>
-        where Self: Sized, F: Fn(&mut Self) -> T
-    {
-        RngIterator { rng: self, f: f }
+    fn iter<'a>(&'a mut self) -> iter::RngIterator<'a, Self> where Self: Sized     {
+        iter::RngIterator { rng: self, len: None }
     }
 
     /// Return an iterator of random characters from the set A-Z,a-z,0-9.
@@ -534,24 +533,6 @@ impl<R: ?Sized> Rng for Box<R> where R: Rng {
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
-    }
-}
-
-/// Pseudo-Iterator encapsulating a random number generator.
-/// See [`Rng::iter`](trait.Rng.html#method.iter).
-/// 
-/// This only implements a [`map`](struct.RngIterator.html#method.map) method.
-#[derive(Debug)]
-pub struct RngIterator<'a, R:'a, T, F: Fn(&mut R) -> T> {
-    rng: &'a mut R,
-    f: F
-}
-
-impl<'a, R:'a, T, F: Fn(&mut R) -> T> Iterator for RngIterator<'a, R, T, F> {
-    type Item = T;
-    
-    fn next(&mut self) -> Option<T> {
-        Some((self.f)(self.rng))
     }
 }
 
@@ -850,9 +831,9 @@ mod test {
     #[test]
     fn test_gen_vec() {
         let mut r = thread_rng();
-        assert_eq!(r.iter_map(|rng| rng.next_u32()).take(0).count(), 0);
-        assert_eq!(r.iter_map(|rng| uniform::<u8, _>(rng)).take(10).count(), 10);
-        assert_eq!(r.iter_map(|rng| uniform01::<f64, _>(rng)).take(16).count(), 16);
+        assert_eq!(r.iter().map(|rng| rng.next_u32()).take(0).count(), 0);
+        assert_eq!(r.iter().map(|rng| uniform::<u8, _>(rng)).take(10).count(), 10);
+        assert_eq!(r.iter().map(|rng| uniform01::<f64, _>(rng)).take(16).count(), 16);
     }
 
     #[test]
@@ -940,7 +921,7 @@ mod test {
 
     #[test]
     fn test_std_rng_seeded() {
-        let s = thread_rng().iter_map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
+        let s = thread_rng().iter().map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
         let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
         let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
         assert!(iter_eq(ra.gen_ascii_chars().take(100),
@@ -949,7 +930,7 @@ mod test {
 
     #[test]
     fn test_std_rng_reseed() {
-        let s = thread_rng().iter_map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
+        let s = thread_rng().iter().map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
         let mut r: StdRng = SeedableRng::from_seed(&s[..]);
         let string1 = r.gen_ascii_chars().take(100).collect::<String>();
 
