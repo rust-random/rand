@@ -269,45 +269,6 @@ pub mod reseeding;
 mod read;
 mod os;
 
-/// A type that can be randomly generated using an `Rng`.
-///
-/// ## Built-in Implementations
-///
-/// This crate implements `Rand` for various primitive types.  Assuming the
-/// provided `Rng` is well-behaved, these implementations generate values with
-/// the following ranges and distributions:
-///
-/// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
-///   over all values of the type.
-/// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
-///   code points in the range `0...0x10_FFFF`, except for the range
-///   `0xD800...0xDFFF` (the surrogate code points).  This includes
-///   unassigned/reserved code points.
-/// * `bool`: Generates `false` or `true`, each with probability 0.5.
-/// * Floating point types (`f32` and `f64`): Uniformly distributed in the
-///   half-open range `[0, 1)`.  (The [`Open01`], [`Closed01`], [`Exp1`], and
-///   [`StandardNormal`] wrapper types produce floating point numbers with
-///   alternative ranges or distributions.)
-///
-/// [`Open01`]: struct.Open01.html
-/// [`Closed01`]: struct.Closed01.html
-/// [`Exp1`]: struct.Exp1.html
-/// [`StandardNormal`]: struct.StandardNormal.html
-///
-/// The following aggregate types also implement `Rand` as long as their
-/// component types implement it:
-///
-/// * Tuples and arrays: Each element of the tuple or array is generated
-///   independently, using its own `Rand` implementation.
-/// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
-///   random `T` and returns `Some(T)`.
-
-pub trait Rand : Sized {
-    /// Generates a random instance of this type using the specified source of
-    /// randomness.
-    fn rand<R: Rng>(rng: &mut R) -> Self;
-}
-
 /// A random number generator.
 pub trait Rng {
     /// Return the next random u32.
@@ -427,27 +388,6 @@ pub trait Rng {
             num >>= 8;
             count -= 1;
         }
-    }
-
-    /// Return a random value of a `Rand` type.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use rand::{thread_rng, Rng};
-    /// use rand::dist::{uniform, uniform01};
-    ///
-    /// let mut rng = thread_rng();
-    /// let x: u32 = uniform(&mut rng);
-    /// let y: f64 = uniform01(&mut rng);
-    /// let z: bool = uniform(&mut rng);
-    /// println!("{}", x);
-    /// println!("{}", y);
-    /// println!("{}", z);
-    /// ```
-    #[inline(always)]
-    fn gen<T: Rand>(&mut self) -> T where Self: Sized {
-        Rand::rand(self)
     }
 
     /// Yield an iterator applying some function to self.
@@ -737,7 +677,7 @@ impl StdRng {
     /// Reading the randomness from the OS may fail, and any error is
     /// propagated via the `io::Result` return value.
     pub fn new() -> io::Result<StdRng> {
-        OsRng::new().map(|mut r| StdRng { rng: r.gen() })
+        OsRng::new().map(|mut r| StdRng { rng: IsaacWordRng::new_from_rng(&mut r) })
     }
 }
 
@@ -774,9 +714,11 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 ///
 /// This will read randomness from the operating system to seed the
 /// generator.
+// TODO: is this method useful?
 pub fn weak_rng() -> XorShiftRng {
+    // TODO: should this seed from `thread_rng()`?
     match OsRng::new() {
-        Ok(mut r) => r.gen(),
+        Ok(mut r) => XorShiftRng::new_from_rng(&mut r),
         Err(e) => panic!("weak_rng: failed to create seeded RNG: {:?}", e)
     }
 }

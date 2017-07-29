@@ -138,18 +138,12 @@ impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
 
 #[cfg(test)]
 mod tests {
-
-    use {Rng, Rand};
-    use dist::{RandSample, Sample};
+    use Rng;
+    use dist::Sample;
     use super::{WeightedChoice, Weighted};
 
     #[derive(PartialEq, Debug)]
     struct ConstRand(usize);
-    impl Rand for ConstRand {
-        fn rand<R: Rng>(_: &mut R) -> ConstRand {
-            ConstRand(0)
-        }
-    }
 
     // 0, 1, 2, 3, ...
     struct CountingRng { i: u32 }
@@ -163,12 +157,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_rand_sample() {
-        let rand_sample = RandSample::<ConstRand>::new();
-
-        assert_eq!(rand_sample.sample(&mut ::test::rng()), ConstRand(0));
-    }
     #[test]
     fn test_weighted_choice() {
         // this makes assumptions about the internal implementation of

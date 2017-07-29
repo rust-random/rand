@@ -17,7 +17,7 @@ use std::iter::repeat;
 use std::num::Wrapping as w;
 use std::fmt;
 
-use {Rng, SeedableRng, Rand};
+use {Rng, SeedableRng};
 
 /// Select 32- or 64-bit variant dependent on pointer size.
 #[cfg(target_pointer_width = "32")]
@@ -61,13 +61,35 @@ static EMPTY: IsaacRng = IsaacRng {
 };
 
 impl IsaacRng {
-
     /// Create an ISAAC random number generator using the default
     /// fixed seed.
     pub fn new_unseeded() -> IsaacRng {
         let mut rng = EMPTY;
         rng.init(false);
         rng
+    }
+
+    /// Create an ISAAC random number generator, seeding from another generator.
+    /// 
+    /// Care should be taken when seeding one RNG from another. There is no
+    /// free entropy gained. In some cases where the parent and child RNGs use
+    /// the same algorithm, both generate the same output sequences (possibly
+    /// with a small lag).
+    pub fn new_from_rng<R: Rng>(other: &mut R) -> IsaacRng {
+        let mut ret = EMPTY;
+        unsafe {
+            let ptr = ret.rsl.as_mut_ptr() as *mut u8;
+
+            let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE_USIZE * 4);
+            other.fill_bytes(slice);
+        }
+        ret.cnt = 0;
+        ret.a = w(0);
+        ret.b = w(0);
+        ret.c = w(0);
+
+        ret.init(true);
+        return ret;
     }
 
     /// Initialises `self`. If `use_rsl` is true, then use the current value
@@ -253,25 +275,6 @@ impl<'a> SeedableRng<&'a [u32]> for IsaacRng {
     }
 }
 
-impl Rand for IsaacRng {
-    fn rand<R: Rng>(other: &mut R) -> IsaacRng {
-        let mut ret = EMPTY;
-        unsafe {
-            let ptr = ret.rsl.as_mut_ptr() as *mut u8;
-
-            let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE_USIZE * 4);
-            other.fill_bytes(slice);
-        }
-        ret.cnt = 0;
-        ret.a = w(0);
-        ret.b = w(0);
-        ret.c = w(0);
-
-        ret.init(true);
-        return ret;
-    }
-}
-
 impl fmt::Debug for IsaacRng {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "IsaacRng {{}}")
@@ -315,6 +318,29 @@ impl Isaac64Rng {
         let mut rng = EMPTY_64;
         rng.init(false);
         rng
+    }
+
+    /// Create an ISAAC random number generator, seeding from another generator.
+    /// 
+    /// Care should be taken when seeding one RNG from another. There is no
+    /// free entropy gained. In some cases where the parent and child RNGs use
+    /// the same algorithm, both generate the same output sequences (possibly
+    /// with a small lag).
+    pub fn new_from_rng<R: Rng>(other: &mut R) -> Isaac64Rng {
+        let mut ret = EMPTY_64;
+        unsafe {
+            let ptr = ret.rsl.as_mut_ptr() as *mut u8;
+
+            let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE_64 * 8);
+            other.fill_bytes(slice);
+        }
+        ret.cnt = 0;
+        ret.a = w(0);
+        ret.b = w(0);
+        ret.c = w(0);
+
+        ret.init(true);
+        return ret;
     }
 
     /// Initialises `self`. If `use_rsl` is true, then use the current value
@@ -498,25 +524,6 @@ impl<'a> SeedableRng<&'a [u64]> for Isaac64Rng {
         let mut rng = EMPTY_64;
         rng.reseed(seed);
         rng
-    }
-}
-
-impl Rand for Isaac64Rng {
-    fn rand<R: Rng>(other: &mut R) -> Isaac64Rng {
-        let mut ret = EMPTY_64;
-        unsafe {
-            let ptr = ret.rsl.as_mut_ptr() as *mut u8;
-
-            let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE_64 * 8);
-            other.fill_bytes(slice);
-        }
-        ret.cnt = 0;
-        ret.a = w(0);
-        ret.b = w(0);
-        ret.c = w(0);
-
-        ret.init(true);
-        return ret;
     }
 }
 

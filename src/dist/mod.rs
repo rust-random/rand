@@ -17,9 +17,7 @@
 //!
 //! TODO: is it worth exposing both submodules and re-exporting their members?
 
-use std::marker;
-
-use {Rng, Rand};
+use Rng;
 
 pub use self::uniform::{uniform, uniform01, open01, closed01, codepoint};
 pub use self::range::Range;
@@ -41,30 +39,6 @@ pub trait Sample<T> {
     fn sample<R: Rng>(&self, rng: &mut R) -> T;
 }
 
-
-/// A wrapper for generating types that implement `Rand` via the
-/// `Sample` trait.
-#[derive(Debug)]
-pub struct RandSample<T> {
-    _marker: marker::PhantomData<fn() -> T>,
-}
-
-impl<T> Copy for RandSample<T> {}
-impl<T> Clone for RandSample<T> {
-    fn clone(&self) -> Self { *self }
-}
-
-impl<T: Rand> Sample<T> for RandSample<T> {
-    fn sample<R: Rng>(&self, rng: &mut R) -> T {
-        rng.gen()
-    }
-}
-
-impl<T> RandSample<T> {
-    pub fn new() -> RandSample<T> {
-        RandSample { _marker: marker::PhantomData }
-    }
-}
 
 mod ziggurat_tables;
 

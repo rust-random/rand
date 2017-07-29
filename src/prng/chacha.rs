@@ -11,7 +11,7 @@
 //! The ChaCha random number generator.
 
 use std::num::Wrapping as w;
-use {Rng, SeedableRng, Rand};
+use {Rng, SeedableRng};
 
 #[allow(bad_style)]
 type w32 = w<u32>;
@@ -81,7 +81,6 @@ fn core(output: &mut [w32; STATE_WORDS], input: &[w32; STATE_WORDS]) {
 }
 
 impl ChaChaRng {
-
     /// Create an ChaCha random number generator using the default
     /// fixed key of 8 zero words.
     ///
@@ -106,6 +105,20 @@ impl ChaChaRng {
         let mut rng = EMPTY;
         rng.init(&[0; KEY_WORDS]);
         rng
+    }
+
+    /// Create an ChaCha random number generator, seeding from another generator.
+    /// 
+    /// Care should be taken when seeding one RNG from another. There is no
+    /// free entropy gained. In some cases where the parent and child RNGs use
+    /// the same algorithm, both generate the same output sequences (possibly
+    /// with a small lag).
+    pub fn new_from_rng<R: Rng>(other: &mut R) -> ChaChaRng {
+        let mut key : [u32; KEY_WORDS] = [0; KEY_WORDS];
+        for word in key.iter_mut() {
+            *word = other.next_u32();
+        }
+        SeedableRng::from_seed(&key[..])
     }
 
     /// Sets the internal 128-bit ChaCha counter to
@@ -201,7 +214,6 @@ impl Rng for ChaChaRng {
 }
 
 impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
-
     fn reseed(&mut self, seed: &'a [u32]) {
         // reset state
         self.init(&[0u32; KEY_WORDS]);
@@ -220,16 +232,6 @@ impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
         let mut rng = EMPTY;
         rng.reseed(seed);
         rng
-    }
-}
-
-impl Rand for ChaChaRng {
-    fn rand<R: Rng>(other: &mut R) -> ChaChaRng {
-        let mut key : [u32; KEY_WORDS] = [0; KEY_WORDS];
-        for word in key.iter_mut() {
-            *word = other.next_u32();
-        }
-        SeedableRng::from_seed(&key[..])
     }
 }
 

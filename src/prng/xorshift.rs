@@ -11,7 +11,7 @@
 //! Xorshift generators
 
 use std::num::Wrapping as w;
-use {Rng, SeedableRng, Rand};
+use {Rng, SeedableRng};
 
 /// An Xorshift[1] random number
 /// generator.
@@ -46,6 +46,24 @@ impl XorShiftRng {
             z: w(0x97830e05),
             w: w(0x113ba7bb),
         }
+    }
+    
+    /// Create an ChaCha random number generator, seeding from another generator.
+    /// 
+    /// Care should be taken when seeding one RNG from another. There is no
+    /// free entropy gained. In some cases where the parent and child RNGs use
+    /// the same algorithm, both generate the same output sequences (possibly
+    /// with a small lag).
+    pub fn new_from_rng<R: Rng>(rng: &mut R) -> XorShiftRng {
+        let mut tuple: (u32, u32, u32, u32);
+        loop {
+            tuple = (rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32());
+            if tuple != (0, 0, 0, 0) {
+                break;
+            }
+        }
+        let (x, y, z, w_) = tuple;
+        XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) }
     }
 }
 
@@ -86,19 +104,5 @@ impl SeedableRng<[u32; 4]> for XorShiftRng {
             z: w(seed[2]),
             w: w(seed[3]),
         }
-    }
-}
-
-impl Rand for XorShiftRng {
-    fn rand<R: Rng>(rng: &mut R) -> XorShiftRng {
-        let mut tuple: (u32, u32, u32, u32);
-        loop {
-            tuple = (rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32());
-            if tuple != (0, 0, 0, 0) {
-                break;
-            }
-        }
-        let (x, y, z, w_) = tuple;
-        XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) }
     }
 }
