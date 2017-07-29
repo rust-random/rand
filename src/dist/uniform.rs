@@ -11,12 +11,9 @@
 //! Generating uniformly distributed numbers
 
 use std::char;
-use std::fmt;
 use std::mem;
-use std::marker::PhantomData;
 
 use Rng;
-use dist::Distribution;
 
 // ----- convenience functions -----
 
@@ -72,73 +69,29 @@ pub fn codepoint<R: Rng>(rng: &mut R) -> char {
 }
 
 
-// ----- Distribution implementations -----
-// TODO: do we want these? If so, implement for other ranges.
-
-/// Sample values uniformly over the whole range supported by the type.
-/// 
-/// No internal state.
-#[derive(Default)]
-pub struct Uniform<T: SampleUniform> {
-    _marker: PhantomData<T>,
-}
-
-impl<T: SampleUniform> Uniform<T> {
-    /// Create an instance. Should optimise to nothing, since there is no
-    /// internal state.
-    pub fn new() -> Self {
-        Uniform {
-            _marker: PhantomData
-        }
-    }
-}
-
-impl<T: SampleUniform> Copy for Uniform<T> {}
-
-// derive only auto-impls for types T: Clone, but we don't have that restriction
-impl<T: SampleUniform> Clone for Uniform<T> {
-    fn clone(&self) -> Self {
-        Uniform::new()
-    }
-}
-
-// derive only auto-impls for types T: Debug, but we don't have that restriction
-impl<T: SampleUniform> fmt::Debug for Uniform<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "Uniform {{}}")
-    }
-}
-
-impl<T: SampleUniform> Distribution<T> for Uniform<T> {
-    fn sample<R: Rng>(&self, rng: &mut R) -> T {
-        T::sample_uniform(rng)
-    }
-}
-
-
 // ----- Sampling traits -----
 
 /// Sample values uniformly over the whole range supported by the type
 pub trait SampleUniform: Sized {
-    /// Sample a value from a RNG
+    /// Sample a value using an RNG
     fn sample_uniform<R: Rng>(rng: &mut R) -> Self;
 }
 
 /// Sample values uniformly over the half-open range [0, 1)
 pub trait SampleUniform01: Sized {
-    /// Sample a value from a RNG
+    /// Sample a value using an RNG
     fn sample_uniform01<R: Rng>(rng: &mut R) -> Self;
 }
 
 /// Sample values uniformly over the open range (0, 1)
 pub trait SampleOpen01: Sized {
-    /// Sample a value from a RNG
+    /// Sample a value using an RNG
     fn sample_open01<R: Rng>(rng: &mut R) -> Self;
 }
 
 /// Sample values uniformly over the closed range [0, 1]
 pub trait SampleClosed01: Sized {
-    /// Sample a value from a RNG
+    /// Sample a value using an RNG
     fn sample_closed01<R: Rng>(rng: &mut R) -> Self;
 }
 
@@ -284,8 +237,8 @@ float_impls! { SCALE_F32, f32, 24, next_f32 }
 #[cfg(test)]
 mod tests {
     use {Rng, thread_rng};
-    use dist::{uniform, Distribution};
-    use dist::uniform::{SampleUniform, Uniform};
+    use dist::{uniform};
+    use dist::uniform::SampleUniform;
     use dist::{uniform01, open01, closed01};
     
     #[test]
@@ -310,9 +263,6 @@ mod tests {
         let _: u64 = uniform(&mut rng);
         #[cfg(feature = "i128_support")]
         let _: u128 = uniform(&mut rng);
-        
-        let dist = Uniform::<u8>::new();
-        let _ = dist.sample(&mut rng);
     }
 
     struct ConstantRng(u64);

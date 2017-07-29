@@ -19,12 +19,14 @@
 
 use Rng;
 
+pub use self::default::{DefaultDist, SampleDefault};
 pub use self::uniform::{uniform, uniform01, open01, closed01, codepoint};
 pub use self::range::Range;
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal};
 pub use self::exponential::Exp;
 
+pub mod default;
 pub mod uniform;
 pub mod range;
 pub mod gamma;
