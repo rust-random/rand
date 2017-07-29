@@ -10,14 +10,11 @@
 
 //! Utilities for random number generation
 //!
-//! The key functions are `random()` and `Rng::gen()`. These are polymorphic and
-//! so can be used to generate any type that implements `Rand`. Type inference
-//! means that often a simple call to `rand::random()` or `rng.gen()` will
-//! suffice, but sometimes an annotation is required, e.g.
-//! `rand::random::<f64>()`.
-//!
-//! See the `dist` submodule for sampling random numbers from
-//! distributions like normal and exponential.
+//! The `Rng` trait covers random number generation, and can be used directly
+//! to produce values of some core types (`u32, u64, f32, f64`, and byte
+//! strings). To generate anything else, or to generate values of the above type
+//! in generic code, use the `dist` (distributions) module. This includes
+//! distributions like ranges, normal and exponential.
 //!
 //! # Usage
 //!
@@ -38,8 +35,8 @@
 //! # Thread-local RNG
 //!
 //! There is built-in support for a RNG associated with each thread stored
-//! in thread-local storage. This RNG can be accessed via `thread_rng`, or
-//! used implicitly via `random`. This RNG is normally randomly seeded
+//! in thread-local storage. This RNG can be accessed via `thread_rng`.
+//! This RNG is normally randomly seeded
 //! from an operating-system source of randomness, e.g. `/dev/urandom` on
 //! Unix systems, and will automatically reseed itself from this source
 //! after generating 32 KiB of random data.
@@ -845,50 +842,6 @@ impl Rng for ThreadRng {
     }
 }
 
-/// Generates a random value using the thread-local random number generator.
-///
-/// `random()` can generate various types of random things, and so may require
-/// type hinting to generate the specific type you want.
-///
-/// This function uses the thread local random number generator. This means
-/// that if you're calling `random()` in a loop, caching the generator can
-/// increase performance. An example is shown below.
-///
-/// # Examples
-///
-/// ```
-/// let x = rand::random::<u8>();
-/// println!("{}", x);
-///
-/// if rand::random() { // generates a boolean
-///     println!("Better lucky than good!");
-/// }
-/// ```
-///
-/// Caching the thread local random number generator:
-///
-/// ```
-/// use rand::Rng;
-///
-/// let mut v = vec![1, 2, 3];
-///
-/// for x in v.iter_mut() {
-///     *x = rand::random()
-/// }
-///
-/// // would be faster as
-///
-/// let mut rng = rand::thread_rng();
-///
-/// for x in v.iter_mut() {
-///     *x = rng.gen();
-/// }
-/// ```
-#[inline]
-pub fn random<T: Rand>() -> T {
-    thread_rng().gen()
-}
-
 /// Randomly sample up to `amount` elements from a finite iterator.
 /// The order of elements in the sample is not random.
 ///
@@ -921,7 +874,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, random, SeedableRng, StdRng, sample};
+    use {Rng, thread_rng, SeedableRng, StdRng, sample};
     use dist::{uniform, uniform01};
     use std::iter::repeat;
 
@@ -1104,19 +1057,6 @@ mod test {
             assert_eq!(v, b);
             assert_eq!(r.gen_range(0, 1), 0);
         }
-    }
-
-    #[test]
-    fn test_random() {
-        // not sure how to test this aside from just getting some values
-        let _n : usize = random();
-        let _o : Option<Option<i8>> = random();
-        let _many : ((),
-                     (usize,
-                      isize,
-                      Option<(u32, (bool,))>),
-                     (u8, i8, u16, i16, u32, i32, u64, i64))
-                    = random();
     }
 
     #[test]
