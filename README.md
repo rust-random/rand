@@ -51,10 +51,10 @@ if uniform(&mut rng) { // random bool
 It is also possible to use other generators types, which have a similar interface. The following uses the "ChaCha" algorithm instead of the default.
 
 ```rust
-use rand::{Rng, ChaChaRng};
+use rand::{thread_rng, ChaChaRng, dist};
 
-let mut rng = rand::ChaChaRng::new_from_rng(&mut thread_rng());
-println!("random between 0-9: {}", Range::new(0, 10).sample(&mut rng));
+let mut rng = ChaChaRng::new_from_rng(&mut thread_rng());
+println!("random between 0-9: {}", dist::range(0, 10, &mut rng));
 ```
 
 

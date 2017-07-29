@@ -17,6 +17,32 @@ use std::num::Wrapping as w;
 use Rng;
 use dist::{Distribution, uniform01};
 
+/// Generate a random value in the range [`low`, `high`).
+///
+/// This is a convenience wrapper around `Range`. If this function will be called
+/// repeatedly with the same arguments, one should use `Range`, as that will
+/// amortize the computations that allow for perfect uniformity.
+///
+/// # Panics
+///
+/// Panics if `low >= high`.
+///
+/// # Example
+///
+/// ```rust
+/// use rand::dist::range;
+///
+/// let mut rng = rand::thread_rng();
+/// let n: u32 = range(0, 10, &mut rng);
+/// println!("{}", n);
+/// let m: f64 = range(-40.0f64, 1.3e5f64, &mut rng);
+/// println!("{}", m);
+/// ```
+pub fn range<T: PartialOrd + SampleRange, R: Rng>(low: T, high: T, rng: &mut R) -> T {
+    assert!(low < high, "dist::range called with low >= high");
+    Range::new(low, high).sample(rng)
+}
+
 /// Sample values uniformly between two bounds.
 ///
 /// This gives a uniform distribution (assuming the RNG used to sample
@@ -162,8 +188,42 @@ float_impl! { f64 }
 
 #[cfg(test)]
 mod tests {
+    use thread_rng;
     use dist::{Distribution};
-    use super::Range as Range;
+    use dist::{Range, range};
+
+    #[test]
+    fn test_fn_range() {
+        let mut r = thread_rng();
+        for _ in 0..1000 {
+            let a = range(-3, 42, &mut r);
+            assert!(a >= -3 && a < 42);
+            assert_eq!(range(0, 1, &mut r), 0);
+            assert_eq!(range(-12, -11, &mut r), -12);
+        }
+
+        for _ in 0..1000 {
+            let a = range(10, 42, &mut r);
+            assert!(a >= 10 && a < 42);
+            assert_eq!(range(0, 1, &mut r), 0);
+            assert_eq!(range(3_000_000, 3_000_001, &mut r), 3_000_000);
+        }
+
+    }
+    
+    #[test]
+    #[should_panic]
+    fn test_fn_range_panic_int() {
+        let mut r = thread_rng();
+        range(5, -2, &mut r);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_fn_range_panic_usize() {
+        let mut r = thread_rng();
+        range(5, 2, &mut r);
+    }
 
     #[should_panic]
     #[test]

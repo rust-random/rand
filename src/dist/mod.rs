@@ -21,7 +21,7 @@ use Rng;
 
 pub use self::default::{DefaultDist, SampleDefault};
 pub use self::uniform::{uniform, uniform01, open01, closed01, codepoint};
-pub use self::range::Range;
+pub use self::range::{range, Range};
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal};
 pub use self::exponential::Exp;
@@ -33,6 +33,24 @@ pub mod gamma;
 pub mod normal;
 pub mod exponential;
 pub mod weighted;
+
+/// Return a bool with a 1 in n chance of being true
+/// 
+/// This uses [`range`] internally, so for repeated uses it would be faster to
+/// create a `Range` distribution and test its samples:
+/// `range.sample(rng) == 0`.
+///
+/// # Example
+///
+/// ```rust
+/// use rand::dist::weighted_bool;
+///
+/// let mut rng = rand::thread_rng();
+/// println!("{}", weighted_bool(3, &mut rng));
+/// ```
+pub fn weighted_bool<R: Rng>(n: u32, rng: &mut R) -> bool {
+    n <= 1 || range(0, n, rng) == 0
+}
 
 /// Types (distributions) that can be used to create a random instance of `T`.
 pub trait Distribution<T> {
@@ -105,5 +123,18 @@ fn ziggurat<R: Rng, P, Z>(
         if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * uniform01::<f64, _>(rng) < pdf(x) {
             return x;
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use thread_rng;
+    use dist::weighted_bool;
+
+    #[test]
+    fn test_fn_weighted_bool() {
+        let mut r = thread_rng();
+        assert_eq!(weighted_bool(0, &mut r), true);
+        assert_eq!(weighted_bool(1, &mut r), true);
     }
 }
