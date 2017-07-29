@@ -68,6 +68,17 @@ pub fn codepoint<R: Rng>(rng: &mut R) -> char {
     }
 }
 
+/// Sample a `char`, uniformly distributed over ASCII letters and numbers:
+/// a-z, A-Z and 0-9.
+#[inline]
+pub fn ascii_word_char<R: Rng>(rng: &mut R) -> char {
+    const GEN_ASCII_STR_CHARSET: &'static [u8] =
+        b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+            abcdefghijklmnopqrstuvwxyz\
+            0123456789";
+    *rng.choose(GEN_ASCII_STR_CHARSET).unwrap() as char
+}
+
 
 // ----- Sampling traits -----
 
@@ -238,7 +249,7 @@ float_impls! { SCALE_F32, f32, 24, next_f32 }
 mod tests {
     use {Rng, thread_rng};
     use dist::{uniform};
-    use dist::uniform::SampleUniform;
+    use dist::uniform::{SampleUniform, codepoint, ascii_word_char};
     use dist::{uniform01, open01, closed01};
     
     #[test]
@@ -263,6 +274,18 @@ mod tests {
         let _: u64 = uniform(&mut rng);
         #[cfg(feature = "i128_support")]
         let _: u128 = uniform(&mut rng);
+    }
+    
+    #[test]
+    fn test_chars() {
+        let mut rng = ::test::rng();
+        
+        let _ = codepoint(&mut rng);
+        let c = ascii_word_char(&mut rng);
+        assert!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
+        
+        let word: String = rng.iter().take(5).map(|rng| ascii_word_char(rng)).collect();
+        assert_eq!(word.len(), 5);
     }
 
     struct ConstantRng(u64);

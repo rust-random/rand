@@ -536,6 +536,7 @@ impl fmt::Debug for Isaac64Rng {
 #[cfg(test)]
 mod test {
     use {Rng, SeedableRng};
+    use dist::ascii_word_char;
     use super::{IsaacRng, Isaac64Rng};
 
     #[test]
@@ -543,16 +544,16 @@ mod test {
         let s = ::test::rng().iter().map(|rng| rng.next_u32()).take(256).collect::<Vec<u32>>();
         let mut ra: IsaacRng = SeedableRng::from_seed(&s[..]);
         let mut rb: IsaacRng = SeedableRng::from_seed(&s[..]);
-        assert!(::test::iter_eq(ra.gen_ascii_chars().take(100),
-                                rb.gen_ascii_chars().take(100)));
+        assert!(::test::iter_eq(ra.iter().map(|rng| ascii_word_char(rng)).take(100),
+                                rb.iter().map(|rng| ascii_word_char(rng)).take(100)));
     }
     #[test]
     fn test_rng_64_rand_seeded() {
         let s = ::test::rng().iter().map(|rng| rng.next_u64()).take(256).collect::<Vec<u64>>();
         let mut ra: Isaac64Rng = SeedableRng::from_seed(&s[..]);
         let mut rb: Isaac64Rng = SeedableRng::from_seed(&s[..]);
-        assert!(::test::iter_eq(ra.gen_ascii_chars().take(100),
-                                rb.gen_ascii_chars().take(100)));
+        assert!(::test::iter_eq(ra.iter().map(|rng| ascii_word_char(rng)).take(100),
+                                rb.iter().map(|rng| ascii_word_char(rng)).take(100)));
     }
 
     #[test]
@@ -560,38 +561,38 @@ mod test {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
         let mut ra: IsaacRng = SeedableRng::from_seed(seed);
         let mut rb: IsaacRng = SeedableRng::from_seed(seed);
-        assert!(::test::iter_eq(ra.gen_ascii_chars().take(100),
-                                rb.gen_ascii_chars().take(100)));
+        assert!(::test::iter_eq(ra.iter().map(|rng| ascii_word_char(rng)).take(100),
+                                rb.iter().map(|rng| ascii_word_char(rng)).take(100)));
     }
     #[test]
     fn test_rng_64_seeded() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
         let mut ra: Isaac64Rng = SeedableRng::from_seed(seed);
         let mut rb: Isaac64Rng = SeedableRng::from_seed(seed);
-        assert!(::test::iter_eq(ra.gen_ascii_chars().take(100),
-                                rb.gen_ascii_chars().take(100)));
+        assert!(::test::iter_eq(ra.iter().map(|rng| ascii_word_char(rng)).take(100),
+                                rb.iter().map(|rng| ascii_word_char(rng)).take(100)));
     }
 
     #[test]
     fn test_rng_32_reseed() {
         let s = ::test::rng().iter().map(|rng| rng.next_u32()).take(256).collect::<Vec<u32>>();
         let mut r: IsaacRng = SeedableRng::from_seed(&s[..]);
-        let string1: String = r.gen_ascii_chars().take(100).collect();
+        let string1: String = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect();
 
         r.reseed(&s[..]);
 
-        let string2: String = r.gen_ascii_chars().take(100).collect();
+        let string2: String = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect();
         assert_eq!(string1, string2);
     }
     #[test]
     fn test_rng_64_reseed() {
         let s = ::test::rng().iter().map(|rng| rng.next_u64()).take(256).collect::<Vec<u64>>();
         let mut r: Isaac64Rng = SeedableRng::from_seed(&s[..]);
-        let string1: String = r.gen_ascii_chars().take(100).collect();
+        let string1: String = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect();
 
         r.reseed(&s[..]);
 
-        let string2: String = r.gen_ascii_chars().take(100).collect();
+        let string2: String = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect();
         assert_eq!(string1, string2);
     }
 

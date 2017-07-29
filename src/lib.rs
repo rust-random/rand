@@ -416,20 +416,6 @@ pub trait Rng {
         iter::RngIterator { rng: self, len: None }
     }
 
-    /// Return an iterator of random characters from the set A-Z,a-z,0-9.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let s: String = thread_rng().gen_ascii_chars().take(10).collect();
-    /// println!("{}", s);
-    /// ```
-    fn gen_ascii_chars<'a>(&'a mut self) -> AsciiGenerator<'a, Self> where Self: Sized {
-        AsciiGenerator { rng: self }
-    }
-
     /// Return a random element from `values`.
     ///
     /// Return `None` if `values` is empty.
@@ -533,29 +519,6 @@ impl<R: ?Sized> Rng for Box<R> where R: Rng {
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
-    }
-}
-
-/// Iterator which will continuously generate random ascii characters.
-///
-/// This iterator is created via the [`gen_ascii_chars`] method on [`Rng`].
-///
-/// [`gen_ascii_chars`]: trait.Rng.html#method.gen_ascii_chars
-/// [`Rng`]: trait.Rng.html
-#[derive(Debug)]
-pub struct AsciiGenerator<'a, R:'a> {
-    rng: &'a mut R,
-}
-
-impl<'a, R: Rng> Iterator for AsciiGenerator<'a, R> {
-    type Item = char;
-
-    fn next(&mut self) -> Option<char> {
-        const GEN_ASCII_STR_CHARSET: &'static [u8] =
-            b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-              abcdefghijklmnopqrstuvwxyz\
-              0123456789";
-        Some(*self.rng.choose(GEN_ASCII_STR_CHARSET).unwrap() as char)
     }
 }
 
@@ -757,7 +720,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 #[cfg(test)]
 mod test {
     use {Rng, thread_rng, SeedableRng, StdRng, sample};
-    use dist::{uniform, uniform01, range};
+    use dist::{uniform, uniform01, range, ascii_word_char};
     use std::iter::repeat;
 
     pub struct MyRng<R> { inner: R }
@@ -818,14 +781,6 @@ mod test {
                 }
             }
         }
-    }
-
-    #[test]
-    fn test_gen_ascii_str() {
-        let mut r = thread_rng();
-        assert_eq!(r.gen_ascii_chars().take(0).count(), 0);
-        assert_eq!(r.gen_ascii_chars().take(10).count(), 10);
-        assert_eq!(r.gen_ascii_chars().take(16).count(), 16);
     }
 
     #[test]
@@ -924,19 +879,19 @@ mod test {
         let s = thread_rng().iter().map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
         let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
         let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
-        assert!(iter_eq(ra.gen_ascii_chars().take(100),
-                        rb.gen_ascii_chars().take(100)));
+        assert!(iter_eq(ra.iter().map(|rng| ascii_word_char(rng)).take(100),
+                        rb.iter().map(|rng| ascii_word_char(rng)).take(100)));
     }
 
     #[test]
     fn test_std_rng_reseed() {
         let s = thread_rng().iter().map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
         let mut r: StdRng = SeedableRng::from_seed(&s[..]);
-        let string1 = r.gen_ascii_chars().take(100).collect::<String>();
+        let string1 = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect::<String>();
 
         r.reseed(&s);
 
-        let string2 = r.gen_ascii_chars().take(100).collect::<String>();
+        let string2 = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect::<String>();
         assert_eq!(string1, string2);
     }
 }

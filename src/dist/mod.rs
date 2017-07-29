@@ -20,7 +20,8 @@
 use Rng;
 
 pub use self::default::{DefaultDist, SampleDefault};
-pub use self::uniform::{uniform, uniform01, open01, closed01, codepoint};
+pub use self::uniform::{uniform, uniform01, open01, closed01, codepoint,
+        ascii_word_char};
 pub use self::range::{range, Range};
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal};

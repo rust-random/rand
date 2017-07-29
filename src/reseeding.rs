@@ -104,6 +104,7 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
 ///
 /// ```rust
 /// use rand::{Rng, SeedableRng, StdRng};
+/// use rand::dist::ascii_word_char;
 /// use rand::reseeding::{Reseeder, ReseedingRng};
 ///
 /// struct TickTockReseeder { tick: bool }
@@ -120,8 +121,8 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
 ///     let inner = StdRng::new().unwrap();
 ///     let mut rng = ReseedingRng::new(inner, 10, rsdr);
 ///
-///     // this will repeat, because it gets reseeded very regularly.
-///     let s: String = rng.gen_ascii_chars().take(100).collect();
+///     // this will repeat, because it gets reseeded very frequently.
+///     let s: String = rng.iter().map(|rng| ascii_word_char(rng)).take(100).collect();
 ///     println!("{}", s);
 /// }
 ///
@@ -149,8 +150,9 @@ impl Default for ReseedWithDefault {
 mod test {
     use std::default::Default;
     use std::iter::repeat;
-    use super::{ReseedingRng, ReseedWithDefault};
     use {SeedableRng, Rng};
+    use dist::ascii_word_char;
+    use super::{ReseedingRng, ReseedWithDefault};
 
     struct Counter {
         i: u32
@@ -193,18 +195,18 @@ mod test {
     fn test_rng_seeded() {
         let mut ra: MyRng = SeedableRng::from_seed((ReseedWithDefault, 2));
         let mut rb: MyRng = SeedableRng::from_seed((ReseedWithDefault, 2));
-        assert!(::test::iter_eq(ra.gen_ascii_chars().take(100),
-                                rb.gen_ascii_chars().take(100)));
+        assert!(::test::iter_eq(ra.iter().map(|rng| ascii_word_char(rng)).take(100),
+                                rb.iter().map(|rng| ascii_word_char(rng)).take(100)));
     }
 
     #[test]
     fn test_rng_reseed() {
         let mut r: MyRng = SeedableRng::from_seed((ReseedWithDefault, 3));
-        let string1: String = r.gen_ascii_chars().take(100).collect();
+        let string1: String = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect();
 
         r.reseed((ReseedWithDefault, 3));
 
-        let string2: String = r.gen_ascii_chars().take(100).collect();
+        let string2: String = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect();
         assert_eq!(string1, string2);
     }
 
