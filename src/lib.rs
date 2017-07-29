@@ -266,7 +266,6 @@ pub mod dist;
 pub mod prng;
 pub mod reseeding;
 
-mod rand_impls;
 mod read;
 mod os;
 
@@ -1029,7 +1028,7 @@ mod test {
     #[test]
     fn test_thread_rng() {
         let mut r = thread_rng();
-        r.gen::<i32>();
+        uniform::<i32, _>(&mut r);
         let mut v = [1, 1, 1];
         r.shuffle(&mut v);
         let b: &[_] = &[1, 1, 1];
@@ -1043,7 +1042,7 @@ mod test {
         {
             let mut r = &mut rng as &mut Rng;
             r.next_u32();
-            (&mut r).gen::<i32>();
+            uniform::<i32, _>(&mut r);
             let mut v = [1, 1, 1];
             (&mut r).shuffle(&mut v);
             let b: &[_] = &[1, 1, 1];
@@ -1053,7 +1052,7 @@ mod test {
         {
             let mut r = Box::new(rng) as Box<Rng>;
             r.next_u32();
-            r.gen::<i32>();
+            uniform::<i32, _>(&mut r);
             let mut v = [1, 1, 1];
             r.shuffle(&mut v);
             let b: &[_] = &[1, 1, 1];
