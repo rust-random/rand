@@ -57,7 +57,7 @@ directive. To use this first add this to your Cargo.toml:
 
 ```toml
 rand = "0.3"
-rand-derive = "0.3"
+rand_derive = "0.3"
 ```
 
 Next in your crate:

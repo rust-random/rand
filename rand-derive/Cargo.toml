@@ -6,7 +6,7 @@ authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-lang-nursery/rand"
-documentation = "https://docs.rs/rand-derive"
+documentation = "https://docs.rs/rand_derive"
 homepage = "https://github.com/rust-lang-nursery/rand"
 description = """
 `#[derive(Rand)]` functionality for the `rand::Rand` trait.
