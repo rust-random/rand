@@ -601,6 +601,56 @@ impl Rng for ThreadRng {
     }
 }
 
+/// Generates a andom value using the thread-local random number generator.
+///
+/// `random()` can generate various types of random things, and so may require
+/// type hinting to generate the specific type you want. It uses
+/// `dist::SampleDefault` to determine *how* values are generated for each type.
+///
+/// This function uses the thread local random number generator. This means
+/// that if you're calling `random()` in a loop, caching the generator can
+/// increase performance. An example is shown below.
+///
+/// # Examples
+///
+/// ```
+/// let x = rand::random::<u8>();
+/// println!("{}", x);
+///
+/// if rand::random() { // generates a boolean
+///     println!("Better lucky than good!");
+/// }
+/// ```
+///
+/// Caching the thread local random number generator:
+///
+/// ```
+/// use rand::Rng;
+/// use rand::dist::SampleDefault;
+///
+/// let mut v = vec![1, 2, 3];
+///
+/// for x in v.iter_mut() {
+///     *x = rand::random()
+/// }
+///
+/// // would be faster as
+///
+/// let mut rng = rand::thread_rng();
+///
+/// for x in v.iter_mut() {
+///     *x = SampleDefault::sample_default(&mut rng);
+/// }
+/// ```
+/// 
+/// Note that the above example uses `SampleDefault` which is a zero-sized
+/// marker type.
+#[inline]
+pub fn random<T: dist::SampleDefault>() -> T {
+    dist::SampleDefault::sample_default(&mut thread_rng())
+}
+
+
 #[cfg(test)]
 mod test {
     use {Rng, thread_rng, SeedableRng, StdRng, Shuffle, iter};
