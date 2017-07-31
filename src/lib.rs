@@ -408,11 +408,14 @@ pub trait Rng {
     ///
     /// ```
     /// use rand::{thread_rng, Rng};
-    /// use rand::dist::uniform;
+    /// use rand::dist::{uniform, ascii_word_char};
     ///
     /// let mut rng = thread_rng();
-    /// let x = rng.iter().take(10).map(|rng| uniform(rng)).collect::<Vec<u32>>();
+    /// let x: Vec<u32> = rng.iter().take(10).map(|rng| uniform(rng)).collect();
     /// println!("{:?}", x);
+    /// 
+    /// let w: String = rng.iter().take(6).map(|rng| ascii_word_char(rng)).collect();
+    /// println!("{}", w);
     /// ```
     fn iter<'a>(&'a mut self) -> iter::RngIterator<'a, Self> where Self: Sized     {
         iter::RngIterator { rng: self, len: None }
