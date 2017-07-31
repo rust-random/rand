@@ -248,7 +248,7 @@ float_impls! { SCALE_F32, f32, 24, next_f32 }
 
 #[cfg(test)]
 mod tests {
-    use {Rng, thread_rng};
+    use {Rng, thread_rng, iter};
     use dist::{uniform};
     use dist::uniform::{SampleUniform, codepoint, ascii_word_char};
     use dist::{uniform01, open01, closed01};
@@ -285,7 +285,7 @@ mod tests {
         let c = ascii_word_char(&mut rng);
         assert!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
         
-        let word: String = rng.iter().take(5).map(|rng| ascii_word_char(rng)).collect();
+        let word: String = iter(&mut rng).take(5).map(|rng| ascii_word_char(rng)).collect();
         assert_eq!(word.len(), 5);
     }
 

@@ -26,13 +26,26 @@ pub struct Iter<'a, R: Rng+?Sized+'a> {
     pub(crate) len: Option<usize>,
 }
 
+/// Create an iterator on an `Rng`.
+/// 
+/// # Example
+///
+/// ```
+/// use rand::{thread_rng, Rng, iter};
+/// use rand::dist::{uniform, ascii_word_char};
+///
+/// let mut rng = thread_rng();
+/// let x: Vec<u32> = iter(&mut rng).take(10).map(|rng| uniform(rng)).collect();
+/// println!("{:?}", x);
+/// 
+/// let w: String = iter(&mut rng).take(6).map(|rng| ascii_word_char(rng)).collect();
+/// println!("{}", w);
+/// ```
+pub fn iter<'a, R: Rng+?Sized+'a>(rng: &'a mut R) -> Iter<'a, R> {
+    Iter { rng: rng, len: None }
+}
+
 impl<'a, R: Rng+?Sized+'a> Iter<'a, R> {
-    /// Create an instance. Same as `Rng::iter()` but supports dynamic dispatch.
-    // TODO: remove `Rng::iter()`?
-    pub fn new(rng: &'a mut R) -> Self {
-        Iter { rng, len: None }
-    }
-    
     /// Restrict number of generated items to at most `len`
     pub fn take(self, len: usize) -> Self {
         Iter {
@@ -120,22 +133,21 @@ impl<'a, R:?Sized+'a, U, F> Iterator for FlatMap<'a, R, U, F>
 
 #[cfg(test)]
 mod tests {
-    use {Rng, thread_rng};
+    use {Rng, thread_rng, iter};
     use dist::{uniform, ascii_word_char};
-    use iter::Iter;
     
     #[test]
     fn test_iter() {
         let mut rng = thread_rng();
         
-        let x: Vec<()> = rng.iter().take(10).map(|_| ()).collect();
+        let x: Vec<()> = iter(&mut rng).take(10).map(|_| ()).collect();
         assert_eq!(x.len(), 10);
-        let y: Vec<u32> = rng.iter().take(10).map(|rng| uniform(rng)).collect();
+        let y: Vec<u32> = iter(&mut rng).take(10).map(|rng| uniform(rng)).collect();
         assert_eq!(y.len(), 10);
-        let z: Vec<u32> = rng.iter().take(10).flat_map(|rng|
+        let z: Vec<u32> = iter(&mut rng).take(10).flat_map(|rng|
                 vec![uniform(rng), uniform(rng)].into_iter()).collect();
         assert_eq!(z.len(), 20);
-        let w: Vec<String> = rng.iter().take(10).flat_map(|_| vec![].into_iter()).collect();
+        let w: Vec<String> = iter(&mut rng).take(10).flat_map(|_| vec![].into_iter()).collect();
         assert_eq!(w.len(), 0);
     }
     
@@ -143,7 +155,7 @@ mod tests {
     fn test_dyn_dispatch() {
         let mut r: &mut Rng = &mut thread_rng();
         
-        let x: String = Iter::new(r).take(10).map(|rng| ascii_word_char(rng)).collect();
+        let x: String = iter(r).take(10).map(|rng| ascii_word_char(rng)).collect();
         assert_eq!(x.len(), 10);
     }
 }

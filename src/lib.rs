@@ -256,6 +256,7 @@ use std::rc::Rc;
 pub use read::ReadRng;
 pub use os::OsRng;
 pub use self::sequence::{Choose, Shuffle};
+pub use iter::iter;
 
 use dist::range::range;
 
@@ -390,35 +391,6 @@ pub trait Rng {
             num >>= 8;
             count -= 1;
         }
-    }
-
-    /// Yield an iterator.
-    /// 
-    /// Unfortunately this is only possible with static dispatch (i.e. where
-    /// `Self: Sized`). [Why? Because the method must be generic, to support
-    /// the lifetime bound on the `&mut Rng` field of the returned object, if
-    /// not also for types `T` and `F`; representing this field requires that
-    /// `Rng` trait objects can be constructed, but trait objects cannot be
-    /// constructed for traits with generic methods without a `Sized` bound.
-    /// But the starting point was wanting a dynamic version of this method,
-    /// i.e. not requiring the `Sized` bound.
-    /// See `rustc --explain E0038` for more.]
-    /// 
-    /// # Example
-    ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    /// use rand::dist::{uniform, ascii_word_char};
-    ///
-    /// let mut rng = thread_rng();
-    /// let x: Vec<u32> = rng.iter().take(10).map(|rng| uniform(rng)).collect();
-    /// println!("{:?}", x);
-    /// 
-    /// let w: String = rng.iter().take(6).map(|rng| ascii_word_char(rng)).collect();
-    /// println!("{}", w);
-    /// ```
-    fn iter<'a>(&'a mut self) -> iter::Iter<'a, Self> where Self: Sized     {
-        iter::Iter { rng: self, len: None }
     }
 }
 
@@ -663,8 +635,8 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, SeedableRng, StdRng, sample, Shuffle};
-    use dist::{uniform, uniform01, range, ascii_word_char};
+    use {Rng, thread_rng, SeedableRng, StdRng, sample, Shuffle, iter};
+    use dist::{uniform, range, ascii_word_char};
     use std::iter::repeat;
 
     pub struct MyRng<R: ?Sized> { inner: R }
@@ -725,14 +697,6 @@ mod test {
                 }
             }
         }
-    }
-
-    #[test]
-    fn test_gen_vec() {
-        let mut r = thread_rng();
-        assert_eq!(r.iter().map(|rng| rng.next_u32()).take(0).count(), 0);
-        assert_eq!(r.iter().map(|rng| uniform::<u8, _>(rng)).take(10).count(), 10);
-        assert_eq!(r.iter().map(|rng| uniform01::<f64, _>(rng)).take(16).count(), 16);
     }
 
     #[test]
@@ -797,22 +761,22 @@ mod test {
 
     #[test]
     fn test_std_rng_seeded() {
-        let s = thread_rng().iter().map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
+        let s = iter(&mut thread_rng()).map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
         let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
         let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
-        assert!(iter_eq(ra.iter().map(|rng| ascii_word_char(rng)).take(100),
-                        rb.iter().map(|rng| ascii_word_char(rng)).take(100)));
+        assert!(iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
+                        iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
     }
 
     #[test]
     fn test_std_rng_reseed() {
-        let s = thread_rng().iter().map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
+        let s = iter(&mut thread_rng()).map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
         let mut r: StdRng = SeedableRng::from_seed(&s[..]);
-        let string1 = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect::<String>();
+        let string1 = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect::<String>();
 
         r.reseed(&s);
 
-        let string2 = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect::<String>();
+        let string2 = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect::<String>();
         assert_eq!(string1, string2);
     }
 }

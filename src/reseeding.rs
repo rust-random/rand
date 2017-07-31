@@ -103,7 +103,7 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
 /// # Example
 ///
 /// ```rust
-/// use rand::{Rng, SeedableRng, StdRng};
+/// use rand::{Rng, SeedableRng, StdRng, iter};
 /// use rand::dist::ascii_word_char;
 /// use rand::reseeding::{Reseeder, ReseedingRng};
 ///
@@ -122,7 +122,7 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
 ///     let mut rng = ReseedingRng::new(inner, 10, rsdr);
 ///
 ///     // this will repeat, because it gets reseeded very frequently.
-///     let s: String = rng.iter().map(|rng| ascii_word_char(rng)).take(100).collect();
+///     let s: String = iter(&mut rng).map(|rng| ascii_word_char(rng)).take(100).collect();
 ///     println!("{}", s);
 /// }
 ///
@@ -150,7 +150,7 @@ impl Default for ReseedWithDefault {
 mod test {
     use std::default::Default;
     use std::iter::repeat;
-    use {SeedableRng, Rng};
+    use {SeedableRng, Rng, iter};
     use dist::ascii_word_char;
     use super::{ReseedingRng, ReseedWithDefault};
 
@@ -195,18 +195,18 @@ mod test {
     fn test_rng_seeded() {
         let mut ra: MyRng = SeedableRng::from_seed((ReseedWithDefault, 2));
         let mut rb: MyRng = SeedableRng::from_seed((ReseedWithDefault, 2));
-        assert!(::test::iter_eq(ra.iter().map(|rng| ascii_word_char(rng)).take(100),
-                                rb.iter().map(|rng| ascii_word_char(rng)).take(100)));
+        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
+                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
     }
 
     #[test]
     fn test_rng_reseed() {
         let mut r: MyRng = SeedableRng::from_seed((ReseedWithDefault, 3));
-        let string1: String = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect();
+        let string1: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
 
         r.reseed((ReseedWithDefault, 3));
 
-        let string2: String = r.iter().map(|rng| ascii_word_char(rng)).take(100).collect();
+        let string2: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
         assert_eq!(string1, string2);
     }
 
