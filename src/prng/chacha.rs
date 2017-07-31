@@ -113,7 +113,7 @@ impl ChaChaRng {
     /// free entropy gained. In some cases where the parent and child RNGs use
     /// the same algorithm, both generate the same output sequences (possibly
     /// with a small lag).
-    pub fn new_from_rng<R: Rng>(other: &mut R) -> ChaChaRng {
+    pub fn new_from_rng<R: Rng+?Sized>(other: &mut R) -> ChaChaRng {
         let mut key : [u32; KEY_WORDS] = [0; KEY_WORDS];
         for word in key.iter_mut() {
             *word = other.next_u32();

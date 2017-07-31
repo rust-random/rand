@@ -75,7 +75,7 @@ impl IsaacRng {
     /// free entropy gained. In some cases where the parent and child RNGs use
     /// the same algorithm, both generate the same output sequences (possibly
     /// with a small lag).
-    pub fn new_from_rng<R: Rng>(other: &mut R) -> IsaacRng {
+    pub fn new_from_rng<R: Rng+?Sized>(other: &mut R) -> IsaacRng {
         let mut ret = EMPTY;
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;
@@ -326,7 +326,7 @@ impl Isaac64Rng {
     /// free entropy gained. In some cases where the parent and child RNGs use
     /// the same algorithm, both generate the same output sequences (possibly
     /// with a small lag).
-    pub fn new_from_rng<R: Rng>(other: &mut R) -> Isaac64Rng {
+    pub fn new_from_rng<R: Rng+?Sized>(other: &mut R) -> Isaac64Rng {
         let mut ret = EMPTY_64;
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;

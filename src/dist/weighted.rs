@@ -89,7 +89,7 @@ impl<T: Clone> WeightedChoice<T> {
 }
 
 impl<T: Clone> Distribution<T> for WeightedChoice<T> {
-    fn sample<R: Rng>(&self, rng: &mut R) -> T {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T {
         // we want to find the first element that has cumulative
         // weight > sample_weight, which we do by binary since the
         // cumulative weights of self.items are sorted.

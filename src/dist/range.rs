@@ -38,7 +38,7 @@ use dist::{Distribution, uniform01};
 /// let m: f64 = range(-40.0f64, 1.3e5f64, &mut rng);
 /// println!("{}", m);
 /// ```
-pub fn range<T: PartialOrd + SampleRange, R: Rng>(low: T, high: T, rng: &mut R) -> T {
+pub fn range<T: PartialOrd + SampleRange, R: Rng+?Sized>(low: T, high: T, rng: &mut R) -> T {
     assert!(low < high, "dist::range called with low >= high");
     Range::new(low, high).sample(rng)
 }
@@ -89,7 +89,7 @@ impl<X: SampleRange + PartialOrd> Range<X> {
 }
 
 impl<T: SampleRange> Distribution<T> for Range<T> {
-    fn sample<R: Rng>(&self, rng: &mut R) -> T {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T {
         SampleRange::sample_range(self, rng)
     }
 }
@@ -106,7 +106,7 @@ pub trait SampleRange : Sized {
 
     /// Sample a value from the given `Range` with the given `Rng` as
     /// a source of randomness.
-    fn sample_range<R: Rng>(r: &Range<Self>, rng: &mut R) -> Self;
+    fn sample_range<R: Rng+?Sized>(r: &Range<Self>, rng: &mut R) -> Self;
 }
 
 macro_rules! integer_impl {
@@ -137,7 +137,7 @@ macro_rules! integer_impl {
             }
 
             #[inline]
-            fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
+            fn sample_range<R: Rng+?Sized>(r: &Range<$ty>, rng: &mut R) -> $ty {
                 use $crate::dist::uniform;
                 loop {
                     // rejection sample
@@ -176,7 +176,7 @@ macro_rules! float_impl {
                     accept_zone: 0.0 // unused
                 }
             }
-            fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
+            fn sample_range<R: Rng+?Sized>(r: &Range<$ty>, rng: &mut R) -> $ty {
                 r.low + r.range * uniform01::<$ty, _>(rng)
             }
         }

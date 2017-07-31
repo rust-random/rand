@@ -29,11 +29,11 @@ pub trait Choose<T> {
     /// println!("{:?}", choices[..].choose(&mut rng));
     /// assert_eq!(choices[..0].choose(&mut rng), None);
     /// ```
-    fn choose<R: Rng>(self, rng: &mut R) -> Option<T>;
+    fn choose<R: Rng+?Sized>(self, rng: &mut R) -> Option<T>;
 }
 
 impl<'a, T> Choose<&'a T> for &'a [T] {
-    fn choose<R: Rng>(self, rng: &mut R) -> Option<&'a T> {
+    fn choose<R: Rng+?Sized>(self, rng: &mut R) -> Option<&'a T> {
         if self.is_empty() {
             None
         } else {
@@ -43,7 +43,7 @@ impl<'a, T> Choose<&'a T> for &'a [T] {
 }
 
 impl<'a, T> Choose<&'a mut T> for &'a mut [T] {
-    fn choose<R: Rng>(self, rng: &mut R) -> Option<&'a mut T> {
+    fn choose<R: Rng+?Sized>(self, rng: &mut R) -> Option<&'a mut T> {
         if self.is_empty() {
             None
         } else {
@@ -54,7 +54,7 @@ impl<'a, T> Choose<&'a mut T> for &'a mut [T] {
 }
 
 impl<T> Choose<T> for Vec<T> {
-    fn choose<R: Rng>(mut self, rng: &mut R) -> Option<T> {
+    fn choose<R: Rng+?Sized>(mut self, rng: &mut R) -> Option<T> {
         if self.is_empty() {
             None
         } else {
@@ -83,11 +83,11 @@ pub trait Shuffle {
     /// y[..].shuffle(&mut rng);
     /// println!("{:?}", y);
     /// ```
-    fn shuffle<R: Rng>(self, rng: &mut R);
+    fn shuffle<R: Rng+?Sized>(self, rng: &mut R);
 }
 
 impl<'a, T> Shuffle for &'a mut [T] {
-    fn shuffle<R: Rng>(self, rng: &mut R) {
+    fn shuffle<R: Rng+?Sized>(self, rng: &mut R) {
         let mut i = self.len();
         while i >= 2 {
             // invariant: elements with index >= i have been locked in place.
@@ -99,14 +99,14 @@ impl<'a, T> Shuffle for &'a mut [T] {
 }
 
 impl<'a, T> Shuffle for &'a mut Vec<T> {
-    fn shuffle<R: Rng>(self, rng: &mut R) {
+    fn shuffle<R: Rng+?Sized>(self, rng: &mut R) {
         (self[..]).shuffle(rng)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use {thread_rng, Choose, Shuffle};
+    use {Rng, thread_rng, Choose, Shuffle};
     
     #[test]
     fn test_choose() {
@@ -135,5 +135,16 @@ mod test {
         x[..].shuffle(&mut r);
         let b: &[_] = &[1, 1, 1];
         assert_eq!(x, b);
+    }
+    
+    #[test]
+    fn dyn_dispatch() {
+        let mut r: &mut Rng = &mut thread_rng();
+        
+        assert_eq!([7, 7][..].choose(r), Some(&7));
+        
+        let mut x = [6, 2];
+        x[..].shuffle(r);
+        assert!(x == [6, 2] || x == [2, 6]);
     }
 }

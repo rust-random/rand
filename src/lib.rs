@@ -667,11 +667,11 @@ mod test {
     use dist::{uniform, uniform01, range, ascii_word_char};
     use std::iter::repeat;
 
-    pub struct MyRng<R> { inner: R }
+    pub struct MyRng<R: ?Sized> { inner: R }
 
-    impl<R: Rng> Rng for MyRng<R> {
+    impl<R: Rng+?Sized> Rng for MyRng<R> {
         fn next_u32(&mut self) -> u32 {
-            fn next<T: Rng>(t: &mut T) -> u32 {
+            fn next<T: Rng+?Sized>(t: &mut T) -> u32 {
                 t.next_u32()
             }
             next(&mut self.inner)

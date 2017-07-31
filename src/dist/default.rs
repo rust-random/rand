@@ -65,7 +65,7 @@ impl<T: SampleDefault> fmt::Debug for DefaultDist<T> {
 }
 
 impl<T: SampleDefault> Distribution<T> for DefaultDist<T> {
-    fn sample<R: Rng>(&self, rng: &mut R) -> T {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T {
         T::sample_default(rng)
     }
 }
@@ -76,11 +76,11 @@ impl<T: SampleDefault> Distribution<T> for DefaultDist<T> {
 /// Types supporting default sampling (see `DefaultDist`)
 pub trait SampleDefault {
     /// Sample a value using an RNG
-    fn sample_default<R: Rng>(rng: &mut R) -> Self;
+    fn sample_default<R: Rng+?Sized>(rng: &mut R) -> Self;
 }
 
 impl<T: SampleUniform> SampleDefault for T {
-    fn sample_default<R: Rng>(rng: &mut R) -> Self {
+    fn sample_default<R: Rng+?Sized>(rng: &mut R) -> Self {
         T::sample_uniform(rng)
     }
 }
@@ -91,7 +91,7 @@ impl<T: SampleUniform> SampleDefault for T {
 //     }
 // }
 impl SampleDefault for char {
-    fn sample_default<R: Rng>(rng: &mut R) -> char {
+    fn sample_default<R: Rng+?Sized>(rng: &mut R) -> char {
         codepoint(rng)
     }
 }
@@ -106,20 +106,20 @@ mod tests {
     
     #[test]
     fn test_types() {
-        let mut rng = thread_rng();
-        fn do_test<T: SampleDefault, R: Rng>(rng: &mut R) -> T {
+        let mut rng: &mut Rng = &mut thread_rng();
+        fn do_test<T: SampleDefault>(rng: &mut Rng) -> T {
             let dist = DefaultDist::<T>::new();
             dist.sample(rng)
         }
         
-        do_test::<u32, _>(&mut rng);
-        do_test::<i8, _>(&mut rng);
+        do_test::<u32>(rng);
+        do_test::<i8>(rng);
         // FIXME (see above)
-        // do_test::<f32, _>(&mut rng);
-        // do_test::<f64, _>(&mut rng);
+        // do_test::<f32>(rng);
+        // do_test::<f64>(rng);
         #[cfg(feature = "i128_support")]
-        do_test::<u128, _>(&mut rng);
-        do_test::<char, _>(&mut rng);
-        do_test::<bool, _>(&mut rng);
+        do_test::<u128>(rng);
+        do_test::<char>(rng);
+        do_test::<bool>(rng);
     }
 }

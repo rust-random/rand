@@ -21,7 +21,7 @@ use Rng;
 /// 
 /// This method has precisely two template parameters. To fix the output type,
 /// use the syntax `uniform::<u32, _>(rng)`.
-pub fn uniform<T: SampleUniform, R: Rng>(rng: &mut R) -> T {
+pub fn uniform<T: SampleUniform, R: Rng+?Sized>(rng: &mut R) -> T {
     T::sample_uniform(rng)
 }
 
@@ -29,7 +29,7 @@ pub fn uniform<T: SampleUniform, R: Rng>(rng: &mut R) -> T {
 /// 
 /// This method has precisely two template parameters. To fix the output type,
 /// use the syntax `uniform01::<f64, _>(rng)`.
-pub fn uniform01<T: SampleUniform01, R: Rng>(rng: &mut R) -> T {
+pub fn uniform01<T: SampleUniform01, R: Rng+?Sized>(rng: &mut R) -> T {
     T::sample_uniform01(rng)
 }
 
@@ -37,7 +37,7 @@ pub fn uniform01<T: SampleUniform01, R: Rng>(rng: &mut R) -> T {
 /// 
 /// This method has precisely two template parameters. To fix the output type,
 /// use the syntax `open01::<f64, _>(rng)`.
-pub fn open01<T: SampleOpen01, R: Rng>(rng: &mut R) -> T {
+pub fn open01<T: SampleOpen01, R: Rng+?Sized>(rng: &mut R) -> T {
     T::sample_open01(rng)
 }
 
@@ -45,7 +45,7 @@ pub fn open01<T: SampleOpen01, R: Rng>(rng: &mut R) -> T {
 /// 
 /// This method has precisely two template parameters. To fix the output type,
 /// use the syntax `closed01::<f64, _>(rng)`.
-pub fn closed01<T: SampleClosed01, R: Rng>(rng: &mut R) -> T {
+pub fn closed01<T: SampleClosed01, R: Rng+?Sized>(rng: &mut R) -> T {
     T::sample_closed01(rng)
 }
 
@@ -54,7 +54,7 @@ pub fn closed01<T: SampleClosed01, R: Rng>(rng: &mut R) -> T {
 /// `0xD800...0xDFFF` (the surrogate code points).  This includes
 /// unassigned/reserved code points.
 #[inline]
-pub fn codepoint<R: Rng>(rng: &mut R) -> char {
+pub fn codepoint<R: Rng+?Sized>(rng: &mut R) -> char {
     // a char is 21 bits
     const CHAR_MASK: u32 = 0x001f_ffff;
     loop {
@@ -71,7 +71,7 @@ pub fn codepoint<R: Rng>(rng: &mut R) -> char {
 /// Sample a `char`, uniformly distributed over ASCII letters and numbers:
 /// a-z, A-Z and 0-9.
 #[inline]
-pub fn ascii_word_char<R: Rng>(rng: &mut R) -> char {
+pub fn ascii_word_char<R: Rng+?Sized>(rng: &mut R) -> char {
     use Choose;
     const GEN_ASCII_STR_CHARSET: &'static [u8] =
         b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
@@ -86,25 +86,25 @@ pub fn ascii_word_char<R: Rng>(rng: &mut R) -> char {
 /// Sample values uniformly over the whole range supported by the type
 pub trait SampleUniform: Sized {
     /// Sample a value using an RNG
-    fn sample_uniform<R: Rng>(rng: &mut R) -> Self;
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> Self;
 }
 
 /// Sample values uniformly over the half-open range [0, 1)
 pub trait SampleUniform01: Sized {
     /// Sample a value using an RNG
-    fn sample_uniform01<R: Rng>(rng: &mut R) -> Self;
+    fn sample_uniform01<R: Rng+?Sized>(rng: &mut R) -> Self;
 }
 
 /// Sample values uniformly over the open range (0, 1)
 pub trait SampleOpen01: Sized {
     /// Sample a value using an RNG
-    fn sample_open01<R: Rng>(rng: &mut R) -> Self;
+    fn sample_open01<R: Rng+?Sized>(rng: &mut R) -> Self;
 }
 
 /// Sample values uniformly over the closed range [0, 1]
 pub trait SampleClosed01: Sized {
     /// Sample a value using an RNG
-    fn sample_closed01<R: Rng>(rng: &mut R) -> Self;
+    fn sample_closed01<R: Rng+?Sized>(rng: &mut R) -> Self;
 }
 
 
@@ -112,7 +112,7 @@ pub trait SampleClosed01: Sized {
 
 impl SampleUniform for isize {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> isize {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> isize {
         if mem::size_of::<isize>() == 4 {
             i32::sample_uniform(rng) as isize
         } else {
@@ -123,28 +123,28 @@ impl SampleUniform for isize {
 
 impl SampleUniform for i8 {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> i8 {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> i8 {
         rng.next_u32() as i8
     }
 }
 
 impl SampleUniform for i16 {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> i16 {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> i16 {
         rng.next_u32() as i16
     }
 }
 
 impl SampleUniform for i32 {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> i32 {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> i32 {
         rng.next_u32() as i32
     }
 }
 
 impl SampleUniform for i64 {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> i64 {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> i64 {
         rng.next_u64() as i64
     }
 }
@@ -152,14 +152,14 @@ impl SampleUniform for i64 {
 #[cfg(feature = "i128_support")]
 impl SampleUniform for i128 {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> i128 {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> i128 {
         rng.gen::<u128>() as i128
     }
 }
 
 impl SampleUniform for usize {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> usize {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> usize {
         if mem::size_of::<usize>() == 4 {
             u32::sample_uniform(rng) as usize
         } else {
@@ -170,28 +170,28 @@ impl SampleUniform for usize {
 
 impl SampleUniform for u8 {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> u8 {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> u8 {
         rng.next_u32() as u8
     }
 }
 
 impl SampleUniform for u16 {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> u16 {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> u16 {
         rng.next_u32() as u16
     }
 }
 
 impl SampleUniform for u32 {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> u32 {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> u32 {
         rng.next_u32()
     }
 }
 
 impl SampleUniform for u64 {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> u64 {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> u64 {
         rng.next_u64()
     }
 }
@@ -199,14 +199,14 @@ impl SampleUniform for u64 {
 #[cfg(feature = "i128_support")]
 impl SampleUniform for u128 {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> u128 {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> u128 {
         ((rng.next_u64() as u128) << 64) | (rng.next_u64() as u128)
     }
 }
 
 impl SampleUniform for bool {
     #[inline]
-    fn sample_uniform<R: Rng>(rng: &mut R) -> bool {
+    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> bool {
         rng.next_u32() & 1 == 1
     }
 }
@@ -218,13 +218,13 @@ macro_rules! float_impls {
         
         impl SampleUniform01 for $ty {
             #[inline]
-            fn sample_uniform01<R: Rng>(rng: &mut R) -> $ty {
+            fn sample_uniform01<R: Rng+?Sized>(rng: &mut R) -> $ty {
                 rng.$method_name()
             }
         }
         impl SampleOpen01 for $ty {
             #[inline]
-            fn sample_open01<R: Rng>(rng: &mut R) -> $ty {
+            fn sample_open01<R: Rng+?Sized>(rng: &mut R) -> $ty {
                 // add a small amount (specifically 2 bits below
                 // the precision of f64/f32 at 1.0), so that small
                 // numbers are larger than 0, but large numbers
@@ -234,7 +234,7 @@ macro_rules! float_impls {
         }
         impl SampleClosed01 for $ty {
             #[inline]
-            fn sample_closed01<R: Rng>(rng: &mut R) -> $ty {
+            fn sample_closed01<R: Rng+?Sized>(rng: &mut R) -> $ty {
                 // rescale so that 1.0 - epsilon becomes 1.0
                 // precisely.
                 uniform01::<$ty, _>(rng) * $scale_name / ($scale_name - 1.0)

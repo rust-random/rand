@@ -127,7 +127,7 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
 /// }
 ///
 /// ```
-pub trait Reseeder<R> {
+pub trait Reseeder<R: ?Sized> {
     /// Reseed the given RNG.
     fn reseed(&mut self, rng: &mut R);
 }
@@ -137,7 +137,7 @@ pub trait Reseeder<R> {
 #[derive(Clone, Copy, Debug)]
 pub struct ReseedWithDefault;
 
-impl<R: Rng + Default> Reseeder<R> for ReseedWithDefault {
+impl<R: Rng + Default + ?Sized> Reseeder<R> for ReseedWithDefault {
     fn reseed(&mut self, rng: &mut R) {
         *rng = Default::default();
     }

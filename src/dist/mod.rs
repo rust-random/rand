@@ -49,7 +49,7 @@ pub mod weighted;
 /// let mut rng = rand::thread_rng();
 /// println!("{}", weighted_bool(3, &mut rng));
 /// ```
-pub fn weighted_bool<R: Rng>(n: u32, rng: &mut R) -> bool {
+pub fn weighted_bool<R: Rng+?Sized>(n: u32, rng: &mut R) -> bool {
     n <= 1 || range(0, n, rng) == 0
 }
 
@@ -57,7 +57,7 @@ pub fn weighted_bool<R: Rng>(n: u32, rng: &mut R) -> bool {
 pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the
     /// source of randomness.
-    fn sample<R: Rng>(&self, rng: &mut R) -> T;
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T;
 }
 
 
@@ -79,7 +79,7 @@ mod ziggurat_tables;
 // the perf improvement (25-50%) is definitely worth the extra code
 // size from force-inlining.
 #[inline(always)]
-fn ziggurat<R: Rng, P, Z>(
+fn ziggurat<R: Rng+?Sized, P, Z>(
             rng: &mut R,
             symmetric: bool,
             x_tab: ziggurat_tables::ZigTable,
@@ -129,13 +129,14 @@ fn ziggurat<R: Rng, P, Z>(
 
 #[cfg(test)]
 mod test {
-    use thread_rng;
+    use {Rng, thread_rng};
     use dist::weighted_bool;
 
     #[test]
     fn test_fn_weighted_bool() {
         let mut r = thread_rng();
         assert_eq!(weighted_bool(0, &mut r), true);
-        assert_eq!(weighted_bool(1, &mut r), true);
+        let s: &mut Rng = &mut r;
+        assert_eq!(weighted_bool(1, s), true);
     }
 }

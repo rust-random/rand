@@ -54,7 +54,7 @@ impl XorShiftRng {
     /// free entropy gained. In some cases where the parent and child RNGs use
     /// the same algorithm, both generate the same output sequences (possibly
     /// with a small lag).
-    pub fn new_from_rng<R: Rng>(rng: &mut R) -> XorShiftRng {
+    pub fn new_from_rng<R: Rng+?Sized>(rng: &mut R) -> XorShiftRng {
         let mut tuple: (u32, u32, u32, u32);
         loop {
             tuple = (rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32());
