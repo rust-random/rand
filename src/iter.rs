@@ -21,31 +21,31 @@ use Rng;
 /// Pseudo-iterator encapsulating a random number generator.
 /// See [`Rng::iter`](trait.Rng.html#method.iter).
 #[derive(Debug)]
-pub struct RngIterator<'a, R: Rng+?Sized+'a> {
+pub struct Iter<'a, R: Rng+?Sized+'a> {
     pub(crate) rng: &'a mut R,
     pub(crate) len: Option<usize>,
 }
 
-impl<'a, R: Rng+?Sized+'a> RngIterator<'a, R> {
+impl<'a, R: Rng+?Sized+'a> Iter<'a, R> {
     /// Create an instance. Same as `Rng::iter()` but supports dynamic dispatch.
     // TODO: remove `Rng::iter()`?
     pub fn new(rng: &'a mut R) -> Self {
-        RngIterator { rng, len: None }
+        Iter { rng, len: None }
     }
     
     /// Restrict number of generated items to at most `len`
     pub fn take(self, len: usize) -> Self {
-        RngIterator {
+        Iter {
             rng: self.rng,
             len: Some(self.len.map_or(len, |old| min(old, len))),
         }
     }
     
     /// Produce an iterator returning a mapped value
-    pub fn map<B, F>(self, f: F) -> RngMap<'a, R, B, F>
+    pub fn map<B, F>(self, f: F) -> Map<'a, R, B, F>
         where F: FnMut(&mut R) -> B
     {
-        RngMap {
+        Map {
             rng: self.rng,
             len: self.len,
             f: f,
@@ -53,10 +53,10 @@ impl<'a, R: Rng+?Sized+'a> RngIterator<'a, R> {
     }
     
     /// Produce an iterator returning a flat-mapped value
-    pub fn flat_map<U, F>(self, f: F) -> RngFlatMap<'a, R, U, F>
+    pub fn flat_map<U, F>(self, f: F) -> FlatMap<'a, R, U, F>
         where F: FnMut(&mut R) -> U, U: IntoIterator
     {
-        RngFlatMap {
+        FlatMap {
             rng: self.rng,
             len: self.len,
             f: f,
@@ -66,12 +66,12 @@ impl<'a, R: Rng+?Sized+'a> RngIterator<'a, R> {
 }
 
 #[derive(Debug)]
-pub struct RngMap<'a, R:?Sized+'a, B, F> where F: FnMut(&mut R) -> B {
+pub struct Map<'a, R:?Sized+'a, B, F> where F: FnMut(&mut R) -> B {
     rng: &'a mut R,
     len: Option<usize>,
     f: F,
 }
-impl<'a, R:?Sized+'a, B, F> Iterator for RngMap<'a, R, B, F>
+impl<'a, R:?Sized+'a, B, F> Iterator for Map<'a, R, B, F>
     where F: FnMut(&mut R) -> B
 {
     type Item = B;
@@ -87,7 +87,7 @@ impl<'a, R:?Sized+'a, B, F> Iterator for RngMap<'a, R, B, F>
 }
 
 #[derive(Debug)]
-pub struct RngFlatMap<'a, R:?Sized+'a, U, F>
+pub struct FlatMap<'a, R:?Sized+'a, U, F>
     where F: FnMut(&mut R) -> U, U: IntoIterator
 {
     rng: &'a mut R,
@@ -95,7 +95,7 @@ pub struct RngFlatMap<'a, R:?Sized+'a, U, F>
     f: F,
     frontiter: Option<U::IntoIter>,
 }
-impl<'a, R:?Sized+'a, U, F> Iterator for RngFlatMap<'a, R, U, F>
+impl<'a, R:?Sized+'a, U, F> Iterator for FlatMap<'a, R, U, F>
     where F: FnMut(&mut R) -> U, U: IntoIterator
 {
     type Item = <U as IntoIterator>::Item;
@@ -122,7 +122,7 @@ impl<'a, R:?Sized+'a, U, F> Iterator for RngFlatMap<'a, R, U, F>
 mod tests {
     use {Rng, thread_rng};
     use dist::{uniform, ascii_word_char};
-    use iter::RngIterator;
+    use iter::Iter;
     
     #[test]
     fn test_iter() {
@@ -143,7 +143,7 @@ mod tests {
     fn test_dyn_dispatch() {
         let mut r: &mut Rng = &mut thread_rng();
         
-        let x: String = RngIterator::new(r).take(10).map(|rng| ascii_word_char(rng)).collect();
+        let x: String = Iter::new(r).take(10).map(|rng| ascii_word_char(rng)).collect();
         assert_eq!(x.len(), 10);
     }
 }

@@ -417,8 +417,8 @@ pub trait Rng {
     /// let w: String = rng.iter().take(6).map(|rng| ascii_word_char(rng)).collect();
     /// println!("{}", w);
     /// ```
-    fn iter<'a>(&'a mut self) -> iter::RngIterator<'a, Self> where Self: Sized     {
-        iter::RngIterator { rng: self, len: None }
+    fn iter<'a>(&'a mut self) -> iter::Iter<'a, Self> where Self: Sized     {
+        iter::Iter { rng: self, len: None }
     }
 }
 
