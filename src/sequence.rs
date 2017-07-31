@@ -64,6 +64,36 @@ impl<T> Choose<T> for Vec<T> {
     }
 }
 
+/// Randomly sample up to `amount` elements from a finite iterator.
+/// The order of elements in the sample is not random.
+///
+/// # Example
+///
+/// ```rust
+/// use rand::{thread_rng, sample};
+///
+/// let mut rng = thread_rng();
+/// let sample = sample(&mut rng, 1..100, 5);
+/// println!("{:?}", sample);
+/// ```
+pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
+    where I: IntoIterator<Item=T>,
+          R: Rng,
+{
+    let mut iter = iterable.into_iter();
+    let mut reservoir: Vec<T> = iter.by_ref().take(amount).collect();
+    // continue unless the iterator was exhausted
+    if reservoir.len() == amount {
+        for (i, elem) in iter.enumerate() {
+            let k = range(0, i + 1 + amount, rng);
+            if let Some(spot) = reservoir.get_mut(k) {
+                *spot = elem;
+            }
+        }
+    }
+    reservoir
+}
+
 /// This trait introduces a `shuffle` operations on slices.
 pub trait Shuffle {
     /// Shuffle a mutable sequence in place.
@@ -106,7 +136,7 @@ impl<'a, T> Shuffle for &'a mut Vec<T> {
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, Choose, Shuffle};
+    use {Rng, thread_rng, Choose, sample, Shuffle};
     
     #[test]
     fn test_choose() {
@@ -115,6 +145,24 @@ mod test {
 
         let v: &[isize] = &[];
         assert_eq!(v.choose(&mut r), None);
+    }
+
+    #[test]
+    fn test_sample() {
+        let min_val = 1;
+        let max_val = 100;
+
+        let mut r = thread_rng();
+        let vals = (min_val..max_val).collect::<Vec<i32>>();
+        let small_sample = sample(&mut r, vals.iter(), 5);
+        let large_sample = sample(&mut r, vals.iter(), vals.len() + 5);
+
+        assert_eq!(small_sample.len(), 5);
+        assert_eq!(large_sample.len(), vals.len());
+
+        assert!(small_sample.iter().all(|e| {
+            **e >= min_val && **e <= max_val
+        }));
     }
 
     #[test]
