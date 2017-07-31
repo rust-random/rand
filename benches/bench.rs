@@ -9,17 +9,17 @@ mod distributions;
 
 use std::mem::size_of;
 use test::{black_box, Bencher};
-use rand::{Rng, StdRng, OsRng, weak_rng};
+use rand::{StdRng, OsRng, weak_rng};
 use rand::prng::{XorShiftRng, IsaacRng, Isaac64Rng};
 use rand::{sample, Shuffle};
-use rand::dist::uniform;
+use rand::dist::{Rand, Uniform, Uniform01};
 
 #[bench]
 fn rand_xorshift(b: &mut Bencher) {
     let mut rng = XorShiftRng::new_from_rng(&mut OsRng::new().unwrap());
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
-            black_box(uniform::<usize, _>(&mut rng));
+            black_box(usize::rand(&mut rng, Uniform));
         }
     });
     b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -30,7 +30,7 @@ fn rand_isaac(b: &mut Bencher) {
     let mut rng = IsaacRng::new_from_rng(&mut OsRng::new().unwrap());
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
-            black_box(uniform::<usize, _>(&mut rng));
+            black_box(usize::rand(&mut rng, Uniform));
         }
     });
     b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -41,7 +41,7 @@ fn rand_isaac64(b: &mut Bencher) {
     let mut rng = Isaac64Rng::new_from_rng(&mut OsRng::new().unwrap());
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
-            black_box(uniform::<usize, _>(&mut rng));
+            black_box(usize::rand(&mut rng, Uniform));
         }
     });
     b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -52,7 +52,7 @@ fn rand_std(b: &mut Bencher) {
     let mut rng = StdRng::new().unwrap();
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
-            black_box(uniform::<usize, _>(&mut rng));
+            black_box(usize::rand(&mut rng, Uniform));
         }
     });
     b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
@@ -63,7 +63,7 @@ fn rand_f32(b: &mut Bencher) {
     let mut rng = StdRng::new().unwrap();
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
-            black_box(rng.next_f32());
+            black_box(f32::rand(&mut rng, Uniform01));
         }
     });
     b.bytes = size_of::<f32>() as u64 * RAND_BENCH_N;
@@ -74,7 +74,7 @@ fn rand_f64(b: &mut Bencher) {
     let mut rng = StdRng::new().unwrap();
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
-            black_box(rng.next_f64());
+            black_box(f64::rand(&mut rng, Uniform01));
         }
     });
     b.bytes = size_of::<f64>() as u64 * RAND_BENCH_N;

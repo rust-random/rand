@@ -203,17 +203,44 @@ impl Distribution<bool> for Uniform {
     }
 }
 
+impl Distribution<f32> for Uniform01 {
+    /// This uses a technique described by Saito and Matsumoto at
+    /// MCQMC'08. Given that the IEEE floating point numbers are
+    /// uniformly distributed over [1,2), we generate a number in
+    /// this range and then offset it onto the range [0,1). Our
+    /// choice of bits (masking v. shifting) is arbitrary and
+    /// should be immaterial for high quality generators. For low
+    /// quality generators (ex. LCG), prefer bitshifting due to
+    /// correlation between sequential low order bits.
+    ///
+    /// See:
+    /// A PRNG specialized in double precision floating point numbers using
+    /// an affine transition
+    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf
+    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> f32 {
+        const UPPER_MASK: u32 = 0x3F800000;
+        const LOWER_MASK: u32 = 0x7FFFFF;
+        let tmp = UPPER_MASK | (rng.next_u32() & LOWER_MASK);
+        let result: f32 = unsafe { mem::transmute(tmp) };
+        result - 1.0
+    }
+}
+
+impl Distribution<f64> for Uniform01 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> f64 {
+        const UPPER_MASK: u64 = 0x3FF0000000000000;
+        const LOWER_MASK: u64 = 0xFFFFFFFFFFFFF;
+        let tmp = UPPER_MASK | (rng.next_u64() & LOWER_MASK);
+        let result: f64 = unsafe { mem::transmute(tmp) };
+        result - 1.0
+    }
+}
 
 macro_rules! float_impls {
-    ($scale_name:ident, $ty:ty, $mantissa_bits:expr, $method_name:ident) => {
+    ($scale_name:ident, $ty:ty, $mantissa_bits:expr) => {
         const $scale_name: $ty = (1u64 << $mantissa_bits) as $ty;
         
-        impl Distribution<$ty> for Uniform01 {
-            #[inline]
-            fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
-                rng.$method_name()
-            }
-        }
         impl Distribution<$ty> for Open01 {
             #[inline]
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
@@ -234,8 +261,8 @@ macro_rules! float_impls {
         }
     }
 }
-float_impls! { SCALE_F64, f64, 53, next_f64 }
-float_impls! { SCALE_F32, f32, 24, next_f32 }
+float_impls! { SCALE_F64, f64, 53 }
+float_impls! { SCALE_F32, f32, 24 }
 
 
 #[cfg(test)]
