@@ -163,14 +163,14 @@ impl Distribution<usize> for Uniform {
 impl Distribution<u8> for Uniform {
     #[inline]
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> u8 {
-        rng.next_u32() as u8
+        rng.next_u8()
     }
 }
 
 impl Distribution<u16> for Uniform {
     #[inline]
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> u16 {
-        rng.next_u32() as u16
+        rng.next_u16()
     }
 }
 
@@ -192,7 +192,7 @@ impl Distribution<u64> for Uniform {
 impl Distribution<u128> for Uniform {
     #[inline]
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> u128 {
-        ((rng.next_u64() as u128) << 64) | (rng.next_u64() as u128)
+        rng.next_u128()
     }
 }
 

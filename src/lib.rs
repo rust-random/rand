@@ -273,10 +273,21 @@ mod os;
 
 /// A random number generator.
 pub trait Rng {
+    /// Return the next random u8.
+    /// 
+    /// By default this is implemented in terms of `next_u32`.
+    fn next_u8(&mut self) -> u8 {
+        self.next_u32() as u8
+    }
+    
+    /// Return the next random u16.
+    /// 
+    /// By default this is implemented in terms of `next_u32`.
+    fn next_u16(&mut self) -> u16 {
+        self.next_u32() as u16
+    }
+    
     /// Return the next random u32.
-    ///
-    /// This rarely needs to be called directly, prefer `r.gen()` to
-    /// `r.next_u32()`.
     // FIXME #rust-lang/rfcs#628: Should be implemented in terms of next_u64
     fn next_u32(&mut self) -> u32;
 
@@ -290,6 +301,14 @@ pub trait Rng {
         ((self.next_u32() as u64) << 32) | (self.next_u32() as u64)
     }
 
+    #[cfg(feature = "i128_support")]
+    /// Return the next random u128.
+    /// 
+    /// By default this is implemented in terms of `next_u64`.
+    fn next_u128(&mut self) -> u128 {
+        ((self.next_u64() as u128) << 64) | (self.next_u64() as u128)
+    }
+    
     /// Fill `dest` with random data.
     ///
     /// This has a default implementation in terms of `next_u64` and
@@ -343,12 +362,25 @@ pub trait Rng {
 }
 
 impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
+    fn next_u8(&mut self) -> u8 {
+        (**self).next_u8()
+    }
+
+    fn next_u16(&mut self) -> u16 {
+        (**self).next_u16()
+    }
+
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
 
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
+    }
+
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        (**self).next_u128()
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
@@ -357,12 +389,25 @@ impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
 }
 
 impl<R: ?Sized> Rng for Box<R> where R: Rng {
+    fn next_u8(&mut self) -> u8 {
+        (**self).next_u8()
+    }
+
+    fn next_u16(&mut self) -> u16 {
+        (**self).next_u16()
+    }
+
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
 
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
+    }
+
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        (**self).next_u128()
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
