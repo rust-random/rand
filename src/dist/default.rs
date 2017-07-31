@@ -10,88 +10,43 @@
 
 //! Generic value creation
 
-use std::fmt;
-use std::marker::PhantomData;
-
 use Rng;
-use dist::Distribution;
-use dist::uniform::{SampleUniform, /*SampleUniform01,*/ codepoint};
+use dist::{Distribution, Rand};
+use dist::uniform::{Uniform, /*Uniform01,*/ codepoint};
 
-/// A generic random value creator. Generates values using what appears to be
-/// an appropriate distribution for each type, but choice is arbitrary.
+/// A generic random value distribution. Generates values using what appears to
+/// be "the best" distribution for each type, but ultimately the choice is arbitrary.
 /// 
-/// Makes use of the following traits on the types implementing them:
+/// Makes use of the following distributions:
 /// 
-/// *   [`SampleUniform`] for integer types
-/// *   [`SampleUniform01`] for floating point types (FIXME)
+/// *   [`Uniform`] for integer types
+/// *   [`Uniform01`] for floating point types (FIXME)
 /// 
 /// Makes use of the following methods:
 /// 
 /// *   [`codepoint`] for `char`
 /// 
 /// TODO: link
-/// 
-/// TODO: is this useful? Personally I feel not, but it carries over previous
-/// functionality.
-#[derive(Default)]
-pub struct DefaultDist<T: SampleDefault> {
-    _marker: PhantomData<T>,
-}
+#[derive(Debug)]
+pub struct Default;
 
-impl<T: SampleDefault> DefaultDist<T> {
-    /// Create an instance. Should optimise to nothing, since there is no
-    /// internal state.
-    pub fn new() -> Self {
-        DefaultDist {
-            _marker: PhantomData
-        }
-    }
-}
+// ----- implementations -----
 
-impl<T: SampleDefault> Copy for DefaultDist<T> {}
-
-// derive only auto-impls for types T: Clone, but we don't have that restriction
-impl<T: SampleDefault> Clone for DefaultDist<T> {
-    fn clone(&self) -> Self {
-        DefaultDist::new()
-    }
-}
-
-// derive only auto-impls for types T: Debug, but we don't have that restriction
-impl<T: SampleDefault> fmt::Debug for DefaultDist<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "DefaultDist {{}}")
-    }
-}
-
-impl<T: SampleDefault> Distribution<T> for DefaultDist<T> {
+impl<T: Rand<Uniform>> Distribution<T> for Default {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T {
-        T::sample_default(rng)
+        T::rand(rng, Uniform)
     }
 }
 
-
-// ----- SampleDefault -----
-
-/// Types supporting default sampling (see `DefaultDist`)
-pub trait SampleDefault {
-    /// Sample a value using an RNG
-    fn sample_default<R: Rng+?Sized>(rng: &mut R) -> Self;
-}
-
-impl<T: SampleUniform> SampleDefault for T {
-    fn sample_default<R: Rng+?Sized>(rng: &mut R) -> Self {
-        T::sample_uniform(rng)
-    }
-}
 // FIXME: https://github.com/rust-lang/rust/issues/23341
-// impl<T: SampleUniform01> SampleDefault for T {
-//     fn sample_default<R: Rng>(rng: &mut R) -> T {
-//         T::sample_uniform01(rng)
+// impl<T: Rand<Uniform01>> Distribution<T> for Default {
+//     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T {
+//         T::rand(rng, Uniform01)
 //     }
 // }
-impl SampleDefault for char {
-    fn sample_default<R: Rng+?Sized>(rng: &mut R) -> char {
+
+impl Distribution<char> for Default {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
         codepoint(rng)
     }
 }
@@ -100,16 +55,13 @@ impl SampleDefault for char {
 #[cfg(test)]
 mod tests {
     use {Rng, thread_rng};
-    use dist::Distribution;
-    use dist::default::{DefaultDist, SampleDefault};
-    
+    use dist::{Rand, Default};
     
     #[test]
     fn test_types() {
         let mut rng: &mut Rng = &mut thread_rng();
-        fn do_test<T: SampleDefault>(rng: &mut Rng) -> T {
-            let dist = DefaultDist::<T>::new();
-            dist.sample(rng)
+        fn do_test<T: Rand<Default>>(rng: &mut Rng) -> T {
+            T::rand(rng, Default)
         }
         
         do_test::<u32>(rng);

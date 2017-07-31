@@ -19,9 +19,10 @@
 
 use Rng;
 
-pub use self::default::{DefaultDist, SampleDefault};
+pub use self::default::Default;
 pub use self::uniform::{uniform, uniform01, open01, closed01, codepoint,
         ascii_word_char};
+pub use self::uniform::{Uniform, Uniform01, Open01, Closed01};
 pub use self::range::{range, Range};
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal};
@@ -60,6 +61,16 @@ pub trait Distribution<T> {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T;
 }
 
+/// Generic trait for sampling random values from some distribution
+pub trait Rand<Dist> {
+    fn rand<R: Rng+?Sized>(rng: &mut R, dist: Dist) -> Self;
+}
+
+impl<T, D: Distribution<T>> Rand<D> for T {
+    fn rand<R: Rng+?Sized>(rng: &mut R, dist: D) -> Self {
+        dist.sample(rng)
+    }
+}
 
 mod ziggurat_tables;
 

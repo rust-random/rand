@@ -14,6 +14,7 @@ use std::char;
 use std::mem;
 
 use Rng;
+use dist::{Distribution, Rand};
 
 // ----- convenience functions -----
 
@@ -21,32 +22,32 @@ use Rng;
 /// 
 /// This method has precisely two template parameters. To fix the output type,
 /// use the syntax `uniform::<u32, _>(rng)`.
-pub fn uniform<T: SampleUniform, R: Rng+?Sized>(rng: &mut R) -> T {
-    T::sample_uniform(rng)
+pub fn uniform<T: Rand<Uniform>, R: Rng+?Sized>(rng: &mut R) -> T {
+    T::rand(rng, Uniform)
 }
 
 /// Sample values uniformly over the half-open range [0, 1)
 /// 
 /// This method has precisely two template parameters. To fix the output type,
 /// use the syntax `uniform01::<f64, _>(rng)`.
-pub fn uniform01<T: SampleUniform01, R: Rng+?Sized>(rng: &mut R) -> T {
-    T::sample_uniform01(rng)
+pub fn uniform01<T: Rand<Uniform01>, R: Rng+?Sized>(rng: &mut R) -> T {
+    T::rand(rng, Uniform01)
 }
 
 /// Sample values uniformly over the open range (0, 1)
 /// 
 /// This method has precisely two template parameters. To fix the output type,
 /// use the syntax `open01::<f64, _>(rng)`.
-pub fn open01<T: SampleOpen01, R: Rng+?Sized>(rng: &mut R) -> T {
-    T::sample_open01(rng)
+pub fn open01<T: Rand<Open01>, R: Rng+?Sized>(rng: &mut R) -> T {
+    T::rand(rng, Open01)
 }
 
 /// Sample values uniformly over the closed range [0, 1]
 /// 
 /// This method has precisely two template parameters. To fix the output type,
 /// use the syntax `closed01::<f64, _>(rng)`.
-pub fn closed01<T: SampleClosed01, R: Rng+?Sized>(rng: &mut R) -> T {
-    T::sample_closed01(rng)
+pub fn closed01<T: Rand<Closed01>, R: Rng+?Sized>(rng: &mut R) -> T {
+    T::rand(rng, Closed01)
 }
 
 /// Sample a `char`, uniformly distributed over all Unicode scalar values,
@@ -81,132 +82,123 @@ pub fn ascii_word_char<R: Rng+?Sized>(rng: &mut R) -> char {
 }
 
 
-// ----- Sampling traits -----
+// ----- Sampling distributions -----
 
 /// Sample values uniformly over the whole range supported by the type
-pub trait SampleUniform: Sized {
-    /// Sample a value using an RNG
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> Self;
-}
+#[derive(Debug)]
+pub struct Uniform;
 
 /// Sample values uniformly over the half-open range [0, 1)
-pub trait SampleUniform01: Sized {
-    /// Sample a value using an RNG
-    fn sample_uniform01<R: Rng+?Sized>(rng: &mut R) -> Self;
-}
+#[derive(Debug)]
+pub struct Uniform01;
 
 /// Sample values uniformly over the open range (0, 1)
-pub trait SampleOpen01: Sized {
-    /// Sample a value using an RNG
-    fn sample_open01<R: Rng+?Sized>(rng: &mut R) -> Self;
-}
+#[derive(Debug)]
+pub struct Open01;
 
 /// Sample values uniformly over the closed range [0, 1]
-pub trait SampleClosed01: Sized {
-    /// Sample a value using an RNG
-    fn sample_closed01<R: Rng+?Sized>(rng: &mut R) -> Self;
-}
+#[derive(Debug)]
+pub struct Closed01;
 
 
 // ----- actual implementations -----
 
-impl SampleUniform for isize {
-    #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> isize {
+impl Distribution<isize> for Uniform {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> isize {
         if mem::size_of::<isize>() == 4 {
-            i32::sample_uniform(rng) as isize
+            i32::rand(rng, Uniform) as isize
         } else {
-            i64::sample_uniform(rng) as isize
+            i64::rand(rng, Uniform) as isize
         }
     }
 }
 
-impl SampleUniform for i8 {
+impl Distribution<i8> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> i8 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> i8 {
         rng.next_u32() as i8
     }
 }
 
-impl SampleUniform for i16 {
+impl Distribution<i16> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> i16 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> i16 {
         rng.next_u32() as i16
     }
 }
 
-impl SampleUniform for i32 {
+impl Distribution<i32> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> i32 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> i32 {
         rng.next_u32() as i32
     }
 }
 
-impl SampleUniform for i64 {
+impl Distribution<i64> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> i64 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> i64 {
         rng.next_u64() as i64
     }
 }
 
 #[cfg(feature = "i128_support")]
-impl SampleUniform for i128 {
+impl Distribution<i128> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> i128 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> i128 {
         rng.gen::<u128>() as i128
     }
 }
 
-impl SampleUniform for usize {
+impl Distribution<usize> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> usize {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> usize {
         if mem::size_of::<usize>() == 4 {
-            u32::sample_uniform(rng) as usize
+            u32::rand(rng, Uniform) as usize
         } else {
-            u64::sample_uniform(rng) as usize
+            u64::rand(rng, Uniform) as usize
         }
     }
 }
 
-impl SampleUniform for u8 {
+impl Distribution<u8> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> u8 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> u8 {
         rng.next_u32() as u8
     }
 }
 
-impl SampleUniform for u16 {
+impl Distribution<u16> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> u16 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> u16 {
         rng.next_u32() as u16
     }
 }
 
-impl SampleUniform for u32 {
+impl Distribution<u32> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> u32 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> u32 {
         rng.next_u32()
     }
 }
 
-impl SampleUniform for u64 {
+impl Distribution<u64> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> u64 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> u64 {
         rng.next_u64()
     }
 }
 
 #[cfg(feature = "i128_support")]
-impl SampleUniform for u128 {
+impl Distribution<u128> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> u128 {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> u128 {
         ((rng.next_u64() as u128) << 64) | (rng.next_u64() as u128)
     }
 }
 
-impl SampleUniform for bool {
+impl Distribution<bool> for Uniform {
     #[inline]
-    fn sample_uniform<R: Rng+?Sized>(rng: &mut R) -> bool {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> bool {
         rng.next_u32() & 1 == 1
     }
 }
@@ -216,15 +208,15 @@ macro_rules! float_impls {
     ($scale_name:ident, $ty:ty, $mantissa_bits:expr, $method_name:ident) => {
         const $scale_name: $ty = (1u64 << $mantissa_bits) as $ty;
         
-        impl SampleUniform01 for $ty {
+        impl Distribution<$ty> for Uniform01 {
             #[inline]
-            fn sample_uniform01<R: Rng+?Sized>(rng: &mut R) -> $ty {
+            fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
                 rng.$method_name()
             }
         }
-        impl SampleOpen01 for $ty {
+        impl Distribution<$ty> for Open01 {
             #[inline]
-            fn sample_open01<R: Rng+?Sized>(rng: &mut R) -> $ty {
+            fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
                 // add a small amount (specifically 2 bits below
                 // the precision of f64/f32 at 1.0), so that small
                 // numbers are larger than 0, but large numbers
@@ -232,9 +224,9 @@ macro_rules! float_impls {
                 uniform01::<$ty, _>(rng) + 0.25 / $scale_name
             }
         }
-        impl SampleClosed01 for $ty {
+        impl Distribution<$ty> for Closed01 {
             #[inline]
-            fn sample_closed01<R: Rng+?Sized>(rng: &mut R) -> $ty {
+            fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
                 // rescale so that 1.0 - epsilon becomes 1.0
                 // precisely.
                 uniform01::<$ty, _>(rng) * $scale_name / ($scale_name - 1.0)
@@ -249,16 +241,16 @@ float_impls! { SCALE_F32, f32, 24, next_f32 }
 #[cfg(test)]
 mod tests {
     use {Rng, thread_rng, iter};
-    use dist::{uniform};
-    use dist::uniform::{SampleUniform, codepoint, ascii_word_char};
+    use dist::{Rand, uniform, Uniform};
+    use dist::uniform::{codepoint, ascii_word_char};
     use dist::{uniform01, open01, closed01};
     
     #[test]
     fn test_integers() {
         let mut rng = ::test::rng();
         
-        let _: i32 = SampleUniform::sample_uniform(&mut rng);
-        let _: i32 = i32::sample_uniform(&mut rng);
+        let _: i32 = Rand::rand(&mut rng, Uniform);
+        let _ = i32::rand(&mut rng, Uniform);
         
         let _: isize = uniform(&mut rng);
         let _: i8 = uniform(&mut rng);

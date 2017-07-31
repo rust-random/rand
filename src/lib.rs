@@ -260,6 +260,7 @@ pub use iter::iter;
 
 use prng::IsaacWordRng;
 use prng::XorShiftRng;
+use dist::{Default, Rand};
 
 pub mod dist;
 pub mod iter;
@@ -625,8 +626,7 @@ impl Rng for ThreadRng {
 /// Caching the thread local random number generator:
 ///
 /// ```
-/// use rand::Rng;
-/// use rand::dist::SampleDefault;
+/// use rand::dist::{Rand, Default};
 ///
 /// let mut v = vec![1, 2, 3];
 ///
@@ -639,15 +639,15 @@ impl Rng for ThreadRng {
 /// let mut rng = rand::thread_rng();
 ///
 /// for x in v.iter_mut() {
-///     *x = SampleDefault::sample_default(&mut rng);
+///     *x = Rand::rand(&mut rng, Default);
 /// }
 /// ```
 /// 
 /// Note that the above example uses `SampleDefault` which is a zero-sized
 /// marker type.
 #[inline]
-pub fn random<T: dist::SampleDefault>() -> T {
-    dist::SampleDefault::sample_default(&mut thread_rng())
+pub fn random<T: Rand<Default>>() -> T {
+    T::rand(&mut thread_rng(), Default)
 }
 
 
