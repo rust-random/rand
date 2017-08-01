@@ -155,6 +155,7 @@
 //! ```
 //! use rand::Rng;
 //! use rand::distributions::{Distribution, Range, uniform};
+//! use rand::sequences::Choose;
 //!
 //! struct SimulationResult {
 //!     win: bool,
@@ -185,7 +186,7 @@
 //! // where the car is. The game host will never open the door with the car.
 //! fn game_host_open<R: Rng>(car: u32, choice: u32, rng: &mut R) -> u32 {
 //!     let choices = free_doors(&[car, choice]);
-//!     rand::sample(rng, choices.into_iter(), 1)[0]
+//!     *choices[..].choose(rng).unwrap()
 //! }
 //!
 //! // Returns the door we switch to, given our current choice and
@@ -254,7 +255,6 @@ use std::rc::Rc;
 
 pub use read::ReadRng;
 pub use os::OsRng;
-pub use self::sequence::{Choose, sample, Shuffle};
 pub use iter::iter;
 pub use distributions::{Default, Rand};
 
@@ -265,7 +265,7 @@ pub mod distributions;
 pub mod iter;
 pub mod prng;
 pub mod reseeding;
-pub mod sequence;
+pub mod sequences;
 
 mod read;
 mod os;
@@ -661,8 +661,9 @@ pub fn random_with<D, T: Rand<D>>(distribution: D) -> T {
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, SeedableRng, StdRng, Shuffle, iter};
+    use {Rng, thread_rng, SeedableRng, StdRng, iter};
     use distributions::{uniform, range, ascii_word_char};
+    use sequences::Shuffle;
     use std::iter::repeat;
 
     pub struct MyRng<R: ?Sized> { inner: R }

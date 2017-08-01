@@ -34,7 +34,7 @@ pub struct Weighted<T> {
 ///
 /// ```rust
 /// use rand::distributions::Distribution;
-/// use rand::distributions::{Weighted, WeightedChoice};
+/// use rand::sequences::{Weighted, WeightedChoice};
 ///
 /// let items = vec!(Weighted { weight: 2, item: 'a' },
 ///                      Weighted { weight: 4, item: 'b' },

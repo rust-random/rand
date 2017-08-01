@@ -13,6 +13,10 @@
 use Rng;
 use distributions::range;
 
+pub use self::weighted::{Weighted, WeightedChoice};
+
+mod weighted;
+
 /// This trait implements a `choose` operations on slices and sequences.
 pub trait Choose<T> {
     /// Return one element from a sequence.
@@ -22,7 +26,8 @@ pub trait Choose<T> {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Choose};
+    /// use rand::thread_rng;
+    /// use rand::sequences::Choose;
     ///
     /// let choices = [1, 2, 4, 8, 16, 32];
     /// let mut rng = thread_rng();
@@ -70,7 +75,8 @@ impl<T> Choose<T> for Vec<T> {
 /// # Example
 ///
 /// ```rust
-/// use rand::{thread_rng, sample};
+/// use rand::thread_rng;
+/// use rand::sequences::sample;
 ///
 /// let mut rng = thread_rng();
 /// let sample = sample(&mut rng, 1..100, 5);
@@ -104,7 +110,8 @@ pub trait Shuffle {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{thread_rng, Shuffle};
+    /// use rand::thread_rng;
+    /// use rand::sequences::Shuffle;
     ///
     /// let mut rng = thread_rng();
     /// let mut y = [1, 2, 3];
@@ -136,7 +143,8 @@ impl<'a, T> Shuffle for &'a mut Vec<T> {
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, Choose, sample, Shuffle};
+    use {Rng, thread_rng};
+    use super::{Choose, sample, Shuffle};
     
     #[test]
     fn test_choose() {

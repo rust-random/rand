@@ -49,7 +49,7 @@ pub fn codepoint<R: Rng+?Sized>(rng: &mut R) -> char {
 /// a-z, A-Z and 0-9.
 #[inline]
 pub fn ascii_word_char<R: Rng+?Sized>(rng: &mut R) -> char {
-    use Choose;
+    use sequences::Choose;
     const GEN_ASCII_STR_CHARSET: &'static [u8] =
         b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
             abcdefghijklmnopqrstuvwxyz\
