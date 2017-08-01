@@ -12,7 +12,7 @@
 
 use Rng;
 use distributions::{Distribution, Rand};
-use distributions::uniform::{Uniform, /*Uniform01,*/ codepoint};
+use distributions::uniform::{Uniform, Uniform01, codepoint};
 
 /// A generic random value distribution. Generates values using what appears to
 /// be "the best" distribution for each type, but ultimately the choice is arbitrary.
@@ -20,7 +20,7 @@ use distributions::uniform::{Uniform, /*Uniform01,*/ codepoint};
 /// Makes use of the following distributions:
 /// 
 /// *   [`Uniform`] for integer types
-/// *   [`Uniform01`] for floating point types (FIXME)
+/// *   [`Uniform01`] for floating point types
 /// 
 /// Makes use of the following methods:
 /// 
@@ -44,6 +44,17 @@ impl<T: Rand<Uniform>> Distribution<T> for Default {
 //         T::rand(rng, Uniform01)
 //     }
 // }
+// workaround above issue:
+impl Distribution<f32> for Default {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> f32 {
+        f32::rand(rng, Uniform01)
+    }
+}
+impl Distribution<f64> for Default {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> f64 {
+        f64::rand(rng, Uniform01)
+    }
+}
 
 impl Distribution<char> for Default {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
@@ -66,9 +77,8 @@ mod tests {
         
         do_test::<u32>(rng);
         do_test::<i8>(rng);
-        // FIXME (see above)
-        // do_test::<f32>(rng);
-        // do_test::<f64>(rng);
+        do_test::<f32>(rng);
+        do_test::<f64>(rng);
         #[cfg(feature = "i128_support")]
         do_test::<u128>(rng);
         do_test::<char>(rng);

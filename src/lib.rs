@@ -638,7 +638,7 @@ pub fn random<T: Rand<Default>>() -> T {
 /// use rand::distributions::{Rand, Default, Uniform01, Closed01, Range};
 /// 
 /// // identical to calling `random()`:
-/// // FIXME let x: f64 = random_with(Default);
+/// let x: f64 = random_with(Default);
 /// 
 /// // same distribution, since Default uses Uniform01 for floats:
 /// let y: f64 = random_with(Uniform01);
