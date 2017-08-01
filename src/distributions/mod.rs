@@ -20,7 +20,7 @@
 use Rng;
 
 pub use self::default::Default;
-pub use self::uniform::{uniform, uniform01, open01, closed01, codepoint,
+pub use self::uniform::{uniform, uniform01, codepoint,
         ascii_word_char};
 pub use self::uniform::{Uniform, Uniform01, Open01, Closed01};
 pub use self::range::{range, Range};

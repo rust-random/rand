@@ -34,22 +34,6 @@ pub fn uniform01<T: Rand<Uniform01>, R: Rng+?Sized>(rng: &mut R) -> T {
     T::rand(rng, Uniform01)
 }
 
-/// Sample values uniformly over the open range (0, 1)
-/// 
-/// This method has precisely two template parameters. To fix the output type,
-/// use the syntax `open01::<f64, _>(rng)`.
-pub fn open01<T: Rand<Open01>, R: Rng+?Sized>(rng: &mut R) -> T {
-    T::rand(rng, Open01)
-}
-
-/// Sample values uniformly over the closed range [0, 1]
-/// 
-/// This method has precisely two template parameters. To fix the output type,
-/// use the syntax `closed01::<f64, _>(rng)`.
-pub fn closed01<T: Rand<Closed01>, R: Rng+?Sized>(rng: &mut R) -> T {
-    T::rand(rng, Closed01)
-}
-
 /// Sample a `char`, uniformly distributed over all Unicode scalar values,
 /// i.e. all code points in the range `0...0x10_FFFF`, except for the range
 /// `0xD800...0xDFFF` (the surrogate code points).  This includes
@@ -268,9 +252,9 @@ float_impls! { SCALE_F32, f32, 24 }
 #[cfg(test)]
 mod tests {
     use {Rng, thread_rng, iter};
-    use distributions::{Rand, uniform, Uniform};
+    use distributions::{Rand, uniform, Uniform, Open01, Closed01};
     use distributions::uniform::{codepoint, ascii_word_char};
-    use distributions::{uniform01, open01, closed01};
+    use distributions::{uniform01};
     
     #[test]
     fn test_integers() {
@@ -345,10 +329,10 @@ mod tests {
         let mut rng = thread_rng();
         for _ in 0..1_000 {
             // strict inequalities
-            let f = open01::<f64, _>(&mut rng);
+            let f = f64::rand(&mut rng, Open01);
             assert!(0.0 < f && f < 1.0);
 
-            let f = open01::<f32, _>(&mut rng);
+            let f = f32::rand(&mut rng, Open01);
             assert!(0.0 < f && f < 1.0);
         }
     }
@@ -358,10 +342,10 @@ mod tests {
         let mut rng = thread_rng();
         for _ in 0..1_000 {
             // strict inequalities
-            let f = closed01::<f64, _>(&mut rng);
+            let f = f64::rand(&mut rng, Closed01);
             assert!(0.0 <= f && f <= 1.0);
 
-            let f = closed01::<f32, _>(&mut rng);
+            let f = f32::rand(&mut rng, Closed01);
             assert!(0.0 <= f && f <= 1.0);
         }
     }
