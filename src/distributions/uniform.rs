@@ -26,14 +26,6 @@ pub fn uniform<T: Rand<Uniform>, R: Rng+?Sized>(rng: &mut R) -> T {
     T::rand(rng, Uniform)
 }
 
-/// Sample values uniformly over the half-open range [0, 1)
-/// 
-/// This method has precisely two template parameters. To fix the output type,
-/// use the syntax `uniform01::<f64, _>(rng)`.
-pub fn uniform01<T: Rand<Uniform01>, R: Rng+?Sized>(rng: &mut R) -> T {
-    T::rand(rng, Uniform01)
-}
-
 /// Sample a `char`, uniformly distributed over all Unicode scalar values,
 /// i.e. all code points in the range `0...0x10_FFFF`, except for the range
 /// `0xD800...0xDFFF` (the surrogate code points).  This includes
@@ -232,7 +224,8 @@ macro_rules! float_impls {
                 // the precision of f64/f32 at 1.0), so that small
                 // numbers are larger than 0, but large numbers
                 // aren't pushed to/above 1.
-                uniform01::<$ty, _>(rng) + 0.25 / $scale_name
+                let x: $ty = Rand::rand(rng, Uniform01);
+                x + 0.25 / $scale_name
             }
         }
         impl Distribution<$ty> for Closed01 {
@@ -240,7 +233,8 @@ macro_rules! float_impls {
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
                 // rescale so that 1.0 - epsilon becomes 1.0
                 // precisely.
-                uniform01::<$ty, _>(rng) * $scale_name / ($scale_name - 1.0)
+                let x: $ty = Rand::rand(rng, Uniform01);
+                x * $scale_name / ($scale_name - 1.0)
             }
         }
     }
@@ -252,9 +246,8 @@ float_impls! { SCALE_F32, f32, 24 }
 #[cfg(test)]
 mod tests {
     use {Rng, thread_rng, iter};
-    use distributions::{Rand, uniform, Uniform, Open01, Closed01};
+    use distributions::{Rand, uniform, Uniform, Uniform01, Open01, Closed01};
     use distributions::uniform::{codepoint, ascii_word_char};
-    use distributions::{uniform01};
     
     #[test]
     fn test_integers() {
@@ -307,8 +300,8 @@ mod tests {
     #[test]
     fn test_f64() {
         let mut r = thread_rng();
-        let a: f64 = uniform01(&mut r);
-        let b = uniform01::<f64, _>(&mut r);
+        let a: f64 = Rand::rand(&mut r, Uniform01);
+        let b = f64::rand(&mut r, Uniform01);
         assert!(0.0 <= a && a < 1.0);
         assert!(0.0 <= b && b < 1.0);
     }
@@ -318,8 +311,8 @@ mod tests {
         // FIXME: this message and test predates this repo; message suggests
         // test is supposed to be ==; using != is pretty useless
         // the test for exact equality is correct here.
-        assert!(uniform01::<f64, _>(&mut ConstantRng(0xffff_ffff)) != 1.0);
-        assert!(uniform01::<f64, _>(&mut ConstantRng(0xffff_ffff_ffff_ffff)) != 1.0);
+        assert!(f64::rand(&mut ConstantRng(0xffff_ffff), Uniform01) != 1.0);
+        assert!(f64::rand(&mut ConstantRng(0xffff_ffff_ffff_ffff), Uniform01) != 1.0);
     }
 
     #[test]

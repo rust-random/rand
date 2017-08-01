@@ -76,21 +76,20 @@
 //! # Examples
 //!
 //! ```rust
-//! use rand::distributions::uniform;
+//! use rand::random;
 //!
-//! let mut rng = rand::thread_rng();
-//! if uniform(&mut rng) { // random bool
-//!     let a: i32 = uniform(&mut rng);
-//!     let b: u32 = uniform(&mut rng);
+//! if random() { // random bool
+//!     let a: i32 = random();
+//!     let b: u32 = random();
 //!     println!("i32: {}, u32: {}", a, b)
 //! }
 //! ```
 //!
 //! ```rust
 //! use rand::thread_rng;
-//! use rand::distributions::{uniform, uniform01};
+//! use rand::distributions::{Rand, Uniform, Uniform01};
 //! let mut rng = thread_rng();
-//! let tuple: (f64, u8) = (uniform01(&mut rng), uniform(&mut rng));
+//! let tuple = (f64::rand(&mut rng, Uniform01), u8::rand(&mut rng, Uniform));
 //! println!("{:?}", tuple)
 //! ```
 //!
@@ -112,7 +111,7 @@
 //! and multiply this fraction by 4.
 //!
 //! ```
-//! use rand::distributions::{Distribution, Range};
+//! use rand::distributions::{Rand, Range};
 //!
 //! fn main() {
 //!    let between = Range::new(-1f64, 1.);
@@ -122,8 +121,8 @@
 //!    let mut in_circle = 0;
 //!
 //!    for _ in 0..total {
-//!        let a = between.sample(&mut rng);
-//!        let b = between.sample(&mut rng);
+//!        let a = f64::rand(&mut rng, between);
+//!        let b = f64::rand(&mut rng, between);
 //!        if a*a + b*b <= 1. {
 //!            in_circle += 1;
 //!        }
@@ -423,15 +422,14 @@ pub trait SeedableRng<Seed>: Rng {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{Rng, SeedableRng};
-    /// use rand::prng::IsaacWordRng;
-    /// use rand::distributions::uniform01;
+    /// use rand::{Rng, SeedableRng, Rand, Default};
+    /// use rand::prng::ChaChaRng;
     ///
     /// let seed: &[_] = &[1, 2, 3, 4];
-    /// let mut rng: IsaacWordRng = SeedableRng::from_seed(seed);
-    /// println!("{}", uniform01::<f64, _>(&mut rng));
+    /// let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+    /// println!("{}", f64::rand(&mut rng, Default));
     /// rng.reseed(&[5, 6, 7, 8]);
-    /// println!("{}", uniform01::<f64, _>(&mut rng));
+    /// println!("{}", f64::rand(&mut rng, Default));
     /// ```
     fn reseed(&mut self, Seed);
 
@@ -440,13 +438,12 @@ pub trait SeedableRng<Seed>: Rng {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{Rng, SeedableRng};
+    /// use rand::{Rng, SeedableRng, Rand, Default};
     /// use rand::prng::ChaChaRng;
-    /// use rand::distributions::uniform01;
     ///
     /// let seed: &[_] = &[1, 2, 3, 4];
     /// let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
-    /// println!("{}", uniform01::<f64, _>(&mut rng));
+    /// println!("{}", f64::rand(&mut rng, Default));
     /// ```
     fn from_seed(seed: Seed) -> Self;
 }

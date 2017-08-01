@@ -20,8 +20,7 @@
 use Rng;
 
 pub use self::default::Default;
-pub use self::uniform::{uniform, uniform01, codepoint,
-        ascii_word_char};
+pub use self::uniform::{uniform, codepoint, ascii_word_char};
 pub use self::uniform::{Uniform, Uniform01, Open01, Closed01};
 pub use self::range::{range, Range};
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
@@ -133,7 +132,7 @@ fn ziggurat<R: Rng+?Sized, P, Z>(
             return zero_case(rng, u);
         }
         // algebraically equivalent to f1 + DRanU()*(f0 - f1) < 1
-        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * uniform01::<f64, _>(rng) < pdf(x) {
+        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * f64::rand(rng, Uniform01) < pdf(x) {
             return x;
         }
     }

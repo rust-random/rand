@@ -15,7 +15,7 @@
 use std::num::Wrapping as w;
 
 use Rng;
-use distributions::{Distribution, uniform01};
+use distributions::{Distribution, Uniform01, Rand};
 
 /// Generate a random value in the range [`low`, `high`).
 ///
@@ -177,7 +177,8 @@ macro_rules! float_impl {
                 }
             }
             fn sample_range<R: Rng+?Sized>(r: &Range<$ty>, rng: &mut R) -> $ty {
-                r.low + r.range * uniform01::<$ty, _>(rng)
+                let x: $ty = Rand::rand(rng, Uniform01);
+                r.low + r.range * x
             }
         }
     }
