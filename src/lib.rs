@@ -746,26 +746,20 @@ mod test {
             let mut r = &mut rng as &mut Rng;
             r.next_u32();
             uniform::<i32, _>(&mut r);
-            // FIXME: dynamic dispatch?
-            /*
             let mut v = [1, 1, 1];
             v[..].shuffle(r);
             let b: &[_] = &[1, 1, 1];
             assert_eq!(v, b);
-            */
             assert_eq!(range(0, 1, &mut r), 0);
         }
         {
             let mut r = Box::new(rng) as Box<Rng>;
             r.next_u32();
             uniform::<i32, _>(&mut r);
-            // FIXME: dynamic dispatch?
-            /*
             let mut v = [1, 1, 1];
-            v[..].shuffle(r);
+            v[..].shuffle(&mut *r);
             let b: &[_] = &[1, 1, 1];
             assert_eq!(v, b);
-            */
             assert_eq!(range(0, 1, &mut r), 0);
         }
     }
