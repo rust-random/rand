@@ -13,7 +13,7 @@
 //! The `Rng` trait covers random number generation, and can be used directly
 //! to produce values of some core types (`u32, u64, f32, f64`, and byte
 //! strings). To generate anything else, or to generate values of the above type
-//! in generic code, use the `dist` (distributions) module. This includes
+//! in generic code, use the `distributions` module. This includes
 //! distributions like ranges, normal and exponential.
 //!
 //! # Usage
@@ -76,7 +76,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use rand::dist::uniform;
+//! use rand::distributions::uniform;
 //!
 //! let mut rng = rand::thread_rng();
 //! if uniform(&mut rng) { // random bool
@@ -88,7 +88,7 @@
 //!
 //! ```rust
 //! use rand::thread_rng;
-//! use rand::dist::{uniform, uniform01};
+//! use rand::distributions::{uniform, uniform01};
 //! let mut rng = thread_rng();
 //! let tuple: (f64, u8) = (uniform01(&mut rng), uniform(&mut rng));
 //! println!("{:?}", tuple)
@@ -112,7 +112,7 @@
 //! and multiply this fraction by 4.
 //!
 //! ```
-//! use rand::dist::{Distribution, Range};
+//! use rand::distributions::{Distribution, Range};
 //!
 //! fn main() {
 //!    let between = Range::new(-1f64, 1.);
@@ -155,7 +155,7 @@
 //!
 //! ```
 //! use rand::Rng;
-//! use rand::dist::{Distribution, Range, uniform};
+//! use rand::distributions::{Distribution, Range, uniform};
 //!
 //! struct SimulationResult {
 //!     win: bool,
@@ -257,12 +257,12 @@ pub use read::ReadRng;
 pub use os::OsRng;
 pub use self::sequence::{Choose, sample, Shuffle};
 pub use iter::iter;
-pub use dist::{Default, Rand};
+pub use distributions::{Default, Rand};
 
 use prng::IsaacWordRng;
 use prng::XorShiftRng;
 
-pub mod dist;
+pub mod distributions;
 pub mod iter;
 pub mod prng;
 pub mod reseeding;
@@ -425,7 +425,7 @@ pub trait SeedableRng<Seed>: Rng {
     /// ```rust
     /// use rand::{Rng, SeedableRng};
     /// use rand::prng::IsaacWordRng;
-    /// use rand::dist::uniform01;
+    /// use rand::distributions::uniform01;
     ///
     /// let seed: &[_] = &[1, 2, 3, 4];
     /// let mut rng: IsaacWordRng = SeedableRng::from_seed(seed);
@@ -442,7 +442,7 @@ pub trait SeedableRng<Seed>: Rng {
     /// ```rust
     /// use rand::{Rng, SeedableRng};
     /// use rand::prng::ChaChaRng;
-    /// use rand::dist::uniform01;
+    /// use rand::distributions::uniform01;
     ///
     /// let seed: &[_] = &[1, 2, 3, 4];
     /// let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
@@ -584,7 +584,7 @@ impl Rng for ThreadRng {
 ///
 /// `random()` can generate various types of random things, and so may require
 /// type hinting to generate the specific type you want. It uses
-/// `dist::SampleDefault` to determine *how* values are generated for each type.
+/// `distributions::SampleDefault` to determine *how* values are generated for each type.
 ///
 /// This function uses the thread local random number generator. This means
 /// that if you're calling `random()` in a loop, caching the generator can
@@ -604,7 +604,7 @@ impl Rng for ThreadRng {
 /// Caching the thread local random number generator:
 ///
 /// ```
-/// use rand::dist::{Rand, Default};
+/// use rand::distributions::{Rand, Default};
 ///
 /// let mut v = vec![1, 2, 3];
 ///
@@ -632,7 +632,7 @@ pub fn random<T: Rand<Default>>() -> T {
 #[cfg(test)]
 mod test {
     use {Rng, thread_rng, SeedableRng, StdRng, Shuffle, iter};
-    use dist::{uniform, range, ascii_word_char};
+    use distributions::{uniform, range, ascii_word_char};
     use std::iter::repeat;
 
     pub struct MyRng<R: ?Sized> { inner: R }

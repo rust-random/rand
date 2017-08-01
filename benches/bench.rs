@@ -12,7 +12,7 @@ use test::{black_box, Bencher};
 use rand::{StdRng, OsRng, weak_rng};
 use rand::prng::{XorShiftRng, IsaacRng, Isaac64Rng};
 use rand::{sample, Shuffle};
-use rand::dist::{Rand, Uniform, Uniform01};
+use rand::distributions::{Rand, Uniform, Uniform01};
 
 #[bench]
 fn rand_xorshift(b: &mut Bencher) {

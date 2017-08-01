@@ -16,8 +16,8 @@ use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
 
 use {Rng};
-use dist::normal::standard_normal;
-use dist::{Distribution, Exp, open01};
+use distributions::normal::standard_normal;
+use distributions::{Distribution, Exp, open01};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -38,7 +38,7 @@ use dist::{Distribution, Exp, open01};
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{Distribution, Gamma};
+/// use rand::distributions::{Distribution, Gamma};
 ///
 /// let gamma = Gamma::new(2.0, 5.0);
 /// let v = gamma.sample(&mut rand::thread_rng());
@@ -182,7 +182,7 @@ impl Distribution<f64> for GammaLargeShape {
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{ChiSquared, Distribution};
+/// use rand::distributions::{ChiSquared, Distribution};
 ///
 /// let chi = ChiSquared::new(11.0);
 /// let v = chi.sample(&mut rand::thread_rng());
@@ -237,7 +237,7 @@ impl Distribution<f64> for ChiSquared {
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{FisherF, Distribution};
+/// use rand::distributions::{FisherF, Distribution};
 ///
 /// let f = FisherF::new(2.0, 32.0);
 /// let v = f.sample(&mut rand::thread_rng());
@@ -278,7 +278,7 @@ impl Distribution<f64> for FisherF {
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{StudentT, Distribution};
+/// use rand::distributions::{StudentT, Distribution};
 ///
 /// let t = StudentT::new(11.0);
 /// let v = t.sample(&mut rand::thread_rng());
@@ -310,7 +310,7 @@ impl Distribution<f64> for StudentT {
 
 #[cfg(test)]
 mod test {
-    use dist::{Distribution};
+    use distributions::{Distribution};
     use super::{ChiSquared, StudentT, FisherF};
 
     #[test]

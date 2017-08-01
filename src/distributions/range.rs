@@ -15,7 +15,7 @@
 use std::num::Wrapping as w;
 
 use Rng;
-use dist::{Distribution, uniform01};
+use distributions::{Distribution, uniform01};
 
 /// Generate a random value in the range [`low`, `high`).
 ///
@@ -30,7 +30,7 @@ use dist::{Distribution, uniform01};
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::range;
+/// use rand::distributions::range;
 ///
 /// let mut rng = rand::thread_rng();
 /// let n: u32 = range(0, 10, &mut rng);
@@ -39,7 +39,7 @@ use dist::{Distribution, uniform01};
 /// println!("{}", m);
 /// ```
 pub fn range<T: PartialOrd + SampleRange, R: Rng+?Sized>(low: T, high: T, rng: &mut R) -> T {
-    assert!(low < high, "dist::range called with low >= high");
+    assert!(low < high, "distributions::range called with low >= high");
     Range::new(low, high).sample(rng)
 }
 
@@ -60,7 +60,7 @@ pub fn range<T: PartialOrd + SampleRange, R: Rng+?Sized>(low: T, high: T, rng: &
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{Distribution, Range};
+/// use rand::distributions::{Distribution, Range};
 ///
 /// fn main() {
 ///     let between = Range::new(10, 10000);
@@ -138,7 +138,7 @@ macro_rules! integer_impl {
 
             #[inline]
             fn sample_range<R: Rng+?Sized>(r: &Range<$ty>, rng: &mut R) -> $ty {
-                use $crate::dist::uniform;
+                use $crate::distributions::uniform;
                 loop {
                     // rejection sample
                     let v: $unsigned = uniform(rng);
@@ -189,8 +189,8 @@ float_impl! { f64 }
 #[cfg(test)]
 mod tests {
     use thread_rng;
-    use dist::{Distribution};
-    use dist::{Range, range};
+    use distributions::{Distribution};
+    use distributions::{Range, range};
 
     #[test]
     fn test_fn_range() {

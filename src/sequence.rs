@@ -11,7 +11,7 @@
 //! Random operations on sequences
 
 use Rng;
-use dist::range;
+use distributions::range;
 
 /// This trait implements a `choose` operations on slices and sequences.
 pub trait Choose<T> {

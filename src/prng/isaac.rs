@@ -536,7 +536,7 @@ impl fmt::Debug for Isaac64Rng {
 #[cfg(test)]
 mod test {
     use {Rng, SeedableRng, iter};
-    use dist::ascii_word_char;
+    use distributions::ascii_word_char;
     use super::{IsaacRng, Isaac64Rng};
 
     #[test]

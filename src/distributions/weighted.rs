@@ -14,7 +14,7 @@
 //! adapted, or removed entirely.
 
 use Rng;
-use dist::{Range, Distribution};
+use distributions::{Range, Distribution};
 
 /// A value with a particular weight for use with `WeightedChoice`.
 #[derive(Copy, Clone, Debug)]
@@ -33,8 +33,8 @@ pub struct Weighted<T> {
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::Distribution;
-/// use rand::dist::{Weighted, WeightedChoice};
+/// use rand::distributions::Distribution;
+/// use rand::distributions::{Weighted, WeightedChoice};
 ///
 /// let items = vec!(Weighted { weight: 2, item: 'a' },
 ///                      Weighted { weight: 4, item: 'b' },
@@ -134,7 +134,7 @@ impl<T: Clone> Distribution<T> for WeightedChoice<T> {
 #[cfg(test)]
 mod tests {
     use Rng;
-    use dist::Distribution;
+    use distributions::Distribution;
     use super::{WeightedChoice, Weighted};
 
     #[derive(PartialEq, Debug)]

@@ -14,7 +14,7 @@ use std::char;
 use std::mem;
 
 use Rng;
-use dist::{Distribution, Rand};
+use distributions::{Distribution, Rand};
 
 // ----- convenience functions -----
 
@@ -268,9 +268,9 @@ float_impls! { SCALE_F32, f32, 24 }
 #[cfg(test)]
 mod tests {
     use {Rng, thread_rng, iter};
-    use dist::{Rand, uniform, Uniform};
-    use dist::uniform::{codepoint, ascii_word_char};
-    use dist::{uniform01, open01, closed01};
+    use distributions::{Rand, uniform, Uniform};
+    use distributions::uniform::{codepoint, ascii_word_char};
+    use distributions::{uniform01, open01, closed01};
     
     #[test]
     fn test_integers() {

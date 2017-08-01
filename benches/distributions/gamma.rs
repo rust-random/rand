@@ -1,8 +1,8 @@
 use std::mem::size_of;
 use test::Bencher;
 use rand;
-use rand::dist::Distribution;
-use rand::dist::gamma::Gamma;
+use rand::distributions::Distribution;
+use rand::distributions::gamma::Gamma;
 
 #[bench]
 fn bench_gamma_large_shape(b: &mut Bencher) {

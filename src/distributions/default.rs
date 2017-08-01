@@ -11,8 +11,8 @@
 //! Generic value creation
 
 use Rng;
-use dist::{Distribution, Rand};
-use dist::uniform::{Uniform, /*Uniform01,*/ codepoint};
+use distributions::{Distribution, Rand};
+use distributions::uniform::{Uniform, /*Uniform01,*/ codepoint};
 
 /// A generic random value distribution. Generates values using what appears to
 /// be "the best" distribution for each type, but ultimately the choice is arbitrary.
@@ -55,7 +55,7 @@ impl Distribution<char> for Default {
 #[cfg(test)]
 mod tests {
     use {Rng, thread_rng};
-    use dist::{Rand, Default};
+    use distributions::{Rand, Default};
     
     #[test]
     fn test_types() {

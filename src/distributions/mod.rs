@@ -46,7 +46,7 @@ mod weighted;
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::weighted_bool;
+/// use rand::distributions::weighted_bool;
 ///
 /// let mut rng = rand::thread_rng();
 /// println!("{}", weighted_bool(3, &mut rng));
@@ -142,7 +142,7 @@ fn ziggurat<R: Rng+?Sized, P, Z>(
 #[cfg(test)]
 mod test {
     use {Rng, thread_rng};
-    use dist::weighted_bool;
+    use distributions::weighted_bool;
 
     #[test]
     fn test_fn_weighted_bool() {

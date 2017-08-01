@@ -239,7 +239,7 @@ impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
 #[cfg(test)]
 mod test {
     use {Rng, SeedableRng, iter};
-    use dist::ascii_word_char;
+    use distributions::ascii_word_char;
     use super::ChaChaRng;
 
     #[test]

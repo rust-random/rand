@@ -37,7 +37,7 @@ println!("{}", x)
 ```
 
 ```rust
-use rand::dist::{uniform};
+use rand::distributions::{uniform};
 use rand::Rng;
 
 let mut rng = rand::thread_rng();
@@ -51,10 +51,10 @@ if uniform(&mut rng) { // random bool
 It is also possible to use other generators types, which have a similar interface. The following uses the "ChaCha" algorithm instead of the default.
 
 ```rust
-use rand::{thread_rng, ChaChaRng, dist};
+use rand::{thread_rng, ChaChaRng, distributions};
 
 let mut rng = ChaChaRng::new_from_rng(&mut thread_rng());
-println!("random between 0-9: {}", dist::range(0, 10, &mut rng));
+println!("random between 0-9: {}", distributions::range(0, 10, &mut rng));
 ```
 
 

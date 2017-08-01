@@ -104,7 +104,7 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
 ///
 /// ```rust
 /// use rand::{Rng, SeedableRng, StdRng, iter};
-/// use rand::dist::ascii_word_char;
+/// use rand::distributions::ascii_word_char;
 /// use rand::reseeding::{Reseeder, ReseedingRng};
 ///
 /// struct TickTockReseeder { tick: bool }
@@ -151,7 +151,7 @@ mod test {
     use std::default::Default;
     use std::iter::repeat;
     use {SeedableRng, Rng, iter};
-    use dist::ascii_word_char;
+    use distributions::ascii_word_char;
     use super::{ReseedingRng, ReseedWithDefault};
 
     struct Counter {

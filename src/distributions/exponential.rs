@@ -11,7 +11,7 @@
 //! The exponential distribution.
 
 use {Rng};
-use dist::{ziggurat, ziggurat_tables, Distribution, uniform01};
+use distributions::{ziggurat, ziggurat_tables, Distribution, uniform01};
 
 /// Generates Exp(1) random numbers.
 ///
@@ -29,7 +29,7 @@ use dist::{ziggurat, ziggurat_tables, Distribution, uniform01};
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::exponential::exp1;
+/// use rand::distributions::exponential::exp1;
 ///
 /// let x = exp1(&mut rand::thread_rng());
 /// println!("{}", x);
@@ -60,7 +60,7 @@ pub fn exp1<R: Rng+?Sized>(rng: &mut R) -> f64 {
 /// # Example
 ///
 /// ```rust
-/// use rand::dist::{Exp, Distribution};
+/// use rand::distributions::{Exp, Distribution};
 ///
 /// let exp = Exp::new(2.0);
 /// let v = exp.sample(&mut rand::thread_rng());
@@ -90,7 +90,7 @@ impl Distribution<f64> for Exp {
 
 #[cfg(test)]
 mod test {
-    use dist::{Distribution};
+    use distributions::{Distribution};
     use super::Exp;
 
     #[test]

@@ -24,11 +24,11 @@ use Rng;
 /// # Example
 ///
 /// ```rust
-/// use rand::{ReadRng, dist};
+/// use rand::{ReadRng, distributions};
 ///
 /// let data = vec![1, 2, 3, 4, 5, 6, 7, 8];
 /// let mut rng = ReadRng::new(&data[..]);
-/// println!("{:x}", dist::uniform::<u32, _>(&mut rng));
+/// println!("{:x}", distributions::uniform::<u32, _>(&mut rng));
 /// ```
 #[derive(Debug)]
 pub struct ReadRng<R> {

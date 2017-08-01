@@ -32,7 +32,7 @@ pub struct Iter<'a, R: Rng+?Sized+'a> {
 ///
 /// ```
 /// use rand::{thread_rng, Rng, iter};
-/// use rand::dist::{uniform, ascii_word_char};
+/// use rand::distributions::{uniform, ascii_word_char};
 ///
 /// let mut rng = thread_rng();
 /// let x: Vec<u32> = iter(&mut rng).take(10).map(|rng| uniform(rng)).collect();
@@ -134,7 +134,7 @@ impl<'a, R:?Sized+'a, U, F> Iterator for FlatMap<'a, R, U, F>
 #[cfg(test)]
 mod tests {
     use {Rng, thread_rng, iter};
-    use dist::{uniform, ascii_word_char};
+    use distributions::{uniform, ascii_word_char};
     
     #[test]
     fn test_iter() {
