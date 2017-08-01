@@ -580,7 +580,7 @@ impl Rng for ThreadRng {
     }
 }
 
-/// Generates a andom value using the thread-local random number generator.
+/// Generates a random value using the thread-local random number generator.
 ///
 /// `random()` can generate various types of random things, and so may require
 /// type hinting to generate the specific type you want. It uses
@@ -604,7 +604,7 @@ impl Rng for ThreadRng {
 /// Caching the thread local random number generator:
 ///
 /// ```
-/// use rand::distributions::{Rand, Default};
+/// use rand::{Rand, Default};
 ///
 /// let mut v = vec![1, 2, 3];
 ///
@@ -626,6 +626,39 @@ impl Rng for ThreadRng {
 #[inline]
 pub fn random<T: Rand<Default>>() -> T {
     T::rand(&mut thread_rng(), Default)
+}
+
+/// Generates a random value using the thread-local random number generator.
+/// 
+/// This is a more flexible variant of `random()`, supporting selection of the
+/// distribution used. For example:
+/// 
+/// ```
+/// use rand::random_with;
+/// use rand::distributions::{Rand, Default, Uniform01, Closed01, Range};
+/// 
+/// // identical to calling `random()`:
+/// // FIXME let x: f64 = random_with(Default);
+/// 
+/// // same distribution, since Default uses Uniform01 for floats:
+/// let y: f64 = random_with(Uniform01);
+/// 
+/// // use the closed range [0, 1] inseat of half-open [0, 1):
+/// let z: f64 = random_with(Closed01);
+/// 
+/// // use the half-open range [0, 2):
+/// let w: f64 = random_with(Range::new(0.0, 2.0));
+/// 
+/// // Note that constructing a `Range` is non-trivial, so for the last example
+/// // it might be better to do this if sampling a lot:
+/// let mut rng = rand::thread_rng();
+/// let range = Range::new(0.0, 2.0);
+/// // Do this bit many times:
+/// let v = f64::rand(&mut rng, range);
+/// ```
+#[inline]
+pub fn random_with<D, T: Rand<D>>(distribution: D) -> T {
+    T::rand(&mut thread_rng(), distribution)
 }
 
 
