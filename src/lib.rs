@@ -257,10 +257,10 @@ pub use read::ReadRng;
 pub use os::OsRng;
 pub use self::sequence::{Choose, sample, Shuffle};
 pub use iter::iter;
+pub use dist::{Default, Rand};
 
 use prng::IsaacWordRng;
 use prng::XorShiftRng;
-use dist::{Default, Rand};
 
 pub mod dist;
 pub mod iter;

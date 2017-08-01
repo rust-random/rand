@@ -27,14 +27,15 @@ pub use self::range::{range, Range};
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal};
 pub use self::exponential::Exp;
+pub use self::weighted::{Weighted, WeightedChoice};
 
-pub mod default;
-pub mod uniform;
+mod default;
+mod uniform;
 pub mod range;
 pub mod gamma;
 pub mod normal;
 pub mod exponential;
-pub mod weighted;
+mod weighted;
 
 /// Return a bool with a 1 in n chance of being true
 /// 
