@@ -136,11 +136,15 @@ integer_impl! { i8, u8 }
 integer_impl! { i16, u16 }
 integer_impl! { i32, u32 }
 integer_impl! { i64, u64 }
+#[cfg(feature = "i128_support")]
+integer_impl! { i128, u128 }
 integer_impl! { isize, usize }
 integer_impl! { u8, u8 }
 integer_impl! { u16, u16 }
 integer_impl! { u32, u32 }
 integer_impl! { u64, u64 }
+#[cfg(feature = "i128_support")]
+integer_impl! { u128, u128 }
 integer_impl! { usize, usize }
 
 macro_rules! float_impl {
@@ -200,8 +204,12 @@ mod tests {
                  )*
             }}
         }
+        #[cfg(not(feature = "i128_support"))]
         t!(i8, i16, i32, i64, isize,
-           u8, u16, u32, u64, usize)
+           u8, u16, u32, u64, usize);
+        #[cfg(feature = "i128_support")]
+        t!(i8, i16, i32, i64, i128, isize,
+           u8, u16, u32, u64, u128, usize);
     }
 
     #[test]
