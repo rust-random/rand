@@ -38,7 +38,7 @@ use distributions::{Distribution, Uniform01, Rand};
 /// let m: f64 = range(-40.0f64, 1.3e5f64, &mut rng);
 /// println!("{}", m);
 /// ```
-pub fn range<T: PartialOrd + SampleRange, R: Rng+?Sized>(low: T, high: T, rng: &mut R) -> T {
+pub fn range<T: SampleRange, R: Rng+?Sized>(low: T, high: T, rng: &mut R) -> T {
     assert!(low < high, "distributions::range called with low >= high");
     SampleRange::construct_range(low, high).sample(rng)
 }
@@ -90,7 +90,7 @@ pub struct Range<X> {
     pub zone: X
 }
 
-impl<X: SampleRange + PartialOrd> Range<X> {
+impl<X: SampleRange> Range<X> {
     /// Create a new `Range` instance that samples uniformly from
     /// `[low, high)`. Panics if `low >= high`.
     pub fn new(low: X, high: X) -> Range<X> {
@@ -108,7 +108,7 @@ impl<T: SampleRange> Distribution<T> for Range<T> {
 /// The helper trait for types that have a sensible way to sample
 /// uniformly between two values. This should not be used directly,
 /// and is only to facilitate `Range`.
-pub trait SampleRange : Sized {
+pub trait SampleRange : PartialOrd+Sized {
     /// Construct the `Range` object that `sample_range`
     /// requires. This should not ever be called directly, only via
     /// `Range::new`, which will check that `low < high`, so this
