@@ -30,6 +30,7 @@ pub use self::exponential::Exp;
 mod default;
 mod uniform;
 pub mod range;
+pub mod range2;
 pub mod gamma;
 pub mod normal;
 pub mod exponential;
