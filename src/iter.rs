@@ -28,6 +28,10 @@ pub struct Iter<'a, R: Rng+?Sized+'a> {
 
 /// Create an iterator on an `Rng`.
 /// 
+/// This does not create a "real" `Iterator` due to lifetime restrictions, but
+/// the returned object supports the most important iterator functions, like
+/// `take(number)` and `map(closure)`.
+/// 
 /// # Example
 ///
 /// ```
@@ -42,7 +46,7 @@ pub struct Iter<'a, R: Rng+?Sized+'a> {
 /// println!("{}", w);
 /// ```
 pub fn iter<'a, R: Rng+?Sized+'a>(rng: &'a mut R) -> Iter<'a, R> {
-    Iter { rng: rng, len: None }
+    Iter { rng, len: None }
 }
 
 impl<'a, R: Rng+?Sized+'a> Iter<'a, R> {
