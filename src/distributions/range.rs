@@ -40,7 +40,7 @@ use distributions::{Distribution, Uniform01, Rand};
 /// ```
 pub fn range<T: PartialOrd + SampleRange, R: Rng+?Sized>(low: T, high: T, rng: &mut R) -> T {
     assert!(low < high, "distributions::range called with low >= high");
-    Range::new(low, high).sample(rng)
+    SampleRange::construct_range(low, high).sample(rng)
 }
 
 /// Sample values uniformly between two bounds.
@@ -56,6 +56,10 @@ pub fn range<T: PartialOrd + SampleRange, R: Rng+?Sized>(low: T, high: T, rng: &
 /// including `high`, but this may be very difficult. All the
 /// primitive integer types satisfy this property, and the float types
 /// normally satisfy it, but rounding may mean `high` can occur.
+/// 
+/// Internal details of this type are exposed so as to allow users to implement
+/// `SampleRange` for their own types. Outside of `SampleRange` implementations,
+/// accessing these members should not be necessary.
 ///
 /// # Example
 ///
@@ -74,9 +78,16 @@ pub fn range<T: PartialOrd + SampleRange, R: Rng+?Sized>(low: T, high: T, rng: &
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Range<X> {
-    low: X,
-    range: X,
-    accept_zone: X
+    /// The `low` of `Range::new(low, high)`.
+    pub low: X,
+    /// Usually it is more convenient to store `low` and `range = high - low`
+    /// internally. Custom implementations of `SampleRange` may however use
+    /// this differently.
+    pub range: X,
+    /// The integer implementation ensures uniform distribution by rejecting
+    /// parameters outside of a certain "acceptance zone", from `0` to `zone`.
+    /// Not all implementations use this parameter.
+    pub zone: X
 }
 
 impl<X: SampleRange + PartialOrd> Range<X> {
@@ -132,7 +143,7 @@ macro_rules! integer_impl {
                 Range {
                     low: low,
                     range: range as $ty,
-                    accept_zone: zone as $ty
+                    zone: zone as $ty
                 }
             }
 
@@ -145,7 +156,7 @@ macro_rules! integer_impl {
                     // until we find something that fits into the
                     // region which r.range evenly divides (this will
                     // be uniformly distributed)
-                    if v < r.accept_zone as $unsigned {
+                    if v < r.zone as $unsigned {
                         // and return it, with some adjustments
                         return (w(r.low) + w((v % r.range as $unsigned) as $ty)).0;
                     }
@@ -173,7 +184,7 @@ macro_rules! float_impl {
                 Range {
                     low: low,
                     range: high - low,
-                    accept_zone: 0.0 // unused
+                    zone: 0.0 // unused
                 }
             }
             fn sample_range<R: Rng+?Sized>(r: &Range<$ty>, rng: &mut R) -> $ty {
@@ -189,9 +200,9 @@ float_impl! { f64 }
 
 #[cfg(test)]
 mod tests {
-    use thread_rng;
-    use distributions::{Distribution};
-    use distributions::{Range, range};
+    use {Rng, thread_rng};
+    use distributions::{Distribution, Rand, Uniform01};
+    use distributions::range::{Range, range, SampleRange};
 
     #[test]
     fn test_fn_range() {
@@ -284,4 +295,32 @@ mod tests {
         t!(f32, f64)
     }
 
+    #[test]
+    fn test_custom_range() {
+        #[derive(Clone, Copy, PartialEq, PartialOrd)]
+        struct MyF32 {
+            x: f32,
+        }
+        impl SampleRange for MyF32 {
+            fn construct_range(low: MyF32, high: MyF32) -> Range<MyF32> {
+                Range {
+                    low: low,
+                    range: MyF32 { x: high.x - low.x },
+                    zone: MyF32 { x: 0.0f32 }
+                }
+            }
+            fn sample_range<R: Rng+?Sized>(r: &Range<MyF32>, rng: &mut R) -> MyF32 {
+                let x = f32::rand(rng, Uniform01);
+                MyF32 { x: r.low.x + r.range.x * x }
+            }
+        }
+        
+        let (low, high) = (MyF32{ x: 17.0f32 }, MyF32{ x: 22.0f32 });
+        let range = Range::new(low, high);
+        let mut rng = ::test::rng();
+        for _ in 0..100 {
+            let x = MyF32::rand(&mut rng, range);
+            assert!(low <= x && x < high);
+        }
+    }
 }
