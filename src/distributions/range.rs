@@ -134,14 +134,21 @@ macro_rules! integer_impl {
                 let range = (w(high as $unsigned) - w(low as $unsigned)).0;
                 let unsigned_max: $unsigned = ::core::$unsigned::MAX;
 
-                // this is the largest number that fits into $unsigned
-                // that `range` divides evenly, so, if we've sampled
-                // `n` uniformly from this region, then `n % range` is
-                // uniform in [0, range)
-                let zone = unsigned_max - unsigned_max % range;
+                // We want to calculate type_range % range where type_range is
+                // pow(2, n_bits($ty)), but we can't represent type_range.
+                // (type_range - range) % range is equivalent, since we know
+                // type_range > range. Since range >= 1,
+                // type_range - range = (unsigned_max - range) + 1.
+                let ignore_zone = ((unsigned_max - range) + 1) % range;
+                // We want to sample from the zone
+                // [0, (type_range - ignore_zone))
+                // however, ignore_zone may be zero. Instead use a closed range
+                // from zero to:
+                let zone = unsigned_max - ignore_zone;
 
                 Range {
                     low: low,
+                    // These are really $unsigned values, but store as $ty:
                     range: range as $ty,
                     zone: zone as $ty
                 }
@@ -151,13 +158,10 @@ macro_rules! integer_impl {
             fn sample_range<R: Rng+?Sized>(r: &Range<$ty>, rng: &mut R) -> $ty {
                 use $crate::distributions::uniform;
                 loop {
-                    // rejection sample
                     let v: $unsigned = uniform(rng);
-                    // until we find something that fits into the
-                    // region which r.range evenly divides (this will
-                    // be uniformly distributed)
-                    if v < r.zone as $unsigned {
-                        // and return it, with some adjustments
+                    // Reject samples not between 0 and zone:
+                    if v <= r.zone as $unsigned {
+                        // Adjustment sample for range and low value:
                         return (w(r.low) + w((v % r.range as $unsigned) as $ty)).0;
                     }
                 }
