@@ -13,8 +13,10 @@
 use Rng;
 use distributions::range;
 
+#[cfg(feature="std")]
 pub use self::weighted::{Weighted, WeightedChoice};
 
+#[cfg(feature="std")]
 mod weighted;
 
 /// This trait implements a `choose` operations on slices and sequences.
@@ -58,6 +60,7 @@ impl<'a, T> Choose<&'a mut T> for &'a mut [T] {
     }
 }
 
+#[cfg(feature="std")]
 impl<T> Choose<T> for Vec<T> {
     fn choose<R: Rng+?Sized>(mut self, rng: &mut R) -> Option<T> {
         if self.is_empty() {
@@ -82,6 +85,7 @@ impl<T> Choose<T> for Vec<T> {
 /// let sample = sample(&mut rng, 1..100, 5);
 /// println!("{:?}", sample);
 /// ```
+#[cfg(feature="std")]
 pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     where I: IntoIterator<Item=T>,
           R: Rng,
@@ -135,6 +139,7 @@ impl<'a, T> Shuffle for &'a mut [T] {
     }
 }
 
+#[cfg(feature="std")]
 impl<'a, T> Shuffle for &'a mut Vec<T> {
     fn shuffle<R: Rng+?Sized>(self, rng: &mut R) {
         (self[..]).shuffle(rng)

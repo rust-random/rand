@@ -14,7 +14,7 @@
 //! `std::iter::Iterator`. Instead, you get the simplified iterators below,
 //! providing only a subset of functionality.
 
-use std::cmp::min;
+use core::cmp::min;
 
 use Rng;
 

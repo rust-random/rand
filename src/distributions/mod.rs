@@ -23,17 +23,29 @@ pub use self::default::Default;
 pub use self::uniform::{uniform, codepoint, ascii_word_char};
 pub use self::uniform::{Uniform, Uniform01, Open01, Closed01};
 pub use self::range::{range, Range};
+
+#[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
+#[cfg(feature="std")]
 pub use self::normal::{Normal, LogNormal};
+#[cfg(feature="std")]
 pub use self::exponential::Exp;
 
 mod default;
 mod uniform;
+#[cfg(feature="std")]
+mod ziggurat_tables;
+
 pub mod range;
 pub mod range2;
+
+#[cfg(feature="std")]
 pub mod gamma;
+#[cfg(feature="std")]
 pub mod normal;
+#[cfg(feature="std")]
 pub mod exponential;
+
 
 /// Return a bool with a 1 in n chance of being true
 /// 
@@ -71,8 +83,6 @@ impl<T, D: Distribution<T>> Rand<D> for T {
     }
 }
 
-mod ziggurat_tables;
-
 /// Sample a random number using the Ziggurat method (specifically the
 /// ZIGNOR variant from Doornik 2005). Most of the arguments are
 /// directly from the paper:
@@ -88,6 +98,7 @@ mod ziggurat_tables;
 
 // the perf improvement (25-50%) is definitely worth the extra code
 // size from force-inlining.
+#[cfg(feature="std")]
 #[inline(always)]
 fn ziggurat<R: Rng+?Sized, P, Z>(
             rng: &mut R,

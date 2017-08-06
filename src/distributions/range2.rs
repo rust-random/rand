@@ -21,7 +21,7 @@
 //! etc. (or just `RangeI32`, etc.) types, each implementing `Distribution`,
 //! but it adds some magic to support generic `range` and `new_range` methods.
 
-use std::num::Wrapping as w;
+use core::num::Wrapping as w;
 
 use Rng;
 use distributions::{Distribution, Uniform01, Rand};
@@ -153,7 +153,7 @@ macro_rules! range_int_impl {
             
             fn new(low: Self::X, high: Self::X) -> Self {
                 let range = (w(high as $unsigned) - w(low as $unsigned)).0;
-                let unsigned_max: $unsigned = ::std::$unsigned::MAX;
+                let unsigned_max: $unsigned = ::core::$unsigned::MAX;
 
                 // this is the largest number that fits into $unsigned
                 // that `range` divides evenly, so, if we've sampled

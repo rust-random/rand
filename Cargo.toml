@@ -14,8 +14,10 @@ keywords = ["random", "rng"]
 categories = ["algorithms"]
 
 [features]
-i128_support = []
+default = ["std"]
 nightly = ["i128_support"]
+std = []
+i128_support = []
 
 [dependencies]
 libc = "0.2"

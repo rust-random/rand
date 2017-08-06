@@ -10,8 +10,8 @@
 
 //! Generating uniformly distributed numbers
 
-use std::char;
-use std::mem;
+use core::char;
+use core::mem;
 
 use Rng;
 use distributions::{Distribution, Rand};
