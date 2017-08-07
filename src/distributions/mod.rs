@@ -73,13 +73,52 @@ pub trait Distribution<T> {
 }
 
 /// Generic trait for sampling random values from some distribution
+/// 
+/// # Example
+/// ```rust
+/// use rand::distributions::{Rand, Default, Range};
+/// 
+/// let mut rng = rand::thread_rng();
+/// println!("Random byte: {}", u8::rand(&mut rng, Default));
+/// println!("Random range: {}", i32::rand(&mut rng, Range::new(-99, 100)));
+/// ```
 pub trait Rand<Dist> {
     fn rand<R: Rng+?Sized>(rng: &mut R, dist: Dist) -> Self;
 }
 
 impl<T, D: Distribution<T>> Rand<D> for T {
+    /// Generate a random value of the given type, according to the specified
+    /// distribution.
+    /// 
+    /// The distributions `Default` (or `Uniform` and `Uniform01`) and `Range`
+    /// should cover most simpler usages; `Normal`, `LogNormal`, `Exp`, `Gamma`
+    /// and a few others are also available.
     fn rand<R: Rng+?Sized>(rng: &mut R, dist: D) -> Self {
         dist.sample(rng)
+    }
+}
+
+/// Simpler version of `Rand`, without support for alternative distributions.
+/// 
+/// TODO: decide which version of `Rand` to keep. If this one, rename struct to
+/// `Rand` and function to `rand`.
+/// 
+/// # Example
+/// ```rust
+/// use rand::distributions::SimpleRand;
+/// 
+/// let mut rng = rand::thread_rng();
+/// println!("Random byte: {}", u8::simple_rand(&mut rng));
+/// ```
+pub trait SimpleRand {
+    /// Generate a random value of the given type, using the `Default`
+    /// distribution.
+    fn simple_rand<R: Rng+?Sized>(rng: &mut R) -> Self;
+}
+
+impl<T> SimpleRand for T where Default: Distribution<T> {
+    fn simple_rand<R: Rng+?Sized>(rng: &mut R) -> Self {
+        Default.sample(rng)
     }
 }
 
