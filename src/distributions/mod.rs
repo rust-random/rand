@@ -13,7 +13,7 @@
 //! A distribution may have internal state describing the distribution of
 //! generated values; for example `Range` needs to know its upper and lower
 //! bounds. Distributions use the `Distribution` trait to yield values: call
-//! `dist.sample(&mut rng)` to get a random variable.
+//! `distr.sample(&mut rng)` to get a random variable.
 //!
 //! TODO: is it worth exposing both submodules and re-exporting their members?
 
@@ -82,19 +82,19 @@ pub trait Distribution<T> {
 /// println!("Random byte: {}", u8::rand(&mut rng, Default));
 /// println!("Random range: {}", i32::rand(&mut rng, Range::new(-99, 100)));
 /// ```
-pub trait Rand<Dist> {
-    fn rand<R: Rng+?Sized>(rng: &mut R, dist: Dist) -> Self;
-}
-
-impl<T, D: Distribution<T>> Rand<D> for T {
+pub trait Rand<D> {
     /// Generate a random value of the given type, according to the specified
     /// distribution.
     /// 
     /// The distributions `Default` (or `Uniform` and `Uniform01`) and `Range`
     /// should cover most simpler usages; `Normal`, `LogNormal`, `Exp`, `Gamma`
     /// and a few others are also available.
-    fn rand<R: Rng+?Sized>(rng: &mut R, dist: D) -> Self {
-        dist.sample(rng)
+    fn rand<R: Rng+?Sized>(rng: &mut R, distr: D) -> Self;
+}
+
+impl<T, D: Distribution<T>> Rand<D> for T {
+    fn rand<R: Rng+?Sized>(rng: &mut R, distr: D) -> Self {
+        distr.sample(rng)
     }
 }
 
