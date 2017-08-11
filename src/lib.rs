@@ -252,12 +252,7 @@
 #[cfg(feature="std")]
 extern crate core;
 
-#[cfg(feature="std")]
-use std::cell::RefCell;
-#[cfg(feature="std")]
-use std::rc::Rc;
-#[cfg(feature="std")]
-use core::mem;
+use core::mem::transmute;
 
 #[cfg(feature="std")]
 pub use read::ReadRng;
@@ -265,10 +260,11 @@ pub use read::ReadRng;
 pub use os::OsRng;
 pub use iter::iter;
 pub use distributions::{Default, Rand};
+#[cfg(feature="std")]
+pub use thread_local::{ThreadRng, thread_rng, random, random_with};
 
-#[cfg(feature="std")]
 use prng::IsaacWordRng;
-#[cfg(feature="std")]
+#[cfg(feature="std")]   // available but unused without "std"
 use prng::XorShiftRng;
 
 pub mod distributions;
@@ -278,9 +274,11 @@ pub mod reseeding;
 pub mod sequences;
 
 #[cfg(feature="std")]
+mod os;
+#[cfg(feature="std")]
 mod read;
 #[cfg(feature="std")]
-mod os;
+mod thread_local;
 
 /// A random number generator.
 pub trait Rng {
@@ -463,7 +461,6 @@ pub trait SeedableRng<Seed>: Rng {
 
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
-#[cfg(feature="std")]
 #[derive(Copy, Clone, Debug)]
 pub struct StdRng {
     rng: IsaacWordRng,
@@ -487,7 +484,6 @@ impl StdRng {
     }
 }
 
-#[cfg(feature="std")]
 impl Rng for StdRng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
@@ -500,16 +496,15 @@ impl Rng for StdRng {
     }
 }
 
-#[cfg(feature="std")]
 impl<'a> SeedableRng<&'a [usize]> for StdRng {
     fn reseed(&mut self, seed: &'a [usize]) {
         // the internal RNG can just be seeded from the above
         // randomness.
-        self.rng.reseed(unsafe {mem::transmute(seed)})
+        self.rng.reseed(unsafe {transmute(seed)})
     }
 
     fn from_seed(seed: &'a [usize]) -> StdRng {
-        StdRng { rng: SeedableRng::from_seed(unsafe {mem::transmute(seed)}) }
+        StdRng { rng: SeedableRng::from_seed(unsafe {transmute(seed)}) }
     }
 }
 
@@ -530,159 +525,6 @@ pub fn weak_rng() -> XorShiftRng {
         Ok(mut r) => XorShiftRng::new_from_rng(&mut r),
         Err(e) => panic!("weak_rng: failed to create seeded RNG: {:?}", e)
     }
-}
-
-/// Controls how the thread-local RNG is reseeded.
-#[cfg(feature="std")]
-#[derive(Debug)]
-struct ThreadRngReseeder;
-
-#[cfg(feature="std")]
-impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
-    fn reseed(&mut self, rng: &mut StdRng) {
-        *rng = match StdRng::new() {
-            Ok(r) => r,
-            Err(e) => panic!("could not reseed thread_rng: {}", e)
-        }
-    }
-}
-#[cfg(feature="std")]
-const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
-#[cfg(feature="std")]
-type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
-
-/// The thread-local RNG.
-#[cfg(feature="std")]
-#[derive(Clone, Debug)]
-pub struct ThreadRng {
-    rng: Rc<RefCell<ThreadRngInner>>,
-}
-
-/// Retrieve the lazily-initialized thread-local random number
-/// generator, seeded by the system. Intended to be used in method
-/// chaining style, e.g. `thread_rng().gen::<i32>()`.
-///
-/// The RNG provided will reseed itself from the operating system
-/// after generating a certain amount of randomness.
-///
-/// The internal RNG used is platform and architecture dependent, even
-/// if the operating system random number generator is rigged to give
-/// the same sequence always. If absolute consistency is required,
-/// explicitly select an RNG, e.g. `IsaacRng` or `Isaac64Rng`.
-#[cfg(feature="std")]
-pub fn thread_rng() -> ThreadRng {
-    // used to make space in TLS for a random number generator
-    thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
-        let r = match StdRng::new() {
-            Ok(r) => r,
-            Err(e) => panic!("could not initialize thread_rng: {}", e)
-        };
-        let rng = reseeding::ReseedingRng::new(r,
-                                               THREAD_RNG_RESEED_THRESHOLD,
-                                               ThreadRngReseeder);
-        Rc::new(RefCell::new(rng))
-    });
-
-    ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
-}
-
-#[cfg(feature="std")]
-impl Rng for ThreadRng {
-    fn next_u32(&mut self) -> u32 {
-        self.rng.borrow_mut().next_u32()
-    }
-
-    fn next_u64(&mut self) -> u64 {
-        self.rng.borrow_mut().next_u64()
-    }
-
-    #[inline]
-    fn fill_bytes(&mut self, bytes: &mut [u8]) {
-        self.rng.borrow_mut().fill_bytes(bytes)
-    }
-}
-
-/// Generates a random value using the thread-local random number generator.
-///
-/// `random()` can generate various types of random things, and so may require
-/// type hinting to generate the specific type you want. It uses
-/// `distributions::SampleDefault` to determine *how* values are generated for each type.
-///
-/// This function uses the thread local random number generator. This means
-/// that if you're calling `random()` in a loop, caching the generator can
-/// increase performance. An example is shown below.
-///
-/// # Examples
-///
-/// ```
-/// let x = rand::random::<u8>();
-/// println!("{}", x);
-///
-/// if rand::random() { // generates a boolean
-///     println!("Better lucky than good!");
-/// }
-/// ```
-///
-/// Caching the thread local random number generator:
-///
-/// ```
-/// use rand::{Rand, Default};
-///
-/// let mut v = vec![1, 2, 3];
-///
-/// for x in v.iter_mut() {
-///     *x = rand::random()
-/// }
-///
-/// // would be faster as
-///
-/// let mut rng = rand::thread_rng();
-///
-/// for x in v.iter_mut() {
-///     *x = Rand::rand(&mut rng, Default);
-/// }
-/// ```
-/// 
-/// Note that the above example uses `SampleDefault` which is a zero-sized
-/// marker type.
-#[cfg(feature="std")]
-#[inline]
-pub fn random<T: Rand<Default>>() -> T {
-    T::rand(&mut thread_rng(), Default)
-}
-
-/// Generates a random value using the thread-local random number generator.
-/// 
-/// This is a more flexible variant of `random()`, supporting selection of the
-/// distribution used. For example:
-/// 
-/// ```
-/// use rand::random_with;
-/// use rand::distributions::{Rand, Default, Uniform01, Closed01, Range};
-/// 
-/// // identical to calling `random()`:
-/// let x: f64 = random_with(Default);
-/// 
-/// // same distribution, since Default uses Uniform01 for floats:
-/// let y: f64 = random_with(Uniform01);
-/// 
-/// // use the closed range [0, 1] inseat of half-open [0, 1):
-/// let z: f64 = random_with(Closed01);
-/// 
-/// // use the half-open range [0, 2):
-/// let w: f64 = random_with(Range::new(0.0, 2.0));
-/// 
-/// // Note that constructing a `Range` is non-trivial, so for the last example
-/// // it might be better to do this if sampling a lot:
-/// let mut rng = rand::thread_rng();
-/// let range = Range::new(0.0, 2.0);
-/// // Do this bit many times:
-/// let v = f64::rand(&mut rng, range);
-/// ```
-#[cfg(feature="std")]
-#[inline]
-pub fn random_with<D, T: Rand<D>>(distribution: D) -> T {
-    T::rand(&mut thread_rng(), distribution)
 }
 
 
