@@ -10,8 +10,8 @@ mod distributions;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 use rand::{StdRng, OsRng, weak_rng};
-use rand::prng::{XorShiftRng, IsaacRng, Isaac64Rng};
-use rand::{sample, Shuffle};
+use rand::prng::{XorShiftRng, IsaacRng, Isaac64Rng, ChaChaRng};
+use rand::sequences::{sample, Shuffle};
 use rand::distributions::{Rand, Uniform, Uniform01};
 
 #[bench]
@@ -39,6 +39,17 @@ fn rand_isaac(b: &mut Bencher) {
 #[bench]
 fn rand_isaac64(b: &mut Bencher) {
     let mut rng = Isaac64Rng::new_from_rng(&mut OsRng::new().unwrap());
+    b.iter(|| {
+        for _ in 0..RAND_BENCH_N {
+            black_box(usize::rand(&mut rng, Uniform));
+        }
+    });
+    b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
+}
+
+#[bench]
+fn rand_chacha(b: &mut Bencher) {
+    let mut rng = ChaChaRng::new_from_rng(&mut OsRng::new().unwrap());
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
             black_box(usize::rand(&mut rng, Uniform));
