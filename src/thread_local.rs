@@ -114,6 +114,21 @@ pub fn thread_rng() -> ThreadRng {
 /// in the current thread, including libraries. Users should ensure the
 /// generator used is secure enough for all users of `thread_rng`, including
 /// other libraries.
+/// 
+/// This may have some use in testing, by spawning a new thread, overriding the
+/// generator with known values (a constant or a PRNG with known seed), then
+/// asserting the exact output of "randomly" generated values. The use of a new
+/// thread avoids affecting other users of `thread_rng`.
+/// 
+/// ```rust
+/// use rand::{ConstRng, random, set_thread_rng};
+/// use std::thread;
+/// 
+/// thread::spawn(move || {
+///     set_thread_rng(Box::new(ConstRng::new(123u32)));
+///     assert_eq!(random::<u32>(), 123u32);
+/// });
+/// ```
 pub fn set_thread_rng(rng: Box<Rng>) {
     THREAD_RNG_KEY.with(|t| *t.borrow_mut() = rng);
 }
@@ -223,20 +238,22 @@ pub fn random_with<D, T: Rand<D>>(distribution: D) -> T {
 
 #[cfg(test)]
 mod test {
-    use {set_thread_rng, random, Rng};
+    use std::thread;
+    use {set_thread_rng, random, ConstRng};
     
-    #[derive(Debug)]
-    struct ConstRng { i: u64 }
-    impl Rng for ConstRng {
-        fn next_u32(&mut self) -> u32 { self.i as u32 }
-        fn next_u64(&mut self) -> u64 { self.i }
-    }
-
     #[test]
     fn test_set_thread_rng() {
-        random::<u64>();
-        set_thread_rng(Box::new(ConstRng { i: 12u64 }));
-        assert_eq!(random::<u64>(), 12u64);
-        assert_eq!(random::<u64>(), 12u64);
+        let v = 12u64;
+        thread::spawn(move || {
+            random::<u64>();
+            // affect this thread only:
+            set_thread_rng(Box::new(ConstRng::new(v)));
+            assert_eq!(random::<u64>(), v);
+            assert_eq!(random::<u64>(), v);
+        });
+        
+        // The chance of 128 bits randomly equalling our value is miniscule:
+        let (x, y): (u64, u64) = (random(), random());
+        assert!((x, y) != (v, v));
     }
 }

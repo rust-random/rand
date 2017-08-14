@@ -461,6 +461,37 @@ pub trait SeedableRng<Seed>: Rng {
     fn from_seed(seed: Seed) -> Self;
 }
 
+/// A very simple implementation of `Rng`, purely for testing. Returns the same
+/// value each time.
+/// 
+/// ```rust
+/// use rand::{ConstRng, Rng};
+/// 
+/// let mut my_rng = ConstRng::new(2u32);
+/// assert_eq!(my_rng.next_u32(), 2u32);
+/// assert_eq!(my_rng.next_u64(), (2u64 << 32) + 2u64);
+/// ```
+#[derive(Debug)]
+pub struct ConstRng<T> {
+    v: T
+}
+
+impl<T> ConstRng<T> {
+    /// Create a `ConstRng`, yielding the given value
+    pub fn new(v: T) -> Self {
+        ConstRng { v }
+    }
+}
+
+impl Rng for ConstRng<u32> {
+    fn next_u32(&mut self) -> u32 { self.v }
+}
+
+impl Rng for ConstRng<u64> {
+    fn next_u32(&mut self) -> u32 { self.v as u32 }
+    fn next_u64(&mut self) -> u64 { self.v }
+}
+
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
 #[derive(Copy, Clone, Debug)]
@@ -532,7 +563,7 @@ pub fn weak_rng() -> XorShiftRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, SeedableRng, StdRng, iter};
+    use {Rng, thread_rng, SeedableRng, StdRng, ConstRng, iter};
     use distributions::{uniform, range, ascii_word_char};
     use sequences::Shuffle;
     use std::iter::repeat;
@@ -551,15 +582,6 @@ mod test {
 
     pub fn rng() -> MyRng<::ThreadRng> {
         MyRng { inner: ::thread_rng() }
-    }
-
-    #[derive(Debug)]
-    struct ConstRng { i: u64 }
-    impl Rng for ConstRng {
-        fn next_u32(&mut self) -> u32 { self.i as u32 }
-        fn next_u64(&mut self) -> u64 { self.i }
-
-        // no fill_bytes on purpose
     }
 
     pub fn iter_eq<I, J>(i: I, j: J) -> bool
@@ -581,7 +603,7 @@ mod test {
 
     #[test]
     fn test_fill_bytes_default() {
-        let mut r = ConstRng { i: 0x11_22_33_44_55_66_77_88 };
+        let mut r = ConstRng::new(0x11_22_33_44_55_66_77_88u64);
 
         // check every remainder mod 8, both in small and big vectors.
         let lengths = [0, 1, 2, 3, 4, 5, 6, 7,
