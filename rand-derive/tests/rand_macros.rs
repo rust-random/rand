@@ -19,7 +19,23 @@ struct Tuple(i16, Option<f64>);
 struct Unit;
 
 #[derive(Rand)]
-enum Enum {
+enum EnumUnit {
+    X,
+}
+
+#[derive(Rand)]
+enum Enum1 {
+    X(u8, f32),
+}
+
+#[derive(Rand)]
+enum Enum2 {
+    X(bool),
+    Y,
+}
+
+#[derive(Rand)]
+enum Enum3 {
     X { x: u8, y: isize },
     Y([bool; 4]),
     Z,
@@ -34,6 +50,9 @@ fn smoke() {
         let _ = rng.gen::<Struct>();
         let _ = rng.gen::<Tuple>();
         let _ = rng.gen::<Unit>();
-        let _ = rng.gen::<Enum>();
+        let _ = rng.gen::<EnumUnit>();
+        let _ = rng.gen::<Enum1>();
+        let _ = rng.gen::<Enum2>();
+        let _ = rng.gen::<Enum3>();
     }
 }
