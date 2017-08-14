@@ -245,7 +245,7 @@ float_impls! { SCALE_F32, f32, 24 }
 
 #[cfg(test)]
 mod tests {
-    use {Rng, thread_rng, iter};
+    use {ConstRng, thread_rng, iter};
     use distributions::{Rand, uniform, Uniform, Uniform01, Open01, Closed01};
     use distributions::uniform::{codepoint, ascii_word_char};
     
@@ -285,19 +285,6 @@ mod tests {
         assert_eq!(word.len(), 5);
     }
 
-    #[derive(Debug)]
-    struct ConstantRng(u64);
-    impl Rng for ConstantRng {
-        fn next_u32(&mut self) -> u32 {
-            let ConstantRng(v) = *self;
-            v as u32
-        }
-        fn next_u64(&mut self) -> u64 {
-            let ConstantRng(v) = *self;
-            v
-        }
-    }
-
     #[test]
     fn test_f64() {
         let mut r = thread_rng();
@@ -312,8 +299,8 @@ mod tests {
         // FIXME: this message and test predates this repo; message suggests
         // test is supposed to be ==; using != is pretty useless
         // the test for exact equality is correct here.
-        assert!(f64::rand(&mut ConstantRng(0xffff_ffff), Uniform01) != 1.0);
-        assert!(f64::rand(&mut ConstantRng(0xffff_ffff_ffff_ffff), Uniform01) != 1.0);
+        assert!(f64::rand(&mut ConstRng::new(0xffff_ffffu64), Uniform01) != 1.0);
+        assert!(f64::rand(&mut ConstRng::new(0xffff_ffff_ffff_ffffu64), Uniform01) != 1.0);
     }
 
     #[test]
