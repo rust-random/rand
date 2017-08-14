@@ -10,6 +10,7 @@
 
 //! A wrapper around any Read to treat it as an RNG.
 
+use std::fmt::Debug;
 use std::io::{self, Read};
 use std::mem;
 use Rng;
@@ -31,11 +32,11 @@ use Rng;
 /// println!("{:x}", distributions::uniform::<u32, _>(&mut rng));
 /// ```
 #[derive(Debug)]
-pub struct ReadRng<R> {
+pub struct ReadRng<R: Debug> {
     reader: R
 }
 
-impl<R: Read> ReadRng<R> {
+impl<R: Read + Debug> ReadRng<R> {
     /// Create a new `ReadRng` from a `Read`.
     pub fn new(r: R) -> ReadRng<R> {
         ReadRng {
@@ -44,7 +45,7 @@ impl<R: Read> ReadRng<R> {
     }
 }
 
-impl<R: Read> Rng for ReadRng<R> {
+impl<R: Read + Debug> Rng for ReadRng<R> {
     fn next_u32(&mut self) -> u32 {
         // This is designed for speed: reading a LE integer on a LE
         // platform just involves blitting the bytes into the memory

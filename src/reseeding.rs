@@ -12,6 +12,7 @@
 //! generates a certain number of random bytes.
 
 use core::default::Default;
+use core::fmt::Debug;
 
 use {Rng, SeedableRng};
 
@@ -22,7 +23,7 @@ const DEFAULT_GENERATION_THRESHOLD: u64 = 32 * 1024;
 /// A wrapper around any RNG which reseeds the underlying RNG after it
 /// has generated a certain number of random bytes.
 #[derive(Debug)]
-pub struct ReseedingRng<R, Rsdr> {
+pub struct ReseedingRng<R, Rsdr: Debug> {
     rng: R,
     generation_threshold: u64,
     bytes_generated: u64,
@@ -30,7 +31,7 @@ pub struct ReseedingRng<R, Rsdr> {
     pub reseeder: Rsdr,
 }
 
-impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
+impl<R: Rng, Rsdr: Reseeder<R> + Debug> ReseedingRng<R, Rsdr> {
     /// Create a new `ReseedingRng` with the given parameters.
     ///
     /// # Arguments
@@ -58,7 +59,7 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
 }
 
 
-impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
+impl<R: Rng, Rsdr: Reseeder<R> + Debug> Rng for ReseedingRng<R, Rsdr> {
     fn next_u32(&mut self) -> u32 {
         self.reseed_if_necessary();
         self.bytes_generated += 4;
@@ -78,7 +79,7 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
     }
 }
 
-impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
+impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Debug + Default>
      SeedableRng<(Rsdr, S)> for ReseedingRng<R, Rsdr> {
     fn reseed(&mut self, (rsdr, seed): (Rsdr, S)) {
         self.rng.reseed(seed);
@@ -107,6 +108,7 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
 /// use rand::distributions::ascii_word_char;
 /// use rand::reseeding::{Reseeder, ReseedingRng};
 ///
+/// #[derive(Debug)]
 /// struct TickTockReseeder { tick: bool }
 /// impl Reseeder<StdRng> for TickTockReseeder {
 ///     fn reseed(&mut self, rng: &mut StdRng) {
@@ -154,6 +156,7 @@ mod test {
     use distributions::ascii_word_char;
     use super::{ReseedingRng, ReseedWithDefault};
 
+    #[derive(Debug)]
     struct Counter {
         i: u32
     }

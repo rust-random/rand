@@ -171,10 +171,12 @@ mod imp {
                       target_arch = "powerpc"))))]
     fn is_getrandom_available() -> bool { false }
 
+    #[derive(Debug)]
     pub struct OsRng {
         inner: OsRngInner,
     }
 
+    #[derive(Debug)]
     enum OsRngInner {
         OsGetrandomRng,
         OsReadRng(ReadRng<File>),

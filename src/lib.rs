@@ -252,6 +252,7 @@
 #[cfg(feature="std")]
 extern crate core;
 
+use core::fmt::Debug;
 use core::mem::transmute;
 
 #[cfg(feature="std")]
@@ -281,7 +282,7 @@ mod read;
 mod thread_local;
 
 /// A random number generator.
-pub trait Rng {
+pub trait Rng: Debug {
     /// Return the next random u8.
     /// 
     /// By default this is implemented in terms of `next_u32`.
@@ -535,6 +536,7 @@ mod test {
     use sequences::Shuffle;
     use std::iter::repeat;
 
+    #[derive(Debug)]
     pub struct MyRng<R: ?Sized> { inner: R }
 
     impl<R: Rng+?Sized> Rng for MyRng<R> {
@@ -550,6 +552,7 @@ mod test {
         MyRng { inner: ::thread_rng() }
     }
 
+    #[derive(Debug)]
     struct ConstRng { i: u64 }
     impl Rng for ConstRng {
         fn next_u32(&mut self) -> u32 { self.i as u32 }

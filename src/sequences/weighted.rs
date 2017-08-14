@@ -141,6 +141,7 @@ mod tests {
     struct ConstRand(usize);
 
     // 0, 1, 2, 3, ...
+    #[derive(Debug)]
     struct CountingRng { i: u32 }
     impl Rng for CountingRng {
         fn next_u32(&mut self) -> u32 {

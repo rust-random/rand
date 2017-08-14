@@ -285,6 +285,7 @@ mod tests {
         assert_eq!(word.len(), 5);
     }
 
+    #[derive(Debug)]
     struct ConstantRng(u64);
     impl Rng for ConstantRng {
         fn next_u32(&mut self) -> u32 {
