@@ -63,12 +63,11 @@ fn impl_rand_derive(ast: &syn::MacroInput) -> quote::Tokens {
             }
 
             let len = body.len();
-            let mut variants = body
+            let mut arms = body
                 .iter()
-                .enumerate()
-                .map(|(index, variant)| {
+                .map(|variant| {
                     let ident = &variant.ident;
-                    let arm = match variant.data {
+                    match variant.data {
                         syn::VariantData::Struct(ref body) => {
                             let fields = body
                                 .iter()
@@ -85,13 +84,24 @@ fn impl_rand_derive(ast: &syn::MacroInput) -> quote::Tokens {
                             quote! { #name::#ident (#(#fields),*) }
                         },
                         syn::VariantData::Unit => quote! { #name::#ident }
-                    };
+                    }
+                });
 
-                    quote! { #index => #arm }
-                })
-                .collect::<Vec<_>>();
-            variants.push(quote! { _ => unreachable!() });
-            quote! { match __rng.gen_range(0, #len) { #(#variants,)* } }
+            match len {
+                1 => quote! { #(#arms)* },
+                2 => {
+                    let (a, b) = (arms.next(), arms.next());
+                    quote! { if __rng.gen() { #a } else { #b } }
+                },
+                _ => {
+                    let mut variants = arms
+                        .enumerate()
+                        .map(|(index, arm)| quote! { #index => #arm })
+                        .collect::<Vec<_>>();
+                    variants.push(quote! { _ => unreachable!() });
+                    quote! { match __rng.gen_range(0, #len) { #(#variants,)* } }
+                },
+            }
         }
     };
 
