@@ -7,7 +7,7 @@ const RAND_BENCH_N: u64 = 1000;
 
 use std::mem::size_of;
 use test::{black_box, Bencher};
-use rand::{StdRng, weak_rng};
+use rand::{StdRng, XorShiftRng};
 use rand::sequences::{sample, Shuffle};
 use rand::distributions::{Rand, Uniform, Uniform01};
 
@@ -57,7 +57,7 @@ fn misc_convert_f64(b: &mut Bencher) {
 
 #[bench]
 fn misc_shuffle_100(b: &mut Bencher) {
-    let mut rng = weak_rng();
+    let mut rng = XorShiftRng::new();
     let x : &mut [usize] = &mut [1; 100];
     b.iter(|| {
         x.shuffle(&mut rng);
@@ -66,7 +66,7 @@ fn misc_shuffle_100(b: &mut Bencher) {
 
 #[bench]
 fn misc_sample_10_of_100(b: &mut Bencher) {
-    let mut rng = weak_rng();
+    let mut rng = XorShiftRng::new();
     let x : &[usize] = &[1; 100];
     b.iter(|| {
         sample(&mut rng, x, 10);

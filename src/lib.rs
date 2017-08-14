@@ -266,8 +266,6 @@ pub use thread_local::{ThreadRng, thread_rng, set_thread_rng, set_new_thread_rng
         random, random_with};
 
 use prng::IsaacWordRng;
-#[cfg(feature="std")]   // available but unused without "std"
-use prng::XorShiftRng;
 
 pub mod distributions;
 pub mod iter;
@@ -538,25 +536,6 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 
     fn from_seed(seed: &'a [usize]) -> StdRng {
         StdRng { rng: SeedableRng::from_seed(unsafe {transmute(seed)}) }
-    }
-}
-
-/// Create a weak random number generator with a default algorithm and seed.
-///
-/// It returns the fastest `Rng` algorithm currently available in Rust without
-/// consideration for cryptography or security. If you require a specifically
-/// seeded `Rng` for consistency over time you should pick one algorithm and
-/// create the `Rng` yourself.
-///
-/// This will read randomness from the operating system to seed the
-/// generator.
-// TODO: is this method useful?
-#[cfg(feature="std")]
-pub fn weak_rng() -> XorShiftRng {
-    // TODO: should this seed from `thread_rng()`?
-    match OsRng::new() {
-        Ok(mut r) => XorShiftRng::new_from_rng(&mut r),
-        Err(e) => panic!("weak_rng: failed to create seeded RNG: {:?}", e)
     }
 }
 

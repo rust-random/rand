@@ -11,7 +11,7 @@
 //! Xorshift generators
 
 use core::num::Wrapping as w;
-use {Rng, SeedableRng};
+use {OsRng, Rng, SeedableRng};
 
 /// An Xorshift[1] random number
 /// generator.
@@ -33,6 +33,14 @@ pub struct XorShiftRng {
 }
 
 impl XorShiftRng {
+    /// Creates a new `XorShiftRng`, automatically seeded via `OsRng`.
+    pub fn new() -> XorShiftRng {
+        match OsRng::new() {
+            Ok(mut r) => XorShiftRng::new_from_rng(&mut r),
+            Err(e) => panic!("XorShiftRng::new: failed to get seed from OS: {:?}", e)
+        }
+    }
+    
     /// Creates a new XorShiftRng instance which is not seeded.
     ///
     /// The initial values of this RNG are constants, so all generators created
