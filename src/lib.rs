@@ -262,7 +262,8 @@ pub use os::OsRng;
 pub use iter::iter;
 pub use distributions::{Default, Rand};
 #[cfg(feature="std")]
-pub use thread_local::{ThreadRng, thread_rng, random, random_with};
+pub use thread_local::{ThreadRng, thread_rng, set_thread_rng, set_new_thread_rng,
+        random, random_with};
 
 use prng::IsaacWordRng;
 #[cfg(feature="std")]   // available but unused without "std"

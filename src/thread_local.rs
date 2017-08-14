@@ -12,57 +12,40 @@
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::Mutex;
 
-use {Rng, StdRng, Rand, Default};
-use reseeding::{Reseeder, ReseedingRng};
+use {Rng, OsRng, Rand, Default};
 
-/// Controls how the thread-local RNG is reseeded.
-#[derive(Debug)]
-struct ThreadRngReseeder;
-
-impl Reseeder<StdRng> for ThreadRngReseeder {
-    fn reseed(&mut self, rng: &mut StdRng) {
-        *rng = match StdRng::new() {
-            Ok(r) => r,
-            Err(e) => panic!("could not reseed thread_rng: {}", e)
-        }
-    }
-}
-
-const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
-type ThreadRngInner = ReseedingRng<StdRng, ThreadRngReseeder>;
+// use reseeding::{Reseeder, ReseedingRng};
+// 
+// /// Controls how the thread-local RNG is reseeded.
+// #[derive(Debug)]
+// struct ThreadRngReseeder;
+// 
+// impl Reseeder<StdRng> for ThreadRngReseeder {
+//     fn reseed(&mut self, rng: &mut StdRng) {
+//         *rng = match StdRng::new() {
+//             Ok(r) => r,
+//             Err(e) => panic!("could not reseed thread_rng: {}", e)
+//         }
+//     }
+// }
+// 
+// const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
+// type ReseedingStdRng = ReseedingRng<StdRng, ThreadRngReseeder>;
+//     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<Option<Box<Rng>>>> = {
+//         let r = match StdRng::new() {
+//             Ok(r) => r,
+//             Err(e) => panic!("could not initialize thread_rng: {}", e)
+//         };
+//         let rng = ReseedingRng::new(r,
+//                                                THREAD_RNG_RESEED_THRESHOLD,
+//                                                ThreadRngReseeder);
 
 /// The thread-local RNG.
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
-    rng: Rc<RefCell<ThreadRngInner>>,
-}
-
-/// Retrieve the lazily-initialized thread-local random number
-/// generator, seeded by the system. Intended to be used in method
-/// chaining style, e.g. `thread_rng().gen::<i32>()`.
-///
-/// The RNG provided will reseed itself from the operating system
-/// after generating a certain amount of randomness.
-///
-/// The internal RNG used is platform and architecture dependent, even
-/// if the operating system random number generator is rigged to give
-/// the same sequence always. If absolute consistency is required,
-/// explicitly select an RNG, e.g. `IsaacRng` or `Isaac64Rng`.
-pub fn thread_rng() -> ThreadRng {
-    // used to make space in TLS for a random number generator
-    thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
-        let r = match StdRng::new() {
-            Ok(r) => r,
-            Err(e) => panic!("could not initialize thread_rng: {}", e)
-        };
-        let rng = ReseedingRng::new(r,
-                                               THREAD_RNG_RESEED_THRESHOLD,
-                                               ThreadRngReseeder);
-        Rc::new(RefCell::new(rng))
-    });
-
-    ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
+    rng: Rc<RefCell<Box<Rng>>>,
 }
 
 impl Rng for ThreadRng {
@@ -78,6 +61,83 @@ impl Rng for ThreadRng {
     fn fill_bytes(&mut self, bytes: &mut [u8]) {
         self.rng.borrow_mut().fill_bytes(bytes)
     }
+}
+
+thread_local!(
+    static THREAD_RNG_CREATOR: Mutex<RefCell<Box<Fn() -> Box<Rng>>>> = {
+        // TODO: should this panic?
+        Mutex::new(RefCell::new(Box::new(|| Box::new(OsRng::new().unwrap()))))
+    }
+);
+
+thread_local!(
+    static THREAD_RNG_KEY: Rc<RefCell<Box<Rng>>> = {
+        let rng = THREAD_RNG_CREATOR.with(|f| {
+            let creator = f.lock().unwrap();
+            let rng = (creator.borrow())();
+            rng
+        });
+        Rc::new(RefCell::new(rng))
+    }
+);
+
+/// Retrieve the lazily-initialized thread-local random number
+/// generator, seeded by the system. This is used by `random` and
+/// `random_with` to generate new values, and may be used directly with other
+/// distributions: `Range::new(0, 10).sample(&mut thread_rng())`.
+///
+/// By default, this uses `OsRng` which pulls random numbers directly from the
+/// operating system. This is intended to be a good secure default; for more
+/// see `set_thread_rng` and `set_new_thread_rng`.
+/// 
+/// This is intended to provide securely generated random numbers, but this
+/// behaviour can be changed by `set_thread_rng` and `set_new_thread_rng`.
+/// 
+/// `thread_rng` is not especially fast, since it uses dynamic dispatch and
+/// `OsRng`, which requires a system call on each usage. Users wanting a fast
+/// generator for games or simulations may prefer not to use `thread_rng` at
+/// all, especially if reproducibility of results is important.
+pub fn thread_rng() -> ThreadRng {
+    ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
+}
+
+/// Set the thread-local RNG used by `thread_rng`. Only affects the current
+/// thread. See also `set_new_thread_rng`.
+/// 
+/// If this is never called in a thread and `set_new_thread_rng` is never called
+/// globally, the first call to `thread_rng()` in the thread will create a new
+/// `OsRng` and use that as a source of numbers.
+/// This method allows a different generator to be set, and can be called at
+/// any time to set a new generator.
+/// 
+/// Calling this affects all users of `thread_rng`, `random` and `random_with`
+/// in the current thread, including libraries. Users should ensure the
+/// generator used is secure enough for all users of `thread_rng`, including
+/// other libraries.
+pub fn set_thread_rng(rng: Box<Rng>) {
+    THREAD_RNG_KEY.with(|t| *t.borrow_mut() = rng);
+}
+
+/// Control how thread-local generators are created for new threads.
+/// 
+/// The first time `thread_rng()` is called in each thread, this closure is
+/// used to create a new generator. If this closure has not been set, the
+/// built-in closure returning a new boxed `OsRng` is used.
+/// 
+/// Calling this affects all users of `thread_rng`, `random` and `random_with`
+/// in all new threads (as well as existing threads which haven't called
+/// `thread_rng` yet), including libraries. Users should ensure the generator
+/// used is secure enough for all users of `thread_rng`, including other
+/// libraries.
+/// 
+/// This closure should not panic; doing so would kill whichever thread is
+/// calling `thread_rng` at the time, poison its mutex, and cause all future
+/// threads initialising a `thread_rng` (or calling this function) to panic.
+pub fn set_new_thread_rng(creator: Box<Fn() -> Box<Rng>>) {
+    THREAD_RNG_CREATOR.with(|f| {
+        let p = f.lock().unwrap();
+        *p.borrow_mut() = creator;
+    });
 }
 
 /// Generates a random value using the thread-local random number generator.
@@ -159,4 +219,24 @@ pub fn random<T: Rand<Default>>() -> T {
 #[inline]
 pub fn random_with<D, T: Rand<D>>(distribution: D) -> T {
     T::rand(&mut thread_rng(), distribution)
+}
+
+#[cfg(test)]
+mod test {
+    use {set_thread_rng, random, Rng};
+    
+    #[derive(Debug)]
+    struct ConstRng { i: u64 }
+    impl Rng for ConstRng {
+        fn next_u32(&mut self) -> u32 { self.i as u32 }
+        fn next_u64(&mut self) -> u64 { self.i }
+    }
+
+    #[test]
+    fn test_set_thread_rng() {
+        random::<u64>();
+        set_thread_rng(Box::new(ConstRng { i: 12u64 }));
+        assert_eq!(random::<u64>(), 12u64);
+        assert_eq!(random::<u64>(), 12u64);
+    }
 }
