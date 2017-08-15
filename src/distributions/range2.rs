@@ -31,6 +31,9 @@ use distributions::{Distribution, Uniform01, Rand};
 /// This is a convenience wrapper around `Range`. If this function will be called
 /// repeatedly with the same arguments, one should use `Range`, as that will
 /// amortize the computations that allow for perfect uniformity.
+/// 
+/// TODO: probably remove this function, since `new_range` is the explicit
+/// version and `Sample::gen_range` is the convenience version.
 ///
 /// # Panics
 ///

@@ -80,6 +80,9 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 
 /// Generic trait for sampling random values from some distribution
 /// 
+/// TODO: quite possibly remove both this and `SimpleRand` since `Sample` is
+/// more convenient and distributions like `Default` handle all the real work.
+/// 
 /// # Example
 /// ```rust
 /// use rand::distributions::{Rand, Default, Range};

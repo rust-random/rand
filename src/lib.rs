@@ -461,6 +461,11 @@ pub trait SeedableRng<Seed>: Rng {
 
 use distributions::range::{Range, SampleRange};
 
+/// Extension trait on [`Rng`] with some convenience methods.
+/// 
+/// This trait exists to allow syntax like `rng.gen()` and
+/// `rng.gen_range(1, 7)`. None of the methods in this trait are any more than
+/// wrappers around functionality which exists elsewhere in the trait.
 pub trait Sample: Rng {
     /// Sample a new value, using the given distribution.
     /// 
@@ -500,11 +505,23 @@ pub trait Sample: Rng {
     /// 
     /// // simulate dice roll
     /// let x = rng.gen_range(1, 7);
-    /// assert!(1 <= x && x <= 6);
     /// ```
     /// 
     /// If the same range is used repeatedly, some work can be saved by
-    /// constructing the `Range` once and using it with `sample`.
+    /// constructing the `Range` once and using it with `sample`:
+    /// 
+    /// ```rust
+    /// use rand::{thread_rng, Sample};
+    /// use rand::distributions::Range;
+    /// 
+    /// let mut rng = thread_rng();
+    /// let die_range = Range::new(1, 7);
+    /// 
+    /// for _ in 0..100 {
+    ///     let x = rng.sample(die_range);
+    ///     assert!(1 <= x && x <= 6);
+    /// }
+    /// ```
     fn gen_range<T: SampleRange>(&mut self, low: T, high: T) -> T {
         self.sample(Range::new(low, high))
     }
