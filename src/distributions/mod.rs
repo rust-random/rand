@@ -72,6 +72,12 @@ pub trait Distribution<T> {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T;
 }
 
+impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T {
+        (*self).sample(rng)
+    }
+}
+
 /// Generic trait for sampling random values from some distribution
 /// 
 /// # Example
@@ -190,7 +196,7 @@ fn ziggurat<R: Rng+?Sized, P, Z>(
 #[cfg(test)]
 mod test {
     use {Rng, thread_rng};
-    use distributions::weighted_bool;
+    use distributions::{weighted_bool};
 
     #[test]
     fn test_fn_weighted_bool() {

@@ -260,7 +260,7 @@ pub use read::ReadRng;
 #[cfg(feature="std")]
 pub use os::OsRng;
 pub use iter::iter;
-pub use distributions::{Default, Rand};
+pub use distributions::{Distribution, Default, Rand};
 #[cfg(feature="std")]
 pub use thread_local::{ThreadRng, thread_rng, set_thread_rng, set_new_thread_rng,
         random, random_with};
@@ -459,6 +459,63 @@ pub trait SeedableRng<Seed>: Rng {
     fn from_seed(seed: Seed) -> Self;
 }
 
+use distributions::range::{Range, SampleRange};
+
+pub trait Sample {
+    /// Sample a new value, using the given distribution.
+    /// 
+    /// ### Example
+    /// 
+    /// ```rust
+    /// use rand::{thread_rng, Sample};
+    /// use rand::distributions::Uniform;
+    /// 
+    /// let mut rng = thread_rng();
+    /// let x: i32 = rng.sample(Uniform);
+    /// ```
+    fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T;
+    
+    /// Sample a new value, using the [`Default`] distribution.
+    /// 
+    /// ### Example
+    /// 
+    /// ```rust
+    /// use rand::{thread_rng, Sample};
+    /// 
+    /// let mut rng = thread_rng();
+    /// let x: i32 = rng.gen();
+    /// ```
+    fn gen<T>(&mut self) -> T where Default: Distribution<T> {
+        self.sample(Default)
+    }
+    
+    /// Sample a new value, using the [`Range`] distribution.
+    /// 
+    /// ### Example
+    /// 
+    /// ```rust
+    /// use rand::{thread_rng, Sample};
+    /// 
+    /// let mut rng = thread_rng();
+    /// 
+    /// // simulate dice roll
+    /// let x = rng.gen_range(1, 7);
+    /// assert!(1 <= x && x <= 6);
+    /// ```
+    /// 
+    /// If the same range is used repeatedly, some work can be saved by
+    /// constructing the `Range` once and using it with `sample`.
+    fn gen_range<T: SampleRange>(&mut self, low: T, high: T) -> T {
+        self.sample(Range::new(low, high))
+    }
+}
+
+impl<R: Rng+?Sized> Sample for R {
+    fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
+        distr.sample(self)
+    }
+}
+
 /// A very simple implementation of `Rng`, purely for testing. Returns the same
 /// value each time.
 /// 
@@ -542,8 +599,9 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, SeedableRng, StdRng, ConstRng, iter};
+    use {Rng, thread_rng, SeedableRng, StdRng, ConstRng, iter, Sample};
     use distributions::{uniform, range, ascii_word_char};
+    use distributions::{Uniform, Range, Exp};
     use sequences::Shuffle;
     use std::iter::repeat;
 
@@ -655,5 +713,19 @@ mod test {
 
         let string2 = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect::<String>();
         assert_eq!(string1, string2);
+    }
+    
+    #[test]
+    fn test_sample_from_rng() {
+        // use a static Rng type:
+        let mut rng = thread_rng();
+        
+        let _a: u32 = rng.sample(Uniform);
+        let _b = rng.sample(Range::new(-2, 15));
+        
+        // use a dynamic Rng type:
+        let mut rng: &mut Rng = &mut thread_rng();
+        
+        let _c = rng.sample(Exp::new(2.0));
     }
 }
