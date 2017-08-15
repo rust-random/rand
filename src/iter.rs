@@ -15,6 +15,7 @@
 //! providing only a subset of functionality.
 
 use core::cmp::min;
+use core::usize;
 
 use Rng;
 
@@ -92,6 +93,7 @@ impl<'a, R:?Sized+'a, B, F> Iterator for Map<'a, R, B, F>
     where F: FnMut(&mut R) -> B
 {
     type Item = B;
+    
     fn next(&mut self) -> Option<B> {
         match self.len {
             Some(0) => return None,
@@ -100,6 +102,13 @@ impl<'a, R:?Sized+'a, B, F> Iterator for Map<'a, R, B, F>
         }
         
         Some((self.f)(self.rng))
+    }
+    
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        // If len == None we have an infinite iterator; usize::MAX is nearest
+        // available lower bound. Probably this suffices to make the following equal:
+        // rng.iter().take(n).map(f).size_hint() == rng.iter().map(f).take(n).size_hint()
+        self.len.map_or((usize::MAX, None), |len| (len, Some(len)))
     }
 }
 
@@ -116,6 +125,7 @@ impl<'a, R:?Sized+'a, U, F> Iterator for FlatMap<'a, R, U, F>
     where F: FnMut(&mut R) -> U, U: IntoIterator
 {
     type Item = <U as IntoIterator>::Item;
+    
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             if let Some(ref mut inner) = self.frontiter {
@@ -132,6 +142,11 @@ impl<'a, R:?Sized+'a, U, F> Iterator for FlatMap<'a, R, U, F>
             
             self.frontiter = Some(IntoIterator::into_iter((self.f)(self.rng)));
         }
+    }
+    
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        // See impl for Map above
+        self.len.map_or((usize::MAX, None), |len| (len, Some(len)))
     }
 }
 
