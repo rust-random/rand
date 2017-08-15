@@ -461,7 +461,7 @@ pub trait SeedableRng<Seed>: Rng {
 
 use distributions::range::{Range, SampleRange};
 
-pub trait Sample {
+pub trait Sample: Rng {
     /// Sample a new value, using the given distribution.
     /// 
     /// ### Example
@@ -507,6 +507,21 @@ pub trait Sample {
     /// constructing the `Range` once and using it with `sample`.
     fn gen_range<T: SampleRange>(&mut self, low: T, high: T) -> T {
         self.sample(Range::new(low, high))
+    }
+    
+    /// Construct an iterator on an `Rng`.
+    /// 
+    /// ### Example
+    /// 
+    /// ```rust
+    /// use rand::{thread_rng, Sample};
+    /// use rand::distributions::AsciiWordChar;
+    /// 
+    /// let mut rng = thread_rng();
+    /// let x: String = rng.iter().map(|rng| rng.sample(AsciiWordChar)).take(6).collect();
+    /// ```
+    fn iter<'a>(&'a mut self) -> iter::Iter<'a, Self> {
+        iter(self)
     }
 }
 

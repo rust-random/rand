@@ -30,6 +30,8 @@ pub fn uniform<T: Rand<Uniform>, R: Rng+?Sized>(rng: &mut R) -> T {
 /// i.e. all code points in the range `0...0x10_FFFF`, except for the range
 /// `0xD800...0xDFFF` (the surrogate code points).  This includes
 /// unassigned/reserved code points.
+/// 
+/// TODO: should this be removed in favour of a distribution?
 #[inline]
 pub fn codepoint<R: Rng+?Sized>(rng: &mut R) -> char {
     // a char is 21 bits
@@ -47,6 +49,8 @@ pub fn codepoint<R: Rng+?Sized>(rng: &mut R) -> char {
 
 /// Sample a `char`, uniformly distributed over ASCII letters and numbers:
 /// a-z, A-Z and 0-9.
+/// 
+/// TODO: should this be removed in favour of `AsciiWordChar`?
 #[inline]
 pub fn ascii_word_char<R: Rng+?Sized>(rng: &mut R) -> char {
     use sequences::Choose;
@@ -75,6 +79,10 @@ pub struct Open01;
 /// Sample values uniformly over the closed range [0, 1]
 #[derive(Debug)]
 pub struct Closed01;
+
+/// Sample values uniformly from the ASCII ranges z-a, A-Z, and 0-9.
+#[derive(Debug)]
+pub struct AsciiWordChar;
 
 
 // ----- actual implementations -----
@@ -241,6 +249,12 @@ macro_rules! float_impls {
 }
 float_impls! { SCALE_F64, f64, 53 }
 float_impls! { SCALE_F32, f32, 24 }
+
+impl Distribution<char> for AsciiWordChar {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
+        ascii_word_char(rng)
+    }
+}
 
 
 #[cfg(test)]

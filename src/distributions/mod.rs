@@ -21,7 +21,7 @@ use Rng;
 
 pub use self::default::Default;
 pub use self::uniform::{uniform, codepoint, ascii_word_char};
-pub use self::uniform::{Uniform, Uniform01, Open01, Closed01};
+pub use self::uniform::{Uniform, Uniform01, Open01, Closed01, AsciiWordChar};
 pub use self::range::{range, Range};
 
 #[cfg(feature="std")]
