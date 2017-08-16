@@ -22,7 +22,7 @@ use Rng;
 pub use self::default::Default;
 pub use self::uniform::{uniform, codepoint, ascii_word_char};
 pub use self::uniform::{Uniform, Uniform01, Open01, Closed01, AsciiWordChar};
-pub use self::range::{range, Range};
+pub use self::range::{Range};
 
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
@@ -30,6 +30,8 @@ pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal};
 #[cfg(feature="std")]
 pub use self::exponential::Exp;
+
+use Sample;
 
 mod default;
 mod uniform;
@@ -62,7 +64,7 @@ pub mod exponential;
 /// println!("{}", weighted_bool(3, &mut rng));
 /// ```
 pub fn weighted_bool<R: Rng+?Sized>(n: u32, rng: &mut R) -> bool {
-    n <= 1 || range(0, n, rng) == 0
+    n <= 1 || rng.gen_range(0, n) == 0
 }
 
 /// Types (distributions) that can be used to create a random instance of `T`.

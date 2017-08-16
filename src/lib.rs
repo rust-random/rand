@@ -459,7 +459,7 @@ pub trait SeedableRng<Seed>: Rng {
     fn from_seed(seed: Seed) -> Self;
 }
 
-use distributions::range::{Range, SampleRange};
+use distributions::range::SampleRange;
 
 /// Extension trait on [`Rng`] with some convenience methods.
 /// 
@@ -523,7 +523,8 @@ pub trait Sample: Rng {
     /// }
     /// ```
     fn gen_range<T: SampleRange>(&mut self, low: T, high: T) -> T {
-        self.sample(Range::new(low, high))
+        assert!(low < high, "Sample::gen_range called with low >= high");
+        SampleRange::construct_range(low, high).sample(self)
     }
     
     /// Construct an iterator on an `Rng`.
@@ -632,7 +633,7 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 #[cfg(test)]
 mod test {
     use {Rng, thread_rng, SeedableRng, StdRng, ConstRng, iter, Sample};
-    use distributions::{uniform, range, ascii_word_char};
+    use distributions::{uniform, ascii_word_char};
     use distributions::{Uniform, Range, Exp};
     use sequences::Shuffle;
     use std::iter::repeat;
@@ -698,7 +699,7 @@ mod test {
         v.shuffle(&mut r);
         let b: &[_] = &[1, 1, 1];
         assert_eq!(v, b);
-        assert_eq!(range(0, 1, &mut r), 0);
+        assert_eq!(r.gen_range(0, 1), 0);
     }
 
     #[test]
@@ -712,7 +713,7 @@ mod test {
             v[..].shuffle(r);
             let b: &[_] = &[1, 1, 1];
             assert_eq!(v, b);
-            assert_eq!(range(0, 1, &mut r), 0);
+            assert_eq!(r.gen_range(0, 1), 0);
         }
         {
             let mut r = Box::new(rng) as Box<Rng>;
@@ -722,7 +723,7 @@ mod test {
             v[..].shuffle(&mut *r);
             let b: &[_] = &[1, 1, 1];
             assert_eq!(v, b);
-            assert_eq!(range(0, 1, &mut r), 0);
+            assert_eq!(r.gen_range(0, 1), 0);
         }
     }
 

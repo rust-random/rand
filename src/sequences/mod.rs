@@ -10,8 +10,7 @@
 
 //! Random operations on sequences
 
-use Rng;
-use distributions::range;
+use {Rng, Sample};
 
 #[cfg(feature="std")]
 pub use self::weighted::{Weighted, WeightedChoice};
@@ -44,7 +43,7 @@ impl<'a, T> Choose<&'a T> for &'a [T] {
         if self.is_empty() {
             None
         } else {
-            Some(&self[range(0, self.len(), rng)])
+            Some(&self[rng.gen_range(0, self.len())])
         }
     }
 }
@@ -55,7 +54,7 @@ impl<'a, T> Choose<&'a mut T> for &'a mut [T] {
             None
         } else {
             let len = self.len();
-            Some(&mut self[range(0, len, rng)])
+            Some(&mut self[rng.gen_range(0, len)])
         }
     }
 }
@@ -66,7 +65,7 @@ impl<T> Choose<T> for Vec<T> {
         if self.is_empty() {
             None
         } else {
-            let index = range(0, self.len(), rng);
+            let index = rng.gen_range(0, self.len());
             self.drain(index..).next()
         }
     }
@@ -95,7 +94,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     // continue unless the iterator was exhausted
     if reservoir.len() == amount {
         for (i, elem) in iter.enumerate() {
-            let k = range(0, i + 1 + amount, rng);
+            let k = rng.gen_range(0, i + 1 + amount);
             if let Some(spot) = reservoir.get_mut(k) {
                 *spot = elem;
             }
@@ -134,7 +133,7 @@ impl<'a, T> Shuffle for &'a mut [T] {
             // invariant: elements with index >= i have been locked in place.
             i -= 1;
             // lock element i in place.
-            self.swap(i, range(0, i + 1, rng));
+            self.swap(i, rng.gen_range(0, i + 1));
         }
     }
 }

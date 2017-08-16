@@ -26,38 +26,9 @@ use core::num::Wrapping as w;
 use Rng;
 use distributions::{Distribution, Uniform01, Rand};
 
-/// Generate a random value in the range [`low`, `high`).
-///
-/// This is a convenience wrapper around `Range`. If this function will be called
-/// repeatedly with the same arguments, one should use `Range`, as that will
-/// amortize the computations that allow for perfect uniformity.
-/// 
-/// TODO: probably remove this function, since `new_range` is the explicit
-/// version and `Sample::gen_range` is the convenience version.
-///
-/// # Panics
-///
-/// Panics if `low >= high`.
-///
-/// # Example
-///
-/// ```rust
-/// use rand::distributions::range2::range;
-///
-/// let mut rng = rand::thread_rng();
-/// let n: u32 = range(0, 10, &mut rng);
-/// println!("{}", n);
-/// let m: f64 = range(-40.0f64, 1.3e5f64, &mut rng);
-/// println!("{}", m);
-/// ```
-pub fn range<X: SampleRange, R: Rng+?Sized>(low: X, high: X, rng: &mut R) -> X {
-    assert!(low < high, "distributions::range called with low >= high");
-    Range { inner: X::T::new(low, high) }.sample(rng)
-}
-
 /// Convenience function to construct a `Range`
-pub fn new_range<X: SampleRange>(low: X, high: X) -> Range<X::T> {
-    assert!(low < high, "new_range called with `low >= high`");
+pub fn range<X: SampleRange>(low: X, high: X) -> Range<X::T> {
+    assert!(low < high, "range called with `low >= high`");
     Range { inner: RangeImpl::new(low, high) }
 }
 
@@ -79,10 +50,10 @@ pub fn new_range<X: SampleRange>(low: X, high: X) -> Range<X::T> {
 ///
 /// ```rust
 /// use rand::distributions::Distribution;
-/// use rand::distributions::range2::new_range;
+/// use rand::distributions::range2::range;
 ///
 /// fn main() {
-///     let between = new_range(10, 10000);
+///     let between = range(10, 10000);
 ///     let mut rng = rand::thread_rng();
 ///     let mut sum = 0;
 ///     for _ in 0..1000 {
@@ -241,24 +212,24 @@ range_float_impl! { f64 }
 #[cfg(test)]
 mod tests {
     use {Rng, thread_rng};
-    use distributions::Rand;
-    use distributions::range2::{Range, range, new_range, RangeImpl, RangeFloat};
+    use distributions::{Rand, Distribution};
+    use distributions::range2::{Range, range, RangeImpl, RangeFloat};
 
     #[test]
     fn test_fn_range() {
         let mut r = thread_rng();
         for _ in 0..1000 {
-            let a = range(-3, 42, &mut r);
+            let a = range(-3, 42).sample(&mut r);
             assert!(a >= -3 && a < 42);
-            assert_eq!(range(0, 1, &mut r), 0);
-            assert_eq!(range(-12, -11, &mut r), -12);
+            assert_eq!(range(0, 1).sample(&mut r), 0);
+            assert_eq!(range(-12, -11).sample(&mut r), -12);
         }
 
         for _ in 0..1000 {
-            let a = range(10, 42, &mut r);
+            let a = range(10, 42).sample(&mut r);
             assert!(a >= 10 && a < 42);
-            assert_eq!(range(0, 1, &mut r), 0);
-            assert_eq!(range(3_000_000, 3_000_001, &mut r), 3_000_000);
+            assert_eq!(range(0, 1).sample(&mut r), 0);
+            assert_eq!(range(3_000_000, 3_000_001).sample(&mut r), 3_000_000);
         }
     }
     
@@ -266,25 +237,25 @@ mod tests {
     #[should_panic]
     fn test_fn_range_panic_int() {
         let mut r = thread_rng();
-        range(5, -2, &mut r);
+        range(5, -2).sample(&mut r);
     }
 
     #[test]
     #[should_panic]
     fn test_fn_range_panic_usize() {
         let mut r = thread_rng();
-        range(5, 2, &mut r);
+        range(5, 2).sample(&mut r);
     }
 
     #[should_panic]
     #[test]
     fn test_range_bad_limits_equal() {
-        new_range(10, 10);
+        range(10, 10);
     }
     #[should_panic]
     #[test]
     fn test_range_bad_limits_flipped() {
-        new_range(10, 5);
+        range(10, 5);
     }
 
     #[test]
@@ -297,9 +268,9 @@ mod tests {
                                             (10, 127),
                                             (::std::$ty::MIN, ::std::$ty::MAX)];
                    for &(low, high) in v.iter() {
-                        let range = new_range(low, high);
+                        let my_range = range(low, high);
                         for _ in 0..1000 {
-                            let v: $ty = Rand::rand(&mut rng, range);
+                            let v: $ty = Rand::rand(&mut rng, my_range);
                             assert!(low <= v && v < high);
                         }
                     }
@@ -321,9 +292,9 @@ mod tests {
                                             (1e-35, 1e-25),
                                             (-1e35, 1e35)];
                    for &(low, high) in v.iter() {
-                        let range = new_range(low, high);
+                        let my_range = range(low, high);
                         for _ in 0..1000 {
-                            let v: $ty = Rand::rand(&mut rng, range);
+                            let v: $ty = Rand::rand(&mut rng, my_range);
                             assert!(low <= v && v < high);
                         }
                     }

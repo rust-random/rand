@@ -17,35 +17,6 @@ use core::num::Wrapping as w;
 use Rng;
 use distributions::{Distribution, Uniform01, Rand};
 
-/// Generate a random value in the range [`low`, `high`).
-///
-/// This is a convenience wrapper around `Range`. If this function will be called
-/// repeatedly with the same arguments, one should use `Range`, as that will
-/// amortize the computations that allow for perfect uniformity.
-/// 
-/// TODO: probably remove this function, since `Range::new` is the explicit
-/// version and `Sample::gen_range` is the convenience version.
-///
-/// # Panics
-///
-/// Panics if `low >= high`.
-///
-/// # Example
-///
-/// ```rust
-/// use rand::distributions::range;
-///
-/// let mut rng = rand::thread_rng();
-/// let n: u32 = range(0, 10, &mut rng);
-/// println!("{}", n);
-/// let m: f64 = range(-40.0f64, 1.3e5f64, &mut rng);
-/// println!("{}", m);
-/// ```
-pub fn range<T: SampleRange, R: Rng+?Sized>(low: T, high: T, rng: &mut R) -> T {
-    assert!(low < high, "distributions::range called with low >= high");
-    SampleRange::construct_range(low, high).sample(rng)
-}
-
 /// Sample values uniformly between two bounds.
 ///
 /// This gives a uniform distribution (assuming the RNG used to sample
@@ -209,23 +180,23 @@ float_impl! { f64 }
 mod tests {
     use {Rng, thread_rng};
     use distributions::{Distribution, Rand, Uniform01};
-    use distributions::range::{Range, range, SampleRange};
+    use distributions::range::{Range, SampleRange};
 
     #[test]
     fn test_fn_range() {
         let mut r = thread_rng();
         for _ in 0..1000 {
-            let a = range(-3, 42, &mut r);
+            let a = Range::new(-3, 42).sample(&mut r);
             assert!(a >= -3 && a < 42);
-            assert_eq!(range(0, 1, &mut r), 0);
-            assert_eq!(range(-12, -11, &mut r), -12);
+            assert_eq!(Range::new(0, 1).sample(&mut r), 0);
+            assert_eq!(Range::new(-12, -11).sample(&mut r), -12);
         }
 
         for _ in 0..1000 {
-            let a = range(10, 42, &mut r);
+            let a = Range::new(10, 42).sample(&mut r);
             assert!(a >= 10 && a < 42);
-            assert_eq!(range(0, 1, &mut r), 0);
-            assert_eq!(range(3_000_000, 3_000_001, &mut r), 3_000_000);
+            assert_eq!(Range::new(0, 1).sample(&mut r), 0);
+            assert_eq!(Range::new(3_000_000, 3_000_001).sample(&mut r), 3_000_000);
         }
 
     }
@@ -234,14 +205,14 @@ mod tests {
     #[should_panic]
     fn test_fn_range_panic_int() {
         let mut r = thread_rng();
-        range(5, -2, &mut r);
+        Range::new(5, -2).sample(&mut r);
     }
 
     #[test]
     #[should_panic]
     fn test_fn_range_panic_usize() {
         let mut r = thread_rng();
-        range(5, 2, &mut r);
+        Range::new(5, 2).sample(&mut r);
     }
 
     #[should_panic]
