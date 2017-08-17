@@ -5,7 +5,7 @@ before_script:
 
 matrix:
   include:
-    - rust: 1.15.0
+    - rust: 1.18.0
     - rust: stable
     - rust: stable
       os: osx
@@ -14,12 +14,10 @@ matrix:
       script:
         - cargo test
         - cargo test --features nightly
-        - cargo test --manifest-path rand-derive/Cargo.toml
         - cargo build --no-default-features
         - cargo doc --no-deps --features nightly
 script:
   - cargo test
-  - cargo test --manifest-path rand-derive/Cargo.toml
 after_success:
   - travis-cargo --only nightly doc-upload
 env:
