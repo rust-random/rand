@@ -11,7 +11,9 @@
 //! Xorshift generators
 
 use core::num::Wrapping as w;
-use {OsRng, Rng, SeedableRng};
+use {Rng, SeedableRng};
+#[cfg(feature="std")]
+use OsRng;
 
 /// An Xorshift[1] random number
 /// generator.
@@ -34,6 +36,7 @@ pub struct XorShiftRng {
 
 impl XorShiftRng {
     /// Creates a new `XorShiftRng`, automatically seeded via `OsRng`.
+    #[cfg(feature="std")]
     pub fn new() -> XorShiftRng {
         match OsRng::new() {
             Ok(mut r) => XorShiftRng::new_from_rng(&mut r),

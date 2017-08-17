@@ -11,7 +11,9 @@
 //! The ChaCha random number generator.
 
 use core::num::Wrapping as w;
-use {OsRng, Rng, SeedableRng};
+use {Rng, SeedableRng};
+#[cfg(feature="std")]
+use OsRng;
 
 #[allow(bad_style)]
 type w32 = w<u32>;
@@ -82,6 +84,7 @@ fn core(output: &mut [w32; STATE_WORDS], input: &[w32; STATE_WORDS]) {
 
 impl ChaChaRng {
     /// Creates a new `ChaChaRng`, automatically seeded via `OsRng`.
+    #[cfg(feature="std")]
     pub fn new() -> ChaChaRng {
         match OsRng::new() {
             Ok(mut r) => ChaChaRng::new_from_rng(&mut r),

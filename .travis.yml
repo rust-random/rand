@@ -15,6 +15,7 @@ matrix:
         - cargo test
         - cargo test --features nightly
         - cargo test --manifest-path rand-derive/Cargo.toml
+        - cargo build --no-default-features
         - cargo doc --no-deps --features nightly
 script:
   - cargo test

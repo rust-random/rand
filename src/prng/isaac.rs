@@ -17,7 +17,9 @@ use core::iter::repeat;
 use core::num::Wrapping as w;
 use core::fmt;
 
-use {OsRng, Rng, SeedableRng};
+use {Rng, SeedableRng};
+#[cfg(feature="std")]
+use OsRng;
 
 /// Select 32- or 64-bit variant dependent on pointer size.
 #[cfg(target_pointer_width = "32")]
@@ -62,6 +64,7 @@ static EMPTY: IsaacRng = IsaacRng {
 
 impl IsaacRng {
     /// Creates a new `IsaacRng`, automatically seeded via `OsRng`.
+    #[cfg(feature="std")]
     pub fn new() -> IsaacRng {
         match OsRng::new() {
             Ok(mut r) => IsaacRng::new_from_rng(&mut r),
@@ -321,6 +324,7 @@ static EMPTY_64: Isaac64Rng = Isaac64Rng {
 
 impl Isaac64Rng {
     /// Creates a new `Isaac64Rng`, automatically seeded via `OsRng`.
+    #[cfg(feature="std")]
     pub fn new() -> Isaac64Rng {
         match OsRng::new() {
             Ok(mut r) => Isaac64Rng::new_from_rng(&mut r),
