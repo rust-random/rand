@@ -129,7 +129,7 @@ impl Distribution<i64> for Uniform {
 impl Distribution<i128> for Uniform {
     #[inline]
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> i128 {
-        rng.gen::<u128>() as i128
+        rng.next_u128() as i128
     }
 }
 

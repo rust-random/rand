@@ -168,11 +168,15 @@ range_int_impl! { i8, u8 }
 range_int_impl! { i16, u16 }
 range_int_impl! { i32, u32 }
 range_int_impl! { i64, u64 }
+#[cfg(feature = "i128_support")]
+range_int_impl! { i128, u128 }
 range_int_impl! { isize, usize }
 range_int_impl! { u8, u8 }
 range_int_impl! { u16, u16 }
 range_int_impl! { u32, u32 }
 range_int_impl! { u64, u64 }
+#[cfg(feature = "i128_support")]
+range_int_impl! { u128, u128 }
 range_int_impl! { usize, usize }
 
 /// Implementation of `RangeImpl` for float types.
@@ -278,7 +282,9 @@ mod tests {
             }}
         }
         t!(i8, i16, i32, i64, isize,
-           u8, u16, u32, u64, usize)
+           u8, u16, u32, u64, usize);
+        #[cfg(feature = "i128_support")]
+        t!(i128, u128)
     }
 
     #[test]
