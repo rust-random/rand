@@ -706,9 +706,9 @@ mod test {
     fn test_rng_trait_object() {
         let mut rng = thread_rng();
         {
-            let mut r = &mut rng as &mut Rng;
+            let r = &mut rng as &mut Rng;
             r.next_u32();
-            uniform::<i32, _>(&mut r);
+            uniform::<i32, _>(r);
             let mut v = [1, 1, 1];
             v[..].shuffle(r);
             let b: &[_] = &[1, 1, 1];
@@ -757,7 +757,7 @@ mod test {
         let _b = rng.sample(Range::new(-2, 15));
         
         // use a dynamic Rng type:
-        let mut rng: &mut Rng = &mut thread_rng();
+        let rng: &mut Rng = &mut thread_rng();
         
         let _c = rng.sample(Exp::new(2.0));
     }

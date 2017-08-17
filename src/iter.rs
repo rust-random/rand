@@ -172,7 +172,7 @@ mod tests {
     
     #[test]
     fn test_dyn_dispatch() {
-        let mut r: &mut Rng = &mut thread_rng();
+        let r: &mut Rng = &mut thread_rng();
         
         let x: String = iter(r).take(10).map(|rng| ascii_word_char(rng)).collect();
         assert_eq!(x.len(), 10);

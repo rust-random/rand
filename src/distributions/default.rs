@@ -70,7 +70,7 @@ mod tests {
     
     #[test]
     fn test_types() {
-        let mut rng: &mut Rng = &mut thread_rng();
+        let rng: &mut Rng = &mut thread_rng();
         fn do_test<T: Rand<Default>>(rng: &mut Rng) -> T {
             T::rand(rng, Default)
         }

@@ -199,7 +199,7 @@ mod test {
     
     #[test]
     fn dyn_dispatch() {
-        let mut r: &mut Rng = &mut thread_rng();
+        let r: &mut Rng = &mut thread_rng();
         
         assert_eq!([7, 7][..].choose(r), Some(&7));
         
