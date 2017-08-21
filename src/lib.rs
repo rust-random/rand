@@ -282,20 +282,6 @@ mod thread_local;
 
 /// A random number generator.
 pub trait Rng: Debug {
-    /// Return the next random u8.
-    /// 
-    /// By default this is implemented in terms of `next_u32`.
-    fn next_u8(&mut self) -> u8 {
-        self.next_u32() as u8
-    }
-    
-    /// Return the next random u16.
-    /// 
-    /// By default this is implemented in terms of `next_u32`.
-    fn next_u16(&mut self) -> u16 {
-        self.next_u32() as u16
-    }
-    
     /// Return the next random u32.
     // FIXME #rust-lang/rfcs#628: Should be implemented in terms of next_u64
     fn next_u32(&mut self) -> u32;
@@ -371,14 +357,6 @@ pub trait Rng: Debug {
 }
 
 impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
-    fn next_u8(&mut self) -> u8 {
-        (**self).next_u8()
-    }
-
-    fn next_u16(&mut self) -> u16 {
-        (**self).next_u16()
-    }
-
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
@@ -399,14 +377,6 @@ impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
 
 #[cfg(feature="std")]
 impl<R: ?Sized> Rng for Box<R> where R: Rng {
-    fn next_u8(&mut self) -> u8 {
-        (**self).next_u8()
-    }
-
-    fn next_u16(&mut self) -> u16 {
-        (**self).next_u16()
-    }
-
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
