@@ -252,7 +252,6 @@
 #[cfg(feature="std")]
 extern crate core;
 
-use core::fmt::Debug;
 use core::mem::transmute;
 
 #[cfg(feature="std")]
@@ -281,7 +280,7 @@ mod read;
 mod thread_local;
 
 /// A random number generator.
-pub trait Rng: Debug {
+pub trait Rng {
     /// Return the next random u32.
     // FIXME #rust-lang/rfcs#628: Should be implemented in terms of next_u64
     fn next_u32(&mut self) -> u32;

@@ -43,7 +43,8 @@ use {Rng, OsRng, Rand, Default};
 //                                                ThreadRngReseeder);
 
 /// The thread-local RNG.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
+#[allow(missing_debug_implementations)]
 pub struct ThreadRng {
     rng: Rc<RefCell<Box<Rng>>>,
 }
