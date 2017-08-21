@@ -53,7 +53,7 @@ It is also possible to use other generators types, which have a similar interfac
 ```rust
 use rand::{thread_rng, ChaChaRng, distributions};
 
-let mut rng = ChaChaRng::new_from_rng(&mut thread_rng());
+let mut rng = ChaChaRng::from_rng(&mut thread_rng()).unwrap();
 println!("random between 0-9: {}", distributions::range(0, 10, &mut rng));
 ```
 

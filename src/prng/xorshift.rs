@@ -11,7 +11,7 @@
 //! Xorshift generators
 
 use core::num::Wrapping as w;
-use {Rng, SeedableRng};
+use {Rng, SeedableRng, CryptoError};
 #[cfg(feature="std")]
 use OsRng;
 
@@ -37,11 +37,9 @@ pub struct XorShiftRng {
 impl XorShiftRng {
     /// Creates a new `XorShiftRng`, automatically seeded via `OsRng`.
     #[cfg(feature="std")]
-    pub fn new() -> XorShiftRng {
-        match OsRng::new() {
-            Ok(mut r) => XorShiftRng::new_from_rng(&mut r),
-            Err(e) => panic!("XorShiftRng::new: failed to get seed from OS: {:?}", e)
-        }
+    pub fn new() -> Result<XorShiftRng, CryptoError> {
+        let mut r = OsRng::new()?;
+        Ok(XorShiftRng::from_rng(&mut r))
     }
     
     /// Creates a new XorShiftRng instance which is not seeded.
@@ -65,7 +63,7 @@ impl XorShiftRng {
     /// free entropy gained. In some cases where the parent and child RNGs use
     /// the same algorithm, both generate the same output sequences (possibly
     /// with a small lag).
-    pub fn new_from_rng<R: Rng+?Sized>(rng: &mut R) -> XorShiftRng {
+    pub fn from_rng<R: Rng+?Sized>(rng: &mut R) -> XorShiftRng {
         let mut tuple: (u32, u32, u32, u32);
         loop {
             tuple = (rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32());

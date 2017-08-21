@@ -11,7 +11,7 @@
 //! The ChaCha random number generator.
 
 use core::num::Wrapping as w;
-use {Rng, SeedableRng};
+use {Rng, SeedableRng, CryptoError};
 #[cfg(feature="std")]
 use OsRng;
 
@@ -85,11 +85,9 @@ fn core(output: &mut [w32; STATE_WORDS], input: &[w32; STATE_WORDS]) {
 impl ChaChaRng {
     /// Creates a new `ChaChaRng`, automatically seeded via `OsRng`.
     #[cfg(feature="std")]
-    pub fn new() -> ChaChaRng {
-        match OsRng::new() {
-            Ok(mut r) => ChaChaRng::new_from_rng(&mut r),
-            Err(e) => panic!("ChaChaRng::new: failed to get seed from OS: {:?}", e)
-        }
+    pub fn new() -> Result<ChaChaRng, CryptoError> {
+        let mut r = OsRng::new()?;
+        Ok(ChaChaRng::from_rng(&mut r))
     }
     
     /// Create an ChaCha random number generator using the default
@@ -124,7 +122,7 @@ impl ChaChaRng {
     /// free entropy gained. In some cases where the parent and child RNGs use
     /// the same algorithm, both generate the same output sequences (possibly
     /// with a small lag).
-    pub fn new_from_rng<R: Rng+?Sized>(other: &mut R) -> ChaChaRng {
+    pub fn from_rng<R: Rng+?Sized>(other: &mut R) -> ChaChaRng {
         let mut key : [u32; KEY_WORDS] = [0; KEY_WORDS];
         for word in key.iter_mut() {
             *word = other.next_u32();

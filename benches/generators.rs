@@ -13,7 +13,7 @@ use rand::prng::{XorShiftRng, IsaacRng, Isaac64Rng, ChaChaRng};
 
 #[bench]
 fn gen_usize_xorshift(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new_from_rng(&mut OsRng::new().unwrap());
+    let mut rng = XorShiftRng::new().unwrap();
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
             black_box(usize::rand(&mut rng, Default));
@@ -24,7 +24,7 @@ fn gen_usize_xorshift(b: &mut Bencher) {
 
 #[bench]
 fn gen_usize_isaac(b: &mut Bencher) {
-    let mut rng = IsaacRng::new_from_rng(&mut OsRng::new().unwrap());
+    let mut rng = IsaacRng::new().unwrap();
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
             black_box(usize::rand(&mut rng, Default));
@@ -35,7 +35,7 @@ fn gen_usize_isaac(b: &mut Bencher) {
 
 #[bench]
 fn gen_usize_isaac64(b: &mut Bencher) {
-    let mut rng = Isaac64Rng::new_from_rng(&mut OsRng::new().unwrap());
+    let mut rng = Isaac64Rng::new().unwrap();
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
             black_box(usize::rand(&mut rng, Default));
@@ -46,7 +46,7 @@ fn gen_usize_isaac64(b: &mut Bencher) {
 
 #[bench]
 fn gen_usize_chacha(b: &mut Bencher) {
-    let mut rng = ChaChaRng::new_from_rng(&mut OsRng::new().unwrap());
+    let mut rng = ChaChaRng::new().unwrap();
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
             black_box(usize::rand(&mut rng, Default));

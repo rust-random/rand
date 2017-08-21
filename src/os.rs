@@ -11,8 +11,9 @@
 //! Interfaces to the operating system provided random number
 //! generators.
 
-use std::{io, mem, fmt};
-use Rng;
+use std::{mem, fmt};
+
+use {Rng, CryptoError};
 
 /// A random number generator that retrieves randomness straight from
 /// the operating system. Platform sources:
@@ -36,7 +37,7 @@ pub struct OsRng(imp::OsRng);
 
 impl OsRng {
     /// Create a new `OsRng`.
-    pub fn new() -> io::Result<OsRng> {
+    pub fn new() -> Result<OsRng, CryptoError> {
         imp::OsRng::new().map(OsRng)
     }
 }
@@ -79,7 +80,7 @@ mod imp {
 
     use std::io;
     use std::fs::File;
-    use Rng;
+    use {Rng, CryptoError};
     use read::ReadRng;
 
     #[cfg(all(target_os = "linux",
@@ -183,12 +184,12 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, CryptoError> {
             if is_getrandom_available() {
                 return Ok(OsRng { inner: OsGetrandomRng });
             }
 
-            let reader = try!(File::open("/dev/urandom"));
+            let reader = File::open("/dev/urandom")?;
             let reader_rng = ReadRng::new(reader);
 
             Ok(OsRng { inner: OsReadRng(reader_rng) })
@@ -242,7 +243,7 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, CryptoError> {
             Ok(OsRng)
         }
     }
@@ -278,7 +279,7 @@ mod imp {
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, CryptoError> {
             Ok(OsRng)
         }
     }
@@ -322,7 +323,7 @@ mod imp {
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, CryptoError> {
             Ok(OsRng)
         }
     }
@@ -362,8 +363,8 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
-            let reader = try!(File::open("rand:"));
+        pub fn new() -> Result<OsRng, CryptoError> {
+            let reader = File::open("rand:")?;
             let reader_rng = ReadRng::new(reader);
 
             Ok(OsRng { inner: reader_rng })
@@ -396,7 +397,7 @@ mod imp {
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, CryptoError> {
             Ok(OsRng)
         }
     }
@@ -442,7 +443,7 @@ mod imp {
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, CryptoError> {
             Ok(OsRng)
         }
     }
@@ -501,7 +502,7 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, CryptoError> {
             let mut iface = NaClIRTRandom {
                 get_random_bytes: None,
             };
@@ -515,9 +516,9 @@ mod imp {
                 let result = OsRng(iface.get_random_bytes.take().unwrap());
                 Ok(result)
             } else {
-                let error = io::ErrorKind::NotFound;
-                let error = io::Error::new(error, "IRT random interface missing");
-                Err(error)
+                // let error = io::ErrorKind::NotFound;
+                // let error = io::Error::new(error, "IRT random interface missing");
+                Err(CryptoError)
             }
         }
     }

@@ -279,6 +279,12 @@ mod read;
 #[cfg(feature="std")]
 mod thread_local;
 
+/// Error type for cryptographic generators. Only operating system and hardware
+/// generators should be able to fail. In such cases there is little that can
+/// be done besides try again later.
+#[derive(Debug)]
+pub struct CryptoError;
+
 /// A random number generator.
 pub trait Rng {
     /// Return the next random u32.
@@ -569,8 +575,8 @@ impl StdRng {
     ///
     /// Reading the randomness from the OS may fail, and any error is
     /// propagated via the `io::Result` return value.
-    pub fn new() -> ::std::io::Result<StdRng> {
-        OsRng::new().map(|mut r| StdRng { rng: IsaacWordRng::new_from_rng(&mut r) })
+    pub fn new() -> Result<StdRng, CryptoError> {
+        IsaacWordRng::new().map(|rng| StdRng { rng })
     }
 }
 
@@ -595,6 +601,12 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 
     fn from_seed(seed: &'a [usize]) -> StdRng {
         StdRng { rng: SeedableRng::from_seed(unsafe {transmute(seed)}) }
+    }
+}
+
+impl From<::std::io::Error> for CryptoError {
+    fn from(_: ::std::io::Error) -> CryptoError {
+        CryptoError
     }
 }
 

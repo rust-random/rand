@@ -17,7 +17,7 @@ use core::iter::repeat;
 use core::num::Wrapping as w;
 use core::fmt;
 
-use {Rng, SeedableRng};
+use {Rng, SeedableRng, CryptoError};
 #[cfg(feature="std")]
 use OsRng;
 
@@ -65,11 +65,9 @@ static EMPTY: IsaacRng = IsaacRng {
 impl IsaacRng {
     /// Creates a new `IsaacRng`, automatically seeded via `OsRng`.
     #[cfg(feature="std")]
-    pub fn new() -> IsaacRng {
-        match OsRng::new() {
-            Ok(mut r) => IsaacRng::new_from_rng(&mut r),
-            Err(e) => panic!("IsaacRng::new: failed to get seed from OS: {:?}", e)
-        }
+    pub fn new() -> Result<IsaacRng, CryptoError> {
+        let mut r = OsRng::new()?;
+        Ok(IsaacRng::from_rng(&mut r))
     }
     
     /// Create an ISAAC random number generator using the default
@@ -86,7 +84,7 @@ impl IsaacRng {
     /// free entropy gained. In some cases where the parent and child RNGs use
     /// the same algorithm, both generate the same output sequences (possibly
     /// with a small lag).
-    pub fn new_from_rng<R: Rng+?Sized>(other: &mut R) -> IsaacRng {
+    pub fn from_rng<R: Rng+?Sized>(other: &mut R) -> IsaacRng {
         let mut ret = EMPTY;
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;
@@ -325,11 +323,9 @@ static EMPTY_64: Isaac64Rng = Isaac64Rng {
 impl Isaac64Rng {
     /// Creates a new `Isaac64Rng`, automatically seeded via `OsRng`.
     #[cfg(feature="std")]
-    pub fn new() -> Isaac64Rng {
-        match OsRng::new() {
-            Ok(mut r) => Isaac64Rng::new_from_rng(&mut r),
-            Err(e) => panic!("Isaac64Rng::new: failed to get seed from OS: {:?}", e)
-        }
+    pub fn new() -> Result<Isaac64Rng, CryptoError> {
+        let mut r = OsRng::new()?;
+        Ok(Isaac64Rng::from_rng(&mut r))
     }
     
     /// Create a 64-bit ISAAC random number generator using the
@@ -346,7 +342,7 @@ impl Isaac64Rng {
     /// free entropy gained. In some cases where the parent and child RNGs use
     /// the same algorithm, both generate the same output sequences (possibly
     /// with a small lag).
-    pub fn new_from_rng<R: Rng+?Sized>(other: &mut R) -> Isaac64Rng {
+    pub fn from_rng<R: Rng+?Sized>(other: &mut R) -> Isaac64Rng {
         let mut ret = EMPTY_64;
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;
