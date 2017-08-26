@@ -361,27 +361,8 @@ pub trait Rng {
     }
 }
 
-impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
-    fn next_u32(&mut self) -> u32 {
-        (**self).next_u32()
-    }
-
-    fn next_u64(&mut self) -> u64 {
-        (**self).next_u64()
-    }
-
-    #[cfg(feature = "i128_support")]
-    fn next_u128(&mut self) -> u128 {
-        (**self).next_u128()
-    }
-
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        (**self).fill_bytes(dest)
-    }
-}
-
 #[cfg(feature="std")]
-impl<R: ?Sized> Rng for Box<R> where R: Rng {
+impl<R> Rng for Box<R> where R: Rng+?Sized {
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
