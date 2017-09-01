@@ -19,7 +19,7 @@ use rand::distributions::gamma::Gamma;
 
 #[bench]
 fn distr_baseline(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::new().unwrap();
 
     b.iter(|| {
         for _ in 0..::RAND_BENCH_N {
@@ -32,7 +32,7 @@ fn distr_baseline(b: &mut Bencher) {
 
 #[bench]
 fn distr_range_int(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::new().unwrap();
     let distr = Range::new(3i64, 134217671i64);
 
     b.iter(|| {
@@ -45,7 +45,7 @@ fn distr_range_int(b: &mut Bencher) {
 
 #[bench]
 fn distr_range_float(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::new().unwrap();
     let distr = Range::new(2.26f64, 2.319f64);
 
     b.iter(|| {
@@ -59,8 +59,8 @@ fn distr_range_float(b: &mut Bencher) {
 
 #[bench]
 fn distr_range2_int(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
-    let distr = range2::range(3i64, 134217671i64);
+    let mut rng = XorShiftRng::new().unwrap();
+    let distr = range2::Range::new(3i64, 134217671i64);
 
     b.iter(|| {
         for _ in 0..::RAND_BENCH_N {
@@ -72,8 +72,8 @@ fn distr_range2_int(b: &mut Bencher) {
 
 #[bench]
 fn distr_range2_float(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
-    let distr = range2::range(2.26f64, 2.319f64);
+    let mut rng = XorShiftRng::new().unwrap();
+    let distr = range2::Range::new(2.26f64, 2.319f64);
 
     b.iter(|| {
         for _ in 0..::RAND_BENCH_N {
@@ -86,7 +86,7 @@ fn distr_range2_float(b: &mut Bencher) {
 
 #[bench]
 fn distr_exp(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::new().unwrap();
     let distr = Exp::new(2.71828 * 3.14159);
 
     b.iter(|| {
@@ -100,7 +100,7 @@ fn distr_exp(b: &mut Bencher) {
 
 #[bench]
 fn distr_normal(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::new().unwrap();
     let distr = Normal::new(-2.71828, 3.14159);
 
     b.iter(|| {
@@ -113,7 +113,7 @@ fn distr_normal(b: &mut Bencher) {
 
 #[bench]
 fn distr_log_normal(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::new().unwrap();
     let distr = LogNormal::new(-2.71828, 3.14159);
 
     b.iter(|| {
@@ -127,7 +127,7 @@ fn distr_log_normal(b: &mut Bencher) {
 
 #[bench]
 fn distr_gamma_large_shape(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::new().unwrap();
     let distr = Gamma::new(10., 1.0);
 
     b.iter(|| {
@@ -140,7 +140,7 @@ fn distr_gamma_large_shape(b: &mut Bencher) {
 
 #[bench]
 fn distr_gamma_small_shape(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::new().unwrap();
     let distr = Gamma::new(0.1, 1.0);
 
     b.iter(|| {

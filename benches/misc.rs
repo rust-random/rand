@@ -58,7 +58,7 @@ fn misc_convert_f64(b: &mut Bencher) {
 
 #[bench]
 fn misc_shuffle_100(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::new().unwrap();
     let x : &mut [usize] = &mut [1; 100];
     b.iter(|| {
         x.shuffle(&mut rng);
@@ -67,7 +67,7 @@ fn misc_shuffle_100(b: &mut Bencher) {
 
 #[bench]
 fn misc_sample_10_of_100(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::new().unwrap();
     let x : &[usize] = &[1; 100];
     b.iter(|| {
         sample(&mut rng, x, 10);
