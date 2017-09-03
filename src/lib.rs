@@ -280,12 +280,6 @@ mod read;
 #[cfg(feature="std")]
 mod thread_local;
 
-/// Error type for cryptographic generators. Only operating system and hardware
-/// generators should be able to fail. In such cases there is little that can
-/// be done besides try again later.
-#[derive(Debug)]
-pub struct CryptoError;
-
 /// A random number generator.
 pub trait Rng {
     /// Return the next random u32.
@@ -586,6 +580,13 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
     }
 }
 
+/// Error type for cryptographic generators. Only operating system and hardware
+/// generators should be able to fail. In such cases there is little that can
+/// be done besides try again later.
+#[derive(Debug)]
+pub struct CryptoError;
+
+#[cfg(feature="std")]
 impl From<::std::io::Error> for CryptoError {
     fn from(_: ::std::io::Error) -> CryptoError {
         CryptoError
