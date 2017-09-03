@@ -46,21 +46,28 @@ impl<R: Read + Debug> ReadRng<R> {
     }
 }
 
+macro_rules! impl_uint_from_fill {
+    ($ty:ty, $N:expr, $self:expr) => ({
+        // Transmute and convert from LE (i.e. byte-swap on BE)
+        assert_eq!($N, ::core::mem::size_of::<$ty>());
+        let mut buf = [0u8; $N];
+        fill(&mut $self.reader, &mut buf).unwrap();
+        unsafe{ *(buf.as_ptr() as *const $ty) }.to_le()
+    });
+}
+
 impl<R: Read + Debug> Rng for ReadRng<R> {
     fn next_u32(&mut self) -> u32 {
-        // This is designed for speed: reading a LE integer on a LE
-        // platform just involves blitting the bytes into the memory
-        // of the u32, similarly for BE on BE; avoiding byteswapping.
-        let mut buf = [0; 4];
-        fill(&mut self.reader, &mut buf).unwrap();
-        unsafe { *(buf.as_ptr() as *const u32) }
+        impl_uint_from_fill!(u32, 4, self)
     }
     fn next_u64(&mut self) -> u64 {
-        // see above for explanation.
-        let mut buf = [0; 8];
-        fill(&mut self.reader, &mut buf).unwrap();
-        unsafe { *(buf.as_ptr() as *const u64) }
+        impl_uint_from_fill!(u64, 8, self)
     }
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        impl_uint_from_fill!(u128, 16, self)
+    }
+    
     fn fill_bytes(&mut self, v: &mut [u8]) {
         if v.len() == 0 { return }
         fill(&mut self.reader, v).unwrap();

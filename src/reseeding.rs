@@ -72,6 +72,13 @@ impl<R: Rng, Rsdr: Reseeder<R> + Debug> Rng for ReseedingRng<R, Rsdr> {
         self.rng.next_u64()
     }
 
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        self.reseed_if_necessary();
+        self.bytes_generated += 16;
+        self.rng.next_u128()
+    }
+
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.reseed_if_necessary();
         self.bytes_generated += dest.len() as u64;

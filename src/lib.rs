@@ -279,46 +279,78 @@ mod read;
 mod thread_local;
 
 /// A random number generator.
+/// 
+/// There are two classes of generators: *algorithmic* generators, also called
+/// PRNGs (Pseudo-Random Number Generators) and *external* generators.
+/// 
+/// Another classification for generators is those that are cryptographically
+/// secure (CSPRNGs) and those that are not. CSPRNGs should satisfy two
+/// additional properties: (1) given the first *k* bits of an algorithm's output
+/// sequence, it should not be possible using polynomial-time algorithms to
+/// predict the next bit with probability significantly greater than 50%, and
+/// (2) if a CSPRNG's state is revealed, it should not be
+/// computationally-feasible to reconstruct output prior to this.
+/// 
+/// PRNGs are expected to be reproducible: that is, when a fixed algorithm is
+/// seeded with a fixed value, then calling *any* sequence of the `Rng`'s
+/// functions should produce a fixed sequence of values, and produce the *same*
+/// sequence of values on every platform. This necessitates that a PRNG have
+/// fixed endianness.
+/// 
+/// All default implementations use little-endian code (e.g. to construct a
+/// `u64` from two `u32` numbers, the first is the low part). To implement
+/// `next_u32` in terms of `next_u64`, one should write `self.next_u64() as u32`
+/// which takes the least-significant half (LE order).
+/// 
+/// PRNGs are normally infallible, while external generators may fail. PRNGs
+/// however have a finite period, and may emit an error rather than loop (this
+/// is important for CSPRNGs which could conceivably cycle, but non-crypto
+/// generators should simply cycle; in many cases the period is so long that
+/// consuming all available values would be inconceivable).
+/// 
+/// TODO: details on error handling are under discussion; for now implementations
+/// may panic.
 pub trait Rng {
     /// Return the next random u32.
-    // FIXME #rust-lang/rfcs#628: Should be implemented in terms of next_u64
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random u64.
     ///
-    /// By default this is implemented in terms of `next_u32`. An
+    /// By default this is implemented in terms of `next_u32` in LE order. An
     /// implementation of this trait must provide at least one of
     /// these two methods. Similarly to `next_u32`, this rarely needs
     /// to be called directly, prefer `r.gen()` to `r.next_u64()`.
     fn next_u64(&mut self) -> u64 {
-        ((self.next_u32() as u64) << 32) | (self.next_u32() as u64)
+        // Use LE; we explicitly generate one value before the next.
+        let x = self.next_u32() as u64;
+        let y = self.next_u32() as u64;
+        (y << 32) | x
     }
 
     #[cfg(feature = "i128_support")]
     /// Return the next random u128.
     /// 
-    /// By default this is implemented in terms of `next_u64`.
+    /// By default this is implemented in terms of `next_u64` in LE order.
     fn next_u128(&mut self) -> u128 {
-        ((self.next_u64() as u128) << 64) | (self.next_u64() as u128)
+        // Use LE; we explicitly generate one value before the next.
+        let x = self.next_u64() as u128;
+        let y = self.next_u64() as u128;
+        (y << 64) | x
     }
     
-    /// Fill `dest` with random data.
+    /// Fill `dest` entirely with random data.
     ///
-    /// This has a default implementation in terms of `next_u64` and
-    /// `next_u32`, but should be overridden by implementations that
-    /// offer a more efficient solution than just calling those
-    /// methods repeatedly.
+    /// This has a default implementation in terms of `next_u64` in LE order,
+    /// but should be overridden by implementations that
+    /// offer a more efficient solution than just calling `next_u64`
+    /// repeatedly.
     ///
-    /// This method does *not* have a requirement to bear any fixed
-    /// relationship to the other methods, for example, it does *not*
-    /// have to result in the same output as progressively filling
-    /// `dest` with `self.gen::<u8>()`, and any such behaviour should
-    /// not be relied upon.
-    ///
-    /// This method should guarantee that `dest` is entirely filled
-    /// with new data, and may panic if this is impossible
-    /// (e.g. reading past the end of a file that is being used as the
-    /// source of randomness).
+    /// This method does *not* have any requirement on how much of the
+    /// generated random number stream is consumed; e.g. the default
+    /// implementation uses `next_u64` thus consuming 8 bytes even when only
+    /// 1 is required. A different implementation might use `next_u32` and
+    /// only consume 4 bytes; *however* any change affecting *reproducibility*
+    /// of output must be considered a breaking change.
     ///
     /// # Example
     ///
@@ -330,26 +362,21 @@ pub trait Rng {
     /// println!("{:?}", &v[..]);
     /// ```
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        // this could, in theory, be done by transmuting dest to a
-        // [u64], but this is (1) likely to be undefined behaviour for
-        // LLVM, (2) has to be very careful about alignment concerns,
-        // (3) adds more `unsafe` that needs to be checked, (4)
-        // probably doesn't give much performance gain if
-        // optimisations are on.
-        let mut count = 0;
-        let mut num = 0;
-        for byte in dest.iter_mut() {
-            if count == 0 {
-                // we could micro-optimise here by generating a u32 if
-                // we only need a few more bytes to fill the vector
-                // (i.e. at most 4).
-                num = self.next_u64();
-                count = 8;
-            }
-
-            *byte = (num & 0xff) as u8;
-            num >>= 8;
-            count -= 1;
+        use core::cmp::min;
+        use core::intrinsics::copy_nonoverlapping;
+        use core::mem::size_of;
+        
+        let mut pos = 0;
+        let len = dest.len();
+        while len > pos {
+            // Cast pointer, effectively to `&[u8; 8]`, and copy as many bytes
+            // as required. Byte-swap x on BE architectures.
+            let x = self.next_u64().to_le();
+            let xp = &x as *const u64 as *const u8;
+            let p: *mut u8 = unsafe{ dest.as_mut_ptr().offset(pos as isize) };
+            let n = min(len - pos, size_of::<u64>());
+            unsafe{ copy_nonoverlapping(xp, p, n); }
+            pos += n;
         }
     }
 }
