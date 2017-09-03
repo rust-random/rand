@@ -15,6 +15,7 @@ use core::mem;
 
 use Rng;
 use distributions::{Distribution, Rand};
+use utils::FloatConversions;
 
 // ----- convenience functions -----
 
@@ -187,68 +188,51 @@ impl Distribution<bool> for Uniform {
     }
 }
 
-impl Distribution<f32> for Uniform01 {
-    /// This uses a technique described by Saito and Matsumoto at
-    /// MCQMC'08. Given that the IEEE floating point numbers are
-    /// uniformly distributed over [1,2), we generate a number in
-    /// this range and then offset it onto the range [0,1). Our
-    /// choice of bits (masking v. shifting) is arbitrary and
-    /// should be immaterial for high quality generators. For low
-    /// quality generators (ex. LCG), prefer bitshifting due to
-    /// correlation between sequential low order bits.
-    ///
-    /// See:
-    /// A PRNG specialized in double precision floating point numbers using
-    /// an affine transition
-    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf
-    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf
-    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> f32 {
-        const UPPER_MASK: u32 = 0x3F800000;
-        const LOWER_MASK: u32 = 0x7FFFFF;
-        let tmp = UPPER_MASK | (rng.next_u32() & LOWER_MASK);
-        let result: f32 = unsafe { mem::transmute(tmp) };
-        result - 1.0
-    }
-}
-
-impl Distribution<f64> for Uniform01 {
-    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> f64 {
-        const UPPER_MASK: u64 = 0x3FF0000000000000;
-        const LOWER_MASK: u64 = 0xFFFFFFFFFFFFF;
-        let tmp = UPPER_MASK | (rng.next_u64() & LOWER_MASK);
-        let result: f64 = unsafe { mem::transmute(tmp) };
-        result - 1.0
-    }
-}
-
 macro_rules! float_impls {
-    ($scale_name:ident, $ty:ty, $mantissa_bits:expr) => {
-        const $scale_name: $ty = (1u64 << $mantissa_bits) as $ty;
-        
-        impl Distribution<$ty> for Open01 {
-            #[inline]
+    ($ty:ty, $next_u:path) => {
+        impl Distribution<$ty> for Uniform01 {
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
-                // add a small amount (specifically 2 bits below
-                // the precision of f64/f32 at 1.0), so that small
-                // numbers are larger than 0, but large numbers
-                // aren't pushed to/above 1.
-                let x: $ty = Rand::rand(rng, Uniform01);
-                x + 0.25 / $scale_name
+                let x = $next_u(rng);
+                x.closed_open01()
             }
         }
+
         impl Distribution<$ty> for Closed01 {
-            #[inline]
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
-                // rescale so that 1.0 - epsilon becomes 1.0
-                // precisely.
-                let x: $ty = Rand::rand(rng, Uniform01);
-                x * $scale_name / ($scale_name - 1.0)
+                // The problem with a closed range over [0,1] is that it needs
+                // 2^n+1 samples to generate a uniform distribution. Which is
+                // difficult, as it means we either have to reject about half
+                // the generated random numbers, or just not include one number
+                // in the distribution. That is why, instead of a closed range,
+                // we actually sample from the half-open range (0,1].
+                //
+                // Floating-point numbers have more precision near zero. This
+                // means for a f32 that only 1 in 2^32 samples will give exactly
+                // 0.0. But 1 in 2^23 will give exactly 1.0 due to rounding.
+                // Because the chance to sample 0.0 is so low, this half-open
+                // range is a very good appoximation of a closed range.
+                let x = $next_u(rng);
+                x.open_closed01()
+            }
+        }
+
+        impl Distribution<$ty> for Open01 {
+            // Sample from the open range (0,1).
+            // This uses the rejection method: use `closed_open01`, and if the
+            // result is 0.0, reject the result and try again.
+            fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
+                let mut x = 0;
+                while x == 0 { // 0 converts to 0.0
+                    x = $next_u(rng);
+                }
+                x.closed_open01()
             }
         }
     }
 }
-float_impls! { SCALE_F64, f64, 53 }
-float_impls! { SCALE_F32, f32, 24 }
+float_impls! { f32, Rng::next_u32 }
+float_impls! { f64, Rng::next_u64 }
+
 
 impl Distribution<char> for AsciiWordChar {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
@@ -259,7 +243,7 @@ impl Distribution<char> for AsciiWordChar {
 
 #[cfg(test)]
 mod tests {
-    use {ConstRng, thread_rng, iter};
+    use {thread_rng, iter};
     use distributions::{Rand, uniform, Uniform, Uniform01, Open01, Closed01};
     use distributions::uniform::{codepoint, ascii_word_char};
     
@@ -306,15 +290,6 @@ mod tests {
         let b = f64::rand(&mut r, Uniform01);
         assert!(0.0 <= a && a < 1.0);
         assert!(0.0 <= b && b < 1.0);
-    }
-
-    #[test]
-    fn floating_point_edge_cases() {
-        // FIXME: this message and test predates this repo; message suggests
-        // test is supposed to be ==; using != is pretty useless
-        // the test for exact equality is correct here.
-        assert!(f64::rand(&mut ConstRng::new(0xffff_ffffu64), Uniform01) != 1.0);
-        assert!(f64::rand(&mut ConstRng::new(0xffff_ffff_ffff_ffffu64), Uniform01) != 1.0);
     }
 
     #[test]
