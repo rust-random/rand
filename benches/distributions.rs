@@ -23,10 +23,10 @@ fn distr_baseline(b: &mut Bencher) {
 
     b.iter(|| {
         for _ in 0..::RAND_BENCH_N {
-            f64::rand(&mut rng, Default);
+            u64::rand(&mut rng, Default);
         }
     });
-    b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
+    b.bytes = size_of::<u64>() as u64 * ::RAND_BENCH_N;
 }
 
 

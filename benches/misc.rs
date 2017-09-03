@@ -10,7 +10,7 @@ use test::{black_box, Bencher};
 use rand::StdRng;
 use rand::prng::XorShiftRng;
 use rand::sequences::{sample, Shuffle};
-use rand::distributions::{Rand, Uniform, Uniform01};
+use rand::distributions::{Rand, Uniform, Uniform01, Closed01, Open01};
 
 #[bench]
 fn misc_baseline_32(b: &mut Bencher) {
@@ -35,7 +35,7 @@ fn misc_baseline_64(b: &mut Bencher) {
 }
 
 #[bench]
-fn misc_convert_f32(b: &mut Bencher) {
+fn misc_uniform01_f32(b: &mut Bencher) {
     let mut rng = StdRng::new().unwrap();
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
@@ -46,11 +46,55 @@ fn misc_convert_f32(b: &mut Bencher) {
 }
 
 #[bench]
-fn misc_convert_f64(b: &mut Bencher) {
+fn misc_uniform01_f64(b: &mut Bencher) {
     let mut rng = StdRng::new().unwrap();
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
             black_box(f64::rand(&mut rng, Uniform01));
+        }
+    });
+    b.bytes = size_of::<f64>() as u64 * RAND_BENCH_N;
+}
+
+#[bench]
+fn misc_closed01_f32(b: &mut Bencher) {
+    let mut rng = StdRng::new().unwrap();
+    b.iter(|| {
+        for _ in 0..RAND_BENCH_N {
+            black_box(f32::rand(&mut rng, Closed01));
+        }
+    });
+    b.bytes = size_of::<f32>() as u64 * RAND_BENCH_N;
+}
+
+#[bench]
+fn misc_closed01_f64(b: &mut Bencher) {
+    let mut rng = StdRng::new().unwrap();
+    b.iter(|| {
+        for _ in 0..RAND_BENCH_N {
+            black_box(f64::rand(&mut rng, Closed01));
+        }
+    });
+    b.bytes = size_of::<f64>() as u64 * RAND_BENCH_N;
+}
+
+#[bench]
+fn misc_open01_f32(b: &mut Bencher) {
+    let mut rng = StdRng::new().unwrap();
+    b.iter(|| {
+        for _ in 0..RAND_BENCH_N {
+            black_box(f32::rand(&mut rng, Open01));
+        }
+    });
+    b.bytes = size_of::<f32>() as u64 * RAND_BENCH_N;
+}
+
+#[bench]
+fn misc_open01_f64(b: &mut Bencher) {
+    let mut rng = StdRng::new().unwrap();
+    b.iter(|| {
+        for _ in 0..RAND_BENCH_N {
+            black_box(f64::rand(&mut rng, Open01));
         }
     });
     b.bytes = size_of::<f64>() as u64 * RAND_BENCH_N;
