@@ -252,8 +252,6 @@
 #[cfg(feature="std")]
 extern crate core;
 
-use core::mem::transmute;
-
 #[cfg(feature="std")]
 pub use read::ReadRng;
 #[cfg(feature="std")]
@@ -533,6 +531,10 @@ impl Rng for ConstRng<u64> {
 
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
+/// 
+/// The underlying algorithm is not fixed, thus values from this generator
+/// cannot be guaranteed to be reproducible. For this reason, `StdRng` does
+/// not support `SeedableRng`.
 #[derive(Copy, Clone, Debug)]
 pub struct StdRng {
     rng: IsaacWordRng,
@@ -568,18 +570,6 @@ impl Rng for StdRng {
     }
 }
 
-impl<'a> SeedableRng<&'a [usize]> for StdRng {
-    fn reseed(&mut self, seed: &'a [usize]) {
-        // the internal RNG can just be seeded from the above
-        // randomness.
-        self.rng.reseed(unsafe {transmute(seed)})
-    }
-
-    fn from_seed(seed: &'a [usize]) -> StdRng {
-        StdRng { rng: SeedableRng::from_seed(unsafe {transmute(seed)}) }
-    }
-}
-
 /// Error type for cryptographic generators. Only operating system and hardware
 /// generators should be able to fail. In such cases there is little that can
 /// be done besides try again later.
@@ -596,8 +586,8 @@ impl From<::std::io::Error> for CryptoError {
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, SeedableRng, StdRng, ConstRng, iter, Sample};
-    use distributions::{uniform, ascii_word_char};
+    use {Rng, thread_rng, ConstRng, Sample};
+    use distributions::{uniform};
     use distributions::{Uniform, Range, Exp};
     use sequences::Shuffle;
     use std::iter::repeat;
@@ -691,27 +681,6 @@ mod test {
         }
     }
 
-    #[test]
-    fn test_std_rng_seeded() {
-        let s = iter(&mut thread_rng()).map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
-        let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
-        let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
-        assert!(iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                        iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
-    }
-
-    #[test]
-    fn test_std_rng_reseed() {
-        let s = iter(&mut thread_rng()).map(|rng| uniform(rng)).take(256).collect::<Vec<usize>>();
-        let mut r: StdRng = SeedableRng::from_seed(&s[..]);
-        let string1 = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect::<String>();
-
-        r.reseed(&s);
-
-        let string2 = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect::<String>();
-        assert_eq!(string1, string2);
-    }
-    
     #[test]
     fn test_sample_from_rng() {
         // use a static Rng type:
