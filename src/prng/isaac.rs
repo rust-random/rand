@@ -17,9 +17,9 @@ use core::iter::repeat;
 use core::num::Wrapping as w;
 use core::fmt;
 
-use {Rng, SeedableRng, CryptoError};
+use {Rng, SeedableRng};
 #[cfg(feature="std")]
-use OsRng;
+use {OsRng, CryptoError};
 
 /// Select 32- or 64-bit variant dependent on pointer size.
 #[cfg(target_pointer_width = "32")]

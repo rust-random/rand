@@ -23,7 +23,6 @@ pub use self::default::Default;
 pub use self::uniform::{uniform, codepoint, ascii_word_char};
 pub use self::uniform::{Uniform, Uniform01, Open01, Closed01, AsciiWordChar};
 pub use self::range::{Range};
-use utils::FloatConversions;
 
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
@@ -159,6 +158,8 @@ fn ziggurat<R: Rng+?Sized, P, Z>(
             mut pdf: P,
             mut zero_case: Z)
             -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
+    use utils::FloatConversions;
+    
     loop {
         // As an optimisation convert the random u64 to a f64 using only
         // 53 bits, as many as will fit in the float's fraction.

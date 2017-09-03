@@ -11,9 +11,9 @@
 //! The ChaCha random number generator.
 
 use core::num::Wrapping as w;
-use {Rng, SeedableRng, CryptoError};
+use {Rng, SeedableRng};
 #[cfg(feature="std")]
-use OsRng;
+use {OsRng, CryptoError};
 
 #[allow(bad_style)]
 type w32 = w<u32>;

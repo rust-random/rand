@@ -11,9 +11,9 @@
 //! Xorshift generators
 
 use core::num::Wrapping as w;
-use {Rng, SeedableRng, CryptoError};
+use {Rng, SeedableRng};
 #[cfg(feature="std")]
-use OsRng;
+use {OsRng, CryptoError};
 
 /// An Xorshift[1] random number
 /// generator.
