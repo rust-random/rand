@@ -37,6 +37,7 @@ mod default;
 mod uniform;
 #[cfg(feature="std")]
 mod ziggurat_tables;
+mod float_conversions;
 
 pub mod range;
 pub mod range2;
