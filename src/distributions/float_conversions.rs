@@ -62,6 +62,24 @@ pub trait FloatConversions {
     /// Closer to zero the distribution gains more precision, up to
     /// 2^-32 for f32 and 2^-64 for f64.
     fn uniform11(self) -> Self::F;
+
+    /// Convert a random number to a floating point number sampled from the
+    /// uniformly distributed half-open range [0,1).
+    /// The distribution has a fixed precision of 2^-23 for f32 and
+    /// 2^-52 for f64.
+    /// The advantage of `uniform01_simple` is it leaves a couple of the random
+    /// bits available for other purposes (the 9 rightmost bits for f32, and
+    /// 12 for f64).
+    fn uniform01_simple(self) -> Self::F;
+
+    /// Convert a random number to a floating point number sampled from the
+    /// uniformly distributed half-open range [-1,1).
+    /// The distribution has a fixed precision of 2^-22 for f32 and
+    /// 2^-51 for f64.
+    /// The advantage of `uniform11_simple` is it leaves a couple of the random
+    /// bits available for other purposes (the 9 rightmost bits for f32, and
+    /// 12 for f64).
+    fn uniform11_simple(self) -> Self::F;
 }
 
 macro_rules! float_impls {
@@ -197,6 +215,36 @@ macro_rules! float_impls {
                 }
                 fraction.binor_exp(exp)
             }
+
+            /// This uses a technique described by Saito and Matsumoto at
+            /// MCQMC'08. Given that the IEEE floating point numbers are
+            /// uniformly distributed over [1,2), we generate a number in this
+            /// range and then offset it onto the range [0,1). Our choice of
+            /// bits (masking v. shifting) is arbitrary and
+            /// should be immaterial for high quality generators. For low
+            /// quality generators (ex. LCG), prefer bitshifting due to
+            /// correlation between sequential low order bits.
+            ///
+            /// See:
+            /// A PRNG specialized in double precision floating point numbers
+            /// using an affine transition
+            /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf
+            /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf
+            #[inline(always)]
+            fn uniform01_simple(self) -> $ty {
+                const EXPONENT: i32 = 0;
+                let fraction = self >> ($FLOAT_SIZE - $FRACTION_BITS);
+                fraction.binor_exp(EXPONENT) - 1.0
+            }
+
+            /// Like `uniform01_simple`, but generate a number in the range
+            /// [2,4) and offset it onto the range [-1,1).
+            #[inline(always)]
+            fn uniform11_simple(self) -> $ty {
+                const EXPONENT: i32 = 1;
+                let fraction = self >> ($FLOAT_SIZE - $FRACTION_BITS);
+                fraction.binor_exp(EXPONENT) - 3.0
+           }
         }
     }
 }

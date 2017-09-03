@@ -23,6 +23,7 @@ pub use self::default::Default;
 pub use self::uniform::{uniform, codepoint, ascii_word_char};
 pub use self::uniform::{Uniform, Uniform01, Open01, Closed01, AsciiWordChar};
 pub use self::range::{Range};
+use self::float_conversions::FloatConversions;
 
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
@@ -159,28 +160,25 @@ fn ziggurat<R: Rng+?Sized, P, Z>(
             mut pdf: P,
             mut zero_case: Z)
             -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
-    const SCALE: f64 = (1u64 << 53) as f64;
     loop {
-        // reimplement the f64 generation as an optimisation suggested
-        // by the Doornik paper: we have a lot of precision-space
-        // (i.e. there are 11 bits of the 64 of a u64 to use after
-        // creating a f64), so we might as well reuse some to save
-        // generating a whole extra random number. (Seems to be 15%
-        // faster.)
-        //
-        // This unfortunately misses out on the benefits of direct
-        // floating point generation if an RNG like dSMFT is
-        // used. (That is, such RNGs create floats directly, highly
-        // efficiently and overload next_f32/f64, so by not calling it
-        // this may be slower than it would be otherwise.)
-        // FIXME: investigate/optimise for the above.
+        // As an optimisation convert the random u64 to a f64 using only
+        // 53 bits, as many as will fit in the float's fraction.
+        // Of the remaining 11 least significant bits we use 8 to construct `i`.
+        // This saves us generating a whole extra random number, while the added
+        // precision of using 64 bits for f64 does not buy us much.
         let bits: u64 = uniform(rng);
-        let i = (bits & 0xff) as usize;
-        let f = (bits >> 11) as f64 / SCALE;
 
         // u is either U(-1, 1) or U(0, 1) depending on if this is a
         // symmetric distribution or not.
-        let u = if symmetric {2.0 * f - 1.0} else {f};
+        // FIXME: the distribution is not open, but closed-open.
+        //        Can that cause problems or a bias?
+        let u = if symmetric {
+                    bits.uniform11_simple()
+                } else {
+                    bits.uniform01_simple()
+                };
+        let i = (bits & 0xff) as usize;
+
         let x = u * x_tab[i];
 
         let test_x = if symmetric { x.abs() } else {x};
