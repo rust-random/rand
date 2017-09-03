@@ -8,7 +8,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Convert a random int to a float in the range [0,1]
+//! A collection of utility functions
+//!
+//! This module exposes some utility functions used internally by the `Rand`
+//! crate. They are not the intended or most ergonomic way to use the library.
+//!
+//! The `FloatConversions` trait provides the building blocks to convert a
+//! random integer to a IEEE floating point number uniformly distributed over a
+//! some range.
 
 use core::mem;
 
@@ -42,49 +49,53 @@ impl FloatBitOps for u64 {
     }
 }
 
+/// Convert a random integer to a uniformly distributed floating point number.
 pub trait FloatConversions {
     type F;
 
-    /// Convert a random number to a floating point number sampled from the
+    /// Convert a random integer to a floating point number sampled from the
     /// uniformly distributed half-open range [0,1).
-    /// Closer to zero the distribution gains more precision, up to
-    /// 2^-32 for f32 and 2^-64 for f64.
-    fn uniform01(self) -> Self::F;
+    /// The precision gets higher closer to zero, up to 2^-32 for f32
+    /// and 2^-64 for f64.
+    fn closed_open01(self) -> Self::F;
 
-    /// Convert a random number to a floating point number sampled from the
-    /// uniformly distributed closed range [0,1].
-    /// Closer to zero the distribution gains more precision, up to
-    /// 2^-32 for f32 and 2^-64 for f64.
-    fn closed01(self) -> Self::F;
+    /// Convert a random integer to a floating point number sampled from the
+    /// uniformly distributed half-open range (0,1].
+    /// The precision gets higher closer to zero, up to 2^-32 for f32
+    /// and 2^-64 for f64.
+    fn open_closed01(self) -> Self::F;
 
-    /// Convert a random number to a floating point number sampled from the
+    /// Convert a random integer to a floating point number sampled from the
     /// uniformly distributed half-open range [-1,1).
-    /// Closer to zero the distribution gains more precision, up to
-    /// 2^-32 for f32 and 2^-64 for f64.
-    fn uniform11(self) -> Self::F;
+    /// The precision gets higher closer to zero, up to 2^-32 for f32
+    /// and 2^-64 for f64.
+    fn closed_open11(self) -> Self::F;
 
-    /// Convert a random number to a floating point number sampled from the
+    /// Convert a random integer to a floating point number sampled from the
     /// uniformly distributed half-open range [0,1).
-    /// The distribution has a fixed precision of 2^-23 for f32 and
-    /// 2^-52 for f64.
-    /// The advantage of `uniform01_simple` is it leaves a couple of the random
-    /// bits available for other purposes (the 9 rightmost bits for f32, and
-    /// 12 for f64).
-    fn uniform01_simple(self) -> Self::F;
+    /// The precision is fixed, with 2^-23 for f32 and 2^-52 for f64.
+    /// This leaves a couple of the random bits available for other purposes
+    /// (the 9 least significant bits for f32, and 12 for f64).
+    fn closed_open01_fixed(self) -> Self::F;
 
-    /// Convert a random number to a floating point number sampled from the
+    /// Convert a random integer to a floating point number sampled from the
+    /// uniformly distributed half-open range (0,1].
+    /// The precision is fixed, with 2^-23 for f32 and 2^-52 for f64.
+    /// This leaves a couple of the random bits available for other purposes
+    /// (the 9 least significant bits for f32, and 12 for f64).
+    fn open_closed01_fixed(self) -> Self::F;
+
+    /// Convert a random integer to a floating point number sampled from the
     /// uniformly distributed half-open range [-1,1).
-    /// The distribution has a fixed precision of 2^-22 for f32 and
-    /// 2^-51 for f64.
-    /// The advantage of `uniform11_simple` is it leaves a couple of the random
-    /// bits available for other purposes (the 9 rightmost bits for f32, and
-    /// 12 for f64).
-    fn uniform11_simple(self) -> Self::F;
+    /// The precision is fixed, with 2^-22 for f32 and 2^-51 for f64.
+    /// This leaves a couple of the random bits available for other purposes
+    /// (the 9 least significant bits for f32, and 12 for f64).
+    fn closed_open11_fixed(self) -> Self::F;
 }
 
 macro_rules! float_impls {
     ($ty:ty, $uty:ty, $FLOAT_SIZE:expr, $FRACTION_BITS:expr,
-     $FRACTION_MASK:expr, $next_u:path) => {
+     $FRACTION_MASK:expr, $EXPONENT_BIAS:expr, $next_u:path) => {
 
         impl FloatConversions for $uty {
             type F = $ty;
@@ -106,7 +117,7 @@ macro_rules! float_impls {
             /// exponent of -10 as if they have -9 as exponent, and substract
             /// 2^-9.
             #[inline(always)]
-            fn uniform01(self) -> $ty {
+            fn closed_open01(self) -> $ty {
                 const MIN_EXPONENT: i32 = $FRACTION_BITS - $FLOAT_SIZE;
                 #[allow(non_snake_case)]
                 let ADJUST: $ty = (0 as $uty).binor_exp(MIN_EXPONENT);
@@ -124,31 +135,20 @@ macro_rules! float_impls {
             }
 
             /// Convert a random number to a floating point number sampled from
-            /// the uniformly distributed closed range [0,1].
+            /// the uniformly distributed chalf-open range (0,1].
             ///
-            /// The problem with a closed range over [0,1] is that the chance to
-            /// sample 1.0 exactly is 2^n+1. Which is difficult, as it is not a
-            /// power of two. Instead of a closed range, we actually sample from
-            /// the half-open range (0,1].
-            ///
-            /// Floating-point numbers have more precision near zero. This means
-            /// for a f32 that only 1 in 2^32 samples will give exactly 0.0. But
-            /// 1 in 2^23 will give exactly 1.0 due to rounding. Because the
-            /// chance to sample 0.0 is so low, this half-open range is a very
-            /// good appoximation of a closed range.
-            ///
-            /// This method is similar to `Uniform01`, with one extra step:
+            /// This method is similar to `closed_open01`, with one extra step:
             /// If the fractional part ends up as zero, add 1 to the exponent in
             /// 50% of the cases. This changes 0.5 to 1.0, 0.25 to 0.5, etc.
             ///
             /// The chance to select these numbers that staddle the boundery
-            /// between exponents is 33% to high in `Uniform01` (e.g. 33%*2^-23
-            /// for 0.5f32). The reason is that with 0.5 as example the distance
-            /// to the next number is 2^-23, but to the previous number 2^-24.
-            /// With the adjustment they have exactly the right chance of
-            /// getting sampled.
+            /// between exponents is 33% to high in `closed_open01`
+            /// (e.g. 33%*2^-23 for 0.5f32). The reason is that with 0.5 as
+            /// example the distance to the next number is 2^-23, but to the
+            /// previous number 2^-24. With the adjustment they have exactly the
+            /// right chance of getting sampled.
             #[inline(always)]
-            fn closed01(self) -> $ty {
+            fn open_closed01(self) -> $ty {
                 const MIN_EXPONENT: i32 = $FRACTION_BITS - $FLOAT_SIZE;
                 #[allow(non_snake_case)]
                 let ADJUST: $ty = (0 as $uty).binor_exp(MIN_EXPONENT);
@@ -164,7 +164,7 @@ macro_rules! float_impls {
                     // one of the unused bits for the exponent.
                     // Shift uncondinionally for the lowest exponents, because
                     // there are no more random bits left.
-                    if (exp > MIN_EXPONENT) &&
+                    if (exp <= MIN_EXPONENT) ||
                        (self & 1 << ($FLOAT_SIZE - 1) != 0) {
                         exp += 1;
                     }
@@ -177,14 +177,14 @@ macro_rules! float_impls {
             /// Convert a random number to a floating point number sampled from
             /// the uniformly distributed half-open range [-1,1).
             ///
-            /// This uses the same method as `uniform01`. One of the random bits
-            /// that it uses for the exponent, is now used as a sign bit.
+            /// This uses the same method as `closed_open01`. One of the random
+            /// bits that it uses for the exponent, is now used as a sign bit.
             ///
             /// This samples numbers from the range (-1,-0] and [0,1). Ideally
             /// we would not sample -0.0, but include -1.0. That is why for
             /// negative numbers we use the extra step from `open01`.
             #[inline(always)]
-            fn uniform11(self) -> $ty {
+            fn closed_open11(self) -> $ty {
                 const MIN_EXPONENT: i32 = $FRACTION_BITS - $FLOAT_SIZE + 1;
                 const SIGN_BIT: $uty = 1 << ($FLOAT_SIZE - 1);
                 #[allow(non_snake_case)]
@@ -202,7 +202,7 @@ macro_rules! float_impls {
                     // one of the unused bits for the exponent.
                     // Shift uncondinionally for the lowest exponents, because
                     // there are no more random bits left.
-                    if (exp > MIN_EXPONENT) &&
+                    if (exp <= MIN_EXPONENT) ||
                        (self & 1 << ($FLOAT_SIZE - 2) != 0) {
                         exp += 1;
                     }
@@ -220,10 +220,10 @@ macro_rules! float_impls {
             /// MCQMC'08. Given that the IEEE floating point numbers are
             /// uniformly distributed over [1,2), we generate a number in this
             /// range and then offset it onto the range [0,1). Our choice of
-            /// bits (masking v. shifting) is arbitrary and
-            /// should be immaterial for high quality generators. For low
-            /// quality generators (ex. LCG), prefer bitshifting due to
-            /// correlation between sequential low order bits.
+            /// bits (masking v. shifting) is arbitrary and should be immaterial
+            /// for high quality generators. For low quality generators
+            /// (ex. LCG), prefer bitshifting due to correlation between
+            /// sequential low order bits.
             ///
             /// See:
             /// A PRNG specialized in double precision floating point numbers
@@ -231,16 +231,32 @@ macro_rules! float_impls {
             /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf
             /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf
             #[inline(always)]
-            fn uniform01_simple(self) -> $ty {
+            fn closed_open01_fixed(self) -> $ty {
                 const EXPONENT: i32 = 0;
                 let fraction = self >> ($FLOAT_SIZE - $FRACTION_BITS);
                 fraction.binor_exp(EXPONENT) - 1.0
             }
 
-            /// Like `uniform01_simple`, but generate a number in the range
+            // Similar to `closed_open01_fixed`, with one modification. After
+            // converting to a float but before substracting -1.0, we want to
+            // shift every number one place to the next floating point number
+            // (e.g. +1 ulp). Thanks to how floating points a represented, this
+            // is as simple as adding 1 to the integer representation.
+            // Because we inline the `binor_exp` function, this looks more
+            // different than it really is.
+            #[inline(always)]
+            fn open_closed01_fixed(self) -> $ty {
+                let exponent_bits: $uty = $EXPONENT_BIAS << $FRACTION_BITS + 0;
+                let fraction = self >> ($FLOAT_SIZE - $FRACTION_BITS);
+                let bits = fraction | exponent_bits;
+                let float: $ty = unsafe { mem::transmute(bits + 1) };
+                float - 1.0
+            }
+
+            /// Like `closed_open01_fixed`, but generate a number in the range
             /// [2,4) and offset it onto the range [-1,1).
             #[inline(always)]
-            fn uniform11_simple(self) -> $ty {
+            fn closed_open11_fixed(self) -> $ty {
                 const EXPONENT: i32 = 1;
                 let fraction = self >> ($FLOAT_SIZE - $FRACTION_BITS);
                 fraction.binor_exp(EXPONENT) - 3.0
@@ -248,47 +264,110 @@ macro_rules! float_impls {
         }
     }
 }
-float_impls! { f32, u32, 32, 23, 0x7FFFFF, Rng::next_u32 }
-float_impls! { f64, u64, 64, 52, 0xFFFFFFFFFFFFF, Rng::next_u64 }
+float_impls! { f32, u32, 32, 23, 0x7f_ffff, 127, Rng::next_u32 }
+float_impls! { f64, u64, 64, 52, 0xf_ffff_ffff_ffff, 1023, Rng::next_u64 }
 
 
 #[cfg(test)]
 mod tests {
     use super::FloatConversions;
+    use distributions::uniform;
 
     #[test]
-    fn uniform01_edge_cases() {
+    fn closed_open01_edge_cases() {
         // Test that the distribution is a half-open range over [0,1).
         // These constants happen to generate the lowest and highest floats in
         // the range.
-        assert!(0u32.uniform01() == 0.0);
-        assert!(0xffff_ffffu32.uniform01() == 0.99999994);
+        assert!(0u32.closed_open01() == 0.0);
+        assert!(0xffff_ffffu32.closed_open01() == 0.99999994);
 
-        assert!(0u64.uniform01() == 0.0);
-        assert!(0xffff_ffff_ffff_ffffu64.uniform01() == 0.9999999999999999);
+        assert!(0u64.closed_open01() == 0.0);
+        assert!(0xffff_ffff_ffff_ffffu64.closed_open01() == 0.9999999999999999);
     }
 
     #[test]
-    fn closed01_edge_cases() {
+    fn open_closed01_edge_cases() {
         // Test that the distribution is a half-open range over (0,1].
         // These constants happen to generate the lowest and highest floats in
         // the range.
-        assert!(1u32.closed01() == 2.3283064e-10); // 2^-32
-        assert!(0xff80_0000u32.closed01() == 1.0);
+        assert!(1u32.open_closed01() == 2.3283064e-10); // 2^-32
+        assert!(0xff80_0000u32.open_closed01() == 1.0);
 
-        assert!(1u64.closed01() == 5.421010862427522e-20); // 2^-64
-        assert!(0xfff0_0000_0000_0000u64.closed01() == 1.0);
+        assert!(1u64.open_closed01() == 5.421010862427522e-20); // 2^-64
+        assert!(0xfff0_0000_0000_0000u64.open_closed01() == 1.0);
     }
 
     #[test]
-    fn uniform11_edge_cases() {
+    fn closed_open11_edge_cases() {
         // Test that the distribution is a half-open range over [-1,1).
         // These constants happen to generate the lowest and highest floats in
         // the range.
-        assert!(0xff80_0000u32.uniform11() == -1.0);
-        assert!(0x7fff_ffffu32.uniform11() == 0.99999994);
+        assert!(0xff80_0000u32.closed_open11() == -1.0);
+        assert!(0x7fff_ffffu32.closed_open11() == 0.99999994); // 1 - 2^-24
 
-        assert!(0xfff0_0000_0000_0000u64.uniform11() == -1.0);
-        assert!(0x7fff_ffff_ffff_ffffu64.uniform11() == 0.9999999999999999);
+        assert!(0xfff0_0000_0000_0000u64.closed_open11() == -1.0);
+        assert!(0x7fff_ffff_ffff_ffffu64.closed_open11() == 0.9999999999999999);
+    }
+
+    #[test]
+    fn closed_open01_fixed_edge_cases() {
+        // Test that the distribution is a half-open range over [0,1).
+        // These constants happen to generate the lowest and highest floats in
+        // the range.
+        let mut rng = ::test::rng();
+        let mut bits: u32 = uniform(&mut rng);
+        bits = bits & 0x1ff; // 9 bits with no influence
+
+        assert!((bits | 0).closed_open01_fixed() == 0.0);
+        assert!((bits | 0xfffffe00).closed_open01_fixed()
+                == 0.9999999); // 1 - 2^-23
+
+        let mut bits: u64 = uniform(&mut rng);
+        bits = bits & 0xfff; // 12 bits with no influence
+
+        assert!((bits | 0).closed_open01_fixed() == 0.0);
+        assert!((bits | 0xffff_ffff_ffff_f000).closed_open01_fixed() ==
+                0.9999999999999998); // 1 - 2^-52
+    }
+
+    #[test]
+    fn open_closed01_fixed_edge_cases() {
+        // Test that the distribution is a half-open range over [0,1).
+        // These constants happen to generate the lowest and highest floats in
+        // the range.
+        let mut rng = ::test::rng();
+        let mut bits: u32 = uniform(&mut rng);
+        bits = bits & 0x1ff; // 9 bits with no influence
+
+        assert!((bits | 0).open_closed01_fixed() == 1.1920929e-7); // 2^-23
+        assert!((bits | 0xfffffe00).open_closed01_fixed() == 1.0);
+
+        let mut bits: u64 = uniform(&mut rng);
+        bits = bits & 0xfff; // 12 bits with no influence
+
+        assert!((bits | 0).open_closed01_fixed() ==
+                2.220446049250313e-16); // 2^-52
+        assert!((bits | 0xffff_ffff_ffff_f000).open_closed01_fixed() == 1.0);
+    }
+
+    #[test]
+    fn closed_open11_fixed_edge_cases() {
+        // Test that the distribution is a half-open range over [0,1).
+        // These constants happen to generate the lowest and highest floats in
+        // the range.
+        let mut rng = ::test::rng();
+        let mut bits: u32 = uniform(&mut rng);
+        bits = bits & 0x1ff; // 9 bits with no influence
+
+        assert!((bits | 0).closed_open11_fixed() == -1.0);
+        assert!((bits | 0xfffffe00).closed_open11_fixed()
+                == 0.99999976); // 1 - 2^-22
+
+        let mut bits: u64 = uniform(&mut rng);
+        bits = bits & 0xfff; // 12 bits with no influence
+
+        assert!((bits | 0).closed_open11_fixed() == -1.0);
+        assert!((bits | 0xffff_ffff_ffff_f000).closed_open11_fixed() ==
+                0.9999999999999996); // 1 - 2^-51
     }
 }

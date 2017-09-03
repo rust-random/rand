@@ -25,7 +25,7 @@ use core::num::Wrapping as w;
 
 use Rng;
 use distributions::Distribution;
-use distributions::float_conversions::FloatConversions;
+use utils::FloatConversions;
 
 /// Sample values uniformly between two bounds.
 ///
@@ -206,14 +206,14 @@ macro_rules! range_float_impl {
             // simple as applying a scale and offset to get the right range.
             // For a negative range, we apply a negative scale to transform the
             // range [0,1) to (-x,0]. Because this results in a range with it
-            // closed and open sides reversed, we do not sample from `Uniform01`
-            // but from `Closed01`, which actually returns samples from the
-            // range (0,1].
+            // closed and open sides reversed, we do not sample from
+            // `closed_open01` but from `open_closed01`.
             //
             // A range that is both negative and positive.
             // This range has as characteristic that it does not have most of
             // its bits of precision near its low or high end, but in the middle
-            // near 0.0. As the basis we use the [-1,1) range from `Uniform11`.
+            // near 0.0. As the basis we use the [-1,1) range from
+            // `closed_open11`.
             // How it works is easiest to explain with an example.
             // Suppose we want to sample from the range [-20, 100). We are
             // first going to scale the range from [-1,1) to (-60,60]. Note the
@@ -255,15 +255,15 @@ macro_rules! range_float_impl {
                 let rnd = $next_u(rng);
                 match *self {
                     RangeFloat::Positive { offset, scale } => {
-                        let x: $ty = rnd.uniform01();
+                        let x: $ty = rnd.closed_open01();
                         offset + scale * x
                     }
                     RangeFloat::Negative { offset, scale } => {
-                        let x: $ty = rnd.closed01();
+                        let x: $ty = rnd.open_closed01();
                         offset + scale * x
                     }
                     RangeFloat::PosAndNeg { cutoff, scale } => {
-                        let x: $ty = rnd.uniform11();
+                        let x: $ty = rnd.closed_open11();
                         let x = x * scale;
                         if x < cutoff {
                             (cutoff - scale) - x
@@ -272,7 +272,7 @@ macro_rules! range_float_impl {
                         }
                     }
                     RangeFloat::NegAndPos { cutoff, scale } => {
-                        let x: $ty = rnd.uniform11();
+                        let x: $ty = rnd.closed_open11();
                         let x = x * scale;
                         if x >= cutoff {
                             (cutoff + scale) - x

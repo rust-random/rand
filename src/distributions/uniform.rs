@@ -15,7 +15,7 @@ use core::mem;
 
 use Rng;
 use distributions::{Distribution, Rand};
-use distributions::float_conversions::FloatConversions;
+use utils::FloatConversions;
 
 // ----- convenience functions -----
 
@@ -193,27 +193,39 @@ macro_rules! float_impls {
         impl Distribution<$ty> for Uniform01 {
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
                 let x = $next_u(rng);
-                x.uniform01()
+                x.closed_open01()
             }
         }
 
         impl Distribution<$ty> for Closed01 {
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
+                // The problem with a closed range over [0,1] is that it needs
+                // 2^n+1 samples to generate a uniform distribution. Which is
+                // difficult, as it means we either have to reject about half
+                // the generated random numbers, or just not include one number
+                // in the distribution. That is why, instead of a closed range,
+                // we actually sample from the half-open range (0,1].
+                //
+                // Floating-point numbers have more precision near zero. This
+                // means for a f32 that only 1 in 2^32 samples will give exactly
+                // 0.0. But 1 in 2^23 will give exactly 1.0 due to rounding.
+                // Because the chance to sample 0.0 is so low, this half-open
+                // range is a very good appoximation of a closed range.
                 let x = $next_u(rng);
-                x.closed01()
+                x.open_closed01()
             }
         }
 
         impl Distribution<$ty> for Open01 {
             // Sample from the open range (0,1).
-            // This uses the rejection method: use `Uniform01`, and if the
+            // This uses the rejection method: use `closed_open01`, and if the
             // result is 0.0, reject the result and try again.
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> $ty {
                 let mut x = 0;
                 while x == 0 { // 0 converts to 0.0
                     x = $next_u(rng);
                 }
-                x.uniform01()
+                x.closed_open01()
             }
         }
     }

@@ -23,7 +23,7 @@ pub use self::default::Default;
 pub use self::uniform::{uniform, codepoint, ascii_word_char};
 pub use self::uniform::{Uniform, Uniform01, Open01, Closed01, AsciiWordChar};
 pub use self::range::{Range};
-use self::float_conversions::FloatConversions;
+use utils::FloatConversions;
 
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
@@ -38,7 +38,6 @@ mod default;
 mod uniform;
 #[cfg(feature="std")]
 mod ziggurat_tables;
-mod float_conversions;
 
 pub mod range;
 pub mod range2;
@@ -173,9 +172,9 @@ fn ziggurat<R: Rng+?Sized, P, Z>(
         // FIXME: the distribution is not open, but closed-open.
         //        Can that cause problems or a bias?
         let u = if symmetric {
-                    bits.uniform11_simple()
+                    bits.closed_open11_fixed()
                 } else {
-                    bits.uniform01_simple()
+                    bits.closed_open01_fixed()
                 };
         let i = (bits & 0xff) as usize;
 

@@ -271,6 +271,7 @@ pub mod iter;
 pub mod prng;
 pub mod reseeding;
 pub mod sequences;
+pub mod utils;
 
 #[cfg(feature="std")]
 mod os;
