@@ -24,7 +24,8 @@
 use core::num::Wrapping as w;
 
 use Rng;
-use distributions::{Distribution, Uniform01, Rand};
+use distributions::Distribution;
+use distributions::float_conversions::FloatConversions;
 
 /// Sample values uniformly between two bounds.
 ///
@@ -177,37 +178,116 @@ range_int_impl! { usize, usize }
 
 /// Implementation of `RangeImpl` for float types.
 #[derive(Clone, Copy, Debug)]
-pub struct RangeFloat<X> {
-    low: X,
-    range: X,
+pub enum RangeFloat<X> {
+    // A range that is completely positive
+    Positive { offset: X, scale: X },
+    // A range that is completely negative
+    Negative { offset: X, scale: X },
+    // A range that is goes from negative to positive, but has more positive
+    // than negative numbers
+    PosAndNeg { cutoff: X, scale: X },
+    // A range that is goes from negative to positive, but has more negative
+    // than positive numbers
+    NegAndPos { cutoff: X, scale: X },
 }
 
 macro_rules! range_float_impl {
-    ($ty:ty) => {
+    ($ty:ty, $next_u:path) => {
         impl SampleRange for $ty {
             type T = RangeFloat<$ty>;
         }
-        
+
         impl RangeImpl for RangeFloat<$ty> {
+            // We can distinguish between two different kinds of ranges:
+            //
+            // Completely positive or negative.
+            // A characteristic of these ranges is that they get more bits of
+            // precision as they get closer to 0.0. For positive ranges it is as
+            // simple as applying a scale and offset to get the right range.
+            // For a negative range, we apply a negative scale to transform the
+            // range [0,1) to (-x,0]. Because this results in a range with it
+            // closed and open sides reversed, we do not sample from `Uniform01`
+            // but from `Closed01`, which actually returns samples from the
+            // range (0,1].
+            //
+            // A range that is both negative and positive.
+            // This range has as characteristic that it does not have most of
+            // its bits of precision near its low or high end, but in the middle
+            // near 0.0. As the basis we use the [-1,1) range from `Uniform11`.
+            // How it works is easiest to explain with an example.
+            // Suppose we want to sample from the range [-20, 100). We are
+            // first going to scale the range from [-1,1) to (-60,60]. Note the
+            // range changes from closed-open to open-closed because the scale
+            // is negative.
+            // If the sample happens to fall in the part (-60,-20), move it to
+            // (-100,60). Then multiply by -1.
+            // Scaling keeps the bits of precision intact. Moving the assymetric
+            // part also does not waste precision, as the more you move away
+            // from zero the less precision can be stored.
+
             type X = $ty;
-            
+
             fn new(low: Self::X, high: Self::X) -> Self {
-                RangeFloat {
-                    low: low,
-                    range: high - low,
+                if low >= 0.0 {
+                    RangeFloat::Positive {
+                        offset: low,
+                        scale: high - low,
+                    }
+                } else if high <= 0.0 {
+                    RangeFloat::Negative {
+                        offset: high,
+                        scale: low - high,
+                    }
+                } else if -low <= high {
+                    RangeFloat::PosAndNeg {
+                        cutoff: low,
+                        scale: (high + low) / -2.0 + low,
+                    }
+                } else {
+                    RangeFloat::NegAndPos {
+                        cutoff: high,
+                        scale: (high + low) / 2.0 - high,
+                    }
                 }
             }
-            
+
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> Self::X {
-                let x: $ty = Rand::rand(rng, Uniform01);
-                self.low + self.range * x
+                let rnd = $next_u(rng);
+                match *self {
+                    RangeFloat::Positive { offset, scale } => {
+                        let x: $ty = rnd.uniform01();
+                        offset + scale * x
+                    }
+                    RangeFloat::Negative { offset, scale } => {
+                        let x: $ty = rnd.closed01();
+                        offset + scale * x
+                    }
+                    RangeFloat::PosAndNeg { cutoff, scale } => {
+                        let x: $ty = rnd.uniform11();
+                        let x = x * scale;
+                        if x < cutoff {
+                            (cutoff - scale) - x
+                        } else {
+                            x
+                        }
+                    }
+                    RangeFloat::NegAndPos { cutoff, scale } => {
+                        let x: $ty = rnd.uniform11();
+                        let x = x * scale;
+                        if x >= cutoff {
+                            (cutoff + scale) - x
+                        } else {
+                            x
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-range_float_impl! { f32 }
-range_float_impl! { f64 }
+range_float_impl! { f32, Rng::next_u32 }
+range_float_impl! { f64, Rng::next_u64 }
 
 #[cfg(test)]
 mod tests {
