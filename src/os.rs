@@ -12,6 +12,7 @@
 //! generators.
 
 use std::{mem, fmt};
+use std::io::Read;
 
 use {Rng, CryptoError};
 
@@ -43,9 +44,19 @@ impl OsRng {
 }
 
 impl Rng for OsRng {
-    fn next_u32(&mut self) -> u32 { self.0.next_u32() }
-    fn next_u64(&mut self) -> u64 { self.0.next_u64() }
-    fn fill_bytes(&mut self, v: &mut [u8]) { self.0.fill_bytes(v) }
+    fn next_u32(&mut self) -> u32 {
+        let mut buf: [u8; 4] = [0; 4];
+        self.fill_bytes(&mut buf);
+        unsafe{ *(buf.as_ptr() as *const u32) }
+    }
+    fn next_u64(&mut self) -> u64 {
+        let mut buf: [u8; 8] = [0; 8];
+        self.fill_bytes(&mut buf);
+        unsafe{ *(buf.as_ptr() as *const u64) }
+    }
+    fn fill_bytes(&mut self, v: &mut [u8]) {
+        self.0.fill_bytes(v)
+    }
 }
 
 impl fmt::Debug for OsRng {
@@ -54,16 +65,19 @@ impl fmt::Debug for OsRng {
     }
 }
 
-fn next_u32(fill_buf: &mut FnMut(&mut [u8])) -> u32 {
-    let mut buf: [u8; 4] = [0; 4];
-    fill_buf(&mut buf);
-    unsafe { mem::transmute::<[u8; 4], u32>(buf) }
-}
+// Specialisation of `ReadRng` for our purposes
+#[derive(Debug)]
+struct ReadRng<R> (R);
 
-fn next_u64(fill_buf: &mut FnMut(&mut [u8])) -> u64 {
-    let mut buf: [u8; 8] = [0; 8];
-    fill_buf(&mut buf);
-    unsafe { mem::transmute::<[u8; 8], u64>(buf) }
+impl<R: Read> ReadRng<R> {
+    fn fill_bytes(&mut self, mut buf: &mut [u8]) {
+        while buf.len() > 0 {
+            match self.0.read(buf).unwrap_or_else(|e| panic!("Read error: {}", e)) {
+                0 => panic!("OsRng: no bytes available"),
+                n => buf = &mut mem::replace(&mut buf, &mut [])[n..],
+            }
+        }
+    }
 }
 
 #[cfg(all(unix, not(target_os = "ios"),
@@ -75,13 +89,12 @@ fn next_u64(fill_buf: &mut FnMut(&mut [u8])) -> u64 {
 mod imp {
     extern crate libc;
 
-    use super::{next_u32, next_u64};
     use self::OsRngInner::*;
+    use super::ReadRng;
 
     use std::io;
     use std::fs::File;
-    use {Rng, CryptoError};
-    use read::ReadRng;
+    use CryptoError;
 
     #[cfg(all(target_os = "linux",
               any(target_arch = "x86_64",
@@ -190,26 +203,12 @@ mod imp {
             }
 
             let reader = File::open("/dev/urandom")?;
-            let reader_rng = ReadRng::new(reader);
+            let reader_rng = ReadRng(reader);
 
             Ok(OsRng { inner: OsReadRng(reader_rng) })
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            match self.inner {
-                OsGetrandomRng => next_u32(&mut getrandom_fill_bytes),
-                OsReadRng(ref mut rng) => rng.next_u32(),
-            }
-        }
-        fn next_u64(&mut self) -> u64 {
-            match self.inner {
-                OsGetrandomRng => next_u64(&mut getrandom_fill_bytes),
-                OsReadRng(ref mut rng) => rng.next_u64(),
-            }
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        
+        pub fn fill_bytes(&mut self, v: &mut [u8]) {
             match self.inner {
                 OsGetrandomRng => getrandom_fill_bytes(v),
                 OsReadRng(ref mut rng) => rng.fill_bytes(v)
@@ -222,10 +221,7 @@ mod imp {
 mod imp {
     extern crate libc;
 
-    use super::{next_u32, next_u64};
-
     use std::io;
-    use Rng;
     use self::libc::{c_int, size_t};
 
     #[derive(Debug)]
@@ -246,16 +242,7 @@ mod imp {
         pub fn new() -> Result<OsRng, CryptoError> {
             Ok(OsRng)
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn fill_bytes(&mut self, v: &mut [u8]) {
             let ret = unsafe {
                 SecRandomCopyBytes(kSecRandomDefault, v.len() as size_t, v.as_mut_ptr())
             };
@@ -271,9 +258,6 @@ mod imp {
     extern crate libc;
 
     use std::{io, ptr};
-    use Rng;
-
-    use super::{next_u32, next_u64};
 
     #[derive(Debug)]
     pub struct OsRng;
@@ -282,16 +266,7 @@ mod imp {
         pub fn new() -> Result<OsRng, CryptoError> {
             Ok(OsRng)
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn fill_bytes(&mut self, v: &mut [u8]) {
             let mib = [libc::CTL_KERN, libc::KERN_ARND];
             // kern.arandom permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
@@ -315,9 +290,6 @@ mod imp {
     extern crate libc;
 
     use std::io;
-    use Rng;
-
-    use super::{next_u32, next_u64};
 
     #[derive(Debug)]
     pub struct OsRng;
@@ -326,16 +298,7 @@ mod imp {
         pub fn new() -> Result<OsRng, CryptoError> {
             Ok(OsRng)
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn fill_bytes(&mut self, v: &mut [u8]) {
             // getentropy(2) permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
                 let ret = unsafe {
@@ -354,8 +317,7 @@ mod imp {
 mod imp {
     use std::io;
     use std::fs::File;
-    use Rng;
-    use read::ReadRng;
+    use super::ReadRng;
 
     #[derive(Debug)]
     pub struct OsRng {
@@ -365,20 +327,11 @@ mod imp {
     impl OsRng {
         pub fn new() -> Result<OsRng, CryptoError> {
             let reader = File::open("rand:")?;
-            let reader_rng = ReadRng::new(reader);
+            let reader_rng = ReadRng(reader);
 
             Ok(OsRng { inner: reader_rng })
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            self.inner.next_u32()
-        }
-        fn next_u64(&mut self) -> u64 {
-            self.inner.next_u64()
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn fill_bytes(&mut self, v: &mut [u8]) {
             self.inner.fill_bytes(v)
         }
     }
@@ -389,9 +342,6 @@ mod imp {
     extern crate magenta;
 
     use std::io;
-    use Rng;
-
-    use super::{next_u32, next_u64};
 
     #[derive(Debug)]
     pub struct OsRng;
@@ -400,16 +350,7 @@ mod imp {
         pub fn new() -> Result<OsRng, CryptoError> {
             Ok(OsRng)
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn fill_bytes(&mut self, v: &mut [u8]) {
             for s in v.chunks_mut(magenta::MX_CPRNG_DRAW_MAX_LEN) {
                 let mut filled = 0;
                 while filled < s.len() {
@@ -426,9 +367,6 @@ mod imp {
 #[cfg(windows)]
 mod imp {
     use std::io;
-    use Rng;
-
-    use super::{next_u32, next_u64};
 
     type BOOLEAN = u8;
     type ULONG = u32;
@@ -446,16 +384,7 @@ mod imp {
         pub fn new() -> Result<OsRng, CryptoError> {
             Ok(OsRng)
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn fill_bytes(&mut self, v: &mut [u8]) {
             // RtlGenRandom takes an ULONG (u32) for the length so we need to
             // split up the buffer.
             for slice in v.chunks_mut(<ULONG>::max_value() as usize) {
@@ -477,9 +406,6 @@ mod imp {
 
     use std::io;
     use std::mem;
-    use Rng;
-
-    use super::{next_u32, next_u64};
 
     #[derive(Debug)]
     pub struct OsRng(extern fn(dest: *mut libc::c_void,
@@ -521,16 +447,7 @@ mod imp {
                 Err(CryptoError)
             }
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn fill_bytes(&mut self, v: &mut [u8]) {
             let mut read = 0;
             loop {
                 let mut r: libc::size_t = 0;
