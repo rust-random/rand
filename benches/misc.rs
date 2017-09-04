@@ -3,14 +3,9 @@
 extern crate test;
 extern crate rand;
 
-const RAND_BENCH_N: u64 = 1000;
-
-use std::mem::size_of;
 use test::{black_box, Bencher};
-use rand::StdRng;
 use rand::prng::XorShiftRng;
 use rand::sequences::{sample, Shuffle};
-use rand::distributions::{Rand, Uniform, Uniform01, Closed01, Open01};
 
 #[bench]
 fn misc_shuffle_100(b: &mut Bencher) {
