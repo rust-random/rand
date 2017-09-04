@@ -4,6 +4,7 @@ extern crate test;
 extern crate rand;
 
 use test::{black_box, Bencher};
+use rand::NewRng;
 use rand::prng::XorShiftRng;
 use rand::sequences::{sample, Shuffle};
 

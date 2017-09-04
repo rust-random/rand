@@ -11,9 +11,7 @@
 //! Xorshift generators
 
 use core::num::Wrapping as w;
-use {Rng, SeedableRng};
-#[cfg(feature="std")]
-use {OsRng, CryptoError};
+use {Rng, FromRng, SeedableRng};
 
 /// An Xorshift[1] random number
 /// generator.
@@ -35,13 +33,6 @@ pub struct XorShiftRng {
 }
 
 impl XorShiftRng {
-    /// Creates a new `XorShiftRng`, automatically seeded via `OsRng`.
-    #[cfg(feature="std")]
-    pub fn new() -> Result<XorShiftRng, CryptoError> {
-        let mut r = OsRng::new()?;
-        Ok(XorShiftRng::from_rng(&mut r))
-    }
-    
     /// Creates a new XorShiftRng instance which is not seeded.
     ///
     /// The initial values of this RNG are constants, so all generators created
@@ -56,14 +47,10 @@ impl XorShiftRng {
             w: w(0x113ba7bb),
         }
     }
-    
-    /// Create an ChaCha random number generator, seeding from another generator.
-    /// 
-    /// Care should be taken when seeding one RNG from another. There is no
-    /// free entropy gained. In some cases where the parent and child RNGs use
-    /// the same algorithm, both generate the same output sequences (possibly
-    /// with a small lag).
-    pub fn from_rng<R: Rng+?Sized>(rng: &mut R) -> XorShiftRng {
+}
+
+impl FromRng for XorShiftRng {
+    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> XorShiftRng {
         let mut tuple: (u32, u32, u32, u32);
         loop {
             tuple = (rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32());

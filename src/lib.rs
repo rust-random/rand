@@ -403,6 +403,36 @@ impl<R> Rng for Box<R> where R: Rng+?Sized {
     }
 }
 
+/// Support mechanism for creating random number generators seeded by other
+/// generators. All PRNGs should support this to enable `NewRng` support.
+pub trait FromRng {
+    /// Creates a new instance, seeded from another `Rng`.
+    /// 
+    /// Seeding from a cryptographic generator should be fine. On the other
+    /// hand, seeding a simple numerical generator from another of the same
+    /// type sometimes has serious side effects such as effectively cloning the
+    /// generator.
+    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Self;
+}
+
+/// Support mechanism for creating random number generators securely seeded
+/// using the OS generator.
+/// 
+/// This is implemented automatically for any PRNG implementing `FromRng`.
+#[cfg(feature="std")]
+pub trait NewRng: Sized {
+    /// Creates a new instance, automatically seeded via `OsRng`.
+    fn new() -> Result<Self, CryptoError>;
+}
+
+#[cfg(feature="std")]
+impl<R: FromRng> NewRng for R {
+    fn new() -> Result<Self, CryptoError> {
+        let mut r = OsRng::new()?;
+        Ok(Self::from_rng(&mut r))
+    }
+}
+
 /// A random number generator that can be explicitly seeded to produce
 /// the same stream of randomness multiple times.
 pub trait SeedableRng<Seed>: Rng {

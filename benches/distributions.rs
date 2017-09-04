@@ -8,7 +8,7 @@ const RAND_BENCH_N: u64 = 1000;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{Default, Rand};
+use rand::{Default, Rand, NewRng};
 use rand::prng::XorShiftRng;
 use rand::distributions::*;
 
