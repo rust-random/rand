@@ -6,15 +6,11 @@ extern crate rand;
 const RAND_BENCH_N: u64 = 1000;
 
 use std::mem::size_of;
-use test::Bencher;
+use test::{black_box, Bencher};
 
 use rand::{Default, Rand};
 use rand::prng::XorShiftRng;
-use rand::distributions::Distribution;
-use rand::distributions::{Range, range2};
-use rand::distributions::exponential::Exp;
-use rand::distributions::normal::{Normal, LogNormal};
-use rand::distributions::gamma::Gamma;
+use rand::distributions::*;
 
 
 #[bench]
@@ -23,7 +19,7 @@ fn distr_baseline(b: &mut Bencher) {
 
     b.iter(|| {
         for _ in 0..::RAND_BENCH_N {
-            u64::rand(&mut rng, Default);
+            black_box(u64::rand(&mut rng, Default));
         }
     });
     b.bytes = size_of::<u64>() as u64 * ::RAND_BENCH_N;
@@ -36,7 +32,7 @@ fn distr_range_int(b: &mut Bencher) {
 
     b.iter(|| {
         for _ in 0..::RAND_BENCH_N {
-            distr.sample(&mut rng);
+            black_box(distr.sample(&mut rng));
         }
     });
     b.bytes = size_of::<i64>() as u64 * ::RAND_BENCH_N;
@@ -49,7 +45,7 @@ fn distr_range2_int(b: &mut Bencher) {
 
     b.iter(|| {
         for _ in 0..::RAND_BENCH_N {
-            distr.sample(&mut rng);
+            black_box(distr.sample(&mut rng));
         }
     });
     b.bytes = size_of::<i64>() as u64 * ::RAND_BENCH_N;
@@ -64,7 +60,8 @@ macro_rules! distr_float {
 
             b.iter(|| {
                 for _ in 0..::RAND_BENCH_N {
-                    distr.sample(&mut rng);
+                    let x: f64 = distr.sample(&mut rng);
+                    black_box(x);
                 }
             });
             b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
@@ -72,6 +69,9 @@ macro_rules! distr_float {
     }
 }
 
+distr_float!(distr_uniform01_float, Uniform01);
+distr_float!(distr_closed01_float, Closed01);
+distr_float!(distr_open01_float, Open01);
 distr_float!(distr_range_float, Range::new(2.26f64, 2.319f64));
 distr_float!(distr_range2_float, range2::Range::new(2.26f64, 2.319f64));
 distr_float!(distr_exp, Exp::new(2.71828 * 3.14159));

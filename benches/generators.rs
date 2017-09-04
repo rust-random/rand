@@ -21,6 +21,7 @@ macro_rules! gen_bytes {
             b.iter(|| {
                 for _ in 0..RAND_BENCH_N {
                     rng.fill_bytes(&mut buf);
+                    black_box(buf);
                 }
             });
             b.bytes = BYTES_LEN as u64 * RAND_BENCH_N;
