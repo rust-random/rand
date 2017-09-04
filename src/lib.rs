@@ -362,21 +362,23 @@ pub trait Rng {
     /// println!("{:?}", &v[..]);
     /// ```
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        use core::cmp::min;
-        use core::intrinsics::copy_nonoverlapping;
-        use core::mem::size_of;
+        use core::intrinsics::transmute;
         
-        let mut pos = 0;
-        let len = dest.len();
-        while len > pos {
-            // Cast pointer, effectively to `&[u8; 8]`, and copy as many bytes
-            // as required. Byte-swap x on BE architectures.
-            let x = self.next_u64().to_le();
-            let xp = &x as *const u64 as *const u8;
-            let p: *mut u8 = unsafe{ dest.as_mut_ptr().offset(pos as isize) };
-            let n = min(len - pos, size_of::<u64>());
-            unsafe{ copy_nonoverlapping(xp, p, n); }
-            pos += n;
+        let mut left = dest;
+        while left.len() >= 8 {
+            let (l, r) = {left}.split_at_mut(8);
+            left = r;
+            let chunk: [u8; 8] = unsafe {
+                transmute(self.next_u64().to_le())
+            };
+            l.copy_from_slice(&chunk);
+        }
+        let n = left.len();
+        if n > 0 {
+            let chunk: [u8; 8] = unsafe {
+                transmute(self.next_u64().to_le())
+            };
+            left.copy_from_slice(&chunk[..n]);
         }
     }
 }
