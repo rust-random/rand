@@ -9,22 +9,21 @@
 // except according to those terms.
 
 //! Alternative design for `Range`.
-//! 
+//!
 //! TODO: decide whether to replace the old `range` module with this.
 //! Advantage: float ranges don't have to store a "zone" parameter.
 //! Advantage: custom implementations can store extra parameters.
 //! Possible advantage: easier implementations for custom types written in
 //! terms of implementations of other types.
 //! Disadvantage: complex?
-//! 
+//!
 //! This is *almost* like having separate `RangeInt<T>`, `RangeFloat<T>`,
 //! etc. (or just `RangeI32`, etc.) types, each implementing `Distribution`,
 //! but it adds some magic to support generic `range` and `new_range` methods.
 
-use core::num::Wrapping as w;
-
+use Rand;
 use Rng;
-use distributions::Distribution;
+use distributions::{Distribution, Uniform};
 use utils::FloatConversions;
 
 /// Sample values uniformly between two bounds.
@@ -40,7 +39,7 @@ use utils::FloatConversions;
 /// including `high`, but this may be very difficult. All the
 /// primitive integer types satisfy this property, and the float types
 /// normally satisfy it, but rounding may mean `high` can occur.
-/// 
+///
 /// # Example
 ///
 /// ```rust
@@ -71,6 +70,13 @@ impl Range<RangeInt<i32>> {
         assert!(low < high, "Range::new called with `low >= high`");
         Range { inner: RangeImpl::new(low, high) }
     }
+
+    /// Create a new `Range` instance that samples uniformly from
+    /// `[low, high]` (inclusive). Panics if `low >= high`.
+    pub fn new_inclusive<X: SampleRange>(low: X, high: X) -> Range<X::T> {
+        assert!(low < high, "Range::new called with `low >= high`");
+        Range { inner: RangeImpl::new_inclusive(low, high) }
+    }
 }
 
 impl<T: RangeImpl> Distribution<T::X> for Range<T> {
@@ -88,13 +94,15 @@ pub trait SampleRange: PartialOrd+Sized {
 pub trait RangeImpl {
     /// The type sampled by this implementation.
     type X: PartialOrd;
-    
+
     /// Construct self.
-    /// 
+    ///
     /// This should not be called directly. `Range::new` asserts that
     /// `low < high` before calling this.
     fn new(low: Self::X, high: Self::X) -> Self;
-    
+
+    fn new_inclusive(low: Self::X, high: Self::X) -> Self;
+
     /// Sample a value.
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> Self::X;
 }
@@ -108,35 +116,73 @@ pub struct RangeInt<X> {
 }
 
 macro_rules! range_int_impl {
-    ($ty:ty, $unsigned:ident) => {
+    ($ty:ty, $signed:ident, $unsigned:ident,
+     $i_large:ident, $u_large:ident) => {
         impl SampleRange for $ty {
             type T = RangeInt<$ty>;
         }
-        
+
         impl RangeImpl for RangeInt<$ty> {
-            // we play free and fast with unsigned vs signed here
+            // We play free and fast with unsigned vs signed here
             // (when $ty is signed), but that's fine, since the
             // contract of this macro is for $ty and $unsigned to be
-            // "bit-equal", so casting between them is a no-op & a
-            // bijection.
+            // "bit-equal", so casting between them is a no-op.
 
             type X = $ty;
-            
-            fn new(low: Self::X, high: Self::X) -> Self {
-                let range = (w(high as $unsigned) - w(low as $unsigned)).0;
-                let unsigned_max: $unsigned = ::core::$unsigned::MAX;
 
-                // We want to calculate type_range % range where type_range is
-                // pow(2, n_bits($ty)), but we can't represent type_range.
-                // (type_range - range) % range is equivalent, since we know
-                // type_range > range. Since range >= 1,
-                // type_range - range = (unsigned_max - range) + 1.
-                let ignore_zone = ((unsigned_max - range) + 1) % range;
-                // We want to sample from the zone
-                // [0, (type_range - ignore_zone))
-                // however, ignore_zone may be zero. Instead use a closed range
-                // from zero to:
-                let zone = unsigned_max - ignore_zone;
+            fn new(low: Self::X, high: Self::X) -> Self {
+                RangeImpl::new_inclusive(low, high - 1)
+            }
+
+            fn new_inclusive(low: Self::X, high: Self::X) -> Self {
+                // For a closed range the number of possible numbers we should
+                // generate is `range = (high - low + 1)`. It is not possible to
+                // end up with a uniform distribution if we map _all_ the random
+                // integers that can be generated to this range. We have to map
+                // integers from a `zone` that is a multiple of the range. The
+                // rest of the integers, that cause a bias, are rejected. The
+                // sampled number is `zone % range`.
+                //
+                // The problem with `range` is that to cover the full range of
+                // the type, it has to store `unsigned_max + 1`, which can't be
+                // represented. But if the range covers the full range of the
+                // type, no modulus is needed. A range of size 0 can't exist, so
+                // we use that to represent this special case. Wrapping
+                // arithmetic even makes representing `unsigned_max + 1` as 0
+                // simple.
+                //
+                // We don't calculate zone directly, but first calculate the
+                // number of integers to reject. To handle `unsigned_max + 1`
+                // not fitting in the type, we use:
+                // ints_to_reject = (unsigned_max + 1) % range;
+                // ints_to_reject = (unsigned_max - range + 1) % range;
+                //
+                // The smallest integer prngs generate is u32. That is why for
+                // small integer sizes (i8/u8 and i16/u16) there is an
+                // optimisation: don't pick the largest zone that can fit in the
+                // small type, but pick the largest zone that can fit in an u32.
+                // This improves the chance to get a random integer that fits in
+                // the zone to 998 in 1000 in the worst case.
+                //
+                // There is a problem however: we can't store such a large range
+                // in `RangeInt`, that can only hold values of the size of $ty.
+                // `ints_to_reject` is always less than half the size of the
+                // small integer. For an u8 it only ever uses 7 bits. This means
+                // that all but the last 7 bits of `zone` are always 1's (or 15
+                // in the case of u16). So nothing is lost by trucating `zone`.
+
+                let unsigned_max: $u_large = ::core::$u_large::MAX;
+
+                let range = (high as $u_large)
+                            .wrapping_sub(low as $u_large)
+                            .wrapping_add(1);
+                let ints_to_reject =
+                    if range > 0 {
+                        (unsigned_max - range + 1) % range
+                    } else {
+                        0
+                    };
+                let zone = unsigned_max - ints_to_reject;
 
                 RangeInt {
                     low: low,
@@ -145,36 +191,45 @@ macro_rules! range_int_impl {
                     zone: zone as $ty
                 }
             }
-            
+
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> Self::X {
-                use $crate::distributions::uniform;
-                loop {
-                    let v: $unsigned = uniform(rng);
-                    // Reject samples not between 0 and zone:
-                    if v <= self.zone as $unsigned {
-                        // Adjustment sample for range and low value:
-                        return (w(self.low) + w((v % self.range as $unsigned) as $ty)).0;
+                let range = self.range as $unsigned as $u_large;
+                if range > 0 {
+                    // Some casting to recover the trucated bits of `zone`:
+                    // First bit-cast to a signed int. Next sign-extend to the
+                    // larger type. Then bit-cast to unsigned.
+                    // For types that already have the right size, all the
+                    // casting is a no-op.
+                    let zone = self.zone as $signed as $i_large as $u_large;
+                    loop {
+                        let v: $u_large = Rand::rand(rng, Uniform);
+                        if v <= zone {
+                            return self.low.wrapping_add((v % range) as $ty);
+                        }
                     }
+                } else {
+                    // Sample from the entire integer range.
+                    Rand::rand(rng, Uniform)
                 }
             }
         }
     }
 }
 
-range_int_impl! { i8, u8 }
-range_int_impl! { i16, u16 }
-range_int_impl! { i32, u32 }
-range_int_impl! { i64, u64 }
+range_int_impl! { i8, i8, u8, i32, u32 }
+range_int_impl! { i16, i16, u16, i32, u32 }
+range_int_impl! { i32, i32, u32, i32, u32 }
+range_int_impl! { i64, i64, u64, i64, u64 }
 #[cfg(feature = "i128_support")]
-range_int_impl! { i128, u128 }
-range_int_impl! { isize, usize }
-range_int_impl! { u8, u8 }
-range_int_impl! { u16, u16 }
-range_int_impl! { u32, u32 }
-range_int_impl! { u64, u64 }
+range_int_impl! { i128, i128, u128, u128 }
+range_int_impl! { isize, isize, usize, isize, usize }
+range_int_impl! { u8, i8, u8, i32, u32 }
+range_int_impl! { u16, i16, u16, i32, u32 }
+range_int_impl! { u32, i32, u32, i32, u32 }
+range_int_impl! { u64, i64, u64, i64, u64 }
 #[cfg(feature = "i128_support")]
-range_int_impl! { u128, u128 }
-range_int_impl! { usize, usize }
+range_int_impl! { u128, u128, u128, i128, u128 }
+range_int_impl! { usize, isize, usize, isize, usize }
 
 /// Implementation of `RangeImpl` for float types.
 #[derive(Clone, Copy, Debug)]
@@ -249,6 +304,12 @@ macro_rules! range_float_impl {
                         scale: (high + low) / 2.0 - high,
                     }
                 }
+            }
+
+            fn new_inclusive(low: Self::X, high: Self::X) -> Self {
+                // Same as `new`, because the boundaries of a floats range are
+                // (at least currently) not exact due to rounding errors.
+                RangeImpl::new(low, high)
             }
 
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> Self::X {
@@ -403,6 +464,9 @@ mod tests {
                 RangeMyF32 {
                     inner: RangeFloat::<f32>::new(low.x, high.x),
                 }
+            }
+            fn new_inclusive(low: Self::X, high: Self::X) -> Self {
+                RangeImpl::new(low, high)
             }
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> Self::X {
                 MyF32 { x: self.inner.sample(rng) }
