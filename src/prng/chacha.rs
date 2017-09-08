@@ -197,6 +197,42 @@ impl Rng for ChaChaRng {
         self.index += 1;
         value.0
     }
+    
+    // Custom implementation allowing larger reads from buffer is about 8%
+    // faster than default implementation in my tests
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        use core::cmp::min;
+        use core::intrinsics::{transmute, copy_nonoverlapping};
+        
+        let mut left = dest;
+        while left.len() >= 4 {
+            if self.index == STATE_WORDS {
+                self.update();
+            }
+            
+            let words = min(left.len() / 4, STATE_WORDS - self.index);
+            let (l, r) = {left}.split_at_mut(4 * words);
+            left = r;
+            
+            // convert to LE:
+            for ref mut x in self.buffer[self.index..self.index+words].iter_mut() {
+                **x = w((*x).0.to_le());
+            }
+            
+            unsafe{ copy_nonoverlapping(
+                &self.buffer[self.index].0 as *const u32 as *const u8,
+                l.as_mut_ptr(),
+                words) };
+            self.index += words;
+        }
+        let n = left.len();
+        if n > 0 {
+            let chunk: [u8; 4] = unsafe {
+                transmute(self.next_u32().to_le())
+            };
+            left.copy_from_slice(&chunk[..n]);
+        }
+    }
 }
 
 impl FromRng for ChaChaRng {

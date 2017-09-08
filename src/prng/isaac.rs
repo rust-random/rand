@@ -221,6 +221,28 @@ impl Rng for IsaacRng {
         // it optimises to a bitwise mask).
         self.rsl[(self.cnt % RAND_SIZE) as usize].0
     }
+    
+    // Default impl adjusted for native byte size; approx 18% faster in tests
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        use core::intrinsics::transmute;
+        
+        let mut left = dest;
+        while left.len() >= 4 {
+            let (l, r) = {left}.split_at_mut(4);
+            left = r;
+            let chunk: [u8; 4] = unsafe {
+                transmute(self.next_u32().to_le())
+            };
+            l.copy_from_slice(&chunk);
+        }
+        let n = left.len();
+        if n > 0 {
+            let chunk: [u8; 4] = unsafe {
+                transmute(self.next_u32().to_le())
+            };
+            left.copy_from_slice(&chunk[..n]);
+        }
+    }
 }
 
 impl FromRng for IsaacRng {
