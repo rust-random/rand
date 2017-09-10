@@ -358,10 +358,10 @@ pub trait Rng {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut v = [0u8; 13579];
-    /// thread_rng().fill_bytes(&mut v);
+    /// thread_rng().try_fill(&mut v).unwrap();
     /// println!("{:?}", &v[..]);
     /// ```
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
         use core::intrinsics::transmute;
         
         let mut left = dest;
@@ -380,6 +380,7 @@ pub trait Rng {
             };
             left.copy_from_slice(&chunk[..n]);
         }
+        Ok(())
     }
 }
 
@@ -398,21 +399,21 @@ impl<R> Rng for Box<R> where R: Rng+?Sized {
         (**self).next_u128()
     }
 
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        (**self).fill_bytes(dest)
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+        (**self).try_fill(dest)
     }
 }
 
 /// Support mechanism for creating random number generators seeded by other
 /// generators. All PRNGs should support this to enable `NewRng` support.
-pub trait FromRng {
+pub trait FromRng: Sized {
     /// Creates a new instance, seeded from another `Rng`.
     /// 
     /// Seeding from a cryptographic generator should be fine. On the other
     /// hand, seeding a simple numerical generator from another of the same
     /// type sometimes has serious side effects such as effectively cloning the
     /// generator.
-    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Self;
+    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Result<Self>;
 }
 
 /// Support mechanism for creating random number generators securely seeded
@@ -429,7 +430,7 @@ pub trait NewRng: Sized {
 impl<R: FromRng> NewRng for R {
     fn new() -> Result<Self> {
         let mut r = OsRng::new()?;
-        Ok(Self::from_rng(&mut r))
+        Self::from_rng(&mut r)
     }
 }
 
@@ -695,7 +696,7 @@ mod test {
                        80, 81, 82, 83, 84, 85, 86, 87];
         for &n in lengths.iter() {
             let mut v = repeat(0u8).take(n).collect::<Vec<_>>();
-            r.fill_bytes(&mut v);
+            r.try_fill(&mut v).unwrap();
 
             // use this to get nicer error messages.
             for (i, &byte) in v.iter().enumerate() {

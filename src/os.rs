@@ -15,6 +15,7 @@ use std::{mem, fmt};
 use std::io::Read;
 
 use {Rng, Result};
+// TODO: replace many of the panics below with Result error handling
 
 /// A random number generator that retrieves randomness straight from
 /// the operating system. Platform sources:
@@ -46,16 +47,16 @@ impl OsRng {
 impl Rng for OsRng {
     fn next_u32(&mut self) -> u32 {
         let mut buf: [u8; 4] = [0; 4];
-        self.fill_bytes(&mut buf);
+        self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
         unsafe{ *(buf.as_ptr() as *const u32) }
     }
     fn next_u64(&mut self) -> u64 {
         let mut buf: [u8; 8] = [0; 8];
-        self.fill_bytes(&mut buf);
+        self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
         unsafe{ *(buf.as_ptr() as *const u64) }
     }
-    fn fill_bytes(&mut self, v: &mut [u8]) {
-        self.0.fill_bytes(v)
+    fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+        self.0.try_fill(v)
     }
 }
 
@@ -70,13 +71,14 @@ impl fmt::Debug for OsRng {
 struct ReadRng<R> (R);
 
 impl<R: Read> ReadRng<R> {
-    fn fill_bytes(&mut self, mut buf: &mut [u8]) {
+    fn try_fill(&mut self, mut buf: &mut [u8]) -> Result<()> {
         while buf.len() > 0 {
             match self.0.read(buf).unwrap_or_else(|e| panic!("Read error: {}", e)) {
                 0 => panic!("OsRng: no bytes available"),
                 n => buf = &mut mem::replace(&mut buf, &mut [])[n..],
             }
         }
+        Ok(())
     }
 }
 
@@ -131,7 +133,7 @@ mod imp {
                       target_arch = "powerpc"))))]
     fn getrandom(_buf: &mut [u8]) -> libc::c_long { -1 }
 
-    fn getrandom_fill_bytes(v: &mut [u8]) {
+    fn getrandom_try_fill(v: &mut [u8]) -> Result<()> {
         let mut read = 0;
         let len = v.len();
         while read < len {
@@ -147,6 +149,7 @@ mod imp {
                 read += result as usize;
             }
         }
+        Ok(())
     }
 
     #[cfg(all(target_os = "linux",
@@ -208,10 +211,10 @@ mod imp {
             Ok(OsRng { inner: OsReadRng(reader_rng) })
         }
         
-        pub fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
             match self.inner {
-                OsGetrandomRng => getrandom_fill_bytes(v),
-                OsReadRng(ref mut rng) => rng.fill_bytes(v)
+                OsGetrandomRng => getrandom_try_fill(v),
+                OsReadRng(ref mut rng) => rng.try_fill(v)
             }
         }
     }
@@ -243,7 +246,7 @@ mod imp {
         pub fn new() -> Result<OsRng> {
             Ok(OsRng)
         }
-        pub fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
             let ret = unsafe {
                 SecRandomCopyBytes(kSecRandomDefault, v.len() as size_t, v.as_mut_ptr())
             };
@@ -268,7 +271,7 @@ mod imp {
         pub fn new() -> Result<OsRng> {
             Ok(OsRng)
         }
-        pub fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
             let mib = [libc::CTL_KERN, libc::KERN_ARND];
             // kern.arandom permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
@@ -301,7 +304,7 @@ mod imp {
         pub fn new() -> Result<OsRng> {
             Ok(OsRng)
         }
-        pub fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
             // getentropy(2) permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
                 let ret = unsafe {
@@ -335,8 +338,8 @@ mod imp {
 
             Ok(OsRng { inner: reader_rng })
         }
-        pub fn fill_bytes(&mut self, v: &mut [u8]) {
-            self.inner.fill_bytes(v)
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+            self.inner.try_fill(v)
         }
     }
 }
@@ -355,7 +358,7 @@ mod imp {
         pub fn new() -> Result<OsRng> {
             Ok(OsRng)
         }
-        pub fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
             for s in v.chunks_mut(magenta::MX_CPRNG_DRAW_MAX_LEN) {
                 let mut filled = 0;
                 while filled < s.len() {
@@ -390,7 +393,7 @@ mod imp {
         pub fn new() -> Result<OsRng> {
             Ok(OsRng)
         }
-        pub fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
             // RtlGenRandom takes an ULONG (u32) for the length so we need to
             // split up the buffer.
             for slice in v.chunks_mut(<ULONG>::max_value() as usize) {
@@ -454,7 +457,7 @@ mod imp {
                 Err(Result)
             }
         }
-        pub fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
             let mut read = 0;
             loop {
                 let mut r: libc::size_t = 0;
@@ -487,7 +490,7 @@ mod test {
         r.next_u64();
 
         let mut v = [0u8; 1000];
-        r.fill_bytes(&mut v);
+        r.try_fill(&mut v).unwrap();
     }
 
     #[test]
@@ -513,7 +516,7 @@ mod test {
                     thread::yield_now();
                     r.next_u64();
                     thread::yield_now();
-                    r.fill_bytes(&mut v);
+                    r.try_fill(&mut v).unwrap();
                     thread::yield_now();
                 }
             });

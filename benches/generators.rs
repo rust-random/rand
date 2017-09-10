@@ -20,7 +20,7 @@ macro_rules! gen_bytes {
             let mut buf = [0u8; BYTES_LEN];
             b.iter(|| {
                 for _ in 0..RAND_BENCH_N {
-                    rng.fill_bytes(&mut buf);
+                    rng.try_fill(&mut buf).unwrap();
                     black_box(buf);
                 }
             });

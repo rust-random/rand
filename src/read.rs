@@ -68,9 +68,9 @@ impl<R: Read + Debug> Rng for ReadRng<R> {
         impl_uint_from_fill!(u128, 16, self)
     }
     
-    fn fill_bytes(&mut self, v: &mut [u8]) {
-        if v.len() == 0 { return }
-        fill(&mut self.reader, v).unwrap();
+    fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+        if v.len() == 0 { return Ok(()); }
+        fill(&mut self.reader, v)
     }
 }
 
@@ -111,21 +111,20 @@ mod test {
         assert_eq!(rng.next_u32(), 3_u32.to_be());
     }
     #[test]
-    fn test_reader_rng_fill_bytes() {
+    fn test_reader_rng_try_fill() {
         let v = [1u8, 2, 3, 4, 5, 6, 7, 8];
         let mut w = [0u8; 8];
 
         let mut rng = ReadRng::new(&v[..]);
-        rng.fill_bytes(&mut w);
+        rng.try_fill(&mut w).unwrap();
 
         assert!(v == w);
     }
 
     #[test]
-    #[should_panic]
     fn test_reader_rng_insufficient_bytes() {
         let mut rng = ReadRng::new(&[][..]);
         let mut v = [0u8; 3];
-        rng.fill_bytes(&mut v);
+        assert!(rng.try_fill(&mut v).is_err());
     }
 }

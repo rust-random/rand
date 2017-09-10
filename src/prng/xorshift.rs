@@ -11,7 +11,7 @@
 //! Xorshift generators
 
 use core::num::Wrapping as w;
-use {Rng, FromRng, SeedableRng};
+use {Rng, FromRng, SeedableRng, Result};
 
 /// An Xorshift[1] random number
 /// generator.
@@ -50,7 +50,7 @@ impl XorShiftRng {
 }
 
 impl FromRng for XorShiftRng {
-    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> XorShiftRng {
+    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Result<Self> {
         let mut tuple: (u32, u32, u32, u32);
         loop {
             tuple = (rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32());
@@ -59,7 +59,7 @@ impl FromRng for XorShiftRng {
             }
         }
         let (x, y, z, w_) = tuple;
-        XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) }
+        Ok(XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) })
     }
 }
 

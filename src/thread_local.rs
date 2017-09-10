@@ -14,7 +14,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Mutex;
 
-use {Rng, OsRng, Rand, Default};
+use {Rng, OsRng, Rand, Default, Result};
 
 // use reseeding::{Reseeder, ReseedingRng};
 // 
@@ -59,8 +59,8 @@ impl Rng for ThreadRng {
     }
 
     #[inline]
-    fn fill_bytes(&mut self, bytes: &mut [u8]) {
-        self.rng.borrow_mut().fill_bytes(bytes)
+    fn try_fill(&mut self, bytes: &mut [u8]) -> Result<()> {
+        self.rng.borrow_mut().try_fill(bytes)
     }
 }
 

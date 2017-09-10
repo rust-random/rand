@@ -14,7 +14,7 @@
 use core::default::Default;
 use core::fmt::Debug;
 
-use {Rng, SeedableRng};
+use {Rng, SeedableRng, Result};
 
 /// How many bytes of entropy the underling RNG is allowed to generate
 /// before it is reseeded
@@ -79,10 +79,10 @@ impl<R: Rng, Rsdr: Reseeder<R> + Debug> Rng for ReseedingRng<R, Rsdr> {
         self.rng.next_u128()
     }
 
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
         self.reseed_if_necessary();
         self.bytes_generated += dest.len() as u64;
-        self.rng.fill_bytes(dest)
+        self.rng.try_fill(dest)
     }
 }
 
@@ -193,15 +193,15 @@ mod test {
 
     const FILL_BYTES_V_LEN: usize = 13579;
     #[test]
-    fn test_rng_fill_bytes() {
+    fn test_rng_try_fill() {
         let mut v = repeat(0u8).take(FILL_BYTES_V_LEN).collect::<Vec<_>>();
-        ::test::rng().fill_bytes(&mut v);
+        ::test::rng().try_fill(&mut v).unwrap();
 
-        // Sanity test: if we've gotten here, `fill_bytes` has not infinitely
+        // Sanity test: if we've gotten here, `try_fill` has not infinitely
         // recursed.
         assert_eq!(v.len(), FILL_BYTES_V_LEN);
 
-        // To test that `fill_bytes` actually did something, check that the
+        // To test that `try_fill` actually did something, check that the
         // average of `v` is not 0.
         let mut sum = 0.0;
         for &x in v.iter() {

@@ -17,7 +17,7 @@ use core::iter::repeat;
 use core::num::Wrapping as w;
 use core::fmt;
 
-use {Rng, FromRng, SeedableRng};
+use {Rng, FromRng, SeedableRng, Result};
 
 /// Select 32- or 64-bit variant dependent on pointer size.
 #[cfg(target_pointer_width = "32")]
@@ -223,7 +223,7 @@ impl Rng for IsaacRng {
     }
     
     // Default impl adjusted for native byte size; approx 18% faster in tests
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
         use core::intrinsics::transmute;
         
         let mut left = dest;
@@ -242,17 +242,18 @@ impl Rng for IsaacRng {
             };
             left.copy_from_slice(&chunk[..n]);
         }
+        Ok(())
     }
 }
 
 impl FromRng for IsaacRng {
-    fn from_rng<R: Rng+?Sized>(other: &mut R) -> IsaacRng {
+    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self> {
         let mut ret = EMPTY;
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;
 
             let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE_USIZE * 4);
-            other.fill_bytes(slice);
+            other.try_fill(slice)?;
         }
         ret.cnt = 0;
         ret.a = w(0);
@@ -260,7 +261,7 @@ impl FromRng for IsaacRng {
         ret.c = w(0);
 
         ret.init(true);
-        return ret;
+        Ok(ret)
     }
 }
 
@@ -494,13 +495,13 @@ impl Rng for Isaac64Rng {
 }
 
 impl FromRng for Isaac64Rng {
-    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Isaac64Rng {
+    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self> {
         let mut ret = EMPTY_64;
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;
 
             let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE_64 * 8);
-            other.fill_bytes(slice);
+            other.try_fill(slice)?;
         }
         ret.cnt = 0;
         ret.a = w(0);
@@ -508,7 +509,7 @@ impl FromRng for Isaac64Rng {
         ret.c = w(0);
 
         ret.init(true);
-        return ret;
+        Ok(ret)
     }
 }
 
