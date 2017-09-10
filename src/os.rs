@@ -14,7 +14,7 @@
 use std::{mem, fmt};
 use std::io::Read;
 
-use {Rng, CryptoError};
+use {Rng, Result};
 
 /// A random number generator that retrieves randomness straight from
 /// the operating system. Platform sources:
@@ -38,7 +38,7 @@ pub struct OsRng(imp::OsRng);
 
 impl OsRng {
     /// Create a new `OsRng`.
-    pub fn new() -> Result<OsRng, CryptoError> {
+    pub fn new() -> Result<OsRng> {
         imp::OsRng::new().map(OsRng)
     }
 }
@@ -94,7 +94,7 @@ mod imp {
 
     use std::io;
     use std::fs::File;
-    use CryptoError;
+    use Result;
 
     #[cfg(all(target_os = "linux",
               any(target_arch = "x86_64",
@@ -197,7 +197,7 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> Result<OsRng, CryptoError> {
+        pub fn new() -> Result<OsRng> {
             if is_getrandom_available() {
                 return Ok(OsRng { inner: OsGetrandomRng });
             }
@@ -223,6 +223,7 @@ mod imp {
 
     use std::io;
     use self::libc::{c_int, size_t};
+    use Result;
 
     #[derive(Debug)]
     pub struct OsRng;
@@ -239,7 +240,7 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> Result<OsRng, CryptoError> {
+        pub fn new() -> Result<OsRng> {
             Ok(OsRng)
         }
         pub fn fill_bytes(&mut self, v: &mut [u8]) {
@@ -258,12 +259,13 @@ mod imp {
     extern crate libc;
 
     use std::{io, ptr};
+    use Result;
 
     #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> Result<OsRng, CryptoError> {
+        pub fn new() -> Result<OsRng> {
             Ok(OsRng)
         }
         pub fn fill_bytes(&mut self, v: &mut [u8]) {
@@ -290,12 +292,13 @@ mod imp {
     extern crate libc;
 
     use std::io;
+    use Result;
 
     #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> Result<OsRng, CryptoError> {
+        pub fn new() -> Result<OsRng> {
             Ok(OsRng)
         }
         pub fn fill_bytes(&mut self, v: &mut [u8]) {
@@ -318,6 +321,7 @@ mod imp {
     use std::io;
     use std::fs::File;
     use super::ReadRng;
+    use Result;
 
     #[derive(Debug)]
     pub struct OsRng {
@@ -325,7 +329,7 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> Result<OsRng, CryptoError> {
+        pub fn new() -> Result<OsRng> {
             let reader = File::open("rand:")?;
             let reader_rng = ReadRng(reader);
 
@@ -342,12 +346,13 @@ mod imp {
     extern crate magenta;
 
     use std::io;
+    use Result;
 
     #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> Result<OsRng, CryptoError> {
+        pub fn new() -> Result<OsRng> {
             Ok(OsRng)
         }
         pub fn fill_bytes(&mut self, v: &mut [u8]) {
@@ -367,6 +372,7 @@ mod imp {
 #[cfg(windows)]
 mod imp {
     use std::io;
+    use Result;
 
     type BOOLEAN = u8;
     type ULONG = u32;
@@ -381,7 +387,7 @@ mod imp {
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> Result<OsRng, CryptoError> {
+        pub fn new() -> Result<OsRng> {
             Ok(OsRng)
         }
         pub fn fill_bytes(&mut self, v: &mut [u8]) {
@@ -406,6 +412,7 @@ mod imp {
 
     use std::io;
     use std::mem;
+    use Result;
 
     #[derive(Debug)]
     pub struct OsRng(extern fn(dest: *mut libc::c_void,
@@ -428,7 +435,7 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> Result<OsRng, CryptoError> {
+        pub fn new() -> Result<OsRng> {
             let mut iface = NaClIRTRandom {
                 get_random_bytes: None,
             };
@@ -444,7 +451,7 @@ mod imp {
             } else {
                 // let error = io::ErrorKind::NotFound;
                 // let error = io::Error::new(error, "IRT random interface missing");
-                Err(CryptoError)
+                Err(Result)
             }
         }
         pub fn fill_bytes(&mut self, v: &mut [u8]) {
