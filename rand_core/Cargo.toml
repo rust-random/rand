@@ -1,14 +1,14 @@
 [package]
-name = "rand"
-version = "0.3.16"
+name = "rand_core"
+version = "0.0.1"
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-lang-nursery/rand"
-documentation = "https://docs.rs/rand"
+documentation = "https://docs.rs/rand_core"
 homepage = "https://github.com/rust-lang-nursery/rand"
 description = """
-Random number generators and other randomness functionality.
+Random number generator traits
 """
 keywords = ["random", "rng"]
 categories = ["algorithms"]
@@ -18,13 +18,3 @@ default = ["std"]
 nightly = ["i128_support"]
 std = []
 i128_support = []
-
-[dependencies]
-libc = "0.2"
-rand_core = { path = 'rand_core' }
-
-[target.'cfg(target_os = "fuchsia")'.dependencies]
-magenta = "^0.1.1"
-
-[workspace]
-members = ["rand_core"]
