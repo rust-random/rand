@@ -57,6 +57,24 @@ let mut rng = ChaChaRng::from_rng(&mut thread_rng()).unwrap();
 println!("random between 0-9: {}", distributions::range(0, 10, &mut rng));
 ```
 
+## Testing
+
+Unfortunately, `cargo test` does not test everything. The following tests are
+recommended:
+
+```
+# Basic tests for rand and sub-crates
+cargo test --all
+
+# Test no_std support (build only since nearly all tests require std)
+cargo build --all --no-default-features
+
+# Test 128-bit support (requires nightly)
+cargo test --all --features i128_support
+
+# Benchmarks (requires nightly)
+cargo bench
+```
 
 # License
 
