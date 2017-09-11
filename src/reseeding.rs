@@ -11,10 +11,9 @@
 //! A wrapper around another RNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use core::default::Default;
 use core::fmt::Debug;
 
-use {Rng, SeedableRng, Result};
+use {Rng, SeedableRng, NewSeeded, Result};
 
 /// How many bytes of entropy the underling RNG is allowed to generate
 /// before it is reseeded
@@ -31,7 +30,7 @@ pub struct ReseedingRng<R, Rsdr: Debug> {
     pub reseeder: Rsdr,
 }
 
-impl<R: Rng, Rsdr: Reseeder<R> + Debug> ReseedingRng<R, Rsdr> {
+impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
     /// Create a new `ReseedingRng` with the given parameters.
     ///
     /// # Arguments
@@ -59,7 +58,7 @@ impl<R: Rng, Rsdr: Reseeder<R> + Debug> ReseedingRng<R, Rsdr> {
 }
 
 
-impl<R: Rng, Rsdr: Reseeder<R> + Debug> Rng for ReseedingRng<R, Rsdr> {
+impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
     fn next_u32(&mut self) -> u32 {
         self.reseed_if_necessary();
         self.bytes_generated += 4;
@@ -86,8 +85,9 @@ impl<R: Rng, Rsdr: Reseeder<R> + Debug> Rng for ReseedingRng<R, Rsdr> {
     }
 }
 
-impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Debug + Default>
-     SeedableRng<(Rsdr, S)> for ReseedingRng<R, Rsdr> {
+impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R>> SeedableRng<(Rsdr, S)> for
+        ReseedingRng<R, Rsdr>
+{
     fn reseed(&mut self, (rsdr, seed): (Rsdr, S)) {
         self.rng.reseed(seed);
         self.reseeder = rsdr;
@@ -107,32 +107,31 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Debug + Default>
 }
 
 /// Something that can be used to reseed an RNG via `ReseedingRng`.
-pub trait Reseeder<R: ?Sized> {
+pub trait Reseeder<R: ?Sized>: Debug {
     /// Reseed the given RNG.
     fn reseed(&mut self, rng: &mut R);
 }
 
-/// Reseed an RNG using a `Default` instance. This reseeds by
-/// replacing the RNG with the result of a `Default::default` call.
+/// Reseed an RNG using `NewSeeded` to replace the current instance.
 #[derive(Clone, Copy, Debug)]
-pub struct ReseedWithDefault;
+pub struct ReseedWithNew;
 
-impl<R: Rng + Default + ?Sized> Reseeder<R> for ReseedWithDefault {
+impl<R: Rng + NewSeeded> Reseeder<R> for ReseedWithNew {
     fn reseed(&mut self, rng: &mut R) {
-        *rng = Default::default();
+        match R::new() {
+            Ok(result) => *rng = result,
+            // TODO: should we ignore and continue without reseeding?
+            Err(e) => panic!("Reseeding failed: {:?}", e),
+        }
     }
-}
-impl Default for ReseedWithDefault {
-    fn default() -> ReseedWithDefault { ReseedWithDefault }
 }
 
 #[cfg(test)]
 mod test {
-    use std::default::Default;
     use std::iter::repeat;
-    use {SeedableRng, Rng, iter};
+    use {SeedableRng, Rng, iter, NewSeeded, Result};
     use distributions::ascii_word_char;
-    use super::{ReseedingRng, ReseedWithDefault};
+    use super::{ReseedingRng, ReseedWithNew};
 
     #[derive(Debug)]
     struct Counter {
@@ -146,9 +145,9 @@ mod test {
             self.i - 1
         }
     }
-    impl Default for Counter {
-        fn default() -> Counter {
-            Counter { i: 0 }
+    impl NewSeeded for Counter {
+        fn new() -> Result<Counter> {
+            Ok(Counter { i: 0 })
         }
     }
     impl SeedableRng<u32> for Counter {
@@ -159,11 +158,11 @@ mod test {
             Counter { i: seed }
         }
     }
-    type MyRng = ReseedingRng<Counter, ReseedWithDefault>;
+    type MyRng = ReseedingRng<Counter, ReseedWithNew>;
 
     #[test]
     fn test_reseeding() {
-        let mut rs = ReseedingRng::new(Counter {i:0}, 400, ReseedWithDefault);
+        let mut rs = ReseedingRng::new(Counter {i:0}, 400, ReseedWithNew);
 
         let mut i = 0;
         for _ in 0..1000 {
@@ -174,18 +173,18 @@ mod test {
 
     #[test]
     fn test_rng_seeded() {
-        let mut ra: MyRng = SeedableRng::from_seed((ReseedWithDefault, 2));
-        let mut rb: MyRng = SeedableRng::from_seed((ReseedWithDefault, 2));
+        let mut ra: MyRng = SeedableRng::from_seed((ReseedWithNew, 2));
+        let mut rb: MyRng = SeedableRng::from_seed((ReseedWithNew, 2));
         assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
                                 iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
     }
 
     #[test]
     fn test_rng_reseed() {
-        let mut r: MyRng = SeedableRng::from_seed((ReseedWithDefault, 3));
+        let mut r: MyRng = SeedableRng::from_seed((ReseedWithNew, 3));
         let string1: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
 
-        r.reseed((ReseedWithDefault, 3));
+        r.reseed((ReseedWithNew, 3));
 
         let string2: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
         assert_eq!(string1, string2);

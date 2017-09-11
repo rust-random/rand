@@ -286,7 +286,9 @@ mod thread_local;
 /// using the OS generator.
 /// Intended for use by RNGs, but not restricted to these.
 /// 
-/// This is implemented automatically for any PRNG implementing `SeedFromRng`.
+/// This is implemented automatically for any PRNG implementing `SeedFromRng`,
+/// and for normal types shouldn't be implemented directly. For mock generators
+/// it may be useful to implement this instead of `SeedFromRng`.
 #[cfg(feature="std")]
 pub trait NewSeeded: Sized {
     /// Creates a new instance, automatically seeded via `OsRng`.
