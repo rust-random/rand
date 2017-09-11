@@ -8,7 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The ISAAC random number generator.
+//! The ISAAC-64 random number generator.
 
 use core::slice;
 use core::iter::repeat;
@@ -23,16 +23,54 @@ type w64 = w<u64>;
 const RAND_SIZE_LEN: usize = 8;
 const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 
-/// A random number generator that uses ISAAC-64[1], the 64-bit
-/// variant of the ISAAC algorithm.
+/// A random number generator that uses ISAAC-64, the 64-bit variant of the
+/// ISAAC algorithm.
 ///
-/// The ISAAC algorithm is generally accepted as suitable for
-/// cryptographic purposes, but this implementation has not be
-/// verified as such. Prefer a generator like `OsRng` that defers to
-/// the operating system for cases that need high security.
+/// ISAAC stands for "Indirection, Shift, Accumulate, Add, and Count" which are
+/// the principal bitwise operations employed. It is the most advanced of a
+/// series of array based random number generator designed by Robert Jenkins
+/// in 1996[1].
 ///
-/// [1]: Bob Jenkins, [*ISAAC: A fast cryptographic random number
-/// generator*](http://www.burtleburtle.net/bob/rand/isaacafa.html)
+/// Although ISAAC is designed to be cryptographically secure, its design is not
+/// founded in cryptographic theory. Therefore it is _not recommended for_
+/// cryptographic purposes. It is however one of the strongest non-cryptograpic
+/// RNGs, and that while still being reasonably fast.
+///
+/// ISAAC-64 is mostly similar to ISAAC. Because it operates on 64-bit integers
+/// instead of 32-bit, it uses twice as much memory to hold its state and
+/// results. Also it uses different constants for shifts and indirect indexing,
+/// optimized to give good results for 64bit arithmetic.
+///
+/// ## Overview of the ISAAC-64 algorithm:
+/// (in pseudo-code)
+///
+/// ```text
+/// Input: a, b, c, s[256] // state
+/// Output: r[256] // results
+///
+/// mix(a,i) = !(a ^ a << 21)  if i = 0 mod 4
+///              a ^ a >>  5   if i = 1 mod 4
+///              a ^ a << 12   if i = 2 mod 4
+///              a ^ a >> 33   if i = 3 mod 4
+///
+/// c = c + 1
+/// b = b + c
+///
+/// for i in 0..256 {
+///     x = s_[i]
+///     a = mix(a,i) + s[i+128 mod 256]
+///     y = a + b + s[x>>3 mod 256]
+///     s[i] = y
+///     b = x + s[y>>11 mod 256]
+///     r[i] = b
+/// }
+/// ```
+///
+/// See for more information the description in rand::prng::IsaacRng.
+///
+/// [1]: Bob Jenkins, [*ISAAC and RC4*]
+///      (http://burtleburtle.net/bob/rand/isaac.html)
+
 #[derive(Copy)]
 pub struct Isaac64Rng {
     rsl: [w64; RAND_SIZE],
@@ -122,6 +160,20 @@ impl Isaac64Rng {
     }
 
     /// Refills the output buffer (`self.rsl`)
+    /// See also the pseudocode desciption of the algorithm at the top of this
+    /// file.
+    ///
+    /// Optimisations used (similar to the reference implementation):
+    /// - The loop is unrolled 4 times, once for every constant of mix().
+    /// - The contents of the main loop are moved to a function `rngstep`, to
+    ///   reduce code duplication.
+    /// - We use local variables for a and b, which helps with optimisations.
+    /// - We split the main loop in two, one that operates over 0..128 and one
+    ///   over 128..256. This way we can optimise out the addition and modulus
+    ///   from `s[i+128 mod 256]`.
+    /// - We maintain one index `i` and add `m` or `m2` as base (m2 for the
+    ///   `s[i+128 mod 256]`), relying on the optimizer to turn it into pointer
+    ///   arithmetic.
     fn isaac64(&mut self) {
         self.c += w(1);
         // abbreviations
