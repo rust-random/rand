@@ -10,8 +10,6 @@
 
 //! The ISAAC random number generator.
 
-#![allow(non_camel_case_types)]
-
 use core::slice;
 use core::iter::repeat;
 use core::num::Wrapping as w;
@@ -19,12 +17,11 @@ use core::fmt;
 
 use {Rng, SeedableRng, Rand};
 
-#[allow(bad_style)]
+#[allow(non_camel_case_types)]
 type w32 = w<u32>;
 
 const RAND_SIZE_LEN: usize = 8;
-const RAND_SIZE: u32 = 1 << RAND_SIZE_LEN;
-const RAND_SIZE_USIZE: usize = 1 << RAND_SIZE_LEN;
+const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 
 /// A random number generator that uses the ISAAC algorithm[1].
 ///
@@ -37,18 +34,18 @@ const RAND_SIZE_USIZE: usize = 1 << RAND_SIZE_LEN;
 /// generator*](http://www.burtleburtle.net/bob/rand/isaacafa.html)
 #[derive(Copy)]
 pub struct IsaacRng {
-    cnt: u32,
-    rsl: [w32; RAND_SIZE_USIZE],
-    mem: [w32; RAND_SIZE_USIZE],
+    rsl: [w32; RAND_SIZE],
+    mem: [w32; RAND_SIZE],
     a: w32,
     b: w32,
     c: w32,
+    cnt: u32,
 }
 
 static EMPTY: IsaacRng = IsaacRng {
     cnt: 0,
-    rsl: [w(0); RAND_SIZE_USIZE],
-    mem: [w(0); RAND_SIZE_USIZE],
+    rsl: [w(0); RAND_SIZE],
+    mem: [w(0); RAND_SIZE],
     a: w(0), b: w(0), c: w(0),
 };
 
@@ -66,7 +63,7 @@ impl IsaacRng {
     /// of `rsl` as a seed, otherwise construct one algorithmically (not
     /// randomly).
     fn init(&mut self, use_rsl: bool) {
-        let mut a = w(0x9e3779b9);
+        let mut a = w(0x9e3779b9); // golden ratio
         let mut b = a;
         let mut c = a;
         let mut d = a;
@@ -77,14 +74,14 @@ impl IsaacRng {
 
         macro_rules! mix {
             () => {{
-                a=a^(b<<11); d=d+a; b=b+c;
-                b=b^(c>>2);  e=e+b; c=c+d;
-                c=c^(d<<8);  f=f+c; d=d+e;
-                d=d^(e>>16); g=g+d; e=e+f;
-                e=e^(f<<10); h=h+e; f=f+g;
-                f=f^(g>>4);  a=a+f; g=g+h;
-                g=g^(h<<8);  b=b+g; h=h+a;
-                h=h^(a>>9);  c=c+h; a=a+b;
+                a ^= b << 11; d += a; b += c;
+                b ^= c >> 2;  e += b; c += d;
+                c ^= d << 8;  f += c; d += e;
+                d ^= e >> 16; g += d; e += f;
+                e ^= f << 10; h += e; f += g;
+                f ^= g >> 4;  a += f; g += h;
+                g ^= h << 8;  b += g; h += a;
+                h ^= a >> 9;  c += h; a += b;
             }}
         }
 
@@ -95,16 +92,16 @@ impl IsaacRng {
         if use_rsl {
             macro_rules! memloop {
                 ($arr:expr) => {{
-                    for i in (0..RAND_SIZE_USIZE/8).map(|i| i * 8) {
-                        a=a+$arr[i  ]; b=b+$arr[i+1];
-                        c=c+$arr[i+2]; d=d+$arr[i+3];
-                        e=e+$arr[i+4]; f=f+$arr[i+5];
-                        g=g+$arr[i+6]; h=h+$arr[i+7];
+                    for i in (0..RAND_SIZE/8).map(|i| i * 8) {
+                        a += $arr[i  ]; b += $arr[i+1];
+                        c += $arr[i+2]; d += $arr[i+3];
+                        e += $arr[i+4]; f += $arr[i+5];
+                        g += $arr[i+6]; h += $arr[i+7];
                         mix!();
-                        self.mem[i  ]=a; self.mem[i+1]=b;
-                        self.mem[i+2]=c; self.mem[i+3]=d;
-                        self.mem[i+4]=e; self.mem[i+5]=f;
-                        self.mem[i+6]=g; self.mem[i+7]=h;
+                        self.mem[i  ] = a; self.mem[i+1] = b;
+                        self.mem[i+2] = c; self.mem[i+3] = d;
+                        self.mem[i+4] = e; self.mem[i+5] = f;
+                        self.mem[i+6] = g; self.mem[i+7] = h;
                     }
                 }}
             }
@@ -112,12 +109,12 @@ impl IsaacRng {
             memloop!(self.rsl);
             memloop!(self.mem);
         } else {
-            for i in (0..RAND_SIZE_USIZE/8).map(|i| i * 8) {
+            for i in (0..RAND_SIZE/8).map(|i| i * 8) {
                 mix!();
-                self.mem[i  ]=a; self.mem[i+1]=b;
-                self.mem[i+2]=c; self.mem[i+3]=d;
-                self.mem[i+4]=e; self.mem[i+5]=f;
-                self.mem[i+6]=g; self.mem[i+7]=h;
+                self.mem[i  ] = a; self.mem[i+1] = b;
+                self.mem[i+2] = c; self.mem[i+3] = d;
+                self.mem[i+4] = e; self.mem[i+5] = f;
+                self.mem[i+6] = g; self.mem[i+7] = h;
             }
         }
 
@@ -125,63 +122,56 @@ impl IsaacRng {
     }
 
     /// Refills the output buffer (`self.rsl`)
-    #[inline]
     fn isaac(&mut self) {
-        self.c = self.c + w(1);
+        self.c += w(1);
         // abbreviations
         let mut a = self.a;
         let mut b = self.b + self.c;
+        const MIDPOINT: usize = RAND_SIZE / 2;
 
-        const MIDPOINT: usize = RAND_SIZE_USIZE / 2;
-
-        macro_rules! ind {
-            ($x:expr) => ( self.mem[($x >> 2usize).0 as usize & (RAND_SIZE_USIZE - 1)] )
+        #[inline(always)]
+        fn ind(mem:&[w32; RAND_SIZE], v: w32, amount: usize) -> w32 {
+            let index = (v >> amount).0 as usize % RAND_SIZE;
+            mem[index]
         }
 
-        let r = [(0, MIDPOINT), (MIDPOINT, 0)];
-        for &(mr_offset, m2_offset) in r.iter() {
+        #[inline(always)]
+        fn rngstep(ctx: &mut IsaacRng,
+                   mix: w32,
+                   a: &mut w32,
+                   b: &mut w32,
+                   base: usize,
+                   m: usize,
+                   m2: usize) {
+            let x = ctx.mem[base + m];
+            *a = mix + ctx.mem[base + m2];
+            let y = *a + *b + ind(&ctx.mem, x, 2);
+            ctx.mem[base + m] = y;
+            *b = x + ind(&ctx.mem, y, 2 + RAND_SIZE_LEN);
+            ctx.rsl[base + m] = *b;
+        }
 
-            macro_rules! rngstepp {
-                ($j:expr, $shift:expr) => {{
-                    let base = $j;
-                    let mix = a << $shift;
+        let mut m = 0;
+        let mut m2 = MIDPOINT;
+        for i in (0..MIDPOINT/4).map(|i| i * 4) {
+            rngstep(self, a ^ (a << 13), &mut a, &mut b, i + 0, m, m2);
+            rngstep(self, a ^ (a >> 6 ),  &mut a, &mut b, i + 1, m, m2);
+            rngstep(self, a ^ (a << 2 ),  &mut a, &mut b, i + 2, m, m2);
+            rngstep(self, a ^ (a >> 16),  &mut a, &mut b, i + 3, m, m2);
+        }
 
-                    let x = self.mem[base  + mr_offset];
-                    a = (a ^ mix) + self.mem[base + m2_offset];
-                    let y = ind!(x) + a + b;
-                    self.mem[base + mr_offset] = y;
-
-                    b = ind!(y >> RAND_SIZE_LEN) + x;
-                    self.rsl[base + mr_offset] = b;
-                }}
-            }
-
-            macro_rules! rngstepn {
-                ($j:expr, $shift:expr) => {{
-                    let base = $j;
-                    let mix = a >> $shift;
-
-                    let x = self.mem[base  + mr_offset];
-                    a = (a ^ mix) + self.mem[base + m2_offset];
-                    let y = ind!(x) + a + b;
-                    self.mem[base + mr_offset] = y;
-
-                    b = ind!(y >> RAND_SIZE_LEN) + x;
-                    self.rsl[base + mr_offset] = b;
-                }}
-            }
-
-            for i in (0..MIDPOINT/4).map(|i| i * 4) {
-                rngstepp!(i + 0, 13);
-                rngstepn!(i + 1, 6);
-                rngstepp!(i + 2, 2);
-                rngstepn!(i + 3, 16);
-            }
+        m = MIDPOINT;
+        m2 = 0;
+        for i in (0..MIDPOINT/4).map(|i| i * 4) {
+            rngstep(self, a ^ (a << 13), &mut a, &mut b, i + 0, m, m2);
+            rngstep(self, a ^ (a >> 6 ),  &mut a, &mut b, i + 1, m, m2);
+            rngstep(self, a ^ (a << 2 ),  &mut a, &mut b, i + 2, m, m2);
+            rngstep(self, a ^ (a >> 16),  &mut a, &mut b, i + 3, m, m2);
         }
 
         self.a = a;
         self.b = b;
-        self.cnt = RAND_SIZE;
+        self.cnt = RAND_SIZE as u32;
     }
 }
 
@@ -207,12 +197,12 @@ impl Rng for IsaacRng {
         // misrefactors, so we check, sometimes.
         //
         // (Changes here should be reflected in Isaac64Rng.next_u64.)
-        debug_assert!(self.cnt < RAND_SIZE);
+        debug_assert!((self.cnt as usize) < RAND_SIZE);
 
         // (the % is cheaply telling the optimiser that we're always
         // in bounds, without unsafe. NB. this is a power of two, so
         // it optimises to a bitwise mask).
-        self.rsl[(self.cnt % RAND_SIZE) as usize].0
+        self.rsl[self.cnt as usize % RAND_SIZE].0
     }
 }
 
@@ -251,7 +241,7 @@ impl Rand for IsaacRng {
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;
 
-            let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE_USIZE * 4);
+            let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE * 4);
             other.fill_bytes(slice);
         }
         ret.cnt = 0;
