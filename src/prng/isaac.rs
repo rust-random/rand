@@ -24,15 +24,70 @@ type w32 = w<u32>;
 const RAND_SIZE_LEN: usize = 8;
 const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 
-/// A random number generator that uses the ISAAC algorithm[1].
+/// A random number generator that uses the ISAAC algorithm.
 ///
-/// The ISAAC algorithm is generally accepted as suitable for
-/// cryptographic purposes, but this implementation has not be
-/// verified as such. Prefer a generator like `OsRng` that defers to
-/// the operating system for cases that need high security.
+/// ISAAC stands for "Indirection, Shift, Accumulate, Add, and Count" which are
+/// the principal bitwise operations employed. It is the most advanced of a
+/// series of array based random number generator designed by Robert Jenkins
+/// in 1996[1][2].
 ///
-/// [1]: Bob Jenkins, [*ISAAC: A fast cryptographic random number
-/// generator*](http://www.burtleburtle.net/bob/rand/isaacafa.html)
+/// Although ISAAC is designed to be cryptographically secure, its design is not
+/// founded in cryptographic theory. Therefore it is _not recommended for_
+/// cryptographic purposes. It is however one of the strongest non-cryptograpic
+/// RNGs, and that while still being reasonably fast.
+///
+/// Where fast random numbers are needed which should still be secure, but where
+/// speed is more important than absolute (cryptographic) security (e.g. to
+/// initialise hashes in the std library), a generator like ISAAC may be a good
+/// choice.
+///
+/// In 2006 an improvement to ISAAC was suggested by Jean-Philippe Aumasson,
+/// named ISAAC+[3]. But because the specification is not complete, there is no
+/// good implementation, and because the suggested bias may not exist, it is not
+/// implemented here.
+///
+/// ## Overview of the ISAAC algorithm:
+/// (in pseudo-code)
+///
+/// ```text
+/// Input: a, b, c, s[256] // state
+/// Output: r[256]         // results
+///
+/// mix(a,i) = a ^ a << 13   if i = 0 mod 4
+///            a ^ a >>  6   if i = 1 mod 4
+///            a ^ a <<  2   if i = 2 mod 4
+///            a ^ a >> 16   if i = 3 mod 4
+///
+/// c = c + 1
+/// b = b + c
+///
+/// for i in 0..256 {
+///     x = s_[i]
+///     a = f(a,i) + s[i+128 mod 256]
+///     y = a + b + s[x>>2 mod 256]
+///     s[i] = y
+///     b = x + s[y>>10 mod 256]
+///     r[i] = b
+/// }
+/// ```
+///
+/// Numbers are generated in blocks of 256. This means the function above only
+/// runs once every 256 times you ask for a next random number. In all other
+/// circumstances the last element of the results array is returned.
+///
+/// ISAAC therefore needs a lot of memory, relative to other non-vrypto RNGs.
+/// 2 * 256 * 4 = 2 kb to hold the state and results.
+///
+/// ## References
+/// [1]: Bob Jenkins, [*ISAAC: A fast cryptographic random number generator*]
+///      (http://burtleburtle.net/bob/rand/isaacafa.html)
+///
+/// [2]: Bob Jenkins, [*ISAAC and RC4*]
+///      (http://burtleburtle.net/bob/rand/isaac.html)
+///
+/// [3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*]
+///      (http://eprint.iacr.org/2006/438)
+
 #[derive(Copy)]
 pub struct IsaacRng {
     rsl: [w32; RAND_SIZE],
@@ -123,6 +178,20 @@ impl IsaacRng {
     }
 
     /// Refills the output buffer (`self.rsl`)
+    /// See also the pseudocode desciption of the algorithm at the top of this
+    /// file.
+    ///
+    /// Optimisations used (similar to the reference implementation):
+    /// - The loop is unrolled 4 times, once for every constant of mix().
+    /// - The contents of the main loop are moved to a function `rngstep`, to
+    ///   reduce code duplication.
+    /// - We use local variables for a and b, which helps with optimisations.
+    /// - We split the main loop in two, one that operates over 0..128 and one
+    ///   over 128..256. This way we can optimise out the addition and modulus
+    ///   from `s[i+128 mod 256]`.
+    /// - We maintain one index `i` and add `m` or `m2` as base (m2 for the
+    ///   `s[i+128 mod 256]`), relying on the optimizer to turn it into pointer
+    ///   arithmetic.
     fn isaac(&mut self) {
         self.c += w(1);
         // abbreviations
