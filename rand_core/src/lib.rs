@@ -29,7 +29,7 @@
 #![deny(missing_debug_implementations)]
 
 #![cfg_attr(not(feature="std"), no_std)]
-#![cfg_attr(feature = "i128_support", feature(i128_type, i128))]
+#![cfg_attr(feature = "i128_support", feature(i128_type))]
 
 // We need to use several items from "core" for no_std support.
 #[cfg(feature="std")]
