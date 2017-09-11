@@ -17,7 +17,7 @@ use core::iter::repeat;
 use core::num::Wrapping as w;
 use core::fmt;
 
-use {Rng, FromRng, SeedableRng, Result};
+use {Rng, SeedFromRng, SeedableRng, Result};
 
 /// Select 32- or 64-bit variant dependent on pointer size.
 #[cfg(target_pointer_width = "32")]
@@ -246,7 +246,7 @@ impl Rng for IsaacRng {
     }
 }
 
-impl FromRng for IsaacRng {
+impl SeedFromRng for IsaacRng {
     fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self> {
         let mut ret = EMPTY;
         unsafe {
@@ -494,7 +494,7 @@ impl Rng for Isaac64Rng {
     }
 }
 
-impl FromRng for Isaac64Rng {
+impl SeedFromRng for Isaac64Rng {
     fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self> {
         let mut ret = EMPTY_64;
         unsafe {

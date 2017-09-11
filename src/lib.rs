@@ -254,7 +254,7 @@ extern crate core;
 
 extern crate rand_core;
 
-pub use rand_core::{Rng, FromRng, SeedableRng, Error, Result};
+pub use rand_core::{Rng, SeedFromRng, SeedableRng, Error, Result};
 
 #[cfg(feature="std")]
 pub use read::ReadRng;
@@ -282,18 +282,19 @@ mod read;
 #[cfg(feature="std")]
 mod thread_local;
 
-/// Support mechanism for creating random number generators securely seeded
+/// Support mechanism for creating securely seeded objects 
 /// using the OS generator.
+/// Intended for use by RNGs, but not restricted to these.
 /// 
-/// This is implemented automatically for any PRNG implementing `FromRng`.
+/// This is implemented automatically for any PRNG implementing `SeedFromRng`.
 #[cfg(feature="std")]
-pub trait NewRng: Sized {
+pub trait NewSeeded: Sized {
     /// Creates a new instance, automatically seeded via `OsRng`.
     fn new() -> Result<Self>;
 }
 
 #[cfg(feature="std")]
-impl<R: FromRng> NewRng for R {
+impl<R: SeedFromRng> NewSeeded for R {
     fn new() -> Result<Self> {
         let mut r = OsRng::new()?;
         Self::from_rng(&mut r)

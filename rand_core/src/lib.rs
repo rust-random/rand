@@ -17,7 +17,7 @@
 //! `Rng` is the core trait implemented by algorithmic pseudo-random number
 //! generators and external random-number sources.
 //! 
-//! `FromRng` and `SeedableRng` are extension traits.
+//! `SeedFromRng` and `SeedableRng` are extension traits.
 //! 
 //! `Error` and `Result` are provided for error-handling. They are safe to use
 //! in `no_std` environments.
@@ -154,8 +154,15 @@ impl<R> Rng for Box<R> where R: Rng+?Sized {
 
 
 /// Support mechanism for creating random number generators seeded by other
-/// generators. All PRNGs should support this to enable `NewRng` support.
-pub trait FromRng: Sized {
+/// generators. All PRNGs should support this to enable `NewSeeded` support.
+/// 
+/// TODO: should this use `Distribution` instead? That would require moving
+/// that trait and a distribution type to this crate.
+/// TODO: should the source requirement be changed, e.g. to `CryptoRng`?
+/// Note: this is distinct from `SeedableRng` because it is generic over the
+/// RNG type (achieving the same with `SeedableRng` would require dynamic
+/// dispatch: `SeedableRng<&mut Rng>`).
+pub trait SeedFromRng: Sized {
     /// Creates a new instance, seeded from another `Rng`.
     /// 
     /// Seeding from a cryptographic generator should be fine. On the other
