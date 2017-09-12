@@ -133,40 +133,24 @@ impl<R: Rng + NewSeeded> Reseeder<R> for ReseedWithNew {
 #[cfg(test)]
 mod test {
     use std::iter::repeat;
-    use {SeedableRng, Rng, iter, NewSeeded, Result};
+    use rand_core::mock::MockAddRng;
+    use {SeedableRng, Rng, iter};
     use distributions::ascii_word_char;
-    use super::{ReseedingRng, ReseedWithNew};
-
+    use super::{ReseedingRng, Reseeder};
+    
     #[derive(Debug)]
-    struct Counter {
-        i: u32
+    struct ReseedMock;
+    impl Reseeder<MockAddRng<u32>> for ReseedMock {
+        fn reseed(&mut self, rng: &mut MockAddRng<u32>) {
+            *rng = MockAddRng::new(0, 1);
+        }
     }
 
-    impl Rng for Counter {
-        fn next_u32(&mut self) -> u32 {
-            self.i += 1;
-            // very random
-            self.i - 1
-        }
-    }
-    impl NewSeeded for Counter {
-        fn new() -> Result<Counter> {
-            Ok(Counter { i: 0 })
-        }
-    }
-    impl SeedableRng<u32> for Counter {
-        fn reseed(&mut self, seed: u32) {
-            self.i = seed;
-        }
-        fn from_seed(seed: u32) -> Counter {
-            Counter { i: seed }
-        }
-    }
-    type MyRng = ReseedingRng<Counter, ReseedWithNew>;
+    type MyRng = ReseedingRng<MockAddRng<u32>, ReseedMock>;
 
     #[test]
     fn test_reseeding() {
-        let mut rs = ReseedingRng::new(Counter {i:0}, 400, ReseedWithNew);
+        let mut rs = ReseedingRng::new(MockAddRng::new(0, 1), 400, ReseedMock);
 
         let mut i = 0;
         for _ in 0..1000 {
@@ -177,18 +161,18 @@ mod test {
 
     #[test]
     fn test_rng_seeded() {
-        let mut ra: MyRng = SeedableRng::from_seed((ReseedWithNew, 2));
-        let mut rb: MyRng = SeedableRng::from_seed((ReseedWithNew, 2));
+        let mut ra: MyRng = SeedableRng::from_seed((ReseedMock, 2));
+        let mut rb: MyRng = SeedableRng::from_seed((ReseedMock, 2));
         assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
                                 iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
     }
 
     #[test]
     fn test_rng_reseed() {
-        let mut r: MyRng = SeedableRng::from_seed((ReseedWithNew, 3));
+        let mut r: MyRng = SeedableRng::from_seed((ReseedMock, 3));
         let string1: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
 
-        r.reseed((ReseedWithNew, 3));
+        r.reseed((ReseedMock, 3));
 
         let string2: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
         assert_eq!(string1, string2);

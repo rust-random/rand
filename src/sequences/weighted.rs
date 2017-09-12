@@ -133,25 +133,9 @@ impl<T: Clone> Distribution<T> for WeightedChoice<T> {
 
 #[cfg(test)]
 mod tests {
-    use Rng;
+    use rand_core::mock::MockAddRng;
     use distributions::Distribution;
     use super::{WeightedChoice, Weighted};
-
-    #[derive(PartialEq, Debug)]
-    struct ConstRand(usize);
-
-    // 0, 1, 2, 3, ...
-    #[derive(Debug)]
-    struct CountingRng { i: u32 }
-    impl Rng for CountingRng {
-        fn next_u32(&mut self) -> u32 {
-            self.i += 1;
-            self.i - 1
-        }
-        fn next_u64(&mut self) -> u64 {
-            self.next_u32() as u64
-        }
-    }
 
     #[test]
     fn test_weighted_choice() {
@@ -166,7 +150,7 @@ mod tests {
                 let wc = WeightedChoice::new(items);
                 let expected = $expected;
 
-                let mut rng = CountingRng { i: 0 };
+                let mut rng = MockAddRng::new(0u32, 1);
 
                 for &val in expected.iter() {
                     assert_eq!(wc.sample(&mut rng), val)

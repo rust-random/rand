@@ -35,6 +35,8 @@
 #[cfg(feature="std")]
 extern crate core;
 
+pub mod mock;
+
 
 /// A random number generator.
 /// 
