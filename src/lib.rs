@@ -404,14 +404,18 @@ pub struct StdRng {
 }
 
 impl Rng for StdRng {
-    #[inline]
     fn next_u32(&mut self) -> u32 {
         self.rng.next_u32()
     }
-
-    #[inline]
     fn next_u64(&mut self) -> u64 {
         self.rng.next_u64()
+    }
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        self.rng.next_u128()
+    }
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+        self.rng.try_fill(dest)
     }
 }
 
@@ -424,7 +428,7 @@ impl SeedFromRng for StdRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, Sample};
+    use {Rng, thread_rng, Sample, Result};
     use rand_core::mock::MockAddRng;
     use distributions::{uniform};
     use distributions::{Uniform, Range, Exp};
@@ -436,10 +440,17 @@ mod test {
 
     impl<R: Rng+?Sized> Rng for MyRng<R> {
         fn next_u32(&mut self) -> u32 {
-            fn next<T: Rng+?Sized>(t: &mut T) -> u32 {
-                t.next_u32()
-            }
-            next(&mut self.inner)
+            self.inner.next_u32()
+        }
+        fn next_u64(&mut self) -> u64 {
+            self.inner.next_u64()
+        }
+        #[cfg(feature = "i128_support")]
+        fn next_u128(&mut self) -> u128 {
+            self.inner.next_u128()
+        }
+        fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+            self.inner.try_fill(dest)
         }
     }
 

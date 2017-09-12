@@ -222,27 +222,16 @@ impl Rng for IsaacRng {
         self.rsl[(self.cnt % RAND_SIZE) as usize].0
     }
     
-    // Default impl adjusted for native byte size; approx 18% faster in tests
+    fn next_u64(&mut self) -> u64 {
+        ::rand_core::impls::next_u64_via_u32(self)
+    }
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        ::rand_core::impls::next_u128_via_u64(self)
+    }
+    
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
-        use core::intrinsics::transmute;
-        
-        let mut left = dest;
-        while left.len() >= 4 {
-            let (l, r) = {left}.split_at_mut(4);
-            left = r;
-            let chunk: [u8; 4] = unsafe {
-                transmute(self.next_u32().to_le())
-            };
-            l.copy_from_slice(&chunk);
-        }
-        let n = left.len();
-        if n > 0 {
-            let chunk: [u8; 4] = unsafe {
-                transmute(self.next_u32().to_le())
-            };
-            left.copy_from_slice(&chunk[..n]);
-        }
-        Ok(())
+        ::rand_core::impls::try_fill_via_u32(self, dest)
     }
 }
 
@@ -491,6 +480,14 @@ impl Rng for Isaac64Rng {
         // explanation.
         debug_assert!(self.cnt < RAND_SIZE_64);
         self.rsl[(self.cnt % RAND_SIZE_64) as usize].0
+    }
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        ::rand_core::impls::next_u128_via_u64(self)
+    }
+    
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+        ::rand_core::impls::try_fill_via_u64(self, dest)
     }
 }
 

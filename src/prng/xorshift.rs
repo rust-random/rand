@@ -75,6 +75,18 @@ impl Rng for XorShiftRng {
         self.w = w_ ^ (w_ >> 19) ^ (t ^ (t >> 8));
         self.w.0
     }
+    
+    fn next_u64(&mut self) -> u64 {
+        ::rand_core::impls::next_u64_via_u32(self)
+    }
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        ::rand_core::impls::next_u128_via_u64(self)
+    }
+    
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+        ::rand_core::impls::try_fill_via_u32(self, dest)
+    }
 }
 
 impl SeedableRng<[u32; 4]> for XorShiftRng {

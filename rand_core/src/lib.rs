@@ -35,6 +35,7 @@
 #[cfg(feature="std")]
 extern crate core;
 
+pub mod impls;
 pub mod mock;
 
 
@@ -75,63 +76,21 @@ pub trait Rng {
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random u64.
-    ///
-    /// By default this is implemented in terms of `next_u32` in LE order. An
-    /// implementation of this trait must provide at least one of
-    /// these two methods. Similarly to `next_u32`, this rarely needs
-    /// to be called directly, prefer `r.gen()` to `r.next_u64()`.
-    fn next_u64(&mut self) -> u64 {
-        // Use LE; we explicitly generate one value before the next.
-        let x = self.next_u32() as u64;
-        let y = self.next_u32() as u64;
-        (y << 32) | x
-    }
+    fn next_u64(&mut self) -> u64;
 
-    #[cfg(feature = "i128_support")]
     /// Return the next random u128.
-    /// 
-    /// By default this is implemented in terms of `next_u64` in LE order.
-    fn next_u128(&mut self) -> u128 {
-        // Use LE; we explicitly generate one value before the next.
-        let x = self.next_u64() as u128;
-        let y = self.next_u64() as u128;
-        (y << 64) | x
-    }
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128;
     
     /// Fill `dest` entirely with random data.
     ///
-    /// This has a default implementation in terms of `next_u64` in LE order,
-    /// but should be overridden by implementations that
-    /// offer a more efficient solution than just calling `next_u64`
-    /// repeatedly.
-    ///
     /// This method does *not* have any requirement on how much of the
-    /// generated random number stream is consumed; e.g. the default
+    /// generated random number stream is consumed; e.g. `try_fill_via_u64`
     /// implementation uses `next_u64` thus consuming 8 bytes even when only
     /// 1 is required. A different implementation might use `next_u32` and
     /// only consume 4 bytes; *however* any change affecting *reproducibility*
     /// of output must be considered a breaking change.
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
-        use core::intrinsics::transmute;
-        
-        let mut left = dest;
-        while left.len() >= 8 {
-            let (l, r) = {left}.split_at_mut(8);
-            left = r;
-            let chunk: [u8; 8] = unsafe {
-                transmute(self.next_u64().to_le())
-            };
-            l.copy_from_slice(&chunk);
-        }
-        let n = left.len();
-        if n > 0 {
-            let chunk: [u8; 8] = unsafe {
-                transmute(self.next_u64().to_le())
-            };
-            left.copy_from_slice(&chunk[..n]);
-        }
-        Ok(())
-    }
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()>;
 }
 
 #[cfg(feature="std")]

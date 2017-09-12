@@ -16,7 +16,7 @@
 //! Instead maybe this should be yet another crate? Or just leave it here?
 
 use core::num::Wrapping as w;
-use {Rng, SeedableRng};
+use {Rng, SeedableRng, impls, Result};
 
 /// A simple implementation of `Rng`, purely for testing.
 /// Returns an arithmetic sequence (i.e. adds a constant each step).
@@ -49,6 +49,17 @@ impl Rng for MockAddRng<u32> {
         self.v += self.a;
         result
     }
+    fn next_u64(&mut self) -> u64 {
+        impls::next_u64_via_u32(self)
+    }
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        impls::next_u128_via_u64(self)
+    }
+    
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+        impls::try_fill_via_u32(self, dest)
+    }
 }
 
 impl Rng for MockAddRng<u64> {
@@ -59,6 +70,14 @@ impl Rng for MockAddRng<u64> {
         let result = self.v.0;
         self.v += self.a;
         result
+    }
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        impls::next_u128_via_u64(self)
+    }
+    
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+        impls::try_fill_via_u32(self, dest)
     }
 }
 
