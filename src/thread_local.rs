@@ -12,41 +12,19 @@
 
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::Mutex;
 
-use {Rng, OsRng, Rand, Default, Result};
+use {Rng, StdRng, NewSeeded, Rand, Default, Result};
 
-// use reseeding::{Reseeder, ReseedingRng};
-// 
-// /// Controls how the thread-local RNG is reseeded.
-// #[derive(Debug)]
-// struct ThreadRngReseeder;
-// 
-// impl Reseeder<StdRng> for ThreadRngReseeder {
-//     fn reseed(&mut self, rng: &mut StdRng) {
-//         *rng = match StdRng::new() {
-//             Ok(r) => r,
-//             Err(e) => panic!("could not reseed thread_rng: {}", e)
-//         }
-//     }
-// }
-// 
-// const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
-// type ReseedingStdRng = ReseedingRng<StdRng, ThreadRngReseeder>;
-//     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<Option<Box<Rng>>>> = {
-//         let r = match StdRng::new() {
-//             Ok(r) => r,
-//             Err(e) => panic!("could not initialize thread_rng: {}", e)
-//         };
-//         let rng = ReseedingRng::new(r,
-//                                                THREAD_RNG_RESEED_THRESHOLD,
-//                                                ThreadRngReseeder);
+use reseeding::{ReseedingRng, ReseedWithNew};
+
+const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
+type ReseedingStdRng = ReseedingRng<StdRng, ReseedWithNew>;
 
 /// The thread-local RNG.
 #[derive(Clone)]
 #[allow(missing_debug_implementations)]
 pub struct ThreadRng {
-    rng: Rc<RefCell<Box<Rng>>>,
+    rng: Rc<RefCell<ReseedingStdRng>>,
 }
 
 impl Rng for ThreadRng {
@@ -57,27 +35,26 @@ impl Rng for ThreadRng {
     fn next_u64(&mut self) -> u64 {
         self.rng.borrow_mut().next_u64()
     }
-
-    #[inline]
+    
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        self.rng.borrow_mut().next_u128()
+    }
+    
     fn try_fill(&mut self, bytes: &mut [u8]) -> Result<()> {
         self.rng.borrow_mut().try_fill(bytes)
     }
 }
 
 thread_local!(
-    static THREAD_RNG_CREATOR: Mutex<RefCell<Box<Fn() -> Box<Rng>>>> = {
-        // TODO: should this panic?
-        Mutex::new(RefCell::new(Box::new(|| Box::new(OsRng::new().unwrap()))))
-    }
-);
-
-thread_local!(
-    static THREAD_RNG_KEY: Rc<RefCell<Box<Rng>>> = {
-        let rng = THREAD_RNG_CREATOR.with(|f| {
-            let creator = f.lock().unwrap();
-            let rng = (creator.borrow())();
-            rng
-        });
+    static THREAD_RNG_KEY: Rc<RefCell<ReseedingStdRng>> = {
+        let r = match StdRng::new() {
+            Ok(r) => r,
+            Err(e) => panic!("could not initialize thread_rng: {:?}", e)
+        };
+        let rng = ReseedingRng::new(r,
+                                               THREAD_RNG_RESEED_THRESHOLD,
+                                               ReseedWithNew);
         Rc::new(RefCell::new(rng))
     }
 );
@@ -87,73 +64,13 @@ thread_local!(
 /// `random_with` to generate new values, and may be used directly with other
 /// distributions: `Range::new(0, 10).sample(&mut thread_rng())`.
 ///
-/// By default, this uses `OsRng` which pulls random numbers directly from the
-/// operating system. This is intended to be a good secure default; for more
-/// see `set_thread_rng` and `set_new_thread_rng`.
-/// 
-/// This is intended to provide securely generated random numbers, but this
-/// behaviour can be changed by `set_thread_rng` and `set_new_thread_rng`.
-/// 
-/// `thread_rng` is not especially fast, since it uses dynamic dispatch and
-/// `OsRng`, which requires a system call on each usage. Users wanting a fast
-/// generator for games or simulations may prefer not to use `thread_rng` at
-/// all, especially if reproducibility of results is important.
+/// Uses `StdRng` internally, set to reseed from `OsRng` periodically.
+/// This should provide a reasonable compromise between speed and security;
+/// while the generator is not approved for crytographic usage its output should
+/// be hard to guess, and performance should be similar to non-cryptographic
+/// generators.
 pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
-}
-
-/// Set the thread-local RNG used by `thread_rng`. Only affects the current
-/// thread. See also `set_new_thread_rng`.
-/// 
-/// If this is never called in a thread and `set_new_thread_rng` is never called
-/// globally, the first call to `thread_rng()` in the thread will create a new
-/// `OsRng` and use that as a source of numbers.
-/// This method allows a different generator to be set, and can be called at
-/// any time to set a new generator.
-/// 
-/// Calling this affects all users of `thread_rng`, `random` and `random_with`
-/// in the current thread, including libraries. Users should ensure the
-/// generator used is secure enough for all users of `thread_rng`, including
-/// other libraries.
-/// 
-/// This may have some use in testing, by spawning a new thread, overriding the
-/// generator with known values (a constant or a PRNG with known seed), then
-/// asserting the exact output of "randomly" generated values. The use of a new
-/// thread avoids affecting other users of `thread_rng`.
-/// 
-/// ```rust
-/// use rand::{ConstRng, random, set_thread_rng};
-/// use std::thread;
-/// 
-/// thread::spawn(move || {
-///     set_thread_rng(Box::new(ConstRng::new(123u32)));
-///     assert_eq!(random::<u32>(), 123u32);
-/// });
-/// ```
-pub fn set_thread_rng(rng: Box<Rng>) {
-    THREAD_RNG_KEY.with(|t| *t.borrow_mut() = rng);
-}
-
-/// Control how thread-local generators are created for new threads.
-/// 
-/// The first time `thread_rng()` is called in each thread, this closure is
-/// used to create a new generator. If this closure has not been set, the
-/// built-in closure returning a new boxed `OsRng` is used.
-/// 
-/// Calling this affects all users of `thread_rng`, `random` and `random_with`
-/// in all new threads (as well as existing threads which haven't called
-/// `thread_rng` yet), including libraries. Users should ensure the generator
-/// used is secure enough for all users of `thread_rng`, including other
-/// libraries.
-/// 
-/// This closure should not panic; doing so would kill whichever thread is
-/// calling `thread_rng` at the time, poison its mutex, and cause all future
-/// threads initialising a `thread_rng` (or calling this function) to panic.
-pub fn set_new_thread_rng(creator: Box<Fn() -> Box<Rng>>) {
-    THREAD_RNG_CREATOR.with(|f| {
-        let p = f.lock().unwrap();
-        *p.borrow_mut() = creator;
-    });
 }
 
 /// Generates a random value using the thread-local random number generator.
@@ -235,26 +152,4 @@ pub fn random<T: Rand<Default>>() -> T {
 #[inline]
 pub fn random_with<D, T: Rand<D>>(distribution: D) -> T {
     T::rand(&mut thread_rng(), distribution)
-}
-
-#[cfg(test)]
-mod test {
-    use std::thread;
-    use {set_thread_rng, random, ConstRng};
-    
-    #[test]
-    fn test_set_thread_rng() {
-        let v = 12u64;
-        thread::spawn(move || {
-            random::<u64>();
-            // affect this thread only:
-            set_thread_rng(Box::new(ConstRng::new(v)));
-            assert_eq!(random::<u64>(), v);
-            assert_eq!(random::<u64>(), v);
-        });
-        
-        // The chance of 128 bits randomly equalling our value is miniscule:
-        let (x, y): (u64, u64) = (random(), random());
-        assert!((x, y) != (v, v));
-    }
 }

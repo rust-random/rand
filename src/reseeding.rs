@@ -13,7 +13,9 @@
 
 use core::fmt::Debug;
 
-use {Rng, SeedableRng, NewSeeded, Result};
+use {Rng, SeedableRng, Result};
+#[cfg(feature="std")]
+use NewSeeded;
 
 /// How many bytes of entropy the underling RNG is allowed to generate
 /// before it is reseeded
@@ -113,9 +115,11 @@ pub trait Reseeder<R: ?Sized>: Debug {
 }
 
 /// Reseed an RNG using `NewSeeded` to replace the current instance.
+#[cfg(feature="std")]
 #[derive(Clone, Copy, Debug)]
 pub struct ReseedWithNew;
 
+#[cfg(feature="std")]
 impl<R: Rng + NewSeeded> Reseeder<R> for ReseedWithNew {
     fn reseed(&mut self, rng: &mut R) {
         match R::new() {

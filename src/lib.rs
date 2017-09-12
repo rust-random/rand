@@ -263,8 +263,7 @@ pub use os::OsRng;
 pub use iter::iter;
 pub use distributions::{Distribution, Default, Rand};
 #[cfg(feature="std")]
-pub use thread_local::{ThreadRng, thread_rng, set_thread_rng, set_new_thread_rng,
-        random, random_with};
+pub use thread_local::{ThreadRng, thread_rng, random, random_with};
 
 use prng::IsaacWordRng;
 
@@ -435,24 +434,6 @@ pub struct StdRng {
     rng: IsaacWordRng,
 }
 
-#[cfg(feature="std")]
-impl StdRng {
-    /// Create a randomly seeded instance of `StdRng`.
-    ///
-    /// This is a very expensive operation as it has to read
-    /// randomness from the operating system and use this in an
-    /// expensive seeding operation. If one is only generating a small
-    /// number of random numbers, or doesn't need the utmost speed for
-    /// generating each number, `thread_rng` and/or `random` may be more
-    /// appropriate.
-    ///
-    /// Reading the randomness from the OS may fail, and any error is
-    /// propagated via the `io::Result` return value.
-    pub fn new() -> Result<StdRng> {
-        IsaacWordRng::new().map(|rng| StdRng { rng })
-    }
-}
-
 impl Rng for StdRng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
@@ -462,6 +443,12 @@ impl Rng for StdRng {
     #[inline]
     fn next_u64(&mut self) -> u64 {
         self.rng.next_u64()
+    }
+}
+
+impl SeedFromRng for StdRng {
+    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self> {
+        IsaacWordRng::from_rng(other).map(|rng| StdRng{ rng })
     }
 }
 
