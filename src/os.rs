@@ -259,6 +259,7 @@ mod imp {
             if ret == -1 {
                 panic!("couldn't generate random bytes: {}", io::Error::last_os_error());
             }
+            Ok(())
         }
     }
 }
@@ -292,6 +293,7 @@ mod imp {
                            ret, s.len(), s_len);
                 }
             }
+            Ok(())
         }
     }
 }
@@ -321,6 +323,7 @@ mod imp {
                     panic!("getentropy failed: {}", err);
                 }
             }
+            Ok(())
         }
     }
 }
@@ -374,6 +377,7 @@ mod imp {
                     };
                 }
             }
+            Ok(())
         }
     }
 }
@@ -411,6 +415,7 @@ mod imp {
                            io::Error::last_os_error());
                 }
             }
+            Ok(())
         }
     }
 }
@@ -476,6 +481,7 @@ mod imp {
 
                 if read >= v.len() { break; }
             }
+            Ok(())
         }
     }
 }
