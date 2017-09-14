@@ -2,16 +2,14 @@
 name = "rand_core"
 version = "0.0.1"
 authors = ["The Rust Project Developers"]
-license = "MIT/Apache-2.0"
-readme = "README.md"
-repository = "https://github.com/rust-lang-nursery/rand"
+description = "Random number generator core: `Rng` and extensions"
+homepage = "https://github.com/dhardy/rand/tree/master/rand_core"
 documentation = "https://docs.rs/rand_core"
-homepage = "https://github.com/rust-lang-nursery/rand"
-description = """
-Random number generator traits
-"""
+readme = "README.md"
 keywords = ["random", "rng"]
 categories = ["algorithms"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/dhardy/rand/"
 
 [features]
 default = ["std"]
