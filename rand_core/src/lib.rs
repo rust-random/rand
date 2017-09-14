@@ -101,8 +101,27 @@ pub trait Rng {
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<()>;
 }
 
+impl<'a, R: Rng+?Sized> Rng for &'a mut R {
+    fn next_u32(&mut self) -> u32 {
+        (**self).next_u32()
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        (**self).next_u64()
+    }
+
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        (**self).next_u128()
+    }
+
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+        (**self).try_fill(dest)
+    }
+}
+
 #[cfg(feature="std")]
-impl<R> Rng for Box<R> where R: Rng+?Sized {
+impl<R: Rng+?Sized> Rng for Box<R> {
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
