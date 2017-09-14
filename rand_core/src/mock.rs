@@ -27,7 +27,7 @@ use {Rng, SeedableRng, impls, Result};
 /// 
 /// let mut my_rng = MockAddRng::new(2u32, 1u32);
 /// assert_eq!(my_rng.next_u32(), 2u32);
-/// assert_eq!(my_rng.next_u64(), (4u64 << 32) + 3u64);
+/// assert_eq!(my_rng.next_u64(), 3u64 + (4u64 << 32));
 /// ```
 #[derive(Debug)]
 pub struct MockAddRng<T> {

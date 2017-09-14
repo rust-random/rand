@@ -18,6 +18,10 @@
 //! Byte-swapping (like the std `to_le` functions) is only needed to convert
 //! to/from byte sequences, and since its purpose is reproducibility,
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
+//! 
+//! Missing from here are implementations of `next_u*` in terms of `try_fill`.
+//! Currently `OsRng` handles these implementations itself.
+//! TODO: should we add more implementations?
 
 use core::intrinsics::transmute;
 use {Rng, Result};
@@ -31,6 +35,8 @@ pub fn next_u64_via_u32<R: Rng+?Sized>(rng: &mut R) -> u64 {
 }
 
 /// Implement `next_u128` via `next_u64`, little-endian order.
+/// 
+/// This may be used even where `next_u64` is implemented via `next_u32`.
 #[cfg(feature = "i128_support")]
 pub fn next_u128_via_u64<R: Rng+?Sized>(rng: &mut R) -> u128 {
     // Use LE; we explicitly generate one value before the next.
@@ -76,3 +82,5 @@ pub fn try_fill_via_u64<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) -> Result<(
 pub fn try_fill_via_u128<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) -> Result<()> {
     try_fill_via!(rng, next_u128, 16, dest)
 }
+
+// TODO: implement tests for the above
