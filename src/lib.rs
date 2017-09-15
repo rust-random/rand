@@ -529,7 +529,7 @@ pub trait Rng {
     /// println!("{}", s);
     /// ```
     fn gen_ascii_chars<'a>(&'a mut self) -> AsciiGenerator<'a, Self> where Self: Sized {
-        AsciiGenerator { rng: self }
+        AsciiGenerator { rng: self, range: Range::new(0, 62) }
     }
 
     /// Return a random element from `values`.
@@ -667,6 +667,7 @@ impl<'a, T: Rand, R: Rng> Iterator for Generator<'a, T, R> {
 #[derive(Debug)]
 pub struct AsciiGenerator<'a, R:'a> {
     rng: &'a mut R,
+    range: Range<usize>,
 }
 
 impl<'a, R: Rng> Iterator for AsciiGenerator<'a, R> {
@@ -677,7 +678,7 @@ impl<'a, R: Rng> Iterator for AsciiGenerator<'a, R> {
             b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
               abcdefghijklmnopqrstuvwxyz\
               0123456789";
-        Some(*self.rng.choose(GEN_ASCII_STR_CHARSET).unwrap() as char)
+        Some(GEN_ASCII_STR_CHARSET[self.range.ind_sample(&mut self.rng)] as char)
     }
 }
 
