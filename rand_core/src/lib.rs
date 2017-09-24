@@ -172,12 +172,6 @@ pub trait SeedFromRng: Sized {
 /// algorithm used in the future. This is to ensure that manual seeding of PRNGs
 /// actually does yield reproducible results.
 pub trait SeedableRng<Seed>: Rng {
-    /// Reseed an RNG with the given seed.
-    /// 
-    /// The type of `Seed` is specified by the implementation (implementation
-    /// for multiple seed types is possible).
-    fn reseed(&mut self, Seed);
-
     /// Create a new RNG with the given seed.
     /// 
     /// The type of `Seed` is specified by the implementation (implementation

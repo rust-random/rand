@@ -85,9 +85,6 @@ impl<T> SeedableRng<T> for MockAddRng<T> where
         MockAddRng<T>: Rng,
         T: From<u8>,    // for 1.into()
 {
-    fn reseed(&mut self, seed: T) {
-        self.v = w(seed);
-    }
     fn from_seed(seed: T) -> Self {
         MockAddRng::new(seed, 1.into())
     }

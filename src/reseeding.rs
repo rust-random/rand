@@ -90,12 +90,6 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
 impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R>> SeedableRng<(Rsdr, S)> for
         ReseedingRng<R, Rsdr>
 {
-    fn reseed(&mut self, (rsdr, seed): (Rsdr, S)) {
-        self.rng.reseed(seed);
-        self.reseeder = rsdr;
-        self.bytes_generated = 0;
-    }
-
     /// Create a new `ReseedingRng` from the given reseeder and
     /// seed. This uses a default value for `generation_threshold`.
     fn from_seed((rsdr, seed): (Rsdr, S)) -> ReseedingRng<R, Rsdr> {
@@ -165,17 +159,6 @@ mod test {
         let mut rb: MyRng = SeedableRng::from_seed((ReseedMock, 2));
         assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
                                 iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
-    }
-
-    #[test]
-    fn test_rng_reseed() {
-        let mut r: MyRng = SeedableRng::from_seed((ReseedMock, 3));
-        let string1: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
-
-        r.reseed((ReseedMock, 3));
-
-        let string2: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
-        assert_eq!(string1, string2);
     }
 
     const FILL_BYTES_V_LEN: usize = 13579;

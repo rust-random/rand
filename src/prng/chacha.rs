@@ -255,23 +255,20 @@ impl SeedFromRng for ChaChaRng {
 }
 
 impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
-    fn reseed(&mut self, seed: &'a [u32]) {
-        // reset state
-        self.init(&[0u32; KEY_WORDS]);
-        // set key in place
-        let key = &mut self.state[4 .. 4+KEY_WORDS];
-        for (k, s) in key.iter_mut().zip(seed.iter()) {
-            *k = w(*s);
-        }
-    }
-
     /// Create a ChaCha generator from a seed,
     /// obtained from a variable-length u32 array.
     /// Only up to 8 words are used; if less than 8
     /// words are used, the remaining are set to zero.
     fn from_seed(seed: &'a [u32]) -> ChaChaRng {
         let mut rng = EMPTY;
-        rng.reseed(seed);
+        rng.init(&[0u32; KEY_WORDS]);
+        // set key in place
+        {
+            let key = &mut rng.state[4 .. 4+KEY_WORDS];
+            for (k, s) in key.iter_mut().zip(seed.iter()) {
+                *k = w(*s);
+            }
+        }
         rng
     }
 }
@@ -299,18 +296,6 @@ mod test {
         let mut rb: ChaChaRng = SeedableRng::from_seed(seed);
         assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
                                 iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
-    }
-
-    #[test]
-    fn test_rng_reseed() {
-        let s = iter(&mut ::test::rng()).map(|rng| rng.next_u32()).take(8).collect::<Vec<u32>>();
-        let mut r: ChaChaRng = SeedableRng::from_seed(&s[..]);
-        let string1: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
-
-        r.reseed(&s);
-
-        let string2: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
-        assert_eq!(string1, string2);
     }
 
     #[test]
