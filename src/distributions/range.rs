@@ -8,18 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Alternative design for `Range`.
-//!
-//! TODO: decide whether to replace the old `range` module with this.
-//! Advantage: float ranges don't have to store a "zone" parameter.
-//! Advantage: custom implementations can store extra parameters.
-//! Possible advantage: easier implementations for custom types written in
-//! terms of implementations of other types.
-//! Disadvantage: complex?
-//!
-//! This is *almost* like having separate `RangeInt<T>`, `RangeFloat<T>`,
-//! etc. (or just `RangeI32`, etc.) types, each implementing `Distribution`,
-//! but it adds some magic to support generic `range` and `new_range` methods.
+//! Generating numbers between two others.
 
 use Rand;
 use Rng;
@@ -44,7 +33,7 @@ use utils::FloatConversions;
 ///
 /// ```rust
 /// use rand::distributions::Distribution;
-/// use rand::distributions::range2::Range;
+/// use rand::distributions::range::Range;
 ///
 /// fn main() {
 ///     let between = Range::new(10, 10000);
@@ -354,7 +343,7 @@ range_float_impl! { f64, Rng::next_u64 }
 mod tests {
     use {Rng, thread_rng};
     use distributions::{Rand, Distribution};
-    use distributions::range2::{Range, RangeImpl, RangeFloat, SampleRange};
+    use distributions::range::{Range, RangeImpl, RangeFloat, SampleRange};
 
     #[test]
     fn test_fn_range() {
@@ -373,7 +362,7 @@ mod tests {
             assert_eq!(Range::new(3_000_000, 3_000_001).sample(&mut r), 3_000_000);
         }
     }
-    
+
     #[test]
     #[should_panic]
     fn test_fn_range_panic_int() {
@@ -475,7 +464,7 @@ mod tests {
         impl SampleRange for MyF32 {
             type T = RangeMyF32;
         }
-        
+
         let (low, high) = (MyF32{ x: 17.0f32 }, MyF32{ x: 22.0f32 });
         let range = Range::new(low, high);
         let mut rng = ::test::rng();
