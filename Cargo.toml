@@ -27,4 +27,4 @@ log = "0.3.0"
 members = ["rand-derive"]
 
 [target.'cfg(target_os = "fuchsia")'.dependencies]
-magenta = "^0.1.1"
+fuchsia-zircon = "^0.2.1"
