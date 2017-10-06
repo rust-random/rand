@@ -383,7 +383,7 @@ mod imp {
 
 #[cfg(target_os = "fuchsia")]
 mod imp {
-    extern crate magenta;
+    extern crate fuchsia_zircon;
 
     use std::io;
     use Rng;
@@ -407,10 +407,10 @@ mod imp {
             next_u64(&mut |v| self.fill_bytes(v))
         }
         fn fill_bytes(&mut self, v: &mut [u8]) {
-            for s in v.chunks_mut(magenta::MX_CPRNG_DRAW_MAX_LEN) {
+            for s in v.chunks_mut(fuchsia_zircon::ZX_CPRNG_DRAW_MAX_LEN) {
                 let mut filled = 0;
                 while filled < s.len() {
-                    match magenta::cprng_draw(&mut s[filled..]) {
+                    match fuchsia_zircon::cprng_draw(&mut s[filled..]) {
                         Ok(actual) => filled += actual,
                         Err(e) => panic!("cprng_draw failed: {:?}", e),
                     };
