@@ -645,16 +645,16 @@ impl<R: ?Sized> Rng for Box<R> where R: Rng {
 /// [`gen_iter`]: trait.Rng.html#method.gen_iter
 /// [`Rng`]: trait.Rng.html
 #[derive(Debug)]
-pub struct Generator<'a, T, R: 'a> {
+pub struct Generator<'a, T, R: 'a + ?Sized> {
     rng: &'a mut R,
     _marker: marker::PhantomData<fn() -> T>,
 }
 
-impl<'a, T: Rand, R: Rng> Iterator for Generator<'a, T, R> {
+impl<'a, T: Rand, R: Rng + ?Sized> Iterator for Generator<'a, T, R> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        Some(self.rng.gen())
+        Some(T::rand(self.rng))
     }
 }
 
