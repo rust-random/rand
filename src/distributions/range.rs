@@ -14,7 +14,7 @@
 
 use std::num::Wrapping as w;
 
-use Rng;
+use {Rand, Rng};
 use distributions::{Sample, IndependentSample};
 
 /// Sample values uniformly between two bounds.
@@ -64,10 +64,10 @@ impl<X: SampleRange + PartialOrd> Range<X> {
 
 impl<Sup: SampleRange> Sample<Sup> for Range<Sup> {
     #[inline]
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Sup { self.ind_sample(rng) }
 }
 impl<Sup: SampleRange> IndependentSample<Sup> for Range<Sup> {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> Sup {
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Sup {
         SampleRange::sample_range(self, rng)
     }
 }
@@ -84,7 +84,7 @@ pub trait SampleRange : Sized {
 
     /// Sample a value from the given `Range` with the given `Rng` as
     /// a source of randomness.
-    fn sample_range<R: Rng>(r: &Range<Self>, rng: &mut R) -> Self;
+    fn sample_range<R: Rng + ?Sized>(r: &Range<Self>, rng: &mut R) -> Self;
 }
 
 macro_rules! integer_impl {
@@ -115,10 +115,10 @@ macro_rules! integer_impl {
             }
 
             #[inline]
-            fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
+            fn sample_range<R: Rng + ?Sized>(r: &Range<$ty>, rng: &mut R) -> $ty {
                 loop {
                     // rejection sample
-                    let v = rng.gen::<$unsigned>();
+                    let v = <$unsigned>::rand(rng);
                     // until we find something that fits into the
                     // region which r.range evenly divides (this will
                     // be uniformly distributed)
@@ -153,8 +153,8 @@ macro_rules! float_impl {
                     accept_zone: 0.0 // unused
                 }
             }
-            fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
-                r.low + r.range * rng.gen::<$ty>()
+            fn sample_range<R: Rng + ?Sized>(r: &Range<$ty>, rng: &mut R) -> $ty {
+                r.low + r.range * <$ty>::rand(rng)
             }
         }
     }

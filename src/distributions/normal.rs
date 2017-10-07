@@ -37,13 +37,13 @@ use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 pub struct StandardNormal(pub f64);
 
 impl Rand for StandardNormal {
-    fn rand<R:Rng>(rng: &mut R) -> StandardNormal {
+    fn rand<R:Rng + ?Sized>(rng: &mut R) -> StandardNormal {
         #[inline]
         fn pdf(x: f64) -> f64 {
             (-x*x/2.0).exp()
         }
         #[inline]
-        fn zero_case<R:Rng>(rng: &mut R, u: f64) -> f64 {
+        fn zero_case<R:Rng + ?Sized>(rng: &mut R, u: f64) -> f64 {
             // compute a random number in the tail by hand
 
             // strange initial conditions, because the loop is not
@@ -54,8 +54,8 @@ impl Rand for StandardNormal {
             let mut y = 0.0f64;
 
             while -2.0 * y < x * x {
-                let Open01(x_) = rng.gen::<Open01<f64>>();
-                let Open01(y_) = rng.gen::<Open01<f64>>();
+                let Open01(x_) = Open01::<f64>::rand(rng);
+                let Open01(y_) = Open01::<f64>::rand(rng);
 
                 x = x_.ln() / ziggurat_tables::ZIG_NORM_R;
                 y = y_.ln();
@@ -111,11 +111,11 @@ impl Normal {
     }
 }
 impl Sample<f64> for Normal {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 impl IndependentSample<f64> for Normal {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let StandardNormal(n) = rng.gen::<StandardNormal>();
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+        let StandardNormal(n) = StandardNormal::rand(rng);
         self.mean + self.std_dev * n
     }
 }
@@ -155,10 +155,10 @@ impl LogNormal {
     }
 }
 impl Sample<f64> for LogNormal {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 impl IndependentSample<f64> for LogNormal {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         self.norm.ind_sample(rng).exp()
     }
 }
