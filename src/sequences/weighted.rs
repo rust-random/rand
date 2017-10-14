@@ -14,7 +14,8 @@
 //! adapted, or removed entirely.
 
 use Rng;
-use distributions::{Range, Distribution};
+use distributions::Distribution;
+use distributions::range::{Range, RangeInt};
 
 /// A value with a particular weight for use with `WeightedChoice`.
 #[derive(Copy, Clone, Debug)]
@@ -49,7 +50,7 @@ pub struct Weighted<T> {
 #[derive(Clone, Debug)]
 pub struct WeightedChoice<T: Clone> {
     items: Vec<Weighted<T>>,
-    weight_range: Range<u32>
+    weight_range: Range<RangeInt<u32>>,
 }
 
 impl<T: Clone> WeightedChoice<T> {

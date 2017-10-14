@@ -38,18 +38,28 @@ fn distr_range_int(b: &mut Bencher) {
     b.bytes = size_of::<i64>() as u64 * ::RAND_BENCH_N;
 }
 
-#[bench]
-fn distr_range2_int(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new().unwrap();
-    let distr = range2::Range::new(3i64, 134217671i64);
+macro_rules! distr_range2_int {
+    ($fnn:ident, $ty:ty, $low:expr, $high:expr) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = XorShiftRng::new().unwrap();
+            let distr = range2::Range::new($low, $high);
 
-    b.iter(|| {
-        for _ in 0..::RAND_BENCH_N {
-            black_box(distr.sample(&mut rng));
+            b.iter(|| {
+                for _ in 0..::RAND_BENCH_N {
+                    let x: $ty = distr.sample(&mut rng);
+                    black_box(x);
+                }
+            });
+            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
         }
-    });
-    b.bytes = size_of::<i64>() as u64 * ::RAND_BENCH_N;
+    }
 }
+
+distr_range2_int!(distr_range2_i8, i8, 20i8, 100);
+distr_range2_int!(distr_range2_i16, i16, -500i16, 2000);
+distr_range2_int!(distr_range2_i32, i32, -200_000_000i32, 800_000_000);
+distr_range2_int!(distr_range2_i64, i64, 3i64, 134217671);
 
 macro_rules! distr_float {
     ($fnn:ident, $distr:expr) => {

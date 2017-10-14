@@ -155,6 +155,7 @@
 //! ```
 //! use rand::Rng;
 //! use rand::distributions::{Distribution, Range, uniform};
+//! use rand::distributions::range::RangeInt;
 //! use rand::sequences::Choose;
 //!
 //! struct SimulationResult {
@@ -163,7 +164,7 @@
 //! }
 //!
 //! // Run a single simulation of the Monty Hall problem.
-//! fn simulate<R: Rng>(random_door: &Range<u32>, rng: &mut R)
+//! fn simulate<R: Rng>(random_door: &Range<RangeInt<u32>>, rng: &mut R)
 //!                     -> SimulationResult {
 //!     let car = random_door.sample(rng);
 //!
@@ -204,7 +205,7 @@
 //!     let num_simulations = 10000;
 //!
 //!     let mut rng = rand::thread_rng();
-//!     let random_door = Range::new(0, 3);
+//!     let random_door = Range::new(0u32, 3);
 //!
 //!     let (mut switch_wins, mut switch_losses) = (0, 0);
 //!     let (mut keep_wins, mut keep_losses) = (0, 0);
@@ -266,6 +267,7 @@ pub use distributions::{Distribution, Default, Rand};
 pub use thread_local::{ThreadRng, thread_rng, random, random_with};
 
 use prng::IsaacWordRng;
+use distributions::range::Range;
 
 pub mod distributions;
 pub mod iter;
@@ -367,7 +369,7 @@ pub trait Sample: Rng {
     /// ```
     fn gen_range<T: SampleRange>(&mut self, low: T, high: T) -> T {
         assert!(low < high, "Sample::gen_range called with low >= high");
-        SampleRange::construct_range(low, high).sample(self)
+        Range::new(low, high).sample(self)
     }
     
     /// Construct an iterator on an `Rng`.
