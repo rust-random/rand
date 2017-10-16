@@ -292,22 +292,6 @@ impl SeedFromRng for Isaac64Rng {
 }
 
 impl<'a> SeedableRng<&'a [u64]> for Isaac64Rng {
-    fn reseed(&mut self, seed: &'a [u64]) {
-        // make the seed into [seed[0], seed[1], ..., seed[seed.len()
-        // - 1], 0, 0, ...], to fill rng.rsl.
-        let seed_iter = seed.iter().map(|&x| x).chain(repeat(0u64));
-
-        for (rsl_elem, seed_elem) in self.rsl.iter_mut().zip(seed_iter) {
-            *rsl_elem = w(seed_elem);
-        }
-        self.cnt = 0;
-        self.a = w(0);
-        self.b = w(0);
-        self.c = w(0);
-
-        self.init(true);
-    }
-
     /// Create an ISAAC random number generator with a seed. This can
     /// be any length, although the maximum number of elements used is
     /// 256 and any more will be silently ignored. A generator
@@ -315,7 +299,15 @@ impl<'a> SeedableRng<&'a [u64]> for Isaac64Rng {
     /// of values as all other generators constructed with that seed.
     fn from_seed(seed: &'a [u64]) -> Isaac64Rng {
         let mut rng = EMPTY_64;
-        rng.reseed(seed);
+
+        // make the seed into [seed[0], seed[1], ..., seed[seed.len()
+        // - 1], 0, 0, ...], to fill rng.rsl.
+        let seed_iter = seed.iter().map(|&x| x).chain(repeat(0u64));
+
+        for (rsl_elem, seed_elem) in rng.rsl.iter_mut().zip(seed_iter) {
+            *rsl_elem = w(seed_elem);
+        }
+        rng.init(true);
         rng
     }
 }
@@ -348,18 +340,6 @@ mod test {
         let mut rb: Isaac64Rng = SeedableRng::from_seed(seed);
         assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
                                 iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
-    }
-
-    #[test]
-    fn test_rng_64_reseed() {
-        let s = iter(&mut ::test::rng()).map(|rng| rng.next_u64()).take(256).collect::<Vec<u64>>();
-        let mut r: Isaac64Rng = SeedableRng::from_seed(&s[..]);
-        let string1: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
-
-        r.reseed(&s[..]);
-
-        let string2: String = iter(&mut r).map(|rng| ascii_word_char(rng)).take(100).collect();
-        assert_eq!(string1, string2);
     }
 
     #[test]

@@ -90,17 +90,6 @@ impl Rng for XorShiftRng {
 }
 
 impl SeedableRng<[u32; 4]> for XorShiftRng {
-    /// Reseed an XorShiftRng. This will panic if `seed` is entirely 0.
-    fn reseed(&mut self, seed: [u32; 4]) {
-        assert!(!seed.iter().all(|&x| x == 0),
-                "XorShiftRng.reseed called with an all zero seed.");
-
-        self.x = w(seed[0]);
-        self.y = w(seed[1]);
-        self.z = w(seed[2]);
-        self.w = w(seed[3]);
-    }
-
     /// Create a new XorShiftRng. This will panic if `seed` is entirely 0.
     fn from_seed(seed: [u32; 4]) -> XorShiftRng {
         assert!(!seed.iter().all(|&x| x == 0),
