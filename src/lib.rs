@@ -354,8 +354,9 @@ pub trait Rng {
     /// See:
     /// A PRNG specialized in double precision floating point numbers using
     /// an affine transition
-    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf
-    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf
+    ///
+    /// * <http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf>
+    /// * <http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf>
     ///
     /// By default this is implemented in terms of `next_u32`, but a
     /// random number generator which can generate numbers satisfying
