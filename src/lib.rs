@@ -39,10 +39,9 @@
 //!
 //! There is built-in support for a RNG associated with each thread stored
 //! in thread-local storage. This RNG can be accessed via `thread_rng`, or
-//! used implicitly via `random`. This RNG is normally randomly seeded
-//! from an operating-system source of randomness, e.g. `/dev/urandom` on
-//! Unix systems, and will automatically reseed itself from this source
-//! after generating 32 KiB of random data.
+//! used implicitly via `random`. This RNG normally uses
+//! an operating-system source of randomness, e.g. `/dev/urandom` on
+//! Unix systems.
 //!
 //! # Cryptographic security
 //!
@@ -900,20 +899,7 @@ pub fn weak_rng() -> XorShiftRng {
     }
 }
 
-/// Controls how the thread-local RNG is reseeded.
-#[derive(Debug)]
-struct ThreadRngReseeder;
-
-impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
-    fn reseed(&mut self, rng: &mut StdRng) {
-        *rng = match StdRng::new() {
-            Ok(r) => r,
-            Err(e) => panic!("could not reseed thread_rng: {}", e)
-        }
-    }
-}
-const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
-type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
+type ThreadRngInner = os::OsRng;
 
 /// The thread-local RNG.
 #[derive(Clone, Debug)]
@@ -922,26 +908,17 @@ pub struct ThreadRng {
 }
 
 /// Retrieve the lazily-initialized thread-local random number
-/// generator, seeded by the system. Intended to be used in method
+/// generator. Intended to be used in method
 /// chaining style, e.g. `thread_rng().gen::<i32>()`.
 ///
-/// The RNG provided will reseed itself from the operating system
-/// after generating a certain amount of randomness.
-///
-/// The internal RNG used is platform and architecture dependent, even
-/// if the operating system random number generator is rigged to give
-/// the same sequence always. If absolute consistency is required,
-/// explicitly select an RNG, e.g. `IsaacRng` or `Isaac64Rng`.
+/// The RNG provided will use an operating-system source of randomness.
 pub fn thread_rng() -> ThreadRng {
     // used to make space in TLS for a random number generator
     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
-        let r = match StdRng::new() {
+        let rng = match os::OsRng::new() {
             Ok(r) => r,
             Err(e) => panic!("could not initialize thread_rng: {}", e)
         };
-        let rng = reseeding::ReseedingRng::new(r,
-                                               THREAD_RNG_RESEED_THRESHOLD,
-                                               ThreadRngReseeder);
         Rc::new(RefCell::new(rng))
     });
 

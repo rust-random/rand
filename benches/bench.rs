@@ -9,7 +9,7 @@ mod distributions;
 
 use std::mem::size_of;
 use test::{black_box, Bencher};
-use rand::{XorShiftRng, StdRng, IsaacRng, Isaac64Rng, Rng};
+use rand::{XorShiftRng, StdRng, IsaacRng, Isaac64Rng, Rng, thread_rng};
 use rand::{OsRng, sample, weak_rng};
 
 #[bench]
@@ -94,4 +94,13 @@ fn rand_sample_10_of_100(b: &mut Bencher) {
     b.iter(|| {
         sample(&mut rng, x, 10);
     })
+}
+
+#[bench]
+fn rand_thread(b: &mut Bencher) {
+    let mut rng = thread_rng();
+    b.iter(|| for _ in 0..RAND_BENCH_N {
+        black_box(rng.gen::<usize>());
+    });
+    b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
 }
