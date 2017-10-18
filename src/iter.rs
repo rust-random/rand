@@ -145,8 +145,15 @@ impl<'a, R:?Sized+'a, U, F> Iterator for FlatMap<'a, R, U, F>
     }
     
     fn size_hint(&self) -> (usize, Option<usize>) {
-        // See impl for Map above
-        self.len.map_or((usize::MAX, None), |len| (len, Some(len)))
+        if self.len == Some(0) {
+            // No new iters, so we have frontiter or nothing
+            self.frontiter.as_ref().map_or((0, Some(0)), |it| it.size_hint())
+        } else {
+            // Can't compute an actual bound without producing the sub-iters,
+            // which we don't want to do. But we may have a lower bound.
+            let lb = self.frontiter.as_ref().map_or(0, |it| it.size_hint().0);
+            (lb, None)
+        }
     }
 }
 
