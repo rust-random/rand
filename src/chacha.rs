@@ -1,10 +1,10 @@
 // Copyright 2014 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
+// https://www.rust-lang.org/COPYRIGHT.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
@@ -25,7 +25,7 @@ const CHACHA_ROUNDS: u32 = 20; // Cryptographically secure from 8 upwards as of 
 /// the operating system for cases that need high security.
 ///
 /// [1]: D. J. Bernstein, [*ChaCha, a variant of
-/// Salsa20*](http://cr.yp.to/chacha.html)
+/// Salsa20*](https://cr.yp.to/chacha.html)
 #[derive(Copy, Clone, Debug)]
 pub struct ChaChaRng {
     buffer:  [w32; STATE_WORDS], // Internal buffer of output
@@ -148,7 +148,7 @@ impl ChaChaRng {
     /// counter  counter  counter  counter
     /// ```
     /// [1]: Daniel J. Bernstein. [*Extending the Salsa20
-    /// nonce.*](http://cr.yp.to/papers.html#xsalsa)
+    /// nonce.*](https://cr.yp.to/papers.html#xsalsa)
     fn init(&mut self, key: &[u32; KEY_WORDS]) {
         self.state[0] = w(0x61707865);
         self.state[1] = w(0x3320646E);
@@ -267,7 +267,7 @@ mod test {
     #[test]
     fn test_rng_true_values() {
         // Test vectors 1 and 2 from
-        // http://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
+        // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
         let seed : &[_] = &[0u32; 8];
         let mut ra: ChaChaRng = SeedableRng::from_seed(seed);
 
