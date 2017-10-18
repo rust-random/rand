@@ -1,10 +1,10 @@
 // Copyright 2013-2014 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
+// https://rust-lang.org/COPYRIGHT.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
@@ -149,7 +149,7 @@
 //! This program will simulate the game show and with large enough simulation
 //! steps it will indeed confirm that it is better to switch.
 //!
-//! [Monty Hall Problem]: http://en.wikipedia.org/wiki/Monty_Hall_problem
+//! [Monty Hall Problem]: https://en.wikipedia.org/wiki/Monty_Hall_problem
 //!
 //! ```
 //! use rand::Rng;
@@ -722,7 +722,7 @@ pub trait SeedableRng<Seed>: Rng {
 /// requirements, use a more secure one such as `IsaacRng` or `OsRng`.
 ///
 /// [1]: Marsaglia, George (July 2003). ["Xorshift
-/// RNGs"](http://www.jstatsoft.org/v08/i14/paper). *Journal of
+/// RNGs"](https://www.jstatsoft.org/v08/i14/paper). *Journal of
 /// Statistical Software*. Vol. 8 (Issue 14).
 #[allow(missing_copy_implementations)]
 #[derive(Clone, Debug)]
