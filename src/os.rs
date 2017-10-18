@@ -33,8 +33,8 @@ use {Rng, Result};
 /// Max OS X, and modern Linux) this may block very early in the init
 /// process, if the CSPRNG has not been seeded yet.[1]
 ///
-/// [1] See https://www.python.org/dev/peps/pep-0524/ for a more in-depth
-///     discussion.
+/// [1] See <https://www.python.org/dev/peps/pep-0524/> for a more
+///     in-depth discussion.
 pub struct OsRng(imp::OsRng);
 
 impl OsRng {
@@ -355,7 +355,7 @@ mod imp {
 
 #[cfg(target_os = "fuchsia")]
 mod imp {
-    extern crate magenta;
+    extern crate fuchsia_zircon;
 
     use std::io;
     use Result;
@@ -368,10 +368,10 @@ mod imp {
             Ok(OsRng)
         }
         pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
-            for s in v.chunks_mut(magenta::MX_CPRNG_DRAW_MAX_LEN) {
+            for s in v.chunks_mut(fuchsia_zircon::ZX_CPRNG_DRAW_MAX_LEN) {
                 let mut filled = 0;
                 while filled < s.len() {
-                    match magenta::cprng_draw(&mut s[filled..]) {
+                    match fuchsia_zircon::cprng_draw(&mut s[filled..]) {
                         Ok(actual) => filled += actual,
                         Err(e) => panic!("cprng_draw failed: {:?}", e),
                     };
