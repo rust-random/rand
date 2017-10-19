@@ -335,55 +335,62 @@ impl fmt::Debug for IsaacRng {
 #[cfg(test)]
 mod test {
     use {Rng, SeedableRng, iter};
-    use distributions::ascii_word_char;
     use super::IsaacRng;
 
     #[test]
-    fn test_rng_32_rand_seeded() {
-        let s = iter(&mut ::test::rng()).map(|rng| rng.next_u32()).take(256).collect::<Vec<u32>>();
-        let mut ra: IsaacRng = SeedableRng::from_seed(&s[..]);
-        let mut rb: IsaacRng = SeedableRng::from_seed(&s[..]);
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
+    fn test_isaac_from_seed() {
+        let seed = iter(&mut ::test::rng())
+                   .map(|rng| rng.next_u32())
+                   .take(256)
+                   .collect::<Vec<u32>>();
+        let mut rng1 = IsaacRng::from_seed(&seed[..]);
+        let mut rng2 = IsaacRng::from_seed(&seed[..]);
+        for _ in 0..100 {
+            assert_eq!(rng1.next_u32(), rng2.next_u32());
+        }
     }
 
     #[test]
-    fn test_rng_32_seeded() {
+    fn test_isaac_from_seed_fixed() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut ra: IsaacRng = SeedableRng::from_seed(seed);
-        let mut rb: IsaacRng = SeedableRng::from_seed(seed);
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
+        let mut rng1 = IsaacRng::from_seed(&seed[..]);
+        let mut rng2 = IsaacRng::from_seed(&seed[..]);
+        for _ in 0..100 {
+            assert_eq!(rng1.next_u32(), rng2.next_u32());
+        }
     }
 
     #[test]
-    fn test_rng_32_true_values() {
+    fn test_isaac_true_values() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut ra: IsaacRng = SeedableRng::from_seed(seed);
+        let mut rng1 = IsaacRng::from_seed(seed);
         // Regression test that isaac is actually using the above vector
-        let v = (0..10).map(|_| ra.next_u32()).collect::<Vec<_>>();
+        let v = (0..10).map(|_| rng1.next_u32()).collect::<Vec<_>>();
         assert_eq!(v,
-                   vec!(2558573138, 873787463, 263499565, 2103644246, 3595684709,
-                        4203127393, 264982119, 2765226902, 2737944514, 3900253796));
+                   vec!(2558573138, 873787463, 263499565, 2103644246,
+                        3595684709, 4203127393, 264982119, 2765226902,
+                        2737944514, 3900253796));
 
         let seed: &[_] = &[12345, 67890, 54321, 9876];
-        let mut rb: IsaacRng = SeedableRng::from_seed(seed);
+        let mut rng2 = IsaacRng::from_seed(seed);
         // skip forward to the 10000th number
-        for _ in 0..10000 { rb.next_u32(); }
+        for _ in 0..10000 { rng2.next_u32(); }
 
-        let v = (0..10).map(|_| rb.next_u32()).collect::<Vec<_>>();
+        let v = (0..10).map(|_| rng2.next_u32()).collect::<Vec<_>>();
         assert_eq!(v,
-                   vec!(3676831399, 3183332890, 2834741178, 3854698763, 2717568474,
-                        1576568959, 3507990155, 179069555, 141456972, 2478885421));
+                   vec!(3676831399, 3183332890, 2834741178, 3854698763,
+                        2717568474, 1576568959, 3507990155, 179069555,
+                        141456972, 2478885421));
+    }
     }
 
     #[test]
-    fn test_rng_clone() {
+    fn test_isaac_clone() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng: IsaacRng = SeedableRng::from_seed(seed);
-        let mut clone = rng.clone();
+        let mut rng1 = IsaacRng::from_seed(seed);
+        let mut rng2 = rng1.clone();
         for _ in 0..16 {
-            assert_eq!(rng.next_u32(), clone.next_u32());
+            assert_eq!(rng1.next_u32(), rng2.next_u32());
         }
     }
 }

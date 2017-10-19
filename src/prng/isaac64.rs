@@ -321,59 +321,67 @@ impl fmt::Debug for Isaac64Rng {
 #[cfg(test)]
 mod test {
     use {Rng, SeedableRng, iter};
-    use distributions::ascii_word_char;
     use super::Isaac64Rng;
 
     #[test]
-    fn test_rng_64_rand_seeded() {
-        let s = iter(&mut ::test::rng()).map(|rng| rng.next_u64()).take(256).collect::<Vec<u64>>();
-        let mut ra: Isaac64Rng = SeedableRng::from_seed(&s[..]);
-        let mut rb: Isaac64Rng = SeedableRng::from_seed(&s[..]);
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
+    fn test_isaac64_from_seed() {
+        let seed = iter(&mut ::test::rng())
+                   .map(|rng| rng.next_u64())
+                   .take(256)
+                   .collect::<Vec<u64>>();
+        let mut rng1 = Isaac64Rng::from_seed(&seed[..]);
+        let mut rng2 = Isaac64Rng::from_seed(&seed[..]);
+        for _ in 0..100 {
+            assert_eq!(rng1.next_u64(), rng2.next_u64());
+        }
     }
 
     #[test]
-    fn test_rng_64_seeded() {
+    fn test_isaac64_from_seed_fixed() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut ra: Isaac64Rng = SeedableRng::from_seed(seed);
-        let mut rb: Isaac64Rng = SeedableRng::from_seed(seed);
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
+        let mut rng1 = Isaac64Rng::from_seed(&seed[..]);
+        let mut rng2 = Isaac64Rng::from_seed(&seed[..]);
+        for _ in 0..100 {
+            assert_eq!(rng1.next_u64(), rng2.next_u64());
+        }
+    }
     }
 
     #[test]
-    fn test_rng_64_true_values() {
+    fn test_isaac64_true_values() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut ra: Isaac64Rng = SeedableRng::from_seed(seed);
+        let mut rng1 = Isaac64Rng::from_seed(seed);
         // Regression test that isaac is actually using the above vector
-        let v = (0..10).map(|_| ra.next_u64()).collect::<Vec<_>>();
+        let v = (0..10).map(|_| rng1.next_u64()).collect::<Vec<_>>();
         assert_eq!(v,
-                   vec!(547121783600835980, 14377643087320773276, 17351601304698403469,
-                        1238879483818134882, 11952566807690396487, 13970131091560099343,
-                        4469761996653280935, 15552757044682284409, 6860251611068737823,
-                        13722198873481261842));
+                   vec!(547121783600835980, 14377643087320773276,
+                        17351601304698403469, 1238879483818134882,
+                        11952566807690396487, 13970131091560099343,
+                        4469761996653280935, 15552757044682284409,
+                        6860251611068737823, 13722198873481261842));
 
         let seed: &[_] = &[12345, 67890, 54321, 9876];
-        let mut rb: Isaac64Rng = SeedableRng::from_seed(seed);
+        let mut rng2 = Isaac64Rng::from_seed(seed);
         // skip forward to the 10000th number
-        for _ in 0..10000 { rb.next_u64(); }
+        for _ in 0..10000 { rng2.next_u64(); }
 
-        let v = (0..10).map(|_| rb.next_u64()).collect::<Vec<_>>();
+        let v = (0..10).map(|_| rng2.next_u64()).collect::<Vec<_>>();
         assert_eq!(v,
-                   vec!(18143823860592706164, 8491801882678285927, 2699425367717515619,
-                        17196852593171130876, 2606123525235546165, 15790932315217671084,
-                        596345674630742204, 9947027391921273664, 11788097613744130851,
-                        10391409374914919106));
+                   vec!(18143823860592706164, 8491801882678285927,
+                        2699425367717515619, 17196852593171130876,
+                        2606123525235546165, 15790932315217671084,
+                        596345674630742204, 9947027391921273664,
+                        11788097613744130851, 10391409374914919106));
+    }
     }
 
     #[test]
-    fn test_rng_clone() {
+    fn test_isaac64_clone() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng: Isaac64Rng = SeedableRng::from_seed(seed);
-        let mut clone = rng.clone();
+        let mut rng1 = Isaac64Rng::from_seed(seed);
+        let mut rng2 = rng1.clone();
         for _ in 0..16 {
-            assert_eq!(rng.next_u64(), clone.next_u64());
+            assert_eq!(rng1.next_u64(), rng2.next_u64());
         }
     }
 }
