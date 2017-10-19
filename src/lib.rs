@@ -400,7 +400,7 @@ impl<R: Rng+?Sized> Sample for R {
 /// The underlying algorithm is not fixed, thus values from this generator
 /// cannot be guaranteed to be reproducible. For this reason, `StdRng` does
 /// not support `SeedableRng`.
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct StdRng {
     rng: IsaacWordRng,
 }

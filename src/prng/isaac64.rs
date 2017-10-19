@@ -70,8 +70,6 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///
 /// [1]: Bob Jenkins, [*ISAAC and RC4*]
 ///      (http://burtleburtle.net/bob/rand/isaac.html)
-
-#[derive(Copy)]
 pub struct Isaac64Rng {
     rsl: [w64; RAND_SIZE],
     mem: [w64; RAND_SIZE],
@@ -81,82 +79,81 @@ pub struct Isaac64Rng {
     cnt: u32,
 }
 
-static EMPTY_64: Isaac64Rng = Isaac64Rng {
-    cnt: 0,
-    rsl: [w(0); RAND_SIZE],
-    mem: [w(0); RAND_SIZE],
-    a: w(0), b: w(0), c: w(0),
-};
+// Cannot be derived because [u64; 256] does not implement Clone
+impl Clone for Isaac64Rng {
+    fn clone(&self) -> Isaac64Rng {
+        Isaac64Rng {
+            rsl: self.rsl,
+            mem: self.mem,
+            a: self.a,
+            b: self.b,
+            c: self.c,
+            cnt: self.cnt,
+        }
+    }
+}
+
+impl fmt::Debug for Isaac64Rng {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Isaac64Rng {{}}")
+    }
+}
+
+fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
+       e: &mut w64, f: &mut w64, g: &mut w64, h: &mut w64) {
+    *a -= *e; *f ^= *h >> 9;  *h += *a;
+    *b -= *f; *g ^= *a << 9;  *a += *b;
+    *c -= *g; *h ^= *b >> 23; *b += *c;
+    *d -= *h; *a ^= *c << 15; *c += *d;
+    *e -= *a; *b ^= *d >> 14; *d += *e;
+    *f -= *b; *c ^= *e << 20; *e += *f;
+    *g -= *c; *d ^= *f >> 17; *f += *g;
+    *h -= *d; *e ^= *g << 14; *g += *h;
+}
 
 impl Isaac64Rng {
-    /// Create a 64-bit ISAAC random number generator using the
-    /// default fixed seed.
-    pub fn new_unseeded() -> Isaac64Rng {
-        let mut rng = EMPTY_64;
-        rng.init(false);
+    /// Creates an ISAAC-64 random number generator using an u64 as seed.
+    /// If `seed == 0` this will produce the same stream of random numbers as
+    /// the reference implementation when used unseeded.
+    pub fn new_from_u64(seed: u64) -> Isaac64Rng {
+        let mut a = w(0x647c4677a2884b7c);
+        let mut b = w(0xb9f8b322c73ac862);
+        let mut c = w(0x8c0ea5053d4712a0);
+        let mut d = w(0xb29b2e824a595524);
+        let mut e = w(0x82f053db8355e0ce);
+        let mut f = w(0x48fe4a0fa5a09315);
+        let mut g = w(0xae985bf2cbfc89ed);
+        let mut h = w(0x98f5704f6c44c0ab);
+
+        let mut mem = [w(0); RAND_SIZE];
+
+        a += w(seed);
+
+        for i in (0..RAND_SIZE/8).map(|i| i * 8) {
+            mix(&mut a, &mut b, &mut c, &mut d, &mut e, &mut f, &mut g, &mut h);
+            mem[i  ] = a; mem[i+1] = b;
+            mem[i+2] = c; mem[i+3] = d;
+            mem[i+4] = e; mem[i+5] = f;
+            mem[i+6] = g; mem[i+7] = h;
+        }
+        // A second pass does not improve the quality here, because all of
+        // the seed was already available in the first round.
+        // Not doing the second pass has the small advantage that if `seed == 0`
+        // this method produces exactly the same state as the reference
+        // implementation when used unseeded.
+
+        let mut rng = Isaac64Rng {
+            rsl: [w(0); RAND_SIZE],
+            mem: mem,
+            a: w(0),
+            b: w(0),
+            c: w(0),
+            cnt: 0,
+        };
+
+        // Prepare the first set of results
+        rng.isaac64();
         rng
-    }
-
-    /// Initialises `self`. If `use_rsl` is true, then use the current value
-    /// of `rsl` as a seed, otherwise construct one algorithmically (not
-    /// randomly).
-    fn init(&mut self, use_rsl: bool) {
-        let mut a = w(0x9e3779b97f4a7c13); // golden ratio
-        let mut b = a;
-        let mut c = a;
-        let mut d = a;
-        let mut e = a;
-        let mut f = a;
-        let mut g = a;
-        let mut h = a;
-
-        macro_rules! mix {
-            () => {{
-                a -= e; f ^= h >> 9;  h += a;
-                b -= f; g ^= a << 9;  a += b;
-                c -= g; h ^= b >> 23; b += c;
-                d -= h; a ^= c << 15; c += d;
-                e -= a; b ^= d >> 14; d += e;
-                f -= b; c ^= e << 20; e += f;
-                g -= c; d ^= f >> 17; f += g;
-                h -= d; e ^= g << 14; g += h;
-            }}
-        }
-
-        for _ in 0..4 {
-            mix!();
-        }
-
-        if use_rsl {
-            macro_rules! memloop {
-                ($arr:expr) => {{
-                    for i in (0..RAND_SIZE/8).map(|i| i * 8) {
-                        a += $arr[i  ]; b += $arr[i+1];
-                        c += $arr[i+2]; d += $arr[i+3];
-                        e += $arr[i+4]; f += $arr[i+5];
-                        g += $arr[i+6]; h += $arr[i+7];
-                        mix!();
-                        self.mem[i  ] = a; self.mem[i+1] = b;
-                        self.mem[i+2] = c; self.mem[i+3] = d;
-                        self.mem[i+4] = e; self.mem[i+5] = f;
-                        self.mem[i+6] = g; self.mem[i+7] = h;
-                    }
-                }}
-            }
-
-            memloop!(self.rsl);
-            memloop!(self.mem);
-        } else {
-            for i in (0..RAND_SIZE/8).map(|i| i * 8) {
-                mix!();
-                self.mem[i  ] = a; self.mem[i+1] = b;
-                self.mem[i+2] = c; self.mem[i+3] = d;
-                self.mem[i+4] = e; self.mem[i+5] = f;
-                self.mem[i+6] = g; self.mem[i+7] = h;
-            }
-        }
-
-        self.isaac64();
     }
 
     /// Refills the output buffer (`self.rsl`)
@@ -227,13 +224,6 @@ impl Isaac64Rng {
     }
 }
 
-// Cannot be derived because [u32; 256] does not implement Clone
-impl Clone for Isaac64Rng {
-    fn clone(&self) -> Isaac64Rng {
-        *self
-    }
-}
-
 impl Rng for Isaac64Rng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
@@ -261,33 +251,79 @@ impl Rng for Isaac64Rng {
         // it optimises to a bitwise mask).
         self.rsl[self.cnt as usize % RAND_SIZE].0
     }
-    
+
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128 {
         ::rand_core::impls::next_u128_via_u64(self)
     }
-    
+
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
         ::rand_core::impls::try_fill_via_u32(self, dest)
     }
 }
 
+/// Creates a new ISAAC-64 random number generator.
+fn init(key: [w64; RAND_SIZE]) -> Isaac64Rng {
+    // These numbers are the result of initializing a...h with the
+    // fractional part of the golden ratio in binary (0x9e3779b97f4a7c13)
+    // and applying mix() 4 times.
+    let mut a = w(0x647c4677a2884b7c);
+    let mut b = w(0xb9f8b322c73ac862);
+    let mut c = w(0x8c0ea5053d4712a0);
+    let mut d = w(0xb29b2e824a595524);
+    let mut e = w(0x82f053db8355e0ce);
+    let mut f = w(0x48fe4a0fa5a09315);
+    let mut g = w(0xae985bf2cbfc89ed);
+    let mut h = w(0x98f5704f6c44c0ab);
+
+    let mut mem = [w(0); RAND_SIZE];
+
+    macro_rules! memloop {
+        ($arr:expr) => {{
+            for i in (0..RAND_SIZE/8).map(|i| i * 8) {
+                a += $arr[i  ]; b += $arr[i+1];
+                c += $arr[i+2]; d += $arr[i+3];
+                e += $arr[i+4]; f += $arr[i+5];
+                g += $arr[i+6]; h += $arr[i+7];
+                mix(&mut a, &mut b, &mut c, &mut d,
+                    &mut e, &mut f, &mut g, &mut h);
+                mem[i  ] = a; mem[i+1] = b;
+                mem[i+2] = c; mem[i+3] = d;
+                mem[i+4] = e; mem[i+5] = f;
+                mem[i+6] = g; mem[i+7] = h;
+            }
+        }}
+    }
+
+    memloop!(key);
+    // Do a second pass to make all of the seed affect all of `mem`
+    memloop!(mem);
+
+    let mut rng = Isaac64Rng {
+        rsl: [w(0); RAND_SIZE],
+        mem: mem,
+        a: w(0),
+        b: w(0),
+        c: w(0),
+        cnt: 0,
+    };
+
+    // Prepare the first set of results
+    rng.isaac64();
+    rng
+}
+
 impl SeedFromRng for Isaac64Rng {
     fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self> {
-        let mut ret = EMPTY_64;
+        let mut key = [w(0); RAND_SIZE];
         unsafe {
-            let ptr = ret.rsl.as_mut_ptr() as *mut u8;
+            let ptr = key.as_mut_ptr() as *mut u8;
 
             let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE * 8);
             other.try_fill(slice)?;
         }
-        ret.cnt = 0;
-        ret.a = w(0);
-        ret.b = w(0);
-        ret.c = w(0);
 
-        ret.init(true);
-        Ok(ret)
+        Ok(init(key))
     }
 }
 
@@ -298,23 +334,17 @@ impl<'a> SeedableRng<&'a [u64]> for Isaac64Rng {
     /// constructed with a given seed will generate the same sequence
     /// of values as all other generators constructed with that seed.
     fn from_seed(seed: &'a [u64]) -> Isaac64Rng {
-        let mut rng = EMPTY_64;
+        let mut key = [w(0); RAND_SIZE];
 
         // make the seed into [seed[0], seed[1], ..., seed[seed.len()
-        // - 1], 0, 0, ...], to fill rng.rsl.
+        // - 1], 0, 0, ...], to fill `key`.
         let seed_iter = seed.iter().map(|&x| x).chain(repeat(0u64));
 
-        for (rsl_elem, seed_elem) in rng.rsl.iter_mut().zip(seed_iter) {
+        for (rsl_elem, seed_elem) in key.iter_mut().zip(seed_iter) {
             *rsl_elem = w(seed_elem);
         }
-        rng.init(true);
-        rng
-    }
-}
 
-impl fmt::Debug for Isaac64Rng {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Isaac64Rng {{}}")
+        init(key)
     }
 }
 
@@ -345,7 +375,6 @@ mod test {
             assert_eq!(rng1.next_u64(), rng2.next_u64());
         }
     }
-    }
 
     #[test]
     fn test_isaac64_true_values() {
@@ -373,6 +402,24 @@ mod test {
                         596345674630742204, 9947027391921273664,
                         11788097613744130851, 10391409374914919106));
     }
+
+    #[test]
+    fn test_isaac_new_uninitialized() {
+        // Compare the results from initializing `IsaacRng` with
+        // `new_from_u64(0)`, to make sure it is the same as the reference
+        // implementation when used uninitialized.
+        // Note: We only test the first 16 integers, not the full 256 of the
+        // first block.
+        let mut rng = Isaac64Rng::new_from_u64(0);
+        let vec = (0..16).map(|_| rng.next_u64()).collect::<Vec<_>>();
+        let expected: [u64; 16] = [
+            0xF67DFBA498E4937C, 0x84A5066A9204F380, 0xFEE34BD5F5514DBB,
+            0x4D1664739B8F80D6, 0x8607459AB52A14AA, 0x0E78BC5A98529E49,
+            0xFE5332822AD13777, 0x556C27525E33D01A, 0x08643CA615F3149F,
+            0xD0771FAF3CB04714, 0x30E86F68A37B008D, 0x3074EBC0488A3ADF,
+            0x270645EA7A2790BC, 0x5601A0A8D3763C6A, 0x2F83071F53F325DD,
+            0xB9090F3D42D2D2EA];
+        assert_eq!(vec, expected);
     }
 
     #[test]
