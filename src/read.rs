@@ -11,8 +11,8 @@
 //! A wrapper around any Read to treat it as an RNG.
 
 use std::fmt::Debug;
+use std::io;
 use std::io::Read;
-use std::mem;
 
 use {Rng, Error, ErrorKind};
 
@@ -21,7 +21,9 @@ use {Rng, Error, ErrorKind};
 ///
 /// # Panics
 ///
-/// It will panic if it there is insufficient data to fulfill a request.
+/// Only the `try_fill` method will report errors. All other methods will panic
+/// if the underlying reader encounters an error. They will also panic if there
+/// is insufficient data to fulfill a request.
 ///
 /// # Example
 ///
@@ -46,55 +48,43 @@ impl<R: Read + Debug> ReadRng<R> {
     }
 }
 
-macro_rules! impl_uint_from_fill {
-    ($ty:ty, $N:expr, $self:expr) => ({
-        // Transmute and convert from LE (i.e. byte-swap on BE)
-        assert_eq!($N, ::core::mem::size_of::<$ty>());
-        let mut buf = [0u8; $N];
-        fill(&mut $self.reader, &mut buf).unwrap();
-        unsafe{ *(buf.as_ptr() as *const $ty) }.to_le()
-    });
-}
-
 impl<R: Read + Debug> Rng for ReadRng<R> {
     fn next_u32(&mut self) -> u32 {
-        impl_uint_from_fill!(u32, 4, self)
+        ::rand_core::impls::next_u32_via_fill(self)
     }
 
     fn next_u64(&mut self) -> u64 {
-        impl_uint_from_fill!(u64, 8, self)
+        ::rand_core::impls::next_u64_via_fill(self)
     }
 
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128 {
-        impl_uint_from_fill!(u128, 16, self)
+        ::rand_core::impls::next_u128_via_fill(self)
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.try_fill(dest).unwrap();
     }
 
-    fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
-        if v.len() == 0 { return Ok(()); }
-        fill(&mut self.reader, v)
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        if dest.len() == 0 { return Ok(()); }
+        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
+        self.reader.read_exact(dest).map_err(map_err)
     }
 }
 
-fn fill(r: &mut Read, mut buf: &mut [u8]) -> Result<(), Error> {
-    while buf.len() > 0 {
-        match r.read(buf) {
-            Ok(0) => return Err(Error::new(ErrorKind::Unavailable, None)),
-            Ok(n) => buf = &mut mem::replace(&mut buf, &mut [])[n..],
-            Err(_) => return Err(Error::new(ErrorKind::Other, None)),
-        }
-    }
-    Ok(())
+fn map_err(err: io::Error) -> Error {
+    let kind = match err.kind() {
+        io::ErrorKind::UnexpectedEof => ErrorKind::Unavailable,
+        _ => ErrorKind::Other,
+    };
+    Error::new(kind, Some(Box::new(err)))
 }
 
 #[cfg(test)]
 mod test {
     use super::ReadRng;
-    use Rng;
+    use {Rng, ErrorKind};
 
     #[test]
     fn test_reader_rng_u64() {
@@ -130,8 +120,11 @@ mod test {
 
     #[test]
     fn test_reader_rng_insufficient_bytes() {
-        let mut rng = ReadRng::new(&[][..]);
-        let mut v = [0u8; 3];
-        assert!(rng.try_fill(&mut v).is_err());
+        let v = [1u8, 2, 3, 4, 5, 6, 7, 8];
+        let mut w = [0u8; 9];
+
+        let mut rng = ReadRng::new(&v[..]);
+
+        assert!(rng.try_fill(&mut w).err().unwrap().kind == ErrorKind::Unavailable);
     }
 }

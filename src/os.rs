@@ -46,22 +46,18 @@ impl OsRng {
 
 impl Rng for OsRng {
     fn next_u32(&mut self) -> u32 {
-        let mut buf: [u8; 4] = [0; 4];
-        self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
-        unsafe{ *(buf.as_ptr() as *const u32) }
+        // note: `next_u32_via_fill` does a byte-swap on big-endian
+        // architectures, which is not really needed here
+        ::rand_core::impls::next_u32_via_fill(self)
     }
 
     fn next_u64(&mut self) -> u64 {
-        let mut buf: [u8; 8] = [0; 8];
-        self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
-        unsafe{ *(buf.as_ptr() as *const u64) }
+        ::rand_core::impls::next_u64_via_fill(self)
     }
 
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128 {
-        let mut buf: [u8; 16] = [0; 16];
-        self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
-        unsafe{ *(buf.as_ptr() as *const u128) }
+        ::rand_core::impls::next_u128_via_fill(self)
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {

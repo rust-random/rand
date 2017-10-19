@@ -82,4 +82,27 @@ pub fn fill_bytes_via_u128<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
     fill_bytes_via!(rng, next_u128, 16, dest)
 }
 
+macro_rules! impl_uint_from_fill {
+    ($self:expr, $ty:ty, $N:expr) => ({
+        // Transmute and convert from LE (i.e. byte-swap on BE)
+        debug_assert!($N == ::core::mem::size_of::<$ty>());
+        let mut buf = [0u8; $N];
+        $self.fill_bytes(&mut buf);
+        unsafe{ *(buf.as_ptr() as *const $ty) }.to_le()
+    });
+}
+
+pub fn next_u32_via_fill<R: Rng+?Sized>(rng: &mut R) -> u32 {
+    impl_uint_from_fill!(rng, u32, 4)
+}
+
+pub fn next_u64_via_fill<R: Rng+?Sized>(rng: &mut R) -> u64 {
+    impl_uint_from_fill!(rng, u64, 8)
+}
+
+#[cfg(feature = "i128_support")]
+pub fn next_u128_via_fill<R: Rng+?Sized>(rng: &mut R) -> u128 {
+    impl_uint_from_fill!(rng, u128, 16)
+}
+
 // TODO: implement tests for the above
