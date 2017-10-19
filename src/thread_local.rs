@@ -13,7 +13,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use {Rng, StdRng, NewSeeded, Rand, Default, Result};
+use {Rng, StdRng, NewSeeded, Rand, Default, Error};
 
 use reseeding::{ReseedingRng, ReseedWithNew};
 
@@ -41,7 +41,7 @@ impl Rng for ThreadRng {
         self.rng.borrow_mut().next_u128()
     }
     
-    fn try_fill(&mut self, bytes: &mut [u8]) -> Result<()> {
+    fn try_fill(&mut self, bytes: &mut [u8]) -> Result<(), Error> {
         self.rng.borrow_mut().try_fill(bytes)
     }
 }

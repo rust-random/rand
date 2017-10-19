@@ -13,7 +13,7 @@
 
 use core::fmt::Debug;
 
-use {Rng, SeedableRng, Result};
+use {Rng, SeedableRng, Error};
 #[cfg(feature="std")]
 use NewSeeded;
 
@@ -80,7 +80,7 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
         self.rng.next_u128()
     }
 
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.reseed_if_necessary();
         self.bytes_generated += dest.len() as u64;
         self.rng.try_fill(dest)

@@ -11,7 +11,7 @@
 //! The ChaCha random number generator.
 
 use core::num::Wrapping as w;
-use {Rng, SeedFromRng, SeedableRng, Result};
+use {Rng, SeedFromRng, SeedableRng, Error};
 
 #[allow(bad_style)]
 type w32 = w<u32>;
@@ -208,7 +208,7 @@ impl Rng for ChaChaRng {
     
     // Custom implementation allowing larger reads from buffer is about 8%
     // faster than default implementation in my tests
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         use core::cmp::min;
         use core::intrinsics::{transmute, copy_nonoverlapping};
         
@@ -245,7 +245,7 @@ impl Rng for ChaChaRng {
 }
 
 impl SeedFromRng for ChaChaRng {
-    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self> {
+    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self, Error> {
         let mut key : [u32; KEY_WORDS] = [0; KEY_WORDS];
         for word in key.iter_mut() {
             *word = other.next_u32();

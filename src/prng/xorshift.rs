@@ -11,7 +11,7 @@
 //! Xorshift generators
 
 use core::num::Wrapping as w;
-use {Rng, SeedFromRng, SeedableRng, Result};
+use {Rng, SeedFromRng, SeedableRng, Error};
 
 /// An Xorshift[1] random number
 /// generator.
@@ -50,7 +50,7 @@ impl XorShiftRng {
 }
 
 impl SeedFromRng for XorShiftRng {
-    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Result<Self> {
+    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Result<Self, Error> {
         let mut tuple: (u32, u32, u32, u32);
         loop {
             tuple = (rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32());
@@ -84,7 +84,7 @@ impl Rng for XorShiftRng {
         ::rand_core::impls::next_u128_via_u64(self)
     }
     
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         ::rand_core::impls::try_fill_via_u32(self, dest)
     }
 }

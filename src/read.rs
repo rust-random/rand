@@ -14,7 +14,7 @@ use std::fmt::Debug;
 use std::io::Read;
 use std::mem;
 
-use {Rng, Error, Result};
+use {Rng, Error, ErrorKind};
 
 /// An RNG that reads random bytes straight from a `Read`. This will
 /// work best with an infinite reader, but this is not required.
@@ -68,17 +68,18 @@ impl<R: Read + Debug> Rng for ReadRng<R> {
         impl_uint_from_fill!(u128, 16, self)
     }
     
-    fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+    fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
         if v.len() == 0 { return Ok(()); }
         fill(&mut self.reader, v)
     }
 }
 
-fn fill(r: &mut Read, mut buf: &mut [u8]) -> Result<()> {
+fn fill(r: &mut Read, mut buf: &mut [u8]) -> Result<(), Error> {
     while buf.len() > 0 {
-        match r.read(buf)? {
-            0 => return Err(Error),
-            n => buf = &mut mem::replace(&mut buf, &mut [])[n..],
+        match r.read(buf) {
+            Ok(0) => return Err(Error::new(ErrorKind::Unavailable, None)),
+            Ok(n) => buf = &mut mem::replace(&mut buf, &mut [])[n..],
+            Err(_) => return Err(Error::new(ErrorKind::Other, None)),
         }
     }
     Ok(())
