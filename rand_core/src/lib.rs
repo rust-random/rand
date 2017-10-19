@@ -95,12 +95,27 @@ pub trait Rng {
     /// Fill `dest` entirely with random data.
     ///
     /// This method does *not* have any requirement on how much of the
+    /// generated random number stream is consumed; e.g. `fill_bytes_via_u64`
+    /// implementation uses `next_u64` thus consuming 8 bytes even when only
+    /// 1 is required. A different implementation might use `next_u32` and
+    /// only consume 4 bytes; *however* any change affecting *reproducibility*
+    /// of output must be considered a breaking change.
+    fn fill_bytes(&mut self, dest: &mut [u8]);
+
+    /// Fill `dest` entirely with random data.
+    ///
+    /// If a RNG can encounter an error, this is the only method that reports
+    /// it. The other methods either handle the error, or panic.
+    ///
+    /// This method does *not* have any requirement on how much of the
     /// generated random number stream is consumed; e.g. `try_fill_via_u64`
     /// implementation uses `next_u64` thus consuming 8 bytes even when only
     /// 1 is required. A different implementation might use `next_u32` and
     /// only consume 4 bytes; *however* any change affecting *reproducibility*
     /// of output must be considered a breaking change.
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error>;
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
+    }
 }
 
 impl<'a, R: Rng+?Sized> Rng for &'a mut R {
@@ -115,6 +130,10 @@ impl<'a, R: Rng+?Sized> Rng for &'a mut R {
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128 {
         (**self).next_u128()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        (**self).fill_bytes(dest)
     }
 
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
@@ -135,6 +154,10 @@ impl<R: Rng+?Sized> Rng for Box<R> {
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128 {
         (**self).next_u128()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        (**self).fill_bytes(dest)
     }
 
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
@@ -162,7 +185,6 @@ pub trait SeedFromRng: Sized {
     /// generator.
     fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Result<Self, Error>;
 }
-
 
 /// A random number generator that can be explicitly seeded to produce
 /// the same stream of randomness multiple times.

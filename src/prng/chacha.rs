@@ -208,7 +208,7 @@ impl Rng for ChaChaRng {
     
     // Custom implementation allowing larger reads from buffer is about 8%
     // faster than default implementation in my tests
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
         use core::cmp::min;
         use core::intrinsics::{transmute, copy_nonoverlapping};
         
@@ -240,7 +240,6 @@ impl Rng for ChaChaRng {
             };
             left.copy_from_slice(&chunk[..n]);
         }
-        Ok(())
     }
 }
 

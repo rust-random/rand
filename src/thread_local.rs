@@ -40,7 +40,11 @@ impl Rng for ThreadRng {
     fn next_u128(&mut self) -> u128 {
         self.rng.borrow_mut().next_u128()
     }
-    
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.rng.borrow_mut().fill_bytes(dest);
+    }
+
     fn try_fill(&mut self, bytes: &mut [u8]) -> Result<(), Error> {
         self.rng.borrow_mut().try_fill(bytes)
     }

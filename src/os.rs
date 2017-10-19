@@ -50,17 +50,24 @@ impl Rng for OsRng {
         self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
         unsafe{ *(buf.as_ptr() as *const u32) }
     }
+
     fn next_u64(&mut self) -> u64 {
         let mut buf: [u8; 8] = [0; 8];
         self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
         unsafe{ *(buf.as_ptr() as *const u64) }
     }
+
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128 {
         let mut buf: [u8; 16] = [0; 16];
         self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
         unsafe{ *(buf.as_ptr() as *const u128) }
     }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.try_fill(dest).unwrap();
+    }
+
     fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
         self.0.try_fill(v)
     }

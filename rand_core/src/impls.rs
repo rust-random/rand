@@ -24,7 +24,7 @@
 //! TODO: should we add more implementations?
 
 use core::intrinsics::transmute;
-use {Rng, Error};
+use Rng;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
 pub fn next_u64_via_u32<R: Rng+?Sized>(rng: &mut R) -> u64 {
@@ -45,7 +45,7 @@ pub fn next_u128_via_u64<R: Rng+?Sized>(rng: &mut R) -> u128 {
     (y << 64) | x
 }
 
-macro_rules! try_fill_via {
+macro_rules! fill_bytes_via {
     ($rng:ident, $next_u:ident, $BYTES:expr, $dest:ident) => {{
         let mut left = $dest;
         while left.len() >= $BYTES {
@@ -63,24 +63,23 @@ macro_rules! try_fill_via {
             };
             left.copy_from_slice(&chunk[..n]);
         }
-        Ok(())
     }}
 }
 
-/// Implement `try_fill` via `next_u32`, little-endian order.
-pub fn try_fill_via_u32<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) -> Result<(), Error> {
-    try_fill_via!(rng, next_u32, 4, dest)
+/// Implement `fill_bytes` via `next_u32`, little-endian order.
+pub fn fill_bytes_via_u32<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
+    fill_bytes_via!(rng, next_u32, 4, dest)
 }
 
-/// Implement `try_fill` via `next_u64`, little-endian order.
-pub fn try_fill_via_u64<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) -> Result<(), Error> {
-    try_fill_via!(rng, next_u64, 8, dest)
+/// Implement `fill_bytes` via `next_u64`, little-endian order.
+pub fn fill_bytes_via_u64<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
+    fill_bytes_via!(rng, next_u64, 8, dest)
 }
 
-/// Implement `try_fill` via `next_u128`, little-endian order.
+/// Implement `fill_bytes` via `next_u128`, little-endian order.
 #[cfg(feature = "i128_support")]
-pub fn try_fill_via_u128<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) -> Result<(), Error> {
-    try_fill_via!(rng, next_u128, 16, dest)
+pub fn fill_bytes_via_u128<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
+    fill_bytes_via!(rng, next_u128, 16, dest)
 }
 
 // TODO: implement tests for the above

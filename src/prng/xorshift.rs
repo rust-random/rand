@@ -84,8 +84,8 @@ impl Rng for XorShiftRng {
         ::rand_core::impls::next_u128_via_u64(self)
     }
     
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        ::rand_core::impls::try_fill_via_u32(self, dest)
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        ::rand_core::impls::fill_bytes_via_u32(self, dest);
     }
 }
 

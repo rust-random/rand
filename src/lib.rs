@@ -416,6 +416,9 @@ impl Rng for StdRng {
     fn next_u128(&mut self) -> u128 {
         self.rng.next_u128()
     }
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.rng.fill_bytes(dest);
+    }
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.rng.try_fill(dest)
     }
@@ -450,6 +453,9 @@ mod test {
         #[cfg(feature = "i128_support")]
         fn next_u128(&mut self) -> u128 {
             self.inner.next_u128()
+        }
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            self.inner.fill_bytes(dest)
         }
         fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             self.inner.try_fill(dest)
@@ -486,7 +492,7 @@ mod test {
                        80, 81, 82, 83, 84, 85, 86, 87];
         for &n in lengths.iter() {
             let mut v = repeat(0u8).take(n).collect::<Vec<_>>();
-            r.try_fill(&mut v).unwrap();
+            r.fill_bytes(&mut v);
 
             // use this to get nicer error messages.
             for (i, &byte) in v.iter().enumerate() {

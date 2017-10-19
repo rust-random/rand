@@ -80,6 +80,12 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
         self.rng.next_u128()
     }
 
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.reseed_if_necessary();
+        self.bytes_generated += dest.len() as u64;
+        self.rng.fill_bytes(dest);
+    }
+
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.reseed_if_necessary();
         self.bytes_generated += dest.len() as u64;
@@ -163,15 +169,15 @@ mod test {
 
     const FILL_BYTES_V_LEN: usize = 13579;
     #[test]
-    fn test_rng_try_fill() {
+    fn test_rng_fill_bytes() {
         let mut v = repeat(0u8).take(FILL_BYTES_V_LEN).collect::<Vec<_>>();
-        ::test::rng().try_fill(&mut v).unwrap();
+        ::test::rng().fill_bytes(&mut v);
 
-        // Sanity test: if we've gotten here, `try_fill` has not infinitely
+        // Sanity test: if we've gotten here, `fill_bytes` has not infinitely
         // recursed.
         assert_eq!(v.len(), FILL_BYTES_V_LEN);
 
-        // To test that `try_fill` actually did something, check that the
+        // To test that `fill_bytes` actually did something, check that the
         // average of `v` is not 0.
         let mut sum = 0.0;
         for &x in v.iter() {
