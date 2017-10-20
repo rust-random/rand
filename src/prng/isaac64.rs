@@ -81,6 +81,7 @@ pub struct Isaac64Rng {
 }
 
 // Cannot be derived because [u64; 256] does not implement Clone
+// FIXME: remove once RFC 2000 gets implemented
 impl Clone for Isaac64Rng {
     fn clone(&self) -> Isaac64Rng {
         Isaac64Rng {
@@ -100,61 +101,20 @@ impl fmt::Debug for Isaac64Rng {
     }
 }
 
-fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
-       e: &mut w64, f: &mut w64, g: &mut w64, h: &mut w64) {
-    *a -= *e; *f ^= *h >> 9;  *h += *a;
-    *b -= *f; *g ^= *a << 9;  *a += *b;
-    *c -= *g; *h ^= *b >> 23; *b += *c;
-    *d -= *h; *a ^= *c << 15; *c += *d;
-    *e -= *a; *b ^= *d >> 14; *d += *e;
-    *f -= *b; *c ^= *e << 20; *e += *f;
-    *g -= *c; *d ^= *f >> 17; *f += *g;
-    *h -= *d; *e ^= *g << 14; *g += *h;
-}
-
 impl Isaac64Rng {
     /// Creates an ISAAC-64 random number generator using an u64 as seed.
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.
     pub fn new_from_u64(seed: u64) -> Isaac64Rng {
-        let mut a = w(0x647c4677a2884b7c);
-        let mut b = w(0xb9f8b322c73ac862);
-        let mut c = w(0x8c0ea5053d4712a0);
-        let mut d = w(0xb29b2e824a595524);
-        let mut e = w(0x82f053db8355e0ce);
-        let mut f = w(0x48fe4a0fa5a09315);
-        let mut g = w(0xae985bf2cbfc89ed);
-        let mut h = w(0x98f5704f6c44c0ab);
-
-        let mut mem = [w(0); RAND_SIZE];
-
-        a += w(seed);
-
-        for i in (0..RAND_SIZE/8).map(|i| i * 8) {
-            mix(&mut a, &mut b, &mut c, &mut d, &mut e, &mut f, &mut g, &mut h);
-            mem[i  ] = a; mem[i+1] = b;
-            mem[i+2] = c; mem[i+3] = d;
-            mem[i+4] = e; mem[i+5] = f;
-            mem[i+6] = g; mem[i+7] = h;
-        }
+        let mut key = [w(0); RAND_SIZE];
+        key[0] = w(seed);
+        // Initialize with only one pass.
         // A second pass does not improve the quality here, because all of
         // the seed was already available in the first round.
         // Not doing the second pass has the small advantage that if `seed == 0`
         // this method produces exactly the same state as the reference
         // implementation when used unseeded.
-
-        let mut rng = Isaac64Rng {
-            rsl: [w(0); RAND_SIZE],
-            mem: mem,
-            a: w(0),
-            b: w(0),
-            c: w(0),
-            cnt: 0,
-        };
-
-        // Prepare the first set of results
-        rng.isaac64();
-        rng
+        init(key, 1)
     }
 
     /// Refills the output buffer (`self.rsl`)
@@ -259,7 +219,7 @@ impl Rng for Isaac64Rng {
 }
 
 /// Creates a new ISAAC-64 random number generator.
-fn init(key: [w64; RAND_SIZE]) -> Isaac64Rng {
+fn init(mut mem: [w64; RAND_SIZE], rounds: u32) -> Isaac64Rng {
     // These numbers are the result of initializing a...h with the
     // fractional part of the golden ratio in binary (0x9e3779b97f4a7c13)
     // and applying mix() 4 times.
@@ -272,28 +232,22 @@ fn init(key: [w64; RAND_SIZE]) -> Isaac64Rng {
     let mut g = w(0xae985bf2cbfc89ed);
     let mut h = w(0x98f5704f6c44c0ab);
 
-    let mut mem = [w(0); RAND_SIZE];
-
-    macro_rules! memloop {
-        ($arr:expr) => {{
-            for i in (0..RAND_SIZE/8).map(|i| i * 8) {
-                a += $arr[i  ]; b += $arr[i+1];
-                c += $arr[i+2]; d += $arr[i+3];
-                e += $arr[i+4]; f += $arr[i+5];
-                g += $arr[i+6]; h += $arr[i+7];
-                mix(&mut a, &mut b, &mut c, &mut d,
-                    &mut e, &mut f, &mut g, &mut h);
-                mem[i  ] = a; mem[i+1] = b;
-                mem[i+2] = c; mem[i+3] = d;
-                mem[i+4] = e; mem[i+5] = f;
-                mem[i+6] = g; mem[i+7] = h;
-            }
-        }}
+    // Normally this should do two passes, to make all of the seed effect all
+    // of `mem`
+    for _ in 0..rounds {
+        for i in (0..RAND_SIZE/8).map(|i| i * 8) {
+            a += mem[i  ]; b += mem[i+1];
+            c += mem[i+2]; d += mem[i+3];
+            e += mem[i+4]; f += mem[i+5];
+            g += mem[i+6]; h += mem[i+7];
+            mix(&mut a, &mut b, &mut c, &mut d,
+                &mut e, &mut f, &mut g, &mut h);
+            mem[i  ] = a; mem[i+1] = b;
+            mem[i+2] = c; mem[i+3] = d;
+            mem[i+4] = e; mem[i+5] = f;
+            mem[i+6] = g; mem[i+7] = h;
+        }
     }
-
-    memloop!(key);
-    // Do a second pass to make all of the seed affect all of `mem`
-    memloop!(mem);
 
     let mut rng = Isaac64Rng {
         rsl: [w(0); RAND_SIZE],
@@ -309,6 +263,18 @@ fn init(key: [w64; RAND_SIZE]) -> Isaac64Rng {
     rng
 }
 
+fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
+       e: &mut w64, f: &mut w64, g: &mut w64, h: &mut w64) {
+    *a -= *e; *f ^= *h >> 9;  *h += *a;
+    *b -= *f; *g ^= *a << 9;  *a += *b;
+    *c -= *g; *h ^= *b >> 23; *b += *c;
+    *d -= *h; *a ^= *c << 15; *c += *d;
+    *e -= *a; *b ^= *d >> 14; *d += *e;
+    *f -= *b; *c ^= *e << 20; *e += *f;
+    *g -= *c; *d ^= *f >> 17; *f += *g;
+    *h -= *d; *e ^= *g << 14; *g += *h;
+}
+
 impl Rand for Isaac64Rng {
     fn rand<R: Rng>(other: &mut R) -> Isaac64Rng {
         let mut key = [w(0); RAND_SIZE];
@@ -318,7 +284,7 @@ impl Rand for Isaac64Rng {
             let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE * 8);
             other.fill_bytes(slice);
         }
-        init(key)
+        init(key, 2)
     }
 }
 
@@ -343,7 +309,7 @@ impl<'a> SeedableRng<&'a [u64]> for Isaac64Rng {
             *rsl_elem = w(seed_elem);
         }
 
-        init(key)
+        init(key, 2)
     }
 }
 
