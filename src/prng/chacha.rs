@@ -241,6 +241,10 @@ impl Rng for ChaChaRng {
             left.copy_from_slice(&chunk[..n]);
         }
     }
+
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
+    }
 }
 
 impl SeedFromRng for ChaChaRng {
