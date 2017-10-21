@@ -110,6 +110,7 @@ impl Clone for IsaacRng {
     }
 }
 
+// Custom Debug implementation that does not expose the internal state
 impl fmt::Debug for IsaacRng {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "IsaacRng {{}}")
