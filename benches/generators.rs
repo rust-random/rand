@@ -9,7 +9,7 @@ const BYTES_LEN: usize = 1024;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{Rng, NewSeeded, StdRng, OsRng, Rand, Default};
+use rand::{Rng, NewSeeded, SeedFromRng, StdRng, OsRng, Rand, Default};
 use rand::prng::{XorShiftRng, IsaacRng, Isaac64Rng, ChaChaRng};
 
 macro_rules! gen_bytes {
@@ -58,3 +58,23 @@ gen_usize!(gen_usize_isaac64, Isaac64Rng);
 gen_usize!(gen_usize_chacha, ChaChaRng);
 gen_usize!(gen_usize_std, StdRng);
 gen_usize!(gen_usize_os, OsRng);
+
+macro_rules! init_gen {
+    ($fnn:ident, $gen:ident) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = XorShiftRng::new().unwrap();
+            b.iter(|| {
+                for _ in 0..RAND_BENCH_N {
+                    black_box($gen::from_rng(&mut rng).unwrap());
+                }
+            });
+        }
+    }
+}
+
+init_gen!(init_xorshift, XorShiftRng);
+init_gen!(init_isaac, IsaacRng);
+init_gen!(init_isaac64, Isaac64Rng);
+init_gen!(init_chacha, ChaChaRng);
+init_gen!(init_std, StdRng);

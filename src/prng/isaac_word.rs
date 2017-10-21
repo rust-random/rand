@@ -10,7 +10,6 @@
 
 //! The ISAAC random number generator.
 
-use core::fmt;
 use {Rng, SeedFromRng, Error};
 
 #[cfg(target_pointer_width = "32")]
@@ -30,14 +29,8 @@ type WordRngType = super::isaac64::Isaac64Rng;
 /// `Isaac64Rng` uses.
 ///
 /// See for an explanation of the algorithm `IsaacRng` and `Isaac64Rng`.
-#[derive(Copy)]
+#[derive(Clone, Debug)]
 pub struct IsaacWordRng(WordRngType);
-
-impl Clone for IsaacWordRng {
-    fn clone(&self) -> IsaacWordRng {
-        *self
-    }
-}
 
 impl Rng for IsaacWordRng {
     fn next_u32(&mut self) -> u32 {
@@ -65,11 +58,5 @@ impl Rng for IsaacWordRng {
 impl SeedFromRng for IsaacWordRng {
     fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self, Error> {
         WordRngType::from_rng(other).map(|rng| IsaacWordRng(rng))
-    }
-}
-
-impl fmt::Debug for IsaacWordRng {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "IsaacWordRng {{}}")
     }
 }
