@@ -11,7 +11,7 @@
 //! The ChaCha random number generator.
 
 use core::num::Wrapping as w;
-use {Rng, SeedFromRng, SeedableRng, Error};
+use {Rng, CryptoRng, SeedFromRng, SeedableRng, Error};
 
 #[allow(bad_style)]
 type w32 = w<u32>;
@@ -246,6 +246,8 @@ impl Rng for ChaChaRng {
         Ok(self.fill_bytes(dest))
     }
 }
+
+impl CryptoRng for ChaChaRng {}
 
 impl SeedFromRng for ChaChaRng {
     fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self, Error> {

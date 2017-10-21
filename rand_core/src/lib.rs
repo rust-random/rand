@@ -49,38 +49,55 @@ pub mod impls;
 pub mod mock;
 
 
-/// A random number generator.
+/// A random number generator (not necessarily suitable for cryptography).
 /// 
-/// There are two classes of generators: *algorithmic* generators, also called
-/// PRNGs (Pseudo-Random Number Generators) and *external* generators.
+/// "Random" number generators can be categorised multiple ways:
 /// 
-/// Another classification for generators is those that are cryptographically
-/// secure (CSPRNGs) and those that are not. CSPRNGs should satisfy two
-/// additional properties: (1) given the first *k* bits of an algorithm's output
-/// sequence, it should not be possible using polynomial-time algorithms to
-/// predict the next bit with probability significantly greater than 50%, and
-/// (2) if a CSPRNG's state is revealed, it should not be
-/// computationally-feasible to reconstruct output prior to this.
+/// *   *True* and *apparent* random number generators: *true* generators must
+///     depend on some phenomenon which is actually random, such as atomic decay
+///     or photon polarisation (note: bias may still be present, and it is
+///     possible that these phenomena are in fact dependent on other unseen
+///     parameters), while *apparent* random numbers are merely unpredictable.
+/// *   *Algorithmic* and *external* generators: *algorithmic generators* can
+///     never produce *true random numbers* but can still yield hard-to-predict
+///     output. External generators may or may not use *true random sources*.
+///     
+///     *Algorithmic generators* are also known as *psuedo-random number
+///     generators* or *PRNGs*.
+///     
+///     *Algorithmic* generators are necessarily deterministic: if two
+///     generators using the same algorithm are initialised with the same seed,
+///     they will necessarily produce the same output. PRNGs should normally
+///     implement the `SeedableRng` trait, allowing this. To be reproducible
+///     across platforms, conversion of output from one type to another should
+///     pay special attention to endianness (we generally choose LE, e.g.
+///     `fn next_u32(&mut self) -> u32 { self.next_u64() as u32 }`).
+/// *   *Cryptographically secure*, *trivially predictable*, and various states
+///     in between: if, after observing some output from an algorithmic
+///     generator future output of the generator can be predicted, then it is
+///     insecure.
+///     
+///     Note that all algorithmic generators eventually cycle,
+///     returning to previous internal state and repeating all output, but in
+///     good generators the period is so long that it is never reached (e.g. our
+///     implementation of ChaCha would produce 2^134 bytes of output before
+///     cycling, although cycles are not always so long). Predictability may not
+///     be a problem for games, simulations and some randomised algorithms,
+///     but unpredictability is essential in cryptography.
 /// 
-/// PRNGs are expected to be reproducible: that is, when a fixed algorithm is
-/// seeded with a fixed value, then calling *any* sequence of the `Rng`'s
-/// functions should produce a fixed sequence of values, and produce the *same*
-/// sequence of values on every platform. This necessitates that a PRNG have
-/// fixed endianness.
+/// The `Rng` trait can be used for all the above types of generators. If using
+/// random numbers for cryptography prefer to use numbers pulled from the OS
+/// directly (`OsRng`) or at least use a generator implementing `CryptoRng`.
+/// For applications where performance is important and unpredictability is
+/// less critical but still somewhat important (e.g. to prevent a DoS attack),
+/// one may prefer to use a `CryptoRng` generator or may consider other "hard
+/// to predict" but not cryptographically proven generators.
 /// 
-/// All default implementations use little-endian code (e.g. to construct a
-/// `u64` from two `u32` numbers, the first is the low part). To implement
-/// `next_u32` in terms of `next_u64`, one should write `self.next_u64() as u32`
-/// which takes the least-significant half (LE order).
-/// 
-/// PRNGs are normally infallible, while external generators may fail. PRNGs
-/// however have a finite period, and may emit an error rather than loop (this
-/// is important for CSPRNGs which could conceivably cycle, but non-crypto
-/// generators should simply cycle; in many cases the period is so long that
-/// consuming all available values would be inconceivable).
-/// 
-/// TODO: details on error handling are under discussion; for now implementations
-/// may panic.
+/// PRNGs are usually infallible, while external generators may fail. Since
+/// errors are rare and may be hard for the user to handle, most of the output
+/// functions only allow errors to be reported as panics; byte output can
+/// however be retrieved from `try_fill` which allows for the usual error
+/// handling.
 pub trait Rng {
     /// Return the next random u32.
     fn next_u32(&mut self) -> u32;
@@ -115,6 +132,26 @@ pub trait Rng {
     /// of output must be considered a breaking change.
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
+
+/// A marker trait for an `Rng` which may be considered for use in
+/// cryptography.
+/// 
+/// *Cryptographically secure generators*, also known as *CSPRNGs*, should
+/// satisfy an additional properties over other generators: given the first
+/// *k* bits of an algorithm's output
+/// sequence, it should not be possible using polynomial-time algorithms to
+/// predict the next bit with probability significantly greater than 50%.
+/// 
+/// Some generators may satisfy an additional property, however this is not
+/// required: if the CSPRNG's state is revealed, it should not be
+/// computationally-feasible to reconstruct output prior to this. Some other
+/// generators allow backwards-computation and are consided *reversible*.
+/// 
+/// Note that this trait is provided for guidance only and cannot guarantee
+/// suitability for cryptographic applications. In general it should only be
+/// implemented for well-reviewed code implementing well-regarded algorithms.
+pub trait CryptoRng: Rng {}
+
 
 impl<'a, R: Rng+?Sized> Rng for &'a mut R {
     fn next_u32(&mut self) -> u32 {
@@ -167,13 +204,6 @@ impl<R: Rng+?Sized> Rng for Box<R> {
 /// Support mechanism for creating random number generators seeded by other
 /// generators. All PRNGs should support this to enable `NewSeeded` support,
 /// which should be the preferred way of creating randomly-seeded generators.
-/// 
-/// TODO: should this use `Distribution` instead? That would require moving
-/// that trait and a distribution type to this crate.
-/// TODO: should the source requirement be changed, e.g. to `CryptoRng`?
-/// Note: this is distinct from `SeedableRng` because it is generic over the
-/// RNG type (achieving the same with `SeedableRng` would require dynamic
-/// dispatch: `SeedableRng<&mut Rng>`).
 pub trait SeedFromRng: Sized {
     /// Creates a new instance, seeded from another `Rng`.
     /// 
