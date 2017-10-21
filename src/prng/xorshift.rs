@@ -11,6 +11,7 @@
 //! Xorshift generators
 
 use core::num::Wrapping as w;
+use core::fmt;
 use {Rng, SeedableRng, Rand};
 use impls;
 
@@ -24,13 +25,19 @@ use impls;
 /// [1]: Marsaglia, George (July 2003). ["Xorshift
 /// RNGs"](http://www.jstatsoft.org/v08/i14/paper). *Journal of
 /// Statistical Software*. Vol. 8 (Issue 14).
-#[allow(missing_copy_implementations)]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct XorShiftRng {
     x: w<u32>,
     y: w<u32>,
     z: w<u32>,
     w: w<u32>,
+}
+
+// Custom Debug implementation that does not expose the internal state
+impl fmt::Debug for XorShiftRng {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "XorShiftRng {{}}")
+    }
 }
 
 impl XorShiftRng {
