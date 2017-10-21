@@ -10,7 +10,6 @@
 
 //! A wrapper around any Read to treat it as an RNG.
 
-use std::fmt::Debug;
 use std::io;
 use std::io::Read;
 
@@ -35,11 +34,12 @@ use {Rng, Error, ErrorKind};
 /// println!("{:x}", distributions::uniform::<u32, _>(&mut rng));
 /// ```
 #[derive(Debug)]
-pub struct ReadRng<R: Debug> {
+// Do not derive Clone, because it could share the underlying reader
+pub struct ReadRng<R> {
     reader: R
 }
 
-impl<R: Read + Debug> ReadRng<R> {
+impl<R: Read> ReadRng<R> {
     /// Create a new `ReadRng` from a `Read`.
     pub fn new(r: R) -> ReadRng<R> {
         ReadRng {
@@ -48,7 +48,7 @@ impl<R: Read + Debug> ReadRng<R> {
     }
 }
 
-impl<R: Read + Debug> Rng for ReadRng<R> {
+impl<R: Read> Rng for ReadRng<R> {
     fn next_u32(&mut self) -> u32 {
         ::rand_core::impls::next_u32_via_fill(self)
     }

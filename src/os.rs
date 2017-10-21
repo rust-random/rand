@@ -18,7 +18,9 @@ use {Rng, Error};
 // TODO: replace many of the panics below with Result error handling
 
 /// A random number generator that retrieves randomness straight from
-/// the operating system. Platform sources:
+/// the operating system.
+///
+/// Platform sources:
 ///
 /// - Unix-like systems (Linux, Android, Mac OSX): read directly from
 ///   `/dev/urandom`, or from `getrandom(2)` system call if available.
@@ -36,6 +38,12 @@ use {Rng, Error};
 /// [1] See <https://www.python.org/dev/peps/pep-0524/> for a more
 ///     in-depth discussion.
 pub struct OsRng(imp::OsRng);
+
+impl fmt::Debug for OsRng {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 impl OsRng {
     /// Create a new `OsRng`.
@@ -66,12 +74,6 @@ impl Rng for OsRng {
 
     fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
         self.0.try_fill(v)
-    }
-}
-
-impl fmt::Debug for OsRng {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "OsRng {{}}")
     }
 }
 

@@ -94,6 +94,7 @@ impl Clone for Isaac64Rng {
     }
 }
 
+// Custom Debug implementation that does not expose the internal state
 impl fmt::Debug for Isaac64Rng {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Isaac64Rng {{}}")
