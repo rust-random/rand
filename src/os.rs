@@ -14,7 +14,7 @@
 use std::{mem, fmt};
 use std::io::Read;
 
-use {Rng, Result};
+use {Rng, Error};
 // TODO: replace many of the panics below with Result error handling
 
 /// A random number generator that retrieves randomness straight from
@@ -39,29 +39,32 @@ pub struct OsRng(imp::OsRng);
 
 impl OsRng {
     /// Create a new `OsRng`.
-    pub fn new() -> Result<OsRng> {
+    pub fn new() -> Result<OsRng, Error> {
         imp::OsRng::new().map(OsRng)
     }
 }
 
 impl Rng for OsRng {
     fn next_u32(&mut self) -> u32 {
-        let mut buf: [u8; 4] = [0; 4];
-        self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
-        unsafe{ *(buf.as_ptr() as *const u32) }
+        // note: `next_u32_via_fill` does a byte-swap on big-endian
+        // architectures, which is not really needed here
+        ::rand_core::impls::next_u32_via_fill(self)
     }
+
     fn next_u64(&mut self) -> u64 {
-        let mut buf: [u8; 8] = [0; 8];
-        self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
-        unsafe{ *(buf.as_ptr() as *const u64) }
+        ::rand_core::impls::next_u64_via_fill(self)
     }
+
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128 {
-        let mut buf: [u8; 16] = [0; 16];
-        self.try_fill(&mut buf).unwrap_or_else(|e| panic!("try_fill failed: {:?}", e));
-        unsafe{ *(buf.as_ptr() as *const u128) }
+        ::rand_core::impls::next_u128_via_fill(self)
     }
-    fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.try_fill(dest).unwrap();
+    }
+
+    fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
         self.0.try_fill(v)
     }
 }
@@ -77,7 +80,7 @@ impl fmt::Debug for OsRng {
 struct ReadRng<R> (R);
 
 impl<R: Read> ReadRng<R> {
-    fn try_fill(&mut self, mut buf: &mut [u8]) -> Result<()> {
+    fn try_fill(&mut self, mut buf: &mut [u8]) -> Result<(), Error> {
         while buf.len() > 0 {
             match self.0.read(buf).unwrap_or_else(|e| panic!("Read error: {}", e)) {
                 0 => panic!("OsRng: no bytes available"),
@@ -99,10 +102,10 @@ mod imp {
 
     use self::OsRngInner::*;
     use super::ReadRng;
+    use Error;
 
     use std::io;
     use std::fs::File;
-    use Result;
 
     #[cfg(all(target_os = "linux",
               any(target_arch = "x86_64",
@@ -139,7 +142,7 @@ mod imp {
                       target_arch = "powerpc"))))]
     fn getrandom(_buf: &mut [u8]) -> libc::c_long { -1 }
 
-    fn getrandom_try_fill(v: &mut [u8]) -> Result<()> {
+    fn getrandom_try_fill(v: &mut [u8]) -> Result<(), Error> {
         let mut read = 0;
         let len = v.len();
         while read < len {
@@ -206,18 +209,18 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             if is_getrandom_available() {
                 return Ok(OsRng { inner: OsGetrandomRng });
             }
 
-            let reader = File::open("/dev/urandom")?;
+            let reader = File::open("/dev/urandom").unwrap();
             let reader_rng = ReadRng(reader);
 
             Ok(OsRng { inner: OsReadRng(reader_rng) })
         }
         
-        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             match self.inner {
                 OsGetrandomRng => getrandom_try_fill(v),
                 OsReadRng(ref mut rng) => rng.try_fill(v)
@@ -232,7 +235,6 @@ mod imp {
 
     use std::io;
     use self::libc::{c_int, size_t};
-    use Result;
 
     #[derive(Debug)]
     pub struct OsRng;
@@ -249,10 +251,10 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             let ret = unsafe {
                 SecRandomCopyBytes(kSecRandomDefault, v.len() as size_t, v.as_mut_ptr())
             };
@@ -269,16 +271,15 @@ mod imp {
     extern crate libc;
 
     use std::{io, ptr};
-    use Result;
 
     #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             let mib = [libc::CTL_KERN, libc::KERN_ARND];
             // kern.arandom permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
@@ -303,16 +304,15 @@ mod imp {
     extern crate libc;
 
     use std::io;
-    use Result;
 
     #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             // getentropy(2) permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
                 let ret = unsafe {
@@ -333,7 +333,6 @@ mod imp {
     use std::io;
     use std::fs::File;
     use super::ReadRng;
-    use Result;
 
     #[derive(Debug)]
     pub struct OsRng {
@@ -341,13 +340,13 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> Result<OsRng> {
-            let reader = File::open("rand:")?;
+        pub fn new() -> Result<OsRng, Error> {
+            let reader = File::open("rand:").unwrap();
             let reader_rng = ReadRng(reader);
 
             Ok(OsRng { inner: reader_rng })
         }
-        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             self.inner.try_fill(v)
         }
     }
@@ -358,16 +357,15 @@ mod imp {
     extern crate fuchsia_zircon;
 
     use std::io;
-    use Result;
 
     #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             for s in v.chunks_mut(fuchsia_zircon::ZX_CPRNG_DRAW_MAX_LEN) {
                 let mut filled = 0;
                 while filled < s.len() {
@@ -385,7 +383,6 @@ mod imp {
 #[cfg(windows)]
 mod imp {
     use std::io;
-    use Result;
 
     type BOOLEAN = u8;
     type ULONG = u32;
@@ -400,10 +397,10 @@ mod imp {
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             // RtlGenRandom takes an ULONG (u32) for the length so we need to
             // split up the buffer.
             for slice in v.chunks_mut(<ULONG>::max_value() as usize) {
@@ -426,7 +423,6 @@ mod imp {
 
     use std::io;
     use std::mem;
-    use Result;
 
     #[derive(Debug)]
     pub struct OsRng(extern fn(dest: *mut libc::c_void,
@@ -449,7 +445,7 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             let mut iface = NaClIRTRandom {
                 get_random_bytes: None,
             };
@@ -468,7 +464,7 @@ mod imp {
                 Err(Result)
             }
         }
-        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<()> {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             let mut read = 0;
             loop {
                 let mut r: libc::size_t = 0;
