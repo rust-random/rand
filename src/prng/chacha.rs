@@ -11,6 +11,7 @@
 //! The ChaCha random number generator.
 
 use core::num::Wrapping as w;
+use core::fmt;
 use {Rng, SeedableRng, Rand};
 use impls;
 
@@ -30,11 +31,18 @@ const CHACHA_ROUNDS: u32 = 20; // Cryptographically secure from 8 upwards as of 
 ///
 /// [1]: D. J. Bernstein, [*ChaCha, a variant of
 /// Salsa20*](http://cr.yp.to/chacha.html)
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ChaChaRng {
     buffer:  [w32; STATE_WORDS], // Internal buffer of output
     state:   [w32; STATE_WORDS], // Initial state
     index:   usize,                 // Index into state
+}
+
+// Custom Debug implementation that does not expose the internal state
+impl fmt::Debug for ChaChaRng {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ChaChaRng {{}}")
+    }
 }
 
 macro_rules! quarter_round{
