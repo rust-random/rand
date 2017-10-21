@@ -30,19 +30,12 @@ const CHACHA_ROUNDS: u32 = 20; // Cryptographically secure from 8 upwards as of 
 ///
 /// [1]: D. J. Bernstein, [*ChaCha, a variant of
 /// Salsa20*](http://cr.yp.to/chacha.html)
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct ChaChaRng {
     buffer:  [w32; STATE_WORDS], // Internal buffer of output
     state:   [w32; STATE_WORDS], // Initial state
     index:   usize,                 // Index into state
 }
-
-static EMPTY: ChaChaRng = ChaChaRng {
-    buffer:  [w(0); STATE_WORDS],
-    state:   [w(0); STATE_WORDS],
-    index:   STATE_WORDS
-};
-
 
 macro_rules! quarter_round{
     ($a: expr, $b: expr, $c: expr, $d: expr) => {{
@@ -103,7 +96,11 @@ impl ChaChaRng {
     /// - 2917185654
     /// - 2419978656
     pub fn new_unseeded() -> ChaChaRng {
-        let mut rng = EMPTY;
+        let mut rng = ChaChaRng {
+            buffer:  [w(0); STATE_WORDS],
+            state:   [w(0); STATE_WORDS],
+            index:   STATE_WORDS
+        };
         rng.init(&[0; KEY_WORDS]);
         rng
     }
@@ -210,13 +207,7 @@ impl Rng for ChaChaRng {
 impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
 
     fn reseed(&mut self, seed: &'a [u32]) {
-        // reset state
-        self.init(&[0u32; KEY_WORDS]);
-        // set key in place
-        let key = &mut self.state[4 .. 4+KEY_WORDS];
-        for (k, s) in key.iter_mut().zip(seed.iter()) {
-            *k = w(*s);
-        }
+        *self = Self::from_seed(seed);
     }
 
     /// Create a ChaCha generator from a seed,
@@ -224,8 +215,19 @@ impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
     /// Only up to 8 words are used; if less than 8
     /// words are used, the remaining are set to zero.
     fn from_seed(seed: &'a [u32]) -> ChaChaRng {
-        let mut rng = EMPTY;
-        rng.reseed(seed);
+        let mut rng = ChaChaRng {
+            buffer:  [w(0); STATE_WORDS],
+            state:   [w(0); STATE_WORDS],
+            index:   STATE_WORDS
+        };
+        rng.init(&[0u32; KEY_WORDS]);
+        // set key in place
+        {
+            let key = &mut rng.state[4 .. 4+KEY_WORDS];
+            for (k, s) in key.iter_mut().zip(seed.iter()) {
+                *k = w(*s);
+            }
+        }
         rng
     }
 }
