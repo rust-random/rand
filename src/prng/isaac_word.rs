@@ -10,7 +10,7 @@
 
 //! The ISAAC random number generator.
 
-use {Rng, SeedFromRng, Result};
+use {Rng, SeedFromRng, Error};
 
 #[cfg(target_pointer_width = "32")]
 type WordRngType = super::isaac::IsaacRng;
@@ -46,13 +46,17 @@ impl Rng for IsaacWordRng {
         self.0.next_u128()
     }
     
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.0.fill_bytes(dest)
+    }
+
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.0.try_fill(dest)
     }
 }
 
 impl SeedFromRng for IsaacWordRng {
-    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self> {
+    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self, Error> {
         WordRngType::from_rng(other).map(|rng| IsaacWordRng(rng))
     }
 }

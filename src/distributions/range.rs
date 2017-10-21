@@ -210,7 +210,7 @@ range_int_impl! { i16, i16, u16, i32, u32 }
 range_int_impl! { i32, i32, u32, i32, u32 }
 range_int_impl! { i64, i64, u64, i64, u64 }
 #[cfg(feature = "i128_support")]
-range_int_impl! { i128, i128, u128, u128 }
+range_int_impl! { i128, i128, u128, u128, u128 }
 range_int_impl! { isize, isize, usize, isize, usize }
 range_int_impl! { u8, i8, u8, i32, u32 }
 range_int_impl! { u16, i16, u16, i32, u32 }

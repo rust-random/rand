@@ -20,8 +20,8 @@
 //! `SeedFromRng` and `SeedableRng` are extension traits for construction and
 //! reseeding.
 //! 
-//! `Error` and `Result` are provided for error-handling. They are safe to use
-//! in `no_std` environments.
+//! `Error` is provided for error-handling. It is safe to use in `no_std`
+//! environments.
 //! 
 //! The `impls` sub-module includes a few small functions to assist
 //! implementation of `Rng`. Since this module is only of interest to `Rng`
@@ -42,6 +42,8 @@
 // We need to use several items from "core" for no_std support.
 #[cfg(feature="std")]
 extern crate core;
+
+use core::fmt;
 
 pub mod impls;
 pub mod mock;
@@ -89,8 +91,21 @@ pub trait Rng {
     /// Return the next random u128.
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128;
-    
+
     /// Fill `dest` entirely with random data.
+    ///
+    /// This method does *not* have any requirement on how much of the
+    /// generated random number stream is consumed; e.g. `fill_bytes_via_u64`
+    /// implementation uses `next_u64` thus consuming 8 bytes even when only
+    /// 1 is required. A different implementation might use `next_u32` and
+    /// only consume 4 bytes; *however* any change affecting *reproducibility*
+    /// of output must be considered a breaking change.
+    fn fill_bytes(&mut self, dest: &mut [u8]);
+
+    /// Fill `dest` entirely with random data.
+    ///
+    /// If a RNG can encounter an error, this is the only method that reports
+    /// it. The other methods either handle the error, or panic.
     ///
     /// This method does *not* have any requirement on how much of the
     /// generated random number stream is consumed; e.g. `try_fill_via_u64`
@@ -98,7 +113,7 @@ pub trait Rng {
     /// 1 is required. A different implementation might use `next_u32` and
     /// only consume 4 bytes; *however* any change affecting *reproducibility*
     /// of output must be considered a breaking change.
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()>;
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
 
 impl<'a, R: Rng+?Sized> Rng for &'a mut R {
@@ -115,7 +130,11 @@ impl<'a, R: Rng+?Sized> Rng for &'a mut R {
         (**self).next_u128()
     }
 
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        (**self).fill_bytes(dest)
+    }
+
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill(dest)
     }
 }
@@ -135,7 +154,11 @@ impl<R: Rng+?Sized> Rng for Box<R> {
         (**self).next_u128()
     }
 
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        (**self).fill_bytes(dest)
+    }
+
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill(dest)
     }
 }
@@ -158,9 +181,8 @@ pub trait SeedFromRng: Sized {
     /// hand, seeding a simple numerical generator from another of the same
     /// type sometimes has serious side effects such as effectively cloning the
     /// generator.
-    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Result<Self>;
+    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Result<Self, Error>;
 }
-
 
 /// A random number generator that can be explicitly seeded to produce
 /// the same stream of randomness multiple times.
@@ -180,21 +202,71 @@ pub trait SeedableRng<Seed>: Rng {
 }
 
 
-/// Error type for cryptographic generators. Technically external generators
-/// such as the operating system or hardware generators could fail. A PRNG
-/// (algorithm) could also fail if it detects cycles, though most PRNGs have
-/// sufficiently long cycles that looping is not usually feasible.
-/// 
-/// TODO: how should error details be reported?
-#[derive(Debug)]
-pub struct Error;
+/// Error kind which can be matched over.
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
+pub enum ErrorKind {
+    /// Permanent failure: likely not recoverable without user action.
+    Unavailable,
+    /// Temporary failure: recommended to retry a few times, but may also be
+    /// irrecoverable.
+    Transient,
+    /// Not ready yet: recommended to try again a little later.
+    NotReady,
+    /// Uncategorised error
+    Other,
+    #[doc(hidden)]
+    __Nonexhaustive,
+}
 
 #[cfg(feature="std")]
-impl From<::std::io::Error> for Error {
-    fn from(_: ::std::io::Error) -> Error {
-        Error
+#[derive(Debug)]
+pub struct Error {
+    pub kind: ErrorKind,
+    pub cause: Option<Box<std::error::Error>>,
+}
+
+#[cfg(not(feature="std"))]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Error {
+    pub kind: ErrorKind,
+    pub cause: Option<&'static str>,
+}
+
+impl Error {
+    #[cfg(feature="std")]
+    pub fn new(kind: ErrorKind, cause: Option<Box<std::error::Error>>) -> Error {
+        Error {
+            kind: kind,
+            cause: cause,
+        }
     }
 }
 
-/// Result type (convenience type-def)
-pub type Result<T> = ::std::result::Result<T, Error>;
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.kind {
+            ErrorKind::Unavailable => write!(f, "RNG not available."),
+            ErrorKind::Transient => write!(f, "RNG has failed, probably temporary."),
+            ErrorKind::NotReady => write!(f, "RNG not ready yet."),
+            ErrorKind::Other => write!(f, "An unspecified RNG error occurred."),
+            ErrorKind::__Nonexhaustive => unreachable!(),
+        }
+    }
+}
+
+#[cfg(feature="std")]
+impl ::std::error::Error for Error {
+    fn description(&self) -> &str {
+        match self.kind {
+            ErrorKind::Unavailable => "not available",
+            ErrorKind::Transient => "temporary failure",
+            ErrorKind::NotReady => "not ready yet",
+            ErrorKind::Other => "Uncategorised rng error",
+            ErrorKind::__Nonexhaustive => unreachable!(),
+        }
+    }
+
+    fn cause(&self) -> Option<&::std::error::Error> {
+        self.cause.as_ref().map(|e| &**e)
+    }
+}

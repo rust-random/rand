@@ -15,7 +15,7 @@ use core::iter::repeat;
 use core::num::Wrapping as w;
 use core::fmt;
 
-use {Rng, SeedFromRng, SeedableRng, Result};
+use {Rng, SeedFromRng, SeedableRng, Error};
 
 #[allow(non_camel_case_types)]
 type w64 = w<u64>;
@@ -217,8 +217,12 @@ impl Rng for Isaac64Rng {
         ::rand_core::impls::next_u128_via_u64(self)
     }
 
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
-        ::rand_core::impls::try_fill_via_u32(self, dest)
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        ::rand_core::impls::fill_bytes_via_u32(self, dest);
+    }
+
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
     }
 }
 
@@ -280,7 +284,7 @@ fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
 }
 
 impl SeedFromRng for Isaac64Rng {
-    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self> {
+    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self, Error> {
         let mut key = [w(0); RAND_SIZE];
         unsafe {
             let ptr = key.as_mut_ptr() as *mut u8;

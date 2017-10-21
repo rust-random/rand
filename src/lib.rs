@@ -255,7 +255,7 @@ extern crate core;
 
 extern crate rand_core;
 
-pub use rand_core::{Rng, SeedFromRng, SeedableRng, Error, Result};
+pub use rand_core::{Rng, SeedFromRng, SeedableRng, Error, ErrorKind};
 
 #[cfg(feature="std")]
 pub use read::ReadRng;
@@ -293,12 +293,12 @@ mod thread_local;
 #[cfg(feature="std")]
 pub trait NewSeeded: Sized {
     /// Creates a new instance, automatically seeded via `OsRng`.
-    fn new() -> Result<Self>;
+    fn new() -> Result<Self, Error>;
 }
 
 #[cfg(feature="std")]
 impl<R: SeedFromRng> NewSeeded for R {
-    fn new() -> Result<Self> {
+    fn new() -> Result<Self, Error> {
         let mut r = OsRng::new()?;
         Self::from_rng(&mut r)
     }
@@ -416,13 +416,16 @@ impl Rng for StdRng {
     fn next_u128(&mut self) -> u128 {
         self.rng.next_u128()
     }
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.rng.fill_bytes(dest);
+    }
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.rng.try_fill(dest)
     }
 }
 
 impl SeedFromRng for StdRng {
-    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self> {
+    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self, Error> {
         IsaacWordRng::from_rng(other).map(|rng| StdRng{ rng })
     }
 }
@@ -430,7 +433,7 @@ impl SeedFromRng for StdRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, thread_rng, Sample, Result};
+    use {Rng, thread_rng, Sample, Error};
     use rand_core::mock::MockAddRng;
     use distributions::{uniform};
     use distributions::{Uniform, Range, Exp};
@@ -451,7 +454,10 @@ mod test {
         fn next_u128(&mut self) -> u128 {
             self.inner.next_u128()
         }
-        fn try_fill(&mut self, dest: &mut [u8]) -> Result<()> {
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            self.inner.fill_bytes(dest)
+        }
+        fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             self.inner.try_fill(dest)
         }
     }
@@ -486,7 +492,7 @@ mod test {
                        80, 81, 82, 83, 84, 85, 86, 87];
         for &n in lengths.iter() {
             let mut v = repeat(0u8).take(n).collect::<Vec<_>>();
-            r.try_fill(&mut v).unwrap();
+            r.fill_bytes(&mut v);
 
             // use this to get nicer error messages.
             for (i, &byte) in v.iter().enumerate() {
