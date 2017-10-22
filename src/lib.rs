@@ -1042,7 +1042,8 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 
 #[cfg(test)]
 mod test {
-    use super::{Rng, thread_rng, random, SeedableRng, StdRng, sample};
+    use super::{Rng, thread_rng, random, SeedableRng, StdRng, sample,
+                weak_rng};
     use std::iter::repeat;
 
     pub struct MyRng<R> { inner: R }
@@ -1285,5 +1286,14 @@ mod test {
 
         let string2 = r.gen_ascii_chars().take(100).collect::<String>();
         assert_eq!(string1, string2);
+    }
+
+    #[test]
+    fn test_weak_rng() {
+        let s = weak_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
+        let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
+        let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
+        assert!(iter_eq(ra.gen_ascii_chars().take(100),
+                        rb.gen_ascii_chars().take(100)));
     }
 }
