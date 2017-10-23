@@ -46,7 +46,6 @@ extern crate core;
 use core::fmt;
 
 pub mod impls;
-pub mod mock;
 
 
 /// A random number generator (not necessarily suitable for cryptography).

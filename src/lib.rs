@@ -271,6 +271,7 @@ use distributions::range::Range;
 
 pub mod distributions;
 pub mod iter;
+pub mod mock;
 pub mod prng;
 pub mod reseeding;
 pub mod sequences;
@@ -434,7 +435,7 @@ impl SeedFromRng for StdRng {
 #[cfg(test)]
 mod test {
     use {Rng, thread_rng, Sample, Error};
-    use rand_core::mock::MockAddRng;
+    use mock::MockAddRng;
     use distributions::{uniform};
     use distributions::{Uniform, Range, Exp};
     use sequences::Shuffle;

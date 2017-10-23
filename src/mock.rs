@@ -16,14 +16,15 @@
 //! Instead maybe this should be yet another crate? Or just leave it here?
 
 use core::num::Wrapping as w;
-use {Rng, SeedableRng, Error, impls};
+use {Rng, SeedableRng, Error};
+use rand_core::impls;
 
 /// A simple implementation of `Rng`, purely for testing.
 /// Returns an arithmetic sequence (i.e. adds a constant each step).
 /// 
 /// ```rust
-/// use rand_core::Rng;
-/// use rand_core::mock::MockAddRng;
+/// use rand::Rng;
+/// use rand::mock::MockAddRng;
 /// 
 /// let mut my_rng = MockAddRng::new(2u32, 1u32);
 /// assert_eq!(my_rng.next_u32(), 2u32);

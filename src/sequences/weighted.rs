@@ -134,7 +134,7 @@ impl<T: Clone> Distribution<T> for WeightedChoice<T> {
 
 #[cfg(test)]
 mod tests {
-    use rand_core::mock::MockAddRng;
+    use mock::MockAddRng;
     use distributions::Distribution;
     use super::{WeightedChoice, Weighted};
 

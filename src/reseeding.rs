@@ -133,7 +133,7 @@ impl<R: Rng + NewSeeded> Reseeder<R> for ReseedWithNew {
 #[cfg(test)]
 mod test {
     use std::iter::repeat;
-    use rand_core::mock::MockAddRng;
+    use mock::MockAddRng;
     use {SeedableRng, Rng, iter};
     use distributions::ascii_word_char;
     use super::{ReseedingRng, Reseeder};
