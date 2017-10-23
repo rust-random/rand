@@ -211,7 +211,7 @@ pub trait SeedFromRng: Sized {
     /// hand, seeding a simple numerical generator from another of the same
     /// type sometimes has serious side effects such as effectively cloning the
     /// generator.
-    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Result<Self, Error>;
+    fn from_rng<R: Rng>(rng: R) -> Result<Self, Error>;
 }
 
 /// A random number generator that can be explicitly seeded to produce

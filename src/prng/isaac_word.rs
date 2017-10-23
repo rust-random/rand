@@ -56,7 +56,7 @@ impl Rng for IsaacWordRng {
 }
 
 impl SeedFromRng for IsaacWordRng {
-    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: Rng>(other: R) -> Result<Self, Error> {
         WordRngType::from_rng(other).map(|rng| IsaacWordRng(rng))
     }
 }

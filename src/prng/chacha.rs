@@ -250,7 +250,7 @@ impl Rng for ChaChaRng {
 impl CryptoRng for ChaChaRng {}
 
 impl SeedFromRng for ChaChaRng {
-    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: Rng>(mut other: R) -> Result<Self, Error> {
         let mut key : [u32; KEY_WORDS] = [0; KEY_WORDS];
         for word in key.iter_mut() {
             *word = other.next_u32();

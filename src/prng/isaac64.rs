@@ -284,7 +284,7 @@ fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
 }
 
 impl SeedFromRng for Isaac64Rng {
-    fn from_rng<R: Rng+?Sized>(other: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: Rng>(mut other: R) -> Result<Self, Error> {
         let mut key = [w(0); RAND_SIZE];
         unsafe {
             let ptr = key.as_mut_ptr() as *mut u8;

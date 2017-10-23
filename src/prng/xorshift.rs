@@ -50,7 +50,7 @@ impl XorShiftRng {
 }
 
 impl SeedFromRng for XorShiftRng {
-    fn from_rng<R: Rng+?Sized>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: Rng>(mut rng: R) -> Result<Self, Error> {
         let mut tuple: (u32, u32, u32, u32);
         loop {
             tuple = (rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32());
