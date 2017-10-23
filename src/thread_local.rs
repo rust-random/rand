@@ -21,8 +21,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
 type ReseedingStdRng = ReseedingRng<StdRng, ReseedWithNew>;
 
 /// The thread-local RNG.
-#[derive(Clone)]
-#[allow(missing_debug_implementations)]
+#[derive(Clone, Debug)]
 pub struct ThreadRng {
     rng: Rc<RefCell<ReseedingStdRng>>,
 }
