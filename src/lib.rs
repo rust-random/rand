@@ -891,13 +891,9 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 /// seeded `Rng` for consistency over time you should pick one algorithm and
 /// create the `Rng` yourself.
 ///
-/// This will read randomness from the operating system to seed the
-/// generator.
+/// This will seed the generator with randomness from thread_rng.
 pub fn weak_rng() -> XorShiftRng {
-    match OsRng::new() {
-        Ok(mut r) => r.gen(),
-        Err(e) => panic!("weak_rng: failed to create seeded RNG: {:?}", e)
-    }
+    thread_rng().gen()
 }
 
 /// Controls how the thread-local RNG is reseeded.
