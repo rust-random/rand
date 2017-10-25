@@ -1,15 +1,4 @@
-language: rust
-sudo: false
-before_script:
-  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
 
-matrix:
-  include:
-    - rust: 1.15.0
-    - rust: stable
-    - rust: stable
-      os: osx
-    - rust: beta
     - rust: nightly
       script:
         - cargo test
