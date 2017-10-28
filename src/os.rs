@@ -29,7 +29,6 @@ use {Rng, Error};
 /// - Windows: calls `RtlGenRandom`, exported from `advapi32.dll` as
 ///   `SystemFunction036`.
 /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
-/// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
 ///
 /// This usually does not block. On some systems (e.g. FreeBSD, OpenBSD,
 /// Max OS X, and modern Linux) this may block very early in the init
@@ -413,71 +412,6 @@ mod imp {
                     panic!("couldn't generate random bytes: {}",
                            io::Error::last_os_error());
                 }
-            }
-            Ok(())
-        }
-    }
-}
-
-#[cfg(target_os = "nacl")]
-mod imp {
-    extern crate libc;
-
-    use std::io;
-    use std::mem;
-
-    #[derive(Debug)]
-    pub struct OsRng(extern fn(dest: *mut libc::c_void,
-                               bytes: libc::size_t,
-                               read: *mut libc::size_t) -> libc::c_int);
-
-    extern {
-        fn nacl_interface_query(name: *const libc::c_char,
-                                table: *mut libc::c_void,
-                                table_size: libc::size_t) -> libc::size_t;
-    }
-
-    const INTERFACE: &'static [u8] = b"nacl-irt-random-0.1\0";
-
-    #[repr(C)]
-    struct NaClIRTRandom {
-        get_random_bytes: Option<extern fn(dest: *mut libc::c_void,
-                                           bytes: libc::size_t,
-                                           read: *mut libc::size_t) -> libc::c_int>,
-    }
-
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
-            let mut iface = NaClIRTRandom {
-                get_random_bytes: None,
-            };
-            let result = unsafe {
-                nacl_interface_query(INTERFACE.as_ptr() as *const _,
-                                     mem::transmute(&mut iface),
-                                     mem::size_of::<NaClIRTRandom>() as libc::size_t)
-            };
-            if result != 0 {
-                assert!(iface.get_random_bytes.is_some());
-                let result = OsRng(iface.get_random_bytes.take().unwrap());
-                Ok(result)
-            } else {
-                // let error = io::ErrorKind::NotFound;
-                // let error = io::Error::new(error, "IRT random interface missing");
-                Err(Result)
-            }
-        }
-        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
-            let mut read = 0;
-            loop {
-                let mut r: libc::size_t = 0;
-                let len = v.len();
-                let error = (self.0)(v[read..].as_mut_ptr() as *mut _,
-                                     (len - read) as libc::size_t,
-                                     &mut r as *mut _);
-                assert!(error == 0, "`get_random_bytes` failed!");
-                read += r as usize;
-
-                if read >= v.len() { break; }
             }
             Ok(())
         }
