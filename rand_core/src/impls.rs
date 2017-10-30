@@ -18,10 +18,6 @@
 //! Byte-swapping (like the std `to_le` functions) is only needed to convert
 //! to/from byte sequences, and since its purpose is reproducibility,
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
-//! 
-//! Missing from here are implementations of `next_u*` in terms of `try_fill`.
-//! Currently `OsRng` handles these implementations itself.
-//! TODO: should we add more implementations?
 
 use core::intrinsics::transmute;
 use Rng;
