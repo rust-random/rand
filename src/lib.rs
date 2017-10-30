@@ -261,6 +261,7 @@ pub use rand_core::{Rng, CryptoRng, SeedFromRng, SeedableRng, Error, ErrorKind};
 pub use read::ReadRng;
 #[cfg(feature="std")]
 pub use os::OsRng;
+pub use jitter_rng::JitterRng;
 pub use iter::iter;
 pub use distributions::{Distribution, Default, Rand};
 #[cfg(feature="std")]
@@ -271,6 +272,7 @@ use distributions::range::Range;
 
 pub mod distributions;
 pub mod iter;
+pub mod jitter_rng;
 pub mod mock;
 pub mod prng;
 pub mod reseeding;
