@@ -20,6 +20,7 @@
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
 
 use core::intrinsics::transmute;
+use core::slice;
 use Rng;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
@@ -80,22 +81,29 @@ pub fn fill_bytes_via_u128<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
 
 macro_rules! impl_uint_from_fill {
     ($self:expr, $ty:ty, $N:expr) => ({
-        // Transmute and convert from LE (i.e. byte-swap on BE)
         debug_assert!($N == ::core::mem::size_of::<$ty>());
-        let mut buf = [0u8; $N];
-        $self.fill_bytes(&mut buf);
-        unsafe{ *(buf.as_ptr() as *const $ty) }.to_le()
+
+        let mut int: $ty = 0;
+        unsafe {
+            let ptr = &mut int as *mut $ty as *mut u8;
+            let slice = slice::from_raw_parts_mut(ptr, $N);
+            $self.fill_bytes(slice);
+        }
+        int.to_le()
     });
 }
 
+/// Implement `next_u32` via `fill_bytes`, little-endian order.
 pub fn next_u32_via_fill<R: Rng+?Sized>(rng: &mut R) -> u32 {
     impl_uint_from_fill!(rng, u32, 4)
 }
 
+/// Implement `next_u64` via `fill_bytes`, little-endian order.
 pub fn next_u64_via_fill<R: Rng+?Sized>(rng: &mut R) -> u64 {
     impl_uint_from_fill!(rng, u64, 8)
 }
 
+/// Implement `next_u128` via `fill_bytes`, little-endian order.
 #[cfg(feature = "i128_support")]
 pub fn next_u128_via_fill<R: Rng+?Sized>(rng: &mut R) -> u128 {
     impl_uint_from_fill!(rng, u128, 16)
