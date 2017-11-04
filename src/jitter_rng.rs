@@ -71,10 +71,16 @@ impl fmt::Debug for JitterRng {
     }
 }
 
-/// An error that can occur when intializing `JitterRng`.
+/// An error that can occur when `test_timer` fails.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Error {
+pub struct TimerError {
     kind: ErrorKind,
+}
+
+impl TimerError {
+    pub fn kind(&self) -> ErrorKind {
+        self.kind
+    }
 }
 
 /// Error kind which can be matched over.
@@ -107,7 +113,7 @@ impl ErrorKind {
     }
 }
 
-impl fmt::Display for Error {
+impl fmt::Display for TimerError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.kind {
             ErrorKind::NoTimer =>
@@ -126,25 +132,27 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature="std")]
-impl ::std::error::Error for Error {
+impl ::std::error::Error for TimerError {
     fn description(&self) -> &str {
         self.kind.description()
     }
 }
 
-#[cfg(feature="std")]
-fn new_error(kind: ErrorKind) -> rand_core::Error {
-    rand_core::Error {
-        kind: rand_core::ErrorKind::Unavailable,
-        cause: Some(Box::new(Error { kind: kind })),
+impl From<TimerError> for Error {
+    #[cfg(feature="std")]
+    fn from(err: TimerError) -> Error {
+        Error {
+            kind: rand_core::ErrorKind::Unavailable,
+            cause: Some(err.into()),
+        }
     }
-}
 
-#[cfg(not(feature="std"))]
-fn new_error(kind: ErrorKind) -> rand_core::Error {
-    rand_core::Error {
-        kind: rand_core::ErrorKind::Unavailable,
-        cause: kind.description(),
+    #[cfg(not(feature="std"))]
+    fn from(err: TimerError) -> Error {
+        Error {
+            kind: rand_core::ErrorKind::Unavailable,
+            cause: errkind.description(),
+        }
     }
 }
 
@@ -156,8 +164,10 @@ impl JitterRng {
     /// hundred times. If this does not pass basic quality tests, an error is
     /// returned.
     #[cfg(feature="std")]
-    pub fn new() -> Result<JitterRng, rand_core::Error> {
-        JitterRng::new_with_timer(get_nstime)
+    pub fn new() -> Result<JitterRng, Error> {
+        let mut ec = JitterRng::new_with_timer(get_nstime);
+        ec.test_timer()?;
+        Ok(ec)
     }
 
     /// Create a new `JitterRng`.
@@ -166,11 +176,10 @@ impl JitterRng {
     ///
     /// The timer must have nanosecond precision.
     ///
-    /// During initialization CPU execution timing jitter is measured a few
-    /// hundred times. If this does not pass basic quality tests, an error is
-    /// returned.
-    pub fn new_with_timer(timer: fn() -> u64)
-            -> Result<JitterRng, rand_core::Error> {
+    /// This method is more low-level than `new()`. It is the responsibility of
+    /// the caller to run `test_timer` before using any numbers generated with
+    /// `JitterRng`.
+    pub fn new_with_timer(timer: fn() -> u64) -> JitterRng {
         let mut ec = JitterRng {
             data: 0,
             timer: timer,
@@ -182,8 +191,18 @@ impl JitterRng {
             data_remaining: None,
         };
 
-        ec.entropy_init()?;
-        Ok(ec)
+        // Fill `data`, `prev_time`, `last_delta` and `last_delta2` with
+        // non-zero values.
+        ec.prev_time = timer();
+        ec.gen_entropy();
+
+        // Do a single read from `self.mem` to make sure the Memory Access noise
+        // source is not optimised out.
+        // Note: this read is important, it effects optimisations for the entire
+        // module!
+        black_box(ec.mem[0]);
+
+        ec
     }
 
     // Calculate a random loop count used for the next round of an entropy
@@ -226,7 +245,7 @@ impl JitterRng {
     // execution is used to measure the CPU execution time jitter. Any change to
     // the loop in this function implies that careful retesting must be done.
     #[inline(never)]
-    fn lfsr_time(&mut self, time: u64) {
+    fn lfsr_time(&mut self, time: u64, var_rounds: bool) {
         fn lfsr(mut data: u64, time: u64) -> u64{
             for i in 1..65 {
                 let mut tmp = time << (64 - i);
@@ -256,8 +275,11 @@ impl JitterRng {
         // `self.data`, all the other results are ignored. To make sure the
         // other rounds are not optimised out, we first run all but the last
         // round on a throw-away value instead of the real `self.data`.
+        let mut lfsr_loop_cnt = 0;
+        if var_rounds { lfsr_loop_cnt = self.random_loop_cnt(4) };
+
         let mut throw_away: u64 = 0;
-        for _ in 0..(self.random_loop_cnt(4)) {
+        for _ in 0..lfsr_loop_cnt {
             throw_away = lfsr(throw_away, time);
         }
         black_box(throw_away);
@@ -282,9 +304,12 @@ impl JitterRng {
     // range of wait states. However, to reliably access either L3 or memory,
     // the `self.mem` memory must be quite large which is usually not desirable.
     #[inline(never)]
-    fn memaccess(&mut self) {
+    fn memaccess(&mut self, var_rounds: bool) {
+        let mut acc_loop_cnt = 128;
+        if var_rounds { acc_loop_cnt += self.random_loop_cnt(4) };
+
         let mut index = self.mem_prev_index;
-        for _ in 0..(self.random_loop_cnt(7) + 128) {
+        for _ in 0..acc_loop_cnt {
             // Addition of memblocksize - 1 to index with wrap around logic to
             // ensure that every memory location is hit evenly.
             // The modulus also allows the compiler to remove the indexing
@@ -328,7 +353,7 @@ impl JitterRng {
     // result.
     fn measure_jitter(&mut self) -> Option<()> {
         // Invoke one noise source before time measurement to add variations
-        self.memaccess();
+        self.memaccess(true);
 
         // Get time stamp and calculate time delta to previous
         // invocation to measure the timing variations
@@ -337,7 +362,7 @@ impl JitterRng {
         self.prev_time = time;
 
         // Call the next noise source which also injects the data
-        self.lfsr_time(current_delta as u64);
+        self.lfsr_time(current_delta as u64, true);
 
         // Check whether we have a stuck measurement (i.e. does the last
         // measurement holds entropy?).
@@ -415,15 +440,12 @@ impl JitterRng {
         }
 
         self.stir_pool();
-
-        // Do a single read from `self.mem` to make sure the Memory Access noise
-        // source is not optimised out.
-        black_box(self.mem[0]);
-
         self.data
     }
 
-    fn entropy_init(&mut self) -> Result<(), rand_core::Error> {
+    /// Basic quality tests on the timer, by measuring CPU timing jitter a few
+    /// hundred times.
+    pub fn test_timer(&mut self) -> Result<(), TimerError> {
         // We could add a check for system capabilities such as `clock_getres`
         // or check for `CONFIG_X86_TSC`, but it does not make much sense as the
         // following sanity checks verify that we have a high-resolution timer.
@@ -443,12 +465,12 @@ impl JitterRng {
         for i in 0..(CLEARCACHE + TESTLOOPCOUNT) {
             // Invoke core entropy collection logic
             let time = (self.timer)();
-            self.lfsr_time(time);
+            self.lfsr_time(time, true);
             let time2 = (self.timer)();
 
             // Test whether timer works
             if time == 0 || time2 == 0 {
-                return Err(new_error(ErrorKind::NoTimer));
+                return Err(TimerError { kind: ErrorKind::NoTimer });
             }
             let delta = time2.wrapping_sub(time) as i64;
 
@@ -456,7 +478,7 @@ impl JitterRng {
             // when called shortly after each other -- this implies that we also
             // have a high resolution timer
             if delta == 0 {
-                return Err(new_error(ErrorKind::CoarseTimer));
+                return Err(TimerError { kind: ErrorKind::CoarseTimer });
             }
 
             // Up to here we did not modify any variable that will be
@@ -488,29 +510,128 @@ impl JitterRng {
         // should not fail. The value of 3 should cover the NTP case being
         // performed during our test run.
         if time_backwards > 3 {
-            return Err(new_error(ErrorKind::NotMonotonic));
+            return Err(TimerError { kind: ErrorKind::NotMonotonic });
         }
 
         // Variations of deltas of time must on average be larger than 1 to
         // ensure the entropy estimation implied with 1 is preserved
         if delta_sum < (TESTLOOPCOUNT) {
-            return Err(new_error(ErrorKind::TinyVariantions));
+            return Err(TimerError { kind: ErrorKind::TinyVariantions });
         }
 
         // Ensure that we have variations in the time stamp below 100 for at
         // least 10% of all checks -- on some platforms, the counter increments
         // in multiples of 100, but not always
         if count_mod > (TESTLOOPCOUNT/10 * 9) {
-            return Err(new_error(ErrorKind::CoarseTimer));
+            return Err(TimerError { kind: ErrorKind::CoarseTimer });
         }
 
         // If we have more than 90% stuck results, then this Jitter RNG is
         // likely to not work well.
         if count_stuck > (TESTLOOPCOUNT/10 * 9) {
-            return Err(new_error(ErrorKind::ToManyStuck));
+            return Err(TimerError { kind: ErrorKind::ToManyStuck });
         }
 
         Ok(())
+    }
+
+    /// Statistical test: return the timer delta of one normal run of the
+    /// `JitterEntropy` entropy collector.
+    ///
+    /// Setting `var_rounds` to `true` will execute the memory access and the
+    /// CPU jitter noice sources a variable amount of times (just like a real
+    /// `JitterEntropy` round).
+    ///
+    /// Setting `var_rounds` to `false` will execute the noice sources the
+    /// minimal number of times. This can be used to measure the minimum amount
+    /// of entropy one round of entropy collector can collect in the worst case.
+    ///
+    /// # Example
+    ///
+    /// Use `timer_stats` to run the [NIST SP 800-90B Entropy Estimation Suite]
+    /// (https://github.com/usnistgov/SP800-90B_EntropyAssessment).
+    ///
+    /// This is the recommended way to test the quality of `JitterRng`. It
+    /// should be run before using the RNG on untested hardware, after changes
+    /// that could effect how the code is optimised, and after major compiler
+    /// compiler changes, like a new LLVM version.
+    ///
+    /// First generate two files `jitter_rng_var.bin` and `jitter_rng_var.min`.
+    ///
+    /// Execute `python noniid_main.py -v jitter_rng_var.bin 8`, and validate it
+    /// with `restart.py -v jitter_rng_var.bin 8 <min-entropy>`.
+    /// This number is the expected amount of entropy that is at least available
+    /// for each round of the entropy collector. This number should be greater
+    /// than the amount estimated with `64 / test_timer()`.
+    ///
+    /// Execute `python noniid_main.py -v -u 4 jitter_rng_var.bin 4`, and
+    /// validate it with `restart.py -v -u 4 jitter_rng_var.bin 4 <min-entropy>`.
+    /// This number is the expected amount of entropy that is available in the
+    /// last 4 bits of the timer delta after running noice sources. Note that
+    /// a value of 3.70 is the minimum estimated entropy for true randomness.
+    ///
+    /// Execute `python noniid_main.py -v -u 4 jitter_rng_var.bin 4`, and
+    /// validate it with `restart.py -v -u 4 jitter_rng_var.bin 4 <min-entropy>`.
+    /// This number is the expected amount of entropy that is available to the
+    /// entropy collecter if both noice sources only run their minimal number of
+    /// times. This measures the absolute worst-case, and gives a lower bound
+    /// for the available entropy.
+    ///
+    /// ```rust
+    /// use rand::JitterRng;
+    ///
+    /// # use std::error::Error;
+    /// # use std::fs::File;
+    /// # use std::io::Write;
+    /// #
+    /// # fn try_main() -> Result<(), Box<Error>> {
+    /// fn get_nstime() -> u64 {
+    ///     use std::time::{SystemTime, UNIX_EPOCH};
+    ///
+    ///     let dur = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+    ///     // The correct way to calculate the current time is
+    ///     // `dur.as_secs() * 1_000_000_000 + dur.subsec_nanos() as u64`
+    ///     // But this is faster, and the difference in terms of entropy is
+    ///     // negligible (log2(10^9) == 29.9).
+    ///     dur.as_secs() << 30 | dur.subsec_nanos() as u64
+    /// }
+    ///
+    /// // Do not initialize with `JitterRng::new`, but with `new_with_timer`.
+    /// // 'new' always runst `test_timer`, and can therefore fail to
+    /// // initialize. We want to be able to get the statistics even when the
+    /// // timer test fails.
+    /// let mut rng = JitterRng::new_with_timer(get_nstime);
+    ///
+    /// // 1_000_000 results are required for the NIST SP 800-90B Entropy
+    /// // Estimation Suite
+    /// // FIXME: this number is smaller here, otherwise the Doc-test is to slow
+    /// const ROUNDS: usize = 10_000;
+    /// let mut deltas_variable: Vec<u8> = Vec::with_capacity(ROUNDS);
+    /// let mut deltas_minimal: Vec<u8> = Vec::with_capacity(ROUNDS);
+    ///
+    /// for _ in 0..ROUNDS {
+    ///     deltas_variable.push(rng.timer_stats(true) as u8);
+    ///     deltas_minimal.push(rng.timer_stats(false) as u8);
+    /// }
+    ///
+    /// // Write out after the statistics collection loop, to not disturb the
+    /// // test results.
+    /// File::create("jitter_rng_var.bin")?.write(&deltas_variable)?;
+    /// File::create("jitter_rng_min.bin")?.write(&deltas_minimal)?;
+    /// #
+    /// # Ok(())
+    /// # }
+    /// #
+    /// # fn main() {
+    /// #     try_main().unwrap();
+    /// # }
+    /// ```
+    pub fn timer_stats(&mut self, var_rounds: bool) -> i64 {
+        let time = get_nstime();
+        self.memaccess(var_rounds);
+        self.lfsr_time(time, var_rounds);
+        let time2 = get_nstime();
+        time2.wrapping_sub(time) as i64
     }
 }
 
