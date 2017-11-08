@@ -51,6 +51,8 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 // out what is technically dead code, but that does influence timing jitter.
 pub struct JitterRng {
     data: u64, // Actual random number
+    // Number of rounds to run the entropy collector per 64 bits
+    rounds: u16,
     // Timer and previous time stamp, used by `measure_jitter`
     timer: fn() -> u64,
     prev_time: u64,
@@ -166,7 +168,7 @@ impl JitterRng {
     #[cfg(feature="std")]
     pub fn new() -> Result<JitterRng, Error> {
         let mut ec = JitterRng::new_with_timer(get_nstime);
-        ec.test_timer()?;
+        ec.rounds = ec.test_timer()?;
         Ok(ec)
     }
 
@@ -182,6 +184,7 @@ impl JitterRng {
     pub fn new_with_timer(timer: fn() -> u64) -> JitterRng {
         let mut ec = JitterRng {
             data: 0,
+            rounds: 64,
             timer: timer,
             prev_time: 0,
             last_delta: 0,
@@ -432,7 +435,7 @@ impl JitterRng {
         // first loop round collects the expected entropy.
         let _ = self.measure_jitter();
 
-        for _ in 0..64 {
+        for _ in 0..self.rounds {
             // If a stuck measurement is received, repeat measurement
             // Note: we do not guard against an infinite loop, that would mean
             // the timer suddenly became broken.
@@ -445,7 +448,11 @@ impl JitterRng {
 
     /// Basic quality tests on the timer, by measuring CPU timing jitter a few
     /// hundred times.
-    pub fn test_timer(&mut self) -> Result<(), TimerError> {
+    ///
+    /// If succesful, this will return the estimated number of rounds necessary
+    /// to collect 64 bits of entropy. Otherwise a `TimerError` with the cause
+    /// of the failure will be returned.
+    pub fn test_timer(&mut self) -> Result<u16, TimerError> {
         // We could add a check for system capabilities such as `clock_getres`
         // or check for `CONFIG_X86_TSC`, but it does not make much sense as the
         // following sanity checks verify that we have a high-resolution timer.
@@ -463,8 +470,9 @@ impl JitterRng {
         const CLEARCACHE: u64 = 100;
 
         for i in 0..(CLEARCACHE + TESTLOOPCOUNT) {
-            // Invoke core entropy collection logic
+            // Measure time delta of core entropy collection logic
             let time = (self.timer)();
+            self.memaccess(true);
             self.lfsr_time(time, true);
             let time2 = (self.timer)();
 
@@ -513,9 +521,14 @@ impl JitterRng {
             return Err(TimerError { kind: ErrorKind::NotMonotonic });
         }
 
-        // Variations of deltas of time must on average be larger than 1 to
-        // ensure the entropy estimation implied with 1 is preserved
-        if delta_sum < (TESTLOOPCOUNT) {
+        // Test that the available amount of entropy per round does not get to
+        // low. We expect 1 bit of entropy per round as a reasonable minimum
+        // (although less is possible, it means the collector loop has to run
+        // much more often).
+        // `assert!(delta_average >= log2(1))`
+        // `assert!(delta_sum / TESTLOOPCOUNT >= 1)`
+        // `assert!(delta_sum >= TESTLOOPCOUNT)`
+        if delta_sum < TESTLOOPCOUNT {
             return Err(TimerError { kind: ErrorKind::TinyVariantions });
         }
 
@@ -532,7 +545,31 @@ impl JitterRng {
             return Err(TimerError { kind: ErrorKind::ToManyStuck });
         }
 
-        Ok(())
+        // Estimate the number of `measure_jitter` rounds necessary for 64 bits
+        // of entropy.
+        //
+        // We don't try very hard to come up with a good estimate of the
+        // available bits of entropy per round here for two reasons:
+        // 1. Simple estimates of the available bits (like Shannon entropy) are
+        //    to optimistic.
+        // 2)  Unless we want to waste a lot of time during intialization, there
+        //     is only a small amount of samples available.
+        //
+        // Therefore we use a very simple and conservative estimate:
+        // `let bits_of_entropy = log2(delta_average / TESTLOOPCOUNT) / 2`.
+        //
+        // The number of rounds `measure_jitter` should run to collect 64 bits
+        // of entropy is `64 / bits_of_entropy`.
+        //
+        // To have smaller rounding errors, intermediate values are multiplied
+        // by `FACTOR`. To compensate for `log2` and division rounding down,
+        // add 1.
+        let delta_average = delta_sum / TESTLOOPCOUNT;
+
+        const FACTOR: u32  = 5;
+        fn log2(x: u64) -> u32 { 64 - x.leading_zeros() as u32 }
+
+        Ok((64 * 2 * FACTOR / log2(delta_average.pow(FACTOR)) + 1) as u16)
     }
 
     /// Statistical test: return the timer delta of one normal run of the
