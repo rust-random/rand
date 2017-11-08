@@ -78,7 +78,7 @@ fn map_err(err: io::Error) -> Error {
         io::ErrorKind::UnexpectedEof => ErrorKind::Unavailable,
         _ => ErrorKind::Other,
     };
-    Error::new(kind, Some(Box::new(err)))
+    Error::new(kind, "ReadRng: read error", Some(err))
 }
 
 #[cfg(test)]
