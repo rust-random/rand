@@ -11,10 +11,10 @@
 //! Interfaces to the operating system provided random number
 //! generators.
 
-use std::{mem, fmt};
+use std::fmt;
 use std::io::Read;
 
-use {Rng, Error};
+use {Rng, Error, ErrorKind};
 // TODO: replace many of the panics below with Result error handling
 
 /// A random number generator that retrieves randomness straight from
@@ -81,14 +81,11 @@ impl Rng for OsRng {
 struct ReadRng<R> (R);
 
 impl<R: Read> ReadRng<R> {
-    fn try_fill(&mut self, mut buf: &mut [u8]) -> Result<(), Error> {
-        while buf.len() > 0 {
-            match self.0.read(buf).unwrap_or_else(|e| panic!("Read error: {}", e)) {
-                0 => panic!("OsRng: no bytes available"),
-                n => buf = &mut mem::replace(&mut buf, &mut [])[n..],
-            }
-        }
-        Ok(())
+    fn try_fill(&mut self, mut dest: &mut [u8]) -> Result<(), Error> {
+        if dest.len() == 0 { return Ok(()); }
+        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
+        self.0.read_exact(dest).map_err(|err|
+            Error::new(ErrorKind::Unavailable, "error reading random device", Some(err)))
     }
 }
 
@@ -103,7 +100,7 @@ mod imp {
 
     use self::OsRngInner::*;
     use super::ReadRng;
-    use Error;
+    use {Error, ErrorKind};
 
     use std::io;
     use std::fs::File;
@@ -153,7 +150,7 @@ mod imp {
                 if err.kind() == io::ErrorKind::Interrupted {
                     continue
                 } else {
-                    panic!("unexpected getrandom error: {}", err);
+                    return Err(Error::new(ErrorKind::Other, "unexpected getrandom error", Some(err)));
                 }
             } else {
                 read += result as usize;
@@ -215,7 +212,8 @@ mod imp {
                 return Ok(OsRng { inner: OsGetrandomRng });
             }
 
-            let reader = File::open("/dev/urandom").unwrap();
+            let reader = File::open("/dev/urandom").map_err(|err|
+                Error::new(ErrorKind::Unavailable, "error opening random device", Some(err)))?;
             let reader_rng = ReadRng(reader);
 
             Ok(OsRng { inner: OsReadRng(reader_rng) })
@@ -234,6 +232,8 @@ mod imp {
 mod imp {
     extern crate libc;
 
+    use {Error, ErrorKind};
+    
     use std::io;
     use self::libc::{c_int, size_t};
 
@@ -260,9 +260,13 @@ mod imp {
                 SecRandomCopyBytes(kSecRandomDefault, v.len() as size_t, v.as_mut_ptr())
             };
             if ret == -1 {
-                panic!("couldn't generate random bytes: {}", io::Error::last_os_error());
+                Err(Error::new(
+                    ErrorKind::Unavailable,
+                    "couldn't generate random bytes",
+                    Some(io::Error::last_os_error())))
+            } else {
+                Ok(())
             }
-            Ok(())
         }
     }
 }
@@ -271,6 +275,8 @@ mod imp {
 mod imp {
     extern crate libc;
 
+    use {Error, ErrorKind};
+    
     use std::{io, ptr};
 
     #[derive(Debug)]
@@ -291,8 +297,11 @@ mod imp {
                                  ptr::null(), 0)
                 };
                 if ret == -1 || s_len != s.len() {
-                    panic!("kern.arandom sysctl failed! (returned {}, s.len() {}, oldlenp {})",
-                           ret, s.len(), s_len);
+                    // Old format string: "kern.arandom sysctl failed! (returned {}, s.len() {}, oldlenp {})"
+                    return Err(Error::new(
+                        ErrorKind::Unavailable,
+                        "kern.arandom sysctl failed",
+                        None));
                 }
             }
             Ok(())
@@ -304,6 +313,8 @@ mod imp {
 mod imp {
     extern crate libc;
 
+    use {Error, ErrorKind};
+    
     use std::io;
 
     #[derive(Debug)]
@@ -320,8 +331,10 @@ mod imp {
                     libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s.len())
                 };
                 if ret == -1 {
-                    let err = io::Error::last_os_error();
-                    panic!("getentropy failed: {}", err);
+                    return Err(Error::new(
+                        ErrorKind::Unavailable,
+                        "getentropy failed",
+                        Some(io::Error::last_os_error())));
                 }
             }
             Ok(())
@@ -331,6 +344,8 @@ mod imp {
 
 #[cfg(target_os = "redox")]
 mod imp {
+    use {Error, ErrorKind};
+    
     use std::io;
     use std::fs::File;
     use super::ReadRng;
@@ -342,7 +357,8 @@ mod imp {
 
     impl OsRng {
         pub fn new() -> Result<OsRng, Error> {
-            let reader = File::open("rand:").unwrap();
+            let reader = File::open("rand:").map_err(|err|
+                Error::new(ErrorKind::Unavailable, "error opening random device", Some(err)))?;
             let reader_rng = ReadRng(reader);
 
             Ok(OsRng { inner: reader_rng })
@@ -357,6 +373,8 @@ mod imp {
 mod imp {
     extern crate fuchsia_zircon;
 
+    use {Error, ErrorKind};
+    
     use std::io;
 
     #[derive(Debug)]
@@ -372,7 +390,12 @@ mod imp {
                 while filled < s.len() {
                     match fuchsia_zircon::cprng_draw(&mut s[filled..]) {
                         Ok(actual) => filled += actual,
-                        Err(e) => panic!("cprng_draw failed: {:?}", e),
+                        Err(e) => {
+                            return Err(Error::new(
+                                ErrorKind::Unavailable,
+                                "cprng_draw failed",
+                                Some(e)));
+                        }
                     };
                 }
             }
@@ -383,6 +406,8 @@ mod imp {
 
 #[cfg(windows)]
 mod imp {
+    use {Error, ErrorKind};
+    
     use std::io;
 
     type BOOLEAN = u8;
@@ -409,8 +434,10 @@ mod imp {
                     SystemFunction036(slice.as_mut_ptr(), slice.len() as ULONG)
                 };
                 if ret == 0 {
-                    panic!("couldn't generate random bytes: {}",
-                           io::Error::last_os_error());
+                    return Err(Error::new(
+                        ErrorKind::Unavailable,
+                        "couldn't generate random bytes",
+                        Some(io::Error::last_os_error())));
                 }
             }
             Ok(())
