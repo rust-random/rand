@@ -142,6 +142,10 @@ integer_impl! { u16, u16 }
 integer_impl! { u32, u32 }
 integer_impl! { u64, u64 }
 integer_impl! { usize, usize }
+#[cfg(feature = "i128_support")]
+integer_impl! { u128, u128 }
+#[cfg(feature = "i128_support")]
+integer_impl! { i128, i128 }
 
 macro_rules! float_impl {
     ($ty:ty) => {
