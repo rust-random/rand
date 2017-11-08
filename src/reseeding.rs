@@ -11,9 +11,10 @@
 //! A wrapper around another RNG that reseeds it after it
 //! generates a certain number of random bytes.
 
+use core::cmp::max;
 use core::fmt::Debug;
 
-use {Rng, SeedableRng, Error};
+use {Rng, SeedableRng, Error, ErrorKind};
 #[cfg(feature="std")]
 use NewSeeded;
 
@@ -23,6 +24,9 @@ const DEFAULT_GENERATION_THRESHOLD: u64 = 32 * 1024;
 
 /// A wrapper around any RNG which reseeds the underlying RNG after it
 /// has generated a certain number of random bytes.
+/// 
+/// Note that reseeding is considered advisory only. If reseeding fails, the
+/// generator may delay reseeding or not reseed at all.
 #[derive(Debug)]
 pub struct ReseedingRng<R, Rsdr: Debug> {
     rng: R,
@@ -51,11 +55,50 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
 
     /// Reseed the internal RNG if the number of bytes that have been
     /// generated exceed the threshold.
+    /// 
+    /// On error, this may delay reseeding or not reseed at all.
     pub fn reseed_if_necessary(&mut self) {
         if self.bytes_generated >= self.generation_threshold {
-            self.reseeder.reseed(&mut self.rng);
+            while if let Err(e) = self.reseeder.reseed(&mut self.rng) {
+                    // TODO: log?
+                    if e.kind.should_wait() {
+                        // Delay reseeding
+                        let delay = max(self.generation_threshold >> 8, self.bytes_generated);
+                        self.bytes_generated -= delay;
+                        false
+                    } else if e.kind.should_retry() {
+                        true    // immediate retry
+                    } else {
+                        false   // give up trying to reseed
+                    }
+                } else { false } {
+                // empty loop body
+            }
             self.bytes_generated = 0;
         }
+    }
+    /// Reseed the internal RNG if the number of bytes that have been
+    /// generated exceed the threshold.
+    /// 
+    /// If reseeding fails, return an error with the original cause. Note that
+    /// if the cause has a permanent failure, we report a transient error and
+    /// skip reseeding.
+    pub fn try_reseed_if_necessary(&mut self) -> Result<(), Error> {
+        if self.bytes_generated >= self.generation_threshold {
+            if let Err(err) = self.reseeder.reseed(&mut self.rng) {
+                let newkind = match err.kind {
+                    a @ ErrorKind::NotReady => a,
+                    b @ ErrorKind::Transient => b,
+                    _ => {
+                        self.bytes_generated = 0;   // skip reseeding
+                        ErrorKind::Transient
+                    }
+                };
+                return Err(Error::new(newkind, "reseeding failed", Some(err)));
+            }
+            self.bytes_generated = 0;
+        }
+        Ok(())
     }
 }
 
@@ -87,7 +130,7 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
     }
 
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.reseed_if_necessary();
+        self.try_reseed_if_necessary()?;
         self.bytes_generated += dest.len() as u64;
         self.rng.try_fill(dest)
     }
@@ -111,7 +154,10 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R>> SeedableRng<(Rsdr, S)> for
 /// Something that can be used to reseed an RNG via `ReseedingRng`.
 pub trait Reseeder<R: ?Sized>: Debug {
     /// Reseed the given RNG.
-    fn reseed(&mut self, rng: &mut R);
+    /// 
+    /// On error, this should just forward the source error; errors are handled
+    /// by the caller.
+    fn reseed(&mut self, rng: &mut R) -> Result<(), Error>;
 }
 
 /// Reseed an RNG using `NewSeeded` to replace the current instance.
@@ -121,11 +167,13 @@ pub struct ReseedWithNew;
 
 #[cfg(feature="std")]
 impl<R: Rng + NewSeeded> Reseeder<R> for ReseedWithNew {
-    fn reseed(&mut self, rng: &mut R) {
+    fn reseed(&mut self, rng: &mut R) -> Result<(), Error> {
         match R::new() {
-            Ok(result) => *rng = result,
-            // TODO: should we ignore and continue without reseeding?
-            Err(e) => panic!("Reseeding failed: {:?}", e),
+            Ok(result) => {
+                *rng = result;
+                Ok(())
+            }
+            Err(e) => Err(e)
         }
     }
 }
@@ -134,15 +182,15 @@ impl<R: Rng + NewSeeded> Reseeder<R> for ReseedWithNew {
 mod test {
     use std::iter::repeat;
     use mock::MockAddRng;
-    use {SeedableRng, Rng, iter};
-    use distributions::ascii_word_char;
+    use {SeedableRng, Rng, iter, Error};
     use super::{ReseedingRng, Reseeder};
     
     #[derive(Debug)]
     struct ReseedMock;
     impl Reseeder<MockAddRng<u32>> for ReseedMock {
-        fn reseed(&mut self, rng: &mut MockAddRng<u32>) {
+        fn reseed(&mut self, rng: &mut MockAddRng<u32>) -> Result<(), Error> {
             *rng = MockAddRng::new(0, 1);
+            Ok(())
         }
     }
 
@@ -161,10 +209,11 @@ mod test {
 
     #[test]
     fn test_rng_seeded() {
+        // Default seed threshold is way beyond what we use here
         let mut ra: MyRng = SeedableRng::from_seed((ReseedMock, 2));
-        let mut rb: MyRng = SeedableRng::from_seed((ReseedMock, 2));
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
+        let mut rb: MockAddRng<u32> = SeedableRng::from_seed(2);
+        assert!(::test::iter_eq(iter(&mut ra).map(|rng| rng.next_u32()).take(100),
+                                iter(&mut rb).map(|rng| rng.next_u32()).take(100)));
     }
 
     const FILL_BYTES_V_LEN: usize = 13579;
