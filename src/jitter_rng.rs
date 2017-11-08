@@ -109,7 +109,7 @@ impl ErrorKind {
             ErrorKind::CoarseTimer => "coarse timer",
             ErrorKind::NotMonotonic => "timer not monotonic",
             ErrorKind::TinyVariantions => "time delta variations too small",
-            ErrorKind::ToManyStuck => "to many stuck results",
+            ErrorKind::ToManyStuck => "too many stuck results",
             ErrorKind::__Nonexhaustive => unreachable!(),
         }
     }
@@ -127,7 +127,7 @@ impl fmt::Display for TimerError {
             ErrorKind::TinyVariantions =>
                 write!(f, "Variations of deltas of time too small."),
             ErrorKind::ToManyStuck =>
-                write!(f, "To many stuck results (indicating no added entropy)."),
+                write!(f, "Too many stuck results (indicating no added entropy)."),
             ErrorKind::__Nonexhaustive => unreachable!(),
         }
     }
@@ -361,6 +361,9 @@ impl JitterRng {
         // Get time stamp and calculate time delta to previous
         // invocation to measure the timing variations
         let time = (self.timer)();
+        // Note: wrapping_sub combined with a cast to `i64` generates a correct
+        // delta, even in the unlikely case this is a timer than is not strictly
+        // monotonic.
         let current_delta = time.wrapping_sub(self.prev_time) as i64;
         self.prev_time = time;
 
@@ -422,7 +425,7 @@ impl JitterRng {
         // we rely on it to not recognise the opportunity.
         for i in 0..64 {
             let apply = (self.data >> i) & 1;
-            let mask = !((apply as i64) - 1) as u64;
+            let mask = !apply.wrapping_sub(1);
             mixer ^= CONSTANT & mask;
             mixer = mixer.rotate_left(1);
         }
