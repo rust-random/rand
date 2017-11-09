@@ -11,8 +11,6 @@
 //! A wrapper around another RNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use core::fmt::Debug;
-
 use {Rng, SeedableRng, Error};
 #[cfg(feature="std")]
 use NewSeeded;
@@ -23,8 +21,12 @@ const DEFAULT_GENERATION_THRESHOLD: u64 = 32 * 1024;
 
 /// A wrapper around any RNG which reseeds the underlying RNG after it
 /// has generated a certain number of random bytes.
-#[derive(Debug)]
-pub struct ReseedingRng<R, Rsdr: Debug> {
+/// 
+/// This derives `Clone` if both the inner RNG `R` and the reseeder `Rsdr` do.
+/// Note that reseeders using external entropy should deliberately not
+/// implement `Clone`.
+#[derive(Debug, Clone)]
+pub struct ReseedingRng<R, Rsdr: Reseeder<R>> {
     rng: R,
     generation_threshold: u64,
     bytes_generated: u64,
@@ -109,14 +111,18 @@ impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R>> SeedableRng<(Rsdr, S)> for
 }
 
 /// Something that can be used to reseed an RNG via `ReseedingRng`.
-pub trait Reseeder<R: ?Sized>: Debug {
+/// 
+/// Note that implementations should support `Clone` only if reseeding is
+/// deterministic (no external entropy source). This is so that a `ReseedingRng`
+/// only supports `Clone` if fully deterministic.
+pub trait Reseeder<R: ?Sized> {
     /// Reseed the given RNG.
     fn reseed(&mut self, rng: &mut R);
 }
 
 /// Reseed an RNG using `NewSeeded` to replace the current instance.
 #[cfg(feature="std")]
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct ReseedWithNew;
 
 #[cfg(feature="std")]
@@ -138,7 +144,7 @@ mod test {
     use distributions::ascii_word_char;
     use super::{ReseedingRng, Reseeder};
     
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     struct ReseedMock;
     impl Reseeder<MockAddRng<u32>> for ReseedMock {
         fn reseed(&mut self, rng: &mut MockAddRng<u32>) {
