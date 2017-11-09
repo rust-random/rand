@@ -10,7 +10,6 @@
 
 //! A wrapper around any Read to treat it as an RNG.
 
-use std::io;
 use std::io::Read;
 
 use {Rng, Error, ErrorKind};
@@ -69,16 +68,9 @@ impl<R: Read> Rng for ReadRng<R> {
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         if dest.len() == 0 { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-        self.reader.read_exact(dest).map_err(map_err)
+        self.reader.read_exact(dest).map_err(|err|
+            Error::new(ErrorKind::Unavailable, "ReadRng: read error", Some(err)))
     }
-}
-
-fn map_err(err: io::Error) -> Error {
-    let kind = match err.kind() {
-        io::ErrorKind::UnexpectedEof => ErrorKind::Unavailable,
-        _ => ErrorKind::Other,
-    };
-    Error::new(kind, Some(Box::new(err)))
 }
 
 #[cfg(test)]
