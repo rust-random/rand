@@ -68,7 +68,7 @@ impl Rng for OsRng {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.try_fill(dest).unwrap();
+        ::rand_core::impls::fill_via_try_fill(self, dest)
     }
 
     fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
@@ -152,7 +152,7 @@ mod imp {
                     continue;
                 } else {
                     return Err(Error::new_with_cause(
-                        ErrorKind::Other,
+                        ErrorKind::Unavailable,
                         "unexpected getrandom error",
                         err,
                     ));

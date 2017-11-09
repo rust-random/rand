@@ -260,15 +260,19 @@ impl ErrorKind {
             _ => false,
         }
     }
+    
     /// True if we should retry but wait before retrying
     /// 
     /// This implies `should_retry()` is true.
     pub fn should_wait(self) -> bool {
-        match self {
-            ErrorKind::NotReady => true,
-            _ => false,
-        }
+        self == ErrorKind::NotReady
     }
+    
+    /// True if we should limit the number of retries before giving up.
+    pub fn limit_retries(self) -> bool {
+        self == ErrorKind::Transient
+    }
+    
     /// A description of this error kind
     pub fn description(self) -> &'static str {
         match self {
