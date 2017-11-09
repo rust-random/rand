@@ -68,8 +68,9 @@ impl<R: Read> Rng for ReadRng<R> {
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         if dest.len() == 0 { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-        self.reader.read_exact(dest).map_err(|err|
-            Error::new(ErrorKind::Unavailable, "ReadRng: read error", Some(err)))
+        self.reader.read_exact(dest).map_err(|err| {
+            Error::new_with_cause(ErrorKind::Unavailable, "ReadRng: read error", err)
+        })
     }
 }
 

@@ -298,7 +298,16 @@ pub struct Error {
 }
 
 impl Error {
-    /// Create a new instance, with specified kind, message, and optionally a
+    /// Create a new instance, with specified kind and a message.
+    pub fn new(kind: ErrorKind, msg: &'static str) -> Self {
+        #[cfg(feature="std")] {
+            Self { kind, msg, cause: None }
+        }
+        #[cfg(not(feature="std"))] {
+            Self { kind, msg }
+        }
+    }
+    /// Create a new instance, with specified kind, message, and a
     /// chained cause.
     /// 
     /// Note: `stdError` is an alias for `std::error::Error`.
@@ -308,17 +317,17 @@ impl Error {
     /// type `E` (because both `Box` and `stdError` are unavailable), and the
     /// `cause` is ignored.
     #[cfg(feature="std")]
-    pub fn new<E>(kind: ErrorKind, msg: &'static str, cause: Option<E>) -> Self
+    pub fn new_with_cause<E>(kind: ErrorKind, msg: &'static str, cause: E) -> Self
         where E: Into<Box<stdError + Send + Sync>>
     {
-        Self { kind, msg, cause: cause.map(|inner| inner.into()) }
+        Self { kind, msg, cause: Some(cause.into()) }
     }
-    /// Create a new instance, with specified kind, message, and optionally a
+    /// Create a new instance, with specified kind, message, and a
     /// chained cause.
     /// 
     /// In `no_std` mode the *cause* is ignored.
     #[cfg(not(feature="std"))]
-    pub fn new<E>(kind: ErrorKind, msg: &'static str, _cause: Option<E>) -> Self {
+    pub fn new_with_cause<E>(kind: ErrorKind, msg: &'static str, _cause: E) -> Self {
         Self { kind, msg }
     }
     

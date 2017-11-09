@@ -84,8 +84,9 @@ impl<R: Read> ReadRng<R> {
     fn try_fill(&mut self, mut dest: &mut [u8]) -> Result<(), Error> {
         if dest.len() == 0 { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-        self.0.read_exact(dest).map_err(|err|
-            Error::new(ErrorKind::Unavailable, "error reading random device", Some(err)))
+        self.0.read_exact(dest).map_err(|err| {
+            Error::new_with_cause(ErrorKind::Unavailable, "error reading random device", err)
+        })
     }
 }
 
@@ -148,9 +149,13 @@ mod imp {
             if result == -1 {
                 let err = io::Error::last_os_error();
                 if err.kind() == io::ErrorKind::Interrupted {
-                    continue
+                    continue;
                 } else {
-                    return Err(Error::new(ErrorKind::Other, "unexpected getrandom error", Some(err)));
+                    return Err(Error::new_with_cause(
+                        ErrorKind::Other,
+                        "unexpected getrandom error",
+                        err,
+                    ));
                 }
             } else {
                 read += result as usize;
@@ -212,8 +217,9 @@ mod imp {
                 return Ok(OsRng { inner: OsGetrandomRng });
             }
 
-            let reader = File::open("/dev/urandom").map_err(|err|
-                Error::new(ErrorKind::Unavailable, "error opening random device", Some(err)))?;
+            let reader = File::open("/dev/urandom").map_err(|err| {
+                Error::new_with_cause(ErrorKind::Unavailable, "error opening random device", err)
+            })?;
             let reader_rng = ReadRng(reader);
 
             Ok(OsRng { inner: OsReadRng(reader_rng) })
@@ -260,10 +266,10 @@ mod imp {
                 SecRandomCopyBytes(kSecRandomDefault, v.len() as size_t, v.as_mut_ptr())
             };
             if ret == -1 {
-                Err(Error::new(
+                Err(Error::new_with_cause(
                     ErrorKind::Unavailable,
                     "couldn't generate random bytes",
-                    Some(io::Error::last_os_error())))
+                    io::Error::last_os_error()))
             } else {
                 Ok(())
             }
@@ -297,11 +303,11 @@ mod imp {
                                  ptr::null(), 0)
                 };
                 if ret == -1 || s_len != s.len() {
-                    // Old format string: "kern.arandom sysctl failed! (returned {}, s.len() {}, oldlenp {})"
+                    // Old format string:
+                    // "kern.arandom sysctl failed! (returned {}, s.len() {}, oldlenp {})"
                     return Err(Error::new(
                         ErrorKind::Unavailable,
-                        "kern.arandom sysctl failed",
-                        None));
+                        "kern.arandom sysctl failed"));
                 }
             }
             Ok(())
@@ -331,10 +337,10 @@ mod imp {
                     libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s.len())
                 };
                 if ret == -1 {
-                    return Err(Error::new(
+                    return Err(Error::new_with_cause(
                         ErrorKind::Unavailable,
                         "getentropy failed",
-                        Some(io::Error::last_os_error())));
+                        io::Error::last_os_error()));
                 }
             }
             Ok(())
@@ -357,8 +363,9 @@ mod imp {
 
     impl OsRng {
         pub fn new() -> Result<OsRng, Error> {
-            let reader = File::open("rand:").map_err(|err|
-                Error::new(ErrorKind::Unavailable, "error opening random device", Some(err)))?;
+            let reader = File::open("rand:").map_err(|err| {
+                Error::new_with_cause(ErrorKind::Unavailable, "error opening random device", err)
+            })?;
             let reader_rng = ReadRng(reader);
 
             Ok(OsRng { inner: reader_rng })
@@ -391,10 +398,10 @@ mod imp {
                     match fuchsia_zircon::cprng_draw(&mut s[filled..]) {
                         Ok(actual) => filled += actual,
                         Err(e) => {
-                            return Err(Error::new(
+                            return Err(Error::new_with_cause(
                                 ErrorKind::Unavailable,
                                 "cprng_draw failed",
-                                Some(e)));
+                                e));
                         }
                     };
                 }
@@ -434,10 +441,10 @@ mod imp {
                     SystemFunction036(slice.as_mut_ptr(), slice.len() as ULONG)
                 };
                 if ret == 0 {
-                    return Err(Error::new(
+                    return Err(Error::new_with_cause(
                         ErrorKind::Unavailable,
                         "couldn't generate random bytes",
-                        Some(io::Error::last_os_error())));
+                        io::Error::last_os_error()));
                 }
             }
             Ok(())
