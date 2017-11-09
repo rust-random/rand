@@ -81,7 +81,7 @@ impl Rng for OsRng {
 struct ReadRng<R> (R);
 
 impl<R: Read> ReadRng<R> {
-    fn try_fill(&mut self, mut dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         if dest.len() == 0 { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
         self.0.read_exact(dest).map_err(|err| {
@@ -127,9 +127,11 @@ mod imp {
         const NR_GETRANDOM: libc::c_long = 278;
         #[cfg(target_arch = "powerpc")]
         const NR_GETRANDOM: libc::c_long = 384;
+        
+        const GRND_NONBLOCK: libc::c_uint = 0x0001;
 
         unsafe {
-            syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(), 0)
+            syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(), GRND_NONBLOCK)
         }
     }
 
@@ -148,8 +150,14 @@ mod imp {
             let result = getrandom(&mut v[read..]);
             if result == -1 {
                 let err = io::Error::last_os_error();
-                if err.kind() == io::ErrorKind::Interrupted {
+                let kind = err.kind();
+                if kind == io::ErrorKind::Interrupted {
                     continue;
+                } else if kind == io::ErrorKind::WouldBlock {
+                    // Potentially this would waste bytes, but since we use
+                    // /dev/urandom blocking only happens if not initialised.
+                    // Also, wasting the bytes in v doesn't matter very much.
+                    return Err(Error::new(ErrorKind::NotReady, "getrandom not ready"));
                 } else {
                     return Err(Error::new_with_cause(
                         ErrorKind::Unavailable,
