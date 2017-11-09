@@ -59,20 +59,22 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
     /// On error, this may delay reseeding or not reseed at all.
     pub fn reseed_if_necessary(&mut self) {
         if self.bytes_generated >= self.generation_threshold {
-            while if let Err(e) = self.reseeder.reseed(&mut self.rng) {
+            loop {
+                if let Err(e) = self.reseeder.reseed(&mut self.rng) {
                     // TODO: log?
                     if e.kind.should_wait() {
                         // Delay reseeding
                         let delay = max(self.generation_threshold >> 8, self.bytes_generated);
                         self.bytes_generated -= delay;
-                        false
+                        break;
                     } else if e.kind.should_retry() {
-                        true    // immediate retry
+                        continue;   // immediate retry
                     } else {
-                        false   // give up trying to reseed
+                        break;  // give up trying to reseed
                     }
-                } else { false } {
-                // empty loop body
+                } else {
+                    break;  // no reseeding
+                }
             }
             self.bytes_generated = 0;
         }
@@ -168,13 +170,7 @@ pub struct ReseedWithNew;
 #[cfg(feature="std")]
 impl<R: Rng + NewSeeded> Reseeder<R> for ReseedWithNew {
     fn reseed(&mut self, rng: &mut R) -> Result<(), Error> {
-        match R::new() {
-            Ok(result) => {
-                *rng = result;
-                Ok(())
-            }
-            Err(e) => Err(e)
-        }
+        R::new().map(|result| *rng = result)
     }
 }
 
