@@ -321,30 +321,27 @@ impl<'a> SeedableRng<&'a [u64]> for Isaac64Rng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, iter};
+    use {Rng, SeedableRng, SeedFromRng, iter};
     use super::Isaac64Rng;
 
     #[test]
-    fn test_isaac64_from_seed() {
+    fn test_isaac64_construction() {
+        // Test that various construction techniques produce a working RNG.
+        
         let seed = iter(&mut ::test::rng())
                    .map(|rng| rng.next_u64())
                    .take(256)
                    .collect::<Vec<u64>>();
         let mut rng1 = Isaac64Rng::from_seed(&seed[..]);
-        let mut rng2 = Isaac64Rng::from_seed(&seed[..]);
-        for _ in 0..100 {
-            assert_eq!(rng1.next_u64(), rng2.next_u64());
-        }
-    }
-
-    #[test]
-    fn test_isaac64_from_seed_fixed() {
+        rng1.next_u64();
+        
+        let mut rng2 = Isaac64Rng::from_rng(&mut ::test::rng()).unwrap();
+        rng2.next_u64();
+        
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng1 = Isaac64Rng::from_seed(&seed[..]);
-        let mut rng2 = Isaac64Rng::from_seed(&seed[..]);
-        for _ in 0..100 {
-            assert_eq!(rng1.next_u64(), rng2.next_u64());
-        }
+        let mut rng3 = Isaac64Rng::from_seed(&seed[..]);
+        rng3.next_u64();
+        
     }
 
     #[test]

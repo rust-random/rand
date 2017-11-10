@@ -362,30 +362,26 @@ impl<'a> SeedableRng<&'a [u32]> for IsaacRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, iter};
+    use {Rng, SeedableRng, SeedFromRng, iter};
     use super::IsaacRng;
 
     #[test]
-    fn test_isaac_from_seed() {
+    fn test_isaac_construction() {
+        // Test that various construction techniques produce a working RNG.
+        
         let seed = iter(&mut ::test::rng())
                    .map(|rng| rng.next_u32())
                    .take(256)
                    .collect::<Vec<u32>>();
         let mut rng1 = IsaacRng::from_seed(&seed[..]);
-        let mut rng2 = IsaacRng::from_seed(&seed[..]);
-        for _ in 0..100 {
-            assert_eq!(rng1.next_u32(), rng2.next_u32());
-        }
-    }
-
-    #[test]
-    fn test_isaac_from_seed_fixed() {
+        rng1.next_u32();
+        
+        let mut rng2 = IsaacRng::from_rng(&mut ::test::rng()).unwrap();
+        rng2.next_u32();
+        
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng1 = IsaacRng::from_seed(&seed[..]);
-        let mut rng2 = IsaacRng::from_seed(&seed[..]);
-        for _ in 0..100 {
-            assert_eq!(rng1.next_u32(), rng2.next_u32());
-        }
+        let mut rng3 = IsaacRng::from_seed(&seed[..]);
+        rng3.next_u32();
     }
 
     #[test]

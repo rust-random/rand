@@ -290,26 +290,23 @@ impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, iter};
-    use distributions::ascii_word_char;
+    use {Rng, SeedableRng, SeedFromRng, iter};
     use super::ChaChaRng;
 
     #[test]
     fn test_rng_rand_seeded() {
+        // Test that various construction techniques produce a working RNG.
+        
         let s = iter(&mut ::test::rng()).map(|rng| rng.next_u32()).take(8).collect::<Vec<u32>>();
-        let mut ra: ChaChaRng = SeedableRng::from_seed(&s[..]);
-        let mut rb: ChaChaRng = SeedableRng::from_seed(&s[..]);
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
-    }
-
-    #[test]
-    fn test_rng_seeded() {
+        let mut ra = ChaChaRng::from_seed(&s[..]);
+        ra.next_u32();
+        
+        let mut rb = ChaChaRng::from_rng(&mut ::test::rng()).unwrap();
+        rb.next_u32();
+        
         let seed : &[_] = &[0,1,2,3,4,5,6,7];
-        let mut ra: ChaChaRng = SeedableRng::from_seed(seed);
-        let mut rb: ChaChaRng = SeedableRng::from_seed(seed);
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
+        let mut rc = ChaChaRng::from_seed(seed);
+        rc.next_u32();
     }
 
     #[test]
