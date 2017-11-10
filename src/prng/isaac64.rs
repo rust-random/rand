@@ -372,6 +372,28 @@ mod test {
     }
     
     #[test]
+    fn test_isaac64_true_values_32() {
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut rng1 = Isaac64Rng::from_seed(seed);
+        let v = (0..10).map(|_| rng1.next_u32()).collect::<Vec<_>>();
+        // Subset of above values, as an LE u32 sequence
+        // TODO: switch to this sequence?
+//         assert_eq!(v,
+//                    [141028748, 127386717,
+//                     1058730652, 3347555894,
+//                     851491469, 4039984500,
+//                     2692730210, 288449107,
+//                     646103879, 2782923823]);
+        // Subset of above values, using only low-half of each u64
+        assert_eq!(v,
+                   [141028748, 1058730652,
+                    851491469, 2692730210,
+                    646103879, 4195642895,
+                    2836348583, 1312677241,
+                    999139615, 253604626]);
+    }
+    
+    #[test]
     fn test_isaac64_true_bytes() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
         let mut rng1 = Isaac64Rng::from_seed(seed);
