@@ -59,6 +59,7 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
     /// On error, this may delay reseeding or not reseed at all.
     pub fn reseed_if_necessary(&mut self) {
         if self.bytes_generated >= self.generation_threshold {
+            let mut err_count = 0;
             loop {
                 if let Err(e) = self.reseeder.reseed(&mut self.rng) {
                     // TODO: log?
@@ -68,6 +69,11 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
                         self.bytes_generated -= delay;
                         break;
                     } else if e.kind.should_retry() {
+                        if err_count > 4 {  // arbitrary limit
+                            // TODO: log details & cause?
+                            break;  // give up trying to reseed
+                        }
+                        err_count += 1;
                         continue;   // immediate retry
                     } else {
                         break;  // give up trying to reseed
