@@ -413,6 +413,20 @@ mod test {
     }
 
     #[test]
+    fn test_isaac_true_bytes() {
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut rng1 = IsaacRng::from_seed(seed);
+        let mut buf = [0u8; 32];
+        rng1.fill_bytes(&mut buf);
+        // Same as first values in test_isaac_true_values as bytes in LE order
+        assert_eq!(buf,
+                   [82, 186, 128, 152, 71, 240, 20, 52,
+                    45, 175, 180, 15, 86, 16, 99, 125,
+                    101, 203, 81, 214, 97, 162, 134, 250,
+                    103, 78, 203, 15, 150, 3, 210, 164]);
+    }
+    
+    #[test]
     fn test_isaac_new_uninitialized() {
         // Compare the results from initializing `IsaacRng` with
         // `new_from_u64(0)`, to make sure it is the same as the reference

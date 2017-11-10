@@ -329,6 +329,20 @@ mod test {
     }
 
     #[test]
+    fn test_rng_true_bytes() {
+        let seed : &[_] = &[0u32; 8];
+        let mut ra: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut buf = [0u8; 32];
+        ra.fill_bytes(&mut buf);
+        // Same as first values in test_isaac_true_values as bytes in LE order
+        assert_eq!(buf,
+                   [118, 184, 224, 173, 160, 241, 61, 144,
+                    64, 93, 106, 229, 83, 134, 189, 40,
+                    189, 210, 25, 184, 160, 141, 237, 26,
+                    168, 54, 239, 204, 139, 119, 13, 199]);
+    }
+    
+    #[test]
     fn test_rng_clone() {
         let seed : &[_] = &[0u32; 8];
         let mut rng: ChaChaRng = SeedableRng::from_seed(seed);

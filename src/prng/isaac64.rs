@@ -373,7 +373,21 @@ mod test {
                         596345674630742204, 9947027391921273664, 11788097613744130851,
                         10391409374914919106));
     }
-
+    
+    #[test]
+    fn test_isaac64_true_bytes() {
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut rng1 = Isaac64Rng::from_seed(seed);
+        let mut buf = [0u8; 32];
+        rng1.fill_bytes(&mut buf);
+        // Same as first values in test_isaac64_true_values as bytes in LE order
+        assert_eq!(buf,
+                   [140, 237, 103, 8, 93, 196, 151, 7,
+                    156, 242, 26, 63, 54, 166, 135, 199,
+                    141, 186, 192, 50, 116, 69, 205, 240,
+                    98, 205, 127, 160, 83, 98, 49, 17]);
+    }
+    
     #[test]
     fn test_isaac_new_uninitialized() {
         // Compare the results from initializing `IsaacRng` with
