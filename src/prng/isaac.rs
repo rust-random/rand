@@ -362,30 +362,26 @@ impl<'a> SeedableRng<&'a [u32]> for IsaacRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, iter};
+    use {Rng, SeedableRng, SeedFromRng, iter};
     use super::IsaacRng;
 
     #[test]
-    fn test_isaac_from_seed() {
+    fn test_isaac_construction() {
+        // Test that various construction techniques produce a working RNG.
+        
         let seed = iter(&mut ::test::rng())
                    .map(|rng| rng.next_u32())
                    .take(256)
                    .collect::<Vec<u32>>();
         let mut rng1 = IsaacRng::from_seed(&seed[..]);
-        let mut rng2 = IsaacRng::from_seed(&seed[..]);
-        for _ in 0..100 {
-            assert_eq!(rng1.next_u32(), rng2.next_u32());
-        }
-    }
-
-    #[test]
-    fn test_isaac_from_seed_fixed() {
+        rng1.next_u32();
+        
+        let mut rng2 = IsaacRng::from_rng(&mut ::test::rng()).unwrap();
+        rng2.next_u32();
+        
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng1 = IsaacRng::from_seed(&seed[..]);
-        let mut rng2 = IsaacRng::from_seed(&seed[..]);
-        for _ in 0..100 {
-            assert_eq!(rng1.next_u32(), rng2.next_u32());
-        }
+        let mut rng3 = IsaacRng::from_seed(&seed[..]);
+        rng3.next_u32();
     }
 
     #[test]
@@ -411,6 +407,20 @@ mod test {
                         141456972, 2478885421));
     }
 
+    #[test]
+    fn test_isaac_true_bytes() {
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut rng1 = IsaacRng::from_seed(seed);
+        let mut buf = [0u8; 32];
+        rng1.fill_bytes(&mut buf);
+        // Same as first values in test_isaac_true_values as bytes in LE order
+        assert_eq!(buf,
+                   [82, 186, 128, 152, 71, 240, 20, 52,
+                    45, 175, 180, 15, 86, 16, 99, 125,
+                    101, 203, 81, 214, 97, 162, 134, 250,
+                    103, 78, 203, 15, 150, 3, 210, 164]);
+    }
+    
     #[test]
     fn test_isaac_new_uninitialized() {
         // Compare the results from initializing `IsaacRng` with

@@ -235,7 +235,7 @@ impl Rng for ChaChaRng {
             unsafe{ copy_nonoverlapping(
                 &self.buffer[self.index].0 as *const u32 as *const u8,
                 l.as_mut_ptr(),
-                words) };
+                4 * words) };
             self.index += words;
         }
         let n = left.len();
@@ -290,26 +290,23 @@ impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, iter};
-    use distributions::ascii_word_char;
+    use {Rng, SeedableRng, SeedFromRng, iter};
     use super::ChaChaRng;
 
     #[test]
     fn test_rng_rand_seeded() {
+        // Test that various construction techniques produce a working RNG.
+        
         let s = iter(&mut ::test::rng()).map(|rng| rng.next_u32()).take(8).collect::<Vec<u32>>();
-        let mut ra: ChaChaRng = SeedableRng::from_seed(&s[..]);
-        let mut rb: ChaChaRng = SeedableRng::from_seed(&s[..]);
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
-    }
-
-    #[test]
-    fn test_rng_seeded() {
+        let mut ra = ChaChaRng::from_seed(&s[..]);
+        ra.next_u32();
+        
+        let mut rb = ChaChaRng::from_rng(&mut ::test::rng()).unwrap();
+        rb.next_u32();
+        
         let seed : &[_] = &[0,1,2,3,4,5,6,7];
-        let mut ra: ChaChaRng = SeedableRng::from_seed(seed);
-        let mut rb: ChaChaRng = SeedableRng::from_seed(seed);
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
+        let mut rc = ChaChaRng::from_seed(seed);
+        rc.next_u32();
     }
 
     #[test]
@@ -354,6 +351,20 @@ mod test {
                         0x2c5bad8f, 0x898881dc, 0x5f1c86d9, 0xc1f8e7f4));
     }
 
+    #[test]
+    fn test_rng_true_bytes() {
+        let seed : &[_] = &[0u32; 8];
+        let mut ra: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut buf = [0u8; 32];
+        ra.fill_bytes(&mut buf);
+        // Same as first values in test_isaac_true_values as bytes in LE order
+        assert_eq!(buf,
+                   [118, 184, 224, 173, 160, 241, 61, 144,
+                    64, 93, 106, 229, 83, 134, 189, 40,
+                    189, 210, 25, 184, 160, 141, 237, 26,
+                    168, 54, 239, 204, 139, 119, 13, 199]);
+    }
+    
     #[test]
     fn test_rng_clone() {
         let seed : &[_] = &[0u32; 8];

@@ -219,7 +219,7 @@ impl Rng for Isaac64Rng {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        ::rand_core::impls::fill_bytes_via_u32(self, dest);
+        ::rand_core::impls::fill_bytes_via_u64(self, dest);
     }
 
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
@@ -321,30 +321,27 @@ impl<'a> SeedableRng<&'a [u64]> for Isaac64Rng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, iter};
+    use {Rng, SeedableRng, SeedFromRng, iter};
     use super::Isaac64Rng;
 
     #[test]
-    fn test_isaac64_from_seed() {
+    fn test_isaac64_construction() {
+        // Test that various construction techniques produce a working RNG.
+        
         let seed = iter(&mut ::test::rng())
                    .map(|rng| rng.next_u64())
                    .take(256)
                    .collect::<Vec<u64>>();
         let mut rng1 = Isaac64Rng::from_seed(&seed[..]);
-        let mut rng2 = Isaac64Rng::from_seed(&seed[..]);
-        for _ in 0..100 {
-            assert_eq!(rng1.next_u64(), rng2.next_u64());
-        }
-    }
-
-    #[test]
-    fn test_isaac64_from_seed_fixed() {
+        rng1.next_u64();
+        
+        let mut rng2 = Isaac64Rng::from_rng(&mut ::test::rng()).unwrap();
+        rng2.next_u64();
+        
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng1 = Isaac64Rng::from_seed(&seed[..]);
-        let mut rng2 = Isaac64Rng::from_seed(&seed[..]);
-        for _ in 0..100 {
-            assert_eq!(rng1.next_u64(), rng2.next_u64());
-        }
+        let mut rng3 = Isaac64Rng::from_seed(&seed[..]);
+        rng3.next_u64();
+        
     }
 
     #[test]
@@ -373,7 +370,43 @@ mod test {
                         596345674630742204, 9947027391921273664,
                         11788097613744130851, 10391409374914919106));
     }
-
+    
+    #[test]
+    fn test_isaac64_true_values_32() {
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut rng1 = Isaac64Rng::from_seed(seed);
+        let v = (0..10).map(|_| rng1.next_u32()).collect::<Vec<_>>();
+        // Subset of above values, as an LE u32 sequence
+        // TODO: switch to this sequence?
+//         assert_eq!(v,
+//                    [141028748, 127386717,
+//                     1058730652, 3347555894,
+//                     851491469, 4039984500,
+//                     2692730210, 288449107,
+//                     646103879, 2782923823]);
+        // Subset of above values, using only low-half of each u64
+        assert_eq!(v,
+                   [141028748, 1058730652,
+                    851491469, 2692730210,
+                    646103879, 4195642895,
+                    2836348583, 1312677241,
+                    999139615, 253604626]);
+    }
+    
+    #[test]
+    fn test_isaac64_true_bytes() {
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut rng1 = Isaac64Rng::from_seed(seed);
+        let mut buf = [0u8; 32];
+        rng1.fill_bytes(&mut buf);
+        // Same as first values in test_isaac64_true_values as bytes in LE order
+        assert_eq!(buf,
+                   [140, 237, 103, 8, 93, 196, 151, 7,
+                    156, 242, 26, 63, 54, 166, 135, 199,
+                    141, 186, 192, 50, 116, 69, 205, 240,
+                    98, 205, 127, 160, 83, 98, 49, 17]);
+    }
+    
     #[test]
     fn test_isaac_new_uninitialized() {
         // Compare the results from initializing `IsaacRng` with
