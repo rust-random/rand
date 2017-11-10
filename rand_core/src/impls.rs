@@ -21,6 +21,7 @@
 
 use core::intrinsics::transmute;
 use core::slice;
+use core::cmp::min;
 use Rng;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
@@ -91,6 +92,71 @@ macro_rules! impl_uint_from_fill {
         }
         int.to_le()
     });
+}
+
+macro_rules! fill_via_chunks {
+    ($src:expr, $dest:expr, $N:expr) => ({
+        let chunk_size_u8 = min($src.len() * $N, $dest.len());
+        let chunk_size = (chunk_size_u8 + $N - 1) / $N;
+
+        // Convert to little-endian:
+        for ref mut x in $src[0..chunk_size].iter_mut() {
+            **x = (*x).to_le();
+        }
+
+        let bytes = unsafe { slice::from_raw_parts($src.as_ptr() as *const u8,
+                                                   $src.len() * $N) };
+
+        let dest_chunk = &mut $dest[0..chunk_size_u8];
+        dest_chunk.copy_from_slice(&bytes[0..chunk_size_u8]);
+
+        (chunk_size, chunk_size_u8)
+    });
+}
+
+/// Implement `fill_bytes` by reading chunks from the output buffer of a block
+/// based RNG.
+///
+/// The return values are `(consumed_u32, filled_u8)`.
+///
+/// Note that on big-endian systems values in the output buffer `src` are
+/// mutated: they get converted to little-endian before copying.
+///
+/// # Example
+/// (from `IsaacRng`)
+///
+/// ```rust,ignore
+/// fn fill_bytes(&mut self, dest: &mut [u8]) {
+///     let mut read_len = 0;
+///     while read_len < dest.len() {
+///         if self.index >= self.rsl.len() {
+///             self.isaac();
+///         }
+///
+///         let (consumed_u32, filled_u8) =
+///             impls::fill_via_u32_chunks(&mut self.rsl[self.index..],
+///                                        &mut dest[read_len..]);
+///
+///         self.index += consumed_u32;
+///         read_len += filled_u8;
+///     }
+/// }
+/// ```
+pub fn fill_via_u32_chunks(src: &mut [u32], dest: &mut [u8]) -> (usize, usize) {
+    fill_via_chunks!(src, dest, 4)
+}
+
+/// Implement `fill_bytes` by reading chunks from the output buffer of a block
+/// based RNG.
+///
+/// Note that on big-endian systems values in the output buffer `src` are
+/// mutated: they get converted to little-endian before copying.
+///
+/// The return values are `(consumed_u64, filled_u8)`.
+///
+/// See `fill_via_u32_chunks` for an example.
+pub fn fill_via_u64_chunks(src: &mut [u64], dest: &mut [u8]) -> (usize, usize) {
+    fill_via_chunks!(src, dest, 8)
 }
 
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
