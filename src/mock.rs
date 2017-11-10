@@ -30,13 +30,13 @@ use rand_core::impls;
 /// assert_eq!(my_rng.next_u32(), 2u32);
 /// assert_eq!(my_rng.next_u64(), 3u64 + (4u64 << 32));
 /// ```
-#[derive(Debug)]
-pub struct MockAddRng<T> {
+#[derive(Debug, Clone)]
+pub struct MockAddRng<T: Clone> {
     v: w<T>,
     a: w<T>,
 }
 
-impl<T> MockAddRng<T> {
+impl<T: Clone> MockAddRng<T> {
     /// Create a `MockAddRng`, yielding an arithmetic sequence starting with
     /// `v` and incremented by `a` each time.
     pub fn new(v: T, a: T) -> Self {
@@ -90,7 +90,7 @@ impl Rng for MockAddRng<u64> {
     }
 }
 
-impl<T> SeedableRng<T> for MockAddRng<T> where
+impl<T: Clone> SeedableRng<T> for MockAddRng<T> where
         MockAddRng<T>: Rng,
         T: From<u8>,    // for 1.into()
 {

@@ -12,12 +12,14 @@ matrix:
     - rust: beta
     - rust: nightly
       script:
-        - cargo test
-        - cargo test --features nightly
-        - cargo build --no-default-features
+        - cargo test --all
+        - cargo test --all --features nightly
+        - cargo test --all --benches
+        - cargo build --all --no-default-features
         - cargo doc --no-deps --features nightly
 script:
-  - cargo test
+  - cargo test --all
+  - cargo build --all --no-default-features
 after_success:
   - travis-cargo --only nightly doc-upload
 env:
