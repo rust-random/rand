@@ -21,7 +21,6 @@
 
 use core::intrinsics::transmute;
 use core::slice;
-use core::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 use Rng;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
@@ -110,21 +109,18 @@ pub fn next_u128_via_fill<R: Rng+?Sized>(rng: &mut R) -> u128 {
     impl_uint_from_fill!(rng, u128, 16)
 }
 
-const LIMIT_ERR_MAX: usize = 20;    // arbitrary
-static LIMIT_ERR_COUNT: AtomicUsize = ATOMIC_USIZE_INIT;
-
 /// Implement `fill_bytes` via `try_fill` with implicit error handling.
 pub fn fill_via_try_fill<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
+    let mut err_count = 0;
     loop {
         if let Err(e) = rng.try_fill(dest) {
             if e.kind.should_retry() {
                 if e.kind.limit_retries() {
-                    // We use a global counter since we don't have any local memory.
-                    let count = LIMIT_ERR_COUNT.fetch_add(1, Ordering::Relaxed);
-                    if count > LIMIT_ERR_MAX {
+                    if err_count > 8 {  // arbitrary limit
                         // TODO: log details & cause?
                         panic!("Too many RNG errors; last error: {}", e.msg());
                     }
+                    err_count += 1;
                 }
                 
                 if e.kind.should_wait() {
