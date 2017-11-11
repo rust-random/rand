@@ -403,21 +403,39 @@ mod test {
                         596345674630742204, 9947027391921273664, 11788097613744130851,
                         10391409374914919106));
     }
-    
+
     #[test]
     fn test_isaac64_true_values_32() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
         let mut rng1 = Isaac64Rng::from_seed(seed);
-        let v = (0..10).map(|_| rng1.next_u32()).collect::<Vec<_>>();
+        let v = (0..12).map(|_| rng1.next_u32()).collect::<Vec<_>>();
         // Subset of above values, as an LE u32 sequence
         assert_eq!(v,
                    [141028748, 127386717,
                     1058730652, 3347555894,
                     851491469, 4039984500,
                     2692730210, 288449107,
-                    646103879, 2782923823]);
+                    646103879, 2782923823,
+                    4195642895, 3252674613]);
     }
-    
+
+    #[test]
+    fn test_isaac64_true_values_mixed() {
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut rng = Isaac64Rng::from_seed(seed);
+        // Test alternating between `next_u64` and `next_u32` works as expected.
+        // Values are the same as `test_isaac64_true_values` and
+        // `test_isaac64_true_values_32`.
+        assert_eq!(rng.next_u64(), 547121783600835980);
+        assert_eq!(rng.next_u32(), 1058730652);
+        assert_eq!(rng.next_u32(), 3347555894);
+        assert_eq!(rng.next_u64(), 17351601304698403469);
+        assert_eq!(rng.next_u32(), 2692730210);
+        // Skip one u32
+        assert_eq!(rng.next_u64(), 11952566807690396487);
+        assert_eq!(rng.next_u32(), 4195642895);
+    }
+
     #[test]
     fn test_isaac64_true_bytes() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
@@ -431,7 +449,7 @@ mod test {
                     141, 186, 192, 50, 116, 69, 205, 240,
                     98, 205, 127, 160, 83, 98, 49, 17]);
     }
-    
+
     #[test]
     fn test_isaac_new_uninitialized() {
         // Compare the results from initializing `IsaacRng` with
