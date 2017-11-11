@@ -88,12 +88,12 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// [3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*]
 ///      (http://eprint.iacr.org/2006/438)
 pub struct IsaacRng {
-    rsl: [w32; RAND_SIZE],
+    rsl: [u32; RAND_SIZE],
     mem: [w32; RAND_SIZE],
     a: w32,
     b: w32,
     c: w32,
-    cnt: u32,
+    index: u32,
 }
 
 // Cannot be derived because [u32; 256] does not implement Clone
@@ -106,7 +106,7 @@ impl Clone for IsaacRng {
             a: self.a,
             b: self.b,
             c: self.c,
-            cnt: self.cnt,
+            index: self.index,
         }
     }
 }
@@ -150,6 +150,9 @@ impl IsaacRng {
     /// - We maintain one index `i` and add `m` or `m2` as base (m2 for the
     ///   `s[i+128 mod 256]`), relying on the optimizer to turn it into pointer
     ///   arithmetic.
+    /// - We fill `rsl` backwards. The reference implementation reads values
+    ///   from `rsl` in reverse. We read them in the normal direction, to make
+    ///   `fill_bytes` a memcopy. To maintain compatibility we fill in reverse.
     fn isaac(&mut self) {
         self.c += w(1);
         // abbreviations
@@ -157,13 +160,13 @@ impl IsaacRng {
         let mut b = self.b + self.c;
         const MIDPOINT: usize = RAND_SIZE / 2;
 
-        #[inline(always)]
+        #[inline]
         fn ind(mem:&[w32; RAND_SIZE], v: w32, amount: usize) -> w32 {
             let index = (v >> amount).0 as usize % RAND_SIZE;
             mem[index]
         }
 
-        #[inline(always)]
+        #[inline]
         fn rngstep(ctx: &mut IsaacRng,
                    mix: w32,
                    a: &mut w32,
@@ -176,7 +179,7 @@ impl IsaacRng {
             let y = *a + *b + ind(&ctx.mem, x, 2);
             ctx.mem[base + m] = y;
             *b = x + ind(&ctx.mem, y, 2 + RAND_SIZE_LEN);
-            ctx.rsl[base + m] = *b;
+            ctx.rsl[RAND_SIZE - 1 - base - m] = (*b).0;
         }
 
         let mut m = 0;
@@ -199,40 +202,46 @@ impl IsaacRng {
 
         self.a = a;
         self.b = b;
-        self.cnt = RAND_SIZE as u32;
+        self.index = 0;
     }
 }
 
 impl Rng for IsaacRng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        if self.cnt == 0 {
-            // make some more numbers
+        // Using a local variable for `index`, and checking the size avoids a
+        // bounds check later on.
+        let mut index = self.index as usize;
+        if index >= RAND_SIZE {
             self.isaac();
+            index = 0;
         }
-        self.cnt -= 1;
 
-        // self.cnt is at most RAND_SIZE, but that is before the
-        // subtraction above. We want to index without bounds
-        // checking, but this could lead to incorrect code if someone
-        // misrefactors, so we check, sometimes.
-        //
-        // (Changes here should be reflected in Isaac64Rng.next_u64.)
-        debug_assert!((self.cnt as usize) < RAND_SIZE);
-
-        // (the % is cheaply telling the optimiser that we're always
-        // in bounds, without unsafe. NB. this is a power of two, so
-        // it optimises to a bitwise mask).
-        self.rsl[self.cnt as usize % RAND_SIZE].0
+        let value = self.rsl[index];
+        self.index += 1;
+        value
     }
 
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         impls::next_u64_via_u32(self)
     }
 
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        impls::fill_bytes_via_u32(self, dest)
+        let mut read_len = 0;
+        while read_len < dest.len() {
+            if self.index as usize >= RAND_SIZE {
+                self.isaac();
+            }
+
+            let (consumed_u32, filled_u8) =
+                impls::fill_via_u32_chunks(&mut self.rsl[(self.index as usize)..],
+                                           &mut dest[read_len..]);
+
+            self.index += consumed_u32 as u32;
+            read_len += filled_u8;
+        }
     }
 }
 
@@ -293,12 +302,12 @@ fn init(mut mem: [w32; RAND_SIZE], rounds: u32) -> IsaacRng {
     }
 
     let mut rng = IsaacRng {
-        rsl: [w(0); RAND_SIZE],
+        rsl: [0; RAND_SIZE],
         mem: mem,
         a: w(0),
         b: w(0),
         c: w(0),
-        cnt: 0,
+        index: 0,
     };
 
     // Prepare the first set of results
