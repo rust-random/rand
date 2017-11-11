@@ -16,7 +16,7 @@
 
 //! Non-physical true random number generator based on timing jitter.
 
-use {CryptoRng, Rng, Error};
+use {CryptoRng, Rng, Error, ErrorKind};
 use rand_core;
 use rand_core::impls;
 
@@ -75,19 +75,7 @@ impl fmt::Debug for JitterRng {
 
 /// An error that can occur when `test_timer` fails.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TimerError {
-    kind: ErrorKind,
-}
-
-impl TimerError {
-    pub fn kind(&self) -> ErrorKind {
-        self.kind
-    }
-}
-
-/// Error kind which can be matched over.
-#[derive(PartialEq, Eq, Debug, Copy, Clone)]
-pub enum ErrorKind {
+pub enum TimerError {
     /// No timer available.
     NoTimer,
     /// Timer too coarse to use as an entropy source.
@@ -97,52 +85,40 @@ pub enum ErrorKind {
     /// Variations of deltas of time too small.
     TinyVariantions,
     /// Too many stuck results (indicating no added entropy).
-    ToManyStuck,
+    TooManyStuck,
     #[doc(hidden)]
     __Nonexhaustive,
 }
 
-impl ErrorKind {
+impl TimerError {
     fn description(&self) -> &'static str {
         match *self {
-            ErrorKind::NoTimer => "no timer available",
-            ErrorKind::CoarseTimer => "coarse timer",
-            ErrorKind::NotMonotonic => "timer not monotonic",
-            ErrorKind::TinyVariantions => "time delta variations too small",
-            ErrorKind::ToManyStuck => "too many stuck results",
-            ErrorKind::__Nonexhaustive => unreachable!(),
+            TimerError::NoTimer => "no timer available",
+            TimerError::CoarseTimer => "coarse timer",
+            TimerError::NotMonotonic => "timer not monotonic",
+            TimerError::TinyVariantions => "time delta variations too small",
+            TimerError::TooManyStuck => "too many stuck results",
+            TimerError::__Nonexhaustive => unreachable!(),
         }
     }
 }
 
 impl fmt::Display for TimerError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.kind {
-            ErrorKind::NoTimer =>
-                write!(f, "No timer available."),
-            ErrorKind::CoarseTimer =>
-                write!(f, "Timer too coarse to use as an entropy source."),
-            ErrorKind::NotMonotonic =>
-                write!(f, "Timer is not monotonically increasing."),
-            ErrorKind::TinyVariantions =>
-                write!(f, "Variations of deltas of time too small."),
-            ErrorKind::ToManyStuck =>
-                write!(f, "Too many stuck results (indicating no added entropy)."),
-            ErrorKind::__Nonexhaustive => unreachable!(),
-        }
+        write!(f, "{}", self.description())
     }
 }
 
 #[cfg(feature="std")]
 impl ::std::error::Error for TimerError {
     fn description(&self) -> &str {
-        self.kind.description()
+        self.description()
     }
 }
 
 impl From<TimerError> for Error {
     fn from(err: TimerError) -> Error {
-        Error::new_with_cause(rand_core::ErrorKind::Unavailable,
+        Error::new_with_cause(ErrorKind::Unavailable,
                               "timer jitter failed basic quality tests", err)
     }
 }
@@ -470,7 +446,7 @@ impl JitterRng {
 
             // Test whether timer works
             if time == 0 || time2 == 0 {
-                return Err(TimerError { kind: ErrorKind::NoTimer });
+                return Err(TimerError::NoTimer);
             }
             let delta = time2.wrapping_sub(time) as i64;
 
@@ -478,7 +454,7 @@ impl JitterRng {
             // when called shortly after each other -- this implies that we also
             // have a high resolution timer
             if delta == 0 {
-                return Err(TimerError { kind: ErrorKind::CoarseTimer });
+                return Err(TimerError::CoarseTimer);
             }
 
             // Up to here we did not modify any variable that will be
@@ -510,7 +486,7 @@ impl JitterRng {
         // should not fail. The value of 3 should cover the NTP case being
         // performed during our test run.
         if time_backwards > 3 {
-            return Err(TimerError { kind: ErrorKind::NotMonotonic });
+            return Err(TimerError::NotMonotonic);
         }
 
         // Test that the available amount of entropy per round does not get to
@@ -521,20 +497,20 @@ impl JitterRng {
         // `assert!(delta_sum / TESTLOOPCOUNT >= 1)`
         // `assert!(delta_sum >= TESTLOOPCOUNT)`
         if delta_sum < TESTLOOPCOUNT {
-            return Err(TimerError { kind: ErrorKind::TinyVariantions });
+            return Err(TimerError::TinyVariantions);
         }
 
         // Ensure that we have variations in the time stamp below 100 for at
         // least 10% of all checks -- on some platforms, the counter increments
         // in multiples of 100, but not always
         if count_mod > (TESTLOOPCOUNT/10 * 9) {
-            return Err(TimerError { kind: ErrorKind::CoarseTimer });
+            return Err(TimerError::CoarseTimer);
         }
 
         // If we have more than 90% stuck results, then this Jitter RNG is
         // likely to not work well.
         if count_stuck > (TESTLOOPCOUNT/10 * 9) {
-            return Err(TimerError { kind: ErrorKind::ToManyStuck });
+            return Err(TimerError::TooManyStuck);
         }
 
         // Estimate the number of `measure_jitter` rounds necessary for 64 bits
