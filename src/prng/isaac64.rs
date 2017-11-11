@@ -79,6 +79,7 @@ pub struct Isaac64Rng {
     b: w64,
     c: w64,
     index: u32,
+    half_used: bool, // true if only half of the previous result is used
 }
 
 // Cannot be derived because [u64; 256] does not implement Clone
@@ -92,6 +93,7 @@ impl Clone for Isaac64Rng {
             b: self.b,
             c: self.c,
             index: self.index,
+            half_used: self.half_used,
         }
     }
 }
@@ -137,13 +139,6 @@ impl Isaac64Rng {
     /// - We fill `rsl` backwards. The reference implementation reads values
     ///   from `rsl` in reverse. We read them in the normal direction, to make
     ///   `fill_bytes` a memcopy. To maintain compatibility we fill in reverse.
-    /// - We store `index` as if `rsl` contains `u32`'s instead of `u64`'s, plus
-    ///   one. This way we can make more efficient use of the generated results
-    ///   in `next_u32`.
-    ///   For `next_u32` the correct index is `index - 1`.
-    ///   For `next_u64` the correct index is `index >> 1`, which also takes
-    ///   care of any alignment issues that could arise if `next_u64` was called
-    ///   after `next_u32`.
     fn isaac64(&mut self) {
         self.c += w(1);
         // abbreviations
@@ -193,7 +188,8 @@ impl Isaac64Rng {
 
         self.a = a;
         self.b = b;
-        self.index = 1;
+        self.index = 0;
+        self.half_used = false;
     }
 }
 
@@ -202,39 +198,37 @@ impl Rng for Isaac64Rng {
     fn next_u32(&mut self) -> u32 {
         // Using a local variable for `index`, and checking the size avoids a
         // bounds check later on.
-        let mut index = self.index as usize - 1;
+        let mut index = self.index as usize * 2 - self.half_used as usize;
         if index >= RAND_SIZE * 2 {
             self.isaac64();
             index = 0;
         }
 
-        let value;
+        self.half_used = !self.half_used;
+        self.index += self.half_used as u32;
+
+        // Index as if this is a u32 slice.
+        let rsl = unsafe { &*(&mut self.rsl as *mut [u64; RAND_SIZE]
+                                            as *mut [u32; RAND_SIZE * 2]) };
+
         if cfg!(target_endian = "little") {
-            // Index as if this is a u32 slice.
-            let rsl = unsafe { &*(&mut self.rsl as *mut [u64; RAND_SIZE]
-                                                as *mut [u32; RAND_SIZE * 2]) };
-            value = rsl[index];
+            rsl[index]
         } else {
-            // Index into the u64 slice, rotate and truncate the result.
-            // Works always, also on big-endian systems, but is slower.
-            let tmp = self.rsl[index >> 1];
-            value = tmp as u32;
-            self.rsl[index >> 1] = tmp.rotate_right(32);
+            rsl[index ^ 1]
         }
-        self.index += 1;
-        value
     }
 
     #[inline]
     fn next_u64(&mut self) -> u64 {
-        let mut index = self.index as usize >> 1;
+        let mut index = self.index as usize;
         if index >= RAND_SIZE {
             self.isaac64();
             index = 0;
         }
 
         let value = self.rsl[index];
-        self.index += 2;
+        self.index += 1;
+        self.half_used = false;
         value
     }
 
@@ -246,15 +240,15 @@ impl Rng for Isaac64Rng {
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         let mut read_len = 0;
         while read_len < dest.len() {
-            if (self.index as usize >> 1) >= RAND_SIZE {
+            if self.index as usize >= RAND_SIZE {
                 self.isaac64();
             }
 
             let (consumed_u64, filled_u8) =
-                impls::fill_via_u64_chunks(&mut self.rsl[(self.index as usize >> 1)..],
+                impls::fill_via_u64_chunks(&mut self.rsl[self.index as usize..],
                                            &mut dest[read_len..]);
 
-            self.index += consumed_u64 as u32 * 2;
+            self.index += consumed_u64 as u32;
             read_len += filled_u8;
         }
     }
@@ -302,6 +296,7 @@ fn init(mut mem: [w64; RAND_SIZE], rounds: u32) -> Isaac64Rng {
         b: w(0),
         c: w(0),
         index: 0,
+        half_used: false,
     };
 
     // Prepare the first set of results
