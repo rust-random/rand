@@ -119,8 +119,14 @@ macro_rules! fill_via_chunks {
 ///
 /// The return values are `(consumed_u32, filled_u8)`.
 ///
+/// `filled_u8` is the number of filled bytes in `dest`, which may be less than
+/// the length of `dest`.
+/// `consumed_u32` is the number of words consumed from `src`, which is the same
+/// as `filled_u8 / 4` rounded up.
+///
 /// Note that on big-endian systems values in the output buffer `src` are
-/// mutated: they get converted to little-endian before copying.
+/// mutated. `src[0..consumed_u32]` get converted to little-endian before
+/// copying.
 ///
 /// # Example
 /// (from `IsaacRng`)
@@ -149,10 +155,15 @@ pub fn fill_via_u32_chunks(src: &mut [u32], dest: &mut [u8]) -> (usize, usize) {
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
 /// based RNG.
 ///
-/// Note that on big-endian systems values in the output buffer `src` are
-/// mutated: they get converted to little-endian before copying.
-///
 /// The return values are `(consumed_u64, filled_u8)`.
+/// `filled_u8` is the number of filled bytes in `dest`, which may be less than
+/// the length of `dest`.
+/// `consumed_u64` is the number of words consumed from `src`, which is the same
+/// as `filled_u8 / 8` rounded up.
+///
+/// Note that on big-endian systems values in the output buffer `src` are
+/// mutated. `src[0..consumed_u64]` get converted to little-endian before
+/// copying.
 ///
 /// See `fill_via_u32_chunks` for an example.
 pub fn fill_via_u64_chunks(src: &mut [u64], dest: &mut [u8]) -> (usize, usize) {
