@@ -655,6 +655,7 @@ impl JitterRng {
     /// #     try_main().unwrap();
     /// # }
     /// ```
+    #[cfg(feature="std")]
     pub fn timer_stats(&mut self, var_rounds: bool) -> i64 {
         let time = get_nstime();
         self.memaccess(var_rounds);
