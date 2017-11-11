@@ -10,12 +10,9 @@
 
 //! The ChaCha random number generator.
 
-use core::num::Wrapping as w;
 use core::fmt;
+use rand_core::impls;
 use {Rng, CryptoRng, SeedFromRng, SeedableRng, Error};
-
-#[allow(bad_style)]
-type w32 = w<u32>;
 
 const KEY_WORDS    : usize =  8; // 8 words for the 256-bit key
 const STATE_WORDS  : usize = 16;
@@ -32,9 +29,9 @@ const CHACHA_ROUNDS: u32 = 20; // Cryptographically secure from 8 upwards as of 
 /// Salsa20*](http://cr.yp.to/chacha.html)
 #[derive(Clone)]
 pub struct ChaChaRng {
-    buffer:  [w32; STATE_WORDS], // Internal buffer of output
-    state:   [w32; STATE_WORDS], // Initial state
-    index:   usize,                 // Index into state
+    buffer:  [u32; STATE_WORDS], // Internal buffer of output
+    state:   [u32; STATE_WORDS], // Initial state
+    index:   usize,              // Index into state
 }
 
 // Custom Debug implementation that does not expose the internal state
@@ -46,10 +43,10 @@ impl fmt::Debug for ChaChaRng {
 
 macro_rules! quarter_round{
     ($a: expr, $b: expr, $c: expr, $d: expr) => {{
-        $a = $a + $b; $d = $d ^ $a; $d = w($d.0.rotate_left(16));
-        $c = $c + $d; $b = $b ^ $c; $b = w($b.0.rotate_left(12));
-        $a = $a + $b; $d = $d ^ $a; $d = w($d.0.rotate_left( 8));
-        $c = $c + $d; $b = $b ^ $c; $b = w($b.0.rotate_left( 7));
+        $a = $a.wrapping_add($b); $d ^= $a; $d = $d.rotate_left(16);
+        $c = $c.wrapping_add($d); $b ^= $c; $b = $b.rotate_left(12);
+        $a = $a.wrapping_add($b); $d ^= $a; $d = $d.rotate_left( 8);
+        $c = $c.wrapping_add($d); $b ^= $c; $b = $b.rotate_left( 7);
     }}
 }
 
@@ -69,15 +66,15 @@ macro_rules! double_round{
 }
 
 #[inline]
-fn core(output: &mut [w32; STATE_WORDS], input: &[w32; STATE_WORDS]) {
-    *output = *input;
+fn core(new: &mut [u32; STATE_WORDS], input: &[u32; STATE_WORDS]) {
+    *new = *input;
 
     for _ in 0..CHACHA_ROUNDS / 2 {
-        double_round!(output);
+        double_round!(new);
     }
 
     for i in 0..STATE_WORDS {
-        output[i] = output[i] + input[i];
+        new[i] = new[i].wrapping_add(input[i]);
     }
 }
 
@@ -104,8 +101,8 @@ impl ChaChaRng {
     /// - 2419978656
     pub fn new_unseeded() -> ChaChaRng {
         let mut rng = ChaChaRng {
-            buffer:  [w(0); STATE_WORDS],
-            state:   [w(0); STATE_WORDS],
+            buffer:  [0; STATE_WORDS],
+            state:   [0; STATE_WORDS],
             index:   STATE_WORDS
         };
         rng.init(&[0; KEY_WORDS]);
@@ -133,10 +130,10 @@ impl ChaChaRng {
     /// println!("{:?}", ra.next_u32());
     /// ```
     pub fn set_counter(&mut self, counter_low: u64, counter_high: u64) {
-        self.state[12] = w((counter_low >>  0) as u32);
-        self.state[13] = w((counter_low >> 32) as u32);
-        self.state[14] = w((counter_high >>  0) as u32);
-        self.state[15] = w((counter_high >> 32) as u32);
+        self.state[12] = (counter_low >>  0) as u32;
+        self.state[13] = (counter_low >> 32) as u32;
+        self.state[14] = (counter_high >>  0) as u32;
+        self.state[15] = (counter_high >> 32) as u32;
         self.index = STATE_WORDS; // force recomputation
     }
 
@@ -159,19 +156,19 @@ impl ChaChaRng {
     /// [1]: Daniel J. Bernstein. [*Extending the Salsa20
     /// nonce.*](http://cr.yp.to/papers.html#xsalsa)
     fn init(&mut self, key: &[u32; KEY_WORDS]) {
-        self.state[0] = w(0x61707865);
-        self.state[1] = w(0x3320646E);
-        self.state[2] = w(0x79622D32);
-        self.state[3] = w(0x6B206574);
+        self.state[0] = 0x61707865;
+        self.state[1] = 0x3320646E;
+        self.state[2] = 0x79622D32;
+        self.state[3] = 0x6B206574;
 
         for i in 0..KEY_WORDS {
-            self.state[4+i] = w(key[i]);
+            self.state[4+i] = key[i];
         }
 
-        self.state[12] = w(0);
-        self.state[13] = w(0);
-        self.state[14] = w(0);
-        self.state[15] = w(0);
+        self.state[12] = 0;
+        self.state[13] = 0;
+        self.state[14] = 0;
+        self.state[15] = 0;
 
         self.index = STATE_WORDS;
     }
@@ -181,69 +178,54 @@ impl ChaChaRng {
         core(&mut self.buffer, &self.state);
         self.index = 0;
         // update 128-bit counter
-        self.state[12] = self.state[12] + w(1);
-        if self.state[12] != w(0) { return };
-        self.state[13] = self.state[13] + w(1);
-        if self.state[13] != w(0) { return };
-        self.state[14] = self.state[14] + w(1);
-        if self.state[14] != w(0) { return };
-        self.state[15] = self.state[15] + w(1);
+        self.state[12] = self.state[12].wrapping_add(1);
+        if self.state[12] != 0 { return };
+        self.state[13] = self.state[13].wrapping_add(1);
+        if self.state[13] != 0 { return };
+        self.state[14] = self.state[14].wrapping_add(1);
+        if self.state[14] != 0 { return };
+        self.state[15] = self.state[15].wrapping_add(1);
     }
 }
 
 impl Rng for ChaChaRng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        if self.index == STATE_WORDS {
+        // Using a local variable for `index`, and checking the size avoids a
+        // bounds check later on.
+        let mut index = self.index as usize;
+        if index >= STATE_WORDS {
             self.update();
+            index = 0;
         }
 
-        let value = self.buffer[self.index % STATE_WORDS];
+        let value = self.buffer[index];
         self.index += 1;
-        value.0
+        value
     }
-    
+
     fn next_u64(&mut self) -> u64 {
-        ::rand_core::impls::next_u64_via_u32(self)
+        impls::next_u64_via_u32(self)
     }
+
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128 {
-        ::rand_core::impls::next_u128_via_u64(self)
+        impls::next_u128_via_u64(self)
     }
-    
-    // Custom implementation allowing larger reads from buffer is about 8%
-    // faster than default implementation in my tests
+
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        use core::cmp::min;
-        use core::intrinsics::{transmute, copy_nonoverlapping};
-        
-        let mut left = dest;
-        while left.len() >= 4 {
-            if self.index == STATE_WORDS {
+        let mut read_len = 0;
+        while read_len < dest.len() {
+            if self.index >= self.buffer.len() {
                 self.update();
             }
-            
-            let words = min(left.len() / 4, STATE_WORDS - self.index);
-            let (l, r) = {left}.split_at_mut(4 * words);
-            left = r;
-            
-            // convert to LE:
-            for ref mut x in self.buffer[self.index..self.index+words].iter_mut() {
-                **x = w((*x).0.to_le());
-            }
-            
-            unsafe{ copy_nonoverlapping(
-                &self.buffer[self.index].0 as *const u32 as *const u8,
-                l.as_mut_ptr(),
-                words) };
-            self.index += words;
-        }
-        let n = left.len();
-        if n > 0 {
-            let chunk: [u8; 4] = unsafe {
-                transmute(self.next_u32().to_le())
-            };
-            left.copy_from_slice(&chunk[..n]);
+
+            let (consumed_u32, filled_u8) =
+                impls::fill_via_u32_chunks(&mut self.buffer[self.index..],
+                                           &mut dest[read_len..]);
+
+            self.index += consumed_u32;
+            read_len += filled_u8;
         }
     }
 
@@ -271,8 +253,8 @@ impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
     /// words are used, the remaining are set to zero.
     fn from_seed(seed: &'a [u32]) -> ChaChaRng {
         let mut rng = ChaChaRng {
-            buffer:  [w(0); STATE_WORDS],
-            state:   [w(0); STATE_WORDS],
+            buffer:  [0; STATE_WORDS],
+            state:   [0; STATE_WORDS],
             index:   STATE_WORDS
         };
         rng.init(&[0u32; KEY_WORDS]);
@@ -280,7 +262,7 @@ impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
         {
             let key = &mut rng.state[4 .. 4+KEY_WORDS];
             for (k, s) in key.iter_mut().zip(seed.iter()) {
-                *k = w(*s);
+                *k = *s;
             }
         }
         rng
@@ -290,26 +272,23 @@ impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, iter};
-    use distributions::ascii_word_char;
+    use {Rng, SeedableRng, SeedFromRng, iter};
     use super::ChaChaRng;
 
     #[test]
     fn test_rng_rand_seeded() {
+        // Test that various construction techniques produce a working RNG.
+        
         let s = iter(&mut ::test::rng()).map(|rng| rng.next_u32()).take(8).collect::<Vec<u32>>();
-        let mut ra: ChaChaRng = SeedableRng::from_seed(&s[..]);
-        let mut rb: ChaChaRng = SeedableRng::from_seed(&s[..]);
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
-    }
-
-    #[test]
-    fn test_rng_seeded() {
+        let mut ra = ChaChaRng::from_seed(&s[..]);
+        ra.next_u32();
+        
+        let mut rb = ChaChaRng::from_rng(&mut ::test::rng()).unwrap();
+        rb.next_u32();
+        
         let seed : &[_] = &[0,1,2,3,4,5,6,7];
-        let mut ra: ChaChaRng = SeedableRng::from_seed(seed);
-        let mut rb: ChaChaRng = SeedableRng::from_seed(seed);
-        assert!(::test::iter_eq(iter(&mut ra).map(|rng| ascii_word_char(rng)).take(100),
-                                iter(&mut rb).map(|rng| ascii_word_char(rng)).take(100)));
+        let mut rc = ChaChaRng::from_seed(seed);
+        rc.next_u32();
     }
 
     #[test]
@@ -354,6 +333,20 @@ mod test {
                         0x2c5bad8f, 0x898881dc, 0x5f1c86d9, 0xc1f8e7f4));
     }
 
+    #[test]
+    fn test_rng_true_bytes() {
+        let seed : &[_] = &[0u32; 8];
+        let mut ra: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut buf = [0u8; 32];
+        ra.fill_bytes(&mut buf);
+        // Same as first values in test_isaac_true_values as bytes in LE order
+        assert_eq!(buf,
+                   [118, 184, 224, 173, 160, 241, 61, 144,
+                    64, 93, 106, 229, 83, 134, 189, 40,
+                    189, 210, 25, 184, 160, 141, 237, 26,
+                    168, 54, 239, 204, 139, 119, 13, 199]);
+    }
+    
     #[test]
     fn test_rng_clone() {
         let seed : &[_] = &[0u32; 8];

@@ -15,6 +15,8 @@ use core::iter::repeat;
 use core::num::Wrapping as w;
 use core::fmt;
 
+use rand_core::impls;
+
 use {Rng, SeedFromRng, SeedableRng, Error};
 
 #[allow(non_camel_case_types)]
@@ -87,12 +89,12 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// [3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*]
 ///      (http://eprint.iacr.org/2006/438)
 pub struct IsaacRng {
-    rsl: [w32; RAND_SIZE],
+    rsl: [u32; RAND_SIZE],
     mem: [w32; RAND_SIZE],
     a: w32,
     b: w32,
     c: w32,
-    cnt: u32,
+    index: u32,
 }
 
 // Cannot be derived because [u32; 256] does not implement Clone
@@ -105,7 +107,7 @@ impl Clone for IsaacRng {
             a: self.a,
             b: self.b,
             c: self.c,
-            cnt: self.cnt,
+            index: self.index,
         }
     }
 }
@@ -149,6 +151,9 @@ impl IsaacRng {
     /// - We maintain one index `i` and add `m` or `m2` as base (m2 for the
     ///   `s[i+128 mod 256]`), relying on the optimizer to turn it into pointer
     ///   arithmetic.
+    /// - We fill `rsl` backwards. The reference implementation reads values
+    ///   from `rsl` in reverse. We read them in the normal direction, to make
+    ///   `fill_bytes` a memcopy. To maintain compatibility we fill in reverse.
     fn isaac(&mut self) {
         self.c += w(1);
         // abbreviations
@@ -156,13 +161,13 @@ impl IsaacRng {
         let mut b = self.b + self.c;
         const MIDPOINT: usize = RAND_SIZE / 2;
 
-        #[inline(always)]
+        #[inline]
         fn ind(mem:&[w32; RAND_SIZE], v: w32, amount: usize) -> w32 {
             let index = (v >> amount).0 as usize % RAND_SIZE;
             mem[index]
         }
 
-        #[inline(always)]
+        #[inline]
         fn rngstep(ctx: &mut IsaacRng,
                    mix: w32,
                    a: &mut w32,
@@ -175,7 +180,7 @@ impl IsaacRng {
             let y = *a + *b + ind(&ctx.mem, x, 2);
             ctx.mem[base + m] = y;
             *b = x + ind(&ctx.mem, y, 2 + RAND_SIZE_LEN);
-            ctx.rsl[base + m] = *b;
+            ctx.rsl[RAND_SIZE - 1 - base - m] = (*b).0;
         }
 
         let mut m = 0;
@@ -198,44 +203,50 @@ impl IsaacRng {
 
         self.a = a;
         self.b = b;
-        self.cnt = RAND_SIZE as u32;
+        self.index = 0;
     }
 }
 
 impl Rng for IsaacRng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        if self.cnt == 0 {
-            // make some more numbers
+        // Using a local variable for `index`, and checking the size avoids a
+        // bounds check later on.
+        let mut index = self.index as usize;
+        if index >= RAND_SIZE {
             self.isaac();
+            index = 0;
         }
-        self.cnt -= 1;
 
-        // self.cnt is at most RAND_SIZE, but that is before the
-        // subtraction above. We want to index without bounds
-        // checking, but this could lead to incorrect code if someone
-        // misrefactors, so we check, sometimes.
-        //
-        // (Changes here should be reflected in Isaac64Rng.next_u64.)
-        debug_assert!((self.cnt as usize) < RAND_SIZE);
-
-        // (the % is cheaply telling the optimiser that we're always
-        // in bounds, without unsafe. NB. this is a power of two, so
-        // it optimises to a bitwise mask).
-        self.rsl[self.cnt as usize % RAND_SIZE].0
+        let value = self.rsl[index];
+        self.index += 1;
+        value
     }
 
+    #[inline]
     fn next_u64(&mut self) -> u64 {
-        ::rand_core::impls::next_u64_via_u32(self)
+        impls::next_u64_via_u32(self)
     }
 
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128 {
-        ::rand_core::impls::next_u128_via_u64(self)
+        impls::next_u128_via_u64(self)
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        ::rand_core::impls::fill_bytes_via_u32(self, dest);
+        let mut read_len = 0;
+        while read_len < dest.len() {
+            if self.index as usize >= RAND_SIZE {
+                self.isaac();
+            }
+
+            let (consumed_u32, filled_u8) =
+                impls::fill_via_u32_chunks(&mut self.rsl[(self.index as usize)..],
+                                           &mut dest[read_len..]);
+
+            self.index += consumed_u32 as u32;
+            read_len += filled_u8;
+        }
     }
 
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
@@ -300,12 +311,12 @@ fn init(mut mem: [w32; RAND_SIZE], rounds: u32) -> IsaacRng {
     }
 
     let mut rng = IsaacRng {
-        rsl: [w(0); RAND_SIZE],
+        rsl: [0; RAND_SIZE],
         mem: mem,
         a: w(0),
         b: w(0),
         c: w(0),
-        cnt: 0,
+        index: 0,
     };
 
     // Prepare the first set of results
@@ -362,30 +373,26 @@ impl<'a> SeedableRng<&'a [u32]> for IsaacRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, iter};
+    use {Rng, SeedableRng, SeedFromRng, iter};
     use super::IsaacRng;
 
     #[test]
-    fn test_isaac_from_seed() {
+    fn test_isaac_construction() {
+        // Test that various construction techniques produce a working RNG.
+        
         let seed = iter(&mut ::test::rng())
                    .map(|rng| rng.next_u32())
                    .take(256)
                    .collect::<Vec<u32>>();
         let mut rng1 = IsaacRng::from_seed(&seed[..]);
-        let mut rng2 = IsaacRng::from_seed(&seed[..]);
-        for _ in 0..100 {
-            assert_eq!(rng1.next_u32(), rng2.next_u32());
-        }
-    }
-
-    #[test]
-    fn test_isaac_from_seed_fixed() {
+        rng1.next_u32();
+        
+        let mut rng2 = IsaacRng::from_rng(&mut ::test::rng()).unwrap();
+        rng2.next_u32();
+        
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng1 = IsaacRng::from_seed(&seed[..]);
-        let mut rng2 = IsaacRng::from_seed(&seed[..]);
-        for _ in 0..100 {
-            assert_eq!(rng1.next_u32(), rng2.next_u32());
-        }
+        let mut rng3 = IsaacRng::from_seed(&seed[..]);
+        rng3.next_u32();
     }
 
     #[test]
@@ -411,6 +418,20 @@ mod test {
                         141456972, 2478885421));
     }
 
+    #[test]
+    fn test_isaac_true_bytes() {
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut rng1 = IsaacRng::from_seed(seed);
+        let mut buf = [0u8; 32];
+        rng1.fill_bytes(&mut buf);
+        // Same as first values in test_isaac_true_values as bytes in LE order
+        assert_eq!(buf,
+                   [82, 186, 128, 152, 71, 240, 20, 52,
+                    45, 175, 180, 15, 86, 16, 99, 125,
+                    101, 203, 81, 214, 97, 162, 134, 250,
+                    103, 78, 203, 15, 150, 3, 210, 164]);
+    }
+    
     #[test]
     fn test_isaac_new_uninitialized() {
         // Compare the results from initializing `IsaacRng` with

@@ -18,12 +18,10 @@
 //! Byte-swapping (like the std `to_le` functions) is only needed to convert
 //! to/from byte sequences, and since its purpose is reproducibility,
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
-//! 
-//! Missing from here are implementations of `next_u*` in terms of `try_fill`.
-//! Currently `OsRng` handles these implementations itself.
-//! TODO: should we add more implementations?
 
 use core::intrinsics::transmute;
+use core::slice;
+use core::cmp::min;
 use Rng;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
@@ -84,22 +82,105 @@ pub fn fill_bytes_via_u128<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
 
 macro_rules! impl_uint_from_fill {
     ($self:expr, $ty:ty, $N:expr) => ({
-        // Transmute and convert from LE (i.e. byte-swap on BE)
         debug_assert!($N == ::core::mem::size_of::<$ty>());
-        let mut buf = [0u8; $N];
-        $self.fill_bytes(&mut buf);
-        unsafe{ *(buf.as_ptr() as *const $ty) }.to_le()
+
+        let mut int: $ty = 0;
+        unsafe {
+            let ptr = &mut int as *mut $ty as *mut u8;
+            let slice = slice::from_raw_parts_mut(ptr, $N);
+            $self.fill_bytes(slice);
+        }
+        int
     });
 }
 
+macro_rules! fill_via_chunks {
+    ($src:expr, $dest:expr, $N:expr) => ({
+        let chunk_size_u8 = min($src.len() * $N, $dest.len());
+        let chunk_size = (chunk_size_u8 + $N - 1) / $N;
+
+        // Convert to little-endian:
+        for ref mut x in $src[0..chunk_size].iter_mut() {
+            **x = (*x).to_le();
+        }
+
+        let bytes = unsafe { slice::from_raw_parts($src.as_ptr() as *const u8,
+                                                   $src.len() * $N) };
+
+        let dest_chunk = &mut $dest[0..chunk_size_u8];
+        dest_chunk.copy_from_slice(&bytes[0..chunk_size_u8]);
+
+        (chunk_size, chunk_size_u8)
+    });
+}
+
+/// Implement `fill_bytes` by reading chunks from the output buffer of a block
+/// based RNG.
+///
+/// The return values are `(consumed_u32, filled_u8)`.
+///
+/// `filled_u8` is the number of filled bytes in `dest`, which may be less than
+/// the length of `dest`.
+/// `consumed_u32` is the number of words consumed from `src`, which is the same
+/// as `filled_u8 / 4` rounded up.
+///
+/// Note that on big-endian systems values in the output buffer `src` are
+/// mutated. `src[0..consumed_u32]` get converted to little-endian before
+/// copying.
+///
+/// # Example
+/// (from `IsaacRng`)
+///
+/// ```rust,ignore
+/// fn fill_bytes(&mut self, dest: &mut [u8]) {
+///     let mut read_len = 0;
+///     while read_len < dest.len() {
+///         if self.index >= self.rsl.len() {
+///             self.isaac();
+///         }
+///
+///         let (consumed_u32, filled_u8) =
+///             impls::fill_via_u32_chunks(&mut self.rsl[self.index..],
+///                                        &mut dest[read_len..]);
+///
+///         self.index += consumed_u32;
+///         read_len += filled_u8;
+///     }
+/// }
+/// ```
+pub fn fill_via_u32_chunks(src: &mut [u32], dest: &mut [u8]) -> (usize, usize) {
+    fill_via_chunks!(src, dest, 4)
+}
+
+/// Implement `fill_bytes` by reading chunks from the output buffer of a block
+/// based RNG.
+///
+/// The return values are `(consumed_u64, filled_u8)`.
+/// `filled_u8` is the number of filled bytes in `dest`, which may be less than
+/// the length of `dest`.
+/// `consumed_u64` is the number of words consumed from `src`, which is the same
+/// as `filled_u8 / 8` rounded up.
+///
+/// Note that on big-endian systems values in the output buffer `src` are
+/// mutated. `src[0..consumed_u64]` get converted to little-endian before
+/// copying.
+///
+/// See `fill_via_u32_chunks` for an example.
+pub fn fill_via_u64_chunks(src: &mut [u64], dest: &mut [u8]) -> (usize, usize) {
+    fill_via_chunks!(src, dest, 8)
+}
+
+/// Implement `next_u32` via `fill_bytes`, little-endian order.
 pub fn next_u32_via_fill<R: Rng+?Sized>(rng: &mut R) -> u32 {
     impl_uint_from_fill!(rng, u32, 4)
 }
 
+/// Implement `next_u64` via `fill_bytes`, little-endian order.
 pub fn next_u64_via_fill<R: Rng+?Sized>(rng: &mut R) -> u64 {
     impl_uint_from_fill!(rng, u64, 8)
 }
 
+/// Implement `next_u128` via `fill_bytes`, little-endian order.
 #[cfg(feature = "i128_support")]
 pub fn next_u128_via_fill<R: Rng+?Sized>(rng: &mut R) -> u128 {
     impl_uint_from_fill!(rng, u128, 16)

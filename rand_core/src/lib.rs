@@ -43,6 +43,9 @@
 #[cfg(feature="std")]
 extern crate core;
 
+#[cfg(feature="std")]
+use std::error::Error as stdError;
+
 use core::fmt;
 
 pub mod impls;
@@ -247,55 +250,106 @@ pub enum ErrorKind {
     __Nonexhaustive,
 }
 
-#[cfg(feature="std")]
-#[derive(Debug)]
-pub struct Error {
-    pub kind: ErrorKind,
-    pub cause: Option<Box<std::error::Error>>,
+impl ErrorKind {
+    /// True if this kind of error may resolve itself on retry.
+    /// 
+    /// See also `should_wait()`.
+    pub fn should_retry(self) -> bool {
+        match self {
+            ErrorKind::Transient | ErrorKind::NotReady => true,
+            _ => false,
+        }
+    }
+    /// True if we should retry but wait before retrying
+    /// 
+    /// This implies `should_retry()` is true.
+    pub fn should_wait(self) -> bool {
+        match self {
+            ErrorKind::NotReady => true,
+            _ => false,
+        }
+    }
+    /// A description of this error kind
+    pub fn description(self) -> &'static str {
+        match self {
+            ErrorKind::Unavailable => "permanent failure or unavailable",
+            ErrorKind::Transient => "transient failure",
+            ErrorKind::NotReady => "not ready yet",
+            ErrorKind::Other => "uncategorised",
+            ErrorKind::__Nonexhaustive => unreachable!(),
+        }
+    }
 }
 
-#[cfg(not(feature="std"))]
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Error type of random number generators
+/// 
+/// This embeds an `ErrorKind` which can be matched over, a *message* to tell
+/// users what happened, and optionally a *cause* (which allows chaining back
+/// to the original error).
+/// 
+/// The cause is omitted in `no_std` mode (see `Error::new` for details).
+#[derive(Debug)]
 pub struct Error {
+    /// Error kind. This enum is included to aid handling of errors.
     pub kind: ErrorKind,
-    pub cause: Option<&'static str>,
+    msg: &'static str,
+    #[cfg(feature="std")]
+    cause: Option<Box<stdError + Send + Sync>>,
 }
 
 impl Error {
-    #[cfg(feature="std")]
-    pub fn new(kind: ErrorKind, cause: Option<Box<std::error::Error>>) -> Error {
-        Error {
-            kind: kind,
-            cause: cause,
+    /// Create a new instance, with specified kind and a message.
+    pub fn new(kind: ErrorKind, msg: &'static str) -> Self {
+        #[cfg(feature="std")] {
+            Self { kind, msg, cause: None }
         }
+        #[cfg(not(feature="std"))] {
+            Self { kind, msg }
+        }
+    }
+    /// Create a new instance, with specified kind, message, and a
+    /// chained cause.
+    /// 
+    /// Note: `stdError` is an alias for `std::error::Error`.
+    /// 
+    /// If not targetting `std` (i.e. `no_std`), this function is replaced by
+    /// another with the same prototype, except that there are no bounds on the
+    /// type `E` (because both `Box` and `stdError` are unavailable), and the
+    /// `cause` is ignored.
+    #[cfg(feature="std")]
+    pub fn new_with_cause<E>(kind: ErrorKind, msg: &'static str, cause: E) -> Self
+        where E: Into<Box<stdError + Send + Sync>>
+    {
+        Self { kind, msg, cause: Some(cause.into()) }
+    }
+    /// Create a new instance, with specified kind, message, and a
+    /// chained cause.
+    /// 
+    /// In `no_std` mode the *cause* is ignored.
+    #[cfg(not(feature="std"))]
+    pub fn new_with_cause<E>(kind: ErrorKind, msg: &'static str, _cause: E) -> Self {
+        Self { kind, msg }
+    }
+    
+    /// Get the error message
+    pub fn msg(&self) -> &'static str {
+        self.msg
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.kind {
-            ErrorKind::Unavailable => write!(f, "RNG not available."),
-            ErrorKind::Transient => write!(f, "RNG has failed, probably temporary."),
-            ErrorKind::NotReady => write!(f, "RNG not ready yet."),
-            ErrorKind::Other => write!(f, "An unspecified RNG error occurred."),
-            ErrorKind::__Nonexhaustive => unreachable!(),
-        }
+        write!(f, "RNG error [{}]: {}", self.kind.description(), self.msg())
     }
 }
 
 #[cfg(feature="std")]
-impl ::std::error::Error for Error {
+impl stdError for Error {
     fn description(&self) -> &str {
-        match self.kind {
-            ErrorKind::Unavailable => "not available",
-            ErrorKind::Transient => "temporary failure",
-            ErrorKind::NotReady => "not ready yet",
-            ErrorKind::Other => "Uncategorised rng error",
-            ErrorKind::__Nonexhaustive => unreachable!(),
-        }
+        self.msg
     }
 
-    fn cause(&self) -> Option<&::std::error::Error> {
-        self.cause.as_ref().map(|e| &**e)
+    fn cause(&self) -> Option<&stdError> {
+        self.cause.as_ref().map(|e| e.as_ref() as &stdError)
     }
 }

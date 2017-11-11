@@ -141,20 +141,9 @@ impl ::std::error::Error for TimerError {
 }
 
 impl From<TimerError> for Error {
-    #[cfg(feature="std")]
     fn from(err: TimerError) -> Error {
-        Error {
-            kind: rand_core::ErrorKind::Unavailable,
-            cause: Some(err.into()),
-        }
-    }
-
-    #[cfg(not(feature="std"))]
-    fn from(err: TimerError) -> Error {
-        Error {
-            kind: rand_core::ErrorKind::Unavailable,
-            cause: errkind.description(),
-        }
+        Error::new_with_cause(rand_core::ErrorKind::Unavailable,
+                              "timer jitter failed basic quality tests", err)
     }
 }
 
@@ -362,7 +351,7 @@ impl JitterRng {
         // invocation to measure the timing variations
         let time = (self.timer)();
         // Note: wrapping_sub combined with a cast to `i64` generates a correct
-        // delta, even in the unlikely case this is a timer than is not strictly
+        // delta, even in the unlikely case this is a timer that is not strictly
         // monotonic.
         let current_delta = time.wrapping_sub(self.prev_time) as i64;
         self.prev_time = time;

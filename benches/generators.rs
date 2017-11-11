@@ -9,7 +9,7 @@ const BYTES_LEN: usize = 1024;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{Rng, NewSeeded, SeedFromRng, StdRng, OsRng, JitterRng, Rand, Default};
+use rand::{Rng, NewSeeded, Sample, SeedFromRng, StdRng, OsRng, JitterRng};
 use rand::prng::{XorShiftRng, IsaacRng, Isaac64Rng, ChaChaRng};
 
 macro_rules! gen_bytes {
@@ -20,7 +20,7 @@ macro_rules! gen_bytes {
             let mut buf = [0u8; BYTES_LEN];
             b.iter(|| {
                 for _ in 0..RAND_BENCH_N {
-                    rng.try_fill(&mut buf).unwrap();
+                    rng.fill_bytes(&mut buf);
                     black_box(buf);
                 }
             });
@@ -37,35 +37,42 @@ gen_bytes!(gen_bytes_std, StdRng);
 gen_bytes!(gen_bytes_os, OsRng);
 
 
-macro_rules! gen_usize {
-    ($fnn:ident, $gen:ident) => {
+macro_rules! gen_uint {
+    ($fnn:ident, $ty:ty, $gen:ident) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
             let mut rng = $gen::new().unwrap();
             b.iter(|| {
                 for _ in 0..RAND_BENCH_N {
-                    black_box(usize::rand(&mut rng, Default));
+                    black_box(rng.gen::<$ty>());
                 }
             });
-            b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
     }
 }
 
-gen_usize!(gen_usize_xorshift, XorShiftRng);
-gen_usize!(gen_usize_isaac, IsaacRng);
-gen_usize!(gen_usize_isaac64, Isaac64Rng);
-gen_usize!(gen_usize_chacha, ChaChaRng);
-gen_usize!(gen_usize_std, StdRng);
-gen_usize!(gen_usize_os, OsRng);
+gen_uint!(gen_u32_xorshift, u32, XorShiftRng);
+gen_uint!(gen_u32_isaac, u32, IsaacRng);
+gen_uint!(gen_u32_isaac64, u32, Isaac64Rng);
+gen_uint!(gen_u32_chacha, u32, ChaChaRng);
+gen_uint!(gen_u32_std, u32, StdRng);
+gen_uint!(gen_u32_os, u32, OsRng);
+
+gen_uint!(gen_u64_xorshift, u64, XorShiftRng);
+gen_uint!(gen_u64_isaac, u64, IsaacRng);
+gen_uint!(gen_u64_isaac64, u64, Isaac64Rng);
+gen_uint!(gen_u64_chacha, u64, ChaChaRng);
+gen_uint!(gen_u64_std, u64, StdRng);
+gen_uint!(gen_u64_os, u64, OsRng);
 
 #[bench]
-fn gen_usize_jitter(b: &mut Bencher) {
+fn gen_u64_jitter(b: &mut Bencher) {
     let mut rng = JitterRng::new().unwrap();
     b.iter(|| {
-        black_box(usize::rand(&mut rng, Default));
+        black_box(rng.gen::<u64>());
     });
-    b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
+    b.bytes = size_of::<u64>() as u64 * RAND_BENCH_N;
 }
 
 macro_rules! init_gen {
