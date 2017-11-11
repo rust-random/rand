@@ -10,13 +10,9 @@
 
 //! The ChaCha random number generator.
 
-use core::num::Wrapping as w;
 use core::fmt;
 use {Rng, SeedableRng, Rand};
 use impls;
-
-#[allow(bad_style)]
-type w32 = w<u32>;
 
 const KEY_WORDS    : usize =  8; // 8 words for the 256-bit key
 const STATE_WORDS  : usize = 16;
@@ -33,9 +29,9 @@ const CHACHA_ROUNDS: u32 = 20; // Cryptographically secure from 8 upwards as of 
 /// Salsa20*](http://cr.yp.to/chacha.html)
 #[derive(Clone)]
 pub struct ChaChaRng {
-    buffer:  [w32; STATE_WORDS], // Internal buffer of output
-    state:   [w32; STATE_WORDS], // Initial state
-    index:   usize,                 // Index into state
+    buffer:  [u32; STATE_WORDS], // Internal buffer of output
+    state:   [u32; STATE_WORDS], // Initial state
+    index:   usize,              // Index into state
 }
 
 // Custom Debug implementation that does not expose the internal state
@@ -47,10 +43,10 @@ impl fmt::Debug for ChaChaRng {
 
 macro_rules! quarter_round{
     ($a: expr, $b: expr, $c: expr, $d: expr) => {{
-        $a = $a + $b; $d = $d ^ $a; $d = w($d.0.rotate_left(16));
-        $c = $c + $d; $b = $b ^ $c; $b = w($b.0.rotate_left(12));
-        $a = $a + $b; $d = $d ^ $a; $d = w($d.0.rotate_left( 8));
-        $c = $c + $d; $b = $b ^ $c; $b = w($b.0.rotate_left( 7));
+        $a = $a.wrapping_add($b); $d ^= $a; $d = $d.rotate_left(16);
+        $c = $c.wrapping_add($d); $b ^= $c; $b = $b.rotate_left(12);
+        $a = $a.wrapping_add($b); $d ^= $a; $d = $d.rotate_left( 8);
+        $c = $c.wrapping_add($d); $b ^= $c; $b = $b.rotate_left( 7);
     }}
 }
 
@@ -70,15 +66,15 @@ macro_rules! double_round{
 }
 
 #[inline]
-fn core(output: &mut [w32; STATE_WORDS], input: &[w32; STATE_WORDS]) {
-    *output = *input;
+fn core(new: &mut [u32; STATE_WORDS], input: &[u32; STATE_WORDS]) {
+    *new = *input;
 
     for _ in 0..CHACHA_ROUNDS / 2 {
-        double_round!(output);
+        double_round!(new);
     }
 
     for i in 0..STATE_WORDS {
-        output[i] = output[i] + input[i];
+        new[i] = new[i].wrapping_add(input[i]);
     }
 }
 
@@ -105,8 +101,8 @@ impl ChaChaRng {
     /// - 2419978656
     pub fn new_unseeded() -> ChaChaRng {
         let mut rng = ChaChaRng {
-            buffer:  [w(0); STATE_WORDS],
-            state:   [w(0); STATE_WORDS],
+            buffer:  [0; STATE_WORDS],
+            state:   [0; STATE_WORDS],
             index:   STATE_WORDS
         };
         rng.init(&[0; KEY_WORDS]);
@@ -133,10 +129,10 @@ impl ChaChaRng {
     /// println!("{:?}", ra.next_u32());
     /// ```
     pub fn set_counter(&mut self, counter_low: u64, counter_high: u64) {
-        self.state[12] = w((counter_low >>  0) as u32);
-        self.state[13] = w((counter_low >> 32) as u32);
-        self.state[14] = w((counter_high >>  0) as u32);
-        self.state[15] = w((counter_high >> 32) as u32);
+        self.state[12] = (counter_low >>  0) as u32;
+        self.state[13] = (counter_low >> 32) as u32;
+        self.state[14] = (counter_high >>  0) as u32;
+        self.state[15] = (counter_high >> 32) as u32;
         self.index = STATE_WORDS; // force recomputation
     }
 
@@ -159,19 +155,19 @@ impl ChaChaRng {
     /// [1]: Daniel J. Bernstein. [*Extending the Salsa20
     /// nonce.*](http://cr.yp.to/papers.html#xsalsa)
     fn init(&mut self, key: &[u32; KEY_WORDS]) {
-        self.state[0] = w(0x61707865);
-        self.state[1] = w(0x3320646E);
-        self.state[2] = w(0x79622D32);
-        self.state[3] = w(0x6B206574);
+        self.state[0] = 0x61707865;
+        self.state[1] = 0x3320646E;
+        self.state[2] = 0x79622D32;
+        self.state[3] = 0x6B206574;
 
         for i in 0..KEY_WORDS {
-            self.state[4+i] = w(key[i]);
+            self.state[4+i] = key[i];
         }
 
-        self.state[12] = w(0);
-        self.state[13] = w(0);
-        self.state[14] = w(0);
-        self.state[15] = w(0);
+        self.state[12] = 0;
+        self.state[13] = 0;
+        self.state[14] = 0;
+        self.state[15] = 0;
 
         self.index = STATE_WORDS;
     }
@@ -181,31 +177,36 @@ impl ChaChaRng {
         core(&mut self.buffer, &self.state);
         self.index = 0;
         // update 128-bit counter
-        self.state[12] = self.state[12] + w(1);
-        if self.state[12] != w(0) { return };
-        self.state[13] = self.state[13] + w(1);
-        if self.state[13] != w(0) { return };
-        self.state[14] = self.state[14] + w(1);
-        if self.state[14] != w(0) { return };
-        self.state[15] = self.state[15] + w(1);
+        self.state[12] = self.state[12].wrapping_add(1);
+        if self.state[12] != 0 { return };
+        self.state[13] = self.state[13].wrapping_add(1);
+        if self.state[13] != 0 { return };
+        self.state[14] = self.state[14].wrapping_add(1);
+        if self.state[14] != 0 { return };
+        self.state[15] = self.state[15].wrapping_add(1);
     }
 }
 
 impl Rng for ChaChaRng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        if self.index == STATE_WORDS {
+        // Using a local variable for `index`, and checking the size avoids a
+        // bounds check later on.
+        let mut index = self.index as usize;
+        if index >= STATE_WORDS {
             self.update();
+            index = 0;
         }
 
-        let value = self.buffer[self.index % STATE_WORDS];
+        let value = self.buffer[index];
         self.index += 1;
-        value.0
+        value
     }
-    
+
     fn next_u64(&mut self) -> u64 {
         impls::next_u64_via_u32(self)
     }
+
     
     fn fill_bytes(&mut self, bytes: &mut [u8]) {
         impls::fill_bytes_via_u32(self, bytes)
@@ -224,8 +225,8 @@ impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
     /// words are used, the remaining are set to zero.
     fn from_seed(seed: &'a [u32]) -> ChaChaRng {
         let mut rng = ChaChaRng {
-            buffer:  [w(0); STATE_WORDS],
-            state:   [w(0); STATE_WORDS],
+            buffer:  [0; STATE_WORDS],
+            state:   [0; STATE_WORDS],
             index:   STATE_WORDS
         };
         rng.init(&[0u32; KEY_WORDS]);
@@ -233,7 +234,7 @@ impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
         {
             let key = &mut rng.state[4 .. 4+KEY_WORDS];
             for (k, s) in key.iter_mut().zip(seed.iter()) {
-                *k = w(*s);
+                *k = *s;
             }
         }
         rng
