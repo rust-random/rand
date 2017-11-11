@@ -78,6 +78,7 @@ pub struct Isaac64Rng {
     b: w64,
     c: w64,
     index: u32,
+    half_used: bool, // true if only half of the previous result is used
 }
 
 // Cannot be derived because [u64; 256] does not implement Clone
@@ -91,6 +92,7 @@ impl Clone for Isaac64Rng {
             b: self.b,
             c: self.c,
             index: self.index,
+            half_used: self.half_used,
         }
     }
 }
@@ -186,13 +188,33 @@ impl Isaac64Rng {
         self.a = a;
         self.b = b;
         self.index = 0;
+        self.half_used = false;
     }
 }
 
 impl Rng for Isaac64Rng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        self.next_u64() as u32
+        // Using a local variable for `index`, and checking the size avoids a
+        // bounds check later on.
+        let mut index = self.index as usize * 2 - self.half_used as usize;
+        if index >= RAND_SIZE * 2 {
+            self.isaac64();
+            index = 0;
+        }
+
+        self.half_used = !self.half_used;
+        self.index += self.half_used as u32;
+
+        // Index as if this is a u32 slice.
+        let rsl = unsafe { &*(&mut self.rsl as *mut [u64; RAND_SIZE]
+                                            as *mut [u32; RAND_SIZE * 2]) };
+
+        if cfg!(target_endian = "little") {
+            rsl[index]
+        } else {
+            rsl[index ^ 1]
+        }
     }
 
     #[inline]
@@ -205,6 +227,7 @@ impl Rng for Isaac64Rng {
 
         let value = self.rsl[index];
         self.index += 1;
+        self.half_used = false;
         value
     }
 
@@ -216,7 +239,7 @@ impl Rng for Isaac64Rng {
             }
 
             let (consumed_u64, filled_u8) =
-                impls::fill_via_u64_chunks(&mut self.rsl[(self.index as usize)..],
+                impls::fill_via_u64_chunks(&mut self.rsl[self.index as usize..],
                                            &mut dest[read_len..]);
 
             self.index += consumed_u64 as u32;
@@ -263,6 +286,7 @@ fn init(mut mem: [w64; RAND_SIZE], rounds: u32) -> Isaac64Rng {
         b: w(0),
         c: w(0),
         index: 0,
+        half_used: false,
     };
 
     // Prepare the first set of results
@@ -386,20 +410,12 @@ mod test {
         let mut rng1 = Isaac64Rng::from_seed(seed);
         let v = (0..10).map(|_| rng1.next_u32()).collect::<Vec<_>>();
         // Subset of above values, as an LE u32 sequence
-        // TODO: switch to this sequence?
-//         assert_eq!(v,
-//                    [141028748, 127386717,
-//                     1058730652, 3347555894,
-//                     851491469, 4039984500,
-//                     2692730210, 288449107,
-//                     646103879, 2782923823]);
-        // Subset of above values, using only low-half of each u64
         assert_eq!(v,
-                   [141028748, 1058730652,
-                    851491469, 2692730210,
-                    646103879, 4195642895,
-                    2836348583, 1312677241,
-                    999139615, 253604626]);
+                   [141028748, 127386717,
+                    1058730652, 3347555894,
+                    851491469, 4039984500,
+                    2692730210, 288449107,
+                    646103879, 2782923823]);
     }
     
     #[test]
