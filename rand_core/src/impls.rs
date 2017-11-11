@@ -111,23 +111,27 @@ pub fn next_u128_via_fill<R: Rng+?Sized>(rng: &mut R) -> u128 {
 
 /// Implement `fill_bytes` via `try_fill` with implicit error handling.
 pub fn fill_via_try_fill<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
+    const WAIT_DUR_MS: u32 = 100;
+    const MAX_WAIT: u32 = (1 * 60 * 1000) / WAIT_DUR_MS;
+    const TRANSIENT_STEP: u32 = MAX_WAIT / 8;
     let mut err_count = 0;
+    
     loop {
         if let Err(e) = rng.try_fill(dest) {
             if e.kind.should_retry() {
-                if e.kind.limit_retries() {
-                    if err_count > 8 {  // arbitrary limit
-                        // TODO: log details & cause?
-                        panic!("Too many RNG errors; last error: {}", e.msg());
-                    }
-                    err_count += 1;
+                if err_count > MAX_WAIT {
+                    // TODO: log details & cause?
+                    panic!("Too many RNG errors or timeout; last error: {}", e.msg());
                 }
                 
                 if e.kind.should_wait() {
                     #[cfg(feature="std")]{
-                        let dur = ::std::time::Duration::from_millis(10);
+                        let dur = ::std::time::Duration::from_millis(WAIT_DUR_MS as u64);
                         ::std::thread::sleep(dur);
                     }
+                    err_count += 1;
+                } else {
+                    err_count += TRANSIENT_STEP;
                 }
                 
                 continue;
