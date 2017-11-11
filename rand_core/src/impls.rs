@@ -89,7 +89,7 @@ macro_rules! impl_uint_from_fill {
             let slice = slice::from_raw_parts_mut(ptr, $N);
             $self.fill_bytes(slice);
         }
-        int.to_le()
+        int
     });
 }
 

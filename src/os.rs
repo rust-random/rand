@@ -81,7 +81,7 @@ impl Rng for OsRng {
 struct ReadRng<R> (R);
 
 impl<R: Read> ReadRng<R> {
-    fn try_fill(&mut self, mut dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         if dest.len() == 0 { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
         self.0.read_exact(dest).map_err(|err| {
