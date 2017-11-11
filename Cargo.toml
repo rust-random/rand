@@ -21,7 +21,10 @@ i128_support = ["rand_core/i128_support"]
 
 [dependencies]
 libc = "0.2"
-rand_core = { path = 'rand_core' }
+
+[dependencies.rand_core]
+path = 'rand_core'
+default-features = false
 
 [target.'cfg(target_os = "fuchsia")'.dependencies]
 fuchsia-zircon = "^0.2.1"
