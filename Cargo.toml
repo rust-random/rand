@@ -16,12 +16,16 @@ categories = ["algorithms"]
 [features]
 default = ["std"]
 nightly = ["i128_support"]
-std = []
+
 i128_support = ["rand_core/i128_support"]
 
+# Deps should use 'std' if we do:
+std = ["rand_core/std", "libc/use_std"]
+
 [dependencies]
-libc = "0.2"
-rand_core = { path = 'rand_core' }
+# All deps must not use 'std' by default
+libc = { version = "0.2", default-features = false }
+rand_core = { path = 'rand_core', default-features = false }
 
 [target.'cfg(target_os = "fuchsia")'.dependencies]
 fuchsia-zircon = "^0.2.1"
