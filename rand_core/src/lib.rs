@@ -97,9 +97,15 @@ pub mod impls;
 /// 
 /// PRNGs are usually infallible, while external generators may fail. Since
 /// errors are rare and may be hard for the user to handle, most of the output
-/// functions only allow errors to be reported as panics; byte output can
-/// however be retrieved from `try_fill` which allows for the usual error
-/// handling.
+/// functions do not return a `Result`; byte output can however be retrieved
+/// with `try_fill` which allows for the usual error handling. If the random
+/// source implements other output functions in terms of `try_fill` (see
+/// `impls::fill_via_try_fill`), then some errors will be handled implicitly,
+/// so long as not too many retries are needed (specifically: `NotReady` is
+/// handled by waiting up to 1 minute, and `Transient` is handled by retrying
+/// a few times). In some applications it may make sense to ensure your entropy
+/// source (e.g. `OsRng`) is ready by calling `try_fill` explicitly before
+/// using any of the other output functions.
 pub trait Rng {
     /// Return the next random u32.
     fn next_u32(&mut self) -> u32;
@@ -260,15 +266,14 @@ impl ErrorKind {
             _ => false,
         }
     }
+    
     /// True if we should retry but wait before retrying
     /// 
     /// This implies `should_retry()` is true.
     pub fn should_wait(self) -> bool {
-        match self {
-            ErrorKind::NotReady => true,
-            _ => false,
-        }
+        self == ErrorKind::NotReady
     }
+    
     /// A description of this error kind
     pub fn description(self) -> &'static str {
         match self {

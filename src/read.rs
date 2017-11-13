@@ -62,7 +62,7 @@ impl<R: Read> Rng for ReadRng<R> {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.try_fill(dest).unwrap();
+        ::rand_core::impls::fill_via_try_fill(self, dest)
     }
 
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
