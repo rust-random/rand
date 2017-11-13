@@ -4,8 +4,12 @@ set -ex
 
 # TODO This is the "test phase", tweak it as you see fit
 main() {
-    cross build --target $TARGET
     cross build --all --no-default-features --target $TARGET --release
+    if [ ! -z $DISABLE_STD ]; then
+        return
+    fi
+    
+    cross build --target $TARGET
     if [ ! -z $NIGHTLY ]; then
         cross doc --no-deps --features nightly
     fi
