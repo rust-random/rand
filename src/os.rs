@@ -36,6 +36,7 @@ use {Rng, Error, ErrorKind};
 ///
 /// [1] See <https://www.python.org/dev/peps/pep-0524/> for a more
 ///     in-depth discussion.
+#[allow(unused)]    // not used by all targets
 pub struct OsRng(imp::OsRng);
 
 impl fmt::Debug for OsRng {
@@ -81,6 +82,7 @@ impl Rng for OsRng {
 struct ReadRng<R> (R);
 
 impl<R: Read> ReadRng<R> {
+    #[allow(unused)]    // not used by all targets
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         if dest.len() == 0 { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
