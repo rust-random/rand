@@ -69,7 +69,7 @@ impl Rng for OsRng {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.try_fill(dest).unwrap();
+        ::rand_core::impls::fill_via_try_fill(self, dest)
     }
 
     fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
@@ -129,9 +129,11 @@ mod imp {
         const NR_GETRANDOM: libc::c_long = 278;
         #[cfg(target_arch = "powerpc")]
         const NR_GETRANDOM: libc::c_long = 384;
+        
+        const GRND_NONBLOCK: libc::c_uint = 0x0001;
 
         unsafe {
-            syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(), 0)
+            syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(), GRND_NONBLOCK)
         }
     }
 
@@ -150,11 +152,17 @@ mod imp {
             let result = getrandom(&mut v[read..]);
             if result == -1 {
                 let err = io::Error::last_os_error();
-                if err.kind() == io::ErrorKind::Interrupted {
+                let kind = err.kind();
+                if kind == io::ErrorKind::Interrupted {
                     continue;
+                } else if kind == io::ErrorKind::WouldBlock {
+                    // Potentially this would waste bytes, but since we use
+                    // /dev/urandom blocking only happens if not initialised.
+                    // Also, wasting the bytes in v doesn't matter very much.
+                    return Err(Error::new(ErrorKind::NotReady, "getrandom not ready"));
                 } else {
                     return Err(Error::new_with_cause(
-                        ErrorKind::Other,
+                        ErrorKind::Unavailable,
                         "unexpected getrandom error",
                         err,
                     ));
