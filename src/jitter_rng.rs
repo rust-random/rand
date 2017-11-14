@@ -503,13 +503,13 @@ impl JitterRng {
         // Ensure that we have variations in the time stamp below 100 for at
         // least 10% of all checks -- on some platforms, the counter increments
         // in multiples of 100, but not always
-        if count_mod > (TESTLOOPCOUNT/10 * 9) {
+        if count_mod > (TESTLOOPCOUNT * 9 / 10) {
             return Err(TimerError::CoarseTimer);
         }
 
         // If we have more than 90% stuck results, then this Jitter RNG is
         // likely to not work well.
-        if count_stuck > (TESTLOOPCOUNT/10 * 9) {
+        if count_stuck > (TESTLOOPCOUNT * 9 / 10) {
             return Err(TimerError::TooManyStuck);
         }
 
@@ -519,12 +519,12 @@ impl JitterRng {
         // We don't try very hard to come up with a good estimate of the
         // available bits of entropy per round here for two reasons:
         // 1. Simple estimates of the available bits (like Shannon entropy) are
-        //    to optimistic.
+        //    too optimistic.
         // 2)  Unless we want to waste a lot of time during intialization, there
-        //     is only a small amount of samples available.
+        //     only a small number of samples are available.
         //
         // Therefore we use a very simple and conservative estimate:
-        // `let bits_of_entropy = log2(delta_average / TESTLOOPCOUNT) / 2`.
+        // `let bits_of_entropy = log2(delta_average) / 2`.
         //
         // The number of rounds `measure_jitter` should run to collect 64 bits
         // of entropy is `64 / bits_of_entropy`.
@@ -533,11 +533,13 @@ impl JitterRng {
         // by `FACTOR`. To compensate for `log2` and division rounding down,
         // add 1.
         let delta_average = delta_sum / TESTLOOPCOUNT;
+        // println!("delta_average: {}", delta_average);
 
-        const FACTOR: u32  = 5;
+        const FACTOR: u32  = 3;
         fn log2(x: u64) -> u32 { 64 - x.leading_zeros() as u32 }
-
-        Ok((64 * 2 * FACTOR / log2(delta_average.pow(FACTOR)) + 1) as u16)
+        
+        // pow(δ, FACTOR) must be representable; if you have overflow reduce FACTOR
+        Ok((64 * 2 * FACTOR / (log2(delta_average.pow(FACTOR)) + 1)) as u16)
     }
 
     /// Statistical test: return the timer delta of one normal run of the
