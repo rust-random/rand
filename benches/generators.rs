@@ -79,7 +79,7 @@ macro_rules! init_gen {
     ($fnn:ident, $gen:ident) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = OsRng::new().unwrap();
+            let mut rng = XorShiftRng::new().unwrap();
             b.iter(|| {
                 black_box($gen::from_rng(&mut rng).unwrap());
             });
