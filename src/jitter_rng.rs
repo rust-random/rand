@@ -22,6 +22,7 @@ use rand_core::impls;
 
 use core;
 use core::fmt;
+use core::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 
 const MEMORY_BLOCKS: usize = 64;
 const MEMORY_BLOCKSIZE: usize = 32;
@@ -52,7 +53,7 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 pub struct JitterRng {
     data: u64, // Actual random number
     // Number of rounds to run the entropy collector per 64 bits
-    rounds: u16,
+    rounds: u32,
     // Timer and previous time stamp, used by `measure_jitter`
     timer: fn() -> u64,
     prev_time: u64,
@@ -123,17 +124,27 @@ impl From<TimerError> for Error {
     }
 }
 
+// Initialise to zero; must be positive
+static JITTER_ROUNDS: AtomicUsize = ATOMIC_USIZE_INIT;
+
 impl JitterRng {
     /// Create a new `JitterRng`.
     /// Makes use of `std::time` for a timer.
     ///
     /// During initialization CPU execution timing jitter is measured a few
     /// hundred times. If this does not pass basic quality tests, an error is
-    /// returned.
+    /// returned. The test result is cached to make subsequent calls faster.
     #[cfg(feature="std")]
     pub fn new() -> Result<JitterRng, Error> {
         let mut ec = JitterRng::new_with_timer(get_nstime);
-        ec.rounds = ec.test_timer()?;
+        let mut rounds = JITTER_ROUNDS.load(Ordering::Relaxed) as u32;
+        if rounds == 0 {
+            // No result yet: run test.
+            // This allows the timer test to run multiple times; we don't care.
+            rounds = ec.test_timer()?;
+            JITTER_ROUNDS.store(rounds as usize, Ordering::Relaxed);
+        }
+        ec.set_rounds(rounds);
         Ok(ec)
     }
 
@@ -145,7 +156,7 @@ impl JitterRng {
     ///
     /// This method is more low-level than `new()`. It is the responsibility of
     /// the caller to run `test_timer` before using any numbers generated with
-    /// `JitterRng`.
+    /// `JitterRng`, and optionally call `set_rounds()`.
     pub fn new_with_timer(timer: fn() -> u64) -> JitterRng {
         let mut ec = JitterRng {
             data: 0,
@@ -171,6 +182,19 @@ impl JitterRng {
         black_box(ec.mem[0]);
 
         ec
+    }
+    
+    /// Configures how many rounds are used to generate each 64-bit value.
+    /// This must be greater than zero, and has a big impact on performance
+    /// and output quality.
+    /// 
+    /// `new_with_timer` conservatively uses 64 rounds, but often less rounds
+    /// can be used. The `test_timer()` function returns the minimum number of
+    /// rounds required for full strength (platform dependent), so one may use
+    /// `rng.set_rounds(rng.test_timer()?);` or cache the value.
+    pub fn set_rounds(&mut self, rounds: u32) {
+        assert!(rounds > 0);
+        self.rounds = rounds;
     }
 
     // Calculate a random loop count used for the next round of an entropy
@@ -420,7 +444,7 @@ impl JitterRng {
     /// If succesful, this will return the estimated number of rounds necessary
     /// to collect 64 bits of entropy. Otherwise a `TimerError` with the cause
     /// of the failure will be returned.
-    pub fn test_timer(&mut self) -> Result<u16, TimerError> {
+    pub fn test_timer(&mut self) -> Result<u32, TimerError> {
         // We could add a check for system capabilities such as `clock_getres`
         // or check for `CONFIG_X86_TSC`, but it does not make much sense as the
         // following sanity checks verify that we have a high-resolution timer.
@@ -536,10 +560,10 @@ impl JitterRng {
         // println!("delta_average: {}", delta_average);
 
         const FACTOR: u32  = 3;
-        fn log2(x: u64) -> u32 { 64 - x.leading_zeros() as u32 }
+        fn log2(x: u64) -> u32 { 64 - x.leading_zeros() }
         
         // pow(δ, FACTOR) must be representable; if you have overflow reduce FACTOR
-        Ok((64 * 2 * FACTOR / (log2(delta_average.pow(FACTOR)) + 1)) as u16)
+        Ok(64 * 2 * FACTOR / (log2(delta_average.pow(FACTOR)) + 1))
     }
 
     /// Statistical test: return the timer delta of one normal run of the
