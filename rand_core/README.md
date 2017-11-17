@@ -7,7 +7,7 @@ This crate contains the core trait, `Rng`, and some extension traits. This
 should be sufficient for libraries publishing an RNG type, but most users should
 prefer to use the [rand] crate.
 
-[Documentation](https://docs.rs/rand)
+[Documentation](https://docs.rs/rand_core)
 
 
 ## Status
