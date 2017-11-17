@@ -22,7 +22,9 @@ use rand_core::impls;
 
 use core;
 use core::fmt;
-use core::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+
+#[cfg(feature="std")]
+use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 
 const MEMORY_BLOCKS: usize = 64;
 const MEMORY_BLOCKSIZE: usize = 32;
@@ -125,6 +127,7 @@ impl From<TimerError> for Error {
 }
 
 // Initialise to zero; must be positive
+#[cfg(feature="std")]
 static JITTER_ROUNDS: AtomicUsize = ATOMIC_USIZE_INIT;
 
 impl JitterRng {
