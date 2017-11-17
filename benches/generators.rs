@@ -72,7 +72,7 @@ fn gen_u64_jitter(b: &mut Bencher) {
     b.iter(|| {
         black_box(rng.gen::<u64>());
     });
-    b.bytes = size_of::<u64>() as u64 * RAND_BENCH_N;
+    b.bytes = size_of::<u64>() as u64;
 }
 
 macro_rules! init_gen {
