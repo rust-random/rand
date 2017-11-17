@@ -12,7 +12,8 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/dhardy/rand/"
 
 [features]
-default = ["std"]
+# Bug: https://github.com/rust-lang/cargo/issues/4361
+# default = ["std"]
 nightly = ["i128_support"]
 std = []
 i128_support = []
