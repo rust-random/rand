@@ -286,24 +286,55 @@ mod read;
 #[cfg(feature="std")]
 mod thread_local;
 
-/// Support mechanism for creating securely seeded objects 
-/// using the OS generator.
-/// Intended for use by RNGs, but not restricted to these.
+/// Seeding mechanism for PRNGs, providing a `new` function.
+/// This is the recommended way to create (pseudo) random number generators,
+/// unless a deterministic seed is desired (in which case the `SeedableRng`
+/// trait should be used directly).
 /// 
-/// This is implemented automatically for any PRNG implementing `SeedFromRng`,
-/// and for normal types shouldn't be implemented directly. For mock generators
-/// it may be useful to implement this instead of `SeedFromRng`.
+/// Note: this trait is automatically implemented for any PRNG implementing
+/// `SeedFromRng` and is not intended to be implemented by users.
+/// 
+/// ## Example
+/// 
+/// ```
+/// use rand::{StdRng, Sample, NewSeeded};
+/// 
+/// let mut rng = StdRng::new().unwrap();
+/// println!("Random die roll: {}", rng.gen_range(1, 7));
+/// ```
 #[cfg(feature="std")]
-pub trait NewSeeded: Sized {
-    /// Creates a new instance, automatically seeded via `OsRng`.
+pub trait NewSeeded: SeedFromRng {
+    /// Creates a new instance, automatically seeded with fresh entropy.
+    /// 
+    /// Normally this will use `OsRng`, but if that fails `JitterRng` will be
+    /// used instead. Both should be suitable for cryptography. It is possible
+    /// that both entropy sources will fail though unlikely.
     fn new() -> Result<Self, Error>;
 }
 
 #[cfg(feature="std")]
 impl<R: SeedFromRng> NewSeeded for R {
     fn new() -> Result<Self, Error> {
-        let mut r = OsRng::new()?;
-        Self::from_rng(&mut r)
+        // Note: error handling would be easier with try/catch blocks
+        fn new_os<T: SeedFromRng>() -> Result<T, Error> {
+            let mut r = OsRng::new()?;
+            T::from_rng(&mut r)
+        }
+        fn new_jitter<T: SeedFromRng>() -> Result<T, Error> {
+            let mut r = JitterRng::new()?;
+            T::from_rng(&mut r)
+        }
+        
+        new_os().or_else(|e1| {
+            new_jitter().map_err(|_e2| {
+                // TODO: log
+                // TODO: can we somehow return both error sources?
+                Error::new_with_cause(
+                    ErrorKind::Unavailable,
+                    "seeding a new RNG failed: both OS and Jitter entropy sources failed",
+                    e1)
+            })
+        })
     }
 }
 
