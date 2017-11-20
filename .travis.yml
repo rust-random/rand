@@ -78,10 +78,8 @@ matrix:
       rust: nightly
 
     # Testing other channels
+    # Don't run nightly tests on darwin: JitterRng bench fails due to low-res timer
     - env: TARGET=x86_64-unknown-linux-gnu NIGHTLY=1
-      rust: nightly
-    - env: TARGET=x86_64-apple-darwin NIGHTLY=1
-      os: osx
       rust: nightly
 
 before_install:
