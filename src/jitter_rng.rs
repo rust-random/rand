@@ -611,7 +611,7 @@ impl JitterRng {
     /// times. This measures the absolute worst-case, and gives a lower bound
     /// for the available entropy.
     ///
-    /// ```no_run
+    /// ```rust,no_run
     /// use rand::JitterRng;
     ///
     /// # use std::error::Error;
@@ -670,7 +670,7 @@ impl JitterRng {
     }
 }
 
-#[cfg(feature="std")]
+#[cfg(all(feature="std", not(any(target_os = "macos", target_os = "ios"))))]
 fn get_nstime() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -680,6 +680,18 @@ fn get_nstime() -> u64 {
     // But this is faster, and the difference in terms of entropy is negligible
     // (log2(10^9) == 29.9).
     dur.as_secs() << 30 | dur.subsec_nanos() as u64
+}
+
+#[cfg(all(feature="std", any(target_os = "macos", target_os = "ios")))]
+fn get_nstime() -> u64 {
+    extern crate libc;
+    // On Mac OS and iOS std::time::SystemTime only has 1000ns resolution.
+    // We use `mach_absolute_time` instead. This provides a CPU dependent unit,
+    // to get real nanoseconds the result should by multiplied by numer/denom
+    // from `mach_timebase_info`.
+    // But we are not interested in the exact nanoseconds, just entropy. So we
+    // use the raw result.
+    unsafe { libc::mach_absolute_time() }
 }
 
 // A function that is opaque to the optimizer to assist in avoiding dead-code
