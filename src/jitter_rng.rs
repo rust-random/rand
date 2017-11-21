@@ -22,7 +22,9 @@ use rand_core::impls;
 
 use core;
 use core::fmt;
-use core::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+
+#[cfg(feature="std")]
+use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 
 const MEMORY_BLOCKS: usize = 64;
 const MEMORY_BLOCKSIZE: usize = 32;
@@ -125,6 +127,7 @@ impl From<TimerError> for Error {
 }
 
 // Initialise to zero; must be positive
+#[cfg(feature="std")]
 static JITTER_ROUNDS: AtomicUsize = ATOMIC_USIZE_INIT;
 
 impl JitterRng {
@@ -608,7 +611,7 @@ impl JitterRng {
     /// times. This measures the absolute worst-case, and gives a lower bound
     /// for the available entropy.
     ///
-    /// ```rust
+    /// ```no_run
     /// use rand::JitterRng;
     ///
     /// # use std::error::Error;
@@ -635,7 +638,7 @@ impl JitterRng {
     ///
     /// // 1_000_000 results are required for the NIST SP 800-90B Entropy
     /// // Estimation Suite
-    /// // FIXME: this number is smaller here, otherwise the Doc-test is to slow
+    /// // FIXME: this number is smaller here, otherwise the Doc-test is too slow
     /// const ROUNDS: usize = 10_000;
     /// let mut deltas_variable: Vec<u8> = Vec::with_capacity(ROUNDS);
     /// let mut deltas_minimal: Vec<u8> = Vec::with_capacity(ROUNDS);

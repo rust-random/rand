@@ -3,8 +3,8 @@ rand
 
 A Rust library for random number generators and other randomness functionality.
 
-[![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/rand)
-[![Build status](https://ci.appveyor.com/api/projects/status/rm5c9o33k3jhchbw?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
+[![Build Status](https://travis-ci.org/dhardy/rand.svg?branch=master)](https://travis-ci.org/dhardy/rand)
+
 
 [Documentation](https://docs.rs/rand)
 

@@ -69,10 +69,13 @@ matrix:
     # Bare metal
     # These targets don't support std and as such are likely not suitable for
     # most crates.
-    # - env: TARGET=thumbv6m-none-eabi DISABLE_STD=1
-    # - env: TARGET=thumbv7em-none-eabi DISABLE_STD=1
-    # - env: TARGET=thumbv7em-none-eabihf DISABLE_STD=1
-    # - env: TARGET=thumbv7m-none-eabi DISABLE_STD=1
+    - env: TARGET=thumbv6m-none-eabi DISABLE_STD=1
+      rust: nightly
+      rust: nightly
+    - env: TARGET=thumbv7em-none-eabihf DISABLE_STD=1
+      rust: nightly
+    - env: TARGET=thumbv7m-none-eabi DISABLE_STD=1
+      rust: nightly
 
     # Testing other channels
     - env: TARGET=x86_64-unknown-linux-gnu NIGHTLY=1
@@ -86,16 +89,16 @@ before_install:
   - rustup self update
 
 install:
-  - sh ci/install.sh
+  - sh utils/ci/install.sh
   - source ~/.cargo/env || true
 
 script:
-  - bash ci/script.sh
+  - bash utils/ci/script.sh
 
 after_script: set +e
 
-before_deploy:
-  - sh ci/before_deploy.sh
+#before_deploy:
+#  - sh utils/ci/before_deploy.sh
 
 cache: cargo
 before_cache:
