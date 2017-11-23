@@ -184,7 +184,7 @@
 //! // where the car is. The game host will never open the door with the car.
 //! fn game_host_open<R: Rng>(car: u32, choice: u32, rng: &mut R) -> u32 {
 //!     let choices = free_doors(&[car, choice]);
-//!     rand::sample(rng, choices.into_iter(), 1)[0]
+//!     rand::sample_reservoir(rng, choices.into_iter(), 1)[0]
 //! }
 //!
 //! // Returns the door we switch to, given our current choice and
@@ -260,6 +260,12 @@ pub use os::OsRng;
 
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
+pub use sample::{
+    // TODO: `sample` name will be deprecated in 1.0, use `sample_reservoir` instead
+    sample_reservoir as sample,
+    sample_reservoir,
+    Sample,
+    SampleRef};
 
 #[cfg(target_pointer_width = "32")]
 use IsaacRng as IsaacWordRng;
@@ -276,6 +282,7 @@ pub mod reseeding;
 mod rand_impls;
 pub mod os;
 pub mod read;
+mod sample;
 
 #[allow(bad_style)]
 type w64 = w<u64>;
@@ -1016,40 +1023,9 @@ pub fn random<T: Rand>() -> T {
     thread_rng().gen()
 }
 
-/// Randomly sample up to `amount` elements from a finite iterator.
-/// The order of elements in the sample is not random.
-///
-/// # Example
-///
-/// ```rust
-/// use rand::{thread_rng, sample};
-///
-/// let mut rng = thread_rng();
-/// let sample = sample(&mut rng, 1..100, 5);
-/// println!("{:?}", sample);
-/// ```
-pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
-    where I: IntoIterator<Item=T>,
-          R: Rng,
-{
-    let mut iter = iterable.into_iter();
-    let mut reservoir: Vec<T> = iter.by_ref().take(amount).collect();
-    // continue unless the iterator was exhausted
-    if reservoir.len() == amount {
-        for (i, elem) in iter.enumerate() {
-            let k = rng.gen_range(0, i + 1 + amount);
-            if let Some(spot) = reservoir.get_mut(k) {
-                *spot = elem;
-            }
-        }
-    }
-    reservoir
-}
-
 #[cfg(test)]
 mod test {
-    use super::{Rng, thread_rng, random, SeedableRng, StdRng, sample,
-                weak_rng};
+    use super::{Rng, thread_rng, random, SeedableRng, StdRng, weak_rng};
     use std::iter::repeat;
 
     pub struct MyRng<R> { inner: R }
@@ -1253,24 +1229,6 @@ mod test {
                       Option<(u32, (bool,))>),
                      (u8, i8, u16, i16, u32, i32, u64, i64),
                      (f32, (f64, (f64,)))) = random();
-    }
-
-    #[test]
-    fn test_sample() {
-        let min_val = 1;
-        let max_val = 100;
-
-        let mut r = thread_rng();
-        let vals = (min_val..max_val).collect::<Vec<i32>>();
-        let small_sample = sample(&mut r, vals.iter(), 5);
-        let large_sample = sample(&mut r, vals.iter(), vals.len() + 5);
-
-        assert_eq!(small_sample.len(), 5);
-        assert_eq!(large_sample.len(), vals.len());
-
-        assert!(small_sample.iter().all(|e| {
-            **e >= min_val && **e <= max_val
-        }));
     }
 
     #[test]
