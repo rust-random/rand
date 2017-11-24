@@ -48,6 +48,9 @@ use std::error::Error as stdError;
 
 use core::fmt;
 
+use hash::{AsBytesFixed, Finalize, SeaHash, SEA_SEED};
+
+pub mod hash;
 pub mod impls;
 
 
@@ -212,6 +215,12 @@ impl<R: Rng+?Sized> Rng for Box<R> {
 /// Support mechanism for creating random number generators seeded by other
 /// generators. All PRNGs should support this to enable `NewSeeded` support,
 /// which should be the preferred way of creating randomly-seeded generators.
+/// 
+/// There are two subtle differences between `SeedFromRng::from_rng` and
+/// `SeedableRng::from_seed` (beyond the obvious): first, that `from_rng` has
+/// no reproducibility requirement, and second, that `from_rng` may directly
+/// fill internal states larger than `SeedableRng::Seed`, where `from_seed` may
+/// need some extra step to expand the input.
 pub trait SeedFromRng: Sized {
     /// Creates a new instance, seeded from another `Rng`.
     /// 
@@ -223,7 +232,7 @@ pub trait SeedFromRng: Sized {
 }
 
 /// A random number generator that can be explicitly seeded to produce
-/// the same stream of randomness multiple times.
+/// the same stream of randomness multiple times (i.e. is reproducible).
 /// 
 /// Note: this should only be implemented by reproducible generators (i.e.
 /// where the algorithm is fixed and results should be the same across
@@ -231,12 +240,37 @@ pub trait SeedFromRng: Sized {
 /// the underlying implementation based on platform, or which may change the
 /// algorithm used in the future. This is to ensure that manual seeding of PRNGs
 /// actually does yield reproducible results.
-pub trait SeedableRng<Seed>: Rng {
-    /// Create a new RNG with the given seed.
+pub trait SeedableRng: Sized {
+    /// Seed type. TODO: allow override?
+    type Seed: Finalize<SeaHash>;
+    
+    /// Create a new PRNG using the given seed.
     /// 
-    /// The type of `Seed` is specified by the implementation (implementation
-    /// for multiple seed types is possible).
-    fn from_seed(seed: Seed) -> Self;
+    /// Each PRNG should implement this.
+    /// 
+    /// Reproducibility is required; that is, a fixed PRNG seeded using this
+    /// function with a fixed seed should produce the same sequence of output
+    /// today, and in the future. PRNGs not able to satisfy this should make
+    /// clear notes in their documentation or not implement `SeedableRng` at
+    /// all. It is however not required that this function yield the same state
+    /// as a reference implementation of the PRNG given equivalent seed; if
+    /// necessary another constructor should be used.
+    /// 
+    /// It may be expected that bits in the seed are well distributed, i.e. that
+    /// values like 0, 1 and (size - 1) are unlikely. Users with poorly
+    /// distributed input should use `from_hashable`.
+    fn from_seed(seed: Self::Seed) -> Self;
+    
+    /// Create a new PRNG using any hashable input as the seed.
+    /// 
+    /// Again, reproducibility is required; that is, use of this function with
+    /// fixed input should produce the same result on all platforms and across
+    /// all supporting versions. PRNGs do not need to implement this function
+    /// themselves.
+    fn from_hashable<T: AsBytesFixed + ?Sized>(x: &T) -> Self {
+        let seed = Finalize::from(SeaHash::hash(x, SEA_SEED));
+        Self::from_seed(seed)
+    }
 }
 
 

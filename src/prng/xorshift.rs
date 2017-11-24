@@ -100,17 +100,18 @@ impl Rng for XorShiftRng {
     }
 }
 
-impl SeedableRng<[u32; 4]> for XorShiftRng {
+impl SeedableRng for XorShiftRng {
+    type Seed = [u64; 2];
     /// Create a new XorShiftRng. This will panic if `seed` is entirely 0.
-    fn from_seed(seed: [u32; 4]) -> XorShiftRng {
+    fn from_seed(seed: Self::Seed) -> Self {
         assert!(!seed.iter().all(|&x| x == 0),
                 "XorShiftRng::from_seed called with an all zero seed.");
 
         XorShiftRng {
-            x: w(seed[0]),
-            y: w(seed[1]),
-            z: w(seed[2]),
-            w: w(seed[3]),
+            x: w(seed[0] as u32),
+            y: w((seed[0] >> 32) as u32),
+            z: w(seed[1] as u32),
+            w: w((seed[1] >> 32) as u32),
         }
     }
 }

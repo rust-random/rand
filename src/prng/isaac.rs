@@ -11,7 +11,6 @@
 //! The ISAAC random number generator.
 
 use core::slice;
-use core::iter::repeat;
 use core::num::Wrapping as w;
 use core::fmt;
 
@@ -350,54 +349,42 @@ impl SeedFromRng for IsaacRng {
     }
 }
 
-impl<'a> SeedableRng<&'a [u32]> for IsaacRng {
-    /// Create an ISAAC random number generator with a seed. This can
-    /// be any length, although the maximum number of elements used is
-    /// 256 and any more will be silently ignored. A generator
-    /// constructed with a given seed will generate the same sequence
-    /// of values as all other generators constructed with that seed.
-    fn from_seed(seed: &'a [u32]) -> IsaacRng {
+impl SeedableRng for IsaacRng {
+    type Seed = [u64; 4];
+    fn from_seed(seed: Self::Seed) -> Self {
         let mut key = [w(0); RAND_SIZE];
-
-        // make the seed into [seed[0], seed[1], ..., seed[seed.len()
-        // - 1], 0, 0, ...], to fill `key`.
-        let seed_iter = seed.iter().map(|&x| x).chain(repeat(0u32));
-
-        for (rsl_elem, seed_elem) in key.iter_mut().zip(seed_iter) {
-            *rsl_elem = w(seed_elem);
+        for i in 0..4 {
+            // fix to LE
+            key[2 * i + 0] = w(seed[i] as u32);
+            key[2 * i + 1] = w((seed[i] >> 32) as u32);
         }
-
         init(key, 2)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, SeedFromRng, iter};
+    use {Rng, SeedableRng, SeedFromRng};
     use super::IsaacRng;
 
     #[test]
     fn test_isaac_construction() {
         // Test that various construction techniques produce a working RNG.
         
-        let seed = iter(&mut ::test::rng())
-                   .map(|rng| rng.next_u32())
-                   .take(256)
-                   .collect::<Vec<u32>>();
-        let mut rng1 = IsaacRng::from_seed(&seed[..]);
+        let mut rng1 = IsaacRng::from_hashable("some weak seed");
         rng1.next_u32();
         
         let mut rng2 = IsaacRng::from_rng(&mut ::test::rng()).unwrap();
         rng2.next_u32();
         
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng3 = IsaacRng::from_seed(&seed[..]);
+        let seed = [1, 23, 456, 7890];
+        let mut rng3 = IsaacRng::from_seed(seed);
         rng3.next_u32();
     }
 
     #[test]
     fn test_isaac_true_values() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed = [1 + (23 << 32), 456 + (7890 << 32), 12345, 0];
         let mut rng1 = IsaacRng::from_seed(seed);
         // Regression test that isaac is actually using the above vector
         let v = (0..10).map(|_| rng1.next_u32()).collect::<Vec<_>>();
@@ -406,7 +393,7 @@ mod test {
                         3595684709, 4203127393, 264982119, 2765226902,
                         2737944514, 3900253796));
 
-        let seed: &[_] = &[12345, 67890, 54321, 9876];
+        let seed = [12345 + (67890 << 32), 54321 + (9876 << 32), 0, 0];
         let mut rng2 = IsaacRng::from_seed(seed);
         // skip forward to the 10000th number
         for _ in 0..10000 { rng2.next_u32(); }
@@ -420,7 +407,7 @@ mod test {
 
     #[test]
     fn test_isaac_true_bytes() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed = [1 + (23 << 32), 456 + (7890 << 32), 12345, 0];
         let mut rng1 = IsaacRng::from_seed(seed);
         let mut buf = [0u8; 32];
         rng1.fill_bytes(&mut buf);
@@ -451,7 +438,7 @@ mod test {
 
     #[test]
     fn test_isaac_clone() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed = [1, 23, 456, 7890];
         let mut rng1 = IsaacRng::from_seed(seed);
         let mut rng2 = rng1.clone();
         for _ in 0..16 {

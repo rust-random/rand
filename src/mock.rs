@@ -67,7 +67,8 @@ impl Rng for MockAddRng {
     }
 }
 
-impl SeedableRng<u64> for MockAddRng {
+impl SeedableRng for MockAddRng {
+    type Seed = u64;
     fn from_seed(seed: u64) -> Self {
         MockAddRng::new(seed, 1)
     }
