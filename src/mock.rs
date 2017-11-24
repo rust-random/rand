@@ -26,48 +26,25 @@ use rand_core::impls;
 /// use rand::Rng;
 /// use rand::mock::MockAddRng;
 /// 
-/// let mut my_rng = MockAddRng::new(2u32, 1u32);
-/// assert_eq!(my_rng.next_u32(), 2u32);
-/// assert_eq!(my_rng.next_u64(), 3u64 + (4u64 << 32));
+/// let mut my_rng = MockAddRng::new(2, 1);
+/// assert_eq!(my_rng.next_u32(), 2);
+/// assert_eq!(my_rng.next_u64(), 3);
 /// ```
 #[derive(Debug, Clone)]
-pub struct MockAddRng<T: Clone> {
-    v: w<T>,
-    a: w<T>,
+pub struct MockAddRng {
+    v: w<u64>,
+    a: w<u64>,
 }
 
-impl<T: Clone> MockAddRng<T> {
+impl MockAddRng {
     /// Create a `MockAddRng`, yielding an arithmetic sequence starting with
     /// `v` and incremented by `a` each time.
-    pub fn new(v: T, a: T) -> Self {
+    pub fn new(v: u64, a: u64) -> Self {
         MockAddRng { v: w(v), a: w(a) }
     }
 }
 
-impl Rng for MockAddRng<u32> {
-    fn next_u32(&mut self) -> u32 {
-        let result = self.v.0;
-        self.v += self.a;
-        result
-    }
-    fn next_u64(&mut self) -> u64 {
-        impls::next_u64_via_u32(self)
-    }
-    #[cfg(feature = "i128_support")]
-    fn next_u128(&mut self) -> u128 {
-        impls::next_u128_via_u64(self)
-    }
-    
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        impls::fill_bytes_via_u32(self, dest);
-    }
-
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
-    }
-}
-
-impl Rng for MockAddRng<u64> {
+impl Rng for MockAddRng {
     fn next_u32(&mut self) -> u32 {
         self.next_u64() as u32
     }
@@ -90,11 +67,8 @@ impl Rng for MockAddRng<u64> {
     }
 }
 
-impl<T: Clone> SeedableRng<T> for MockAddRng<T> where
-        MockAddRng<T>: Rng,
-        T: From<u8>,    // for 1.into()
-{
-    fn from_seed(seed: T) -> Self {
-        MockAddRng::new(seed, 1.into())
+impl SeedableRng<u64> for MockAddRng {
+    fn from_seed(seed: u64) -> Self {
+        MockAddRng::new(seed, 1)
     }
 }

@@ -151,7 +151,7 @@ mod tests {
                 let wc = WeightedChoice::new(items);
                 let expected = $expected;
 
-                let mut rng = MockAddRng::new(0u32, 1);
+                let mut rng = MockAddRng::new(0, 1);
 
                 for &val in expected.iter() {
                     assert_eq!(wc.sample(&mut rng), val)
