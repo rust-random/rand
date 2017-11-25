@@ -1,4 +1,4 @@
-// Copyright 2013-2014 The Rust Project Developers. See the COPYRIGHT
+// Copyright 2017 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // http://rust-lang.org/COPYRIGHT.
 //
@@ -8,89 +8,27 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Functions for sampling data
+//! Functions for randomly accessing and sampling sequences.
 
 use super::Rng;
 use std::collections::hash_map::HashMap;
 
-/// The `Sample` trait provides the `sample` method.
+/// Randomly sample *up to* `amount` elements from a finite iterator.
 ///
-/// This is intended to be implemented for containers that:
-/// - Can be sampled in `O(amount)` time.
-/// - Whos items can be `cloned`.
+/// The values are non-repeating but the order of elements returned is *not* random.
 ///
-/// If cloning is impossible or expensive, use `sample_ref` instead.
-pub trait Sample {
-    /// The returned sampled data. Typically the either a `Vec<T>` or a new instance of the
-    /// container's own type.
-    type Sampled;
-
-    /// Return exactly `amount` randomly sampled values.
-    ///
-    /// Any type which implements `sample` should guarantee that:
-    /// - Both the order and values of `Sampled` is random.
-    /// - The implementation uses `O(amount)` speed and memory
-    /// - The returned values are not references (if so, implement `SampleRef` instead).
-    ///
-    /// Panics if `amount > self.len()`
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use rand::{thread_rng, Sample};
-    ///
-    /// let mut rng = thread_rng();
-    /// let values = vec![5, 6, 1, 3, 4, 6, 7];
-    /// println!("{:?}", values.sample(&mut rng, 3))
-    /// ```
-    fn sample<R: Rng>(&self, rng: &mut R, amount: usize) -> Self::Sampled;
-}
-
-/// The `SampleRef` trait provides the `sample_ref` method.
+/// This implementation uses `O(len(iterable))` time and `O(amount)` memory.
 ///
-/// This is intended to be implemented for containers that which can be sampled in `O(amount)` time
-/// and want a fast way to give references to a sample of their items.
-pub trait SampleRef {
-    /// The returned sampled data. Typically the either a `Vec<&T>` or a new instance of the
-    /// container's own type containing references to the underlying data.
-    type SampledRef;
-
-    /// Return exactly `amount` references to randomly sampled values.
-    ///
-    /// Any type which implements `sample_ref` should guarantee that:
-    /// - Both the order and values of `SampledRef` is random.
-    /// - The implementation uses `O(amount)` speed and memory.
-    /// - The returned values are not copies/clones (if so, implement `Sample` instead).
-    ///
-    /// Panics if `amount > self.len()`
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use rand::{thread_rng, SampleRef};
-    ///
-    /// let mut rng = thread_rng();
-    /// let values = vec![5, 6, 1, 3, 4, 6, 7];
-    /// println!("{:?}", values.as_slice().sample_ref(&mut rng, 3))
-    /// ```
-    fn sample_ref<R: Rng>(&self, rng: &mut R, amount: usize) -> Self::SampledRef;
-}
-
-/// Randomly sample *up to* `amount` elements from a finite iterator using a reservoir.
-///
-/// The order of elements in the sample is not random. In fact, if `len(iterable) <= amount` then
-/// the output will be in the exact order they were collected.
-///
-/// The reservoir method used allocates only an `Vec` of size `amount`. The size of the iterable
-/// does not affect the amount of memory used.
+/// > If `len(iterable) <= amount` then the values will be in sequential order. In all other
+/// > cases the order of the elements is neither random nor guaranteed.
 ///
 /// # Example
 ///
 /// ```rust
-/// use rand::{thread_rng, sample_reservoir};
+/// use rand::{thread_rng, seq};
 ///
 /// let mut rng = thread_rng();
-/// let sample = sample_reservoir(&mut rng, 1..100, 5);
+/// let sample = seq::sample_reservoir(&mut rng, 1..100, 5);
 /// println!("{:?}", sample);
 /// ```
 pub fn sample_reservoir<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
@@ -102,6 +40,9 @@ pub fn sample_reservoir<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec
     reservoir.extend(iter.by_ref().take(amount));
 
     // continue unless the iterator was exhausted
+    //
+    // note: this prevents iterators that "restart" from causing problems.
+    // If the iterator stops once, then so do we.
     if reservoir.len() == amount {
         for (i, elem) in iter.enumerate() {
             let k = rng.gen_range(0, i + 1 + amount);
@@ -109,19 +50,80 @@ pub fn sample_reservoir<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec
                 *spot = elem;
             }
         }
+    } else {
+        // Don't hang onto extra memory. There is a corner case where
+        // `amount <<< len(iterable)` that we want to avoid.
+        reservoir.shrink_to_fit();
     }
     reservoir
 }
 
-/// Sample (non-repeating) exactly `amount` of indices from a sequence of the given `length`.
+/// Randomly sample exactly `amount` values from `slice`.
 ///
-/// The returned elements and their order are random.
+/// The values are non-repeating and in random order.
 ///
-/// Panics if `amount > length`
+/// This implementation uses `O(amount)` time and memory.
 ///
-/// TODO: IMO this should be made public since it can be generally useful, although
-/// there might be a way to make the output type more generic/compact.
-fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
+/// Panics if `amount > self.len()`
+///
+/// # Example
+///
+/// ```rust
+/// use rand::{thread_rng, seq};
+///
+/// let mut rng = thread_rng();
+/// let values = vec![5, 6, 1, 3, 4, 6, 7];
+/// println!("{:?}", seq::sample_slice(&mut rng, &values, 3));
+/// ```
+pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
+    where R: Rng,
+          T: Clone
+{
+    let indices = sample_indices(rng, slice.len(), amount);
+
+    let mut out = Vec::with_capacity(amount);
+    out.extend(indices.iter().map(|i| slice[*i].clone()));
+    out
+}
+
+/// Randomly sample exactly `amount` references from `slice`.
+///
+/// The references are non-repeating and in random order.
+///
+/// This implementation uses `O(amount)` time and memory.
+///
+/// Panics if `amount > self.len()`
+///
+/// # Example
+///
+/// ```rust
+/// use rand::{thread_rng, seq};
+///
+/// let mut rng = thread_rng();
+/// let values = vec![5, 6, 1, 3, 4, 6, 7];
+/// println!("{:?}", seq::sample_slice_ref(&mut rng, &values, 3));
+/// ```
+pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>
+    where R: Rng
+{
+    let indices = sample_indices(rng, slice.len(), amount);
+
+    let mut out = Vec::with_capacity(amount);
+    out.extend(indices.iter().map(|i| &slice[*i]));
+    out
+}
+
+/// Randomly sample exactly `amount` indices from `0..length`.
+///
+/// The values are non-repeating and in random order.
+///
+/// This implementation uses `O(amount)` time and memory.
+///
+/// This method is used internally by the slice sampling methods, but it can sometimes be useful to
+/// have the indices themselves so this is provided as an alternative.
+///
+/// Panics if `amount > self.len()`
+pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
     where R: Rng,
 {
     if amount > length {
@@ -132,7 +134,7 @@ fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
     // if we use the `cached` version we will have to allocate `amount` as a HashMap as well since
     // it inserts an element for every loop.
     //
-    // Therefore, if amount >= length / 2, inplace will be both faster and use less memory.
+    // Therefore, if `amount >= length / 2` then inplace will be both faster and use less memory.
     //
     // TODO: there is probably even more fine-tuning that can be done here since
     // `HashMap::with_capacity(amount)` probably allocates more than `amount` in practice,
@@ -156,23 +158,25 @@ fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<u
     where R: Rng,
 {
     debug_assert!(amount <= length);
-    let amount = if amount == length {
+    let mut indices: Vec<usize> = Vec::with_capacity(length);
+    indices.extend(0..length);
+    let end_i = if length != 0 && amount == length {
         // It isn't necessary to shuffle the final element if we are shuffling
         // the whole array... it would just be shuffled with itself
+        //
+        // Also, `rng.gen_range(i, i)` panics.
         amount - 1
     } else {
         amount
     };
-
-    let mut indices: Vec<usize> = Vec::with_capacity(length);
-    indices.extend(0..length);
-    for i in 0..amount {
+    for i in 0..end_i {
         let j: usize = rng.gen_range(i, length);
         let tmp = indices[i];
         indices[i] = indices[j];
         indices[j] = tmp;
     }
     indices.truncate(amount);
+    debug_assert_eq!(indices.len(), amount);
     indices
 }
 
@@ -213,51 +217,9 @@ fn sample_indices_cache<R>(
         // note that in the inplace version, slice[i] is automatically "returned" value
         out.push(x);
     }
+    debug_assert_eq!(out.len(), amount);
     out
 }
-
-impl<'a, T: Clone> Sample for &'a [T] {
-    type Sampled = Vec<T>;
-
-    fn sample<R: Rng>(&self, rng: &mut R, amount: usize) -> Vec<T> {
-        let indices = sample_indices(rng, self.len(), amount);
-
-        let mut out = Vec::with_capacity(amount);
-        out.extend(indices.iter().map(|i| self[*i].clone()));
-        out
-    }
-}
-
-impl<'a, T: Clone> Sample for Vec<T> {
-    type Sampled = Vec<T>;
-
-    fn sample<R: Rng>(&self, rng: &mut R, amount: usize) -> Vec<T> {
-        self.as_slice().sample(rng, amount)
-    }
-}
-
-impl<'a, T> SampleRef for &'a [T] {
-    type SampledRef = Vec<&'a T>;
-
-    fn sample_ref<R: Rng>(&self, rng: &mut R, amount: usize) -> Vec<&'a T> {
-        let indices = sample_indices(rng, self.len(), amount);
-
-        let mut out = Vec::with_capacity(amount);
-        out.extend(indices.iter().map(|i| &self[*i]));
-        out
-    }
-}
-
-// TODO: It looks like implementing this depends on RFC 1598 being implemented.
-// See this: https://github.com/rust-lang/rfcs/issues/1965
-//
-// impl<'a, T> SampleRef for Vec<&'a T>{
-//     type SampledRef = Vec<&'a T>;
-//
-//     fn sample_ref<R: Rng>(&'a self, rng: &mut R, amount: usize) -> Vec<&'a T> {
-//        self.as_slice().sample_ref(rng, amount)
-//     }
-// }
 
 #[cfg(test)]
 mod test {
@@ -281,11 +243,28 @@ mod test {
             **e >= min_val && **e <= max_val
         }));
     }
+    #[test]
+    fn test_sample_slice_boundaries() {
+        let empty: &[u8] = &[];
+
+        let mut r = thread_rng();
+
+        // sample 0 items
+        assert_eq!(sample_slice(&mut r, empty, 0), vec![]);
+        assert_eq!(sample_slice(&mut r, &[42, 2, 42], 0), vec![]);
+
+        // sample 1 item
+        assert_eq!(sample_slice(&mut r, &[42], 1), vec![42]);
+        let v = sample_slice(&mut r, &[1, 42], 1)[0];
+        assert!(v == 1 || v == 42);
+
+        // sample "all" the items
+        let v = sample_slice(&mut r, &[42, 133], 2);
+        assert!(v == vec![42, 133] || v == vec![133, 42]);
+    }
 
     #[test]
-    /// This test mainly works by asserting that the two cases are equivalent,
-    /// as well as equivalent to the exported function.
-    fn test_sample_indices() {
+    fn test_sample_slice() {
         let xor_rng = XorShiftRng::from_seed;
 
         let max_range = 100;
@@ -299,7 +278,7 @@ mod test {
 
             println!("Selecting indices: len={}, amount={}, seed={:?}", length, amount, seed);
 
-            // assert that the two methods give exactly the same result
+            // assert that the two index methods give exactly the same result
             let inplace = sample_indices_inplace(
                 &mut xor_rng(seed), length, amount);
             let cache = sample_indices_cache(
@@ -313,15 +292,15 @@ mod test {
             assert!(regular.iter().all(|e| *e < length));
             assert_eq!(regular, inplace);
 
-            // just for fun, also test sampling from a vector
+            // also test that sampling the slice works
             let vec: Vec<usize> = (0..length).collect();
             {
-                let result = vec.sample(&mut xor_rng(seed), amount);
+                let result = sample_slice(&mut xor_rng(seed), &vec, amount);
                 assert_eq!(result, regular);
             }
 
             {
-                let result = vec.as_slice().sample_ref(&mut xor_rng(seed), amount);
+                let result = sample_slice_ref(&mut xor_rng(seed), &vec, amount);
                 let expected = regular.iter().map(|v| v).collect::<Vec<_>>();
                 assert_eq!(result, expected);
             }
