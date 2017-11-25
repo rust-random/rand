@@ -184,7 +184,7 @@
 //! // where the car is. The game host will never open the door with the car.
 //! fn game_host_open<R: Rng>(car: u32, choice: u32, rng: &mut R) -> u32 {
 //!     let choices = free_doors(&[car, choice]);
-//!     rand::sample_reservoir(rng, choices.into_iter(), 1)[0]
+//!     rand::seq::sample_slice(rng, &choices, 1)[0]
 //! }
 //!
 //! // Returns the door we switch to, given our current choice and
@@ -260,12 +260,8 @@ pub use os::OsRng;
 
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
-pub use sample::{
-    // TODO: `sample` name will be deprecated in 1.0, use `sample_reservoir` instead
-    sample_reservoir as sample,
-    sample_reservoir,
-    Sample,
-    SampleRef};
+#[deprecated(since="0.3.18", note="renamed to seq::sample_reservoir")]
+pub use seq::{sample_reservoir as sample};
 
 #[cfg(target_pointer_width = "32")]
 use IsaacRng as IsaacWordRng;
@@ -282,7 +278,7 @@ pub mod reseeding;
 mod rand_impls;
 pub mod os;
 pub mod read;
-mod sample;
+pub mod seq;
 
 #[allow(bad_style)]
 type w64 = w<u64>;
