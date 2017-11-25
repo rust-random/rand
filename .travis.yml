@@ -12,6 +12,7 @@ matrix:
     - rust: beta
     - rust: nightly
       script:
+        - cargo bench
         - cargo test
         - cargo test --features nightly
         - cargo test --manifest-path rand-derive/Cargo.toml
