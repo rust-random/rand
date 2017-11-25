@@ -670,7 +670,8 @@ impl JitterRng {
     }
 }
 
-#[cfg(all(feature="std", not(any(target_os = "macos", target_os = "ios"))))]
+#[cfg(all(feature="std", not(any(target_os = "macos", target_os = "ios",
+                                 target_os = "windows"))))]
 fn get_nstime() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -692,6 +693,21 @@ fn get_nstime() -> u64 {
     // But we are not interested in the exact nanoseconds, just entropy. So we
     // use the raw result.
     unsafe { libc::mach_absolute_time() }
+}
+
+#[cfg(all(feature="std", any(target_os = "windows")))]
+fn get_nstime() -> u64 {
+    #[allow(non_camel_case_types)]
+    type LARGE_INTEGER = i64;
+    #[allow(non_camel_case_types)]
+    type BOOL = i32;
+    extern "system" {
+        fn QueryPerformanceCounter(lpPerformanceCount: *mut LARGE_INTEGER) -> BOOL;
+    }
+
+    let mut t = 0;
+    unsafe { QueryPerformanceCounter(&mut t); }
+    t as u64
 }
 
 // A function that is opaque to the optimizer to assist in avoiding dead-code
