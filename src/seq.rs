@@ -160,16 +160,7 @@ fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<u
     debug_assert!(amount <= length);
     let mut indices: Vec<usize> = Vec::with_capacity(length);
     indices.extend(0..length);
-    let end_i = if length != 0 && amount == length {
-        // It isn't necessary to shuffle the final element if we are shuffling
-        // the whole array... it would just be shuffled with itself
-        //
-        // Also, `rng.gen_range(i, i)` panics.
-        amount - 1
-    } else {
-        amount
-    };
-    for i in 0..end_i {
+    for i in 0..amount {
         let j: usize = rng.gen_range(i, length);
         let tmp = indices[i];
         indices[i] = indices[j];
@@ -261,6 +252,15 @@ mod test {
         // sample "all" the items
         let v = sample_slice(&mut r, &[42, 133], 2);
         assert!(v == vec![42, 133] || v == vec![133, 42]);
+
+        assert_eq!(sample_indices_inplace(&mut r, 0, 0), vec![]);
+        assert_eq!(sample_indices_inplace(&mut r, 1, 0), vec![]);
+        assert_eq!(sample_indices_inplace(&mut r, 1, 1), vec![0]);
+
+        assert_eq!(sample_indices_cache(&mut r, 0, 0), vec![]);
+        assert_eq!(sample_indices_cache(&mut r, 1, 0), vec![]);
+        assert_eq!(sample_indices_cache(&mut r, 1, 1), vec![0]);
+
     }
 
     #[test]
