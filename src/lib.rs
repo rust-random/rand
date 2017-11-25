@@ -260,8 +260,8 @@ pub use os::OsRng;
 
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
-#[deprecated(since="0.3.18", note="renamed to seq::sample_reservoir")]
-pub use seq::{sample_reservoir as sample};
+#[deprecated(since="0.3.18", note="renamed to seq::sample_iter")]
+pub use seq::{sample_iter as sample};
 
 #[cfg(target_pointer_width = "32")]
 use IsaacRng as IsaacWordRng;

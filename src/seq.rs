@@ -28,10 +28,10 @@ use std::collections::hash_map::HashMap;
 /// use rand::{thread_rng, seq};
 ///
 /// let mut rng = thread_rng();
-/// let sample = seq::sample_reservoir(&mut rng, 1..100, 5);
+/// let sample = seq::sample_iter(&mut rng, 1..100, 5);
 /// println!("{:?}", sample);
 /// ```
-pub fn sample_reservoir<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
+pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     where I: IntoIterator<Item=T>,
           R: Rng,
 {
@@ -227,14 +227,14 @@ mod test {
     use {thread_rng, XorShiftRng, SeedableRng};
 
     #[test]
-    fn test_sample_reservoir() {
+    fn test_sample_iter() {
         let min_val = 1;
         let max_val = 100;
 
         let mut r = thread_rng();
         let vals = (min_val..max_val).collect::<Vec<i32>>();
-        let small_sample = sample_reservoir(&mut r, vals.iter(), 5);
-        let large_sample = sample_reservoir(&mut r, vals.iter(), vals.len() + 5);
+        let small_sample = sample_iter(&mut r, vals.iter(), 5);
+        let large_sample = sample_iter(&mut r, vals.iter(), vals.len() + 5);
 
         assert_eq!(small_sample.len(), 5);
         assert_eq!(large_sample.len(), vals.len());
