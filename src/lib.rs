@@ -1,4 +1,4 @@
-// Copyright 2013-2014 The Rust Project Developers. See the COPYRIGHT
+// Copyright 2013-2017 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // http://rust-lang.org/COPYRIGHT.
 //
@@ -256,6 +256,7 @@ use std::rc::Rc;
 use std::num::Wrapping as w;
 use std::time;
 
+pub use jitter::JitterRng;
 pub use os::OsRng;
 
 pub use isaac::{IsaacRng, Isaac64Rng};
@@ -274,6 +275,7 @@ pub mod isaac;
 pub mod chacha;
 pub mod reseeding;
 mod rand_impls;
+pub mod jitter;
 pub mod os;
 pub mod read;
 
