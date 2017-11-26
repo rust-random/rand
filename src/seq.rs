@@ -261,6 +261,21 @@ mod test {
         assert_eq!(sample_indices_cache(&mut r, 1, 0), vec![]);
         assert_eq!(sample_indices_cache(&mut r, 1, 1), vec![0]);
 
+        // Make sure lucky 777's aren't lucky
+        let slice = &[42, 777];
+        let mut num_42 = 0;
+        let total = 1000;
+        for _ in 0..total {
+            let v = sample_slice(&mut r, slice, 1);
+            assert_eq!(v.len(), 1);
+            let v = v[0];
+            assert!(v == 42 || v == 777);
+            if v == 42 {
+                num_42 += 1;
+            }
+        }
+        let ratio_42 = num_42 as f64 / 1000 as f64;
+        assert!(0.4 <= ratio_42 || ratio_42 <= 0.6, "{}", ratio_42);
     }
 
     #[test]
