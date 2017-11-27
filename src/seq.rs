@@ -17,8 +17,9 @@ use std::collections::hash_map::HashMap;
 ///
 /// The following can be returned:
 /// - `Ok`: `Vec` of `amount` non-repeating randomly sampled elements. The order is not random.
-/// - `Err`: `Vec` of *less than* `amount` elements in sequential order. This is considered an
-///   error since exactly `amount` elements is typically expected.
+/// - `Err`: `Vec` of all the elements from `iterable` in sequential order. This happens when the
+///   length of `iterable` was less than `amount`. This is considered an error since exactly
+///   `amount` elements is typically expected.
 ///
 /// This implementation uses `O(len(iterable))` time and `O(amount)` memory.
 ///
