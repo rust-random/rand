@@ -17,8 +17,8 @@
 //! `Rng` is the core trait implemented by algorithmic pseudo-random number
 //! generators and external random-number sources.
 //! 
-//! `SeedFromRng` and `SeedableRng` are extension traits for construction and
-//! reseeding.
+//! `SeedableRng` is an extension trait for construction from fixed seeds and
+//! other random number generators.
 //! 
 //! `Error` is provided for error-handling. It is safe to use in `no_std`
 //! environments.
@@ -442,5 +442,23 @@ pub mod le {
     #[inline]
     pub fn read_u64_into(src: &[u8], dst: &mut [u64]) {
         read_slice!(src, dst, 8, to_le);
+    }
+    
+    #[test]
+    fn test_read() {
+        assert_eq!(read_u32(&[1, 2, 3, 4]), 0x04030201);
+        assert_eq!(read_u64(&[1, 2, 3, 4, 5, 6, 7, 8]), 0x0807060504030201);
+        
+        let bytes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+        
+        let mut buf = [0u32; 4];
+        read_u32_into(&bytes, &mut buf);
+        assert_eq!(buf[0], 0x04030201);
+        assert_eq!(buf[3], 0x100F0E0D);
+        
+        let mut buf = [0u64; 2];
+        read_u64_into(&bytes, &mut buf);
+        assert_eq!(buf[0], 0x0807060504030201);
+        assert_eq!(buf[1], 0x100F0E0D0C0B0A09);
     }
 }
