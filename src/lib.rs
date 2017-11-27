@@ -260,8 +260,6 @@ pub use os::OsRng;
 
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
-#[deprecated(since="0.3.18", note="renamed to seq::sample_iter")]
-pub use seq::{sample_iter as sample};
 
 #[cfg(target_pointer_width = "32")]
 use IsaacRng as IsaacWordRng;
@@ -1017,6 +1015,31 @@ impl Rng for ThreadRng {
 #[inline]
 pub fn random<T: Rand>() -> T {
     thread_rng().gen()
+}
+
+#[inline(always)]
+#[deprecated(since="0.3.18", note="renamed to seq::sample_iter")]
+/// DEPRECATED: use `seq::sample_iter` instead.
+///
+/// Randomly sample up to `amount` elements from a finite iterator.
+/// The order of elements in the sample is not random.
+///
+/// # Example
+///
+/// ```rust
+/// use rand::{thread_rng, sample};
+///
+/// let mut rng = thread_rng();
+/// let sample = sample(&mut rng, 1..100, 5);
+/// println!("{:?}", sample);
+/// ```
+pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
+    where I: IntoIterator<Item=T>,
+          R: Rng,
+{
+    // the legacy sample didn't care whether amount was met
+    seq::sample_iter(rng, iterable, amount)
+        .unwrap_or_else(|e| e)
 }
 
 #[cfg(test)]
