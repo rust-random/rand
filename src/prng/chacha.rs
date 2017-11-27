@@ -251,11 +251,14 @@ impl SeedFromRng for ChaChaRng {
 }
 
 impl SeedableRng for ChaChaRng {
-    type Seed = [u64; 4];
-    fn from_seed(seed: Self::Seed) -> Self {
+    type Seed = [u8; 32];
+    fn from_seed(mut seed: Self::Seed) -> Self {
         let mut rng = CHACHA_EMPTY;
-        let p = &seed as *const [u64; 4] as *const [u32; 8];
-        let key = unsafe{ &*p };
+        let p = &mut seed as *mut [u8; 32] as *mut [u32; 8];
+        let key = unsafe{ &mut *p };
+        for k in key.iter_mut() {
+            *k = k.to_le();
+        }
         rng.init(key);
         rng
     }
@@ -277,7 +280,10 @@ mod test {
         let mut rb = ChaChaRng::from_rng(&mut ::test::rng()).unwrap();
         rb.next_u32();
         
-        let seed = [0,1,2,3];
+        let seed = [0,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,
+            2,0,0,0,0,0,0,0,
+            3,0,0,0,0,0,0,0];
         let mut rc = ChaChaRng::from_seed(seed);
         rc.next_u32();
     }
@@ -286,7 +292,7 @@ mod test {
     fn test_rng_true_values() {
         // Test vectors 1 and 2 from
         // http://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
-        let seed = [0u64; 4];
+        let seed = [0u8; 32];
         let mut ra: ChaChaRng = SeedableRng::from_seed(seed);
 
         let v = (0..16).map(|_| ra.next_u32()).collect::<Vec<_>>();
@@ -304,7 +310,7 @@ mod test {
                         0x281fed31, 0x45fb0a51, 0x1f0ae1ac, 0x6f4d794b));
 
 
-        let seed = [0 + (1 << 32), 2 + (3 << 32), 4 + (5 << 32), 6 + (7 << 32)];
+        let seed = [0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0, 4,0,0,0, 5,0,0,0, 6,0,0,0, 7,0,0,0];
         let mut ra: ChaChaRng = SeedableRng::from_seed(seed);
 
         // Store the 17*i-th 32-bit word,
@@ -326,7 +332,7 @@ mod test {
 
     #[test]
     fn test_rng_true_bytes() {
-        let seed = [0u64; 4];
+        let seed = [0u8; 32];
         let mut ra: ChaChaRng = SeedableRng::from_seed(seed);
         let mut buf = [0u8; 32];
         ra.fill_bytes(&mut buf);
@@ -340,7 +346,7 @@ mod test {
     
     #[test]
     fn test_rng_clone() {
-        let seed = [0u64; 4];
+        let seed = [0u8; 32];
         let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
         let mut clone = rng.clone();
         for _ in 0..16 {

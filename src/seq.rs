@@ -301,7 +301,8 @@ mod test {
 
         for length in 1usize..max_range {
             let amount = r.gen_range(0, length);
-            let seed = [r.gen(), r.gen()];
+            let mut seed = [0u8; 16];
+            r.fill_bytes(&mut seed);
             
             println!("Selecting indices: len={}, amount={}, seed={:?}", length, amount, seed);
 

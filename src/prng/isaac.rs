@@ -14,7 +14,7 @@ use core::slice;
 use core::num::Wrapping as w;
 use core::fmt;
 
-use rand_core::impls;
+use rand_core::{impls, le};
 
 use {Rng, SeedFromRng, SeedableRng, Error};
 
@@ -350,13 +350,11 @@ impl SeedFromRng for IsaacRng {
 }
 
 impl SeedableRng for IsaacRng {
-    type Seed = [u64; 4];
-    fn from_seed(seed: Self::Seed) -> Self {
+    type Seed = [u8; 32];
+    fn from_seed(mut seed: Self::Seed) -> Self {
         let mut key = [w(0); RAND_SIZE];
-        for i in 0..4 {
-            // fix to LE
-            key[2 * i + 0] = w(seed[i] as u32);
-            key[2 * i + 1] = w((seed[i] >> 32) as u32);
+        for (x, y) in key.iter_mut().zip(le::convert_slice_32(&mut seed[..]).iter()) {
+            *x = w(*y);
         }
         init(key, 2)
     }
@@ -377,14 +375,14 @@ mod test {
         let mut rng2 = IsaacRng::from_rng(&mut ::test::rng()).unwrap();
         rng2.next_u32();
         
-        let seed = [1, 23, 456, 7890];
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
         let mut rng3 = IsaacRng::from_seed(seed);
         rng3.next_u32();
     }
 
     #[test]
     fn test_isaac_true_values() {
-        let seed = [1 + (23 << 32), 456 + (7890 << 32), 12345, 0];
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0, 57,48,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
         let mut rng1 = IsaacRng::from_seed(seed);
         // Regression test that isaac is actually using the above vector
         let v = (0..10).map(|_| rng1.next_u32()).collect::<Vec<_>>();
@@ -393,7 +391,7 @@ mod test {
                         3595684709, 4203127393, 264982119, 2765226902,
                         2737944514, 3900253796));
 
-        let seed = [12345 + (67890 << 32), 54321 + (9876 << 32), 0, 0];
+        let seed = [57,48,0,0, 50,9,1,0, 49,212,0,0, 148,38,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
         let mut rng2 = IsaacRng::from_seed(seed);
         // skip forward to the 10000th number
         for _ in 0..10000 { rng2.next_u32(); }
@@ -407,7 +405,7 @@ mod test {
 
     #[test]
     fn test_isaac_true_bytes() {
-        let seed = [1 + (23 << 32), 456 + (7890 << 32), 12345, 0];
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0, 57,48,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
         let mut rng1 = IsaacRng::from_seed(seed);
         let mut buf = [0u8; 32];
         rng1.fill_bytes(&mut buf);
@@ -438,7 +436,7 @@ mod test {
 
     #[test]
     fn test_isaac_clone() {
-        let seed = [1, 23, 456, 7890];
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
         let mut rng1 = IsaacRng::from_seed(seed);
         let mut rng2 = rng1.clone();
         for _ in 0..16 {

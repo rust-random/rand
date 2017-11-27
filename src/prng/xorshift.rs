@@ -13,6 +13,7 @@
 use core::num::Wrapping as w;
 use core::fmt;
 use {Rng, SeedFromRng, SeedableRng, Error};
+use rand_core::le;
 
 /// An Xorshift[1] random number
 /// generator.
@@ -101,17 +102,17 @@ impl Rng for XorShiftRng {
 }
 
 impl SeedableRng for XorShiftRng {
-    type Seed = [u64; 2];
+    type Seed = [u8; 16];
     /// Create a new XorShiftRng. This will panic if `seed` is entirely 0.
     fn from_seed(seed: Self::Seed) -> Self {
         assert!(!seed.iter().all(|&x| x == 0),
                 "XorShiftRng::from_seed called with an all zero seed.");
 
         XorShiftRng {
-            x: w(seed[0] as u32),
-            y: w((seed[0] >> 32) as u32),
-            z: w(seed[1] as u32),
-            w: w((seed[1] >> 32) as u32),
+            x: w(le::read_u32(array_ref!(seed, 0, 4))),
+            y: w(le::read_u32(array_ref!(seed, 4, 4))),
+            z: w(le::read_u32(array_ref!(seed, 8, 4))),
+            w: w(le::read_u32(array_ref!(seed, 12, 4))),
         }
     }
 }

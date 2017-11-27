@@ -216,8 +216,9 @@ mod test {
     #[test]
     fn test_rng_seeded() {
         // Default seed threshold is way beyond what we use here
-        let mut ra: MyRng = ReseedingRng::from_reseeder(ReseedMock, 2);
-        let mut rb = MockAddRng::from_seed(2);
+        let seed = [0, 1, 2, 3, 4, 5, 6, 7];
+        let mut ra: MyRng = ReseedingRng::from_reseeder(ReseedMock, seed);
+        let mut rb = MockAddRng::from_seed(seed);
         assert!(::test::iter_eq(iter(&mut ra).map(|rng| rng.next_u32()).take(100),
                                 iter(&mut rb).map(|rng| rng.next_u32()).take(100)));
     }

@@ -17,7 +17,7 @@
 
 use core::num::Wrapping as w;
 use {Rng, SeedableRng, Error};
-use rand_core::impls;
+use rand_core::{impls, le};
 
 /// A simple implementation of `Rng`, purely for testing.
 /// Returns an arithmetic sequence (i.e. adds a constant each step).
@@ -68,8 +68,9 @@ impl Rng for MockAddRng {
 }
 
 impl SeedableRng for MockAddRng {
-    type Seed = u64;
-    fn from_seed(seed: u64) -> Self {
+    type Seed = [u8; 8];
+    fn from_seed(seed: Self::Seed) -> Self {
+        let seed = le::read_u64(array_ref!(seed, 0, 8));
         MockAddRng::new(seed, 1)
     }
 }

@@ -273,6 +273,23 @@ pub use thread_local::{ThreadRng, thread_rng, random, random_with};
 use prng::IsaacWordRng;
 use distributions::range::Range;
 
+/// Copied from `arrayref` crate
+macro_rules! array_ref {
+    ($arr:expr, $offset:expr, $len:expr) => {{
+        {
+            #[inline]
+            unsafe fn as_array<T>(slice: &[T]) -> &[T; $len] {
+                &*(slice.as_ptr() as *const [_; $len])
+            }
+            let offset = $offset;
+            let slice = & $arr[offset..offset + $len];
+            unsafe {
+                as_array(slice)
+            }
+        }
+    }}
+}
+
 pub mod distributions;
 pub mod iter;
 pub mod jitter;
