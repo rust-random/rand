@@ -544,6 +544,26 @@ mod imp {
     }
 }
 
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+mod imp {
+    use std::io;
+    use Rng;
+
+    #[derive(Debug)]
+    pub struct OsRng;
+
+    impl OsRng {
+        pub fn new() -> io::Result<OsRng> {
+            Err(io::Error::new(io::ErrorKind::Other, "Not supported"))
+        }
+    }
+
+    impl Rng for OsRng {
+        fn next_u32(&mut self) -> u32 {
+            panic!("Not supported")
+        }
+    }
+}
 
 #[cfg(test)]
 mod test {
