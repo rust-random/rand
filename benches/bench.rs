@@ -9,8 +9,17 @@ mod distributions;
 
 use std::mem::size_of;
 use test::{black_box, Bencher};
-use rand::{XorShiftRng, StdRng, IsaacRng, Isaac64Rng, Rng};
+use rand::{XorShiftRng, StdRng, IsaacRng, Isaac64Rng, JitterRng, Rng};
 use rand::{OsRng, sample, weak_rng};
+
+#[bench]
+fn rand_jitter(b: &mut Bencher) {
+    let mut rng = JitterRng::new().unwrap();
+    b.iter(|| {
+        black_box(rng.next_u64());
+    });
+    b.bytes = size_of::<u64>() as u64;
+}
 
 #[bench]
 fn rand_xorshift(b: &mut Bencher) {

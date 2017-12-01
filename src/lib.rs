@@ -1,4 +1,4 @@
-// Copyright 2013-2014 The Rust Project Developers. See the COPYRIGHT
+// Copyright 2013-2017 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // http://rust-lang.org/COPYRIGHT.
 //
@@ -254,8 +254,8 @@ use std::mem;
 use std::io;
 use std::rc::Rc;
 use std::num::Wrapping as w;
-use std::time;
 
+pub use jitter::JitterRng;
 pub use os::OsRng;
 
 pub use isaac::{IsaacRng, Isaac64Rng};
@@ -274,6 +274,7 @@ pub mod isaac;
 pub mod chacha;
 pub mod reseeding;
 mod rand_impls;
+pub mod jitter;
 pub mod os;
 pub mod read;
 
@@ -857,7 +858,17 @@ impl StdRng {
     /// Reading the randomness from the OS may fail, and any error is
     /// propagated via the `io::Result` return value.
     pub fn new() -> io::Result<StdRng> {
-        OsRng::new().map(|mut r| StdRng { rng: r.gen() })
+        match OsRng::new() {
+            Ok(mut r) => Ok(StdRng { rng: r.gen() }),
+            Err(e1) => {
+                match JitterRng::new() {
+                    Ok(mut r) => Ok(StdRng { rng: r.gen() }),
+                    Err(_) => {
+                        Err(e1)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -905,7 +916,7 @@ impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
     fn reseed(&mut self, rng: &mut StdRng) {
         match StdRng::new() {
             Ok(r) => *rng = r,
-            Err(_) => rng.reseed(&weak_seed())
+            Err(e) => panic!("No entropy available: {}", e),
         }
     }
 }
@@ -935,7 +946,7 @@ pub fn thread_rng() -> ThreadRng {
     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
         let r = match StdRng::new() {
             Ok(r) => r,
-            Err(_) => StdRng::from_seed(&weak_seed())
+            Err(e) => panic!("No entropy available: {}", e),
         };
         let rng = reseeding::ReseedingRng::new(r,
                                                THREAD_RNG_RESEED_THRESHOLD,
@@ -944,14 +955,6 @@ pub fn thread_rng() -> ThreadRng {
     });
 
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
-}
-
-fn weak_seed() -> [usize; 2] {
-    let now = time::SystemTime::now();
-    let unix_time = now.duration_since(time::UNIX_EPOCH).unwrap();
-    let seconds = unix_time.as_secs() as usize;
-    let nanoseconds = unix_time.subsec_nanos() as usize;
-    [seconds, nanoseconds]
 }
 
 impl Rng for ThreadRng {
