@@ -146,12 +146,10 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
     }
 }
 
-impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R>> SeedableRng<(Rsdr, S)> for
-        ReseedingRng<R, Rsdr>
-{
+impl<R: SeedableRng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
     /// Create a new `ReseedingRng` from the given reseeder and
     /// seed. This uses a default value for `generation_threshold`.
-    fn from_seed((rsdr, seed): (Rsdr, S)) -> ReseedingRng<R, Rsdr> {
+    pub fn from_reseeder(rsdr: Rsdr, seed: <R as SeedableRng>::Seed) -> ReseedingRng<R, Rsdr> {
         ReseedingRng {
             rng: SeedableRng::from_seed(seed),
             generation_threshold: DEFAULT_GENERATION_THRESHOLD,
@@ -195,14 +193,14 @@ mod test {
     
     #[derive(Debug, Clone)]
     struct ReseedMock;
-    impl Reseeder<MockAddRng<u32>> for ReseedMock {
-        fn reseed(&mut self, rng: &mut MockAddRng<u32>) -> Result<(), Error> {
+    impl Reseeder<MockAddRng> for ReseedMock {
+        fn reseed(&mut self, rng: &mut MockAddRng) -> Result<(), Error> {
             *rng = MockAddRng::new(0, 1);
             Ok(())
         }
     }
 
-    type MyRng = ReseedingRng<MockAddRng<u32>, ReseedMock>;
+    type MyRng = ReseedingRng<MockAddRng, ReseedMock>;
 
     #[test]
     fn test_reseeding() {
@@ -218,8 +216,8 @@ mod test {
     #[test]
     fn test_rng_seeded() {
         // Default seed threshold is way beyond what we use here
-        let mut ra: MyRng = SeedableRng::from_seed((ReseedMock, 2));
-        let mut rb: MockAddRng<u32> = SeedableRng::from_seed(2);
+        let mut ra: MyRng = ReseedingRng::from_reseeder(ReseedMock, 2);
+        let mut rb = MockAddRng::from_seed(2);
         assert!(::test::iter_eq(iter(&mut ra).map(|rng| rng.next_u32()).take(100),
                                 iter(&mut rb).map(|rng| rng.next_u32()).take(100)));
     }

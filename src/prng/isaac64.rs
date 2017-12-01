@@ -11,7 +11,6 @@
 //! The ISAAC-64 random number generator.
 
 use core::slice;
-use core::iter::repeat;
 use core::num::Wrapping as w;
 use core::fmt;
 
@@ -330,66 +329,53 @@ impl SeedFromRng for Isaac64Rng {
     }
 }
 
-impl<'a> SeedableRng<&'a [u64]> for Isaac64Rng {
-    /// Create an ISAAC random number generator with a seed. This can
-    /// be any length, although the maximum number of elements used is
-    /// 256 and any more will be silently ignored. A generator
-    /// constructed with a given seed will generate the same sequence
-    /// of values as all other generators constructed with that seed.
-    fn from_seed(seed: &'a [u64]) -> Isaac64Rng {
+impl SeedableRng for Isaac64Rng {
+    type Seed = [u64; 4];
+    fn from_seed(seed: Self::Seed) -> Self {
         let mut key = [w(0); RAND_SIZE];
-
-        // make the seed into [seed[0], seed[1], ..., seed[seed.len()
-        // - 1], 0, 0, ...], to fill `key`.
-        let seed_iter = seed.iter().map(|&x| x).chain(repeat(0u64));
-
-        for (rsl_elem, seed_elem) in key.iter_mut().zip(seed_iter) {
-            *rsl_elem = w(seed_elem);
-        }
-
+        key[0] = w(seed[0]);
+        key[1] = w(seed[1]);
+        key[2] = w(seed[2]);
+        key[3] = w(seed[3]);
         init(key, 2)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, SeedFromRng, iter};
+    use {Rng, SeedableRng, SeedFromRng};
     use super::Isaac64Rng;
 
     #[test]
     fn test_isaac64_construction() {
         // Test that various construction techniques produce a working RNG.
         
-        let seed = iter(&mut ::test::rng())
-                   .map(|rng| rng.next_u64())
-                   .take(256)
-                   .collect::<Vec<u64>>();
-        let mut rng1 = Isaac64Rng::from_seed(&seed[..]);
+        let mut rng1 = Isaac64Rng::from_hashable("some weak seed");
         rng1.next_u64();
         
         let mut rng2 = Isaac64Rng::from_rng(&mut ::test::rng()).unwrap();
         rng2.next_u64();
         
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng3 = Isaac64Rng::from_seed(&seed[..]);
+        let seed = [1, 23, 456, 7890];
+        let mut rng3 = Isaac64Rng::from_seed(seed);
         rng3.next_u64();
         
     }
-
+    
     #[test]
     fn test_isaac64_true_values() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed = [1, 23, 456, 7890];
         let mut rng1 = Isaac64Rng::from_seed(seed);
         // Regression test that isaac is actually using the above vector
         let v = (0..10).map(|_| rng1.next_u64()).collect::<Vec<_>>();
         assert_eq!(v,
-                   vec!(547121783600835980, 14377643087320773276,
-                        17351601304698403469, 1238879483818134882,
-                        11952566807690396487, 13970131091560099343,
-                        4469761996653280935, 15552757044682284409,
-                        6860251611068737823, 13722198873481261842));
+                   vec!(15071495833797886820, 7720185633435529318,
+                   10836773366498097981, 5414053799617603544,
+                   12890513357046278984, 17001051845652595546,
+                   9240803642279356310, 12558996012687158051,
+                   14673053937227185542, 1677046725350116783));
 
-        let seed: &[_] = &[12345, 67890, 54321, 9876];
+        let seed = [12345, 67890, 54321, 9876];
         let mut rng2 = Isaac64Rng::from_seed(seed);
         // skip forward to the 10000th number
         for _ in 0..10000 { rng2.next_u64(); }
@@ -405,50 +391,50 @@ mod test {
 
     #[test]
     fn test_isaac64_true_values_32() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed = [1, 23, 456, 7890];
         let mut rng1 = Isaac64Rng::from_seed(seed);
         let v = (0..12).map(|_| rng1.next_u32()).collect::<Vec<_>>();
         // Subset of above values, as an LE u32 sequence
         assert_eq!(v,
-                   [141028748, 127386717,
-                    1058730652, 3347555894,
-                    851491469, 4039984500,
-                    2692730210, 288449107,
-                    646103879, 2782923823,
-                    4195642895, 3252674613]);
+                   [3477963620, 3509106075,
+                    687845478, 1797495790,
+                    227048253, 2523132918,
+                    4044335064, 1260557630,
+                    4079741768, 3001306521,
+                    69157722, 3958365844]);
     }
 
     #[test]
     fn test_isaac64_true_values_mixed() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed = [1, 23, 456, 7890];
         let mut rng = Isaac64Rng::from_seed(seed);
         // Test alternating between `next_u64` and `next_u32` works as expected.
         // Values are the same as `test_isaac64_true_values` and
         // `test_isaac64_true_values_32`.
-        assert_eq!(rng.next_u64(), 547121783600835980);
-        assert_eq!(rng.next_u32(), 1058730652);
-        assert_eq!(rng.next_u32(), 3347555894);
-        assert_eq!(rng.next_u64(), 17351601304698403469);
-        assert_eq!(rng.next_u32(), 2692730210);
+        assert_eq!(rng.next_u64(), 15071495833797886820);
+        assert_eq!(rng.next_u32(), 687845478);
+        assert_eq!(rng.next_u32(), 1797495790);
+        assert_eq!(rng.next_u64(), 10836773366498097981);
+        assert_eq!(rng.next_u32(), 4044335064);
         // Skip one u32
-        assert_eq!(rng.next_u64(), 11952566807690396487);
-        assert_eq!(rng.next_u32(), 4195642895);
+        assert_eq!(rng.next_u64(), 12890513357046278984);
+        assert_eq!(rng.next_u32(), 69157722);
     }
 
     #[test]
     fn test_isaac64_true_bytes() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed = [1, 23, 456, 7890];
         let mut rng1 = Isaac64Rng::from_seed(seed);
         let mut buf = [0u8; 32];
         rng1.fill_bytes(&mut buf);
         // Same as first values in test_isaac64_true_values as bytes in LE order
         assert_eq!(buf,
-                   [140, 237, 103, 8, 93, 196, 151, 7,
-                    156, 242, 26, 63, 54, 166, 135, 199,
-                    141, 186, 192, 50, 116, 69, 205, 240,
-                    98, 205, 127, 160, 83, 98, 49, 17]);
+                   [100, 131, 77, 207, 155, 181, 40, 209,
+                    102, 176, 255, 40, 238, 155, 35, 107,
+                    61, 123, 136, 13, 246, 243, 99, 150,
+                    216, 167, 15, 241, 62, 149, 34, 75]);
     }
-
+    
     #[test]
     fn test_isaac_new_uninitialized() {
         // Compare the results from initializing `IsaacRng` with
@@ -470,7 +456,7 @@ mod test {
 
     #[test]
     fn test_isaac64_clone() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed = [1, 23, 456, 7890];
         let mut rng1 = Isaac64Rng::from_seed(seed);
         let mut rng2 = rng1.clone();
         for _ in 0..16 {
