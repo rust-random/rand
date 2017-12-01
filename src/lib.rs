@@ -318,7 +318,7 @@ type w32 = w<u32>;
 pub trait Rand : Sized {
     /// Generates a random instance of this type using the specified source of
     /// randomness.
-    fn rand<R: Rng>(rng: &mut R) -> Self;
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> Self;
 }
 
 /// A random number generator.
@@ -647,16 +647,16 @@ impl<R: ?Sized> Rng for Box<R> where R: Rng {
 /// [`gen_iter`]: trait.Rng.html#method.gen_iter
 /// [`Rng`]: trait.Rng.html
 #[derive(Debug)]
-pub struct Generator<'a, T, R:'a> {
+pub struct Generator<'a, T, R: 'a + ?Sized> {
     rng: &'a mut R,
     _marker: marker::PhantomData<fn() -> T>,
 }
 
-impl<'a, T: Rand, R: Rng> Iterator for Generator<'a, T, R> {
+impl<'a, T: Rand, R: Rng + ?Sized> Iterator for Generator<'a, T, R> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        Some(self.rng.gen())
+        Some(T::rand(self.rng))
     }
 }
 
@@ -792,10 +792,10 @@ impl SeedableRng<[u32; 4]> for XorShiftRng {
 }
 
 impl Rand for XorShiftRng {
-    fn rand<R: Rng>(rng: &mut R) -> XorShiftRng {
-        let mut tuple: (u32, u32, u32, u32) = rng.gen();
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> XorShiftRng {
+        let mut tuple = <(u32, u32, u32, u32)>::rand(rng);
         while tuple == (0, 0, 0, 0) {
-            tuple = rng.gen();
+            tuple = Rand::rand(rng);
         }
         let (x, y, z, w_) = tuple;
         XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) }

@@ -15,7 +15,7 @@
 use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
 
-use {Rng, Open01};
+use {Rand, Rng, Open01};
 use super::normal::StandardNormal;
 use super::{IndependentSample, Sample, Exp};
 
@@ -134,17 +134,17 @@ impl GammaLargeShape {
 }
 
 impl Sample<f64> for Gamma {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 impl Sample<f64> for GammaSmallShape {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 impl Sample<f64> for GammaLargeShape {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 
 impl IndependentSample<f64> for Gamma {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         match self.repr {
             Small(ref g) => g.ind_sample(rng),
             One(ref g) => g.ind_sample(rng),
@@ -153,23 +153,23 @@ impl IndependentSample<f64> for Gamma {
     }
 }
 impl IndependentSample<f64> for GammaSmallShape {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let Open01(u) = rng.gen::<Open01<f64>>();
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+        let Open01(u) = Open01::<f64>::rand(rng);
 
         self.large_shape.ind_sample(rng) * u.powf(self.inv_shape)
     }
 }
 impl IndependentSample<f64> for GammaLargeShape {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         loop {
-            let StandardNormal(x) = rng.gen::<StandardNormal>();
+            let StandardNormal(x) = StandardNormal::rand(rng);
             let v_cbrt = 1.0 + self.c * x;
             if v_cbrt <= 0.0 { // a^3 <= 0 iff a <= 0
                 continue
             }
 
             let v = v_cbrt * v_cbrt * v_cbrt;
-            let Open01(u) = rng.gen::<Open01<f64>>();
+            let Open01(u) = Open01::<f64>::rand(rng);
 
             let x_sqr = x * x;
             if u < 1.0 - 0.0331 * x_sqr * x_sqr ||
@@ -225,14 +225,14 @@ impl ChiSquared {
     }
 }
 impl Sample<f64> for ChiSquared {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 impl IndependentSample<f64> for ChiSquared {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         match self.repr {
             DoFExactlyOne => {
                 // k == 1 => N(0,1)^2
-                let StandardNormal(norm) = rng.gen::<StandardNormal>();
+                let StandardNormal(norm) = StandardNormal::rand(rng);
                 norm * norm
             }
             DoFAnythingElse(ref g) => g.ind_sample(rng)
@@ -279,10 +279,10 @@ impl FisherF {
     }
 }
 impl Sample<f64> for FisherF {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 impl IndependentSample<f64> for FisherF {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         self.numer.ind_sample(rng) / self.denom.ind_sample(rng) * self.dof_ratio
     }
 }
@@ -317,11 +317,11 @@ impl StudentT {
     }
 }
 impl Sample<f64> for StudentT {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 impl IndependentSample<f64> for StudentT {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let StandardNormal(norm) = rng.gen::<StandardNormal>();
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+        let StandardNormal(norm) = StandardNormal::rand(rng);
         norm * (self.dof / self.chi.ind_sample(rng)).sqrt()
     }
 }

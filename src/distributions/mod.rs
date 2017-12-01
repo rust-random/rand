@@ -35,7 +35,7 @@ pub mod exponential;
 pub trait Sample<Support> {
     /// Generate a random value of `Support`, using `rng` as the
     /// source of randomness.
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> Support;
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Support;
 }
 
 /// `Sample`s that do not require keeping track of state.
@@ -48,7 +48,7 @@ pub trait Sample<Support> {
 // trait called `Sample` and the other should be `DependentSample`.
 pub trait IndependentSample<Support>: Sample<Support> {
     /// Generate a random value.
-    fn ind_sample<R: Rng>(&self, &mut R) -> Support;
+    fn ind_sample<R: Rng + ?Sized>(&self, &mut R) -> Support;
 }
 
 /// A wrapper for generating types that implement `Rand` via the
@@ -64,12 +64,12 @@ impl<Sup> Clone for RandSample<Sup> {
 }
 
 impl<Sup: Rand> Sample<Sup> for RandSample<Sup> {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Sup { self.ind_sample(rng) }
 }
 
 impl<Sup: Rand> IndependentSample<Sup> for RandSample<Sup> {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> Sup {
-        rng.gen()
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Sup {
+        Sup::rand(rng)
     }
 }
 
@@ -157,11 +157,11 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
 }
 
 impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> T { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> T { self.ind_sample(rng) }
 }
 
 impl<'a, T: Clone> IndependentSample<T> for WeightedChoice<'a, T> {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> T {
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
         // we want to find the first element that has cumulative
         // weight > sample_weight, which we do by binary since the
         // cumulative weights of self.items are sorted.
@@ -221,7 +221,7 @@ mod ziggurat_tables;
 // the perf improvement (25-50%) is definitely worth the extra code
 // size from force-inlining.
 #[inline(always)]
-fn ziggurat<R: Rng, P, Z>(
+fn ziggurat<R: Rng + ?Sized, P, Z>(
             rng: &mut R,
             symmetric: bool,
             x_tab: ziggurat_tables::ZigTable,
@@ -244,7 +244,7 @@ fn ziggurat<R: Rng, P, Z>(
         // efficiently and overload next_f32/f64, so by not calling it
         // this may be slower than it would be otherwise.)
         // FIXME: investigate/optimise for the above.
-        let bits: u64 = rng.gen();
+        let bits: u64 = rng.next_u64();
         let i = (bits & 0xff) as usize;
         let f = (bits >> 11) as f64 / SCALE;
 
@@ -263,7 +263,7 @@ fn ziggurat<R: Rng, P, Z>(
             return zero_case(rng, u);
         }
         // algebraically equivalent to f1 + DRanU()*(f0 - f1) < 1
-        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * rng.gen::<f64>() < pdf(x) {
+        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * rng.next_f64() < pdf(x) {
             return x;
         }
     }
@@ -278,7 +278,7 @@ mod tests {
     #[derive(PartialEq, Debug)]
     struct ConstRand(usize);
     impl Rand for ConstRand {
-        fn rand<R: Rng>(_: &mut R) -> ConstRand {
+        fn rand<R: Rng + ?Sized>(_: &mut R) -> ConstRand {
             ConstRand(0)
         }
     }

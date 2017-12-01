@@ -40,14 +40,14 @@ pub struct Exp1(pub f64);
 // This could be done via `-rng.gen::<f64>().ln()` but that is slower.
 impl Rand for Exp1 {
     #[inline]
-    fn rand<R:Rng>(rng: &mut R) -> Exp1 {
+    fn rand<R:Rng + ?Sized>(rng: &mut R) -> Exp1 {
         #[inline]
         fn pdf(x: f64) -> f64 {
             (-x).exp()
         }
         #[inline]
-        fn zero_case<R:Rng>(rng: &mut R, _u: f64) -> f64 {
-            ziggurat_tables::ZIG_EXP_R - rng.gen::<f64>().ln()
+        fn zero_case<R:Rng + ?Sized>(rng: &mut R, _u: f64) -> f64 {
+            ziggurat_tables::ZIG_EXP_R - rng.next_f64().ln()
         }
 
         Exp1(ziggurat(rng, false,
@@ -88,11 +88,11 @@ impl Exp {
 }
 
 impl Sample<f64> for Exp {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
+    fn sample<R: Rng + ?Sized>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 impl IndependentSample<f64> for Exp {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let Exp1(n) = rng.gen::<Exp1>();
+    fn ind_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+        let Exp1(n) = Exp1::rand(rng);
         n * self.lambda_inverse
     }
 }

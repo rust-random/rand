@@ -243,7 +243,7 @@ impl<'a> SeedableRng<&'a [u32]> for IsaacRng {
 }
 
 impl Rand for IsaacRng {
-    fn rand<R: Rng>(other: &mut R) -> IsaacRng {
+    fn rand<R: Rng + ?Sized>(other: &mut R) -> IsaacRng {
         let mut ret = EMPTY;
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;
@@ -492,7 +492,7 @@ impl<'a> SeedableRng<&'a [u64]> for Isaac64Rng {
 }
 
 impl Rand for Isaac64Rng {
-    fn rand<R: Rng>(other: &mut R) -> Isaac64Rng {
+    fn rand<R: Rng + ?Sized>(other: &mut R) -> Isaac64Rng {
         let mut ret = EMPTY_64;
         unsafe {
             let ptr = ret.rsl.as_mut_ptr() as *mut u8;

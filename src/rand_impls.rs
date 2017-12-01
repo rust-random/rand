@@ -17,39 +17,39 @@ use {Rand,Rng};
 
 impl Rand for isize {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> isize {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> isize {
         if mem::size_of::<isize>() == 4 {
-            rng.gen::<i32>() as isize
+            i32::rand(rng) as isize
         } else {
-            rng.gen::<i64>() as isize
+            i64::rand(rng) as isize
         }
     }
 }
 
 impl Rand for i8 {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> i8 {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> i8 {
         rng.next_u32() as i8
     }
 }
 
 impl Rand for i16 {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> i16 {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> i16 {
         rng.next_u32() as i16
     }
 }
 
 impl Rand for i32 {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> i32 {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> i32 {
         rng.next_u32() as i32
     }
 }
 
 impl Rand for i64 {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> i64 {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> i64 {
         rng.next_u64() as i64
     }
 }
@@ -57,46 +57,46 @@ impl Rand for i64 {
 #[cfg(feature = "i128_support")]
 impl Rand for i128 {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> i128 {
-        rng.gen::<u128>() as i128
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> i128 {
+        u128::rand(rng) as i128
     }
 }
 
 impl Rand for usize {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> usize {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> usize {
         if mem::size_of::<usize>() == 4 {
-            rng.gen::<u32>() as usize
+            u32::rand(rng) as usize
         } else {
-            rng.gen::<u64>() as usize
+            u64::rand(rng) as usize
         }
     }
 }
 
 impl Rand for u8 {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> u8 {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> u8 {
         rng.next_u32() as u8
     }
 }
 
 impl Rand for u16 {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> u16 {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> u16 {
         rng.next_u32() as u16
     }
 }
 
 impl Rand for u32 {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> u32 {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> u32 {
         rng.next_u32()
     }
 }
 
 impl Rand for u64 {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> u64 {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> u64 {
         rng.next_u64()
     }
 }
@@ -104,7 +104,7 @@ impl Rand for u64 {
 #[cfg(feature = "i128_support")]
 impl Rand for u128 {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> u128 {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> u128 {
         ((rng.next_u64() as u128) << 64) | (rng.next_u64() as u128)
     }
 }
@@ -124,13 +124,13 @@ macro_rules! float_impls {
                 /// See `Closed01` for the closed interval `[0,1]`,
                 /// and `Open01` for the open interval `(0,1)`.
                 #[inline]
-                fn rand<R: Rng>(rng: &mut R) -> $ty {
+                fn rand<R: Rng + ?Sized>(rng: &mut R) -> $ty {
                     rng.$method_name()
                 }
             }
             impl Rand for Open01<$ty> {
                 #[inline]
-                fn rand<R: Rng>(rng: &mut R) -> Open01<$ty> {
+                fn rand<R: Rng + ?Sized>(rng: &mut R) -> Open01<$ty> {
                     // add a small amount (specifically 2 bits below
                     // the precision of f64/f32 at 1.0), so that small
                     // numbers are larger than 0, but large numbers
@@ -140,7 +140,7 @@ macro_rules! float_impls {
             }
             impl Rand for Closed01<$ty> {
                 #[inline]
-                fn rand<R: Rng>(rng: &mut R) -> Closed01<$ty> {
+                fn rand<R: Rng + ?Sized>(rng: &mut R) -> Closed01<$ty> {
                     // rescale so that 1.0 - epsilon becomes 1.0
                     // precisely.
                     Closed01(rng.$method_name() * SCALE / (SCALE - 1.0))
@@ -154,7 +154,7 @@ float_impls! { f32_rand_impls, f32, 24, next_f32 }
 
 impl Rand for char {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> char {
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> char {
         // a char is 21 bits
         const CHAR_MASK: u32 = 0x001f_ffff;
         loop {
@@ -171,8 +171,8 @@ impl Rand for char {
 
 impl Rand for bool {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> bool {
-        rng.gen::<u8>() & 1 == 1
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> bool {
+        u32::rand(rng) & 1 == 1
     }
 }
 
@@ -185,12 +185,12 @@ macro_rules! tuple_impl {
             > Rand for ( $( $tyvar ),* , ) {
 
             #[inline]
-            fn rand<R: Rng>(_rng: &mut R) -> ( $( $tyvar ),* , ) {
+            fn rand<R: Rng + ?Sized>(_rng: &mut R) -> ( $( $tyvar ),* , ) {
                 (
                     // use the $tyvar's to get the appropriate number of
                     // repeats (they're not actually needed)
                     $(
-                        _rng.gen::<$tyvar>()
+                        <$tyvar>::rand(_rng)
                     ),*
                     ,
                 )
@@ -201,7 +201,7 @@ macro_rules! tuple_impl {
 
 impl Rand for () {
     #[inline]
-    fn rand<R: Rng>(_: &mut R) -> () { () }
+    fn rand<R: Rng + ?Sized>(_: &mut R) -> () { () }
 }
 tuple_impl!{A}
 tuple_impl!{A, B}
@@ -222,14 +222,14 @@ macro_rules! array_impl {
 
         impl<T> Rand for [T; $n] where T: Rand {
             #[inline]
-            fn rand<R: Rng>(_rng: &mut R) -> [T; $n] {
-                [_rng.gen::<$t>(), $(_rng.gen::<$ts>()),*]
+            fn rand<R: Rng + ?Sized>(_rng: &mut R) -> [T; $n] {
+                [<$t>::rand(_rng), $(<$ts>::rand(_rng)),*]
             }
         }
     };
     {$n:expr,} => {
         impl<T> Rand for [T; $n] {
-            fn rand<R: Rng>(_rng: &mut R) -> [T; $n] { [] }
+            fn rand<R: Rng + ?Sized>(_rng: &mut R) -> [T; $n] { [] }
         }
     };
 }
@@ -238,9 +238,9 @@ array_impl!{32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T
 
 impl<T:Rand> Rand for Option<T> {
     #[inline]
-    fn rand<R: Rng>(rng: &mut R) -> Option<T> {
-        if rng.gen() {
-            Some(rng.gen())
+    fn rand<R: Rng + ?Sized>(rng: &mut R) -> Option<T> {
+        if bool::rand(rng) {
+            Some(T::rand(rng))
         } else {
             None
         }
