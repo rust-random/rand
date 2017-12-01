@@ -534,6 +534,36 @@ pub trait Rng {
         AsciiGenerator { rng: self }
     }
 
+    /// Return a random element from `iter`, or `None` if `iter` is empty.
+    ///
+    /// When dealing with slices, use [`choose`](#method.choose) or
+    /// [`choose_mut`](#method.choose_mut) for more efficient solutions.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let choices = [1, 1, 2, 3, 5, 8];
+    /// let mut rng = thread_rng();
+    ///
+    /// let iter = choices.iter()
+    ///                   .rev()
+    ///                   .map(|x| x * 3)
+    ///                   .take(2);
+    ///
+    /// assert!(rng.pick(iter).unwrap() >= 15);
+    /// ```
+    fn pick<I: IntoIterator>(&mut self, iter: I) -> Option<I::Item> where Self: Sized {
+        let mut value = None;
+        for (i, elem) in iter.into_iter().enumerate() {
+            if i == 0 || self.gen_range(0, i + 1) == 0 {
+                value = Some(elem);
+            }
+        }
+        value
+    }
+
     /// Return a random element from `values`.
     ///
     /// Return `None` if `values` is empty.
