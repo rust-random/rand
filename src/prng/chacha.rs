@@ -270,10 +270,10 @@ mod test {
     #[test]
     fn test_rng_rand_seeded() {
         // Test that various construction techniques produce a working RNG.
-        
-        let mut ra = ChaChaRng::from_hashable("hey ho lets go");
+        /* TODO: from_hashable
+        let mut ra = ChaChaRng::from_hashable("some weak seed");
         ra.next_u32();
-        
+        */
         let mut rb = ChaChaRng::from_rng(&mut ::test::rng()).unwrap();
         rb.next_u32();
         

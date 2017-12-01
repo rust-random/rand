@@ -370,10 +370,10 @@ mod test {
     #[test]
     fn test_isaac_construction() {
         // Test that various construction techniques produce a working RNG.
-        
+        /* TODO: from_hashable
         let mut rng1 = IsaacRng::from_hashable("some weak seed");
         rng1.next_u32();
-        
+        */
         let mut rng2 = IsaacRng::from_rng(&mut ::test::rng()).unwrap();
         rng2.next_u32();
         

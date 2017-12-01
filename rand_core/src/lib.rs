@@ -48,9 +48,6 @@ use std::error::Error as stdError;
 
 use core::fmt;
 
-use hash::{AsBytesFixed, Finalize, SeaHash, SEA_SEED};
-
-pub mod hash;
 pub mod impls;
 
 
@@ -241,8 +238,10 @@ pub trait SeedFromRng: Sized {
 /// algorithm used in the future. This is to ensure that manual seeding of PRNGs
 /// actually does yield reproducible results.
 pub trait SeedableRng: Sized {
-    /// Seed type. TODO: allow override?
-    type Seed: Finalize<SeaHash>;
+    /// Seed type.
+    /// 
+    /// TODO: restrict to `[u8; N]` where N in 8, 16, 32
+    type Seed;
     
     /// Create a new PRNG using the given seed.
     /// 
@@ -260,17 +259,6 @@ pub trait SeedableRng: Sized {
     /// values like 0, 1 and (size - 1) are unlikely. Users with poorly
     /// distributed input should use `from_hashable`.
     fn from_seed(seed: Self::Seed) -> Self;
-    
-    /// Create a new PRNG using any hashable input as the seed.
-    /// 
-    /// Again, reproducibility is required; that is, use of this function with
-    /// fixed input should produce the same result on all platforms and across
-    /// all supporting versions. PRNGs do not need to implement this function
-    /// themselves.
-    fn from_hashable<T: AsBytesFixed + ?Sized>(x: &T) -> Self {
-        let seed = Finalize::from(SeaHash::hash(x, SEA_SEED));
-        Self::from_seed(seed)
-    }
 }
 
 

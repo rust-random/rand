@@ -349,10 +349,10 @@ mod test {
     #[test]
     fn test_isaac64_construction() {
         // Test that various construction techniques produce a working RNG.
-        
+        /* TODO: from_hashable
         let mut rng1 = Isaac64Rng::from_hashable("some weak seed");
         rng1.next_u64();
-        
+        */
         let mut rng2 = Isaac64Rng::from_rng(&mut ::test::rng()).unwrap();
         rng2.next_u64();
         
