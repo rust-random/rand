@@ -66,7 +66,7 @@ pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<V
 ///
 /// This implementation uses `O(amount)` time and memory.
 ///
-/// Panics if `amount > self.len()`
+/// Panics if `amount > slice.len()`
 ///
 /// # Example
 ///
@@ -94,7 +94,7 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 ///
 /// This implementation uses `O(amount)` time and memory.
 ///
-/// Panics if `amount > self.len()`
+/// Panics if `amount > slice.len()`
 ///
 /// # Example
 ///
@@ -124,7 +124,7 @@ pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) ->
 /// This method is used internally by the slice sampling methods, but it can sometimes be useful to
 /// have the indices themselves so this is provided as an alternative.
 ///
-/// Panics if `amount > self.len()`
+/// Panics if `amount > length`
 pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
     where R: Rng,
 {
