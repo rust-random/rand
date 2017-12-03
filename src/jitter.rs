@@ -17,12 +17,9 @@
 //! Non-physical true random number generator based on timing jitter.
 
 use {CryptoRng, Rng, Error, ErrorKind};
-use rand_core;
 use rand_core::impls;
 
-use core;
-use core::fmt;
-
+use core::{fmt, mem, ptr};
 #[cfg(feature="std")]
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 
@@ -138,7 +135,7 @@ impl JitterRng {
     /// hundred times. If this does not pass basic quality tests, an error is
     /// returned. The test result is cached to make subsequent calls faster.
     #[cfg(feature="std")]
-    pub fn new() -> Result<JitterRng, Error> {
+    pub fn new() -> Result<JitterRng, TimerError> {
         let mut ec = JitterRng::new_with_timer(get_nstime);
         let mut rounds = JITTER_ROUNDS.load(Ordering::Relaxed) as u32;
         if rounds == 0 {
@@ -695,7 +692,7 @@ fn get_nstime() -> u64 {
     unsafe { libc::mach_absolute_time() }
 }
 
-#[cfg(all(feature="std", any(target_os = "windows")))]
+#[cfg(all(feature="std", target_os = "windows"))]
 fn get_nstime() -> u64 {
     #[allow(non_camel_case_types)]
     type LARGE_INTEGER = i64;
@@ -714,8 +711,8 @@ fn get_nstime() -> u64 {
 // elimination. Taken from `bencher`.
 fn black_box<T>(dummy: T) -> T {
     unsafe {
-        let ret = core::ptr::read_volatile(&dummy);
-        core::mem::forget(dummy);
+        let ret = ptr::read_volatile(&dummy);
+        mem::forget(dummy);
         ret
     }
 }
@@ -745,9 +742,12 @@ impl Rng for JitterRng {
         impls::fill_bytes_via_u64(self, dest)
     }
 
-    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), rand_core::Error> {
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         Ok(self.fill_bytes(dest))
     }
 }
 
 impl CryptoRng for JitterRng {}
+
+// There are no tests included because (1) this is an "external" RNG, so output
+// is not reproducible and (2) `test_timer` *will* fail on some platforms.

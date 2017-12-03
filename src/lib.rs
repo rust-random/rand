@@ -1,4 +1,4 @@
-// Copyright 2013-2014 The Rust Project Developers. See the COPYRIGHT
+// Copyright 2013-2017 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // http://rust-lang.org/COPYRIGHT.
 //
@@ -261,7 +261,7 @@ pub use rand_core::{Rng, CryptoRng, SeedFromRng, SeedableRng, Error, ErrorKind};
 pub use read::ReadRng;
 #[cfg(feature="std")]
 pub use os::OsRng;
-pub use jitter_rng::JitterRng;
+pub use jitter::JitterRng;
 pub use iter::iter;
 pub use distributions::{Distribution, Default, Rand};
 #[cfg(feature="std")]
@@ -272,7 +272,7 @@ use distributions::range::Range;
 
 pub mod distributions;
 pub mod iter;
-pub mod jitter_rng;
+pub mod jitter;
 pub mod mock;
 pub mod prng;
 pub mod reseeding;

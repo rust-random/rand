@@ -32,5 +32,6 @@ install:
 build: false
 
 test_script:
+  - cargo bench
   - cargo test
   - cargo test --features nightly
