@@ -329,7 +329,7 @@ impl<R: SeedFromRng> NewSeeded for R {
             new_jitter().map_err(|_e2| {
                 // TODO: log
                 // TODO: can we somehow return both error sources?
-                Error::new_with_cause(
+                Error::with_cause(
                     ErrorKind::Unavailable,
                     "seeding a new RNG failed: both OS and Jitter entropy sources failed",
                     e1)

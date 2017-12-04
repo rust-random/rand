@@ -118,7 +118,7 @@ impl ::std::error::Error for TimerError {
 
 impl From<TimerError> for Error {
     fn from(err: TimerError) -> Error {
-        Error::new_with_cause(ErrorKind::Unavailable,
+        Error::with_cause(ErrorKind::Unavailable,
                               "timer jitter failed basic quality tests", err)
     }
 }

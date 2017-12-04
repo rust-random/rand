@@ -104,7 +104,7 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
                         ErrorKind::Transient
                     }
                 };
-                return Err(Error::new_with_cause(newkind, "reseeding failed", err));
+                return Err(Error::with_cause(newkind, "reseeding failed", err));
             }
             self.bytes_generated = 0;
         }

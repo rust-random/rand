@@ -69,7 +69,7 @@ impl<R: Read> Rng for ReadRng<R> {
         if dest.len() == 0 { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
         self.reader.read_exact(dest).map_err(|err| {
-            Error::new_with_cause(ErrorKind::Unavailable, "ReadRng: read error", err)
+            Error::with_cause(ErrorKind::Unavailable, "ReadRng: read error", err)
         })
     }
 }

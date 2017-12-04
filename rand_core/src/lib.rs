@@ -344,7 +344,7 @@ impl Error {
     /// type `E` (because both `Box` and `stdError` are unavailable), and the
     /// `cause` is ignored.
     #[cfg(feature="std")]
-    pub fn new_with_cause<E>(kind: ErrorKind, msg: &'static str, cause: E) -> Self
+    pub fn with_cause<E>(kind: ErrorKind, msg: &'static str, cause: E) -> Self
         where E: Into<Box<stdError + Send + Sync>>
     {
         Self { kind, msg, cause: Some(cause.into()) }
@@ -354,7 +354,7 @@ impl Error {
     /// 
     /// In `no_std` mode the *cause* is ignored.
     #[cfg(not(feature="std"))]
-    pub fn new_with_cause<E>(kind: ErrorKind, msg: &'static str, _cause: E) -> Self {
+    pub fn with_cause<E>(kind: ErrorKind, msg: &'static str, _cause: E) -> Self {
         Self { kind, msg }
     }
     
