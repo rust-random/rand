@@ -10,7 +10,7 @@ mod distributions;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 use rand::{XorShiftRng, StdRng, IsaacRng, Isaac64Rng, JitterRng, Rng};
-use rand::{OsRng, sample, weak_rng};
+use rand::OsRng;
 
 #[bench]
 fn rand_jitter(b: &mut Bencher) {
