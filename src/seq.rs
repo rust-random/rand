@@ -144,7 +144,7 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize
     // `HashMap::with_capacity(amount)` probably allocates more than `amount` in practice,
     // and a trade off could probably be made between memory/cpu, since hashmap operations
     // are slower than array index swapping.
-    if amount * 20 >= length {
+    if amount >= length / 20 {
         sample_indices_inplace(rng, length, amount)
     } else {
         sample_indices_cache(rng, length, amount)
