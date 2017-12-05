@@ -49,7 +49,7 @@ distr_range_int!(distr_range_i32, i32, -200_000_000i32, 800_000_000);
 distr_range_int!(distr_range_i64, i64, 3i64, 134217671);
 
 macro_rules! distr_float {
-    ($fnn:ident, $distr:expr) => {
+    ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
             let mut rng = XorShiftRng::new().unwrap();
@@ -57,21 +57,25 @@ macro_rules! distr_float {
 
             b.iter(|| {
                 for _ in 0..::RAND_BENCH_N {
-                    let x: f64 = distr.sample(&mut rng);
+                    let x: $ty = distr.sample(&mut rng);
                     black_box(x);
                 }
             });
-            b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
+            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
         }
     }
 }
 
-distr_float!(distr_uniform01_float, Uniform01);
-distr_float!(distr_closed01_float, Closed01);
-distr_float!(distr_open01_float, Open01);
-distr_float!(distr_range_float, Range::new(2.26f64, 2.319f64));
-distr_float!(distr_exp, Exp::new(2.71828 * 3.14159));
-distr_float!(distr_normal, Normal::new(-2.71828, 3.14159));
-distr_float!(distr_log_normal, LogNormal::new(-2.71828, 3.14159));
-distr_float!(distr_gamma_large_shape, Gamma::new(10., 1.0));
-distr_float!(distr_gamma_small_shape, Gamma::new(0.1, 1.0));
+distr_float!(distr_uniform01_float32, f32, Uniform01);
+distr_float!(distr_closed01_float32, f32, Closed01);
+distr_float!(distr_open01_float32, f32, Open01);
+
+distr_float!(distr_uniform01_float, f64, Uniform01);
+distr_float!(distr_closed01_float, f64, Closed01);
+distr_float!(distr_open01_float, f64, Open01);
+distr_float!(distr_range_float, f64, Range::new(2.26f64, 2.319f64));
+distr_float!(distr_exp, f64, Exp::new(2.71828 * 3.14159));
+distr_float!(distr_normal, f64, Normal::new(-2.71828, 3.14159));
+distr_float!(distr_log_normal, f64, LogNormal::new(-2.71828, 3.14159));
+distr_float!(distr_gamma_large_shape, f64, Gamma::new(10., 1.0));
+distr_float!(distr_gamma_small_shape, f64, Gamma::new(0.1, 1.0));
