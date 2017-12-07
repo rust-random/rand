@@ -5,9 +5,31 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- `JitterRng` added as a high-quality alternative entropy source using the
+  system timer
+- new `seq` module with `sample_iter`, `sample_slice`, etc.
+- WASM support via dummy implementations (fail at run-time)
+- Additional benchmarks, covering generators and new seq code
+
+### Changed
+- `thread_rng` uses `JitterRng` if seeding from system time fails
+  (slower but more secure than previous method)
+
+### Deprecated
+  - `sample` function deprecated (replaced by `sample_iter`)
+
+## [0.3.18] - 2017-11-06
+### Changed
+- `thread_rng` is seeded from the system time if `OsRng` fails
+- `weak_rng` now uses `thread_rng` internally
 
 
-## [0.3.16] - 2016-07-27
+## [0.3.17] - 2017-10-07
+### Changed
+ - Fuchsia: Magenta was renamed Zircon
+
+## [0.3.16] - 2017-07-27
 ### Added
 - Implement Debug for mote non-public types
 - implement `Rand` for (i|u)i128
