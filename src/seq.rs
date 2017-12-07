@@ -137,12 +137,14 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize
     // it inserts an element for every loop.
     //
     // Therefore, if `amount >= length / 2` then inplace will be both faster and use less memory.
+    // In fact, benchmarks show the inplace version is faster for length up to about 20 times
+    // faster than amount.
     //
     // TODO: there is probably even more fine-tuning that can be done here since
     // `HashMap::with_capacity(amount)` probably allocates more than `amount` in practice,
     // and a trade off could probably be made between memory/cpu, since hashmap operations
     // are slower than array index swapping.
-    if amount >= length / 2 {
+    if amount >= length / 20 {
         sample_indices_inplace(rng, length, amount)
     } else {
         sample_indices_cache(rng, length, amount)
