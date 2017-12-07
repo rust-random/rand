@@ -276,6 +276,9 @@ pub mod jitter;
 pub mod mock;
 pub mod prng;
 pub mod reseeding;
+// TODO: move sequences code to seq maybe?
+#[cfg(feature="std")]
+pub mod seq;
 pub mod sequences;
 pub mod utils;
 

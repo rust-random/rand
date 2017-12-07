@@ -462,6 +462,23 @@ mod imp {
     }
 }
 
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+mod imp {
+    use std::io;
+    use Rng;
+
+    #[derive(Debug)]
+    pub struct OsRng;
+
+    impl OsRng {
+        pub fn new() -> Result<OsRng, Error> {
+            Err(Error::new(ErrorKind::Unavailable, "not supported on WASM"))
+        }
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
+            Err(Error::new(ErrorKind::Unavailable, "not supported on WASM"))
+        }
+    }
+}
 
 #[cfg(test)]
 mod test {

@@ -183,11 +183,11 @@ impl JitterRng {
 
         ec
     }
-    
+
     /// Configures how many rounds are used to generate each 64-bit value.
     /// This must be greater than zero, and has a big impact on performance
     /// and output quality.
-    /// 
+    ///
     /// `new_with_timer` conservatively uses 64 rounds, but often less rounds
     /// can be used. The `test_timer()` function returns the minimum number of
     /// rounds required for full strength (platform dependent), so one may use
@@ -449,6 +449,9 @@ impl JitterRng {
         // or check for `CONFIG_X86_TSC`, but it does not make much sense as the
         // following sanity checks verify that we have a high-resolution timer.
 
+        #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+        return Err(TimerError::NoTimer);
+
         let mut delta_sum = 0;
         let mut old_delta = 0;
 
@@ -561,7 +564,7 @@ impl JitterRng {
 
         const FACTOR: u32  = 3;
         fn log2(x: u64) -> u32 { 64 - x.leading_zeros() }
-        
+
         // pow(δ, FACTOR) must be representable; if you have overflow reduce FACTOR
         Ok(64 * 2 * FACTOR / (log2(delta_average.pow(FACTOR)) + 1))
     }
@@ -667,8 +670,10 @@ impl JitterRng {
     }
 }
 
-#[cfg(all(feature="std", not(any(target_os = "macos", target_os = "ios",
-                                 target_os = "windows"))))]
+#[cfg(all(feature="std", not(any(
+        target_os = "macos", target_os = "ios", target_os = "windows",
+        all(target_arch = "wasm32", not(target_os = "emscripten"))
+    ))))]
 fn get_nstime() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -705,6 +710,11 @@ fn get_nstime() -> u64 {
     let mut t = 0;
     unsafe { QueryPerformanceCounter(&mut t); }
     t as u64
+}
+
+#[cfg(all(feature="std", target_arch = "wasm32", not(target_os = "emscripten")))]
+fn get_nstime() -> u64 {
+    unreachable!()
 }
 
 // A function that is opaque to the optimizer to assist in avoiding dead-code
