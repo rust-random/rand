@@ -11,7 +11,13 @@
 //! Functions for randomly accessing and sampling sequences.
 
 use super::{Rng, Sample};
-use std::collections::hash_map::HashMap;
+
+// This crate is only enabled when either std or alloc is available.
+// BTreeMap is not as fast in tests, but better than nothing.
+#[cfg(feature="std")] use std::collections::HashMap;
+#[cfg(not(feature="std"))] use alloc::btree_map::BTreeMap;
+
+#[cfg(not(feature="std"))] use alloc::Vec;
 
 /// Randomly sample `amount` elements from a finite iterator.
 ///
@@ -189,7 +195,8 @@ fn sample_indices_cache<R>(
     where R: Rng,
 {
     debug_assert!(amount <= length);
-    let mut cache = HashMap::with_capacity(amount);
+    #[cfg(feature="std")] let mut cache = HashMap::with_capacity(amount);
+    #[cfg(not(feature="std"))] let mut cache = BTreeMap::new();
     let mut out = Vec::with_capacity(amount);
     for i in 0..amount {
         let j: usize = rng.gen_range(i, length);

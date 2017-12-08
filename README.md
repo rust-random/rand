@@ -57,6 +57,17 @@ let mut rng = ChaChaRng::from_rng(&mut thread_rng()).unwrap();
 println!("random between 0-9: {}", distributions::range(0, 10, &mut rng));
 ```
 
+## Features
+
+By default, `rand` is built with all stable features available. The following
+optional features are available:
+
+-   `i128_support` enables support for generating `u128` and `i128` values
+-   `nightly` enables all unstable features (`i128_support`)
+-   `std` enabled by default; by setting "default-features = false" `no_std`
+    mode is activated; unfortunately this removes several important features
+-   `alloc` without `std` re-enables some functionality
+
 ## Testing
 
 Unfortunately, `cargo test` does not test everything. The following tests are

@@ -247,11 +247,14 @@
 #![deny(missing_debug_implementations)]
 
 #![cfg_attr(not(feature="std"), no_std)]
+#![cfg_attr(all(feature="alloc"), feature(alloc))]
 #![cfg_attr(feature = "i128_support", feature(i128_type, i128))]
 
 // We need to use several items from "core" for no_std support.
 #[cfg(feature="std")]
 extern crate core;
+#[cfg(all(feature="alloc"))]
+extern crate alloc;
 
 extern crate rand_core;
 
@@ -277,7 +280,7 @@ pub mod mock;
 pub mod prng;
 pub mod reseeding;
 // TODO: move sequences code to seq maybe?
-#[cfg(feature="std")]
+#[cfg(any(feature="alloc", feature="std"))]
 pub mod seq;
 pub mod sequences;
 pub mod utils;
