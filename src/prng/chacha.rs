@@ -88,8 +88,7 @@ impl ChaChaRng {
     /// # Examples
     ///
     /// ```rust
-    /// use rand::Rng;
-    /// use rand::prng::ChaChaRng;
+    /// use rand::{Rng, ChaChaRng};
     ///
     /// let mut ra = ChaChaRng::new_unseeded();
     /// println!("{:?}", ra.next_u32());
@@ -120,8 +119,7 @@ impl ChaChaRng {
     /// # Examples
     ///
     /// ```rust
-    /// use rand::Rng;
-    /// use rand::prng::ChaChaRng;
+    /// use rand::{Rng, ChaChaRng};
     ///
     /// let mut ra = ChaChaRng::new_unseeded();
     /// ra.set_counter(0u64, 1234567890u64);
