@@ -257,6 +257,9 @@ use std::rc::Rc;
 pub use jitter::JitterRng;
 pub use os::OsRng;
 
+pub use isaac::{IsaacRng, Isaac64Rng};
+pub use chacha::ChaChaRng;
+
 #[cfg(target_pointer_width = "32")]
 use prng::IsaacRng as IsaacWordRng;
 #[cfg(target_pointer_width = "64")]
@@ -275,6 +278,16 @@ pub mod os;
 pub mod read;
 pub mod seq;
 mod prng;
+
+// These tiny modules are here to avoid API breakage, probably only temporarily
+pub mod chacha {
+    //! The ChaCha random number generator.
+    pub use prng::ChaChaRng;
+}
+pub mod isaac {
+    //! The ISAAC random number generator.
+    pub use prng::{IsaacRng, Isaac64Rng};
+}
 
 /// A type that can be randomly generated using an `Rng`.
 ///
