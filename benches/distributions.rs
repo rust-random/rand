@@ -1,4 +1,5 @@
 #![feature(test)]
+#![cfg_attr(feature = "i128_support", feature(i128_type, i128))]
 
 extern crate test;
 extern crate rand;
@@ -46,7 +47,9 @@ macro_rules! distr_range_int {
 distr_range_int!(distr_range_i8, i8, 20i8, 100);
 distr_range_int!(distr_range_i16, i16, -500i16, 2000);
 distr_range_int!(distr_range_i32, i32, -200_000_000i32, 800_000_000);
-distr_range_int!(distr_range_i64, i64, 3i64, 134217671);
+distr_range_int!(distr_range_i64, i64, 3i64, 12345678901234);
+#[cfg(feature = "i128_support")]
+distr_range_int!(distr_range_i128, i128, -12345678901234i128, 12345678901234567890);
 
 macro_rules! distr_float {
     ($fnn:ident, $ty:ty, $distr:expr) => {

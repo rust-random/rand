@@ -141,17 +141,22 @@ mod tests {
     #[test]
     fn test_weighted_choice() {
         // this makes assumptions about the internal implementation of
-        // WeightedChoice, specifically: it doesn't reorder the items,
-        // it doesn't do weird things to the RNG (so 0 maps to 0, 1 to
-        // 1, internally; modulo a modulo operation).
+        // WeightedChoice. It may fail when the implementation in
+        // `distributions::range::RangeInt changes.
 
         macro_rules! t {
             ($items:expr, $expected:expr) => {{
                 let items = $items;
+                let mut total_weight = 0;
+                for item in &items { total_weight += item.weight; }
+
                 let wc = WeightedChoice::new(items);
                 let expected = $expected;
 
-                let mut rng = MockAddRng::new(0, 1);
+                // Use extremely large steps between the random numbers, because
+                // we test with small ranges and RangeInt is designed to prefer
+                // the most significant bits.
+                let mut rng = MockAddRng::new(0, !0 / (total_weight as u64));
 
                 for &val in expected.iter() {
                     assert_eq!(wc.sample(&mut rng), val)
@@ -166,12 +171,12 @@ mod tests {
                 Weighted { weight: 2, item: 21},
                 Weighted { weight: 0, item: 22},
                 Weighted { weight: 1, item: 23}),
-           [21,21, 23]);
+           [21, 21, 23]);
 
         // different weights
         t!(vec!(Weighted { weight: 4, item: 30},
                 Weighted { weight: 3, item: 31}),
-           [30,30,30,30, 31,31,31]);
+           [30, 31, 30, 31, 30, 31, 30]);
 
         // check that we're binary searching
         // correctly with some vectors of odd
@@ -189,7 +194,7 @@ mod tests {
                 Weighted { weight: 1, item: 54},
                 Weighted { weight: 1, item: 55},
                 Weighted { weight: 1, item: 56}),
-           [50, 51, 52, 53, 54, 55, 56]);
+           [50, 54, 51, 55, 52, 56, 53]);
     }
 
     #[test]
