@@ -437,13 +437,14 @@ pub mod le {
             assert_eq!(read_u32(&[1, 2, 3, 4]), 0x04030201);
             assert_eq!(read_u64(&[1, 2, 3, 4, 5, 6, 7, 8]), 0x0807060504030201);
             
-            let mut bytes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
             {
+                let mut bytes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
                 let slice = convert_slice_32(&mut bytes[..]);
                 assert_eq!(slice[0], 0x04030201);
                 assert_eq!(slice[3], 0x100F0E0D);
             }
             {
+                let mut bytes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
                 let slice = convert_slice_64(&mut bytes[..]);
                 assert_eq!(slice[0], 0x0807060504030201);
                 assert_eq!(slice[1], 0x100F0E0D0C0B0A09);
