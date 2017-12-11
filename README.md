@@ -27,8 +27,8 @@ extern crate rand;
 
 The 'master' branch tracks development code while the '0.3' branch tracks the
 latest stable release. New features are currently being released in an "unstable
-channel"; if you wish to opt-in to the latest releases (expect some breaking
-changes) specify `rand = "0.4.0-pre.0"`.
+channel"; if you wish to opt-in to the latest releases (expect more breaking
+changes in this channel) specify `rand = "0.4.0-pre.0"`.
 
 ## Examples
 
