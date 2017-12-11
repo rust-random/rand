@@ -253,7 +253,6 @@ use std::marker;
 use std::mem;
 use std::io;
 use std::rc::Rc;
-use std::num::Wrapping as w;
 
 pub use jitter::JitterRng;
 pub use os::OsRng;
@@ -262,27 +261,33 @@ pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
 
 #[cfg(target_pointer_width = "32")]
-use IsaacRng as IsaacWordRng;
+use prng::IsaacRng as IsaacWordRng;
 #[cfg(target_pointer_width = "64")]
-use Isaac64Rng as IsaacWordRng;
+use prng::Isaac64Rng as IsaacWordRng;
 
 use distributions::{Range, IndependentSample};
 use distributions::range::SampleRange;
 
+pub use prng::XorShiftRng;
+
 pub mod distributions;
-pub mod isaac;
-pub mod chacha;
 pub mod reseeding;
 mod rand_impls;
 pub mod jitter;
 pub mod os;
 pub mod read;
 pub mod seq;
+mod prng;
 
-#[allow(bad_style)]
-type w64 = w<u64>;
-#[allow(bad_style)]
-type w32 = w<u32>;
+// These tiny modules are here to avoid API breakage, probably only temporarily
+pub mod chacha {
+    //! The ChaCha random number generator.
+    pub use prng::ChaChaRng;
+}
+pub mod isaac {
+    //! The ISAAC random number generator.
+    pub use prng::{IsaacRng, Isaac64Rng};
+}
 
 /// A type that can be randomly generated using an `Rng`.
 ///
@@ -715,93 +720,6 @@ pub trait SeedableRng<Seed>: Rng {
     /// println!("{}", rng.gen::<f64>());
     /// ```
     fn from_seed(seed: Seed) -> Self;
-}
-
-/// An Xorshift[1] random number
-/// generator.
-///
-/// The Xorshift algorithm is not suitable for cryptographic purposes
-/// but is very fast. If you do not know for sure that it fits your
-/// requirements, use a more secure one such as `IsaacRng` or `OsRng`.
-///
-/// [1]: Marsaglia, George (July 2003). ["Xorshift
-/// RNGs"](http://www.jstatsoft.org/v08/i14/paper). *Journal of
-/// Statistical Software*. Vol. 8 (Issue 14).
-#[allow(missing_copy_implementations)]
-#[derive(Clone, Debug)]
-pub struct XorShiftRng {
-    x: w32,
-    y: w32,
-    z: w32,
-    w: w32,
-}
-
-impl XorShiftRng {
-    /// Creates a new XorShiftRng instance which is not seeded.
-    ///
-    /// The initial values of this RNG are constants, so all generators created
-    /// by this function will yield the same stream of random numbers. It is
-    /// highly recommended that this is created through `SeedableRng` instead of
-    /// this function
-    pub fn new_unseeded() -> XorShiftRng {
-        XorShiftRng {
-            x: w(0x193a6754),
-            y: w(0xa8a7d469),
-            z: w(0x97830e05),
-            w: w(0x113ba7bb),
-        }
-    }
-}
-
-impl Rng for XorShiftRng {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        let x = self.x;
-        let t = x ^ (x << 11);
-        self.x = self.y;
-        self.y = self.z;
-        self.z = self.w;
-        let w_ = self.w;
-        self.w = w_ ^ (w_ >> 19) ^ (t ^ (t >> 8));
-        self.w.0
-    }
-}
-
-impl SeedableRng<[u32; 4]> for XorShiftRng {
-    /// Reseed an XorShiftRng. This will panic if `seed` is entirely 0.
-    fn reseed(&mut self, seed: [u32; 4]) {
-        assert!(!seed.iter().all(|&x| x == 0),
-                "XorShiftRng.reseed called with an all zero seed.");
-
-        self.x = w(seed[0]);
-        self.y = w(seed[1]);
-        self.z = w(seed[2]);
-        self.w = w(seed[3]);
-    }
-
-    /// Create a new XorShiftRng. This will panic if `seed` is entirely 0.
-    fn from_seed(seed: [u32; 4]) -> XorShiftRng {
-        assert!(!seed.iter().all(|&x| x == 0),
-                "XorShiftRng::from_seed called with an all zero seed.");
-
-        XorShiftRng {
-            x: w(seed[0]),
-            y: w(seed[1]),
-            z: w(seed[2]),
-            w: w(seed[3]),
-        }
-    }
-}
-
-impl Rand for XorShiftRng {
-    fn rand<R: Rng>(rng: &mut R) -> XorShiftRng {
-        let mut tuple: (u32, u32, u32, u32) = rng.gen();
-        while tuple == (0, 0, 0, 0) {
-            tuple = rng.gen();
-        }
-        let (x, y, z, w_) = tuple;
-        XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) }
-    }
 }
 
 /// A wrapper for generating floating point numbers uniformly in the
