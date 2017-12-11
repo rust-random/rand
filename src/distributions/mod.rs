@@ -165,6 +165,8 @@ fn ziggurat<R: Rng+?Sized, P, Z>(
         // Of the remaining 11 least significant bits we use 8 to construct `i`.
         // This saves us generating a whole extra random number, while the added
         // precision of using 64 bits for f64 does not buy us much.
+        // Because for some RNG's the least significant bits can be of lower
+        // statistical quality, we use bits 3..10 for i.
         let bits: u64 = uniform(rng);
 
         // u is either U(-1, 1) or U(0, 1) depending on if this is a
@@ -176,7 +178,7 @@ fn ziggurat<R: Rng+?Sized, P, Z>(
                 } else {
                     bits.closed_open01_fixed()
                 };
-        let i = (bits & 0xff) as usize;
+        let i = ((bits >> 3) & 0xff) as usize;
 
         let x = u * x_tab[i];
 
