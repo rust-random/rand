@@ -75,11 +75,13 @@ macro_rules! gen_range_int {
         #[bench]
         fn $fnn(b: &mut Bencher) {
             let mut rng = XorShiftRng::new().unwrap();
+            let high = $high;
 
             b.iter(|| {
                 for _ in 0..::RAND_BENCH_N {
-                    let x: $ty = Range::new($low, $high).sample(&mut rng);
+                    let x: $ty = Range::sample_single($low, high, &mut rng);
                     black_box(x);
+                    black_box(high);
                 }
             });
             b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
