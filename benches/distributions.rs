@@ -67,3 +67,29 @@ distr!(distr_normal, f64, Normal::new(-2.71828, 3.14159));
 distr!(distr_log_normal, f64, LogNormal::new(-2.71828, 3.14159));
 distr!(distr_gamma_large_shape, f64, Gamma::new(10., 1.0));
 distr!(distr_gamma_small_shape, f64, Gamma::new(0.1, 1.0));
+
+
+// construct and sample from a range
+macro_rules! gen_range_int {
+    ($fnn:ident, $ty:ty, $low:expr, $high:expr) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = XorShiftRng::new().unwrap();
+
+            b.iter(|| {
+                for _ in 0..::RAND_BENCH_N {
+                    let x: $ty = Range::new($low, $high).sample(&mut rng);
+                    black_box(x);
+                }
+            });
+            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+        }
+    }
+}
+
+gen_range_int!(gen_range_i8, i8, 20i8, 100);
+gen_range_int!(gen_range_i16, i16, -500i16, 2000);
+gen_range_int!(gen_range_i32, i32, -200_000_000i32, 800_000_000);
+gen_range_int!(gen_range_i64, i64, 3i64, 12345678901234);
+#[cfg(feature = "i128_support")]
+gen_range_int!(gen_range_i128, i128, -12345678901234i128, 12345678901234567890);
