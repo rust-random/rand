@@ -20,4 +20,4 @@ quote = "0.3"
 syn = "0.11"
 
 [dev-dependencies]
-rand = { path = "..", version = "0.3" }
+rand = { path = "..", version = "0.4.0-pre.0" }
