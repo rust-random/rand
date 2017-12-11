@@ -1021,7 +1021,7 @@ pub fn random<T: Rand>() -> T {
 }
 
 #[inline(always)]
-#[deprecated(since="0.3.18", note="renamed to seq::sample_iter")]
+#[deprecated(since="0.4.0", note="renamed to seq::sample_iter")]
 /// DEPRECATED: use `seq::sample_iter` instead.
 ///
 /// Randomly sample up to `amount` elements from a finite iterator.
