@@ -11,7 +11,7 @@
 //! The exponential distribution.
 
 use {Rng};
-use distributions::{ziggurat, ziggurat_tables, Distribution, Uniform01, Rand};
+use distributions::{ziggurat, ziggurat_tables, Distribution, Uniform01};
 
 /// Generates Exp(1) random numbers.
 ///
@@ -43,7 +43,7 @@ pub fn exp1<R: Rng+?Sized>(rng: &mut R) -> f64 {
     }
     #[inline]
     fn zero_case<R:Rng+?Sized>(rng: &mut R, _u: f64) -> f64 {
-        let x = f64::rand(rng, Uniform01);
+        let x: f64 = Uniform01.sample(rng);
         ziggurat_tables::ZIG_EXP_R - x.ln()
     }
 

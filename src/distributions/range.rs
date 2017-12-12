@@ -10,7 +10,6 @@
 
 //! A distribution generating numbers within a given range.
 
-use Rand;
 use Rng;
 use distributions::{Distribution, Uniform};
 use utils::FloatConversions;
@@ -245,7 +244,7 @@ macro_rules! range_int_impl {
                     // casting is a no-op.
                     let zone = self.zone as $signed as $i_large as $u_large;
                     loop {
-                        let v: $u_large = Rand::rand(rng, Uniform);
+                        let v: $u_large = Uniform.sample(rng);
                         if $use_mult {
                             let (high, low) = v.wmul(range);
                             if low <= zone {
@@ -259,7 +258,7 @@ macro_rules! range_int_impl {
                     }
                 } else {
                     // Sample from the entire integer range.
-                    Rand::rand(rng, Uniform)
+                    Uniform.sample(rng)
                 }
             }
         }

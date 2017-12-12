@@ -14,7 +14,7 @@ use core::char;
 use core::mem;
 
 use Rng;
-use distributions::{Distribution, Rand};
+use distributions::Distribution;
 use utils::FloatConversions;
 
 // ----- convenience functions -----
@@ -23,8 +23,8 @@ use utils::FloatConversions;
 /// 
 /// This method has precisely two template parameters. To fix the output type,
 /// use the syntax `uniform::<u32, _>(rng)`.
-pub fn uniform<T: Rand<Uniform>, R: Rng+?Sized>(rng: &mut R) -> T {
-    T::rand(rng, Uniform)
+pub fn uniform<T, R: Rng+?Sized>(rng: &mut R) -> T where Uniform: Distribution<T> {
+    Uniform.sample(rng)
 }
 
 /// Sample a `char`, uniformly distributed over all Unicode scalar values,
@@ -91,9 +91,9 @@ pub struct AsciiWordChar;
 impl Distribution<isize> for Uniform {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> isize {
         if mem::size_of::<isize>() == 4 {
-            i32::rand(rng, Uniform) as isize
+            Distribution::<i32>::sample(&Uniform, rng) as isize
         } else {
-            i64::rand(rng, Uniform) as isize
+            Distribution::<i64>::sample(&Uniform, rng) as isize
         }
     }
 }
@@ -138,9 +138,9 @@ impl Distribution<usize> for Uniform {
     #[inline]
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> usize {
         if mem::size_of::<usize>() == 4 {
-            u32::rand(rng, Uniform) as usize
+            Distribution::<u32>::sample(&Uniform, rng) as usize
         } else {
-            u64::rand(rng, Uniform) as usize
+            Distribution::<u64>::sample(&Uniform, rng) as usize
         }
     }
 }

@@ -13,7 +13,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use {Rng, StdRng, NewSeeded, Rand, Default, Error};
+use {Rng, StdRng, NewSeeded, Distribution, Default, Sample, Error};
 
 use reseeding::{ReseedingRng, ReseedWithNew};
 
@@ -100,7 +100,7 @@ pub fn thread_rng() -> ThreadRng {
 /// Caching the thread local random number generator:
 ///
 /// ```
-/// use rand::{Rand, Default};
+/// use rand::{Rand, Sample};
 ///
 /// let mut v = vec![1, 2, 3];
 ///
@@ -113,15 +113,12 @@ pub fn thread_rng() -> ThreadRng {
 /// let mut rng = rand::thread_rng();
 ///
 /// for x in v.iter_mut() {
-///     *x = Rand::rand(&mut rng, Default);
+///     *x = rng.gen()
 /// }
 /// ```
-/// 
-/// Note that the above example uses `SampleDefault` which is a zero-sized
-/// marker type.
 #[inline]
-pub fn random<T: Rand<Default>>() -> T {
-    T::rand(&mut thread_rng(), Default)
+pub fn random<T>() -> T where Default: Distribution<T> {
+    thread_rng().sample(Default)
 }
 
 /// Generates a random value using the thread-local random number generator.
@@ -153,6 +150,6 @@ pub fn random<T: Rand<Default>>() -> T {
 /// let v = f64::rand(&mut rng, range);
 /// ```
 #[inline]
-pub fn random_with<D, T: Rand<D>>(distribution: D) -> T {
-    T::rand(&mut thread_rng(), distribution)
+pub fn random_with<D, T>(distribution: D) -> T where D: Distribution<T> {
+    thread_rng().sample(distribution)
 }

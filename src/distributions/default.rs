@@ -11,7 +11,7 @@
 //! Generic value creation
 
 use Rng;
-use distributions::{Distribution, Rand};
+use distributions::Distribution;
 use distributions::uniform::{Uniform, Uniform01, codepoint};
 
 /// A generic random value distribution. Generates values using what appears to
@@ -32,27 +32,27 @@ pub struct Default;
 
 // ----- implementations -----
 
-impl<T: Rand<Uniform>> Distribution<T> for Default {
+impl<T> Distribution<T> for Default where Uniform: Distribution<T>{
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T {
-        T::rand(rng, Uniform)
+        Uniform.sample(rng)
     }
 }
 
 // FIXME: https://github.com/rust-lang/rust/issues/23341
-// impl<T: Rand<Uniform01>> Distribution<T> for Default {
+// impl<T> Distribution<T> for Default where Uniform01: Distribution<T>{
 //     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T {
-//         T::rand(rng, Uniform01)
+//         Uniform01.sample(rng)
 //     }
 // }
 // workaround above issue:
 impl Distribution<f32> for Default {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> f32 {
-        f32::rand(rng, Uniform01)
+        Uniform01.sample(rng)
     }
 }
 impl Distribution<f64> for Default {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> f64 {
-        f64::rand(rng, Uniform01)
+        Uniform01.sample(rng)
     }
 }
 
