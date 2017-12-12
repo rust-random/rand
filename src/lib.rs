@@ -243,7 +243,7 @@
 
 #![deny(missing_debug_implementations)]
 
-#![cfg_attr(feature = "i128_support", feature(i128_type))]
+#![cfg_attr(feature = "i128_support", feature(i128_type, i128))]
 
 #[cfg(test)] #[macro_use] extern crate log;
 
