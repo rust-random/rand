@@ -14,8 +14,6 @@
 //! generated values; for example `Range` needs to know its upper and lower
 //! bounds. Distributions use the `Distribution` trait to yield values: call
 //! `distr.sample(&mut rng)` to get a random variable.
-//!
-//! TODO: is it worth exposing both submodules and re-exporting their members?
 
 use Rng;
 
