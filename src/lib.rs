@@ -311,8 +311,8 @@ pub mod isaac {
 ///
 /// [`Open01`]: struct.Open01.html
 /// [`Closed01`]: struct.Closed01.html
-/// [`Exp1`]: struct.Exp1.html
-/// [`StandardNormal`]: struct.StandardNormal.html
+/// [`Exp1`]: distributions/exponential/struct.Exp1.html
+/// [`StandardNormal`]: distributions/normal/struct.StandardNormal.html
 ///
 /// The following aggregate types also implement `Rand` as long as their
 /// component types implement it:
