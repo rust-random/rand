@@ -87,7 +87,7 @@ pub trait SampleRange: PartialOrd+Sized {
 }
 
 /// Helper trait handling actual range sampling.
-pub trait RangeImpl {
+pub trait RangeImpl: Sized {
     /// The type sampled by this implementation.
     type X: PartialOrd;
 
@@ -104,7 +104,11 @@ pub trait RangeImpl {
 
     /// Sample a single value.
     fn sample_single<R: Rng+?Sized>(low: Self::X, high: Self::X, rng: &mut R)
-        -> Self::X;
+        -> Self::X
+    {
+        let range: Self = RangeImpl::new(low, high);
+        range.sample(rng)
+    }
 }
 
 /// Implementation of `RangeImpl` for integer types.
@@ -490,11 +494,6 @@ macro_rules! range_float_impl {
                     }
                 }
             }
-
-            fn sample_single<R: Rng+?Sized>(low: Self::X, high: Self::X, rng: &mut R) -> Self::X {
-                let range: Self = RangeImpl::new(low, high);
-                range.sample(rng)
-            }
         }
     }
 }
@@ -622,10 +621,6 @@ mod tests {
             }
             fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> Self::X {
                 MyF32 { x: self.inner.sample(rng) }
-            }
-            fn sample_single<R: Rng+?Sized>(low: Self::X, high: Self::X, rng: &mut R) -> Self::X {
-                let range: Self = RangeImpl::new(low, high);
-                range.sample(rng)
             }
         }
         impl SampleRange for MyF32 {
