@@ -8,7 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Generating numbers between two others.
+//! A distribution generating numbers within a given range.
 
 use Rand;
 use Rng;
@@ -18,22 +18,21 @@ use utils::FloatConversions;
 /// Sample values uniformly between two bounds.
 ///
 /// This gives a uniform distribution (assuming the RNG used to sample
-/// it is itself uniform & the `RangeImpl` implementation is correct),
+/// it is itself uniform and the `RangeImpl` implementation is correct),
 /// even for edge cases like `low = 0u8`,
 /// `high = 170u8`, for which a naive modulo operation would return
 /// numbers less than 85 with double the probability to those greater
 /// than 85.
 ///
-/// Types should attempt to sample in `[low, high)`, i.e., not
-/// including `high`, but this may be very difficult. All the
-/// primitive integer types satisfy this property, and the float types
-/// normally satisfy it, but rounding may mean `high` can occur.
+/// Types should attempt to sample in `[low, high)` for
+/// `Range::new(low, high)`, i.e., excluding `high`, but this may be very
+/// difficult. All the primitive integer types satisfy this property, and the
+/// float types normally satisfy it, but rounding may mean `high` can occur.
 ///
 /// # Example
 ///
 /// ```rust
-/// use rand::distributions::Distribution;
-/// use rand::distributions::range::Range;
+/// use rand::distributions::{Distribution, Range};
 ///
 /// fn main() {
 ///     let between = Range::new(10, 10000);
@@ -50,18 +49,19 @@ pub struct Range<T: RangeImpl> {
     inner: T,
 }
 
-// Range must be parameterised so that `Self` is fully typed, but we don't
-// actually use this type, so we just use any valid type here. (Minor lang bug?)
+/// Ignore the `RangeInt<i32>` parameterisation; these non-member functions are
+/// available to all range types. (Rust requires a type, and won't accept
+/// `T: RangeImpl`. Consider this a minor language issue.)
 impl Range<RangeInt<i32>> {
-    /// Create a new `Range` instance that samples uniformly from
-    /// `[low, high)`. Panics if `low >= high`.
+    /// Create a new `Range` instance which samples uniformly from the half
+    /// open range `[low, high)` (excluding `high`). Panics if `low >= high`.
     pub fn new<X: SampleRange>(low: X, high: X) -> Range<X::T> {
         assert!(low < high, "Range::new called with `low >= high`");
         Range { inner: RangeImpl::new(low, high) }
     }
 
-    /// Create a new `Range` instance that samples uniformly from
-    /// `[low, high]` (inclusive). Panics if `low >= high`.
+    /// Create a new `Range` instance which samples uniformly from the closed
+    /// range `[low, high]` (inclusive). Panics if `low >= high`.
     pub fn new_inclusive<X: SampleRange>(low: X, high: X) -> Range<X::T> {
         assert!(low < high, "Range::new called with `low >= high`");
         Range { inner: RangeImpl::new_inclusive(low, high) }
@@ -81,28 +81,74 @@ impl<T: RangeImpl> Distribution<T::X> for Range<T> {
     }
 }
 
-/// Helper trait for creating implementations of `RangeImpl`.
+/// Helper trait for creating objects using the correct implementation of
+/// `RangeImpl` for the sampling type; this enables `Range::new(a, b)` to work.
 pub trait SampleRange: PartialOrd+Sized {
     type T: RangeImpl<X = Self>;
 }
 
 /// Helper trait handling actual range sampling.
+/// 
+/// If you want to implement `Range` sampling for your own type, then
+/// implement both this trait and `SampleRange`:
+/// 
+/// ```rust
+/// use rand::{Rng, thread_rng, Distribution};
+/// use rand::distributions::range::{Range, SampleRange, RangeImpl, RangeFloat};
+/// 
+/// #[derive(Clone, Copy, PartialEq, PartialOrd)]
+/// struct MyF32(f32);
+/// 
+/// #[derive(Clone, Copy, Debug)]
+/// struct RangeMyF32 {
+///     inner: RangeFloat<f32>,
+/// }
+/// impl RangeImpl for RangeMyF32 {
+///     type X = MyF32;
+///     fn new(low: Self::X, high: Self::X) -> Self {
+///         RangeMyF32 {
+///             inner: RangeFloat::<f32>::new(low.0, high.0),
+///         }
+///     }
+///     fn new_inclusive(low: Self::X, high: Self::X) -> Self {
+///         RangeImpl::new(low, high)
+///     }
+///     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> Self::X {
+///         MyF32(self.inner.sample(rng))
+///     }
+/// }
+/// 
+/// impl SampleRange for MyF32 {
+///     type T = RangeMyF32;
+/// }
+/// 
+/// let (low, high) = (MyF32(17.0f32), MyF32(22.0f32));
+/// let range = Range::new(low, high);
+/// let x = range.sample(&mut thread_rng());
+/// ```
 pub trait RangeImpl: Sized {
     /// The type sampled by this implementation.
     type X: PartialOrd;
 
-    /// Construct self.
+    /// Construct self, with inclusive lower bound and exclusive upper bound
+    /// `[low, high)`.
     ///
-    /// This should not be called directly. `Range::new` asserts that
-    /// `low < high` before calling this.
+    /// Usually users should not call this directly but instead use
+    /// `Range::new`, which asserts that `low < high` before calling this.
     fn new(low: Self::X, high: Self::X) -> Self;
 
+    /// Construct self, with inclusive bounds `[low, high]`.
+    ///
+    /// Usually users should not call this directly but instead use
+    /// `Range::new`, which asserts that `low < high` before calling this.
     fn new_inclusive(low: Self::X, high: Self::X) -> Self;
 
     /// Sample a value.
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> Self::X;
 
-    /// Sample a single value.
+    /// Sample a single value uniformly from a range with inclusive lower bound
+    /// and exclusive upper bound `[low, high)`.
+    /// Panics if `low >= high`.
     fn sample_single<R: Rng+?Sized>(low: Self::X, high: Self::X, rng: &mut R)
         -> Self::X
     {
@@ -386,14 +432,18 @@ wmul_impl_128! { u128 }
 #[derive(Clone, Copy, Debug)]
 pub enum RangeFloat<X> {
     // A range that is completely positive
+    #[doc(hidden)]
     Positive { offset: X, scale: X },
     // A range that is completely negative
+    #[doc(hidden)]
     Negative { offset: X, scale: X },
     // A range that is goes from negative to positive, but has more positive
     // than negative numbers
+    #[doc(hidden)]
     PosAndNeg { cutoff: X, scale: X },
     // A range that is goes from negative to positive, but has more negative
     // than positive numbers
+    #[doc(hidden)]
     NegAndPos { cutoff: X, scale: X },
 }
 
