@@ -154,8 +154,8 @@
 //! [Monty Hall Problem]: http://en.wikipedia.org/wiki/Monty_Hall_problem
 //!
 //! ```
-//! use rand::Rng;
-//! use rand::distributions::{Distribution, Range, uniform};
+//! use rand::{Rng, Sample};
+//! use rand::distributions::{Distribution, Range};
 //! use rand::distributions::range::RangeInt;
 //! use rand::sequences::Choose;
 //!
@@ -176,7 +176,7 @@
 //!     let open = game_host_open(car, choice, rng);
 //!
 //!     // Shall we switch?
-//!     let switch = uniform(rng);
+//!     let switch = rng.gen();
 //!     if switch {
 //!         choice = switch_door(choice, open);
 //!     }
@@ -492,8 +492,7 @@ impl SeedFromRng for StdRng {
 #[cfg(test)]
 mod test {
     use {Rng, thread_rng, Sample, Error};
-    use mock::MockAddRng;
-    use distributions::{uniform};
+    use mock::MockAddRng;   
     use distributions::{Uniform, Range, Exp};
     use sequences::Shuffle;
     use std::iter::repeat;
@@ -564,7 +563,7 @@ mod test {
     #[test]
     fn test_thread_rng() {
         let mut r = thread_rng();
-        uniform::<i32, _>(&mut r);
+        r.sample::<i32, _>(Uniform);
         let mut v = [1, 1, 1];
         v.shuffle(&mut r);
         let b: &[_] = &[1, 1, 1];
@@ -578,7 +577,7 @@ mod test {
         {
             let r = &mut rng as &mut Rng;
             r.next_u32();
-            uniform::<i32, _>(r);
+            r.sample::<i32, _>(Uniform);
             let mut v = [1, 1, 1];
             v[..].shuffle(r);
             let b: &[_] = &[1, 1, 1];
@@ -588,7 +587,7 @@ mod test {
         {
             let mut r = Box::new(rng) as Box<Rng>;
             r.next_u32();
-            uniform::<i32, _>(&mut r);
+            r.sample::<i32, _>(Uniform);
             let mut v = [1, 1, 1];
             v[..].shuffle(&mut *r);
             let b: &[_] = &[1, 1, 1];

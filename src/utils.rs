@@ -271,7 +271,8 @@ float_impls! { f64, u64, 64, 52, 0xf_ffff_ffff_ffff, 1023, Rng::next_u64 }
 #[cfg(test)]
 mod tests {
     use super::FloatConversions;
-    use distributions::uniform;
+    use Sample;
+    use distributions::Uniform;
 
     #[test]
     fn closed_open01_edge_cases() {
@@ -315,14 +316,14 @@ mod tests {
         // These constants happen to generate the lowest and highest floats in
         // the range.
         let mut rng = ::test::rng();
-        let mut bits: u32 = uniform(&mut rng);
+        let mut bits: u32 = rng.sample(Uniform);
         bits = bits & 0x1ff; // 9 bits with no influence
 
         assert!((bits | 0).closed_open01_fixed() == 0.0);
         assert!((bits | 0xfffffe00).closed_open01_fixed()
                 == 0.9999999); // 1 - 2^-23
 
-        let mut bits: u64 = uniform(&mut rng);
+        let mut bits: u64 = rng.sample(Uniform);
         bits = bits & 0xfff; // 12 bits with no influence
 
         assert!((bits | 0).closed_open01_fixed() == 0.0);
@@ -336,13 +337,13 @@ mod tests {
         // These constants happen to generate the lowest and highest floats in
         // the range.
         let mut rng = ::test::rng();
-        let mut bits: u32 = uniform(&mut rng);
+        let mut bits: u32 = rng.sample(Uniform);
         bits = bits & 0x1ff; // 9 bits with no influence
 
         assert!((bits | 0).open_closed01_fixed() == 1.1920929e-7); // 2^-23
         assert!((bits | 0xfffffe00).open_closed01_fixed() == 1.0);
 
-        let mut bits: u64 = uniform(&mut rng);
+        let mut bits: u64 = rng.sample(Uniform);
         bits = bits & 0xfff; // 12 bits with no influence
 
         assert!((bits | 0).open_closed01_fixed() ==
@@ -356,14 +357,14 @@ mod tests {
         // These constants happen to generate the lowest and highest floats in
         // the range.
         let mut rng = ::test::rng();
-        let mut bits: u32 = uniform(&mut rng);
+        let mut bits: u32 = rng.sample(Uniform);
         bits = bits & 0x1ff; // 9 bits with no influence
 
         assert!((bits | 0).closed_open11_fixed() == -1.0);
         assert!((bits | 0xfffffe00).closed_open11_fixed()
                 == 0.99999976); // 1 - 2^-22
 
-        let mut bits: u64 = uniform(&mut rng);
+        let mut bits: u64 = rng.sample(Uniform);
         bits = bits & 0xfff; // 12 bits with no influence
 
         assert!((bits | 0).closed_open11_fixed() == -1.0);

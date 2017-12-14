@@ -17,52 +17,6 @@ use Rng;
 use distributions::Distribution;
 use utils::FloatConversions;
 
-// ----- convenience functions -----
-
-/// Sample values uniformly over the whole range supported by the type
-/// 
-/// This method has precisely two template parameters. To fix the output type,
-/// use the syntax `uniform::<u32, _>(rng)`.
-pub fn uniform<T, R: Rng+?Sized>(rng: &mut R) -> T where Uniform: Distribution<T> {
-    Uniform.sample(rng)
-}
-
-/// Sample a `char`, uniformly distributed over all Unicode scalar values,
-/// i.e. all code points in the range `0...0x10_FFFF`, except for the range
-/// `0xD800...0xDFFF` (the surrogate code points).  This includes
-/// unassigned/reserved code points.
-/// 
-/// TODO: should this be removed in favour of a distribution?
-#[inline]
-pub fn codepoint<R: Rng+?Sized>(rng: &mut R) -> char {
-    // a char is 21 bits
-    const CHAR_MASK: u32 = 0x001f_ffff;
-    loop {
-        // Rejection sampling. About 0.2% of numbers with at most
-        // 21-bits are invalid codepoints (surrogates), so this
-        // will succeed first go almost every time.
-        match char::from_u32(rng.next_u32() & CHAR_MASK) {
-            Some(c) => return c,
-            None => {}
-        }
-    }
-}
-
-/// Sample a `char`, uniformly distributed over ASCII letters and numbers:
-/// a-z, A-Z and 0-9.
-/// 
-/// TODO: should this be removed in favour of `AsciiWordChar`?
-#[inline]
-pub fn ascii_word_char<R: Rng+?Sized>(rng: &mut R) -> char {
-    use sequences::Choose;
-    const GEN_ASCII_STR_CHARSET: &'static [u8] =
-        b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-            abcdefghijklmnopqrstuvwxyz\
-            0123456789";
-    *GEN_ASCII_STR_CHARSET.choose(rng).unwrap() as char
-}
-
-
 // ----- Sampling distributions -----
 
 /// Sample values uniformly over the whole range supported by the type
@@ -81,7 +35,15 @@ pub struct Open01;
 #[derive(Debug)]
 pub struct Closed01;
 
-/// Sample values uniformly from the ASCII ranges z-a, A-Z, and 0-9.
+/// Sample a `char`, uniformly distributed over all Unicode scalar values,
+/// i.e. all code points in the range `0...0x10_FFFF`, except for the range
+/// `0xD800...0xDFFF` (the surrogate code points).  This includes
+/// unassigned/reserved code points.
+#[derive(Debug)]
+pub struct Codepoint;
+
+/// Sample a `char`, uniformly distributed over ASCII letters and numbers:
+/// a-z, A-Z and 0-9.
 #[derive(Debug)]
 pub struct AsciiWordChar;
 
@@ -238,9 +200,30 @@ float_impls! { f32, Rng::next_u32 }
 float_impls! { f64, Rng::next_u64 }
 
 
+impl Distribution<char> for Codepoint {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
+        // a char is 21 bits
+        const CHAR_MASK: u32 = 0x001f_ffff;
+        loop {
+            // Rejection sampling. About 0.2% of numbers with at most
+            // 21-bits are invalid codepoints (surrogates), so this
+            // will succeed first go almost every time.
+            match char::from_u32(rng.next_u32() & CHAR_MASK) {
+                Some(c) => return c,
+                None => {}
+            }
+        }
+    }
+}
+
 impl Distribution<char> for AsciiWordChar {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
-        ascii_word_char(rng)
+        use sequences::Choose;
+        const GEN_ASCII_STR_CHARSET: &'static [u8] =
+            b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                abcdefghijklmnopqrstuvwxyz\
+                0123456789";
+        *GEN_ASCII_STR_CHARSET.choose(rng).unwrap() as char
     }
 }
 
@@ -248,8 +231,8 @@ impl Distribution<char> for AsciiWordChar {
 #[cfg(test)]
 mod tests {
     use {Sample, thread_rng, iter};
-    use distributions::{Uniform, Uniform01, Open01, Closed01};
-    use distributions::uniform::{codepoint, ascii_word_char};
+    use distributions::{Uniform, Uniform01, Open01, Closed01,
+            Codepoint, AsciiWordChar};
     
     #[test]
     fn test_integers() {
@@ -276,11 +259,11 @@ mod tests {
     fn test_chars() {
         let mut rng = ::test::rng();
         
-        let _ = codepoint(&mut rng);
-        let c = ascii_word_char(&mut rng);
+        let _ = rng.sample(Codepoint);
+        let c = rng.sample(AsciiWordChar);
         assert!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
         
-        let word: String = iter(&mut rng).take(5).map(|rng| ascii_word_char(rng)).collect();
+        let word: String = iter(&mut rng).take(5).map(|rng| rng.sample(AsciiWordChar)).collect();
         assert_eq!(word.len(), 5);
     }
 

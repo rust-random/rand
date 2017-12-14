@@ -36,14 +36,14 @@ pub struct Iter<'a, R: Rng+?Sized+'a> {
 /// # Example
 ///
 /// ```
-/// use rand::{thread_rng, Rng, iter};
-/// use rand::distributions::{uniform, ascii_word_char};
+/// use rand::{thread_rng, Rng, Sample, iter};
+/// use rand::distributions::{Uniform, AsciiWordChar};
 ///
 /// let mut rng = thread_rng();
-/// let x: Vec<u32> = iter(&mut rng).take(10).map(|rng| uniform(rng)).collect();
+/// let x: Vec<u32> = iter(&mut rng).take(10).map(|rng| rng.sample(Uniform)).collect();
 /// println!("{:?}", x);
 /// 
-/// let w: String = iter(&mut rng).take(6).map(|rng| ascii_word_char(rng)).collect();
+/// let w: String = iter(&mut rng).take(6).map(|rng| rng.sample(AsciiWordChar)).collect();
 /// println!("{}", w);
 /// ```
 pub fn iter<'a, R: Rng+?Sized+'a>(rng: &'a mut R) -> Iter<'a, R> {
@@ -159,8 +159,8 @@ impl<'a, R:?Sized+'a, U, F> Iterator for FlatMap<'a, R, U, F>
 
 #[cfg(test)]
 mod tests {
-    use {Rng, thread_rng, iter};
-    use distributions::{uniform, ascii_word_char};
+    use {Rng, Sample, thread_rng, iter};
+    use distributions::{Uniform, AsciiWordChar};
     
     #[test]
     fn test_iter() {
@@ -168,10 +168,10 @@ mod tests {
         
         let x: Vec<()> = iter(&mut rng).take(10).map(|_| ()).collect();
         assert_eq!(x.len(), 10);
-        let y: Vec<u32> = iter(&mut rng).take(10).map(|rng| uniform(rng)).collect();
+        let y: Vec<u32> = iter(&mut rng).take(10).map(|rng| rng.sample(Uniform)).collect();
         assert_eq!(y.len(), 10);
         let z: Vec<u32> = iter(&mut rng).take(10).flat_map(|rng|
-                vec![uniform(rng), uniform(rng)].into_iter()).collect();
+                vec![rng.sample(Uniform), rng.sample(Uniform)].into_iter()).collect();
         assert_eq!(z.len(), 20);
         let w: Vec<String> = iter(&mut rng).take(10).flat_map(|_| vec![].into_iter()).collect();
         assert_eq!(w.len(), 0);
@@ -181,7 +181,7 @@ mod tests {
     fn test_dyn_dispatch() {
         let r: &mut Rng = &mut thread_rng();
         
-        let x: String = iter(r).take(10).map(|rng| ascii_word_char(rng)).collect();
+        let x: String = iter(r).take(10).map(|rng| rng.sample(AsciiWordChar)).collect();
         assert_eq!(x.len(), 10);
     }
 }

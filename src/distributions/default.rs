@@ -12,7 +12,7 @@
 
 use Rng;
 use distributions::Distribution;
-use distributions::uniform::{Uniform, Uniform01, codepoint};
+use distributions::uniform::{Uniform, Uniform01, Codepoint};
 
 /// A generic random value distribution. Generates values using what appears to
 /// be "the best" distribution for each type, but ultimately the choice is arbitrary.
@@ -21,10 +21,7 @@ use distributions::uniform::{Uniform, Uniform01, codepoint};
 /// 
 /// *   [`Uniform`] for integer types
 /// *   [`Uniform01`] for floating point types
-/// 
-/// Makes use of the following methods:
-/// 
-/// *   [`codepoint`] for `char`
+/// *   [`Codepoint`] for `char`
 /// 
 /// TODO: link
 #[derive(Debug)]
@@ -58,7 +55,7 @@ impl Distribution<f64> for Default {
 
 impl Distribution<char> for Default {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
-        codepoint(rng)
+        Codepoint.sample(rng)
     }
 }
 
