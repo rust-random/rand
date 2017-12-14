@@ -15,7 +15,7 @@ use core::slice;
 
 use rand_core::{impls, le};
 
-use {Rng, SeedFromRng, SeedableRng, Error};
+use {Rng, CryptoRng, SeedFromRng, SeedableRng, Error};
 
 /// A cryptographically secure random number generator that uses the HC-128
 /// algorithm.
@@ -414,6 +414,8 @@ impl SeedableRng for Hc128Rng {
         Hc128Rng::init(&le::convert_slice_32(&mut seed))
     }
 }
+
+impl CryptoRng for Hc128Rng {}
 
 #[cfg(test)]
 mod test {
