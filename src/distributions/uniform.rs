@@ -247,32 +247,29 @@ impl Distribution<char> for AsciiWordChar {
 
 #[cfg(test)]
 mod tests {
-    use {thread_rng, iter};
-    use distributions::{Rand, uniform, Uniform, Uniform01, Open01, Closed01};
+    use {Sample, thread_rng, iter};
+    use distributions::{Uniform, Uniform01, Open01, Closed01};
     use distributions::uniform::{codepoint, ascii_word_char};
     
     #[test]
     fn test_integers() {
         let mut rng = ::test::rng();
         
-        let _: i32 = Rand::rand(&mut rng, Uniform);
-        let _ = i32::rand(&mut rng, Uniform);
-        
-        let _: isize = uniform(&mut rng);
-        let _: i8 = uniform(&mut rng);
-        let _: i16 = uniform(&mut rng);
-        let _: i32 = uniform(&mut rng);
-        let _: i64 = uniform(&mut rng);
+        rng.sample::<isize, _>(Uniform);
+        rng.sample::<i8, _>(Uniform);
+        rng.sample::<i16, _>(Uniform);
+        rng.sample::<i32, _>(Uniform);
+        rng.sample::<i64, _>(Uniform);
         #[cfg(feature = "i128_support")]
-        let _: i128 = uniform(&mut rng);
+        rng.sample::<i128, _>(Uniform);
         
-        let _: usize = uniform(&mut rng);
-        let _: u8 = uniform(&mut rng);
-        let _: u16 = uniform(&mut rng);
-        let _: u32 = uniform(&mut rng);
-        let _: u64 = uniform(&mut rng);
+        rng.sample::<usize, _>(Uniform);
+        rng.sample::<u8, _>(Uniform);
+        rng.sample::<u16, _>(Uniform);
+        rng.sample::<u32, _>(Uniform);
+        rng.sample::<u64, _>(Uniform);
         #[cfg(feature = "i128_support")]
-        let _: u128 = uniform(&mut rng);
+        rng.sample::<u128, _>(Uniform);
     }
     
     #[test]
@@ -289,9 +286,9 @@ mod tests {
 
     #[test]
     fn test_f64() {
-        let mut r = thread_rng();
-        let a: f64 = Rand::rand(&mut r, Uniform01);
-        let b = f64::rand(&mut r, Uniform01);
+        let mut rng = thread_rng();
+        let a: f64 = rng.sample(Uniform01);
+        let b = rng.sample::<f64, _>(Uniform01);
         assert!(0.0 <= a && a < 1.0);
         assert!(0.0 <= b && b < 1.0);
     }
@@ -303,10 +300,10 @@ mod tests {
         let mut rng = thread_rng();
         for _ in 0..1_000 {
             // strict inequalities
-            let f = f64::rand(&mut rng, Open01);
+            let f: f64 = rng.sample(Open01);
             assert!(0.0 < f && f < 1.0);
 
-            let f = f32::rand(&mut rng, Open01);
+            let f: f32 = rng.sample(Open01);
             assert!(0.0 < f && f < 1.0);
         }
     }
@@ -316,10 +313,10 @@ mod tests {
         let mut rng = thread_rng();
         for _ in 0..1_000 {
             // strict inequalities
-            let f = f64::rand(&mut rng, Closed01);
+            let f: f64 = rng.sample(Closed01);
             assert!(0.0 <= f && f <= 1.0);
 
-            let f = f32::rand(&mut rng, Closed01);
+            let f: f32 = rng.sample(Closed01);
             assert!(0.0 <= f && f <= 1.0);
         }
     }

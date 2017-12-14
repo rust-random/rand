@@ -10,7 +10,7 @@
 
 //! A collection of utility functions
 //!
-//! This module exposes some utility functions used internally by the `Rand`
+//! This module exposes some utility functions used internally by the `rand`
 //! crate. They are not the intended or most ergonomic way to use the library.
 //!
 //! The `FloatConversions` trait provides the building blocks to convert a

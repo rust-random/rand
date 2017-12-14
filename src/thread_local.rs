@@ -100,7 +100,7 @@ pub fn thread_rng() -> ThreadRng {
 /// Caching the thread local random number generator:
 ///
 /// ```
-/// use rand::{Rand, Sample};
+/// use rand::{Sample};
 ///
 /// let mut v = vec![1, 2, 3];
 ///
@@ -127,8 +127,8 @@ pub fn random<T>() -> T where Default: Distribution<T> {
 /// distribution used. For example:
 /// 
 /// ```
-/// use rand::random_with;
-/// use rand::distributions::{Rand, Default, Uniform01, Closed01, Range};
+/// use rand::{Sample, random_with};
+/// use rand::distributions::{Default, Uniform01, Closed01, Range};
 /// 
 /// // identical to calling `random()`:
 /// let x: f64 = random_with(Default);
@@ -147,7 +147,7 @@ pub fn random<T>() -> T where Default: Distribution<T> {
 /// let mut rng = rand::thread_rng();
 /// let range = Range::new(0.0, 2.0);
 /// // Do this bit many times:
-/// let v = f64::rand(&mut rng, range);
+/// let v = rng.sample(range);
 /// ```
 #[inline]
 pub fn random_with<D, T>(distribution: D) -> T where D: Distribution<T> {

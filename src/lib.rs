@@ -86,10 +86,10 @@
 //! ```
 //!
 //! ```rust
-//! use rand::thread_rng;
-//! use rand::distributions::{Rand, Uniform, Uniform01};
+//! use rand::{Sample, thread_rng};
+//! use rand::distributions::{Uniform, Uniform01};
 //! let mut rng = thread_rng();
-//! let tuple = (f64::rand(&mut rng, Uniform01), u8::rand(&mut rng, Uniform));
+//! let tuple: (f64, u8) = (rng.sample(Uniform01), rng.sample(Uniform));
 //! println!("{:?}", tuple)
 //! ```
 //!
@@ -111,18 +111,19 @@
 //! and multiply this fraction by 4.
 //!
 //! ```
-//! use rand::distributions::{Rand, Range};
+//! use rand::{thread_rng, Sample};
+//! use rand::distributions::{Range};
 //!
 //! fn main() {
 //!    let between = Range::new(-1f64, 1.);
-//!    let mut rng = rand::thread_rng();
+//!    let mut rng = thread_rng();
 //!
 //!    let total = 1_000_000;
 //!    let mut in_circle = 0;
 //!
 //!    for _ in 0..total {
-//!        let a = f64::rand(&mut rng, between);
-//!        let b = f64::rand(&mut rng, between);
+//!        let a = rng.sample(between);
+//!        let b = rng.sample(between);
 //!        if a*a + b*b <= 1. {
 //!            in_circle += 1;
 //!        }

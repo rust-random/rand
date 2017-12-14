@@ -65,23 +65,20 @@ impl Distribution<char> for Default {
 
 #[cfg(test)]
 mod tests {
-    use {Rng, thread_rng};
-    use distributions::{Rand, Default};
+    use {Rng, Sample, thread_rng};
+    use distributions::{Default};
     
     #[test]
     fn test_types() {
         let rng: &mut Rng = &mut thread_rng();
-        fn do_test<T: Rand<Default>>(rng: &mut Rng) -> T {
-            T::rand(rng, Default)
-        }
         
-        do_test::<u32>(rng);
-        do_test::<i8>(rng);
-        do_test::<f32>(rng);
-        do_test::<f64>(rng);
+        rng.sample::<u32, _>(Default);
+        rng.sample::<i8, _>(Default);
+        rng.sample::<f32, _>(Default);
+        rng.sample::<f64, _>(Default);
         #[cfg(feature = "i128_support")]
-        do_test::<u128>(rng);
-        do_test::<char>(rng);
-        do_test::<bool>(rng);
+        rng.sample::<u128, _>(Default);
+        rng.sample::<char, _>(Default);
+        rng.sample::<bool, _>(Default);
     }
 }
