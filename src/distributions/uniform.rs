@@ -52,10 +52,12 @@ pub struct AsciiWordChar;
 
 impl Distribution<isize> for Uniform {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> isize {
-        if mem::size_of::<isize>() == 4 {
-            Distribution::<i32>::sample(&Uniform, rng) as isize
+        if mem::size_of::<isize>() <= 4 {
+            rng.next_u32() as isize
+        } else if mem::size_of::<isize>() == 8 {
+            rng.next_u64() as isize
         } else {
-            Distribution::<i64>::sample(&Uniform, rng) as isize
+            unreachable!()
         }
     }
 }
@@ -99,10 +101,12 @@ impl Distribution<i128> for Uniform {
 impl Distribution<usize> for Uniform {
     #[inline]
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> usize {
-        if mem::size_of::<usize>() == 4 {
-            Distribution::<u32>::sample(&Uniform, rng) as usize
+        if mem::size_of::<usize>() <= 4 {
+            rng.next_u32() as usize
+        } else if mem::size_of::<usize>() == 8 {
+            rng.next_u64() as usize
         } else {
-            Distribution::<u64>::sample(&Uniform, rng) as usize
+            unreachable!()
         }
     }
 }
