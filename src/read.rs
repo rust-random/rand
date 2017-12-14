@@ -26,11 +26,11 @@ use {Rng, Error, ErrorKind};
 /// # Example
 ///
 /// ```rust
-/// use rand::{ReadRng, distributions};
+/// use rand::{Rng, ReadRng, distributions};
 ///
 /// let data = vec![1, 2, 3, 4, 5, 6, 7, 8];
 /// let mut rng = ReadRng::new(&data[..]);
-/// println!("{:x}", distributions::uniform::<u32, _>(&mut rng));
+/// println!("{:x}", rng.next_u32());
 /// ```
 #[derive(Debug)]
 // Do not derive Clone, because it could share the underlying reader

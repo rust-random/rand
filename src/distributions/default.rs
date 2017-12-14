@@ -11,8 +11,8 @@
 //! Generic value creation
 
 use Rng;
-use distributions::{Distribution, Rand};
-use distributions::uniform::{Uniform, Uniform01, codepoint};
+use distributions::Distribution;
+use distributions::uniform::{Uniform, Uniform01, Codepoint};
 
 /// A generic random value distribution. Generates values using what appears to
 /// be "the best" distribution for each type, but ultimately the choice is arbitrary.
@@ -21,10 +21,7 @@ use distributions::uniform::{Uniform, Uniform01, codepoint};
 /// 
 /// *   [`Uniform`] for integer types
 /// *   [`Uniform01`] for floating point types
-/// 
-/// Makes use of the following methods:
-/// 
-/// *   [`codepoint`] for `char`
+/// *   [`Codepoint`] for `char`
 /// 
 /// TODO: link
 #[derive(Debug)]
@@ -32,56 +29,53 @@ pub struct Default;
 
 // ----- implementations -----
 
-impl<T: Rand<Uniform>> Distribution<T> for Default {
+impl<T> Distribution<T> for Default where Uniform: Distribution<T>{
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T {
-        T::rand(rng, Uniform)
+        Uniform.sample(rng)
     }
 }
 
 // FIXME: https://github.com/rust-lang/rust/issues/23341
-// impl<T: Rand<Uniform01>> Distribution<T> for Default {
+// impl<T> Distribution<T> for Default where Uniform01: Distribution<T>{
 //     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> T {
-//         T::rand(rng, Uniform01)
+//         Uniform01.sample(rng)
 //     }
 // }
 // workaround above issue:
 impl Distribution<f32> for Default {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> f32 {
-        f32::rand(rng, Uniform01)
+        Uniform01.sample(rng)
     }
 }
 impl Distribution<f64> for Default {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> f64 {
-        f64::rand(rng, Uniform01)
+        Uniform01.sample(rng)
     }
 }
 
 impl Distribution<char> for Default {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
-        codepoint(rng)
+        Codepoint.sample(rng)
     }
 }
 
 
 #[cfg(test)]
 mod tests {
-    use {Rng, thread_rng};
-    use distributions::{Rand, Default};
+    use {Rng, Sample, thread_rng};
+    use distributions::{Default};
     
     #[test]
     fn test_types() {
         let rng: &mut Rng = &mut thread_rng();
-        fn do_test<T: Rand<Default>>(rng: &mut Rng) -> T {
-            T::rand(rng, Default)
-        }
         
-        do_test::<u32>(rng);
-        do_test::<i8>(rng);
-        do_test::<f32>(rng);
-        do_test::<f64>(rng);
+        rng.sample::<u32, _>(Default);
+        rng.sample::<i8, _>(Default);
+        rng.sample::<f32, _>(Default);
+        rng.sample::<f64, _>(Default);
         #[cfg(feature = "i128_support")]
-        do_test::<u128>(rng);
-        do_test::<char>(rng);
-        do_test::<bool>(rng);
+        rng.sample::<u128, _>(Default);
+        rng.sample::<char, _>(Default);
+        rng.sample::<bool, _>(Default);
     }
 }

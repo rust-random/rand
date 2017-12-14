@@ -18,8 +18,7 @@
 use Rng;
 
 pub use self::default::Default;
-pub use self::uniform::{uniform, codepoint, ascii_word_char};
-pub use self::uniform::{Uniform, Uniform01, Open01, Closed01, AsciiWordChar};
+pub use self::uniform::{Uniform, Uniform01, Open01, Closed01, Codepoint, AsciiWordChar};
 pub use self::range::Range;
 
 #[cfg(feature="std")]
@@ -77,55 +76,26 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
     }
 }
 
-/// Generic trait for sampling random values from some distribution
+/// Trait for sampling values from the `Default` distribution.
 /// 
-/// TODO: quite possibly remove both this and `SimpleRand` since `Sample` is
-/// more convenient and distributions like `Default` handle all the real work.
-/// 
-/// # Example
-/// ```rust
-/// use rand::distributions::{Rand, Default, Range};
-/// 
-/// let mut rng = rand::thread_rng();
-/// println!("Random byte: {}", u8::rand(&mut rng, Default));
-/// println!("Random range: {}", i32::rand(&mut rng, Range::new(-99, 100)));
-/// ```
-pub trait Rand<D> {
-    /// Generate a random value of the given type, according to the specified
-    /// distribution.
-    /// 
-    /// The distributions `Default` (or `Uniform` and `Uniform01`) and `Range`
-    /// should cover most simpler usages; `Normal`, `LogNormal`, `Exp`, `Gamma`
-    /// and a few others are also available.
-    fn rand<R: Rng+?Sized>(rng: &mut R, distr: D) -> Self;
-}
-
-impl<T, D: Distribution<T>> Rand<D> for T {
-    fn rand<R: Rng+?Sized>(rng: &mut R, distr: D) -> Self {
-        distr.sample(rng)
-    }
-}
-
-/// Simpler version of `Rand`, without support for alternative distributions.
-/// 
-/// TODO: decide which version of `Rand` to keep. If this one, rename struct to
-/// `Rand` and function to `rand`.
+/// This is mostly a shim around `Default` for backwards compatibility; the
+/// implementation is simply `Default.sample(rng)`.
 /// 
 /// # Example
 /// ```rust
-/// use rand::distributions::SimpleRand;
+/// use rand::{Rand, thread_rng};
 /// 
-/// let mut rng = rand::thread_rng();
-/// println!("Random byte: {}", u8::simple_rand(&mut rng));
+/// let mut rng = thread_rng();
+/// println!("Random byte: {}", u8::rand(&mut rng));
 /// ```
-pub trait SimpleRand {
+pub trait Rand : Sized {
     /// Generate a random value of the given type, using the `Default`
     /// distribution.
-    fn simple_rand<R: Rng+?Sized>(rng: &mut R) -> Self;
+    fn rand<R: Rng+?Sized>(rng: &mut R) -> Self;
 }
 
-impl<T> SimpleRand for T where Default: Distribution<T> {
-    fn simple_rand<R: Rng+?Sized>(rng: &mut R) -> Self {
+impl<T> Rand for T where Default: Distribution<T> {
+    fn rand<R: Rng+?Sized>(rng: &mut R) -> Self {
         Default.sample(rng)
     }
 }
@@ -165,7 +135,7 @@ fn ziggurat<R: Rng+?Sized, P, Z>(
         // precision of using 64 bits for f64 does not buy us much.
         // Because for some RNG's the least significant bits can be of lower
         // statistical quality, we use bits 3..10 for i.
-        let bits: u64 = uniform(rng);
+        let bits: u64 = rng.sample(Uniform);
 
         // u is either U(-1, 1) or U(0, 1) depending on if this is a
         // symmetric distribution or not.
@@ -190,7 +160,7 @@ fn ziggurat<R: Rng+?Sized, P, Z>(
             return zero_case(rng, u);
         }
         // algebraically equivalent to f1 + DRanU()*(f0 - f1) < 1
-        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * f64::rand(rng, Uniform01) < pdf(x) {
+        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * rng.sample::<f64, _>(Uniform01) < pdf(x) {
             return x;
         }
     }

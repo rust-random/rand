@@ -10,7 +10,6 @@
 
 //! A distribution generating numbers within a given range.
 
-use Rand;
 use Rng;
 use distributions::{Distribution, Uniform};
 use utils::FloatConversions;
@@ -262,7 +261,7 @@ macro_rules! range_int_impl {
                     // casting is a no-op.
                     let zone = self.zone as $signed as $i_large as $u_large;
                     loop {
-                        let v: $u_large = Rand::rand(rng, Uniform);
+                        let v: $u_large = Uniform.sample(rng);
                         if $use_mult {
                             let (hi, lo) = v.wmul(range);
                             if lo <= zone {
@@ -276,7 +275,7 @@ macro_rules! range_int_impl {
                     }
                 } else {
                     // Sample from the entire integer range.
-                    Rand::rand(rng, Uniform)
+                    Uniform.sample(rng)
                 }
             }
 
@@ -297,7 +296,7 @@ macro_rules! range_int_impl {
                     };
 
                 loop {
-                    let v: $u_large = Rand::rand(rng, Uniform);
+                    let v: $u_large = Uniform.sample(rng);
                     if $use_mult {
                         let (hi, lo) = v.wmul(range);
                         if lo <= zone {
@@ -553,8 +552,8 @@ range_float_impl! { f64, Rng::next_u64 }
 
 #[cfg(test)]
 mod tests {
-    use {Rng, thread_rng};
-    use distributions::{Rand, Distribution};
+    use {Rng, Sample, thread_rng};
+    use distributions::{Distribution};
     use distributions::range::{Range, RangeImpl, RangeFloat, SampleRange};
 
     #[test]
@@ -612,7 +611,7 @@ mod tests {
                    for &(low, high) in v.iter() {
                         let my_range = Range::new(low, high);
                         for _ in 0..1000 {
-                            let v: $ty = Rand::rand(&mut rng, my_range);
+                            let v: $ty = rng.sample(my_range);
                             assert!(low <= v && v < high);
                         }
                     }
@@ -638,7 +637,7 @@ mod tests {
                    for &(low, high) in v.iter() {
                         let my_range = Range::new(low, high);
                         for _ in 0..1000 {
-                            let v: $ty = Rand::rand(&mut rng, my_range);
+                            let v: $ty = rng.sample(my_range);
                             assert!(low <= v && v < high);
                         }
                     }
@@ -681,7 +680,7 @@ mod tests {
         let range = Range::new(low, high);
         let mut rng = ::test::rng();
         for _ in 0..100 {
-            let x = MyF32::rand(&mut rng, range);
+            let x: MyF32 = rng.sample(range);
             assert!(low <= x && x < high);
         }
     }

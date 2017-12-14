@@ -14,59 +14,8 @@ use core::char;
 use core::mem;
 
 use Rng;
-use distributions::{Distribution, Rand};
+use distributions::Distribution;
 use utils::FloatConversions;
-
-// ----- convenience functions -----
-
-/// Sample values uniformly over the whole range supported by the type
-/// 
-/// This method has precisely two template parameters. To fix the output type,
-/// use the syntax `uniform::<u32, _>(rng)`.
-pub fn uniform<T: Rand<Uniform>, R: Rng+?Sized>(rng: &mut R) -> T {
-    T::rand(rng, Uniform)
-}
-
-/// Sample a `char`, uniformly distributed over all Unicode scalar values,
-/// i.e. all code points in the range `0...0x10_FFFF`, except for the range
-/// `0xD800...0xDFFF` (the surrogate code points).  This includes
-/// unassigned/reserved code points.
-/// 
-/// TODO: should this be removed in favour of a distribution?
-#[inline]
-pub fn codepoint<R: Rng+?Sized>(rng: &mut R) -> char {
-    // a char is 21 bits
-    const CHAR_MASK: u32 = 0x001f_ffff;
-    loop {
-        // Rejection sampling. About 0.2% of numbers with at most
-        // 21-bits are invalid codepoints (surrogates), so this
-        // will succeed first go almost every time.
-        match char::from_u32(rng.next_u32() & CHAR_MASK) {
-            Some(c) => return c,
-            None => {}
-        }
-    }
-}
-
-/// Sample a `char`, uniformly distributed over ASCII letters and numbers:
-/// a-z, A-Z and 0-9.
-/// 
-/// TODO: should this be removed in favour of `AsciiWordChar`?
-#[inline]
-pub fn ascii_word_char<R: Rng+?Sized>(rng: &mut R) -> char {
-    const RANGE: u32 = 26 + 26 + 10;
-    const GEN_ASCII_STR_CHARSET: &'static [u8] =
-        b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-            abcdefghijklmnopqrstuvwxyz\
-            0123456789";
-    loop {
-        let var = rng.next_u32() & 0x3F;
-        if var < RANGE {
-            return GEN_ASCII_STR_CHARSET[var as usize] as char
-        }
-    }
-}
-
 
 // ----- Sampling distributions -----
 
@@ -86,7 +35,15 @@ pub struct Open01;
 #[derive(Debug)]
 pub struct Closed01;
 
-/// Sample values uniformly from the ASCII ranges z-a, A-Z, and 0-9.
+/// Sample a `char`, uniformly distributed over all Unicode scalar values,
+/// i.e. all code points in the range `0...0x10_FFFF`, except for the range
+/// `0xD800...0xDFFF` (the surrogate code points).  This includes
+/// unassigned/reserved code points.
+#[derive(Debug)]
+pub struct Codepoint;
+
+/// Sample a `char`, uniformly distributed over ASCII letters and numbers:
+/// a-z, A-Z and 0-9.
 #[derive(Debug)]
 pub struct AsciiWordChar;
 
@@ -95,10 +52,12 @@ pub struct AsciiWordChar;
 
 impl Distribution<isize> for Uniform {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> isize {
-        if mem::size_of::<isize>() == 4 {
-            i32::rand(rng, Uniform) as isize
+        if mem::size_of::<isize>() <= 4 {
+            rng.next_u32() as isize
+        } else if mem::size_of::<isize>() == 8 {
+            rng.next_u64() as isize
         } else {
-            i64::rand(rng, Uniform) as isize
+            unreachable!()
         }
     }
 }
@@ -142,10 +101,12 @@ impl Distribution<i128> for Uniform {
 impl Distribution<usize> for Uniform {
     #[inline]
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> usize {
-        if mem::size_of::<usize>() == 4 {
-            u32::rand(rng, Uniform) as usize
+        if mem::size_of::<usize>() <= 4 {
+            rng.next_u32() as usize
+        } else if mem::size_of::<usize>() == 8 {
+            rng.next_u64() as usize
         } else {
-            u64::rand(rng, Uniform) as usize
+            unreachable!()
         }
     }
 }
@@ -243,60 +204,83 @@ float_impls! { f32, Rng::next_u32 }
 float_impls! { f64, Rng::next_u64 }
 
 
+impl Distribution<char> for Codepoint {
+    fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
+        // a char is 21 bits
+        const CHAR_MASK: u32 = 0x001f_ffff;
+        loop {
+            // Rejection sampling. About 0.2% of numbers with at most
+            // 21-bits are invalid codepoints (surrogates), so this
+            // will succeed first go almost every time.
+            match char::from_u32(rng.next_u32() & CHAR_MASK) {
+                Some(c) => return c,
+                None => {}
+            }
+        }
+    }
+}
+
 impl Distribution<char> for AsciiWordChar {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
-        ascii_word_char(rng)
+        const RANGE: u32 = 26 + 26 + 10;
+        const GEN_ASCII_STR_CHARSET: &'static [u8] =
+            b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                abcdefghijklmnopqrstuvwxyz\
+                0123456789";
+        loop {
+            let var = rng.next_u32() & 0x3F;
+            if var < RANGE {
+                return GEN_ASCII_STR_CHARSET[var as usize] as char
+            }
+        }
     }
 }
 
 
 #[cfg(test)]
 mod tests {
-    use {thread_rng, iter};
-    use distributions::{Rand, uniform, Uniform, Uniform01, Open01, Closed01};
-    use distributions::uniform::{codepoint, ascii_word_char};
+    use {Sample, thread_rng, iter};
+    use distributions::{Uniform, Uniform01, Open01, Closed01,
+            Codepoint, AsciiWordChar};
     
     #[test]
     fn test_integers() {
         let mut rng = ::test::rng();
         
-        let _: i32 = Rand::rand(&mut rng, Uniform);
-        let _ = i32::rand(&mut rng, Uniform);
-        
-        let _: isize = uniform(&mut rng);
-        let _: i8 = uniform(&mut rng);
-        let _: i16 = uniform(&mut rng);
-        let _: i32 = uniform(&mut rng);
-        let _: i64 = uniform(&mut rng);
+        rng.sample::<isize, _>(Uniform);
+        rng.sample::<i8, _>(Uniform);
+        rng.sample::<i16, _>(Uniform);
+        rng.sample::<i32, _>(Uniform);
+        rng.sample::<i64, _>(Uniform);
         #[cfg(feature = "i128_support")]
-        let _: i128 = uniform(&mut rng);
+        rng.sample::<i128, _>(Uniform);
         
-        let _: usize = uniform(&mut rng);
-        let _: u8 = uniform(&mut rng);
-        let _: u16 = uniform(&mut rng);
-        let _: u32 = uniform(&mut rng);
-        let _: u64 = uniform(&mut rng);
+        rng.sample::<usize, _>(Uniform);
+        rng.sample::<u8, _>(Uniform);
+        rng.sample::<u16, _>(Uniform);
+        rng.sample::<u32, _>(Uniform);
+        rng.sample::<u64, _>(Uniform);
         #[cfg(feature = "i128_support")]
-        let _: u128 = uniform(&mut rng);
+        rng.sample::<u128, _>(Uniform);
     }
     
     #[test]
     fn test_chars() {
         let mut rng = ::test::rng();
         
-        let _ = codepoint(&mut rng);
-        let c = ascii_word_char(&mut rng);
+        let _ = rng.sample(Codepoint);
+        let c = rng.sample(AsciiWordChar);
         assert!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
         
-        let word: String = iter(&mut rng).take(5).map(|rng| ascii_word_char(rng)).collect();
+        let word: String = iter(&mut rng).take(5).map(|rng| rng.sample(AsciiWordChar)).collect();
         assert_eq!(word.len(), 5);
     }
 
     #[test]
     fn test_f64() {
-        let mut r = thread_rng();
-        let a: f64 = Rand::rand(&mut r, Uniform01);
-        let b = f64::rand(&mut r, Uniform01);
+        let mut rng = thread_rng();
+        let a: f64 = rng.sample(Uniform01);
+        let b = rng.sample::<f64, _>(Uniform01);
         assert!(0.0 <= a && a < 1.0);
         assert!(0.0 <= b && b < 1.0);
     }
@@ -308,10 +292,10 @@ mod tests {
         let mut rng = thread_rng();
         for _ in 0..1_000 {
             // strict inequalities
-            let f = f64::rand(&mut rng, Open01);
+            let f: f64 = rng.sample(Open01);
             assert!(0.0 < f && f < 1.0);
 
-            let f = f32::rand(&mut rng, Open01);
+            let f: f32 = rng.sample(Open01);
             assert!(0.0 < f && f < 1.0);
         }
     }
@@ -321,10 +305,10 @@ mod tests {
         let mut rng = thread_rng();
         for _ in 0..1_000 {
             // strict inequalities
-            let f = f64::rand(&mut rng, Closed01);
+            let f: f64 = rng.sample(Closed01);
             assert!(0.0 <= f && f <= 1.0);
 
-            let f = f32::rand(&mut rng, Closed01);
+            let f: f32 = rng.sample(Closed01);
             assert!(0.0 <= f && f <= 1.0);
         }
     }
