@@ -65,6 +65,13 @@ impl Range<RangeInt<i32>> {
         assert!(low < high, "Range::new called with `low >= high`");
         Range { inner: RangeImpl::new_inclusive(low, high) }
     }
+
+    /// Sample a single value uniformly from `[low, high)`.
+    /// Panics if `low >= high`.
+    pub fn sample_single<X: SampleRange, R: Rng+?Sized>(low: X, high: X, rng: &mut R) -> X {
+        assert!(low < high, "Range::sample_single called with low >= high");
+        X::T::sample_single(low, high, rng)
+    }
 }
 
 impl<T: RangeImpl> Distribution<T::X> for Range<T> {
@@ -118,8 +125,8 @@ pub trait SampleRange: PartialOrd+Sized {
 /// let range = Range::new(low, high);
 /// let x = range.sample(&mut thread_rng());
 /// ```
-pub trait RangeImpl {
-    /// The type sampled by this implementation (output type).
+pub trait RangeImpl: Sized {
+    /// The type sampled by this implementation.
     type X: PartialOrd;
 
     /// Construct self, with inclusive lower bound and exclusive upper bound
@@ -137,6 +144,16 @@ pub trait RangeImpl {
 
     /// Sample a value.
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> Self::X;
+
+    /// Sample a single value uniformly from a range with inclusive lower bound
+    /// and exclusive upper bound `[low, high)`.
+    /// Panics if `low >= high`.
+    fn sample_single<R: Rng+?Sized>(low: Self::X, high: Self::X, rng: &mut R)
+        -> Self::X
+    {
+        let range: Self = RangeImpl::new(low, high);
+        range.sample(rng)
+    }
 }
 
 /// Implementation of `RangeImpl` for integer types.
@@ -246,9 +263,9 @@ macro_rules! range_int_impl {
                     loop {
                         let v: $u_large = Uniform.sample(rng);
                         if $use_mult {
-                            let (high, low) = v.wmul(range);
-                            if low <= zone {
-                                return self.low.wrapping_add(high as $ty);
+                            let (hi, lo) = v.wmul(range);
+                            if lo <= zone {
+                                return self.low.wrapping_add(hi as $ty);
                             }
                         } else {
                             if v <= zone {
@@ -259,6 +276,37 @@ macro_rules! range_int_impl {
                 } else {
                     // Sample from the entire integer range.
                     Uniform.sample(rng)
+                }
+            }
+
+            fn sample_single<R: Rng+?Sized>(low: Self::X, high: Self::X, rng: &mut R) -> Self::X {
+                let range = (high as $u_large)
+                            .wrapping_sub(low as $u_large);
+                let zone =
+                    if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+                        // Using a modulus is faster than the approximation for
+                        // i8 and i16. I suppose we trade the cost of one
+                        // modulus for near-perfect branch prediction.
+                        let unsigned_max: $u_large = ::core::$u_large::MAX;
+                        let ints_to_reject = (unsigned_max - range + 1) % range;
+                        unsigned_max - ints_to_reject
+                    } else {
+                        // conservative but fast approximation
+                       range << range.leading_zeros()
+                    };
+
+                loop {
+                    let v: $u_large = Uniform.sample(rng);
+                    if $use_mult {
+                        let (hi, lo) = v.wmul(range);
+                        if lo <= zone {
+                            return low.wrapping_add(hi as $ty);
+                        }
+                    } else {
+                        if v <= zone {
+                            return low.wrapping_add((v % range) as $ty);
+                        }
+                    }
                 }
             }
         }

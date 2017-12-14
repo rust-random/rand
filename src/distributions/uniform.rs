@@ -218,12 +218,17 @@ impl Distribution<char> for Codepoint {
 
 impl Distribution<char> for AsciiWordChar {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
-        use sequences::Choose;
+        const RANGE: u32 = 26 + 26 + 10;
         const GEN_ASCII_STR_CHARSET: &'static [u8] =
             b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                 abcdefghijklmnopqrstuvwxyz\
                 0123456789";
-        *GEN_ASCII_STR_CHARSET.choose(rng).unwrap() as char
+        loop {
+            let var = rng.next_u32() & 0x3F;
+            if var < RANGE {
+                return GEN_ASCII_STR_CHARSET[var as usize] as char
+            }
+        }
     }
 }
 

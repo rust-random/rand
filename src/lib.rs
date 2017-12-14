@@ -426,8 +426,7 @@ pub trait Sample: Rng {
     /// }
     /// ```
     fn gen_range<T: SampleRange>(&mut self, low: T, high: T) -> T {
-        assert!(low < high, "Sample::gen_range called with low >= high");
-        Range::new(low, high).sample(self)
+        Range::sample_single(low, high, self)
     }
     
     /// Construct an iterator on an `Rng`.
