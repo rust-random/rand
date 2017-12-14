@@ -12,10 +12,10 @@
 
 #![allow(non_camel_case_types)]
 
-use std::slice;
-use std::iter::repeat;
-use std::num::Wrapping as w;
-use std::fmt;
+use core::slice;
+use core::iter::repeat;
+use core::num::Wrapping as w;
+use core::fmt;
 
 use {Rng, SeedableRng, Rand};
 
