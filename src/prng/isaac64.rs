@@ -16,6 +16,7 @@ use core::num::Wrapping as w;
 use core::fmt;
 
 use {Rng, SeedableRng, Rand};
+use impls;
 
 #[allow(non_camel_case_types)]
 type w64 = w<u64>;
@@ -208,6 +209,10 @@ impl Rng for Isaac64Rng {
         // in bounds, without unsafe. NB. this is a power of two, so
         // it optimises to a bitwise mask).
         self.rsl[self.cnt as usize % RAND_SIZE].0
+    }
+    
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        impls::fill_bytes_via_u64(self, dest)
     }
 }
 

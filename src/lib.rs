@@ -277,6 +277,7 @@ use distributions::range::SampleRange;
 
 // public modules
 pub mod distributions;
+mod impls;
 pub mod jitter;
 #[cfg(feature="std")] pub mod os;
 #[cfg(feature="std")] pub mod read;
@@ -339,21 +340,10 @@ pub trait Rand : Sized {
 /// A random number generator.
 pub trait Rng {
     /// Return the next random u32.
-    ///
-    /// This rarely needs to be called directly, prefer `r.gen()` to
-    /// `r.next_u32()`.
-    // FIXME #rust-lang/rfcs#628: Should be implemented in terms of next_u64
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random u64.
-    ///
-    /// By default this is implemented in terms of `next_u32`. An
-    /// implementation of this trait must provide at least one of
-    /// these two methods. Similarly to `next_u32`, this rarely needs
-    /// to be called directly, prefer `r.gen()` to `r.next_u64()`.
-    fn next_u64(&mut self) -> u64 {
-        ((self.next_u32() as u64) << 32) | (self.next_u32() as u64)
-    }
+    fn next_u64(&mut self) -> u64;
 
     /// Return the next random f32 selected from the half-open
     /// interval `[0, 1)`.
@@ -409,11 +399,6 @@ pub trait Rng {
 
     /// Fill `dest` with random data.
     ///
-    /// This has a default implementation in terms of `next_u64` and
-    /// `next_u32`, but should be overridden by implementations that
-    /// offer a more efficient solution than just calling those
-    /// methods repeatedly.
-    ///
     /// This method does *not* have a requirement to bear any fixed
     /// relationship to the other methods, for example, it does *not*
     /// have to result in the same output as progressively filling
@@ -434,29 +419,7 @@ pub trait Rng {
     /// thread_rng().fill_bytes(&mut v);
     /// println!("{:?}", &v[..]);
     /// ```
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        // this could, in theory, be done by transmuting dest to a
-        // [u64], but this is (1) likely to be undefined behaviour for
-        // LLVM, (2) has to be very careful about alignment concerns,
-        // (3) adds more `unsafe` that needs to be checked, (4)
-        // probably doesn't give much performance gain if
-        // optimisations are on.
-        let mut count = 0;
-        let mut num = 0;
-        for byte in dest.iter_mut() {
-            if count == 0 {
-                // we could micro-optimise here by generating a u32 if
-                // we only need a few more bytes to fill the vector
-                // (i.e. at most 4).
-                num = self.next_u64();
-                count = 8;
-            }
-
-            *byte = (num & 0xff) as u8;
-            num >>= 8;
-            count -= 1;
-        }
-    }
+    fn fill_bytes(&mut self, dest: &mut [u8]);
 
     /// Return a random value of a `Rand` type.
     ///
@@ -802,14 +765,16 @@ impl StdRng {
 }
 
 impl Rng for StdRng {
-    #[inline]
     fn next_u32(&mut self) -> u32 {
         self.rng.next_u32()
     }
 
-    #[inline]
     fn next_u64(&mut self) -> u64 {
         self.rng.next_u64()
+    }
+    
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.rng.fill_bytes(dest)
     }
 }
 
@@ -985,6 +950,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 
 #[cfg(test)]
 mod test {
+    use impls;
     use super::{Rng, thread_rng, random, SeedableRng, StdRng, weak_rng};
     use std::iter::repeat;
 
@@ -992,10 +958,13 @@ mod test {
 
     impl<R: Rng> Rng for MyRng<R> {
         fn next_u32(&mut self) -> u32 {
-            fn next<T: Rng>(t: &mut T) -> u32 {
-                t.next_u32()
-            }
-            next(&mut self.inner)
+            self.inner.next_u32()
+        }
+        fn next_u64(&mut self) -> u64 {
+            self.inner.next_u64()
+        }
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            self.inner.fill_bytes(dest)
         }
     }
 
@@ -1007,8 +976,10 @@ mod test {
     impl Rng for ConstRng {
         fn next_u32(&mut self) -> u32 { self.i as u32 }
         fn next_u64(&mut self) -> u64 { self.i }
-
-        // no fill_bytes on purpose
+        
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            impls::fill_bytes_via_u64(self, dest)
+        }
     }
 
     pub fn iter_eq<I, J>(i: I, j: J) -> bool

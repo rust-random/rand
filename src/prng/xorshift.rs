@@ -12,6 +12,7 @@
 
 use core::num::Wrapping as w;
 use {Rng, SeedableRng, Rand};
+use impls;
 
 /// An Xorshift[1] random number
 /// generator.
@@ -60,6 +61,14 @@ impl Rng for XorShiftRng {
         let w_ = self.w;
         self.w = w_ ^ (w_ >> 19) ^ (t ^ (t >> 8));
         self.w.0
+    }
+    
+    fn next_u64(&mut self) -> u64 {
+        impls::next_u64_via_u32(self)
+    }
+    
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        impls::fill_bytes_via_u32(self, dest)
     }
 }
 
