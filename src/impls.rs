@@ -68,14 +68,14 @@ pub fn fill_bytes_via_u64<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
 }
 
 macro_rules! impl_uint_from_fill {
-    ($self:expr, $ty:ty, $N:expr) => ({
+    ($rng:expr, $ty:ty, $N:expr) => ({
         debug_assert!($N == size_of::<$ty>());
 
         let mut int: $ty = 0;
         unsafe {
             let ptr = &mut int as *mut $ty as *mut u8;
             let slice = slice::from_raw_parts_mut(ptr, $N);
-            $self.fill_bytes(slice);
+            $rng.fill_bytes(slice);
         }
         int
     });
