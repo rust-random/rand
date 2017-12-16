@@ -179,10 +179,14 @@ macro_rules! range_int_impl {
 
             type X = $ty;
 
+            #[inline] // if the range is constant, this helps LLVM to do the
+                      // calculations at compile-time.
             fn new(low: Self::X, high: Self::X) -> Self {
                 RangeImpl::new_inclusive(low, high - 1)
             }
 
+            #[inline] // if the range is constant, this helps LLVM to do the
+                      // calculations at compile-time.
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
                 // For a closed range the number of possible numbers we should
                 // generate is `range = (high - low + 1)`. It is not possible to
