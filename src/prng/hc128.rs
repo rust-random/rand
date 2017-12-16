@@ -10,11 +10,11 @@
 
 //! The HC-128 random number generator.
 
-use core::fmt;
-use core::slice;
-
+use core::{fmt, slice};
 use {Rng, SeedableRng, Rand};
 use impls;
+
+const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 
 /// A cryptographically secure random number generator that uses the HC-128
 /// algorithm.
@@ -39,6 +39,11 @@ use impls;
 /// brute-force search of 2<sup>128</sup>. A very comprehensive analysis of the
 /// current state of known attacks / weaknesses of HC-128 is given in [4].
 ///
+/// The average cycle length is expected to be
+/// 2<sup>1024*32-1</sup> = 2<sup>32767</sup>.
+/// We support seeding with a 256-bit array, which matches the 128-bit key
+/// concatenated with a 128-bit IV from the stream cipher.
+///
 /// ## References
 /// [1]: Hongjun Wu (2008). ["The Stream Cipher HC-128"]
 ///      (http://www.ecrypt.eu.org/stream/p3ciphers/hc/hc128_p3.pdf).
@@ -55,8 +60,7 @@ use impls;
 ///      (http://library.isical.ac.in:8080/jspui/bitstream/123456789/6636/1/TH431.pdf).
 ///
 /// [5]: Internet Engineering Task Force (Februari 2015),
-///      ["Prohibiting RC4 Cipher Suites"]
-///      (https://tools.ietf.org/html/rfc7465).
+///      ["Prohibiting RC4 Cipher Suites"](https://tools.ietf.org/html/rfc7465).
 #[derive(Clone)]
 pub struct Hc128Rng {
     state: Hc128,
@@ -89,7 +93,7 @@ impl Hc128Rng {
     // Initialize an HC-128 random number generator. The seed has to be
     // 256 bits in length (`[u32; 8]`), matching the 128 bit `key` followed by
     // 128 bit `iv` when HC-128 where to be used as a stream cipher.
-    pub fn init(seed: &[u32]) -> Hc128Rng {
+    fn init(seed: [u32; SEED_WORDS]) -> Self {
         #[inline]
         fn f1(x: u32) -> u32 {
             x.rotate_right(7) ^ x.rotate_right(18) ^ (x >> 3)
@@ -129,15 +133,12 @@ impl Hc128Rng {
         let mut state = Hc128Rng {
             state: Hc128 { t: t, counter1024: 0 },
             results: [0; 16],
-            index: 0,
+            index: 16, // generate on first use
         };
 
         // run the cipher 1024 steps
         for _ in 0..64 { state.state.sixteen_steps() };
         state.state.counter1024 = 0;
-
-        // Prepare the first set of results
-        state.state.update(&mut state.results);
         state
     }
 }
@@ -400,19 +401,18 @@ impl Rand for Hc128Rng {
             let slice = slice::from_raw_parts_mut(ptr, 8 * 4);
             other.fill_bytes(slice);
         }
-        Hc128Rng::init(&seed)
+        Hc128Rng::init(seed)
     }
 }
 
-impl<'a> SeedableRng<&'a [u32]> for Hc128Rng {
-    fn reseed(&mut self, seed: &'a [u32]) {
+impl SeedableRng<[u32; SEED_WORDS]> for Hc128Rng {
+    fn reseed(&mut self, seed: [u32; SEED_WORDS]) {
         *self = Self::from_seed(seed);
     }
     /// Create an HC-128 random number generator with a seed. The seed has to be
     /// 256 bits in length, matching the 128 bit `key` followed by 128 bit `iv`
     /// when HC-128 where to be used as a stream cipher.
-    fn from_seed(seed: &'a [u32]) -> Hc128Rng {
-        assert!(seed.len() == 8);
+    fn from_seed(seed: [u32; SEED_WORDS]) -> Hc128Rng {
         Hc128Rng::init(seed)
     }
 }
@@ -427,7 +427,7 @@ mod test {
     fn test_hc128_true_values_a() {
         let seed = [0u32, 0, 0, 0, // key
                     0, 0, 0, 0]; // iv
-        let mut rng = Hc128Rng::from_seed(&seed);
+        let mut rng = Hc128Rng::from_seed(seed);
 
         let v = (0..16).map(|_| rng.next_u32()).collect::<Vec<_>>();
         assert_eq!(v,
@@ -442,7 +442,7 @@ mod test {
     fn test_hc128_true_values_b() {
         let seed = [0u32, 0, 0, 0, // key
                     1, 0, 0, 0]; // iv
-        let mut rng = Hc128Rng::from_seed(&seed);
+        let mut rng = Hc128Rng::from_seed(seed);
 
         let v = (0..16).map(|_| rng.next_u32()).collect::<Vec<_>>();
         assert_eq!(v,
@@ -457,7 +457,7 @@ mod test {
     fn test_hc128_true_values_c() {
         let seed = [0x55u32, 0, 0, 0, // key
                     0, 0, 0, 0]; // iv
-        let mut rng = Hc128Rng::from_seed(&seed);
+        let mut rng = Hc128Rng::from_seed(seed);
 
         let v = (0..16).map(|_| rng.next_u32()).collect::<Vec<_>>();
         assert_eq!(v,
@@ -471,7 +471,7 @@ mod test {
     fn test_hc128_true_values_u64() {
         let seed = [0u32, 0, 0, 0, // key
                     0, 0, 0, 0]; // iv
-        let mut rng = Hc128Rng::from_seed(&seed);
+        let mut rng = Hc128Rng::from_seed(seed);
 
         let v = (0..8).map(|_| rng.next_u64()).collect::<Vec<_>>();
         assert_eq!(v,
@@ -497,7 +497,7 @@ mod test {
     fn test_hc128_true_values_bytes() {
         let seed = [0x55u32, 0, 0, 0, // key
                     0, 0, 0, 0]; // iv
-        let mut rng = Hc128Rng::from_seed(&seed);
+        let mut rng = Hc128Rng::from_seed(seed);
         let expected =
             vec!(0x31, 0xf9, 0x2a, 0xb0, 0x32, 0xf0, 0x39, 0x06,
                  0x7a, 0xa4, 0xb4, 0xbc, 0x0b, 0x48, 0x22, 0x57,
@@ -534,7 +534,7 @@ mod test {
     fn test_hc128_clone() {
         let seed = [0x55, 0, 0, 0, // key
                     0, 0, 0, 0]; // iv
-        let mut rng1 = Hc128Rng::from_seed(&seed);
+        let mut rng1 = Hc128Rng::from_seed(seed);
         let mut rng2 = rng1.clone();
         for _ in 0..16 {
             assert_eq!(rng1.next_u32(), rng2.next_u32());
