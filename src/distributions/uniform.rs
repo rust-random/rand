@@ -14,7 +14,7 @@ use core::char;
 use core::mem;
 
 use Rng;
-use distributions::Distribution;
+use distributions::{Distribution, Range};
 use utils::FloatConversions;
 
 // ----- Sampling distributions -----
@@ -45,7 +45,7 @@ pub struct Codepoint;
 /// Sample a `char`, uniformly distributed over ASCII letters and numbers:
 /// a-z, A-Z and 0-9.
 #[derive(Debug)]
-pub struct AsciiWordChar;
+pub struct Alphanumeric;
 
 
 // ----- actual implementations -----
@@ -220,7 +220,7 @@ impl Distribution<char> for Codepoint {
     }
 }
 
-impl Distribution<char> for AsciiWordChar {
+impl Distribution<char> for Alphanumeric {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
         const RANGE: u32 = 26 + 26 + 10;
         const GEN_ASCII_STR_CHARSET: &'static [u8] =
@@ -228,7 +228,7 @@ impl Distribution<char> for AsciiWordChar {
                 abcdefghijklmnopqrstuvwxyz\
                 0123456789";
         loop {
-            let var = rng.next_u32() & 0x3F;
+            let var = rng.next_u32() >> 26;
             if var < RANGE {
                 return GEN_ASCII_STR_CHARSET[var as usize] as char
             }
@@ -241,7 +241,7 @@ impl Distribution<char> for AsciiWordChar {
 mod tests {
     use {Sample, thread_rng, iter};
     use distributions::{Uniform, Uniform01, Open01, Closed01,
-            Codepoint, AsciiWordChar};
+            Codepoint, Alphanumeric};
     
     #[test]
     fn test_integers() {
@@ -269,10 +269,10 @@ mod tests {
         let mut rng = ::test::rng();
         
         let _ = rng.sample(Codepoint);
-        let c = rng.sample(AsciiWordChar);
+        let c = rng.sample(Alphanumeric);
         assert!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
         
-        let word: String = iter(&mut rng).take(5).map(|rng| rng.sample(AsciiWordChar)).collect();
+        let word: String = iter(&mut rng).take(5).map(|rng| rng.sample(Alphanumeric)).collect();
         assert_eq!(word.len(), 5);
     }
 
