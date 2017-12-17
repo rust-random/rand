@@ -243,19 +243,22 @@
 
 #![deny(missing_debug_implementations)]
 
+#![cfg_attr(not(feature="std"), no_std)]
+#![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(feature = "i128_support", feature(i128_type, i128))]
 
+#[cfg(feature="std")] extern crate std as core;
+#[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 #[cfg(test)] #[macro_use] extern crate log;
 
-
-use std::cell::RefCell;
-use std::marker;
-use std::mem;
-use std::io;
-use std::rc::Rc;
+use core::marker;
+use core::mem;
+#[cfg(feature="std")] use std::cell::RefCell;
+#[cfg(feature="std")] use std::io;
+#[cfg(feature="std")] use std::rc::Rc;
 
 pub use jitter::JitterRng;
-pub use os::OsRng;
+#[cfg(feature="std")] pub use os::OsRng;
 
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
@@ -274,9 +277,9 @@ pub mod distributions;
 pub mod reseeding;
 mod rand_impls;
 pub mod jitter;
-pub mod os;
-pub mod read;
-pub mod seq;
+#[cfg(feature="std")] pub mod os;
+#[cfg(feature="std")] pub mod read;
+#[cfg(any(feature="std", feature = "alloc"))] pub mod seq;
 mod prng;
 
 // These tiny modules are here to avoid API breakage, probably only temporarily
@@ -625,6 +628,7 @@ impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
     }
 }
 
+#[cfg(feature="std")]
 impl<R: ?Sized> Rng for Box<R> where R: Rng {
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
@@ -776,6 +780,7 @@ impl StdRng {
     ///
     /// Reading the randomness from the OS may fail, and any error is
     /// propagated via the `io::Result` return value.
+    #[cfg(feature="std")]
     pub fn new() -> io::Result<StdRng> {
         match OsRng::new() {
             Ok(mut r) => Ok(StdRng { rng: r.gen() }),
@@ -823,14 +828,17 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 /// create the `Rng` yourself.
 ///
 /// This will seed the generator with randomness from thread_rng.
+#[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
     thread_rng().gen()
 }
 
 /// Controls how the thread-local RNG is reseeded.
+#[cfg(feature="std")]
 #[derive(Debug)]
 struct ThreadRngReseeder;
 
+#[cfg(feature="std")]
 impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
     fn reseed(&mut self, rng: &mut StdRng) {
         match StdRng::new() {
@@ -839,10 +847,13 @@ impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
         }
     }
 }
+#[cfg(feature="std")]
 const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
+#[cfg(feature="std")]
 type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
 
 /// The thread-local RNG.
+#[cfg(feature="std")]
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
     rng: Rc<RefCell<ThreadRngInner>>,
@@ -860,6 +871,7 @@ pub struct ThreadRng {
 /// if the operating system random number generator is rigged to give
 /// the same sequence always. If absolute consistency is required,
 /// explicitly select an RNG, e.g. `IsaacRng` or `Isaac64Rng`.
+#[cfg(feature="std")]
 pub fn thread_rng() -> ThreadRng {
     // used to make space in TLS for a random number generator
     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
@@ -876,6 +888,7 @@ pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
 }
 
+#[cfg(feature="std")]
 impl Rng for ThreadRng {
     fn next_u32(&mut self) -> u32 {
         self.rng.borrow_mut().next_u32()
@@ -933,13 +946,12 @@ impl Rng for ThreadRng {
 ///     *x = rng.gen();
 /// }
 /// ```
+#[cfg(feature="std")]
 #[inline]
 pub fn random<T: Rand>() -> T {
     thread_rng().gen()
 }
 
-#[inline(always)]
-#[deprecated(since="0.4.0", note="renamed to seq::sample_iter")]
 /// DEPRECATED: use `seq::sample_iter` instead.
 ///
 /// Randomly sample up to `amount` elements from a finite iterator.
@@ -954,6 +966,9 @@ pub fn random<T: Rand>() -> T {
 /// let sample = sample(&mut rng, 1..100, 5);
 /// println!("{:?}", sample);
 /// ```
+#[cfg(feature="std")]
+#[inline(always)]
+#[deprecated(since="0.4.0", note="renamed to seq::sample_iter")]
 pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     where I: IntoIterator<Item=T>,
           R: Rng,

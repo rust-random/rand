@@ -10,7 +10,7 @@
 
 //! Xorshift generators
 
-use std::num::Wrapping as w;
+use core::num::Wrapping as w;
 use {Rng, SeedableRng, Rand};
 
 /// An Xorshift[1] random number
