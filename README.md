@@ -14,7 +14,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.3"
+rand = "0.4"
 ```
 
 and this to your crate root:
@@ -23,12 +23,16 @@ and this to your crate root:
 extern crate rand;
 ```
 
-### Unstable channel
+### Versions
 
-The 'master' branch tracks development code while the '0.3' branch tracks the
-latest stable release. New features are currently being released in an "unstable
-channel"; if you wish to opt-in to the latest releases (expect more breaking
-changes in this channel) specify `rand = "0.4.0-pre.0"`.
+The `rand` crate has been at version `0.3` since March 2015. If you wish to
+avoid all breaking changes you may wish to stick with this version.
+
+Version `0.4`was released in December 2017. It contains almost no breaking
+changes since the `0.3` series, but nevertheless (will) contain a significant
+amount of new code, including a new "external" entropy source (`JitterRng`),
+`no_std` support, and significant performance improvements for the ISAAC random
+number generators.
 
 ## Examples
 
@@ -105,7 +109,7 @@ You can derive the `Rand` trait for your custom type via the `#[derive(Rand)]`
 directive. To use this first add this to your Cargo.toml:
 
 ```toml
-rand = "0.3"
+rand = "0.4"
 rand_derive = "0.3"
 ```
 

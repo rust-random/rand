@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2017-12-17
+### Added
+- `no_std` support
+
 ## [0.4.0-pre.0] - 2017-12-11
 ### Added
 - `JitterRng` added as a high-quality alternative entropy source using the
