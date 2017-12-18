@@ -37,13 +37,13 @@ pub struct Iter<'a, R: Rng+?Sized+'a> {
 ///
 /// ```
 /// use rand::{thread_rng, Rng, Sample, iter};
-/// use rand::distributions::{Uniform, AsciiWordChar};
+/// use rand::distributions::{Uniform, Alphanumeric};
 ///
 /// let mut rng = thread_rng();
 /// let x: Vec<u32> = iter(&mut rng).take(10).map(|rng| rng.sample(Uniform)).collect();
 /// println!("{:?}", x);
 /// 
-/// let w: String = iter(&mut rng).take(6).map(|rng| rng.sample(AsciiWordChar)).collect();
+/// let w: String = iter(&mut rng).take(6).map(|rng| rng.sample(Alphanumeric)).collect();
 /// println!("{}", w);
 /// ```
 pub fn iter<'a, R: Rng+?Sized+'a>(rng: &'a mut R) -> Iter<'a, R> {
@@ -160,7 +160,7 @@ impl<'a, R:?Sized+'a, U, F> Iterator for FlatMap<'a, R, U, F>
 #[cfg(test)]
 mod tests {
     use {Rng, Sample, thread_rng, iter};
-    use distributions::{Uniform, AsciiWordChar};
+    use distributions::{Uniform, Alphanumeric};
     
     #[test]
     fn test_iter() {
@@ -181,7 +181,7 @@ mod tests {
     fn test_dyn_dispatch() {
         let r: &mut Rng = &mut thread_rng();
         
-        let x: String = iter(r).take(10).map(|rng| rng.sample(AsciiWordChar)).collect();
+        let x: String = iter(r).take(10).map(|rng| rng.sample(Alphanumeric)).collect();
         assert_eq!(x.len(), 10);
     }
 }

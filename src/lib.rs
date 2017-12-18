@@ -435,10 +435,10 @@ pub trait Sample: Rng {
     /// 
     /// ```rust
     /// use rand::{thread_rng, Sample};
-    /// use rand::distributions::AsciiWordChar;
+    /// use rand::distributions::Alphanumeric;
     /// 
     /// let mut rng = thread_rng();
-    /// let x: String = rng.iter().map(|rng| rng.sample(AsciiWordChar)).take(6).collect();
+    /// let x: String = rng.iter().map(|rng| rng.sample(Alphanumeric)).take(6).collect();
     /// ```
     fn iter<'a>(&'a mut self) -> iter::Iter<'a, Self> {
         iter(self)

@@ -14,7 +14,7 @@ use core::char;
 use core::mem;
 
 use Rng;
-use distributions::Distribution;
+use distributions::{Distribution, Range};
 use utils::FloatConversions;
 
 // ----- Sampling distributions -----
@@ -45,7 +45,7 @@ pub struct Codepoint;
 /// Sample a `char`, uniformly distributed over ASCII letters and numbers:
 /// a-z, A-Z and 0-9.
 #[derive(Debug)]
-pub struct AsciiWordChar;
+pub struct Alphanumeric;
 
 
 // ----- actual implementations -----
@@ -206,21 +206,19 @@ float_impls! { f64, Rng::next_u64 }
 
 impl Distribution<char> for Codepoint {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
-        // a char is 21 bits
-        const CHAR_MASK: u32 = 0x001f_ffff;
+        let range = Range::new(0u32, 0x11_0000);
         loop {
-            // Rejection sampling. About 0.2% of numbers with at most
-            // 21-bits are invalid codepoints (surrogates), so this
-            // will succeed first go almost every time.
-            match char::from_u32(rng.next_u32() & CHAR_MASK) {
+            match char::from_u32(range.sample(rng)) {
                 Some(c) => return c,
+                // About 0.2% of numbers in the range 0..0x110000 are invalid
+                // codepoints (surrogates).
                 None => {}
             }
         }
     }
 }
 
-impl Distribution<char> for AsciiWordChar {
+impl Distribution<char> for Alphanumeric {
     fn sample<R: Rng+?Sized>(&self, rng: &mut R) -> char {
         const RANGE: u32 = 26 + 26 + 10;
         const GEN_ASCII_STR_CHARSET: &'static [u8] =
@@ -228,7 +226,7 @@ impl Distribution<char> for AsciiWordChar {
                 abcdefghijklmnopqrstuvwxyz\
                 0123456789";
         loop {
-            let var = rng.next_u32() & 0x3F;
+            let var = rng.next_u32() >> 26;
             if var < RANGE {
                 return GEN_ASCII_STR_CHARSET[var as usize] as char
             }
@@ -241,7 +239,7 @@ impl Distribution<char> for AsciiWordChar {
 mod tests {
     use {Sample, thread_rng, iter};
     use distributions::{Uniform, Uniform01, Open01, Closed01,
-            Codepoint, AsciiWordChar};
+            Codepoint, Alphanumeric};
     
     #[test]
     fn test_integers() {
@@ -269,10 +267,10 @@ mod tests {
         let mut rng = ::test::rng();
         
         let _ = rng.sample(Codepoint);
-        let c = rng.sample(AsciiWordChar);
+        let c = rng.sample(Alphanumeric);
         assert!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
         
-        let word: String = iter(&mut rng).take(5).map(|rng| rng.sample(AsciiWordChar)).collect();
+        let word: String = iter(&mut rng).take(5).map(|rng| rng.sample(Alphanumeric)).collect();
         assert_eq!(word.len(), 5);
     }
 
