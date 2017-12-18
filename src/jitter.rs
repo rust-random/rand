@@ -690,17 +690,12 @@ mod platform {
 
     #[cfg(target_os = "windows")]
     pub fn get_nstime() -> u64 {
-        #[allow(non_camel_case_types)]
-        type LARGE_INTEGER = i64;
-        #[allow(non_camel_case_types)]
-        type BOOL = i32;
-        extern "system" {
-            fn QueryPerformanceCounter(lpPerformanceCount: *mut LARGE_INTEGER) -> BOOL;
+        extern crate winapi;
+        unsafe {
+            let mut t = super::mem::zeroed();
+            winapi::um::profileapi::QueryPerformanceCounter(&mut t);
+            *t.QuadPart() as u64
         }
-
-        let mut t = 0;
-        unsafe { QueryPerformanceCounter(&mut t); }
-        t as u64
     }
 
     #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
