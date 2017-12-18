@@ -133,7 +133,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
     ///
     /// Panics if:
     ///
-    /// - `v` is empty
+    /// - `items` is empty
     /// - the total weight is 0
     /// - the total weight is larger than a `u32` can contain.
     pub fn new(items: &'a mut [Weighted<T>]) -> WeightedChoice<'a, T> {
