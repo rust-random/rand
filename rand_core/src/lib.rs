@@ -26,9 +26,6 @@
 //! The `impls` sub-module includes a few small functions to assist
 //! implementation of `Rng`. Since this module is only of interest to `Rng`
 //! implementors, it is not re-exported from `rand`.
-//! 
-//! The `mock` module includes a mock `Rng` implementation. Even though this is
-//! only useful for testing, it is currently always built.
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
