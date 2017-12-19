@@ -136,7 +136,7 @@ impl JitterRng {
     /// returned. The test result is cached to make subsequent calls faster.
     #[cfg(feature="std")]
     pub fn new() -> Result<JitterRng, TimerError> {
-        let mut ec = JitterRng::new_with_timer(get_nstime);
+        let mut ec = JitterRng::new_with_timer(platform::get_nstime);
         let mut rounds = JITTER_ROUNDS.load(Ordering::Relaxed) as u32;
         if rounds == 0 {
             // No result yet: run test.
@@ -662,59 +662,54 @@ impl JitterRng {
     /// ```
     #[cfg(feature="std")]
     pub fn timer_stats(&mut self, var_rounds: bool) -> i64 {
-        let time = get_nstime();
+        let time = platform::get_nstime();
         self.memaccess(var_rounds);
         self.lfsr_time(time, var_rounds);
-        let time2 = get_nstime();
+        let time2 = platform::get_nstime();
         time2.wrapping_sub(time) as i64
     }
 }
 
-#[cfg(all(feature="std", not(any(
-        target_os = "macos", target_os = "ios", target_os = "windows",
-        all(target_arch = "wasm32", not(target_os = "emscripten"))
-    ))))]
-fn get_nstime() -> u64 {
-    use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(feature="std")]
+mod platform {
+    #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "windows", all(target_arch = "wasm32", not(target_os = "emscripten")))))]
+    pub fn get_nstime() -> u64 {
+        use std::time::{SystemTime, UNIX_EPOCH};
 
-    let dur = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
-    // The correct way to calculate the current time is
-    // `dur.as_secs() * 1_000_000_000 + dur.subsec_nanos() as u64`
-    // But this is faster, and the difference in terms of entropy is negligible
-    // (log2(10^9) == 29.9).
-    dur.as_secs() << 30 | dur.subsec_nanos() as u64
-}
-
-#[cfg(all(feature="std", any(target_os = "macos", target_os = "ios")))]
-fn get_nstime() -> u64 {
-    extern crate libc;
-    // On Mac OS and iOS std::time::SystemTime only has 1000ns resolution.
-    // We use `mach_absolute_time` instead. This provides a CPU dependent unit,
-    // to get real nanoseconds the result should by multiplied by numer/denom
-    // from `mach_timebase_info`.
-    // But we are not interested in the exact nanoseconds, just entropy. So we
-    // use the raw result.
-    unsafe { libc::mach_absolute_time() }
-}
-
-#[cfg(all(feature="std", target_os = "windows"))]
-fn get_nstime() -> u64 {
-    #[allow(non_camel_case_types)]
-    type LARGE_INTEGER = i64;
-    #[allow(non_camel_case_types)]
-    type BOOL = i32;
-    extern "system" {
-        fn QueryPerformanceCounter(lpPerformanceCount: *mut LARGE_INTEGER) -> BOOL;
+        let dur = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+        // The correct way to calculate the current time is
+        // `dur.as_secs() * 1_000_000_000 + dur.subsec_nanos() as u64`
+        // But this is faster, and the difference in terms of entropy is negligible
+        // (log2(10^9) == 29.9).
+        dur.as_secs() << 30 | dur.subsec_nanos() as u64
     }
 
-    let mut t = 0;
-    unsafe { QueryPerformanceCounter(&mut t); }
-    t as u64
-}
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    pub fn get_nstime() -> u64 {
+        extern crate libc;
+        // On Mac OS and iOS std::time::SystemTime only has 1000ns resolution.
+        // We use `mach_absolute_time` instead. This provides a CPU dependent unit,
+        // to get real nanoseconds the result should by multiplied by numer/denom
+        // from `mach_timebase_info`.
+        // But we are not interested in the exact nanoseconds, just entropy. So we
+        // use the raw result.
+        unsafe { libc::mach_absolute_time() }
+    }
 
-#[cfg(all(feature="std", target_arch = "wasm32", not(target_os = "emscripten")))]
-fn get_nstime() -> u64 {
-    unreachable!()
+    #[cfg(target_os = "windows")]
+    pub fn get_nstime() -> u64 {
+        extern crate winapi;
+        unsafe {
+            let mut t = super::mem::zeroed();
+            winapi::um::profileapi::QueryPerformanceCounter(&mut t);
+            *t.QuadPart() as u64
+        }
+    }
+
+    #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+    pub fn get_nstime() -> u64 {
+        unreachable!()
+    }
 }
 
 // A function that is opaque to the optimizer to assist in avoiding dead-code

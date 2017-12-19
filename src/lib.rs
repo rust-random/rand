@@ -248,23 +248,19 @@
 #![deny(missing_debug_implementations)]
 
 #![cfg_attr(not(feature="std"), no_std)]
-#![cfg_attr(all(feature="alloc"), feature(alloc))]
+#![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(feature = "i128_support", feature(i128_type, i128))]
 
-// We need to use several items from "core" for no_std support.
-#[cfg(feature="std")]
-extern crate core;
-#[cfg(all(feature="alloc"))]
-extern crate alloc;
+#[cfg(feature="std")] extern crate std as core;
+#[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
+#[cfg(test)] #[macro_use] extern crate log;
 
 extern crate rand_core;
 
 pub use rand_core::{Rng, CryptoRng, SeedFromRng, SeedableRng, Error, ErrorKind};
 
-#[cfg(feature="std")]
-pub use read::ReadRng;
-#[cfg(feature="std")]
-pub use os::OsRng;
+#[cfg(feature="std")] pub use read::ReadRng;
+#[cfg(feature="std")] pub use os::OsRng;
 pub use jitter::JitterRng;
 pub use iter::iter;
 pub use distributions::{Distribution, Default, Rand};

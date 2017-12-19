@@ -423,18 +423,15 @@ mod imp {
 
 #[cfg(windows)]
 mod imp {
+    extern crate winapi;
+    
     use {Error, ErrorKind};
     
     use std::io;
 
-    type BOOLEAN = u8;
-    type ULONG = u32;
-
-    #[link(name = "advapi32")]
-    extern "system" {
-        // This function's real name is `RtlGenRandom`.
-        fn SystemFunction036(RandomBuffer: *mut u8, RandomBufferLength: ULONG) -> BOOLEAN;
-    }
+    use self::winapi::shared::minwindef::ULONG;
+    use self::winapi::um::ntsecapi::RtlGenRandom;
+    use self::winapi::um::winnt::PVOID;
 
     #[derive(Debug)]
     pub struct OsRng;
@@ -448,7 +445,7 @@ mod imp {
             // split up the buffer.
             for slice in v.chunks_mut(<ULONG>::max_value() as usize) {
                 let ret = unsafe {
-                    SystemFunction036(slice.as_mut_ptr(), slice.len() as ULONG)
+                    RtlGenRandom(slice.as_mut_ptr() as PVOID, slice.len() as ULONG)
                 };
                 if ret == 0 {
                     return Err(Error::with_cause(

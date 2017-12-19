@@ -14,7 +14,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.3"
+rand = "0.4"
 ```
 
 and this to your crate root:
@@ -23,12 +23,16 @@ and this to your crate root:
 extern crate rand;
 ```
 
-### Unstable channel
+### Versions
 
-The 'master' branch tracks development code while the '0.3' branch tracks the
-latest stable release. New features are currently being released in an "unstable
-channel"; if you wish to opt-in to the latest releases (expect more breaking
-changes in this channel) specify `rand = "0.4.0-pre.0"`.
+The `rand` crate has been at version `0.3` since March 2015. If you wish to
+avoid all breaking changes you may wish to stick with this version.
+
+Version `0.4`was released in December 2017. It contains almost no breaking
+changes since the `0.3` series, but nevertheless (will) contain a significant
+amount of new code, including a new "external" entropy source (`JitterRng`),
+`no_std` support, and significant performance improvements for the ISAAC random
+number generators.
 
 ## Examples
 
@@ -72,8 +76,39 @@ optional features are available:
 -   `i128_support` enables support for generating `u128` and `i128` values
 -   `nightly` enables all unstable features (`i128_support`)
 -   `std` enabled by default; by setting "default-features = false" `no_std`
-    mode is activated; unfortunately this removes several important features
--   `alloc` without `std` re-enables some functionality
+    mode is activated; this removes features depending on `std` functionality:
+    
+        -   `OsRng` is entirely unavailable
+        -   `JitterRng` code is still present, but a nanosecond timer must be
+            provided via `JitterRng::new_with_timer`
+        -   Since no external entropy is available, it is not possible to create
+            generators with fresh seeds (user must provide entropy)
+        -   `thread_rng`, `weak_rng` and `random` are all disabled
+        -   exponential, normal and gamma type distributions are unavailable
+            since `exp` and `log` functions are not provided in `core`
+        -   any code requiring `Vec` or `Box`
+-   `alloc` can be used instead of `std` to provide `Vec` and `Box`
+
+## Testing
+
+Unfortunately, `cargo test` does not test everything. The following tests are
+recommended:
+
+```
+# Basic tests for rand and sub-crates
+cargo test --all
+
+# Test no_std support (build only since nearly all tests require std)
+cargo build --all --no-default-features
+
+# Test 128-bit support (requires nightly)
+cargo test --all --features nightly
+
+# Benchmarks (requires nightly)
+cargo bench
+# or just to test the benchmark code:
+cargo test --benches
+```
 
 ## Testing
 
@@ -92,6 +127,13 @@ cargo test --all --features i128_support
 
 # Benchmarks (requires nightly)
 cargo bench
+```
+
+# `derive(Rand)`
+
+```toml
+rand = "0.4"
+rand_derive = "0.3"
 ```
 
 # License
