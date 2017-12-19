@@ -257,12 +257,16 @@ use core::mem;
 #[cfg(feature="std")] use std::io;
 #[cfg(feature="std")] use std::rc::Rc;
 
+// external rngs
 pub use jitter::JitterRng;
 #[cfg(feature="std")] pub use os::OsRng;
 
+// pseudo rngs
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
+pub use prng::XorShiftRng;
 
+// local use declarations
 #[cfg(target_pointer_width = "32")]
 use prng::IsaacRng as IsaacWordRng;
 #[cfg(target_pointer_width = "64")]
@@ -271,16 +275,13 @@ use prng::Isaac64Rng as IsaacWordRng;
 use distributions::{Range, IndependentSample};
 use distributions::range::SampleRange;
 
-pub use prng::XorShiftRng;
-
+// public modules
 pub mod distributions;
-pub mod reseeding;
-mod rand_impls;
 pub mod jitter;
 #[cfg(feature="std")] pub mod os;
 #[cfg(feature="std")] pub mod read;
+pub mod reseeding;
 #[cfg(any(feature="std", feature = "alloc"))] pub mod seq;
-mod prng;
 
 // These tiny modules are here to avoid API breakage, probably only temporarily
 pub mod chacha {
@@ -291,6 +292,11 @@ pub mod isaac {
     //! The ISAAC random number generator.
     pub use prng::{IsaacRng, Isaac64Rng};
 }
+
+// private modules
+mod rand_impls;
+mod prng;
+
 
 /// A type that can be randomly generated using an `Rng`.
 ///
@@ -324,7 +330,6 @@ pub mod isaac {
 ///   independently, using its own `Rand` implementation.
 /// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
 ///   random `T` and returns `Some(T)`.
-
 pub trait Rand : Sized {
     /// Generates a random instance of this type using the specified source of
     /// randomness.
