@@ -257,20 +257,25 @@
 
 extern crate rand_core;
 
+// core traits and types
 pub use rand_core::{Rng, CryptoRng, SeedFromRng, SeedableRng, Error, ErrorKind};
 
+// external rngs
+pub use jitter::JitterRng;
 #[cfg(feature="std")] pub use read::ReadRng;
 #[cfg(feature="std")] pub use os::OsRng;
-pub use jitter::JitterRng;
+
+// extensions
 pub use iter::iter;
 pub use distributions::{Distribution, Default, Rand};
 #[cfg(feature="std")]
 pub use thread_local::{ThreadRng, thread_rng, random, random_with};
 
+// local use declarations
 use prng::IsaacWordRng;
 use distributions::range::Range;
 
-/// Copied from `arrayref` crate
+// macro: copied from `arrayref` crate
 macro_rules! array_ref {
     ($arr:expr, $offset:expr, $len:expr) => {{
         {
@@ -287,6 +292,7 @@ macro_rules! array_ref {
     }}
 }
 
+// public modules
 pub mod distributions;
 pub mod iter;
 pub mod jitter;
@@ -299,12 +305,14 @@ pub mod seq;
 pub mod sequences;
 pub mod utils;
 
+// private modules
 #[cfg(feature="std")]
 mod os;
 #[cfg(feature="std")]
 mod read;
 #[cfg(feature="std")]
 mod thread_local;
+
 
 /// Seeding mechanism for PRNGs, providing a `new` function.
 /// This is the recommended way to create (pseudo) random number generators,
