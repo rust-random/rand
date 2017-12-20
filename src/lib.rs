@@ -253,7 +253,6 @@
 
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
-#[cfg(test)] #[macro_use] extern crate log;
 
 extern crate rand_core;
 
