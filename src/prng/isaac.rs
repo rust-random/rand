@@ -422,6 +422,17 @@ mod test {
     }
 
     #[test]
+    fn test_rng_64_true_values() {
+        // As above, using little-endian versions of above values
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut ra: IsaacRng = SeedableRng::from_seed(seed);
+        // Regression test that isaac is actually using the above vector
+        let v = (0..5).map(|_| ra.next_u64()).collect::<Vec<_>>();
+        assert_eq!(v,
+                   vec!(3752888579798383186, 9035083239252078381, 18052294697452424037, 11876559110374379111, 16751462502657800130));
+    }
+
+    #[test]
     fn test_isaac_true_bytes() {
         let seed: &[_] = &[1, 23, 456, 7890, 12345];
         let mut rng1 = IsaacRng::from_seed(seed);
