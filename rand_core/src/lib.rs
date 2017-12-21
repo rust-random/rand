@@ -225,6 +225,21 @@ pub trait SeedFromRng: Sized {
     fn from_rng<R: Rng>(rng: R) -> Result<Self, Error>;
 }
 
+mod private {
+    pub trait Sealed {}
+    impl<S> Sealed for S where S: super::SeedRestriction {}
+}
+
+/// The seed type is restricted to these types. This trait is sealed to prevent
+/// user-extension.
+/// 
+/// Use of byte-arrays avoids endianness issues. We may extend this to allow
+/// byte arrays of other lengths in the future.
+pub trait SeedRestriction: private::Sealed {}
+impl SeedRestriction for [u8; 8] {}
+impl SeedRestriction for [u8; 16] {}
+impl SeedRestriction for [u8; 32] {}
+
 /// A random number generator that can be explicitly seeded to produce
 /// the same stream of randomness multiple times (i.e. is reproducible).
 /// 
@@ -236,9 +251,7 @@ pub trait SeedFromRng: Sized {
 /// actually does yield reproducible results.
 pub trait SeedableRng: Sized {
     /// Seed type.
-    /// 
-    /// TODO: restrict to `[u8; N]` where N in 8, 16, 32
-    type Seed;
+    type Seed: SeedRestriction;
     
     /// Create a new PRNG using the given seed.
     /// 
