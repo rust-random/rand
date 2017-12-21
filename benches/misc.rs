@@ -5,15 +5,21 @@ extern crate rand;
 
 use test::{black_box, Bencher};
 
-use rand::{Rng, weak_rng};
+use rand::NewSeeded;
+use rand::prng::XorShiftRng;
 use rand::seq::*;
+use rand::sequences::Shuffle;
+
+fn weak_rng() -> XorShiftRng {
+    XorShiftRng::new().unwrap()
+}
 
 #[bench]
 fn misc_shuffle_100(b: &mut Bencher) {
     let mut rng = weak_rng();
     let x : &mut [usize] = &mut [1; 100];
     b.iter(|| {
-        rng.shuffle(x);
+        x.shuffle(&mut rng);
         black_box(&x);
     })
 }

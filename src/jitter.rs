@@ -16,7 +16,8 @@
 
 //! Non-physical true random number generator based on timing jitter.
 
-use Rng;
+use {CryptoRng, Rng, Error, ErrorKind};
+use rand_core::impls;
 
 use core::{fmt, mem, ptr};
 #[cfg(feature="std")]
@@ -112,6 +113,13 @@ impl fmt::Display for TimerError {
 impl ::std::error::Error for TimerError {
     fn description(&self) -> &str {
         self.description()
+    }
+}
+
+impl From<TimerError> for Error {
+    fn from(err: TimerError) -> Error {
+        Error::with_cause(ErrorKind::Unavailable,
+                              "timer jitter failed basic quality tests", err)
     }
 }
 
@@ -730,25 +738,21 @@ impl Rng for JitterRng {
        self.gen_entropy()
     }
 
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        impls::next_u128_via_u64(self)
+    }
+
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        let mut left = dest;
-        while left.len() >= 8 {
-            let (l, r) = {left}.split_at_mut(8);
-            left = r;
-            let chunk: [u8; 8] = unsafe {
-                mem::transmute(self.next_u64().to_le())
-            };
-            l.copy_from_slice(&chunk);
-        }
-        let n = left.len();
-        if n > 0 {
-            let chunk: [u8; 8] = unsafe {
-                mem::transmute(self.next_u64().to_le())
-            };
-            left.copy_from_slice(&chunk[..n]);
-        }
+        impls::fill_bytes_via_u64(self, dest)
+    }
+
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
     }
 }
+
+impl CryptoRng for JitterRng {}
 
 // There are no tests included because (1) this is an "external" RNG, so output
 // is not reproducible and (2) `test_timer` *will* fail on some platforms.

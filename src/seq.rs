@@ -10,7 +10,7 @@
 
 //! Functions for randomly accessing and sampling sequences.
 
-use super::Rng;
+use super::{Rng, Sample};
 
 // This crate is only enabled when either std or alloc is available.
 // BTreeMap is not as fast in tests, but better than nothing.
@@ -38,7 +38,7 @@ use super::Rng;
 /// let sample = seq::sample_iter(&mut rng, 1..100, 5).unwrap();
 /// println!("{:?}", sample);
 /// ```
-pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<Vec<T>, Vec<T>>
+pub fn sample_iter<T, I, R>(mut rng: R, iterable: I, amount: usize) -> Result<Vec<T>, Vec<T>>
     where I: IntoIterator<Item=T>,
           R: Rng,
 {
@@ -83,7 +83,7 @@ pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<V
 /// let values = vec![5, 6, 1, 3, 4, 6, 7];
 /// println!("{:?}", seq::sample_slice(&mut rng, &values, 3));
 /// ```
-pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
+pub fn sample_slice<R, T>(rng: R, slice: &[T], amount: usize) -> Vec<T>
     where R: Rng,
           T: Clone
 {
@@ -111,7 +111,7 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 /// let values = vec![5, 6, 1, 3, 4, 6, 7];
 /// println!("{:?}", seq::sample_slice_ref(&mut rng, &values, 3));
 /// ```
-pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>
+pub fn sample_slice_ref<'a, R, T>(rng: R, slice: &'a [T], amount: usize) -> Vec<&'a T>
     where R: Rng
 {
     let indices = sample_indices(rng, slice.len(), amount);
@@ -131,7 +131,7 @@ pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) ->
 /// have the indices themselves so this is provided as an alternative.
 ///
 /// Panics if `amount > length`
-pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
+pub fn sample_indices<R>(rng: R, length: usize, amount: usize) -> Vec<usize>
     where R: Rng,
 {
     if amount > length {
@@ -164,7 +164,7 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize
 ///
 /// This is better than using a HashMap "cache" when `amount >= length / 2` since it does not
 /// require allocating an extra cache and is much faster.
-fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
+fn sample_indices_inplace<R>(mut rng: R, length: usize, amount: usize) -> Vec<usize>
     where R: Rng,
 {
     debug_assert!(amount <= length);
@@ -188,7 +188,7 @@ fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<u
 /// The cache avoids allocating the entire `length` of values. This is especially useful when
 /// `amount <<< length`, i.e. select 3 non-repeating from 1_000_000
 fn sample_indices_cache<R>(
-    rng: &mut R,
+    mut rng: R,
     length: usize,
     amount: usize,
 ) -> Vec<usize>
@@ -226,7 +226,8 @@ fn sample_indices_cache<R>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use {thread_rng, XorShiftRng, SeedableRng};
+    use {thread_rng, SeedableRng};
+    use prng::XorShiftRng;
 
     #[test]
     fn test_sample_iter() {
@@ -300,10 +301,9 @@ mod test {
 
         for length in 1usize..max_range {
             let amount = r.gen_range(0, length);
-            let seed: [u32; 4] = [
-                r.next_u32(), r.next_u32(), r.next_u32(), r.next_u32()
-            ];
-
+            let mut seed = [0u8; 16];
+            r.fill_bytes(&mut seed);
+            
             println!("Selecting indices: len={}, amount={}, seed={:?}", length, amount, seed);
 
             // assert that the two index methods give exactly the same result

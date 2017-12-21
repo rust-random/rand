@@ -39,13 +39,20 @@
 //! short periods for some seeds. If one PRNG is seeded from another using the
 //! same algorithm, it is possible that both will yield the same sequence of
 //! values (with some lag).
+//! 
+//! TODO: add some guidance on selection of a PRNG: cryptographic approval,
+//! statistical properties, performance.
 
 mod chacha;
+mod hc128;
 mod isaac;
 mod isaac64;
+mod isaac_word;
 mod xorshift;
 
 pub use self::chacha::ChaChaRng;
+pub use self::hc128::Hc128Rng;
 pub use self::isaac::IsaacRng;
 pub use self::isaac64::Isaac64Rng;
+pub use self::isaac_word::IsaacWordRng;
 pub use self::xorshift::XorShiftRng;

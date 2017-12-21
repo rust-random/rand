@@ -10,27 +10,30 @@
 
 //! A wrapper around any Read to treat it as an RNG.
 
-use std::io::{self, Read};
-use std::mem;
-use Rng;
+use std::io::Read;
+
+use {Rng, Error, ErrorKind};
 
 /// An RNG that reads random bytes straight from a `Read`. This will
 /// work best with an infinite reader, but this is not required.
 ///
 /// # Panics
 ///
-/// It will panic if it there is insufficient data to fulfill a request.
+/// Only the `try_fill` method will report errors. All other methods will panic
+/// if the underlying reader encounters an error. They will also panic if there
+/// is insufficient data to fulfill a request.
 ///
 /// # Example
 ///
 /// ```rust
-/// use rand::{read, Rng};
+/// use rand::{Rng, ReadRng, distributions};
 ///
 /// let data = vec![1, 2, 3, 4, 5, 6, 7, 8];
-/// let mut rng = read::ReadRng::new(&data[..]);
-/// println!("{:x}", rng.gen::<u32>());
+/// let mut rng = ReadRng::new(&data[..]);
+/// println!("{:x}", rng.next_u32());
 /// ```
 #[derive(Debug)]
+// Do not derive Clone, because it could share the underlying reader
 pub struct ReadRng<R> {
     reader: R
 }
@@ -46,40 +49,35 @@ impl<R: Read> ReadRng<R> {
 
 impl<R: Read> Rng for ReadRng<R> {
     fn next_u32(&mut self) -> u32 {
-        // This is designed for speed: reading a LE integer on a LE
-        // platform just involves blitting the bytes into the memory
-        // of the u32, similarly for BE on BE; avoiding byteswapping.
-        let mut buf = [0; 4];
-        fill(&mut self.reader, &mut buf).unwrap();
-        unsafe { *(buf.as_ptr() as *const u32) }
+        ::rand_core::impls::next_u32_via_fill(self)
     }
-    fn next_u64(&mut self) -> u64 {
-        // see above for explanation.
-        let mut buf = [0; 8];
-        fill(&mut self.reader, &mut buf).unwrap();
-        unsafe { *(buf.as_ptr() as *const u64) }
-    }
-    fn fill_bytes(&mut self, v: &mut [u8]) {
-        if v.len() == 0 { return }
-        fill(&mut self.reader, v).unwrap();
-    }
-}
 
-fn fill(r: &mut Read, mut buf: &mut [u8]) -> io::Result<()> {
-    while buf.len() > 0 {
-        match try!(r.read(buf)) {
-            0 => return Err(io::Error::new(io::ErrorKind::Other,
-                                           "end of file reached")),
-            n => buf = &mut mem::replace(&mut buf, &mut [])[n..],
-        }
+    fn next_u64(&mut self) -> u64 {
+        ::rand_core::impls::next_u64_via_fill(self)
     }
-    Ok(())
+
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        ::rand_core::impls::next_u128_via_fill(self)
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        ::rand_core::impls::fill_via_try_fill(self, dest)
+    }
+
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        if dest.len() == 0 { return Ok(()); }
+        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
+        self.reader.read_exact(dest).map_err(|err| {
+            Error::with_cause(ErrorKind::Unavailable, "ReadRng: read error", err)
+        })
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::ReadRng;
-    use Rng;
+    use {Rng, ErrorKind};
 
     #[test]
     fn test_reader_rng_u64() {
@@ -114,10 +112,12 @@ mod test {
     }
 
     #[test]
-    #[should_panic]
     fn test_reader_rng_insufficient_bytes() {
-        let mut rng = ReadRng::new(&[][..]);
-        let mut v = [0u8; 3];
-        rng.fill_bytes(&mut v);
+        let v = [1u8, 2, 3, 4, 5, 6, 7, 8];
+        let mut w = [0u8; 9];
+
+        let mut rng = ReadRng::new(&v[..]);
+
+        assert!(rng.try_fill(&mut w).err().unwrap().kind == ErrorKind::Unavailable);
     }
 }

@@ -11,11 +11,16 @@
 //! Interfaces to the operating system provided random number
 //! generators.
 
-use std::{io, mem, fmt};
-use Rng;
+use std::fmt;
+use std::io::Read;
+
+use {Rng, Error, ErrorKind};
+// TODO: replace many of the panics below with Result error handling
 
 /// A random number generator that retrieves randomness straight from
-/// the operating system. Platform sources:
+/// the operating system.
+///
+/// Platform sources:
 ///
 /// - Unix-like systems (Linux, Android, Mac OSX): read directly from
 ///   `/dev/urandom`, or from `getrandom(2)` system call if available.
@@ -24,7 +29,6 @@ use Rng;
 /// - Windows: calls `RtlGenRandom`, exported from `advapi32.dll` as
 ///   `SystemFunction036`.
 /// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
-/// - PNaCl: calls into the `nacl-irt-random-0.1` IRT interface.
 ///
 /// This usually does not block. On some systems (e.g. FreeBSD, OpenBSD,
 /// Max OS X, and modern Linux) this may block very early in the init
@@ -32,37 +36,60 @@ use Rng;
 ///
 /// [1] See <https://www.python.org/dev/peps/pep-0524/> for a more
 ///     in-depth discussion.
+#[allow(unused)]    // not used by all targets
 pub struct OsRng(imp::OsRng);
+
+impl fmt::Debug for OsRng {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
 
 impl OsRng {
     /// Create a new `OsRng`.
-    pub fn new() -> io::Result<OsRng> {
+    pub fn new() -> Result<OsRng, Error> {
         imp::OsRng::new().map(OsRng)
     }
 }
 
 impl Rng for OsRng {
-    fn next_u32(&mut self) -> u32 { self.0.next_u32() }
-    fn next_u64(&mut self) -> u64 { self.0.next_u64() }
-    fn fill_bytes(&mut self, v: &mut [u8]) { self.0.fill_bytes(v) }
-}
+    fn next_u32(&mut self) -> u32 {
+        // note: `next_u32_via_fill` does a byte-swap on big-endian
+        // architectures, which is not really needed here
+        ::rand_core::impls::next_u32_via_fill(self)
+    }
 
-impl fmt::Debug for OsRng {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "OsRng {{}}")
+    fn next_u64(&mut self) -> u64 {
+        ::rand_core::impls::next_u64_via_fill(self)
+    }
+
+    #[cfg(feature = "i128_support")]
+    fn next_u128(&mut self) -> u128 {
+        ::rand_core::impls::next_u128_via_fill(self)
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        ::rand_core::impls::fill_via_try_fill(self, dest)
+    }
+
+    fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
+        self.0.try_fill(v)
     }
 }
 
-fn next_u32(fill_buf: &mut FnMut(&mut [u8])) -> u32 {
-    let mut buf: [u8; 4] = [0; 4];
-    fill_buf(&mut buf);
-    unsafe { mem::transmute::<[u8; 4], u32>(buf) }
-}
+// Specialisation of `ReadRng` for our purposes
+#[derive(Debug)]
+struct ReadRng<R> (R);
 
-fn next_u64(fill_buf: &mut FnMut(&mut [u8])) -> u64 {
-    let mut buf: [u8; 8] = [0; 8];
-    fill_buf(&mut buf);
-    unsafe { mem::transmute::<[u8; 8], u64>(buf) }
+impl<R: Read> ReadRng<R> {
+    #[allow(unused)]    // not used by all targets
+    fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        if dest.len() == 0 { return Ok(()); }
+        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
+        self.0.read_exact(dest).map_err(|err| {
+            Error::with_cause(ErrorKind::Unavailable, "error reading random device", err)
+        })
+    }
 }
 
 #[cfg(all(unix, not(target_os = "ios"),
@@ -74,13 +101,12 @@ fn next_u64(fill_buf: &mut FnMut(&mut [u8])) -> u64 {
 mod imp {
     extern crate libc;
 
-    use super::{next_u32, next_u64};
     use self::OsRngInner::*;
+    use super::ReadRng;
+    use {Error, ErrorKind};
 
     use std::io;
     use std::fs::File;
-    use Rng;
-    use read::ReadRng;
 
     #[cfg(all(target_os = "linux",
               any(target_arch = "x86_64",
@@ -103,9 +129,11 @@ mod imp {
         const NR_GETRANDOM: libc::c_long = 278;
         #[cfg(target_arch = "powerpc")]
         const NR_GETRANDOM: libc::c_long = 384;
+        
+        const GRND_NONBLOCK: libc::c_uint = 0x0001;
 
         unsafe {
-            syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(), 0)
+            syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(), GRND_NONBLOCK)
         }
     }
 
@@ -117,22 +145,33 @@ mod imp {
                       target_arch = "powerpc"))))]
     fn getrandom(_buf: &mut [u8]) -> libc::c_long { -1 }
 
-    fn getrandom_fill_bytes(v: &mut [u8]) {
+    fn getrandom_try_fill(v: &mut [u8]) -> Result<(), Error> {
         let mut read = 0;
         let len = v.len();
         while read < len {
             let result = getrandom(&mut v[read..]);
             if result == -1 {
                 let err = io::Error::last_os_error();
-                if err.kind() == io::ErrorKind::Interrupted {
-                    continue
+                let kind = err.kind();
+                if kind == io::ErrorKind::Interrupted {
+                    continue;
+                } else if kind == io::ErrorKind::WouldBlock {
+                    // Potentially this would waste bytes, but since we use
+                    // /dev/urandom blocking only happens if not initialised.
+                    // Also, wasting the bytes in v doesn't matter very much.
+                    return Err(Error::new(ErrorKind::NotReady, "getrandom not ready"));
                 } else {
-                    panic!("unexpected getrandom error: {}", err);
+                    return Err(Error::with_cause(
+                        ErrorKind::Unavailable,
+                        "unexpected getrandom error",
+                        err,
+                    ));
                 }
             } else {
                 read += result as usize;
             }
         }
+        Ok(())
     }
 
     #[cfg(all(target_os = "linux",
@@ -171,45 +210,35 @@ mod imp {
                       target_arch = "powerpc"))))]
     fn is_getrandom_available() -> bool { false }
 
+    #[derive(Debug)]
     pub struct OsRng {
         inner: OsRngInner,
     }
 
+    #[derive(Debug)]
     enum OsRngInner {
         OsGetrandomRng,
         OsReadRng(ReadRng<File>),
     }
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             if is_getrandom_available() {
                 return Ok(OsRng { inner: OsGetrandomRng });
             }
 
-            let reader = try!(File::open("/dev/urandom"));
-            let reader_rng = ReadRng::new(reader);
+            let reader = File::open("/dev/urandom").map_err(|err| {
+                Error::with_cause(ErrorKind::Unavailable, "error opening random device", err)
+            })?;
+            let reader_rng = ReadRng(reader);
 
             Ok(OsRng { inner: OsReadRng(reader_rng) })
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
+        
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             match self.inner {
-                OsGetrandomRng => next_u32(&mut getrandom_fill_bytes),
-                OsReadRng(ref mut rng) => rng.next_u32(),
-            }
-        }
-        fn next_u64(&mut self) -> u64 {
-            match self.inner {
-                OsGetrandomRng => next_u64(&mut getrandom_fill_bytes),
-                OsReadRng(ref mut rng) => rng.next_u64(),
-            }
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
-            match self.inner {
-                OsGetrandomRng => getrandom_fill_bytes(v),
-                OsReadRng(ref mut rng) => rng.fill_bytes(v)
+                OsGetrandomRng => getrandom_try_fill(v),
+                OsReadRng(ref mut rng) => rng.try_fill(v)
             }
         }
     }
@@ -219,10 +248,9 @@ mod imp {
 mod imp {
     extern crate libc;
 
-    use super::{next_u32, next_u64};
-
+    use {Error, ErrorKind};
+    
     use std::io;
-    use Rng;
     use self::libc::{c_int, size_t};
 
     #[derive(Debug)]
@@ -240,24 +268,20 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             let ret = unsafe {
                 SecRandomCopyBytes(kSecRandomDefault, v.len() as size_t, v.as_mut_ptr())
             };
             if ret == -1 {
-                panic!("couldn't generate random bytes: {}", io::Error::last_os_error());
+                Err(Error::with_cause(
+                    ErrorKind::Unavailable,
+                    "couldn't generate random bytes",
+                    io::Error::last_os_error()))
+            } else {
+                Ok(())
             }
         }
     }
@@ -267,28 +291,18 @@ mod imp {
 mod imp {
     extern crate libc;
 
-    use std::{io, ptr};
-    use Rng;
-
-    use super::{next_u32, next_u64};
+    use {Error, ErrorKind};
+    
+    use std::ptr;
 
     #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             let mib = [libc::CTL_KERN, libc::KERN_ARND];
             // kern.arandom permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
@@ -299,10 +313,14 @@ mod imp {
                                  ptr::null(), 0)
                 };
                 if ret == -1 || s_len != s.len() {
-                    panic!("kern.arandom sysctl failed! (returned {}, s.len() {}, oldlenp {})",
-                           ret, s.len(), s_len);
+                    // Old format string:
+                    // "kern.arandom sysctl failed! (returned {}, s.len() {}, oldlenp {})"
+                    return Err(Error::new(
+                        ErrorKind::Unavailable,
+                        "kern.arandom sysctl failed"));
                 }
             }
+            Ok(())
         }
     }
 }
@@ -311,48 +329,42 @@ mod imp {
 mod imp {
     extern crate libc;
 
+    use {Error, ErrorKind};
+    
     use std::io;
-    use Rng;
-
-    use super::{next_u32, next_u64};
 
     #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             // getentropy(2) permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
                 let ret = unsafe {
                     libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s.len())
                 };
                 if ret == -1 {
-                    let err = io::Error::last_os_error();
-                    panic!("getentropy failed: {}", err);
+                    return Err(Error::with_cause(
+                        ErrorKind::Unavailable,
+                        "getentropy failed",
+                        io::Error::last_os_error()));
                 }
             }
+            Ok(())
         }
     }
 }
 
 #[cfg(target_os = "redox")]
 mod imp {
+    use {Error, ErrorKind};
+    
     use std::io;
     use std::fs::File;
-    use Rng;
-    use read::ReadRng;
+    use super::ReadRng;
 
     #[derive(Debug)]
     pub struct OsRng {
@@ -360,23 +372,16 @@ mod imp {
     }
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
-            let reader = try!(File::open("rand:"));
-            let reader_rng = ReadRng::new(reader);
+        pub fn new() -> Result<OsRng, Error> {
+            let reader = File::open("rand:").map_err(|err| {
+                Error::with_cause(ErrorKind::Unavailable, "error opening random device", err)
+            })?;
+            let reader_rng = ReadRng(reader);
 
             Ok(OsRng { inner: reader_rng })
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            self.inner.next_u32()
-        }
-        fn next_u64(&mut self) -> u64 {
-            self.inner.next_u64()
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
-            self.inner.fill_bytes(v)
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
+            self.inner.try_fill(v)
         }
     }
 }
@@ -385,37 +390,33 @@ mod imp {
 mod imp {
     extern crate fuchsia_zircon;
 
+    use {Error, ErrorKind};
+    
     use std::io;
-    use Rng;
-
-    use super::{next_u32, next_u64};
 
     #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             for s in v.chunks_mut(fuchsia_zircon::ZX_CPRNG_DRAW_MAX_LEN) {
                 let mut filled = 0;
                 while filled < s.len() {
                     match fuchsia_zircon::cprng_draw(&mut s[filled..]) {
                         Ok(actual) => filled += actual,
-                        Err(e) => panic!("cprng_draw failed: {:?}", e),
+                        Err(e) => {
+                            return Err(Error::with_cause(
+                                ErrorKind::Unavailable,
+                                "cprng_draw failed",
+                                e));
+                        }
                     };
                 }
             }
+            Ok(())
         }
     }
 }
@@ -423,11 +424,10 @@ mod imp {
 #[cfg(windows)]
 mod imp {
     extern crate winapi;
-
+    
+    use {Error, ErrorKind};
+    
     use std::io;
-    use Rng;
-
-    use super::{next_u32, next_u64};
 
     use self::winapi::shared::minwindef::ULONG;
     use self::winapi::um::ntsecapi::RtlGenRandom;
@@ -437,19 +437,10 @@ mod imp {
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
+        pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
             // RtlGenRandom takes an ULONG (u32) for the length so we need to
             // split up the buffer.
             for slice in v.chunks_mut(<ULONG>::max_value() as usize) {
@@ -457,86 +448,13 @@ mod imp {
                     RtlGenRandom(slice.as_mut_ptr() as PVOID, slice.len() as ULONG)
                 };
                 if ret == 0 {
-                    panic!("couldn't generate random bytes: {}",
-                           io::Error::last_os_error());
+                    return Err(Error::with_cause(
+                        ErrorKind::Unavailable,
+                        "couldn't generate random bytes",
+                        io::Error::last_os_error()));
                 }
             }
-        }
-    }
-}
-
-#[cfg(target_os = "nacl")]
-mod imp {
-    extern crate libc;
-
-    use std::io;
-    use std::mem;
-    use Rng;
-
-    use super::{next_u32, next_u64};
-
-    #[derive(Debug)]
-    pub struct OsRng(extern fn(dest: *mut libc::c_void,
-                               bytes: libc::size_t,
-                               read: *mut libc::size_t) -> libc::c_int);
-
-    extern {
-        fn nacl_interface_query(name: *const libc::c_char,
-                                table: *mut libc::c_void,
-                                table_size: libc::size_t) -> libc::size_t;
-    }
-
-    const INTERFACE: &'static [u8] = b"nacl-irt-random-0.1\0";
-
-    #[repr(C)]
-    struct NaClIRTRandom {
-        get_random_bytes: Option<extern fn(dest: *mut libc::c_void,
-                                           bytes: libc::size_t,
-                                           read: *mut libc::size_t) -> libc::c_int>,
-    }
-
-    impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
-            let mut iface = NaClIRTRandom {
-                get_random_bytes: None,
-            };
-            let result = unsafe {
-                nacl_interface_query(INTERFACE.as_ptr() as *const _,
-                                     mem::transmute(&mut iface),
-                                     mem::size_of::<NaClIRTRandom>() as libc::size_t)
-            };
-            if result != 0 {
-                assert!(iface.get_random_bytes.is_some());
-                let result = OsRng(iface.get_random_bytes.take().unwrap());
-                Ok(result)
-            } else {
-                let error = io::ErrorKind::NotFound;
-                let error = io::Error::new(error, "IRT random interface missing");
-                Err(error)
-            }
-        }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            next_u32(&mut |v| self.fill_bytes(v))
-        }
-        fn next_u64(&mut self) -> u64 {
-            next_u64(&mut |v| self.fill_bytes(v))
-        }
-        fn fill_bytes(&mut self, v: &mut [u8]) {
-            let mut read = 0;
-            loop {
-                let mut r: libc::size_t = 0;
-                let len = v.len();
-                let error = (self.0)(v[read..].as_mut_ptr() as *mut _,
-                                     (len - read) as libc::size_t,
-                                     &mut r as *mut _);
-                assert!(error == 0, "`get_random_bytes` failed!");
-                read += r as usize;
-
-                if read >= v.len() { break; }
-            }
+            Ok(())
         }
     }
 }
@@ -550,14 +468,11 @@ mod imp {
     pub struct OsRng;
 
     impl OsRng {
-        pub fn new() -> io::Result<OsRng> {
-            Err(io::Error::new(io::ErrorKind::Other, "Not supported"))
+        pub fn new() -> Result<OsRng, Error> {
+            Err(Error::new(ErrorKind::Unavailable, "not supported on WASM"))
         }
-    }
-
-    impl Rng for OsRng {
-        fn next_u32(&mut self) -> u32 {
-            panic!("Not supported")
+        pub fn try_fill(&mut self, v: &mut [u8]) -> Result<(), Error> {
+            Err(Error::new(ErrorKind::Unavailable, "not supported on WASM"))
         }
     }
 }
@@ -577,7 +492,7 @@ mod test {
         r.next_u64();
 
         let mut v = [0u8; 1000];
-        r.fill_bytes(&mut v);
+        r.try_fill(&mut v).unwrap();
     }
 
     #[test]
@@ -603,7 +518,7 @@ mod test {
                     thread::yield_now();
                     r.next_u64();
                     thread::yield_now();
-                    r.fill_bytes(&mut v);
+                    r.try_fill(&mut v).unwrap();
                     thread::yield_now();
                 }
             });
