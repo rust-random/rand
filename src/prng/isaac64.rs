@@ -10,12 +10,9 @@
 
 //! The ISAAC-64 random number generator.
 
-use core::slice;
+use core::{fmt, slice};
 use core::num::Wrapping as w;
-use core::fmt;
-
 use rand_core::{impls, le};
-
 use {Rng, SeedFromRng, SeedableRng, Error};
 
 #[allow(non_camel_case_types)]
@@ -288,19 +285,15 @@ fn init(mut mem: [w64; RAND_SIZE], rounds: u32) -> Isaac64Rng {
         }
     }
 
-    let mut rng = Isaac64Rng {
+    Isaac64Rng {
         rsl: [0; RAND_SIZE],
         mem: mem,
         a: w(0),
         b: w(0),
         c: w(0),
-        index: 0,
+        index: RAND_SIZE as u32, // generate on first use
         half_used: false,
-    };
-
-    // Prepare the first set of results
-    rng.isaac64();
-    rng
+    }
 }
 
 fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
@@ -317,26 +310,28 @@ fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
 
 impl SeedFromRng for Isaac64Rng {
     fn from_rng<R: Rng>(mut other: R) -> Result<Self, Error> {
-        let mut key = [w(0); RAND_SIZE];
+        let mut seed = [w(0); RAND_SIZE];
         unsafe {
-            let ptr = key.as_mut_ptr() as *mut u8;
+            let ptr = seed.as_mut_ptr() as *mut u8;
 
             let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE * 8);
             other.try_fill(slice)?;
         }
 
-        Ok(init(key, 2))
+        Ok(init(seed, 2))
     }
 }
 
 impl SeedableRng for Isaac64Rng {
     type Seed = [u8; 32];
-    fn from_seed(mut seed: Self::Seed) -> Self {
-        let mut key = [w(0); RAND_SIZE];
-        for (x, y) in key.iter_mut().zip(le::convert_slice_64(&mut seed[..]).iter()) {
+    fn from_seed(seed: Self::Seed) -> Self {
+        let mut seed_u64 = [0u64; 4];
+        le::read_u64_into(&seed, &mut seed_u64);
+        let mut seed_extended = [w(0); RAND_SIZE];
+        for (x, y) in seed_extended.iter_mut().zip(seed_u64.iter()) {
             *x = w(*y);
         }
-        init(key, 2)
+        init(seed_extended, 2)
     }
 }
 

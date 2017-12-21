@@ -396,69 +396,51 @@ impl stdError for Error {
 /// Little-Endian order has been chosen for internal usage; this makes some
 /// useful functions available.
 pub mod le {
-    use core::slice;
-    
+    use core::ptr;
+
     /// Helper function to turn a slice into an array reference
-    
+
     /// Read a `u32` from a byte sequence, in litte-endian order
     /// 
     /// Consider usage with the `arrayref` crate.
     pub fn read_u32(bytes: &[u8; 4]) -> u32 {
         unsafe{ *(bytes as *const [u8; 4] as *const u32) }.to_le()
     }
-    
+
     /// Read a `u64` from a byte sequence, in litte-endian order
     /// 
     /// Consider usage with the `arrayref` crate.
     pub fn read_u64(bytes: &[u8; 8]) -> u64 {
         unsafe{ *(bytes as *const [u8; 8] as *const u64) }.to_le()
     }
-    
-    /// Convert a byte slice to a `u32` slice and mutate endianness in-place
-    pub fn convert_slice_32(bytes: &mut [u8]) -> &mut [u32] {
-        assert_eq!(bytes.len() % 4, 0);
-        let l = bytes.len() / 4;
-        let p = bytes.as_ptr() as *mut u8 as *mut u32;
-        let s = unsafe{ slice::from_raw_parts_mut(p, l) };
-        for i in s.iter_mut() {
-            *i = (*i).to_le();
-        }
-        s
-    }
-    
-    /// Convert a byte slice to a `u64` slice and mutate endianness in-place
-    pub fn convert_slice_64(bytes: &mut [u8]) -> &mut [u64] {
-        assert_eq!(bytes.len() % 8, 0);
-        let l = bytes.len() / 8;
-        let p = bytes.as_ptr() as *mut u8 as *mut u64;
-        let s = unsafe{ slice::from_raw_parts_mut(p, l) };
-        for i in s.iter_mut() {
-            *i = (*i).to_le();
-        }
-        s
-    }
-    
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-        #[test]
-        
-        fn test_read() {
-            assert_eq!(read_u32(&[1, 2, 3, 4]), 0x04030201);
-            assert_eq!(read_u64(&[1, 2, 3, 4, 5, 6, 7, 8]), 0x0807060504030201);
-            
-            {
-                let mut bytes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-                let slice = convert_slice_32(&mut bytes[..]);
-                assert_eq!(slice[0], 0x04030201);
-                assert_eq!(slice[3], 0x100F0E0D);
+
+    macro_rules! read_slice {
+        ($src:expr, $dst:expr, $size:expr, $which:ident) => {{
+            assert_eq!($src.len(), $size * $dst.len());
+
+            unsafe {
+                ptr::copy_nonoverlapping(
+                    $src.as_ptr(),
+                    $dst.as_mut_ptr() as *mut u8,
+                    $src.len());
             }
-            {
-                let mut bytes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-                let slice = convert_slice_64(&mut bytes[..]);
-                assert_eq!(slice[0], 0x0807060504030201);
-                assert_eq!(slice[1], 0x100F0E0D0C0B0A09);
+            for v in $dst.iter_mut() {
+                *v = v.$which();
             }
-        }
+        }};
+    }
+
+    /// Reads unsigned 32 bit integers from `src` into `dst`.
+    /// Borrowed from the `byteorder` crate.
+    #[inline]
+    pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
+        read_slice!(src, dst, 4, to_le);
+    }
+
+    /// Reads unsigned 64 bit integers from `src` into `dst`.
+    /// Borrowed from the `byteorder` crate.
+    #[inline]
+    pub fn read_u64_into(src: &[u8], dst: &mut [u64]) {
+        read_slice!(src, dst, 8, to_le);
     }
 }
