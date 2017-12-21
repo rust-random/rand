@@ -11,7 +11,7 @@
 //! The normal and derived distributions.
 
 use {Rng, Rand, Open01};
-use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
+use distributions::{ziggurat, ziggurat_tables, Distribution};
 
 /// A wrapper around an `f64` to generate N(0, 1) random numbers
 /// (a.k.a.  a standard normal, or Gaussian).
@@ -81,11 +81,11 @@ impl Rand for StandardNormal {
 /// # Example
 ///
 /// ```rust
-/// use rand::distributions::{Normal, IndependentSample};
+/// use rand::distributions::{Normal, Distribution};
 ///
 /// // mean 2, standard deviation 3
 /// let normal = Normal::new(2.0, 3.0);
-/// let v = normal.ind_sample(&mut rand::thread_rng());
+/// let v = normal.sample(&mut rand::thread_rng());
 /// println!("{} is from a N(2, 9) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -110,11 +110,8 @@ impl Normal {
         }
     }
 }
-impl Sample<f64> for Normal {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
-impl IndependentSample<f64> for Normal {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
+impl Distribution<f64> for Normal {
+    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         let StandardNormal(n) = rng.gen::<StandardNormal>();
         self.mean + self.std_dev * n
     }
@@ -129,11 +126,11 @@ impl IndependentSample<f64> for Normal {
 /// # Example
 ///
 /// ```rust
-/// use rand::distributions::{LogNormal, IndependentSample};
+/// use rand::distributions::{LogNormal, Distribution};
 ///
 /// // mean 2, standard deviation 3
 /// let log_normal = LogNormal::new(2.0, 3.0);
-/// let v = log_normal.ind_sample(&mut rand::thread_rng());
+/// let v = log_normal.sample(&mut rand::thread_rng());
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -154,27 +151,24 @@ impl LogNormal {
         LogNormal { norm: Normal::new(mean, std_dev) }
     }
 }
-impl Sample<f64> for LogNormal {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
-impl IndependentSample<f64> for LogNormal {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        self.norm.ind_sample(rng).exp()
+impl Distribution<f64> for LogNormal {
+    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+        self.norm.sample(rng).exp()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use distributions::{Sample, IndependentSample};
+    use distributions::Distribution;
     use super::{Normal, LogNormal};
 
     #[test]
     fn test_normal() {
-        let mut norm = Normal::new(10.0, 10.0);
+        let norm = Normal::new(10.0, 10.0);
         let mut rng = ::test::rng(210);
         for _ in 0..1000 {
             norm.sample(&mut rng);
-            norm.ind_sample(&mut rng);
+            norm.sample(&mut rng);
         }
     }
     #[test]
@@ -186,11 +180,11 @@ mod tests {
 
     #[test]
     fn test_log_normal() {
-        let mut lnorm = LogNormal::new(10.0, 10.0);
+        let lnorm = LogNormal::new(10.0, 10.0);
         let mut rng = ::test::rng(211);
         for _ in 0..1000 {
             lnorm.sample(&mut rng);
-            lnorm.ind_sample(&mut rng);
+            lnorm.sample(&mut rng);
         }
     }
     #[test]

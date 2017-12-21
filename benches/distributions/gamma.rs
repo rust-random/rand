@@ -1,7 +1,7 @@
 use std::mem::size_of;
 use test::Bencher;
 use rand;
-use rand::distributions::IndependentSample;
+use rand::distributions::Distribution;
 use rand::distributions::gamma::Gamma;
 
 #[bench]
@@ -11,7 +11,7 @@ fn bench_gamma_large_shape(b: &mut Bencher) {
 
     b.iter(|| {
         for _ in 0..::RAND_BENCH_N {
-            gamma.ind_sample(&mut rng);
+            gamma.sample(&mut rng);
         }
     });
     b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
@@ -24,7 +24,7 @@ fn bench_gamma_small_shape(b: &mut Bencher) {
 
     b.iter(|| {
         for _ in 0..::RAND_BENCH_N {
-            gamma.ind_sample(&mut rng);
+            gamma.sample(&mut rng);
         }
     });
     b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
