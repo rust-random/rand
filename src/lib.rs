@@ -483,6 +483,21 @@ pub trait Rng {
         Ok(self.fill_bytes(dest))
     }
 
+    /// Sample a new value, using the given distribution.
+    /// 
+    /// ### Example
+    /// 
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    /// use rand::distributions::Range;
+    /// 
+    /// let mut rng = thread_rng();
+    /// let x: i32 = rng.sample(Range::new(10, 15));
+    /// ```
+    fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T where Self: Sized {
+        distr.sample(self)
+    }
+    
     /// Return a random value of a `Rand` type.
     ///
     /// # Example
