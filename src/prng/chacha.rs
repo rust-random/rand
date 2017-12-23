@@ -10,9 +10,9 @@
 
 //! The ChaCha random number generator.
 
-use core::{fmt, slice};
+use core::fmt;
 use rand_core::{impls, le};
-use {Rng, CryptoRng, SeedFromRng, SeedableRng, Error};
+use {Rng, CryptoRng, SeedableRng, Error};
 
 const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
 const STATE_WORDS: usize = 16;
@@ -224,18 +224,6 @@ impl Rng for ChaChaRng {
 
 impl CryptoRng for ChaChaRng {}
 
-impl SeedFromRng for ChaChaRng {
-    fn from_rng<R: Rng>(mut other: R) -> Result<Self, Error> {
-        let mut seed = [0u32; SEED_WORDS];
-        unsafe {
-            let ptr = seed.as_mut_ptr() as *mut u8;
-            let slice = slice::from_raw_parts_mut(ptr, SEED_WORDS * 4);
-            other.try_fill(slice)?;
-        }
-        Ok(ChaChaRng::init(seed))
-    }
-}
-
 impl SeedableRng for ChaChaRng {
     type Seed = [u8; SEED_WORDS*4];
     fn from_seed(seed: Self::Seed) -> Self {
@@ -248,7 +236,7 @@ impl SeedableRng for ChaChaRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, SeedFromRng};
+    use {Rng, SeedableRng};
     use super::ChaChaRng;
 
     #[test]

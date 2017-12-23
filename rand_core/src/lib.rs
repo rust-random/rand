@@ -43,7 +43,7 @@ extern crate core;
 #[cfg(feature="std")]
 use std::error::Error as stdError;
 
-use core::fmt;
+use core::{fmt, slice, mem};
 
 pub mod impls;
 
@@ -206,25 +206,6 @@ impl<R: Rng+?Sized> Rng for Box<R> {
 }
 
 
-/// Support mechanism for creating random number generators seeded by other
-/// generators. All PRNGs should support this to enable `NewSeeded` support,
-/// which should be the preferred way of creating randomly-seeded generators.
-/// 
-/// There are two subtle differences between `SeedFromRng::from_rng` and
-/// `SeedableRng::from_seed` (beyond the obvious): first, that `from_rng` has
-/// no reproducibility requirement, and second, that `from_rng` may directly
-/// fill internal states larger than `SeedableRng::Seed`, where `from_seed` may
-/// need some extra step to expand the input.
-pub trait SeedFromRng: Sized {
-    /// Creates a new instance, seeded from another `Rng`.
-    /// 
-    /// Seeding from a cryptographic generator should be fine. On the other
-    /// hand, seeding a simple numerical generator from another of the same
-    /// type sometimes has serious side effects such as effectively cloning the
-    /// generator.
-    fn from_rng<R: Rng>(rng: R) -> Result<Self, Error>;
-}
-
 mod private {
     pub trait Sealed {}
     impl<S> Sealed for S where S: super::SeedRestriction {}
@@ -232,43 +213,59 @@ mod private {
 
 /// The seed type is restricted to these types. This trait is sealed to prevent
 /// user-extension.
-/// 
+///
 /// Use of byte-arrays avoids endianness issues. We may extend this to allow
 /// byte arrays of other lengths in the future.
-pub trait SeedRestriction: private::Sealed {}
+pub trait SeedRestriction: private::Sealed +
+                           ::core::default::Default +
+                           ::core::convert::AsMut<[u8]> {}
 impl SeedRestriction for [u8; 8] {}
 impl SeedRestriction for [u8; 16] {}
 impl SeedRestriction for [u8; 32] {}
 
-/// A random number generator that can be explicitly seeded to produce
-/// the same stream of randomness multiple times (i.e. is reproducible).
-/// 
-/// Note: this should only be implemented by reproducible generators (i.e.
-/// where the algorithm is fixed and results should be the same across
-/// platforms). This should not be implemented by wrapper types which choose
-/// the underlying implementation based on platform, or which may change the
-/// algorithm used in the future. This is to ensure that manual seeding of PRNGs
-/// actually does yield reproducible results.
+/// A random number generator that can be explicitly seeded.
+///
+/// There are two subtle differences between `from_rng` and`from_seed` (beyond
+/// the obvious): first, that `from_rng` has no reproducibility requirement, and
+/// second, that `from_rng` may directly fill internal states larger than
+/// `SeedableRng::Seed`, where `from_seed` may need some extra step to expand
+/// the input.
 pub trait SeedableRng: Sized {
     /// Seed type.
     type Seed: SeedRestriction;
-    
+
     /// Create a new PRNG using the given seed.
-    /// 
+    ///
     /// Each PRNG should implement this.
-    /// 
+    ///
     /// Reproducibility is required; that is, a fixed PRNG seeded using this
     /// function with a fixed seed should produce the same sequence of output
     /// today, and in the future. PRNGs not able to satisfy this should make
-    /// clear notes in their documentation or not implement `SeedableRng` at
-    /// all. It is however not required that this function yield the same state
-    /// as a reference implementation of the PRNG given equivalent seed; if
-    /// necessary another constructor should be used.
-    /// 
+    /// clear notes in their documentation. It is however not required that this
+    /// function yield the same state as a reference implementation of the PRNG
+    /// given equivalent seed; if necessary another constructor should be used.
+    ///
     /// It may be expected that bits in the seed are well distributed, i.e. that
     /// values like 0, 1 and (size - 1) are unlikely. Users with poorly
     /// distributed input should use `from_hashable`.
     fn from_seed(seed: Self::Seed) -> Self;
+
+    /// Create a new PRNG seeded from another `Rng`.
+    ///
+    /// Seeding from a cryptographic generator should be fine. On the other
+    /// hand, seeding a simple numerical generator from another of the same
+    /// type sometimes has serious side effects such as effectively cloning the
+    /// generator.
+    fn from_rng<R: Rng>(mut rng: R) -> Result<Self, Error> {
+        let mut seed = Self::Seed::default();
+        let size = mem::size_of::<Self::Seed>() as usize;
+        unsafe {
+            let ptr = seed.as_mut().as_mut_ptr() as *mut u8;
+            let slice = slice::from_raw_parts_mut(ptr, size);
+            rng.try_fill(slice)?;
+        }
+        Ok(Self::from_seed(seed))
+    }
 }
 
 

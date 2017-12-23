@@ -12,7 +12,7 @@
 
 use core::{fmt, slice};
 use rand_core::{impls, le};
-use {Rng, CryptoRng, SeedFromRng, SeedableRng, Error};
+use {Rng, CryptoRng, SeedableRng, Error};
 
 const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 
@@ -389,18 +389,6 @@ impl Rng for Hc128Rng {
 
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         Ok(self.fill_bytes(dest))
-    }
-}
-
-impl SeedFromRng for Hc128Rng {
-    fn from_rng<R: Rng>(mut other: R) -> Result<Self, Error> {
-        let mut seed = [0u32; SEED_WORDS];
-        unsafe {
-            let ptr = seed.as_mut_ptr() as *mut u8;
-            let slice = slice::from_raw_parts_mut(ptr, SEED_WORDS * 4);
-            other.try_fill(slice)?;
-        }
-        Ok(Hc128Rng::init(seed))
     }
 }
 

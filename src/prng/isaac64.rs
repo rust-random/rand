@@ -13,7 +13,7 @@
 use core::{fmt, slice};
 use core::num::Wrapping as w;
 use rand_core::{impls, le};
-use {Rng, SeedFromRng, SeedableRng, Error};
+use {Rng, SeedableRng, Error};
 
 #[allow(non_camel_case_types)]
 type w64 = w<u64>;
@@ -308,22 +308,9 @@ fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
     *h -= *d; *e ^= *g << 14; *g += *h;
 }
 
-impl SeedFromRng for Isaac64Rng {
-    fn from_rng<R: Rng>(mut other: R) -> Result<Self, Error> {
-        let mut seed = [w(0); RAND_SIZE];
-        unsafe {
-            let ptr = seed.as_mut_ptr() as *mut u8;
-
-            let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE * 8);
-            other.try_fill(slice)?;
-        }
-
-        Ok(init(seed, 2))
-    }
-}
-
 impl SeedableRng for Isaac64Rng {
     type Seed = [u8; 32];
+
     fn from_seed(seed: Self::Seed) -> Self {
         let mut seed_u64 = [0u64; 4];
         le::read_u64_into(&seed, &mut seed_u64);
@@ -333,11 +320,27 @@ impl SeedableRng for Isaac64Rng {
         }
         init(seed_extended, 2)
     }
+
+    fn from_rng<R: Rng>(mut other: R) -> Result<Self, Error> {
+        // Custom `from_rng` implementations that fills the entire state
+        let mut seed = [w(0u64); RAND_SIZE];
+        unsafe {
+            let ptr = seed.as_mut_ptr() as *mut u8;
+
+            let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE * 8);
+            other.try_fill(slice)?;
+        }
+        for i in seed.iter_mut() {
+            *i = w(i.0.to_le());
+        }
+
+        Ok(init(seed, 2))
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, SeedFromRng};
+    use {Rng, SeedableRng};
     use super::Isaac64Rng;
 
     #[test]
@@ -347,13 +350,13 @@ mod test {
         let mut rng1 = Isaac64Rng::from_hashable("some weak seed");
         rng1.next_u64();
         */
-        let mut rng2 = Isaac64Rng::from_rng(&mut ::test::rng()).unwrap();
-        rng2.next_u64();
-        
-        let seed = [1,0,0,0, 0,0,0,0, 23,0,0,0, 0,0,0,0, 200,1,0,0, 0,0,0,0, 210,30,0,0, 0,0,0,0];
-        let mut rng3 = Isaac64Rng::from_seed(seed);
-        rng3.next_u64();
-        
+
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let mut rng2 = Isaac64Rng::from_seed(seed);
+        assert_eq!(rng2.next_u64(), 14964555543728284049);
+
+        let mut rng3 = Isaac64Rng::from_rng(&mut rng2).unwrap();
+        assert_eq!(rng3.next_u64(), 919595328260451758);
     }
     
     #[test]
