@@ -119,6 +119,12 @@ impl fmt::Debug for IsaacRng {
 }
 
 impl IsaacRng {
+    /// Create an ISAAC random number generator using the default
+    /// fixed seed.
+    pub fn new_unseeded() -> IsaacRng {
+        Self::new_from_u64(0)
+    }
+    
     /// Creates an ISAAC random number generator using an u64 as seed.
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.

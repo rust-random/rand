@@ -343,7 +343,15 @@ pub trait Rng {
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random u64.
-    fn next_u64(&mut self) -> u64;
+    /// 
+    /// This function has a default implementation  of `next_u32`. The
+    /// default implementation should not be used in wrapper types since the
+    /// wrapped RNG may have its own implementation which may be more efficient
+    /// or even produce different results.
+    fn next_u64(&mut self) -> u64 {
+        // TODO: remove default implementation once impls module is exposed
+        impls::next_u64_via_u32(self)
+    }
 
     /// Return the next random f32 selected from the half-open
     /// interval `[0, 1)`.
@@ -398,6 +406,11 @@ pub trait Rng {
     }
 
     /// Fill `dest` with random data.
+    /// 
+    /// This function has a default implementation in terms of `next_u64`. The
+    /// default implementation should not be used in wrapper types since the
+    /// wrapped RNG may have its own implementation which may be more efficient
+    /// or even produce different results.
     ///
     /// This method does *not* have a requirement to bear any fixed
     /// relationship to the other methods, for example, it does *not*
@@ -419,7 +432,10 @@ pub trait Rng {
     /// thread_rng().fill_bytes(&mut v);
     /// println!("{:?}", &v[..]);
     /// ```
-    fn fill_bytes(&mut self, dest: &mut [u8]);
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        // TODO: remove default implementation once impls module is exposed
+        impls::fill_bytes_via_u64(self, dest)
+    }
 
     /// Return a random value of a `Rand` type.
     ///
