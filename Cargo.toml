@@ -21,7 +21,9 @@ nightly = ["i128_support"]
 libc = "0.2"
 
 [dev-dependencies]
-log = "0.3.0"
+# log 0.3.9 is a wrapper around 0.4.0 which doesn't work with rustc 1.15
+# To keep our CI pin on 1.15 we require log <= 0.3.8.
+log = "0.3, <=0.3.8"
 
 [workspace]
 members = ["rand-derive"]
