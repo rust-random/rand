@@ -44,6 +44,8 @@ extern crate core;
 use std::error::Error as stdError;
 
 use core::{fmt, slice, mem};
+use core::default::Default;
+use core::convert::AsMut;
 
 pub mod impls;
 
@@ -208,7 +210,9 @@ impl<R: Rng+?Sized> Rng for Box<R> {
 
 mod private {
     pub trait Sealed {}
-    impl<S> Sealed for S where S: super::SeedRestriction {}
+    impl Sealed for [u8; 8] {}
+    impl Sealed for [u8; 16] {}
+    impl Sealed for [u8; 32] {}
 }
 
 /// The seed type is restricted to these types. This trait is sealed to prevent
@@ -216,12 +220,8 @@ mod private {
 ///
 /// Use of byte-arrays avoids endianness issues. We may extend this to allow
 /// byte arrays of other lengths in the future.
-pub trait SeedRestriction: private::Sealed +
-                           ::core::default::Default +
-                           ::core::convert::AsMut<[u8]> {}
-impl SeedRestriction for [u8; 8] {}
-impl SeedRestriction for [u8; 16] {}
-impl SeedRestriction for [u8; 32] {}
+pub trait SeedRestriction: private::Sealed + Default + AsMut<[u8]> {}
+impl<S> SeedRestriction for S where S: private::Sealed + Default + AsMut<[u8]> {}
 
 /// A random number generator that can be explicitly seeded.
 ///
