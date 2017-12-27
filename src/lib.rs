@@ -257,7 +257,7 @@
 extern crate rand_core;
 
 // core traits and types
-pub use rand_core::{Rng, CryptoRng, SeedFromRng, SeedableRng, Error, ErrorKind};
+pub use rand_core::{Rng, CryptoRng, SeedableRng, Error, ErrorKind};
 
 // external rngs
 pub use jitter::JitterRng;
@@ -315,11 +315,11 @@ mod thread_local;
 
 /// Seeding mechanism for PRNGs, providing a `new` function.
 /// This is the recommended way to create (pseudo) random number generators,
-/// unless a deterministic seed is desired (in which case the `SeedableRng`
-/// trait should be used directly).
+/// unless a deterministic seed is desired (in which case
+/// `SeedableRng::from_seed` should be used).
 /// 
 /// Note: this trait is automatically implemented for any PRNG implementing
-/// `SeedFromRng` and is not intended to be implemented by users.
+/// `SeedableRng` and is not intended to be implemented by users.
 /// 
 /// ## Example
 /// 
@@ -330,7 +330,7 @@ mod thread_local;
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 #[cfg(feature="std")]
-pub trait NewSeeded: SeedFromRng {
+pub trait NewSeeded: SeedableRng {
     /// Creates a new instance, automatically seeded with fresh entropy.
     /// 
     /// Normally this will use `OsRng`, but if that fails `JitterRng` will be
@@ -340,14 +340,14 @@ pub trait NewSeeded: SeedFromRng {
 }
 
 #[cfg(feature="std")]
-impl<R: SeedFromRng> NewSeeded for R {
+impl<R: SeedableRng> NewSeeded for R {
     fn new() -> Result<Self, Error> {
         // Note: error handling would be easier with try/catch blocks
-        fn new_os<T: SeedFromRng>() -> Result<T, Error> {
+        fn new_os<T: SeedableRng>() -> Result<T, Error> {
             let mut r = OsRng::new()?;
             T::from_rng(&mut r)
         }
-        fn new_jitter<T: SeedFromRng>() -> Result<T, Error> {
+        fn new_jitter<T: SeedableRng>() -> Result<T, Error> {
             let mut r = JitterRng::new()?;
             T::from_rng(&mut r)
         }
@@ -461,32 +461,34 @@ impl<R: Rng+?Sized> Sample for R {
 /// cannot be guaranteed to be reproducible. For this reason, `StdRng` does
 /// not support `SeedableRng`.
 #[derive(Clone, Debug)]
-pub struct StdRng {
-    rng: IsaacWordRng,
-}
+pub struct StdRng(IsaacWordRng);
 
 impl Rng for StdRng {
     fn next_u32(&mut self) -> u32 {
-        self.rng.next_u32()
+        self.0.next_u32()
     }
     fn next_u64(&mut self) -> u64 {
-        self.rng.next_u64()
+        self.0.next_u64()
     }
     #[cfg(feature = "i128_support")]
     fn next_u128(&mut self) -> u128 {
-        self.rng.next_u128()
+        self.0.next_u128()
     }
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.rng.fill_bytes(dest);
+        self.0.fill_bytes(dest);
     }
     fn try_fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.rng.try_fill(dest)
+        self.0.try_fill(dest)
     }
 }
 
-impl SeedFromRng for StdRng {
-    fn from_rng<R: Rng>(other: R) -> Result<Self, Error> {
-        IsaacWordRng::from_rng(other).map(|rng| StdRng{ rng })
+impl SeedableRng for StdRng {
+    type Seed = <IsaacWordRng as SeedableRng>::Seed;
+    fn from_seed(seed: Self::Seed) -> Self {
+        StdRng(IsaacWordRng::from_seed(seed))
+    }
+    fn from_rng<R: Rng>(rng: R) -> Result<Self, Error> {
+        IsaacWordRng::from_rng(rng).map(|rng| StdRng(rng))
     }
 }
 

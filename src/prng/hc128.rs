@@ -10,12 +10,11 @@
 
 //! The HC-128 random number generator.
 
-use core::fmt;
-use core::slice;
-
+use core::{fmt, slice};
 use rand_core::{impls, le};
+use {Rng, CryptoRng, SeedableRng, Error};
 
-use {Rng, CryptoRng, SeedFromRng, SeedableRng, Error};
+const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 
 /// A cryptographically secure random number generator that uses the HC-128
 /// algorithm.
@@ -84,7 +83,7 @@ impl fmt::Debug for Hc128Rng {
 }
 
 impl Hc128Rng {
-    pub fn init(seed: &[u32]) -> Hc128Rng {
+    fn init(seed: [u32; SEED_WORDS]) -> Self {
         #[inline]
         fn f1(x: u32) -> u32 {
             x.rotate_right(7) ^ x.rotate_right(18) ^ (x >> 3)
@@ -124,15 +123,12 @@ impl Hc128Rng {
         let mut state = Hc128Rng {
             state: Hc128 { t: t, counter1024: 0 },
             results: [0; 16],
-            index: 0,
+            index: 16, // generate on first use
         };
 
         // run the cipher 1024 steps
         for _ in 0..64 { state.state.sixteen_steps() };
         state.state.counter1024 = 0;
-
-        // Prepare the first set of results
-        state.state.update(&mut state.results);
         state
     }
 }
@@ -396,22 +392,12 @@ impl Rng for Hc128Rng {
     }
 }
 
-impl SeedFromRng for Hc128Rng {
-    fn from_rng<R: Rng>(mut other: R) -> Result<Self, Error> {
-        let mut seed = [0u32; 8];
-        unsafe {
-            let ptr = seed.as_mut_ptr() as *mut u8;
-            let slice = slice::from_raw_parts_mut(ptr, 8 * 4);
-            other.try_fill(slice)?;
-        }
-        Ok(Hc128Rng::init(&seed))
-    }
-}
-
 impl SeedableRng for Hc128Rng {
-    type Seed = [u8; 32]; /* 128 bit key followed by 128 bit iv */
-    fn from_seed(mut seed: Self::Seed) -> Self {
-        Hc128Rng::init(&le::convert_slice_32(&mut seed))
+    type Seed = [u8; SEED_WORDS*4];
+    fn from_seed(seed: Self::Seed) -> Self {
+        let mut seed_u32 = [0u32; SEED_WORDS];
+        le::read_u32_into(&seed, &mut seed_u32);
+        Hc128Rng::init(seed_u32)
     }
 }
 

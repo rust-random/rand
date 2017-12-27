@@ -10,13 +10,10 @@
 
 //! The ISAAC-64 random number generator.
 
-use core::slice;
+use core::{fmt, slice};
 use core::num::Wrapping as w;
-use core::fmt;
-
 use rand_core::{impls, le};
-
-use {Rng, SeedFromRng, SeedableRng, Error};
+use {Rng, SeedableRng, Error};
 
 #[allow(non_camel_case_types)]
 type w64 = w<u64>;
@@ -288,19 +285,15 @@ fn init(mut mem: [w64; RAND_SIZE], rounds: u32) -> Isaac64Rng {
         }
     }
 
-    let mut rng = Isaac64Rng {
+    Isaac64Rng {
         rsl: [0; RAND_SIZE],
         mem: mem,
         a: w(0),
         b: w(0),
         c: w(0),
-        index: 0,
+        index: RAND_SIZE as u32, // generate on first use
         half_used: false,
-    };
-
-    // Prepare the first set of results
-    rng.isaac64();
-    rng
+    }
 }
 
 fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
@@ -315,34 +308,39 @@ fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
     *h -= *d; *e ^= *g << 14; *g += *h;
 }
 
-impl SeedFromRng for Isaac64Rng {
+impl SeedableRng for Isaac64Rng {
+    type Seed = [u8; 32];
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        let mut seed_u64 = [0u64; 4];
+        le::read_u64_into(&seed, &mut seed_u64);
+        let mut seed_extended = [w(0); RAND_SIZE];
+        for (x, y) in seed_extended.iter_mut().zip(seed_u64.iter()) {
+            *x = w(*y);
+        }
+        init(seed_extended, 2)
+    }
+
     fn from_rng<R: Rng>(mut other: R) -> Result<Self, Error> {
-        let mut key = [w(0); RAND_SIZE];
+        // Custom `from_rng` implementations that fills the entire state
+        let mut seed = [w(0u64); RAND_SIZE];
         unsafe {
-            let ptr = key.as_mut_ptr() as *mut u8;
+            let ptr = seed.as_mut_ptr() as *mut u8;
 
             let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE * 8);
             other.try_fill(slice)?;
         }
-
-        Ok(init(key, 2))
-    }
-}
-
-impl SeedableRng for Isaac64Rng {
-    type Seed = [u8; 32];
-    fn from_seed(mut seed: Self::Seed) -> Self {
-        let mut key = [w(0); RAND_SIZE];
-        for (x, y) in key.iter_mut().zip(le::convert_slice_64(&mut seed[..]).iter()) {
-            *x = w(*y);
+        for i in seed.iter_mut() {
+            *i = w(i.0.to_le());
         }
-        init(key, 2)
+
+        Ok(init(seed, 2))
     }
 }
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng, SeedFromRng};
+    use {Rng, SeedableRng};
     use super::Isaac64Rng;
 
     #[test]
@@ -352,13 +350,13 @@ mod test {
         let mut rng1 = Isaac64Rng::from_hashable("some weak seed");
         rng1.next_u64();
         */
-        let mut rng2 = Isaac64Rng::from_rng(&mut ::test::rng()).unwrap();
-        rng2.next_u64();
-        
-        let seed = [1,0,0,0, 0,0,0,0, 23,0,0,0, 0,0,0,0, 200,1,0,0, 0,0,0,0, 210,30,0,0, 0,0,0,0];
-        let mut rng3 = Isaac64Rng::from_seed(seed);
-        rng3.next_u64();
-        
+
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let mut rng2 = Isaac64Rng::from_seed(seed);
+        assert_eq!(rng2.next_u64(), 14964555543728284049);
+
+        let mut rng3 = Isaac64Rng::from_rng(&mut rng2).unwrap();
+        assert_eq!(rng3.next_u64(), 919595328260451758);
     }
     
     #[test]
