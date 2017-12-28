@@ -166,7 +166,7 @@ pub struct RangeInt<X> {
 
 macro_rules! range_int_impl {
     ($ty:ty, $signed:ident, $unsigned:ident,
-     $i_large:ident, $u_large:ident, $use_mult:expr) => {
+     $i_large:ident, $u_large:ident) => {
         impl SampleRange for $ty {
             type T = RangeInt<$ty>;
         }
@@ -262,15 +262,9 @@ macro_rules! range_int_impl {
                     let zone = self.zone as $signed as $i_large as $u_large;
                     loop {
                         let v: $u_large = Uniform.sample(rng);
-                        if $use_mult {
-                            let (hi, lo) = v.wmul(range);
-                            if lo <= zone {
-                                return self.low.wrapping_add(hi as $ty);
-                            }
-                        } else {
-                            if v <= zone {
-                                return self.low.wrapping_add((v % range) as $ty);
-                            }
+                        let (hi, lo) = v.wmul(range);
+                        if lo <= zone {
+                            return self.low.wrapping_add(hi as $ty);
                         }
                     }
                 } else {
@@ -297,15 +291,9 @@ macro_rules! range_int_impl {
 
                 loop {
                     let v: $u_large = Uniform.sample(rng);
-                    if $use_mult {
-                        let (hi, lo) = v.wmul(range);
-                        if lo <= zone {
-                            return low.wrapping_add(hi as $ty);
-                        }
-                    } else {
-                        if v <= zone {
-                            return low.wrapping_add((v % range) as $ty);
-                        }
+                    let (hi, lo) = v.wmul(range);
+                    if lo <= zone {
+                        return low.wrapping_add(hi as $ty);
                     }
                 }
             }
@@ -313,20 +301,20 @@ macro_rules! range_int_impl {
     }
 }
 
-range_int_impl! { i8, i8, u8, i32, u32, true }
-range_int_impl! { i16, i16, u16, i32, u32, true }
-range_int_impl! { i32, i32, u32, i32, u32, true }
-range_int_impl! { i64, i64, u64, i64, u64, true }
+range_int_impl! { i8, i8, u8, i32, u32 }
+range_int_impl! { i16, i16, u16, i32, u32 }
+range_int_impl! { i32, i32, u32, i32, u32 }
+range_int_impl! { i64, i64, u64, i64, u64 }
 #[cfg(feature = "i128_support")]
-range_int_impl! { i128, i128, u128, u128, u128, false }
-range_int_impl! { isize, isize, usize, isize, usize, true }
-range_int_impl! { u8, i8, u8, i32, u32, true }
-range_int_impl! { u16, i16, u16, i32, u32, true }
-range_int_impl! { u32, i32, u32, i32, u32, true }
-range_int_impl! { u64, i64, u64, i64, u64, true }
-range_int_impl! { usize, isize, usize, isize, usize, true }
+range_int_impl! { i128, i128, u128, u128, u128 }
+range_int_impl! { isize, isize, usize, isize, usize }
+range_int_impl! { u8, i8, u8, i32, u32 }
+range_int_impl! { u16, i16, u16, i32, u32 }
+range_int_impl! { u32, i32, u32, i32, u32 }
+range_int_impl! { u64, i64, u64, i64, u64 }
+range_int_impl! { usize, isize, usize, isize, usize }
 #[cfg(feature = "i128_support")]
-range_int_impl! { u128, u128, u128, i128, u128, false }
+range_int_impl! { u128, u128, u128, i128, u128 }
 
 
 trait WideningMultiply<RHS = Self> {
@@ -352,39 +340,46 @@ macro_rules! wmul_impl {
 wmul_impl! { u8, u16, 8 }
 wmul_impl! { u16, u32, 16 }
 wmul_impl! { u32, u64, 32 }
-
 #[cfg(feature = "i128_support")]
 wmul_impl! { u64, u128, 64 }
 
-#[cfg(not(feature = "i128_support"))]
-impl WideningMultiply for u64 {
-    type Output = (u64, u64);
+// This code is a translation of the __mulddi3 function in LLVM's
+// compiler-rt. It is an optimised variant of the common method
+// `(a + b) * (c + d) = ac + ad + bc + bd`.
+//
+// For some reason LLVM can optimise the C version very well, but
+// keeps shuffeling registers in this Rust translation.
+macro_rules! wmul_impl_large {
+    ($ty:ty, $half:expr) => {
+        impl WideningMultiply for $ty {
+            type Output = ($ty, $ty);
 
-    // This code is a translation of the __mulddi3 function in LLVM's
-    // compiler-rt. It is an optimised variant of the common method
-    // `(a + b) * (c + d) = ac + ad + bc + bd`.
-    //
-    // For some reason LLVM can optimise the C version very well, but keeps
-    // shuffeling registers in this Rust translation.
-    #[inline(always)]
-    fn wmul(self, b: u64) -> Self::Output {
-        const LOWER_MASK: u64 = !0u64 >> 32;
-        let mut low = (self & LOWER_MASK).wrapping_mul(b & LOWER_MASK);
-        let mut t = low >> 32;
-        low &= LOWER_MASK;
-        t += (self >> 32).wrapping_mul(b & LOWER_MASK);
-        low += (t & LOWER_MASK) << 32;
-        let mut high = (t >> 32) as i64;
-        t = low >> 32;
-        low &= LOWER_MASK;
-        t += (b >> 32).wrapping_mul(self & LOWER_MASK);
-        low += (t & LOWER_MASK) << 32;
-        high += (t >> 32) as i64;
-        high += (self >> 32).wrapping_mul(b >> 32) as i64;
+            #[inline(always)]
+            fn wmul(self, b: $ty) -> Self::Output {
+                const LOWER_MASK: $ty = !0 >> $half;
+                let mut low = (self & LOWER_MASK).wrapping_mul(b & LOWER_MASK);
+                let mut t = low >> $half;
+                low &= LOWER_MASK;
+                t += (self >> $half).wrapping_mul(b & LOWER_MASK);
+                low += (t & LOWER_MASK) << $half;
+                let mut high = t >> $half;
+                t = low >> $half;
+                low &= LOWER_MASK;
+                t += (b >> $half).wrapping_mul(self & LOWER_MASK);
+                low += (t & LOWER_MASK) << $half;
+                high += t >> $half;
+                high += (self >> $half).wrapping_mul(b >> $half);
 
-        (high as u64, low)
+                (high, low)
+            }
+        }
     }
 }
+
+#[cfg(not(feature = "i128_support"))]
+wmul_impl_large! { u64, 32 }
+#[cfg(feature = "i128_support")]
+wmul_impl_large! { u128, 64 }
 
 
 macro_rules! wmul_impl_usize {
@@ -405,25 +400,6 @@ macro_rules! wmul_impl_usize {
 wmul_impl_usize! { u32 }
 #[cfg(target_pointer_width = "64")]
 wmul_impl_usize! { u64 }
-
-#[cfg(feature = "i128_support")]
-macro_rules! wmul_impl_128 {
-    ($ty:ty) => {
-        impl WideningMultiply for $ty {
-            type Output = ($ty, $ty);
-
-            #[inline(always)]
-            fn wmul(self, _: $ty) -> Self::Output {
-                unimplemented!();
-            }
-        }
-    }
-}
-
-#[cfg(feature = "i128_support")]
-wmul_impl_128! { i128 }
-#[cfg(feature = "i128_support")]
-wmul_impl_128! { u128 }
 
 
 
