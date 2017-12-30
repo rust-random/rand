@@ -26,7 +26,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! rand = "0.3"
+//! rand = "0.4"
 //! ```
 //!
 //! and this to your crate root:
