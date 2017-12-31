@@ -55,12 +55,11 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
         }
     }
 
-    /// Reseed the internal RNG if the number of bytes that have been
-    /// generated exceed the threshold.
-    /// 
+    /// Reseed the internal RNG.
     /// On error, this may delay reseeding or not reseed at all.
     #[inline(never)]
     pub fn reseed(&mut self) {
+        self.bytes_until_reseed = self.threshold;
         let mut err_count = 0;
         loop {
             if let Err(e) = self.reseeder.reseed(&mut self.rng) {
@@ -68,23 +67,18 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
                 if e.kind.should_wait() {
                     // Delay reseeding
                     self.bytes_until_reseed = self.threshold >> 8;
-                    break;
                 } else if e.kind.should_retry() {
-                    if err_count > 4 {  // arbitrary limit
-                        // TODO: log details & cause?
-                        break;  // give up trying to reseed
-                    }
                     err_count += 1;
-                    continue;   // immediate retry
-                } else {
-                    break;  // give up trying to reseed
+                    if err_count <= 5 { // arbitrary limit
+                        continue; // retry immediately
+                    }
                 }
-            } else {
-                break;  // no reseeding
+                // give up trying to reseed
             }
+            break; // successfully reseeded, delayed, or given up.
         }
-        self.bytes_until_reseed = self.threshold;
     }
+
     /// Reseed the internal RNG if the number of bytes that have been
     /// generated exceed the threshold.
     /// 
