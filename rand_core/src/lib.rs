@@ -210,8 +210,11 @@ impl<R: Rng+?Sized> Rng for Box<R> {
 
 mod private {
     pub trait Sealed {}
+    impl Sealed for [u8; 4] {}
     impl Sealed for [u8; 8] {}
+    impl Sealed for [u8; 12] {}
     impl Sealed for [u8; 16] {}
+    impl Sealed for [u8; 24] {}
     impl Sealed for [u8; 32] {}
 }
 
