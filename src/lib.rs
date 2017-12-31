@@ -943,7 +943,7 @@ impl Rng for ThreadRng {
 ///     *x = rand::random()
 /// }
 ///
-/// // would be faster as
+/// // can be made faster by caching thread_rng
 ///
 /// let mut rng = rand::thread_rng();
 ///
