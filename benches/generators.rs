@@ -107,8 +107,8 @@ fn init_jitter(b: &mut Bencher) {
 
 
 #[bench]
-fn reseeding_xorshift_bytes(b: &mut Bencher) {
-    let mut rng = ReseedingRng::new(XorShiftRng::new().unwrap(),
+fn reseeding_hc128_bytes(b: &mut Bencher) {
+    let mut rng = ReseedingRng::new(Hc128Rng::new().unwrap(),
                                     128*1024*1024*1024,
                                     ReseedWithNew);
     let mut buf = [0u8; BYTES_LEN];
@@ -125,7 +125,7 @@ macro_rules! reseeding_uint {
     ($fnn:ident, $ty:ty) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = ReseedingRng::new(XorShiftRng::new().unwrap(),
+            let mut rng = ReseedingRng::new(Hc128Rng::new().unwrap(),
                                             128*1024*1024*1024,
                                             ReseedWithNew);
             b.iter(|| {
@@ -138,5 +138,5 @@ macro_rules! reseeding_uint {
     }
 }
 
-reseeding_uint!(reseeding_xorshift_u32, u32);
-reseeding_uint!(reseeding_xorshift_u64, u64);
+reseeding_uint!(reseeding_hc128_u32, u32);
+reseeding_uint!(reseeding_hc128_u64, u64);
