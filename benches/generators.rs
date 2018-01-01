@@ -11,6 +11,7 @@ use test::{black_box, Bencher};
 
 use rand::{Rng, NewSeeded, Sample, SeedableRng, StdRng, OsRng, JitterRng};
 use rand::prng::*;
+use rand::reseeding::{ReseedingRng, ReseedWithNew};
 
 macro_rules! gen_bytes {
     ($fnn:ident, $gen:ident) => {
@@ -102,3 +103,40 @@ fn init_jitter(b: &mut Bencher) {
         black_box(JitterRng::new().unwrap());
     });
 }
+
+
+
+#[bench]
+fn reseeding_hc128_bytes(b: &mut Bencher) {
+    let mut rng = ReseedingRng::new(Hc128Rng::new().unwrap(),
+                                    128*1024*1024*1024,
+                                    ReseedWithNew);
+    let mut buf = [0u8; BYTES_LEN];
+    b.iter(|| {
+        for _ in 0..RAND_BENCH_N {
+            rng.fill_bytes(&mut buf);
+            black_box(buf);
+        }
+    });
+    b.bytes = BYTES_LEN as u64 * RAND_BENCH_N;
+}
+
+macro_rules! reseeding_uint {
+    ($fnn:ident, $ty:ty) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = ReseedingRng::new(Hc128Rng::new().unwrap(),
+                                            128*1024*1024*1024,
+                                            ReseedWithNew);
+            b.iter(|| {
+                for _ in 0..RAND_BENCH_N {
+                    black_box(rng.gen::<$ty>());
+                }
+            });
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
+        }
+    }
+}
+
+reseeding_uint!(reseeding_hc128_u32, u32);
+reseeding_uint!(reseeding_hc128_u64, u64);
