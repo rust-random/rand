@@ -339,17 +339,27 @@ pub trait Rand : Sized {
 
 /// A random number generator.
 pub trait Rng {
-    /// Return the next random u32.
+    /// Return the next random `u32`.
+    /// 
+    /// Implementations of this trait must implement at least one of
+    /// `next_u32`, `next_u64` and `fill_bytes` directly. In the case this
+    /// function is not implemented directly, it can be implemented using
+    /// `self.next_u64() as u32` or via `fill_bytes` (TODO: expose helper
+    /// function).
     fn next_u32(&mut self) -> u32;
 
-    /// Return the next random u64.
+    /// Return the next random `u64`.
     /// 
-    /// This function has a default implementation  of `next_u32`. The
-    /// default implementation should not be used in wrapper types since the
-    /// wrapped RNG may have its own implementation which may be more efficient
-    /// or even produce different results.
+    /// Implementations of this trait must implement at least one of
+    /// `next_u32`, `next_u64` and `fill_bytes` directly. In the case this
+    /// function is not implemented directly, the default implementation will
+    /// generate values via `next_u32` in little-endian fashion, or this
+    /// function can be implemented via `fill_bytes` (TODO: expose helper
+    /// function).
+    /// 
+    /// Types wrapping an inner RNG must not use the default implementation,
+    /// since the inner RNG's implementation may produce different values.
     fn next_u64(&mut self) -> u64 {
-        // TODO: remove default implementation once impls module is exposed
         impls::next_u64_via_u32(self)
     }
 
@@ -407,17 +417,21 @@ pub trait Rng {
 
     /// Fill `dest` with random data.
     /// 
-    /// This function has a default implementation in terms of `next_u64`. The
-    /// default implementation should not be used in wrapper types since the
-    /// wrapped RNG may have its own implementation which may be more efficient
-    /// or even produce different results.
-    ///
-    /// This method does *not* have a requirement to bear any fixed
-    /// relationship to the other methods, for example, it does *not*
-    /// have to result in the same output as progressively filling
-    /// `dest` with `self.gen::<u8>()`, and any such behaviour should
-    /// not be relied upon.
-    ///
+    /// Implementations of this trait must implement at least one of
+    /// `next_u32`, `next_u64` and `fill_bytes` directly. In the case this
+    /// function is not implemented directly, the default implementation will
+    /// generate values via `next_u64` in little-endian fashion.
+    /// (TODO: expose helper function to allow implementation via `next_u32`.)
+    /// 
+    /// There is no requirement on how this method generates values relative to
+    /// `next_u32` or `next_u64`; e.g. a `u64` cast to bytes is not required to
+    /// have the same value as eight bytes filled via this function. There *is*
+    /// a requirement of portability for reproducible generators which implies
+    /// that any seedable generator must fix endianness when generating bytes.
+    /// 
+    /// Types wrapping an inner RNG must not use the default implementation,
+    /// since the inner RNG's implementation may produce different values.
+    /// 
     /// This method should guarantee that `dest` is entirely filled
     /// with new data, and may panic if this is impossible
     /// (e.g. reading past the end of a file that is being used as the
@@ -433,7 +447,6 @@ pub trait Rng {
     /// println!("{:?}", &v[..]);
     /// ```
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        // TODO: remove default implementation once impls module is exposed
         impls::fill_bytes_via_u64(self, dest)
     }
 
