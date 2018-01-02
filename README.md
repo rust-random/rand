@@ -29,10 +29,12 @@ The `rand` crate has been at version `0.3` since March 2015. If you wish to
 avoid all breaking changes you may wish to stick with this version.
 
 Version `0.4`was released in December 2017. It contains almost no breaking
-changes since the `0.3` series, but nevertheless (will) contain a significant
-amount of new code, including a new "external" entropy source (`JitterRng`),
-`no_std` support, and significant performance improvements for the ISAAC random
-number generators.
+changes since the `0.3` series, but nevertheless contains some significant
+new code, including a new "external" entropy source (`JitterRng`) and `no_std`
+support.
+
+Version `0.5` is in development and contains significant performance
+improvements for the ISAAC random number generators.
 
 ## Examples
 
