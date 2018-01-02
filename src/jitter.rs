@@ -16,7 +16,7 @@
 
 //! Non-physical true random number generator based on timing jitter.
 
-use Rng;
+use {Rng, impls};
 
 use core::{fmt, mem, ptr};
 #[cfg(feature="std")]
@@ -731,22 +731,7 @@ impl Rng for JitterRng {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        let mut left = dest;
-        while left.len() >= 8 {
-            let (l, r) = {left}.split_at_mut(8);
-            left = r;
-            let chunk: [u8; 8] = unsafe {
-                mem::transmute(self.next_u64().to_le())
-            };
-            l.copy_from_slice(&chunk);
-        }
-        let n = left.len();
-        if n > 0 {
-            let chunk: [u8; 8] = unsafe {
-                mem::transmute(self.next_u64().to_le())
-            };
-            left.copy_from_slice(&chunk[..n]);
-        }
+        impls::fill_bytes_via_u64(self, dest)
     }
 }
 

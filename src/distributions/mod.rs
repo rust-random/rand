@@ -279,8 +279,8 @@ fn ziggurat<R: Rng, P, Z>(
 
 #[cfg(test)]
 mod tests {
-
     use {Rng, Rand};
+    use impls;
     use super::{RandSample, WeightedChoice, Weighted, Sample, IndependentSample};
 
     #[derive(PartialEq, Debug)]
@@ -300,6 +300,10 @@ mod tests {
         }
         fn next_u64(&mut self) -> u64 {
             self.next_u32() as u64
+        }
+        
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            impls::fill_bytes_via_u32(self, dest)
         }
     }
 

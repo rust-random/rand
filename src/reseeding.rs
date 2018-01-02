@@ -147,6 +147,7 @@ impl Default for ReseedWithDefault {
 
 #[cfg(test)]
 mod test {
+    use impls;
     use std::default::Default;
     use std::iter::repeat;
     use super::{ReseedingRng, ReseedWithDefault};
@@ -161,6 +162,13 @@ mod test {
             self.i += 1;
             // very random
             self.i - 1
+        }
+        fn next_u64(&mut self) -> u64 {
+            impls::next_u64_via_u32(self)
+        }
+        
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            impls::fill_bytes_via_u64(self, dest)
         }
     }
     impl Default for Counter {
