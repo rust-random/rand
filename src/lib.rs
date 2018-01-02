@@ -794,14 +794,17 @@ impl StdRng {
 }
 
 impl Rng for StdRng {
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         self.rng.next_u32()
     }
 
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         self.rng.next_u64()
     }
     
+    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.rng.fill_bytes(dest)
     }
