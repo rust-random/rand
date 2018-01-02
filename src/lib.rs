@@ -265,6 +265,7 @@ pub use jitter::JitterRng;
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
 pub use prng::XorShiftRng;
+pub use prng::Hc128Rng;
 
 // local use declarations
 #[cfg(target_pointer_width = "32")]
