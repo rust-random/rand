@@ -249,7 +249,6 @@
 
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
-#[cfg(test)] #[macro_use] extern crate log;
 
 use core::marker;
 use core::mem;
@@ -1079,14 +1078,6 @@ mod test {
     fn test_gen_range_panic_usize() {
         let mut r = thread_rng();
         r.gen_range(5, 2);
-    }
-
-    #[test]
-    fn test_gen_f64() {
-        let mut r = thread_rng();
-        let a = r.gen::<f64>();
-        let b = r.gen::<f64>();
-        debug!("{:?}", (a, b));
     }
 
     #[test]
