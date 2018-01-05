@@ -245,8 +245,6 @@
 
 #![cfg_attr(feature = "i128_support", feature(i128_type))]
 
-#[cfg(test)] #[macro_use] extern crate log;
-
 
 use std::cell::RefCell;
 use std::marker;
@@ -1143,14 +1141,6 @@ mod test {
     fn test_gen_range_panic_usize() {
         let mut r = thread_rng();
         r.gen_range(5, 2);
-    }
-
-    #[test]
-    fn test_gen_f64() {
-        let mut r = thread_rng();
-        let a = r.gen::<f64>();
-        let b = r.gen::<f64>();
-        debug!("{:?}", (a, b));
     }
 
     #[test]
