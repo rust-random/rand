@@ -22,7 +22,7 @@ pub use self::range::Range;
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 #[cfg(feature="std")]
-pub use self::normal::{Normal, LogNormal};
+pub use self::normal::{Normal, LogNormal, StandardNormal};
 #[cfg(feature="std")]
 pub use self::exponential::{Exp, Exp1};
 

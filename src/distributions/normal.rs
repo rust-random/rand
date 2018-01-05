@@ -10,11 +10,12 @@
 
 //! The normal and derived distributions.
 
-use {Rng, Rand};
+use {Rng};
 use distributions::{ziggurat, ziggurat_tables, Distribution, Open01};
 
-/// A wrapper around an `f64` to generate N(0, 1) random numbers
-/// (a.k.a.  a standard normal, or Gaussian).
+/// Samples floating-point numbers according to the normal distribution
+/// `N(0, 1)` (a.k.a.  a standard normal, or Gaussian). This is equivalent to
+/// `Normal::new(0.0, 1.0)` but faster.
 ///
 /// See `Normal` for the general normal distribution.
 ///
@@ -26,18 +27,18 @@ use distributions::{ziggurat, ziggurat_tables, Distribution, Open01};
 /// College, Oxford
 ///
 /// # Example
-///
 /// ```rust
-/// use rand::distributions::normal::StandardNormal;
+/// use rand::{weak_rng, Rng};
+/// use rand::distributions::StandardNormal;
 ///
-/// let StandardNormal(x) = rand::random();
-/// println!("{}", x);
+/// let val: f64 = weak_rng().sample(StandardNormal);
+/// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct StandardNormal(pub f64);
+pub struct StandardNormal;
 
-impl Rand for StandardNormal {
-    fn rand<R:Rng>(rng: &mut R) -> StandardNormal {
+impl Distribution<f64> for StandardNormal {
+    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         #[inline]
         fn pdf(x: f64) -> f64 {
             (-x*x/2.0).exp()
@@ -64,12 +65,10 @@ impl Rand for StandardNormal {
             if u < 0.0 { x - ziggurat_tables::ZIG_NORM_R } else { ziggurat_tables::ZIG_NORM_R - x }
         }
 
-        StandardNormal(ziggurat(
-            rng,
-            true, // this is symmetric
-            &ziggurat_tables::ZIG_NORM_X,
-            &ziggurat_tables::ZIG_NORM_F,
-            pdf, zero_case))
+        ziggurat(rng, true, // this is symmetric
+                 &ziggurat_tables::ZIG_NORM_X,
+                 &ziggurat_tables::ZIG_NORM_F,
+                 pdf, zero_case)
     }
 }
 
@@ -112,7 +111,7 @@ impl Normal {
 }
 impl Distribution<f64> for Normal {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let StandardNormal(n) = rng.gen::<StandardNormal>();
+        let n = rng.sample(StandardNormal);
         self.mean + self.std_dev * n
     }
 }
