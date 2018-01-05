@@ -24,7 +24,7 @@ pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 #[cfg(feature="std")]
 pub use self::normal::{Normal, LogNormal};
 #[cfg(feature="std")]
-pub use self::exponential::Exp;
+pub use self::exponential::{Exp, Exp1};
 
 pub mod range;
 #[cfg(feature="std")]
