@@ -10,10 +10,12 @@
 
 //! The exponential distribution.
 
-use {Rng, Rand};
+use {Rng};
 use distributions::{ziggurat, ziggurat_tables, Distribution};
 
-/// A wrapper around an `f64` to generate Exp(1) random numbers.
+/// Samples floating-point numbers according to the exponential distribution,
+/// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
+/// sampling with `-rng.gen::<f64>().ln()`, but faster.
 ///
 /// See `Exp` for the general exponential distribution.
 ///
@@ -27,20 +29,20 @@ use distributions::{ziggurat, ziggurat_tables, Distribution};
 /// College, Oxford
 ///
 /// # Example
-///
 /// ```rust
-/// use rand::distributions::exponential::Exp1;
+/// use rand::{weak_rng, Rng};
+/// use rand::distributions::Exp1;
 ///
-/// let Exp1(x) = rand::random();
-/// println!("{}", x);
+/// let val: f64 = weak_rng().sample(Exp1);
+/// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Exp1(pub f64);
+pub struct Exp1;
 
 // This could be done via `-rng.gen::<f64>().ln()` but that is slower.
-impl Rand for Exp1 {
+impl Distribution<f64> for Exp1 {
     #[inline]
-    fn rand<R:Rng>(rng: &mut R) -> Exp1 {
+    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
         #[inline]
         fn pdf(x: f64) -> f64 {
             (-x).exp()
@@ -50,10 +52,10 @@ impl Rand for Exp1 {
             ziggurat_tables::ZIG_EXP_R - rng.gen::<f64>().ln()
         }
 
-        Exp1(ziggurat(rng, false,
-                      &ziggurat_tables::ZIG_EXP_X,
-                      &ziggurat_tables::ZIG_EXP_F,
-                      pdf, zero_case))
+        ziggurat(rng, false,
+                 &ziggurat_tables::ZIG_EXP_X,
+                 &ziggurat_tables::ZIG_EXP_F,
+                 pdf, zero_case)
     }
 }
 
@@ -89,7 +91,7 @@ impl Exp {
 
 impl Distribution<f64> for Exp {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let Exp1(n) = rng.gen::<Exp1>();
+        let n: f64 = rng.sample(Exp1);
         n * self.lambda_inverse
     }
 }
