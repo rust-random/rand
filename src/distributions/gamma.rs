@@ -15,9 +15,9 @@
 use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
 
-use {Rng, Open01};
-use super::normal::StandardNormal;
-use super::{Distribution, Exp};
+use {Rng};
+use distributions::normal::StandardNormal;
+use distributions::{Distribution, Exp, Open01};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -144,7 +144,7 @@ impl Distribution<f64> for Gamma {
 }
 impl Distribution<f64> for GammaSmallShape {
     fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let Open01(u) = rng.gen::<Open01<f64>>();
+        let u: f64 = rng.sample(Open01);
 
         self.large_shape.sample(rng) * u.powf(self.inv_shape)
     }
@@ -159,7 +159,7 @@ impl Distribution<f64> for GammaLargeShape {
             }
 
             let v = v_cbrt * v_cbrt * v_cbrt;
-            let Open01(u) = rng.gen::<Open01<f64>>();
+            let u: f64 = rng.sample(Open01);
 
             let x_sqr = x * x;
             if u < 1.0 - 0.0331 * x_sqr * x_sqr ||
