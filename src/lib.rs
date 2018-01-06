@@ -320,6 +320,9 @@ mod prng;
 ///
 /// ## Built-in Implementations
 ///
+/// `Rand` is implemented for any type supporting the [`Uniform`] distribution.
+/// That includes: floating point numbers.
+///
 /// This crate implements `Rand` for various primitive types.  Assuming the
 /// provided `Rng` is well-behaved, these implementations generate values with
 /// the following ranges and distributions:
@@ -331,15 +334,6 @@ mod prng;
 ///   `0xD800...0xDFFF` (the surrogate code points).  This includes
 ///   unassigned/reserved code points.
 /// * `bool`: Generates `false` or `true`, each with probability 0.5.
-/// * Floating point types (`f32` and `f64`): Uniformly distributed in the
-///   half-open range `[0, 1)`.  (The [`Open01`], [`Closed01`], [`Exp1`], and
-///   [`StandardNormal`] wrapper types produce floating point numbers with
-///   alternative ranges or distributions.)
-///
-/// [`Open01`]: struct.Open01.html
-/// [`Closed01`]: struct.Closed01.html
-/// [`Exp1`]: distributions/exponential/struct.Exp1.html
-/// [`StandardNormal`]: distributions/normal/struct.StandardNormal.html
 ///
 /// The following aggregate types also implement `Rand` as long as their
 /// component types implement it:
@@ -348,6 +342,8 @@ mod prng;
 ///   independently, using its own `Rand` implementation.
 /// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
 ///   random `T` and returns `Some(T)`.
+/// 
+/// [`Uniform`]: distributions/struct.Uniform.html
 pub trait Rand : Sized {
     /// Generates a random instance of this type using the specified source of
     /// randomness.
@@ -403,9 +399,6 @@ pub trait Rng {
     /// random number generator which can generate numbers satisfying
     /// the requirements directly can overload this for performance.
     /// It is required that the return value lies in `[0, 1)`.
-    ///
-    /// See `Closed01` for the closed interval `[0,1]`, and
-    /// `Open01` for the open interval `(0,1)`.
     fn next_f32(&mut self) -> f32 {
         const UPPER_MASK: u32 = 0x3F800000;
         const LOWER_MASK: u32 = 0x7FFFFF;
@@ -421,9 +414,6 @@ pub trait Rng {
     /// random number generator which can generate numbers satisfying
     /// the requirements directly can overload this for performance.
     /// It is required that the return value lies in `[0, 1)`.
-    ///
-    /// See `Closed01` for the closed interval `[0,1]`, and
-    /// `Open01` for the open interval `(0,1)`.
     fn next_f64(&mut self) -> f64 {
         const UPPER_MASK: u64 = 0x3FF0000000000000;
         const LOWER_MASK: u64 = 0xFFFFFFFFFFFFF;
@@ -862,41 +852,6 @@ impl<R: SeedableRng> NewRng for R {
         R::from_rng(&mut EntropyRng::new())
     }
 }
-
-/// A wrapper for generating floating point numbers uniformly in the
-/// open interval `(0,1)` (not including either endpoint).
-///
-/// Use `Closed01` for the closed interval `[0,1]`, and the default
-/// `Rand` implementation for `f32` and `f64` for the half-open
-/// `[0,1)`.
-///
-/// # Example
-/// ```rust
-/// use rand::{random, Open01};
-///
-/// let Open01(val) = random::<Open01<f32>>();
-/// println!("f32 from (0,1): {}", val);
-/// ```
-#[derive(Debug)]
-pub struct Open01<F>(pub F);
-
-/// A wrapper for generating floating point numbers uniformly in the
-/// closed interval `[0,1]` (including both endpoints).
-///
-/// Use `Open01` for the closed interval `(0,1)`, and the default
-/// `Rand` implementation of `f32` and `f64` for the half-open
-/// `[0,1)`.
-///
-/// # Example
-///
-/// ```rust
-/// use rand::{random, Closed01};
-///
-/// let Closed01(val) = random::<Closed01<f32>>();
-/// println!("f32 from [0,1]: {}", val);
-/// ```
-#[derive(Debug)]
-pub struct Closed01<F>(pub F);
 
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.

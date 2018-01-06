@@ -17,6 +17,7 @@
 
 use {Rng, Rand};
 
+pub use self::float::{Open01, Closed01};
 pub use self::range::Range;
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
@@ -33,6 +34,7 @@ pub mod normal;
 #[cfg(feature="std")]
 pub mod exponential;
 
+mod float;
 #[cfg(feature="std")]
 mod ziggurat_tables;
 
@@ -131,8 +133,22 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// A generic random value distribution. Generates values for various types
 /// with numerically uniform distribution.
 /// 
+/// For floating-point numbers, this generates values from the half-open range
+/// `[0, 1)` (excluding 1). See also [`Open01`] and [`Closed01`] for alternatives.
+///
 /// TODO: document implementations
-/// TODO: add example
+///
+/// # Example
+/// ```rust
+/// use rand::{weak_rng, Rng};
+/// use rand::distributions::Uniform;
+///
+/// let val: f32 = weak_rng().sample(Uniform);
+/// println!("f32 from [0,1): {}", val);
+/// ```
+///
+/// [`Open01`]: struct.Open01.html
+/// [`Closed01`]: struct.Closed01.html
 #[derive(Debug)]
 pub struct Uniform;
 
