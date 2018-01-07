@@ -265,6 +265,9 @@ pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
 pub use prng::XorShiftRng;
 
+// error types
+pub use error::{ErrorKind, Error};
+
 // local use declarations
 #[cfg(target_pointer_width = "32")]
 use prng::IsaacRng as IsaacWordRng;
@@ -294,6 +297,7 @@ pub mod isaac {
 }
 
 // private modules
+mod error;
 mod rand_impls;
 mod prng;
 
