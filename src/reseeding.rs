@@ -148,8 +148,7 @@ impl Default for ReseedWithDefault {
 #[cfg(test)]
 mod test {
     use impls;
-    use std::default::Default;
-    use std::iter::repeat;
+    use core::default::Default;
     use super::{ReseedingRng, ReseedWithDefault};
     use {SeedableRng, Rng};
 
@@ -207,24 +206,22 @@ mod test {
 
     #[test]
     fn test_rng_reseed() {
-        let mut r: MyRng = SeedableRng::from_seed((ReseedWithDefault, 3));
-        let string1: String = r.gen_ascii_chars().take(100).collect();
+        let mut rng: MyRng = SeedableRng::from_seed((ReseedWithDefault, 3));
+        let mut results1 = [0u32; 32];
+        for i in results1.iter_mut() { *i = rng.next_u32(); }
 
-        r.reseed((ReseedWithDefault, 3));
+        rng.reseed((ReseedWithDefault, 3));
 
-        let string2: String = r.gen_ascii_chars().take(100).collect();
-        assert_eq!(string1, string2);
+        let mut results2 = [0u32; 32];
+        for i in results2.iter_mut() { *i = rng.next_u32(); }
+        assert_eq!(results1, results2);
     }
 
     const FILL_BYTES_V_LEN: usize = 13579;
     #[test]
     fn test_rng_fill_bytes() {
-        let mut v = repeat(0u8).take(FILL_BYTES_V_LEN).collect::<Vec<_>>();
+        let mut v = [0u8; FILL_BYTES_V_LEN];
         ::test::rng().fill_bytes(&mut v);
-
-        // Sanity test: if we've gotten here, `fill_bytes` has not infinitely
-        // recursed.
-        assert_eq!(v.len(), FILL_BYTES_V_LEN);
 
         // To test that `fill_bytes` actually did something, check that the
         // average of `v` is not 0.
