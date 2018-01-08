@@ -116,6 +116,12 @@ impl fmt::Debug for IsaacRng {
 }
 
 impl IsaacRng {
+    /// Create an ISAAC random number generator using the default
+    /// fixed seed.
+    pub fn new_unseeded() -> IsaacRng {
+        Self::new_from_u64(0)
+    }
+    
     /// Creates an ISAAC random number generator using an u64 as seed.
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.
@@ -306,14 +312,18 @@ fn init(mut mem: [w32; RAND_SIZE], rounds: u32) -> IsaacRng {
         }
     }
 
-    IsaacRng {
+    let mut rng = IsaacRng {
         rsl: [0; RAND_SIZE],
         mem: mem,
         a: w(0),
         b: w(0),
         c: w(0),
-        index: RAND_SIZE as u32, // generate on first use
-    }
+        index: 0,
+    };
+
+    // Prepare the first set of results
+    rng.isaac();
+    rng
 }
 
 fn mix(a: &mut w32, b: &mut w32, c: &mut w32, d: &mut w32,
