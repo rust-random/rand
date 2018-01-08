@@ -69,8 +69,8 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///
 /// See for more information the description in rand::prng::IsaacRng.
 ///
-/// [1]: Bob Jenkins, [*ISAAC and RC4*]
-///      (http://burtleburtle.net/bob/rand/isaac.html)
+/// [1]: Bob Jenkins, [*ISAAC and RC4*](
+///      http://burtleburtle.net/bob/rand/isaac.html)
 pub struct Isaac64Rng {
     rsl: [u64; RAND_SIZE],
     mem: [w64; RAND_SIZE],
