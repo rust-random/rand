@@ -253,7 +253,6 @@
 use core::marker;
 use core::mem;
 #[cfg(feature="std")] use std::cell::RefCell;
-#[cfg(feature="std")] use std::io;
 #[cfg(feature="std")] use std::rc::Rc;
 
 // external rngs
@@ -817,7 +816,7 @@ impl StdRng {
     /// Reading the randomness from the OS may fail, and any error is
     /// propagated via the `io::Result` return value.
     #[cfg(feature="std")]
-    pub fn new() -> io::Result<StdRng> {
+    pub fn new() -> Result<StdRng, Error> {
         match OsRng::new() {
             Ok(mut r) => Ok(StdRng { rng: r.gen() }),
             Err(e1) => {
