@@ -227,6 +227,8 @@ fn sample_indices_cache<R>(
 mod test {
     use super::*;
     use {thread_rng, XorShiftRng, SeedableRng};
+    #[cfg(not(feature="std"))]
+    use alloc::Vec;
 
     #[test]
     fn test_sample_iter() {
@@ -254,25 +256,25 @@ mod test {
         let mut r = thread_rng();
 
         // sample 0 items
-        assert_eq!(sample_slice(&mut r, empty, 0), vec![]);
-        assert_eq!(sample_slice(&mut r, &[42, 2, 42], 0), vec![]);
+        assert_eq!(&sample_slice(&mut r, empty, 0)[..], []);
+        assert_eq!(&sample_slice(&mut r, &[42, 2, 42], 0)[..], []);
 
         // sample 1 item
-        assert_eq!(sample_slice(&mut r, &[42], 1), vec![42]);
+        assert_eq!(&sample_slice(&mut r, &[42], 1)[..], [42]);
         let v = sample_slice(&mut r, &[1, 42], 1)[0];
         assert!(v == 1 || v == 42);
 
         // sample "all" the items
         let v = sample_slice(&mut r, &[42, 133], 2);
-        assert!(v == vec![42, 133] || v == vec![133, 42]);
+        assert!(&v[..] == [42, 133] || v[..] == [133, 42]);
 
-        assert_eq!(sample_indices_inplace(&mut r, 0, 0), vec![]);
-        assert_eq!(sample_indices_inplace(&mut r, 1, 0), vec![]);
-        assert_eq!(sample_indices_inplace(&mut r, 1, 1), vec![0]);
+        assert_eq!(&sample_indices_inplace(&mut r, 0, 0)[..], []);
+        assert_eq!(&sample_indices_inplace(&mut r, 1, 0)[..], []);
+        assert_eq!(&sample_indices_inplace(&mut r, 1, 1)[..], [0]);
 
-        assert_eq!(sample_indices_cache(&mut r, 0, 0), vec![]);
-        assert_eq!(sample_indices_cache(&mut r, 1, 0), vec![]);
-        assert_eq!(sample_indices_cache(&mut r, 1, 1), vec![0]);
+        assert_eq!(&sample_indices_cache(&mut r, 0, 0)[..], []);
+        assert_eq!(&sample_indices_cache(&mut r, 1, 0)[..], []);
+        assert_eq!(&sample_indices_cache(&mut r, 1, 1)[..], [0]);
 
         // Make sure lucky 777's aren't lucky
         let slice = &[42, 777];
@@ -303,8 +305,6 @@ mod test {
             let seed: [u32; 4] = [
                 r.next_u32(), r.next_u32(), r.next_u32(), r.next_u32()
             ];
-
-            println!("Selecting indices: len={}, amount={}, seed={:?}", length, amount, seed);
 
             // assert that the two index methods give exactly the same result
             let inplace = sample_indices_inplace(
