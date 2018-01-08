@@ -624,7 +624,9 @@ impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
     }
 }
 
-#[cfg(feature="std")]
+#[cfg(all(feature="alloc", not(feature="std")))]
+use alloc::boxed::Box;
+#[cfg(any(feature="std", feature="alloc"))]
 impl<R: ?Sized> Rng for Box<R> where R: Rng {
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
