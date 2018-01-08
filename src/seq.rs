@@ -22,6 +22,7 @@ use super::Rng;
 /// Randomly sample `amount` elements from a finite iterator.
 ///
 /// The following can be returned:
+///
 /// - `Ok`: `Vec` of `amount` non-repeating randomly sampled elements. The order is not random.
 /// - `Err`: `Vec` of all the elements from `iterable` in sequential order. This happens when the
 ///   length of `iterable` was less than `amount`. This is considered an error since exactly
