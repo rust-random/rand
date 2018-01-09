@@ -1,4 +1,4 @@
-// Copyright 2013-2014 The Rust Project Developers. See the COPYRIGHT
+// Copyright 2013-2017 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // https://rust-lang.org/COPYRIGHT.
 //
@@ -26,7 +26,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! rand = "0.3"
+//! rand = "0.4"
 //! ```
 //!
 //! and this to your crate root:
@@ -184,7 +184,7 @@
 //! // where the car is. The game host will never open the door with the car.
 //! fn game_host_open<R: Rng>(car: u32, choice: u32, rng: &mut R) -> u32 {
 //!     let choices = free_doors(&[car, choice]);
-//!     rand::sample(rng, choices.into_iter(), 1)[0]
+//!     rand::seq::sample_slice(rng, &choices, 1)[0]
 //! }
 //!
 //! // Returns the door we switch to, given our current choice and
@@ -243,43 +243,60 @@
 
 #![deny(missing_debug_implementations)]
 
-#![cfg_attr(feature = "i128_support", feature(i128_type))]
+#![cfg_attr(not(feature="std"), no_std)]
+#![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
+#![cfg_attr(feature = "i128_support", feature(i128_type, i128))]
 
-#[cfg(test)] #[macro_use] extern crate log;
+#[cfg(feature="std")] extern crate std as core;
+#[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 
+use core::marker;
+use core::mem;
+#[cfg(feature="std")] use std::cell::RefCell;
+#[cfg(feature="std")] use std::io;
+#[cfg(feature="std")] use std::rc::Rc;
 
-use std::cell::RefCell;
-use std::marker;
-use std::mem;
-use std::io;
-use std::rc::Rc;
-use std::num::Wrapping as w;
+// external rngs
+pub use jitter::JitterRng;
+#[cfg(feature="std")] pub use os::OsRng;
 
-pub use os::OsRng;
-
+// pseudo rngs
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
+pub use prng::XorShiftRng;
 
+// local use declarations
 #[cfg(target_pointer_width = "32")]
-use IsaacRng as IsaacWordRng;
+use prng::IsaacRng as IsaacWordRng;
 #[cfg(target_pointer_width = "64")]
-use Isaac64Rng as IsaacWordRng;
+use prng::Isaac64Rng as IsaacWordRng;
 
 use distributions::{Range, IndependentSample};
 use distributions::range::SampleRange;
 
+// public modules
 pub mod distributions;
-pub mod isaac;
-pub mod chacha;
+mod impls;
+pub mod jitter;
+#[cfg(feature="std")] pub mod os;
+#[cfg(feature="std")] pub mod read;
 pub mod reseeding;
-mod rand_impls;
-pub mod os;
-pub mod read;
+#[cfg(any(feature="std", feature = "alloc"))] pub mod seq;
 
-#[allow(bad_style)]
-type w64 = w<u64>;
-#[allow(bad_style)]
-type w32 = w<u32>;
+// These tiny modules are here to avoid API breakage, probably only temporarily
+pub mod chacha {
+    //! The ChaCha random number generator.
+    pub use prng::ChaChaRng;
+}
+pub mod isaac {
+    //! The ISAAC random number generator.
+    pub use prng::{IsaacRng, Isaac64Rng};
+}
+
+// private modules
+mod rand_impls;
+mod prng;
+
 
 /// A type that can be randomly generated using an `Rng`.
 ///
@@ -303,8 +320,8 @@ type w32 = w<u32>;
 ///
 /// [`Open01`]: struct.Open01.html
 /// [`Closed01`]: struct.Closed01.html
-/// [`Exp1`]: struct.Exp1.html
-/// [`StandardNormal`]: struct.StandardNormal.html
+/// [`Exp1`]: distributions/exponential/struct.Exp1.html
+/// [`StandardNormal`]: distributions/normal/struct.StandardNormal.html
 ///
 /// The following aggregate types also implement `Rand` as long as their
 /// component types implement it:
@@ -313,7 +330,6 @@ type w32 = w<u32>;
 ///   independently, using its own `Rand` implementation.
 /// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
 ///   random `T` and returns `Some(T)`.
-
 pub trait Rand : Sized {
     /// Generates a random instance of this type using the specified source of
     /// randomness.
@@ -322,21 +338,28 @@ pub trait Rand : Sized {
 
 /// A random number generator.
 pub trait Rng {
-    /// Return the next random u32.
+    /// Return the next random `u32`.
     ///
-    /// This rarely needs to be called directly, prefer `r.gen()` to
-    /// `r.next_u32()`.
-    // FIXME #rust-lang/rfcs#628: Should be implemented in terms of next_u64
+    /// Implementations of this trait must implement at least one of
+    /// `next_u32`, `next_u64` and `fill_bytes` directly. In the case this
+    /// function is not implemented directly, it can be implemented using
+    /// `self.next_u64() as u32` or via `fill_bytes` (TODO: expose helper
+    /// function).
     fn next_u32(&mut self) -> u32;
 
-    /// Return the next random u64.
+    /// Return the next random `u64`.
     ///
-    /// By default this is implemented in terms of `next_u32`. An
-    /// implementation of this trait must provide at least one of
-    /// these two methods. Similarly to `next_u32`, this rarely needs
-    /// to be called directly, prefer `r.gen()` to `r.next_u64()`.
+    /// Implementations of this trait must implement at least one of
+    /// `next_u32`, `next_u64` and `fill_bytes` directly. In the case this
+    /// function is not implemented directly, the default implementation will
+    /// generate values via `next_u32` in little-endian fashion, or this
+    /// function can be implemented via `fill_bytes` (TODO: expose helper
+    /// function).
+    ///
+    /// Types wrapping an inner RNG must not use the default implementation,
+    /// since the inner RNG's implementation may produce different values.
     fn next_u64(&mut self) -> u64 {
-        ((self.next_u32() as u64) << 32) | (self.next_u32() as u64)
+        impls::next_u64_via_u32(self)
     }
 
     /// Return the next random f32 selected from the half-open
@@ -393,16 +416,20 @@ pub trait Rng {
 
     /// Fill `dest` with random data.
     ///
-    /// This has a default implementation in terms of `next_u64` and
-    /// `next_u32`, but should be overridden by implementations that
-    /// offer a more efficient solution than just calling those
-    /// methods repeatedly.
+    /// Implementations of this trait must implement at least one of
+    /// `next_u32`, `next_u64` and `fill_bytes` directly. In the case this
+    /// function is not implemented directly, the default implementation will
+    /// generate values via `next_u64` in little-endian fashion.
+    /// (TODO: expose helper function to allow implementation via `next_u32`.)
     ///
-    /// This method does *not* have a requirement to bear any fixed
-    /// relationship to the other methods, for example, it does *not*
-    /// have to result in the same output as progressively filling
-    /// `dest` with `self.gen::<u8>()`, and any such behaviour should
-    /// not be relied upon.
+    /// There is no requirement on how this method generates values relative to
+    /// `next_u32` or `next_u64`; e.g. a `u64` cast to bytes is not required to
+    /// have the same value as eight bytes filled via this function. There *is*
+    /// a requirement of portability for reproducible generators which implies
+    /// that any seedable generator must fix endianness when generating bytes.
+    ///
+    /// Types wrapping an inner RNG must not use the default implementation,
+    /// since the inner RNG's implementation may produce different values.
     ///
     /// This method should guarantee that `dest` is entirely filled
     /// with new data, and may panic if this is impossible
@@ -419,27 +446,7 @@ pub trait Rng {
     /// println!("{:?}", &v[..]);
     /// ```
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        // this could, in theory, be done by transmuting dest to a
-        // [u64], but this is (1) likely to be undefined behaviour for
-        // LLVM, (2) has to be very careful about alignment concerns,
-        // (3) adds more `unsafe` that needs to be checked, (4)
-        // probably doesn't give much performance gain if
-        // optimisations are on.
-        let mut count = 0;
-        let mut num = 0;
-        for byte in dest.iter_mut() {
-            if count == 0 {
-                // we could micro-optimise here by generating a u32 if
-                // we only need a few more bytes to fill the vector
-                // (i.e. at most 4).
-                num = self.next_u64();
-                count = 8;
-            }
-
-            *byte = (num & 0xff) as u8;
-            num >>= 8;
-            count -= 1;
-        }
+        impls::fill_bytes_via_u64(self, dest)
     }
 
     /// Return a random value of a `Rand` type.
@@ -617,6 +624,7 @@ impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
     }
 }
 
+#[cfg(feature="std")]
 impl<R: ?Sized> Rng for Box<R> where R: Rng {
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
@@ -714,93 +722,6 @@ pub trait SeedableRng<Seed>: Rng {
     fn from_seed(seed: Seed) -> Self;
 }
 
-/// An Xorshift[1] random number
-/// generator.
-///
-/// The Xorshift algorithm is not suitable for cryptographic purposes
-/// but is very fast. If you do not know for sure that it fits your
-/// requirements, use a more secure one such as `IsaacRng` or `OsRng`.
-///
-/// [1]: Marsaglia, George (July 2003). ["Xorshift
-/// RNGs"](https://www.jstatsoft.org/v08/i14/paper). *Journal of
-/// Statistical Software*. Vol. 8 (Issue 14).
-#[allow(missing_copy_implementations)]
-#[derive(Clone, Debug)]
-pub struct XorShiftRng {
-    x: w32,
-    y: w32,
-    z: w32,
-    w: w32,
-}
-
-impl XorShiftRng {
-    /// Creates a new XorShiftRng instance which is not seeded.
-    ///
-    /// The initial values of this RNG are constants, so all generators created
-    /// by this function will yield the same stream of random numbers. It is
-    /// highly recommended that this is created through `SeedableRng` instead of
-    /// this function
-    pub fn new_unseeded() -> XorShiftRng {
-        XorShiftRng {
-            x: w(0x193a6754),
-            y: w(0xa8a7d469),
-            z: w(0x97830e05),
-            w: w(0x113ba7bb),
-        }
-    }
-}
-
-impl Rng for XorShiftRng {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        let x = self.x;
-        let t = x ^ (x << 11);
-        self.x = self.y;
-        self.y = self.z;
-        self.z = self.w;
-        let w_ = self.w;
-        self.w = w_ ^ (w_ >> 19) ^ (t ^ (t >> 8));
-        self.w.0
-    }
-}
-
-impl SeedableRng<[u32; 4]> for XorShiftRng {
-    /// Reseed an XorShiftRng. This will panic if `seed` is entirely 0.
-    fn reseed(&mut self, seed: [u32; 4]) {
-        assert!(!seed.iter().all(|&x| x == 0),
-                "XorShiftRng.reseed called with an all zero seed.");
-
-        self.x = w(seed[0]);
-        self.y = w(seed[1]);
-        self.z = w(seed[2]);
-        self.w = w(seed[3]);
-    }
-
-    /// Create a new XorShiftRng. This will panic if `seed` is entirely 0.
-    fn from_seed(seed: [u32; 4]) -> XorShiftRng {
-        assert!(!seed.iter().all(|&x| x == 0),
-                "XorShiftRng::from_seed called with an all zero seed.");
-
-        XorShiftRng {
-            x: w(seed[0]),
-            y: w(seed[1]),
-            z: w(seed[2]),
-            w: w(seed[3]),
-        }
-    }
-}
-
-impl Rand for XorShiftRng {
-    fn rand<R: Rng>(rng: &mut R) -> XorShiftRng {
-        let mut tuple: (u32, u32, u32, u32) = rng.gen();
-        while tuple == (0, 0, 0, 0) {
-            tuple = rng.gen();
-        }
-        let (x, y, z, w_) = tuple;
-        XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) }
-    }
-}
-
 /// A wrapper for generating floating point numbers uniformly in the
 /// open interval `(0,1)` (not including either endpoint).
 ///
@@ -838,7 +759,7 @@ pub struct Closed01<F>(pub F);
 
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct StdRng {
     rng: IsaacWordRng,
 }
@@ -855,8 +776,19 @@ impl StdRng {
     ///
     /// Reading the randomness from the OS may fail, and any error is
     /// propagated via the `io::Result` return value.
+    #[cfg(feature="std")]
     pub fn new() -> io::Result<StdRng> {
-        OsRng::new().map(|mut r| StdRng { rng: r.gen() })
+        match OsRng::new() {
+            Ok(mut r) => Ok(StdRng { rng: r.gen() }),
+            Err(e1) => {
+                match JitterRng::new() {
+                    Ok(mut r) => Ok(StdRng { rng: r.gen() }),
+                    Err(_) => {
+                        Err(e1)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -869,6 +801,11 @@ impl Rng for StdRng {
     #[inline]
     fn next_u64(&mut self) -> u64 {
         self.rng.next_u64()
+    }
+
+    #[inline]
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.rng.fill_bytes(dest)
     }
 }
 
@@ -891,31 +828,33 @@ impl<'a> SeedableRng<&'a [usize]> for StdRng {
 /// seeded `Rng` for consistency over time you should pick one algorithm and
 /// create the `Rng` yourself.
 ///
-/// This will read randomness from the operating system to seed the
-/// generator.
+/// This will seed the generator with randomness from thread_rng.
+#[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
-    match OsRng::new() {
-        Ok(mut r) => r.gen(),
-        Err(e) => panic!("weak_rng: failed to create seeded RNG: {:?}", e)
-    }
+    thread_rng().gen()
 }
 
 /// Controls how the thread-local RNG is reseeded.
+#[cfg(feature="std")]
 #[derive(Debug)]
 struct ThreadRngReseeder;
 
+#[cfg(feature="std")]
 impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
     fn reseed(&mut self, rng: &mut StdRng) {
-        *rng = match StdRng::new() {
-            Ok(r) => r,
-            Err(e) => panic!("could not reseed thread_rng: {}", e)
+        match StdRng::new() {
+            Ok(r) => *rng = r,
+            Err(e) => panic!("No entropy available: {}", e),
         }
     }
 }
+#[cfg(feature="std")]
 const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
+#[cfg(feature="std")]
 type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
 
 /// The thread-local RNG.
+#[cfg(feature="std")]
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
     rng: Rc<RefCell<ThreadRngInner>>,
@@ -925,19 +864,21 @@ pub struct ThreadRng {
 /// generator, seeded by the system. Intended to be used in method
 /// chaining style, e.g. `thread_rng().gen::<i32>()`.
 ///
-/// The RNG provided will reseed itself from the operating system
-/// after generating a certain amount of randomness.
+/// After generating a certain amount of randomness, the RNG will reseed itself
+/// from the operating system or, if the operating system RNG returns an error,
+/// a seed based on the current system time.
 ///
 /// The internal RNG used is platform and architecture dependent, even
 /// if the operating system random number generator is rigged to give
 /// the same sequence always. If absolute consistency is required,
 /// explicitly select an RNG, e.g. `IsaacRng` or `Isaac64Rng`.
+#[cfg(feature="std")]
 pub fn thread_rng() -> ThreadRng {
     // used to make space in TLS for a random number generator
     thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
         let r = match StdRng::new() {
             Ok(r) => r,
-            Err(e) => panic!("could not initialize thread_rng: {}", e)
+            Err(e) => panic!("No entropy available: {}", e),
         };
         let rng = reseeding::ReseedingRng::new(r,
                                                THREAD_RNG_RESEED_THRESHOLD,
@@ -948,6 +889,7 @@ pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
 }
 
+#[cfg(feature="std")]
 impl Rng for ThreadRng {
     fn next_u32(&mut self) -> u32 {
         self.rng.borrow_mut().next_u32()
@@ -997,7 +939,7 @@ impl Rng for ThreadRng {
 ///     *x = rand::random()
 /// }
 ///
-/// // would be faster as
+/// // can be made faster by caching thread_rng
 ///
 /// let mut rng = rand::thread_rng();
 ///
@@ -1005,11 +947,14 @@ impl Rng for ThreadRng {
 ///     *x = rng.gen();
 /// }
 /// ```
+#[cfg(feature="std")]
 #[inline]
 pub fn random<T: Rand>() -> T {
     thread_rng().gen()
 }
 
+/// DEPRECATED: use `seq::sample_iter` instead.
+///
 /// Randomly sample up to `amount` elements from a finite iterator.
 /// The order of elements in the sample is not random.
 ///
@@ -1022,37 +967,35 @@ pub fn random<T: Rand>() -> T {
 /// let sample = sample(&mut rng, 1..100, 5);
 /// println!("{:?}", sample);
 /// ```
+#[cfg(feature="std")]
+#[inline(always)]
+#[deprecated(since="0.4.0", note="renamed to seq::sample_iter")]
 pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     where I: IntoIterator<Item=T>,
           R: Rng,
 {
-    let mut iter = iterable.into_iter();
-    let mut reservoir: Vec<T> = iter.by_ref().take(amount).collect();
-    // continue unless the iterator was exhausted
-    if reservoir.len() == amount {
-        for (i, elem) in iter.enumerate() {
-            let k = rng.gen_range(0, i + 1 + amount);
-            if let Some(spot) = reservoir.get_mut(k) {
-                *spot = elem;
-            }
-        }
-    }
-    reservoir
+    // the legacy sample didn't care whether amount was met
+    seq::sample_iter(rng, iterable, amount)
+        .unwrap_or_else(|e| e)
 }
 
 #[cfg(test)]
 mod test {
-    use super::{Rng, thread_rng, random, SeedableRng, StdRng, sample};
+    use impls;
+    use super::{Rng, thread_rng, random, SeedableRng, StdRng, weak_rng};
     use std::iter::repeat;
 
     pub struct MyRng<R> { inner: R }
 
     impl<R: Rng> Rng for MyRng<R> {
         fn next_u32(&mut self) -> u32 {
-            fn next<T: Rng>(t: &mut T) -> u32 {
-                t.next_u32()
-            }
-            next(&mut self.inner)
+            self.inner.next_u32()
+        }
+        fn next_u64(&mut self) -> u64 {
+            self.inner.next_u64()
+        }
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            self.inner.fill_bytes(dest)
         }
     }
 
@@ -1065,7 +1008,9 @@ mod test {
         fn next_u32(&mut self) -> u32 { self.i as u32 }
         fn next_u64(&mut self) -> u64 { self.i }
 
-        // no fill_bytes on purpose
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            impls::fill_bytes_via_u64(self, dest)
+        }
     }
 
     pub fn iter_eq<I, J>(i: I, j: J) -> bool
@@ -1136,14 +1081,6 @@ mod test {
     fn test_gen_range_panic_usize() {
         let mut r = thread_rng();
         r.gen_range(5, 2);
-    }
-
-    #[test]
-    fn test_gen_f64() {
-        let mut r = thread_rng();
-        let a = r.gen::<f64>();
-        let b = r.gen::<f64>();
-        debug!("{:?}", (a, b));
     }
 
     #[test]
@@ -1249,24 +1186,6 @@ mod test {
     }
 
     #[test]
-    fn test_sample() {
-        let min_val = 1;
-        let max_val = 100;
-
-        let mut r = thread_rng();
-        let vals = (min_val..max_val).collect::<Vec<i32>>();
-        let small_sample = sample(&mut r, vals.iter(), 5);
-        let large_sample = sample(&mut r, vals.iter(), vals.len() + 5);
-
-        assert_eq!(small_sample.len(), 5);
-        assert_eq!(large_sample.len(), vals.len());
-
-        assert!(small_sample.iter().all(|e| {
-            **e >= min_val && **e <= max_val
-        }));
-    }
-
-    #[test]
     fn test_std_rng_seeded() {
         let s = thread_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
         let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
@@ -1285,5 +1204,14 @@ mod test {
 
         let string2 = r.gen_ascii_chars().take(100).collect::<String>();
         assert_eq!(string1, string2);
+    }
+
+    #[test]
+    fn test_weak_rng() {
+        let s = weak_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
+        let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
+        let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
+        assert!(iter_eq(ra.gen_ascii_chars().take(100),
+                        rb.gen_ascii_chars().take(100)));
     }
 }

@@ -10,8 +10,7 @@
 
 //! The implementations of `Rand` for the built-in types.
 
-use std::char;
-use std::mem;
+use core::{char, mem};
 
 use {Rand,Rng};
 
@@ -249,6 +248,7 @@ impl<T:Rand> Rand for Option<T> {
 
 #[cfg(test)]
 mod tests {
+    use impls;
     use {Rng, thread_rng, Open01, Closed01};
 
     struct ConstantRng(u64);
@@ -260,6 +260,10 @@ mod tests {
         fn next_u64(&mut self) -> u64 {
             let ConstantRng(v) = *self;
             v
+        }
+
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            impls::fill_bytes_via_u64(self, dest)
         }
     }
 
