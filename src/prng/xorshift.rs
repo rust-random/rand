@@ -1,10 +1,10 @@
 // Copyright 2017 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
+// https://rust-lang.org/COPYRIGHT.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
@@ -23,7 +23,7 @@ use impls;
 /// requirements, use a more secure one such as `IsaacRng` or `OsRng`.
 ///
 /// [1]: Marsaglia, George (July 2003). ["Xorshift
-/// RNGs"](http://www.jstatsoft.org/v08/i14/paper). *Journal of
+/// RNGs"](https://www.jstatsoft.org/v08/i14/paper). *Journal of
 /// Statistical Software*. Vol. 8 (Issue 14).
 #[derive(Clone)]
 pub struct XorShiftRng {
@@ -69,11 +69,11 @@ impl Rng for XorShiftRng {
         self.w = w_ ^ (w_ >> 19) ^ (t ^ (t >> 8));
         self.w.0
     }
-    
+
     fn next_u64(&mut self) -> u64 {
         impls::next_u64_via_u32(self)
     }
-    
+
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         impls::fill_bytes_via_u32(self, dest)
     }

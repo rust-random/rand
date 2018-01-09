@@ -72,7 +72,7 @@ optional features are available:
 -   `nightly` enables all unstable features (`i128_support`)
 -   `std` enabled by default; by setting "default-features = false" `no_std`
     mode is activated; this removes features depending on `std` functionality:
-    
+
         -   `OsRng` is entirely unavailable
         -   `JitterRng` code is still present, but a nanosecond timer must be
             provided via `JitterRng::new_with_timer`

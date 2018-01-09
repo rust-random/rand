@@ -1,10 +1,10 @@
 // Copyright 2013 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
+// https://rust-lang.org/COPYRIGHT.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
@@ -86,7 +86,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///      (http://burtleburtle.net/bob/rand/isaac.html)
 ///
 /// [3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*]
-///      (http://eprint.iacr.org/2006/438)
+///      (https://eprint.iacr.org/2006/438)
 pub struct IsaacRng {
     rsl: [u32; RAND_SIZE],
     mem: [w32; RAND_SIZE],
@@ -124,7 +124,7 @@ impl IsaacRng {
     pub fn new_unseeded() -> IsaacRng {
         Self::new_from_u64(0)
     }
-    
+
     /// Creates an ISAAC random number generator using an u64 as seed.
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.
@@ -451,7 +451,7 @@ mod test {
                     101, 203, 81, 214, 97, 162, 134, 250,
                     103, 78, 203, 15, 150, 3, 210, 164]);
     }
-    
+
     #[test]
     fn test_isaac_new_uninitialized() {
         // Compare the results from initializing `IsaacRng` with
