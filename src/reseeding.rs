@@ -223,12 +223,8 @@ mod test {
         let mut v = [0u8; FILL_BYTES_V_LEN];
         ::test::rng(321).fill_bytes(&mut v);
 
-        // To test that `fill_bytes` actually did something, check that the
-        // average of `v` is not 0.
-        let mut sum = 0.0;
-        for &x in v.iter() {
-            sum += x as f64;
-        }
-        assert!(sum / v.len() as f64 != 0.0);
+        // To test that `fill_bytes` actually did something, check that not all
+        // bytes are zero.
+        assert!(!v.iter().all(|&x| x == 0));
     }
 }
