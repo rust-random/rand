@@ -298,6 +298,7 @@ pub mod isaac {
 }
 
 // private modules
+mod le;
 mod error;
 mod rand_impls;
 mod prng;
