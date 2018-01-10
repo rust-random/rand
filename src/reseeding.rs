@@ -221,7 +221,7 @@ mod test {
     #[test]
     fn test_rng_fill_bytes() {
         let mut v = [0u8; FILL_BYTES_V_LEN];
-        ::test::rng().fill_bytes(&mut v);
+        ::test::rng(321).fill_bytes(&mut v);
 
         // To test that `fill_bytes` actually did something, check that the
         // average of `v` is not 0.

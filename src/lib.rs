@@ -987,9 +987,9 @@ mod test {
     use super::{Rng, thread_rng, random, SeedableRng, StdRng, weak_rng};
     use std::iter::repeat;
 
-    pub struct MyRng<R> { inner: R }
+    pub struct TestRng<R> { inner: R }
 
-    impl<R: Rng> Rng for MyRng<R> {
+    impl<R: Rng> Rng for TestRng<R> {
         fn next_u32(&mut self) -> u32 {
             self.inner.next_u32()
         }
@@ -1001,8 +1001,9 @@ mod test {
         }
     }
 
-    pub fn rng() -> MyRng<::ThreadRng> {
-        MyRng { inner: ::thread_rng() }
+    pub fn rng(seed: u64) -> TestRng<StdRng> {
+        let seed = [seed as usize];
+        TestRng { inner: StdRng::from_seed(&seed) }
     }
 
     struct ConstRng { i: u64 }
@@ -1054,7 +1055,7 @@ mod test {
 
     #[test]
     fn test_gen_range() {
-        let mut r = thread_rng();
+        let mut r = rng(101);
         for _ in 0..1000 {
             let a = r.gen_range(-3, 42);
             assert!(a >= -3 && a < 42);
@@ -1074,27 +1075,27 @@ mod test {
     #[test]
     #[should_panic]
     fn test_gen_range_panic_int() {
-        let mut r = thread_rng();
+        let mut r = rng(102);
         r.gen_range(5, -2);
     }
 
     #[test]
     #[should_panic]
     fn test_gen_range_panic_usize() {
-        let mut r = thread_rng();
+        let mut r = rng(103);
         r.gen_range(5, 2);
     }
 
     #[test]
     fn test_gen_weighted_bool() {
-        let mut r = thread_rng();
+        let mut r = rng(104);
         assert_eq!(r.gen_weighted_bool(0), true);
         assert_eq!(r.gen_weighted_bool(1), true);
     }
 
     #[test]
     fn test_gen_ascii_str() {
-        let mut r = thread_rng();
+        let mut r = rng(105);
         assert_eq!(r.gen_ascii_chars().take(0).count(), 0);
         assert_eq!(r.gen_ascii_chars().take(10).count(), 10);
         assert_eq!(r.gen_ascii_chars().take(16).count(), 16);
@@ -1102,7 +1103,7 @@ mod test {
 
     #[test]
     fn test_gen_vec() {
-        let mut r = thread_rng();
+        let mut r = rng(106);
         assert_eq!(r.gen_iter::<u8>().take(0).count(), 0);
         assert_eq!(r.gen_iter::<u8>().take(10).count(), 10);
         assert_eq!(r.gen_iter::<f64>().take(16).count(), 16);
@@ -1110,7 +1111,7 @@ mod test {
 
     #[test]
     fn test_choose() {
-        let mut r = thread_rng();
+        let mut r = rng(107);
         assert_eq!(r.choose(&[1, 1, 1]).map(|&x|x), Some(1));
 
         let v: &[isize] = &[];
@@ -1119,7 +1120,7 @@ mod test {
 
     #[test]
     fn test_shuffle() {
-        let mut r = thread_rng();
+        let mut r = rng(108);
         let empty: &mut [isize] = &mut [];
         r.shuffle(empty);
         let mut one = [1];
@@ -1150,7 +1151,7 @@ mod test {
 
     #[test]
     fn test_rng_trait_object() {
-        let mut rng = thread_rng();
+        let mut rng = rng(109);
         {
             let mut r = &mut rng as &mut Rng;
             r.next_u32();
@@ -1188,24 +1189,28 @@ mod test {
     }
 
     #[test]
-    fn test_std_rng_seeded() {
-        let s = thread_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
-        let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
-        let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
-        assert!(iter_eq(ra.gen_ascii_chars().take(100),
-                        rb.gen_ascii_chars().take(100)));
+    #[cfg(target_pointer_width = "32")]
+    fn test_stdrng_construction() {
+        let seed = [1, 23, 456, 7890, 0, 0, 0, 0];
+        let mut rng1 = StdRng::from_seed(&seed);
+        assert_eq!(rng1.next_u32(), 2869442790);
+
+        /* FIXME: enable once `from_rng` has landed
+        let mut rng2 = StdRng::from_rng(&mut rng1).unwrap();
+        assert_eq!(rng1.next_u32(), 3094074039);
+        */
     }
-
     #[test]
-    fn test_std_rng_reseed() {
-        let s = thread_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
-        let mut r: StdRng = SeedableRng::from_seed(&s[..]);
-        let string1 = r.gen_ascii_chars().take(100).collect::<String>();
+    #[cfg(target_pointer_width = "64")]
+    fn test_stdrng_construction() {
+        let seed = [1, 23, 456, 7890, 0, 0, 0, 0];
+        let mut rng1 = StdRng::from_seed(&seed);
+        assert_eq!(rng1.next_u32(), 3477963620);
 
-        r.reseed(&s);
-
-        let string2 = r.gen_ascii_chars().take(100).collect::<String>();
-        assert_eq!(string1, string2);
+        /* FIXME: enable once `from_rng` has landed
+        let mut rng2 = StdRng::from_rng(&mut rng1).unwrap();
+        assert_eq!(rng1.next_u32(), 3094074039);
+        */
     }
 
     #[test]

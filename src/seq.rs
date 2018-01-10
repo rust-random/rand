@@ -226,7 +226,7 @@ fn sample_indices_cache<R>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use {thread_rng, XorShiftRng, SeedableRng};
+    use {XorShiftRng, SeedableRng};
     #[cfg(not(feature="std"))]
     use alloc::Vec;
 
@@ -235,7 +235,7 @@ mod test {
         let min_val = 1;
         let max_val = 100;
 
-        let mut r = thread_rng();
+        let mut r = ::test::rng(401);
         let vals = (min_val..max_val).collect::<Vec<i32>>();
         let small_sample = sample_iter(&mut r, vals.iter(), 5).unwrap();
         let large_sample = sample_iter(&mut r, vals.iter(), vals.len() + 5).unwrap_err();
@@ -253,7 +253,7 @@ mod test {
     fn test_sample_slice_boundaries() {
         let empty: &[u8] = &[];
 
-        let mut r = thread_rng();
+        let mut r = ::test::rng(402);
 
         // sample 0 items
         assert_eq!(&sample_slice(&mut r, empty, 0)[..], []);
@@ -298,7 +298,7 @@ mod test {
         let xor_rng = XorShiftRng::from_seed;
 
         let max_range = 100;
-        let mut r = thread_rng();
+        let mut r = ::test::rng(403);
 
         for length in 1usize..max_range {
             let amount = r.gen_range(0, length);
