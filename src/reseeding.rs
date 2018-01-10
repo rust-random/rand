@@ -13,7 +13,7 @@
 
 use core::default::Default;
 
-use {Rng, SeedableRng};
+use {Rng, SeedableRng, Error};
 
 /// How many bytes of entropy the underling RNG is allowed to generate
 /// before it is reseeded
@@ -75,6 +75,12 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
         self.reseed_if_necessary();
         self.bytes_generated += dest.len() as u64;
         self.rng.fill_bytes(dest)
+    }
+    
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.reseed_if_necessary();
+        self.bytes_generated += dest.len() as u64;
+        self.rng.try_fill_bytes(dest)
     }
 }
 

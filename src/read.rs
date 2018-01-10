@@ -10,9 +10,10 @@
 
 //! A wrapper around any Read to treat it as an RNG.
 
-use std::io::{self, Read};
-use std::mem;
-use Rng;
+use std::io::Read;
+
+use {Rng, Error, ErrorKind, impls};
+
 
 /// An RNG that reads random bytes straight from a `Read`. This will
 /// work best with an infinite reader, but this is not required.
@@ -46,34 +47,24 @@ impl<R: Read> ReadRng<R> {
 
 impl<R: Read> Rng for ReadRng<R> {
     fn next_u32(&mut self) -> u32 {
-        // This is designed for speed: reading a LE integer on a LE
-        // platform just involves blitting the bytes into the memory
-        // of the u32, similarly for BE on BE; avoiding byteswapping.
-        let mut buf = [0; 4];
-        fill(&mut self.reader, &mut buf).unwrap();
-        unsafe { *(buf.as_ptr() as *const u32) }
+        impls::next_u32_via_fill(self)
     }
-    fn next_u64(&mut self) -> u64 {
-        // see above for explanation.
-        let mut buf = [0; 8];
-        fill(&mut self.reader, &mut buf).unwrap();
-        unsafe { *(buf.as_ptr() as *const u64) }
-    }
-    fn fill_bytes(&mut self, v: &mut [u8]) {
-        if v.len() == 0 { return }
-        fill(&mut self.reader, v).unwrap();
-    }
-}
 
-fn fill(r: &mut Read, mut buf: &mut [u8]) -> io::Result<()> {
-    while buf.len() > 0 {
-        match try!(r.read(buf)) {
-            0 => return Err(io::Error::new(io::ErrorKind::Other,
-                                           "end of file reached")),
-            n => buf = &mut mem::replace(&mut buf, &mut [])[n..],
-        }
+    fn next_u64(&mut self) -> u64 {
+        impls::next_u64_via_fill(self)
     }
-    Ok(())
+    
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.try_fill_bytes(dest).unwrap();
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        if dest.len() == 0 { return Ok(()); }
+        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
+        self.reader.read_exact(dest).map_err(|err| {
+            Error::with_cause(ErrorKind::Unavailable, "ReadRng: read error", err)
+        })
+    }
 }
 
 #[cfg(test)]
