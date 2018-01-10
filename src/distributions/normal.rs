@@ -171,7 +171,7 @@ mod tests {
     #[test]
     fn test_normal() {
         let mut norm = Normal::new(10.0, 10.0);
-        let mut rng = ::test::rng();
+        let mut rng = ::test::rng(210);
         for _ in 0..1000 {
             norm.sample(&mut rng);
             norm.ind_sample(&mut rng);
@@ -187,7 +187,7 @@ mod tests {
     #[test]
     fn test_log_normal() {
         let mut lnorm = LogNormal::new(10.0, 10.0);
-        let mut rng = ::test::rng();
+        let mut rng = ::test::rng(211);
         for _ in 0..1000 {
             lnorm.sample(&mut rng);
             lnorm.ind_sample(&mut rng);

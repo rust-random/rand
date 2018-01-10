@@ -311,9 +311,10 @@ mod tests {
     fn test_rand_sample() {
         let mut rand_sample = RandSample::<ConstRand>::new();
 
-        assert_eq!(rand_sample.sample(&mut ::test::rng()), ConstRand(0));
-        assert_eq!(rand_sample.ind_sample(&mut ::test::rng()), ConstRand(0));
+        assert_eq!(rand_sample.sample(&mut ::test::rng(231)), ConstRand(0));
+        assert_eq!(rand_sample.ind_sample(&mut ::test::rng(232)), ConstRand(0));
     }
+
     #[test]
     fn test_weighted_choice() {
         // this makes assumptions about the internal implementation of

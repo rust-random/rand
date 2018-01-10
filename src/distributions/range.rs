@@ -185,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_integers() {
-        let mut rng = ::test::rng();
+        let mut rng = ::test::rng(251);
         macro_rules! t {
             ($($ty:ident),*) => {{
                 $(
@@ -214,7 +214,7 @@ mod tests {
 
     #[test]
     fn test_floats() {
-        let mut rng = ::test::rng();
+        let mut rng = ::test::rng(252);
         macro_rules! t {
             ($($ty:ty),*) => {{
                 $(
@@ -237,5 +237,4 @@ mod tests {
 
         t!(f32, f64)
     }
-
 }
