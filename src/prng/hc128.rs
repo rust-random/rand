@@ -45,19 +45,19 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 /// concatenated with a 128-bit IV from the stream cipher.
 ///
 /// ## References
-/// [1]: Hongjun Wu (2008). ["The Stream Cipher HC-128"]
-///      (http://www.ecrypt.eu.org/stream/p3ciphers/hc/hc128_p3.pdf).
+/// [1]: Hongjun Wu (2008). ["The Stream Cipher HC-128"](
+///      http://www.ecrypt.eu.org/stream/p3ciphers/hc/hc128_p3.pdf).
 ///      *The eSTREAM Finalists*, LNCS 4986, pp. 39--47, Springer-Verlag.
 ///
-/// [2]: [eSTREAM: the ECRYPT Stream Cipher Project]
-///      (http://www.ecrypt.eu.org/stream/)
+/// [2]: [eSTREAM: the ECRYPT Stream Cipher Project](
+///      http://www.ecrypt.eu.org/stream/)
 ///
-/// [3]: Hongjun Wu, [Stream Ciphers HC-128 and HC-256]
-///      (https://www.ntu.edu.sg/home/wuhj/research/hc/index.html)
+/// [3]: Hongjun Wu, [Stream Ciphers HC-128 and HC-256](
+///      https://www.ntu.edu.sg/home/wuhj/research/hc/index.html)
 ///
-/// [4]: Shashwat Raizada (January 2015),
-///      ["Some Results On Analysis And Implementation Of HC-128 Stream Cipher"]
-///      (http://library.isical.ac.in:8080/jspui/bitstream/123456789/6636/1/TH431.pdf).
+/// [4]: Shashwat Raizada (January 2015),["Some Results On Analysis And
+///      Implementation Of HC-128 Stream Cipher"](
+///      http://library.isical.ac.in:8080/jspui/bitstream/123456789/6636/1/TH431.pdf).
 ///
 /// [5]: Internet Engineering Task Force (Februari 2015),
 ///      ["Prohibiting RC4 Cipher Suites"](https://tools.ietf.org/html/rfc7465).
