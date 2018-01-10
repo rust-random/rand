@@ -255,6 +255,7 @@ use core::mem;
 #[cfg(feature="std")] use std::cell::RefCell;
 #[cfg(feature="std")] use std::io;
 #[cfg(feature="std")] use std::rc::Rc;
+#[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
 // external rngs
 pub use jitter::JitterRng;
@@ -624,8 +625,6 @@ impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
     }
 }
 
-#[cfg(all(feature="alloc", not(feature="std")))]
-use alloc::boxed::Box;
 #[cfg(any(feature="std", feature="alloc"))]
 impl<R: ?Sized> Rng for Box<R> where R: Rng {
     fn next_u32(&mut self) -> u32 {
@@ -984,8 +983,11 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 #[cfg(test)]
 mod test {
     use impls;
-    use super::{Rng, thread_rng, random, SeedableRng, StdRng, weak_rng};
-    use std::iter::repeat;
+    #[cfg(feature="std")]
+    use super::{random, thread_rng, weak_rng};
+    use super::{Rng, SeedableRng, StdRng};
+    #[cfg(feature="alloc")]
+    use alloc::boxed::Box;
 
     pub struct TestRng<R> { inner: R }
 
@@ -1041,8 +1043,9 @@ mod test {
         let lengths = [0, 1, 2, 3, 4, 5, 6, 7,
                        80, 81, 82, 83, 84, 85, 86, 87];
         for &n in lengths.iter() {
-            let mut v = repeat(0u8).take(n).collect::<Vec<_>>();
-            r.fill_bytes(&mut v);
+            let mut buffer = [0u8; 87];
+            let mut v = &mut buffer[0..n];
+            r.fill_bytes(v);
 
             // use this to get nicer error messages.
             for (i, &byte) in v.iter().enumerate() {
@@ -1139,6 +1142,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature="std")]
     fn test_thread_rng() {
         let mut r = thread_rng();
         r.gen::<i32>();
@@ -1150,6 +1154,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(any(feature="std", feature="alloc"))]
     fn test_rng_trait_object() {
         let mut rng = rng(109);
         {
@@ -1175,6 +1180,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature="std")]
     fn test_random() {
         // not sure how to test this aside from just getting some values
         let _n : usize = random();
@@ -1214,6 +1220,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature="std")]
     fn test_weak_rng() {
         let s = weak_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
         let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
