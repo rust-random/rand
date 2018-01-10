@@ -253,7 +253,6 @@
 use core::marker;
 use core::mem;
 #[cfg(feature="std")] use std::cell::RefCell;
-#[cfg(feature="std")] use std::io;
 #[cfg(feature="std")] use std::rc::Rc;
 
 // external rngs
@@ -265,6 +264,9 @@ pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
 pub use prng::XorShiftRng;
 pub use prng::Hc128Rng;
+
+// error types
+pub use error::{ErrorKind, Error};
 
 // local use declarations
 #[cfg(target_pointer_width = "32")]
@@ -295,6 +297,7 @@ pub mod isaac {
 }
 
 // private modules
+mod error;
 mod rand_impls;
 mod prng;
 
@@ -448,6 +451,22 @@ pub trait Rng {
     /// ```
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         impls::fill_bytes_via_u64(self, dest)
+    }
+
+    /// Fill `dest` entirely with random data.
+    ///
+    /// This is the only method which allows an RNG to report errors while
+    /// generating random data; other methods either handle the error
+    /// internally or panic. This method is
+    /// the intended way to use external (true) RNGs, like `OsRng`. Its main
+    /// use-cases are to generate keys and to seed (infallible) PRNGs.
+    /// 
+    /// Other than error handling, this method is identical to [`fill_bytes`], and
+    /// has a default implementation simply wrapping [`fill_bytes`].
+    /// 
+    /// [`fill_bytes`]: trait.Rng.html#method.fill_bytes
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
     }
 
     /// Return a random value of a `Rand` type.
@@ -604,47 +623,67 @@ pub trait Rng {
 }
 
 impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
 
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
     }
 
+    #[inline]
     fn next_f32(&mut self) -> f32 {
         (**self).next_f32()
     }
 
+    #[inline]
     fn next_f64(&mut self) -> f64 {
         (**self).next_f64()
     }
 
+    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
+    }
+    
+    #[inline]
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        (**self).try_fill_bytes(dest)
     }
 }
 
 #[cfg(feature="std")]
 impl<R: ?Sized> Rng for Box<R> where R: Rng {
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
 
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
     }
 
+    #[inline]
     fn next_f32(&mut self) -> f32 {
         (**self).next_f32()
     }
 
+    #[inline]
     fn next_f64(&mut self) -> f64 {
         (**self).next_f64()
     }
 
+    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
+    }
+    
+    #[inline]
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        (**self).try_fill_bytes(dest)
     }
 }
 
@@ -778,7 +817,7 @@ impl StdRng {
     /// Reading the randomness from the OS may fail, and any error is
     /// propagated via the `io::Result` return value.
     #[cfg(feature="std")]
-    pub fn new() -> io::Result<StdRng> {
+    pub fn new() -> Result<StdRng, Error> {
         match OsRng::new() {
             Ok(mut r) => Ok(StdRng { rng: r.gen() }),
             Err(e1) => {
@@ -807,6 +846,11 @@ impl Rng for StdRng {
     #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.rng.fill_bytes(dest)
+    }
+    
+    #[inline]
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.rng.try_fill_bytes(dest)
     }
 }
 
@@ -892,10 +936,12 @@ pub fn thread_rng() -> ThreadRng {
 
 #[cfg(feature="std")]
 impl Rng for ThreadRng {
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         self.rng.borrow_mut().next_u32()
     }
 
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         self.rng.borrow_mut().next_u64()
     }
@@ -903,6 +949,11 @@ impl Rng for ThreadRng {
     #[inline]
     fn fill_bytes(&mut self, bytes: &mut [u8]) {
         self.rng.borrow_mut().fill_bytes(bytes)
+    }
+    
+    #[inline]
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.rng.borrow_mut().try_fill_bytes(dest)
     }
 }
 
