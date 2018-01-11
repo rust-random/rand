@@ -115,10 +115,12 @@ impl<R: Read> ReadRng<R> {
     }
 }
 
-#[cfg(all(unix, not(target_os = "ios"),
-          not(target_os = "nacl"),
+#[cfg(all(unix,
+          not(target_os = "cloudabi"),
           not(target_os = "freebsd"),
           not(target_os = "fuchsia"),
+          not(target_os = "ios"),
+          not(target_os = "nacl"),
           not(target_os = "openbsd"),
           not(target_os = "redox")))]
 mod imp {
@@ -262,6 +264,33 @@ mod imp {
             match self.inner {
                 OsGetrandomRng => getrandom_try_fill(v),
                 OsReadRng(ref mut rng) => rng.try_fill_bytes(v)
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "cloudabi")]
+mod imp {
+    extern crate cloudabi;
+
+    use {Error, ErrorKind};
+
+    #[derive(Debug)]
+    pub struct OsRng;
+
+    impl OsRng {
+        pub fn new() -> Result<OsRng, Error> {
+            Ok(OsRng)
+        }
+
+        pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
+            if unsafe { cloudabi::random_get(v) } == cloudabi::errno::SUCCESS {
+                Ok(())
+            } else {
+                Err(Error::new(
+                    ErrorKind::Unavailable,
+                    "random_get() system call failed",
+                ))
             }
         }
     }

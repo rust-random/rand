@@ -31,5 +31,8 @@ winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "
 [workspace]
 members = ["rand-derive"]
 
+[target.'cfg(target_os = "cloudabi")'.dependencies]
+cloudabi = "0.0.3"
+
 [target.'cfg(target_os = "fuchsia")'.dependencies]
 fuchsia-zircon = "0.3.2"
