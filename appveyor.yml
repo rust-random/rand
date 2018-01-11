@@ -35,4 +35,5 @@ test_script:
   - cargo test --benches
   - cargo test
   - cargo test --features nightly
+  - cargo test --tests --no-default-features --features=alloc
   - cargo test --manifest-path rand-derive/Cargo.toml
