@@ -17,11 +17,13 @@ matrix:
         - cargo doc --no-deps --all-features
         - cargo test --benches
         - cargo test --features nightly
+        - cargo test --tests --no-default-features --features=alloc
       after_success:
         - travis-cargo --only nightly doc-upload
 
 script:
   - cargo test
+  - cargo test --tests --no-default-features
   - cargo test --manifest-path rand-derive/Cargo.toml
 
 env:
