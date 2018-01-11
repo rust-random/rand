@@ -523,11 +523,11 @@ mod test {
         // remainder from `state.results`, directly filling the buffer, and
         // filling the remainder of the buffer.
         let mut buffer = [0u8; 16*4*2];
-        // Consume a value the we have a remainder.
+        // Consume a value so that we have a remainder.
         let _ = rng.next_u64();
         rng.fill_bytes(&mut buffer);
 
-        // [u8; 128] doesn't miplement PartialEq
+        // [u8; 128] doesn't implement PartialEq
         assert_eq!(buffer.len(), expected.len());
         for (b, e) in buffer.iter().zip(expected.iter()) {
             assert_eq!(b, e);
