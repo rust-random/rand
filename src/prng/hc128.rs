@@ -429,12 +429,13 @@ mod test {
                     0, 0, 0, 0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
-        let v = (0..16).map(|_| rng.next_u32()).collect::<Vec<_>>();
-        assert_eq!(v,
-                   vec!(0x73150082, 0x3bfd03a0, 0xfb2fd77f, 0xaa63af0e,
+        let mut results = [0u32; 16];
+        for i in results.iter_mut() { *i = rng.next_u32(); }
+        let expected = [0x73150082, 0x3bfd03a0, 0xfb2fd77f, 0xaa63af0e,
                         0xde122fc6, 0xa7dc29b6, 0x62a68527, 0x8b75ec68,
                         0x9036db1e, 0x81896005, 0x00ade078, 0x491fbf9a,
-                        0x1cdc3013, 0x6c3d6e24, 0x90f664b2, 0x9cd57102));
+                        0x1cdc3013, 0x6c3d6e24, 0x90f664b2, 0x9cd57102];
+        assert_eq!(results, expected);
     }
 
     #[test]
@@ -444,12 +445,13 @@ mod test {
                     1, 0, 0, 0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
-        let v = (0..16).map(|_| rng.next_u32()).collect::<Vec<_>>();
-        assert_eq!(v,
-                   vec!(0xc01893d5, 0xb7dbe958, 0x8f65ec98, 0x64176604,
+        let mut results = [0u32; 16];
+        for i in results.iter_mut() { *i = rng.next_u32(); }
+        let expected = [0xc01893d5, 0xb7dbe958, 0x8f65ec98, 0x64176604,
                         0x36fc6724, 0xc82c6eec, 0x1b1c38a7, 0xc9b42a95,
                         0x323ef123, 0x0a6a908b, 0xce757b68, 0x9f14f7bb,
-                        0xe4cde011, 0xaeb5173f, 0x89608c94, 0xb5cf46ca));
+                        0xe4cde011, 0xaeb5173f, 0x89608c94, 0xb5cf46ca];
+        assert_eq!(results, expected);
     }
 
     #[test]
@@ -459,12 +461,13 @@ mod test {
                     0, 0, 0, 0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
-        let v = (0..16).map(|_| rng.next_u32()).collect::<Vec<_>>();
-        assert_eq!(v,
-                   vec!(0x518251a4, 0x04b4930a, 0xb02af931, 0x0639f032,
+        let mut results = [0u32; 16];
+        for i in results.iter_mut() { *i = rng.next_u32(); }
+        let expected = [0x518251a4, 0x04b4930a, 0xb02af931, 0x0639f032,
                         0xbcb4a47a, 0x5722480b, 0x2bf99f72, 0xcdc0e566,
                         0x310f0c56, 0xd3cc83e8, 0x663db8ef, 0x62dfe07f,
-                        0x593e1790, 0xc5ceaa9c, 0xab03806f, 0xc9a6e5a0));
+                        0x593e1790, 0xc5ceaa9c, 0xab03806f, 0xc9a6e5a0];
+        assert_eq!(results, expected);
     }
 
     #[test]
@@ -473,24 +476,25 @@ mod test {
                     0, 0, 0, 0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
-        let v = (0..8).map(|_| rng.next_u64()).collect::<Vec<_>>();
-        assert_eq!(v,
-                   vec!(0x3bfd03a073150082, 0xaa63af0efb2fd77f,
+        let mut results = [0u64; 8];
+        for i in results.iter_mut() { *i = rng.next_u64(); }
+        let expected = [0x3bfd03a073150082, 0xaa63af0efb2fd77f,
                         0xa7dc29b6de122fc6, 0x8b75ec6862a68527,
                         0x818960059036db1e, 0x491fbf9a00ade078,
-                        0x6c3d6e241cdc3013, 0x9cd5710290f664b2));
+                        0x6c3d6e241cdc3013, 0x9cd5710290f664b2];
+        assert_eq!(results, expected);
 
         // The RNG operates in a P block of 512 results and next a Q block.
         // After skipping 2*800 u32 results we end up somewhere in the Q block
         // of the second round
         for _ in 0..800 { rng.next_u64(); }
 
-        let v = (0..8).map(|_| rng.next_u64()).collect::<Vec<_>>();
-        assert_eq!(v,
-                   vec!(0xd8c4d6ca84d0fc10, 0xf16a5d91dc66e8e7,
+        for i in results.iter_mut() { *i = rng.next_u64(); }
+        let expected = [0xd8c4d6ca84d0fc10, 0xf16a5d91dc66e8e7,
                         0xd800de5bc37a8653, 0x7bae1f88c0dfbb4c,
                         0x3bfe1f374e6d4d14, 0x424b55676be3fa06,
-                        0xe3a1e8758cbff579, 0x417f7198c5652bcd));
+                        0xe3a1e8758cbff579, 0x417f7198c5652bcd];
+        assert_eq!(results, expected);
     }
 
     #[test]
@@ -498,8 +502,7 @@ mod test {
         let seed = [0x55u32, 0, 0, 0, // key
                     0, 0, 0, 0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
-        let expected =
-            vec!(0x31, 0xf9, 0x2a, 0xb0, 0x32, 0xf0, 0x39, 0x06,
+        let expected = [0x31, 0xf9, 0x2a, 0xb0, 0x32, 0xf0, 0x39, 0x06,
                  0x7a, 0xa4, 0xb4, 0xbc, 0x0b, 0x48, 0x22, 0x57,
                  0x72, 0x9f, 0xf9, 0x2b, 0x66, 0xe5, 0xc0, 0xcd,
                  0x56, 0x0c, 0x0f, 0x31, 0xe8, 0x83, 0xcc, 0xd3,
@@ -514,20 +517,21 @@ mod test {
                  0xad, 0x83, 0x6b, 0x9d, 0x60, 0xa1, 0x99, 0x96,
                  0x90, 0x00, 0x66, 0x7f, 0xfa, 0x7e, 0x65, 0xe9,
                  0xac, 0x8b, 0x92, 0x34, 0x77, 0xb4, 0x23, 0xd0,
-                 0xb9, 0xab, 0xb1, 0x47, 0x7d, 0x4a, 0x13, 0x0a);
+                 0xb9, 0xab, 0xb1, 0x47, 0x7d, 0x4a, 0x13, 0x0a];
 
         // Pick a somewhat large buffer so we can test filling with the
         // remainder from `state.results`, directly filling the buffer, and
         // filling the remainder of the buffer.
-        let mut buffer = vec!(0u8; 16*4*2);
-        // Consume a value the we have a remainder.
+        let mut buffer = [0u8; 16*4*2];
+        // Consume a value so that we have a remainder.
         let _ = rng.next_u64();
         rng.fill_bytes(&mut buffer);
 
-        for i in buffer.iter() {
-            print!("0x{:02x}, ", i);
+        // [u8; 128] doesn't implement PartialEq
+        assert_eq!(buffer.len(), expected.len());
+        for (b, e) in buffer.iter().zip(expected.iter()) {
+            assert_eq!(b, e);
         }
-        assert_eq!(buffer, expected);
     }
 
     #[test]
