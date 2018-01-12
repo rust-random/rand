@@ -79,14 +79,14 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// 2 * 256 * 4 = 2 kb to hold the state and results.
 ///
 /// ## References
-/// [1]: Bob Jenkins, [*ISAAC: A fast cryptographic random number generator*]
-///      (http://burtleburtle.net/bob/rand/isaacafa.html)
+/// [1]: Bob Jenkins, [*ISAAC: A fast cryptographic random number generator*](
+///      http://burtleburtle.net/bob/rand/isaacafa.html)
 ///
-/// [2]: Bob Jenkins, [*ISAAC and RC4*]
-///      (http://burtleburtle.net/bob/rand/isaac.html)
+/// [2]: Bob Jenkins, [*ISAAC and RC4*](
+///      http://burtleburtle.net/bob/rand/isaac.html)
 ///
-/// [3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*]
-///      (https://eprint.iacr.org/2006/438)
+/// [3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*](
+///      https://eprint.iacr.org/2006/438)
 pub struct IsaacRng {
     rsl: [u32; RAND_SIZE],
     mem: [w32; RAND_SIZE],
