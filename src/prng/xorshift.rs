@@ -11,9 +11,9 @@
 //! Xorshift generators
 
 use core::num::Wrapping as w;
-use core::fmt;
-use {Rng, SeedableRng, Rand};
-use impls;
+use core::{fmt, slice};
+use {Rng, SeedableRng, Error};
+use {impls, le};
 
 /// An Xorshift[1] random number
 /// generator.
@@ -79,39 +79,45 @@ impl Rng for XorShiftRng {
     }
 }
 
-impl SeedableRng<[u32; 4]> for XorShiftRng {
-    /// Reseed an XorShiftRng. This will panic if `seed` is entirely 0.
-    fn reseed(&mut self, seed: [u32; 4]) {
-        assert!(!seed.iter().all(|&x| x == 0),
-                "XorShiftRng.reseed called with an all zero seed.");
+impl SeedableRng for XorShiftRng {
+    type Seed = [u8; 16];
 
-        self.x = w(seed[0]);
-        self.y = w(seed[1]);
-        self.z = w(seed[2]);
-        self.w = w(seed[3]);
-    }
+    fn from_seed(seed: Self::Seed) -> Self {
+        let mut seed_u32 = [0u32; 4];
+        le::read_u32_into(&seed, &mut seed_u32);
 
-    /// Create a new XorShiftRng. This will panic if `seed` is entirely 0.
-    fn from_seed(seed: [u32; 4]) -> XorShiftRng {
-        assert!(!seed.iter().all(|&x| x == 0),
-                "XorShiftRng::from_seed called with an all zero seed.");
+        // Xorshift cannot be seeded with 0 and we cannot return an Error, but
+        // also do not wish to panic (because a random seed can legitimately be
+        // 0); our only option is therefore to use a preset value.
+        if seed_u32.iter().all(|&x| x == 0) {
+            seed_u32 = [0xBAD_5EED, 0xBAD_5EED, 0xBAD_5EED, 0xBAD_5EED];
+        }
 
         XorShiftRng {
-            x: w(seed[0]),
-            y: w(seed[1]),
-            z: w(seed[2]),
-            w: w(seed[3]),
+            x: w(seed_u32[0]),
+            y: w(seed_u32[1]),
+            z: w(seed_u32[2]),
+            w: w(seed_u32[3]),
         }
     }
-}
 
-impl Rand for XorShiftRng {
-    fn rand<R: Rng>(rng: &mut R) -> XorShiftRng {
-        let mut tuple: (u32, u32, u32, u32) = rng.gen();
-        while tuple == (0, 0, 0, 0) {
-            tuple = rng.gen();
+    fn from_rng<R: Rng>(mut rng: R) -> Result<Self, Error> {
+        let mut seed_u32 = [0u32; 4];
+        loop {
+            unsafe {
+                let ptr = seed_u32.as_mut_ptr() as *mut u8;
+
+                let slice = slice::from_raw_parts_mut(ptr, 4 * 4);
+                rng.try_fill_bytes(slice)?;
+            }
+            if !seed_u32.iter().all(|&x| x == 0) { break; }
         }
-        let (x, y, z, w_) = tuple;
-        XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) }
+
+        Ok(XorShiftRng {
+            x: w(seed_u32[0]),
+            y: w(seed_u32[1]),
+            z: w(seed_u32[2]),
+            w: w(seed_u32[3]),
+        })
     }
 }

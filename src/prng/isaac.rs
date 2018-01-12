@@ -10,13 +10,11 @@
 
 //! The ISAAC random number generator.
 
-use core::slice;
-use core::iter::repeat;
+use core::{fmt, slice};
 use core::num::Wrapping as w;
-use core::fmt;
 
-use {Rng, SeedableRng, Rand};
-use impls;
+use {Rng, SeedableRng, Error};
+use {impls, le};
 
 #[allow(non_camel_case_types)]
 type w32 = w<u32>;
@@ -333,41 +331,34 @@ fn mix(a: &mut w32, b: &mut w32, c: &mut w32, d: &mut w32,
     *h ^= *a >> 9;  *c += *h; *a += *b;
 }
 
-impl Rand for IsaacRng {
-    fn rand<R: Rng>(other: &mut R) -> IsaacRng {
-        let mut key = [w(0); RAND_SIZE];
+impl SeedableRng for IsaacRng {
+    type Seed = [u8; 32];
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        let mut seed_u32 = [0u32; 8];
+        le::read_u32_into(&seed, &mut seed_u32);
+        let mut seed_extended = [w(0); RAND_SIZE];
+        for (x, y) in seed_extended.iter_mut().zip(seed_u32.iter()) {
+            *x = w(*y);
+        }
+        init(seed_extended, 2)
+    }
+
+    fn from_rng<R: Rng>(mut rng: R) -> Result<Self, Error> {
+        // Custom `from_rng` implementation that fills a seed with the same size
+        // as the entire state.
+        let mut seed = [w(0u32); RAND_SIZE];
         unsafe {
-            let ptr = key.as_mut_ptr() as *mut u8;
+            let ptr = seed.as_mut_ptr() as *mut u8;
 
             let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE * 4);
-            other.fill_bytes(slice);
+            rng.try_fill_bytes(slice)?;
+        }
+        for i in seed.iter_mut() {
+            *i = w(i.0.to_le());
         }
 
-        init(key, 2)
-    }
-}
-
-impl<'a> SeedableRng<&'a [u32]> for IsaacRng {
-    fn reseed(&mut self, seed: &'a [u32]) {
-        *self = Self::from_seed(seed);
-    }
-    /// Create an ISAAC random number generator with a seed. This can
-    /// be any length, although the maximum number of elements used is
-    /// 256 and any more will be silently ignored. A generator
-    /// constructed with a given seed will generate the same sequence
-    /// of values as all other generators constructed with that seed.
-    fn from_seed(seed: &'a [u32]) -> IsaacRng {
-        let mut key = [w(0); RAND_SIZE];
-
-        // make the seed into [seed[0], seed[1], ..., seed[seed.len()
-        // - 1], 0, 0, ...], to fill `key`.
-        let seed_iter = seed.iter().map(|&x| x).chain(repeat(0u32));
-
-        for (rsl_elem, seed_elem) in key.iter_mut().zip(seed_iter) {
-            *rsl_elem = w(seed_elem);
-        }
-
-        init(key, 2)
+        Ok(init(seed, 2))
     }
 }
 
@@ -378,20 +369,21 @@ mod test {
 
     #[test]
     fn test_isaac_construction() {
-        let seed = [1, 23, 456, 7890, 0, 0, 0, 0];
-        let mut rng1 = IsaacRng::from_seed(&seed);
+        // Test that various construction techniques produce a working RNG.
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
+                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let mut rng1 = IsaacRng::from_seed(seed);
         assert_eq!(rng1.next_u32(), 2869442790);
 
-        /* FIXME: enable once `from_rng` has landed
         let mut rng2 = IsaacRng::from_rng(&mut rng1).unwrap();
-        assert_eq!(rng1.next_u32(), 3094074039);
-        */
+        assert_eq!(rng2.next_u32(), 3094074039);
     }
 
     #[test]
     fn test_isaac_true_values_32() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng1: IsaacRng = SeedableRng::from_seed(seed);
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
+                     57,48,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let mut rng1 = IsaacRng::from_seed(seed);
         let mut results = [0u32; 10];
         for i in results.iter_mut() { *i = rng1.next_u32(); }
         let expected = [
@@ -399,8 +391,9 @@ mod test {
             4203127393, 264982119, 2765226902, 2737944514, 3900253796];
         assert_eq!(results, expected);
 
-        let seed: &[_] = &[12345, 67890, 54321, 9876];
-        let mut rng2: IsaacRng = SeedableRng::from_seed(seed);
+        let seed = [57,48,0,0, 50,9,1,0, 49,212,0,0, 148,38,0,0,
+                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let mut rng2 = IsaacRng::from_seed(seed);
         // skip forward to the 10000th number
         for _ in 0..10000 { rng2.next_u32(); }
 
@@ -414,8 +407,9 @@ mod test {
     #[test]
     fn test_isaac_true_values_64() {
         // As above, using little-endian versions of above values
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng: IsaacRng = SeedableRng::from_seed(seed);
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
+                    57,48,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let mut rng = IsaacRng::from_seed(seed);
         let mut results = [0u64; 5];
         for i in results.iter_mut() { *i = rng.next_u64(); }
         let expected = [
@@ -426,7 +420,8 @@ mod test {
 
     #[test]
     fn test_isaac_true_bytes() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
+                     57,48,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
         let mut rng = IsaacRng::from_seed(seed);
         let mut results = [0u8; 32];
         rng.fill_bytes(&mut results);
@@ -458,11 +453,12 @@ mod test {
 
     #[test]
     fn test_isaac_clone() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng: IsaacRng = SeedableRng::from_seed(seed);
-        let mut clone = rng.clone();
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
+                     57,48,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let mut rng1 = IsaacRng::from_seed(seed);
+        let mut rng2 = rng1.clone();
         for _ in 0..16 {
-            assert_eq!(rng.next_u64(), clone.next_u64());
+            assert_eq!(rng1.next_u32(), rng2.next_u32());
         }
     }
 }

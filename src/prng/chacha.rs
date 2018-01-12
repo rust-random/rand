@@ -11,12 +11,13 @@
 //! The ChaCha random number generator.
 
 use core::fmt;
-use {Rng, SeedableRng, Rand};
-use impls;
+use {Rng, SeedableRng};
+use {impls, le};
 
-const KEY_WORDS    : usize =  8; // 8 words for the 256-bit key
-const STATE_WORDS  : usize = 16;
-const CHACHA_ROUNDS: u32 = 20; // Cryptographically secure from 8 upwards as of this writing
+const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
+const STATE_WORDS: usize = 16;
+const CHACHA_ROUNDS: u32 = 20; // Cryptographically secure from 8 upwards as of
+                               // this writing
 
 /// A random number generator that uses the ChaCha20 algorithm [1].
 ///
@@ -79,7 +80,6 @@ fn core(new: &mut [u32; STATE_WORDS], input: &[u32; STATE_WORDS]) {
 }
 
 impl ChaChaRng {
-
     /// Create an ChaCha random number generator using the default
     /// fixed key of 8 zero words.
     ///
@@ -100,13 +100,7 @@ impl ChaChaRng {
     /// - 2917185654
     /// - 2419978656
     pub fn new_unseeded() -> ChaChaRng {
-        let mut rng = ChaChaRng {
-            buffer:  [0; STATE_WORDS],
-            state:   [0; STATE_WORDS],
-            index:   STATE_WORDS
-        };
-        rng.init(&[0; KEY_WORDS]);
-        rng
+        ChaChaRng::init([0; SEED_WORDS])
     }
 
     /// Sets the internal 128-bit ChaCha counter to
@@ -154,22 +148,15 @@ impl ChaChaRng {
     /// ```
     /// [1]: Daniel J. Bernstein. [*Extending the Salsa20
     /// nonce.*](https://cr.yp.to/papers.html#xsalsa)
-    fn init(&mut self, key: &[u32; KEY_WORDS]) {
-        self.state[0] = 0x61707865;
-        self.state[1] = 0x3320646E;
-        self.state[2] = 0x79622D32;
-        self.state[3] = 0x6B206574;
-
-        for i in 0..KEY_WORDS {
-            self.state[4+i] = key[i];
-        }
-
-        self.state[12] = 0;
-        self.state[13] = 0;
-        self.state[14] = 0;
-        self.state[15] = 0;
-
-        self.index = STATE_WORDS;
+    fn init(seed: [u32; SEED_WORDS]) -> Self {
+        ChaChaRng {
+            buffer: [0; STATE_WORDS],
+            state: [0x61707865, 0x3320646E, 0x79622D32, 0x6B206574, // constants
+                    seed[0], seed[1], seed[2], seed[3], // seed
+                    seed[4], seed[5], seed[6], seed[7], // seed
+                    0, 0, 0, 0], // counter
+            index: STATE_WORDS, // generate on first use
+         }
     }
 
     /// Refill the internal output buffer (`self.buffer`)
@@ -213,44 +200,14 @@ impl Rng for ChaChaRng {
     }
 }
 
-impl<'a> SeedableRng<&'a [u32]> for ChaChaRng {
-
-    fn reseed(&mut self, seed: &'a [u32]) {
-        *self = Self::from_seed(seed);
-    }
-
-    /// Create a ChaCha generator from a seed,
-    /// obtained from a variable-length u32 array.
-    /// Only up to 8 words are used; if less than 8
-    /// words are used, the remaining are set to zero.
-    fn from_seed(seed: &'a [u32]) -> ChaChaRng {
-        let mut rng = ChaChaRng {
-            buffer:  [0; STATE_WORDS],
-            state:   [0; STATE_WORDS],
-            index:   STATE_WORDS
-        };
-        rng.init(&[0u32; KEY_WORDS]);
-        // set key in place
-        {
-            let key = &mut rng.state[4 .. 4+KEY_WORDS];
-            for (k, s) in key.iter_mut().zip(seed.iter()) {
-                *k = *s;
-            }
-        }
-        rng
+impl SeedableRng for ChaChaRng {
+    type Seed = [u8; SEED_WORDS*4];
+    fn from_seed(seed: Self::Seed) -> Self {
+        let mut seed_u32 = [0u32; SEED_WORDS];
+        le::read_u32_into(&seed, &mut seed_u32);
+        ChaChaRng::init(seed_u32)
     }
 }
-
-impl Rand for ChaChaRng {
-    fn rand<R: Rng>(other: &mut R) -> ChaChaRng {
-        let mut key : [u32; KEY_WORDS] = [0; KEY_WORDS];
-        for word in key.iter_mut() {
-            *word = other.gen();
-        }
-        SeedableRng::from_seed(&key[..])
-    }
-}
-
 
 #[cfg(test)]
 mod test {
@@ -259,21 +216,22 @@ mod test {
 
     #[test]
     fn test_chacha_construction() {
-        let seed = [0, 0, 1, 0, 2, 0, 3, 0];
-        let mut rng1 = ChaChaRng::from_seed(&seed);
+        let seed = [0,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,
+            2,0,0,0,0,0,0,0,
+            3,0,0,0,0,0,0,0];
+        let mut rng1 = ChaChaRng::from_seed(seed);
         assert_eq!(rng1.next_u32(), 137206642);
 
-        /* FIXME: enable once `from_rng` has landed
         let mut rng2 = ChaChaRng::from_rng(&mut rng1).unwrap();
         assert_eq!(rng2.next_u32(), 1325750369);
-        */
     }
 
     #[test]
     fn test_chacha_true_values() {
         // Test vectors 1 and 2 from
         // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
-        let seed: &[_] = &[0u32; 8];
+        let seed = [0u8; 32];
         let mut rng1: ChaChaRng = SeedableRng::from_seed(seed);
 
         let mut results = [0u32; 16];
@@ -292,7 +250,7 @@ mod test {
         assert_eq!(results, expected);
 
 
-        let seed: &[_] = &[0,1,2,3,4,5,6,7];
+        let seed = [0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0, 4,0,0,0, 5,0,0,0, 6,0,0,0, 7,0,0,0];
         let mut rng2: ChaChaRng = SeedableRng::from_seed(seed);
 
         // Store the 17*i-th 32-bit word,
@@ -312,7 +270,7 @@ mod test {
 
     #[test]
     fn test_chacha_true_bytes() {
-        let seed: &[_] = &[0u32; 8];
+        let seed = [0u8; 32];
         let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
         let mut results = [0u8; 32];
         rng.fill_bytes(&mut results);
@@ -326,7 +284,7 @@ mod test {
 
     #[test]
     fn test_chacha_clone() {
-        let seed: &[_] = &[0,1,2,3,4,5,6,7];
+        let seed = [0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0, 4,0,0,0, 5,0,0,0, 6,0,0,0, 7,0,0,0];
         let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
         let mut clone = rng.clone();
         for _ in 0..16 {

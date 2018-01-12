@@ -13,11 +13,7 @@
 
 use core::default::Default;
 
-use {Rng, SeedableRng, Error};
-
-/// How many bytes of entropy the underling RNG is allowed to generate
-/// before it is reseeded
-const DEFAULT_GENERATION_THRESHOLD: u64 = 32 * 1024;
+use {Rng, Error};
 
 /// A wrapper around any RNG which reseeds the underlying RNG after it
 /// has generated a certain number of random bytes.
@@ -84,54 +80,11 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
     }
 }
 
-impl<S, R: SeedableRng<S>, Rsdr: Reseeder<R> + Default>
-     SeedableRng<(Rsdr, S)> for ReseedingRng<R, Rsdr> {
-    fn reseed(&mut self, (rsdr, seed): (Rsdr, S)) {
-        self.rng.reseed(seed);
-        self.reseeder = rsdr;
-        self.bytes_generated = 0;
-    }
-
-    /// Create a new `ReseedingRng` from the given reseeder and
-    /// seed. This uses a default value for `generation_threshold`.
-    fn from_seed((rsdr, seed): (Rsdr, S)) -> ReseedingRng<R, Rsdr> {
-        ReseedingRng {
-            rng: SeedableRng::from_seed(seed),
-            generation_threshold: DEFAULT_GENERATION_THRESHOLD,
-            bytes_generated: 0,
-            reseeder: rsdr
-        }
-    }
-}
-
 /// Something that can be used to reseed an RNG via `ReseedingRng`.
 ///
-/// # Example
-///
-/// ```rust
-/// use rand::{Rng, SeedableRng, StdRng};
-/// use rand::reseeding::{Reseeder, ReseedingRng};
-///
-/// struct TickTockReseeder { tick: bool }
-/// impl Reseeder<StdRng> for TickTockReseeder {
-///     fn reseed(&mut self, rng: &mut StdRng) {
-///         let val = if self.tick {0} else {1};
-///         rng.reseed(&[val]);
-///         self.tick = !self.tick;
-///     }
-/// }
-/// fn main() {
-///     let rsdr = TickTockReseeder { tick: true };
-///
-///     let inner = StdRng::new().unwrap();
-///     let mut rng = ReseedingRng::new(inner, 10, rsdr);
-///
-///     // this will repeat, because it gets reseeded very regularly.
-///     let s: String = rng.gen_ascii_chars().take(100).collect();
-///     println!("{}", s);
-/// }
-///
-/// ```
+/// Note that implementations should support `Clone` only if reseeding is
+/// deterministic (no external entropy source). This is so that a `ReseedingRng`
+/// only supports `Clone` if fully deterministic.
 pub trait Reseeder<R> {
     /// Reseed the given RNG.
     fn reseed(&mut self, rng: &mut R);
@@ -153,7 +106,7 @@ impl Default for ReseedWithDefault {
 
 #[cfg(test)]
 mod test {
-    use impls;
+    use {impls, le};
     use core::default::Default;
     use super::{ReseedingRng, ReseedWithDefault};
     use {SeedableRng, Rng};
@@ -181,12 +134,12 @@ mod test {
             Counter { i: 0 }
         }
     }
-    impl SeedableRng<u32> for Counter {
-        fn reseed(&mut self, seed: u32) {
-            self.i = seed;
-        }
-        fn from_seed(seed: u32) -> Counter {
-            Counter { i: seed }
+    impl SeedableRng for Counter {
+        type Seed = [u8; 4];
+        fn from_seed(seed: Self::Seed) -> Self {
+            let mut seed_u32 = [0u32; 1];
+            le::read_u32_into(&seed, &mut seed_u32);
+            Counter { i: seed_u32[0] }
         }
     }
     type MyRng = ReseedingRng<Counter, ReseedWithDefault>;
@@ -200,27 +153,6 @@ mod test {
             assert_eq!(rs.next_u32(), i % 100);
             i += 1;
         }
-    }
-
-    #[test]
-    fn test_rng_seeded() {
-        let mut ra: MyRng = SeedableRng::from_seed((ReseedWithDefault, 2));
-        let mut rb: MyRng = SeedableRng::from_seed((ReseedWithDefault, 2));
-        assert!(::test::iter_eq(ra.gen_ascii_chars().take(100),
-                                rb.gen_ascii_chars().take(100)));
-    }
-
-    #[test]
-    fn test_rng_reseed() {
-        let mut rng: MyRng = SeedableRng::from_seed((ReseedWithDefault, 3));
-        let mut results1 = [0u32; 32];
-        for i in results1.iter_mut() { *i = rng.next_u32(); }
-
-        rng.reseed((ReseedWithDefault, 3));
-
-        let mut results2 = [0u32; 32];
-        for i in results2.iter_mut() { *i = rng.next_u32(); }
-        assert_eq!(results1, results2);
     }
 
     const FILL_BYTES_V_LEN: usize = 13579;
