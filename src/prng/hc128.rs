@@ -11,8 +11,8 @@
 //! The HC-128 random number generator.
 
 use core::{fmt, slice};
-use {Rng, SeedableRng, Rand};
-use impls;
+use {Rng, SeedableRng};
+use {impls, le};
 
 const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 
@@ -393,27 +393,16 @@ impl Rng for Hc128Rng {
     }
 }
 
-impl Rand for Hc128Rng {
-    fn rand<R: Rng>(other: &mut R) -> Hc128Rng {
-        let mut seed = [0u32; 8];
-        unsafe {
-            let ptr = seed.as_mut_ptr() as *mut u8;
-            let slice = slice::from_raw_parts_mut(ptr, 8 * 4);
-            other.fill_bytes(slice);
-        }
-        Hc128Rng::init(seed)
-    }
-}
+impl SeedableRng for Hc128Rng {
+    type Seed = [u8; SEED_WORDS*4];
 
-impl SeedableRng<[u32; SEED_WORDS]> for Hc128Rng {
-    fn reseed(&mut self, seed: [u32; SEED_WORDS]) {
-        *self = Self::from_seed(seed);
-    }
     /// Create an HC-128 random number generator with a seed. The seed has to be
     /// 256 bits in length, matching the 128 bit `key` followed by 128 bit `iv`
     /// when HC-128 where to be used as a stream cipher.
-    fn from_seed(seed: [u32; SEED_WORDS]) -> Hc128Rng {
-        Hc128Rng::init(seed)
+    fn from_seed(seed: Self::Seed) -> Self {
+        let mut seed_u32 = [0u32; SEED_WORDS];
+        le::read_u32_into(&seed, &mut seed_u32);
+        Hc128Rng::init(seed_u32)
     }
 }
 
@@ -425,8 +414,8 @@ mod test {
     #[test]
     // Test vector 1 from the paper "The Stream Cipher HC-128"
     fn test_hc128_true_values_a() {
-        let seed = [0u32, 0, 0, 0, // key
-                    0, 0, 0, 0]; // iv
+        let seed = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
+                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u32; 16];
@@ -441,8 +430,8 @@ mod test {
     #[test]
     // Test vector 2 from the paper "The Stream Cipher HC-128"
     fn test_hc128_true_values_b() {
-        let seed = [0u32, 0, 0, 0, // key
-                    1, 0, 0, 0]; // iv
+        let seed = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
+                    1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u32; 16];
@@ -457,8 +446,8 @@ mod test {
     #[test]
     // Test vector 3 from the paper "The Stream Cipher HC-128"
     fn test_hc128_true_values_c() {
-        let seed = [0x55u32, 0, 0, 0, // key
-                    0, 0, 0, 0]; // iv
+        let seed = [0x55,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
+                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u32; 16];
@@ -472,8 +461,8 @@ mod test {
 
     #[test]
     fn test_hc128_true_values_u64() {
-        let seed = [0u32, 0, 0, 0, // key
-                    0, 0, 0, 0]; // iv
+        let seed = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
+                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u64; 8];
@@ -499,8 +488,8 @@ mod test {
 
     #[test]
     fn test_hc128_true_values_bytes() {
-        let seed = [0x55u32, 0, 0, 0, // key
-                    0, 0, 0, 0]; // iv
+        let seed = [0x55,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
+                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
         let expected = [0x31, 0xf9, 0x2a, 0xb0, 0x32, 0xf0, 0x39, 0x06,
                  0x7a, 0xa4, 0xb4, 0xbc, 0x0b, 0x48, 0x22, 0x57,
@@ -536,8 +525,8 @@ mod test {
 
     #[test]
     fn test_hc128_clone() {
-        let seed = [0x55, 0, 0, 0, // key
-                    0, 0, 0, 0]; // iv
+        let seed = [0x55,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
+                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng1 = Hc128Rng::from_seed(seed);
         let mut rng2 = rng1.clone();
         for _ in 0..16 {

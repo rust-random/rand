@@ -12,7 +12,7 @@
 
 use core::{char, mem};
 
-use {Rand,Rng};
+use {Rand, Rng, SeedableRng};
 
 impl Rand for isize {
     #[inline]
@@ -243,6 +243,12 @@ impl<T:Rand> Rand for Option<T> {
         } else {
             None
         }
+    }
+}
+
+impl<T: SeedableRng> Rand for T {
+    fn rand<R: Rng>(rng: &mut R) -> Self {
+        Self::from_rng(rng).unwrap()
     }
 }
 

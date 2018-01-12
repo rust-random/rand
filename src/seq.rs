@@ -303,9 +303,8 @@ mod test {
 
         for length in 1usize..max_range {
             let amount = r.gen_range(0, length);
-            let seed: [u32; 4] = [
-                r.next_u32(), r.next_u32(), r.next_u32(), r.next_u32()
-            ];
+            let mut seed = [0u8; 16];
+            r.fill_bytes(&mut seed);
 
             // assert that the two index methods give exactly the same result
             let inplace = sample_indices_inplace(

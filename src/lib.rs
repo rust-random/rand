@@ -250,8 +250,7 @@
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 
-use core::marker;
-use core::mem;
+use core::{marker, mem, slice};
 #[cfg(feature="std")] use std::cell::RefCell;
 #[cfg(feature="std")] use std::rc::Rc;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
@@ -732,36 +731,66 @@ impl<'a, R: Rng> Iterator for AsciiGenerator<'a, R> {
     }
 }
 
-/// A random number generator that can be explicitly seeded to produce
-/// the same stream of randomness multiple times.
-pub trait SeedableRng<Seed>: Rng {
-    /// Reseed an RNG with the given seed.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use rand::{Rng, SeedableRng, StdRng};
-    ///
-    /// let seed: &[_] = &[1, 2, 3, 4];
-    /// let mut rng: StdRng = SeedableRng::from_seed(seed);
-    /// println!("{}", rng.gen::<f64>());
-    /// rng.reseed(&[5, 6, 7, 8]);
-    /// println!("{}", rng.gen::<f64>());
-    /// ```
-    fn reseed(&mut self, Seed);
+mod private {
+    pub trait Sealed {}
+    impl Sealed for [u8; 4] {}
+    impl Sealed for [u8; 8] {}
+    impl Sealed for [u8; 12] {}
+    impl Sealed for [u8; 16] {}
+    impl Sealed for [u8; 24] {}
+    impl Sealed for [u8; 32] {}
+}
 
-    /// Create a new RNG with the given seed.
+/// The seed type is restricted to these types. This trait is sealed to prevent
+/// user-extension.
+///
+/// Use of byte-arrays avoids endianness issues. We may extend this to allow
+/// byte arrays of other lengths in the future.
+pub trait SeedRestriction: private::Sealed + Default + AsMut<[u8]> {}
+impl<S> SeedRestriction for S where S: private::Sealed + Default + AsMut<[u8]> {}
+
+/// A random number generator that can be explicitly seeded.
+///
+/// There are two subtle differences between `from_rng` and`from_seed` (beyond
+/// the obvious): first, that `from_rng` has no reproducibility requirement, and
+/// second, that `from_rng` may directly fill internal states larger than
+/// `SeedableRng::Seed`, where `from_seed` may need some extra step to expand
+/// the input.
+pub trait SeedableRng: Sized {
+    /// Seed type.
+    type Seed: SeedRestriction;
+
+    /// Create a new PRNG using the given seed.
     ///
-    /// # Example
+    /// Each PRNG should implement this.
     ///
-    /// ```rust
-    /// use rand::{Rng, SeedableRng, StdRng};
+    /// Reproducibility is required; that is, a fixed PRNG seeded using this
+    /// function with a fixed seed should produce the same sequence of output
+    /// today, and in the future. PRNGs not able to satisfy this should make
+    /// clear notes in their documentation. It is however not required that this
+    /// function yield the same state as a reference implementation of the PRNG
+    /// given equivalent seed; if necessary another constructor should be used.
     ///
-    /// let seed: &[_] = &[1, 2, 3, 4];
-    /// let mut rng: StdRng = SeedableRng::from_seed(seed);
-    /// println!("{}", rng.gen::<f64>());
-    /// ```
-    fn from_seed(seed: Seed) -> Self;
+    /// It may be expected that bits in the seed are well distributed, i.e. that
+    /// values like 0, 1 and (size - 1) are unlikely.
+    fn from_seed(seed: Self::Seed) -> Self;
+
+    /// Create a new PRNG seeded from another `Rng`.
+    ///
+    /// Seeding from a cryptographic generator should be fine. On the other
+    /// hand, seeding a simple numerical generator from another of the same
+    /// type sometimes has serious side effects such as effectively cloning the
+    /// generator.
+    fn from_rng<R: Rng>(mut rng: R) -> Result<Self, Error> {
+        let mut seed = Self::Seed::default();
+        let size = mem::size_of::<Self::Seed>() as usize;
+        unsafe {
+            let ptr = seed.as_mut().as_mut_ptr() as *mut u8;
+            let slice = slice::from_raw_parts_mut(ptr, size);
+            rng.try_fill_bytes(slice)?;
+        }
+        Ok(Self::from_seed(seed))
+    }
 }
 
 /// A wrapper for generating floating point numbers uniformly in the
@@ -801,10 +830,11 @@ pub struct Closed01<F>(pub F);
 
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
+///
+/// The underlying algorithm is not fixed, thus values from this generator
+/// cannot be guaranteed to be reproducible.
 #[derive(Clone, Debug)]
-pub struct StdRng {
-    rng: IsaacWordRng,
-}
+pub struct StdRng(IsaacWordRng);
 
 impl StdRng {
     /// Create a randomly seeded instance of `StdRng`.
@@ -821,10 +851,10 @@ impl StdRng {
     #[cfg(feature="std")]
     pub fn new() -> Result<StdRng, Error> {
         match OsRng::new() {
-            Ok(mut r) => Ok(StdRng { rng: r.gen() }),
+            Ok(mut r) => Ok(StdRng(r.gen())),
             Err(e1) => {
                 match JitterRng::new() {
-                    Ok(mut r) => Ok(StdRng { rng: r.gen() }),
+                    Ok(mut r) => Ok(StdRng(r.gen())),
                     Err(_) => {
                         Err(e1)
                     }
@@ -835,36 +865,32 @@ impl StdRng {
 }
 
 impl Rng for StdRng {
-    #[inline]
     fn next_u32(&mut self) -> u32 {
-        self.rng.next_u32()
+        self.0.next_u32()
     }
 
-    #[inline]
     fn next_u64(&mut self) -> u64 {
-        self.rng.next_u64()
+        self.0.next_u64()
     }
 
-    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.rng.fill_bytes(dest)
+        self.0.fill_bytes(dest);
     }
-    
-    #[inline]
+
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.rng.try_fill_bytes(dest)
+        self.0.try_fill_bytes(dest)
     }
 }
 
-impl<'a> SeedableRng<&'a [usize]> for StdRng {
-    fn reseed(&mut self, seed: &'a [usize]) {
-        // the internal RNG can just be seeded from the above
-        // randomness.
-        self.rng.reseed(unsafe {mem::transmute(seed)})
+impl SeedableRng for StdRng {
+    type Seed = <IsaacWordRng as SeedableRng>::Seed;
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        StdRng(IsaacWordRng::from_seed(seed))
     }
 
-    fn from_seed(seed: &'a [usize]) -> StdRng {
-        StdRng { rng: SeedableRng::from_seed(unsafe {mem::transmute(seed)}) }
+    fn from_rng<R: Rng>(rng: R) -> Result<Self, Error> {
+        IsaacWordRng::from_rng(rng).map(|rng| StdRng(rng))
     }
 }
 
@@ -1037,7 +1063,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 mod test {
     use impls;
     #[cfg(feature="std")]
-    use super::{random, thread_rng, weak_rng};
+    use super::{random, thread_rng};
     use super::{Rng, SeedableRng, StdRng};
     #[cfg(feature="alloc")]
     use alloc::boxed::Box;
@@ -1057,8 +1083,21 @@ mod test {
     }
 
     pub fn rng(seed: u64) -> TestRng<StdRng> {
-        let seed = [seed as usize];
-        TestRng { inner: StdRng::from_seed(&seed) }
+        // TODO: use from_hashable
+        let mut state = seed;
+        let mut seed = <StdRng as SeedableRng>::Seed::default();
+        for x in seed.iter_mut() {
+            // PCG algorithm
+            const MUL: u64 = 6364136223846793005;
+            const INC: u64 = 11634580027462260723;
+            let oldstate = state;
+            state = oldstate.wrapping_mul(MUL).wrapping_add(INC);
+
+            let xorshifted = (((oldstate >> 18) ^ oldstate) >> 27) as u32;
+            let rot = (oldstate >> 59) as u32;
+            *x = xorshifted.rotate_right(rot) as u8;
+        }
+        TestRng { inner: StdRng::from_seed(seed) }
     }
 
     struct ConstRng { i: u64 }
@@ -1068,23 +1107,6 @@ mod test {
 
         fn fill_bytes(&mut self, dest: &mut [u8]) {
             impls::fill_bytes_via_u64(self, dest)
-        }
-    }
-
-    pub fn iter_eq<I, J>(i: I, j: J) -> bool
-        where I: IntoIterator,
-              J: IntoIterator<Item=I::Item>,
-              I::Item: Eq
-    {
-        // make sure the iterators have equal length
-        let mut i = i.into_iter();
-        let mut j = j.into_iter();
-        loop {
-            match (i.next(), j.next()) {
-                (Some(ref ei), Some(ref ej)) if ei == ej => { }
-                (None, None) => return true,
-                _ => return false,
-            }
         }
     }
 
@@ -1250,35 +1272,23 @@ mod test {
     #[test]
     #[cfg(target_pointer_width = "32")]
     fn test_stdrng_construction() {
-        let seed = [1, 23, 456, 7890, 0, 0, 0, 0];
-        let mut rng1 = StdRng::from_seed(&seed);
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
+                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let mut rng1 = StdRng::from_seed(seed);
         assert_eq!(rng1.next_u32(), 2869442790);
 
-        /* FIXME: enable once `from_rng` has landed
         let mut rng2 = StdRng::from_rng(&mut rng1).unwrap();
-        assert_eq!(rng1.next_u32(), 3094074039);
-        */
+        assert_eq!(rng2.next_u32(), 3094074039);
     }
     #[test]
     #[cfg(target_pointer_width = "64")]
     fn test_stdrng_construction() {
-        let seed = [1, 23, 456, 7890, 0, 0, 0, 0];
-        let mut rng1 = StdRng::from_seed(&seed);
-        assert_eq!(rng1.next_u32(), 3477963620);
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
+                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let mut rng1 = StdRng::from_seed(seed);
+        assert_eq!(rng1.next_u64(), 14964555543728284049);
 
-        /* FIXME: enable once `from_rng` has landed
         let mut rng2 = StdRng::from_rng(&mut rng1).unwrap();
-        assert_eq!(rng1.next_u32(), 3094074039);
-        */
-    }
-
-    #[test]
-    #[cfg(feature="std")]
-    fn test_weak_rng() {
-        let s = weak_rng().gen_iter::<usize>().take(256).collect::<Vec<usize>>();
-        let mut ra: StdRng = SeedableRng::from_seed(&s[..]);
-        let mut rb: StdRng = SeedableRng::from_seed(&s[..]);
-        assert!(iter_eq(ra.gen_ascii_chars().take(100),
-                        rb.gen_ascii_chars().take(100)));
+        assert_eq!(rng2.next_u64(), 919595328260451758);
     }
 }
