@@ -276,7 +276,7 @@ use prng::Isaac64Rng as IsaacWordRng;
 
 use distributions::{Range, IndependentSample};
 use distributions::range::SampleRange;
-use reseeding::{ReseedingRng, ReseedWithNew};
+#[cfg(feature="std")]use reseeding::{ReseedingRng, ReseedWithNew};
 
 // public modules
 pub mod distributions;
