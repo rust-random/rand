@@ -11,9 +11,9 @@
 //! A wrapper around another RNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use core::default::Default;
-
 use {Rng, Error};
+#[cfg(feature="std")]
+use NewSeeded;
 
 /// A wrapper around any RNG which reseeds the underlying RNG after it
 /// has generated a certain number of random bytes.
@@ -47,7 +47,7 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
     /// generated exceed the threshold.
     pub fn reseed_if_necessary(&mut self) {
         if self.bytes_generated >= self.generation_threshold {
-            self.reseeder.reseed(&mut self.rng);
+            self.reseeder.reseed(&mut self.rng).unwrap();
             self.bytes_generated = 0;
         }
     }
@@ -85,30 +85,31 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
 /// Note that implementations should support `Clone` only if reseeding is
 /// deterministic (no external entropy source). This is so that a `ReseedingRng`
 /// only supports `Clone` if fully deterministic.
-pub trait Reseeder<R> {
+pub trait Reseeder<R: ?Sized> {
     /// Reseed the given RNG.
-    fn reseed(&mut self, rng: &mut R);
+    ///
+    /// On error, this should just forward the source error; errors are handled
+    /// by the caller.
+    fn reseed(&mut self, rng: &mut R) -> Result<(), Error>;
 }
 
-/// Reseed an RNG using a `Default` instance. This reseeds by
-/// replacing the RNG with the result of a `Default::default` call.
-#[derive(Clone, Copy, Debug)]
-pub struct ReseedWithDefault;
+/// Reseed an RNG using `NewSeeded` to replace the current instance.
+#[cfg(feature="std")]
+#[derive(Debug)]
+pub struct ReseedWithNew;
 
-impl<R: Rng + Default> Reseeder<R> for ReseedWithDefault {
-    fn reseed(&mut self, rng: &mut R) {
-        *rng = Default::default();
+#[cfg(feature="std")]
+impl<R: Rng + NewSeeded> Reseeder<R> for ReseedWithNew {
+    fn reseed(&mut self, rng: &mut R) -> Result<(), Error> {
+        R::new().map(|result| *rng = result)
     }
-}
-impl Default for ReseedWithDefault {
-    fn default() -> ReseedWithDefault { ReseedWithDefault }
 }
 
 #[cfg(test)]
 mod test {
     use {impls, le};
     use core::default::Default;
-    use super::{ReseedingRng, ReseedWithDefault};
+    use super::{ReseedingRng, ReseedWithNew};
     use {SeedableRng, Rng};
 
     struct Counter {
@@ -142,11 +143,10 @@ mod test {
             Counter { i: seed_u32[0] }
         }
     }
-    type MyRng = ReseedingRng<Counter, ReseedWithDefault>;
 
     #[test]
     fn test_reseeding() {
-        let mut rs = ReseedingRng::new(Counter {i:0}, 400, ReseedWithDefault);
+        let mut rs = ReseedingRng::new(Counter {i:0}, 400, ReseedWithNew);
 
         let mut i = 0;
         for _ in 0..1000 {

@@ -276,6 +276,7 @@ use prng::Isaac64Rng as IsaacWordRng;
 
 use distributions::{Range, IndependentSample};
 use distributions::range::SampleRange;
+use reseeding::{ReseedingRng, ReseedWithNew};
 
 // public modules
 pub mod distributions;
@@ -933,58 +934,39 @@ pub fn weak_rng() -> XorShiftRng {
     thread_rng().gen()
 }
 
-/// Controls how the thread-local RNG is reseeded.
-#[cfg(feature="std")]
-#[derive(Debug)]
-struct ThreadRngReseeder;
-
-#[cfg(feature="std")]
-impl reseeding::Reseeder<StdRng> for ThreadRngReseeder {
-    fn reseed(&mut self, rng: &mut StdRng) {
-        match StdRng::new() {
-            Ok(r) => *rng = r,
-            Err(e) => panic!("No entropy available: {}", e),
-        }
-    }
-}
-#[cfg(feature="std")]
-const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
-#[cfg(feature="std")]
-type ThreadRngInner = reseeding::ReseedingRng<StdRng, ThreadRngReseeder>;
 
 /// The thread-local RNG.
 #[cfg(feature="std")]
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
-    rng: Rc<RefCell<ThreadRngInner>>,
+    rng: Rc<RefCell<ReseedingRng<StdRng, ReseedWithNew>>>,
 }
+
+#[cfg(feature="std")]
+thread_local!(
+    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<StdRng, ReseedWithNew>>> = {
+        const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
+        let r = match StdRng::new() {
+            Ok(r) => r,
+            Err(e) => panic!("could not initialize thread_rng: {:?}", e)
+        };
+        let rng = ReseedingRng::new(r,
+                                    THREAD_RNG_RESEED_THRESHOLD,
+                                    ReseedWithNew);
+        Rc::new(RefCell::new(rng))
+    }
+);
 
 /// Retrieve the lazily-initialized thread-local random number
 /// generator, seeded by the system. Intended to be used in method
 /// chaining style, e.g. `thread_rng().gen::<i32>()`.
 ///
-/// After generating a certain amount of randomness, the RNG will reseed itself
-/// from the operating system or, if the operating system RNG returns an error,
-/// a seed based on the current system time.
-///
-/// The internal RNG used is platform and architecture dependent, even
-/// if the operating system random number generator is rigged to give
-/// the same sequence always. If absolute consistency is required,
-/// explicitly select an RNG, e.g. `IsaacRng` or `Isaac64Rng`.
+/// The internal RNG used is the one defined by `StdRng`. After generating 32KiB
+/// of random bytes, the RNG will reseed itself from the operating system or, if
+/// the operating system RNG returns an error, the `JitterRng` entropy
+/// collector.
 #[cfg(feature="std")]
 pub fn thread_rng() -> ThreadRng {
-    // used to make space in TLS for a random number generator
-    thread_local!(static THREAD_RNG_KEY: Rc<RefCell<ThreadRngInner>> = {
-        let r = match StdRng::new() {
-            Ok(r) => r,
-            Err(e) => panic!("No entropy available: {}", e),
-        };
-        let rng = reseeding::ReseedingRng::new(r,
-                                               THREAD_RNG_RESEED_THRESHOLD,
-                                               ThreadRngReseeder);
-        Rc::new(RefCell::new(rng))
-    });
-
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
 }
 
