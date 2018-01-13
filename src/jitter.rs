@@ -16,7 +16,7 @@
 
 //! Non-physical true random number generator based on timing jitter.
 
-use {Rng, impls};
+use {Rng, Error, ErrorKind, impls};
 
 use core::{fmt, mem, ptr};
 #[cfg(feature="std")]
@@ -112,6 +112,13 @@ impl fmt::Display for TimerError {
 impl ::std::error::Error for TimerError {
     fn description(&self) -> &str {
         self.description()
+    }
+}
+
+impl From<TimerError> for Error {
+    fn from(err: TimerError) -> Error {
+        Error::with_cause(ErrorKind::Unavailable,
+                              "timer jitter failed basic quality tests", err)
     }
 }
 
