@@ -793,6 +793,60 @@ pub trait SeedableRng: Sized {
     }
 }
 
+
+/// Seeding mechanism for PRNGs, providing a `new` function.
+/// This is the recommended way to create (pseudo) random number generators,
+/// unless a deterministic seed is desired (in which case
+/// `SeedableRng::from_seed` should be used).
+///
+/// Note: this trait is automatically implemented for any PRNG implementing
+/// `SeedableRng` and is not intended to be implemented by users.
+///
+/// ## Example
+///
+/// ```
+/// use rand::{StdRng, Rng, NewSeeded};
+///
+/// let mut rng = StdRng::new().unwrap();
+/// println!("Random die roll: {}", rng.gen_range(1, 7));
+/// ```
+#[cfg(feature="std")]
+pub trait NewSeeded: SeedableRng {
+    /// Creates a new instance, automatically seeded with fresh entropy.
+    ///
+    /// Normally this will use `OsRng`, but if that fails `JitterRng` will be
+    /// used instead. Both should be suitable for cryptography. It is possible
+    /// that both entropy sources will fail though unlikely.
+    fn new() -> Result<Self, Error>;
+}
+
+#[cfg(feature="std")]
+impl<R: SeedableRng> NewSeeded for R {
+    fn new() -> Result<Self, Error> {
+        // Note: error handling would be easier with try/catch blocks
+        fn new_os<T: SeedableRng>() -> Result<T, Error> {
+            let mut r = OsRng::new()?;
+            T::from_rng(&mut r)
+        }
+
+        fn new_jitter<T: SeedableRng>() -> Result<T, Error> {
+            let mut r = JitterRng::new()?;
+            T::from_rng(&mut r)
+        }
+
+        new_os().or_else(|e1| {
+            new_jitter().map_err(|_e2| {
+                // TODO: log
+                // TODO: can we somehow return both error sources?
+                Error::with_cause(
+                    ErrorKind::Unavailable,
+                    "seeding a new RNG failed: both OS and Jitter entropy sources failed",
+                    e1)
+            })
+        })
+    }
+}
+
 /// A wrapper for generating floating point numbers uniformly in the
 /// open interval `(0,1)` (not including either endpoint).
 ///
@@ -835,34 +889,6 @@ pub struct Closed01<F>(pub F);
 /// cannot be guaranteed to be reproducible.
 #[derive(Clone, Debug)]
 pub struct StdRng(IsaacWordRng);
-
-impl StdRng {
-    /// Create a randomly seeded instance of `StdRng`.
-    ///
-    /// This is a very expensive operation as it has to read
-    /// randomness from the operating system and use this in an
-    /// expensive seeding operation. If one is only generating a small
-    /// number of random numbers, or doesn't need the utmost speed for
-    /// generating each number, `thread_rng` and/or `random` may be more
-    /// appropriate.
-    ///
-    /// Reading the randomness from the OS may fail, and any error is
-    /// propagated via the `io::Result` return value.
-    #[cfg(feature="std")]
-    pub fn new() -> Result<StdRng, Error> {
-        match OsRng::new() {
-            Ok(mut r) => Ok(StdRng(r.gen())),
-            Err(e1) => {
-                match JitterRng::new() {
-                    Ok(mut r) => Ok(StdRng(r.gen())),
-                    Err(_) => {
-                        Err(e1)
-                    }
-                }
-            }
-        }
-    }
-}
 
 impl Rng for StdRng {
     fn next_u32(&mut self) -> u32 {
