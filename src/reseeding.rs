@@ -108,9 +108,8 @@ impl<R: Rng + NewSeeded> Reseeder<R> for ReseedWithNew {
 #[cfg(test)]
 mod test {
     use {impls, le};
-    use core::default::Default;
-    use super::{ReseedingRng, ReseedWithNew};
-    use {SeedableRng, Rng};
+    use super::{ReseedingRng, Reseeder};
+    use {SeedableRng, Rng, Error};
 
     struct Counter {
         i: u32
@@ -130,11 +129,6 @@ mod test {
             impls::fill_bytes_via_u64(self, dest)
         }
     }
-    impl Default for Counter {
-        fn default() -> Counter {
-            Counter { i: 0 }
-        }
-    }
     impl SeedableRng for Counter {
         type Seed = [u8; 4];
         fn from_seed(seed: Self::Seed) -> Self {
@@ -144,25 +138,23 @@ mod test {
         }
     }
 
+    #[derive(Debug, Clone)]
+    struct ReseedCounter;
+    impl Reseeder<Counter> for ReseedCounter {
+        fn reseed(&mut self, rng: &mut Counter) -> Result<(), Error> {
+            *rng = Counter { i: 0 };
+            Ok(())
+        }
+    }
+
     #[test]
     fn test_reseeding() {
-        let mut rs = ReseedingRng::new(Counter {i:0}, 400, ReseedWithNew);
+        let mut rs = ReseedingRng::new(Counter {i:0}, 400, ReseedCounter);
 
         let mut i = 0;
         for _ in 0..1000 {
             assert_eq!(rs.next_u32(), i % 100);
             i += 1;
         }
-    }
-
-    const FILL_BYTES_V_LEN: usize = 13579;
-    #[test]
-    fn test_rng_fill_bytes() {
-        let mut v = [0u8; FILL_BYTES_V_LEN];
-        ::test::rng(321).fill_bytes(&mut v);
-
-        // To test that `fill_bytes` actually did something, check that not all
-        // bytes are zero.
-        assert!(!v.iter().all(|&x| x == 0));
     }
 }

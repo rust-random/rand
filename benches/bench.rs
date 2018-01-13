@@ -9,7 +9,7 @@ mod distributions;
 
 use std::mem::size_of;
 use test::{black_box, Bencher};
-use rand::{StdRng, Rng};
+use rand::{StdRng, Rng, NewSeeded};
 
 #[bench]
 fn rand_f32(b: &mut Bencher) {

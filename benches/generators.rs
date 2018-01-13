@@ -9,7 +9,7 @@ const BYTES_LEN: usize = 1024;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{Rng, StdRng, OsRng, JitterRng};
+use rand::{Rng, NewSeeded, StdRng, OsRng, JitterRng};
 use rand::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 
 macro_rules! gen_bytes {
