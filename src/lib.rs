@@ -1017,6 +1017,106 @@ impl Rng for ThreadRng {
     }
 }
 
+/// An RNG provided specifically for seeding PRNG's.
+///
+/// `EntropySource` uses the interface for random numbers provided by the
+/// operating system (`OsRng`). If that returns an error, it will fall back to
+/// the `JitterRng` entropy collector. Occasionally it will then check if
+/// `OsRng` is still not available, and switch back if possible.
+#[cfg(feature="std")]
+#[derive(Debug)]
+pub struct EntropySource {
+    rng: EntropySourceInner,
+    counter: u32,
+}
+
+#[cfg(feature="std")]
+#[derive(Debug)]
+enum EntropySourceInner {
+    Os(OsRng),
+    Jitter(JitterRng),
+}
+
+#[cfg(feature="std")]
+impl EntropySource {
+    pub fn new() -> Result<Self, Error> {
+        match OsRng::new() {
+            Ok(r) =>
+                Ok(EntropySource { rng: EntropySourceInner::Os(r),
+                                   counter: 0u32 }),
+            Err(e1) => {
+                match JitterRng::new() {
+                    Ok(r) =>
+                        Ok(EntropySource { rng: EntropySourceInner::Jitter(r),
+                                           counter: 0 }),
+                    Err(_) =>
+                        Err(Error::with_cause(
+                            ErrorKind::Unavailable,
+                            "Both OS and Jitter entropy sources are unavailable",
+                            e1))
+                }
+            }
+        }
+    }
+}
+
+#[cfg(feature="std")]
+impl Rng for EntropySource {
+    fn next_u32(&mut self) -> u32 {
+        impls::next_u32_via_fill(self)
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        impls::next_u64_via_fill(self)
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.try_fill_bytes(dest).unwrap();
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        let mut switch_rng = None;
+        let mut result;
+        match self.rng {
+            EntropySourceInner::Os(ref mut rng) => {
+                result = rng.try_fill_bytes(dest);
+                if result.is_err() {
+                    // Fall back to JitterRng.
+                    let mut rng2_result = JitterRng::new();
+                    if let Ok(mut rng2) = rng2_result {
+                        result = rng2.try_fill_bytes(dest); // Can't fail
+                        switch_rng = Some(EntropySourceInner::Jitter(rng2));
+                    }
+                }
+            }
+            EntropySourceInner::Jitter(ref mut rng) => {
+                if self.counter < 8 {
+                    result = rng.try_fill_bytes(dest); // use JitterRng
+                    self.counter = (self.counter + 1) % 8;
+                } else {
+                    // Try if OsRng is still unavailable
+                    let os_rng_result = OsRng::new();
+                    if let Ok(mut os_rng) = os_rng_result {
+                        result = os_rng.try_fill_bytes(dest);
+                        if result.is_ok() {
+                            switch_rng = Some(EntropySourceInner::Os(os_rng));
+                        } else {
+                            result = rng.try_fill_bytes(dest); // use JitterRng
+                        }
+                    } else {
+                        result = rng.try_fill_bytes(dest); // use JitterRng
+                    }
+                }
+            }
+        }
+        if let Some(rng) = switch_rng {
+            self.rng = rng;
+            self.counter = 0;
+        }
+        result
+    }
+}
+
 /// Generates a random value using the thread-local random number generator.
 ///
 /// `random()` can generate various types of random things, and so may require
