@@ -370,15 +370,16 @@ mod test {
 
     #[test]
     fn test_isaac64_true_values_64() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed: &[_] = &[1, 23, 456, 7890];
         let mut rng1: Isaac64Rng = SeedableRng::from_seed(seed);
         let mut results = [0u64; 10];
         for i in results.iter_mut() { *i = rng1.next_u64(); }
         let expected = [
-            547121783600835980, 14377643087320773276, 17351601304698403469,
-            1238879483818134882, 11952566807690396487, 13970131091560099343,
-            4469761996653280935, 15552757044682284409, 6860251611068737823,
-            13722198873481261842];
+                   15071495833797886820, 7720185633435529318,
+                   10836773366498097981, 5414053799617603544,
+                   12890513357046278984, 17001051845652595546,
+                   9240803642279356310, 12558996012687158051,
+                   14673053937227185542, 1677046725350116783];
         assert_eq!(results, expected);
 
         let seed: &[_] = &[12345, 67890, 54321, 9876];
@@ -397,46 +398,49 @@ mod test {
 
     #[test]
     fn test_isaac64_true_values_32() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed: &[_] = &[1, 23, 456, 7890];
         let mut rng = Isaac64Rng::from_seed(seed);
         let mut results = [0u32; 12];
         for i in results.iter_mut() { *i = rng.next_u32(); }
         // Subset of above values, as an LE u32 sequence
         let expected = [
-            141028748, 127386717, 1058730652, 3347555894, 851491469,
-            4039984500, 2692730210, 288449107, 646103879, 2782923823,
-            4195642895, 3252674613];
+                    3477963620, 3509106075,
+                    687845478, 1797495790,
+                    227048253, 2523132918,
+                    4044335064, 1260557630,
+                    4079741768, 3001306521,
+                    69157722, 3958365844];
         assert_eq!(results, expected);
     }
 
     #[test]
     fn test_isaac64_true_values_mixed() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed: &[_] = &[1, 23, 456, 7890];
         let mut rng = Isaac64Rng::from_seed(seed);
         // Test alternating between `next_u64` and `next_u32` works as expected.
         // Values are the same as `test_isaac64_true_values` and
         // `test_isaac64_true_values_32`.
-        assert_eq!(rng.next_u64(), 547121783600835980);
-        assert_eq!(rng.next_u32(), 1058730652);
-        assert_eq!(rng.next_u32(), 3347555894);
-        assert_eq!(rng.next_u64(), 17351601304698403469);
-        assert_eq!(rng.next_u32(), 2692730210);
+        assert_eq!(rng.next_u64(), 15071495833797886820);
+        assert_eq!(rng.next_u32(), 687845478);
+        assert_eq!(rng.next_u32(), 1797495790);
+        assert_eq!(rng.next_u64(), 10836773366498097981);
+        assert_eq!(rng.next_u32(), 4044335064);
         // Skip one u32
-        assert_eq!(rng.next_u64(), 11952566807690396487);
-        assert_eq!(rng.next_u32(), 4195642895);
+        assert_eq!(rng.next_u64(), 12890513357046278984);
+        assert_eq!(rng.next_u32(), 69157722);
     }
 
     #[test]
     fn test_isaac64_true_bytes() {
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let seed: &[_] = &[1, 23, 456, 7890];
         let mut rng = Isaac64Rng::from_seed(seed);
         let mut results = [0u8; 32];
         rng.fill_bytes(&mut results);
         // Same as first values in test_isaac64_true_values as bytes in LE order
-        let expected = [140, 237, 103, 8, 93, 196, 151, 7,
-                        156, 242, 26, 63, 54, 166, 135, 199,
-                        141, 186, 192, 50, 116, 69, 205, 240,
-                        98, 205, 127, 160, 83, 98, 49, 17];
+        let expected = [100, 131, 77, 207, 155, 181, 40, 209,
+                    102, 176, 255, 40, 238, 155, 35, 107,
+                    61, 123, 136, 13, 246, 243, 99, 150,
+                    216, 167, 15, 241, 62, 149, 34, 75];
         assert_eq!(results, expected);
     }
 
