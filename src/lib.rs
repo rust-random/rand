@@ -843,29 +843,8 @@ pub trait NewRng: SeedableRng {
 #[cfg(feature="std")]
 impl<R: SeedableRng> NewRng for R {
     fn new() -> Result<Self, Error> {
-        // Note: error handling would be easier with try/catch blocks
-        fn new_os<T: SeedableRng>() -> Result<T, Error> {
-            let mut r = OsRng::new()?;
-            T::from_rng(&mut r)
-        }
-
-        fn new_jitter<T: SeedableRng>() -> Result<T, Error> {
-            let mut r = JitterRng::new()?;
-            T::from_rng(&mut r)
-        }
-
-        trace!("Seeding new RNG");
-        new_os().or_else(|e1| {
-            warn!("OsRng failed [falling back to JitterRng]: {:?}", e1);
-            new_jitter().map_err(|_e2| {
-                warn!("JitterRng failed: {:?}", _e2);
-                // TODO: can we somehow return both error sources?
-                Error::with_cause(
-                    ErrorKind::Unavailable,
-                    "seeding a new RNG failed: both OS and Jitter entropy sources failed",
-                    e1)
-            })
-        })
+        let mut source = EntropySource::new()?;
+        R::from_rng(&mut source)
     }
 }
 
