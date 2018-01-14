@@ -752,36 +752,58 @@ impl<S> SeedRestriction for S where S: private::Sealed + Default + AsMut<[u8]> {
 
 /// A random number generator that can be explicitly seeded.
 ///
-/// There are two subtle differences between `from_rng` and`from_seed` (beyond
-/// the obvious): first, that `from_rng` has no reproducibility requirement, and
-/// second, that `from_rng` may directly fill internal states larger than
-/// `SeedableRng::Seed`, where `from_seed` may need some extra step to expand
-/// the input.
+/// Each pseudo-random number generator (PRNG) should implement this.
 pub trait SeedableRng: Sized {
-    /// Seed type.
+    /// Seed type, which is restricted to `u8` arrays with a length of
+    /// 4, 8, 12, 16, 24 and 32.
+    ///
+    /// It is recommended to seed PRNG's with a seed of more than circa
+    /// 100 bits, which means an array of `[u8; 12]` or greater to avoid picking
+    /// RNG's with partially overlapping periods.
+    ///
+    /// For cryptographic RNG's a seed of 256 bits is recommended, `[u8; 32]`.
     type Seed: SeedRestriction;
 
     /// Create a new PRNG using the given seed.
     ///
-    /// Each PRNG should implement this.
+    /// PRNG implementations are allowed to assume that bits in the seed are
+    /// well distributed. That means usually that the number of one and zero
+    /// bits are about equal, and values like 0, 1 and (size - 1) are unlikely.
     ///
-    /// Reproducibility is required; that is, a fixed PRNG seeded using this
-    /// function with a fixed seed should produce the same sequence of output
-    /// today, and in the future. PRNGs not able to satisfy this should make
-    /// clear notes in their documentation. It is however not required that this
-    /// function yield the same state as a reference implementation of the PRNG
-    /// given equivalent seed; if necessary another constructor should be used.
+    /// PRNG implementations are recommended to be reproducible. A PRNG seeded
+    /// using this function with a fixed seed should produce the same sequence
+    /// of output in the future and on different architectures (with for example
+    /// different endianness).
     ///
-    /// It may be expected that bits in the seed are well distributed, i.e. that
-    /// values like 0, 1 and (size - 1) are unlikely.
+    /// It is however not required that this function yield the same state as a
+    /// reference implementation of the PRNG given equivalent seed; if necessary
+    /// another constructor can be used.
     fn from_seed(seed: Self::Seed) -> Self;
 
     /// Create a new PRNG seeded from another `Rng`.
     ///
-    /// Seeding from a cryptographic generator should be fine. On the other
-    /// hand, seeding a simple numerical generator from another of the same
-    /// type sometimes has serious side effects such as effectively cloning the
-    /// generator.
+    /// This is the recommended way to initialize PRNGs. See the `NewSeeded`
+    /// trait that provides a convenient `new` method using `from_rng` and a
+    /// good entropy source.
+    ///
+    /// It is recommended to use a good source of randomness to initialize the
+    /// PRNG. Otherwise small PRNG's could show statistical bias in the first
+    /// couple of results, and possibly not use their entire period well.
+    /// Cryptographic PRNG's can be less secure or even insecure when they are
+    /// seeded from a non-cryptographic PRNG.
+    ///
+    /// Examples of good RNG's for seeding are entropy sources like `OsRng` and
+    /// `JitterRng`. Also cryptographically secure PRNG's (like `thread_rng`)
+    /// can be used without hesitation.
+    ///
+    /// Seeding a small PRNG from another small PRNG is be possible, but
+    /// something to be careful with. An extreme example of how this can go
+    /// wrong is seeding an Xorshift RNG from another Xorshift RNG. That will
+    /// effectively clone the generator.
+    ///
+    /// PRNG implementations are allowed to assume that a good RNG is provided
+    /// for seeding, and that it is cryptographically secure when appropriate.
+    /// There are no reproducibility requirements like endianness conversion.
     fn from_rng<R: Rng>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
         let size = mem::size_of::<Self::Seed>() as usize;
@@ -886,8 +908,11 @@ pub struct Closed01<F>(pub F);
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
 ///
-/// The underlying algorithm is not fixed, thus values from this generator
-/// cannot be guaranteed to be reproducible.
+/// Reproducibility of output from this generator is not required, thus future
+/// library versions may use a different internal generator with different
+/// output. Further, this generator may not be portable and can produce
+/// different output depending on the architecture. If you require reproducible
+/// output, use a named RNG, for example `ChaChaRng`.
 #[derive(Clone, Debug)]
 pub struct StdRng(IsaacWordRng);
 
