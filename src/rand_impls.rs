@@ -131,11 +131,10 @@ macro_rules! float_impls {
             impl Rand for Open01<$ty> {
                 #[inline]
                 fn rand<R: Rng>(rng: &mut R) -> Open01<$ty> {
-                    // add a small amount (specifically 2 bits below
-                    // the precision of f64/f32 at 1.0), so that small
-                    // numbers are larger than 0, but large numbers
-                    // aren't pushed to/above 1.
-                    Open01(rng.$method_name() + 0.25 / SCALE)
+                    // add 0.5 * epsilon, so that smallest number is
+                    // greater than 0, and largest number is still
+                    // less than 1, specifically 1 - 0.5 * epsilon.
+                    Open01(rng.$method_name() + 0.5 / SCALE)
                 }
             }
             impl Rand for Closed01<$ty> {
@@ -318,20 +317,20 @@ mod tests {
         let mut zeros = ConstantRng(0);
         let Open01(zero32) = zeros.gen::<Open01<f32>>();
         let Open01(zero64) = zeros.gen::<Open01<f64>>();
-        assert_eq!(zero32, 0.0 + EPSILON32 / 4.0);
-        assert_eq!(zero64, 0.0 + EPSILON64 / 4.0);
+        assert_eq!(zero32, 0.0 + EPSILON32 / 2.0);
+        assert_eq!(zero64, 0.0 + EPSILON64 / 2.0);
         
         let mut one = ConstantRng(1);
         let Open01(one32) = one.gen::<Open01<f32>>();
         let Open01(one64) = one.gen::<Open01<f64>>();
-        assert!(EPSILON32 < one32 && one32 < EPSILON32 * 1.5);
-        assert!(EPSILON64 < one64 && one64 < EPSILON64 * 1.5);
+        assert!(EPSILON32 < one32 && one32 < EPSILON32 * 2.0);
+        assert!(EPSILON64 < one64 && one64 < EPSILON64 * 2.0);
         
         let mut max = ConstantRng(!0);
         let Open01(max32) = max.gen::<Open01<f32>>();
         let Open01(max64) = max.gen::<Open01<f64>>();
-        assert_eq!(max32, 1.0 - EPSILON32);
-        assert_eq!(max64, 1.0 - EPSILON64);
+        assert_eq!(max32, 1.0 - EPSILON32 / 2.0);
+        assert_eq!(max64, 1.0 - EPSILON64 / 2.0);
     }
 
     #[test]
