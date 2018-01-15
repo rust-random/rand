@@ -114,6 +114,7 @@ macro_rules! float_impls {
         mod $mod_name {
             use {Rand, Rng, Open01, Closed01};
 
+            // 1.0 / epsilon
             const SCALE: $ty = (1u64 << $mantissa_bits) as $ty;
 
             impl Rand for $ty {
@@ -148,8 +149,8 @@ macro_rules! float_impls {
         }
     }
 }
-float_impls! { f64_rand_impls, f64, 53, next_f64 }
-float_impls! { f32_rand_impls, f32, 24, next_f32 }
+float_impls! { f64_rand_impls, f64, 52, next_f64 }
+float_impls! { f32_rand_impls, f32, 23, next_f32 }
 
 impl Rand for char {
     #[inline]
