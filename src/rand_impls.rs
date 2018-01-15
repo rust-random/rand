@@ -131,11 +131,10 @@ macro_rules! float_impls {
             impl Rand for Open01<$ty> {
                 #[inline]
                 fn rand<R: Rng>(rng: &mut R) -> Open01<$ty> {
-                    // add a small amount (specifically 2 bits below
-                    // the precision of f64/f32 at 1.0), so that small
-                    // numbers are larger than 0, but large numbers
-                    // aren't pushed to/above 1.
-                    Open01(rng.$method_name() + 0.25 / SCALE)
+                    // add 0.5 * epsilon, so that smallest number is
+                    // greater than 0, and largest number is still
+                    // less than 1, specifically 1 - 0.5 * epsilon.
+                    Open01(rng.$method_name() + 0.5 / SCALE)
                 }
             }
             impl Rand for Closed01<$ty> {
