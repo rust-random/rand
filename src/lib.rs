@@ -843,8 +843,7 @@ pub trait NewRng: SeedableRng {
 #[cfg(feature="std")]
 impl<R: SeedableRng> NewRng for R {
     fn new() -> Result<Self, Error> {
-        let mut source = EntropySource::new()?;
-        R::from_rng(&mut source)
+        R::from_rng(EntropyRng::new())
     }
 }
 
@@ -942,15 +941,14 @@ pub fn weak_rng() -> XorShiftRng {
 #[cfg(feature="std")]
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
-    rng: Rc<RefCell<ReseedingRng<StdRng, EntropySource>>>,
+    rng: Rc<RefCell<ReseedingRng<StdRng, EntropyRng>>>,
 }
 
 #[cfg(feature="std")]
 thread_local!(
-    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<StdRng, EntropySource>>> = {
+    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<StdRng, EntropyRng>>> = {
         const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
-        let mut entropy_source = EntropySource::new()
-            .expect("could not initialize thread_rng");
+        let mut entropy_source = EntropyRng::new();
         let r = StdRng::from_rng(&mut entropy_source)
             .expect("could not initialize thread_rng");
         let rng = ReseedingRng::new(r,
@@ -998,49 +996,42 @@ impl Rng for ThreadRng {
 
 /// An RNG provided specifically for seeding PRNG's.
 ///
-/// `EntropySource` uses the interface for random numbers provided by the
-/// operating system (`OsRng`). If that returns an error, it will fall back to
-/// the `JitterRng` entropy collector. Occasionally it will then check if
-/// `OsRng` is still not available, and switch back if possible.
+/// `EntropyRng` uses the interface for random numbers provided by the operating
+/// system ([`OsRng`]). If that returns an error, it will fall back to the
+/// [`JitterRng`] entropy collector. Occasionally it will then check if `OsRng`
+/// is still not available, and switch back if possible.
+///
+/// [`OsRng`]: os/struct.OsRng.html
+/// [`JitterRng`]: jitter/struct.JitterRng.html
 #[cfg(feature="std")]
 #[derive(Debug)]
-pub struct EntropySource {
-    rng: EntropySourceInner,
+pub struct EntropyRng {
+    rng: EntropySource,
     counter: u32,
 }
 
 #[cfg(feature="std")]
 #[derive(Debug)]
-enum EntropySourceInner {
+enum EntropySource {
     Os(OsRng),
     Jitter(JitterRng),
+    None,
 }
 
 #[cfg(feature="std")]
-impl EntropySource {
-    pub fn new() -> Result<Self, Error> {
-        match OsRng::new() {
-            Ok(r) =>
-                Ok(EntropySource { rng: EntropySourceInner::Os(r),
-                                   counter: 0u32 }),
-            Err(e1) => {
-                match JitterRng::new() {
-                    Ok(r) =>
-                        Ok(EntropySource { rng: EntropySourceInner::Jitter(r),
-                                           counter: 0 }),
-                    Err(_) =>
-                        Err(Error::with_cause(
-                            ErrorKind::Unavailable,
-                            "Both OS and Jitter entropy sources are unavailable",
-                            e1))
-                }
-            }
-        }
+impl EntropyRng {
+    /// Create a new `EntropyRng`.
+    ///
+    /// This method will do no system calls or other initialization routines,
+    /// those are done on first use. This is done to make `new` infallible,
+    /// and `try_fill_bytes` the only place to report errors.
+    pub fn new() -> Self {
+        EntropyRng { rng: EntropySource::None, counter: 0u32 }
     }
 }
 
 #[cfg(feature="std")]
-impl Rng for EntropySource {
+impl Rng for EntropyRng {
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
     }
@@ -1054,37 +1045,58 @@ impl Rng for EntropySource {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        fn try_os_new(dest: &mut [u8]) -> Result<OsRng, Error>
+        {
+            let mut rng = OsRng::new()?;
+            rng.try_fill_bytes(dest)?;
+            Ok(rng)
+        }
+
+        fn try_jitter_new(dest: &mut [u8]) -> Result<JitterRng, Error>
+        {
+            let mut rng = JitterRng::new()?;
+            rng.try_fill_bytes(dest)?;
+            Ok(rng)
+        }
+
         let mut switch_rng = None;
-        let mut result;
         match self.rng {
-            EntropySourceInner::Os(ref mut rng) => {
-                result = rng.try_fill_bytes(dest);
-                if result.is_err() {
-                    // Fall back to JitterRng.
-                    let mut rng2_result = JitterRng::new();
-                    if let Ok(mut rng2) = rng2_result {
-                        result = rng2.try_fill_bytes(dest); // Can't fail
-                        switch_rng = Some(EntropySourceInner::Jitter(rng2));
+            EntropySource::None => {
+                let os_rng_result = try_os_new(dest);
+                match os_rng_result {
+                    Ok(os_rng) => {
+                        switch_rng = Some(EntropySource::Os(os_rng));
+                    }
+                    Err(os_rng_error) => {
+                        if let Ok(jitter_rng) = try_jitter_new(dest) {
+                            switch_rng = Some(EntropySource::Jitter(jitter_rng));
+                        } else {
+                            return Err(os_rng_error);
+                        }
                     }
                 }
             }
-            EntropySourceInner::Jitter(ref mut rng) => {
-                if self.counter < 8 {
-                    result = rng.try_fill_bytes(dest); // use JitterRng
-                    self.counter = (self.counter + 1) % 8;
-                } else {
-                    // Try if OsRng is still unavailable
-                    let os_rng_result = OsRng::new();
-                    if let Ok(mut os_rng) = os_rng_result {
-                        result = os_rng.try_fill_bytes(dest);
-                        if result.is_ok() {
-                            switch_rng = Some(EntropySourceInner::Os(os_rng));
-                        } else {
-                            result = rng.try_fill_bytes(dest); // use JitterRng
-                        }
+            EntropySource::Os(ref mut rng) => {
+                let os_rng_result = rng.try_fill_bytes(dest);
+                if os_rng_result.is_err() {
+                    if let Ok(jitter_rng) = try_jitter_new(dest) {
+                        switch_rng = Some(EntropySource::Jitter(jitter_rng));
                     } else {
-                        result = rng.try_fill_bytes(dest); // use JitterRng
+                        return os_rng_result;
                     }
+                }
+            }
+            EntropySource::Jitter(ref mut rng) => {
+                if self.counter >= 8 {
+                    if let Ok(os_rng) = try_os_new(dest) {
+                        switch_rng = Some(EntropySource::Os(os_rng));
+                    } else {
+                        self.counter = (self.counter + 1) % 8;
+                        return rng.try_fill_bytes(dest); // use JitterRng
+                    }
+                } else {
+                    self.counter = (self.counter + 1) % 8;
+                    return rng.try_fill_bytes(dest); // use JitterRng
                 }
             }
         }
@@ -1092,7 +1104,7 @@ impl Rng for EntropySource {
             self.rng = rng;
             self.counter = 0;
         }
-        result
+        Ok(())
     }
 }
 
