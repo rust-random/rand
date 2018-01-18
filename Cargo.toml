@@ -17,7 +17,7 @@ categories = ["algorithms"]
 default = ["std"]
 nightly = ["i128_support"] # enables all features requiring nightly rust
 
-std = ["libc"] # default feature; without this rand uses libcore
+std = ["libc", "winapi"] # default feature; without this rand uses libcore
 alloc = []  # enables Vec and Box support without std
 
 i128_support = [] # enables i128 and u128 support
@@ -26,7 +26,7 @@ i128_support = [] # enables i128 and u128 support
 libc = { version = "0.2", optional = true }
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"] }
+winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"], optional = true }
 
 [workspace]
 members = ["rand-derive"]
