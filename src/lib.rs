@@ -250,7 +250,7 @@
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 
-use core::{marker, mem, slice};
+use core::{marker, mem};
 #[cfg(feature="std")] use std::cell::RefCell;
 #[cfg(feature="std")] use std::rc::Rc;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
@@ -732,24 +732,6 @@ impl<'a, R: Rng> Iterator for AsciiGenerator<'a, R> {
     }
 }
 
-mod private {
-    pub trait Sealed {}
-    impl Sealed for [u8; 4] {}
-    impl Sealed for [u8; 8] {}
-    impl Sealed for [u8; 12] {}
-    impl Sealed for [u8; 16] {}
-    impl Sealed for [u8; 24] {}
-    impl Sealed for [u8; 32] {}
-}
-
-/// The seed type is restricted to these types. This trait is sealed to prevent
-/// user-extension.
-///
-/// Use of byte-arrays avoids endianness issues. We may extend this to allow
-/// byte arrays of other lengths in the future.
-pub trait SeedRestriction: private::Sealed + Default + AsMut<[u8]> {}
-impl<S> SeedRestriction for S where S: private::Sealed + Default + AsMut<[u8]> {}
-
 /// A random number generator that can be explicitly seeded.
 ///
 /// Each pseudo-random number generator (PRNG) should implement this.
@@ -762,7 +744,7 @@ pub trait SeedableRng: Sized {
     /// RNG's with partially overlapping periods.
     ///
     /// For cryptographic RNG's a seed of 256 bits is recommended, `[u8; 32]`.
-    type Seed: SeedRestriction;
+    type Seed: Sized + Default + AsMut<[u8]>;
 
     /// Create a new PRNG using the given seed.
     ///
@@ -806,12 +788,7 @@ pub trait SeedableRng: Sized {
     /// There are no reproducibility requirements like endianness conversion.
     fn from_rng<R: Rng>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
-        let size = mem::size_of::<Self::Seed>() as usize;
-        unsafe {
-            let ptr = seed.as_mut().as_mut_ptr() as *mut u8;
-            let slice = slice::from_raw_parts_mut(ptr, size);
-            rng.try_fill_bytes(slice)?;
-        }
+        rng.try_fill_bytes(seed.as_mut())?;
         Ok(Self::from_seed(seed))
     }
 }
