@@ -3,7 +3,7 @@ sudo: false
 
 matrix:
   include:
-    - rust: 1.15.0
+    - rust: 1.22.0
       script:
         - cargo test
         - cargo build --no-default-features # we cannot exclude doc tests
