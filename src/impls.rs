@@ -23,6 +23,7 @@
 #![allow(unused)]
 
 use core::intrinsics::transmute;
+use core::ptr::copy_nonoverlapping;
 use core::slice;
 use core::cmp::min;
 use core::mem::size_of;
@@ -82,20 +83,33 @@ macro_rules! impl_uint_from_fill {
 }
 
 macro_rules! fill_via_chunks {
-    ($src:expr, $dest:expr, $N:expr) => ({
-        let chunk_size_u8 = min($src.len() * $N, $dest.len());
-        let chunk_size = (chunk_size_u8 + $N - 1) / $N;
-
-        // Convert to little-endian:
-        for ref mut x in $src[0..chunk_size].iter_mut() {
-            **x = (*x).to_le();
+    ($src:expr, $dst:expr, $size:expr) => ({
+        let chunk_size_u8 = min($src.len() * $size, $dst.len());
+        let chunk_size = (chunk_size_u8 + $size - 1) / $size;
+        if cfg!(target_endian="little") {
+            // Unsafe code copied from `byteorder::write_slice_native`.
+            unsafe {
+                copy_nonoverlapping(
+                    $src.as_ptr() as *const u8,
+                    $dst.as_mut_ptr(),
+                    chunk_size_u8);
+            }
+        } else {
+            // Unsafe code copied from `byteorder::write_slice` and
+            // `byteorder::write_num_bytes`, with the addition to copy only
+            // `chunk.len()`.
+            // Byteorder assumes we want to copy only complete integers, while
+            // for us the destination may need only a part of the last integer.
+            for (&n, chunk) in $src.iter().zip($dst.chunks_mut($size)) {
+                unsafe {
+                    // N.B. https://github.com/rust-lang/rust/issues/22776
+                    let bytes = transmute::<_, [u8; $size]>(n.to_le());
+                    copy_nonoverlapping((&bytes).as_ptr(),
+                                        chunk.as_mut_ptr(),
+                                        chunk.len());
+                }
+            }
         }
-
-        let bytes = unsafe { slice::from_raw_parts($src.as_ptr() as *const u8,
-                                                   $src.len() * $N) };
-
-        let dest_chunk = &mut $dest[0..chunk_size_u8];
-        dest_chunk.copy_from_slice(&bytes[0..chunk_size_u8]);
 
         (chunk_size, chunk_size_u8)
     });
@@ -110,10 +124,6 @@ macro_rules! fill_via_chunks {
 /// the length of `dest`.
 /// `consumed_u32` is the number of words consumed from `src`, which is the same
 /// as `filled_u8 / 4` rounded up.
-///
-/// Note that on big-endian systems values in the output buffer `src` are
-/// mutated. `src[0..consumed_u32]` get converted to little-endian before
-/// copying.
 ///
 /// # Example
 /// (from `IsaacRng`)
@@ -135,7 +145,7 @@ macro_rules! fill_via_chunks {
 ///     }
 /// }
 /// ```
-pub fn fill_via_u32_chunks(src: &mut [u32], dest: &mut [u8]) -> (usize, usize) {
+pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
     fill_via_chunks!(src, dest, 4)
 }
 
@@ -148,12 +158,8 @@ pub fn fill_via_u32_chunks(src: &mut [u32], dest: &mut [u8]) -> (usize, usize) {
 /// `consumed_u64` is the number of words consumed from `src`, which is the same
 /// as `filled_u8 / 8` rounded up.
 ///
-/// Note that on big-endian systems values in the output buffer `src` are
-/// mutated. `src[0..consumed_u64]` get converted to little-endian before
-/// copying.
-///
 /// See `fill_via_u32_chunks` for an example.
-pub fn fill_via_u64_chunks(src: &mut [u64], dest: &mut [u8]) -> (usize, usize) {
+pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
     fill_via_chunks!(src, dest, 8)
 }
 
