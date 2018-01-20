@@ -276,7 +276,7 @@ use prng::Isaac64Rng as IsaacWordRng;
 
 use distributions::{Range, IndependentSample};
 use distributions::range::SampleRange;
-#[cfg(feature="std")]use reseeding::{ReseedingRng, ReseedWithNew};
+#[cfg(feature="std")] use reseeding::{ReseedingRng, ReseedWithNew};
 
 // public modules
 pub mod distributions;
@@ -736,12 +736,12 @@ impl<'a, R: Rng> Iterator for AsciiGenerator<'a, R> {
 ///
 /// Each pseudo-random number generator (PRNG) should implement this.
 pub trait SeedableRng: Sized {
-    /// Seed type, which is restricted to `u8` arrays with a length of
-    /// 4, 8, 12, 16, 24 and 32.
+    /// Seed type, which is restricted to types mutably-dereferencable as `u8`
+    /// arrays (we recommend `[u8; N]` for some `N`).
     ///
-    /// It is recommended to seed PRNG's with a seed of more than circa
+    /// It is recommended to seed PRNGs with a seed of at least circa
     /// 100 bits, which means an array of `[u8; 12]` or greater to avoid picking
-    /// RNG's with partially overlapping periods.
+    /// RNGs with partially overlapping periods.
     ///
     /// For cryptographic RNG's a seed of 256 bits is recommended, `[u8; 32]`.
     type Seed: Sized + Default + AsMut<[u8]>;
@@ -764,28 +764,33 @@ pub trait SeedableRng: Sized {
 
     /// Create a new PRNG seeded from another `Rng`.
     ///
-    /// This is the recommended way to initialize PRNGs. See the `NewRng`
-    /// trait that provides a convenient `new` method using `from_rng` and a
-    /// good entropy source.
+    /// This is the recommended way to initialize PRNGs. The [`NewRng`] trait
+    /// provides a convenient new method based on from_rng.
     ///
-    /// It is recommended to use a good source of randomness to initialize the
-    /// PRNG. Otherwise small PRNG's could show statistical bias in the first
-    /// couple of results, and possibly not use their entire period well.
-    /// Cryptographic PRNG's can be less secure or even insecure when they are
-    /// seeded from a non-cryptographic PRNG.
+    /// It is important to use a good source of randomness to initialize the
+    /// PRNG. Cryptographic PRNG may be rendered insecure when seeded from a
+    /// non-cryptographic PRNG or with insufficient entropy. Some
+    /// non-cryptographic PRNGs may show statistical bias in their first
+    /// results and may even have abnormally short periods if their seed
+    /// numbers are not well distributed.
     ///
-    /// Examples of good RNG's for seeding are entropy sources like `OsRng` and
-    /// `JitterRng`. Also cryptographically secure PRNG's (like `thread_rng`)
-    /// can be used without hesitation.
+    /// Prefer to seed from a strong external entropy source like [`OsRng`] or
+    /// from a cryptographic PRNG; if creating a new generator for cryptography
+    /// you *must* do this.
     ///
-    /// Seeding a small PRNG from another small PRNG is be possible, but
+    /// Seeding a small PRNG from another small PRNG is possible, but
     /// something to be careful with. An extreme example of how this can go
-    /// wrong is seeding an Xorshift RNG from another Xorshift RNG. That will
-    /// effectively clone the generator.
+    /// wrong is seeding an [`XorShiftRng`] from another [`XorShiftRng`], which
+    /// will effectively clone the generator. In general seeding from a
+    /// generator which is hard to predict is probably okay.
     ///
     /// PRNG implementations are allowed to assume that a good RNG is provided
     /// for seeding, and that it is cryptographically secure when appropriate.
     /// There are no reproducibility requirements like endianness conversion.
+    /// 
+    /// [`NewRng`]: trait.NewRng.html
+    /// [`OsRng`]: os/struct.OsRng.html
+    /// [`XorShiftRng`]: prng/xorshift/struct.XorShiftRng.html
     fn from_rng<R: Rng>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;
@@ -794,8 +799,10 @@ pub trait SeedableRng: Sized {
 }
 
 
-/// Seeding mechanism for PRNGs, providing a `new` function.
-/// This is the recommended way to create (pseudo) random number generators,
+/// A convenient way to seed new algorithmic generators, otherwise known as
+/// pseudo-random number generators (PRNGs).
+/// 
+/// This is the recommended way to create PRNGs,
 /// unless a deterministic seed is desired (in which case
 /// `SeedableRng::from_seed` should be used).
 ///
