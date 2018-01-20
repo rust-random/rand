@@ -10,37 +10,6 @@
 
 //! The implementations of `Rand` for the built-in types.
 
-macro_rules! float_impls {
-    ($mod_name:ident, $ty:ty, $mantissa_bits:expr, $method_name:ident) => {
-        mod $mod_name {
-            use {Rand, Rng, Open01, Closed01};
-
-            const SCALE: $ty = (1u64 << $mantissa_bits) as $ty;
-
-            impl Rand for Open01<$ty> {
-                #[inline]
-                fn rand<R: Rng>(rng: &mut R) -> Open01<$ty> {
-                    // add a small amount (specifically 2 bits below
-                    // the precision of f64/f32 at 1.0), so that small
-                    // numbers are larger than 0, but large numbers
-                    // aren't pushed to/above 1.
-                    Open01(rng.$method_name() + 0.25 / SCALE)
-                }
-            }
-            impl Rand for Closed01<$ty> {
-                #[inline]
-                fn rand<R: Rng>(rng: &mut R) -> Closed01<$ty> {
-                    // rescale so that 1.0 - epsilon becomes 1.0
-                    // precisely.
-                    Closed01(rng.$method_name() * SCALE / (SCALE - 1.0))
-                }
-            }
-        }
-    }
-}
-float_impls! { f64_rand_impls, f64, 53, next_f64 }
-float_impls! { f32_rand_impls, f32, 24, next_f32 }
-
 #[cfg(test)]
 mod tests {
     use {Rng, thread_rng, Open01, Closed01};
