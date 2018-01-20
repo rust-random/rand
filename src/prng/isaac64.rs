@@ -245,7 +245,7 @@ impl Rng for Isaac64Rng {
             }
 
             let (consumed_u64, filled_u8) =
-                impls::fill_via_u64_chunks(&mut self.rsl[self.index as usize..],
+                impls::fill_via_u64_chunks(&self.rsl[self.index as usize..],
                                            &mut dest[read_len..]);
 
             self.index += consumed_u64 as u32;
