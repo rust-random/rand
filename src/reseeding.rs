@@ -13,7 +13,7 @@
 
 use {Rng, Error};
 #[cfg(feature="std")]
-use NewSeeded;
+use NewRng;
 
 /// A wrapper around any RNG which reseeds the underlying RNG after it
 /// has generated a certain number of random bytes.
@@ -93,13 +93,13 @@ pub trait Reseeder<R: ?Sized> {
     fn reseed(&mut self, rng: &mut R) -> Result<(), Error>;
 }
 
-/// Reseed an RNG using `NewSeeded` to replace the current instance.
+/// Reseed an RNG using `NewRng` to replace the current instance.
 #[cfg(feature="std")]
 #[derive(Debug)]
 pub struct ReseedWithNew;
 
 #[cfg(feature="std")]
-impl<R: Rng + NewSeeded> Reseeder<R> for ReseedWithNew {
+impl<R: Rng + NewRng> Reseeder<R> for ReseedWithNew {
     fn reseed(&mut self, rng: &mut R) -> Result<(), Error> {
         R::new().map(|result| *rng = result)
     }
