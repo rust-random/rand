@@ -764,7 +764,7 @@ pub trait SeedableRng: Sized {
 
     /// Create a new PRNG seeded from another `Rng`.
     ///
-    /// This is the recommended way to initialize PRNGs. See the `NewSeeded`
+    /// This is the recommended way to initialize PRNGs. See the `NewRng`
     /// trait that provides a convenient `new` method using `from_rng` and a
     /// good entropy source.
     ///
@@ -805,13 +805,13 @@ pub trait SeedableRng: Sized {
 /// ## Example
 ///
 /// ```
-/// use rand::{StdRng, Rng, NewSeeded};
+/// use rand::{StdRng, Rng, NewRng};
 ///
 /// let mut rng = StdRng::new().unwrap();
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 #[cfg(feature="std")]
-pub trait NewSeeded: SeedableRng {
+pub trait NewRng: SeedableRng {
     /// Creates a new instance, automatically seeded with fresh entropy.
     ///
     /// Normally this will use `OsRng`, but if that fails `JitterRng` will be
@@ -821,7 +821,7 @@ pub trait NewSeeded: SeedableRng {
 }
 
 #[cfg(feature="std")]
-impl<R: SeedableRng> NewSeeded for R {
+impl<R: SeedableRng> NewRng for R {
     fn new() -> Result<Self, Error> {
         // Note: error handling would be easier with try/catch blocks
         fn new_os<T: SeedableRng>() -> Result<T, Error> {

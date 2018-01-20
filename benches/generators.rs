@@ -9,27 +9,10 @@ const BYTES_LEN: usize = 1024;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{Rng, NewSeeded, StdRng, OsRng, JitterRng};
+use rand::{Rng, NewRng, StdRng, OsRng, JitterRng};
 use rand::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 
 macro_rules! gen_bytes {
-    ($fnn:ident, $gen:ident) => {
-        #[bench]
-        fn $fnn(b: &mut Bencher) {
-            let mut rng: $gen = OsRng::new().unwrap().gen();
-            let mut buf = [0u8; BYTES_LEN];
-            b.iter(|| {
-                for _ in 0..RAND_BENCH_N {
-                    rng.fill_bytes(&mut buf);
-                    black_box(buf);
-                }
-            });
-            b.bytes = BYTES_LEN as u64 * RAND_BENCH_N;
-        }
-    }
-}
-
-macro_rules! gen_bytes_new {
     ($fnn:ident, $gen:ident) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
@@ -51,8 +34,8 @@ gen_bytes!(gen_bytes_hc128, Hc128Rng);
 gen_bytes!(gen_bytes_isaac, IsaacRng);
 gen_bytes!(gen_bytes_isaac64, Isaac64Rng);
 gen_bytes!(gen_bytes_chacha, ChaChaRng);
-gen_bytes_new!(gen_bytes_std, StdRng);
-gen_bytes_new!(gen_bytes_os, OsRng);
+gen_bytes!(gen_bytes_std, StdRng);
+gen_bytes!(gen_bytes_os, OsRng);
 
 
 macro_rules! gen_uint {
