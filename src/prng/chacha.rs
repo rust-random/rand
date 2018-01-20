@@ -103,31 +103,38 @@ impl ChaChaRng {
         ChaChaRng::init([0; SEED_WORDS])
     }
 
-    /// Sets the internal 128-bit ChaCha counter to
-    /// a user-provided value. This permits jumping
-    /// arbitrarily ahead (or backwards) in the pseudorandom stream.
+    /// Sets the internal 128-bit ChaCha counter to a user-provided value. This
+    /// permits jumping arbitrarily ahead (or backwards) in the pseudorandom
+    /// stream.
     ///
-    /// Since the nonce words are used to extend the counter to 128 bits,
-    /// users wishing to obtain the conventional ChaCha pseudorandom stream
-    /// associated with a particular nonce can call this function with
-    /// arguments `0, desired_nonce`.
+    /// The 128 bits used for the counter overlap with the nonce and smaller
+    /// counter of ChaCha when used as a stream cipher. It is in theory possible
+    /// to use `set_counter` to obtain the conventional ChaCha pseudorandom
+    /// stream associated with a particular nonce, but that is not a supported
+    /// use of this method.
     ///
     /// # Examples
     ///
     /// ```rust
     /// use rand::{Rng, ChaChaRng};
     ///
-    /// let mut ra = ChaChaRng::new_unseeded();
-    /// ra.set_counter(0u64, 1234567890u64);
-    /// println!("{:?}", ra.next_u32());
-    /// println!("{:?}", ra.next_u32());
+    /// let mut rng1 = ChaChaRng::new_unseeded(); // Use `ChaChaRng::new()` or
+    ///                                           // `ChaChaRng::from_rng()`
+    ///                                           // outside of testing.
+    /// let mut rng2 = rng1.clone();
+    ///
+    /// // Skip to round 20. Because every round generates 16 `u32` values, this
+    /// // actually means skipping 320 values.
+    /// for _ in 0..(20*16) { rng1.next_u32(); }
+    /// rng2.set_counter(20, 0);
+    /// assert_eq!(rng1.next_u32(), rng2.next_u32());
     /// ```
     pub fn set_counter(&mut self, counter_low: u64, counter_high: u64) {
-        self.state[12] = (counter_low >>  0) as u32;
+        self.state[12] = counter_low as u32;
         self.state[13] = (counter_low >> 32) as u32;
-        self.state[14] = (counter_high >>  0) as u32;
+        self.state[14] = counter_high as u32;
         self.state[15] = (counter_high >> 32) as u32;
-        self.index = STATE_WORDS; // force recomputation
+        self.index = STATE_WORDS; // force recomputation on next use
     }
 
     /// Initializes `self.state` with the appropriate key and constants
@@ -228,37 +235,89 @@ mod test {
     }
 
     #[test]
-    fn test_chacha_true_values() {
+    fn test_chacha_true_values_a() {
         // Test vectors 1 and 2 from
         // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
         let seed = [0u8; 32];
-        let mut rng1: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
 
         let mut results = [0u32; 16];
-        for i in results.iter_mut() { *i = rng1.next_u32(); }
+        for i in results.iter_mut() { *i = rng.next_u32(); }
         let expected = [0xade0b876, 0x903df1a0, 0xe56a5d40, 0x28bd8653,
                         0xb819d2bd, 0x1aed8da0, 0xccef36a8, 0xc70d778b,
                         0x7c5941da, 0x8d485751, 0x3fe02477, 0x374ad8b8,
                         0xf4b8436a, 0x1ca11815, 0x69b687c3, 0x8665eeb2];
         assert_eq!(results, expected);
 
-        for i in results.iter_mut() { *i = rng1.next_u32(); }
+        for i in results.iter_mut() { *i = rng.next_u32(); }
         let expected = [0xbee7079f, 0x7a385155, 0x7c97ba98, 0x0d082d73,
                         0xa0290fcb, 0x6965e348, 0x3e53c612, 0xed7aee32,
                         0x7621b729, 0x434ee69c, 0xb03371d5, 0xd539d874,
                         0x281fed31, 0x45fb0a51, 0x1f0ae1ac, 0x6f4d794b];
         assert_eq!(results, expected);
+    }
 
+    #[test]
+    fn test_chacha_true_values_b() {
+        // Test vector 3 from
+        // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
+        let seed = [0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 1];
+        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
 
-        let seed = [0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0, 4,0,0,0, 5,0,0,0, 6,0,0,0, 7,0,0,0];
+        // Skip block 0
+        for _ in 0..16 { rng.next_u32(); }
+
+        let mut results = [0u32; 16];
+        for i in results.iter_mut() { *i = rng.next_u32(); }
+        let expected = [0x2452eb3a, 0x9249f8ec, 0x8d829d9b, 0xddd4ceb1,
+                        0xe8252083, 0x60818b01, 0xf38422b8, 0x5aaa49c9,
+                        0xbb00ca8e, 0xda3ba7b4, 0xc4b592d1, 0xfdf2732f,
+                        0x4436274e, 0x2561b3c8, 0xebdd4aa6, 0xa0136c00];
+        assert_eq!(results, expected);
+    }
+
+    #[test]
+    fn test_chacha_true_values_c() {
+        // Test vector 4 from
+        // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
+        let seed = [0, 0xff, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0];
+        let expected = [0xfb4dd572, 0x4bc42ef1, 0xdf922636, 0x327f1394,
+                        0xa78dea8f, 0x5e269039, 0xa1bebbc1, 0xcaf09aae,
+                        0xa25ab213, 0x48a6b46c, 0x1b9d9bcb, 0x092c5be6,
+                        0x546ca624, 0x1bec45d5, 0x87f47473, 0x96f0992e];
+        let mut results = [0u32; 16];
+
+        // Test block 2 by skipping block 0 and 1
+        let mut rng1: ChaChaRng = SeedableRng::from_seed(seed);
+        for _ in 0..32 { rng1.next_u32(); }
+        for i in results.iter_mut() { *i = rng1.next_u32(); }
+        assert_eq!(results, expected);
+
+        // Test block 2 by using `set_counter`
         let mut rng2: ChaChaRng = SeedableRng::from_seed(seed);
+        rng2.set_counter(2, 0);
+        for i in results.iter_mut() { *i = rng2.next_u32(); }
+        assert_eq!(results, expected);
+    }
+
+    #[test]
+    fn test_chacha_multiple_blocks() {
+        let seed = [0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0, 4,0,0,0, 5,0,0,0, 6,0,0,0, 7,0,0,0];
+        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
 
         // Store the 17*i-th 32-bit word,
         // i.e., the i-th word of the i-th 16-word block
+        let mut results = [0u32; 16];
         for i in results.iter_mut() {
-            *i = rng2.next_u32();
+            *i = rng.next_u32();
             for _ in 0..16 {
-                rng2.next_u32();
+                rng.next_u32();
             }
         }
         let expected = [0xf225c81a, 0x6ab1be57, 0x04d42951, 0x70858036,
@@ -274,7 +333,6 @@ mod test {
         let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
         let mut results = [0u8; 32];
         rng.fill_bytes(&mut results);
-        // Same as first values in test_isaac_true_values as bytes in LE order
         let expected = [118, 184, 224, 173, 160, 241, 61, 144,
                         64, 93, 106, 229, 83, 134, 189, 40,
                         189, 210, 25, 184, 160, 141, 237, 26,
@@ -282,6 +340,22 @@ mod test {
         assert_eq!(results, expected);
     }
 
+    #[test]
+    fn test_chacha_set_counter() {
+        // Test vector 5 from
+        // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
+        let seed = [0u8; 32];
+        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+        rng.set_counter(0, 2u64.to_be());
+
+        let mut results = [0u32; 16];
+        for i in results.iter_mut() { *i = rng.next_u32(); }
+        let expected = [0x374dc6c2, 0x3736d58c, 0xb904e24a, 0xcd3f93ef,
+                        0x88228b1a, 0x96a4dfb3, 0x5b76ab72, 0xc727ee54,
+                        0x0e0e978a, 0xf3145c95, 0x1b748ea8, 0xf786c297,
+                        0x99c28f5f, 0x628314e8, 0x398a19fa, 0x6ded1b53];
+        assert_eq!(results, expected);
+    }
     #[test]
     fn test_chacha_clone() {
         let seed = [0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0, 4,0,0,0, 5,0,0,0, 6,0,0,0, 7,0,0,0];
