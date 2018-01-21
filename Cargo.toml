@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.3.20"
+version = "0.3.21-pre.0"
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"

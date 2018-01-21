@@ -8,6 +8,11 @@ A Rust library for random number generators and other randomness functionality.
 
 [Documentation](https://docs.rs/rand)
 
+## Compatibility upgrade
+
+Version 0.3 has been replaced by a compatibility wrapper around `rand` 0.4. It
+is recommended to update to 0.4.
+
 ## Usage
 
 Add this to your `Cargo.toml`:
