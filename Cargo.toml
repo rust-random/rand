@@ -13,12 +13,16 @@ Random number generators and other randomness functionality.
 keywords = ["random", "rng"]
 categories = ["algorithms"]
 
+[lib]
+doctest = false
+
 [features]
 i128_support = []
 nightly = ["i128_support"]
 
 [dependencies]
 libc = "0.2"
+rand = "0.4"
 
 [workspace]
 members = ["rand-derive"]
