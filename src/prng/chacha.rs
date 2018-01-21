@@ -17,15 +17,51 @@ use {impls, le};
 const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
 const STATE_WORDS: usize = 16;
 
-/// A random number generator that uses the ChaCha20 algorithm [1].
+/// A cryptographically secure random number generator that uses the ChaCha
+/// algorithm.
 ///
-/// The ChaCha algorithm is widely accepted as suitable for
-/// cryptographic purposes, but this implementation has not been
-/// verified as such. Prefer a generator like `OsRng` that defers to
-/// the operating system for cases that need high security.
+/// ChaCha is a stream cipher designed by Daniel J. Bernstein [1], that we use
+/// as an RNG. It is an improved variant of the Salsa20 cipher family, which was
+/// selected as one of the "stream ciphers suitable for widespread adoption" by
+/// eSTREAM [2].
 ///
-/// [1]: D. J. Bernstein, [*ChaCha, a variant of
-/// Salsa20*](https://cr.yp.to/chacha.html)
+/// ChaCha uses add-rotate-xor (ARX) operations as basis. These are safe
+/// against timing attacks, although that is mostly a concern for ciphers and
+/// not for RNGs. Also it is very suitable for SIMD implementation.
+/// Here we do not provide a SIMD implementation yet, except for what is
+/// provided by auto-vectorisation.
+///
+/// With the ChaCha algorithm it is possible to choose the number of rounds the
+/// core algorithm should run. By default `ChaChaRng` is created as ChaCha20,
+/// with means 20 rounds. The number of rounds is a tradeoff between performance
+/// an security, 8 rounds are considered the minimum to be secure. A different
+/// number of rounds can be set with [`set_rounds`].
+///
+/// We deviate slightly from the ChaCha specification regarding the nonce, which
+/// is used to extend the counter to 128 bits. This is provably as strong as the
+/// original cipher, though, since any distinguishing attack on our variant also
+/// works against ChaCha with a chosen-nonce. See the XSalsa20 [3] security
+/// proof for a more involved example of this.
+///
+/// The modified word layout is:
+///
+/// ```text
+/// constant constant constant constant
+/// key      key      key      key
+/// key      key      key      key
+/// counter  counter  counter  counter
+/// ```
+///
+/// [1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
+///      https://cr.yp.to/chacha.html)
+///
+/// [2]: [eSTREAM: the ECRYPT Stream Cipher Project](
+///      http://www.ecrypt.eu.org/stream/)
+///
+/// [3]: Daniel J. Bernstein. [*Extending the Salsa20 nonce.*](
+///      http://cr.yp.to/papers.html#xsalsa)
+///
+/// [`set_rounds`]: #method.set_counter
 #[derive(Clone)]
 pub struct ChaChaRng {
     buffer:  [u32; STATE_WORDS], // Internal buffer of output
@@ -149,23 +185,6 @@ impl ChaChaRng {
     }
 
     /// Initializes `self.state` with the appropriate key and constants
-    ///
-    /// We deviate slightly from the ChaCha specification regarding
-    /// the nonce, which is used to extend the counter to 128 bits.
-    /// This is provably as strong as the original cipher, though,
-    /// since any distinguishing attack on our variant also works
-    /// against ChaCha with a chosen-nonce. See the XSalsa20 [1]
-    /// security proof for a more involved example of this.
-    ///
-    /// The modified word layout is:
-    /// ```text
-    /// constant constant constant constant
-    /// key      key      key      key
-    /// key      key      key      key
-    /// counter  counter  counter  counter
-    /// ```
-    /// [1]: Daniel J. Bernstein. [*Extending the Salsa20
-    /// nonce.*](https://cr.yp.to/papers.html#xsalsa)
     fn init(seed: [u32; SEED_WORDS]) -> Self {
         ChaChaRng {
             buffer: [0; STATE_WORDS],
