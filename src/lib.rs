@@ -287,7 +287,7 @@ use prng::Isaac64Rng as IsaacWordRng;
 
 use distributions::{Range, IndependentSample};
 use distributions::range::SampleRange;
-#[cfg(feature="std")] use reseeding::{ReseedingRng, ReseedWithNew};
+#[cfg(feature="std")] use reseeding::ReseedingRng;
 
 // public modules
 pub mod distributions;
@@ -942,20 +942,20 @@ pub fn weak_rng() -> XorShiftRng {
 #[cfg(feature="std")]
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
-    rng: Rc<RefCell<ReseedingRng<StdRng, ReseedWithNew>>>,
+    rng: Rc<RefCell<ReseedingRng<StdRng, EntropySource>>>,
 }
 
 #[cfg(feature="std")]
 thread_local!(
-    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<StdRng, ReseedWithNew>>> = {
+    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<StdRng, EntropySource>>> = {
         const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
-        let r = match StdRng::new() {
-            Ok(r) => r,
-            Err(e) => panic!("could not initialize thread_rng: {:?}", e)
-        };
+        let mut entropy_source = EntropySource::new()
+            .expect("could not initialize thread_rng");
+        let r = StdRng::from_rng(&mut entropy_source)
+            .expect("could not initialize thread_rng");
         let rng = ReseedingRng::new(r,
                                     THREAD_RNG_RESEED_THRESHOLD,
-                                    ReseedWithNew);
+                                    entropy_source);
         Rc::new(RefCell::new(rng))
     }
 );
