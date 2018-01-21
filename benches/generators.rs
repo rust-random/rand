@@ -33,10 +33,8 @@ gen_bytes!(gen_bytes_xorshift, XorShiftRng);
 gen_bytes!(gen_bytes_hc128, Hc128Rng);
 gen_bytes!(gen_bytes_isaac, IsaacRng);
 gen_bytes!(gen_bytes_isaac64, Isaac64Rng);
-gen_bytes!(gen_bytes_chacha, ChaChaRng);
 gen_bytes!(gen_bytes_std, StdRng);
 gen_bytes!(gen_bytes_os, OsRng);
-
 
 macro_rules! gen_uint {
     ($fnn:ident, $ty:ty, $gen:ident) => {
@@ -72,7 +70,6 @@ gen_uint!(gen_u32_xorshift, u32, XorShiftRng);
 gen_uint!(gen_u32_hc128, u32, Hc128Rng);
 gen_uint!(gen_u32_isaac, u32, IsaacRng);
 gen_uint!(gen_u32_isaac64, u32, Isaac64Rng);
-gen_uint!(gen_u32_chacha, u32, ChaChaRng);
 gen_uint_new!(gen_u32_std, u32, StdRng);
 gen_uint_new!(gen_u32_os, u32, OsRng);
 
@@ -80,10 +77,11 @@ gen_uint!(gen_u64_xorshift, u64, XorShiftRng);
 gen_uint!(gen_u64_hc128, u64, Hc128Rng);
 gen_uint!(gen_u64_isaac, u64, IsaacRng);
 gen_uint!(gen_u64_isaac64, u64, Isaac64Rng);
-gen_uint!(gen_u64_chacha, u64, ChaChaRng);
 gen_uint_new!(gen_u64_std, u64, StdRng);
 gen_uint_new!(gen_u64_os, u64, OsRng);
 
+// Do not test JitterRng like the others by running it RAND_BENCH_N times per,
+// measurement, because it is way to slow. Only run it once
 #[bench]
 fn gen_u64_jitter(b: &mut Bencher) {
     let mut rng = JitterRng::new().unwrap();
@@ -118,3 +116,49 @@ fn init_jitter(b: &mut Bencher) {
         black_box(JitterRng::new().unwrap());
     });
 }
+
+macro_rules! chacha_rounds {
+    ($fn1:ident, $fn2:ident, $fn3:ident, $rounds:expr) => {
+        #[bench]
+        fn $fn1(b: &mut Bencher) {
+            let mut rng = ChaChaRng::new().unwrap();
+            rng.set_rounds($rounds);
+            let mut buf = [0u8; BYTES_LEN];
+            b.iter(|| {
+                for _ in 0..RAND_BENCH_N {
+                    rng.fill_bytes(&mut buf);
+                    black_box(buf);
+                }
+            });
+            b.bytes = BYTES_LEN as u64 * RAND_BENCH_N;
+        }
+
+        #[bench]
+        fn $fn2(b: &mut Bencher) {
+            let mut rng = ChaChaRng::new().unwrap();
+            rng.set_rounds($rounds);
+            b.iter(|| {
+                for _ in 0..RAND_BENCH_N {
+                    black_box(rng.gen::<u32>());
+                }
+            });
+            b.bytes = size_of::<u32>() as u64 * RAND_BENCH_N;
+        }
+
+        #[bench]
+        fn $fn3(b: &mut Bencher) {
+            let mut rng = ChaChaRng::new().unwrap();
+            rng.set_rounds($rounds);
+            b.iter(|| {
+                for _ in 0..RAND_BENCH_N {
+                    black_box(rng.gen::<u64>());
+                }
+            });
+            b.bytes = size_of::<u64>() as u64 * RAND_BENCH_N;
+        }
+    }
+}
+
+chacha_rounds!(gen_bytes_chacha8, gen_u32_chacha8, gen_u64_chacha8, 8);
+chacha_rounds!(gen_bytes_chacha12, gen_u32_chacha12, gen_u64_chacha12, 12);
+chacha_rounds!(gen_bytes_chacha20, gen_u32_chacha20, gen_u64_chacha20, 20);
