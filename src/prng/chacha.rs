@@ -25,7 +25,7 @@ const STATE_WORDS: usize = 16;
 /// selected as one of the "stream ciphers suitable for widespread adoption" by
 /// eSTREAM [2].
 ///
-/// ChaCha uses add-rotate-xor (ARX) operations as basis. These are safe
+/// ChaCha uses add-rotate-xor (ARX) operations as its basis. These are safe
 /// against timing attacks, although that is mostly a concern for ciphers and
 /// not for RNGs. Also it is very suitable for SIMD implementation.
 /// Here we do not provide a SIMD implementation yet, except for what is
@@ -33,9 +33,9 @@ const STATE_WORDS: usize = 16;
 ///
 /// With the ChaCha algorithm it is possible to choose the number of rounds the
 /// core algorithm should run. By default `ChaChaRng` is created as ChaCha20,
-/// with means 20 rounds. The number of rounds is a tradeoff between performance
-/// an security, 8 rounds are considered the minimum to be secure. A different
-/// number of rounds can be set with [`set_rounds`].
+/// which means 20 rounds. The number of rounds is a tradeoff between performance
+/// and security, 8 rounds are considered the minimum to be secure. A different
+/// number of rounds can be set using [`set_rounds`].
 ///
 /// We deviate slightly from the ChaCha specification regarding the nonce, which
 /// is used to extend the counter to 128 bits. This is provably as strong as the
@@ -132,8 +132,9 @@ impl ChaChaRng {
     /// The 128 bits used for the counter overlap with the nonce and smaller
     /// counter of ChaCha when used as a stream cipher. It is in theory possible
     /// to use `set_counter` to obtain the conventional ChaCha pseudorandom
-    /// stream associated with a particular nonce, but that is not a supported
-    /// use of this method.
+    /// stream associated with a particular nonce. This is not a supported use
+    /// of the RNG, because a nonce set that way is not treated as a constant
+    /// value but still as part of the counter, besides endian issues.
     ///
     /// # Examples
     ///
@@ -378,23 +379,6 @@ mod test {
                         64, 93, 106, 229, 83, 134, 189, 40,
                         189, 210, 25, 184, 160, 141, 237, 26,
                         168, 54, 239, 204, 139, 119, 13, 199];
-        assert_eq!(results, expected);
-    }
-
-    #[test]
-    fn test_chacha_set_counter() {
-        // Test vector 5 from
-        // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
-        let seed = [0u8; 32];
-        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
-        rng.set_counter(0, 2u64.to_be());
-
-        let mut results = [0u32; 16];
-        for i in results.iter_mut() { *i = rng.next_u32(); }
-        let expected = [0x374dc6c2, 0x3736d58c, 0xb904e24a, 0xcd3f93ef,
-                        0x88228b1a, 0x96a4dfb3, 0x5b76ab72, 0xc727ee54,
-                        0x0e0e978a, 0xf3145c95, 0x1b748ea8, 0xf786c297,
-                        0x99c28f5f, 0x628314e8, 0x398a19fa, 0x6ded1b53];
         assert_eq!(results, expected);
     }
 
