@@ -23,6 +23,7 @@
 #![allow(unused)]
 
 use core::intrinsics::transmute;
+use core::ptr::copy_nonoverlapping;
 use core::slice;
 use core::cmp::min;
 use core::mem::size_of;
@@ -82,20 +83,27 @@ macro_rules! impl_uint_from_fill {
 }
 
 macro_rules! fill_via_chunks {
-    ($src:expr, $dest:expr, $N:expr) => ({
-        let chunk_size_u8 = min($src.len() * $N, $dest.len());
-        let chunk_size = (chunk_size_u8 + $N - 1) / $N;
-
-        // Convert to little-endian:
-        for ref mut x in $src[0..chunk_size].iter_mut() {
-            **x = (*x).to_le();
+    ($src:expr, $dst:expr, $ty:ty, $size:expr) => ({
+        let chunk_size_u8 = min($src.len() * $size, $dst.len());
+        let chunk_size = (chunk_size_u8 + $size - 1) / $size;
+        if cfg!(target_endian="little") {
+            unsafe {
+                copy_nonoverlapping(
+                    $src.as_ptr() as *const u8,
+                    $dst.as_mut_ptr(),
+                    chunk_size_u8);
+            }
+        } else {
+            for (&n, chunk) in $src.iter().zip($dst.chunks_mut($size)) {
+                let tmp = n.to_le();
+                let src_ptr = &tmp as *const $ty as *const u8;
+                unsafe {
+                    copy_nonoverlapping(src_ptr,
+                                        chunk.as_mut_ptr(),
+                                        chunk.len());
+                }
+            }
         }
-
-        let bytes = unsafe { slice::from_raw_parts($src.as_ptr() as *const u8,
-                                                   $src.len() * $N) };
-
-        let dest_chunk = &mut $dest[0..chunk_size_u8];
-        dest_chunk.copy_from_slice(&bytes[0..chunk_size_u8]);
 
         (chunk_size, chunk_size_u8)
     });
@@ -110,10 +118,6 @@ macro_rules! fill_via_chunks {
 /// the length of `dest`.
 /// `consumed_u32` is the number of words consumed from `src`, which is the same
 /// as `filled_u8 / 4` rounded up.
-///
-/// Note that on big-endian systems values in the output buffer `src` are
-/// mutated. `src[0..consumed_u32]` get converted to little-endian before
-/// copying.
 ///
 /// # Example
 /// (from `IsaacRng`)
@@ -135,8 +139,8 @@ macro_rules! fill_via_chunks {
 ///     }
 /// }
 /// ```
-pub fn fill_via_u32_chunks(src: &mut [u32], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, 4)
+pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
+    fill_via_chunks!(src, dest, u32, 4)
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
@@ -148,13 +152,9 @@ pub fn fill_via_u32_chunks(src: &mut [u32], dest: &mut [u8]) -> (usize, usize) {
 /// `consumed_u64` is the number of words consumed from `src`, which is the same
 /// as `filled_u8 / 8` rounded up.
 ///
-/// Note that on big-endian systems values in the output buffer `src` are
-/// mutated. `src[0..consumed_u64]` get converted to little-endian before
-/// copying.
-///
 /// See `fill_via_u32_chunks` for an example.
-pub fn fill_via_u64_chunks(src: &mut [u64], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, 8)
+pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
+    fill_via_chunks!(src, dest, u64, 8)
 }
 
 /// Implement `next_u32` via `fill_bytes`, little-endian order.

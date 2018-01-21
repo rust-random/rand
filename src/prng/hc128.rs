@@ -342,7 +342,7 @@ impl Rng for Hc128Rng {
         // Continue filling from the current set of results
         if self.index < 16 {
             let (consumed_u32, filled_u8) =
-                impls::fill_via_u32_chunks(&mut self.results[self.index..],
+                impls::fill_via_u32_chunks(&self.results[self.index..],
                                            dest);
 
             self.index += consumed_u32;
@@ -367,7 +367,7 @@ impl Rng for Hc128Rng {
             self.state.update(&mut self.results);
 
             let (consumed_u32, _) =
-                impls::fill_via_u32_chunks(&mut self.results,
+                impls::fill_via_u32_chunks(&self.results,
                                            &mut dest[filled..]);
 
             self.index = consumed_u32;
@@ -384,7 +384,7 @@ impl Rng for Hc128Rng {
             }
 
             let (consumed_u32, filled_u8) =
-                impls::fill_via_u32_chunks(&mut self.results[self.index..],
+                impls::fill_via_u32_chunks(&self.results[self.index..],
                                            &mut dest[read_len..]);
 
             self.index += consumed_u32;
