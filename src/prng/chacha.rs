@@ -122,7 +122,7 @@ impl ChaChaRng {
     /// - 2917185654
     /// - 2419978656
     pub fn new_unseeded() -> ChaChaRng {
-        ChaChaRng::init([0; SEED_WORDS])
+        ChaChaRng::from_seed([0; SEED_WORDS*4])
     }
 
     /// Sets the internal 128-bit ChaCha counter to a user-provided value. This
@@ -184,19 +184,6 @@ impl ChaChaRng {
         self.index = STATE_WORDS; // force recomputation on next use
     }
 
-    /// Initializes `self.state` with the appropriate key and constants
-    fn init(seed: [u32; SEED_WORDS]) -> Self {
-        ChaChaRng {
-            buffer: [0; STATE_WORDS],
-            state: [0x61707865, 0x3320646E, 0x79622D32, 0x6B206574, // constants
-                    seed[0], seed[1], seed[2], seed[3], // seed
-                    seed[4], seed[5], seed[6], seed[7], // seed
-                    0, 0, 0, 0], // counter
-            index: STATE_WORDS, // generate on first use
-            rounds: 20,
-         }
-    }
-
     /// Refill the internal output buffer (`self.buffer`)
     fn update(&mut self) {
         // For some reason extracting this part into a seperate function
@@ -256,9 +243,17 @@ impl Rng for ChaChaRng {
 impl SeedableRng for ChaChaRng {
     type Seed = [u8; SEED_WORDS*4];
     fn from_seed(seed: Self::Seed) -> Self {
-        let mut seed_u32 = [0u32; SEED_WORDS];
-        le::read_u32_into(&seed, &mut seed_u32);
-        ChaChaRng::init(seed_u32)
+        let mut seed_le = [0u32; SEED_WORDS];
+        le::read_u32_into(&seed, &mut seed_le);
+        Self {
+            buffer: [0; STATE_WORDS],
+            state: [0x61707865, 0x3320646E, 0x79622D32, 0x6B206574, // constants
+                    seed_le[0], seed_le[1], seed_le[2], seed_le[3], // seed
+                    seed_le[4], seed_le[5], seed_le[6], seed_le[7], // seed
+                    0, 0, 0, 0], // counter
+            index: STATE_WORDS, // generate on first use
+            rounds: 20,
+         }
     }
 }
 
