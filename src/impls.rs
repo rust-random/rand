@@ -83,11 +83,10 @@ macro_rules! impl_uint_from_fill {
 }
 
 macro_rules! fill_via_chunks {
-    ($src:expr, $dst:expr, $size:expr) => ({
+    ($src:expr, $dst:expr, $ty:ty, $size:expr) => ({
         let chunk_size_u8 = min($src.len() * $size, $dst.len());
         let chunk_size = (chunk_size_u8 + $size - 1) / $size;
         if cfg!(target_endian="little") {
-            // Unsafe code copied from `byteorder::write_slice_native`.
             unsafe {
                 copy_nonoverlapping(
                     $src.as_ptr() as *const u8,
@@ -95,16 +94,11 @@ macro_rules! fill_via_chunks {
                     chunk_size_u8);
             }
         } else {
-            // Unsafe code copied from `byteorder::write_slice` and
-            // `byteorder::write_num_bytes`, with the addition to copy only
-            // `chunk.len()`.
-            // Byteorder assumes we want to copy only complete integers, while
-            // for us the destination may need only a part of the last integer.
             for (&n, chunk) in $src.iter().zip($dst.chunks_mut($size)) {
+                let tmp = n.to_le();
+                let src_ptr = &tmp as *const $ty as *const u8;
                 unsafe {
-                    // N.B. https://github.com/rust-lang/rust/issues/22776
-                    let bytes = transmute::<_, [u8; $size]>(n.to_le());
-                    copy_nonoverlapping((&bytes).as_ptr(),
+                    copy_nonoverlapping(src_ptr,
                                         chunk.as_mut_ptr(),
                                         chunk.len());
                 }
@@ -146,7 +140,7 @@ macro_rules! fill_via_chunks {
 /// }
 /// ```
 pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, 4)
+    fill_via_chunks!(src, dest, u32, 4)
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
@@ -160,7 +154,7 @@ pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
 ///
 /// See `fill_via_u32_chunks` for an example.
 pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, 8)
+    fill_via_chunks!(src, dest, u64, 8)
 }
 
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
