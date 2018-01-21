@@ -16,8 +16,6 @@ use {impls, le};
 
 const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
 const STATE_WORDS: usize = 16;
-const CHACHA_ROUNDS: u32 = 20; // Cryptographically secure from 8 upwards as of
-                               // this writing
 
 /// A random number generator that uses the ChaCha20 algorithm [1].
 ///
@@ -33,6 +31,7 @@ pub struct ChaChaRng {
     buffer:  [u32; STATE_WORDS], // Internal buffer of output
     state:   [u32; STATE_WORDS], // Initial state
     index:   usize,              // Index into state
+    rounds:  usize,
 }
 
 // Custom Debug implementation that does not expose the internal state
@@ -64,19 +63,6 @@ macro_rules! double_round{
         quarter_round!($x[ 2], $x[ 7], $x[ 8], $x[13]);
         quarter_round!($x[ 3], $x[ 4], $x[ 9], $x[14]);
     }}
-}
-
-#[inline]
-fn core(new: &mut [u32; STATE_WORDS], input: &[u32; STATE_WORDS]) {
-    *new = *input;
-
-    for _ in 0..CHACHA_ROUNDS / 2 {
-        double_round!(new);
-    }
-
-    for i in 0..STATE_WORDS {
-        new[i] = new[i].wrapping_add(input[i]);
-    }
 }
 
 impl ChaChaRng {
@@ -137,6 +123,31 @@ impl ChaChaRng {
         self.index = STATE_WORDS; // force recomputation on next use
     }
 
+    /// Sets the number of rounds to run the ChaCha core algorithm per block to
+    /// generate.
+    ///
+    /// By default this is set to 20. Other recommended values are 12 and 8,
+    /// which trade security for performance. `rounds` only supports values
+    /// that are multiples of 4 and less than or equal to 20.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rand::{Rng, ChaChaRng};
+    ///
+    /// let mut rng = ChaChaRng::new_unseeded(); // Use `ChaChaRng::new()` or
+    ///                                           // `ChaChaRng::from_rng()`
+    ///                                           // outside of testing.
+    /// rng.set_rounds(8);
+    ///
+    /// assert_eq!(rng.next_u32(), 0x2fef003e);
+    /// ```
+    pub fn set_rounds(&mut self, rounds: usize) {
+        assert!([4usize, 8, 12, 16, 20].iter().any(|x| *x == rounds));
+        self.rounds = rounds;
+        self.index = STATE_WORDS; // force recomputation on next use
+    }
+
     /// Initializes `self.state` with the appropriate key and constants
     ///
     /// We deviate slightly from the ChaCha specification regarding
@@ -163,12 +174,22 @@ impl ChaChaRng {
                     seed[4], seed[5], seed[6], seed[7], // seed
                     0, 0, 0, 0], // counter
             index: STATE_WORDS, // generate on first use
+            rounds: 20,
          }
     }
 
     /// Refill the internal output buffer (`self.buffer`)
     fn update(&mut self) {
-        core(&mut self.buffer, &self.state);
+        let mut tmp = self.state;
+
+        for _ in 0..self.rounds / 2 {
+            double_round!(tmp);
+        }
+
+        for i in 0..STATE_WORDS {
+            self.buffer[i] = tmp[i].wrapping_add(self.state[i]);
+        }
+
         self.index = 0;
         // update 128-bit counter
         self.state[12] = self.state[12].wrapping_add(1);
@@ -356,6 +377,23 @@ mod test {
                         0x99c28f5f, 0x628314e8, 0x398a19fa, 0x6ded1b53];
         assert_eq!(results, expected);
     }
+
+    #[test]
+    fn test_chacha_set_rounds() {
+        let seed = [0u8; 32];
+        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+        rng.set_rounds(8);
+
+        let mut results = [0u32; 16];
+        for i in results.iter_mut() { *i = rng.next_u32(); }
+
+        let expected = [0x2fef003e, 0xd6405f89, 0xe8b85b7f, 0xa1a5091f,
+                        0xc30e842c, 0x3b7f9ace, 0x88e11b18, 0x1e1a71ef,
+                        0x72e14c98, 0x416f21b9, 0x6753449f, 0x19566d45,
+                        0xa3424a31, 0x01b086da, 0xb8fd7b38, 0x42fe0c0e];
+        assert_eq!(results, expected);
+    }
+
     #[test]
     fn test_chacha_clone() {
         let seed = [0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0, 4,0,0,0, 5,0,0,0, 6,0,0,0, 7,0,0,0];
