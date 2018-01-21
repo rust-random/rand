@@ -199,16 +199,22 @@ impl ChaChaRng {
 
     /// Refill the internal output buffer (`self.buffer`)
     fn update(&mut self) {
-        let mut tmp = self.state;
-
-        for _ in 0..self.rounds / 2 {
-            double_round!(tmp);
+        // For some reason extracting this part into a seperate function
+        // improves performance by 50%.
+        fn core(results: &mut [u32; STATE_WORDS],
+                state: &[u32; STATE_WORDS],
+                rounds: usize)
+        {
+            let mut tmp = *state;
+            for _ in 0..rounds / 2 {
+                double_round!(tmp);
+            }
+            for i in 0..STATE_WORDS {
+                results[i] = tmp[i].wrapping_add(state[i]);
+            }
         }
 
-        for i in 0..STATE_WORDS {
-            self.buffer[i] = tmp[i].wrapping_add(self.state[i]);
-        }
-
+        core(&mut self.buffer, &self.state, self.rounds);
         self.index = 0;
         // update 128-bit counter
         self.state[12] = self.state[12].wrapping_add(1);
