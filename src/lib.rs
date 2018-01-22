@@ -249,6 +249,9 @@
 
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
+#[cfg(test)] #[cfg(feature="serde-1")] extern crate bincode;
+#[cfg(feature="serde-1")] extern crate serde;
+#[cfg(feature="serde-1")] #[macro_use] extern crate serde_derive;
 
 use core::marker;
 use core::mem;

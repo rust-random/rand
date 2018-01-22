@@ -26,6 +26,7 @@ use impls;
 /// RNGs"](https://www.jstatsoft.org/v08/i14/paper). *Journal of
 /// Statistical Software*. Vol. 8 (Issue 14).
 #[derive(Clone)]
+#[cfg_attr(feature="serde-1", derive(Serialize,Deserialize))]
 pub struct XorShiftRng {
     x: w<u32>,
     y: w<u32>,
@@ -113,5 +114,40 @@ impl Rand for XorShiftRng {
         }
         let (x, y, z, w_) = tuple;
         XorShiftRng { x: w(x), y: w(y), z: w(z), w: w(w_) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature="serde-1")]
+    use {Rng, SeedableRng};
+
+    #[cfg(feature="serde-1")]
+    #[test]
+    fn test_serde() {
+        use super::XorShiftRng;
+        use thread_rng;
+        use bincode;
+        use std::io::{BufWriter, BufReader};
+
+        let seed: [u32; 4] = thread_rng().gen();
+        let mut rng: XorShiftRng = SeedableRng::from_seed(seed);
+
+        let buf: Vec<u8> = Vec::new();
+        let mut buf = BufWriter::new(buf);
+        bincode::serialize_into(&mut buf, &rng, bincode::Infinite).expect("Could not serialize");
+
+        let buf = buf.into_inner().unwrap();
+        let mut read = BufReader::new(&buf[..]);
+        let mut deserialized: XorShiftRng = bincode::deserialize_from(&mut read, bincode::Infinite).expect("Could not deserialize");
+
+        assert_eq!(rng.x, deserialized.x);
+        assert_eq!(rng.y, deserialized.y);
+        assert_eq!(rng.z, deserialized.z);
+        assert_eq!(rng.w, deserialized.w);
+
+        for _ in 0..16 {
+            assert_eq!(rng.next_u64(), deserialized.next_u64());
+        }
     }
 }
