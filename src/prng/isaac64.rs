@@ -71,8 +71,11 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///
 /// [1]: Bob Jenkins, [*ISAAC and RC4*](
 ///      http://burtleburtle.net/bob/rand/isaac.html)
+#[cfg_attr(feature="serde-1", derive(Serialize,Deserialize))]
 pub struct Isaac64Rng {
+    #[cfg_attr(feature="serde-1",serde(with="super::isaac_serde::rand_size_serde"))]
     rsl: [u64; RAND_SIZE],
+    #[cfg_attr(feature="serde-1",serde(with="super::isaac_serde::rand_size_serde"))]
     mem: [w64; RAND_SIZE],
     a: w64,
     b: w64,
@@ -471,6 +474,41 @@ mod test {
         let mut clone = rng.clone();
         for _ in 0..16 {
             assert_eq!(rng.next_u64(), clone.next_u64());
+        }
+    }
+
+    #[test]
+    #[cfg(feature="serde-1")]
+    fn test_rng_serde() {
+        use bincode;
+        use std::io::{BufWriter, BufReader};
+
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut rng: Isaac64Rng = SeedableRng::from_seed(seed);
+
+        let buf: Vec<u8> = Vec::new();
+        let mut buf = BufWriter::new(buf);
+        bincode::serialize_into(&mut buf, &rng, bincode::Infinite).expect("Could not serialize");
+
+        let buf = buf.into_inner().unwrap();
+        let mut read = BufReader::new(&buf[..]);
+        let mut deserialized: Isaac64Rng = bincode::deserialize_from(&mut read, bincode::Infinite).expect("Could not deserialize");
+
+        assert_eq!(rng.index, deserialized.index);
+        assert_eq!(rng.half_used, deserialized.half_used);
+        /* Can't assert directly because of the array size */
+        for (orig,deser) in rng.rsl.iter().zip(deserialized.rsl.iter()) {
+            assert_eq!(orig, deser);
+        }
+        for (orig,deser) in rng.mem.iter().zip(deserialized.mem.iter()) {
+            assert_eq!(orig, deser);
+        }
+        assert_eq!(rng.a, deserialized.a);
+        assert_eq!(rng.b, deserialized.b);
+        assert_eq!(rng.c, deserialized.c);
+
+        for _ in 0..16 {
+            assert_eq!(rng.next_u64(), deserialized.next_u64());
         }
     }
 }
