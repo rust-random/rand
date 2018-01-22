@@ -119,6 +119,7 @@ impl Rand for XorShiftRng {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature="serde-1")]
     use {Rng, SeedableRng};
 
     #[cfg(feature="serde-1")]
