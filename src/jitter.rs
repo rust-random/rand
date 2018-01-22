@@ -742,7 +742,12 @@ impl Rng for JitterRng {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        impls::fill_bytes_via_u64(self, dest)
+        // Fill using `next_u32`. This is faster for filling small slices (four
+        // bytes or less), while the overhead is negligible.
+        //
+        // This is done especially for wrappers that implement `next_u32`
+        // themselves via `fill_bytes`.
+        impls::fill_bytes_via_u32(self, dest)
     }
 }
 
