@@ -1,4 +1,15 @@
-#[cfg(feature="serde-1")]
+// Copyright 2013 The Rust Project Developers. See the COPYRIGHT
+// file at the top-level directory of this distribution and at
+// https://rust-lang.org/COPYRIGHT.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! ISAAC serde helper functions.
+
 pub(super) mod rand_size_serde {
     const RAND_SIZE_LEN: usize = 8;
     const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
