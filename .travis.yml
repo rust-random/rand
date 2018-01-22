@@ -28,6 +28,7 @@ matrix:
 script:
   - cargo test
   - cargo test --tests --no-default-features
+  - cargo test --features serde-1
   - cargo test --manifest-path rand-derive/Cargo.toml
 
 env:
