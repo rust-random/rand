@@ -998,7 +998,7 @@ impl Rng for ThreadRng {
 ///
 /// `EntropyRng` uses the interface for random numbers provided by the operating
 /// system ([`OsRng`]). If that returns an error, it will fall back to the
-/// [`JitterRng`] entropy collector. Occasionally it will then check if `OsRng`
+/// [`JitterRng`] entropy collector. Every time it will then check if `OsRng`
 /// is still not available, and switch back if possible.
 ///
 /// [`OsRng`]: os/struct.OsRng.html
@@ -1007,7 +1007,6 @@ impl Rng for ThreadRng {
 #[derive(Debug)]
 pub struct EntropyRng {
     rng: EntropySource,
-    counter: u32,
 }
 
 #[cfg(feature="std")]
@@ -1026,7 +1025,7 @@ impl EntropyRng {
     /// those are done on first use. This is done to make `new` infallible,
     /// and `try_fill_bytes` the only place to report errors.
     pub fn new() -> Self {
-        EntropyRng { rng: EntropySource::None, counter: 0u32 }
+        EntropyRng { rng: EntropySource::None }
     }
 }
 
@@ -1087,22 +1086,15 @@ impl Rng for EntropyRng {
                 }
             }
             EntropySource::Jitter(ref mut rng) => {
-                if self.counter >= 8 {
-                    if let Ok(os_rng) = try_os_new(dest) {
-                        switch_rng = Some(EntropySource::Os(os_rng));
-                    } else {
-                        self.counter = (self.counter + 1) % 8;
-                        return rng.try_fill_bytes(dest); // use JitterRng
-                    }
+                if let Ok(os_rng) = try_os_new(dest) {
+                    switch_rng = Some(EntropySource::Os(os_rng));
                 } else {
-                    self.counter = (self.counter + 1) % 8;
                     return rng.try_fill_bytes(dest); // use JitterRng
                 }
             }
         }
         if let Some(rng) = switch_rng {
             self.rng = rng;
-            self.counter = 0;
         }
         Ok(())
     }
