@@ -778,8 +778,8 @@ pub trait SeedableRng: Sized {
     /// between them.
     ///
     /// Prefer to seed from a strong external entropy source like [`OsRng`] or
-    /// from a cryptographic PRNG; if creating a new generator for cryptography
-    /// you *must* do this.
+    /// from a cryptographic PRNG; if creating a new generator for cryptographic
+    /// uses you *must* seed from a strong source.
     ///
     /// Seeding a small PRNG from another small PRNG is possible, but
     /// something to be careful with. An extreme example of how this can go
