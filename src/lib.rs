@@ -739,9 +739,9 @@ pub trait SeedableRng: Sized {
     /// Seed type, which is restricted to types mutably-dereferencable as `u8`
     /// arrays (we recommend `[u8; N]` for some `N`).
     ///
-    /// It is recommended to seed PRNGs with a seed of at least circa
-    /// 100 bits, which means an array of `[u8; 12]` or greater to avoid picking
-    /// RNGs with partially overlapping periods.
+    /// It is recommended to seed PRNGs with a seed of at least circa 100 bits,
+    /// which means an array of `[u8; 12]` or greater to avoid picking RNGs with
+    /// partially overlapping periods.
     ///
     /// For cryptographic RNG's a seed of 256 bits is recommended, `[u8; 32]`.
     type Seed: Sized + Default + AsMut<[u8]>;
@@ -765,14 +765,14 @@ pub trait SeedableRng: Sized {
     /// Create a new PRNG seeded from another `Rng`.
     ///
     /// This is the recommended way to initialize PRNGs. The [`NewRng`] trait
-    /// provides a convenient new method based on from_rng.
+    /// provides a convenient new method based on `from_rng`.
     ///
     /// It is important to use a good source of randomness to initialize the
     /// PRNG. Cryptographic PRNG may be rendered insecure when seeded from a
-    /// non-cryptographic PRNG or with insufficient entropy. Some
-    /// non-cryptographic PRNGs may show statistical bias in their first
-    /// results and may even have abnormally short periods if their seed
-    /// numbers are not well distributed.
+    /// non-cryptographic PRNG or with insufficient entropy.
+    /// Many non-cryptographic PRNGs will show statistical bias in their first
+    /// results if their seed numbers are small or if there is a simple pattern
+    /// between them.
     ///
     /// Prefer to seed from a strong external entropy source like [`OsRng`] or
     /// from a cryptographic PRNG; if creating a new generator for cryptography
@@ -801,13 +801,12 @@ pub trait SeedableRng: Sized {
 
 /// A convenient way to seed new algorithmic generators, otherwise known as
 /// pseudo-random number generators (PRNGs).
-/// 
-/// This is the recommended way to create PRNGs,
-/// unless a deterministic seed is desired (in which case
-/// `SeedableRng::from_seed` should be used).
+///
+/// This is the recommended way to create PRNGs, unless a deterministic seed is
+/// desired (in which case `SeedableRng::from_seed` should be used).
 ///
 /// Note: this trait is automatically implemented for any PRNG implementing
-/// `SeedableRng` and is not intended to be implemented by users.
+/// [`SeedableRng`] and is not intended to be implemented by users.
 ///
 /// ## Example
 ///
@@ -817,6 +816,8 @@ pub trait SeedableRng: Sized {
 /// let mut rng = StdRng::new().unwrap();
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
+///
+/// [`SeedableRng`]: trait.SeedableRng.html
 #[cfg(feature="std")]
 pub trait NewRng: SeedableRng {
     /// Creates a new instance, automatically seeded with fresh entropy.
