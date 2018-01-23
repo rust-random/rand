@@ -17,16 +17,29 @@ categories = ["algorithms"]
 default = ["std"]
 nightly = ["i128_support"] # enables all features requiring nightly rust
 
-std = ["libc"] # default feature; without this rand uses libcore
+std = ["libc", "winapi"] # default feature; without this rand uses libcore
 alloc = []  # enables Vec and Box support without std
 
 i128_support = [] # enables i128 and u128 support
+
+serde-1 = ["serde", "serde_derive"]
+
 
 [target.'cfg(unix)'.dependencies]
 libc = { version = "0.2", optional = true }
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"] }
+winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"], optional = true }
+
+[dependencies]
+serde = {version="1",optional=true}
+serde_derive = {version="1", optional=true}
+
+[dev-dependencies]
+# This is for testing serde, unfortunately
+# we can't specify feature-gated dev deps yet,
+# see: https://github.com/rust-lang/cargo/issues/1596
+bincode = "0.9"
 
 [workspace]
 members = ["rand-derive"]

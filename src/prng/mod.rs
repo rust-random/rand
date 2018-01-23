@@ -46,6 +46,9 @@ mod isaac;
 mod isaac64;
 mod xorshift;
 
+#[cfg(feature="serde-1")]
+mod isaac_serde;
+
 pub use self::chacha::ChaChaRng;
 pub use self::hc128::Hc128Rng;
 pub use self::isaac::IsaacRng;
