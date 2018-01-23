@@ -195,8 +195,20 @@ impl Rng for ChaChaRng {
     }
 
 
-    fn fill_bytes(&mut self, bytes: &mut [u8]) {
-        impls::fill_bytes_via_u32(self, bytes)
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        let mut read_len = 0;
+        while read_len < dest.len() {
+            if self.index >= self.buffer.len() {
+                self.update();
+            }
+
+            let (consumed_u32, filled_u8) =
+                impls::fill_via_u32_chunks(&self.buffer[self.index..],
+                                           &mut dest[read_len..]);
+
+            self.index += consumed_u32;
+            read_len += filled_u8;
+        }
     }
 }
 

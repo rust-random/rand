@@ -85,8 +85,11 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///
 /// [3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*](
 ///      https://eprint.iacr.org/2006/438)
+#[cfg_attr(feature="serde-1", derive(Serialize,Deserialize))]
 pub struct IsaacRng {
+    #[cfg_attr(feature="serde-1",serde(with="super::isaac_serde::rand_size_serde"))]
     rsl: [u32; RAND_SIZE],
+    #[cfg_attr(feature="serde-1",serde(with="super::isaac_serde::rand_size_serde"))]
     mem: [w32; RAND_SIZE],
     a: w32,
     b: w32,
@@ -240,7 +243,7 @@ impl Rng for IsaacRng {
             }
 
             let (consumed_u32, filled_u8) =
-                impls::fill_via_u32_chunks(&mut self.rsl[(self.index as usize)..],
+                impls::fill_via_u32_chunks(&self.rsl[(self.index as usize)..],
                                            &mut dest[read_len..]);
 
             self.index += consumed_u32 as u32;
@@ -459,6 +462,40 @@ mod test {
         let mut rng2 = rng1.clone();
         for _ in 0..16 {
             assert_eq!(rng1.next_u32(), rng2.next_u32());
+        }
+    }
+
+    #[test]
+    #[cfg(feature="serde-1")]
+    fn test_rng_serde() {
+        use bincode;
+        use std::io::{BufWriter, BufReader};
+
+        let seed: &[_] = &[1, 23, 456, 7890, 12345];
+        let mut rng: IsaacRng = SeedableRng::from_seed(seed);
+
+        let buf: Vec<u8> = Vec::new();
+        let mut buf = BufWriter::new(buf);
+        bincode::serialize_into(&mut buf, &rng, bincode::Infinite).expect("Could not serialize");
+
+        let buf = buf.into_inner().unwrap();
+        let mut read = BufReader::new(&buf[..]);
+        let mut deserialized: IsaacRng = bincode::deserialize_from(&mut read, bincode::Infinite).expect("Could not deserialize");
+
+        assert_eq!(rng.index, deserialized.index);
+        /* Can't assert directly because of the array size */
+        for (orig,deser) in rng.rsl.iter().zip(deserialized.rsl.iter()) {
+            assert_eq!(orig, deser);
+        }
+        for (orig,deser) in rng.mem.iter().zip(deserialized.mem.iter()) {
+            assert_eq!(orig, deser);
+        }
+        assert_eq!(rng.a, deserialized.a);
+        assert_eq!(rng.b, deserialized.b);
+        assert_eq!(rng.c, deserialized.c);
+
+        for _ in 0..16 {
+            assert_eq!(rng.next_u64(), deserialized.next_u64());
         }
     }
 }
