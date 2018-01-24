@@ -81,7 +81,7 @@ gen_uint_new!(gen_u64_std, u64, StdRng);
 gen_uint_new!(gen_u64_os, u64, OsRng);
 
 // Do not test JitterRng like the others by running it RAND_BENCH_N times per,
-// measurement, because it is way to slow. Only run it once
+// measurement, because it is way too slow. Only run it once.
 #[bench]
 fn gen_u64_jitter(b: &mut Bencher) {
     let mut rng = JitterRng::new().unwrap();
