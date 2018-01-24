@@ -246,7 +246,7 @@ impl SeedableRng for ChaChaRng {
     fn from_seed(seed: Self::Seed) -> Self {
         let mut seed_le = [0u32; SEED_WORDS];
         le::read_u32_into(&seed, &mut seed_le);
-        Self {
+        ChaChaRng {
             buffer: [0; STATE_WORDS],
             state: [0x61707865, 0x3320646E, 0x79622D32, 0x6B206574, // constants
                     seed_le[0], seed_le[1], seed_le[2], seed_le[3], // seed
