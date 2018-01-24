@@ -17,7 +17,7 @@ use self::ChiSquaredRepr::*;
 
 use {Rng, Open01};
 use super::normal::StandardNormal;
-use super::{IndependentSample, Sample, Exp};
+use super::{IndependentSample, Exp};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -133,16 +133,6 @@ impl GammaLargeShape {
     }
 }
 
-impl Sample<f64> for Gamma {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
-impl Sample<f64> for GammaSmallShape {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
-impl Sample<f64> for GammaLargeShape {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
-
 impl IndependentSample<f64> for Gamma {
     fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
         match self.repr {
@@ -224,9 +214,6 @@ impl ChiSquared {
         ChiSquared { repr: repr }
     }
 }
-impl Sample<f64> for ChiSquared {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
 impl IndependentSample<f64> for ChiSquared {
     fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
         match self.repr {
@@ -278,9 +265,6 @@ impl FisherF {
         }
     }
 }
-impl Sample<f64> for FisherF {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
 impl IndependentSample<f64> for FisherF {
     fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
         self.numer.ind_sample(rng) / self.denom.ind_sample(rng) * self.dof_ratio
@@ -315,9 +299,6 @@ impl StudentT {
             dof: n
         }
     }
-}
-impl Sample<f64> for StudentT {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
 }
 impl IndependentSample<f64> for StudentT {
     fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {

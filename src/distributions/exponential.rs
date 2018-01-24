@@ -11,7 +11,7 @@
 //! The exponential distribution.
 
 use {Rng, Rand};
-use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
+use distributions::{ziggurat, ziggurat_tables, IndependentSample};
 
 /// A wrapper around an `f64` to generate Exp(1) random numbers.
 ///
@@ -87,9 +87,6 @@ impl Exp {
     }
 }
 
-impl Sample<f64> for Exp {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
 impl IndependentSample<f64> for Exp {
     fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
         let Exp1(n) = rng.gen::<Exp1>();

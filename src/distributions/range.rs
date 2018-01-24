@@ -15,7 +15,7 @@
 use core::num::Wrapping as w;
 
 use Rng;
-use distributions::{Sample, IndependentSample};
+use distributions::IndependentSample;
 
 /// Sample values uniformly between two bounds.
 ///
@@ -62,10 +62,6 @@ impl<X: SampleRange + PartialOrd> Range<X> {
     }
 }
 
-impl<Sup: SampleRange> Sample<Sup> for Range<Sup> {
-    #[inline]
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup { self.ind_sample(rng) }
-}
 impl<Sup: SampleRange> IndependentSample<Sup> for Range<Sup> {
     fn ind_sample<R: Rng>(&self, rng: &mut R) -> Sup {
         SampleRange::sample_range(self, rng)
