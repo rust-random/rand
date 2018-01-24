@@ -187,7 +187,7 @@ impl ChaChaRng {
 
     /// Refill the internal output buffer (`self.buffer`)
     fn update(&mut self) {
-        // For some reason extracting this part into a seperate function
+        // For some reason extracting this part into a separate function
         // improves performance by 50%.
         fn core(results: &mut [u32; STATE_WORDS],
                 state: &[u32; STATE_WORDS],
