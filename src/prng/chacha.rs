@@ -383,6 +383,25 @@ mod test {
     }
 
     #[test]
+    fn test_chacha_set_counter() {
+        // Test vector 5 from
+        // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
+        // Although we do not support setting a nonce, we try it here anyway so
+        // we can use this test vector.
+        let seed = [0u8; 32];
+        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+        rng.set_counter(0, 2u64 << 56);
+
+        let mut results = [0u32; 16];
+        for i in results.iter_mut() { *i = rng.next_u32(); }
+        let expected = [0x374dc6c2, 0x3736d58c, 0xb904e24a, 0xcd3f93ef,
+                        0x88228b1a, 0x96a4dfb3, 0x5b76ab72, 0xc727ee54,
+                        0x0e0e978a, 0xf3145c95, 0x1b748ea8, 0xf786c297,
+                        0x99c28f5f, 0x628314e8, 0x398a19fa, 0x6ded1b53];
+        assert_eq!(results, expected);
+    }
+
+    #[test]
     fn test_chacha_set_rounds() {
         let seed = [0u8; 32];
         let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
