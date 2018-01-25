@@ -125,19 +125,18 @@ impl SeedableRng for XorShiftRng {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature="serde-1")]
+    #[cfg(all(feature="serde-1", feature="std"))]
     use {Rng, SeedableRng};
 
-    #[cfg(feature="serde-1")]
+    #[cfg(all(feature="serde-1", feature="std"))]
     #[test]
-    fn test_serde() {
+    fn test_xorshift_serde() {
         use super::XorShiftRng;
-        use thread_rng;
         use bincode;
         use std::io::{BufWriter, BufReader};
 
-        let seed: [u32; 4] = thread_rng().gen();
-        let mut rng: XorShiftRng = SeedableRng::from_seed(seed);
+        let seed = [1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16];
+        let mut rng = XorShiftRng::from_seed(seed);
 
         let buf: Vec<u8> = Vec::new();
         let mut buf = BufWriter::new(buf);
