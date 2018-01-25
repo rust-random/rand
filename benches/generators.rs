@@ -9,7 +9,7 @@ const BYTES_LEN: usize = 1024;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{Rng, NewRng, StdRng, OsRng, JitterRng, EntropyRng};
+use rand::{RngCore, Rng, NewRng, StdRng, OsRng, JitterRng, EntropyRng};
 use rand::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 use rand::reseeding::ReseedingRng;
 

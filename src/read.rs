@@ -12,7 +12,7 @@
 
 use std::io::Read;
 
-use {Rng, Error, ErrorKind, impls};
+use {RngCore, Error, ErrorKind, impls};
 
 
 /// An RNG that reads random bytes straight from a `Read`. This will
@@ -45,7 +45,7 @@ impl<R: Read> ReadRng<R> {
     }
 }
 
-impl<R: Read> Rng for ReadRng<R> {
+impl<R: Read> RngCore for ReadRng<R> {
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
     }
@@ -70,7 +70,7 @@ impl<R: Read> Rng for ReadRng<R> {
 #[cfg(test)]
 mod test {
     use super::ReadRng;
-    use Rng;
+    use RngCore;
 
     #[test]
     fn test_reader_rng_u64() {

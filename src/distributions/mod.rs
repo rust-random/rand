@@ -279,7 +279,7 @@ fn ziggurat<R: Rng, P, Z>(
 
 #[cfg(test)]
 mod tests {
-    use {Rng, Rand};
+    use {Rng, RngCore, Rand};
     use impls;
     use super::{RandSample, WeightedChoice, Weighted, Sample, IndependentSample};
 
@@ -293,7 +293,7 @@ mod tests {
 
     // 0, 1, 2, 3, ...
     struct CountingRng { i: u32 }
-    impl Rng for CountingRng {
+    impl RngCore for CountingRng {
         fn next_u32(&mut self) -> u32 {
             self.i += 1;
             self.i - 1

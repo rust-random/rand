@@ -11,7 +11,7 @@
 //! The HC-128 random number generator.
 
 use core::{fmt, slice};
-use {Rng, SeedableRng};
+use {RngCore, SeedableRng};
 use {impls, le};
 
 const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
@@ -290,7 +290,7 @@ impl Hc128 {
     }
 }
 
-impl Rng for Hc128Rng {
+impl RngCore for Hc128Rng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         if self.index >= 16 {
@@ -408,7 +408,7 @@ impl SeedableRng for Hc128Rng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng};
+    use {RngCore, SeedableRng};
     use super::Hc128Rng;
 
     #[test]
