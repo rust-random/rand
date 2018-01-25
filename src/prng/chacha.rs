@@ -11,7 +11,7 @@
 //! The ChaCha random number generator.
 
 use core::fmt;
-use {Rng, SeedableRng};
+use {RngCore, SeedableRng};
 use {impls, le};
 
 const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
@@ -108,7 +108,7 @@ impl ChaChaRng {
     /// # Examples
     ///
     /// ```rust
-    /// use rand::{Rng, ChaChaRng};
+    /// use rand::{RngCore, ChaChaRng};
     ///
     /// let mut ra = ChaChaRng::new_unseeded();
     /// println!("{:?}", ra.next_u32());
@@ -139,7 +139,7 @@ impl ChaChaRng {
     /// # Examples
     ///
     /// ```rust
-    /// use rand::{Rng, ChaChaRng};
+    /// use rand::{RngCore, ChaChaRng};
     ///
     /// let mut rng1 = ChaChaRng::new_unseeded(); // Use `ChaChaRng::new()` or
     ///                                           // `ChaChaRng::from_rng()`
@@ -170,7 +170,7 @@ impl ChaChaRng {
     /// # Examples
     ///
     /// ```rust
-    /// use rand::{Rng, ChaChaRng};
+    /// use rand::{RngCore, ChaChaRng};
     ///
     /// let mut rng = ChaChaRng::new_unseeded(); // Use `ChaChaRng::new()` or
     ///                                           // `ChaChaRng::from_rng()`
@@ -215,7 +215,7 @@ impl ChaChaRng {
     }
 }
 
-impl Rng for ChaChaRng {
+impl RngCore for ChaChaRng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         // Using a local variable for `index`, and checking the size avoids a
@@ -272,7 +272,7 @@ impl SeedableRng for ChaChaRng {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng};
+    use {RngCore, SeedableRng};
     use super::ChaChaRng;
 
     #[test]

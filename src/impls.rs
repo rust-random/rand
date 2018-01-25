@@ -8,7 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Helper functions for implementing `Rng` functions.
+//! Helper functions for implementing `RngCore` functions.
 //!
 //! For cross-platform reproducibility, these functions all use Little Endian:
 //! least-significant part first. For example, `next_u64_via_u32` takes `u32`
@@ -27,10 +27,10 @@ use core::ptr::copy_nonoverlapping;
 use core::slice;
 use core::cmp::min;
 use core::mem::size_of;
-use Rng;
+use RngCore;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
-pub fn next_u64_via_u32<R: Rng+?Sized>(rng: &mut R) -> u64 {
+pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
     // Use LE; we explicitly generate one value before the next.
     let x = rng.next_u32() as u64;
     let y = rng.next_u32() as u64;
@@ -59,12 +59,12 @@ macro_rules! fill_bytes_via {
 }
 
 /// Implement `fill_bytes` via `next_u32`, little-endian order.
-pub fn fill_bytes_via_u32<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
+pub fn fill_bytes_via_u32<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     fill_bytes_via!(rng, next_u32, 4, dest)
 }
 
 /// Implement `fill_bytes` via `next_u64`, little-endian order.
-pub fn fill_bytes_via_u64<R: Rng+?Sized>(rng: &mut R, dest: &mut [u8]) {
+pub fn fill_bytes_via_u64<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     fill_bytes_via!(rng, next_u64, 8, dest)
 }
 
@@ -158,12 +158,12 @@ pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
 }
 
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
-pub fn next_u32_via_fill<R: Rng+?Sized>(rng: &mut R) -> u32 {
+pub fn next_u32_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u32 {
     impl_uint_from_fill!(rng, u32, 4)
 }
 
 /// Implement `next_u64` via `fill_bytes`, little-endian order.
-pub fn next_u64_via_fill<R: Rng+?Sized>(rng: &mut R) -> u64 {
+pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
     impl_uint_from_fill!(rng, u64, 8)
 }
 

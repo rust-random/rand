@@ -12,7 +12,7 @@
 
 use core::num::Wrapping as w;
 use core::{fmt, slice};
-use {Rng, SeedableRng, Error};
+use {RngCore, SeedableRng, Error};
 use {impls, le};
 
 /// An Xorshift[1] random number
@@ -58,7 +58,7 @@ impl XorShiftRng {
     }
 }
 
-impl Rng for XorShiftRng {
+impl RngCore for XorShiftRng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         let x = self.x;
@@ -102,7 +102,7 @@ impl SeedableRng for XorShiftRng {
         }
     }
 
-    fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
         let mut seed_u32 = [0u32; 4];
         loop {
             unsafe {
@@ -125,7 +125,7 @@ impl SeedableRng for XorShiftRng {
 
 #[cfg(test)]
 mod tests {
-    use {Rng, SeedableRng};
+    use {RngCore, SeedableRng};
     use super::XorShiftRng;
 
     #[test]
