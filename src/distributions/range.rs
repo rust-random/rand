@@ -14,7 +14,7 @@
 
 use core::num::Wrapping as w;
 
-use Rng;
+use {Rng, SampleRng};
 use distributions::{Sample, IndependentSample};
 
 /// Sample values uniformly between two bounds.

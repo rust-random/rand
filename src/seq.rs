@@ -10,7 +10,7 @@
 
 //! Functions for randomly accessing and sampling sequences.
 
-use super::Rng;
+use super::SampleRng;
 
 // This crate is only enabled when either std or alloc is available.
 // BTreeMap is not as fast in tests, but better than nothing.
@@ -41,7 +41,7 @@ use super::Rng;
 /// ```
 pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<Vec<T>, Vec<T>>
     where I: IntoIterator<Item=T>,
-          R: Rng,
+          R: SampleRng,
 {
     let mut iter = iterable.into_iter();
     let mut reservoir = Vec::with_capacity(amount);
@@ -85,7 +85,7 @@ pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<V
 /// println!("{:?}", seq::sample_slice(&mut rng, &values, 3));
 /// ```
 pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
-    where R: Rng,
+    where R: SampleRng,
           T: Clone
 {
     let indices = sample_indices(rng, slice.len(), amount);
@@ -113,7 +113,7 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 /// println!("{:?}", seq::sample_slice_ref(&mut rng, &values, 3));
 /// ```
 pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>
-    where R: Rng
+    where R: SampleRng
 {
     let indices = sample_indices(rng, slice.len(), amount);
 
@@ -133,7 +133,7 @@ pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) ->
 ///
 /// Panics if `amount > length`
 pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
-    where R: Rng,
+    where R: SampleRng,
 {
     if amount > length {
         panic!("`amount` must be less than or equal to `slice.len()`");
@@ -166,7 +166,7 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize
 /// This is better than using a HashMap "cache" when `amount >= length / 2` since it does not
 /// require allocating an extra cache and is much faster.
 fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
-    where R: Rng,
+    where R: SampleRng,
 {
     debug_assert!(amount <= length);
     let mut indices: Vec<usize> = Vec::with_capacity(length);
@@ -193,7 +193,7 @@ fn sample_indices_cache<R>(
     length: usize,
     amount: usize,
 ) -> Vec<usize>
-    where R: Rng,
+    where R: SampleRng,
 {
     debug_assert!(amount <= length);
     #[cfg(feature="std")] let mut cache = HashMap::with_capacity(amount);
@@ -227,7 +227,7 @@ fn sample_indices_cache<R>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use {XorShiftRng, SeedableRng};
+    use {XorShiftRng, Rng, SeedableRng};
     #[cfg(not(feature="std"))]
     use alloc::Vec;
 

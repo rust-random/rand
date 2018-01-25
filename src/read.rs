@@ -25,7 +25,7 @@ use {Rng, Error, ErrorKind, impls};
 /// # Example
 ///
 /// ```rust
-/// use rand::{read, Rng};
+/// use rand::{read, SampleRng};
 ///
 /// let data = vec![1, 2, 3, 4, 5, 6, 7, 8];
 /// let mut rng = read::ReadRng::new(&data[..]);

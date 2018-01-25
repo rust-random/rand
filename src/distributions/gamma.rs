@@ -15,7 +15,7 @@
 use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
 
-use {Rng, Open01};
+use {Rng, SampleRng, Open01};
 use super::normal::StandardNormal;
 use super::{IndependentSample, Sample, Exp};
 
