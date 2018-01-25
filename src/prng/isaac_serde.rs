@@ -18,7 +18,7 @@ pub(super) mod rand_size_serde {
     use serde::de::{Visitor,SeqAccess};
     use serde::de;
 
-    use std::fmt;
+    use core::fmt;
 
     pub fn serialize<T, S>(arr: &[T;RAND_SIZE], ser: S) -> Result<S::Ok, S::Error> 
     where
@@ -42,7 +42,7 @@ pub(super) mod rand_size_serde {
         T: Deserialize<'de>+Default+Copy,
         D: Deserializer<'de>,
     {
-        use std::marker::PhantomData;
+        use core::marker::PhantomData;
         struct ArrayVisitor<T> {
             _pd: PhantomData<T>,
         };
