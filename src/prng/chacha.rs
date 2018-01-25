@@ -281,7 +281,7 @@ mod test {
         // Test vectors 1 and 2 from
         // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
         let seed = [0u8; 32];
-        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut rng = ChaChaRng::from_seed(seed);
 
         let mut results = [0u32; 16];
         for i in results.iter_mut() { *i = rng.next_u32(); }
@@ -307,7 +307,7 @@ mod test {
                     0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 1];
-        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut rng = ChaChaRng::from_seed(seed);
 
         // Skip block 0
         for _ in 0..16 { rng.next_u32(); }
@@ -336,13 +336,13 @@ mod test {
         let mut results = [0u32; 16];
 
         // Test block 2 by skipping block 0 and 1
-        let mut rng1: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut rng1 = ChaChaRng::from_seed(seed);
         for _ in 0..32 { rng1.next_u32(); }
         for i in results.iter_mut() { *i = rng1.next_u32(); }
         assert_eq!(results, expected);
 
         // Test block 2 by using `set_counter`
-        let mut rng2: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut rng2 = ChaChaRng::from_seed(seed);
         rng2.set_counter(2, 0);
         for i in results.iter_mut() { *i = rng2.next_u32(); }
         assert_eq!(results, expected);
@@ -351,7 +351,7 @@ mod test {
     #[test]
     fn test_chacha_multiple_blocks() {
         let seed = [0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0, 4,0,0,0, 5,0,0,0, 6,0,0,0, 7,0,0,0];
-        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut rng = ChaChaRng::from_seed(seed);
 
         // Store the 17*i-th 32-bit word,
         // i.e., the i-th word of the i-th 16-word block
@@ -372,7 +372,7 @@ mod test {
     #[test]
     fn test_chacha_true_bytes() {
         let seed = [0u8; 32];
-        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut rng = ChaChaRng::from_seed(seed);
         let mut results = [0u8; 32];
         rng.fill_bytes(&mut results);
         let expected = [118, 184, 224, 173, 160, 241, 61, 144,
@@ -389,7 +389,7 @@ mod test {
         // Although we do not support setting a nonce, we try it here anyway so
         // we can use this test vector.
         let seed = [0u8; 32];
-        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut rng = ChaChaRng::from_seed(seed);
         rng.set_counter(0, 2u64 << 56);
 
         let mut results = [0u32; 16];
@@ -404,7 +404,7 @@ mod test {
     #[test]
     fn test_chacha_set_rounds() {
         let seed = [0u8; 32];
-        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut rng = ChaChaRng::from_seed(seed);
         rng.set_rounds(8);
 
         let mut results = [0u32; 16];
@@ -420,7 +420,7 @@ mod test {
     #[test]
     fn test_chacha_clone() {
         let seed = [0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0, 4,0,0,0, 5,0,0,0, 6,0,0,0, 7,0,0,0];
-        let mut rng: ChaChaRng = SeedableRng::from_seed(seed);
+        let mut rng = ChaChaRng::from_seed(seed);
         let mut clone = rng.clone();
         for _ in 0..16 {
             assert_eq!(rng.next_u64(), clone.next_u64());
