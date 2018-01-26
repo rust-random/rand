@@ -62,7 +62,7 @@ pub struct JitterRng<T: JitterTimer> {
     mem_prev_index: usize,
     mem: [u8; MEMORY_SIZE],
     // Make `next_u32` not waste 32 bits
-    data_remaining: Option<u32>,
+    data_half_used: bool,
 }
 
 // Custom Debug implementation that does not expose the internal state
@@ -170,7 +170,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
             last_delta2: 0,
             mem_prev_index: 0,
             mem: [0; MEMORY_SIZE],
-            data_remaining: None,
+            data_half_used: false,
         };
 
         // Fill `data`, `prev_time`, `last_delta` and `last_delta2` with
@@ -762,16 +762,18 @@ fn black_box<T>(dummy: T) -> T {
 impl<T: JitterTimer+Clone> Rng for JitterRng<T> {
     fn next_u32(&mut self) -> u32 {
         // We want to use both parts of the generated entropy
-        if let Some(high) = self.data_remaining.take() {
-            high
+        if self.data_half_used {
+            self.data_half_used = false;
+            (self.data >> 32) as u32
         } else {
-            let data = self.next_u64();
-            self.data_remaining = Some((data >> 32) as u32);
-            data as u32
+            self.data = self.next_u64();
+            self.data_half_used = true;
+            self.data as u32
         }
     }
 
     fn next_u64(&mut self) -> u64 {
+       self.data_half_used = false;
        self.gen_entropy()
     }
 
