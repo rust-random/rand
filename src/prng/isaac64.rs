@@ -470,13 +470,14 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature="serde-1")]
-    fn test_rng_serde() {
+    #[cfg(all(feature="serde-1", feature="std"))]
+    fn test_isaac64_serde() {
         use bincode;
         use std::io::{BufWriter, BufReader};
 
-        let seed: &[_] = &[1, 23, 456, 7890, 12345];
-        let mut rng: Isaac64Rng = SeedableRng::from_seed(seed);
+        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
+                     57,48,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+        let mut rng = Isaac64Rng::from_seed(seed);
 
         let buf: Vec<u8> = Vec::new();
         let mut buf = BufWriter::new(buf);
