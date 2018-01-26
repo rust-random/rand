@@ -249,9 +249,15 @@
 
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
+
 #[cfg(test)] #[cfg(feature="serde-1")] extern crate bincode;
 #[cfg(feature="serde-1")] extern crate serde;
 #[cfg(feature="serde-1")] #[macro_use] extern crate serde_derive;
+
+#[cfg(feature = "log")] #[macro_use] extern crate log;
+#[cfg(not(feature = "log"))] macro_rules! trace { ($($x:tt)*) => () }
+#[cfg(all(feature="std", not(feature = "log")))] macro_rules! warn { ($($x:tt)*) => () }
+
 
 use core::{marker, mem};
 #[cfg(feature="std")] use std::cell::RefCell;
@@ -846,9 +852,11 @@ impl<R: SeedableRng> NewRng for R {
             T::from_rng(&mut r)
         }
 
+        trace!("Seeding new RNG");
         new_os().or_else(|e1| {
+            warn!("OsRng failed [falling back to JitterRng]: {:?}", e1);
             new_jitter().map_err(|_e2| {
-                // TODO: log
+                warn!("JitterRng failed: {:?}", _e2);
                 // TODO: can we somehow return both error sources?
                 Error::with_cause(
                     ErrorKind::Unavailable,
