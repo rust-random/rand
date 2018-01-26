@@ -69,23 +69,35 @@ impl Rng for OsRng {
         const MAX_WAIT: u32 = (10 * 1000) / WAIT_DUR_MS;    // max 10s
         const TRANSIENT_STEP: u32 = MAX_WAIT / 8;
         let mut err_count = 0;
+        let mut log_err = 0;    // log when err_count >= log_err
         
         loop {
             if let Err(e) = self.try_fill_bytes(dest) {
-                // TODO: add logging to explain why we wait and the full cause
+                if log_err == 0 {
+                    warn!("OsRng failed: {:?}", e);
+                }
+                
                 if e.kind().should_retry() {
                     if err_count > MAX_WAIT {
                         panic!("Too many RNG errors or timeout; last error: {}", e.msg());
                     }
                     
                     if e.kind().should_wait() {
+                        err_count += 1;
+                        if err_count >= log_err {
+                            log_err += TRANSIENT_STEP;
+                            warn!("OsRng: waiting and retrying ...");
+                        }
                         #[cfg(feature="std")]{
                             let dur = ::std::time::Duration::from_millis(WAIT_DUR_MS as u64);
                             ::std::thread::sleep(dur);
                         }
-                        err_count += 1;
                     } else {
                         err_count += TRANSIENT_STEP;
+                        if err_count >= log_err {
+                            log_err += TRANSIENT_STEP;
+                            warn!("OsRng: retrying ...");
+                        }
                     }
                     
                     continue;

@@ -33,8 +33,7 @@ changes since the `0.3` series, but nevertheless contains some significant
 new code, including a new "external" entropy source (`JitterRng`) and `no_std`
 support.
 
-Version `0.5` is in development and contains significant performance
-improvements for the ISAAC random number generators.
+Version `0.5` is in development and will contain significant breaking changes.
 
 ## Examples
 
@@ -68,21 +67,22 @@ println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
 By default, `rand` is built with all stable features available. The following
 optional features are available:
 
+-   `alloc` can be used instead of `std` to provide `Vec` and `Box`
 -   `i128_support` enables support for generating `u128` and `i128` values
+-   `log` enables some logging via the `log` crate
 -   `nightly` enables all unstable features (`i128_support`)
+-   `serde-1` enables serialisation for some types, via Serde version 1
 -   `std` enabled by default; by setting "default-features = false" `no_std`
     mode is activated; this removes features depending on `std` functionality:
-
-        -   `OsRng` is entirely unavailable
-        -   `JitterRng` code is still present, but a nanosecond timer must be
-            provided via `JitterRng::new_with_timer`
-        -   Since no external entropy is available, it is not possible to create
-            generators with fresh seeds (user must provide entropy)
-        -   `thread_rng`, `weak_rng` and `random` are all disabled
-        -   exponential, normal and gamma type distributions are unavailable
-            since `exp` and `log` functions are not provided in `core`
-        -   any code requiring `Vec` or `Box`
--   `alloc` can be used instead of `std` to provide `Vec` and `Box`
+    -   `OsRng` is entirely unavailable
+    -   `JitterRng` code is still present, but a nanosecond timer must be
+        provided via `JitterRng::new_with_timer`
+    -   Since no external entropy is available, it is not possible to create
+        generators with fresh seeds (user must provide entropy)
+    -   `thread_rng`, `weak_rng` and `random` are all disabled
+    -   exponential, normal and gamma type distributions are unavailable
+        since `exp` and `log` functions are not provided in `core`
+    -   any code requiring `Vec` or `Box`
 
 ## Testing
 
