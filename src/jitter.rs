@@ -59,7 +59,7 @@ pub struct JitterRng<T: JitterTimer> {
     last_delta: i64,
     last_delta2: i64,
     // Memory for the Memory Access noise source
-    mem_prev_index: usize,
+    mem_prev_index: u16,
     mem: [u8; MEMORY_SIZE],
     // Make `next_u32` not waste 32 bits
     data_half_used: bool,
@@ -303,7 +303,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
         let mut acc_loop_cnt = 128;
         if var_rounds { acc_loop_cnt += self.random_loop_cnt(4) };
 
-        let mut index = self.mem_prev_index;
+        let mut index = self.mem_prev_index as usize;
         for _ in 0..acc_loop_cnt {
             // Addition of memblocksize - 1 to index with wrap around logic to
             // ensure that every memory location is hit evenly.
@@ -316,7 +316,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
             let tmp = self.mem[index];
             self.mem[index] = tmp.wrapping_add(1);
         }
-        self.mem_prev_index = index;
+        self.mem_prev_index = index as u16;
     }
 
 
