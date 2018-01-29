@@ -9,7 +9,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.3"
+rand = "0.4"
 rand_macros = "0.2"
 ```
 
