@@ -503,7 +503,7 @@ pub trait Rng {
 /// (converting that randomness to the desired type and distribution).
 /// 
 /// [`Rng`]: trait.Rng.html
-pub trait SampleRng: Rng {
+pub trait SampleRng: Rng + Sized {
     /// Return a random value of a `Rand` type.
     ///
     /// # Example
@@ -517,7 +517,7 @@ pub trait SampleRng: Rng {
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
     #[inline(always)]
-    fn gen<T: Rand>(&mut self) -> T where Self: Sized {
+    fn gen<T: Rand>(&mut self) -> T {
         Rand::rand(self)
     }
 
@@ -535,7 +535,7 @@ pub trait SampleRng: Rng {
     /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
-    fn gen_iter<'a, T: Rand>(&'a mut self) -> Generator<'a, T, Self> where Self: Sized {
+    fn gen_iter<'a, T: Rand>(&'a mut self) -> Generator<'a, T, Self> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
 
@@ -562,7 +562,7 @@ pub trait SampleRng: Rng {
     /// let m: f64 = rng.gen_range(-40.0f64, 1.3e5f64);
     /// println!("{}", m);
     /// ```
-    fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T where Self: Sized {
+    fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T {
         assert!(low < high, "SampleRng::gen_range called with low >= high");
         Range::new(low, high).ind_sample(self)
     }
@@ -577,7 +577,7 @@ pub trait SampleRng: Rng {
     /// let mut rng = thread_rng();
     /// println!("{}", rng.gen_weighted_bool(3));
     /// ```
-    fn gen_weighted_bool(&mut self, n: u32) -> bool where Self: Sized {
+    fn gen_weighted_bool(&mut self, n: u32) -> bool {
         n <= 1 || self.gen_range(0, n) == 0
     }
 
@@ -591,7 +591,7 @@ pub trait SampleRng: Rng {
     /// let s: String = thread_rng().gen_ascii_chars().take(10).collect();
     /// println!("{}", s);
     /// ```
-    fn gen_ascii_chars<'a>(&'a mut self) -> AsciiGenerator<'a, Self> where Self: Sized {
+    fn gen_ascii_chars<'a>(&'a mut self) -> AsciiGenerator<'a, Self> {
         AsciiGenerator { rng: self }
     }
 
@@ -609,7 +609,7 @@ pub trait SampleRng: Rng {
     /// println!("{:?}", rng.choose(&choices));
     /// assert_eq!(rng.choose(&choices[..0]), None);
     /// ```
-    fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> where Self: Sized {
+    fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
         if values.is_empty() {
             None
         } else {
@@ -620,7 +620,7 @@ pub trait SampleRng: Rng {
     /// Return a mutable pointer to a random element from `values`.
     ///
     /// Return `None` if `values` is empty.
-    fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> where Self: Sized {
+    fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> {
         if values.is_empty() {
             None
         } else {
@@ -646,7 +646,7 @@ pub trait SampleRng: Rng {
     /// rng.shuffle(&mut y);
     /// println!("{:?}", y);
     /// ```
-    fn shuffle<T>(&mut self, values: &mut [T]) where Self: Sized {
+    fn shuffle<T>(&mut self, values: &mut [T]) {
         let mut i = values.len();
         while i >= 2 {
             // invariant: elements with index >= i have been locked in place.
