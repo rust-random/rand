@@ -5,7 +5,7 @@ extern crate rand;
 
 use test::{black_box, Bencher};
 
-use rand::{Rng, weak_rng};
+use rand::{SampleRng, weak_rng};
 use rand::seq::*;
 
 #[bench]
