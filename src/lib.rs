@@ -509,13 +509,14 @@ pub trait Rng {
         Generator { rng: self, _marker: marker::PhantomData }
     }
 
-    /// Generate a random value in the range [`low`, `high`).
+    /// Generate a random value in the range [`low`, `high`), i.e. inclusive of
+    /// `low` and exclusive of `high`.
     ///
     /// This is a convenience wrapper around
     /// `distributions::Range`. If this function will be called
     /// repeatedly with the same arguments, one should use `Range`, as
     /// that will amortize the computations that allow for perfect
-    /// uniformity, as they only happen on initialization.
+    /// uniformity, as they only happen when constructing the `Range`.
     ///
     /// # Panics
     ///
