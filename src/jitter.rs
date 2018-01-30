@@ -142,6 +142,7 @@ impl JitterRng {
             // This allows the timer test to run multiple times; we don't care.
             rounds = ec.test_timer()?;
             JITTER_ROUNDS.store(rounds as usize, Ordering::Relaxed);
+            info!("JitterRng: using {} rounds per u64 output", rounds);
         }
         ec.set_rounds(rounds);
         Ok(ec)
@@ -422,6 +423,8 @@ impl JitterRng {
     }
 
     fn gen_entropy(&mut self) -> u64 {
+        trace!("JitterRng: collecting entropy");
+        
         // Prime `self.prev_time`, and run the noice sources to make sure the
         // first loop round collects the expected entropy.
         let _ = self.measure_jitter();
@@ -444,6 +447,7 @@ impl JitterRng {
     /// to collect 64 bits of entropy. Otherwise a `TimerError` with the cause
     /// of the failure will be returned.
     pub fn test_timer(&mut self) -> Result<u32, TimerError> {
+        debug!("JitterRng: testing timer ...");
         // We could add a check for system capabilities such as `clock_getres`
         // or check for `CONFIG_X86_TSC`, but it does not make much sense as the
         // following sanity checks verify that we have a high-resolution timer.

@@ -142,6 +142,7 @@ impl ReadRng {
         let mutex = unsafe{ READ_RNG_FILE.as_ref().unwrap() };
         let mut guard = mutex.lock().unwrap();
         if (*guard).is_none() {
+            info!("OsRng: opening random device {}", path.as_ref().display());
             let file = File::open(path).map_err(|err| Error::with_cause(
                     ErrorKind::Unavailable,
                     "error opening random device",
@@ -154,6 +155,7 @@ impl ReadRng {
     }
     
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        trace!("OsRng: reading {} bytes from random device", dest.len());
         if dest.len() == 0 { return Ok(()); }
         
         // Since we have an instance of Self, we can assume that our memory was
@@ -223,6 +225,7 @@ mod imp {
     fn getrandom(_buf: &mut [u8]) -> libc::c_long { -1 }
 
     fn getrandom_try_fill(v: &mut [u8]) -> Result<(), Error> {
+        trace!("OsRng: reading {} bytes via getrandom", v.len());
         let mut read = 0;
         let len = v.len();
         while read < len {
@@ -265,6 +268,7 @@ mod imp {
         static AVAILABLE: AtomicBool = ATOMIC_BOOL_INIT;
 
         CHECKER.call_once(|| {
+            debug!("OsRng: testing getrandom");
             let mut buf: [u8; 0] = [];
             let result = getrandom(&mut buf);
             let available = if result == -1 {
@@ -274,6 +278,7 @@ mod imp {
                 true
             };
             AVAILABLE.store(available, Ordering::Relaxed);
+            info!("OsRng: using {}", if available { "getrandom" } else { "/dev/urandom" });
         });
 
         AVAILABLE.load(Ordering::Relaxed)
@@ -332,6 +337,7 @@ mod imp {
         }
 
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
+            trace!("OsRng: reading {} bytes via cloadabi::random_get", v.len());
             if unsafe { cloudabi::random_get(v) } == cloudabi::errno::SUCCESS {
                 Ok(())
             } else {
@@ -372,6 +378,7 @@ mod imp {
             Ok(OsRng)
         }
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
+            trace!("OsRng: reading {} bytes via SecRandomCopyBytes", v.len());
             let ret = unsafe {
                 SecRandomCopyBytes(kSecRandomDefault, v.len() as size_t, v.as_mut_ptr())
             };
@@ -407,6 +414,7 @@ mod imp {
             // kern.arandom permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
                 let mut s_len = s.len();
+                trace!("OsRng: reading {} bytes via kern.arandom", v.len());
                 let ret = unsafe {
                     libc::sysctl(mib.as_ptr(), mib.len() as libc::c_uint,
                                  s.as_mut_ptr() as *mut _, &mut s_len,
@@ -441,6 +449,7 @@ mod imp {
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
             // getentropy(2) permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
+                trace!("OsRng: reading {} bytes via getentropy", s.len());
                 let ret = unsafe {
                     libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s.len())
                 };
@@ -494,6 +503,7 @@ mod imp {
         }
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
             for s in v.chunks_mut(fuchsia_zircon::sys::ZX_CPRNG_DRAW_MAX_LEN) {
+                trace!("OsRng: reading {} bytes via cprng_draw", s.len());
                 let mut filled = 0;
                 while filled < s.len() {
                     match fuchsia_zircon::cprng_draw(&mut s[filled..]) {
@@ -535,6 +545,7 @@ mod imp {
             // RtlGenRandom takes an ULONG (u32) for the length so we need to
             // split up the buffer.
             for slice in v.chunks_mut(<ULONG>::max_value() as usize) {
+                trace!("OsRng: reading {} bytes via RtlGenRandom", slice.len());
                 let ret = unsafe {
                     RtlGenRandom(slice.as_mut_ptr() as PVOID, slice.len() as ULONG)
                 };
