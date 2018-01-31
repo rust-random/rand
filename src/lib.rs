@@ -856,9 +856,9 @@ impl<R: SeedableRng> NewRng for R {
 
         trace!("Seeding new RNG");
         new_os().or_else(|e1| {
-            warn!("OsRng failed [falling back to JitterRng]: {:?}", e1);
+            warn!("OsRng failed [falling back to JitterRng]: {}", e1);
             new_jitter().map_err(|_e2| {
-                warn!("JitterRng failed: {:?}", _e2);
+                warn!("JitterRng failed: {}", _e2);
                 // TODO: can we somehow return both error sources?
                 Error::with_cause(
                     ErrorKind::Unavailable,
