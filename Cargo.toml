@@ -32,6 +32,8 @@ libc = { version = "0.2", optional = true }
 winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"], optional = true }
 
 [dependencies]
+log = { version = "0.4", optional = true }
+
 serde = {version="1",optional=true}
 serde_derive = {version="1", optional=true}
 
