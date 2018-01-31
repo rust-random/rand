@@ -64,6 +64,9 @@ impl Rng for OsRng {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
+        use std::time::Duration;
+        use core::error::Error;
+
         // We cannot return Err(..), so we try to handle before panicking.
         const MAX_RETRY_PERIOD: u32 = 10; // max 10s
         const WAIT_DUR_MS: u32 = 100; // retry every 100ms
@@ -75,16 +78,17 @@ impl Rng for OsRng {
         loop {
             if let Err(e) = self.try_fill_bytes(dest) {
                 if err_count >= RETRY_LIMIT {
-                    error!("OsRng failed too many times, last error: {}", e);
+                    error!("OsRng failed too many times, last error: {}",
+                           e.cause().unwrap().description());
                     panic!("OsRng failed too many times, last error: {}",
-                           e.msg());
+                           e.cause().unwrap().description());
                 }
 
                 match e.kind() {
                     ErrorKind::Transient => {
                         if !error_logged {
                             warn!("OsRng failed: {}. retrying {} times ...",
-                                  e, TRANSIENT_STEP);
+                                  e.cause().unwrap().description(), TRANSIENT_STEP);
                             error_logged = true;
                         }
                         err_count += TRANSIENT_STEP;
@@ -93,17 +97,17 @@ impl Rng for OsRng {
                     ErrorKind::NotReady => {
                         if !error_logged {
                             warn!("OsRng failed: {}. waiting and retrying for {} ms ...",
-                                  e, MAX_RETRY_PERIOD);
+                                  e.cause().unwrap().description(), MAX_RETRY_PERIOD);
                             error_logged = true;
                         }
                         err_count += 1;
-                        let dur = ::std::time::Duration::from_millis(WAIT_DUR_MS as u64);
+                        let dur = Duration::from_millis(WAIT_DUR_MS as u64);
                         ::std::thread::sleep(dur);
                         continue;
                     }
                     _ => {
-                        error!("OsRng failed: {}", e);
-                        panic!("OsRng fatal error: {}", e.msg());
+                        error!("OsRng failed: {}", e.cause().unwrap().description());
+                        panic!("OsRng fatal error: {}", e.cause().unwrap().description());
                     }
                 }
             }
@@ -241,7 +245,11 @@ mod imp {
                     // Potentially this would waste bytes, but since we use
                     // /dev/urandom blocking only happens if not initialised.
                     // Also, wasting the bytes in v doesn't matter very much.
-                    return Err(Error::new(ErrorKind::NotReady, "getrandom not ready"));
+                    return Err(Error::with_cause(
+                        ErrorKind::NotReady,
+                        "getrandom not ready",
+                        err,
+                    ));
                 } else {
                     return Err(Error::with_cause(
                         ErrorKind::Unavailable,
@@ -340,12 +348,14 @@ mod imp {
 
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
             trace!("OsRng: reading {} bytes via cloadabi::random_get", v.len());
-            if unsafe { cloudabi::random_get(v) } == cloudabi::errno::SUCCESS {
+            let errno = unsafe { cloudabi::random_get(v) };
+            if errno == cloudabi::errno::SUCCESS {
                 Ok(())
             } else {
-                Err(Error::new(
+                Err(Error::with_cause(
                     ErrorKind::Unavailable,
                     "random_get() system call failed",
+                    io::Error::from_raw_os_error(errno),
                 ))
             }
         }
@@ -423,9 +433,10 @@ mod imp {
                                  ptr::null(), 0)
                 };
                 if ret == -1 || s_len != s.len() {
-                    return Err(Error::new(
+                    return Err(Error::with_cause(
                         ErrorKind::Unavailable,
-                        "kern.arandom sysctl failed"));
+                        "kern.arandom sysctl failed",
+                        io::Error::last_os_error()));
                 }
             }
             Ok(())
