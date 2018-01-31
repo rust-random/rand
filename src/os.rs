@@ -65,47 +65,49 @@ impl Rng for OsRng {
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         // We cannot return Err(..), so we try to handle before panicking.
-        const WAIT_DUR_MS: u32 = 100;   // retry every 100ms
-        const MAX_WAIT: u32 = (10 * 1000) / WAIT_DUR_MS;    // max 10s
-        const TRANSIENT_STEP: u32 = MAX_WAIT / 8;
+        const MAX_RETRY_PERIOD: u32 = 10; // max 10s
+        const WAIT_DUR_MS: u32 = 100; // retry every 100ms
+        const RETRY_LIMIT: u32 = (MAX_RETRY_PERIOD * 1000) / WAIT_DUR_MS;
+        const TRANSIENT_STEP: u32 = RETRY_LIMIT / 8;
         let mut err_count = 0;
-        let mut log_err = 0;    // log when err_count >= log_err
-        
+        let mut error_logged = false;
+
         loop {
             if let Err(e) = self.try_fill_bytes(dest) {
-                if log_err == 0 {
-                    warn!("OsRng failed: {:?}", e);
+                if err_count >= RETRY_LIMIT {
+                    error!("OsRng failed too many times, last error: {}", e);
+                    panic!("OsRng failed too many times, last error: {}",
+                           e.msg());
                 }
-                
-                if e.kind().should_retry() {
-                    if err_count > MAX_WAIT {
-                        panic!("Too many RNG errors or timeout; last error: {}", e.msg());
-                    }
-                    
-                    if e.kind().should_wait() {
-                        err_count += 1;
-                        if err_count >= log_err {
-                            log_err += TRANSIENT_STEP;
-                            warn!("OsRng: waiting and retrying ...");
+
+                match e.kind() {
+                    ErrorKind::Transient => {
+                        if !error_logged {
+                            warn!("OsRng failed: {}. retrying {} times ...",
+                                  e, TRANSIENT_STEP);
+                            error_logged = true;
                         }
-                        #[cfg(feature="std")]{
-                            let dur = ::std::time::Duration::from_millis(WAIT_DUR_MS as u64);
-                            ::std::thread::sleep(dur);
-                        }
-                    } else {
                         err_count += TRANSIENT_STEP;
-                        if err_count >= log_err {
-                            log_err += TRANSIENT_STEP;
-                            warn!("OsRng: retrying ...");
-                        }
+                        continue;
                     }
-                    
-                    continue;
+                    ErrorKind::NotReady => {
+                        if !error_logged {
+                            warn!("OsRng failed: {}. waiting and retrying for {} ms ...",
+                                  e, MAX_RETRY_PERIOD);
+                            error_logged = true;
+                        }
+                        err_count += 1;
+                        let dur = ::std::time::Duration::from_millis(WAIT_DUR_MS as u64);
+                        ::std::thread::sleep(dur);
+                        continue;
+                    }
+                    _ => {
+                        error!("OsRng failed: {}", e);
+                        panic!("OsRng fatal error: {}", e.msg());
+                    }
                 }
-                
-                panic!("Fatal RNG error: {}", e.msg());
             }
-            
+
             break;
         }
     }
