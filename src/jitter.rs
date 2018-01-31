@@ -56,8 +56,8 @@ pub struct JitterRng<T: JitterTimer> {
     timer: T,
     prev_time: u64,
     // Deltas used for the stuck test
-    last_delta: i64,
-    last_delta2: i64,
+    last_delta: i32,
+    last_delta2: i32,
     // Memory for the Memory Access noise source
     mem_prev_index: u16,
     mem: [u8; MEMORY_SIZE],
@@ -329,7 +329,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
     // All values must always be non-zero.
     // This test is a heuristic to see whether the last measurement holds
     // entropy.
-    fn stuck(&mut self, current_delta: i64) -> bool {
+    fn stuck(&mut self, current_delta: i32) -> bool {
         let delta2 = self.last_delta - current_delta;
         let delta3 = delta2 - self.last_delta2;
 
@@ -356,7 +356,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
         // Note: wrapping_sub combined with a cast to `i64` generates a correct
         // delta, even in the unlikely case this is a timer that is not strictly
         // monotonic.
-        let current_delta = time.wrapping_sub(self.prev_time) as i64;
+        let current_delta = time.wrapping_sub(self.prev_time) as i64 as i32;
         self.prev_time = time;
 
         // Call the next noise source which also injects the data
@@ -481,7 +481,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
             if time == 0 || time2 == 0 {
                 return Err(TimerError::NoTimer);
             }
-            let delta = time2.wrapping_sub(time) as i64;
+            let delta = time2.wrapping_sub(time) as i64 as i32;
 
             // Test whether timer is fine grained enough to provide delta even
             // when called shortly after each other -- this implies that we also
