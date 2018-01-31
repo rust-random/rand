@@ -51,7 +51,7 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 pub struct JitterRng<T: JitterTimer> {
     data: u64, // Actual random number
     // Number of rounds to run the entropy collector per 64 bits
-    rounds: u32,
+    rounds: u8,
     // Timer and previous time stamp, used by `measure_jitter`
     timer: T,
     prev_time: u64,
@@ -136,7 +136,7 @@ impl JitterRng<Timer> {
     /// returned. The test result is cached to make subsequent calls faster.
     pub fn new() -> Result<JitterRng<Timer>, TimerError> {
         let mut ec = JitterRng::new_with_timer(Timer::default());
-        let mut rounds = JITTER_ROUNDS.load(Ordering::Relaxed) as u32;
+        let mut rounds = JITTER_ROUNDS.load(Ordering::Relaxed) as u8;
         if rounds == 0 {
             // No result yet: run test.
             // This allows the timer test to run multiple times; we don't care.
@@ -195,7 +195,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
     /// can be used. The `test_timer()` function returns the minimum number of
     /// rounds required for full strength (platform dependent), so one may use
     /// `rng.set_rounds(rng.test_timer()?);` or cache the value.
-    pub fn set_rounds(&mut self, rounds: u32) {
+    pub fn set_rounds(&mut self, rounds: u8) {
         assert!(rounds > 0);
         self.rounds = rounds;
     }
@@ -449,7 +449,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
     /// If succesful, this will return the estimated number of rounds necessary
     /// to collect 64 bits of entropy. Otherwise a `TimerError` with the cause
     /// of the failure will be returned.
-    pub fn test_timer(&mut self) -> Result<u32, TimerError> {
+    pub fn test_timer(&mut self) -> Result<u8, TimerError> {
         debug!("JitterRng: testing timer ...");
         // We could add a check for system capabilities such as `clock_getres`
         // or check for `CONFIG_X86_TSC`, but it does not make much sense as the
@@ -572,7 +572,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
         fn log2(x: u64) -> u32 { 64 - x.leading_zeros() }
 
         // pow(δ, FACTOR) must be representable; if you have overflow reduce FACTOR
-        Ok(64 * 2 * FACTOR / (log2(delta_average.pow(FACTOR)) + 1))
+        Ok((64u32 * 2 * FACTOR / (log2(delta_average.pow(FACTOR)) + 1)) as u8)
     }
 
     /// Statistical test: return the timer delta of one normal run of the
