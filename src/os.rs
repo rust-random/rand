@@ -74,7 +74,7 @@ impl Rng for OsRng {
         loop {
             if let Err(e) = self.try_fill_bytes(dest) {
                 if log_err == 0 {
-                    warn!("OsRng failed: {:?}", e);
+                    warn!("OsRng failed: {}", e);
                 }
                 
                 if e.kind().should_retry() {
