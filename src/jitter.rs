@@ -52,17 +52,45 @@ pub struct JitterRng<T: JitterTimer> {
     data: u64, // Actual random number
     // Number of rounds to run the entropy collector per 64 bits
     rounds: u8,
-    // Timer and previous time stamp, used by `measure_jitter`
+    // Timer used by `measure_jitter`
     timer: T,
+    // Memory for the Memory Access noise source FIXME
+    mem_prev_index: u16,
+    // Make `next_u32` not waste 32 bits
+    data_half_used: bool,
+}
+
+// Entropy collector state.
+// These values are not necessary to preserve across runs.
+struct EcState {
+    // Previous time stamp to determine the timer delta
     prev_time: u64,
     // Deltas used for the stuck test
     last_delta: i32,
     last_delta2: i32,
     // Memory for the Memory Access noise source
-    mem_prev_index: u16,
     mem: [u8; MEMORY_SIZE],
-    // Make `next_u32` not waste 32 bits
-    data_half_used: bool,
+}
+
+impl EcState {
+    // Stuck test by checking the:
+    // - 1st derivation of the jitter measurement (time delta)
+    // - 2nd derivation of the jitter measurement (delta of time deltas)
+    // - 3rd derivation of the jitter measurement (delta of delta of time
+    //   deltas)
+    //
+    // All values must always be non-zero.
+    // This test is a heuristic to see whether the last measurement holds
+    // entropy.
+    fn stuck(&mut self, current_delta: i32) -> bool {
+        let delta2 = self.last_delta - current_delta;
+        let delta3 = delta2 - self.last_delta2;
+
+        self.last_delta = current_delta;
+        self.last_delta2 = delta2;
+
+        current_delta == 0 || delta2 == 0 || delta3 == 0
+    }
 }
 
 // Custom Debug implementation that does not expose the internal state
@@ -135,22 +163,25 @@ impl JitterRng<Timer> {
     /// hundred times. If this does not pass basic quality tests, an error is
     /// returned. The test result is cached to make subsequent calls faster.
     pub fn new() -> Result<JitterRng<Timer>, TimerError> {
-        let mut ec = JitterRng::new_with_timer(Timer::default());
+        let mut state = JitterRng::new_with_timer(Timer::default());
+
         let mut rounds = JITTER_ROUNDS.load(Ordering::Relaxed) as u8;
         if rounds == 0 {
             // No result yet: run test.
             // This allows the timer test to run multiple times; we don't care.
-            rounds = ec.test_timer()?;
+            rounds = state.test_timer()?;
             JITTER_ROUNDS.store(rounds as usize, Ordering::Relaxed);
             info!("JitterRng: using {} rounds per u64 output", rounds);
         }
-        ec.set_rounds(rounds);
-        Ok(ec)
+        state.set_rounds(rounds);
+
+        // Fill `data` with a non-zero value.
+        state.gen_entropy();
+        Ok(state)
     }
 }
 
 impl<T: JitterTimer+Clone> JitterRng<T> {
-
     /// Create a new `JitterRng`.
     /// A custom timer can be supplied, making it possible to use `JitterRng` in
     /// `no_std` environments.
@@ -159,32 +190,17 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
     ///
     /// This method is more low-level than `new()`. It is the responsibility of
     /// the caller to run `test_timer` before using any numbers generated with
-    /// `JitterRng`, and optionally call `set_rounds()`.
+    /// `JitterRng`, and optionally call `set_rounds()`. Also it is important to
+    /// call `gen_entropy` once before using the first result to initialize the
+    /// entropy collection pool.
     pub fn new_with_timer(timer: T) -> JitterRng<T> {
-        let mut ec = JitterRng {
+        JitterRng {
             data: 0,
             rounds: 64,
             timer: timer.clone(),
-            prev_time: 0,
-            last_delta: 0,
-            last_delta2: 0,
             mem_prev_index: 0,
-            mem: [0; MEMORY_SIZE],
             data_half_used: false,
-        };
-
-        // Fill `data`, `prev_time`, `last_delta` and `last_delta2` with
-        // non-zero values.
-        ec.prev_time = timer.get_nstime();
-        ec.gen_entropy();
-
-        // Do a single read from `self.mem` to make sure the Memory Access noise
-        // source is not optimised out.
-        // Note: this read is important, it effects optimisations for the entire
-        // module!
-        black_box(ec.mem[0]);
-
-        ec
+        }
     }
 
     /// Configures how many rounds are used to generate each 64-bit value.
@@ -299,7 +315,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
     // range of wait states. However, to reliably access either L3 or memory,
     // the `self.mem` memory must be quite large which is usually not desirable.
     #[inline(never)]
-    fn memaccess(&mut self, var_rounds: bool) {
+    fn memaccess(&mut self, mem: &mut [u8; MEMORY_SIZE], var_rounds: bool) {
         let mut acc_loop_cnt = 128;
         if var_rounds { acc_loop_cnt += self.random_loop_cnt(4) };
 
@@ -313,42 +329,21 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
 
             // memory access: just add 1 to one byte
             // memory access implies read from and write to memory location
-            let tmp = self.mem[index];
-            self.mem[index] = tmp.wrapping_add(1);
+            mem[index] = mem[index].wrapping_add(1);
         }
         self.mem_prev_index = index as u16;
-    }
-
-
-    // Stuck test by checking the:
-    // - 1st derivation of the jitter measurement (time delta)
-    // - 2nd derivation of the jitter measurement (delta of time deltas)
-    // - 3rd derivation of the jitter measurement (delta of delta of time
-    //   deltas)
-    //
-    // All values must always be non-zero.
-    // This test is a heuristic to see whether the last measurement holds
-    // entropy.
-    fn stuck(&mut self, current_delta: i32) -> bool {
-        let delta2 = self.last_delta - current_delta;
-        let delta3 = delta2 - self.last_delta2;
-
-        self.last_delta = current_delta;
-        self.last_delta2 = delta2;
-
-        current_delta == 0 || delta2 == 0 || delta3 == 0
     }
 
     // This is the heart of the entropy generation: calculate time deltas and
     // use the CPU jitter in the time deltas. The jitter is injected into the
     // entropy pool.
     //
-    // Ensure that `self.prev_time` is primed before using the output of this
+    // Ensure that `ec.prev_time` is primed before using the output of this
     // function. This can be done by calling this function and not using its
     // result.
-    fn measure_jitter(&mut self) -> Option<()> {
+    fn measure_jitter(&mut self, ec: &mut EcState) -> Option<()> {
         // Invoke one noise source before time measurement to add variations
-        self.memaccess(true);
+        self.memaccess(&mut ec.mem, true);
 
         // Get time stamp and calculate time delta to previous
         // invocation to measure the timing variations
@@ -356,15 +351,15 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
         // Note: wrapping_sub combined with a cast to `i64` generates a correct
         // delta, even in the unlikely case this is a timer that is not strictly
         // monotonic.
-        let current_delta = time.wrapping_sub(self.prev_time) as i64 as i32;
-        self.prev_time = time;
+        let current_delta = time.wrapping_sub(ec.prev_time) as i64 as i32;
+        ec.prev_time = time;
 
         // Call the next noise source which also injects the data
         self.lfsr_time(current_delta as u64, true);
 
         // Check whether we have a stuck measurement (i.e. does the last
         // measurement holds entropy?).
-        if self.stuck(current_delta) { return None };
+        if ec.stuck(current_delta) { return None };
 
         // Rotate the data buffer by a prime number (any odd number would
         // do) to ensure that every bit position of the input time stamp
@@ -427,17 +422,27 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
 
     fn gen_entropy(&mut self) -> u64 {
         trace!("JitterRng: collecting entropy");
-        
-        // Prime `self.prev_time`, and run the noice sources to make sure the
+
+        // Prime `ec.prev_time`, and run the noice sources to make sure the
         // first loop round collects the expected entropy.
-        let _ = self.measure_jitter();
+        let mut ec = EcState {
+            prev_time: self.timer.get_nstime(),
+            last_delta: 0,
+            last_delta2: 0,
+            mem: [0; MEMORY_SIZE],
+        };
+        let _ = self.measure_jitter(&mut ec);
 
         for _ in 0..self.rounds {
             // If a stuck measurement is received, repeat measurement
             // Note: we do not guard against an infinite loop, that would mean
             // the timer suddenly became broken.
-            while self.measure_jitter().is_none() {}
+            while self.measure_jitter(&mut ec).is_none() {}
         }
+
+        // Do a single read from `self.mem` to make sure the Memory Access noise
+        // source is not optimised out.
+        black_box(ec.mem[0]);
 
         self.stir_pool();
         self.data
@@ -465,6 +470,13 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
         let mut count_mod = 0;
         let mut count_stuck = 0;
 
+        let mut ec = EcState {
+            prev_time: self.timer.get_nstime(),
+            last_delta: 0,
+            last_delta2: 0,
+            mem: [0; MEMORY_SIZE],
+        };
+
         // TESTLOOPCOUNT needs some loops to identify edge systems.
         // 100 is definitely too little.
         const TESTLOOPCOUNT: u64 = 300;
@@ -473,7 +485,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
         for i in 0..(CLEARCACHE + TESTLOOPCOUNT) {
             // Measure time delta of core entropy collection logic
             let time = self.timer.get_nstime();
-            self.memaccess(true);
+            self.memaccess(&mut ec.mem, true);
             self.lfsr_time(time, true);
             let time2 = self.timer.get_nstime();
 
@@ -497,7 +509,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
             // measurements.
             if i < CLEARCACHE { continue; }
 
-            if self.stuck(delta) { count_stuck += 1; }
+            if ec.stuck(delta) { count_stuck += 1; }
 
             // Test whether we have an increasing timer.
             if !(time2 > time) { time_backwards += 1; }
@@ -512,6 +524,10 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
             delta_sum += (delta - old_delta).abs() as u64;
             old_delta = delta;
         }
+
+        // Do a single read from `self.mem` to make sure the Memory Access noise
+        // source is not optimised out.
+        black_box(ec.mem[0]);
 
         // We allow the time to run backwards for up to three times.
         // This can happen if the clock is being adjusted by NTP operations.
@@ -674,8 +690,10 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
     #[cfg(feature="std")]
     pub fn timer_stats(&mut self, var_rounds: bool) -> i64 {
         let timer = Timer::default();
+        let mut mem = [0; MEMORY_SIZE];
+
         let time = timer.get_nstime();
-        self.memaccess(var_rounds);
+        self.memaccess(&mut mem, var_rounds);
         self.lfsr_time(time, var_rounds);
         let time2 = timer.get_nstime();
         time2.wrapping_sub(time) as i64
