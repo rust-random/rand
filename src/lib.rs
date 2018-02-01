@@ -259,6 +259,7 @@
 #[cfg(not(feature = "log"))] macro_rules! debug { ($($x:tt)*) => () }
 #[cfg(all(feature="std", not(feature = "log")))] macro_rules! info { ($($x:tt)*) => () }
 #[cfg(all(feature="std", not(feature = "log")))] macro_rules! warn { ($($x:tt)*) => () }
+#[cfg(all(feature="std", not(feature = "log")))] macro_rules! error { ($($x:tt)*) => () }
 
 
 use core::{marker, mem};
