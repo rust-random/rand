@@ -1067,26 +1067,41 @@ impl Rng for EntropyRng {
                         switch_rng = Some(EntropySource::Os(os_rng));
                     }
                     Err(os_rng_error) => {
-                        if let Ok(jitter_rng) = try_jitter_new(dest) {
-                            switch_rng = Some(EntropySource::Jitter(jitter_rng));
-                        } else {
-                            return Err(os_rng_error);
+                        warn!("EntropyRng: OsRng failed [falling back to JitterRng]: {}",
+                              os_rng_error);
+                        match try_jitter_new(dest) {
+                            Ok(jitter_rng) => {
+                                switch_rng = Some(EntropySource::Jitter(jitter_rng));
+                            }
+                            Err(jitter_error) => {
+                                warn!("EntropyRng: JitterRng failed: {}",
+                                      jitter_error);
+                                return Err(os_rng_error);
+                            }
                         }
                     }
                 }
             }
             EntropySource::Os(ref mut rng) => {
                 let os_rng_result = rng.try_fill_bytes(dest);
-                if os_rng_result.is_err() {
-                    if let Ok(jitter_rng) = try_jitter_new(dest) {
-                        switch_rng = Some(EntropySource::Jitter(jitter_rng));
-                    } else {
-                        return os_rng_result;
+                if let Err(os_rng_error) = os_rng_result {
+                    warn!("EntropyRng: OsRng failed [falling back to JitterRng]: {}",
+                          os_rng_error);
+                    match try_jitter_new(dest) {
+                        Ok(jitter_rng) => {
+                            switch_rng = Some(EntropySource::Jitter(jitter_rng));
+                        }
+                        Err(jitter_error) => {
+                            warn!("EntropyRng: JitterRng failed: {}",
+                                  jitter_error);
+                            return Err(os_rng_error);
+                        }
                     }
                 }
             }
             EntropySource::Jitter(ref mut rng) => {
                 if let Ok(os_rng) = try_os_new(dest) {
+                    info!("EntropyRng: OsRng available [switching back from JitterRng]");
                     switch_rng = Some(EntropySource::Os(os_rng));
                 } else {
                     return rng.try_fill_bytes(dest); // use JitterRng
