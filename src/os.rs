@@ -64,50 +64,47 @@ impl Rng for OsRng {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        use std::time::Duration;
-        use core::error::Error;
+        use std::{time, thread};
 
         // We cannot return Err(..), so we try to handle before panicking.
         const MAX_RETRY_PERIOD: u32 = 10; // max 10s
         const WAIT_DUR_MS: u32 = 100; // retry every 100ms
+        let wait_dur = time::Duration::from_millis(WAIT_DUR_MS as u64);
         const RETRY_LIMIT: u32 = (MAX_RETRY_PERIOD * 1000) / WAIT_DUR_MS;
-        const TRANSIENT_STEP: u32 = RETRY_LIMIT / 8;
+        const TRANSIENT_RETRIES: u32 = 8;
         let mut err_count = 0;
         let mut error_logged = false;
 
         loop {
             if let Err(e) = self.try_fill_bytes(dest) {
                 if err_count >= RETRY_LIMIT {
-                    error!("OsRng failed too many times, last error: {}",
-                           e.cause().unwrap().description());
-                    panic!("OsRng failed too many times, last error: {}",
-                           e.cause().unwrap().description());
+                    error!("OsRng failed too many times; last error: {:?}", e);
+                    panic!("OsRng failed too many times; last error: {:?}", e);
                 }
 
                 match e.kind() {
                     ErrorKind::Transient => {
                         if !error_logged {
-                            warn!("OsRng failed: {}. retrying {} times ...",
-                                  e.cause().unwrap().description(), TRANSIENT_STEP);
+                            warn!("OsRng failed; retrying up to {} times. Error: {:?}",
+                                    TRANSIENT_RETRIES, e);
                             error_logged = true;
                         }
-                        err_count += TRANSIENT_STEP;
+                        err_count += RETRY_LIMIT / TRANSIENT_RETRIES;
                         continue;
                     }
                     ErrorKind::NotReady => {
                         if !error_logged {
-                            warn!("OsRng failed: {}. waiting and retrying for {} ms ...",
-                                  e.cause().unwrap().description(), MAX_RETRY_PERIOD);
+                            warn!("OsRng failed; waiting up to {}s and retrying. Error: {:?}",
+                                    MAX_RETRY_PERIOD, e);
                             error_logged = true;
                         }
                         err_count += 1;
-                        let dur = Duration::from_millis(WAIT_DUR_MS as u64);
-                        ::std::thread::sleep(dur);
+                        thread::sleep(wait_dur);
                         continue;
                     }
                     _ => {
-                        error!("OsRng failed: {}", e.cause().unwrap().description());
-                        panic!("OsRng fatal error: {}", e.cause().unwrap().description());
+                        error!("OsRng failed: {:?}", e);
+                        panic!("OsRng fatal error: {:?}", e);
                     }
                 }
             }
@@ -352,6 +349,8 @@ mod imp {
             if errno == cloudabi::errno::SUCCESS {
                 Ok(())
             } else {
+                // Cloudlibc provides its own `strerror` implementation so we
+                // can use `from_raw_os_error` here.
                 Err(Error::with_cause(
                     ErrorKind::Unavailable,
                     "random_get() system call failed",
