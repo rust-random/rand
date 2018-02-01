@@ -1,0 +1,23 @@
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+
+## [0.1.0] - Unreleased
+
+### `rand-core` crate
+(Split out of the Rand crate, changes here are relative to rand 0.4.2)
+- `RngCore` and `SeedableRng` are now part of `rand-core`. (#288)
+- Added modules to help implementing RNGs `impl` and `le`. (#209, #228)
+- added `Error` and `ErrorKind`. (#225)
+- Added `CryptoRng` marker trait. (#273)
+- Added `BlockRngCore` trait. (#281)
+- Added `BlockRng` wrapper to help implemtations. (#281)
+- Revised the `SeedableRng` trait. (#233)
+- Removed default implementations for `RngCore::next_u64` and `RngCore::fill_bytes`. (#288)
+- Added `RngCore::try_fill_bytes`. (#225)
+
+## [0.0.1] - 2017-09-14
+Experimental version as part of the rand crate refactor.
