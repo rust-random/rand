@@ -569,26 +569,29 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
         // available bits of entropy per round here for two reasons:
         // 1. Simple estimates of the available bits (like Shannon entropy) are
         //    too optimistic.
-        // 2)  Unless we want to waste a lot of time during intialization, there
-        //     only a small number of samples are available.
+        // 2. Unless we want to waste a lot of time during intialization, there
+        //    only a small number of samples are available.
         //
         // Therefore we use a very simple and conservative estimate:
         // `let bits_of_entropy = log2(delta_average) / 2`.
         //
         // The number of rounds `measure_jitter` should run to collect 64 bits
         // of entropy is `64 / bits_of_entropy`.
-        //
-        // To have smaller rounding errors, intermediate values are multiplied
-        // by `FACTOR`. To compensate for `log2` and division rounding down,
-        // add 1.
         let delta_average = delta_sum / TESTLOOPCOUNT;
-        // println!("delta_average: {}", delta_average);
 
-        const FACTOR: u32  = 3;
-        fn log2(x: u64) -> u32 { 64 - x.leading_zeros() }
-
-        // pow(δ, FACTOR) must be representable; if you have overflow reduce FACTOR
-        Ok((64u32 * 2 * FACTOR / (log2(delta_average.pow(FACTOR)) + 1)) as u8)
+        if delta_average >= 16 {
+            let log2 = 64 - delta_average.leading_zeros();
+            // Do something similar to roundup(64/(log2/2)):
+            Ok( ((64u32 * 2 + log2 - 1) / log2) as u8)
+        } else {
+            // For values < 16 the rounding error becomes too large, use a
+            // lookup table.
+            // Values 0 and 1 are invalid, and filtered out by the
+            // `delta_sum < TESTLOOPCOUNT` test above.
+            let log2_lookup = [0,  0, 128, 81, 64, 56, 50, 46,
+                               43, 41, 39, 38, 36, 35, 34, 33];
+            Ok(log2_lookup[delta_average as usize])
+        }
     }
 
     /// Statistical test: return the timer delta of one normal run of the
