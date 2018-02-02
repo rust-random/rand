@@ -269,9 +269,38 @@ mod tests {
 
     #[test]
     fn floating_point_edge_cases() {
-        // the test for exact equality is correct here.
-        assert!(ConstantRng(0xffff_ffff).gen::<f32>() != 1.0);
-        assert!(ConstantRng(0xffff_ffff_ffff_ffff).gen::<f64>() != 1.0);
+        const EPSILON32: f32 = 1.0 / (1u32 << 23) as f32;
+        const EPSILON64: f64 = 1.0 / (1u64 << 52) as f64;
+
+        let mut zeros = ConstantRng(0);
+        let mut ones = ConstantRng(!0);
+
+        let zero32 = zeros.gen::<f32>();
+        let zero64 = zeros.gen::<f64>();
+        let one32 = ones.gen::<f32>();
+        let one64 = ones.gen::<f64>();
+        assert_eq!(zero32, 0.0);
+        assert_eq!(zero64, 0.0);
+        assert!(1.0 - EPSILON32 <= one32 && one32 < 1.0);
+        assert!(1.0 - EPSILON64 <= one64 && one64 < 1.0);
+
+        let Closed01(closed_zero32) = zeros.gen::<Closed01<f32>>();
+        let Closed01(closed_zero64) = zeros.gen::<Closed01<f64>>();
+        let Closed01(closed_one32) = ones.gen::<Closed01<f32>>();
+        let Closed01(closed_one64) = ones.gen::<Closed01<f64>>();
+        assert_eq!(closed_zero32, 0.0);
+        assert_eq!(closed_zero64, 0.0);
+        assert_eq!(closed_one32, 1.0);
+        assert_eq!(closed_one64, 1.0);
+
+        let Open01(open_zero32) = zeros.gen::<Open01<f32>>();
+        let Open01(open_zero64) = zeros.gen::<Open01<f64>>();
+        let Open01(open_one32) = ones.gen::<Open01<f32>>();
+        let Open01(open_one64) = ones.gen::<Open01<f64>>();
+        assert!(0.0 < open_zero32 && open_zero32 <= EPSILON32);
+        assert!(0.0 < open_zero64 && open_zero64 <= EPSILON64);
+        assert!(1.0 - EPSILON32 <= open_one32 && open_one32 < 1.0);
+        assert!(1.0 - EPSILON64 <= open_one64 && open_one64 < 1.0);
     }
 
     #[test]
