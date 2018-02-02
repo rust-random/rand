@@ -1073,9 +1073,9 @@ impl Rng for EntropyRng {
                             Ok(jitter_rng) => {
                                 switch_rng = Some(EntropySource::Jitter(jitter_rng));
                             }
-                            Err(jitter_error) => {
+                            Err(_jitter_error) => {
                                 warn!("EntropyRng: JitterRng failed: {}",
-                                      jitter_error);
+                                      _jitter_error);
                                 return Err(os_rng_error);
                             }
                         }
@@ -1091,9 +1091,9 @@ impl Rng for EntropyRng {
                         Ok(jitter_rng) => {
                             switch_rng = Some(EntropySource::Jitter(jitter_rng));
                         }
-                        Err(jitter_error) => {
+                        Err(_jitter_error) => {
                             warn!("EntropyRng: JitterRng failed: {}",
-                                  jitter_error);
+                                  _jitter_error);
                             return Err(os_rng_error);
                         }
                     }
