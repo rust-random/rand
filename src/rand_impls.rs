@@ -256,6 +256,9 @@ impl<T: SeedableRng> Rand for T {
 mod tests {
     use impls;
     use {Rng, Open01, Closed01};
+    
+    const EPSILON32: f32 = ::core::f32::EPSILON;
+    const EPSILON64: f64 = ::core::f64::EPSILON;
 
     struct ConstantRng(u64);
     impl Rng for ConstantRng {
@@ -275,9 +278,59 @@ mod tests {
 
     #[test]
     fn floating_point_edge_cases() {
-        // the test for exact equality is correct here.
-        assert!(ConstantRng(0xffff_ffff).gen::<f32>() != 1.0);
-        assert!(ConstantRng(0xffff_ffff_ffff_ffff).gen::<f64>() != 1.0);
+        let mut zeros = ConstantRng(0);
+        assert_eq!(zeros.gen::<f32>(), 0.0);
+        assert_eq!(zeros.gen::<f64>(), 0.0);
+        
+        let mut one = ConstantRng(1);
+        assert_eq!(one.gen::<f32>(), EPSILON32);
+        assert_eq!(one.gen::<f64>(), EPSILON64);
+        
+        let mut max = ConstantRng(!0);
+        assert_eq!(max.gen::<f32>(), 1.0 - EPSILON32);
+        assert_eq!(max.gen::<f64>(), 1.0 - EPSILON64);
+    }
+
+    #[test]
+    fn fp_closed_edge_cases() {
+        let mut zeros = ConstantRng(0);
+        let Closed01(zero32) = zeros.gen::<Closed01<f32>>();
+        let Closed01(zero64) = zeros.gen::<Closed01<f64>>();
+        assert_eq!(zero32, 0.0);
+        assert_eq!(zero64, 0.0);
+        
+        let mut one = ConstantRng(1);
+        let Closed01(one32) = one.gen::<Closed01<f32>>();
+        let Closed01(one64) = one.gen::<Closed01<f64>>();
+        assert!(EPSILON32 < one32 && one32 < EPSILON32 * 1.01);
+        assert!(EPSILON64 < one64 && one64 < EPSILON64 * 1.01);
+        
+        let mut max = ConstantRng(!0);
+        let Closed01(max32) = max.gen::<Closed01<f32>>();
+        let Closed01(max64) = max.gen::<Closed01<f64>>();
+        assert_eq!(max32, 1.0 - EPSILON32 / 2.0);  // FIXME
+        assert_eq!(max64, 1.0 - EPSILON64 / 2.0);  // FIXME
+    }
+
+    #[test]
+    fn fp_open_edge_cases() {
+        let mut zeros = ConstantRng(0);
+        let Open01(zero32) = zeros.gen::<Open01<f32>>();
+        let Open01(zero64) = zeros.gen::<Open01<f64>>();
+        assert_eq!(zero32, 0.0 + EPSILON32 / 8.0);
+        assert_eq!(zero64, 0.0 + EPSILON64 / 8.0);
+        
+        let mut one = ConstantRng(1);
+        let Open01(one32) = one.gen::<Open01<f32>>();
+        let Open01(one64) = one.gen::<Open01<f64>>();
+        assert!(EPSILON32 < one32 && one32 < EPSILON32 * 1.2);
+        assert!(EPSILON64 < one64 && one64 < EPSILON64 * 1.2);
+        
+        let mut max = ConstantRng(!0);
+        let Open01(max32) = max.gen::<Open01<f32>>();
+        let Open01(max64) = max.gen::<Open01<f64>>();
+        assert_eq!(max32, 1.0 - EPSILON32);
+        assert_eq!(max64, 1.0 - EPSILON64);
     }
 
     #[test]
