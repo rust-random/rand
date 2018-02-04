@@ -89,7 +89,8 @@ impl Rng for OsRng {
                                     TRANSIENT_RETRIES, e);
                             error_logged = true;
                         }
-                        err_count += RETRY_LIMIT / TRANSIENT_RETRIES;
+                        err_count += (RETRY_LIMIT + TRANSIENT_RETRIES - 1)
+                                / TRANSIENT_RETRIES;    // round up
                         continue;
                     }
                     ErrorKind::NotReady => {
