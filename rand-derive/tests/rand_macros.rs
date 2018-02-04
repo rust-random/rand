@@ -4,7 +4,7 @@ extern crate rand;
 #[macro_use]
 extern crate rand_derive;
 
-use rand::Rng;
+use rand::SampleRng;
 
 #[derive(Rand)]
 struct Struct {

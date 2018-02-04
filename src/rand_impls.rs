@@ -12,7 +12,7 @@
 
 use core::{char, mem};
 
-use {Rand, Rng, SeedableRng};
+use {Rand, Rng, SampleRng, SeedableRng};
 
 impl Rand for isize {
     #[inline]
@@ -255,7 +255,7 @@ impl<T: SeedableRng> Rand for T {
 #[cfg(test)]
 mod tests {
     use impls;
-    use {Rng, Open01, Closed01};
+    use {Rng, SampleRng, Open01, Closed01};
 
     struct ConstantRng(u64);
     impl Rng for ConstantRng {

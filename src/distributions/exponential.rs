@@ -10,7 +10,7 @@
 
 //! The exponential distribution.
 
-use {Rng, Rand};
+use {Rng, SampleRng, Rand};
 use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 
 /// A wrapper around an `f64` to generate Exp(1) random numbers.

@@ -79,7 +79,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use rand::Rng;
+//! use rand::SampleRng;
 //!
 //! let mut rng = rand::thread_rng();
 //! if rng.gen() { // random bool
@@ -152,7 +152,7 @@
 //! [Monty Hall Problem]: https://en.wikipedia.org/wiki/Monty_Hall_problem
 //!
 //! ```
-//! use rand::Rng;
+//! use rand::SampleRng;
 //! use rand::distributions::{IndependentSample, Range};
 //!
 //! struct SimulationResult {
@@ -161,7 +161,7 @@
 //! }
 //!
 //! // Run a single simulation of the Monty Hall problem.
-//! fn simulate<R: Rng>(random_door: &Range<u32>, rng: &mut R)
+//! fn simulate<R: SampleRng>(random_door: &Range<u32>, rng: &mut R)
 //!                     -> SimulationResult {
 //!     let car = random_door.ind_sample(rng);
 //!
@@ -182,7 +182,7 @@
 //!
 //! // Returns the door the game host opens given our choice and knowledge of
 //! // where the car is. The game host will never open the door with the car.
-//! fn game_host_open<R: Rng>(car: u32, choice: u32, rng: &mut R) -> u32 {
+//! fn game_host_open<R: SampleRng>(car: u32, choice: u32, rng: &mut R) -> u32 {
 //!     let choices = free_doors(&[car, choice]);
 //!     rand::seq::sample_slice(rng, &choices, 1)[0]
 //! }
@@ -354,6 +354,21 @@ pub trait Rand : Sized {
 }
 
 /// A random number generator.
+/// 
+/// This trait encapsulates the low-level functionality common to all
+/// generators, and is the "back end", to be implemented by generators.
+/// Several extension traits exist:
+/// 
+/// *   [`SampleRng`] provides high-level generic functionality built on top of
+///     `Rng`
+/// *   [`SeedableRng`] is another "back end" trait covering creation and
+///      seeding of algorithmic RNGs (PRNGs)
+/// *   [`NewRng`] is a high-level trait providing a convenient way to create
+///     freshly-seeded PRNGs
+/// 
+/// [`SampleRng`]: trait.SampleRng.html
+/// [`SeedableRng`]: trait.SeedableRng.html
+/// [`NewRng`]: trait.NewRng.html
 pub trait Rng {
     /// Return the next random `u32`.
     ///
@@ -481,13 +496,28 @@ pub trait Rng {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         Ok(self.fill_bytes(dest))
     }
+}
 
+/// An automatically-implemented extension trait on [`Rng`] providing high-level
+/// generic methods for sampling values and other convenience methods.
+/// 
+/// Users should "use" this trait to enable its extension methods on [`Rng`]
+/// or require this type directly (i.e. `<R: SampleRng>`). Since `SampleRng`
+/// extends `Rng` and every `Rng` implements `SampleRng`, usage of the two
+/// traits is somewhat interchangeable.
+/// 
+/// This functionality is provided as an extension trait to allow separation
+/// between the backend (the [`Rng`] providing randomness) and the front-end
+/// (converting that randomness to the desired type and distribution).
+/// 
+/// [`Rng`]: trait.Rng.html
+pub trait SampleRng: Rng + Sized {
     /// Return a random value of a `Rand` type.
     ///
     /// # Example
     ///
     /// ```rust
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, SampleRng};
     ///
     /// let mut rng = thread_rng();
     /// let x: u32 = rng.gen();
@@ -495,7 +525,7 @@ pub trait Rng {
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
     #[inline(always)]
-    fn gen<T: Rand>(&mut self) -> T where Self: Sized {
+    fn gen<T: Rand>(&mut self) -> T {
         Rand::rand(self)
     }
 
@@ -505,7 +535,7 @@ pub trait Rng {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, SampleRng};
     ///
     /// let mut rng = thread_rng();
     /// let x = rng.gen_iter::<u32>().take(10).collect::<Vec<u32>>();
@@ -513,7 +543,7 @@ pub trait Rng {
     /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
-    fn gen_iter<'a, T: Rand>(&'a mut self) -> Generator<'a, T, Self> where Self: Sized {
+    fn gen_iter<'a, T: Rand>(&'a mut self) -> Generator<'a, T, Self> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
 
@@ -533,7 +563,7 @@ pub trait Rng {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, SampleRng};
     ///
     /// let mut rng = thread_rng();
     /// let n: u32 = rng.gen_range(0, 10);
@@ -541,8 +571,8 @@ pub trait Rng {
     /// let m: f64 = rng.gen_range(-40.0f64, 1.3e5f64);
     /// println!("{}", m);
     /// ```
-    fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T where Self: Sized {
-        assert!(low < high, "Rng.gen_range called with low >= high");
+    fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T {
+        assert!(low < high, "SampleRng::gen_range called with low >= high");
         Range::new(low, high).ind_sample(self)
     }
 
@@ -551,12 +581,12 @@ pub trait Rng {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, SampleRng};
     ///
     /// let mut rng = thread_rng();
     /// println!("{}", rng.gen_weighted_bool(3));
     /// ```
-    fn gen_weighted_bool(&mut self, n: u32) -> bool where Self: Sized {
+    fn gen_weighted_bool(&mut self, n: u32) -> bool {
         n <= 1 || self.gen_range(0, n) == 0
     }
 
@@ -565,12 +595,12 @@ pub trait Rng {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, SampleRng};
     ///
     /// let s: String = thread_rng().gen_ascii_chars().take(10).collect();
     /// println!("{}", s);
     /// ```
-    fn gen_ascii_chars<'a>(&'a mut self) -> AsciiGenerator<'a, Self> where Self: Sized {
+    fn gen_ascii_chars<'a>(&'a mut self) -> AsciiGenerator<'a, Self> {
         AsciiGenerator { rng: self }
     }
 
@@ -581,14 +611,14 @@ pub trait Rng {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, SampleRng};
     ///
     /// let choices = [1, 2, 4, 8, 16, 32];
     /// let mut rng = thread_rng();
     /// println!("{:?}", rng.choose(&choices));
     /// assert_eq!(rng.choose(&choices[..0]), None);
     /// ```
-    fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> where Self: Sized {
+    fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
         if values.is_empty() {
             None
         } else {
@@ -599,7 +629,7 @@ pub trait Rng {
     /// Return a mutable pointer to a random element from `values`.
     ///
     /// Return `None` if `values` is empty.
-    fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> where Self: Sized {
+    fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> {
         if values.is_empty() {
             None
         } else {
@@ -616,7 +646,7 @@ pub trait Rng {
     /// # Example
     ///
     /// ```rust
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, SampleRng};
     ///
     /// let mut rng = thread_rng();
     /// let mut y = [1, 2, 3];
@@ -625,7 +655,7 @@ pub trait Rng {
     /// rng.shuffle(&mut y);
     /// println!("{:?}", y);
     /// ```
-    fn shuffle<T>(&mut self, values: &mut [T]) where Self: Sized {
+    fn shuffle<T>(&mut self, values: &mut [T]) {
         let mut i = values.len();
         while i >= 2 {
             // invariant: elements with index >= i have been locked in place.
@@ -635,6 +665,8 @@ pub trait Rng {
         }
     }
 }
+
+impl<R: Rng> SampleRng for R {}
 
 impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
     #[inline]
@@ -746,7 +778,15 @@ impl<'a, R: Rng> Iterator for AsciiGenerator<'a, R> {
 
 /// A random number generator that can be explicitly seeded.
 ///
-/// Each pseudo-random number generator (PRNG) should implement this.
+/// This trait encapsulates the low-level functionality common to all
+/// pseudo-random number generators (PRNGs, or algorithmic generators).
+/// 
+/// Normally users should use the [`NewRng`] extension trait, excepting when a
+/// fixed seed must be used, in which case usage of [`SeedableRng::from_seed`]
+/// is recommended.
+/// 
+/// [`NewRng`]: trait.NewRng.html
+/// [`SeedableRng::from_seed`]: #tymethod.from_seed
 pub trait SeedableRng: Sized {
     /// Seed type, which is restricted to types mutably-dereferencable as `u8`
     /// arrays (we recommend `[u8; N]` for some `N`).
@@ -776,8 +816,12 @@ pub trait SeedableRng: Sized {
 
     /// Create a new PRNG seeded from another `Rng`.
     ///
-    /// This is the recommended way to initialize PRNGs. The [`NewRng`] trait
-    /// provides a convenient new method based on `from_rng`.
+    /// This is the recommended way to initialize PRNGs with fresh entropy. The
+    /// [`NewRng`] trait provides a convenient new method based on `from_rng`.
+    /// 
+    /// Usage of this method is not recommended when reproducibility is required
+    /// since implementing PRNGs are not required to fix Endianness and are
+    /// allowed to modify implementations in new releases.
     ///
     /// It is important to use a good source of randomness to initialize the
     /// PRNG. Cryptographic PRNG may be rendered insecure when seeded from a
@@ -798,7 +842,6 @@ pub trait SeedableRng: Sized {
     ///
     /// PRNG implementations are allowed to assume that a good RNG is provided
     /// for seeding, and that it is cryptographically secure when appropriate.
-    /// There are no reproducibility requirements like endianness conversion.
     /// 
     /// [`NewRng`]: trait.NewRng.html
     /// [`OsRng`]: os/struct.OsRng.html
@@ -815,7 +858,7 @@ pub trait SeedableRng: Sized {
 /// pseudo-random number generators (PRNGs).
 ///
 /// This is the recommended way to create PRNGs, unless a deterministic seed is
-/// desired (in which case `SeedableRng::from_seed` should be used).
+/// desired (in which case [`SeedableRng::from_seed`] should be used).
 ///
 /// Note: this trait is automatically implemented for any PRNG implementing
 /// [`SeedableRng`] and is not intended to be implemented by users.
@@ -823,13 +866,14 @@ pub trait SeedableRng: Sized {
 /// ## Example
 ///
 /// ```
-/// use rand::{StdRng, Rng, NewRng};
+/// use rand::{StdRng, SampleRng, NewRng};
 ///
 /// let mut rng = StdRng::new().unwrap();
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
 /// [`SeedableRng`]: trait.SeedableRng.html
+/// [`SeedableRng::from_seed`]: trait.SeedableRng.html#tymethod.from_seed
 #[cfg(feature="std")]
 pub trait NewRng: SeedableRng {
     /// Creates a new instance, automatically seeded with fresh entropy.
@@ -1043,7 +1087,7 @@ impl Rng for ThreadRng {
 /// Caching the thread local random number generator:
 ///
 /// ```
-/// use rand::Rng;
+/// use rand::SampleRng;
 ///
 /// let mut v = vec![1, 2, 3];
 ///
@@ -1096,7 +1140,7 @@ mod test {
     use impls;
     #[cfg(feature="std")]
     use super::{random, thread_rng};
-    use super::{Rng, SeedableRng, StdRng};
+    use super::{Rng, SampleRng, SeedableRng, StdRng};
     #[cfg(feature="alloc")]
     use alloc::boxed::Box;
 

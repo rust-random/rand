@@ -19,7 +19,7 @@
 
 use core::marker;
 
-use {Rng, Rand};
+use {Rng, SampleRng, Rand};
 
 pub use self::range::Range;
 #[cfg(feature="std")]

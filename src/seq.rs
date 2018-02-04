@@ -10,7 +10,7 @@
 
 //! Functions for randomly accessing and sampling sequences.
 
-use super::Rng;
+use super::{Rng, SampleRng};
 
 // This crate is only enabled when either std or alloc is available.
 // BTreeMap is not as fast in tests, but better than nothing.
@@ -227,7 +227,7 @@ fn sample_indices_cache<R>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use {XorShiftRng, SeedableRng};
+    use {XorShiftRng, Rng, SeedableRng};
     #[cfg(not(feature="std"))]
     use alloc::Vec;
 

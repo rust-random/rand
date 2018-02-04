@@ -108,7 +108,7 @@ fn impl_rand_derive(ast: &syn::MacroInput) -> quote::Tokens {
     quote! {
         impl #impl_generics ::rand::Rand for #name #ty_generics #where_clause {
             #[inline]
-            fn rand<__R: ::rand::Rng>(__rng: &mut __R) -> Self {
+            fn rand<__R: ::rand::SampleRng>(__rng: &mut __R) -> Self {
                 #rand
             }
         }
