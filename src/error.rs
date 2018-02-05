@@ -125,13 +125,13 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         #[cfg(feature="std")] {
             if let Some(ref cause) = self.cause {
-                return write!(f, "RNG error [{}]: {}; cause: {}",
-                        self.kind.description(),
+                return write!(f, "{} ({}); cause: {}",
                         self.msg(),
+                        self.kind.description(),
                         cause);
             }
         }
-        write!(f, "RNG error [{}]: {}", self.kind.description(), self.msg())
+        write!(f, "{} ({})", self.msg(), self.kind.description())
     }
 }
 
