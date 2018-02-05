@@ -19,7 +19,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.3"
+rand = "0.4"
 ```
 
 and this to your crate root:
@@ -61,7 +61,7 @@ You can derive the `Rand` trait for your custom type via the `#[derive(Rand)]`
 directive. To use this first add this to your Cargo.toml:
 
 ```toml
-rand = "0.3"
+rand = "0.4"
 rand_derive = "0.3"
 ```
 
