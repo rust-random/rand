@@ -11,9 +11,7 @@
 //! A wrapper around another RNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use {Rng, Error};
-#[cfg(feature="std")]
-use NewRng;
+use {Rng, SeedableRng, Error};
 
 /// A wrapper around any RNG which reseeds the underlying RNG after it
 /// has generated a certain number of random bytes.
@@ -23,10 +21,10 @@ pub struct ReseedingRng<R, Rsdr> {
     generation_threshold: u64,
     bytes_generated: u64,
     /// Controls the behaviour when reseeding the RNG.
-    pub reseeder: Rsdr,
+    reseeder: Rsdr,
 }
 
-impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
+impl<R: Rng+SeedableRng, Rsdr: Rng> ReseedingRng<R, Rsdr> {
     /// Create a new `ReseedingRng` with the given parameters.
     ///
     /// # Arguments
@@ -48,14 +46,14 @@ impl<R: Rng, Rsdr: Reseeder<R>> ReseedingRng<R, Rsdr> {
     pub fn reseed_if_necessary(&mut self) {
         if self.bytes_generated >= self.generation_threshold {
             trace!("Reseeding RNG after {} bytes", self.bytes_generated);
-            self.reseeder.reseed(&mut self.rng).unwrap();
+            R::from_rng(&mut self.reseeder).map(|result| self.rng = result).unwrap();
             self.bytes_generated = 0;
         }
     }
 }
 
 
-impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
+impl<R: Rng+SeedableRng, Rsdr: Rng> Rng for ReseedingRng<R, Rsdr> {
     fn next_u32(&mut self) -> u32 {
         self.reseed_if_necessary();
         self.bytes_generated += 4;
@@ -81,35 +79,10 @@ impl<R: Rng, Rsdr: Reseeder<R>> Rng for ReseedingRng<R, Rsdr> {
     }
 }
 
-/// Something that can be used to reseed an RNG via `ReseedingRng`.
-///
-/// Note that implementations should support `Clone` only if reseeding is
-/// deterministic (no external entropy source). This is so that a `ReseedingRng`
-/// only supports `Clone` if fully deterministic.
-pub trait Reseeder<R: ?Sized> {
-    /// Reseed the given RNG.
-    ///
-    /// On error, this should just forward the source error; errors are handled
-    /// by the caller.
-    fn reseed(&mut self, rng: &mut R) -> Result<(), Error>;
-}
-
-/// Reseed an RNG using `NewRng` to replace the current instance.
-#[cfg(feature="std")]
-#[derive(Debug)]
-pub struct ReseedWithNew;
-
-#[cfg(feature="std")]
-impl<R: Rng + NewRng> Reseeder<R> for ReseedWithNew {
-    fn reseed(&mut self, rng: &mut R) -> Result<(), Error> {
-        R::new().map(|result| *rng = result)
-    }
-}
-
 #[cfg(test)]
 mod test {
     use {impls, le};
-    use super::{ReseedingRng, Reseeder};
+    use super::{ReseedingRng};
     use {SeedableRng, Rng, Error};
 
     struct Counter {
@@ -140,17 +113,20 @@ mod test {
     }
 
     #[derive(Debug, Clone)]
-    struct ReseedCounter;
-    impl Reseeder<Counter> for ReseedCounter {
-        fn reseed(&mut self, rng: &mut Counter) -> Result<(), Error> {
-            *rng = Counter { i: 0 };
+    struct ResetCounter;
+    impl Rng for ResetCounter {
+        fn next_u32(&mut self) -> u32 { unimplemented!() }
+        fn next_u64(&mut self) -> u64 { unimplemented!() }
+        fn fill_bytes(&mut self, _dest: &mut [u8]) { unimplemented!() }
+        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            for i in dest.iter_mut() { *i = 0; }
             Ok(())
         }
     }
 
     #[test]
     fn test_reseeding() {
-        let mut rs = ReseedingRng::new(Counter {i:0}, 400, ReseedCounter);
+        let mut rs = ReseedingRng::new(Counter {i:0}, 400, ResetCounter);
 
         let mut i = 0;
         for _ in 0..1000 {
