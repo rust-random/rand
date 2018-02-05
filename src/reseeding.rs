@@ -46,7 +46,8 @@ impl<R: Rng+SeedableRng, Rsdr: Rng> ReseedingRng<R, Rsdr> {
     pub fn reseed_if_necessary(&mut self) {
         if self.bytes_generated >= self.generation_threshold {
             trace!("Reseeding RNG after {} bytes", self.bytes_generated);
-            R::from_rng(&mut self.reseeder).map(|result| self.rng = result).unwrap();
+            R::from_rng(&mut self.reseeder).map(|result| self.rng = result)
+                    .unwrap_or_else(|err| panic!("reseeding failed: {}", err));
             self.bytes_generated = 0;
         }
     }
