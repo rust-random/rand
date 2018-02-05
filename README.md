@@ -25,9 +25,6 @@ extern crate rand;
 
 ### Versions
 
-The `rand` crate has been at version `0.3` since March 2015. If you wish to
-avoid all breaking changes you may wish to stick with this version.
-
 Version `0.4`was released in December 2017. It contains almost no breaking
 changes since the `0.3` series, but nevertheless contains some significant
 new code, including a new "external" entropy source (`JitterRng`) and `no_std`
