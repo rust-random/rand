@@ -239,7 +239,7 @@
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://docs.rs/rand/0.3")]
+       html_root_url = "https://docs.rs/rand/0.4")]
 
 #![deny(missing_debug_implementations)]
 
@@ -259,6 +259,7 @@
 #[cfg(not(feature = "log"))] macro_rules! debug { ($($x:tt)*) => () }
 #[cfg(all(feature="std", not(feature = "log")))] macro_rules! info { ($($x:tt)*) => () }
 #[cfg(all(feature="std", not(feature = "log")))] macro_rules! warn { ($($x:tt)*) => () }
+#[cfg(all(feature="std", not(feature = "log")))] macro_rules! error { ($($x:tt)*) => () }
 
 
 use core::{marker, mem};
@@ -287,7 +288,7 @@ use prng::Isaac64Rng as IsaacWordRng;
 
 use distributions::{Range, IndependentSample};
 use distributions::range::SampleRange;
-#[cfg(feature="std")] use reseeding::{ReseedingRng, ReseedWithNew};
+#[cfg(feature="std")] use reseeding::ReseedingRng;
 
 // public modules
 pub mod distributions;
@@ -843,29 +844,7 @@ pub trait NewRng: SeedableRng {
 #[cfg(feature="std")]
 impl<R: SeedableRng> NewRng for R {
     fn new() -> Result<Self, Error> {
-        // Note: error handling would be easier with try/catch blocks
-        fn new_os<T: SeedableRng>() -> Result<T, Error> {
-            let mut r = OsRng::new()?;
-            T::from_rng(&mut r)
-        }
-
-        fn new_jitter<T: SeedableRng>() -> Result<T, Error> {
-            let mut r = JitterRng::new()?;
-            T::from_rng(&mut r)
-        }
-
-        trace!("Seeding new RNG");
-        new_os().or_else(|e1| {
-            warn!("OsRng failed [falling back to JitterRng]: {}", e1);
-            new_jitter().map_err(|_e2| {
-                warn!("JitterRng failed: {}", _e2);
-                // TODO: can we somehow return both error sources?
-                Error::with_cause(
-                    ErrorKind::Unavailable,
-                    "seeding a new RNG failed: both OS and Jitter entropy sources failed",
-                    e1)
-            })
-        })
+        R::from_rng(EntropyRng::new())
     }
 }
 
@@ -963,20 +942,19 @@ pub fn weak_rng() -> XorShiftRng {
 #[cfg(feature="std")]
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
-    rng: Rc<RefCell<ReseedingRng<StdRng, ReseedWithNew>>>,
+    rng: Rc<RefCell<ReseedingRng<StdRng, EntropyRng>>>,
 }
 
 #[cfg(feature="std")]
 thread_local!(
-    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<StdRng, ReseedWithNew>>> = {
+    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<StdRng, EntropyRng>>> = {
         const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
-        let r = match StdRng::new() {
-            Ok(r) => r,
-            Err(e) => panic!("could not initialize thread_rng: {:?}", e)
-        };
+        let mut entropy_source = EntropyRng::new();
+        let r = StdRng::from_rng(&mut entropy_source)
+            .expect("could not initialize thread_rng");
         let rng = ReseedingRng::new(r,
                                     THREAD_RNG_RESEED_THRESHOLD,
-                                    ReseedWithNew);
+                                    entropy_source);
         Rc::new(RefCell::new(rng))
     }
 );
@@ -1014,6 +992,127 @@ impl Rng for ThreadRng {
     #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.rng.borrow_mut().try_fill_bytes(dest)
+    }
+}
+
+/// An RNG provided specifically for seeding PRNG's.
+///
+/// `EntropyRng` uses the interface for random numbers provided by the operating
+/// system ([`OsRng`]). If that returns an error, it will fall back to the
+/// [`JitterRng`] entropy collector. Every time it will then check if `OsRng`
+/// is still not available, and switch back if possible.
+///
+/// [`OsRng`]: os/struct.OsRng.html
+/// [`JitterRng`]: jitter/struct.JitterRng.html
+#[cfg(feature="std")]
+#[derive(Debug)]
+pub struct EntropyRng {
+    rng: EntropySource,
+}
+
+#[cfg(feature="std")]
+#[derive(Debug)]
+enum EntropySource {
+    Os(OsRng),
+    Jitter(JitterRng),
+    None,
+}
+
+#[cfg(feature="std")]
+impl EntropyRng {
+    /// Create a new `EntropyRng`.
+    ///
+    /// This method will do no system calls or other initialization routines,
+    /// those are done on first use. This is done to make `new` infallible,
+    /// and `try_fill_bytes` the only place to report errors.
+    pub fn new() -> Self {
+        EntropyRng { rng: EntropySource::None }
+    }
+}
+
+#[cfg(feature="std")]
+impl Rng for EntropyRng {
+    fn next_u32(&mut self) -> u32 {
+        impls::next_u32_via_fill(self)
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        impls::next_u64_via_fill(self)
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.try_fill_bytes(dest).unwrap();
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        fn try_os_new(dest: &mut [u8]) -> Result<OsRng, Error>
+        {
+            let mut rng = OsRng::new()?;
+            rng.try_fill_bytes(dest)?;
+            Ok(rng)
+        }
+
+        fn try_jitter_new(dest: &mut [u8]) -> Result<JitterRng, Error>
+        {
+            let mut rng = JitterRng::new()?;
+            rng.try_fill_bytes(dest)?;
+            Ok(rng)
+        }
+
+        let mut switch_rng = None;
+        match self.rng {
+            EntropySource::None => {
+                let os_rng_result = try_os_new(dest);
+                match os_rng_result {
+                    Ok(os_rng) => {
+                        switch_rng = Some(EntropySource::Os(os_rng));
+                    }
+                    Err(os_rng_error) => {
+                        warn!("EntropyRng: OsRng failed [falling back to JitterRng]: {}",
+                              os_rng_error);
+                        match try_jitter_new(dest) {
+                            Ok(jitter_rng) => {
+                                switch_rng = Some(EntropySource::Jitter(jitter_rng));
+                            }
+                            Err(_jitter_error) => {
+                                warn!("EntropyRng: JitterRng failed: {}",
+                                      _jitter_error);
+                                return Err(os_rng_error);
+                            }
+                        }
+                    }
+                }
+            }
+            EntropySource::Os(ref mut rng) => {
+                let os_rng_result = rng.try_fill_bytes(dest);
+                if let Err(os_rng_error) = os_rng_result {
+                    warn!("EntropyRng: OsRng failed [falling back to JitterRng]: {}",
+                          os_rng_error);
+                    match try_jitter_new(dest) {
+                        Ok(jitter_rng) => {
+                            switch_rng = Some(EntropySource::Jitter(jitter_rng));
+                        }
+                        Err(_jitter_error) => {
+                            warn!("EntropyRng: JitterRng failed: {}",
+                                  _jitter_error);
+                            return Err(os_rng_error);
+                        }
+                    }
+                }
+            }
+            EntropySource::Jitter(ref mut rng) => {
+                if let Ok(os_rng) = try_os_new(dest) {
+                    info!("EntropyRng: OsRng available [switching back from JitterRng]");
+                    switch_rng = Some(EntropySource::Os(os_rng));
+                } else {
+                    return rng.try_fill_bytes(dest); // use JitterRng
+                }
+            }
+        }
+        if let Some(rng) = switch_rng {
+            self.rng = rng;
+        }
+        Ok(())
     }
 }
 
