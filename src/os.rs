@@ -64,48 +64,52 @@ impl Rng for OsRng {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
+        use std::{time, thread};
+
         // We cannot return Err(..), so we try to handle before panicking.
-        const WAIT_DUR_MS: u32 = 100;   // retry every 100ms
-        const MAX_WAIT: u32 = (10 * 1000) / WAIT_DUR_MS;    // max 10s
-        const TRANSIENT_STEP: u32 = MAX_WAIT / 8;
+        const MAX_RETRY_PERIOD: u32 = 10; // max 10s
+        const WAIT_DUR_MS: u32 = 100; // retry every 100ms
+        let wait_dur = time::Duration::from_millis(WAIT_DUR_MS as u64);
+        const RETRY_LIMIT: u32 = (MAX_RETRY_PERIOD * 1000) / WAIT_DUR_MS;
+        const TRANSIENT_RETRIES: u32 = 8;
         let mut err_count = 0;
-        let mut log_err = 0;    // log when err_count >= log_err
-        
+        let mut error_logged = false;
+
         loop {
             if let Err(e) = self.try_fill_bytes(dest) {
-                if log_err == 0 {
-                    warn!("OsRng failed: {:?}", e);
+                if err_count >= RETRY_LIMIT {
+                    error!("OsRng failed too many times; last error: {:?}", e);
+                    panic!("OsRng failed too many times; last error: {:?}", e);
                 }
-                
-                if e.kind().should_retry() {
-                    if err_count > MAX_WAIT {
-                        panic!("Too many RNG errors or timeout; last error: {}", e.msg());
+
+                match e.kind() {
+                    ErrorKind::Transient => {
+                        if !error_logged {
+                            warn!("OsRng failed; retrying up to {} times. Error: {:?}",
+                                    TRANSIENT_RETRIES, e);
+                            error_logged = true;
+                        }
+                        err_count += (RETRY_LIMIT + TRANSIENT_RETRIES - 1)
+                                / TRANSIENT_RETRIES;    // round up
+                        continue;
                     }
-                    
-                    if e.kind().should_wait() {
+                    ErrorKind::NotReady => {
+                        if !error_logged {
+                            warn!("OsRng failed; waiting up to {}s and retrying. Error: {:?}",
+                                    MAX_RETRY_PERIOD, e);
+                            error_logged = true;
+                        }
                         err_count += 1;
-                        if err_count >= log_err {
-                            log_err += TRANSIENT_STEP;
-                            warn!("OsRng: waiting and retrying ...");
-                        }
-                        #[cfg(feature="std")]{
-                            let dur = ::std::time::Duration::from_millis(WAIT_DUR_MS as u64);
-                            ::std::thread::sleep(dur);
-                        }
-                    } else {
-                        err_count += TRANSIENT_STEP;
-                        if err_count >= log_err {
-                            log_err += TRANSIENT_STEP;
-                            warn!("OsRng: retrying ...");
-                        }
+                        thread::sleep(wait_dur);
+                        continue;
                     }
-                    
-                    continue;
+                    _ => {
+                        error!("OsRng failed: {:?}", e);
+                        panic!("OsRng fatal error: {:?}", e);
+                    }
                 }
-                
-                panic!("Fatal RNG error: {}", e.msg());
             }
-            
+
             break;
         }
     }
@@ -239,7 +243,11 @@ mod imp {
                     // Potentially this would waste bytes, but since we use
                     // /dev/urandom blocking only happens if not initialised.
                     // Also, wasting the bytes in v doesn't matter very much.
-                    return Err(Error::new(ErrorKind::NotReady, "getrandom not ready"));
+                    return Err(Error::with_cause(
+                        ErrorKind::NotReady,
+                        "getrandom not ready",
+                        err,
+                    ));
                 } else {
                     return Err(Error::with_cause(
                         ErrorKind::Unavailable,
@@ -338,12 +346,16 @@ mod imp {
 
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
             trace!("OsRng: reading {} bytes via cloadabi::random_get", v.len());
-            if unsafe { cloudabi::random_get(v) } == cloudabi::errno::SUCCESS {
+            let errno = unsafe { cloudabi::random_get(v) };
+            if errno == cloudabi::errno::SUCCESS {
                 Ok(())
             } else {
-                Err(Error::new(
+                // Cloudlibc provides its own `strerror` implementation so we
+                // can use `from_raw_os_error` here.
+                Err(Error::with_cause(
                     ErrorKind::Unavailable,
                     "random_get() system call failed",
+                    io::Error::from_raw_os_error(errno),
                 ))
             }
         }
@@ -421,9 +433,10 @@ mod imp {
                                  ptr::null(), 0)
                 };
                 if ret == -1 || s_len != s.len() {
-                    return Err(Error::new(
+                    return Err(Error::with_cause(
                         ErrorKind::Unavailable,
-                        "kern.arandom sysctl failed"));
+                        "kern.arandom sysctl failed",
+                        io::Error::last_os_error()));
                 }
             }
             Ok(())
