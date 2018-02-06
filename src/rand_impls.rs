@@ -114,6 +114,7 @@ macro_rules! float_impls {
         mod $mod_name {
             use {Rand, Rng, Open01, Closed01};
 
+            // 1.0 / epsilon
             const SCALE: $ty = (1u64 << $mantissa_bits) as $ty;
 
             impl Rand for $ty {
@@ -130,11 +131,10 @@ macro_rules! float_impls {
             impl Rand for Open01<$ty> {
                 #[inline]
                 fn rand<R: Rng>(rng: &mut R) -> Open01<$ty> {
-                    // add a small amount (specifically 2 bits below
-                    // the precision of f64/f32 at 1.0), so that small
-                    // numbers are larger than 0, but large numbers
-                    // aren't pushed to/above 1.
-                    Open01(rng.$method_name() + 0.25 / SCALE)
+                    // add 0.5 * epsilon, so that smallest number is
+                    // greater than 0, and largest number is still
+                    // less than 1, specifically 1 - 0.5 * epsilon.
+                    Open01(rng.$method_name() + 0.5 / SCALE)
                 }
             }
             impl Rand for Closed01<$ty> {
@@ -148,8 +148,8 @@ macro_rules! float_impls {
         }
     }
 }
-float_impls! { f64_rand_impls, f64, 53, next_f64 }
-float_impls! { f32_rand_impls, f32, 24, next_f32 }
+float_impls! { f64_rand_impls, f64, 52, next_f64 }
+float_impls! { f32_rand_impls, f32, 23, next_f32 }
 
 impl Rand for char {
     #[inline]
@@ -256,6 +256,9 @@ impl<T: SeedableRng> Rand for T {
 mod tests {
     use impls;
     use {Rng, Open01, Closed01};
+    
+    const EPSILON32: f32 = ::core::f32::EPSILON;
+    const EPSILON64: f64 = ::core::f64::EPSILON;
 
     struct ConstantRng(u64);
     impl Rng for ConstantRng {
@@ -275,9 +278,59 @@ mod tests {
 
     #[test]
     fn floating_point_edge_cases() {
-        // the test for exact equality is correct here.
-        assert!(ConstantRng(0xffff_ffff).gen::<f32>() != 1.0);
-        assert!(ConstantRng(0xffff_ffff_ffff_ffff).gen::<f64>() != 1.0);
+        let mut zeros = ConstantRng(0);
+        assert_eq!(zeros.gen::<f32>(), 0.0);
+        assert_eq!(zeros.gen::<f64>(), 0.0);
+        
+        let mut one = ConstantRng(1);
+        assert_eq!(one.gen::<f32>(), EPSILON32);
+        assert_eq!(one.gen::<f64>(), EPSILON64);
+        
+        let mut max = ConstantRng(!0);
+        assert_eq!(max.gen::<f32>(), 1.0 - EPSILON32);
+        assert_eq!(max.gen::<f64>(), 1.0 - EPSILON64);
+    }
+
+    #[test]
+    fn fp_closed_edge_cases() {
+        let mut zeros = ConstantRng(0);
+        let Closed01(zero32) = zeros.gen::<Closed01<f32>>();
+        let Closed01(zero64) = zeros.gen::<Closed01<f64>>();
+        assert_eq!(zero32, 0.0);
+        assert_eq!(zero64, 0.0);
+        
+        let mut one = ConstantRng(1);
+        let Closed01(one32) = one.gen::<Closed01<f32>>();
+        let Closed01(one64) = one.gen::<Closed01<f64>>();
+        assert!(EPSILON32 < one32 && one32 < EPSILON32 * 1.01);
+        assert!(EPSILON64 < one64 && one64 < EPSILON64 * 1.01);
+        
+        let mut max = ConstantRng(!0);
+        let Closed01(max32) = max.gen::<Closed01<f32>>();
+        let Closed01(max64) = max.gen::<Closed01<f64>>();
+        assert_eq!(max32, 1.0);
+        assert_eq!(max64, 1.0);
+    }
+
+    #[test]
+    fn fp_open_edge_cases() {
+        let mut zeros = ConstantRng(0);
+        let Open01(zero32) = zeros.gen::<Open01<f32>>();
+        let Open01(zero64) = zeros.gen::<Open01<f64>>();
+        assert_eq!(zero32, 0.0 + EPSILON32 / 2.0);
+        assert_eq!(zero64, 0.0 + EPSILON64 / 2.0);
+        
+        let mut one = ConstantRng(1);
+        let Open01(one32) = one.gen::<Open01<f32>>();
+        let Open01(one64) = one.gen::<Open01<f64>>();
+        assert!(EPSILON32 < one32 && one32 < EPSILON32 * 2.0);
+        assert!(EPSILON64 < one64 && one64 < EPSILON64 * 2.0);
+        
+        let mut max = ConstantRng(!0);
+        let Open01(max32) = max.gen::<Open01<f32>>();
+        let Open01(max64) = max.gen::<Open01<f64>>();
+        assert_eq!(max32, 1.0 - EPSILON32 / 2.0);
+        assert_eq!(max64, 1.0 - EPSILON64 / 2.0);
     }
 
     #[test]
