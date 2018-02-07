@@ -48,12 +48,12 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 // Note: the C implementation relies on being compiled without optimizations.
 // This implementation goes through lengths to make the compiler not optimise
 // out what is technically dead code, but that does influence timing jitter.
-pub struct JitterRng<T: JitterTimer> {
+pub struct JitterRng {
     data: u64, // Actual random number
     // Number of rounds to run the entropy collector per 64 bits
     rounds: u8,
     // Timer used by `measure_jitter`
-    timer: T,
+    timer: fn() -> u64,
     // Memory for the Memory Access noise source FIXME
     mem_prev_index: u16,
     // Make `next_u32` not waste 32 bits
@@ -94,7 +94,7 @@ impl EcState {
 }
 
 // Custom Debug implementation that does not expose the internal state
-impl<T: JitterTimer> fmt::Debug for JitterRng<T> {
+impl fmt::Debug for JitterRng {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "JitterRng {{}}")
     }
@@ -154,17 +154,16 @@ impl From<TimerError> for Error {
 #[cfg(feature="std")]
 static JITTER_ROUNDS: AtomicUsize = ATOMIC_USIZE_INIT;
 
-#[cfg(feature="std")]
-impl JitterRng<Timer> {
+impl JitterRng {
     /// Create a new `JitterRng`.
     /// Makes use of `std::time` for a timer.
     ///
     /// During initialization CPU execution timing jitter is measured a few
     /// hundred times. If this does not pass basic quality tests, an error is
     /// returned. The test result is cached to make subsequent calls faster.
-    pub fn new() -> Result<JitterRng<Timer>, TimerError> {
-        let mut state = JitterRng::new_with_timer(Timer::default());
-
+    #[cfg(feature="std")]
+    pub fn new() -> Result<JitterRng, TimerError> {
+        let mut state = JitterRng::new_with_timer(platform::get_nstime);
         let mut rounds = JITTER_ROUNDS.load(Ordering::Relaxed) as u8;
         if rounds == 0 {
             // No result yet: run test.
@@ -179,9 +178,7 @@ impl JitterRng<Timer> {
         state.gen_entropy();
         Ok(state)
     }
-}
 
-impl<T: JitterTimer+Clone> JitterRng<T> {
     /// Create a new `JitterRng`.
     /// A custom timer can be supplied, making it possible to use `JitterRng` in
     /// `no_std` environments.
@@ -193,11 +190,11 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
     /// `JitterRng`, and optionally call `set_rounds()`. Also it is important to
     /// call `gen_entropy` once before using the first result to initialize the
     /// entropy collection pool.
-    pub fn new_with_timer(timer: T) -> JitterRng<T> {
+    pub fn new_with_timer(timer: fn() -> u64) -> JitterRng {
         JitterRng {
             data: 0,
             rounds: 64,
-            timer: timer.clone(),
+            timer: timer,
             mem_prev_index: 0,
             data_half_used: false,
         }
@@ -228,7 +225,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
     fn random_loop_cnt(&mut self, n_bits: u32) -> u32 {
         let mut rounds = 0;
 
-        let mut time = self.timer.get_nstime();
+        let mut time = (self.timer)();
         // Mix with the current state of the random number balance the random
         // loop counter a bit more.
         time ^= self.data;
@@ -347,7 +344,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
 
         // Get time stamp and calculate time delta to previous
         // invocation to measure the timing variations
-        let time = self.timer.get_nstime();
+        let time = (self.timer)();
         // Note: wrapping_sub combined with a cast to `i64` generates a correct
         // delta, even in the unlikely case this is a timer that is not strictly
         // monotonic.
@@ -426,7 +423,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
         // Prime `ec.prev_time`, and run the noice sources to make sure the
         // first loop round collects the expected entropy.
         let mut ec = EcState {
-            prev_time: self.timer.get_nstime(),
+            prev_time: (self.timer)(),
             last_delta: 0,
             last_delta2: 0,
             mem: [0; MEMORY_SIZE],
@@ -471,7 +468,7 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
         let mut count_stuck = 0;
 
         let mut ec = EcState {
-            prev_time: self.timer.get_nstime(),
+            prev_time: (self.timer)(),
             last_delta: 0,
             last_delta2: 0,
             mem: [0; MEMORY_SIZE],
@@ -484,10 +481,10 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
 
         for i in 0..(CLEARCACHE + TESTLOOPCOUNT) {
             // Measure time delta of core entropy collection logic
-            let time = self.timer.get_nstime();
+            let time = (self.timer)();
             self.memaccess(&mut ec.mem, true);
             self.lfsr_time(time, true);
-            let time2 = self.timer.get_nstime();
+            let time2 = (self.timer)();
 
             // Test whether timer works
             if time == 0 || time2 == 0 {
@@ -638,33 +635,28 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
     ///
     /// ```rust,no_run
     /// use rand::JitterRng;
-    /// use rand::jitter::JitterTimer;
     ///
     /// # use std::error::Error;
     /// # use std::fs::File;
     /// # use std::io::Write;
     /// #
     /// # fn try_main() -> Result<(), Box<Error>> {
-    /// #[derive(Clone, Debug, Default)]
-    /// struct Timer;
-    /// impl JitterTimer for Timer {
-    ///     fn get_nstime(&self) -> u64 {
-    ///         use std::time::{SystemTime, UNIX_EPOCH};
+    /// fn get_nstime() -> u64 {
+    ///     use std::time::{SystemTime, UNIX_EPOCH};
     ///
-    ///         let dur = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
-    ///         // The correct way to calculate the current time is
-    ///         // `dur.as_secs() * 1_000_000_000 + dur.subsec_nanos() as u64`
-    ///         // But this is faster, and the difference in terms of entropy is
-    ///         // negligible (log2(10^9) == 29.9).
-    ///         dur.as_secs() << 30 | dur.subsec_nanos() as u64
-    ///     }
+    ///     let dur = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+    ///     // The correct way to calculate the current time is
+    ///     // `dur.as_secs() * 1_000_000_000 + dur.subsec_nanos() as u64`
+    ///     // But this is faster, and the difference in terms of entropy is
+    ///     // negligible (log2(10^9) == 29.9).
+    ///     dur.as_secs() << 30 | dur.subsec_nanos() as u64
     /// }
     ///
     /// // Do not initialize with `JitterRng::new`, but with `new_with_timer`.
     /// // 'new' always runst `test_timer`, and can therefore fail to
     /// // initialize. We want to be able to get the statistics even when the
     /// // timer test fails.
-    /// let mut rng = JitterRng::new_with_timer(Timer);
+    /// let mut rng = JitterRng::new_with_timer(get_nstime);
     ///
     /// // 1_000_000 results are required for the NIST SP 800-90B Entropy
     /// // Estimation Suite
@@ -692,37 +684,20 @@ impl<T: JitterTimer+Clone> JitterRng<T> {
     /// ```
     #[cfg(feature="std")]
     pub fn timer_stats(&mut self, var_rounds: bool) -> i64 {
-        let timer = Timer::default();
         let mut mem = [0; MEMORY_SIZE];
 
-        let time = timer.get_nstime();
+        let time = platform::get_nstime();
         self.memaccess(&mut mem, var_rounds);
         self.lfsr_time(time, var_rounds);
-        let time2 = timer.get_nstime();
+        let time2 = platform::get_nstime();
         time2.wrapping_sub(time) as i64
     }
 }
 
-/// Timer to be used by `JitterRng`.
-///
-/// Implement this trait to supply a custom timer to `JitterRng` with
-/// `new_with_timer`, making it possible to use in `no_std` environments.
-///
-/// The timer must have nanosecond precision.
-pub trait JitterTimer: Sized {
-    fn get_nstime(&self) -> u64;
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct Timer;
-
-#[cfg(all(feature="std",
-          not(any(target_os = "macos",
-                  target_os = "ios",
-                  target_os = "windows",
-                  all(target_arch = "wasm32", not(target_os = "emscripten"))))))]
-impl JitterTimer for Timer {
-    fn get_nstime(&self) -> u64 {
+#[cfg(feature="std")]
+mod platform {
+    #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "windows", all(target_arch = "wasm32", not(target_os = "emscripten")))))]
+    pub fn get_nstime() -> u64 {
         use std::time::{SystemTime, UNIX_EPOCH};
 
         let dur = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
@@ -732,12 +707,9 @@ impl JitterTimer for Timer {
         // (log2(10^9) == 29.9).
         dur.as_secs() << 30 | dur.subsec_nanos() as u64
     }
-}
 
-#[cfg(all(feature="std",
-      any(target_os = "macos", target_os = "ios")))]
-impl JitterTimer for Timer {
-    fn get_nstime(&self) -> u64 {
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    pub fn get_nstime() -> u64 {
         extern crate libc;
         // On Mac OS and iOS std::time::SystemTime only has 1000ns resolution.
         // We use `mach_absolute_time` instead. This provides a CPU dependent unit,
@@ -747,11 +719,9 @@ impl JitterTimer for Timer {
         // use the raw result.
         unsafe { libc::mach_absolute_time() }
     }
-}
 
-#[cfg(all(feature="std", target_os = "windows"))]
-impl JitterTimer for Timer {
-    fn get_nstime(&self) -> u64 {
+    #[cfg(target_os = "windows")]
+    pub fn get_nstime() -> u64 {
         extern crate winapi;
         unsafe {
             let mut t = super::mem::zeroed();
@@ -759,13 +729,9 @@ impl JitterTimer for Timer {
             *t.QuadPart() as u64
         }
     }
-}
 
-#[cfg(all(feature="std",
-          target_arch = "wasm32",
-          not(target_os = "emscripten")))]
-impl JitterTimer for Timer {
-    fn get_nstime(&self) -> u64 {
+    #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+    pub fn get_nstime() -> u64 {
         unreachable!()
     }
 }
@@ -780,7 +746,7 @@ fn black_box<T>(dummy: T) -> T {
     }
 }
 
-impl<T: JitterTimer+Clone> Rng for JitterRng<T> {
+impl Rng for JitterRng {
     fn next_u32(&mut self) -> u32 {
         // We want to use both parts of the generated entropy
         if self.data_half_used {
