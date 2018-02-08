@@ -145,6 +145,8 @@ impl ::std::error::Error for TimerError {
 
 impl From<TimerError> for Error {
     fn from(err: TimerError) -> Error {
+        // Timer check is already quite permissive of failures so we don't
+        // expect false-positive failures, i.e. any error is irrecoverable.
         Error::with_cause(ErrorKind::Unavailable,
                               "timer jitter failed basic quality tests", err)
     }
