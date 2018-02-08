@@ -82,31 +82,27 @@ impl RngCore for OsRng {
                     panic!("OsRng failed too many times; last error: {}", e);
                 }
 
-                match e.kind() {
-                    ErrorKind::Transient => {
-                        if !error_logged {
-                            warn!("OsRng failed; retrying up to {} times. Error: {}",
-                                    TRANSIENT_RETRIES, e);
-                            error_logged = true;
-                        }
-                        err_count += (RETRY_LIMIT + TRANSIENT_RETRIES - 1)
-                                / TRANSIENT_RETRIES;    // round up
-                        continue;
+                if e.kind.should_wait() {
+                    if !error_logged {
+                        warn!("OsRng failed; waiting up to {}s and retrying. Error: {}",
+                                MAX_RETRY_PERIOD, e);
+                        error_logged = true;
                     }
-                    ErrorKind::NotReady => {
-                        if !error_logged {
-                            warn!("OsRng failed; waiting up to {}s and retrying. Error: {}",
-                                    MAX_RETRY_PERIOD, e);
-                            error_logged = true;
-                        }
-                        err_count += 1;
-                        thread::sleep(wait_dur);
-                        continue;
+                    err_count += 1;
+                    thread::sleep(wait_dur);
+                    continue;
+                } else if e.kind.should_retry() {
+                    if !error_logged {
+                        warn!("OsRng failed; retrying up to {} times. Error: {}",
+                                TRANSIENT_RETRIES, e);
+                        error_logged = true;
                     }
-                    _ => {
-                        error!("OsRng failed: {}", e);
-                        panic!("OsRng fatal error: {}", e);
-                    }
+                    err_count += (RETRY_LIMIT + TRANSIENT_RETRIES - 1)
+                            / TRANSIENT_RETRIES;    // round up
+                    continue;
+                } else {
+                    error!("OsRng failed: {}", e);
+                    panic!("OsRng fatal error: {}", e);
                 }
             }
 
@@ -147,11 +143,16 @@ impl ReadRng {
         let mut guard = mutex.lock().unwrap();
         if (*guard).is_none() {
             info!("OsRng: opening random device {}", path.as_ref().display());
-            let file = File::open(path).map_err(|err| Error::with_cause(
-                    ErrorKind::Unavailable,
-                    "error opening random device",
-                    err
-            ))?;
+            let file = File::open(path).map_err(|err| {
+                use std::io::ErrorKind::*;
+                match err.kind() {
+                    NotFound | PermissionDenied | ConnectionRefused | BrokenPipe =>
+                        Error::with_cause(ErrorKind::Unavailable,
+                            "permanent error while opening random device", err),
+                    _ => Error::with_cause(ErrorKind::Unexpected,
+                            "unexpected error while opening random device", err)
+                }
+            })?;
             *guard = Some(file);
         }
         
@@ -169,7 +170,7 @@ impl ReadRng {
         let mut file = (*guard).as_mut().unwrap();
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
         file.read_exact(dest).map_err(|err| {
-            Error::with_cause(ErrorKind::Unavailable, "error reading random device", err)
+            Error::with_cause(ErrorKind::Unexpected, "error reading random device", err)
         })
     }
 }
@@ -250,7 +251,7 @@ mod imp {
                     ));
                 } else {
                     return Err(Error::with_cause(
-                        ErrorKind::Unavailable,
+                        ErrorKind::Unexpected,
                         "unexpected getrandom error",
                         err,
                     ));

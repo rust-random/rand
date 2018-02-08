@@ -18,15 +18,33 @@ use std::error::Error as stdError;
 /// Error kind which can be matched over.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum ErrorKind {
-    /// Permanent failure: likely not recoverable without user action.
+    /// Feature is not available; not recoverable.
+    /// 
+    /// This is the most permanent failure type and implies the error cannot be
+    /// resolved simply by retrying (e.g. the feature may not exist in this
+    /// build of the application or on the current platform).
     Unavailable,
-    /// Temporary failure: recommended to retry a few times, but may also be
-    /// irrecoverable.
+    /// General failure; there may be a chance of recovery on retry.
+    /// 
+    /// This is the catch-all kind for errors from known and unknown sources
+    /// which do not have a more specific kind / handling method.
+    /// 
+    /// It is suggested to retry a couple of times or retry later when
+    /// handling; some error sources may be able to resolve themselves,
+    /// although this is not likely.
+    Unexpected,
+    /// A transient failure which likely can be resolved or worked around.
+    /// 
+    /// This error kind exists for a few specific cases where it is known that
+    /// the error likely can be resolved internally, but is reported anyway.
     Transient,
     /// Not ready yet: recommended to try again a little later.
+    /// 
+    /// This error kind implies the generator needs more time or needs some
+    /// other part of the application to do something else first before it is
+    /// ready for use; for example this may be used by external generators
+    /// which require time for initialization.
     NotReady,
-    /// Uncategorised error
-    Other,
     #[doc(hidden)]
     __Nonexhaustive,
 }
@@ -36,10 +54,7 @@ impl ErrorKind {
     /// 
     /// See also `should_wait()`.
     pub fn should_retry(self) -> bool {
-        match self {
-            ErrorKind::Transient | ErrorKind::NotReady => true,
-            _ => false,
-        }
+        self != ErrorKind::Unavailable
     }
     
     /// True if we should retry but wait before retrying
@@ -52,24 +67,30 @@ impl ErrorKind {
     /// A description of this error kind
     pub fn description(self) -> &'static str {
         match self {
-            ErrorKind::Unavailable => "permanent failure",
+            ErrorKind::Unavailable => "permanently unavailable",
+            ErrorKind::Unexpected => "unexpected failure",
             ErrorKind::Transient => "transient failure",
             ErrorKind::NotReady => "not ready yet",
-            ErrorKind::Other => "uncategorised",
             ErrorKind::__Nonexhaustive => unreachable!(),
         }
     }
 }
 
+
 /// Error type of random number generators
 /// 
 /// This is a relatively simple error type, designed for compatibility with and
 /// without the Rust `std` library. It embeds a "kind" code, a message (static
-/// string only), and an optional chained cause (`std` only).
+/// string only), and an optional chained cause (`std` only). The `kind` and
+/// `msg` fields can be accessed directly; cause can be accessed via
+/// `std::error::Error::cause` or `Error::take_cause`. Construction can only be
+/// done via `Error::new` or `Error::with_cause`.
 #[derive(Debug)]
 pub struct Error {
-    kind: ErrorKind,
-    msg: &'static str,
+    /// The error kind
+    pub kind: ErrorKind,
+    /// The error message
+    pub msg: &'static str,
     #[cfg(feature="std")]
     cause: Option<Box<stdError + Send + Sync>>,
 }
@@ -110,14 +131,11 @@ impl Error {
         Error { kind: kind, msg: msg }
     }
     
-    /// Get the error kind
-    pub fn kind(&self) -> ErrorKind {
-        self.kind
-    }
-    
-    /// Get the error message
-    pub fn msg(&self) -> &'static str {
-        self.msg
+    /// Take the cause, if any. This allows the embedded cause to be extracted.
+    /// This uses `Option::take`, leaving `self` with no cause.
+    #[cfg(feature="std")]
+    pub fn take_cause(&mut self) -> Option<Box<stdError + Send + Sync>> {
+        self.cause.take()
     }
 }
 
@@ -126,12 +144,10 @@ impl fmt::Display for Error {
         #[cfg(feature="std")] {
             if let Some(ref cause) = self.cause {
                 return write!(f, "{} ({}); cause: {}",
-                        self.msg(),
-                        self.kind.description(),
-                        cause);
+                        self.msg, self.kind.description(), cause);
             }
         }
-        write!(f, "{} ({})", self.msg(), self.kind.description())
+        write!(f, "{} ({})", self.msg, self.kind.description())
     }
 }
 
