@@ -15,9 +15,7 @@
 //! bounds. Distributions use the `Distribution` trait to yield values: call
 //! `distr.sample(&mut rng)` to get a random variable.
 
-use core::marker;
-
-use {Rng, Rand};
+use Rng;
 
 pub use self::range::Range;
 #[cfg(feature="std")]
@@ -63,9 +61,9 @@ pub trait IndependentSample<Support>: Sample<Support> {
 
 #[allow(deprecated)]
 mod impls {
-    use {Rng, Rand};
+    use Rng;
     use distributions::{Distribution, Sample, IndependentSample,
-            RandSample, WeightedChoice};
+            WeightedChoice};
     #[cfg(feature="std")]
     use distributions::exponential::Exp;
     #[cfg(feature="std")]
@@ -73,17 +71,6 @@ mod impls {
     #[cfg(feature="std")]
     use distributions::normal::{Normal, LogNormal};
     use distributions::range::{Range, SampleRange};
-    
-    impl<Sup: Rand> Sample<Sup> for RandSample<Sup> {
-        fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup {
-            Distribution::sample(self, rng)
-        }
-    }
-    impl<Sup: Rand> IndependentSample<Sup> for RandSample<Sup> {
-        fn ind_sample<R: Rng>(&self, rng: &mut R) -> Sup {
-            Distribution::sample(self, rng)
-        }
-    }
     
     impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
         fn sample<R: Rng>(&mut self, rng: &mut R) -> T {
@@ -138,30 +125,6 @@ pub trait Distribution<T> {
 impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
     fn sample<R: Rng>(&self, rng: &mut R) -> T {
         (*self).sample(rng)
-    }
-}
-
-/// A wrapper for generating types that implement `Rand` via the
-/// `Distribution` trait.
-#[derive(Debug)]
-pub struct RandSample<Sup> {
-    _marker: marker::PhantomData<fn() -> Sup>,
-}
-
-impl<Sup> Copy for RandSample<Sup> {}
-impl<Sup> Clone for RandSample<Sup> {
-    fn clone(&self) -> Self { *self }
-}
-
-impl<Sup: Rand> Distribution<Sup> for RandSample<Sup> {
-    fn sample<R: Rng>(&self, rng: &mut R) -> Sup {
-        rng.gen()
-    }
-}
-
-impl<Sup> RandSample<Sup> {
-    pub fn new() -> RandSample<Sup> {
-        RandSample { _marker: marker::PhantomData }
     }
 }
 
@@ -351,17 +314,9 @@ fn ziggurat<R: Rng, P, Z>(
 
 #[cfg(test)]
 mod tests {
-    use {Rng, RngCore, Rand};
+    use {Rng, RngCore};
     use impls;
-    use super::{RandSample, WeightedChoice, Weighted, Distribution};
-
-    #[derive(PartialEq, Debug)]
-    struct ConstRand(usize);
-    impl Rand for ConstRand {
-        fn rand<R: Rng>(_: &mut R) -> ConstRand {
-            ConstRand(0)
-        }
-    }
+    use super::{WeightedChoice, Weighted, Distribution};
 
     // 0, 1, 2, 3, ...
     struct CountingRng { i: u32 }
@@ -377,14 +332,6 @@ mod tests {
         fn fill_bytes(&mut self, dest: &mut [u8]) {
             impls::fill_bytes_via_u32(self, dest)
         }
-    }
-
-    #[test]
-    fn test_rand_sample() {
-        let rand_sample = RandSample::<ConstRand>::new();
-
-        assert_eq!(rand_sample.sample(&mut ::test::rng(231)), ConstRand(0));
-        assert_eq!(rand_sample.sample(&mut ::test::rng(232)), ConstRand(0));
     }
 
     #[test]
