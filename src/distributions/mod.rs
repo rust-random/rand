@@ -36,6 +36,7 @@ pub mod exponential;
 
 mod float;
 mod integer;
+mod other;
 #[cfg(feature="std")]
 mod ziggurat_tables;
 
@@ -145,6 +146,11 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///
 /// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
 ///   over all values of the type.
+/// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
+///   code points in the range `0...0x10_FFFF`, except for the range
+///   `0xD800...0xDFFF` (the surrogate code points).  This includes
+///   unassigned/reserved code points.
+/// * `bool`: Generates `false` or `true`, each with probability 0.5.
 /// * Floating point types (`f32` and `f64`): Uniformly distributed in the
 ///   half-open range `[0, 1)`.  (The [`Open01`], [`Closed01`], [`Exp1`], and
 ///   [`StandardNormal`] distributions produce floating point numbers with

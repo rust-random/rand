@@ -321,17 +321,7 @@ mod prng;
 /// ## Built-in Implementations
 ///
 /// `Rand` is implemented for any type supporting the [`Uniform`] distribution.
-/// That includes: floating point numbers.
-///
-/// This crate implements `Rand` for various primitive types.  Assuming the
-/// provided `Rng` is well-behaved, these implementations generate values with
-/// the following ranges and distributions:
-///
-/// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
-///   code points in the range `0...0x10_FFFF`, except for the range
-///   `0xD800...0xDFFF` (the surrogate code points).  This includes
-///   unassigned/reserved code points.
-/// * `bool`: Generates `false` or `true`, each with probability 0.5.
+/// That includes: integers, floating point numbers, char, boolean.
 ///
 /// The following aggregate types also implement `Rand` as long as their
 /// component types implement it:
@@ -367,8 +357,7 @@ pub trait Rand : Sized {
 /// 
 /// // or:
 /// fn use_any_rng<R: RngCore>(rng: &mut R) -> char {
-///     // TODO: generating a single char should be easier than this
-///     rng.gen_ascii_chars().next().unwrap()
+///     rng.gen()
 /// }
 /// ```
 /// 
