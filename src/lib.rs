@@ -1018,7 +1018,8 @@ impl SeedableRng for StdRng {
 /// This will seed the generator with randomness from thread_rng.
 #[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
-    thread_rng().gen()
+    XorShiftRng::from_rng(&mut thread_rng()).unwrap_or_else(|err|
+        panic!("weak_rng failed: {:?}", err))
 }
 
 
