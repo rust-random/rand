@@ -7,7 +7,6 @@ matrix:
       script:
         - cargo test
         - cargo build --no-default-features # we cannot exclude doc tests
-        - cargo test --manifest-path rand-derive/Cargo.toml
     - rust: stable
     - rust: stable
       os: osx
@@ -30,7 +29,6 @@ script:
   - cargo test --tests --no-default-features
   - cargo test --features serde-1,log
   - cargo test --tests --no-default-features --features=serde-1
-  - cargo test --manifest-path rand-derive/Cargo.toml
 
 env:
   global:
