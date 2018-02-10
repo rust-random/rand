@@ -17,7 +17,7 @@ use distributions::{Distribution, Uniform};
 
 impl Distribution<char> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> char {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> char {
         // a char is 21 bits
         const CHAR_MASK: u32 = 0x001f_ffff;
         loop {
@@ -34,7 +34,7 @@ impl Distribution<char> for Uniform {
 
 impl Distribution<bool> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> bool {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
         rng.gen::<u8>() & 1 == 1
     }
 }
@@ -49,7 +49,7 @@ macro_rules! tuple_impl {
             where $( Uniform: Distribution<$tyvar> ),*
         {
             #[inline]
-            fn sample<R: Rng>(&self, _rng: &mut R) -> ( $( $tyvar ),* , ) {
+            fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> ( $( $tyvar ),* , ) {
                 (
                     // use the $tyvar's to get the appropriate number of
                     // repeats (they're not actually needed)
@@ -65,7 +65,7 @@ macro_rules! tuple_impl {
 
 impl Distribution<()> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, _: &mut R) -> () { () }
+    fn sample<R: Rng + ?Sized>(&self, _: &mut R) -> () { () }
 }
 tuple_impl!{A}
 tuple_impl!{A, B}
@@ -87,7 +87,7 @@ macro_rules! array_impl {
 
         impl<T> Distribution<[T; $n]> for Uniform where Uniform: Distribution<T> {
             #[inline]
-            fn sample<R: Rng>(&self, _rng: &mut R) -> [T; $n] {
+            fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; $n] {
                 [_rng.gen::<$t>(), $(_rng.gen::<$ts>()),*]
             }
         }
@@ -95,7 +95,7 @@ macro_rules! array_impl {
     // empty case:
     {$n:expr,} => {
         impl<T> Distribution<[T; $n]> for Uniform {
-            fn sample<R: Rng>(&self, _rng: &mut R) -> [T; $n] { [] }
+            fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; $n] { [] }
         }
     };
 }
@@ -104,7 +104,7 @@ array_impl!{32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T
 
 impl<T> Distribution<Option<T>> for Uniform where Uniform: Distribution<T> {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> Option<T> {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Option<T> {
         // UFCS is needed here: https://github.com/rust-lang/rust/issues/24066
         if rng.gen::<bool>() {
             Some(rng.gen())

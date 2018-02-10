@@ -38,13 +38,13 @@ use distributions::{ziggurat, ziggurat_tables, Distribution, Open01};
 pub struct StandardNormal;
 
 impl Distribution<f64> for StandardNormal {
-    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         #[inline]
         fn pdf(x: f64) -> f64 {
             (-x*x/2.0).exp()
         }
         #[inline]
-        fn zero_case<R:Rng>(rng: &mut R, u: f64) -> f64 {
+        fn zero_case<R: Rng + ?Sized>(rng: &mut R, u: f64) -> f64 {
             // compute a random number in the tail by hand
 
             // strange initial conditions, because the loop is not
@@ -110,7 +110,7 @@ impl Normal {
     }
 }
 impl Distribution<f64> for Normal {
-    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         let n = rng.sample(StandardNormal);
         self.mean + self.std_dev * n
     }
@@ -151,7 +151,7 @@ impl LogNormal {
     }
 }
 impl Distribution<f64> for LogNormal {
-    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         self.norm.sample(rng).exp()
     }
 }

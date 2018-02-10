@@ -123,11 +123,11 @@ mod impls {
 pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the
     /// source of randomness.
-    fn sample<R: Rng>(&self, rng: &mut R) -> T;
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T;
 }
 
 impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
-    fn sample<R: Rng>(&self, rng: &mut R) -> T {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
         (*self).sample(rng)
     }
 }
@@ -265,7 +265,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
 }
 
 impl<'a, T: Clone> Distribution<T> for WeightedChoice<'a, T> {
-    fn sample<R: Rng>(&self, rng: &mut R) -> T {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
         // we want to find the first element that has cumulative
         // weight > sample_weight, which we do by binary since the
         // cumulative weights of self.items are sorted.
@@ -324,7 +324,7 @@ impl<'a, T: Clone> Distribution<T> for WeightedChoice<'a, T> {
 // size from force-inlining.
 #[cfg(feature="std")]
 #[inline(always)]
-fn ziggurat<R: Rng, P, Z>(
+fn ziggurat<R: Rng + ?Sized, P, Z>(
             rng: &mut R,
             symmetric: bool,
             x_tab: ziggurat_tables::ZigTable,

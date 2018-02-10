@@ -17,7 +17,7 @@ use distributions::{Distribution, Uniform};
 
 impl Distribution<isize> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> isize {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> isize {
         if mem::size_of::<isize>() == 4 {
             rng.gen::<i32>() as isize
         } else {
@@ -28,28 +28,28 @@ impl Distribution<isize> for Uniform {
 
 impl Distribution<i8> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> i8 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> i8 {
         rng.next_u32() as i8
     }
 }
 
 impl Distribution<i16> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> i16 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> i16 {
         rng.next_u32() as i16
     }
 }
 
 impl Distribution<i32> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> i32 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> i32 {
         rng.next_u32() as i32
     }
 }
 
 impl Distribution<i64> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> i64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> i64 {
         rng.next_u64() as i64
     }
 }
@@ -57,14 +57,14 @@ impl Distribution<i64> for Uniform {
 #[cfg(feature = "i128_support")]
 impl Distribution<i128> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> i128 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> i128 {
         rng.gen::<u128>() as i128
     }
 }
 
 impl Distribution<usize> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> usize {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
         if mem::size_of::<usize>() == 4 {
             rng.gen::<u32>() as usize
         } else {
@@ -75,28 +75,28 @@ impl Distribution<usize> for Uniform {
 
 impl Distribution<u8> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> u8 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u8 {
         rng.next_u32() as u8
     }
 }
 
 impl Distribution<u16> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> u16 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u16 {
         rng.next_u32() as u16
     }
 }
 
 impl Distribution<u32> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> u32 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u32 {
         rng.next_u32()
     }
 }
 
 impl Distribution<u64> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> u64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         rng.next_u64()
     }
 }
@@ -104,7 +104,7 @@ impl Distribution<u64> for Uniform {
 #[cfg(feature = "i128_support")]
 impl Distribution<u128> for Uniform {
     #[inline]
-    fn sample<R: Rng>(&self, rng: &mut R) -> u128 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u128 {
         ((rng.next_u64() as u128) << 64) | (rng.next_u64() as u128)
     }
 }

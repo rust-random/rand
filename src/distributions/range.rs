@@ -63,7 +63,7 @@ impl<X: SampleRange + PartialOrd> Range<X> {
 }
 
 impl<Sup: SampleRange> Distribution<Sup> for Range<Sup> {
-    fn sample<R: Rng>(&self, rng: &mut R) -> Sup {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Sup {
         SampleRange::sample_range(self, rng)
     }
 }
@@ -80,7 +80,7 @@ pub trait SampleRange : Sized {
 
     /// Sample a value from the given `Range` with the given `Rng` as
     /// a source of randomness.
-    fn sample_range<R: Rng>(r: &Range<Self>, rng: &mut R) -> Self;
+    fn sample_range<R: Rng + ?Sized>(r: &Range<Self>, rng: &mut R) -> Self;
 }
 
 macro_rules! integer_impl {
@@ -111,7 +111,7 @@ macro_rules! integer_impl {
             }
 
             #[inline]
-            fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
+            fn sample_range<R: Rng + ?Sized>(r: &Range<$ty>, rng: &mut R) -> $ty {
                 loop {
                     // rejection sample
                     let v = rng.gen::<$unsigned>();
@@ -153,7 +153,7 @@ macro_rules! float_impl {
                     accept_zone: 0.0 // unused
                 }
             }
-            fn sample_range<R: Rng>(r: &Range<$ty>, rng: &mut R) -> $ty {
+            fn sample_range<R: Rng + ?Sized>(r: &Range<$ty>, rng: &mut R) -> $ty {
                 r.low + r.range * rng.gen::<$ty>()
             }
         }

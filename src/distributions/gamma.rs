@@ -134,7 +134,7 @@ impl GammaLargeShape {
 }
 
 impl Distribution<f64> for Gamma {
-    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         match self.repr {
             Small(ref g) => g.sample(rng),
             One(ref g) => g.sample(rng),
@@ -143,14 +143,14 @@ impl Distribution<f64> for Gamma {
     }
 }
 impl Distribution<f64> for GammaSmallShape {
-    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         let u: f64 = rng.sample(Open01);
 
         self.large_shape.sample(rng) * u.powf(self.inv_shape)
     }
 }
 impl Distribution<f64> for GammaLargeShape {
-    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         loop {
             let x = rng.sample(StandardNormal);
             let v_cbrt = 1.0 + self.c * x;
@@ -215,7 +215,7 @@ impl ChiSquared {
     }
 }
 impl Distribution<f64> for ChiSquared {
-    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         match self.repr {
             DoFExactlyOne => {
                 // k == 1 => N(0,1)^2
@@ -266,7 +266,7 @@ impl FisherF {
     }
 }
 impl Distribution<f64> for FisherF {
-    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         self.numer.sample(rng) / self.denom.sample(rng) * self.dof_ratio
     }
 }
@@ -301,7 +301,7 @@ impl StudentT {
     }
 }
 impl Distribution<f64> for StudentT {
-    fn sample<R: Rng>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         let norm = rng.sample(StandardNormal);
         norm * (self.dof / self.chi.sample(rng)).sqrt()
     }
