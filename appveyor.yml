@@ -38,4 +38,3 @@ test_script:
   - cargo test --features nightly
   - cargo test --tests --no-default-features --features=alloc
   - cargo test --tests --no-default-features --features=serde-1
-  - cargo test --manifest-path rand-derive/Cargo.toml
