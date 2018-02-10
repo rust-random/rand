@@ -15,7 +15,7 @@
 //! bounds. Distributions use the `Distribution` trait to yield values: call
 //! `distr.sample(&mut rng)` to get a random variable.
 
-use Rng;
+use {Rng, Rand};
 
 pub use self::range::Range;
 #[cfg(feature="std")]
@@ -127,6 +127,21 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
         (*self).sample(rng)
     }
 }
+
+/// A generic random value distribution. Generates values for various types
+/// with numerically uniform distribution.
+/// 
+/// TODO: document implementations
+/// TODO: add example
+#[derive(Debug)]
+pub struct Uniform;
+
+impl<T> Rand for T where Uniform: Distribution<T> {
+    fn rand<R: Rng>(rng: &mut R) -> Self {
+        Uniform.sample(rng)
+    }
+}
+
 
 /// A value with a particular weight for use with `WeightedChoice`.
 #[derive(Copy, Clone, Debug)]
