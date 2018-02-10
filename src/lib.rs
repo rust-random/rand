@@ -327,8 +327,6 @@ mod prng;
 /// provided `Rng` is well-behaved, these implementations generate values with
 /// the following ranges and distributions:
 ///
-/// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
-///   over all values of the type.
 /// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
 ///   code points in the range `0...0x10_FFFF`, except for the range
 ///   `0xD800...0xDFFF` (the surrogate code points).  This includes
