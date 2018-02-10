@@ -35,6 +35,7 @@ pub mod normal;
 pub mod exponential;
 
 mod float;
+mod integer;
 #[cfg(feature="std")]
 mod ziggurat_tables;
 
@@ -136,7 +137,18 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// For floating-point numbers, this generates values from the half-open range
 /// `[0, 1)` (excluding 1). See also [`Open01`] and [`Closed01`] for alternatives.
 ///
-/// TODO: document implementations
+/// ## Built-in Implementations
+///
+/// This crate implements the distribution `Uniform` for various primitive
+/// types.  Assuming the provided `Rng` is well-behaved, these implementations
+/// generate values with the following ranges and distributions:
+///
+/// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
+///   over all values of the type.
+/// * Floating point types (`f32` and `f64`): Uniformly distributed in the
+///   half-open range `[0, 1)`.  (The [`Open01`], [`Closed01`], [`Exp1`], and
+///   [`StandardNormal`] distributions produce floating point numbers with
+///   alternative ranges or distributions.)
 ///
 /// # Example
 /// ```rust
@@ -149,6 +161,8 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///
 /// [`Open01`]: struct.Open01.html
 /// [`Closed01`]: struct.Closed01.html
+/// [`Exp1`]: struct.Exp1.html
+/// [`StandardNormal`]: struct.StandardNormal.html
 #[derive(Debug)]
 pub struct Uniform;
 
