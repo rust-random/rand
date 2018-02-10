@@ -156,6 +156,14 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///   [`StandardNormal`] distributions produce floating point numbers with
 ///   alternative ranges or distributions.)
 ///
+/// The following aggregate types also implement the distribution `Uniform` as
+/// long as their component types implement it:
+///
+/// * Tuples and arrays: Each element of the tuple or array is generated
+///   independently, using the `Uniform` distribution recursively.
+/// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
+///   random `T` and returns `Some(T)`.
+///
 /// # Example
 /// ```rust
 /// use rand::{weak_rng, Rng};
