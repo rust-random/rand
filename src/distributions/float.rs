@@ -68,13 +68,13 @@ macro_rules! float_impls {
                 /// See `Closed01` for the closed interval `[0,1]`,
                 /// and `Open01` for the open interval `(0,1)`.
                 #[inline]
-                fn sample<R: Rng>(&self, rng: &mut R) -> $ty {
+                fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                     rng.$method_name()
                 }
             }
             impl Distribution<$ty> for Open01 {
                 #[inline]
-                fn sample<R: Rng>(&self, rng: &mut R) -> $ty {
+                fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                     // add 0.5 * epsilon, so that smallest number is
                     // greater than 0, and largest number is still
                     // less than 1, specifically 1 - 0.5 * epsilon.
@@ -83,7 +83,7 @@ macro_rules! float_impls {
             }
             impl Distribution<$ty> for Closed01 {
                 #[inline]
-                fn sample<R: Rng>(&self, rng: &mut R) -> $ty {
+                fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                     // rescale so that 1.0 - epsilon becomes 1.0
                     // precisely.
                     rng.$method_name() * SCALE / (SCALE - 1.0)

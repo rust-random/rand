@@ -556,7 +556,7 @@ pub trait Rng: RngCore + Sized {
     /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
-    fn gen_iter<'a, T>(&'a mut self) -> Generator<'a, T, Self> where Uniform: Distribution<T> {
+    fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Uniform: Distribution<T> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
 
@@ -613,7 +613,7 @@ pub trait Rng: RngCore + Sized {
     /// let s: String = thread_rng().gen_ascii_chars().take(10).collect();
     /// println!("{}", s);
     /// ```
-    fn gen_ascii_chars<'a>(&'a mut self) -> AsciiGenerator<'a, Self> {
+    fn gen_ascii_chars(&mut self) -> AsciiGenerator<&mut Self> {
         AsciiGenerator { rng: self }
     }
 
@@ -753,12 +753,12 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
 /// [`gen_iter`]: trait.Rng.html#method.gen_iter
 /// [`Rng`]: trait.Rng.html
 #[derive(Debug)]
-pub struct Generator<'a, T, R:'a> {
-    rng: &'a mut R,
+pub struct Generator<T, R: RngCore> {
+    rng: R,
     _marker: marker::PhantomData<fn() -> T>,
 }
 
-impl<'a, T, R: RngCore> Iterator for Generator<'a, T, R> where Uniform: Distribution<T> {
+impl<T, R: RngCore> Iterator for Generator<T, R> where Uniform: Distribution<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -773,11 +773,11 @@ impl<'a, T, R: RngCore> Iterator for Generator<'a, T, R> where Uniform: Distribu
 /// [`gen_ascii_chars`]: trait.Rng.html#method.gen_ascii_chars
 /// [`Rng`]: trait.Rng.html
 #[derive(Debug)]
-pub struct AsciiGenerator<'a, R:'a> {
-    rng: &'a mut R,
+pub struct AsciiGenerator<R: RngCore> {
+    rng: R,
 }
 
-impl<'a, R: RngCore> Iterator for AsciiGenerator<'a, R> {
+impl<R: RngCore> Iterator for AsciiGenerator<R> {
     type Item = char;
 
     fn next(&mut self) -> Option<char> {
@@ -1422,13 +1422,12 @@ mod test {
         {
             let mut r = &mut rng as &mut RngCore;
             r.next_u32();
-            let r2 = &mut r;
-            r2.gen::<i32>();
+            r.gen::<i32>();
             let mut v = [1, 1, 1];
-            r2.shuffle(&mut v);
+            r.shuffle(&mut v);
             let b: &[_] = &[1, 1, 1];
             assert_eq!(v, b);
-            assert_eq!(r2.gen_range(0, 1), 0);
+            assert_eq!(r.gen_range(0, 1), 0);
         }
         {
             let mut r = Box::new(rng) as Box<RngCore>;
