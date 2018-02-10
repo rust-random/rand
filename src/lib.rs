@@ -11,7 +11,8 @@
 //! Utilities for random number generation
 //!
 //! The key functions are `random()` and `Rng::gen()`. These are polymorphic and
-//! so can be used to generate any type that implements `Rand`. Type inference
+//! so can be used to generate any type supporting the [`Uniform`] distribution
+//! (i.e. `T` where `Uniform`: `Distribution<T>`). Type inference
 //! means that often a simple call to `rand::random()` or `rng.gen()` will
 //! suffice, but sometimes an annotation is required, e.g.
 //! `rand::random::<f64>()`.
@@ -236,6 +237,8 @@
 //!              keep_wins as f32 / total_keeps as f32);
 //! }
 //! ```
+//!
+//! [`Uniform`]: distributions/struct.Uniform.html
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
@@ -286,7 +289,7 @@ use prng::IsaacRng as IsaacWordRng;
 #[cfg(target_pointer_width = "64")]
 use prng::Isaac64Rng as IsaacWordRng;
 
-use distributions::{Distribution, Range};
+use distributions::{Distribution, Uniform, Range};
 use distributions::range::SampleRange;
 #[cfg(feature="std")] use reseeding::ReseedingRng;
 
@@ -321,6 +324,7 @@ mod prng;
 /// convenience and backwards-compatibility.
 /// 
 /// [`Uniform`]: distributions/struct.Uniform.html
+#[deprecated(since="0.5.0", note="replaced by distributions::Uniform")]
 pub trait Rand : Sized {
     /// Generates a random instance of this type using the specified source of
     /// randomness.
@@ -465,7 +469,9 @@ pub trait Rng {
         distr.sample(self)
     }
     
-    /// Return a random value of a `Rand` type.
+    /// Return a random value supporting the [`Uniform`] distribution.
+    /// 
+    /// [`Uniform`]: struct.Uniform.html
     ///
     /// # Example
     ///
@@ -478,8 +484,8 @@ pub trait Rng {
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
     #[inline(always)]
-    fn gen<T: Rand>(&mut self) -> T where Self: Sized {
-        Rand::rand(self)
+    fn gen<T>(&mut self) -> T where Self: Sized, Uniform: Distribution<T> {
+        Uniform.sample(self)
     }
 
     /// Return an iterator that will yield an infinite number of randomly
@@ -496,7 +502,7 @@ pub trait Rng {
     /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
-    fn gen_iter<'a, T: Rand>(&'a mut self) -> Generator<'a, T, Self> where Self: Sized {
+    fn gen_iter<'a, T>(&'a mut self) -> Generator<'a, T, Self> where Self: Sized, Uniform: Distribution<T> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
 
@@ -696,7 +702,7 @@ pub struct Generator<'a, T, R:'a> {
     _marker: marker::PhantomData<fn() -> T>,
 }
 
-impl<'a, T: Rand, R: Rng> Iterator for Generator<'a, T, R> {
+impl<'a, T, R: Rng> Iterator for Generator<'a, T, R> where Uniform: Distribution<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -1131,7 +1137,7 @@ impl Rng for EntropyRng {
 /// [`Rand`]: trait.Rand.html
 #[cfg(feature="std")]
 #[inline]
-pub fn random<T: Rand>() -> T {
+pub fn random<T>() -> T where Uniform: Distribution<T> {
     thread_rng().gen()
 }
 

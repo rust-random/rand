@@ -15,7 +15,7 @@
 //! bounds. Distributions use the `Distribution` trait to yield values: call
 //! `distr.sample(&mut rng)` to get a random variable.
 
-use {Rng, Rand};
+use Rng;
 
 pub use self::float::{Open01, Closed01};
 pub use self::range::Range;
@@ -180,7 +180,8 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 #[derive(Debug)]
 pub struct Uniform;
 
-impl<T> Rand for T where Uniform: Distribution<T> {
+#[allow(deprecated)]
+impl<T> ::Rand for T where Uniform: Distribution<T> {
     fn rand<R: Rng>(rng: &mut R) -> Self {
         Uniform.sample(rng)
     }
