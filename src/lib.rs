@@ -312,24 +312,13 @@ pub mod isaac {
 // private modules
 mod le;
 mod error;
-mod rand_impls;
 mod prng;
 
 
 /// A type that can be randomly generated using an `Rng`.
-///
-/// ## Built-in Implementations
-///
-/// `Rand` is implemented for any type supporting the [`Uniform`] distribution.
-/// That includes: integers, floating point numbers, char, boolean.
-///
-/// The following aggregate types also implement `Rand` as long as their
-/// component types implement it:
-///
-/// * Tuples and arrays: Each element of the tuple or array is generated
-///   independently, using its own `Rand` implementation.
-/// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
-///   random `T` and returns `Some(T)`.
+/// 
+/// This is merely an adaptor around the [`Uniform`] distribution for
+/// convenience and backwards-compatibility.
 /// 
 /// [`Uniform`]: distributions/struct.Uniform.html
 pub trait Rand : Sized {
