@@ -637,7 +637,7 @@ pub trait Rng {
     }
 }
 
-impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
+impl<'a, R: Rng + ?Sized> Rng for &'a mut R {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
@@ -670,7 +670,7 @@ impl<'a, R: ?Sized> Rng for &'a mut R where R: Rng {
 }
 
 #[cfg(any(feature="std", feature="alloc"))]
-impl<R: ?Sized> Rng for Box<R> where R: Rng {
+impl<R: Rng + ?Sized> Rng for Box<R> {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
@@ -1389,12 +1389,13 @@ mod test {
         {
             let mut r = &mut rng as &mut Rng;
             r.next_u32();
-            (&mut r).gen::<i32>();
+            let r2 = &mut r;
+            r2.gen::<i32>();
             let mut v = [1, 1, 1];
-            (&mut r).shuffle(&mut v);
+            r2.shuffle(&mut v);
             let b: &[_] = &[1, 1, 1];
             assert_eq!(v, b);
-            assert_eq!((&mut r).gen_range(0, 1), 0);
+            assert_eq!(r2.gen_range(0, 1), 0);
         }
         {
             let mut r = Box::new(rng) as Box<Rng>;
