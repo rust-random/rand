@@ -23,14 +23,15 @@ and this to your crate root:
 extern crate rand;
 ```
 
-### Versions
+### Versions and Rustc requirements
 
 Version `0.4`was released in December 2017. It contains almost no breaking
 changes since the `0.3` series, but nevertheless contains some significant
 new code, including a new "external" entropy source (`JitterRng`) and `no_std`
-support.
+support. Both 0.3 and 0.4 require **Rustc version 1.15 or greater**.
 
 Version `0.5` is in development and will contain significant breaking changes.
+It requires **Rustc version 1.22 or greater**.
 
 ## Examples
 
@@ -90,8 +91,13 @@ recommended:
 # Basic tests for rand and sub-crates
 cargo test --all
 
-# Test no_std support (build only since nearly all tests require std)
-cargo build --all --no-default-features
+# Test no_std support
+cargo test --tests --no-default-features
+# Test no_std+alloc support
+cargo test --tests --no-default-features --features alloc
+
+# Test log and serde support
+cargo test --features serde-1,log
 
 # Test 128-bit support (requires nightly)
 cargo test --all --features nightly
