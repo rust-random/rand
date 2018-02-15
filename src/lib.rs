@@ -804,7 +804,7 @@ pub trait SeedableRng: Sized {
     /// [`NewRng`]: trait.NewRng.html
     /// [`OsRng`]: os/struct.OsRng.html
     /// [`XorShiftRng`]: prng/xorshift/struct.XorShiftRng.html
-    fn from_rng<R: Rng>(mut rng: R) -> Result<Self, Error> {
+    fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;
         Ok(Self::from_seed(seed))
@@ -844,7 +844,7 @@ pub trait NewRng: SeedableRng {
 #[cfg(feature="std")]
 impl<R: SeedableRng> NewRng for R {
     fn new() -> Result<Self, Error> {
-        R::from_rng(EntropyRng::new())
+        R::from_rng(&mut EntropyRng::new())
     }
 }
 
@@ -919,7 +919,7 @@ impl SeedableRng for StdRng {
         StdRng(IsaacWordRng::from_seed(seed))
     }
 
-    fn from_rng<R: Rng>(rng: R) -> Result<Self, Error> {
+    fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, Error> {
         IsaacWordRng::from_rng(rng).map(|rng| StdRng(rng))
     }
 }
