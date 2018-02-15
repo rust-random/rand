@@ -938,7 +938,10 @@ pub fn weak_rng() -> XorShiftRng {
 }
 
 
-/// The thread-local RNG.
+/// The type returned by [`thread_rng`], essentially just a reference to the
+/// PRNG in thread-local memory.
+/// 
+/// [`thread_rng`]: fn.thread_rng.html
 #[cfg(feature="std")]
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
@@ -961,12 +964,25 @@ thread_local!(
 
 /// Retrieve the lazily-initialized thread-local random number
 /// generator, seeded by the system. Intended to be used in method
-/// chaining style, e.g. `thread_rng().gen::<i32>()`.
+/// chaining style, e.g. `thread_rng().gen::<i32>()`, or cached locally, e.g.
+/// `let mut rng = thread_rng();`.
 ///
-/// The internal RNG used is the one defined by `StdRng`. After generating 32KiB
-/// of random bytes, the RNG will reseed itself from the operating system or, if
-/// the operating system RNG returns an error, the `JitterRng` entropy
-/// collector.
+/// `ThreadRng` uses [`ReseedingRng`] wrapping a [`StdRng`] which is reseeded
+/// after generating 32KiB of random data. A single instance is cached per
+/// thread and the returned `ThreadRng` is a reference to this instance — hence
+/// `ThreadRng` is neither `Send` nor `Sync` but is safe to use within a single
+/// thread. This RNG is seeded and reseeded via [`EntropyRng`] as required.
+/// 
+/// Note that the reseeding is done as an extra precaution against entropy
+/// leaks and is in theory unnecessary — to predict `thread_rng`'s output, an
+/// attacker would have to either determine most of the RNG's seed or internal
+/// state, or crack the algorithm used (ISAAC, which has not been proven
+/// cryptographically secure, but has no known attack despite a 20-year old
+/// challenge).
+/// 
+/// [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
+/// [`StdRng`]: struct.StdRng.html
+/// [`EntropyRng`]: struct.EntropyRng.html
 #[cfg(feature="std")]
 pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
@@ -995,15 +1011,21 @@ impl Rng for ThreadRng {
     }
 }
 
-/// An RNG provided specifically for seeding PRNG's.
-///
-/// `EntropyRng` uses the interface for random numbers provided by the operating
-/// system ([`OsRng`]). If that returns an error, it will fall back to the
-/// [`JitterRng`] entropy collector. Every time it will then check if `OsRng`
-/// is still not available, and switch back if possible.
+/// An RNG provided specifically for seeding PRNGs.
+/// 
+/// Where possible, `EntropyRng` retrieves random data from the operating
+/// system's interface for random numbers ([`OsRng`]); if that fails it will
+/// fall back to the [`JitterRng`] entropy collector. In the latter case it will
+/// still try to use [`OsRng`] on the next usage.
+/// 
+/// This is either a little slow ([`OsRng`] requires a system call) or extremely
+/// slow ([`JitterRng`] must use significant CPU time to generate sufficient
+/// jitter). It is recommended to only use `EntropyRng` to seed a PRNG (as in
+/// [`thread_rng`]) or to generate a small key.
 ///
 /// [`OsRng`]: os/struct.OsRng.html
 /// [`JitterRng`]: jitter/struct.JitterRng.html
+/// [`thread_rng`]: fn.thread_rng.html
 #[cfg(feature="std")]
 #[derive(Debug)]
 pub struct EntropyRng {
@@ -1117,13 +1139,10 @@ impl Rng for EntropyRng {
 }
 
 /// Generates a random value using the thread-local random number generator.
-///
-/// `random()` can generate various types of random things, and so may require
-/// type hinting to generate the specific type you want.
-///
-/// This function uses the thread local random number generator. This means
-/// that if you're calling `random()` in a loop, caching the generator can
-/// increase performance. An example is shown below.
+/// 
+/// This is simply a shortcut for `thread_rng().gen()`. See [`thread_rng`] for
+/// documentation of the entropy source and [`Rand`] for documentation of
+/// distributions and type-specific generation.
 ///
 /// # Examples
 ///
@@ -1139,7 +1158,8 @@ impl Rng for EntropyRng {
 /// }
 /// ```
 ///
-/// Caching the thread local random number generator:
+/// If you're calling `random()` in a loop, caching the generator as in the
+/// following example can increase performance.
 ///
 /// ```
 /// use rand::Rng;
@@ -1158,6 +1178,9 @@ impl Rng for EntropyRng {
 ///     *x = rng.gen();
 /// }
 /// ```
+/// 
+/// [`thread_rng`]: fn.thread_rng.html
+/// [`Rand`]: trait.Rand.html
 #[cfg(feature="std")]
 #[inline]
 pub fn random<T: Rand>() -> T {
