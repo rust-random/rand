@@ -173,6 +173,18 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// println!("f32 from [0,1): {}", val);
 /// ```
 ///
+/// With dynamic dispatch (type erasure of `Rng`):
+/// 
+/// ```rust
+/// use rand::{thread_rng, Rng};
+/// use rand::distributions::Uniform;
+///
+/// let mut rng = thread_rng();
+/// let mut erased_rng: &mut Rng = &mut rng;
+/// let val: f32 = (&mut erased_rng).sample(Uniform);
+/// println!("f32 from [0,1): {}", val);
+/// ```
+///
 /// [`Open01`]: struct.Open01.html
 /// [`Closed01`]: struct.Closed01.html
 /// [`Exp1`]: struct.Exp1.html
