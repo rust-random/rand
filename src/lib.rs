@@ -1418,6 +1418,7 @@ mod test {
     #[test]
     #[cfg(any(feature="std", feature="alloc"))]
     fn test_rng_trait_object() {
+        use distributions::{Distribution, Uniform};
         let mut rng = rng(109);
         {
             let mut r = &mut rng as &mut RngCore;
@@ -1428,6 +1429,7 @@ mod test {
             let b: &[_] = &[1, 1, 1];
             assert_eq!(v, b);
             assert_eq!(r.gen_range(0, 1), 0);
+            let _c: u8 = Uniform.sample(&mut r);
         }
         {
             let mut r = Box::new(rng) as Box<RngCore>;
@@ -1438,6 +1440,7 @@ mod test {
             let b: &[_] = &[1, 1, 1];
             assert_eq!(v, b);
             assert_eq!(r.gen_range(0, 1), 0);
+            let _c: u8 = Uniform.sample(&mut r);
         }
     }
 
