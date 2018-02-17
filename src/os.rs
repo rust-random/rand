@@ -78,14 +78,14 @@ impl Rng for OsRng {
         loop {
             if let Err(e) = self.try_fill_bytes(dest) {
                 if err_count >= RETRY_LIMIT {
-                    error!("OsRng failed too many times; last error: {:?}", e);
-                    panic!("OsRng failed too many times; last error: {:?}", e);
+                    error!("OsRng failed too many times; last error: {}", e);
+                    panic!("OsRng failed too many times; last error: {}", e);
                 }
 
                 match e.kind() {
                     ErrorKind::Transient => {
                         if !error_logged {
-                            warn!("OsRng failed; retrying up to {} times. Error: {:?}",
+                            warn!("OsRng failed; retrying up to {} times. Error: {}",
                                     TRANSIENT_RETRIES, e);
                             error_logged = true;
                         }
@@ -95,7 +95,7 @@ impl Rng for OsRng {
                     }
                     ErrorKind::NotReady => {
                         if !error_logged {
-                            warn!("OsRng failed; waiting up to {}s and retrying. Error: {:?}",
+                            warn!("OsRng failed; waiting up to {}s and retrying. Error: {}",
                                     MAX_RETRY_PERIOD, e);
                             error_logged = true;
                         }
@@ -104,8 +104,8 @@ impl Rng for OsRng {
                         continue;
                     }
                     _ => {
-                        error!("OsRng failed: {:?}", e);
-                        panic!("OsRng fatal error: {:?}", e);
+                        error!("OsRng failed: {}", e);
+                        panic!("OsRng fatal error: {}", e);
                     }
                 }
             }

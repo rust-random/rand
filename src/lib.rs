@@ -953,8 +953,8 @@ thread_local!(
     static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<StdRng, EntropyRng>>> = {
         const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
         let mut entropy_source = EntropyRng::new();
-        let r = StdRng::from_rng(&mut entropy_source)
-            .expect("could not initialize thread_rng");
+        let r = StdRng::from_rng(&mut entropy_source).unwrap_or_else(|err|
+                panic!("could not initialize thread_rng: {}", err));
         let rng = ReseedingRng::new(r,
                                     THREAD_RNG_RESEED_THRESHOLD,
                                     entropy_source);
@@ -1063,7 +1063,8 @@ impl Rng for EntropyRng {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.try_fill_bytes(dest).unwrap();
+        self.try_fill_bytes(dest).unwrap_or_else(|err|
+                panic!("all entropy sources failed; first error: {}", err))
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
@@ -1087,6 +1088,7 @@ impl Rng for EntropyRng {
                 let os_rng_result = try_os_new(dest);
                 match os_rng_result {
                     Ok(os_rng) => {
+                        debug!("EntropyRng: using OsRng");
                         switch_rng = Some(EntropySource::Os(os_rng));
                     }
                     Err(os_rng_error) => {
@@ -1094,6 +1096,7 @@ impl Rng for EntropyRng {
                               os_rng_error);
                         match try_jitter_new(dest) {
                             Ok(jitter_rng) => {
+                                debug!("EntropyRng: using JitterRng");
                                 switch_rng = Some(EntropySource::Jitter(jitter_rng));
                             }
                             Err(_jitter_error) => {
@@ -1112,6 +1115,7 @@ impl Rng for EntropyRng {
                           os_rng_error);
                     match try_jitter_new(dest) {
                         Ok(jitter_rng) => {
+                            debug!("EntropyRng: using JitterRng");
                             switch_rng = Some(EntropySource::Jitter(jitter_rng));
                         }
                         Err(_jitter_error) => {
@@ -1124,7 +1128,7 @@ impl Rng for EntropyRng {
             }
             EntropySource::Jitter(ref mut rng) => {
                 if let Ok(os_rng) = try_os_new(dest) {
-                    info!("EntropyRng: OsRng available [switching back from JitterRng]");
+                    debug!("EntropyRng: using OsRng");
                     switch_rng = Some(EntropySource::Os(os_rng));
                 } else {
                     return rng.try_fill_bytes(dest); // use JitterRng
@@ -1217,7 +1221,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 mod test {
     use impls;
     #[cfg(feature="std")]
-    use super::{random, thread_rng};
+    use super::{random, thread_rng, EntropyRng};
     use super::{Rng, SeedableRng, StdRng};
     #[cfg(feature="alloc")]
     use alloc::boxed::Box;
@@ -1262,6 +1266,13 @@ mod test {
         fn fill_bytes(&mut self, dest: &mut [u8]) {
             impls::fill_bytes_via_u64(self, dest)
         }
+    }
+    
+    #[test]
+    #[cfg(feature="std")]
+    fn test_entropy() {
+        let mut rng = EntropyRng::new();
+        rng.next_u32();
     }
 
     #[test]
