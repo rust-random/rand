@@ -52,7 +52,7 @@ impl ErrorKind {
     /// A description of this error kind
     pub fn description(self) -> &'static str {
         match self {
-            ErrorKind::Unavailable => "permanent failure or unavailable",
+            ErrorKind::Unavailable => "permanent failure",
             ErrorKind::Transient => "transient failure",
             ErrorKind::NotReady => "not ready yet",
             ErrorKind::Other => "uncategorised",
@@ -123,7 +123,15 @@ impl Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "RNG error [{}]: {}", self.kind.description(), self.msg())
+        #[cfg(feature="std")] {
+            if let Some(ref cause) = self.cause {
+                return write!(f, "{} ({}); cause: {}",
+                        self.msg(),
+                        self.kind.description(),
+                        cause);
+            }
+        }
+        write!(f, "{} ({})", self.msg(), self.kind.description())
     }
 }
 
