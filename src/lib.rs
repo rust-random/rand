@@ -11,7 +11,8 @@
 //! Utilities for random number generation
 //!
 //! The key functions are `random()` and `Rng::gen()`. These are polymorphic and
-//! so can be used to generate any type that implements `Rand`. Type inference
+//! so can be used to generate any type supporting the [`Uniform`] distribution
+//! (i.e. `T` where `Uniform`: `Distribution<T>`). Type inference
 //! means that often a simple call to `rand::random()` or `rng.gen()` will
 //! suffice, but sometimes an annotation is required, e.g.
 //! `rand::random::<f64>()`.
@@ -110,7 +111,7 @@
 //! and multiply this fraction by 4.
 //!
 //! ```
-//! use rand::distributions::{IndependentSample, Range};
+//! use rand::distributions::{Distribution, Range};
 //!
 //! fn main() {
 //!    let between = Range::new(-1f64, 1.);
@@ -120,8 +121,8 @@
 //!    let mut in_circle = 0;
 //!
 //!    for _ in 0..total {
-//!        let a = between.ind_sample(&mut rng);
-//!        let b = between.ind_sample(&mut rng);
+//!        let a = between.sample(&mut rng);
+//!        let b = between.sample(&mut rng);
 //!        if a*a + b*b <= 1. {
 //!            in_circle += 1;
 //!        }
@@ -153,7 +154,7 @@
 //!
 //! ```
 //! use rand::Rng;
-//! use rand::distributions::{IndependentSample, Range};
+//! use rand::distributions::{Distribution, Range};
 //!
 //! struct SimulationResult {
 //!     win: bool,
@@ -163,10 +164,10 @@
 //! // Run a single simulation of the Monty Hall problem.
 //! fn simulate<R: Rng>(random_door: &Range<u32>, rng: &mut R)
 //!                     -> SimulationResult {
-//!     let car = random_door.ind_sample(rng);
+//!     let car = random_door.sample(rng);
 //!
 //!     // This is our initial choice
-//!     let mut choice = random_door.ind_sample(rng);
+//!     let mut choice = random_door.sample(rng);
 //!
 //!     // The game host opens a door
 //!     let open = game_host_open(car, choice, rng);
@@ -236,6 +237,8 @@
 //!              keep_wins as f32 / total_keeps as f32);
 //! }
 //! ```
+//!
+//! [`Uniform`]: distributions/struct.Uniform.html
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
@@ -286,7 +289,7 @@ use prng::IsaacRng as IsaacWordRng;
 #[cfg(target_pointer_width = "64")]
 use prng::Isaac64Rng as IsaacWordRng;
 
-use distributions::{Range, IndependentSample};
+use distributions::{Distribution, Uniform, Range};
 use distributions::range::SampleRange;
 #[cfg(feature="std")] use reseeding::ReseedingRng;
 
@@ -312,42 +315,16 @@ pub mod isaac {
 // private modules
 mod le;
 mod error;
-mod rand_impls;
 mod prng;
 
 
 /// A type that can be randomly generated using an `Rng`.
-///
-/// ## Built-in Implementations
-///
-/// This crate implements `Rand` for various primitive types.  Assuming the
-/// provided `Rng` is well-behaved, these implementations generate values with
-/// the following ranges and distributions:
-///
-/// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
-///   over all values of the type.
-/// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
-///   code points in the range `0...0x10_FFFF`, except for the range
-///   `0xD800...0xDFFF` (the surrogate code points).  This includes
-///   unassigned/reserved code points.
-/// * `bool`: Generates `false` or `true`, each with probability 0.5.
-/// * Floating point types (`f32` and `f64`): Uniformly distributed in the
-///   half-open range `[0, 1)`.  (The [`Open01`], [`Closed01`], [`Exp1`], and
-///   [`StandardNormal`] wrapper types produce floating point numbers with
-///   alternative ranges or distributions.)
-///
-/// [`Open01`]: struct.Open01.html
-/// [`Closed01`]: struct.Closed01.html
-/// [`Exp1`]: distributions/exponential/struct.Exp1.html
-/// [`StandardNormal`]: distributions/normal/struct.StandardNormal.html
-///
-/// The following aggregate types also implement `Rand` as long as their
-/// component types implement it:
-///
-/// * Tuples and arrays: Each element of the tuple or array is generated
-///   independently, using its own `Rand` implementation.
-/// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
-///   random `T` and returns `Some(T)`.
+/// 
+/// This is merely an adaptor around the [`Uniform`] distribution for
+/// convenience and backwards-compatibility.
+/// 
+/// [`Uniform`]: distributions/struct.Uniform.html
+#[deprecated(since="0.5.0", note="replaced by distributions::Uniform")]
 pub trait Rand : Sized {
     /// Generates a random instance of this type using the specified source of
     /// randomness.
@@ -403,9 +380,6 @@ pub trait Rng {
     /// random number generator which can generate numbers satisfying
     /// the requirements directly can overload this for performance.
     /// It is required that the return value lies in `[0, 1)`.
-    ///
-    /// See `Closed01` for the closed interval `[0,1]`, and
-    /// `Open01` for the open interval `(0,1)`.
     fn next_f32(&mut self) -> f32 {
         const UPPER_MASK: u32 = 0x3F800000;
         const LOWER_MASK: u32 = 0x7FFFFF;
@@ -421,9 +395,6 @@ pub trait Rng {
     /// random number generator which can generate numbers satisfying
     /// the requirements directly can overload this for performance.
     /// It is required that the return value lies in `[0, 1)`.
-    ///
-    /// See `Closed01` for the closed interval `[0,1]`, and
-    /// `Open01` for the open interval `(0,1)`.
     fn next_f64(&mut self) -> f64 {
         const UPPER_MASK: u64 = 0x3FF0000000000000;
         const LOWER_MASK: u64 = 0xFFFFFFFFFFFFF;
@@ -483,7 +454,24 @@ pub trait Rng {
         Ok(self.fill_bytes(dest))
     }
 
-    /// Return a random value of a `Rand` type.
+    /// Sample a new value, using the given distribution.
+    /// 
+    /// ### Example
+    /// 
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    /// use rand::distributions::Range;
+    /// 
+    /// let mut rng = thread_rng();
+    /// let x: i32 = rng.sample(Range::new(10, 15));
+    /// ```
+    fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T where Self: Sized {
+        distr.sample(self)
+    }
+    
+    /// Return a random value supporting the [`Uniform`] distribution.
+    /// 
+    /// [`Uniform`]: struct.Uniform.html
     ///
     /// # Example
     ///
@@ -496,8 +484,8 @@ pub trait Rng {
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
     #[inline(always)]
-    fn gen<T: Rand>(&mut self) -> T where Self: Sized {
-        Rand::rand(self)
+    fn gen<T>(&mut self) -> T where Self: Sized, Uniform: Distribution<T> {
+        Uniform.sample(self)
     }
 
     /// Return an iterator that will yield an infinite number of randomly
@@ -514,7 +502,7 @@ pub trait Rng {
     /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
-    fn gen_iter<'a, T: Rand>(&'a mut self) -> Generator<'a, T, Self> where Self: Sized {
+    fn gen_iter<'a, T>(&'a mut self) -> Generator<'a, T, Self> where Self: Sized, Uniform: Distribution<T> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
 
@@ -544,7 +532,7 @@ pub trait Rng {
     /// ```
     fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T where Self: Sized {
         assert!(low < high, "Rng.gen_range called with low >= high");
-        Range::new(low, high).ind_sample(self)
+        Range::new(low, high).sample(self)
     }
 
     /// Return a bool with a 1 in n chance of true
@@ -714,7 +702,7 @@ pub struct Generator<'a, T, R:'a> {
     _marker: marker::PhantomData<fn() -> T>,
 }
 
-impl<'a, T: Rand, R: Rng> Iterator for Generator<'a, T, R> {
+impl<'a, T, R: Rng> Iterator for Generator<'a, T, R> where Uniform: Distribution<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -848,41 +836,6 @@ impl<R: SeedableRng> NewRng for R {
     }
 }
 
-/// A wrapper for generating floating point numbers uniformly in the
-/// open interval `(0,1)` (not including either endpoint).
-///
-/// Use `Closed01` for the closed interval `[0,1]`, and the default
-/// `Rand` implementation for `f32` and `f64` for the half-open
-/// `[0,1)`.
-///
-/// # Example
-/// ```rust
-/// use rand::{random, Open01};
-///
-/// let Open01(val) = random::<Open01<f32>>();
-/// println!("f32 from (0,1): {}", val);
-/// ```
-#[derive(Debug)]
-pub struct Open01<F>(pub F);
-
-/// A wrapper for generating floating point numbers uniformly in the
-/// closed interval `[0,1]` (including both endpoints).
-///
-/// Use `Open01` for the closed interval `(0,1)`, and the default
-/// `Rand` implementation of `f32` and `f64` for the half-open
-/// `[0,1)`.
-///
-/// # Example
-///
-/// ```rust
-/// use rand::{random, Closed01};
-///
-/// let Closed01(val) = random::<Closed01<f32>>();
-/// println!("f32 from [0,1]: {}", val);
-/// ```
-#[derive(Debug)]
-pub struct Closed01<F>(pub F);
-
 /// The standard RNG. This is designed to be efficient on the current
 /// platform.
 ///
@@ -934,7 +887,8 @@ impl SeedableRng for StdRng {
 /// This will seed the generator with randomness from thread_rng.
 #[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
-    thread_rng().gen()
+    XorShiftRng::from_rng(&mut thread_rng()).unwrap_or_else(|err|
+        panic!("weak_rng failed: {:?}", err))
 }
 
 
@@ -1187,7 +1141,7 @@ impl Rng for EntropyRng {
 /// [`Rand`]: trait.Rand.html
 #[cfg(feature="std")]
 #[inline]
-pub fn random<T: Rand>() -> T {
+pub fn random<T>() -> T where Uniform: Distribution<T> {
     thread_rng().gen()
 }
 
