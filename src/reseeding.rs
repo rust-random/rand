@@ -109,7 +109,7 @@ impl<R: Rng+SeedableRng, Rsdr: Rng> ReseedingRng<R, Rsdr> {
                     // Retry immediately for 5 times (arbitrary limit)
                     if err_count <= 5 { continue; }
                 }
-                warn!("Reseeding RNG failed; continuing without reseeding. Error: {:?}", e);
+                warn!("Reseeding RNG failed; continuing without reseeding. Error: {}", e);
             }
             break; // Successfully reseeded, delayed, or given up.
         }
