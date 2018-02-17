@@ -43,9 +43,6 @@ serde_derive = {version="1", optional=true}
 # see: https://github.com/rust-lang/cargo/issues/1596
 bincode = "0.9"
 
-[workspace]
-members = ["rand-derive"]
-
 [target.'cfg(target_os = "cloudabi")'.dependencies]
 cloudabi = "0.0.3"
 
