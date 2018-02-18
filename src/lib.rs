@@ -354,18 +354,37 @@ pub trait Rand : Sized {
     fn rand<R: Rng>(rng: &mut R) -> Self;
 }
 
-/// A random number generator.
+/// The core of a random number generator.
 /// 
 /// This trait encapsulates the low-level functionality common to all
 /// generators, and is the "back end", to be implemented by generators.
+/// End users should normally use [`Rng`] instead.
+/// 
+/// Unlike [`Rng`], this trait is object-safe. To use a type-erased [`Rng`] —
+/// i.e. dynamic dispatch — this trait must be used, along with [`Rng`] to
+/// use its generic functions:
+/// 
+/// ```
+/// use rand::{Rng, RngCore};
+/// 
+/// fn use_rng(mut rng: &mut RngCore) -> u32 {
+///     rng.gen_range(1, 7)
+/// }
+/// 
+/// // or:
+/// fn use_any_rng<R: RngCore>(rng: &mut R) -> char {
+///     // TODO: generating a single char should be easier than this
+///     rng.gen_ascii_chars().next().unwrap()
+/// }
+/// ```
+/// 
 /// Several extension traits exist:
 /// 
-/// *   [`Rng`] provides high-level generic functionality built on top of
-///     `RngCore`
-/// *   [`SeedableRng`] is another "back end" trait covering creation and
-///      seeding of algorithmic RNGs (PRNGs)
-/// *   [`NewRng`] is a high-level trait providing a convenient way to create
-///     freshly-seeded PRNGs
+/// *   [`Rng`] provides high-level functionality using generic functions
+/// *   [`SeedableRng`] is another low-level trait to be implemented by PRNGs
+///     (algorithmic RNGs), concerning creation and seeding
+/// *   [`NewRng`] is a high-level trait providing a `new()` function, allowing
+///     easy construction of freshly-seeded PRNGs
 /// 
 /// [`Rng`]: trait.Rng.html
 /// [`SeedableRng`]: trait.SeedableRng.html
@@ -502,14 +521,20 @@ pub trait RngCore {
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
 /// 
-/// Users should "use" this trait to enable its extension methods on [`RngCore`]
-/// or require this type directly (i.e. `<R: Rng>`). Since `Rng`
-/// extends `RngCore` and every `RngCore` implements `Rng`, usage of the two
-/// traits is somewhat interchangeable.
+/// This is the primary trait to use when generating random values. Example:
 /// 
-/// This functionality is provided as an extension trait to allow separation
-/// between the backend (the [`RngCore`] providing randomness) and the front-end
-/// (converting that randomness to the desired type and distribution).
+/// ```
+/// use rand::Rng;
+/// 
+/// fn use_rng<R: Rng>(rng: &mut R) -> f32 {
+///     rng.gen()
+/// }
+/// ```
+/// 
+/// Since this trait exclusively uses generic methods, it is marked `Sized`.
+/// Should it be necessary to support trait objects, use [`RngCore`].
+/// Since `Rng` extends `RngCore` and every `RngCore` implements `Rng`, usage
+/// of the two traits is somewhat interchangeable.
 /// 
 /// [`RngCore`]: trait.RngCore.html
 pub trait Rng: RngCore + Sized {
