@@ -1,8 +1,11 @@
-
-rand_macros
+rand_derive
 ====
 
 `#[derive(Rand)]` functionality for the `rand::Rand` trait.
+
+**This module is deprecated as of rand 0.5**, due in part to breaking changes
+in rand and in part to lack of use. Code is preserved because in theory it
+should be straightforward to modify for use with rand's new distribution code.
 
 ## Usage
 Add this to your `Cargo.toml`:
