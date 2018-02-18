@@ -9,8 +9,9 @@ const BYTES_LEN: usize = 1024;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{Rng, NewRng, StdRng, OsRng, JitterRng};
+use rand::{Rng, NewRng, StdRng, OsRng, JitterRng, EntropyRng};
 use rand::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
+use rand::reseeding::ReseedingRng;
 
 macro_rules! gen_bytes {
     ($fnn:ident, $gen:ident) => {
@@ -162,3 +163,39 @@ macro_rules! chacha_rounds {
 chacha_rounds!(gen_bytes_chacha8, gen_u32_chacha8, gen_u64_chacha8, 8);
 chacha_rounds!(gen_bytes_chacha12, gen_u32_chacha12, gen_u64_chacha12, 12);
 chacha_rounds!(gen_bytes_chacha20, gen_u32_chacha20, gen_u64_chacha20, 20);
+
+
+#[bench]
+fn reseeding_hc128_bytes(b: &mut Bencher) {
+    let mut rng = ReseedingRng::new(Hc128Rng::new().unwrap(),
+                                    128*1024*1024,
+                                    EntropyRng::new());
+    let mut buf = [0u8; BYTES_LEN];
+    b.iter(|| {
+        for _ in 0..RAND_BENCH_N {
+            rng.fill_bytes(&mut buf);
+            black_box(buf);
+        }
+    });
+    b.bytes = BYTES_LEN as u64 * RAND_BENCH_N;
+}
+
+macro_rules! reseeding_uint {
+    ($fnn:ident, $ty:ty) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = ReseedingRng::new(Hc128Rng::new().unwrap(),
+                                            128*1024*1024,
+                                            EntropyRng::new());
+            b.iter(|| {
+                for _ in 0..RAND_BENCH_N {
+                    black_box(rng.gen::<$ty>());
+                }
+            });
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
+        }
+    }
+}
+
+reseeding_uint!(reseeding_hc128_u32, u32);
+reseeding_uint!(reseeding_hc128_u64, u64);

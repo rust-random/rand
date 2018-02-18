@@ -258,7 +258,7 @@
 #[cfg(not(feature = "log"))] macro_rules! trace { ($($x:tt)*) => () }
 #[cfg(not(feature = "log"))] macro_rules! debug { ($($x:tt)*) => () }
 #[cfg(all(feature="std", not(feature = "log")))] macro_rules! info { ($($x:tt)*) => () }
-#[cfg(all(feature="std", not(feature = "log")))] macro_rules! warn { ($($x:tt)*) => () }
+#[cfg(not(feature = "log"))] macro_rules! warn { ($($x:tt)*) => () }
 #[cfg(all(feature="std", not(feature = "log")))] macro_rules! error { ($($x:tt)*) => () }
 
 
@@ -1284,7 +1284,7 @@ mod test {
                        80, 81, 82, 83, 84, 85, 86, 87];
         for &n in lengths.iter() {
             let mut buffer = [0u8; 87];
-            let mut v = &mut buffer[0..n];
+            let v = &mut buffer[0..n];
             r.fill_bytes(v);
 
             // use this to get nicer error messages.
