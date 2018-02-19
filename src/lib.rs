@@ -265,7 +265,7 @@
 #[cfg(all(feature="std", not(feature = "log")))] macro_rules! error { ($($x:tt)*) => () }
 
 
-use core::{marker, mem};
+use core::{marker, mem, slice};
 #[cfg(feature="std")] use std::cell::RefCell;
 #[cfg(feature="std")] use std::rc::Rc;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
@@ -508,6 +508,71 @@ pub trait RngCore {
 /// 
 /// [`RngCore`]: trait.RngCore.html
 pub trait Rng: RngCore + Sized {
+    /// Fill `dest` entirely with random bytes, where `dest` is any type
+    /// supporting [`AsByteSliceMut`], namely slices over primitive integer
+    /// types (`i8`, `i16`, `u32`, etc.).
+    /// 
+    /// On big-endian platforms this performs byte-swapping to ensure
+    /// portability of results from reproducible generators.
+    /// 
+    /// This uses [`fill_bytes`] internally which may handle some RNG errors
+    /// implicitly (e.g. waiting if the OS generator is not ready), but panics
+    /// on other errors. See also [`try_fill`] which returns errors.
+    /// 
+    /// # Example
+    /// 
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    /// 
+    /// let mut arr = [0i8; 20];
+    /// thread_rng().try_fill(&mut arr[..]);
+    /// ```
+    /// 
+    /// [`fill_bytes`]: trait.RngCore.html#method.fill_bytes
+    /// [`try_fill`]: trait.Rng.html#method.try_fill
+    /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
+    fn fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) where Self: Sized {
+        self.fill_bytes(dest.as_byte_slice_mut());
+        dest.to_le();
+    }
+    
+    /// Fill `dest` entirely with random bytes, where `dest` is any type
+    /// supporting [`AsByteSliceMut`], namely slices over primitive integer
+    /// types (`i8`, `i16`, `u32`, etc.).
+    /// 
+    /// On big-endian platforms this performs byte-swapping to ensure
+    /// portability of results from reproducible generators.
+    /// 
+    /// This uses [`try_fill_bytes`] internally and forwards all RNG errors. In
+    /// some cases errors may be resolvable; see [`ErrorKind`] and
+    /// documentation for the RNG in use. If you do not plan to handle these
+    /// errors you may prefer to use [`fill`].
+    /// 
+    /// # Example
+    /// 
+    /// ```rust
+    /// # use rand::Error;
+    /// use rand::{thread_rng, Rng};
+    /// 
+    /// # fn try_inner() -> Result<(), Error> {
+    /// let mut arr = [0u64; 4];
+    /// thread_rng().try_fill(&mut arr[..])?;
+    /// # Ok(())
+    /// # }
+    /// 
+    /// # try_inner().unwrap()
+    /// ```
+    /// 
+    /// [`ErrorKind`]: enum.ErrorKind.html
+    /// [`try_fill_bytes`]: trait.RngCore.html#method.try_fill_bytes
+    /// [`fill`]: trait.Rng.html#method.fill
+    /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
+    fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> where Self: Sized {
+        self.try_fill_bytes(dest.as_byte_slice_mut())?;
+        dest.to_le();
+        Ok(())
+    }
+    
     /// Sample a new value, using the given distribution.
     /// 
     /// ### Example
@@ -745,6 +810,62 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
         (**self).try_fill_bytes(dest)
     }
 }
+
+/// Trait for casting types to byte slices
+/// 
+/// This is used by the [`fill`] and [`try_fill`] methods.
+/// 
+/// [`fill`]: trait.Rng.html#method.fill
+/// [`try_fill`]: trait.Rng.html#method.try_fill
+pub trait AsByteSliceMut {
+    /// Return a mutable reference to self as a byte slice
+    fn as_byte_slice_mut<'a>(&'a mut self) -> &'a mut [u8];
+    
+    /// Call `to_le` on each element (i.e. byte-swap on Big Endian platforms).
+    fn to_le(&mut self);
+}
+
+impl AsByteSliceMut for [u8] {
+    fn as_byte_slice_mut<'a>(&'a mut self) -> &'a mut [u8] {
+        self
+    }
+    
+    fn to_le(&mut self) {}
+}
+
+macro_rules! impl_as_byte_slice {
+    ($t:ty) => {
+        impl AsByteSliceMut for [$t] {
+            fn as_byte_slice_mut<'a>(&'a mut self) -> &'a mut [u8] {
+                unsafe {
+                    slice::from_raw_parts_mut(&mut self[0]
+                        as *mut $t
+                        as *mut u8,
+                        self.len() * mem::size_of::<$t>()
+                    )
+                }
+            }
+            
+            fn to_le(&mut self) {
+                for mut x in self {
+                    *x = x.to_le();
+                }
+            }
+        }
+    }
+}
+
+impl_as_byte_slice!(u16);
+impl_as_byte_slice!(u32);
+impl_as_byte_slice!(u64);
+#[cfg(feature="i128_support")] impl_as_byte_slice!(u128);
+impl_as_byte_slice!(usize);
+impl_as_byte_slice!(i8);
+impl_as_byte_slice!(i16);
+impl_as_byte_slice!(i32);
+impl_as_byte_slice!(i64);
+#[cfg(feature="i128_support")] impl_as_byte_slice!(i128);
+impl_as_byte_slice!(isize);
 
 /// Iterator which will generate a stream of random items.
 ///
@@ -1316,6 +1437,24 @@ mod test {
                 }
             }
         }
+    }
+    
+    #[test]
+    fn test_fill() {
+        let x = 9041086907909331047;    // a random u64
+        let mut rng = ConstRng { i: x };
+        
+        // Convert to byte sequence and back to u64; byte-swap twice if BE.
+        let mut array = [0u64; 2];
+        rng.fill(&mut array[..]);
+        assert_eq!(array, [x, x]);
+        assert_eq!(rng.next_u64(), x);
+        
+        // Convert to bytes then u32 in LE order
+        let mut array = [0u32; 2];
+        rng.fill(&mut array[..]);
+        assert_eq!(array, [x as u32, (x >> 32) as u32]);
+        assert_eq!(rng.next_u32(), x as u32);
     }
 
     #[test]
