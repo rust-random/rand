@@ -255,13 +255,13 @@ impl<T: SeedableRng> Rand for T {
 #[cfg(test)]
 mod tests {
     use impls;
-    use {Rng, Open01, Closed01};
+    use {RngCore, Rng, Open01, Closed01};
     
     const EPSILON32: f32 = ::core::f32::EPSILON;
     const EPSILON64: f64 = ::core::f64::EPSILON;
 
     struct ConstantRng(u64);
-    impl Rng for ConstantRng {
+    impl RngCore for ConstantRng {
         fn next_u32(&mut self) -> u32 {
             let ConstantRng(v) = *self;
             v as u32

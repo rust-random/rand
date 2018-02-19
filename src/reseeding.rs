@@ -11,7 +11,7 @@
 //! A wrapper around another PRNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use {Rng, SeedableRng, Error, ErrorKind};
+use {RngCore, SeedableRng, Error, ErrorKind};
 
 /// A wrapper around any PRNG which reseeds the underlying PRNG after it has
 /// generated a certain number of random bytes.
@@ -62,7 +62,7 @@ pub struct ReseedingRng<R, Rsdr> {
     bytes_until_reseed: i64,
 }
 
-impl<R: Rng+SeedableRng, Rsdr: Rng> ReseedingRng<R, Rsdr> {
+impl<R: RngCore + SeedableRng, Rsdr: RngCore> ReseedingRng<R, Rsdr> {
     /// Create a new `ReseedingRng` with the given parameters.
     ///
     /// # Arguments
@@ -143,7 +143,7 @@ impl<R: Rng+SeedableRng, Rsdr: Rng> ReseedingRng<R, Rsdr> {
     }
 }
 
-impl<R: Rng+SeedableRng, Rsdr: Rng> Rng for ReseedingRng<R, Rsdr> {
+impl<R: RngCore + SeedableRng, Rsdr: RngCore> RngCore for ReseedingRng<R, Rsdr> {
     fn next_u32(&mut self) -> u32 {
         let value = self.rng.next_u32();
         self.bytes_until_reseed -= 4;
@@ -184,13 +184,13 @@ impl<R: Rng+SeedableRng, Rsdr: Rng> Rng for ReseedingRng<R, Rsdr> {
 mod test {
     use {impls, le};
     use super::{ReseedingRng};
-    use {SeedableRng, Rng, Error};
+    use {SeedableRng, RngCore, Error};
 
     struct Counter {
         i: u32
     }
 
-    impl Rng for Counter {
+    impl RngCore for Counter {
         fn next_u32(&mut self) -> u32 {
             self.i += 1;
             // very random
@@ -215,7 +215,7 @@ mod test {
 
     #[derive(Debug, Clone)]
     struct ResetCounter;
-    impl Rng for ResetCounter {
+    impl RngCore for ResetCounter {
         fn next_u32(&mut self) -> u32 { unimplemented!() }
         fn next_u64(&mut self) -> u64 { unimplemented!() }
         fn fill_bytes(&mut self, _dest: &mut [u8]) { unimplemented!() }

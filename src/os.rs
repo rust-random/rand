@@ -17,7 +17,7 @@ use std::io::Read;
 #[allow(unused)] use std::path::Path;
 #[allow(unused)] use std::sync::{Once, Mutex, ONCE_INIT};
 
-use {Rng, Error, ErrorKind, impls};
+use {RngCore, Error, ErrorKind, impls};
 
 /// A random number generator that retrieves randomness straight from
 /// the operating system.
@@ -54,7 +54,7 @@ impl OsRng {
     }
 }
 
-impl Rng for OsRng {
+impl RngCore for OsRng {
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
     }
@@ -577,7 +577,6 @@ mod imp {
 #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
 mod imp {
     use std::io;
-    use Rng;
 
     #[derive(Debug)]
     pub struct OsRng;
@@ -595,7 +594,7 @@ mod imp {
 #[cfg(test)]
 mod test {
     use std::sync::mpsc::channel;
-    use Rng;
+    use RngCore;
     use OsRng;
     use std::thread;
 
