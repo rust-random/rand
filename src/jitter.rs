@@ -16,7 +16,7 @@
 
 //! Non-physical true random number generator based on timing jitter.
 
-use {Rng, Error, ErrorKind, impls};
+use {RngCore, Error, ErrorKind, impls};
 
 use core::{fmt, mem, ptr};
 #[cfg(feature="std")]
@@ -746,7 +746,7 @@ fn black_box<T>(dummy: T) -> T {
     }
 }
 
-impl Rng for JitterRng {
+impl RngCore for JitterRng {
     fn next_u32(&mut self) -> u32 {
         // We want to use both parts of the generated entropy
         if self.data_half_used {
