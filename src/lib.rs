@@ -508,9 +508,9 @@ pub trait RngCore {
 /// 
 /// [`RngCore`]: trait.RngCore.html
 pub trait Rng: RngCore + Sized {
-    /// Fill `dest` entirely with random bytes, where `dest` is any type
-    /// supporting [`AsByteSliceMut`], namely slices over primitive integer
-    /// types (`i8`, `i16`, `u32`, etc.).
+    /// Fill `dest` entirely with random bytes (uniform value distribution),
+    /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
+    /// and arrays over primitive integer types (`i8`, `i16`, `u32`, etc.).
     /// 
     /// On big-endian platforms this performs byte-swapping to ensure
     /// portability of results from reproducible generators.
@@ -536,9 +536,9 @@ pub trait Rng: RngCore + Sized {
         dest.to_le();
     }
     
-    /// Fill `dest` entirely with random bytes, where `dest` is any type
-    /// supporting [`AsByteSliceMut`], namely slices over primitive integer
-    /// types (`i8`, `i16`, `u32`, etc.).
+    /// Fill `dest` entirely with random bytes (uniform value distribution),
+    /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
+    /// and arrays over primitive integer types (`i8`, `i16`, `u32`, etc.).
     /// 
     /// On big-endian platforms this performs byte-swapping to ensure
     /// portability of results from reproducible generators.
@@ -866,6 +866,24 @@ impl_as_byte_slice!(i32);
 impl_as_byte_slice!(i64);
 #[cfg(feature="i128_support")] impl_as_byte_slice!(i128);
 impl_as_byte_slice!(isize);
+
+macro_rules! impl_as_byte_slice_arrays {
+    ($n:expr,) => {};
+    ($n:expr, $N:ident, $($NN:ident,)*) => {
+        impl_as_byte_slice_arrays!($n - 1, $($NN,)*);
+        
+        impl<T> AsByteSliceMut for [T; $n] where [T]: AsByteSliceMut {
+            fn as_byte_slice_mut<'a>(&'a mut self) -> &'a mut [u8] {
+                self[..].as_byte_slice_mut()
+            }
+            
+            fn to_le(&mut self) {
+                self[..].to_le()
+            }
+        }
+    };
+}
+impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
 
 /// Iterator which will generate a stream of random items.
 ///
