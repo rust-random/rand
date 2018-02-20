@@ -10,10 +10,12 @@
 
 //! The exponential distribution.
 
-use {Rng, Rand};
-use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
+use {Rng};
+use distributions::{ziggurat, ziggurat_tables, Distribution};
 
-/// A wrapper around an `f64` to generate Exp(1) random numbers.
+/// Samples floating-point numbers according to the exponential distribution,
+/// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
+/// sampling with `-rng.gen::<f64>().ln()`, but faster.
 ///
 /// See `Exp` for the general exponential distribution.
 ///
@@ -27,33 +29,33 @@ use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
 /// College, Oxford
 ///
 /// # Example
-///
 /// ```rust
-/// use rand::distributions::exponential::Exp1;
+/// use rand::{weak_rng, Rng};
+/// use rand::distributions::Exp1;
 ///
-/// let Exp1(x) = rand::random();
-/// println!("{}", x);
+/// let val: f64 = weak_rng().sample(Exp1);
+/// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Exp1(pub f64);
+pub struct Exp1;
 
 // This could be done via `-rng.gen::<f64>().ln()` but that is slower.
-impl Rand for Exp1 {
+impl Distribution<f64> for Exp1 {
     #[inline]
-    fn rand<R:Rng>(rng: &mut R) -> Exp1 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         #[inline]
         fn pdf(x: f64) -> f64 {
             (-x).exp()
         }
         #[inline]
-        fn zero_case<R:Rng>(rng: &mut R, _u: f64) -> f64 {
+        fn zero_case<R: Rng + ?Sized>(rng: &mut R, _u: f64) -> f64 {
             ziggurat_tables::ZIG_EXP_R - rng.gen::<f64>().ln()
         }
 
-        Exp1(ziggurat(rng, false,
-                      &ziggurat_tables::ZIG_EXP_X,
-                      &ziggurat_tables::ZIG_EXP_F,
-                      pdf, zero_case))
+        ziggurat(rng, false,
+                 &ziggurat_tables::ZIG_EXP_X,
+                 &ziggurat_tables::ZIG_EXP_F,
+                 pdf, zero_case)
     }
 }
 
@@ -65,10 +67,10 @@ impl Rand for Exp1 {
 /// # Example
 ///
 /// ```rust
-/// use rand::distributions::{Exp, IndependentSample};
+/// use rand::distributions::{Exp, Distribution};
 ///
 /// let exp = Exp::new(2.0);
-/// let v = exp.ind_sample(&mut rand::thread_rng());
+/// let v = exp.sample(&mut rand::thread_rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -87,28 +89,25 @@ impl Exp {
     }
 }
 
-impl Sample<f64> for Exp {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
-impl IndependentSample<f64> for Exp {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let Exp1(n) = rng.gen::<Exp1>();
+impl Distribution<f64> for Exp {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+        let n: f64 = rng.sample(Exp1);
         n * self.lambda_inverse
     }
 }
 
 #[cfg(test)]
 mod test {
-    use distributions::{Sample, IndependentSample};
+    use distributions::Distribution;
     use super::Exp;
 
     #[test]
     fn test_exp() {
-        let mut exp = Exp::new(10.0);
+        let exp = Exp::new(10.0);
         let mut rng = ::test::rng(221);
         for _ in 0..1000 {
             assert!(exp.sample(&mut rng) >= 0.0);
-            assert!(exp.ind_sample(&mut rng) >= 0.0);
+            assert!(exp.sample(&mut rng) >= 0.0);
         }
     }
     #[test]
