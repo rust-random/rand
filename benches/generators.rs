@@ -52,34 +52,19 @@ macro_rules! gen_uint {
     }
 }
 
-macro_rules! gen_uint_new {
-    ($fnn:ident, $ty:ty, $gen:ident) => {
-        #[bench]
-        fn $fnn(b: &mut Bencher) {
-            let mut rng = $gen::new().unwrap();
-            b.iter(|| {
-                for _ in 0..RAND_BENCH_N {
-                    black_box(rng.gen::<$ty>());
-                }
-            });
-            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
-        }
-    }
-}
-
 gen_uint!(gen_u32_xorshift, u32, XorShiftRng);
 gen_uint!(gen_u32_hc128, u32, Hc128Rng);
 gen_uint!(gen_u32_isaac, u32, IsaacRng);
 gen_uint!(gen_u32_isaac64, u32, Isaac64Rng);
-gen_uint_new!(gen_u32_std, u32, StdRng);
-gen_uint_new!(gen_u32_os, u32, OsRng);
+gen_uint!(gen_u32_std, u32, StdRng);
+gen_uint!(gen_u32_os, u32, OsRng);
 
 gen_uint!(gen_u64_xorshift, u64, XorShiftRng);
 gen_uint!(gen_u64_hc128, u64, Hc128Rng);
 gen_uint!(gen_u64_isaac, u64, IsaacRng);
 gen_uint!(gen_u64_isaac64, u64, Isaac64Rng);
-gen_uint_new!(gen_u64_std, u64, StdRng);
-gen_uint_new!(gen_u64_os, u64, OsRng);
+gen_uint!(gen_u64_std, u64, StdRng);
+gen_uint!(gen_u64_os, u64, OsRng);
 
 // Do not test JitterRng like the others by running it RAND_BENCH_N times per,
 // measurement, because it is way too slow. Only run it once.
