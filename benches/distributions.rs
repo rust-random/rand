@@ -38,8 +38,8 @@ distr!(distr_range_i64, i64, Range::new(3i64, 12345678901234));
 #[cfg(feature = "i128_support")]
 distr!(distr_range_i128, i128, Range::new(-12345678901234i128, 12345678901234567890));
 
-distr!(distr_range_float32, f32, Range::new(2.26f32, 2.319));
-distr!(distr_range_float, f64, Range::new(2.26f64, 2.319));
+distr!(distr_range_f32, f32, Range::new(2.26f32, 2.319));
+distr!(distr_range_f64, f64, Range::new(2.26f64, 2.319));
 
 // uniform
 distr!(distr_uniform_i8, i8, Uniform);
@@ -52,13 +52,8 @@ distr!(distr_uniform_i128, i128, Uniform);
 distr!(distr_uniform_bool, bool, Uniform);
 distr!(distr_uniform_codepoint, char, Uniform);
 
-distr!(distr_uniform01_float32, f32, Uniform);
-distr!(distr_closed01_float32, f32, Closed01);
-distr!(distr_open01_float32, f32, Open01);
-
-distr!(distr_uniform01_float, f64, Uniform);
-distr!(distr_closed01_float, f64, Closed01);
-distr!(distr_open01_float, f64, Open01);
+distr!(distr_uniform_f32, f32, Uniform);
+distr!(distr_uniform_f64, f64, Uniform);
 
 // distributions
 distr!(distr_exp, f64, Exp::new(2.71828 * 3.14159));

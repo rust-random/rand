@@ -155,6 +155,7 @@
 //! ```
 //! use rand::Rng;
 //! use rand::distributions::{Distribution, Range};
+//! use rand::distributions::range::RangeInt;
 //!
 //! struct SimulationResult {
 //!     win: bool,
@@ -162,7 +163,7 @@
 //! }
 //!
 //! // Run a single simulation of the Monty Hall problem.
-//! fn simulate<R: Rng>(random_door: &Range<u32>, rng: &mut R)
+//! fn simulate<R: Rng>(random_door: &Range<RangeInt<u32>>, rng: &mut R)
 //!                     -> SimulationResult {
 //!     let car = random_door.sample(rng);
 //!
@@ -203,7 +204,7 @@
 //!     let num_simulations = 10000;
 //!
 //!     let mut rng = rand::thread_rng();
-//!     let random_door = Range::new(0, 3);
+//!     let random_door = Range::new(0u32, 3);
 //!
 //!     let (mut switch_wins, mut switch_losses) = (0, 0);
 //!     let (mut keep_wins, mut keep_losses) = (0, 0);
@@ -630,8 +631,7 @@ pub trait Rng: RngCore + Sized {
     /// println!("{}", m);
     /// ```
     fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T {
-        assert!(low < high, "Rng::gen_range called with low >= high");
-        Range::new(low, high).sample(self)
+        Range::sample_single(low, high, self)
     }
 
     /// Return a bool with a 1 in n chance of true
