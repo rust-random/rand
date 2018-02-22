@@ -17,7 +17,6 @@
 
 use Rng;
 
-pub use self::float::{Open01, Closed01};
 pub use self::range::Range;
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
@@ -39,6 +38,8 @@ mod integer;
 mod other;
 #[cfg(feature="std")]
 mod ziggurat_tables;
+#[cfg(feature="std")]
+use distributions::float::IntoFloat;
 
 /// Types that can be used to create a random instance of `Support`.
 #[deprecated(since="0.5.0", note="use Distribution instead")]
@@ -74,7 +75,7 @@ mod impls {
     use distributions::gamma::{Gamma, ChiSquared, FisherF, StudentT};
     #[cfg(feature="std")]
     use distributions::normal::{Normal, LogNormal};
-    use distributions::range::{Range, SampleRange};
+    use distributions::range::{Range, SampleRange, RangeImpl};
     
     impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
         fn sample<R: Rng>(&mut self, rng: &mut R) -> T {
@@ -87,12 +88,12 @@ mod impls {
         }
     }
     
-    impl<Sup: SampleRange> Sample<Sup> for Range<Sup> {
+    impl<Sup: SampleRange + RangeImpl<X = Sup>> Sample<Sup> for Range<Sup> {
         fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup {
             Distribution::sample(self, rng)
         }
     }
-    impl<Sup: SampleRange> IndependentSample<Sup> for Range<Sup> {
+    impl<Sup: SampleRange + RangeImpl<X = Sup>> IndependentSample<Sup> for Range<Sup> {
         fn ind_sample<R: Rng>(&self, rng: &mut R) -> Sup {
             Distribution::sample(self, rng)
         }
@@ -236,7 +237,7 @@ pub struct Weighted<T> {
 #[derive(Debug)]
 pub struct WeightedChoice<'a, T:'a> {
     items: &'a mut [Weighted<T>],
-    weight_range: Range<u32>
+    weight_range: Range<range::RangeInt<u32>>,
 }
 
 impl<'a, T: Clone> WeightedChoice<'a, T> {
@@ -344,21 +345,24 @@ fn ziggurat<R: Rng + ?Sized, P, Z>(
             mut pdf: P,
             mut zero_case: Z)
             -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
-    const SCALE: f64 = (1u64 << 53) as f64;
     loop {
-        // reimplement the f64 generation as an optimisation suggested
-        // by the Doornik paper: we have a lot of precision-space
-        // (i.e. there are 11 bits of the 64 of a u64 to use after
-        // creating a f64), so we might as well reuse some to save
-        // generating a whole extra random number. (Seems to be 15%
-        // faster.)
-        let bits: u64 = rng.gen();
-        let i = (bits & 0xff) as usize;
-        let f = (bits >> 11) as f64 / SCALE;
+        // As an optimisation we re-implement the conversion to a f64.
+        // From the remaining 12 most significant bits we use 8 to construct `i`.
+        // This saves us generating a whole extra random number, while the added
+        // precision of using 64 bits for f64 does not buy us much.
+        // Because for some RNG's the least significant bits can be of lower
+        // statistical quality, we use bits 3..10 for i.
+        let bits = rng.next_u64();
+        let i = bits as usize & 0xff;
 
-        // u is either U(-1, 1) or U(0, 1) depending on if this is a
-        // symmetric distribution or not.
-        let u = if symmetric {2.0 * f - 1.0} else {f};
+        let u = if symmetric {
+            // Convert to a value in the range [2,4) and substract to get [-1,1)
+            (bits >> 12).into_float_with_exponent(1) - 3.0
+        } else {
+            // Convert to a value in the range [1,2) and substract to get (0,1)
+            (bits >> 12).into_float_with_exponent(0)
+            - (1.0 - ::core::f64::EPSILON / 2.0)
+        };
         let x = u * x_tab[i];
 
         let test_x = if symmetric { x.abs() } else {x};
@@ -386,17 +390,22 @@ mod tests {
     #[test]
     fn test_weighted_choice() {
         // this makes assumptions about the internal implementation of
-        // WeightedChoice, specifically: it doesn't reorder the items,
-        // it doesn't do weird things to the RNG (so 0 maps to 0, 1 to
-        // 1, internally; modulo a modulo operation).
+        // WeightedChoice. It may fail when the implementation in
+        // `distributions::range::RangeInt changes.
 
         macro_rules! t {
             ($items:expr, $expected:expr) => {{
                 let mut items = $items;
+                let mut total_weight = 0;
+                for item in &items { total_weight += item.weight; }
+
                 let wc = WeightedChoice::new(&mut items);
                 let expected = $expected;
 
-                let mut rng = StepRng::new(0, 1);
+                // Use extremely large steps between the random numbers, because
+                // we test with small ranges and RangeInt is designed to prefer
+                // the most significant bits.
+                let mut rng = StepRng::new(0, !0 / (total_weight as u64));
 
                 for &val in expected.iter() {
                     assert_eq!(wc.sample(&mut rng), val)
@@ -411,12 +420,12 @@ mod tests {
             Weighted { weight: 2, item: 21},
             Weighted { weight: 0, item: 22},
             Weighted { weight: 1, item: 23}],
-           [21,21, 23]);
+           [21, 21, 23]);
 
         // different weights
         t!([Weighted { weight: 4, item: 30},
             Weighted { weight: 3, item: 31}],
-           [30,30,30,30, 31,31,31]);
+           [30, 31, 30, 31, 30, 31, 30]);
 
         // check that we're binary searching
         // correctly with some vectors of odd
@@ -434,7 +443,7 @@ mod tests {
             Weighted { weight: 1, item: 54},
             Weighted { weight: 1, item: 55},
             Weighted { weight: 1, item: 56}],
-           [50, 51, 52, 53, 54, 55, 56]);
+           [50, 54, 51, 55, 52, 56, 53]);
     }
 
     #[test]
