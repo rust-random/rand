@@ -23,12 +23,34 @@ matrix:
         - cargo test --tests --no-default-features --features=alloc
       after_success:
         - travis-cargo --only nightly doc-upload
+    
+    - rust: stable
+      sudo: required
+      dist: trusty
+      services: docker
+      install:
+        - sh utils/ci/install.sh
+        - source ~/.cargo/env || true
+      script:
+        - bash utils/ci/script.sh
+      env: TARGET=mips64-unknown-linux-gnuabi64
+
+before_install:
+  - set -e
+  - rustup self update
 
 script:
   - cargo test
   - cargo test --tests --no-default-features
   - cargo test --features serde-1,log
   - cargo test --tests --no-default-features --features=serde-1
+
+after_script: set +e
+
+cache: cargo
+before_cache:
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
 
 env:
   global:
