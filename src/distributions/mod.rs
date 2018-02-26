@@ -386,25 +386,9 @@ fn ziggurat<R: Rng + ?Sized, P, Z>(
 
 #[cfg(test)]
 mod tests {
-    use {Rng, RngCore};
-    use impls;
+    use Rng;
+    use mock::StepRng;
     use super::{WeightedChoice, Weighted, Distribution};
-
-    // 0, 1, 2, 3, ...
-    struct CountingRng { i: u32 }
-    impl RngCore for CountingRng {
-        fn next_u32(&mut self) -> u32 {
-            self.i += 1;
-            self.i - 1
-        }
-        fn next_u64(&mut self) -> u64 {
-            self.next_u32() as u64
-        }
-
-        fn fill_bytes(&mut self, dest: &mut [u8]) {
-            impls::fill_bytes_via_u32(self, dest)
-        }
-    }
 
     #[test]
     fn test_weighted_choice() {
@@ -419,7 +403,7 @@ mod tests {
                 let wc = WeightedChoice::new(&mut items);
                 let expected = $expected;
 
-                let mut rng = CountingRng { i: 0 };
+                let mut rng = StepRng::new(0, 1);
 
                 for &val in expected.iter() {
                     assert_eq!(wc.sample(&mut rng), val)

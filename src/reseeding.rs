@@ -182,57 +182,24 @@ impl<R: RngCore + SeedableRng, Rsdr: RngCore> RngCore for ReseedingRng<R, Rsdr> 
 
 #[cfg(test)]
 mod test {
-    use {impls, le};
-    use super::{ReseedingRng};
-    use {SeedableRng, RngCore, Error};
-
-    struct Counter {
-        i: u32
-    }
-
-    impl RngCore for Counter {
-        fn next_u32(&mut self) -> u32 {
-            self.i += 1;
-            // very random
-            self.i - 1
-        }
-        fn next_u64(&mut self) -> u64 {
-            impls::next_u64_via_u32(self)
-        }
-
-        fn fill_bytes(&mut self, dest: &mut [u8]) {
-            impls::fill_bytes_via_u64(self, dest)
-        }
-    }
-    impl SeedableRng for Counter {
-        type Seed = [u8; 4];
-        fn from_seed(seed: Self::Seed) -> Self {
-            let mut seed_u32 = [0u32; 1];
-            le::read_u32_into(&seed, &mut seed_u32);
-            Counter { i: seed_u32[0] }
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    struct ResetCounter;
-    impl RngCore for ResetCounter {
-        fn next_u32(&mut self) -> u32 { unimplemented!() }
-        fn next_u64(&mut self) -> u64 { unimplemented!() }
-        fn fill_bytes(&mut self, _dest: &mut [u8]) { unimplemented!() }
-        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            for i in dest.iter_mut() { *i = 0; }
-            Ok(())
-        }
-    }
+    use {Rng, SeedableRng, StdRng};
+    use mock::StepRng;
+    use super::ReseedingRng;
 
     #[test]
     fn test_reseeding() {
-        let mut rs = ReseedingRng::new(Counter {i:0}, 400, ResetCounter);
+        let mut zero = StepRng::new(0, 0);
+        let rng = StdRng::from_rng(&mut zero).unwrap();
+        let mut reseeding = ReseedingRng::new(rng, 32, zero);
 
-        let mut i = 0;
-        for _ in 0..1000 {
-            assert_eq!(rs.next_u32(), i % 100);
-            i += 1;
+        // Currently we only support for arrays up to length 32.
+        // TODO: cannot generate seq via Rng::gen because it uses different alg
+        let mut buf = [0u8; 32];
+        reseeding.fill(&mut buf);
+        let seq = buf;
+        for _ in 0..10 {
+            reseeding.fill(&mut buf);
+            assert_eq!(buf, seq);
         }
     }
 }
