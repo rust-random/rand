@@ -98,73 +98,58 @@ float_impls! { f32_rand_impls, f32, 23, next_f32 }
 
 #[cfg(test)]
 mod tests {
-    use {Rng, RngCore, impls};
+    use Rng;
+    use mock::StepRng;
     use distributions::{Open01, Closed01};
 
     const EPSILON32: f32 = ::core::f32::EPSILON;
     const EPSILON64: f64 = ::core::f64::EPSILON;
 
-    struct ConstantRng(u64);
-    impl RngCore for ConstantRng {
-        fn next_u32(&mut self) -> u32 {
-            let ConstantRng(v) = *self;
-            v as u32
-        }
-        fn next_u64(&mut self) -> u64 {
-            let ConstantRng(v) = *self;
-            v
-        }
-        
-        fn fill_bytes(&mut self, dest: &mut [u8]) {
-            impls::fill_bytes_via_u64(self, dest)
-        }
-    }
-
     #[test]
     fn floating_point_edge_cases() {
-        let mut zeros = ConstantRng(0);
+        let mut zeros = StepRng::new(0, 0);
         assert_eq!(zeros.gen::<f32>(), 0.0);
         assert_eq!(zeros.gen::<f64>(), 0.0);
         
-        let mut one = ConstantRng(1);
+        let mut one = StepRng::new(1, 0);
         assert_eq!(one.gen::<f32>(), EPSILON32);
         assert_eq!(one.gen::<f64>(), EPSILON64);
         
-        let mut max = ConstantRng(!0);
+        let mut max = StepRng::new(!0, 0);
         assert_eq!(max.gen::<f32>(), 1.0 - EPSILON32);
         assert_eq!(max.gen::<f64>(), 1.0 - EPSILON64);
     }
 
     #[test]
     fn fp_closed_edge_cases() {
-        let mut zeros = ConstantRng(0);
+        let mut zeros = StepRng::new(0, 0);
         assert_eq!(zeros.sample::<f32, _>(Closed01), 0.0);
         assert_eq!(zeros.sample::<f64, _>(Closed01), 0.0);
         
-        let mut one = ConstantRng(1);
+        let mut one = StepRng::new(1, 0);
         let one32 = one.sample::<f32, _>(Closed01);
         let one64 = one.sample::<f64, _>(Closed01);
         assert!(EPSILON32 < one32 && one32 < EPSILON32 * 1.01);
         assert!(EPSILON64 < one64 && one64 < EPSILON64 * 1.01);
         
-        let mut max = ConstantRng(!0);
+        let mut max = StepRng::new(!0, 0);
         assert_eq!(max.sample::<f32, _>(Closed01), 1.0);
         assert_eq!(max.sample::<f64, _>(Closed01), 1.0);
     }
 
     #[test]
     fn fp_open_edge_cases() {
-        let mut zeros = ConstantRng(0);
+        let mut zeros = StepRng::new(0, 0);
         assert_eq!(zeros.sample::<f32, _>(Open01), 0.0 + EPSILON32 / 2.0);
         assert_eq!(zeros.sample::<f64, _>(Open01), 0.0 + EPSILON64 / 2.0);
         
-        let mut one = ConstantRng(1);
+        let mut one = StepRng::new(1, 0);
         let one32 = one.sample::<f32, _>(Open01);
         let one64 = one.sample::<f64, _>(Open01);
         assert!(EPSILON32 < one32 && one32 < EPSILON32 * 2.0);
         assert!(EPSILON64 < one64 && one64 < EPSILON64 * 2.0);
         
-        let mut max = ConstantRng(!0);
+        let mut max = StepRng::new(!0, 0);
         assert_eq!(max.sample::<f32, _>(Open01), 1.0 - EPSILON32 / 2.0);
         assert_eq!(max.sample::<f64, _>(Open01), 1.0 - EPSILON64 / 2.0);
     }

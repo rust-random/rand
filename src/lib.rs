@@ -297,6 +297,7 @@ use distributions::range::SampleRange;
 pub mod distributions;
 mod impls;
 pub mod jitter;
+pub mod mock;
 #[cfg(feature="std")] pub mod os;
 #[cfg(feature="std")] pub mod read;
 pub mod reseeding;
@@ -1380,7 +1381,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 
 #[cfg(test)]
 mod test {
-    use impls;
+    use mock::StepRng;
     #[cfg(feature="std")]
     use super::{random, thread_rng, EntropyRng};
     use super::{RngCore, Rng, SeedableRng, StdRng};
@@ -1419,16 +1420,6 @@ mod test {
         TestRng { inner: StdRng::from_seed(seed) }
     }
 
-    struct ConstRng { i: u64 }
-    impl RngCore for ConstRng {
-        fn next_u32(&mut self) -> u32 { self.i as u32 }
-        fn next_u64(&mut self) -> u64 { self.i }
-
-        fn fill_bytes(&mut self, dest: &mut [u8]) {
-            impls::fill_bytes_via_u64(self, dest)
-        }
-    }
-    
     #[test]
     #[cfg(feature="std")]
     fn test_entropy() {
@@ -1438,7 +1429,7 @@ mod test {
 
     #[test]
     fn test_fill_bytes_default() {
-        let mut r = ConstRng { i: 0x11_22_33_44_55_66_77_88 };
+        let mut r = StepRng::new(0x11_22_33_44_55_66_77_88, 0);
 
         // check every remainder mod 8, both in small and big vectors.
         let lengths = [0, 1, 2, 3, 4, 5, 6, 7,
@@ -1460,7 +1451,7 @@ mod test {
     #[test]
     fn test_fill() {
         let x = 9041086907909331047;    // a random u64
-        let mut rng = ConstRng { i: x };
+        let mut rng = StepRng::new(x, 0);
         
         // Convert to byte sequence and back to u64; byte-swap twice if BE.
         let mut array = [0u64; 2];
