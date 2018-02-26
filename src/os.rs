@@ -413,6 +413,7 @@ mod imp {
     use {Error, ErrorKind};
     
     use std::ptr;
+    use std::io;
 
     #[derive(Debug)]
     pub struct OsRng;

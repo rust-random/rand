@@ -25,7 +25,7 @@ matrix:
         - travis-cargo --only nightly doc-upload
     
     # Trust cross-built/emulated targets. We must repeat all non-default values.
-    - rust: stable
+    - rust: nightly
       sudo: required
       dist: trusty
       services: docker
@@ -66,6 +66,17 @@ matrix:
         - bash utils/ci/script.sh
       env: TARGET=armv7-linux-androideabi DISABLE_TESTS=1
     - rust: stable
+      os: osx
+      sudo: required
+      dist: trusty
+      services: docker
+      install:
+        - sh utils/ci/install.sh
+        - source ~/.cargo/env || true
+      script:
+        - bash utils/ci/script.sh
+      env: TARGET=armv7-apple-ios DISABLE_TESTS=1
+    - rust: stable
       sudo: required
       dist: trusty
       services: docker
@@ -75,7 +86,7 @@ matrix:
       script:
         - bash utils/ci/script.sh
       # Bare metal target; no std
-      env: TARGET=thumbv6m-none-eabi DISABLE_STD=1
+      env: TARGET=thumbv6m-none-eabi DISABLE_TESTS=1 DISABLE_STD=1
 
 before_install:
   - set -e
