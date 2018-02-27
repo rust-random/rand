@@ -5,7 +5,7 @@ set -ex
 main() {
     if [ ! -z $DISABLE_TESTS ]; then
         if [ ! -z $DISABLE_STD ]; then
-            cross build --all --no-default-features --target $TARGET
+            cross build --all --no-default-features --target $TARGET --release
         else
             cross build --all --features log,serde-1 --target $TARGET
         fi
