@@ -11,7 +11,7 @@
 //! The ChaCha random number generator.
 
 use core::fmt;
-use {RngCore, SeedableRng};
+use {RngCore, CryptoRng, SeedableRng};
 use {impls, le};
 
 const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
@@ -252,6 +252,8 @@ impl RngCore for ChaChaRng {
         }
     }
 }
+
+impl CryptoRng for ChaChaRng {}
 
 impl SeedableRng for ChaChaRng {
     type Seed = [u8; SEED_WORDS*4];

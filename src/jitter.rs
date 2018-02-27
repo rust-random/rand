@@ -16,7 +16,7 @@
 
 //! Non-physical true random number generator based on timing jitter.
 
-use {RngCore, Error, ErrorKind, impls};
+use {RngCore, CryptoRng, Error, ErrorKind, impls};
 
 use core::{fmt, mem, ptr};
 #[cfg(feature="std")]
@@ -775,6 +775,8 @@ impl RngCore for JitterRng {
         impls::fill_bytes_via_u32(self, dest)
     }
 }
+
+impl CryptoRng for JitterRng {}
 
 // There are no tests included because (1) this is an "external" RNG, so output
 // is not reproducible and (2) `test_timer` *will* fail on some platforms.
