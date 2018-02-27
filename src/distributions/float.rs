@@ -10,6 +10,10 @@
 
 //! Basic floating-point number distributions
 
+use core::mem;
+use Rng;
+use distributions::{Distribution, Uniform};
+
 
 /// A distribution to sample floating point numbers uniformly in the open
 /// interval `(0, 1)` (not including either endpoint).
@@ -52,33 +56,60 @@ pub struct Open01;
 pub struct Closed01;
 
 
+// Return the next random f32 selected from the half-open
+// interval `[0, 1)`.
+//
+// This uses a technique described by Saito and Matsumoto at
+// MCQMC'08. Given that the IEEE floating point numbers are
+// uniformly distributed over [1,2), we generate a number in
+// this range and then offset it onto the range [0,1). Our
+// choice of bits (masking v. shifting) is arbitrary and
+// should be immaterial for high quality generators. For low
+// quality generators (ex. LCG), prefer bitshifting due to
+// correlation between sequential low order bits.
+//
+// See:
+// A PRNG specialized in double precision floating point numbers using
+// an affine transition
+//
+// * <http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf>
+// * <http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf>
+impl Distribution<f32> for Uniform {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
+        const UPPER_MASK: u32 = 0x3F800000;
+        const LOWER_MASK: u32 = 0x7FFFFF;
+        let tmp = UPPER_MASK | (rng.next_u32() & LOWER_MASK);
+        let result: f32 = unsafe { mem::transmute(tmp) };
+        result - 1.0
+    }
+}
+impl Distribution<f64> for Uniform {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+        const UPPER_MASK: u64 = 0x3FF0000000000000;
+        const LOWER_MASK: u64 = 0xFFFFFFFFFFFFF;
+        let tmp = UPPER_MASK | (rng.next_u64() & LOWER_MASK);
+        let result: f64 = unsafe { mem::transmute(tmp) };
+        result - 1.0
+    }
+}
+
 macro_rules! float_impls {
-    ($mod_name:ident, $ty:ty, $mantissa_bits:expr, $method_name:ident) => {
+    ($mod_name:ident, $ty:ty, $mantissa_bits:expr) => {
         mod $mod_name {
             use Rng;
-            use distributions::{Distribution, Uniform};
+            use distributions::{Distribution};
             use super::{Open01, Closed01};
 
             const SCALE: $ty = (1u64 << $mantissa_bits) as $ty;
 
-            impl Distribution<$ty> for Uniform {
-                /// Generate a floating point number in the half-open
-                /// interval `[0,1)`.
-                ///
-                /// See `Closed01` for the closed interval `[0,1]`,
-                /// and `Open01` for the open interval `(0,1)`.
-                #[inline]
-                fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                    rng.$method_name()
-                }
-            }
             impl Distribution<$ty> for Open01 {
                 #[inline]
                 fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                     // add 0.5 * epsilon, so that smallest number is
                     // greater than 0, and largest number is still
                     // less than 1, specifically 1 - 0.5 * epsilon.
-                    rng.$method_name() + 0.5 / SCALE
+                    let x: $ty = rng.gen();
+                    x + 0.5 / SCALE
                 }
             }
             impl Distribution<$ty> for Closed01 {
@@ -86,14 +117,15 @@ macro_rules! float_impls {
                 fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                     // rescale so that 1.0 - epsilon becomes 1.0
                     // precisely.
-                    rng.$method_name() * SCALE / (SCALE - 1.0)
+                    let x: $ty = rng.gen();
+                    x * SCALE / (SCALE - 1.0)
                 }
             }
         }
     }
 }
-float_impls! { f64_rand_impls, f64, 52, next_f64 }
-float_impls! { f32_rand_impls, f32, 23, next_f32 }
+float_impls! { f64_rand_impls, f64, 52 }
+float_impls! { f32_rand_impls, f32, 23 }
 
 
 #[cfg(test)]

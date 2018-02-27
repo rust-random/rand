@@ -391,52 +391,6 @@ pub trait RngCore {
         impls::next_u64_via_u32(self)
     }
 
-    /// Return the next random f32 selected from the half-open
-    /// interval `[0, 1)`.
-    ///
-    /// This uses a technique described by Saito and Matsumoto at
-    /// MCQMC'08. Given that the IEEE floating point numbers are
-    /// uniformly distributed over [1,2), we generate a number in
-    /// this range and then offset it onto the range [0,1). Our
-    /// choice of bits (masking v. shifting) is arbitrary and
-    /// should be immaterial for high quality generators. For low
-    /// quality generators (ex. LCG), prefer bitshifting due to
-    /// correlation between sequential low order bits.
-    ///
-    /// See:
-    /// A PRNG specialized in double precision floating point numbers using
-    /// an affine transition
-    ///
-    /// * <http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf>
-    /// * <http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf>
-    ///
-    /// By default this is implemented in terms of `next_u32`, but a
-    /// random number generator which can generate numbers satisfying
-    /// the requirements directly can overload this for performance.
-    /// It is required that the return value lies in `[0, 1)`.
-    fn next_f32(&mut self) -> f32 {
-        const UPPER_MASK: u32 = 0x3F800000;
-        const LOWER_MASK: u32 = 0x7FFFFF;
-        let tmp = UPPER_MASK | (self.next_u32() & LOWER_MASK);
-        let result: f32 = unsafe { mem::transmute(tmp) };
-        result - 1.0
-    }
-
-    /// Return the next random f64 selected from the half-open
-    /// interval `[0, 1)`.
-    ///
-    /// By default this is implemented in terms of `next_u64`, but a
-    /// random number generator which can generate numbers satisfying
-    /// the requirements directly can overload this for performance.
-    /// It is required that the return value lies in `[0, 1)`.
-    fn next_f64(&mut self) -> f64 {
-        const UPPER_MASK: u64 = 0x3FF0000000000000;
-        const LOWER_MASK: u64 = 0xFFFFFFFFFFFFF;
-        let tmp = UPPER_MASK | (self.next_u64() & LOWER_MASK);
-        let result: f64 = unsafe { mem::transmute(tmp) };
-        result - 1.0
-    }
-
     /// Fill `dest` with random data.
     ///
     /// Implementations of this trait must implement at least one of
@@ -759,16 +713,6 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
     }
 
     #[inline]
-    fn next_f32(&mut self) -> f32 {
-        (**self).next_f32()
-    }
-
-    #[inline]
-    fn next_f64(&mut self) -> f64 {
-        (**self).next_f64()
-    }
-
-    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
     }
@@ -789,16 +733,6 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
     #[inline]
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
-    }
-
-    #[inline]
-    fn next_f32(&mut self) -> f32 {
-        (**self).next_f32()
-    }
-
-    #[inline]
-    fn next_f64(&mut self) -> f64 {
-        (**self).next_f64()
     }
 
     #[inline]
