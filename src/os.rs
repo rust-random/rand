@@ -583,27 +583,60 @@ mod imp {
 
 #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
 mod imp {
-    use std::io;
+    use stdweb::unstable::TryInto;
+    use stdweb::web::error::Error as WebError;
+    use {Error, ErrorKind};
 
     #[derive(Debug)]
     pub struct OsRng;
 
     impl OsRng {
         pub fn new() -> Result<OsRng, Error> {
-            Err(Error::new(ErrorKind::Unavailable, "not supported on WASM"))
+            Ok(OsRng)
         }
+
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
-            Err(Error::new(ErrorKind::Unavailable, "not supported on WASM"))
+            let len = v.len() as u32;
+            let ptr = v.as_mut_ptr() as i32;
+
+            let result = js! {
+                let len = @{ len };
+                let ptr = @{ ptr };
+
+                try {
+                    try {
+                        let array = new Uint8Array(len);
+                        window.crypto.getRandomValues(array);
+                        HEAPU8.set(array, ptr);
+                    } catch(err) {
+                        if (err instanceof ReferenceError) {
+                            let bytes = require("crypto").randomBytes(len);
+                            HEAPU8.set(new Uint8Array(bytes), ptr);
+                        } else {
+                            throw err;
+                        }
+                    }
+
+                    return { success: true };
+                } catch(err) {
+                    return { success: false, error: err };
+                }
+            };
+
+            if js!{ return @{ result.as_ref() }.success } == true {
+                Ok(())
+            } else {
+                let err: WebError = js!{ return @{ result }.error }.try_into().unwrap();
+                Err(Error::with_cause(ErrorKind::Other, "WASM Error", err))
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::sync::mpsc::channel;
     use RngCore;
     use OsRng;
-    use std::thread;
 
     #[test]
     fn test_os_rng() {
@@ -614,10 +647,18 @@ mod test {
 
         let mut v = [0u8; 1000];
         r.fill_bytes(&mut v);
+
+        let mut v2 = [0u8; 1000];
+        r.fill_bytes(&mut v2);
+
+        assert_ne!(v[..], v2[..]);
     }
 
+    #[cfg(not(any(target_arch = "wasm32", target_arch = "asmjs")))]
     #[test]
     fn test_os_rng_tasks() {
+        use std::sync::mpsc::channel;
+        use std::thread;
 
         let mut txs = vec!();
         for _ in 0..20 {
