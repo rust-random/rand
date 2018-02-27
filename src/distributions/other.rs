@@ -113,3 +113,17 @@ impl<T> Distribution<Option<T>> for Uniform where Uniform: Distribution<T> {
         }
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use {Rng, RngCore, Uniform};
+    
+    #[test]
+    fn test_misc() {
+        let mut rng: &mut RngCore = &mut ::test::rng(820);
+        
+        rng.sample::<char, _>(Uniform);
+        rng.sample::<bool, _>(Uniform);
+    }
+}

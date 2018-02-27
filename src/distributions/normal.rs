@@ -167,7 +167,6 @@ mod tests {
         let mut rng = ::test::rng(210);
         for _ in 0..1000 {
             norm.sample(&mut rng);
-            norm.sample(&mut rng);
         }
     }
     #[test]
@@ -182,7 +181,6 @@ mod tests {
         let lnorm = LogNormal::new(10.0, 10.0);
         let mut rng = ::test::rng(211);
         for _ in 0..1000 {
-            lnorm.sample(&mut rng);
             lnorm.sample(&mut rng);
         }
     }
