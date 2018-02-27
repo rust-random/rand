@@ -45,7 +45,7 @@ matrix:
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=mips-unknown-linux-gnuabi
+      env: TARGET=mips-unknown-linux-gnu
     - rust: stable
       sudo: required
       dist: trusty
@@ -57,11 +57,11 @@ matrix:
       dist: trusty
       services: docker
       env: TARGET=armv7-apple-ios DISABLE_TESTS=1
-    - rust: stable
+    - rust: nightly
       sudo: required
       dist: trusty
       services: docker
-      # Bare metal target; no std
+      # Bare metal target; no std; only works on nightly
       env: TARGET=thumbv6m-none-eabi DISABLE_TESTS=1 DISABLE_STD=1
 
 before_install:
