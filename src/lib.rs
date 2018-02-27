@@ -446,6 +446,28 @@ pub trait RngCore {
     }
 }
 
+/// A marker trait for an `Rng` which may be considered for use in
+/// cryptography.
+/// 
+/// *Cryptographically secure generators*, also known as *CSPRNGs*, should
+/// satisfy an additional properties over other generators: given the first
+/// *k* bits of an algorithm's output
+/// sequence, it should not be possible using polynomial-time algorithms to
+/// predict the next bit with probability significantly greater than 50%.
+/// 
+/// Some generators may satisfy an additional property, however this is not
+/// required: if the CSPRNG's state is revealed, it should not be
+/// computationally-feasible to reconstruct output prior to this. Some other
+/// generators allow backwards-computation and are consided *reversible*.
+/// 
+/// Note that this trait is provided for guidance only and cannot guarantee
+/// suitability for cryptographic applications. In general it should only be
+/// implemented for well-reviewed code implementing well-regarded algorithms.
+/// 
+/// Note also that use of a `CryptoRng` does not protect against other
+/// weaknesses such as seeding from a weak entropy source or leaking state.
+pub trait CryptoRng: RngCore {}
+
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
 /// 
