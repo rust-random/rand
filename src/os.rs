@@ -424,10 +424,10 @@ mod imp {
         }
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
             let mib = [libc::CTL_KERN, libc::KERN_ARND];
+            trace!("OsRng: reading {} bytes via kern.arandom", v.len());
             // kern.arandom permits a maximum buffer size of 256 bytes
             for s in v.chunks_mut(256) {
                 let mut s_len = s.len();
-                trace!("OsRng: reading {} bytes via kern.arandom", v.len());
                 let ret = unsafe {
                     libc::sysctl(mib.as_ptr(), mib.len() as libc::c_uint,
                                  s.as_mut_ptr() as *mut _, &mut s_len,
