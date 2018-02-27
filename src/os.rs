@@ -146,11 +146,11 @@ impl ReadRng {
             let file = File::open(path).map_err(|err| {
                 use std::io::ErrorKind::*;
                 match err.kind() {
-                    NotFound | PermissionDenied | ConnectionRefused | BrokenPipe =>
-                        Error::with_cause(ErrorKind::Unavailable,
-                            "permanent error while opening random device", err),
-                    _ => Error::with_cause(ErrorKind::Unexpected,
-                            "unexpected error while opening random device", err)
+                    Interrupted => Error::new(ErrorKind::Transient, "interrupted"),
+                    WouldBlock => Error::with_cause(ErrorKind::NotReady,
+                            "opening random device would block", err),
+                    _ => Error::with_cause(ErrorKind::Unavailable,
+                            "error while opening random device", err)
                 }
             })?;
             *guard = Some(file);
@@ -170,7 +170,13 @@ impl ReadRng {
         let mut file = (*guard).as_mut().unwrap();
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
         file.read_exact(dest).map_err(|err| {
-            Error::with_cause(ErrorKind::Unexpected, "error reading random device", err)
+            match err.kind() {
+                ::std::io::ErrorKind::WouldBlock => Error::with_cause(
+                    ErrorKind::NotReady,
+                    "reading from random device would block", err),
+                _ => Error::with_cause(ErrorKind::Unavailable,
+                    "error reading random device", err)
+            }
         })
     }
 }
@@ -251,7 +257,7 @@ mod imp {
                     ));
                 } else {
                     return Err(Error::with_cause(
-                        ErrorKind::Unexpected,
+                        ErrorKind::Unavailable,
                         "unexpected getrandom error",
                         err,
                     ));
