@@ -48,3 +48,6 @@ cloudabi = "0.0.3"
 
 [target.'cfg(target_os = "fuchsia")'.dependencies]
 fuchsia-zircon = "0.3.2"
+
+[target.wasm32-unknown-unknown.dependencies]
+stdweb = "0.4"

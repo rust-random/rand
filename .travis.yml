@@ -24,6 +24,13 @@ matrix:
       after_success:
         - travis-cargo --only nightly doc-upload
 
+    - rust: nightly
+      install:
+        - rustup target add wasm32-unknown-unknown
+        - cargo install --force cargo-web
+      script:
+        - cargo web test --target wasm32-unknown-unknown --nodejs
+
 script:
   - cargo test
   - cargo test --tests --no-default-features
