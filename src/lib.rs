@@ -266,8 +266,6 @@
 
 
 use core::{marker, mem, slice};
-#[cfg(feature="std")] use std::cell::RefCell;
-#[cfg(feature="std")] use std::rc::Rc;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
 // external rngs
@@ -283,6 +281,9 @@ pub use prng::Hc128Rng;
 // error types
 pub use error::{ErrorKind, Error};
 
+// convenience and derived rngs
+#[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng, random};
+
 // local use declarations
 #[cfg(target_pointer_width = "32")]
 use prng::IsaacRng as IsaacWordRng;
@@ -291,7 +292,6 @@ use prng::Isaac64Rng as IsaacWordRng;
 
 use distributions::{Distribution, Uniform, Range};
 use distributions::range::SampleRange;
-#[cfg(feature="std")] use reseeding::ReseedingRng;
 
 // public modules
 pub mod distributions;
@@ -317,6 +317,7 @@ pub mod isaac {
 mod le;
 mod error;
 mod prng;
+#[cfg(feature="std")] mod thread_rng;
 
 
 /// A type that can be randomly generated using an `Rng`.
@@ -1034,79 +1035,6 @@ pub fn weak_rng() -> XorShiftRng {
 }
 
 
-/// The type returned by [`thread_rng`], essentially just a reference to the
-/// PRNG in thread-local memory.
-/// 
-/// [`thread_rng`]: fn.thread_rng.html
-#[cfg(feature="std")]
-#[derive(Clone, Debug)]
-pub struct ThreadRng {
-    rng: Rc<RefCell<ReseedingRng<StdRng, EntropyRng>>>,
-}
-
-#[cfg(feature="std")]
-thread_local!(
-    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<StdRng, EntropyRng>>> = {
-        const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
-        let mut entropy_source = EntropyRng::new();
-        let r = StdRng::from_rng(&mut entropy_source).unwrap_or_else(|err|
-                panic!("could not initialize thread_rng: {}", err));
-        let rng = ReseedingRng::new(r,
-                                    THREAD_RNG_RESEED_THRESHOLD,
-                                    entropy_source);
-        Rc::new(RefCell::new(rng))
-    }
-);
-
-/// Retrieve the lazily-initialized thread-local random number
-/// generator, seeded by the system. Intended to be used in method
-/// chaining style, e.g. `thread_rng().gen::<i32>()`, or cached locally, e.g.
-/// `let mut rng = thread_rng();`.
-///
-/// `ThreadRng` uses [`ReseedingRng`] wrapping a [`StdRng`] which is reseeded
-/// after generating 32KiB of random data. A single instance is cached per
-/// thread and the returned `ThreadRng` is a reference to this instance — hence
-/// `ThreadRng` is neither `Send` nor `Sync` but is safe to use within a single
-/// thread. This RNG is seeded and reseeded via [`EntropyRng`] as required.
-/// 
-/// Note that the reseeding is done as an extra precaution against entropy
-/// leaks and is in theory unnecessary — to predict `thread_rng`'s output, an
-/// attacker would have to either determine most of the RNG's seed or internal
-/// state, or crack the algorithm used (ISAAC, which has not been proven
-/// cryptographically secure, but has no known attack despite a 20-year old
-/// challenge).
-/// 
-/// [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
-/// [`StdRng`]: struct.StdRng.html
-/// [`EntropyRng`]: struct.EntropyRng.html
-#[cfg(feature="std")]
-pub fn thread_rng() -> ThreadRng {
-    ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
-}
-
-#[cfg(feature="std")]
-impl RngCore for ThreadRng {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        self.rng.borrow_mut().next_u32()
-    }
-
-    #[inline]
-    fn next_u64(&mut self) -> u64 {
-        self.rng.borrow_mut().next_u64()
-    }
-
-    #[inline]
-    fn fill_bytes(&mut self, bytes: &mut [u8]) {
-        self.rng.borrow_mut().fill_bytes(bytes)
-    }
-    
-    #[inline]
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.rng.borrow_mut().try_fill_bytes(dest)
-    }
-}
-
 /// An RNG provided specifically for seeding PRNGs.
 /// 
 /// Where possible, `EntropyRng` retrieves random data from the operating
@@ -1236,55 +1164,6 @@ impl RngCore for EntropyRng {
         }
         Ok(())
     }
-}
-
-/// Generates a random value using the thread-local random number generator.
-/// 
-/// This is simply a shortcut for `thread_rng().gen()`. See [`thread_rng`] for
-/// documentation of the entropy source and [`Rand`] for documentation of
-/// distributions and type-specific generation.
-///
-/// # Examples
-///
-/// ```
-/// let x = rand::random::<u8>();
-/// println!("{}", x);
-///
-/// let y = rand::random::<f64>();
-/// println!("{}", y);
-///
-/// if rand::random() { // generates a boolean
-///     println!("Better lucky than good!");
-/// }
-/// ```
-///
-/// If you're calling `random()` in a loop, caching the generator as in the
-/// following example can increase performance.
-///
-/// ```
-/// use rand::Rng;
-///
-/// let mut v = vec![1, 2, 3];
-///
-/// for x in v.iter_mut() {
-///     *x = rand::random()
-/// }
-///
-/// // can be made faster by caching thread_rng
-///
-/// let mut rng = rand::thread_rng();
-///
-/// for x in v.iter_mut() {
-///     *x = rng.gen();
-/// }
-/// ```
-/// 
-/// [`thread_rng`]: fn.thread_rng.html
-/// [`Rand`]: trait.Rand.html
-#[cfg(feature="std")]
-#[inline]
-pub fn random<T>() -> T where Uniform: Distribution<T> {
-    thread_rng().gen()
 }
 
 /// DEPRECATED: use `seq::sample_iter` instead.
