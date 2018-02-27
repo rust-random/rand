@@ -62,13 +62,12 @@ impl<R: Read> RngCore for ReadRng<R> {
         if dest.len() == 0 { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
         self.reader.read_exact(dest).map_err(|err| {
-            use std::io::ErrorKind::*;
             match err.kind() {
-                NotFound | PermissionDenied | ConnectionRefused | BrokenPipe =>
-                    Error::with_cause(ErrorKind::Unavailable,
-                        "ReadRng: resource unavailable", err),
-                _ => Error::with_cause(ErrorKind::Unexpected,
-                        "ReadRng: unexpected error", err)
+                ::std::io::ErrorKind::WouldBlock => Error::with_cause(
+                    ErrorKind::NotReady,
+                    "reading from random device would block", err),
+                _ => Error::with_cause(ErrorKind::Unavailable,
+                    "error reading random device", err)
             }
         })
     }
