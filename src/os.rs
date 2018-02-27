@@ -583,6 +583,7 @@ mod imp {
 
 #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
 mod imp {
+    use std::mem;
     use stdweb::unstable::TryInto;
     use stdweb::web::error::Error as WebError;
     use {Error, ErrorKind};
@@ -596,6 +597,8 @@ mod imp {
         }
 
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
+            assert_eq!(mem::size_of::<usize>(), 4);
+
             let len = v.len() as u32;
             let ptr = v.as_mut_ptr() as i32;
 
@@ -610,6 +613,10 @@ mod imp {
                         HEAPU8.set(array, ptr);
                     } catch(err) {
                         if (err instanceof ReferenceError) {
+                            // Try fallback to nodejs.
+                            //
+                            // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+
                             let bytes = require("crypto").randomBytes(len);
                             HEAPU8.set(new Uint8Array(bytes), ptr);
                         } else {
@@ -627,7 +634,7 @@ mod imp {
                 Ok(())
             } else {
                 let err: WebError = js!{ return @{ result }.error }.try_into().unwrap();
-                Err(Error::with_cause(ErrorKind::Other, "WASM Error", err))
+                Err(Error::with_cause(ErrorKind::Unexpected, "WASM Error", err))
             }
         }
     }
