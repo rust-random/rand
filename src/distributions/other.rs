@@ -13,19 +13,17 @@
 use core::char;
 
 use {Rng};
-use distributions::{Distribution, Uniform};
+use distributions::{Distribution, Uniform, Range};
 
 impl Distribution<char> for Uniform {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> char {
-        // a char is 21 bits
-        const CHAR_MASK: u32 = 0x001f_ffff;
+        let range = Range::new(0u32, 0x11_0000);
         loop {
-            // Rejection sampling. About 0.2% of numbers with at most
-            // 21-bits are invalid codepoints (surrogates), so this
-            // will succeed first go almost every time.
-            match char::from_u32(rng.next_u32() & CHAR_MASK) {
+            match char::from_u32(range.sample(rng)) {
                 Some(c) => return c,
+                // About 0.2% of numbers in the range 0..0x110000 are invalid
+                // codepoints (surrogates).
                 None => {}
             }
         }
