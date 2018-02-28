@@ -590,11 +590,46 @@ mod imp {
     use {Error, ErrorKind};
 
     #[derive(Debug)]
-    pub struct OsRng;
+    enum OsRngInner {
+        Browser,
+        Node
+    }
+
+    #[derive(Debug)]
+    pub struct OsRng(OsRngInner);
 
     impl OsRng {
         pub fn new() -> Result<OsRng, Error> {
-            Ok(OsRng)
+            let result = js! {
+                try {
+                    if (
+                        typeof window === "object" &&
+                        typeof window.crypto === "object" &&
+                        typeof window.crypto.getRandomValues === "function"
+                    ) {
+                        return { success: true, ty: 1 };
+                    }
+
+                    if (typeof require("crypto").randomBytes === "function") {
+                        return { success: true, ty: 2 };
+                    }
+
+                    return { success: false, error: new Error("not supported") };
+                } catch(err) {
+                    return { success: false, error: err };
+                }
+            };
+
+            if js!{ return @{ result.as_ref() }.success } == true {
+                let ty = js!{ return @{ result }.ty };
+
+                if ty == 1 { Ok(OsRng(OsRngInner::Browser)) }
+                else if ty == 2 { Ok(OsRng(OsRngInner::Node)) }
+                else { unreachable!() }
+            } else {
+                let err: WebError = js!{ return @{ result }.error }.try_into().unwrap();
+                Err(Error::with_cause(ErrorKind::Unavailable, "WASM Error", err))
+            }
         }
 
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
@@ -603,31 +638,27 @@ mod imp {
             let len = v.len() as u32;
             let ptr = v.as_mut_ptr() as i32;
 
-            let result = js! {
-                let len = @{ len };
-                let ptr = @{ ptr };
-
-                try {
+            let result = match self.0 {
+                OsRngInner::Browser => js! {
                     try {
-                        let array = new Uint8Array(len);
+                        let array = new Uint8Array(@{ len });
                         window.crypto.getRandomValues(array);
-                        HEAPU8.set(array, ptr);
+                        HEAPU8.set(array, @{ ptr });
+
+                        return { success: true };
                     } catch(err) {
-                        if (err instanceof ReferenceError) {
-                            // Try fallback to nodejs.
-                            //
-                            // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
-
-                            let bytes = require("crypto").randomBytes(len);
-                            HEAPU8.set(new Uint8Array(bytes), ptr);
-                        } else {
-                            throw err;
-                        }
+                        return { success: false, error: err };
                     }
+                },
+                OsRngInner::Node => js! {
+                    try {
+                        let bytes = require("crypto").randomBytes(@{ len });
+                        HEAPU8.set(new Uint8Array(bytes), @{ ptr });
 
-                    return { success: true };
-                } catch(err) {
-                    return { success: false, error: err };
+                        return { success: true };
+                    } catch(err) {
+                        return { success: false, error: err };
+                    }
                 }
             };
 
