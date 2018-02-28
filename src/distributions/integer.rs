@@ -108,3 +108,31 @@ impl Distribution<u128> for Uniform {
         ((rng.next_u64() as u128) << 64) | (rng.next_u64() as u128)
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use Rng;
+    use distributions::{Uniform};
+    
+    #[test]
+    fn test_integers() {
+        let mut rng = ::test::rng(806);
+        
+        rng.sample::<isize, _>(Uniform);
+        rng.sample::<i8, _>(Uniform);
+        rng.sample::<i16, _>(Uniform);
+        rng.sample::<i32, _>(Uniform);
+        rng.sample::<i64, _>(Uniform);
+        #[cfg(feature = "i128_support")]
+        rng.sample::<i128, _>(Uniform);
+        
+        rng.sample::<usize, _>(Uniform);
+        rng.sample::<u8, _>(Uniform);
+        rng.sample::<u16, _>(Uniform);
+        rng.sample::<u32, _>(Uniform);
+        rng.sample::<u64, _>(Uniform);
+        #[cfg(feature = "i128_support")]
+        rng.sample::<u128, _>(Uniform);
+    }
+}
