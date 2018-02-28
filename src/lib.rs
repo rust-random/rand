@@ -266,8 +266,6 @@
 
 
 use core::{marker, mem, slice};
-#[cfg(feature="std")] use std::cell::RefCell;
-#[cfg(feature="std")] use std::rc::Rc;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
 // external rngs
@@ -283,6 +281,10 @@ pub use prng::Hc128Rng;
 // error types
 pub use error::{ErrorKind, Error};
 
+// convenience and derived rngs
+#[cfg(feature="std")] pub use entropy_rng::EntropyRng;
+#[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng, random};
+
 // local use declarations
 #[cfg(target_pointer_width = "32")]
 use prng::IsaacRng as IsaacWordRng;
@@ -291,7 +293,6 @@ use prng::Isaac64Rng as IsaacWordRng;
 
 use distributions::{Distribution, Uniform, Range};
 use distributions::range::SampleRange;
-#[cfg(feature="std")] use reseeding::ReseedingRng;
 
 // public modules
 pub mod distributions;
@@ -315,8 +316,10 @@ pub mod isaac {
 
 // private modules
 mod le;
+#[cfg(feature="std")] mod entropy_rng;
 mod error;
 mod prng;
+#[cfg(feature="std")] mod thread_rng;
 
 
 /// A type that can be randomly generated using an `Rng`.
@@ -391,52 +394,6 @@ pub trait RngCore {
         impls::next_u64_via_u32(self)
     }
 
-    /// Return the next random f32 selected from the half-open
-    /// interval `[0, 1)`.
-    ///
-    /// This uses a technique described by Saito and Matsumoto at
-    /// MCQMC'08. Given that the IEEE floating point numbers are
-    /// uniformly distributed over [1,2), we generate a number in
-    /// this range and then offset it onto the range [0,1). Our
-    /// choice of bits (masking v. shifting) is arbitrary and
-    /// should be immaterial for high quality generators. For low
-    /// quality generators (ex. LCG), prefer bitshifting due to
-    /// correlation between sequential low order bits.
-    ///
-    /// See:
-    /// A PRNG specialized in double precision floating point numbers using
-    /// an affine transition
-    ///
-    /// * <http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/dSFMT.pdf>
-    /// * <http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/SFMT/dSFMT-slide-e.pdf>
-    ///
-    /// By default this is implemented in terms of `next_u32`, but a
-    /// random number generator which can generate numbers satisfying
-    /// the requirements directly can overload this for performance.
-    /// It is required that the return value lies in `[0, 1)`.
-    fn next_f32(&mut self) -> f32 {
-        const UPPER_MASK: u32 = 0x3F800000;
-        const LOWER_MASK: u32 = 0x7FFFFF;
-        let tmp = UPPER_MASK | (self.next_u32() & LOWER_MASK);
-        let result: f32 = unsafe { mem::transmute(tmp) };
-        result - 1.0
-    }
-
-    /// Return the next random f64 selected from the half-open
-    /// interval `[0, 1)`.
-    ///
-    /// By default this is implemented in terms of `next_u64`, but a
-    /// random number generator which can generate numbers satisfying
-    /// the requirements directly can overload this for performance.
-    /// It is required that the return value lies in `[0, 1)`.
-    fn next_f64(&mut self) -> f64 {
-        const UPPER_MASK: u64 = 0x3FF0000000000000;
-        const LOWER_MASK: u64 = 0xFFFFFFFFFFFFF;
-        let tmp = UPPER_MASK | (self.next_u64() & LOWER_MASK);
-        let result: f64 = unsafe { mem::transmute(tmp) };
-        result - 1.0
-    }
-
     /// Fill `dest` with random data.
     ///
     /// Implementations of this trait must implement at least one of
@@ -488,6 +445,28 @@ pub trait RngCore {
         Ok(self.fill_bytes(dest))
     }
 }
+
+/// A marker trait for an `Rng` which may be considered for use in
+/// cryptography.
+/// 
+/// *Cryptographically secure generators*, also known as *CSPRNGs*, should
+/// satisfy an additional properties over other generators: given the first
+/// *k* bits of an algorithm's output
+/// sequence, it should not be possible using polynomial-time algorithms to
+/// predict the next bit with probability significantly greater than 50%.
+/// 
+/// Some generators may satisfy an additional property, however this is not
+/// required: if the CSPRNG's state is revealed, it should not be
+/// computationally-feasible to reconstruct output prior to this. Some other
+/// generators allow backwards-computation and are consided *reversible*.
+/// 
+/// Note that this trait is provided for guidance only and cannot guarantee
+/// suitability for cryptographic applications. In general it should only be
+/// implemented for well-reviewed code implementing well-regarded algorithms.
+/// 
+/// Note also that use of a `CryptoRng` does not protect against other
+/// weaknesses such as seeding from a weak entropy source or leaking state.
+pub trait CryptoRng: RngCore {}
 
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
@@ -759,16 +738,6 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
     }
 
     #[inline]
-    fn next_f32(&mut self) -> f32 {
-        (**self).next_f32()
-    }
-
-    #[inline]
-    fn next_f64(&mut self) -> f64 {
-        (**self).next_f64()
-    }
-
-    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
     }
@@ -789,16 +758,6 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
     #[inline]
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
-    }
-
-    #[inline]
-    fn next_f32(&mut self) -> f32 {
-        (**self).next_f32()
-    }
-
-    #[inline]
-    fn next_f64(&mut self) -> f64 {
-        (**self).next_f64()
     }
 
     #[inline]
@@ -1099,259 +1058,6 @@ pub fn weak_rng() -> XorShiftRng {
         panic!("weak_rng failed: {:?}", err))
 }
 
-
-/// The type returned by [`thread_rng`], essentially just a reference to the
-/// PRNG in thread-local memory.
-/// 
-/// [`thread_rng`]: fn.thread_rng.html
-#[cfg(feature="std")]
-#[derive(Clone, Debug)]
-pub struct ThreadRng {
-    rng: Rc<RefCell<ReseedingRng<StdRng, EntropyRng>>>,
-}
-
-#[cfg(feature="std")]
-thread_local!(
-    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<StdRng, EntropyRng>>> = {
-        const THREAD_RNG_RESEED_THRESHOLD: u64 = 32_768;
-        let mut entropy_source = EntropyRng::new();
-        let r = StdRng::from_rng(&mut entropy_source).unwrap_or_else(|err|
-                panic!("could not initialize thread_rng: {}", err));
-        let rng = ReseedingRng::new(r,
-                                    THREAD_RNG_RESEED_THRESHOLD,
-                                    entropy_source);
-        Rc::new(RefCell::new(rng))
-    }
-);
-
-/// Retrieve the lazily-initialized thread-local random number
-/// generator, seeded by the system. Intended to be used in method
-/// chaining style, e.g. `thread_rng().gen::<i32>()`, or cached locally, e.g.
-/// `let mut rng = thread_rng();`.
-///
-/// `ThreadRng` uses [`ReseedingRng`] wrapping a [`StdRng`] which is reseeded
-/// after generating 32KiB of random data. A single instance is cached per
-/// thread and the returned `ThreadRng` is a reference to this instance — hence
-/// `ThreadRng` is neither `Send` nor `Sync` but is safe to use within a single
-/// thread. This RNG is seeded and reseeded via [`EntropyRng`] as required.
-/// 
-/// Note that the reseeding is done as an extra precaution against entropy
-/// leaks and is in theory unnecessary — to predict `thread_rng`'s output, an
-/// attacker would have to either determine most of the RNG's seed or internal
-/// state, or crack the algorithm used (ISAAC, which has not been proven
-/// cryptographically secure, but has no known attack despite a 20-year old
-/// challenge).
-/// 
-/// [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
-/// [`StdRng`]: struct.StdRng.html
-/// [`EntropyRng`]: struct.EntropyRng.html
-#[cfg(feature="std")]
-pub fn thread_rng() -> ThreadRng {
-    ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
-}
-
-#[cfg(feature="std")]
-impl RngCore for ThreadRng {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        self.rng.borrow_mut().next_u32()
-    }
-
-    #[inline]
-    fn next_u64(&mut self) -> u64 {
-        self.rng.borrow_mut().next_u64()
-    }
-
-    #[inline]
-    fn fill_bytes(&mut self, bytes: &mut [u8]) {
-        self.rng.borrow_mut().fill_bytes(bytes)
-    }
-    
-    #[inline]
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.rng.borrow_mut().try_fill_bytes(dest)
-    }
-}
-
-/// An RNG provided specifically for seeding PRNGs.
-/// 
-/// Where possible, `EntropyRng` retrieves random data from the operating
-/// system's interface for random numbers ([`OsRng`]); if that fails it will
-/// fall back to the [`JitterRng`] entropy collector. In the latter case it will
-/// still try to use [`OsRng`] on the next usage.
-/// 
-/// This is either a little slow ([`OsRng`] requires a system call) or extremely
-/// slow ([`JitterRng`] must use significant CPU time to generate sufficient
-/// jitter). It is recommended to only use `EntropyRng` to seed a PRNG (as in
-/// [`thread_rng`]) or to generate a small key.
-///
-/// [`OsRng`]: os/struct.OsRng.html
-/// [`JitterRng`]: jitter/struct.JitterRng.html
-/// [`thread_rng`]: fn.thread_rng.html
-#[cfg(feature="std")]
-#[derive(Debug)]
-pub struct EntropyRng {
-    rng: EntropySource,
-}
-
-#[cfg(feature="std")]
-#[derive(Debug)]
-enum EntropySource {
-    Os(OsRng),
-    Jitter(JitterRng),
-    None,
-}
-
-#[cfg(feature="std")]
-impl EntropyRng {
-    /// Create a new `EntropyRng`.
-    ///
-    /// This method will do no system calls or other initialization routines,
-    /// those are done on first use. This is done to make `new` infallible,
-    /// and `try_fill_bytes` the only place to report errors.
-    pub fn new() -> Self {
-        EntropyRng { rng: EntropySource::None }
-    }
-}
-
-#[cfg(feature="std")]
-impl RngCore for EntropyRng {
-    fn next_u32(&mut self) -> u32 {
-        impls::next_u32_via_fill(self)
-    }
-
-    fn next_u64(&mut self) -> u64 {
-        impls::next_u64_via_fill(self)
-    }
-
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.try_fill_bytes(dest).unwrap_or_else(|err|
-                panic!("all entropy sources failed; first error: {}", err))
-    }
-
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        fn try_os_new(dest: &mut [u8]) -> Result<OsRng, Error>
-        {
-            let mut rng = OsRng::new()?;
-            rng.try_fill_bytes(dest)?;
-            Ok(rng)
-        }
-
-        fn try_jitter_new(dest: &mut [u8]) -> Result<JitterRng, Error>
-        {
-            let mut rng = JitterRng::new()?;
-            rng.try_fill_bytes(dest)?;
-            Ok(rng)
-        }
-
-        let mut switch_rng = None;
-        match self.rng {
-            EntropySource::None => {
-                let os_rng_result = try_os_new(dest);
-                match os_rng_result {
-                    Ok(os_rng) => {
-                        debug!("EntropyRng: using OsRng");
-                        switch_rng = Some(EntropySource::Os(os_rng));
-                    }
-                    Err(os_rng_error) => {
-                        warn!("EntropyRng: OsRng failed [falling back to JitterRng]: {}",
-                              os_rng_error);
-                        match try_jitter_new(dest) {
-                            Ok(jitter_rng) => {
-                                debug!("EntropyRng: using JitterRng");
-                                switch_rng = Some(EntropySource::Jitter(jitter_rng));
-                            }
-                            Err(_jitter_error) => {
-                                warn!("EntropyRng: JitterRng failed: {}",
-                                      _jitter_error);
-                                return Err(os_rng_error);
-                            }
-                        }
-                    }
-                }
-            }
-            EntropySource::Os(ref mut rng) => {
-                let os_rng_result = rng.try_fill_bytes(dest);
-                if let Err(os_rng_error) = os_rng_result {
-                    warn!("EntropyRng: OsRng failed [falling back to JitterRng]: {}",
-                          os_rng_error);
-                    match try_jitter_new(dest) {
-                        Ok(jitter_rng) => {
-                            debug!("EntropyRng: using JitterRng");
-                            switch_rng = Some(EntropySource::Jitter(jitter_rng));
-                        }
-                        Err(_jitter_error) => {
-                            warn!("EntropyRng: JitterRng failed: {}",
-                                  _jitter_error);
-                            return Err(os_rng_error);
-                        }
-                    }
-                }
-            }
-            EntropySource::Jitter(ref mut rng) => {
-                if let Ok(os_rng) = try_os_new(dest) {
-                    debug!("EntropyRng: using OsRng");
-                    switch_rng = Some(EntropySource::Os(os_rng));
-                } else {
-                    return rng.try_fill_bytes(dest); // use JitterRng
-                }
-            }
-        }
-        if let Some(rng) = switch_rng {
-            self.rng = rng;
-        }
-        Ok(())
-    }
-}
-
-/// Generates a random value using the thread-local random number generator.
-/// 
-/// This is simply a shortcut for `thread_rng().gen()`. See [`thread_rng`] for
-/// documentation of the entropy source and [`Rand`] for documentation of
-/// distributions and type-specific generation.
-///
-/// # Examples
-///
-/// ```
-/// let x = rand::random::<u8>();
-/// println!("{}", x);
-///
-/// let y = rand::random::<f64>();
-/// println!("{}", y);
-///
-/// if rand::random() { // generates a boolean
-///     println!("Better lucky than good!");
-/// }
-/// ```
-///
-/// If you're calling `random()` in a loop, caching the generator as in the
-/// following example can increase performance.
-///
-/// ```
-/// use rand::Rng;
-///
-/// let mut v = vec![1, 2, 3];
-///
-/// for x in v.iter_mut() {
-///     *x = rand::random()
-/// }
-///
-/// // can be made faster by caching thread_rng
-///
-/// let mut rng = rand::thread_rng();
-///
-/// for x in v.iter_mut() {
-///     *x = rng.gen();
-/// }
-/// ```
-/// 
-/// [`thread_rng`]: fn.thread_rng.html
-/// [`Rand`]: trait.Rand.html
-#[cfg(feature="std")]
-#[inline]
-pub fn random<T>() -> T where Uniform: Distribution<T> {
-    thread_rng().gen()
-}
 
 /// DEPRECATED: use `seq::sample_iter` instead.
 ///

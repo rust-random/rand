@@ -107,7 +107,6 @@ mod test {
         let mut rng = ::test::rng(221);
         for _ in 0..1000 {
             assert!(exp.sample(&mut rng) >= 0.0);
-            assert!(exp.sample(&mut rng) >= 0.0);
         }
     }
     #[test]

@@ -318,7 +318,6 @@ mod test {
         let mut rng = ::test::rng(201);
         for _ in 0..1000 {
             chi.sample(&mut rng);
-            chi.sample(&mut rng);
         }
     }
     #[test]
@@ -327,7 +326,6 @@ mod test {
         let mut rng = ::test::rng(202);
         for _ in 0..1000 {
             chi.sample(&mut rng);
-            chi.sample(&mut rng);
         }
     }
     #[test]
@@ -335,7 +333,6 @@ mod test {
         let chi = ChiSquared::new(30.0);
         let mut rng = ::test::rng(203);
         for _ in 0..1000 {
-            chi.sample(&mut rng);
             chi.sample(&mut rng);
         }
     }
@@ -351,7 +348,6 @@ mod test {
         let mut rng = ::test::rng(204);
         for _ in 0..1000 {
             f.sample(&mut rng);
-            f.sample(&mut rng);
         }
     }
 
@@ -360,7 +356,6 @@ mod test {
         let t = StudentT::new(11.0);
         let mut rng = ::test::rng(205);
         for _ in 0..1000 {
-            t.sample(&mut rng);
             t.sample(&mut rng);
         }
     }

@@ -11,7 +11,7 @@
 //! The HC-128 random number generator.
 
 use core::fmt;
-use {RngCore, SeedableRng};
+use {RngCore, CryptoRng, SeedableRng};
 use {impls, le};
 
 const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
@@ -393,6 +393,8 @@ impl RngCore for Hc128Rng {
         }
     }
 }
+
+impl CryptoRng for Hc128Rng {}
 
 impl SeedableRng for Hc128Rng {
     type Seed = [u8; SEED_WORDS*4];
