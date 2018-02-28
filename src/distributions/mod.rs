@@ -136,8 +136,8 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// A generic random value distribution. Generates values for various types
 /// with numerically uniform distribution.
 /// 
-/// For floating-point numbers, this generates values from the half-open range
-/// `[0, 1)` (excluding 1). See also [`Open01`] and [`Closed01`] for alternatives.
+/// For floating-point numbers, this generates values from the open range
+/// `(0, 1)` (i.e. excluding 0.0 and 1.0).
 ///
 /// ## Built-in Implementations
 ///
@@ -149,13 +149,12 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///   over all values of the type.
 /// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
 ///   code points in the range `0...0x10_FFFF`, except for the range
-///   `0xD800...0xDFFF` (the surrogate code points).  This includes
+///   `0xD800...0xDFFF` (the surrogate code points). This includes
 ///   unassigned/reserved code points.
 /// * `bool`: Generates `false` or `true`, each with probability 0.5.
 /// * Floating point types (`f32` and `f64`): Uniformly distributed in the
-///   half-open range `[0, 1)`.  (The [`Open01`], [`Closed01`], [`Exp1`], and
-///   [`StandardNormal`] distributions produce floating point numbers with
-///   alternative ranges or distributions.)
+///   open range `(0, 1)`. (The [`Exp1`], and [`StandardNormal`] distributions
+///   produce floating point numbers with alternative ranges or distributions.)
 ///
 /// The following aggregate types also implement the distribution `Uniform` as
 /// long as their component types implement it:
@@ -186,8 +185,6 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// println!("f32 from [0,1): {}", val);
 /// ```
 ///
-/// [`Open01`]: struct.Open01.html
-/// [`Closed01`]: struct.Closed01.html
 /// [`Exp1`]: struct.Exp1.html
 /// [`StandardNormal`]: struct.StandardNormal.html
 #[derive(Debug)]
