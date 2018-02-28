@@ -10,7 +10,7 @@
 
 //! The HC-128 random number generator.
 
-use core::{fmt, slice};
+use core::fmt;
 use {RngCore, SeedableRng};
 use {impls, le};
 
@@ -337,6 +337,7 @@ impl RngCore for Hc128Rng {
     // This improves performance by about 12%.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
+        use core::slice::from_raw_parts_mut;
         let mut filled = 0;
 
         // Continue filling from the current set of results
@@ -354,9 +355,9 @@ impl RngCore for Hc128Rng {
 
         while filled < len_direct {
             let dest_u32: &mut [u32] = unsafe {
-                slice::from_raw_parts_mut(
-                    dest[filled..].as_mut_ptr() as *mut u8 as *mut u32,
-                                      16)
+                from_raw_parts_mut(
+                        dest[filled..].as_mut_ptr() as *mut u8 as *mut u32,
+                        16)
             };
             self.state.update(dest_u32);
             filled += 16 * 4;

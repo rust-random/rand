@@ -135,8 +135,9 @@ mod tests {
         let mut rng1 = XorShiftRng::from_seed(seed);
         assert_eq!(rng1.next_u64(), 4325440999699518727);
 
-        let mut rng2 = XorShiftRng::from_rng(&mut rng1).unwrap();
-        assert_eq!(rng2.next_u64(), 15614385950550801700);
+        let _rng2 = XorShiftRng::from_rng(&mut rng1).unwrap();
+        // Note: we cannot test the state of _rng2 because from_rng does not
+        // fix Endianness. This is allowed in the trait specification.
     }
 
     #[test]
