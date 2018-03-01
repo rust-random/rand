@@ -249,6 +249,7 @@
 #![cfg_attr(not(feature="std"), no_std)]
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(feature = "i128_support", feature(i128_type, i128))]
+#![cfg_attr(all(target_arch = "wasm32", not(target_os = "emscripten")), recursion_limit="128")]
 
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
@@ -256,6 +257,10 @@
 #[cfg(test)] #[cfg(feature="serde-1")] extern crate bincode;
 #[cfg(feature="serde-1")] extern crate serde;
 #[cfg(feature="serde-1")] #[macro_use] extern crate serde_derive;
+
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+#[macro_use]
+extern crate stdweb;
 
 #[cfg(feature = "log")] #[macro_use] extern crate log;
 #[cfg(not(feature = "log"))] macro_rules! trace { ($($x:tt)*) => () }
@@ -1089,7 +1094,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 mod test {
     use mock::StepRng;
     #[cfg(feature="std")]
-    use super::{random, thread_rng, EntropyRng};
+    use super::{random, EntropyRng};
     use super::{RngCore, Rng, SeedableRng, StdRng};
     #[cfg(feature="alloc")]
     use alloc::boxed::Box;
@@ -1259,8 +1264,9 @@ mod test {
 
     #[test]
     #[cfg(feature="std")]
+    #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
     fn test_thread_rng() {
-        let mut r = thread_rng();
+        let mut r = ::thread_rng();
         r.gen::<i32>();
         let mut v = [1, 1, 1];
         r.shuffle(&mut v);
