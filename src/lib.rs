@@ -812,7 +812,7 @@ macro_rules! impl_as_byte_slice {
             }
             
             fn to_le(&mut self) {
-                for mut x in self {
+                for x in self {
                     *x = x.to_le();
                 }
             }
