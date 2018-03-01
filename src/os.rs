@@ -584,27 +584,98 @@ mod imp {
 
 #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
 mod imp {
-    use std::io;
+    use std::mem;
+    use stdweb::unstable::TryInto;
+    use stdweb::web::error::Error as WebError;
+    use {Error, ErrorKind};
 
     #[derive(Debug)]
-    pub struct OsRng;
+    enum OsRngInner {
+        Browser,
+        Node
+    }
+
+    #[derive(Debug)]
+    pub struct OsRng(OsRngInner);
 
     impl OsRng {
         pub fn new() -> Result<OsRng, Error> {
-            Err(Error::new(ErrorKind::Unavailable, "not supported on WASM"))
+            let result = js! {
+                try {
+                    if (
+                        typeof window === "object" &&
+                        typeof window.crypto === "object" &&
+                        typeof window.crypto.getRandomValues === "function"
+                    ) {
+                        return { success: true, ty: 1 };
+                    }
+
+                    if (typeof require("crypto").randomBytes === "function") {
+                        return { success: true, ty: 2 };
+                    }
+
+                    return { success: false, error: new Error("not supported") };
+                } catch(err) {
+                    return { success: false, error: err };
+                }
+            };
+
+            if js!{ return @{ result.as_ref() }.success } == true {
+                let ty = js!{ return @{ result }.ty };
+
+                if ty == 1 { Ok(OsRng(OsRngInner::Browser)) }
+                else if ty == 2 { Ok(OsRng(OsRngInner::Node)) }
+                else { unreachable!() }
+            } else {
+                let err: WebError = js!{ return @{ result }.error }.try_into().unwrap();
+                Err(Error::with_cause(ErrorKind::Unavailable, "WASM Error", err))
+            }
         }
+
         pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
-            Err(Error::new(ErrorKind::Unavailable, "not supported on WASM"))
+            assert_eq!(mem::size_of::<usize>(), 4);
+
+            let len = v.len() as u32;
+            let ptr = v.as_mut_ptr() as i32;
+
+            let result = match self.0 {
+                OsRngInner::Browser => js! {
+                    try {
+                        let array = new Uint8Array(@{ len });
+                        window.crypto.getRandomValues(array);
+                        HEAPU8.set(array, @{ ptr });
+
+                        return { success: true };
+                    } catch(err) {
+                        return { success: false, error: err };
+                    }
+                },
+                OsRngInner::Node => js! {
+                    try {
+                        let bytes = require("crypto").randomBytes(@{ len });
+                        HEAPU8.set(new Uint8Array(bytes), @{ ptr });
+
+                        return { success: true };
+                    } catch(err) {
+                        return { success: false, error: err };
+                    }
+                }
+            };
+
+            if js!{ return @{ result.as_ref() }.success } == true {
+                Ok(())
+            } else {
+                let err: WebError = js!{ return @{ result }.error }.try_into().unwrap();
+                Err(Error::with_cause(ErrorKind::Unexpected, "WASM Error", err))
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::sync::mpsc::channel;
     use RngCore;
     use OsRng;
-    use std::thread;
 
     #[test]
     fn test_os_rng() {
@@ -613,12 +684,26 @@ mod test {
         r.next_u32();
         r.next_u64();
 
-        let mut v = [0u8; 1000];
-        r.fill_bytes(&mut v);
+        let mut v1 = [0u8; 1000];
+        r.fill_bytes(&mut v1);
+
+        let mut v2 = [0u8; 1000];
+        r.fill_bytes(&mut v2);
+
+        let mut n_diff_bits = 0;
+        for i in 0..v1.len() {
+            n_diff_bits += (v1[i] ^ v2[i]).count_ones();
+        }
+
+        // Check at least 1 bit per byte differs. p(failure) < 1e-1000 with random input.
+        assert!(n_diff_bits >= v1.len() as u32);
     }
 
+    #[cfg(not(any(target_arch = "wasm32", target_arch = "asmjs")))]
     #[test]
     fn test_os_rng_tasks() {
+        use std::sync::mpsc::channel;
+        use std::thread;
 
         let mut txs = vec!();
         for _ in 0..20 {

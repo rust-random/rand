@@ -257,8 +257,8 @@ mod test {
         let mut r = ::test::rng(402);
 
         // sample 0 items
-        assert_eq!(&sample_slice(&mut r, empty, 0)[..], []);
-        assert_eq!(&sample_slice(&mut r, &[42, 2, 42], 0)[..], []);
+        assert_eq!(&sample_slice(&mut r, empty, 0)[..], [0u8; 0]);
+        assert_eq!(&sample_slice(&mut r, &[42, 2, 42], 0)[..], [0u8; 0]);
 
         // sample 1 item
         assert_eq!(&sample_slice(&mut r, &[42], 1)[..], [42]);
@@ -269,12 +269,12 @@ mod test {
         let v = sample_slice(&mut r, &[42, 133], 2);
         assert!(&v[..] == [42, 133] || v[..] == [133, 42]);
 
-        assert_eq!(&sample_indices_inplace(&mut r, 0, 0)[..], []);
-        assert_eq!(&sample_indices_inplace(&mut r, 1, 0)[..], []);
+        assert_eq!(&sample_indices_inplace(&mut r, 0, 0)[..], [0usize; 0]);
+        assert_eq!(&sample_indices_inplace(&mut r, 1, 0)[..], [0usize; 0]);
         assert_eq!(&sample_indices_inplace(&mut r, 1, 1)[..], [0]);
 
-        assert_eq!(&sample_indices_cache(&mut r, 0, 0)[..], []);
-        assert_eq!(&sample_indices_cache(&mut r, 1, 0)[..], []);
+        assert_eq!(&sample_indices_cache(&mut r, 0, 0)[..], [0usize; 0]);
+        assert_eq!(&sample_indices_cache(&mut r, 1, 0)[..], [0usize; 0]);
         assert_eq!(&sample_indices_cache(&mut r, 1, 1)[..], [0]);
 
         // Make sure lucky 777's aren't lucky
