@@ -446,6 +446,11 @@ impl JitterRng {
         self.stir_pool();
         self.data
     }
+    
+    #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+    pub fn test_timer(&mut self) -> Result<u8, TimerError> {
+        return Err(TimerError::NoTimer);
+    }
 
     /// Basic quality tests on the timer, by measuring CPU timing jitter a few
     /// hundred times.
@@ -453,14 +458,12 @@ impl JitterRng {
     /// If succesful, this will return the estimated number of rounds necessary
     /// to collect 64 bits of entropy. Otherwise a `TimerError` with the cause
     /// of the failure will be returned.
+    #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
     pub fn test_timer(&mut self) -> Result<u8, TimerError> {
         debug!("JitterRng: testing timer ...");
         // We could add a check for system capabilities such as `clock_getres`
         // or check for `CONFIG_X86_TSC`, but it does not make much sense as the
         // following sanity checks verify that we have a high-resolution timer.
-
-        #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
-        return Err(TimerError::NoTimer);
 
         let mut delta_sum = 0;
         let mut old_delta = 0;
