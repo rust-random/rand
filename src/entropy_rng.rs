@@ -139,3 +139,15 @@ impl RngCore for EntropyRng {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_entropy() {
+        let mut rng = EntropyRng::new();
+        let n = (rng.next_u32() ^ rng.next_u32()).count_ones();
+        assert!(n >= 2);    // p(failure) approx 1e-7
+    }
+}

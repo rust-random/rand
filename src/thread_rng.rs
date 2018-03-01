@@ -134,3 +134,35 @@ impl RngCore for ThreadRng {
 pub fn random<T>() -> T where Uniform: Distribution<T> {
     thread_rng().gen()
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    #[cfg(feature="std")]
+    #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
+    fn test_thread_rng() {
+        let mut r = ::thread_rng();
+        r.gen::<i32>();
+        let mut v = [1, 1, 1];
+        r.shuffle(&mut v);
+        let b: &[_] = &[1, 1, 1];
+        assert_eq!(v, b);
+        assert_eq!(r.gen_range(0, 1), 0);
+    }
+
+    #[test]
+    fn test_random() {
+        // not sure how to test this aside from just getting some values
+        let _n : usize = random();
+        let _f : f32 = random();
+        let _o : Option<Option<i8>> = random();
+        let _many : ((),
+                     (usize,
+                      isize,
+                      Option<(u32, (bool,))>),
+                     (u8, i8, u16, i16, u32, i32, u64, i64),
+                     (f32, (f64, (f64,)))) = random();
+    }
+}
