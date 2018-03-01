@@ -602,6 +602,8 @@ pub trait Rng: RngCore + Sized {
     /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
+    #[allow(deprecated)]
+    #[deprecated(since="0.5.0", note="replaced by Rng::iter")]
     fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Uniform: Distribution<T> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
@@ -891,11 +893,14 @@ impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
 /// [`gen_iter`]: trait.Rng.html#method.gen_iter
 /// [`Rng`]: trait.Rng.html
 #[derive(Debug)]
+#[allow(deprecated)]
+#[deprecated(since="0.5.0", note="replaced by Rng::iter")]
 pub struct Generator<T, R: RngCore> {
     rng: R,
     _marker: marker::PhantomData<fn() -> T>,
 }
 
+#[allow(deprecated)]
 impl<T, R: RngCore> Iterator for Generator<T, R> where Uniform: Distribution<T> {
     type Item = T;
 
@@ -1252,9 +1257,9 @@ mod test {
     #[test]
     fn test_gen_vec() {
         let mut r = rng(106);
-        assert_eq!(r.gen_iter::<u8>().take(0).count(), 0);
-        assert_eq!(r.gen_iter::<u8>().take(10).count(), 10);
-        assert_eq!(r.gen_iter::<f64>().take(16).count(), 16);
+        assert_eq!(r.iter().map(|rng| rng.gen::<u8>()).take(0).count(), 0);
+        assert_eq!(r.iter().map(|rng| rng.gen::<u8>()).take(10).count(), 10);
+        assert_eq!(r.iter().map(|rng| rng.gen::<f64>()).take(16).count(), 16);
     }
 
     #[test]

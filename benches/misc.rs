@@ -72,6 +72,7 @@ fn gen_1k_iter_repeat(b: &mut Bencher) {
     b.bytes = 1024;
 }
 
+#[allow(deprecated)]
 #[bench]
 fn gen_1k_gen_iter(b: &mut Bencher) {
     let mut rng = weak_rng();
