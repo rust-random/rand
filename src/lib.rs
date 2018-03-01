@@ -1093,9 +1093,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 #[cfg(test)]
 mod test {
     use mock::StepRng;
-    #[cfg(feature="std")]
-    use super::{random, EntropyRng};
-    use super::{RngCore, Rng, SeedableRng, StdRng};
+    use super::*;
     #[cfg(feature="alloc")]
     use alloc::boxed::Box;
 
@@ -1129,13 +1127,6 @@ mod test {
             *x = xorshifted.rotate_right(rot) as u8;
         }
         TestRng { inner: StdRng::from_seed(seed) }
-    }
-
-    #[test]
-    #[cfg(feature="std")]
-    fn test_entropy() {
-        let mut rng = EntropyRng::new();
-        rng.next_u32();
     }
 
     #[test]
@@ -1263,60 +1254,34 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature="std")]
-    #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
-    fn test_thread_rng() {
-        let mut r = ::thread_rng();
+    fn test_rng_trait_object() {
+        use distributions::{Distribution, Uniform};
+        let mut rng = rng(109);
+        let mut r = &mut rng as &mut RngCore;
+        r.next_u32();
         r.gen::<i32>();
         let mut v = [1, 1, 1];
         r.shuffle(&mut v);
         let b: &[_] = &[1, 1, 1];
         assert_eq!(v, b);
         assert_eq!(r.gen_range(0, 1), 0);
+        let _c: u8 = Uniform.sample(&mut r);
     }
 
     #[test]
     #[cfg(any(feature="std", feature="alloc"))]
-    fn test_rng_trait_object() {
+    fn test_rng_boxed_trait() {
         use distributions::{Distribution, Uniform};
-        let mut rng = rng(109);
-        {
-            let mut r = &mut rng as &mut RngCore;
-            r.next_u32();
-            r.gen::<i32>();
-            let mut v = [1, 1, 1];
-            r.shuffle(&mut v);
-            let b: &[_] = &[1, 1, 1];
-            assert_eq!(v, b);
-            assert_eq!(r.gen_range(0, 1), 0);
-            let _c: u8 = Uniform.sample(&mut r);
-        }
-        {
-            let mut r = Box::new(rng) as Box<RngCore>;
-            r.next_u32();
-            r.gen::<i32>();
-            let mut v = [1, 1, 1];
-            r.shuffle(&mut v);
-            let b: &[_] = &[1, 1, 1];
-            assert_eq!(v, b);
-            assert_eq!(r.gen_range(0, 1), 0);
-            let _c: u8 = Uniform.sample(&mut r);
-        }
-    }
-
-    #[test]
-    #[cfg(feature="std")]
-    fn test_random() {
-        // not sure how to test this aside from just getting some values
-        let _n : usize = random();
-        let _f : f32 = random();
-        let _o : Option<Option<i8>> = random();
-        let _many : ((),
-                     (usize,
-                      isize,
-                      Option<(u32, (bool,))>),
-                     (u8, i8, u16, i16, u32, i32, u64, i64),
-                     (f32, (f64, (f64,)))) = random();
+        let rng = rng(110);
+        let mut r = Box::new(rng) as Box<RngCore>;
+        r.next_u32();
+        r.gen::<i32>();
+        let mut v = [1, 1, 1];
+        r.shuffle(&mut v);
+        let b: &[_] = &[1, 1, 1];
+        assert_eq!(v, b);
+        assert_eq!(r.gen_range(0, 1), 0);
+        let _c: u8 = Uniform.sample(&mut r);
     }
 
     #[test]
