@@ -684,13 +684,19 @@ mod test {
         r.next_u32();
         r.next_u64();
 
-        let mut v = [0u8; 1000];
-        r.fill_bytes(&mut v);
+        let mut v1 = [0u8; 1000];
+        r.fill_bytes(&mut v1);
 
         let mut v2 = [0u8; 1000];
         r.fill_bytes(&mut v2);
 
-        assert_ne!(v[..], v2[..]);
+        let mut n_diff_bits = 0;
+        for i in 0..v1.len() {
+            n_diff_bits += (v1[i] ^ v2[i]).count_ones();
+        }
+
+        // Check at least 1 bit per byte differs. p(failure) < 1e-1000 with random input.
+        assert!(n_diff_bits >= v1.len() as u32);
     }
 
     #[cfg(not(any(target_arch = "wasm32", target_arch = "asmjs")))]
