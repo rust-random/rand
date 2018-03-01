@@ -1388,7 +1388,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 mod test {
     use mock::StepRng;
     #[cfg(feature="std")]
-    use super::{random, thread_rng, EntropyRng};
+    use super::{random, EntropyRng};
     use super::{RngCore, Rng, SeedableRng, StdRng};
     #[cfg(feature="alloc")]
     use alloc::boxed::Box;
@@ -1560,7 +1560,7 @@ mod test {
     #[cfg(feature="std")]
     #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
     fn test_thread_rng() {
-        let mut r = thread_rng();
+        let mut r = ::thread_rng();
         r.gen::<i32>();
         let mut v = [1, 1, 1];
         r.shuffle(&mut v);
