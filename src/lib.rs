@@ -253,7 +253,7 @@
 #![cfg_attr(all(target_arch = "wasm32", not(target_os = "emscripten")), recursion_limit="128")]
 
 #[cfg(feature="std")] extern crate std as core;
-#[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
+#[cfg(all(feature = "alloc", not(feature="std")))] #[macro_use] extern crate alloc;
 
 #[cfg(test)] #[cfg(feature="serde-1")] extern crate bincode;
 #[cfg(feature="serde-1")] extern crate serde;
@@ -297,6 +297,7 @@ use distributions::range::SampleRange;
 // public modules
 pub mod distributions;
 mod impls;
+pub mod iter;
 pub mod jitter;
 pub mod mock;
 #[cfg(feature="std")] pub mod os;
@@ -315,9 +316,9 @@ pub mod isaac {
 }
 
 // private modules
-mod le;
 #[cfg(feature="std")] mod entropy_rng;
 mod error;
+mod le;
 mod prng;
 #[cfg(feature="std")] mod thread_rng;
 
@@ -652,6 +653,35 @@ pub trait Rng: RngCore + Sized {
     fn gen_weighted_bool(&mut self, n: u32) -> bool {
         // Short-circuit after `n <= 1` to avoid panic in `gen_range`
         n <= 1 || self.gen_range(0, n) == 0
+    }
+
+    /// Construct an iterator on an `Rng`.
+    /// 
+    /// ### Example
+    /// 
+    /*
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    /// use distributions::Range;
+    /// 
+    /// let die_range = Range::new(1, 7);
+    /// let mut die = thread_rng().iter().map(|rng| rng.sample(die_range));
+    /// for _ in 0..3 {
+    ///     println!("Die roll: {}", die.next());
+    /// }
+    /// ```
+    */
+    /* TODO: Alphanumeric
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    /// use rand::distributions::Alphanumeric;
+    /// 
+    /// let mut rng = thread_rng();
+    /// let x: String = rng.iter().map(|rng| rng.sample(Alphanumeric)).take(6).collect();
+    /// ```
+    */
+    fn iter<'a>(&'a mut self) -> iter::Iter<'a, Self> {
+        iter::Iter::new(self)
     }
 
     /// Return an iterator of random characters from the set A-Z,a-z,0-9.
