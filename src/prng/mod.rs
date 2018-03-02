@@ -40,8 +40,8 @@
 //! same algorithm, it is possible that both will yield the same sequence of
 //! values (with some lag).
 
-mod chacha;
-mod hc128;
+pub mod chacha;
+pub mod hc128;
 mod isaac;
 mod isaac64;
 mod xorshift;
