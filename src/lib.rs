@@ -290,12 +290,6 @@ pub use error::{ErrorKind, Error};
 #[cfg(feature="std")] pub use entropy_rng::EntropyRng;
 #[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng, random};
 
-// local use declarations
-#[cfg(target_pointer_width = "32")]
-use prng::IsaacRng as IsaacWordRng;
-#[cfg(target_pointer_width = "64")]
-use prng::Isaac64Rng as IsaacWordRng;
-
 use distributions::{Distribution, Uniform, Range};
 use distributions::range::SampleRange;
 
