@@ -11,7 +11,8 @@
 //! The ChaCha random number generator.
 
 use core::fmt;
-use rand_core::{RngCore, CryptoRng, SeedableRng, Error, impls, le};
+use rand_core::{BlockRngCore, CryptoRng, RngCore, SeedableRng, Error, le};
+use rand_core::impls::BlockRng;
 
 const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
 const STATE_WORDS: usize = 16;
@@ -61,44 +62,44 @@ const STATE_WORDS: usize = 16;
 ///      http://cr.yp.to/papers.html#xsalsa)
 ///
 /// [`set_rounds`]: #method.set_counter
-#[derive(Clone)]
-pub struct ChaChaRng {
-    buffer:  [u32; STATE_WORDS], // Internal buffer of output
-    state:   [u32; STATE_WORDS], // Initial state
-    index:   usize,              // Index into state
-    rounds:  usize,
-}
+#[derive(Clone, Debug)]
+pub struct ChaChaRng(BlockRng<ChaChaCore>);
 
-// Custom Debug implementation that does not expose the internal state
-impl fmt::Debug for ChaChaRng {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ChaChaRng {{}}")
+impl RngCore for ChaChaRng {
+    #[inline]
+    fn next_u32(&mut self) -> u32 {
+        self.0.next_u32()
+    }
+
+    #[inline]
+    fn next_u64(&mut self) -> u64 {
+        self.0.next_u64()
+    }
+
+    #[inline]
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.0.fill_bytes(dest)
+    }
+
+    #[inline]
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.0.try_fill_bytes(dest)
     }
 }
 
-macro_rules! quarter_round{
-    ($a: expr, $b: expr, $c: expr, $d: expr) => {{
-        $a = $a.wrapping_add($b); $d ^= $a; $d = $d.rotate_left(16);
-        $c = $c.wrapping_add($d); $b ^= $c; $b = $b.rotate_left(12);
-        $a = $a.wrapping_add($b); $d ^= $a; $d = $d.rotate_left( 8);
-        $c = $c.wrapping_add($d); $b ^= $c; $b = $b.rotate_left( 7);
-    }}
+impl SeedableRng for ChaChaRng {
+    type Seed = <ChaChaCore as SeedableRng>::Seed;
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        ChaChaRng(BlockRng::<ChaChaCore>::from_seed(seed))
+    }
+
+    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+        BlockRng::<ChaChaCore>::from_rng(rng).map(|rng| ChaChaRng(rng))
+    }
 }
 
-macro_rules! double_round{
-    ($x: expr) => {{
-        // Column round
-        quarter_round!($x[ 0], $x[ 4], $x[ 8], $x[12]);
-        quarter_round!($x[ 1], $x[ 5], $x[ 9], $x[13]);
-        quarter_round!($x[ 2], $x[ 6], $x[10], $x[14]);
-        quarter_round!($x[ 3], $x[ 7], $x[11], $x[15]);
-        // Diagonal round
-        quarter_round!($x[ 0], $x[ 5], $x[10], $x[15]);
-        quarter_round!($x[ 1], $x[ 6], $x[11], $x[12]);
-        quarter_round!($x[ 2], $x[ 7], $x[ 8], $x[13]);
-        quarter_round!($x[ 3], $x[ 4], $x[ 9], $x[14]);
-    }}
-}
+impl CryptoRng for ChaChaRng {}
 
 impl ChaChaRng {
     /// Create an ChaCha random number generator using the default
@@ -152,11 +153,8 @@ impl ChaChaRng {
     /// assert_eq!(rng1.next_u32(), rng2.next_u32());
     /// ```
     pub fn set_counter(&mut self, counter_low: u64, counter_high: u64) {
-        self.state[12] = counter_low as u32;
-        self.state[13] = (counter_low >> 32) as u32;
-        self.state[14] = counter_high as u32;
-        self.state[15] = (counter_high >> 32) as u32;
-        self.index = STATE_WORDS; // force recomputation on next use
+        self.0.core.set_counter(counter_low, counter_high);
+        self.0.index = STATE_WORDS; // force recomputation on next use
     }
 
     /// Sets the number of rounds to run the ChaCha core algorithm per block to
@@ -179,13 +177,52 @@ impl ChaChaRng {
     /// assert_eq!(rng.next_u32(), 0x2fef003e);
     /// ```
     pub fn set_rounds(&mut self, rounds: usize) {
-        assert!([4usize, 8, 12, 16, 20].iter().any(|x| *x == rounds));
-        self.rounds = rounds;
-        self.index = STATE_WORDS; // force recomputation on next use
+        self.0.core.set_rounds(rounds);
+        self.0.index = STATE_WORDS; // force recomputation on next use
     }
+}
 
-    /// Refill the internal output buffer (`self.buffer`)
-    fn update(&mut self) {
+#[derive(Clone)]
+pub struct ChaChaCore {
+    state: [u32; STATE_WORDS],
+    rounds:  usize,
+}
+
+// Custom Debug implementation that does not expose the internal state
+impl fmt::Debug for ChaChaCore {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ChaChaCore {{}}")
+    }
+}
+
+macro_rules! quarter_round{
+    ($a: expr, $b: expr, $c: expr, $d: expr) => {{
+        $a = $a.wrapping_add($b); $d ^= $a; $d = $d.rotate_left(16);
+        $c = $c.wrapping_add($d); $b ^= $c; $b = $b.rotate_left(12);
+        $a = $a.wrapping_add($b); $d ^= $a; $d = $d.rotate_left( 8);
+        $c = $c.wrapping_add($d); $b ^= $c; $b = $b.rotate_left( 7);
+    }}
+}
+
+macro_rules! double_round{
+    ($x: expr) => {{
+        // Column round
+        quarter_round!($x[ 0], $x[ 4], $x[ 8], $x[12]);
+        quarter_round!($x[ 1], $x[ 5], $x[ 9], $x[13]);
+        quarter_round!($x[ 2], $x[ 6], $x[10], $x[14]);
+        quarter_round!($x[ 3], $x[ 7], $x[11], $x[15]);
+        // Diagonal round
+        quarter_round!($x[ 0], $x[ 5], $x[10], $x[15]);
+        quarter_round!($x[ 1], $x[ 6], $x[11], $x[12]);
+        quarter_round!($x[ 2], $x[ 7], $x[ 8], $x[13]);
+        quarter_round!($x[ 3], $x[ 4], $x[ 9], $x[14]);
+    }}
+}
+
+impl BlockRngCore<u32> for ChaChaCore {
+    type Results = [u32; STATE_WORDS];
+
+    fn generate(&mut self, results: &mut Self::Results) -> Result<(), Error> {
         // For some reason extracting this part into a separate function
         // improves performance by 50%.
         fn core(results: &mut [u32; STATE_WORDS],
@@ -201,74 +238,49 @@ impl ChaChaRng {
             }
         }
 
-        core(&mut self.buffer, &self.state, self.rounds);
-        self.index = 0;
+        core(results, &self.state, self.rounds);
+
         // update 128-bit counter
         self.state[12] = self.state[12].wrapping_add(1);
-        if self.state[12] != 0 { return };
+        if self.state[12] != 0 { return Ok(()) };
         self.state[13] = self.state[13].wrapping_add(1);
-        if self.state[13] != 0 { return };
+        if self.state[13] != 0 { return Ok(()) };
         self.state[14] = self.state[14].wrapping_add(1);
-        if self.state[14] != 0 { return };
+        if self.state[14] != 0 { return Ok(()) };
         self.state[15] = self.state[15].wrapping_add(1);
+        Ok(())
     }
 }
 
-impl RngCore for ChaChaRng {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        // Using a local variable for `index`, and checking the size avoids a
-        // bounds check later on.
-        let mut index = self.index as usize;
-        if index >= STATE_WORDS {
-            self.update();
-            index = 0;
-        }
-
-        let value = self.buffer[index];
-        self.index += 1;
-        value
+impl ChaChaCore {
+    /// Sets the internal 128-bit ChaCha counter to a user-provided value. This
+    /// permits jumping arbitrarily ahead (or backwards) in the pseudorandom
+    /// stream.
+    pub fn set_counter(&mut self, counter_low: u64, counter_high: u64) {
+        self.state[12] = counter_low as u32;
+        self.state[13] = (counter_low >> 32) as u32;
+        self.state[14] = counter_high as u32;
+        self.state[15] = (counter_high >> 32) as u32;
     }
 
-    fn next_u64(&mut self) -> u64 {
-        impls::next_u64_via_u32(self)
-    }
-
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        let mut read_len = 0;
-        while read_len < dest.len() {
-            if self.index >= self.buffer.len() {
-                self.update();
-            }
-
-            let (consumed_u32, filled_u8) =
-                impls::fill_via_u32_chunks(&self.buffer[self.index..],
-                                           &mut dest[read_len..]);
-
-            self.index += consumed_u32;
-            read_len += filled_u8;
-        }
-    }
-
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+    /// Sets the number of rounds to run the ChaCha core algorithm per block to
+    /// generate.
+    pub fn set_rounds(&mut self, rounds: usize) {
+        assert!([4usize, 8, 12, 16, 20].iter().any(|x| *x == rounds));
+        self.rounds = rounds;
     }
 }
 
-impl CryptoRng for ChaChaRng {}
-
-impl SeedableRng for ChaChaRng {
+impl SeedableRng for ChaChaCore {
     type Seed = [u8; SEED_WORDS*4];
     fn from_seed(seed: Self::Seed) -> Self {
         let mut seed_le = [0u32; SEED_WORDS];
         le::read_u32_into(&seed, &mut seed_le);
-        ChaChaRng {
-            buffer: [0; STATE_WORDS],
+        Self {
             state: [0x61707865, 0x3320646E, 0x79622D32, 0x6B206574, // constants
                     seed_le[0], seed_le[1], seed_le[2], seed_le[3], // seed
                     seed_le[4], seed_le[5], seed_le[6], seed_le[7], // seed
                     0, 0, 0, 0], // counter
-            index: STATE_WORDS, // generate on first use
             rounds: 20,
          }
     }
