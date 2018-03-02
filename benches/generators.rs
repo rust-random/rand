@@ -12,6 +12,7 @@ use test::{black_box, Bencher};
 use rand::{RngCore, Rng, SeedableRng, NewRng, StdRng, OsRng, JitterRng, EntropyRng};
 use rand::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 use rand::reseeding::ReseedingRng;
+use rand::prng::hc128::Hc128Core;
 use rand::thread_rng;
 
 macro_rules! gen_bytes {
@@ -151,10 +152,13 @@ chacha_rounds!(gen_bytes_chacha12, gen_u32_chacha12, gen_u64_chacha12, 12);
 chacha_rounds!(gen_bytes_chacha20, gen_u32_chacha20, gen_u64_chacha20, 20);
 
 
+const RESEEDING_THRESHOLD: u64 = 1024*1024*1024; // something high enough to get
+                                                 // deterministic measurements
+
 #[bench]
 fn reseeding_hc128_bytes(b: &mut Bencher) {
-    let mut rng = ReseedingRng::new(Hc128Rng::new().unwrap(),
-                                    128*1024*1024,
+    let mut rng = ReseedingRng::new(Hc128Core::new().unwrap(),
+                                    RESEEDING_THRESHOLD,
                                     EntropyRng::new());
     let mut buf = [0u8; BYTES_LEN];
     b.iter(|| {
@@ -170,8 +174,8 @@ macro_rules! reseeding_uint {
     ($fnn:ident, $ty:ty) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = ReseedingRng::new(Hc128Rng::new().unwrap(),
-                                            128*1024*1024,
+            let mut rng = ReseedingRng::new(Hc128Core::new().unwrap(),
+                                            RESEEDING_THRESHOLD,
                                             EntropyRng::new());
             b.iter(|| {
                 for _ in 0..RAND_BENCH_N {
