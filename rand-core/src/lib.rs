@@ -162,6 +162,15 @@ pub trait RngCore {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
 
+/// Trait for RNG's that do not generate random numbers one at a time, but in
+/// blocks. Especially for cryptographic RNG's it is common to generate 16 or
+/// more results at a time.
+pub trait BlockRngCore<T>: Sized {
+    type Results: AsRef<[T]> + Default;
+
+    fn generate(&mut self, results: &mut Self::Results) -> Result<(), Error>;
+}
+
 /// A marker trait for an `Rng` which may be considered for use in
 /// cryptography.
 /// 
