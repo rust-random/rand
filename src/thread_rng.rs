@@ -13,7 +13,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use {RngCore, StdRng, SeedableRng, EntropyRng};
+use {RngCore, CryptoRng, StdRng, SeedableRng, EntropyRng};
 use {Distribution, Uniform, Rng, Error};
 use reseeding::ReseedingRng;
 
@@ -96,6 +96,8 @@ impl RngCore for ThreadRng {
         self.rng.borrow_mut().try_fill_bytes(dest)
     }
 }
+
+impl CryptoRng for ThreadRng {}
 
 /// Generates a random value using the thread-local random number generator.
 /// 
