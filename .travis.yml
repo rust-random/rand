@@ -39,10 +39,9 @@ matrix:
     - rust: nightly
       install:
         - rustup target add wasm32-unknown-unknown
-        # This did use --force to force updating, but that causes lots of
-        # wasted CPU time (including timeouts sometimes).
-        # Cargo *should* have a --update option.
-        - cargo install cargo-web || true
+        # Use cargo-update since we need a real update-or-install command
+        - cargo install cargo-update || true
+        - cargo install-update -i cargo-web
       script:
         - cargo web test --target wasm32-unknown-unknown --nodejs
     
