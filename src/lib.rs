@@ -652,11 +652,14 @@ pub trait Rng: RngCore + Sized {
     /// # Example
     ///
     /// ```rust
+    /// #[allow(deprecated)]
     /// use rand::{thread_rng, Rng};
     ///
     /// let s: String = thread_rng().gen_ascii_chars().take(10).collect();
     /// println!("{}", s);
     /// ```
+    #[allow(deprecated)]
+    #[deprecated(since="0.5.0", note="use distributions::Alphanumeric instead")]
     fn gen_ascii_chars(&mut self) -> AsciiGenerator<&mut Self> {
         AsciiGenerator { rng: self }
     }
@@ -871,10 +874,13 @@ impl<T, R: RngCore> Iterator for Generator<T, R> where Uniform: Distribution<T> 
 /// [`gen_ascii_chars`]: trait.Rng.html#method.gen_ascii_chars
 /// [`Rng`]: trait.Rng.html
 #[derive(Debug)]
+#[allow(deprecated)]
+#[deprecated(since="0.5.0", note="use distributions::Alphanumeric instead")]
 pub struct AsciiGenerator<R: RngCore> {
     rng: R,
 }
 
+#[allow(deprecated)]
 impl<R: RngCore> Iterator for AsciiGenerator<R> {
     type Item = char;
 
@@ -1204,14 +1210,6 @@ mod test {
         let mut r = rng(104);
         assert_eq!(r.gen_weighted_bool(0), true);
         assert_eq!(r.gen_weighted_bool(1), true);
-    }
-
-    #[test]
-    fn test_gen_ascii_str() {
-        let mut r = rng(105);
-        assert_eq!(r.gen_ascii_chars().take(0).count(), 0);
-        assert_eq!(r.gen_ascii_chars().take(10).count(), 10);
-        assert_eq!(r.gen_ascii_chars().take(16).count(), 16);
     }
 
     #[test]
