@@ -72,7 +72,7 @@ mod impls {
     use distributions::gamma::{Gamma, ChiSquared, FisherF, StudentT};
     #[cfg(feature="std")]
     use distributions::normal::{Normal, LogNormal};
-    use distributions::range::{Range, SampleRange, RangeImpl};
+    use distributions::range::{Range, RangeImpl};
     
     impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
         fn sample<R: Rng>(&mut self, rng: &mut R) -> T {
@@ -85,13 +85,13 @@ mod impls {
         }
     }
     
-    impl<Sup: SampleRange + RangeImpl<X = Sup>> Sample<Sup> for Range<Sup> {
-        fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup {
+    impl<T: RangeImpl> Sample<T::X> for Range<T> {
+        fn sample<R: Rng>(&mut self, rng: &mut R) -> T::X {
             Distribution::sample(self, rng)
         }
     }
-    impl<Sup: SampleRange + RangeImpl<X = Sup>> IndependentSample<Sup> for Range<Sup> {
-        fn ind_sample<R: Rng>(&self, rng: &mut R) -> Sup {
+    impl<T: RangeImpl> IndependentSample<T::X> for Range<T> {
+        fn ind_sample<R: Rng>(&self, rng: &mut R) -> T::X {
             Distribution::sample(self, rng)
         }
     }
