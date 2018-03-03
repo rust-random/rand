@@ -471,46 +471,14 @@ range_float_impl! { f64, 64 - 52, next_u64 }
 #[cfg(test)]
 mod tests {
     use Rng;
-    use distributions::{Distribution};
     use distributions::range::{Range, RangeImpl, RangeFloat, SampleRange};
-
-    #[test]
-    fn test_fn_range() {
-        let mut r = ::test::rng(814);
-        for _ in 0..1000 {
-            let a = Range::new(-3, 42).sample(&mut r);
-            assert!(a >= -3 && a < 42);
-            assert_eq!(Range::new(0, 1).sample(&mut r), 0);
-            assert_eq!(Range::new(-12, -11).sample(&mut r), -12);
-        }
-
-        for _ in 0..1000 {
-            let a = Range::new(10, 42).sample(&mut r);
-            assert!(a >= 10 && a < 42);
-            assert_eq!(Range::new(0, 1).sample(&mut r), 0);
-            assert_eq!(Range::new(3_000_000, 3_000_001).sample(&mut r), 3_000_000);
-        }
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_fn_range_panic_int() {
-        let mut r = ::test::rng(815);
-        Range::new(5, -2).sample(&mut r);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_fn_range_panic_usize() {
-        let mut r = ::test::rng(816);
-        Range::new(5, 2).sample(&mut r);
-    }
 
     #[should_panic]
     #[test]
     fn test_range_bad_limits_equal() {
         Range::new(10, 10);
     }
+
     #[should_panic]
     #[test]
     fn test_range_bad_limits_flipped() {
