@@ -15,6 +15,31 @@ use core::char;
 use {Rng};
 use distributions::{Distribution, Uniform};
 
+// ----- Sampling distributions -----
+
+/// Sample a `char`, uniformly distributed over ASCII letters and numbers:
+/// a-z, A-Z and 0-9.
+/// 
+/// # Example
+///
+/// ```rust
+/// use std::iter;
+/// use rand::{Rng, thread_rng};
+/// use rand::distributions::Alphanumeric;
+/// 
+/// let mut rng = thread_rng();
+/// let chars: String = iter::repeat(())
+///         .map(|()| rng.sample(Alphanumeric))
+///         .take(7)
+///         .collect();
+/// println!("Random chars: {}", chars);
+/// ```
+#[derive(Debug)]
+pub struct Alphanumeric;
+
+
+// ----- Implementations of distributions -----
+
 impl Distribution<char> for Uniform {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> char {
@@ -27,6 +52,22 @@ impl Distribution<char> for Uniform {
             match char::from_u32(rng.next_u32() & CHAR_MASK) {
                 Some(c) => return c,
                 None => {}
+            }
+        }
+    }
+}
+
+impl Distribution<char> for Alphanumeric {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> char {
+        const RANGE: u32 = 26 + 26 + 10;
+        const GEN_ASCII_STR_CHARSET: &'static [u8] =
+            b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                abcdefghijklmnopqrstuvwxyz\
+                0123456789";
+        loop {
+            let var = rng.next_u32() >> 26;
+            if var < RANGE {
+                return GEN_ASCII_STR_CHARSET[var as usize] as char
             }
         }
     }
@@ -118,6 +159,7 @@ impl<T> Distribution<Option<T>> for Uniform where Uniform: Distribution<T> {
 #[cfg(test)]
 mod tests {
     use {Rng, RngCore, Uniform};
+    #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::String;
     
     #[test]
     fn test_misc() {
@@ -125,5 +167,20 @@ mod tests {
         
         rng.sample::<char, _>(Uniform);
         rng.sample::<bool, _>(Uniform);
+    }
+    
+    #[cfg(any(feature="std", feature="alloc"))]
+    #[test]
+    fn test_chars() {
+        use core::iter;
+        use distributions::Alphanumeric;
+        let mut rng = ::test::rng(805);
+        
+        let c = rng.sample(Alphanumeric);
+        assert!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
+        
+        let word: String = iter::repeat(())
+                .map(|()| rng.sample(Alphanumeric)).take(5).collect();
+        assert_eq!(word.len(), 5);
     }
 }

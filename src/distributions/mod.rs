@@ -18,6 +18,7 @@
 use Rng;
 
 pub use self::float::{Open01, Closed01};
+pub use self::other::Alphanumeric;
 pub use self::range::Range;
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
