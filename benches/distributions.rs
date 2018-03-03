@@ -50,6 +50,7 @@ distr!(distr_uniform_i64, i64, Uniform);
 distr!(distr_uniform_i128, i128, Uniform);
 
 distr!(distr_uniform_bool, bool, Uniform);
+distr!(distr_uniform_alphanumeric, char, Alphanumeric);
 distr!(distr_uniform_codepoint, char, Uniform);
 
 distr!(distr_uniform01_float32, f32, Uniform);
