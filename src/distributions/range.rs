@@ -17,8 +17,8 @@ use distributions::float::IntoFloat;
 /// Sample values uniformly between two bounds.
 ///
 /// `Range::new` and `Range::new_inclusive` will set up a `Range`, which does
-/// some preparations up front to make sampeling values faster.
-/// `Range::sample_single` is optimized for sampeling values once or only a
+/// some preparations up front to make sampling values faster.
+/// `Range::sample_single` is optimized for sampling values once or only a
 /// limited number of times from a range.
 ///
 /// If you need to sample many values from a range, consider using `new` or
@@ -26,7 +26,7 @@ use distributions::float::IntoFloat;
 /// because then the preparations can be evaluated at compile-time.
 /// Otherwise `sample_single` may be the best choice.
 ///
-/// Sampeling uniformly from a range can be surprisingly complicated to be both
+/// Sampling uniformly from a range can be surprisingly complicated to be both
 /// generic and correct. Consider for example edge cases like `low = 0u8`,
 /// `high = 170u8`, for which a naive modulo operation would return numbers less
 /// than 85 with double the probability to those greater than 85.
@@ -163,7 +163,7 @@ pub trait RangeImpl: Sized {
     /// this.
     ///
     /// Via this method range implementations can provide a method optimized for
-    /// sampeling only a limited number of values from range. The default
+    /// sampling only a limited number of values from range. The default
     /// implementation just sets up a range with `RangeImpl::new` and samples
     /// from that.
     fn sample_single<R: Rng + ?Sized>(low: Self::X, high: Self::X, rng: &mut R)
