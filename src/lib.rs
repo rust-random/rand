@@ -1094,8 +1094,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 mod test {
     use mock::StepRng;
     use super::*;
-    #[cfg(feature="alloc")]
-    use alloc::boxed::Box;
+    #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 
     pub struct TestRng<R> { inner: R }
 

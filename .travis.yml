@@ -29,6 +29,7 @@ matrix:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
         - cargo test --tests --no-default-features --features=alloc
+        - cargo test --all --features=alloc
         - cargo test --all --features serde-1,log,nightly
         - cargo test --benches
         - cargo doc --no-deps --all-features
