@@ -12,6 +12,7 @@ use test::{black_box, Bencher};
 use rand::{RngCore, Rng, SeedableRng, NewRng, StdRng, OsRng, JitterRng, EntropyRng};
 use rand::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 use rand::reseeding::ReseedingRng;
+use rand::thread_rng;
 
 macro_rules! gen_bytes {
     ($fnn:ident, $gen:ident) => {
@@ -184,3 +185,22 @@ macro_rules! reseeding_uint {
 
 reseeding_uint!(reseeding_hc128_u32, u32);
 reseeding_uint!(reseeding_hc128_u64, u64);
+
+
+macro_rules! threadrng_uint {
+    ($fnn:ident, $ty:ty) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = thread_rng();
+            b.iter(|| {
+                for _ in 0..RAND_BENCH_N {
+                    black_box(rng.gen::<$ty>());
+                }
+            });
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
+        }
+    }
+}
+
+threadrng_uint!(thread_rng_u32, u32);
+threadrng_uint!(thread_rng_u64, u64);
