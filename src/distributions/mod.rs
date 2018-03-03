@@ -17,7 +17,6 @@
 
 use Rng;
 
-pub use self::float::{Open01, Closed01};
 pub use self::other::Alphanumeric;
 pub use self::range::Range;
 #[cfg(feature="std")]
@@ -40,6 +39,8 @@ mod integer;
 mod other;
 #[cfg(feature="std")]
 mod ziggurat_tables;
+#[cfg(feature="std")]
+use distributions::float::IntoFloat;
 
 /// Types that can be used to create a random instance of `Support`.
 #[deprecated(since="0.5.0", note="use Distribution instead")]
@@ -54,9 +55,6 @@ pub trait Sample<Support> {
 /// Since no state is recorded, each sample is (statistically)
 /// independent of all others, assuming the `Rng` used has this
 /// property.
-// FIXME maybe having this separate is overkill (the only reason is to
-// take &self rather than &mut self)? or maybe this should be the
-// trait called `Sample` and the other should be `DependentSample`.
 #[allow(deprecated)]
 #[deprecated(since="0.5.0", note="use Distribution instead")]
 pub trait IndependentSample<Support>: Sample<Support> {
@@ -75,7 +73,7 @@ mod impls {
     use distributions::gamma::{Gamma, ChiSquared, FisherF, StudentT};
     #[cfg(feature="std")]
     use distributions::normal::{Normal, LogNormal};
-    use distributions::range::{Range, SampleRange};
+    use distributions::range::{Range, RangeImpl};
     
     impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
         fn sample<R: Rng>(&mut self, rng: &mut R) -> T {
@@ -88,13 +86,13 @@ mod impls {
         }
     }
     
-    impl<Sup: SampleRange> Sample<Sup> for Range<Sup> {
-        fn sample<R: Rng>(&mut self, rng: &mut R) -> Sup {
+    impl<T: RangeImpl> Sample<T::X> for Range<T> {
+        fn sample<R: Rng>(&mut self, rng: &mut R) -> T::X {
             Distribution::sample(self, rng)
         }
     }
-    impl<Sup: SampleRange> IndependentSample<Sup> for Range<Sup> {
-        fn ind_sample<R: Rng>(&self, rng: &mut R) -> Sup {
+    impl<T: RangeImpl> IndependentSample<T::X> for Range<T> {
+        fn ind_sample<R: Rng>(&self, rng: &mut R) -> T::X {
             Distribution::sample(self, rng)
         }
     }
@@ -136,8 +134,8 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// A generic random value distribution. Generates values for various types
 /// with numerically uniform distribution.
 /// 
-/// For floating-point numbers, this generates values from the half-open range
-/// `[0, 1)` (excluding 1). See also [`Open01`] and [`Closed01`] for alternatives.
+/// For floating-point numbers, this generates values from the open range
+/// `(0, 1)` (i.e. excluding 0.0 and 1.0).
 ///
 /// ## Built-in Implementations
 ///
@@ -149,13 +147,11 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///   over all values of the type.
 /// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
 ///   code points in the range `0...0x10_FFFF`, except for the range
-///   `0xD800...0xDFFF` (the surrogate code points).  This includes
+///   `0xD800...0xDFFF` (the surrogate code points). This includes
 ///   unassigned/reserved code points.
 /// * `bool`: Generates `false` or `true`, each with probability 0.5.
 /// * Floating point types (`f32` and `f64`): Uniformly distributed in the
-///   half-open range `[0, 1)`.  (The [`Open01`], [`Closed01`], [`Exp1`], and
-///   [`StandardNormal`] distributions produce floating point numbers with
-///   alternative ranges or distributions.)
+///   open range `(0, 1)`.
 ///
 /// The following aggregate types also implement the distribution `Uniform` as
 /// long as their component types implement it:
@@ -186,8 +182,6 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// println!("f32 from [0,1): {}", val);
 /// ```
 ///
-/// [`Open01`]: struct.Open01.html
-/// [`Closed01`]: struct.Closed01.html
 /// [`Exp1`]: struct.Exp1.html
 /// [`StandardNormal`]: struct.StandardNormal.html
 #[derive(Debug)]
@@ -237,7 +231,7 @@ pub struct Weighted<T> {
 #[derive(Debug)]
 pub struct WeightedChoice<'a, T:'a> {
     items: &'a mut [Weighted<T>],
-    weight_range: Range<u32>
+    weight_range: Range<range::RangeInt<u32>>,
 }
 
 impl<'a, T: Clone> WeightedChoice<'a, T> {
@@ -345,21 +339,26 @@ fn ziggurat<R: Rng + ?Sized, P, Z>(
             mut pdf: P,
             mut zero_case: Z)
             -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
-    const SCALE: f64 = (1u64 << 53) as f64;
     loop {
-        // reimplement the f64 generation as an optimisation suggested
-        // by the Doornik paper: we have a lot of precision-space
-        // (i.e. there are 11 bits of the 64 of a u64 to use after
-        // creating a f64), so we might as well reuse some to save
-        // generating a whole extra random number. (Seems to be 15%
-        // faster.)
-        let bits: u64 = rng.gen();
-        let i = (bits & 0xff) as usize;
-        let f = (bits >> 11) as f64 / SCALE;
+        // As an optimisation we re-implement the conversion to a f64.
+        // From the remaining 12 most significant bits we use 8 to construct `i`.
+        // This saves us generating a whole extra random number, while the added
+        // precision of using 64 bits for f64 does not buy us much.
+        let bits = rng.next_u64();
+        let i = bits as usize & 0xff;
 
-        // u is either U(-1, 1) or U(0, 1) depending on if this is a
-        // symmetric distribution or not.
-        let u = if symmetric {2.0 * f - 1.0} else {f};
+        let u = if symmetric {
+            // Convert to a value in the range [2,4) and substract to get [-1,1)
+            // We can't convert to an open range directly, that would require
+            // substracting `3.0 - EPSILON`, which is not representable.
+            // It is possible with an extra step, but an open range does not
+            // seem neccesary for the ziggurat algorithm anyway.
+            (bits >> 12).into_float_with_exponent(1) - 3.0
+        } else {
+            // Convert to a value in the range [1,2) and substract to get (0,1)
+            (bits >> 12).into_float_with_exponent(0)
+            - (1.0 - ::core::f64::EPSILON / 2.0)
+        };
         let x = u * x_tab[i];
 
         let test_x = if symmetric { x.abs() } else {x};
@@ -387,17 +386,22 @@ mod tests {
     #[test]
     fn test_weighted_choice() {
         // this makes assumptions about the internal implementation of
-        // WeightedChoice, specifically: it doesn't reorder the items,
-        // it doesn't do weird things to the RNG (so 0 maps to 0, 1 to
-        // 1, internally; modulo a modulo operation).
+        // WeightedChoice. It may fail when the implementation in
+        // `distributions::range::RangeInt changes.
 
         macro_rules! t {
             ($items:expr, $expected:expr) => {{
                 let mut items = $items;
+                let mut total_weight = 0;
+                for item in &items { total_weight += item.weight; }
+
                 let wc = WeightedChoice::new(&mut items);
                 let expected = $expected;
 
-                let mut rng = StepRng::new(0, 1);
+                // Use extremely large steps between the random numbers, because
+                // we test with small ranges and RangeInt is designed to prefer
+                // the most significant bits.
+                let mut rng = StepRng::new(0, !0 / (total_weight as u64));
 
                 for &val in expected.iter() {
                     assert_eq!(wc.sample(&mut rng), val)
@@ -412,12 +416,12 @@ mod tests {
             Weighted { weight: 2, item: 21},
             Weighted { weight: 0, item: 22},
             Weighted { weight: 1, item: 23}],
-           [21,21, 23]);
+           [21, 21, 23]);
 
         // different weights
         t!([Weighted { weight: 4, item: 30},
             Weighted { weight: 3, item: 31}],
-           [30,30,30,30, 31,31,31]);
+           [30, 31, 30, 31, 30, 31, 30]);
 
         // check that we're binary searching
         // correctly with some vectors of odd
@@ -435,7 +439,7 @@ mod tests {
             Weighted { weight: 1, item: 54},
             Weighted { weight: 1, item: 55},
             Weighted { weight: 1, item: 56}],
-           [50, 51, 52, 53, 54, 55, 56]);
+           [50, 54, 51, 55, 52, 56, 53]);
     }
 
     #[test]
