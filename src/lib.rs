@@ -290,12 +290,6 @@ pub use error::{ErrorKind, Error};
 #[cfg(feature="std")] pub use entropy_rng::EntropyRng;
 #[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng, random};
 
-// local use declarations
-#[cfg(target_pointer_width = "32")]
-use prng::IsaacRng as IsaacWordRng;
-#[cfg(target_pointer_width = "64")]
-use prng::Isaac64Rng as IsaacWordRng;
-
 use distributions::{Distribution, Uniform, Range};
 use distributions::range::SampleRange;
 
@@ -1008,16 +1002,21 @@ impl<R: SeedableRng> NewRng for R {
     }
 }
 
-/// The standard RNG. This is designed to be efficient on the current
-/// platform.
+/// The standard RNG. The PRNG algorithm in `StdRng` is choosen to be efficient
+/// on the current platform, to be statistically strong and unpredictable
+/// (meaning a cryptographically secure PRNG).
 ///
-/// Reproducibility of output from this generator is not required, thus future
-/// library versions may use a different internal generator with different
-/// output. Further, this generator may not be portable and can produce
-/// different output depending on the architecture. If you require reproducible
-/// output, use a named RNG, for example `ChaChaRng`.
+/// The current algorithm used on all platforms is [HC-128].
+///
+/// Reproducibility of output from this generator is however not required, thus
+/// future library versions may use a different internal generator with
+/// different output. Further, this generator may not be portable and can
+/// produce different output depending on the architecture. If you require
+/// reproducible output, use a named RNG, for example `ChaChaRng`.
+///
+/// [HC-128]: struct.Hc128Rng.html
 #[derive(Clone, Debug)]
-pub struct StdRng(IsaacWordRng);
+pub struct StdRng(Hc128Rng);
 
 impl RngCore for StdRng {
     fn next_u32(&mut self) -> u32 {
@@ -1038,14 +1037,14 @@ impl RngCore for StdRng {
 }
 
 impl SeedableRng for StdRng {
-    type Seed = <IsaacWordRng as SeedableRng>::Seed;
+    type Seed = <Hc128Rng as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        StdRng(IsaacWordRng::from_seed(seed))
+        StdRng(Hc128Rng::from_seed(seed))
     }
 
     fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, Error> {
-        IsaacWordRng::from_rng(rng).map(|rng| StdRng(rng))
+        Hc128Rng::from_rng(rng).map(|rng| StdRng(rng))
     }
 }
 
@@ -1284,25 +1283,13 @@ mod test {
     }
 
     #[test]
-    #[cfg(target_pointer_width = "32")]
     fn test_stdrng_construction() {
         let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
         let mut rng1 = StdRng::from_seed(seed);
-        assert_eq!(rng1.next_u32(), 2869442790);
+        assert_eq!(rng1.next_u64(), 15759097995037006553);
 
         let mut rng2 = StdRng::from_rng(&mut rng1).unwrap();
-        assert_eq!(rng2.next_u32(), 3094074039);
-    }
-    #[test]
-    #[cfg(target_pointer_width = "64")]
-    fn test_stdrng_construction() {
-        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
-                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
-        let mut rng1 = StdRng::from_seed(seed);
-        assert_eq!(rng1.next_u64(), 14964555543728284049);
-
-        let mut rng2 = StdRng::from_rng(&mut rng1).unwrap();
-        assert_eq!(rng2.next_u64(), 919595328260451758);
+        assert_eq!(rng2.next_u64(), 6766915756997287454);
     }
 }

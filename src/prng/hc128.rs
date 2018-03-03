@@ -350,7 +350,7 @@ impl RngCore for Hc128Rng {
             filled += filled_u8;
         }
 
-        let len_remainder = (dest.len() - filled) % 16;
+        let len_remainder = (dest.len() - filled) % (16 * 4);
         let len_direct = dest.len() - len_remainder;
 
         while filled < len_direct {
