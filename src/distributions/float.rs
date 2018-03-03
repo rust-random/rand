@@ -36,9 +36,9 @@ macro_rules! float_impls {
             type F = $ty;
             #[inline(always)]
             fn into_float_with_exponent(self, exponent: i32) -> $ty {
-                // The exponent is encoded using an offset-binary representation,
-                // with the zero offset being 127
-                let exponent_bits = (($exponent_bias + exponent) as $uty) << $fraction_bits;
+                // The exponent is encoded using an offset-binary representation
+                let exponent_bits =
+                    (($exponent_bias + exponent) as $uty) << $fraction_bits;
                 unsafe { mem::transmute(self | exponent_bits) }
             }
         }

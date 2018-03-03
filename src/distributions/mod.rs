@@ -54,9 +54,6 @@ pub trait Sample<Support> {
 /// Since no state is recorded, each sample is (statistically)
 /// independent of all others, assuming the `Rng` used has this
 /// property.
-// FIXME maybe having this separate is overkill (the only reason is to
-// take &self rather than &mut self)? or maybe this should be the
-// trait called `Sample` and the other should be `DependentSample`.
 #[allow(deprecated)]
 #[deprecated(since="0.5.0", note="use Distribution instead")]
 pub trait IndependentSample<Support>: Sample<Support> {
@@ -153,8 +150,7 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///   unassigned/reserved code points.
 /// * `bool`: Generates `false` or `true`, each with probability 0.5.
 /// * Floating point types (`f32` and `f64`): Uniformly distributed in the
-///   open range `(0, 1)`. (The [`Exp1`], and [`StandardNormal`] distributions
-///   produce floating point numbers with alternative ranges or distributions.)
+///   open range `(0, 1)`.
 ///
 /// The following aggregate types also implement the distribution `Uniform` as
 /// long as their component types implement it:
@@ -347,13 +343,15 @@ fn ziggurat<R: Rng + ?Sized, P, Z>(
         // From the remaining 12 most significant bits we use 8 to construct `i`.
         // This saves us generating a whole extra random number, while the added
         // precision of using 64 bits for f64 does not buy us much.
-        // Because for some RNG's the least significant bits can be of lower
-        // statistical quality, we use bits 3..10 for i.
         let bits = rng.next_u64();
         let i = bits as usize & 0xff;
 
         let u = if symmetric {
             // Convert to a value in the range [2,4) and substract to get [-1,1)
+            // We can't convert to an open range directly, that would require
+            // substracting `3.0 - EPSILON`, which is not representable.
+            // It is possible with an extra step, but an open range does not
+            // seem neccesary for the ziggurat algorithm anyway.
             (bits >> 12).into_float_with_exponent(1) - 3.0
         } else {
             // Convert to a value in the range [1,2) and substract to get (0,1)

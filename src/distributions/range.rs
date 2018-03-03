@@ -16,13 +16,20 @@ use distributions::float::IntoFloat;
 
 /// Sample values uniformly between two bounds.
 ///
-/// This gives a uniform distribution (assuming the RNG used to sample
-/// it is itself uniform and the `RangeImpl` implementation is correct).
+/// `Range::new` and `Range::new_inclusive` will set up a `Range`, which does
+/// some preparations up front to make sampeling values faster.
+/// `Range::sample_single` is optimized for sampeling values once or only a
+/// limited number of times from a range.
 ///
-/// This can be surprisingly complicated to be both generic and correct, for
-/// example for edge cases like `low = 0u8`, `high = 170u8`, for which a naive
-/// modulo operation would return numbers less than 85 with double the
-/// probability to those greater than 85.
+/// If you need to sample many values from a range, consider using `new` or
+/// `new_inclusive`. This is also the best choice if the range is constant,
+/// because then the preparations can be evaluated at compile-time.
+/// Otherwise `sample_single` may be the best choice.
+///
+/// Sampeling uniformly from a range can be surprisingly complicated to be both
+/// generic and correct. Consider for example edge cases like `low = 0u8`,
+/// `high = 170u8`, for which a naive modulo operation would return numbers less
+/// than 85 with double the probability to those greater than 85.
 ///
 /// Types should attempt to sample in `[low, high)` for `Range::new(low, high)`,
 /// i.e., excluding `high`, but this may be very difficult. All the primitive
@@ -141,7 +148,8 @@ pub trait RangeImpl: Sized {
     /// Construct self, with inclusive bounds `[low, high]`.
     ///
     /// Usually users should not call this directly but instead use
-    /// `Range::new`, which asserts that `low < high` before calling this.
+    /// `Range::new_inclusive`, which asserts that `low < high` before calling
+    /// this.
     fn new_inclusive(low: Self::X, high: Self::X) -> Self;
 
     /// Sample a value.
@@ -149,7 +157,15 @@ pub trait RangeImpl: Sized {
 
     /// Sample a single value uniformly from a range with inclusive lower bound
     /// and exclusive upper bound `[low, high)`.
-    /// Panics if `low >= high`.
+    ///
+    /// Usually users should not call this directly but instead use
+    /// `Range::sample_single`, which asserts that `low < high` before calling
+    /// this.
+    ///
+    /// Via this method range implementations can provide a method optimized for
+    /// sampeling only a limited number of values from range. The default
+    /// implementation just sets up a range with `RangeImpl::new` and samples
+    /// from that.
     fn sample_single<R: Rng + ?Sized>(low: Self::X, high: Self::X, rng: &mut R)
         -> Self::X
     {
@@ -167,7 +183,7 @@ pub struct RangeInt<X> {
 }
 
 macro_rules! range_int_impl {
-    ($ty:ty, $signed:ident, $unsigned:ident,
+    ($ty:ty, $signed:ty, $unsigned:ident,
      $i_large:ident, $u_large:ident) => {
         impl SampleRange for $ty {
             type T = RangeInt<$ty>;
@@ -195,8 +211,7 @@ macro_rules! range_int_impl {
                 // end up with a uniform distribution if we map _all_ the random
                 // integers that can be generated to this range. We have to map
                 // integers from a `zone` that is a multiple of the range. The
-                // rest of the integers, that cause a bias, are rejected. The
-                // sampled number is `zone % range`.
+                // rest of the integers, that cause a bias, are rejected.
                 //
                 // The problem with `range` is that to cover the full range of
                 // the type, it has to store `unsigned_max + 1`, which can't be
@@ -327,7 +342,7 @@ trait WideningMultiply<RHS = Self> {
 }
 
 macro_rules! wmul_impl {
-    ($ty:ty, $wide:ident, $shift:expr) => {
+    ($ty:ty, $wide:ty, $shift:expr) => {
         impl WideningMultiply for $ty {
             type Output = ($ty, $ty);
 
