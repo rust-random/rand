@@ -9,7 +9,18 @@
 // except according to those terms.
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma
-/// function) using the Lanczos approximation with g=5
+/// function) using the Lanczos approximation.
+///
+/// The approximation expresses the gamma function as:
+/// `gamma(z+1) = sqrt(2*pi)*(z+g+0.5)^(z+0.5)*exp(-z-g-0.5)*Ag(z)`
+/// `g` is an arbitrary constant; we use the approximation with `g=5`.
+///
+/// Noting that `gamma(z+1) = z*gamma(z)` and applying `ln` to both sides:
+/// `ln(gamma(z)) = (z+0.5)*ln(z+g+0.5)-(z+g+0.5) + ln(sqrt(2*pi)*Ag(z)/z)`
+///
+/// `Ag(z)` is an infinite series with coefficients that can be calculated
+/// ahead of time - we use just the first 6 terms, which is good enough
+/// for most purposes.
 pub fn log_gamma(x: f64) -> f64 {
     // precalculated 6 coefficients for the first 6 terms of the series
     let coefficients: [f64; 6] = [
@@ -21,11 +32,11 @@ pub fn log_gamma(x: f64) -> f64 {
         -0.5395239384953e-5,
     ];
 
-    // ln((x+g+0.5)^(x+0.5)*exp(-(x+g+0.5)))
+    // (x+0.5)*ln(x+g+0.5)-(x+g+0.5)
     let tmp = x + 5.5;
     let log = (x + 0.5) * tmp.ln() - tmp;
 
-    // the first few terms of the series
+    // the first few terms of the series for Ag(x)
     let mut a = 1.000000000190015;
     let mut denom = x;
     for j in 0..6 {
@@ -34,6 +45,7 @@ pub fn log_gamma(x: f64) -> f64 {
     }
 
     // get everything together
-    // division by x is because the series is actually for gamma(x+1) = x*gamma(x)
+    // a is Ag(x)
+    // 2.5066... is sqrt(2pi)
     return log + (2.5066282746310005 * a / x).ln();
 }

@@ -17,8 +17,8 @@ use std::f64::consts::PI;
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///
-/// This distribution has density function: `f(k) = lambda^k *
-/// exp(-lambda) / k!` for `k >= 0`.
+/// This distribution has a density function:
+/// `f(k) = lambda^k * exp(-lambda) / k!` for `k >= 0`.
 ///
 /// # Example
 ///
@@ -42,7 +42,7 @@ impl Poisson {
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`. Panics if `lambda <= 0`.
     pub fn new(lambda: f64) -> Poisson {
-        assert!(lambda > 0.0, "Poisson::new called with `lambda` <= 0");
+        assert!(lambda > 0.0, "Poisson::new called with lambda <= 0");
         Poisson {
             lambda: lambda,
             exp_lambda: (-lambda).exp(),
@@ -53,7 +53,7 @@ impl Poisson {
 }
 
 impl Distribution<u64> for Poisson {
-    fn sample<R: Rng>(&self, rng: &mut R) -> u64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         // using the algorithm from Numerical Recipes in C
 
         // for low expected values use the Knuth method
