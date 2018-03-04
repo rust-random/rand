@@ -78,22 +78,20 @@ pub fn thread_rng() -> ThreadRng {
 }
 
 impl RngCore for ThreadRng {
-    #[inline]
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.rng.borrow_mut().next_u32()
     }
 
-    #[inline]
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         self.rng.borrow_mut().next_u64()
     }
 
-    #[inline]
     fn fill_bytes(&mut self, bytes: &mut [u8]) {
         self.rng.borrow_mut().fill_bytes(bytes)
     }
-    
-    #[inline]
+
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.rng.borrow_mut().try_fill_bytes(dest)
     }

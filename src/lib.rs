@@ -796,10 +796,12 @@ impl<R: SeedableRng> NewRng for R {
 pub struct StdRng(Hc128Rng);
 
 impl RngCore for StdRng {
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }
 
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         self.0.next_u64()
     }
