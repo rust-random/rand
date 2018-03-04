@@ -272,22 +272,20 @@ pub trait SeedableRng: Sized {
 
 
 impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
-    #[inline]
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
 
-    #[inline]
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
     }
 
-    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
     }
-    
-    #[inline]
+
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill_bytes(dest)
     }
@@ -295,22 +293,20 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
 
 #[cfg(any(feature="std", feature="alloc"))]
 impl<R: RngCore + ?Sized> RngCore for Box<R> {
-    #[inline]
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
 
-    #[inline]
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
     }
 
-    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
     }
-    
-    #[inline]
+
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill_bytes(dest)
     }
