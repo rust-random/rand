@@ -551,14 +551,21 @@ mod imp {
 
     impl OsRng {
         pub fn new() -> io::Result<OsRng> {
-            Err(io::Error::new(io::ErrorKind::Other, "Not supported"))
+            //Err(io::Error::new(io::ErrorKind::Other, "Not supported"))
+            Ok(OsRng)
         }
     }
 
     impl Rng for OsRng {
         fn next_u32(&mut self) -> u32 {
-            panic!("Not supported")
+            //panic!("Not supported")
+            let n:u32 = unsafe { date_now() };
+            (n/1000) as u32
         }
+    }
+
+    extern {
+        pub fn date_now()  -> u32;
     }
 }
 

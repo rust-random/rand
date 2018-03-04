@@ -700,9 +700,15 @@ mod platform {
 
     #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
     pub fn get_nstime() -> u64 {
-        unreachable!()
+        (unsafe { date_now() } as u64)
+    }
+
+    extern {
+        pub fn date_now()  -> u32;
     }
 }
+
+
 
 // A function that is opaque to the optimizer to assist in avoiding dead-code
 // elimination. Taken from `bencher`.
