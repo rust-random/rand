@@ -130,9 +130,13 @@ where R: BlockRngCore<u32> + SeedableRng,
 
     fn generate(&mut self, results: &mut Self::Results) -> Result<(), Error> {
         if self.bytes_until_reseed <= 0 {
-            // In the unlikely event the internal PRNG fails, we don't know
-            // whether this is resolvable; schedule to reseed on next use and
-            // return original error kind.
+            // We want to reseed here, and generate results later in the
+            // function. If generating results fail, we should return the error
+            // from that. If generating results succeeded, but reseeding failed,
+            // we should return the error from reseeding.
+            // The only way to get this behaviour without destroying performance
+            // was to split part of the function out into a
+            // `reseed_and_generate` method.
             return self.reseed_and_generate(results);
         }
         self.bytes_until_reseed -= results.as_ref().len() as i64 * 4;
