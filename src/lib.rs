@@ -641,9 +641,16 @@ pub trait Rng: RngCore + Sized {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
+    /// assert_eq!(rng.gen_weighted_bool(0), true);
+    /// assert_eq!(rng.gen_weighted_bool(1), true);
+    /// // Just like `rng.gen::<bool>()` a 50-50% chance, but using a slower
+    /// // method with different results.
+    /// println!("{}", rng.gen_weighted_bool(2));
+    /// // First meaningful use of `gen_weighted_bool`.
     /// println!("{}", rng.gen_weighted_bool(3));
     /// ```
     fn gen_weighted_bool(&mut self, n: u32) -> bool {
+        // Short-circuit after `n <= 1` to avoid panic in `gen_range`
         n <= 1 || self.gen_range(0, n) == 0
     }
 
