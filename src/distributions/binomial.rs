@@ -38,14 +38,14 @@ impl Binomial {
     /// Construct a new `Binomial` with the given shape parameters
     /// `n`, `p`. Panics if `p <= 0` or `p >= 1`.
     pub fn new(n: u64, p: f64) -> Binomial {
-        assert!(p > 0.0, "Binomial::new called with `p` <= 0");
-        assert!(p < 1.0, "Binomial::new called with `p` >= 1");
+        assert!(p > 0.0, "Binomial::new called with p <= 0");
+        assert!(p < 1.0, "Binomial::new called with p >= 1");
         Binomial { n: n, p: p }
     }
 }
 
 impl Distribution<u64> for Binomial {
-    fn sample<R: Rng>(&self, rng: &mut R) -> u64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         // binomial distribution is symmetrical with respect to p -> 1-p, k -> n-k
         // switch p so that it is less than 0.5 - this allows for lower expected values
         // we will just invert the result at the end
