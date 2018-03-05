@@ -96,6 +96,7 @@ impl SeedableRng for Hc128Rng {
     }
 }
 
+#[derive(Clone)]
 pub struct Hc128Core {
     t: [u32; 1024],
     counter1024: usize,
@@ -105,17 +106,6 @@ pub struct Hc128Core {
 impl fmt::Debug for Hc128Core {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Hc128Core {{}}")
-    }
-}
-
-// Cannot be derived because [u32; 1024] does not implement Clone in
-// Rust < 1.21.0 (since https://github.com/rust-lang/rust/pull/43690)
-impl Clone for Hc128Core {
-    fn clone(&self) -> Self {
-        Self {
-            t: self.t,
-            counter1024: self.counter1024,
-        }
     }
 }
 

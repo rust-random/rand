@@ -162,12 +162,24 @@ pub trait RngCore {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
 
-/// Trait for RNG's that do not generate random numbers one at a time, but in
+/// Trait for RNGs that do not generate random numbers one at a time, but in
 /// blocks. Especially for cryptographic RNG's it is common to generate 16 or
 /// more results at a time.
 pub trait BlockRngCore<T>: Sized {
+    /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
+    /// generates, which will usually be an array like `[u32; 16]`.
     type Results: AsRef<[T]> + Default;
 
+    /// Generate a new block of results.
+    ///
+    /// The result type is unnecessary for PRNGs, which we assume to be
+    /// infallible. It only has a signalling function, for example to report a
+    /// failed reseed, that the PRNG is used beyond its limits, or because it
+    /// 'noticed' some kind of interference (like fork protection).
+    ///
+    /// In all cases user code is allowed to ignore any errors from `generate`
+    /// and to expect the generator to keep working, even though it may not be
+    /// in the most ideal conditions.
     fn generate(&mut self, results: &mut Self::Results) -> Result<(), Error>;
 }
 

@@ -173,9 +173,9 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
 ///
 /// `next_u32` simply indexes the array. `next_u64` tries to read two `u32`
 /// values at a time if possible, and handles edge cases like when only one
-/// value is left. `try_fill_bytes` is optimized to even attempt to use the
-/// [`BlockRngCore`] implementation to write the results directly to the
-/// destination slice. No generated values are ever thown away.
+/// value is left. `try_fill_bytes` is optimized use the [`BlockRngCore`]
+/// implementation to write the results directly to the destination slice.
+/// No generated values are ever thown away.
 ///
 /// Although `BlockCoreRng::generate` can return a `Result`, we assume all PRNGs
 /// to be infallible, and for the `Result` to only have a signaling function.
@@ -209,7 +209,7 @@ impl<R: BlockRngCore<u32>> RngCore for BlockRng<R> {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         if self.index >= self.results.as_ref().len() {
-            let _ = self.core.generate(&mut self.results).unwrap();
+            let _ = self.core.generate(&mut self.results);
             self.index = 0;
         }
 
@@ -220,25 +220,28 @@ impl<R: BlockRngCore<u32>> RngCore for BlockRng<R> {
 
     #[inline(always)]
     fn next_u64(&mut self) -> u64 {
+        let read_u64 = |results: &[u32], index| {
+            if cfg!(any(target_arch = "x86", target_arch = "x86_64")) {
+                // requires little-endian CPU supporting unaligned reads:
+                unsafe { *(&results[index] as *const u32 as *const u64) }
+            } else {
+                let x = results[index] as u64;
+                let y = results[index + 1] as u64;
+                (y << 32) | x
+            }
+        };
+
         let len = self.results.as_ref().len();
 
         let index = self.index;
         if index < len-1 {
             self.index += 2;
             // Read an u64 from the current index
-            if cfg!(any(target_arch = "x86", target_arch = "x86_64")) {
-                unsafe { *(&self.results.as_ref()[index] as *const u32 as *const u64) }
-            } else {
-                let x = self.results.as_ref()[index] as u64;
-                let y = self.results.as_ref()[index + 1] as u64;
-                (y << 32) | x
-            }
+            read_u64(self.results.as_ref(), index)
         } else if index >= len {
             let _ = self.core.generate(&mut self.results);
             self.index = 2;
-            let x = self.results.as_ref()[0] as u64;
-            let y = self.results.as_ref()[1] as u64;
-            (y << 32) | x
+            read_u64(self.results.as_ref(), 0)
         } else {
             let x = self.results.as_ref()[len-1] as u64;
             let _ = self.core.generate(&mut self.results);
@@ -253,8 +256,8 @@ impl<R: BlockRngCore<u32>> RngCore for BlockRng<R> {
     }
 
     // As an optimization we try to write directly into the output buffer.
-    // This is only enabled for platforms where unaligned writes are known to
-    // be safe and fast.
+    // This is only enabled for little-endian platforms where unaligned writes
+    // are known to be safe and fast.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         let mut filled = 0;
@@ -272,9 +275,9 @@ impl<R: BlockRngCore<u32>> RngCore for BlockRng<R> {
 
         let len_remainder =
             (dest.len() - filled) % (self.results.as_ref().len() * 4);
-        let len_direct = dest.len() - len_remainder;
+        let end_direct = dest.len() - len_remainder;
 
-        while filled < len_direct {
+        while filled < end_direct {
             let dest_u32: &mut R::Results = unsafe {
                 ::core::mem::transmute(dest[filled..].as_mut_ptr())
             };
