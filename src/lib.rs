@@ -253,7 +253,7 @@
 #![cfg_attr(all(target_arch = "wasm32", not(target_os = "emscripten")), recursion_limit="128")]
 
 #[cfg(feature="std")] extern crate std as core;
-#[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
+#[cfg(all(feature = "alloc", not(feature="std")))] #[macro_use] extern crate alloc;
 
 #[cfg(test)] #[cfg(feature="serde-1")] extern crate bincode;
 #[cfg(feature="serde-1")] extern crate serde;
@@ -297,6 +297,7 @@ use distributions::range::SampleRange;
 // public modules
 pub mod distributions;
 mod impls;
+pub mod iter;
 pub mod jitter;
 pub mod mock;
 #[cfg(feature="std")] pub mod os;
@@ -315,9 +316,9 @@ pub mod isaac {
 }
 
 // private modules
-mod le;
 #[cfg(feature="std")] mod entropy_rng;
 mod error;
+mod le;
 mod prng;
 #[cfg(feature="std")] mod thread_rng;
 
@@ -601,6 +602,8 @@ pub trait Rng: RngCore + Sized {
     /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
+    #[allow(deprecated)]
+    #[deprecated(since="0.5.0", note="replaced by Rng::iter")]
     fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Uniform: Distribution<T> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
@@ -652,6 +655,35 @@ pub trait Rng: RngCore + Sized {
     fn gen_weighted_bool(&mut self, n: u32) -> bool {
         // Short-circuit after `n <= 1` to avoid panic in `gen_range`
         n <= 1 || self.gen_range(0, n) == 0
+    }
+
+    /// Construct an iterator on an `Rng`.
+    /// 
+    /// ### Example
+    /// 
+    /*
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    /// use distributions::Range;
+    /// 
+    /// let die_range = Range::new(1, 7);
+    /// let mut die = thread_rng().iter().map(|rng| rng.sample(die_range));
+    /// for _ in 0..3 {
+    ///     println!("Die roll: {}", die.next());
+    /// }
+    /// ```
+    */
+    /* TODO: Alphanumeric
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    /// use rand::distributions::Alphanumeric;
+    /// 
+    /// let mut rng = thread_rng();
+    /// let x: String = rng.iter().map(|rng| rng.sample(Alphanumeric)).take(6).collect();
+    /// ```
+    */
+    fn iter<'a>(&'a mut self) -> iter::Iter<'a, Self> {
+        iter::Iter::new(self)
     }
 
     /// Return an iterator of random characters from the set A-Z,a-z,0-9.
@@ -861,11 +893,14 @@ impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
 /// [`gen_iter`]: trait.Rng.html#method.gen_iter
 /// [`Rng`]: trait.Rng.html
 #[derive(Debug)]
+#[allow(deprecated)]
+#[deprecated(since="0.5.0", note="replaced by Rng::iter")]
 pub struct Generator<T, R: RngCore> {
     rng: R,
     _marker: marker::PhantomData<fn() -> T>,
 }
 
+#[allow(deprecated)]
 impl<T, R: RngCore> Iterator for Generator<T, R> where Uniform: Distribution<T> {
     type Item = T;
 
@@ -1222,9 +1257,9 @@ mod test {
     #[test]
     fn test_gen_vec() {
         let mut r = rng(106);
-        assert_eq!(r.gen_iter::<u8>().take(0).count(), 0);
-        assert_eq!(r.gen_iter::<u8>().take(10).count(), 10);
-        assert_eq!(r.gen_iter::<f64>().take(16).count(), 16);
+        assert_eq!(r.iter().map(|rng| rng.gen::<u8>()).take(0).count(), 0);
+        assert_eq!(r.iter().map(|rng| rng.gen::<u8>()).take(10).count(), 10);
+        assert_eq!(r.iter().map(|rng| rng.gen::<f64>()).take(16).count(), 16);
     }
 
     #[test]
