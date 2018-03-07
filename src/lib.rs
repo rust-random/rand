@@ -473,7 +473,7 @@ pub trait CryptoRng: RngCore {}
 /// 
 /// This is the primary trait to use when generating random values. Example:
 /// 
-/// ```
+/// ```rust
 /// use rand::Rng;
 /// 
 /// fn use_rng<R: Rng>(rng: &mut R) -> f32 {
@@ -485,6 +485,31 @@ pub trait CryptoRng: RngCore {}
 /// Should it be necessary to support trait objects, use [`RngCore`].
 /// Since `Rng` extends `RngCore` and every `RngCore` implements `Rng`, usage
 /// of the two traits is somewhat interchangeable.
+/// 
+/// Iteration over an `Rng` can be achieved using `iter::repeat` as follows:
+/// 
+/// ```rust
+/// use std::iter;
+/// use rand::{Rng, thread_rng};
+/// use rand::distributions::{Alphanumeric, Range};
+/// 
+/// let mut rng = thread_rng();
+/// 
+/// // Vec of 16 x f32:
+/// let v: Vec<f32> = iter::repeat(()).map(|()| rng.gen()).take(16).collect();
+/// 
+/// // String:
+/// let s: String = iter::repeat(())
+///         .map(|()| rng.sample(Alphanumeric))
+///         .take(7).collect();
+/// 
+/// // Dice-rolling:
+/// let die_range = Range::new_inclusive(1, 6);
+/// let mut roll_die = iter::repeat(()).map(|()| rng.sample(die_range));
+/// while roll_die.next().unwrap() != 6 {
+///     println!("Not a 6; rolling again!");
+/// }
+/// ```
 /// 
 /// [`RngCore`]: trait.RngCore.html
 pub trait Rng: RngCore + Sized {
@@ -601,6 +626,8 @@ pub trait Rng: RngCore + Sized {
     /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
+    #[allow(deprecated)]
+    #[deprecated(since="0.5.0", note="use iter::repeat instead")]
     fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Uniform: Distribution<T> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
@@ -861,11 +888,14 @@ impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
 /// [`gen_iter`]: trait.Rng.html#method.gen_iter
 /// [`Rng`]: trait.Rng.html
 #[derive(Debug)]
+#[allow(deprecated)]
+#[deprecated(since="0.5.0", note="use iter::repeat instead")]
 pub struct Generator<T, R: RngCore> {
     rng: R,
     _marker: marker::PhantomData<fn() -> T>,
 }
 
+#[allow(deprecated)]
 impl<T, R: RngCore> Iterator for Generator<T, R> where Uniform: Distribution<T> {
     type Item = T;
 
@@ -1217,14 +1247,6 @@ mod test {
         let mut r = rng(104);
         assert_eq!(r.gen_weighted_bool(0), true);
         assert_eq!(r.gen_weighted_bool(1), true);
-    }
-
-    #[test]
-    fn test_gen_vec() {
-        let mut r = rng(106);
-        assert_eq!(r.gen_iter::<u8>().take(0).count(), 0);
-        assert_eq!(r.gen_iter::<u8>().take(10).count(), 10);
-        assert_eq!(r.gen_iter::<f64>().take(16).count(), 16);
     }
 
     #[test]
