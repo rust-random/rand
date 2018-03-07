@@ -35,6 +35,7 @@ pub struct Poisson {
     // precalculated values
     exp_lambda: f64,
     log_lambda: f64,
+    sqrt_2lambda: f64,
     magic_val: f64,
 }
 
@@ -43,11 +44,13 @@ impl Poisson {
     /// `lambda`. Panics if `lambda <= 0`.
     pub fn new(lambda: f64) -> Poisson {
         assert!(lambda > 0.0, "Poisson::new called with lambda <= 0");
+        let log_lambda = lambda.ln();
         Poisson {
             lambda: lambda,
             exp_lambda: (-lambda).exp(),
-            log_lambda: lambda.ln(),
-            magic_val: lambda * lambda.ln() - log_gamma(1.0 + lambda),
+            log_lambda: log_lambda,
+            sqrt_2lambda: (2.0 * lambda).sqrt(),
+            magic_val: lambda * log_lambda - log_gamma(1.0 + lambda),
         }
     }
 }
@@ -68,8 +71,6 @@ impl Distribution<u64> for Poisson {
         }
         // high expected values - rejection method
         else {
-            // some cached values
-            let tmp = (2.0 * self.lambda).sqrt();
             let mut int_result: u64;
 
             loop {
@@ -82,7 +83,7 @@ impl Distribution<u64> for Poisson {
                     // draw from the lorentzian distribution
                     comp_dev = (PI * rng.gen::<f64>()).tan();
                     // shift the peak of the comparison ditribution
-                    result = tmp * comp_dev + self.lambda;
+                    result = self.sqrt_2lambda * comp_dev + self.lambda;
                     // repeat the drawing until we are in the range of possible values
                     if result >= 0.0 {
                         break;
