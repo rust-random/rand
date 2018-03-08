@@ -33,8 +33,7 @@ build: false
 
 test_script:
   - cargo test --benches
-  - cargo test
-  - cargo test --features serde-1
-  - cargo test --features nightly
-  - cargo test --tests --no-default-features --features=alloc
+  - cargo test --all
+  - cargo test --features serde-1,log,nightly
+  - cargo test --all --tests --no-default-features --features=alloc
   - cargo test --tests --no-default-features --features=serde-1

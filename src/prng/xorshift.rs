@@ -12,8 +12,7 @@
 
 use core::num::Wrapping as w;
 use core::{fmt, slice};
-use {RngCore, SeedableRng, Error};
-use {impls, le};
+use rand_core::{RngCore, SeedableRng, Error, impls, le};
 
 /// An Xorshift[1] random number
 /// generator.

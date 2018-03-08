@@ -17,7 +17,7 @@ use std::io::Read;
 #[allow(unused)] use std::path::Path;
 #[allow(unused)] use std::sync::{Once, Mutex, ONCE_INIT};
 
-use {RngCore, Error, ErrorKind, impls};
+use rand_core::{RngCore, Error, ErrorKind, impls};
 
 /// A random number generator that retrieves randomness straight from
 /// the operating system.
