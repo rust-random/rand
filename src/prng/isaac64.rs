@@ -13,8 +13,7 @@
 use core::{fmt, slice};
 use core::num::Wrapping as w;
 
-use {RngCore, SeedableRng, Error};
-use {impls, le};
+use rand_core::{RngCore, SeedableRng, Error, impls, le};
 
 #[allow(non_camel_case_types)]
 type w64 = w<u64>;

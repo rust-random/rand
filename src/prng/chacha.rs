@@ -11,8 +11,7 @@
 //! The ChaCha random number generator.
 
 use core::fmt;
-use {RngCore, CryptoRng, SeedableRng};
-use {impls, le};
+use rand_core::{RngCore, CryptoRng, SeedableRng, impls, le};
 
 const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
 const STATE_WORDS: usize = 16;

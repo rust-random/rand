@@ -1,0 +1,20 @@
+[package]
+name = "rand-core"
+version = "0.1.0-pre.0"
+authors = ["The Rust Project Developers"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/rust-lang-nursery/rand"
+documentation = "https://docs.rs/rand"
+homepage = "https://github.com/rust-lang-nursery/rand"
+description = """
+Core random number generator traits and tools for implementation.
+"""
+keywords = ["random", "rng"]
+categories = ["algorithms"]
+
+[features]
+# Bug: https://github.com/rust-lang/cargo/issues/4361
+# default = ["std"]
+std = []    # use std library; should be default but for above bug
+alloc = []  # enables Vec and Box support without std

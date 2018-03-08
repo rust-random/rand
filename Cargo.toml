@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.4.2"
+version = "0.5.0-pre.0"
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -17,8 +17,8 @@ categories = ["algorithms"]
 default = ["std"]
 nightly = ["i128_support"] # enables all features requiring nightly rust
 
-std = ["libc", "winapi"] # default feature; without this rand uses libcore
-alloc = []  # enables Vec and Box support without std
+std = ["rand-core/std", "winapi", "libc"] # default feature; without this rand uses libcore
+alloc = ["rand-core/alloc"]  # enables Vec and Box support without std
 
 i128_support = [] # enables i128 and u128 support
 
@@ -32,10 +32,15 @@ libc = { version = "0.2", optional = true }
 winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"], optional = true }
 
 [dependencies]
+rand-core = { path = 'rand-core', default-features = false }
+
 log = { version = "0.4", optional = true }
 
 serde = {version="1",optional=true}
 serde_derive = {version="1", optional=true}
+
+[workspace]
+members = ["rand-core"]
 
 [dev-dependencies]
 # This is for testing serde, unfortunately

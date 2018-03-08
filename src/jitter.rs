@@ -16,7 +16,7 @@
 
 //! Non-physical true random number generator based on timing jitter.
 
-use {RngCore, CryptoRng, Error, ErrorKind, impls};
+use rand_core::{RngCore, CryptoRng, Error, ErrorKind, impls};
 
 use core::{fmt, mem, ptr};
 #[cfg(feature="std")]

@@ -13,10 +13,7 @@
 //! Little-Endian order has been chosen for internal usage; this makes some
 //! useful functions available.
 
-// TODO: eventually these should be exported somehow
-#![allow(unused)]
-
-use core::{mem, ptr};
+use core::ptr;
 
 macro_rules! read_slice {
     ($src:expr, $dst:expr, $size:expr, $which:ident) => {{
