@@ -43,8 +43,7 @@
 
 use core::default::Default;
 use core::convert::AsMut;
-
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
+use core::ops::DerefMut;
 
 pub use error::{ErrorKind, Error};
 
@@ -262,30 +261,7 @@ pub trait SeedableRng: Sized {
 }
 
 
-impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        (**self).next_u32()
-    }
-
-    #[inline]
-    fn next_u64(&mut self) -> u64 {
-        (**self).next_u64()
-    }
-
-    #[inline]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        (**self).fill_bytes(dest)
-    }
-    
-    #[inline]
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        (**self).try_fill_bytes(dest)
-    }
-}
-
-#[cfg(any(feature="std", feature="alloc"))]
-impl<R: RngCore + ?Sized> RngCore for Box<R> {
+impl<R: RngCore + ?Sized, T: DerefMut<Target = R>> RngCore for T {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
