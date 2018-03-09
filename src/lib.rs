@@ -342,15 +342,10 @@ pub trait Rand : Sized {
 /// ```rust
 /// use rand::Rng;
 /// 
-/// fn use_rng<R: Rng>(rng: &mut R) -> f32 {
+/// fn use_rng<R: Rng + ?Sized>(rng: &mut R) -> f32 {
 ///     rng.gen()
 /// }
 /// ```
-/// 
-/// Since this trait exclusively uses generic methods, it is marked `Sized`.
-/// Should it be necessary to support trait objects, use [`RngCore`].
-/// Since `Rng` extends `RngCore` and every `RngCore` implements `Rng`, usage
-/// of the two traits is somewhat interchangeable.
 /// 
 /// Iteration over an `Rng` can be achieved using `iter::repeat` as follows:
 /// 
@@ -378,7 +373,7 @@ pub trait Rand : Sized {
 /// ```
 /// 
 /// [`RngCore`]: https://docs.rs/rand-core/0.1/rand-core/trait.RngCore.html
-pub trait Rng: RngCore + Sized {
+pub trait Rng: RngCore {
     /// Fill `dest` entirely with random bytes (uniform value distribution),
     /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
     /// and arrays over primitive integer types (`i8`, `i16`, `u32`, etc.).
@@ -402,7 +397,7 @@ pub trait Rng: RngCore + Sized {
     /// [`fill_bytes`]: https://docs.rs/rand-core/0.1/rand-core/trait.RngCore.html#method.fill_bytes
     /// [`try_fill`]: trait.Rng.html#method.try_fill
     /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
-    fn fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) where Self: Sized {
+    fn fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) {
         self.fill_bytes(dest.as_byte_slice_mut());
         dest.to_le();
     }
@@ -438,7 +433,7 @@ pub trait Rng: RngCore + Sized {
     /// [`try_fill_bytes`]: https://docs.rs/rand-core/0.1/rand-core/trait.RngCore.html#method.try_fill_bytes
     /// [`fill`]: trait.Rng.html#method.fill
     /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
-    fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> where Self: Sized {
+    fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
         self.try_fill_bytes(dest.as_byte_slice_mut())?;
         dest.to_le();
         Ok(())
@@ -455,7 +450,7 @@ pub trait Rng: RngCore + Sized {
     /// let mut rng = thread_rng();
     /// let x: i32 = rng.sample(Range::new(10, 15));
     /// ```
-    fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T where Self: Sized {
+    fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
         distr.sample(self)
     }
     
