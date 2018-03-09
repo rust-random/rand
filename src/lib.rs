@@ -255,6 +255,8 @@
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 
+#[macro_use] extern crate rand_derive;
+
 #[cfg(test)] #[cfg(feature="serde-1")] extern crate bincode;
 #[cfg(feature="serde-1")] extern crate serde;
 #[cfg(feature="serde-1")] #[macro_use] extern crate serde_derive;
@@ -312,6 +314,12 @@ pub mod chacha {
 pub mod isaac {
     //! The ISAAC random number generator.
     pub use prng::{IsaacRng, Isaac64Rng};
+}
+
+// Cheat to allow usage of rand-derive in same crate:
+#[doc(hidden)]
+pub mod rand {
+    pub use super::{RngCore, SeedableRng, Error};
 }
 
 // private modules
@@ -1058,38 +1066,8 @@ impl<R: SeedableRng> NewRng for R {
 /// reproducible output, use a named RNG, for example `ChaChaRng`.
 ///
 /// [HC-128]: struct.Hc128Rng.html
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, RngCore, SeedableRng)]
 pub struct StdRng(Hc128Rng);
-
-impl RngCore for StdRng {
-    fn next_u32(&mut self) -> u32 {
-        self.0.next_u32()
-    }
-
-    fn next_u64(&mut self) -> u64 {
-        self.0.next_u64()
-    }
-
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.0.fill_bytes(dest);
-    }
-
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.0.try_fill_bytes(dest)
-    }
-}
-
-impl SeedableRng for StdRng {
-    type Seed = <Hc128Rng as SeedableRng>::Seed;
-
-    fn from_seed(seed: Self::Seed) -> Self {
-        StdRng(Hc128Rng::from_seed(seed))
-    }
-
-    fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, Error> {
-        Hc128Rng::from_rng(rng).map(|rng| StdRng(rng))
-    }
-}
 
 /// Create a weak random number generator with a default algorithm and seed.
 ///
