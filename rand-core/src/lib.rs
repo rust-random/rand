@@ -11,8 +11,8 @@
 //! Random number generation traits
 //! 
 //! This crate is mainly of interest to crates publishing implementations of
-//! `RngCore`. Other users are encouraged to use the
-//! [rand crate](https://crates.io/crates/rand) instead.
+//! `RngCore`. Other users are encouraged to use the [rand] crate instead
+//! which re-exports the main traits and error types.
 //!
 //! `RngCore` is the core trait implemented by algorithmic pseudo-random number
 //! generators and external random-number sources.
@@ -24,8 +24,9 @@
 //! environments.
 //! 
 //! The `impls` and `le` sub-modules include a few small functions to assist
-//! implementation of `RngCore`. Since this module is only of interest to
-//! `RngCore` implementors, it is not re-exported from `rand`.
+//! implementation of `RngCore`.
+//! 
+//! [rand]: https://crates.io/crates/rand
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
@@ -57,67 +58,88 @@ pub mod le;
 /// 
 /// This trait encapsulates the low-level functionality common to all
 /// generators, and is the "back end", to be implemented by generators.
-/// End users should normally use [`Rng`] instead.
+/// End users should normally use [`Rng`] from the [rand] crate, which is
+/// automatically implemented for every type implementing `RngCore`.
 /// 
-/// Unlike [`Rng`], this trait is object-safe. To use a type-erased [`Rng`] —
-/// i.e. dynamic dispatch — this trait must be used (also import [`Rng`] to
-/// use its generic functions):
+/// Three different methods for generating random data are provided since the
+/// optimal implementation of each is dependent on the type of generator. There
+/// is no required relationship between the output of each; e.g. many
+/// implementations of `fill_bytes` consume a whole number of `u32` or `u64`
+/// values and drop any remaining unused bytes.
 /// 
-/// ```
-/// use rand_core::RngCore;
+/// The `try_fill_bytes` method is a variant of `fill_bytes` allowing error
+/// handling; it is not deemed sufficiently useful to add equivalents for
+/// `next_u32` or `next_u64` since the latter methods are almost always used
+/// with algorithmic generators (PRNGs), which are normally infallible.
 /// 
-/// fn use_rng(mut rng: &mut RngCore) -> u32 {
-///     rng.next_u32()
+/// Algorithmic generators implementing `SeedableRng` should normally have
+/// *portable, reproducible* output, i.e. fix Endianness when converting values
+/// to avoid platform differences, and avoid making any changes which affect
+/// output (except by communicating that the release has breaking changes).
+/// 
+/// Typically implementators will implement only one of the methods available
+/// in this trait directly, then use the helper functions from the [`impls`]
+/// module to implement the other methods.
+/// 
+/// # Example
+/// 
+/// A simple example, obviously not generating very *random* output:
+/// 
+/// ```rust
+/// use rand_core::{RngCore, Error, impls};
+/// 
+/// struct CountingRng(u64);
+/// 
+/// impl RngCore for CountingRng {
+///     fn next_u32(&mut self) -> u32 {
+///         self.next_u64() as u32
+///     }
+///     
+///     fn next_u64(&mut self) -> u64 {
+///         self.0 += 1;
+///         self.0
+///     }
+///     
+///     fn fill_bytes(&mut self, dest: &mut [u8]) {
+///         impls::fill_bytes_via_u64(self, dest)
+///     }
+///     
+///     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+///         Ok(self.fill_bytes(dest))
+///     }
 /// }
-/// 
-/// // or:
-/// fn use_any_rng<R: RngCore>(rng: &mut R) -> u32 {
-///     rng.next_u32()
-/// }
 /// ```
 /// 
-/// Several extension traits exist:
-/// 
-/// *   [`Rng`] provides high-level functionality using generic functions
-/// *   [`SeedableRng`] is another low-level trait to be implemented by PRNGs
-///     (algorithmic RNGs), concerning creation and seeding
-/// *   [`NewRng`] is a high-level trait providing a `new()` function, allowing
-///     easy construction of freshly-seeded PRNGs
-/// 
+/// [rand]: https://crates.io/crates/rand
 /// [`Rng`]: https://docs.rs/rand/0.5/rand/trait.Rng.html
-/// [`SeedableRng`]: trait.SeedableRng.html
-/// [`NewRng`]: https://docs.rs/rand/0.5/rand/trait.NewRng.html
+/// [`impls`]: impls/index.html
 pub trait RngCore {
     /// Return the next random `u32`.
     ///
-    /// Implementations of this trait must implement at least one of
-    /// `next_u32`, `next_u64` and `fill_bytes` directly. In the case this
-    /// function is not implemented directly, it can be implemented using
-    /// `self.next_u64() as u32` or via `fill_bytes`.
+    /// RNGs must implement at least one method from this trait directly. In
+    /// the case this method is not implemented directly, it can be implemented
+    /// using `self.next_u64() as u32` or
+    /// [via `fill_bytes`](impls/fn.next_u32_via_fill.html).
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random `u64`.
     ///
-    /// Implementations of this trait must implement at least one of
-    /// `next_u32`, `next_u64` and `fill_bytes` directly. In the case this
-    /// function is not implemented directly, the default implementation will
-    /// generate values via `next_u32` in little-endian fashion, or this
-    /// function can be implemented via `fill_bytes`.
+    /// RNGs must implement at least one method from this trait directly. In
+    /// the case this method is not implemented directly, it can be implemented
+    /// [via `next_u32`](impls/fn.next_u64_via_u32.html) or
+    /// [via `fill_bytes`](impls/fn.next_u64_via_fill.html).
     fn next_u64(&mut self) -> u64;
 
     /// Fill `dest` with random data.
     ///
-    /// Implementations of this trait must implement at least one of
-    /// `next_u32`, `next_u64` and `fill_bytes` directly. In the case this
-    /// function is not implemented directly, the default implementation will
-    /// generate values via `next_u64` in little-endian fashion.
-    ///
-    /// There is no requirement on how this method generates values relative to
-    /// `next_u32` or `next_u64`; e.g. a `u64` cast to bytes is not required to
-    /// have the same value as eight bytes filled via this function. There *is*
-    /// a requirement of portability for reproducible generators which implies
-    /// that any seedable generator must fix endianness when generating bytes.
-    ///
+    /// RNGs must implement at least one method from this trait directly. In
+    /// the case this method is not implemented directly, it can be implemented
+    /// [via `next_u32`](impls/fn.fill_bytes_via_u32.html) or
+    /// [via `next_u64`](impls/fn.fill_bytes_via_u64.html) or
+    /// via `try_fill_bytes`; if this generator can fail the implementation
+    /// must choose how best to handle errors here (e.g. panic with a
+    /// descriptive message or log a warning and retry a few times).
+    /// 
     /// This method should guarantee that `dest` is entirely filled
     /// with new data, and may panic if this is impossible
     /// (e.g. reading past the end of a file that is being used as the
@@ -127,13 +149,14 @@ pub trait RngCore {
     /// Fill `dest` entirely with random data.
     ///
     /// This is the only method which allows an RNG to report errors while
-    /// generating random data; other methods either handle the error
-    /// internally or panic. This method is
-    /// the intended way to use external (true) RNGs, like `OsRng`. Its main
-    /// use-cases are to generate keys and to seed (infallible) PRNGs.
+    /// generating random data thus making this the primary method implemented
+    /// by external (true) RNGs (e.g. `OsRng`) which can fail. It may be used
+    /// directly to generate keys and to seed (infallible) PRNGs.
     /// 
-    /// Other than error handling, this method is identical to [`fill_bytes`], and
-    /// has a default implementation simply wrapping [`fill_bytes`].
+    /// Other than error handling, this method is identical to [`fill_bytes`];
+    /// thus this may be implemented using `Ok(self.fill_bytes(dest))` or
+    /// `fill_bytes` may be implemented with
+    /// `self.try_fill_bytes(dest).unwrap()` or more specific error handling.
     /// 
     /// [`fill_bytes`]: trait.RngCore.html#method.fill_bytes
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
@@ -166,12 +189,11 @@ pub trait CryptoRng: RngCore {}
 /// This trait encapsulates the low-level functionality common to all
 /// pseudo-random number generators (PRNGs, or algorithmic generators).
 /// 
-/// Normally users should use the [`NewRng`] extension trait, excepting when a
-/// fixed seed must be used, in which case usage of [`SeedableRng::from_seed`]
-/// is recommended.
+/// [rand]'s [`NewRng`] trait is automatically implemented for every type
+/// implementing `SeedableRng`, providing a convenient `new()` method.
 /// 
+/// [rand]: https://crates.io/crates/rand
 /// [`NewRng`]: https://docs.rs/rand/0.5/rand/trait.NewRng.html
-/// [`SeedableRng::from_seed`]: #tymethod.from_seed
 pub trait SeedableRng: Sized {
     /// Seed type, which is restricted to types mutably-dereferencable as `u8`
     /// arrays (we recommend `[u8; N]` for some `N`).
@@ -196,7 +218,8 @@ pub trait SeedableRng: Sized {
     ///
     /// It is however not required that this function yield the same state as a
     /// reference implementation of the PRNG given equivalent seed; if necessary
-    /// another constructor can be used.
+    /// another constructor replicating behaviour from a reference
+    /// implementation can be added.
     fn from_seed(seed: Self::Seed) -> Self;
 
     /// Create a new PRNG seeded from another `Rng`.
