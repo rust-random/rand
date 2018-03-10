@@ -252,6 +252,10 @@ impl RngCore for Isaac64Rng {
             read_len += filled_u8;
         }
     }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
+    }
 }
 
 /// Creates a new ISAAC-64 random number generator.

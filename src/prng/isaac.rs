@@ -233,7 +233,6 @@ impl RngCore for IsaacRng {
         impls::next_u64_via_u32(self)
     }
 
-
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         let mut read_len = 0;
         while read_len < dest.len() {
@@ -248,6 +247,10 @@ impl RngCore for IsaacRng {
             self.index += consumed_u32 as u32;
             read_len += filled_u8;
         }
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
     }
 }
 
