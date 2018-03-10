@@ -103,12 +103,7 @@ pub trait RngCore {
     /// function is not implemented directly, the default implementation will
     /// generate values via `next_u32` in little-endian fashion, or this
     /// function can be implemented via `fill_bytes`.
-    ///
-    /// Types wrapping an inner RNG must not use the default implementation,
-    /// since the inner RNG's implementation may produce different values.
-    fn next_u64(&mut self) -> u64 {
-        impls::next_u64_via_u32(self)
-    }
+    fn next_u64(&mut self) -> u64;
 
     /// Fill `dest` with random data.
     ///
@@ -123,16 +118,11 @@ pub trait RngCore {
     /// a requirement of portability for reproducible generators which implies
     /// that any seedable generator must fix endianness when generating bytes.
     ///
-    /// Types wrapping an inner RNG must not use the default implementation,
-    /// since the inner RNG's implementation may produce different values.
-    ///
     /// This method should guarantee that `dest` is entirely filled
     /// with new data, and may panic if this is impossible
     /// (e.g. reading past the end of a file that is being used as the
     /// source of randomness).
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        impls::fill_bytes_via_u64(self, dest)
-    }
+    fn fill_bytes(&mut self, dest: &mut [u8]);
 
     /// Fill `dest` entirely with random data.
     ///
@@ -146,9 +136,7 @@ pub trait RngCore {
     /// has a default implementation simply wrapping [`fill_bytes`].
     /// 
     /// [`fill_bytes`]: trait.RngCore.html#method.fill_bytes
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
-    }
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
 
 /// A marker trait for an `Rng` which may be considered for use in

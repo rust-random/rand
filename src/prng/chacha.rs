@@ -11,7 +11,7 @@
 //! The ChaCha random number generator.
 
 use core::fmt;
-use rand_core::{RngCore, CryptoRng, SeedableRng, impls, le};
+use rand_core::{RngCore, CryptoRng, SeedableRng, Error, impls, le};
 
 const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
 const STATE_WORDS: usize = 16;
@@ -234,7 +234,6 @@ impl RngCore for ChaChaRng {
         impls::next_u64_via_u32(self)
     }
 
-
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         let mut read_len = 0;
         while read_len < dest.len() {
@@ -249,6 +248,10 @@ impl RngCore for ChaChaRng {
             self.index += consumed_u32;
             read_len += filled_u8;
         }
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
     }
 }
 

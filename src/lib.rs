@@ -894,6 +894,9 @@ mod test {
         fn fill_bytes(&mut self, dest: &mut [u8]) {
             self.inner.fill_bytes(dest)
         }
+        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            self.inner.try_fill_bytes(dest)
+        }
     }
 
     pub fn rng(seed: u64) -> TestRng<StdRng> {

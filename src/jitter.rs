@@ -777,6 +777,10 @@ impl RngCore for JitterRng {
         // themselves via `fill_bytes`.
         impls::fill_bytes_via_u32(self, dest)
     }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
+    }
 }
 
 impl CryptoRng for JitterRng {}
