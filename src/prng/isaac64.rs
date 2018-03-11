@@ -481,11 +481,11 @@ mod test {
 
         let buf: Vec<u8> = Vec::new();
         let mut buf = BufWriter::new(buf);
-        bincode::serialize_into(&mut buf, &rng, bincode::Infinite).expect("Could not serialize");
+        bincode::serialize_into(&mut buf, &rng).expect("Could not serialize");
 
         let buf = buf.into_inner().unwrap();
         let mut read = BufReader::new(&buf[..]);
-        let mut deserialized: Isaac64Rng = bincode::deserialize_from(&mut read, bincode::Infinite).expect("Could not deserialize");
+        let mut deserialized: Isaac64Rng = bincode::deserialize_from(&mut read).expect("Could not deserialize");
 
         assert_eq!(rng.index, deserialized.index);
         assert_eq!(rng.half_used, deserialized.half_used);
