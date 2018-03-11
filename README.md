@@ -1,4 +1,4 @@
-rand
+Rand
 ====
 
 A Rust library for random number generators and other randomness functionality.
@@ -23,15 +23,26 @@ and this to your crate root:
 extern crate rand;
 ```
 
-### Versions and Rustc requirements
+## Versions
 
-Version `0.4`was released in December 2017. It contains almost no breaking
-changes since the `0.3` series, but nevertheless contains some significant
-new code, including a new "external" entropy source (`JitterRng`) and `no_std`
-support. Both 0.3 and 0.4 require **Rustc version 1.15 or greater**.
+Version 0.5 is in development and contains many breaking changes; expected
+release date is approx. end of March 2018 if all goes well.
 
-Version `0.5` is in development and will contain significant breaking changes.
-It requires **Rustc version 1.22 or greater**.
+Version 0.4 was released in December 2017. It contains almost no breaking
+changes since the 0.3 series.
+
+For more details, see the [changelog](CHANGELOG.md).
+
+### Rust version requirements
+
+The 0.5 release of Rand will require **Rustc version 1.22 or greater**.
+Rand 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
+greater. Subsets of the Rand code may work with older Rust versions, but this
+is not supported.
+
+Travis CI always has a build with a pinned version of Rustc matching the oldest
+supported Rust release. The current policy is that this can be updated in any
+Rand release if required, but the change must be noted in the changelog.
 
 ## Examples
 
@@ -62,7 +73,7 @@ println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
 
 ## Features
 
-By default, `rand` is built with all stable features available. The following
+By default, Rand is built with all stable features available. The following
 optional features are available:
 
 -   `alloc` can be used instead of `std` to provide `Vec` and `Box`
@@ -88,7 +99,7 @@ Unfortunately, `cargo test` does not test everything. The following tests are
 recommended:
 
 ```
-# Basic tests for rand and sub-crates
+# Basic tests for Rand and sub-crates
 cargo test --all
 
 # Test no_std support
@@ -111,7 +122,7 @@ cargo test --benches
 
 # License
 
-`rand` is primarily distributed under the terms of both the MIT
+Rand is distributed under the terms of both the MIT
 license and the Apache License (Version 2.0).
 
-See LICENSE-APACHE, and LICENSE-MIT for details.
+See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
