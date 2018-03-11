@@ -41,7 +41,7 @@ serde_derive = {version="1", optional=true}
 # This is for testing serde, unfortunately
 # we can't specify feature-gated dev deps yet,
 # see: https://github.com/rust-lang/cargo/issues/1596
-bincode = "0.9"
+bincode = "1.0"
 
 [target.'cfg(target_os = "cloudabi")'.dependencies]
 cloudabi = "0.0.3"
