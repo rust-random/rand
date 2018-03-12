@@ -49,10 +49,11 @@ macro_rules! float_impls {
             ///
             /// # Example
             /// ```rust
-            /// use rand::{weak_rng, Rng};
+            /// use rand::{SeedableRng, SmallRng, Rng, thread_rng};
             /// use rand::distributions::Uniform;
             ///
-            /// let val: f32 = weak_rng().sample(Uniform);
+            /// let val: f32 = SmallRng::from_rng(&mut thread_rng())
+            ///     .unwrap().sample(Uniform);
             /// println!("f32 from (0,1): {}", val);
             /// ```
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {

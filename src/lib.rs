@@ -1085,20 +1085,58 @@ impl SeedableRng for StdRng {
     }
 }
 
-/// Create a weak random number generator with a default algorithm and seed.
+/// An RNG recommended when small state, cheap initialization and good
+/// performance are required. The PRNG algorithm in `SmallRng` is choosen to be
+/// efficient on the current platform, without consideration for cryptography or
+/// security. The size of its state is much smaller than for `StdRng`.
 ///
-/// It returns the fastest `Rng` algorithm currently available in Rust without
-/// consideration for cryptography or security. If you require a specifically
-/// seeded `Rng` for consistency over time you should pick one algorithm and
-/// create the `Rng` yourself.
+/// Reproducibility of output from this generator is however not required, thus
+/// future library versions may use a different internal generator with
+/// different output. Further, this generator may not be portable and can
+/// produce different output depending on the architecture. If you require
+/// reproducible output, use a named RNG, for example `XorShiftRng`.
 ///
-/// This will seed the generator with randomness from thread_rng.
-#[cfg(feature="std")]
-pub fn weak_rng() -> XorShiftRng {
-    XorShiftRng::from_rng(&mut thread_rng()).unwrap_or_else(|err|
-        panic!("weak_rng failed: {:?}", err))
+/// The current algorithm used on all platforms is [Xorshift].
+///
+/// ```
+/// use rand::{SeedableRng, SmallRng, thread_rng};
+///
+/// let _rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+/// ```
+///
+/// [Xorshift]: struct.XorShiftRng.html
+#[derive(Clone, Debug)]
+pub struct SmallRng(XorShiftRng);
+
+impl RngCore for SmallRng {
+    fn next_u32(&mut self) -> u32 {
+        self.0.next_u32()
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        self.0.next_u64()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.0.fill_bytes(dest);
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.0.try_fill_bytes(dest)
+    }
 }
 
+impl SeedableRng for SmallRng {
+    type Seed = <XorShiftRng as SeedableRng>::Seed;
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        SmallRng(XorShiftRng::from_seed(seed))
+    }
+
+    fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, Error> {
+        XorShiftRng::from_rng(rng).map(|rng| SmallRng(rng))
+    }
+}
 
 /// DEPRECATED: use `seq::sample_iter` instead.
 ///

@@ -30,10 +30,11 @@ use distributions::{ziggurat, ziggurat_tables, Distribution};
 ///
 /// # Example
 /// ```rust
-/// use rand::{weak_rng, Rng};
+/// use rand::{SeedableRng, SmallRng, Rng, thread_rng};
 /// use rand::distributions::Exp1;
 ///
-/// let val: f64 = weak_rng().sample(Exp1);
+/// let val: f64 = SmallRng::from_rng(&mut thread_rng())
+///     .unwrap().sample(Exp1);
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
