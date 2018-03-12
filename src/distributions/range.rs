@@ -335,7 +335,7 @@ range_int_impl! { usize, isize, usize, isize, usize }
 range_int_impl! { u128, u128, u128, i128, u128 }
 
 
-trait WideningMultiply<RHS = Self> {
+pub(crate) trait WideningMultiply<RHS = Self> {
     type Output;
 
     fn wmul(self, x: RHS) -> Self::Output;
