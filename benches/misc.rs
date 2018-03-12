@@ -37,12 +37,12 @@ fn misc_gen_bool_var(b: &mut Bencher) {
 }
 
 #[bench]
-fn misc_shuffle_100(b: &mut Bencher) {
+fn misc_shuffle_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
-    let x : &mut [usize] = &mut [1; 100];
+    let x: &mut [u32] = &mut [0; 1000];
     b.iter(|| {
         rng.shuffle(x);
-        black_box(&x);
+        black_box(x[0]);
     })
 }
 
