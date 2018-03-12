@@ -1139,6 +1139,23 @@ impl SeedableRng for SmallRng {
     }
 }
 
+/// DEPRECATED: use `SmallRng` instead.
+///
+/// Create a weak random number generator with a default algorithm and seed.
+///
+/// It returns the fastest `Rng` algorithm currently available in Rust without
+/// consideration for cryptography or security. If you require a specifically
+/// seeded `Rng` for consistency over time you should pick one algorithm and
+/// create the `Rng` yourself.
+///
+/// This will seed the generator with randomness from thread_rng.
+#[deprecated(since="0.5.0", note="removed in favor of SmallRng")]
+#[cfg(feature="std")]
+pub fn weak_rng() -> XorShiftRng {
+    XorShiftRng::from_rng(&mut thread_rng()).unwrap_or_else(|err|
+        panic!("weak_rng failed: {:?}", err))
+}
+
 /// DEPRECATED: use `seq::sample_iter` instead.
 ///
 /// Randomly sample up to `amount` elements from a finite iterator.
