@@ -284,6 +284,7 @@ pub use error::{ErrorKind, Error};
 // convenience and derived rngs
 #[cfg(feature="std")] pub use entropy_rng::EntropyRng;
 #[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng};
+#[cfg(feature="std")] #[allow(deprecated)] pub use thread_rng::random;
 
 use distributions::{Distribution, Uniform, Range};
 use distributions::range::SampleRange;
