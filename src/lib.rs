@@ -10,12 +10,11 @@
 
 //! Utilities for random number generation
 //!
-//! The key functions are `random()` and `Rng::gen()`. These are polymorphic and
-//! so can be used to generate any type supporting the [`Uniform`] distribution
-//! (i.e. `T` where `Uniform`: `Distribution<T>`). Type inference
-//! means that often a simple call to `rand::random()` or `rng.gen()` will
-//! suffice, but sometimes an annotation is required, e.g.
-//! `rand::random::<f64>()`.
+//! The key function is `Rng::gen()`. It is polymorphic and so can be used to
+//! generate any type supporting the [`Uniform`] distribution (i.e. `T` where
+//! `Uniform`: `Distribution<T>`). Type inference means that often a simple call
+//! to `rng.gen()` will suffice, but sometimes an annotation is required, e.g.
+//! `rng.gen::<f64>()`.
 //!
 //! See the `distributions` submodule for sampling random numbers from
 //! distributions like normal and exponential.
@@ -86,11 +85,6 @@
 //! if rng.gen() { // random bool
 //!     println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
 //! }
-//! ```
-//!
-//! ```rust
-//! let tuple = rand::random::<(f64, char)>();
-//! println!("{:?}", tuple)
 //! ```
 //!
 //! ## Monte Carlo estimation of π
@@ -289,7 +283,7 @@ pub use error::{ErrorKind, Error};
 
 // convenience and derived rngs
 #[cfg(feature="std")] pub use entropy_rng::EntropyRng;
-#[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng, random};
+#[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng};
 
 use distributions::{Distribution, Uniform, Range};
 use distributions::range::SampleRange;
