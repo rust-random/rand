@@ -1088,8 +1088,8 @@ impl SeedableRng for StdRng {
 
 /// An RNG recommended when small state, cheap initialization and good
 /// performance are required. The PRNG algorithm in `SmallRng` is choosen to be
-/// efficient on the current platform, without consideration for cryptography or
-/// security. The size of its state is much smaller than for `StdRng`.
+/// efficient on the current platform, **without consideration for cryptography
+/// or security**. The size of its state is much smaller than for `StdRng`.
 ///
 /// Reproducibility of output from this generator is however not required, thus
 /// future library versions may use a different internal generator with
@@ -1099,10 +1099,30 @@ impl SeedableRng for StdRng {
 ///
 /// The current algorithm used on all platforms is [Xorshift].
 ///
+/// # Examples
+///
+/// Initializing `StdRng` with a random seed can be done using `NewRng`:
+///
+/// ```
+/// use rand::{NewRng, SmallRng};
+///
+/// // Create small, cheap to initialize and fast RNG with a random seed.
+/// // The randomness is supplied by the operating system.
+/// let mut small_rng = SmallRng::new().unwrap();
+/// ```
+///
+/// When initializing a lot of `SmallRng`, using `thread_rng` can be more
+/// efficient:
+///
 /// ```
 /// use rand::{SeedableRng, SmallRng, thread_rng};
 ///
-/// let _rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+/// // Create a big, expensive to initialize and slower, but unpredictable RNG.
+/// // This is cached and done only once per thread.
+/// let mut thread_rng = thread_rng();
+/// // Create small, cheap to initialize and fast RNG with a random seed.
+/// // This is very unlikely to fail.
+/// let mut small_rng = SmallRng::from_rng(&mut thread_rng).unwrap();
 /// ```
 ///
 /// [Xorshift]: struct.XorShiftRng.html

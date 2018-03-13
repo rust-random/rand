@@ -163,11 +163,10 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///
 /// # Example
 /// ```rust
-/// use rand::{SeedableRng, SmallRng, Rng, thread_rng};
+/// use rand::{NewRng, SmallRng, Rng};
 /// use rand::distributions::Uniform;
 ///
-/// let val: f32 = SmallRng::from_rng(&mut thread_rng())
-///     .unwrap().sample(Uniform);
+/// let val: f32 = SmallRng::new().unwrap().sample(Uniform);
 /// println!("f32 from [0,1): {}", val);
 /// ```
 ///
