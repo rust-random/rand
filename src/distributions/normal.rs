@@ -28,11 +28,10 @@ use distributions::{ziggurat, ziggurat_tables, Distribution, Uniform};
 ///
 /// # Example
 /// ```rust
-/// use rand::{SeedableRng, SmallRng, Rng, thread_rng};
+/// use rand::{NewRng, SmallRng, Rng};
 /// use rand::distributions::StandardNormal;
 ///
-/// let val: f64 = SmallRng::from_rng(&mut thread_rng())
-///     .unwrap().sample(StandardNormal);
+/// let val: f64 = SmallRng::new().unwrap().sample(StandardNormal);
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
