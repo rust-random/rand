@@ -1,7 +1,7 @@
 [package]
 
-name = "rand_derive"
-version = "0.3.1"
+name = "rand-derive"
+version = "0.5.0-pre.0"
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -9,15 +9,15 @@ repository = "https://github.com/rust-lang-nursery/rand"
 documentation = "https://docs.rs/rand_derive"
 homepage = "https://github.com/rust-lang-nursery/rand"
 description = """
-`#[derive(Rand)]` functionality for the `rand::Rand` trait.
+`#[derive(RngCore)]` functionality for the `RngCore` trait.
 """
 
 [lib]
 proc-macro = true
 
 [dependencies]
-quote = "0.3"
-syn = "0.11"
+quote = "0.4"
+syn = "0.12"
 
 [dev-dependencies]
-rand = { path = "..", version = "0.4" }
+rand = { path = ".." }
