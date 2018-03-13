@@ -10,12 +10,11 @@
 
 //! Utilities for random number generation
 //!
-//! The key functions are `random()` and `Rng::gen()`. These are polymorphic and
-//! so can be used to generate any type supporting the [`Uniform`] distribution
-//! (i.e. `T` where `Uniform`: `Distribution<T>`). Type inference
-//! means that often a simple call to `rand::random()` or `rng.gen()` will
-//! suffice, but sometimes an annotation is required, e.g.
-//! `rand::random::<f64>()`.
+//! The key function is `Rng::gen()`. It is polymorphic and so can be used to
+//! generate any type supporting the [`Uniform`] distribution (i.e. `T` where
+//! `Uniform`: `Distribution<T>`). Type inference means that often a simple call
+//! to `rng.gen()` will suffice, but sometimes an annotation is required, e.g.
+//! `rng.gen::<f64>()`.
 //!
 //! See the `distributions` submodule for sampling random numbers from
 //! distributions like normal and exponential.
@@ -86,11 +85,6 @@
 //! if rng.gen() { // random bool
 //!     println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
 //! }
-//! ```
-//!
-//! ```rust
-//! let tuple = rand::random::<(f64, char)>();
-//! println!("{:?}", tuple)
 //! ```
 //!
 //! ## Monte Carlo estimation of π
@@ -289,7 +283,8 @@ pub use error::{ErrorKind, Error};
 
 // convenience and derived rngs
 #[cfg(feature="std")] pub use entropy_rng::EntropyRng;
-#[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng, random};
+#[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng};
+#[cfg(feature="std")] #[allow(deprecated)] pub use thread_rng::random;
 
 use distributions::{Distribution, Uniform, Range};
 use distributions::range::SampleRange;
@@ -1091,6 +1086,81 @@ impl SeedableRng for StdRng {
     }
 }
 
+/// An RNG recommended when small state, cheap initialization and good
+/// performance are required. The PRNG algorithm in `SmallRng` is choosen to be
+/// efficient on the current platform, **without consideration for cryptography
+/// or security**. The size of its state is much smaller than for `StdRng`.
+///
+/// Reproducibility of output from this generator is however not required, thus
+/// future library versions may use a different internal generator with
+/// different output. Further, this generator may not be portable and can
+/// produce different output depending on the architecture. If you require
+/// reproducible output, use a named RNG, for example `XorShiftRng`.
+///
+/// The current algorithm used on all platforms is [Xorshift].
+///
+/// # Examples
+///
+/// Initializing `StdRng` with a random seed can be done using `NewRng`:
+///
+/// ```
+/// use rand::{NewRng, SmallRng};
+///
+/// // Create small, cheap to initialize and fast RNG with a random seed.
+/// // The randomness is supplied by the operating system.
+/// let mut small_rng = SmallRng::new().unwrap();
+/// ```
+///
+/// When initializing a lot of `SmallRng`, using `thread_rng` can be more
+/// efficient:
+///
+/// ```
+/// use rand::{SeedableRng, SmallRng, thread_rng};
+///
+/// // Create a big, expensive to initialize and slower, but unpredictable RNG.
+/// // This is cached and done only once per thread.
+/// let mut thread_rng = thread_rng();
+/// // Create small, cheap to initialize and fast RNG with a random seed.
+/// // This is very unlikely to fail.
+/// let mut small_rng = SmallRng::from_rng(&mut thread_rng).unwrap();
+/// ```
+///
+/// [Xorshift]: struct.XorShiftRng.html
+#[derive(Clone, Debug)]
+pub struct SmallRng(XorShiftRng);
+
+impl RngCore for SmallRng {
+    fn next_u32(&mut self) -> u32 {
+        self.0.next_u32()
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        self.0.next_u64()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.0.fill_bytes(dest);
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.0.try_fill_bytes(dest)
+    }
+}
+
+impl SeedableRng for SmallRng {
+    type Seed = <XorShiftRng as SeedableRng>::Seed;
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        SmallRng(XorShiftRng::from_seed(seed))
+    }
+
+    fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, Error> {
+        XorShiftRng::from_rng(rng).map(|rng| SmallRng(rng))
+    }
+}
+
+/// DEPRECATED: use `SmallRng` instead.
+///
 /// Create a weak random number generator with a default algorithm and seed.
 ///
 /// It returns the fastest `Rng` algorithm currently available in Rust without
@@ -1099,12 +1169,12 @@ impl SeedableRng for StdRng {
 /// create the `Rng` yourself.
 ///
 /// This will seed the generator with randomness from thread_rng.
+#[deprecated(since="0.5.0", note="removed in favor of SmallRng")]
 #[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
     XorShiftRng::from_rng(&mut thread_rng()).unwrap_or_else(|err|
         panic!("weak_rng failed: {:?}", err))
 }
-
 
 /// DEPRECATED: use `seq::sample_iter` instead.
 ///
