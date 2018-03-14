@@ -286,6 +286,8 @@ impl SeedableRng for ChaChaCore {
     }
 }
 
+impl CryptoRng for ChaChaCore {}
+
 #[cfg(test)]
 mod test {
     use {RngCore, SeedableRng};
