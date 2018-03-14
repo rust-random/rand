@@ -12,7 +12,7 @@
 
 use std::io::Read;
 
-use {RngCore, Error, ErrorKind, impls};
+use rand_core::{RngCore, Error, ErrorKind, impls};
 
 
 /// An RNG that reads random bytes straight from a `Read`. This will

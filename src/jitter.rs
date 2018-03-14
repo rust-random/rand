@@ -16,7 +16,7 @@
 
 //! Non-physical true random number generator based on timing jitter.
 
-use {RngCore, CryptoRng, Error, ErrorKind, impls};
+use rand_core::{RngCore, CryptoRng, Error, ErrorKind, impls};
 
 use core::{fmt, mem, ptr};
 #[cfg(feature="std")]
@@ -776,6 +776,10 @@ impl RngCore for JitterRng {
         // This is done especially for wrappers that implement `next_u32`
         // themselves via `fill_bytes`.
         impls::fill_bytes_via_u32(self, dest)
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
     }
 }
 
