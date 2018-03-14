@@ -114,7 +114,7 @@ impl fmt::Debug for Hc128Core {
 impl BlockRngCore<u32> for Hc128Core {
     type Results = [u32; 16];
 
-    fn generate(&mut self, results: &mut Self::Results) -> Result<(), Error> {
+    fn generate(&mut self, results: &mut Self::Results) {
         assert!(self.counter1024 % 16 == 0);
 
         let cc = self.counter1024 % 512;
@@ -159,7 +159,6 @@ impl BlockRngCore<u32> for Hc128Core {
             results[15] = self.step_q(cc+15, dd+0,  cc+12, cc+5,  cc+3);
         }
         self.counter1024 = self.counter1024.wrapping_add(16);
-        Ok(())
     }
 }
 

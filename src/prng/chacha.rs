@@ -222,7 +222,7 @@ macro_rules! double_round{
 impl BlockRngCore<u32> for ChaChaCore {
     type Results = [u32; STATE_WORDS];
 
-    fn generate(&mut self, results: &mut Self::Results) -> Result<(), Error> {
+    fn generate(&mut self, results: &mut Self::Results) {
         // For some reason extracting this part into a separate function
         // improves performance by 50%.
         fn core(results: &mut [u32; STATE_WORDS],
@@ -242,13 +242,12 @@ impl BlockRngCore<u32> for ChaChaCore {
 
         // update 128-bit counter
         self.state[12] = self.state[12].wrapping_add(1);
-        if self.state[12] != 0 { return Ok(()) };
+        if self.state[12] != 0 { return; };
         self.state[13] = self.state[13].wrapping_add(1);
-        if self.state[13] != 0 { return Ok(()) };
+        if self.state[13] != 0 { return; };
         self.state[14] = self.state[14].wrapping_add(1);
-        if self.state[14] != 0 { return Ok(()) };
+        if self.state[14] != 0 { return; };
         self.state[15] = self.state[15].wrapping_add(1);
-        Ok(())
     }
 }
 
