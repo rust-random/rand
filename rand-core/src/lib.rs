@@ -171,16 +171,7 @@ pub trait BlockRngCore<T>: Sized {
     type Results: AsRef<[T]> + Default;
 
     /// Generate a new block of results.
-    ///
-    /// The result type is unnecessary for PRNGs, which we assume to be
-    /// infallible. It only has a signalling function, for example to report a
-    /// failed reseed, that the PRNG is used beyond its limits, or because it
-    /// 'noticed' some kind of interference (like fork protection).
-    ///
-    /// In all cases user code is allowed to ignore any errors from `generate`
-    /// and to expect the generator to keep working, even though it may not be
-    /// in the most ideal conditions.
-    fn generate(&mut self, results: &mut Self::Results) -> Result<(), Error>;
+    fn generate(&mut self, results: &mut Self::Results);
 }
 
 /// A marker trait for an `Rng` which may be considered for use in
