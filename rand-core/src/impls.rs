@@ -19,9 +19,6 @@
 //! to/from byte sequences, and since its purpose is reproducibility,
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
 
-// TODO: eventually these should be exported somehow
-#![allow(unused)]
-
 use core::intrinsics::transmute;
 use core::ptr::copy_nonoverlapping;
 use core::slice;

@@ -13,8 +13,7 @@
 use core::{fmt, slice};
 use core::num::Wrapping as w;
 
-use {RngCore, SeedableRng, Error};
-use {impls, le};
+use rand_core::{RngCore, SeedableRng, Error, impls, le};
 
 #[allow(non_camel_case_types)]
 type w64 = w<u64>;
@@ -252,6 +251,10 @@ impl RngCore for Isaac64Rng {
             self.index += consumed_u64 as u32;
             read_len += filled_u8;
         }
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
     }
 }
 

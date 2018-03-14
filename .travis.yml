@@ -12,25 +12,26 @@ matrix:
       install:
       script:
         - cargo test --all --tests --no-default-features
-        - cargo test --all --features serde-1,log
+        - cargo test --features serde-1,log
     - rust: stable
       os: osx
       install:
       script:
         - cargo test --all --tests --no-default-features
-        - cargo test --all --features serde-1,log
+        - cargo test --features serde-1,log
     - rust: beta
       install:
       script:
         - cargo test --all --tests --no-default-features
+        - cargo test --tests --no-default-features --features=serde-1
     - rust: nightly
       install:
       before_script:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
-        - cargo test --tests --no-default-features --features=alloc
+        - cargo test --all --tests --no-default-features --features=alloc
         - cargo test --all --features=alloc
-        - cargo test --all --features serde-1,log,nightly
+        - cargo test --features serde-1,log,nightly
         - cargo test --benches
         - cargo doc --no-deps --all-features
       after_success:

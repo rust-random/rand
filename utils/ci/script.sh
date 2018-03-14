@@ -4,21 +4,20 @@ set -ex
 
 main() {
     if [ ! -z $DISABLE_TESTS ]; then
-        if [ ! -z $DISABLE_STD ]; then
-            cross build --all --no-default-features --target $TARGET --release
-        else
-            cross build --all --features log,serde-1 --target $TARGET
+        cross build --all --no-default-features --target $TARGET --release
+        if [ -z $DISABLE_STD ]; then
+            cross build --features log,serde-1 --target $TARGET
         fi
         return
     fi
 
     if [ ! -z $NIGHTLY ]; then
         cross test --all --tests --no-default-features --features alloc --target $TARGET
-        cross test --all --features serde-1,log,nightly --target $TARGET
+        cross test --features serde-1,log,nightly --target $TARGET
         cross test --all --benches --target $TARGET
     else
         cross test --all --tests --no-default-features --target $TARGET
-        cross test --all --features serde-1,log --target $TARGET
+        cross test --features serde-1,log --target $TARGET
     fi
 }
 

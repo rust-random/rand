@@ -11,8 +11,7 @@
 //! The HC-128 random number generator.
 
 use core::fmt;
-use {RngCore, CryptoRng, SeedableRng};
-use {impls, le};
+use rand_core::{RngCore, CryptoRng, SeedableRng, Error, impls, le};
 
 const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 
@@ -391,6 +390,10 @@ impl RngCore for Hc128Rng {
             self.index += consumed_u32;
             read_len += filled_u8;
         }
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
     }
 }
 

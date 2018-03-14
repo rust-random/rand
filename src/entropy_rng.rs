@@ -10,7 +10,7 @@
 
 //! Entropy generator, or wrapper around external generators
 
-use {RngCore, Error, impls};
+use rand_core::{RngCore, Error, impls};
 use {OsRng, JitterRng};
 
 /// An RNG provided specifically for seeding PRNGs.
