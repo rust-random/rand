@@ -14,10 +14,10 @@ use rand::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 use rand::reseeding::ReseedingRng;
 
 macro_rules! gen_bytes {
-    ($fnn:ident, $gen:ident) => {
+    ($fnn:ident, $gen:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = $gen::new().unwrap();
+            let mut rng = $gen;
             let mut buf = [0u8; BYTES_LEN];
             b.iter(|| {
                 for _ in 0..RAND_BENCH_N {
@@ -30,18 +30,18 @@ macro_rules! gen_bytes {
     }
 }
 
-gen_bytes!(gen_bytes_xorshift, XorShiftRng);
-gen_bytes!(gen_bytes_hc128, Hc128Rng);
-gen_bytes!(gen_bytes_isaac, IsaacRng);
-gen_bytes!(gen_bytes_isaac64, Isaac64Rng);
-gen_bytes!(gen_bytes_std, StdRng);
-gen_bytes!(gen_bytes_os, OsRng);
+gen_bytes!(gen_bytes_xorshift, XorShiftRng::new());
+gen_bytes!(gen_bytes_hc128, Hc128Rng::new());
+gen_bytes!(gen_bytes_isaac, IsaacRng::new());
+gen_bytes!(gen_bytes_isaac64, Isaac64Rng::new());
+gen_bytes!(gen_bytes_std, StdRng::new());
+gen_bytes!(gen_bytes_os, OsRng::new().unwrap());
 
 macro_rules! gen_uint {
-    ($fnn:ident, $ty:ty, $gen:ident) => {
+    ($fnn:ident, $ty:ty, $gen:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = $gen::new().unwrap();
+            let mut rng = $gen;
             b.iter(|| {
                 for _ in 0..RAND_BENCH_N {
                     black_box(rng.gen::<$ty>());
@@ -52,19 +52,19 @@ macro_rules! gen_uint {
     }
 }
 
-gen_uint!(gen_u32_xorshift, u32, XorShiftRng);
-gen_uint!(gen_u32_hc128, u32, Hc128Rng);
-gen_uint!(gen_u32_isaac, u32, IsaacRng);
-gen_uint!(gen_u32_isaac64, u32, Isaac64Rng);
-gen_uint!(gen_u32_std, u32, StdRng);
-gen_uint!(gen_u32_os, u32, OsRng);
+gen_uint!(gen_u32_xorshift, u32, XorShiftRng::new());
+gen_uint!(gen_u32_hc128, u32, Hc128Rng::new());
+gen_uint!(gen_u32_isaac, u32, IsaacRng::new());
+gen_uint!(gen_u32_isaac64, u32, Isaac64Rng::new());
+gen_uint!(gen_u32_std, u32, StdRng::new());
+gen_uint!(gen_u32_os, u32, OsRng::new().unwrap());
 
-gen_uint!(gen_u64_xorshift, u64, XorShiftRng);
-gen_uint!(gen_u64_hc128, u64, Hc128Rng);
-gen_uint!(gen_u64_isaac, u64, IsaacRng);
-gen_uint!(gen_u64_isaac64, u64, Isaac64Rng);
-gen_uint!(gen_u64_std, u64, StdRng);
-gen_uint!(gen_u64_os, u64, OsRng);
+gen_uint!(gen_u64_xorshift, u64, XorShiftRng::new());
+gen_uint!(gen_u64_hc128, u64, Hc128Rng::new());
+gen_uint!(gen_u64_isaac, u64, IsaacRng::new());
+gen_uint!(gen_u64_isaac64, u64, Isaac64Rng::new());
+gen_uint!(gen_u64_std, u64, StdRng::new());
+gen_uint!(gen_u64_os, u64, OsRng::new().unwrap());
 
 // Do not test JitterRng like the others by running it RAND_BENCH_N times per,
 // measurement, because it is way too slow. Only run it once.
@@ -81,7 +81,7 @@ macro_rules! init_gen {
     ($fnn:ident, $gen:ident) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::new().unwrap();
+            let mut rng = XorShiftRng::new();
             b.iter(|| {
                 let r2 = $gen::from_rng(&mut rng).unwrap();
                 black_box(r2);
@@ -107,7 +107,7 @@ macro_rules! chacha_rounds {
     ($fn1:ident, $fn2:ident, $fn3:ident, $rounds:expr) => {
         #[bench]
         fn $fn1(b: &mut Bencher) {
-            let mut rng = ChaChaRng::new().unwrap();
+            let mut rng = ChaChaRng::new();
             rng.set_rounds($rounds);
             let mut buf = [0u8; BYTES_LEN];
             b.iter(|| {
@@ -121,7 +121,7 @@ macro_rules! chacha_rounds {
 
         #[bench]
         fn $fn2(b: &mut Bencher) {
-            let mut rng = ChaChaRng::new().unwrap();
+            let mut rng = ChaChaRng::new();
             rng.set_rounds($rounds);
             b.iter(|| {
                 for _ in 0..RAND_BENCH_N {
@@ -133,7 +133,7 @@ macro_rules! chacha_rounds {
 
         #[bench]
         fn $fn3(b: &mut Bencher) {
-            let mut rng = ChaChaRng::new().unwrap();
+            let mut rng = ChaChaRng::new();
             rng.set_rounds($rounds);
             b.iter(|| {
                 for _ in 0..RAND_BENCH_N {
@@ -152,7 +152,7 @@ chacha_rounds!(gen_bytes_chacha20, gen_u32_chacha20, gen_u64_chacha20, 20);
 
 #[bench]
 fn reseeding_hc128_bytes(b: &mut Bencher) {
-    let mut rng = ReseedingRng::new(Hc128Rng::new().unwrap(),
+    let mut rng = ReseedingRng::new(Hc128Rng::new(),
                                     128*1024*1024,
                                     EntropyRng::new());
     let mut buf = [0u8; BYTES_LEN];
@@ -169,7 +169,7 @@ macro_rules! reseeding_uint {
     ($fnn:ident, $ty:ty) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = ReseedingRng::new(Hc128Rng::new().unwrap(),
+            let mut rng = ReseedingRng::new(Hc128Rng::new(),
                                             128*1024*1024,
                                             EntropyRng::new());
             b.iter(|| {
