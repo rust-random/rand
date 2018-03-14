@@ -203,7 +203,7 @@ pub trait BlockRngCore<T>: Sized {
 /// 
 /// Note also that use of a `CryptoRng` does not protect against other
 /// weaknesses such as seeding from a weak entropy source or leaking state.
-pub trait CryptoRng: RngCore {}
+pub trait CryptoRng {}
 
 /// A random number generator that can be explicitly seeded.
 ///

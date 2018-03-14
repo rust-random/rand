@@ -96,6 +96,8 @@ impl SeedableRng for Hc128Rng {
     }
 }
 
+impl CryptoRng for Hc128Rng {}
+
 #[derive(Clone)]
 pub struct Hc128Core {
     t: [u32; 1024],
@@ -309,8 +311,6 @@ impl Hc128Core {
     }
 }
 
-impl CryptoRng for Hc128Rng {}
-
 impl SeedableRng for Hc128Core {
     type Seed = [u8; SEED_WORDS*4];
 
@@ -323,6 +323,8 @@ impl SeedableRng for Hc128Core {
         Self::init(seed_u32)
     }
 }
+
+impl CryptoRng for Hc128Core {}
 
 #[cfg(test)]
 mod test {

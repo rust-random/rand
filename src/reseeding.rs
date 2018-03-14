@@ -11,7 +11,7 @@
 //! A wrapper around another PRNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use rand_core::{RngCore, BlockRngCore, SeedableRng, Error, ErrorKind};
+use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng, Error, ErrorKind};
 use rand_core::impls::BlockRng;
 
 /// A wrapper around any PRNG which reseeds the underlying PRNG after it has
@@ -117,6 +117,10 @@ impl<R: BlockRngCore<u32> + SeedableRng, Rsdr: RngCore> RngCore for ReseedingRng
     }
 }
 
+impl<R, Rsdr> CryptoRng for ReseedingRng<R, Rsdr>
+where R: BlockRngCore<u32> + SeedableRng + CryptoRng,
+      Rsdr: RngCore + CryptoRng {}
+
 #[derive(Debug)]
 struct ReseedingCore<R, Rsdr> {
     inner: R,
@@ -196,6 +200,10 @@ where R: BlockRngCore<u32> + SeedableRng,
         if res2.is_err() { res2 } else { res1 }
     }
 }
+
+impl<R, Rsdr> CryptoRng for ReseedingCore<R, Rsdr>
+where R: BlockRngCore<u32> + SeedableRng + CryptoRng,
+      Rsdr: RngCore + CryptoRng {}
 
 #[cfg(test)]
 mod test {
