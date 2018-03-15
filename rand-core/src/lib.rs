@@ -200,10 +200,13 @@ pub trait RngCore {
 /// // Final RNG.
 /// type MyRng = BlockRng<u32, MyRngCore>;
 /// ```
-pub trait BlockRngCore<T>: Sized {
+pub trait BlockRngCore: Sized {
+    /// Results element type, e.g. `u32`.
+    type Item;
+    
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u32; 16]`.
-    type Results: AsRef<[T]> + Default;
+    type Results: AsRef<[Self::Item]> + Default;
 
     /// Generate a new block of results.
     fn generate(&mut self, results: &mut Self::Results);
