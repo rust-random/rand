@@ -768,10 +768,25 @@ pub trait NewRng: SeedableRng {
     ///
     /// Normally this will use `OsRng`, but if that fails `JitterRng` will be
     /// used instead. Both should be suitable for cryptography. It is possible
-    /// that both entropy sources will fail though unlikely.
+    /// that both entropy sources will fail though unlikely; failures would
+    /// almost certainly be platform limitations or build issues, i.e. most
+    /// applications targetting PC/mobile platforms should not need to worry
+    /// about this failing.
     /// 
-    /// Panics on error. If error handling is desired, use
-    /// `RNG::from_rng(&mut EntropyRng::new())` instead.
+    /// If all entropy sources fail this will panic. If you need to handle
+    /// errors, use the following code, equivalent aside from error handling:
+    /// 
+    /// ```rust
+    /// use rand::{Rng, StdRng, EntropyRng, SeedableRng, Error};
+    /// 
+    /// fn foo() -> Result<(), Error> {
+    ///     // This uses StdRng, but is valid for any R: SeedableRng
+    ///     let mut rng = StdRng::from_rng(&mut EntropyRng::new())?;
+    ///     
+    ///     println!("random number: {}", rng.gen_range(1, 10));
+    ///     Ok(())
+    /// }
+    /// ```
     fn new() -> Self;
 }
 
