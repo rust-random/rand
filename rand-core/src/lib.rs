@@ -200,7 +200,7 @@ pub trait RngCore {
 /// // Final RNG.
 /// type MyRng = BlockRng<u32, MyRngCore>;
 /// ```
-pub trait BlockRngCore: Sized {
+pub trait BlockRngCore {
     /// Results element type, e.g. `u32`.
     type Item;
     
