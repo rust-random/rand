@@ -162,6 +162,18 @@ pub trait RngCore {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
 
+/// Trait for RNGs that do not generate random numbers one at a time, but in
+/// blocks. Especially for cryptographic RNG's it is common to generate 16 or
+/// more results at a time.
+pub trait BlockRngCore<T>: Sized {
+    /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
+    /// generates, which will usually be an array like `[u32; 16]`.
+    type Results: AsRef<[T]> + Default;
+
+    /// Generate a new block of results.
+    fn generate(&mut self, results: &mut Self::Results);
+}
+
 /// A marker trait for an `Rng` which may be considered for use in
 /// cryptography.
 /// 
@@ -182,7 +194,7 @@ pub trait RngCore {
 /// 
 /// Note also that use of a `CryptoRng` does not protect against other
 /// weaknesses such as seeding from a weak entropy source or leaking state.
-pub trait CryptoRng: RngCore {}
+pub trait CryptoRng {}
 
 /// A random number generator that can be explicitly seeded.
 ///
@@ -263,22 +275,20 @@ pub trait SeedableRng: Sized {
 
 
 impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
-    #[inline]
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
 
-    #[inline]
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
     }
 
-    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
     }
-    
-    #[inline]
+
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill_bytes(dest)
     }
@@ -286,22 +296,20 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
 
 #[cfg(any(feature="std", feature="alloc"))]
 impl<R: RngCore + ?Sized> RngCore for Box<R> {
-    #[inline]
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
 
-    #[inline]
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
     }
 
-    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
     }
-    
-    #[inline]
+
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill_bytes(dest)
     }
