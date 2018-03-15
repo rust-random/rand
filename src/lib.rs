@@ -756,7 +756,7 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 /// ```
 /// use rand::{StdRng, Rng, NewRng};
 ///
-/// let mut rng = StdRng::new().unwrap();
+/// let mut rng = StdRng::new();
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
@@ -769,13 +769,17 @@ pub trait NewRng: SeedableRng {
     /// Normally this will use `OsRng`, but if that fails `JitterRng` will be
     /// used instead. Both should be suitable for cryptography. It is possible
     /// that both entropy sources will fail though unlikely.
-    fn new() -> Result<Self, Error>;
+    /// 
+    /// Panics on error. If error handling is desired, use
+    /// `RNG::from_rng(&mut EntropyRng::new())` instead.
+    fn new() -> Self;
 }
 
 #[cfg(feature="std")]
 impl<R: SeedableRng> NewRng for R {
-    fn new() -> Result<Self, Error> {
-        R::from_rng(&mut EntropyRng::new())
+    fn new() -> R {
+        R::from_rng(&mut EntropyRng::new()).unwrap_or_else(|err|
+            panic!("NewRng::new() failed: {}", err))
     }
 }
 
@@ -847,7 +851,7 @@ impl SeedableRng for StdRng {
 ///
 /// // Create small, cheap to initialize and fast RNG with a random seed.
 /// // The randomness is supplied by the operating system.
-/// let mut small_rng = SmallRng::new().unwrap();
+/// let mut small_rng = SmallRng::new();
 /// ```
 ///
 /// When initializing a lot of `SmallRng`, using `thread_rng` can be more
