@@ -62,7 +62,7 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 /// [5]: Internet Engineering Task Force (Februari 2015),
 ///      ["Prohibiting RC4 Cipher Suites"](https://tools.ietf.org/html/rfc7465).
 #[derive(Clone, Debug)]
-pub struct Hc128Rng(BlockRng<u32, Hc128Core>);
+pub struct Hc128Rng(BlockRng<Hc128Core>);
 
 impl RngCore for Hc128Rng {
     #[inline(always)]
@@ -88,11 +88,11 @@ impl SeedableRng for Hc128Rng {
     type Seed = <Hc128Core as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        Hc128Rng(BlockRng::<u32, Hc128Core>::from_seed(seed))
+        Hc128Rng(BlockRng::<Hc128Core>::from_seed(seed))
     }
 
     fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
-        BlockRng::<u32, Hc128Core>::from_rng(rng).map(|rng| Hc128Rng(rng))
+        BlockRng::<Hc128Core>::from_rng(rng).map(|rng| Hc128Rng(rng))
     }
 }
 
@@ -112,7 +112,8 @@ impl fmt::Debug for Hc128Core {
     }
 }
 
-impl BlockRngCore<u32> for Hc128Core {
+impl BlockRngCore for Hc128Core {
+    type Item = u32;
     type Results = [u32; 16];
 
     fn generate(&mut self, results: &mut Self::Results) {

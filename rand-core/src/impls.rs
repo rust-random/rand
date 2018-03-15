@@ -19,6 +19,7 @@
 //! to/from byte sequences, and since its purpose is reproducibility,
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
 
+use core::convert::AsRef;
 use core::intrinsics::transmute;
 use core::ptr::copy_nonoverlapping;
 use core::{fmt, slice};
@@ -183,14 +184,14 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
 /// [`RngCore`]: ../RngCore.t.html
 /// [`SeedableRng`]: ../SeedableRng.t.html
 #[derive(Clone)]
-pub struct BlockRng<T, R: BlockRngCore<T>> {
+pub struct BlockRng<R: BlockRngCore> {
     pub core: R,
     pub results: R::Results,
     pub index: usize,
 }
 
 // Custom Debug implementation that does not expose the contents of `results`.
-impl<T, R: BlockRngCore<T> + fmt::Debug> fmt::Debug for BlockRng<T, R> {
+impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng<R> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("BlockRng")
            .field("core", &self.core)
@@ -200,7 +201,9 @@ impl<T, R: BlockRngCore<T> + fmt::Debug> fmt::Debug for BlockRng<T, R> {
     }
 }
 
-impl<R: BlockRngCore<u32>> RngCore for BlockRng<u32, R> {
+impl<R: BlockRngCore<Item=u32>> RngCore for BlockRng<R>
+where <R as BlockRngCore>::Results: AsRef<[u32]>
+{
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         if self.index >= self.results.as_ref().len() {
@@ -308,7 +311,7 @@ impl<R: BlockRngCore<u32>> RngCore for BlockRng<u32, R> {
     }
 }
 
-impl<R: BlockRngCore<u32> + SeedableRng> SeedableRng for BlockRng<u32, R> {
+impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
     type Seed = R::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
@@ -330,6 +333,6 @@ impl<R: BlockRngCore<u32> + SeedableRng> SeedableRng for BlockRng<u32, R> {
     }
 }
 
-impl<T, R: BlockRngCore<T> + CryptoRng> CryptoRng for BlockRng<T, R> {}
+impl<R: BlockRngCore + CryptoRng> CryptoRng for BlockRng<R> {}
 
 // TODO: implement tests for the above
