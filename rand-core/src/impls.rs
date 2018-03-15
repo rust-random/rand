@@ -184,10 +184,10 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
 /// [`RngCore`]: ../RngCore.t.html
 /// [`SeedableRng`]: ../SeedableRng.t.html
 #[derive(Clone)]
-pub struct BlockRng<R: BlockRngCore> {
-    pub core: R,
+pub struct BlockRng<R: BlockRngCore + ?Sized> {
     pub results: R::Results,
     pub index: usize,
+    pub core: R,
 }
 
 // Custom Debug implementation that does not expose the contents of `results`.
