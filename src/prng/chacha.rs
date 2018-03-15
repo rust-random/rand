@@ -63,7 +63,7 @@ const STATE_WORDS: usize = 16;
 ///
 /// [`set_rounds`]: #method.set_counter
 #[derive(Clone, Debug)]
-pub struct ChaChaRng(BlockRng<ChaChaCore>);
+pub struct ChaChaRng(BlockRng<u32, ChaChaCore>);
 
 impl RngCore for ChaChaRng {
     #[inline]
@@ -91,11 +91,11 @@ impl SeedableRng for ChaChaRng {
     type Seed = <ChaChaCore as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        ChaChaRng(BlockRng::<ChaChaCore>::from_seed(seed))
+        ChaChaRng(BlockRng::<u32, ChaChaCore>::from_seed(seed))
     }
 
     fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
-        BlockRng::<ChaChaCore>::from_rng(rng).map(|rng| ChaChaRng(rng))
+        BlockRng::<u32, ChaChaCore>::from_rng(rng).map(|rng| ChaChaRng(rng))
     }
 }
 

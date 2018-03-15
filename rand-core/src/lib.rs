@@ -162,9 +162,44 @@ pub trait RngCore {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
 
-/// Trait for RNGs that do not generate random numbers one at a time, but in
-/// blocks. Especially for cryptographic RNG's it is common to generate 16 or
-/// more results at a time.
+/// A trait for RNGs which do not generate random numbers individually, but in
+/// blocks (typically `[u32; N]`). This technique is commonly used by
+/// cryptographic RNGs to improve performance.
+/// 
+/// Usage of this trait is optional, but provides two advantages:
+/// implementations only need to concern themselves with generation of the
+/// block, not the various `RngCore` methods (especially `fill_bytes`, where the
+/// optimal implementations are not trivial), and this allows `ReseedingRng` to
+/// perform periodic reseeding with very low overhead.
+/// 
+/// # Example
+/// 
+/// ```norun
+/// use rand_core::BlockRngCore;
+/// use rand_core::impls::BlockRng;
+/// 
+/// struct MyRngCore;
+/// 
+/// impl BlockRngCore for MyRngCore {
+///     type Results = [u32; 16];
+///     
+///     fn generate(&mut self, results: &mut Self::Results) {
+///         unimplemented!()
+///     }
+/// }
+/// 
+/// impl SeedableRng for MyRngCore {
+///     type Seed = unimplemented!();
+///     fn from_seed(seed: Self::Seed) -> Self {
+///         unimplemented!()
+///     }
+/// }
+/// 
+/// // optionally, also implement CryptoRng for MyRngCore
+/// 
+/// // Final RNG.
+/// type MyRng = BlockRng<u32, MyRngCore>;
+/// ```
 pub trait BlockRngCore<T>: Sized {
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u32; 16]`.
@@ -174,8 +209,8 @@ pub trait BlockRngCore<T>: Sized {
     fn generate(&mut self, results: &mut Self::Results);
 }
 
-/// A marker trait for an `Rng` which may be considered for use in
-/// cryptography.
+/// A marker trait used to indicate that an `RngCore` or `BlockRngCore`
+/// implementation is supposed to be cryptographically secure.
 /// 
 /// *Cryptographically secure generators*, also known as *CSPRNGs*, should
 /// satisfy an additional properties over other generators: given the first

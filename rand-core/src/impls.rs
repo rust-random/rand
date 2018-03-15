@@ -167,15 +167,15 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
 /// Wrapper around PRNGs that implement [`BlockRngCore`] to keep a results
 /// buffer and offer the methods from [`RngCore`].
 ///
-/// `BlockRng` has optimized methods to read from the output array that the
-/// algorithm of many cryptograpic RNGs generates natively. Also they handle the
-/// bookkeeping when to generate a new batch of values.
-///
-/// `next_u32` simply indexes the array. `next_u64` tries to read two `u32`
-/// values at a time if possible, and handles edge cases like when only one
-/// value is left. `try_fill_bytes` is optimized use the [`BlockRngCore`]
-/// implementation to write the results directly to the destination slice.
+/// `BlockRng` has heavily optimized implementations of the [`RngCore`] methods
+/// reading values from the results buffer, as well as
+/// calling `BlockRngCore::generate` directly on the output array when
+/// `fill_bytes` / `try_fill_bytes` is called on a large array. These methods
+/// also handle the bookkeeping of when to generate a new batch of values.
 /// No generated values are ever thown away.
+///
+/// Currently `BlockRng` only implements `RngCore` for buffers which are slices
+/// of `u32` elements; this may be extended to other types in the future.
 ///
 /// For easy initialization `BlockRng` also implements [`SeedableRng`].
 ///
@@ -183,14 +183,14 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
 /// [`RngCore`]: ../RngCore.t.html
 /// [`SeedableRng`]: ../SeedableRng.t.html
 #[derive(Clone)]
-pub struct BlockRng<R: BlockRngCore<u32>> {
+pub struct BlockRng<T, R: BlockRngCore<T>> {
     pub core: R,
     pub results: R::Results,
     pub index: usize,
 }
 
 // Custom Debug implementation that does not expose the contents of `results`.
-impl<R: BlockRngCore<u32>+fmt::Debug> fmt::Debug for BlockRng<R> {
+impl<T, R: BlockRngCore<T> + fmt::Debug> fmt::Debug for BlockRng<T, R> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("BlockRng")
            .field("core", &self.core)
@@ -200,7 +200,7 @@ impl<R: BlockRngCore<u32>+fmt::Debug> fmt::Debug for BlockRng<R> {
     }
 }
 
-impl<R: BlockRngCore<u32>> RngCore for BlockRng<R> {
+impl<R: BlockRngCore<u32>> RngCore for BlockRng<u32, R> {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         if self.index >= self.results.as_ref().len() {
@@ -308,7 +308,7 @@ impl<R: BlockRngCore<u32>> RngCore for BlockRng<R> {
     }
 }
 
-impl<R: BlockRngCore<u32> + SeedableRng> SeedableRng for BlockRng<R> {
+impl<R: BlockRngCore<u32> + SeedableRng> SeedableRng for BlockRng<u32, R> {
     type Seed = R::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
@@ -330,6 +330,6 @@ impl<R: BlockRngCore<u32> + SeedableRng> SeedableRng for BlockRng<R> {
     }
 }
 
-impl<R: BlockRngCore<u32>+CryptoRng> CryptoRng for BlockRng<R> {}
+impl<T, R: BlockRngCore<T> + CryptoRng> CryptoRng for BlockRng<T, R> {}
 
 // TODO: implement tests for the above

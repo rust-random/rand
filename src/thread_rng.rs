@@ -32,11 +32,11 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32*1024*1024; // 32 MiB
 /// [`thread_rng`]: fn.thread_rng.html
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
-    rng: Rc<RefCell<ReseedingRng<Hc128Core, EntropyRng>>>,
+    rng: Rc<RefCell<ReseedingRng<u32, Hc128Core, EntropyRng>>>,
 }
 
 thread_local!(
-    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<Hc128Core, EntropyRng>>> = {
+    static THREAD_RNG_KEY: Rc<RefCell<ReseedingRng<u32, Hc128Core, EntropyRng>>> = {
         let mut entropy_source = EntropyRng::new();
         let r = Hc128Core::from_rng(&mut entropy_source).unwrap_or_else(|err|
                 panic!("could not initialize thread_rng: {}", err));
