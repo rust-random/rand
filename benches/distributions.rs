@@ -16,7 +16,7 @@ macro_rules! distr {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::new().unwrap();
+            let mut rng = XorShiftRng::new();
             let distr = $distr;
 
             b.iter(|| {
@@ -69,7 +69,7 @@ macro_rules! gen_range_int {
     ($fnn:ident, $ty:ty, $low:expr, $high:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::new().unwrap();
+            let mut rng = XorShiftRng::new();
             let high = $high;
 
             b.iter(|| {

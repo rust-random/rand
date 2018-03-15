@@ -166,7 +166,7 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// use rand::{NewRng, SmallRng, Rng};
 /// use rand::distributions::Uniform;
 ///
-/// let val: f32 = SmallRng::new().unwrap().sample(Uniform);
+/// let val: f32 = SmallRng::new().sample(Uniform);
 /// println!("f32 from [0,1): {}", val);
 /// ```
 ///

@@ -31,7 +31,7 @@ use distributions::{ziggurat, ziggurat_tables, Distribution, Uniform};
 /// use rand::{NewRng, SmallRng, Rng};
 /// use rand::distributions::StandardNormal;
 ///
-/// let val: f64 = SmallRng::new().unwrap().sample(StandardNormal);
+/// let val: f64 = SmallRng::new().sample(StandardNormal);
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
