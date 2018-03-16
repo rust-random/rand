@@ -251,12 +251,17 @@ where <R as BlockRngCore>::Results: AsRef<[u32]>
             (y << 32) | x
         }
     }
+    
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.try_fill_bytes(dest).unwrap_or_else(|err|
+                panic!("BlockRng: error generating results: {}", err));
+    }
 
     // As an optimization we try to write directly into the output buffer.
     // This is only enabled for little-endian platforms where unaligned writes
     // are known to be safe and fast.
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         let mut filled = 0;
 
         // Continue filling from the current set of results
@@ -277,29 +282,35 @@ where <R as BlockRngCore>::Results: AsRef<[u32]>
             let dest_u32: &mut R::Results = unsafe {
                 ::core::mem::transmute(dest[filled..].as_mut_ptr())
             };
-            self.core.generate(dest_u32).unwrap_or_else(|err|
-                panic!("BlockRng: error generating results: {}", err));
+            if let Err(err) = self.core.generate(dest_u32) {
+                return Err(err.into());
+            }
             filled += self.results.as_ref().len() * 4;
         }
         self.index = self.results.as_ref().len();
 
         if len_remainder > 0 {
-            self.core.generate(&mut self.results).unwrap_or_else(|err|
-                panic!("BlockRng: error generating results: {}", err));
+            if let Err(err) = self.core.generate(&mut self.results) {
+                return Err(err.into());
+            }
             let (consumed_u32, _) =
                 fill_via_u32_chunks(&mut self.results.as_ref(),
                                     &mut dest[filled..]);
 
             self.index = consumed_u32;
         }
+        
+        Ok(())
     }
 
     #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         let mut read_len = 0;
         while read_len < dest.len() {
             if self.index >= self.results.as_ref().len() {
-                self.core.generate(&mut self.results);
+                if let Err(err) = self.core.generate(&mut self.results) {
+                    return Err(err.into());
+                }
                 self.index = 0;
             }
             let (consumed_u32, filled_u8) =
@@ -309,11 +320,8 @@ where <R as BlockRngCore>::Results: AsRef<[u32]>
             self.index += consumed_u32;
             read_len += filled_u8;
         }
-    }
-
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        // TODO: don't panic on error
-        Ok(self.fill_bytes(dest))
+        
+        Ok(())
     }
 }
 
