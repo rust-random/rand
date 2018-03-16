@@ -52,6 +52,8 @@ impl EntropyRng {
 }
 
 impl RngCore for EntropyRng {
+    type Error = Error;
+
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
     }

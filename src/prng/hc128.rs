@@ -11,7 +11,7 @@
 //! The HC-128 random number generator.
 
 use core::fmt;
-use rand_core::{BlockRngCore, CryptoRng, RngCore, SeedableRng, Error, Void, le};
+use rand_core::{BlockRngCore, CryptoRng, RngCore, SeedableRng, Void, le};
 use rand_core::impls::BlockRng;
 
 const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
@@ -65,6 +65,8 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 pub struct Hc128Rng(BlockRng<Hc128Core>);
 
 impl RngCore for Hc128Rng {
+    type Error = Void;
+
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
@@ -79,7 +81,7 @@ impl RngCore for Hc128Rng {
         self.0.fill_bytes(dest)
     }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Void> {
         self.0.try_fill_bytes(dest)
     }
 }
@@ -91,7 +93,7 @@ impl SeedableRng for Hc128Rng {
         Hc128Rng(BlockRng::<Hc128Core>::from_seed(seed))
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, <R as RngCore>::Error> {
         BlockRng::<Hc128Core>::from_rng(rng).map(|rng| Hc128Rng(rng))
     }
 }

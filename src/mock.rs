@@ -10,7 +10,7 @@
 
 //! Mock random number generator
 
-use rand_core::{RngCore, Error, impls};
+use rand_core::{RngCore, Void, impls};
 
 /// A simple implementation of `RngCore` for testing purposes.
 /// 
@@ -41,6 +41,8 @@ impl StepRng {
 }
 
 impl RngCore for StepRng {
+    type Error = Void;
+
     fn next_u32(&mut self) -> u32 {
         self.next_u64() as u32
     }
@@ -55,7 +57,7 @@ impl RngCore for StepRng {
         impls::fill_bytes_via_u64(self, dest);
     }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Void> {
         Ok(self.fill_bytes(dest))
     }
 }

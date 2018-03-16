@@ -271,7 +271,7 @@ use core::{marker, mem, slice};
 
 // re-exports from rand-core
 pub use rand_core::{RngCore, CryptoRng, SeedableRng};
-pub use rand_core::{ErrorKind, Error};
+pub use rand_core::{ErrorKind, Error, Void};
 
 // external rngs
 pub use jitter::JitterRng;
@@ -428,7 +428,7 @@ pub trait Rng: RngCore {
     /// [`try_fill_bytes`]: https://docs.rs/rand-core/0.1/rand-core/trait.RngCore.html#method.try_fill_bytes
     /// [`fill`]: trait.Rng.html#method.fill
     /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
-    fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
+    fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Self::Error> {
         self.try_fill_bytes(dest.as_byte_slice_mut())?;
         dest.to_le();
         Ok(())
@@ -800,6 +800,8 @@ impl<R: SeedableRng> NewRng for R {
 pub struct StdRng(Hc128Rng);
 
 impl RngCore for StdRng {
+    type Error = <Hc128Rng as RngCore>::Error;
+
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
@@ -814,7 +816,7 @@ impl RngCore for StdRng {
         self.0.fill_bytes(dest);
     }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
         self.0.try_fill_bytes(dest)
     }
 }
@@ -826,7 +828,7 @@ impl SeedableRng for StdRng {
         StdRng(Hc128Rng::from_seed(seed))
     }
 
-    fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, <R as RngCore>::Error> {
         Hc128Rng::from_rng(rng).map(|rng| StdRng(rng))
     }
 }
@@ -875,6 +877,8 @@ impl SeedableRng for StdRng {
 pub struct SmallRng(XorShiftRng);
 
 impl RngCore for SmallRng {
+    type Error = <XorShiftRng as RngCore>::Error;
+
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }
@@ -887,7 +891,7 @@ impl RngCore for SmallRng {
         self.0.fill_bytes(dest);
     }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
         self.0.try_fill_bytes(dest)
     }
 }
@@ -899,7 +903,7 @@ impl SeedableRng for SmallRng {
         SmallRng(XorShiftRng::from_seed(seed))
     }
 
-    fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: Rng>(rng: &mut R) -> Result<Self, <R as RngCore>::Error> {
         XorShiftRng::from_rng(rng).map(|rng| SmallRng(rng))
     }
 }
@@ -956,6 +960,7 @@ mod test {
     pub struct TestRng<R> { inner: R }
 
     impl<R: RngCore> RngCore for TestRng<R> {
+        type Error = <R as RngCore>::Error;
         fn next_u32(&mut self) -> u32 {
             self.inner.next_u32()
         }
@@ -965,7 +970,7 @@ mod test {
         fn fill_bytes(&mut self, dest: &mut [u8]) {
             self.inner.fill_bytes(dest)
         }
-        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
             self.inner.try_fill_bytes(dest)
         }
     }
@@ -1100,7 +1105,7 @@ mod test {
     fn test_rng_trait_object() {
         use distributions::{Distribution, Uniform};
         let mut rng = rng(109);
-        let mut r = &mut rng as &mut RngCore;
+        let mut r = &mut rng as &mut RngCore<Error=Void>;
         r.next_u32();
         r.gen::<i32>();
         let mut v = [1, 1, 1];
@@ -1116,7 +1121,7 @@ mod test {
     fn test_rng_boxed_trait() {
         use distributions::{Distribution, Uniform};
         let rng = rng(110);
-        let mut r = Box::new(rng) as Box<RngCore>;
+        let mut r = Box::new(rng) as Box<RngCore<Error=Void>>;
         r.next_u32();
         r.gen::<i32>();
         let mut v = [1, 1, 1];

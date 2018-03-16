@@ -55,6 +55,8 @@ impl OsRng {
 }
 
 impl RngCore for OsRng {
+    type Error = Error;
+
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
     }

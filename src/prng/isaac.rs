@@ -13,7 +13,7 @@
 use core::{fmt, slice};
 use core::num::Wrapping as w;
 
-use rand_core::{RngCore, SeedableRng, Error, impls, le};
+use rand_core::{RngCore, SeedableRng, Void, impls, le};
 
 #[allow(non_camel_case_types)]
 type w32 = w<u32>;
@@ -213,6 +213,8 @@ impl IsaacRng {
 }
 
 impl RngCore for IsaacRng {
+    type Error = Void;
+
     #[inline]
     fn next_u32(&mut self) -> u32 {
         // Using a local variable for `index`, and checking the size avoids a
@@ -249,7 +251,7 @@ impl RngCore for IsaacRng {
         }
     }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Void> {
         Ok(self.fill_bytes(dest))
     }
 }
@@ -349,7 +351,7 @@ impl SeedableRng for IsaacRng {
         init(seed_extended, 2)
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, <R as RngCore>::Error> {
         // Custom `from_rng` implementation that fills a seed with the same size
         // as the entire state.
         let mut seed = [w(0u32); RAND_SIZE];
