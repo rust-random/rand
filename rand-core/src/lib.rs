@@ -43,10 +43,11 @@
 
 use core::default::Default;
 use core::convert::AsMut;
+use core::fmt::Display;
 
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
-pub use error::{ErrorKind, Error};
+pub use error::{ErrorKind, Error, Void};
 
 
 mod error;
@@ -86,11 +87,13 @@ pub mod le;
 /// A simple example, obviously not generating very *random* output:
 /// 
 /// ```rust
-/// use rand_core::{RngCore, Error, impls};
+/// use rand_core::{RngCore, Void, impls};
 /// 
 /// struct CountingRng(u64);
 /// 
 /// impl RngCore for CountingRng {
+///     type Error = Void;
+/// 
 ///     fn next_u32(&mut self) -> u32 {
 ///         self.next_u64() as u32
 ///     }
@@ -104,7 +107,7 @@ pub mod le;
 ///         impls::fill_bytes_via_u64(self, dest)
 ///     }
 ///     
-///     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+///     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Void> {
 ///         Ok(self.fill_bytes(dest))
 ///     }
 /// }
@@ -114,6 +117,10 @@ pub mod le;
 /// [`Rng`]: https://docs.rs/rand/0.5/rand/trait.Rng.html
 /// [`impls`]: impls/index.html
 pub trait RngCore {
+    /// Error type. May be a void type (i.e. enum with no variants) if no
+    /// errors are possible.
+    type Error: Display + Into<Error>;
+
     /// Return the next random `u32`.
     ///
     /// RNGs must implement at least one method from this trait directly. In
@@ -159,7 +166,7 @@ pub trait RngCore {
     /// `self.try_fill_bytes(dest).unwrap()` or more specific error handling.
     /// 
     /// [`fill_bytes`]: trait.RngCore.html#method.fill_bytes
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error>;
 }
 
 /// A trait for RNGs which do not generate random numbers individually, but in
@@ -201,15 +208,24 @@ pub trait RngCore {
 /// type MyRng = BlockRng<u32, MyRngCore>;
 /// ```
 pub trait BlockRngCore {
-    /// Results element type, e.g. `u32`.
+    /// Results element type, e.g. `u32`. [`BlockRng`] must have a
+    /// corresponding impl of `RngCore` for the item type, which means
+    /// currently only `u32` is supported.
+    /// 
+    /// [`BlockRng`]: impls/struct.BlockRng.html
     type Item;
     
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u32; 16]`.
     type Results: AsRef<[Self::Item]> + Default;
+    
+    /// Error type. May be a void type (i.e. enum with no variants) if no
+    /// errors are possible.
+    type Error: Display + Into<Error>;
 
     /// Generate a new block of results.
-    fn generate(&mut self, results: &mut Self::Results);
+    fn generate(&mut self, results: &mut Self::Results)
+            -> Result<(), Self::Error>;
 }
 
 /// A marker trait used to indicate that an `RngCore` or `BlockRngCore`
@@ -304,7 +320,7 @@ pub trait SeedableRng: Sized {
     /// [`NewRng`]: https://docs.rs/rand/0.5/rand/trait.NewRng.html
     /// [`OsRng`]: https://docs.rs/rand/0.5/rand/os/struct.OsRng.html
     /// [`XorShiftRng`]: https://docs.rs/rand/0.5/rand/prng/xorshift/struct.XorShiftRng.html
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, <R as RngCore>::Error> {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;
         Ok(Self::from_seed(seed))
@@ -313,6 +329,8 @@ pub trait SeedableRng: Sized {
 
 
 impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
+    type Error = <R as RngCore>::Error;
+
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
@@ -327,13 +345,15 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
         (**self).fill_bytes(dest)
     }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
         (**self).try_fill_bytes(dest)
     }
 }
 
 #[cfg(any(feature="std", feature="alloc"))]
 impl<R: RngCore + ?Sized> RngCore for Box<R> {
+    type Error = <R as RngCore>::Error;
+
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
@@ -348,7 +368,7 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
         (**self).fill_bytes(dest)
     }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
         (**self).try_fill_bytes(dest)
     }
 }

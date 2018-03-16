@@ -160,12 +160,12 @@ impl<T> Distribution<Option<T>> for Uniform where Uniform: Distribution<T> {
 
 #[cfg(test)]
 mod tests {
-    use {Rng, RngCore, Uniform};
+    use {Rng, RngCore, Uniform, Void};
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::String;
     
     #[test]
     fn test_misc() {
-        let mut rng: &mut RngCore = &mut ::test::rng(820);
+        let mut rng: &mut RngCore<Error=Void> = &mut ::test::rng(820);
         
         rng.sample::<char, _>(Uniform);
         rng.sample::<bool, _>(Uniform);

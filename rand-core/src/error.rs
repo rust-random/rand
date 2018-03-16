@@ -161,3 +161,19 @@ impl stdError for Error {
         self.cause.as_ref().map(|e| e.as_ref() as &stdError)
     }
 }
+
+/// Void error type, for use when errors are statically impossible.
+#[derive(Debug)]
+pub enum Void {}
+
+impl fmt::Display for Void {
+    fn fmt(&self, _f: &mut fmt::Formatter) -> fmt::Result {
+        unreachable!()
+    }
+}
+
+impl From<Void> for Error {
+    fn from(_self: Void) -> Error {
+        unreachable!()
+    }
+}

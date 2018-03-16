@@ -46,6 +46,8 @@ impl<R: Read> ReadRng<R> {
 }
 
 impl<R: Read> RngCore for ReadRng<R> {
+    type Error = Error;
+
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
     }

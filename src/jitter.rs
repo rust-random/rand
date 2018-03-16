@@ -752,6 +752,8 @@ fn black_box<T>(dummy: T) -> T {
 }
 
 impl RngCore for JitterRng {
+    type Error = Error;
+
     fn next_u32(&mut self) -> u32 {
         // We want to use both parts of the generated entropy
         if self.data_half_used {

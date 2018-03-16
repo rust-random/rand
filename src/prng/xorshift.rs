@@ -12,7 +12,7 @@
 
 use core::num::Wrapping as w;
 use core::{fmt, slice};
-use rand_core::{RngCore, SeedableRng, Error, impls, le};
+use rand_core::{RngCore, SeedableRng, Void, impls, le};
 
 /// An Xorshift[1] random number
 /// generator.
@@ -58,6 +58,8 @@ impl XorShiftRng {
 }
 
 impl RngCore for XorShiftRng {
+    type Error = Void;
+
     #[inline]
     fn next_u32(&mut self) -> u32 {
         let x = self.x;
@@ -78,7 +80,7 @@ impl RngCore for XorShiftRng {
         impls::fill_bytes_via_u32(self, dest)
     }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Void> {
         Ok(self.fill_bytes(dest))
     }
 }
@@ -105,7 +107,7 @@ impl SeedableRng for XorShiftRng {
         }
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, <R as RngCore>::Error> {
         let mut seed_u32 = [0u32; 4];
         loop {
             unsafe {

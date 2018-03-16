@@ -11,7 +11,7 @@
 //! The ChaCha random number generator.
 
 use core::fmt;
-use rand_core::{BlockRngCore, CryptoRng, RngCore, SeedableRng, Error, le};
+use rand_core::{BlockRngCore, CryptoRng, RngCore, SeedableRng, Void, le};
 use rand_core::impls::BlockRng;
 
 const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
@@ -66,6 +66,8 @@ const STATE_WORDS: usize = 16;
 pub struct ChaChaRng(BlockRng<ChaChaCore>);
 
 impl RngCore for ChaChaRng {
+    type Error = Void;
+
     #[inline]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
@@ -82,7 +84,7 @@ impl RngCore for ChaChaRng {
     }
 
     #[inline]
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Void> {
         self.0.try_fill_bytes(dest)
     }
 }
@@ -94,7 +96,7 @@ impl SeedableRng for ChaChaRng {
         ChaChaRng(BlockRng::<ChaChaCore>::from_seed(seed))
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, <R as RngCore>::Error> {
         BlockRng::<ChaChaCore>::from_rng(rng).map(|rng| ChaChaRng(rng))
     }
 }
@@ -222,8 +224,9 @@ macro_rules! double_round{
 impl BlockRngCore for ChaChaCore {
     type Item = u32;
     type Results = [u32; STATE_WORDS];
+    type Error = Void;
 
-    fn generate(&mut self, results: &mut Self::Results) {
+    fn generate(&mut self, results: &mut Self::Results) -> Result<(), Void> {
         // For some reason extracting this part into a separate function
         // improves performance by 50%.
         fn core(results: &mut [u32; STATE_WORDS],
@@ -243,12 +246,13 @@ impl BlockRngCore for ChaChaCore {
 
         // update 128-bit counter
         self.state[12] = self.state[12].wrapping_add(1);
-        if self.state[12] != 0 { return; };
+        if self.state[12] != 0 { return Ok(()); };
         self.state[13] = self.state[13].wrapping_add(1);
-        if self.state[13] != 0 { return; };
+        if self.state[13] != 0 { return Ok(()); };
         self.state[14] = self.state[14].wrapping_add(1);
-        if self.state[14] != 0 { return; };
+        if self.state[14] != 0 { return Ok(()); };
         self.state[15] = self.state[15].wrapping_add(1);
+        Ok(())
     }
 }
 
