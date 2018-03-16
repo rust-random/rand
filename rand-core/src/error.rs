@@ -171,3 +171,9 @@ impl fmt::Display for Void {
         unreachable!()
     }
 }
+
+impl From<Void> for Error {
+    fn from(_self: Void) -> Error {
+        unreachable!()
+    }
+}

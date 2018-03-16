@@ -215,7 +215,7 @@ pub trait BlockRngCore {
     
     /// Error type. May be a void type (i.e. enum with no variants) if no
     /// errors are possible.
-    type Error: Display;
+    type Error: Display + Into<Error>;
 
     /// Generate a new block of results.
     fn generate(&mut self, results: &mut Self::Results)
