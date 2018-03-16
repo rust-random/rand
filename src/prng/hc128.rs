@@ -11,7 +11,8 @@
 //! The HC-128 random number generator.
 
 use core::fmt;
-use rand_core::{RngCore, CryptoRng, SeedableRng, Error, impls, le};
+use rand_core::{BlockRngCore, CryptoRng, RngCore, SeedableRng, Error, le};
+use rand_core::impls::BlockRng;
 
 const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 
@@ -60,89 +61,110 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 ///
 /// [5]: Internet Engineering Task Force (Februari 2015),
 ///      ["Prohibiting RC4 Cipher Suites"](https://tools.ietf.org/html/rfc7465).
-#[derive(Clone)]
-pub struct Hc128Rng {
-    state: Hc128,
-    results: [u32; 16],
-    index: usize,
+#[derive(Clone, Debug)]
+pub struct Hc128Rng(BlockRng<Hc128Core>);
+
+impl RngCore for Hc128Rng {
+    #[inline(always)]
+    fn next_u32(&mut self) -> u32 {
+        self.0.next_u32()
+    }
+
+    #[inline(always)]
+    fn next_u64(&mut self) -> u64 {
+        self.0.next_u64()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.0.fill_bytes(dest)
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.0.try_fill_bytes(dest)
+    }
 }
 
-#[derive(Copy)]
-struct Hc128 {
+impl SeedableRng for Hc128Rng {
+    type Seed = <Hc128Core as SeedableRng>::Seed;
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        Hc128Rng(BlockRng::<Hc128Core>::from_seed(seed))
+    }
+
+    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+        BlockRng::<Hc128Core>::from_rng(rng).map(|rng| Hc128Rng(rng))
+    }
+}
+
+impl CryptoRng for Hc128Rng {}
+
+/// The core of `Hc128Rng`, used with `BlockRng`.
+#[derive(Clone)]
+pub struct Hc128Core {
     t: [u32; 1024],
     counter1024: usize,
 }
 
-// Cannot be derived because [u32; 1024] does not implement Clone in
-// Rust < 1.21.0 (since https://github.com/rust-lang/rust/pull/43690)
-impl Clone for Hc128 {
-    fn clone(&self) -> Hc128 {
-        *self
-    }
-}
-
 // Custom Debug implementation that does not expose the internal state
-impl fmt::Debug for Hc128Rng {
+impl fmt::Debug for Hc128Core {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Hc128Rng {{}}")
+        write!(f, "Hc128Core {{}}")
     }
 }
 
-impl Hc128Rng {
-    // Initialize an HC-128 random number generator. The seed has to be
-    // 256 bits in length (`[u32; 8]`), matching the 128 bit `key` followed by
-    // 128 bit `iv` when HC-128 where to be used as a stream cipher.
-    fn init(seed: [u32; SEED_WORDS]) -> Self {
-        #[inline]
-        fn f1(x: u32) -> u32 {
-            x.rotate_right(7) ^ x.rotate_right(18) ^ (x >> 3)
+impl BlockRngCore for Hc128Core {
+    type Item = u32;
+    type Results = [u32; 16];
+
+    fn generate(&mut self, results: &mut Self::Results) {
+        assert!(self.counter1024 % 16 == 0);
+
+        let cc = self.counter1024 % 512;
+        let dd = (cc + 16) % 512;
+        let ee = cc.wrapping_sub(16) % 512;
+
+        if self.counter1024 & 512 == 0 {
+            // P block
+            results[0]  = self.step_p(cc+0,  cc+1,  ee+13, ee+6,  ee+4);
+            results[1]  = self.step_p(cc+1,  cc+2,  ee+14, ee+7,  ee+5);
+            results[2]  = self.step_p(cc+2,  cc+3,  ee+15, ee+8,  ee+6);
+            results[3]  = self.step_p(cc+3,  cc+4,  cc+0,  ee+9,  ee+7);
+            results[4]  = self.step_p(cc+4,  cc+5,  cc+1,  ee+10, ee+8);
+            results[5]  = self.step_p(cc+5,  cc+6,  cc+2,  ee+11, ee+9);
+            results[6]  = self.step_p(cc+6,  cc+7,  cc+3,  ee+12, ee+10);
+            results[7]  = self.step_p(cc+7,  cc+8,  cc+4,  ee+13, ee+11);
+            results[8]  = self.step_p(cc+8,  cc+9,  cc+5,  ee+14, ee+12);
+            results[9]  = self.step_p(cc+9,  cc+10, cc+6,  ee+15, ee+13);
+            results[10] = self.step_p(cc+10, cc+11, cc+7,  cc+0,  ee+14);
+            results[11] = self.step_p(cc+11, cc+12, cc+8,  cc+1,  ee+15);
+            results[12] = self.step_p(cc+12, cc+13, cc+9,  cc+2,  cc+0);
+            results[13] = self.step_p(cc+13, cc+14, cc+10, cc+3,  cc+1);
+            results[14] = self.step_p(cc+14, cc+15, cc+11, cc+4,  cc+2);
+            results[15] = self.step_p(cc+15, dd+0,  cc+12, cc+5,  cc+3);
+        } else {
+            // Q block
+            results[0]  = self.step_q(cc+0,  cc+1,  ee+13, ee+6,  ee+4);
+            results[1]  = self.step_q(cc+1,  cc+2,  ee+14, ee+7,  ee+5);
+            results[2]  = self.step_q(cc+2,  cc+3,  ee+15, ee+8,  ee+6);
+            results[3]  = self.step_q(cc+3,  cc+4,  cc+0,  ee+9,  ee+7);
+            results[4]  = self.step_q(cc+4,  cc+5,  cc+1,  ee+10, ee+8);
+            results[5]  = self.step_q(cc+5,  cc+6,  cc+2,  ee+11, ee+9);
+            results[6]  = self.step_q(cc+6,  cc+7,  cc+3,  ee+12, ee+10);
+            results[7]  = self.step_q(cc+7,  cc+8,  cc+4,  ee+13, ee+11);
+            results[8]  = self.step_q(cc+8,  cc+9,  cc+5,  ee+14, ee+12);
+            results[9]  = self.step_q(cc+9,  cc+10, cc+6,  ee+15, ee+13);
+            results[10] = self.step_q(cc+10, cc+11, cc+7,  cc+0,  ee+14);
+            results[11] = self.step_q(cc+11, cc+12, cc+8,  cc+1,  ee+15);
+            results[12] = self.step_q(cc+12, cc+13, cc+9,  cc+2,  cc+0);
+            results[13] = self.step_q(cc+13, cc+14, cc+10, cc+3,  cc+1);
+            results[14] = self.step_q(cc+14, cc+15, cc+11, cc+4,  cc+2);
+            results[15] = self.step_q(cc+15, dd+0,  cc+12, cc+5,  cc+3);
         }
-
-        #[inline]
-        fn f2(x: u32) -> u32 {
-            x.rotate_right(17) ^ x.rotate_right(19) ^ (x >> 10)
-        }
-
-        let mut t = [0u32; 1024];
-
-        // Expand the key and iv into P and Q
-        let (key, iv) = seed.split_at(4);
-        t[..4].copy_from_slice(key);
-        t[4..8].copy_from_slice(key);
-        t[8..12].copy_from_slice(iv);
-        t[12..16].copy_from_slice(iv);
-
-        // Generate the 256 intermediate values W[16] ... W[256+16-1], and
-        // copy the last 16 generated values to the start op P.
-        for i in 16..256+16 {
-            t[i] = f2(t[i-2]).wrapping_add(t[i-7]).wrapping_add(f1(t[i-15]))
-                   .wrapping_add(t[i-16]).wrapping_add(i as u32);
-        }
-        {
-            let (p1, p2) = t.split_at_mut(256);
-            p1[0..16].copy_from_slice(&p2[0..16]);
-        }
-
-        // Generate both the P and Q tables
-        for i in 16..1024 {
-            t[i] = f2(t[i-2]).wrapping_add(t[i-7]).wrapping_add(f1(t[i-15]))
-                   .wrapping_add(t[i-16]).wrapping_add(256 + i as u32);
-        }
-
-        let mut state = Hc128Rng {
-            state: Hc128 { t: t, counter1024: 0 },
-            results: [0; 16],
-            index: 16, // generate on first use
-        };
-
-        // run the cipher 1024 steps
-        for _ in 0..64 { state.state.sixteen_steps() };
-        state.state.counter1024 = 0;
-        state
+        self.counter1024 = self.counter1024.wrapping_add(16);
     }
 }
 
-impl Hc128 {
+impl Hc128Core {
     // One step of HC-128, update P and generate 32 bits keystream
     #[inline(always)]
     fn step_p(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize)
@@ -194,53 +216,6 @@ impl Hc128 {
         }
     }
 
-    fn update(&mut self, results: &mut [u32]) {
-        assert!(self.counter1024 % 16 == 0);
-
-        let cc = self.counter1024 % 512;
-        let dd = (cc + 16) % 512;
-        let ee = cc.wrapping_sub(16) % 512;
-
-        if self.counter1024 & 512 == 0 {
-            // P block
-            results[0]  = self.step_p(cc+0,  cc+1,  ee+13, ee+6,  ee+4);
-            results[1]  = self.step_p(cc+1,  cc+2,  ee+14, ee+7,  ee+5);
-            results[2]  = self.step_p(cc+2,  cc+3,  ee+15, ee+8,  ee+6);
-            results[3]  = self.step_p(cc+3,  cc+4,  cc+0,  ee+9,  ee+7);
-            results[4]  = self.step_p(cc+4,  cc+5,  cc+1,  ee+10, ee+8);
-            results[5]  = self.step_p(cc+5,  cc+6,  cc+2,  ee+11, ee+9);
-            results[6]  = self.step_p(cc+6,  cc+7,  cc+3,  ee+12, ee+10);
-            results[7]  = self.step_p(cc+7,  cc+8,  cc+4,  ee+13, ee+11);
-            results[8]  = self.step_p(cc+8,  cc+9,  cc+5,  ee+14, ee+12);
-            results[9]  = self.step_p(cc+9,  cc+10, cc+6,  ee+15, ee+13);
-            results[10] = self.step_p(cc+10, cc+11, cc+7,  cc+0,  ee+14);
-            results[11] = self.step_p(cc+11, cc+12, cc+8,  cc+1,  ee+15);
-            results[12] = self.step_p(cc+12, cc+13, cc+9,  cc+2,  cc+0);
-            results[13] = self.step_p(cc+13, cc+14, cc+10, cc+3,  cc+1);
-            results[14] = self.step_p(cc+14, cc+15, cc+11, cc+4,  cc+2);
-            results[15] = self.step_p(cc+15, dd+0,  cc+12, cc+5,  cc+3);
-        } else {
-            // Q block
-            results[0]  = self.step_q(cc+0,  cc+1,  ee+13, ee+6,  ee+4);
-            results[1]  = self.step_q(cc+1,  cc+2,  ee+14, ee+7,  ee+5);
-            results[2]  = self.step_q(cc+2,  cc+3,  ee+15, ee+8,  ee+6);
-            results[3]  = self.step_q(cc+3,  cc+4,  cc+0,  ee+9,  ee+7);
-            results[4]  = self.step_q(cc+4,  cc+5,  cc+1,  ee+10, ee+8);
-            results[5]  = self.step_q(cc+5,  cc+6,  cc+2,  ee+11, ee+9);
-            results[6]  = self.step_q(cc+6,  cc+7,  cc+3,  ee+12, ee+10);
-            results[7]  = self.step_q(cc+7,  cc+8,  cc+4,  ee+13, ee+11);
-            results[8]  = self.step_q(cc+8,  cc+9,  cc+5,  ee+14, ee+12);
-            results[9]  = self.step_q(cc+9,  cc+10, cc+6,  ee+15, ee+13);
-            results[10] = self.step_q(cc+10, cc+11, cc+7,  cc+0,  ee+14);
-            results[11] = self.step_q(cc+11, cc+12, cc+8,  cc+1,  ee+15);
-            results[12] = self.step_q(cc+12, cc+13, cc+9,  cc+2,  cc+0);
-            results[13] = self.step_q(cc+13, cc+14, cc+10, cc+3,  cc+1);
-            results[14] = self.step_q(cc+14, cc+15, cc+11, cc+4,  cc+2);
-            results[15] = self.step_q(cc+15, dd+0,  cc+12, cc+5,  cc+3);
-        }
-        self.counter1024 = self.counter1024.wrapping_add(16);
-    }
-
     fn sixteen_steps(&mut self) {
         assert!(self.counter1024 % 16 == 0);
 
@@ -287,119 +262,57 @@ impl Hc128 {
         }
         self.counter1024 += 16;
     }
-}
 
-impl RngCore for Hc128Rng {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        if self.index >= 16 {
-            self.state.update(&mut self.results);
-            self.index = 0;
+    // Initialize an HC-128 random number generator. The seed has to be
+    // 256 bits in length (`[u32; 8]`), matching the 128 bit `key` followed by
+    // 128 bit `iv` when HC-128 where to be used as a stream cipher.
+    fn init(seed: [u32; SEED_WORDS]) -> Self {
+        #[inline]
+        fn f1(x: u32) -> u32 {
+            x.rotate_right(7) ^ x.rotate_right(18) ^ (x >> 3)
         }
 
-        let value = self.results[self.index];
-        self.index += 1;
-        value
-    }
-
-    #[inline]
-    fn next_u64(&mut self) -> u64 {
-        let index = self.index;
-        if index < 15 {
-            self.index += 2;
-            // Read an u64 from the current index
-            if cfg!(any(target_arch = "x86", target_arch = "x86_64")) {
-                unsafe { *(&self.results[index] as *const u32 as *const u64) }
-            } else {
-                let x = self.results[index] as u64;
-                let y = self.results[index + 1] as u64;
-                (y << 32) | x
-            }
-        } else if index >= 16 {
-            self.state.update(&mut self.results);
-            self.index = 2;
-            let x = self.results[0] as u64;
-            let y = self.results[1] as u64;
-            (y << 32) | x
-        } else {
-            let x = self.results[15] as u64;
-            self.state.update(&mut self.results);
-            self.index = 1;
-            let y = self.results[0] as u64;
-            (y << 32) | x
-        }
-    }
-
-    // As an optimization we try to write directly into the output buffer.
-    // This is only enabled for platforms where unaligned writes are known to
-    // be safe and fast.
-    // This improves performance by about 12%.
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        use core::slice::from_raw_parts_mut;
-        let mut filled = 0;
-
-        // Continue filling from the current set of results
-        if self.index < 16 {
-            let (consumed_u32, filled_u8) =
-                impls::fill_via_u32_chunks(&self.results[self.index..],
-                                           dest);
-
-            self.index += consumed_u32;
-            filled += filled_u8;
+        #[inline]
+        fn f2(x: u32) -> u32 {
+            x.rotate_right(17) ^ x.rotate_right(19) ^ (x >> 10)
         }
 
-        let len_remainder = (dest.len() - filled) % (16 * 4);
-        let len_direct = dest.len() - len_remainder;
+        let mut t = [0u32; 1024];
 
-        while filled < len_direct {
-            let dest_u32: &mut [u32] = unsafe {
-                from_raw_parts_mut(
-                        dest[filled..].as_mut_ptr() as *mut u8 as *mut u32,
-                        16)
-            };
-            self.state.update(dest_u32);
-            filled += 16 * 4;
+        // Expand the key and iv into P and Q
+        let (key, iv) = seed.split_at(4);
+        t[..4].copy_from_slice(key);
+        t[4..8].copy_from_slice(key);
+        t[8..12].copy_from_slice(iv);
+        t[12..16].copy_from_slice(iv);
+
+        // Generate the 256 intermediate values W[16] ... W[256+16-1], and
+        // copy the last 16 generated values to the start op P.
+        for i in 16..256+16 {
+            t[i] = f2(t[i-2]).wrapping_add(t[i-7]).wrapping_add(f1(t[i-15]))
+                   .wrapping_add(t[i-16]).wrapping_add(i as u32);
         }
-        self.index = 16;
-
-        if len_remainder > 0 {
-            self.state.update(&mut self.results);
-
-            let (consumed_u32, _) =
-                impls::fill_via_u32_chunks(&self.results,
-                                           &mut dest[filled..]);
-
-            self.index = consumed_u32;
+        {
+            let (p1, p2) = t.split_at_mut(256);
+            p1[0..16].copy_from_slice(&p2[0..16]);
         }
-    }
 
-    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        let mut read_len = 0;
-        while read_len < dest.len() {
-            if self.index >= 16 {
-                self.state.update(&mut self.results);
-                self.index = 0;
-            }
-
-            let (consumed_u32, filled_u8) =
-                impls::fill_via_u32_chunks(&self.results[self.index..],
-                                           &mut dest[read_len..]);
-
-            self.index += consumed_u32;
-            read_len += filled_u8;
+        // Generate both the P and Q tables
+        for i in 16..1024 {
+            t[i] = f2(t[i-2]).wrapping_add(t[i-7]).wrapping_add(f1(t[i-15]))
+                   .wrapping_add(t[i-16]).wrapping_add(256 + i as u32);
         }
-    }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        let mut core = Self { t: t, counter1024: 0 };
+
+        // run the cipher 1024 steps
+        for _ in 0..64 { core.sixteen_steps() };
+        core.counter1024 = 0;
+        core
     }
 }
 
-impl CryptoRng for Hc128Rng {}
-
-impl SeedableRng for Hc128Rng {
+impl SeedableRng for Hc128Core {
     type Seed = [u8; SEED_WORDS*4];
 
     /// Create an HC-128 random number generator with a seed. The seed has to be
@@ -408,9 +321,11 @@ impl SeedableRng for Hc128Rng {
     fn from_seed(seed: Self::Seed) -> Self {
         let mut seed_u32 = [0u32; SEED_WORDS];
         le::read_u32_into(&seed, &mut seed_u32);
-        Hc128Rng::init(seed_u32)
+        Self::init(seed_u32)
     }
 }
+
+impl CryptoRng for Hc128Core {}
 
 #[cfg(test)]
 mod test {
