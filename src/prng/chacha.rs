@@ -11,7 +11,7 @@
 //! The ChaCha random number generator.
 
 use core::fmt;
-use rand_core::{BlockRngCore, CryptoRng, RngCore, SeedableRng, Error, le};
+use rand_core::{BlockRngCore, CryptoRng, RngCore, SeedableRng, Error, Void, le};
 use rand_core::impls::BlockRng;
 
 const SEED_WORDS: usize = 8; // 8 words for the 256-bit key
@@ -222,8 +222,9 @@ macro_rules! double_round{
 impl BlockRngCore for ChaChaCore {
     type Item = u32;
     type Results = [u32; STATE_WORDS];
+    type Error = Void;
 
-    fn generate(&mut self, results: &mut Self::Results) {
+    fn generate(&mut self, results: &mut Self::Results) -> Result<(), Void> {
         // For some reason extracting this part into a separate function
         // improves performance by 50%.
         fn core(results: &mut [u32; STATE_WORDS],
@@ -243,12 +244,13 @@ impl BlockRngCore for ChaChaCore {
 
         // update 128-bit counter
         self.state[12] = self.state[12].wrapping_add(1);
-        if self.state[12] != 0 { return; };
+        if self.state[12] != 0 { return Ok(()); };
         self.state[13] = self.state[13].wrapping_add(1);
-        if self.state[13] != 0 { return; };
+        if self.state[13] != 0 { return Ok(()); };
         self.state[14] = self.state[14].wrapping_add(1);
-        if self.state[14] != 0 { return; };
+        if self.state[14] != 0 { return Ok(()); };
         self.state[15] = self.state[15].wrapping_add(1);
+        Ok(())
     }
 }
 

@@ -11,7 +11,7 @@
 //! The HC-128 random number generator.
 
 use core::fmt;
-use rand_core::{BlockRngCore, CryptoRng, RngCore, SeedableRng, Error, le};
+use rand_core::{BlockRngCore, CryptoRng, RngCore, SeedableRng, Error, Void, le};
 use rand_core::impls::BlockRng;
 
 const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
@@ -115,8 +115,9 @@ impl fmt::Debug for Hc128Core {
 impl BlockRngCore for Hc128Core {
     type Item = u32;
     type Results = [u32; 16];
+    type Error = Void;
 
-    fn generate(&mut self, results: &mut Self::Results) {
+    fn generate(&mut self, results: &mut Self::Results) -> Result<(), Void> {
         assert!(self.counter1024 % 16 == 0);
 
         let cc = self.counter1024 % 512;
@@ -161,6 +162,8 @@ impl BlockRngCore for Hc128Core {
             results[15] = self.step_q(cc+15, dd+0,  cc+12, cc+5,  cc+3);
         }
         self.counter1024 = self.counter1024.wrapping_add(16);
+        
+        Ok(())
     }
 }
 

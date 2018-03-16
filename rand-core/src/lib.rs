@@ -43,10 +43,11 @@
 
 use core::default::Default;
 use core::convert::AsMut;
+use core::fmt::Display;
 
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
-pub use error::{ErrorKind, Error};
+pub use error::{ErrorKind, Error, Void};
 
 
 mod error;
@@ -201,15 +202,24 @@ pub trait RngCore {
 /// type MyRng = BlockRng<u32, MyRngCore>;
 /// ```
 pub trait BlockRngCore {
-    /// Results element type, e.g. `u32`.
+    /// Results element type, e.g. `u32`. [`BlockRng`] must have a
+    /// corresponding impl of `RngCore` for the item type, which means
+    /// currently only `u32` is supported.
+    /// 
+    /// [`BlockRng`]: impls/struct.BlockRng.html
     type Item;
     
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u32; 16]`.
     type Results: AsRef<[Self::Item]> + Default;
+    
+    /// Error type. May be a void type (i.e. enum with no variants) if no
+    /// errors are possible.
+    type Error: Display;
 
     /// Generate a new block of results.
-    fn generate(&mut self, results: &mut Self::Results);
+    fn generate(&mut self, results: &mut Self::Results)
+            -> Result<(), Self::Error>;
 }
 
 /// A marker trait used to indicate that an `RngCore` or `BlockRngCore`
