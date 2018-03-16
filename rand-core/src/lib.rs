@@ -162,8 +162,58 @@ pub trait RngCore {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
 
-/// A marker trait for an `Rng` which may be considered for use in
-/// cryptography.
+/// A trait for RNGs which do not generate random numbers individually, but in
+/// blocks (typically `[u32; N]`). This technique is commonly used by
+/// cryptographic RNGs to improve performance.
+/// 
+/// Usage of this trait is optional, but provides two advantages:
+/// implementations only need to concern themselves with generation of the
+/// block, not the various `RngCore` methods (especially `fill_bytes`, where the
+/// optimal implementations are not trivial), and this allows `ReseedingRng` to
+/// perform periodic reseeding with very low overhead.
+/// 
+/// # Example
+/// 
+/// ```norun
+/// use rand_core::BlockRngCore;
+/// use rand_core::impls::BlockRng;
+/// 
+/// struct MyRngCore;
+/// 
+/// impl BlockRngCore for MyRngCore {
+///     type Results = [u32; 16];
+///     
+///     fn generate(&mut self, results: &mut Self::Results) {
+///         unimplemented!()
+///     }
+/// }
+/// 
+/// impl SeedableRng for MyRngCore {
+///     type Seed = unimplemented!();
+///     fn from_seed(seed: Self::Seed) -> Self {
+///         unimplemented!()
+///     }
+/// }
+/// 
+/// // optionally, also implement CryptoRng for MyRngCore
+/// 
+/// // Final RNG.
+/// type MyRng = BlockRng<u32, MyRngCore>;
+/// ```
+pub trait BlockRngCore {
+    /// Results element type, e.g. `u32`.
+    type Item;
+    
+    /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
+    /// generates, which will usually be an array like `[u32; 16]`.
+    type Results: AsRef<[Self::Item]> + Default;
+
+    /// Generate a new block of results.
+    fn generate(&mut self, results: &mut Self::Results);
+}
+
+/// A marker trait used to indicate that an `RngCore` or `BlockRngCore`
+/// implementation is supposed to be cryptographically secure.
 /// 
 /// *Cryptographically secure generators*, also known as *CSPRNGs*, should
 /// satisfy an additional properties over other generators: given the first
@@ -182,7 +232,7 @@ pub trait RngCore {
 /// 
 /// Note also that use of a `CryptoRng` does not protect against other
 /// weaknesses such as seeding from a weak entropy source or leaking state.
-pub trait CryptoRng: RngCore {}
+pub trait CryptoRng {}
 
 /// A random number generator that can be explicitly seeded.
 ///
@@ -263,22 +313,20 @@ pub trait SeedableRng: Sized {
 
 
 impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
-    #[inline]
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
 
-    #[inline]
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
     }
 
-    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
     }
-    
-    #[inline]
+
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill_bytes(dest)
     }
@@ -286,22 +334,20 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
 
 #[cfg(any(feature="std", feature="alloc"))]
 impl<R: RngCore + ?Sized> RngCore for Box<R> {
-    #[inline]
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
 
-    #[inline]
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         (**self).next_u64()
     }
 
-    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
     }
-    
-    #[inline]
+
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill_bytes(dest)
     }

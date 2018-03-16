@@ -278,6 +278,7 @@ pub use jitter::JitterRng;
 #[cfg(feature="std")] pub use os::OsRng;
 
 // pseudo rngs
+pub mod prng;
 pub use isaac::{IsaacRng, Isaac64Rng};
 pub use chacha::ChaChaRng;
 pub use prng::XorShiftRng;
@@ -312,7 +313,6 @@ pub mod isaac {
 
 // private modules
 #[cfg(feature="std")] mod entropy_rng;
-mod prng;
 #[cfg(feature="std")] mod thread_rng;
 
 
@@ -815,10 +815,12 @@ impl<R: SeedableRng> NewRng for R {
 pub struct StdRng(Hc128Rng);
 
 impl RngCore for StdRng {
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }
 
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         self.0.next_u64()
     }
