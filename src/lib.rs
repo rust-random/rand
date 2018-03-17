@@ -537,6 +537,23 @@ pub trait Rng: RngCore {
         n <= 1 || self.gen_range(0, n) == 0
     }
 
+    /// Return a bool with a probability `p` of being true.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// println!("{}", rng.gen_bool(1.0 / 3.0));
+    /// ```
+    fn gen_bool(&mut self, p: f64) -> bool {
+        assert!(p >= 0.0 && p <= 1.0);
+        // If `p` is constant, this will be evaluated at compile-time.
+        let p_int = (p * core::u32::MAX as f64) as u32;
+        p_int > self.gen()
+    }
+
     /// Return an iterator of random characters from the set A-Z,a-z,0-9.
     ///
     /// # Example
@@ -1080,6 +1097,15 @@ mod test {
         let mut r = rng(104);
         assert_eq!(r.gen_weighted_bool(0), true);
         assert_eq!(r.gen_weighted_bool(1), true);
+    }
+
+    #[test]
+    fn test_gen_bool() {
+        let mut r = rng(105);
+        for _ in 0..5 {
+            assert_eq!(r.gen_bool(0.0), false);
+            assert_eq!(r.gen_bool(1.0), true);
+        }
     }
 
     #[test]
