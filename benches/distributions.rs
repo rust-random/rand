@@ -95,6 +95,8 @@ distr!(distr_uniform_codepoint, char, Standard);
 
 distr_float!(distr_uniform_f32, f32, Standard);
 distr_float!(distr_uniform_f64, f64, Standard);
+distr_float!(distr_high_precision_f32, f32, HighPrecision01);
+distr_float!(distr_high_precision_f64, f64, HighPrecision01);
 
 // distributions
 distr_float!(distr_exp, f64, Exp::new(1.23 * 4.56));
