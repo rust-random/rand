@@ -175,7 +175,7 @@ use Rng;
 
 pub use self::other::Alphanumeric;
 #[doc(inline)] pub use self::uniform::Uniform;
-pub use self::float::{OpenClosed01, Open01, HighPrecision};
+pub use self::float::{OpenClosed01, Open01, HighPrecision, HighPrecision01};
 pub use self::bernoulli::Bernoulli;
 #[cfg(feature="alloc")] pub use self::weighted::{WeightedIndex, WeightedError};
 #[cfg(feature="std")] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};

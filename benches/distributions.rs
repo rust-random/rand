@@ -109,6 +109,8 @@ distr_float!(distr_open01_f32, f32, Open01);
 distr_float!(distr_open01_f64, f64, Open01);
 distr_float!(distr_openclosed01_f32, f32, OpenClosed01);
 distr_float!(distr_openclosed01_f64, f64, OpenClosed01);
+distr_float!(distr_high_precision_f32, f32, HighPrecision01);
+distr_float!(distr_high_precision_f64, f64, HighPrecision01);
 
 // distributions
 distr_float!(distr_exp, f64, Exp::new(1.23 * 4.56));
