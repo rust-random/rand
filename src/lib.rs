@@ -521,6 +521,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```rust
+    /// #[allow(deprecated)]
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
@@ -532,6 +533,7 @@ pub trait Rng: RngCore {
     /// // First meaningful use of `gen_weighted_bool`.
     /// println!("{}", rng.gen_weighted_bool(3));
     /// ```
+    #[deprecated(since="0.5.0", note="use gen_bool instead")]
     fn gen_weighted_bool(&mut self, n: u32) -> bool {
         // Short-circuit after `n <= 1` to avoid panic in `gen_range`
         n <= 1 || self.gen_range(0, n) == 0
@@ -551,7 +553,7 @@ pub trait Rng: RngCore {
         assert!(p >= 0.0 && p <= 1.0);
         // If `p` is constant, this will be evaluated at compile-time.
         let p_int = (p * core::u32::MAX as f64) as u32;
-        p_int > self.gen()
+        self.gen::<u32>() <= p_int
     }
 
     /// Return an iterator of random characters from the set A-Z,a-z,0-9.
@@ -1093,6 +1095,7 @@ mod test {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_gen_weighted_bool() {
         let mut r = rng(104);
         assert_eq!(r.gen_weighted_bool(0), true);
