@@ -131,13 +131,12 @@ mod test {
 
     #[test]
     #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_poisson_invalid_lambda_zero() {
         Poisson::new(0.0);
     }
+
     #[test]
     #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_poisson_invalid_lambda_neg() {
         Poisson::new(-10.0);
     }

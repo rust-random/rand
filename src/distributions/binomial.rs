@@ -17,7 +17,8 @@ use std::f64::consts::PI;
 
 /// The binomial distribution `Binomial(n, p)`.
 ///
-/// This distribution has density function: `f(k) = n!/(k! (n-k)!) p^k (1-p)^(n-k)` for `k >= 0`.
+/// This distribution has density function:
+/// `f(k) = n!/(k! (n-k)!) p^k (1-p)^(n-k)` for `k >= 0`.
 ///
 /// # Example
 ///
@@ -143,13 +144,12 @@ mod test {
 
     #[test]
     #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_binomial_invalid_lambda_zero() {
         Binomial::new(20, 0.0);
     }
+
     #[test]
     #[should_panic]
-    #[cfg_attr(target_env = "msvc", ignore)]
     fn test_binomial_invalid_lambda_neg() {
         Binomial::new(20, -10.0);
     }
