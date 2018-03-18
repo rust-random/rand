@@ -81,6 +81,14 @@ pub mod le;
 /// in this trait directly, then use the helper functions from the [`impls`]
 /// module to implement the other methods.
 /// 
+/// It is recommended that implementations also implement:
+/// 
+/// - `Debug` but such that no internal details are output
+/// - `Serialize` and `Deserialize` (from Serde), possibly behind a feature gate
+/// - `Clone` if, and only if, the clone will have identical output to the original
+/// - *never* implement `Copy` (accidental copies may cause repeated values)
+/// - `Eq` and `PartialEq` could be implemented, but are probably not useful
+/// 
 /// # Example
 /// 
 /// A simple example, obviously not generating very *random* output:
