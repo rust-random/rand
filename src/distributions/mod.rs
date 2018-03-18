@@ -25,6 +25,10 @@ pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 pub use self::normal::{Normal, LogNormal, StandardNormal};
 #[cfg(feature="std")]
 pub use self::exponential::{Exp, Exp1};
+#[cfg(feature = "std")]
+pub use self::poisson::Poisson;
+#[cfg(feature = "std")]
+pub use self::binomial::Binomial;
 
 pub mod range;
 #[cfg(feature="std")]
@@ -33,9 +37,14 @@ pub mod gamma;
 pub mod normal;
 #[cfg(feature="std")]
 pub mod exponential;
+#[cfg(feature = "std")]
+pub mod poisson;
+#[cfg(feature = "std")]
+pub mod binomial;
 
 mod float;
 mod integer;
+mod log_gamma;
 mod other;
 #[cfg(feature="std")]
 mod ziggurat_tables;

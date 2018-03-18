@@ -1,0 +1,144 @@
+// Copyright 2016-2017 The Rust Project Developers. See the COPYRIGHT
+// file at the top-level directory of this distribution and at
+// https://rust-lang.org/COPYRIGHT.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! The Poisson distribution.
+
+use Rng;
+use distributions::Distribution;
+use distributions::log_gamma::log_gamma;
+use std::f64::consts::PI;
+
+/// The Poisson distribution `Poisson(lambda)`.
+///
+/// This distribution has a density function:
+/// `f(k) = lambda^k * exp(-lambda) / k!` for `k >= 0`.
+///
+/// # Example
+///
+/// ```rust
+/// use rand::distributions::{Poisson, Distribution};
+///
+/// let poi = Poisson::new(2.0);
+/// let v = poi.sample(&mut rand::thread_rng());
+/// println!("{} is from a Poisson(2) distribution", v);
+/// ```
+#[derive(Clone, Copy, Debug)]
+pub struct Poisson {
+    lambda: f64,
+    // precalculated values
+    exp_lambda: f64,
+    log_lambda: f64,
+    sqrt_2lambda: f64,
+    magic_val: f64,
+}
+
+impl Poisson {
+    /// Construct a new `Poisson` with the given shape parameter
+    /// `lambda`. Panics if `lambda <= 0`.
+    pub fn new(lambda: f64) -> Poisson {
+        assert!(lambda > 0.0, "Poisson::new called with lambda <= 0");
+        let log_lambda = lambda.ln();
+        Poisson {
+            lambda: lambda,
+            exp_lambda: (-lambda).exp(),
+            log_lambda: log_lambda,
+            sqrt_2lambda: (2.0 * lambda).sqrt(),
+            magic_val: lambda * log_lambda - log_gamma(1.0 + lambda),
+        }
+    }
+}
+
+impl Distribution<u64> for Poisson {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
+        // using the algorithm from Numerical Recipes in C
+
+        // for low expected values use the Knuth method
+        if self.lambda < 12.0 {
+            let mut result = 0;
+            let mut p = 1.0;
+            while p > self.exp_lambda {
+                p *= rng.gen::<f64>();
+                result += 1;
+            }
+            result - 1
+        }
+        // high expected values - rejection method
+        else {
+            let mut int_result: u64;
+
+            loop {
+                let mut result;
+                let mut comp_dev;
+
+                // we use the lorentzian distribution as the comparison distribution
+                // f(x) ~ 1/(1+x/^2)
+                loop {
+                    // draw from the lorentzian distribution
+                    comp_dev = (PI * rng.gen::<f64>()).tan();
+                    // shift the peak of the comparison ditribution
+                    result = self.sqrt_2lambda * comp_dev + self.lambda;
+                    // repeat the drawing until we are in the range of possible values
+                    if result >= 0.0 {
+                        break;
+                    }
+                }
+                // now the result is a random variable greater than 0 with Lorentzian distribution
+                // the result should be an integer value
+                result = result.floor();
+                int_result = result as u64;
+
+                // this is the ratio of the Poisson distribution to the comparison distribution
+                // the magic value scales the distribution function to a range of approximately 0-1
+                // since it is not exact, we multiply the ratio by 0.9 to avoid ratios greater than 1
+                // this doesn't change the resulting distribution, only increases the rate of failed drawings
+                let check = 0.9 * (1.0 + comp_dev * comp_dev)
+                    * (result * self.log_lambda - log_gamma(1.0 + result) - self.magic_val).exp();
+
+                // check with uniform random value - if below the threshold, we are within the target distribution
+                if rng.gen::<f64>() <= check {
+                    break;
+                }
+            }
+            int_result
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use distributions::Distribution;
+    use super::Poisson;
+
+    #[test]
+    fn test_poisson() {
+        let poisson = Poisson::new(10.0);
+        let mut rng = ::test::rng(123);
+        let mut sum = 0;
+        for _ in 0..1000 {
+            sum += poisson.sample(&mut rng);
+        }
+        let avg = (sum as f64) / 1000.0;
+        println!("Poisson average: {}", avg);
+        assert!((avg - 10.0).abs() < 0.5); // not 100% certain, but probable enough
+    }
+
+    #[test]
+    #[should_panic]
+    #[cfg_attr(target_env = "msvc", ignore)]
+    fn test_poisson_invalid_lambda_zero() {
+        Poisson::new(0.0);
+    }
+    #[test]
+    #[should_panic]
+    #[cfg_attr(target_env = "msvc", ignore)]
+    fn test_poisson_invalid_lambda_neg() {
+        Poisson::new(-10.0);
+    }
+}
