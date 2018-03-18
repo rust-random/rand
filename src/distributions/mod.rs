@@ -44,6 +44,7 @@ pub mod binomial;
 
 mod float;
 mod integer;
+#[cfg(feature="std")]
 mod log_gamma;
 mod other;
 #[cfg(feature="std")]
