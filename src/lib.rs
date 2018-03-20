@@ -817,7 +817,7 @@ impl<R: SeedableRng> NewRng for R {
     }
 }
 
-/// The standard RNG. The PRNG algorithm in `StdRng` is choosen to be efficient
+/// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
 /// on the current platform, to be statistically strong and unpredictable
 /// (meaning a cryptographically secure PRNG).
 ///
@@ -866,7 +866,7 @@ impl SeedableRng for StdRng {
 }
 
 /// An RNG recommended when small state, cheap initialization and good
-/// performance are required. The PRNG algorithm in `SmallRng` is choosen to be
+/// performance are required. The PRNG algorithm in `SmallRng` is chosen to be
 /// efficient on the current platform, **without consideration for cryptography
 /// or security**. The size of its state is much smaller than for `StdRng`.
 ///
@@ -909,10 +909,12 @@ impl SeedableRng for StdRng {
 pub struct SmallRng(XorShiftRng);
 
 impl RngCore for SmallRng {
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }
 
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         self.0.next_u64()
     }
