@@ -332,15 +332,39 @@ pub trait Rand : Sized {
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
 /// 
-/// This is the primary trait to use when generating random values. Example:
+/// This is the primary trait to use when generating random values.
+/// 
+/// # Generic usage
+/// 
+/// The basic pattern is `fn foo<R: Rng + ?Sized>(rng: &mut R)`. Some
+/// things are worth noting here:
+/// 
+/// - Since `Rng: RngCore` and every `RngCore` implements `Rng`, it makes no
+///   difference whether we use `R: Rng` or `R: RngCore`.
+/// - The `+ ?Sized` un-bounding allows functions to be called directly on
+///   type-erased references; i.e. `foo(r)` where `r: &mut RngCore`. Without
+///   this it would be necessary to write `foo(&mut r)`.
+/// 
+/// An alternative pattern is possible: `fn foo<R: Rng>(rng: R)`. This has some
+/// trade-offs. It allows the argument to be consumed directly without a `&mut`
+/// (which is how `from_rng(thread_rng())` works); also it still works directly
+/// on references (including type-erased references). Unfortunately within the
+/// function `foo` it is not known whether `rng` is a reference type or not,
+/// hence many uses of `rng` require an extra reference, either explicitly
+/// (`distr.sample(&mut rng)`) or implicitly (`rng.gen()`); one may hope the
+/// optimiser can remove redundant references later.
+/// 
+/// Example:
 /// 
 /// ```rust
 /// use rand::Rng;
 /// 
-/// fn use_rng<R: Rng + ?Sized>(rng: &mut R) -> f32 {
+/// fn foo<R: Rng + ?Sized>(rng: &mut R) -> f32 {
 ///     rng.gen()
 /// }
 /// ```
+/// 
+/// # Iteration
 /// 
 /// Iteration over an `Rng` can be achieved using `iter::repeat` as follows:
 /// 
