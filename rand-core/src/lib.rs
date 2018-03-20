@@ -81,6 +81,19 @@ pub mod le;
 /// in this trait directly, then use the helper functions from the [`impls`]
 /// module to implement the other methods.
 /// 
+/// It is recommended that implementations also implement:
+/// 
+/// - `Debug` with a custom implementation which *does not* print any internal
+///   state (at least, `CryptoRng`s should not risk leaking state through Debug)
+/// - `Serialize` and `Deserialize` (from Serde), preferably making Serde
+///   support optional at the crate level in PRNG libs
+/// - `Clone` if, and only if, the clone will have identical output to the
+///   original (i.e. all deterministic PRNGs but not external generators)
+/// - *never* implement `Copy` (accidental copies may cause repeated values)
+/// - also *do not* implement `Default`, but instead implement `SeedableRng`
+///   thus allowing use of `rand::NewRng` (which is automatically implemented)
+/// - `Eq` and `PartialEq` could be implemented, but are probably not useful
+/// 
 /// # Example
 /// 
 /// A simple example, obviously not generating very *random* output:
