@@ -94,8 +94,8 @@ impl SeedableRng for ChaChaRng {
         ChaChaRng(BlockRng::<ChaChaCore>::from_seed(seed))
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
-        BlockRng::<ChaChaCore>::from_rng(rng).map(|rng| ChaChaRng(rng))
+    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
+        BlockRng::<ChaChaCore>::from_rng(rng).map(|result| ChaChaRng(result))
     }
 }
 
@@ -273,6 +273,7 @@ impl ChaChaCore {
 
 impl SeedableRng for ChaChaCore {
     type Seed = [u8; SEED_WORDS*4];
+
     fn from_seed(seed: Self::Seed) -> Self {
         let mut seed_le = [0u32; SEED_WORDS];
         le::read_u32_into(&seed, &mut seed_le);

@@ -323,7 +323,7 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
         }
     }
 
-    fn from_rng<RNG: RngCore>(rng: &mut RNG) -> Result<Self, Error> {
+    fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
         let results_empty = R::Results::default();
         Ok(Self {
             core: R::from_rng(rng)?,

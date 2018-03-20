@@ -91,8 +91,8 @@ impl SeedableRng for Hc128Rng {
         Hc128Rng(BlockRng::<Hc128Core>::from_seed(seed))
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
-        BlockRng::<Hc128Core>::from_rng(rng).map(|rng| Hc128Rng(rng))
+    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
+        BlockRng::<Hc128Core>::from_rng(rng).map(|result| Hc128Rng(result))
     }
 }
 

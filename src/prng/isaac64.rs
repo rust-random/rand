@@ -325,7 +325,7 @@ impl SeedableRng for Isaac64Rng {
         init(seed_extended, 2)
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
         // Custom `from_rng` implementation that fills a seed with the same size
         // as the entire state.
         let mut seed = [w(0u64); RAND_SIZE];
