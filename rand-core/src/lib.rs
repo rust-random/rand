@@ -317,7 +317,7 @@ pub trait SeedableRng: Sized {
     /// [`NewRng`]: https://docs.rs/rand/0.5/rand/trait.NewRng.html
     /// [`OsRng`]: https://docs.rs/rand/0.5/rand/os/struct.OsRng.html
     /// [`XorShiftRng`]: https://docs.rs/rand/0.5/rand/prng/xorshift/struct.XorShiftRng.html
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;
         Ok(Self::from_seed(seed))

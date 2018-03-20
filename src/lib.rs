@@ -884,8 +884,8 @@ impl SeedableRng for StdRng {
         StdRng(Hc128Rng::from_seed(seed))
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
-        Hc128Rng::from_rng(rng).map(|rng| StdRng(rng))
+    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
+        Hc128Rng::from_rng(rng).map(|result| StdRng(result))
     }
 }
 
@@ -961,8 +961,8 @@ impl SeedableRng for SmallRng {
         SmallRng(XorShiftRng::from_seed(seed))
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
-        XorShiftRng::from_rng(rng).map(|rng| SmallRng(rng))
+    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
+        XorShiftRng::from_rng(rng).map(|result| SmallRng(result))
     }
 }
 

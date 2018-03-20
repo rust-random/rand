@@ -105,7 +105,7 @@ impl SeedableRng for XorShiftRng {
         }
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
         let mut seed_u32 = [0u32; 4];
         loop {
             unsafe {
