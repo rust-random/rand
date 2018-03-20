@@ -16,7 +16,7 @@ prefer to use the main [rand] crate.
 
 [Documentation](https://docs.rs/rand-core)
 
-[rand]: ..
+[rand]: ../README.md
 
 
 # License
