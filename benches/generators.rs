@@ -9,7 +9,8 @@ const BYTES_LEN: usize = 1024;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{RngCore, Rng, SeedableRng, NewRng, StdRng, OsRng, JitterRng, EntropyRng};
+use rand::{RngCore, Rng, SeedableRng, NewRng};
+use rand::{StdRng, SmallRng, OsRng, JitterRng, EntropyRng};
 use rand::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 use rand::reseeding::ReseedingRng;
 use rand::prng::hc128::Hc128Core;
@@ -37,6 +38,7 @@ gen_bytes!(gen_bytes_hc128, Hc128Rng::new());
 gen_bytes!(gen_bytes_isaac, IsaacRng::new());
 gen_bytes!(gen_bytes_isaac64, Isaac64Rng::new());
 gen_bytes!(gen_bytes_std, StdRng::new());
+gen_bytes!(gen_bytes_small, SmallRng::new());
 gen_bytes!(gen_bytes_os, OsRng::new().unwrap());
 
 macro_rules! gen_uint {
@@ -61,6 +63,7 @@ gen_uint!(gen_u32_hc128, u32, Hc128Rng::new());
 gen_uint!(gen_u32_isaac, u32, IsaacRng::new());
 gen_uint!(gen_u32_isaac64, u32, Isaac64Rng::new());
 gen_uint!(gen_u32_std, u32, StdRng::new());
+gen_uint!(gen_u32_small, u32, SmallRng::new());
 gen_uint!(gen_u32_os, u32, OsRng::new().unwrap());
 
 gen_uint!(gen_u64_xorshift, u64, XorShiftRng::new());
@@ -68,6 +71,7 @@ gen_uint!(gen_u64_hc128, u64, Hc128Rng::new());
 gen_uint!(gen_u64_isaac, u64, IsaacRng::new());
 gen_uint!(gen_u64_isaac64, u64, Isaac64Rng::new());
 gen_uint!(gen_u64_std, u64, StdRng::new());
+gen_uint!(gen_u64_small, u64, SmallRng::new());
 gen_uint!(gen_u64_os, u64, OsRng::new().unwrap());
 
 // Do not test JitterRng like the others by running it RAND_BENCH_N times per,
