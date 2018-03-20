@@ -5,8 +5,8 @@ authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-lang-nursery/rand"
-documentation = "https://docs.rs/rand"
-homepage = "https://github.com/rust-lang-nursery/rand"
+documentation = "https://docs.rs/rand-core"
+homepage = "https://crates.io/crates/rand-core"
 description = """
 Core random number generator traits and tools for implementation.
 """
