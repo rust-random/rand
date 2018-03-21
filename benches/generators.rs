@@ -45,9 +45,11 @@ macro_rules! gen_uint {
         fn $fnn(b: &mut Bencher) {
             let mut rng = $gen;
             b.iter(|| {
+                let mut accum: $ty = 0;
                 for _ in 0..RAND_BENCH_N {
-                    black_box(rng.gen::<$ty>());
+                    accum = accum.wrapping_add(rng.gen::<$ty>());
                 }
+                black_box(accum);
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
@@ -126,9 +128,11 @@ macro_rules! chacha_rounds {
             let mut rng = ChaChaRng::new();
             rng.set_rounds($rounds);
             b.iter(|| {
+                let mut accum: u32 = 0;
                 for _ in 0..RAND_BENCH_N {
-                    black_box(rng.gen::<u32>());
+                    accum = accum.wrapping_add(rng.gen::<u32>());
                 }
+                black_box(accum);
             });
             b.bytes = size_of::<u32>() as u64 * RAND_BENCH_N;
         }
@@ -138,9 +142,11 @@ macro_rules! chacha_rounds {
             let mut rng = ChaChaRng::new();
             rng.set_rounds($rounds);
             b.iter(|| {
+                let mut accum: u64 = 0;
                 for _ in 0..RAND_BENCH_N {
-                    black_box(rng.gen::<u64>());
+                    accum = accum.wrapping_add(rng.gen::<u64>());
                 }
+                black_box(accum);
             });
             b.bytes = size_of::<u64>() as u64 * RAND_BENCH_N;
         }
@@ -178,9 +184,11 @@ macro_rules! reseeding_uint {
                                             RESEEDING_THRESHOLD,
                                             EntropyRng::new());
             b.iter(|| {
+                let mut accum: $ty = 0;
                 for _ in 0..RAND_BENCH_N {
-                    black_box(rng.gen::<$ty>());
+                    accum = accum.wrapping_add(rng.gen::<$ty>());
                 }
+                black_box(accum);
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
@@ -197,9 +205,11 @@ macro_rules! threadrng_uint {
         fn $fnn(b: &mut Bencher) {
             let mut rng = thread_rng();
             b.iter(|| {
+                let mut accum: $ty = 0;
                 for _ in 0..RAND_BENCH_N {
-                    black_box(rng.gen::<$ty>());
+                    accum = accum.wrapping_add(rng.gen::<$ty>());
                 }
+                black_box(accum);
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
