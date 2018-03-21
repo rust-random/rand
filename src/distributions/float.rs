@@ -10,7 +10,7 @@
 
 //! Basic floating-point number distributions
 
-use core::mem;
+use core::{cmp, mem};
 use Rng;
 use distributions::{Distribution, Standard};
 use distributions::utils::FloatSIMDUtils;
@@ -98,22 +98,20 @@ impl<F: HPFloatHelper> HighPrecision<F> {
 }
 
 /// Generate a floating point number in the half-open interval `[0, 1)` with a
-/// uniform distribution.
+/// uniform distribution, with as much precision as the floating-point type
+/// can represent, including sub-normals.
 ///
-/// This is different from `Uniform` in that it uses all 32 bits of an RNG for a
-/// `f32`, instead of only 23, the number of bits that fit in a floats fraction
-/// (or 64 instead of 52 bits for a `f64`).
+/// Technically 0 is representable, but the probability of occurrence is
+/// remote (1 in 2^149 for `f32` or 1 in 2^1074 for `f64`).
 ///
-/// The smallest interval between values that can be generated is 2^-32
-/// (2.3283064e-10) for `f32`, and 2^-64 (5.421010862427522e-20) for `f64`.
-/// But this interval increases further away from zero because of limitations of
-/// the floating point format. Close to 1.0 the interval is 2^-24 (5.9604645e-8)
-/// for `f32`, and 2^-53 (1.1102230246251565) for `f64`. Compare this with
-/// `Uniform`, which has a fixed interval of 2^23 and 2^-52 respectively.
-///
-/// Note: in the future this may change change to request even more bits from
-/// the RNG if the value gets very close to 0.0, so it always has as many digits
-/// of precision as the float can represent.
+/// This is different from `Uniform` in that it uses as many random bits as
+/// required to get high precision close to 0. Normally only a single call to
+/// the source RNG is required (32 bits for `f32` or 64 bits for `f64`); 1 in
+/// 2^9 (`f32`) or 2^12 (`f64`) samples need an extra call; of these 1 in 2^32
+/// or 1 in 2^64 require a third call, etc.; i.e. even for `f32` a third call is
+/// almost impossible to observe with an unbiased RNG. Due to the extra logic
+/// there is some performance overhead relative to `Uniform`; this is more
+/// significant for `f32` than for `f64`.
 ///
 /// # Example
 /// ```rust
@@ -231,24 +229,10 @@ float_impls! { f64x8, u64x8, f64, u64, 52, 1023 }
 
 
 macro_rules! high_precision_float_impls {
-    ($ty:ty, $uty:ty, $ity:ty, $fraction_bits:expr, $exponent_bits:expr) => {
+    ($ty:ty, $uty:ty, $ity:ty, $fraction_bits:expr, $exponent_bits:expr, $exponent_bias:expr) => {
         impl Distribution<$ty> for HighPrecision01 {
             /// Generate a floating point number in the half-open interval
-            /// `[0, 1)` with a uniform distribution.
-            ///
-            /// This is different from `Uniform` in that it uses all 32 bits
-            /// of an RNG for a `f32`, instead of only 23, the number of bits
-            /// that fit in a floats fraction (or 64 instead of 52 bits for a
-            /// `f64`).
-            ///
-            /// # Example
-            /// ```rust
-            /// use rand::{NewRng, SmallRng, Rng};
-            /// use rand::distributions::HighPrecision01;
-            ///
-            /// let val: f32 = SmallRng::new().sample(HighPrecision01);
-            /// println!("f32 from [0,1): {}", val);
-            /// ```
+            /// `[0, 1)` with a uniform distribution. See [`HighPrecision01`].
             ///
             /// # Algorithm
             /// (Note: this description used values that apply to `f32` to
@@ -257,24 +241,35 @@ macro_rules! high_precision_float_impls {
             /// The trick to generate a uniform distribution over [0,1) is to
             /// set the exponent to the -log2 of the remaining random bits. A
             /// simpler alternative to -log2 is to count the number of trailing
-            /// zero's of the random bits.
+            /// zeros in the random bits. In the case where all bits are zero,
+            /// we simply generate a new random number and add the number of
+            /// trailing zeros to the previous count (up to maximum exponent).
             ///
             /// Each exponent is responsible for a piece of the distribution
-            /// between [0,1). The exponent -1 fills the part [0.5,1). -2 fills
-            /// [0.25,0.5). The lowest exponent we can get is -10. So a problem
-            /// with this method is that we can not fill the part between zero
-            /// and the part from -10. The solution is to treat numbers with an
-            /// exponent of -10 as if they have -9 as exponent, and substract
-            /// 2^-9 (implemented in the `fallback` function).
+            /// between [0,1). We take the above exponent, add 1 and negate;
+            /// thus with probability 1/2 we have exponent -1 which fills the
+            /// range [0.5,1); with probability 1/4 we have exponent -2 which
+            /// fills the range [0.25,0.5), etc. If the exponent reaches the
+            /// minimum allowed, the floating-point format drops the implied
+            /// fraction bit, thus allowing numbers down to 0 to be sampled.
+            ///
+            /// [`HighPrecision01`]: struct.HighPrecision01.html
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                // Unusual case. Separate function to allow inlining of rest.
                 #[inline(never)]
-                fn fallback(fraction: $uty) -> $ty {
-                    let float_size = (mem::size_of::<$ty>() * 8) as i32;
-                    let min_exponent = $fraction_bits as i32 - float_size;
-                    let adjust = // 2^MIN_EXPONENT
-                        (0 as $uty).into_float_with_exponent(min_exponent);
-                    fraction.into_float_with_exponent(min_exponent) - adjust
+                fn fallback<R: Rng + ?Sized>(mut exp: i32, fraction: $uty, rng: &mut R) -> $ty {
+                    // Performance impact of code here is negligible.
+                    let bits = rng.gen::<$uty>();
+                    exp += bits.trailing_zeros() as i32;
+                    // If RNG were guaranteed unbiased we could skip the
+                    // check against exp; unfortunately it may be.
+                    // Worst case ("zeros" RNG) has recursion depth 16.
+                    if bits == 0 && exp < $exponent_bias {
+                        return fallback(exp, fraction, rng);
+                    }
+                    exp = cmp::min(exp, $exponent_bias);
+                    fraction.into_float_with_exponent(-exp)
                 }
 
                 let fraction_mask = (1 << $fraction_bits) - 1;
@@ -282,9 +277,14 @@ macro_rules! high_precision_float_impls {
 
                 let fraction = value & fraction_mask;
                 let remaining = value >> $fraction_bits;
-                // If `remaing ==0` we end up in the lowest exponent, which
-                // needs special treatment.
-                if remaining == 0 { return fallback(fraction) }
+                if remaining == 0 {
+                    // exp is compile-time constant so this reduces to a function call:
+                    let size_bits = (mem::size_of::<$ty>() * 8) as i32;
+                    let exp = (size_bits - $fraction_bits as i32) + 1;
+                    return fallback(exp, fraction, rng);
+                }
+
+                // Usual case: exponent from -1 to -9 (f32) or -12 (f64)
                 let exp = remaining.trailing_zeros() as i32 + 1;
                 fraction.into_float_with_exponent(-exp)
             }
@@ -446,8 +446,8 @@ macro_rules! high_precision_float_impls {
     }
 }
 
-high_precision_float_impls! { f32, u32, i32, 23, 8 }
-high_precision_float_impls! { f64, u64, i64, 52, 11 }
+high_precision_float_impls! { f32, u32, i32, 23, 8, 127 }
+high_precision_float_impls! { f64, u64, i64, 52, 11, 1023 }
 
 
 #[cfg(test)]
@@ -730,5 +730,32 @@ mod tests {
         let mut ones = StepRng::new(0xffff_ffff_ffff_ffff, 0);
         assert_eq!(ones.sample::<f32, _>(HighPrecision01), 0.99999994);
         assert_eq!(ones.sample::<f64, _>(HighPrecision01), 0.9999999999999999);
+    }
+
+    #[cfg(feature="std")] mod mean {
+        use Rng;
+        use distributions::{Standard, HighPrecision01};
+
+        macro_rules! test_mean {
+            ($name:ident, $ty:ty, $distr:expr) => {
+        #[test]
+        fn $name() {
+            // TODO: no need to &mut here:
+            let mut r = ::test::rng(602);
+            let mut total: $ty = 0.0;
+            const N: u32 = 1_000_000;
+            for _ in 0..N {
+                total += r.sample::<$ty, _>($distr);
+            }
+            let avg = total / (N as $ty);
+            //println!("average over {} samples: {}", N, avg);
+            assert!(0.499 < avg && avg < 0.501);
+        }
+        } }
+
+        test_mean!(test_mean_f32, f32, Standard);
+        test_mean!(test_mean_f64, f64, Standard);
+        test_mean!(test_mean_high_f32, f32, HighPrecision01);
+        test_mean!(test_mean_high_f64, f64, HighPrecision01);
     }
 }
