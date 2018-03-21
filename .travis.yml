@@ -41,7 +41,7 @@ matrix:
       install:
         - rustup target add wasm32-unknown-unknown
         # Use cargo-update since we need a real update-or-install command
-        - cargo install cargo-update || true
+        - cargo install --force cargo-update
         - cargo install-update -i cargo-web
       script:
         - cargo web test --target wasm32-unknown-unknown --nodejs
