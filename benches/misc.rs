@@ -3,10 +3,38 @@
 extern crate test;
 extern crate rand;
 
+const RAND_BENCH_N: u64 = 1000;
+
 use test::{black_box, Bencher};
 
 use rand::{SeedableRng, SmallRng, Rng, thread_rng};
 use rand::seq::*;
+
+#[bench]
+fn misc_gen_bool(b: &mut Bencher) {
+    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    b.iter(|| {
+        let mut accum = true;
+        for _ in 0..::RAND_BENCH_N {
+            accum ^= rng.gen_bool(0.18);
+        }
+        black_box(accum);
+    })
+}
+
+#[bench]
+fn misc_gen_bool_var(b: &mut Bencher) {
+    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    b.iter(|| {
+        let mut p = 0.18;
+        let mut accum = true;
+        for _ in 0..::RAND_BENCH_N {
+            accum ^= rng.gen_bool(p);
+            p += 0.0001;
+        }
+        black_box(accum);
+    })
+}
 
 #[bench]
 fn misc_shuffle_100(b: &mut Bencher) {
