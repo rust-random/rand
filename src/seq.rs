@@ -10,7 +10,8 @@
 
 //! Functions for randomly accessing and sampling sequences.
 
-use super::Rng;
+use Rng;
+use distributions::range::WideningMultiply;
 
 // This crate is only enabled when either std or alloc is available.
 // BTreeMap is not as fast in tests, but better than nothing.
@@ -222,6 +223,57 @@ fn sample_indices_cache<R>(
     }
     debug_assert_eq!(out.len(), amount);
     out
+}
+
+pub(crate) fn shuffle<R, T>(rng: &mut R, values: &mut [T])
+where R: Rng + ?Sized {
+    // In theory this function is nothing more then:
+    // ```
+    // while i > 1 {
+    //     // invariant: elements with index >= i have been locked in place.
+    //     i -= 1;
+    //     // lock element i in place.
+    //     values.swap(i, self.gen_range(0, i + 1));
+    // }
+    // ```
+    //
+    // We optimize for slices of different, because generating ranges is
+    // faster for smaller integers. Less bits from the RNG are necessary,
+    // and multiplies are faster.
+    //
+    // We don't switch exactly at the boundary between integer sizes,
+    // because right below the integer boundary there is a very large zone
+    // of values that have to be rejected to avoid bias, 25~50%.
+    let mut i = values.len() as u64;
+    while i > (1 << 31) {
+        i -= 1;
+        values.swap(i as usize, rng.gen_range(0, i + 1) as usize);
+    }
+    let mut i = i as u32;
+    while i > (1 << 15) {
+        i -= 1;
+        values.swap(i as usize, rng.gen_range(0, i + 1) as usize);
+    }
+    let mut i = i as u16;
+    while i > 4 {
+        // Reimplement the range reduction here, because we can do better
+        // than generating 32 bits and throwing away half of them.
+        let mut value: u64 = rng.gen();
+        for _ in 0..4 {
+            let val = value as u16;
+            value = value >> 16;
+            let (hi, lo) = val.wmul(i);
+            let zone = ::core::u16::MAX - (::core::u16::MAX - i + 1) % i;
+            if lo <= zone {
+                i -= 1;
+                values.swap(i as usize, hi as usize);
+            }
+        }
+    }
+    while i > 1 {
+        i -= 1;
+        values.swap(i as usize, rng.gen_range(0, i + 1) as usize);
+    }
 }
 
 #[cfg(test)]
