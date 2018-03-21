@@ -64,7 +64,7 @@ impl Distribution<u64> for Binomial {
             if expected < 25.0 {
                 let mut lresult = 0.0;
                 for _ in 0 .. self.n {
-                    if rng.gen::<f64>() < p {
+                    if rng.gen_bool(p) {
                         lresult += 1.0;
                     }
                 }

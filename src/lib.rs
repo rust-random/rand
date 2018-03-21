@@ -521,6 +521,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```rust
+    /// #[allow(deprecated)]
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
@@ -532,9 +533,27 @@ pub trait Rng: RngCore {
     /// // First meaningful use of `gen_weighted_bool`.
     /// println!("{}", rng.gen_weighted_bool(3));
     /// ```
+    #[deprecated(since="0.5.0", note="use gen_bool instead")]
     fn gen_weighted_bool(&mut self, n: u32) -> bool {
         // Short-circuit after `n <= 1` to avoid panic in `gen_range`
         n <= 1 || self.gen_range(0, n) == 0
+    }
+
+    /// Return a bool with a probability `p` of being true.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// println!("{}", rng.gen_bool(1.0 / 3.0));
+    /// ```
+    fn gen_bool(&mut self, p: f64) -> bool {
+        assert!(p >= 0.0 && p <= 1.0);
+        // If `p` is constant, this will be evaluated at compile-time.
+        let p_int = (p * core::u32::MAX as f64) as u32;
+        self.gen::<u32>() <= p_int
     }
 
     /// Return an iterator of random characters from the set A-Z,a-z,0-9.
@@ -798,7 +817,7 @@ impl<R: SeedableRng> NewRng for R {
     }
 }
 
-/// The standard RNG. The PRNG algorithm in `StdRng` is choosen to be efficient
+/// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
 /// on the current platform, to be statistically strong and unpredictable
 /// (meaning a cryptographically secure PRNG).
 ///
@@ -847,7 +866,7 @@ impl SeedableRng for StdRng {
 }
 
 /// An RNG recommended when small state, cheap initialization and good
-/// performance are required. The PRNG algorithm in `SmallRng` is choosen to be
+/// performance are required. The PRNG algorithm in `SmallRng` is chosen to be
 /// efficient on the current platform, **without consideration for cryptography
 /// or security**. The size of its state is much smaller than for `StdRng`.
 ///
@@ -890,10 +909,12 @@ impl SeedableRng for StdRng {
 pub struct SmallRng(XorShiftRng);
 
 impl RngCore for SmallRng {
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }
 
+    #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         self.0.next_u64()
     }
@@ -1076,10 +1097,20 @@ mod test {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_gen_weighted_bool() {
         let mut r = rng(104);
         assert_eq!(r.gen_weighted_bool(0), true);
         assert_eq!(r.gen_weighted_bool(1), true);
+    }
+
+    #[test]
+    fn test_gen_bool() {
+        let mut r = rng(105);
+        for _ in 0..5 {
+            assert_eq!(r.gen_bool(0.0), false);
+            assert_eq!(r.gen_bool(1.0), true);
+        }
     }
 
     #[test]
