@@ -108,30 +108,28 @@ distr_int!(distr_poisson, u64, Poisson::new(4.0));
 
 // construct and sample from a range
 macro_rules! gen_range_int {
-    ($fnn:ident, $ty:ty, $low:expr, $high:expr) => {
+    ($fnn:ident, $ty:ty, $low:expr, $high:expr, $incr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
             let mut rng = XorShiftRng::new();
-            let mut high = $high;
-            let fake_increment = 0;
 
             b.iter(|| {
+                let mut high = $high;
                 let mut accum: $ty = 0;
                 for _ in 0..::RAND_BENCH_N {
                     accum = accum.wrapping_add(rng.gen_range($low, high));
-                    high += fake_increment;
+                    high += $incr;  // force recalculation of range each time
                 }
                 black_box(accum);
-                black_box(fake_increment);
             });
             b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
         }
     }
 }
 
-gen_range_int!(gen_range_i8, i8, 20i8, 100);
-gen_range_int!(gen_range_i16, i16, -500i16, 2000);
-gen_range_int!(gen_range_i32, i32, -200_000_000i32, 800_000_000);
-gen_range_int!(gen_range_i64, i64, 3i64, 12345678901234);
+gen_range_int!(gen_range_i8, i8, 20i8, 100, 0);
+gen_range_int!(gen_range_i16, i16, -500i16, 2000, 1);
+gen_range_int!(gen_range_i32, i32, -200_000_000i32, 800_000_000, 3);
+gen_range_int!(gen_range_i64, i64, 3i64, 12345678901234, 3);
 #[cfg(feature = "i128_support")]
-gen_range_int!(gen_range_i128, i128, -12345678901234i128, 12345678901234567890);
+gen_range_int!(gen_range_i128, i128, -12345678901234i128, 12345678901234567890, 3);
