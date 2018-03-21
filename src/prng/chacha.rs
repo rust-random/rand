@@ -303,7 +303,7 @@ mod test {
         let mut rng1 = ChaChaRng::from_seed(seed);
         assert_eq!(rng1.next_u32(), 137206642);
 
-        let mut rng2 = ChaChaRng::from_rng(&mut rng1).unwrap();
+        let mut rng2 = ChaChaRng::from_rng(rng1).unwrap();
         assert_eq!(rng2.next_u32(), 1325750369);
     }
 

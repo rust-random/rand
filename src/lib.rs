@@ -824,7 +824,7 @@ pub trait NewRng: SeedableRng {
     /// 
     /// fn foo() -> Result<(), Error> {
     ///     // This uses StdRng, but is valid for any R: SeedableRng
-    ///     let mut rng = StdRng::from_rng(&mut EntropyRng::new())?;
+    ///     let mut rng = StdRng::from_rng(EntropyRng::new())?;
     ///     
     ///     println!("random number: {}", rng.gen_range(1, 10));
     ///     Ok(())
@@ -836,7 +836,7 @@ pub trait NewRng: SeedableRng {
 #[cfg(feature="std")]
 impl<R: SeedableRng> NewRng for R {
     fn new() -> R {
-        R::from_rng(&mut EntropyRng::new()).unwrap_or_else(|err|
+        R::from_rng(EntropyRng::new()).unwrap_or_else(|err|
             panic!("NewRng::new() failed: {}", err))
     }
 }
@@ -920,14 +920,18 @@ impl CryptoRng for StdRng {}
 /// efficient:
 ///
 /// ```
+/// use std::iter;
 /// use rand::{SeedableRng, SmallRng, thread_rng};
 ///
 /// // Create a big, expensive to initialize and slower, but unpredictable RNG.
 /// // This is cached and done only once per thread.
 /// let mut thread_rng = thread_rng();
-/// // Create small, cheap to initialize and fast RNG with a random seed.
-/// // This is very unlikely to fail.
-/// let mut small_rng = SmallRng::from_rng(&mut thread_rng).unwrap();
+/// // Create small, cheap to initialize and fast RNGs with random seeds.
+/// // One can generally assume this won't fail.
+/// let rngs: Vec<SmallRng> = iter::repeat(())
+///     .map(|()| SmallRng::from_rng(&mut thread_rng).unwrap())
+///     .take(10)
+///     .collect();
 /// ```
 ///
 /// [Xorshift]: struct.XorShiftRng.html
@@ -979,7 +983,7 @@ impl SeedableRng for SmallRng {
 #[deprecated(since="0.5.0", note="removed in favor of SmallRng")]
 #[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
-    XorShiftRng::from_rng(&mut thread_rng()).unwrap_or_else(|err|
+    XorShiftRng::from_rng(thread_rng()).unwrap_or_else(|err|
         panic!("weak_rng failed: {:?}", err))
 }
 
@@ -1206,7 +1210,7 @@ mod test {
         let mut rng1 = StdRng::from_seed(seed);
         assert_eq!(rng1.next_u64(), 15759097995037006553);
 
-        let mut rng2 = StdRng::from_rng(&mut rng1).unwrap();
+        let mut rng2 = StdRng::from_rng(rng1).unwrap();
         assert_eq!(rng2.next_u64(), 6766915756997287454);
     }
 }

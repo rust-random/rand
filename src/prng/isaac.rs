@@ -380,7 +380,7 @@ mod test {
         let mut rng1 = IsaacRng::from_seed(seed);
         assert_eq!(rng1.next_u32(), 2869442790);
 
-        let mut rng2 = IsaacRng::from_rng(&mut rng1).unwrap();
+        let mut rng2 = IsaacRng::from_rng(rng1).unwrap();
         assert_eq!(rng2.next_u32(), 3094074039);
     }
 
