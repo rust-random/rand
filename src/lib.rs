@@ -659,7 +659,7 @@ pub trait Rng: RngCore {
     }
 }
 
-impl<R: RngCore> Rng for R {}
+impl<R: RngCore + ?Sized> Rng for R {}
 
 /// Trait for casting types to byte slices
 /// 
