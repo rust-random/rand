@@ -299,7 +299,7 @@ pub mod mock;
 #[cfg(feature="std")] pub mod os;
 #[cfg(feature="std")] pub mod read;
 pub mod reseeding;
-#[cfg(any(feature="std", feature = "alloc"))] pub mod seq;
+pub mod seq;
 
 // These tiny modules are here to avoid API breakage, probably only temporarily
 pub mod chacha {
@@ -609,7 +609,8 @@ pub trait Rng: RngCore {
 
     /// Shuffle a mutable slice in place.
     ///
-    /// This applies Durstenfeld's algorithm for the [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
+    /// This applies Durstenfeld's algorithm for the [Fisher–Yates shuffle](
+    /// https://wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle)
     /// which produces an unbiased permutation.
     ///
     /// # Example
@@ -625,13 +626,7 @@ pub trait Rng: RngCore {
     /// println!("{:?}", y);
     /// ```
     fn shuffle<T>(&mut self, values: &mut [T]) {
-        let mut i = values.len();
-        while i >= 2 {
-            // invariant: elements with index >= i have been locked in place.
-            i -= 1;
-            // lock element i in place.
-            values.swap(i, self.gen_range(0, i + 1));
-        }
+        seq::shuffle(self, values)
     }
 }
 
