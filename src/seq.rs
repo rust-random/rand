@@ -15,10 +15,11 @@ use distributions::range::WideningMultiply;
 
 // This crate is only enabled when either std or alloc is available.
 // BTreeMap is not as fast in tests, but better than nothing.
-#[cfg(feature="std")] use std::collections::HashMap;
-#[cfg(not(feature="std"))] use alloc::btree_map::BTreeMap;
 
-#[cfg(not(feature="std"))] use alloc::Vec;
+#[cfg(feature="std")] use std::collections::HashMap;
+#[cfg(all(feature="alloc", not(feature="std")))] use alloc::btree_map::BTreeMap;
+
+#[cfg(all(feature="alloc", not(feature="std")))] use alloc::Vec;
 
 /// Randomly sample `amount` elements from a finite iterator.
 ///
@@ -40,6 +41,7 @@ use distributions::range::WideningMultiply;
 /// let sample = seq::sample_iter(&mut rng, 1..100, 5).unwrap();
 /// println!("{:?}", sample);
 /// ```
+#[cfg(any(feature="std", feature="alloc"))]
 pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<Vec<T>, Vec<T>>
     where I: IntoIterator<Item=T>,
           R: Rng,
@@ -85,6 +87,7 @@ pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<V
 /// let values = vec![5, 6, 1, 3, 4, 6, 7];
 /// println!("{:?}", seq::sample_slice(&mut rng, &values, 3));
 /// ```
+#[cfg(any(feature="std", feature="alloc"))]
 pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
     where R: Rng,
           T: Clone
@@ -113,6 +116,7 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 /// let values = vec![5, 6, 1, 3, 4, 6, 7];
 /// println!("{:?}", seq::sample_slice_ref(&mut rng, &values, 3));
 /// ```
+#[cfg(any(feature="std", feature="alloc"))]
 pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>
     where R: Rng
 {
@@ -133,6 +137,7 @@ pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) ->
 /// have the indices themselves so this is provided as an alternative.
 ///
 /// Panics if `amount > length`
+#[cfg(any(feature="std", feature="alloc"))]
 pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
     where R: Rng,
 {
@@ -166,6 +171,7 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize
 ///
 /// This is better than using a HashMap "cache" when `amount >= length / 2` since it does not
 /// require allocating an extra cache and is much faster.
+#[cfg(any(feature="std", feature="alloc"))]
 fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
     where R: Rng,
 {
@@ -189,6 +195,7 @@ fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<u
 ///
 /// The cache avoids allocating the entire `length` of values. This is especially useful when
 /// `amount <<< length`, i.e. select 3 non-repeating from 1_000_000
+#[cfg(any(feature="std", feature="alloc"))]
 fn sample_indices_cache<R>(
     rng: &mut R,
     length: usize,
@@ -280,10 +287,11 @@ where R: Rng + ?Sized {
 mod test {
     use super::*;
     use {XorShiftRng, Rng, SeedableRng};
-    #[cfg(not(feature="std"))]
+    #[cfg(all(feature="alloc", not(feature="std")))]
     use alloc::Vec;
 
     #[test]
+    #[cfg(any(feature="std", feature="alloc"))]
     fn test_sample_iter() {
         let min_val = 1;
         let max_val = 100;
@@ -302,7 +310,9 @@ mod test {
             **e >= min_val && **e <= max_val
         }));
     }
+
     #[test]
+    #[cfg(any(feature="std", feature="alloc"))]
     fn test_sample_slice_boundaries() {
         let empty: &[u8] = &[];
 
@@ -347,6 +357,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(any(feature="std", feature="alloc"))]
     fn test_sample_slice() {
         let xor_rng = XorShiftRng::from_seed;
 
