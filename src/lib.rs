@@ -270,7 +270,7 @@ extern crate rand_core;
 use core::{marker, mem, slice};
 
 // re-exports from rand-core
-pub use rand_core::{RngCore, CryptoRng, SeedableRng};
+pub use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng};
 pub use rand_core::{ErrorKind, Error};
 
 // external rngs
