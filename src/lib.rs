@@ -270,7 +270,7 @@ extern crate rand_core;
 use core::{marker, mem, slice};
 
 // re-exports from rand-core
-pub use rand_core::{RngCore, CryptoRng, SeedableRng};
+pub use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng};
 pub use rand_core::{ErrorKind, Error};
 
 // external rngs
@@ -864,6 +864,8 @@ impl SeedableRng for StdRng {
         Hc128Rng::from_rng(rng).map(|rng| StdRng(rng))
     }
 }
+
+impl CryptoRng for StdRng {}
 
 /// An RNG recommended when small state, cheap initialization and good
 /// performance are required. The PRNG algorithm in `SmallRng` is chosen to be
