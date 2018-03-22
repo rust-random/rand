@@ -186,7 +186,7 @@ impl ReadRng {
           not(target_os = "freebsd"),
           not(target_os = "fuchsia"),
           not(target_os = "ios"),
-          not(target_os = "nacl"),
+          not(target_os = "macos"),
           not(target_os = "openbsd"),
           not(target_os = "redox")))]
 mod imp {
@@ -369,7 +369,7 @@ mod imp {
     }
 }
 
-#[cfg(target_os = "ios")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 mod imp {
     extern crate libc;
 
