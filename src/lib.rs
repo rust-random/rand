@@ -865,6 +865,8 @@ impl SeedableRng for StdRng {
     }
 }
 
+impl CryptoRng for StdRng {}
+
 /// An RNG recommended when small state, cheap initialization and good
 /// performance are required. The PRNG algorithm in `SmallRng` is chosen to be
 /// efficient on the current platform, **without consideration for cryptography
