@@ -10,6 +10,7 @@
 
 //! Functions for randomly accessing and sampling sequences.
 
+use core;
 use Rng;
 use distributions::range::WideningMultiply;
 
@@ -269,8 +270,9 @@ where R: Rng + ?Sized {
         for _ in 0..4 {
             let val = value as u16;
             value = value >> 16;
-            let (hi, lo) = val.wmul(i);
-            let zone = ::core::u16::MAX - (::core::u16::MAX - i + 1) % i;
+            let range = i + 1;
+            let (hi, lo) = val.wmul(range);
+            let zone = core::u16::MAX - (core::u16::MAX - range + 1) % range;
             if lo <= zone {
                 i -= 1;
                 values.swap(i as usize, hi as usize);
