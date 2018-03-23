@@ -269,7 +269,7 @@ extern crate rand_core;
 
 use core::{marker, mem, slice};
 
-// re-exports from rand-core
+// re-exports from rand_core
 pub use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng};
 pub use rand_core::{ErrorKind, Error};
 
@@ -391,7 +391,7 @@ pub trait Rand : Sized {
 /// }
 /// ```
 /// 
-/// [`RngCore`]: https://docs.rs/rand-core/0.1/rand-core/trait.RngCore.html
+/// [`RngCore`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html
 pub trait Rng: RngCore {
     /// Fill `dest` entirely with random bytes (uniform value distribution),
     /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
@@ -413,7 +413,7 @@ pub trait Rng: RngCore {
     /// thread_rng().try_fill(&mut arr[..]);
     /// ```
     /// 
-    /// [`fill_bytes`]: https://docs.rs/rand-core/0.1/rand-core/trait.RngCore.html#method.fill_bytes
+    /// [`fill_bytes`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html#method.fill_bytes
     /// [`try_fill`]: trait.Rng.html#method.try_fill
     /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
     fn fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) {
@@ -448,8 +448,8 @@ pub trait Rng: RngCore {
     /// # try_inner().unwrap()
     /// ```
     /// 
-    /// [`ErrorKind`]: https://docs.rs/rand-core/0.1/rand-core/enum.ErrorKind.html
-    /// [`try_fill_bytes`]: https://docs.rs/rand-core/0.1/rand-core/trait.RngCore.html#method.try_fill_bytes
+    /// [`ErrorKind`]: https://docs.rs/rand_core/0.1/rand_core/enum.ErrorKind.html
+    /// [`try_fill_bytes`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html#method.try_fill_bytes
     /// [`fill`]: trait.Rng.html#method.fill
     /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
     fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
@@ -803,8 +803,8 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
-/// [`SeedableRng`]: https://docs.rs/rand-core/0.1/rand-core/trait.SeedableRng.html
-/// [`SeedableRng::from_seed`]: https://docs.rs/rand-core/0.1/rand-core/trait.SeedableRng.html#tymethod.from_seed
+/// [`SeedableRng`]: https://docs.rs/rand_core/0.1/rand_core/trait.SeedableRng.html
+/// [`SeedableRng::from_seed`]: https://docs.rs/rand_core/0.1/rand_core/trait.SeedableRng.html#tymethod.from_seed
 #[cfg(feature="std")]
 pub trait NewRng: SeedableRng {
     /// Creates a new instance, automatically seeded with fresh entropy.

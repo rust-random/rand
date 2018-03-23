@@ -13,11 +13,11 @@ This release also contains many optimisations, which are not detailed below.
 
 ### Crates
 
-We have a new crate: `rand-core`! This crate houses some important traits,
+We have a new crate: `rand_core`! This crate houses some important traits,
 `RngCore`, `BlockRngCore`, `SeedableRng` and `CryptoRng`, the error types, as
 well as two modules with helpers for implementations: `le` and `impls`. It is
-recommended that implementations of generators use the `rand-core` trait while
-other users use only the `rand` crate, which re-exports most parts of `rand-core`.
+recommended that implementations of generators use the `rand_core` trait while
+other users use only the `rand` crate, which re-exports most parts of `rand_core`.
 
 The `rand_derive` crate has been deprecated due to very low usage and
 deprecation of `Rand`.
@@ -36,7 +36,7 @@ Several new Cargo feature flags have been added:
 by generators) and a "front end" `Rng` implementing all the convenient extension
 methods.
 
-Implementations of generators must `impl RngCore` instead. Usage of `rand-core`
+Implementations of generators must `impl RngCore` instead. Usage of `rand_core`
 for implementations is encouraged; the `rand_core::{le, impls}` modules may
 prove useful.
 
@@ -109,7 +109,7 @@ Endianness. Helper functions are available in `rand_core::le` to read `u32` and
 
 #### Block-based PRNGs
 
-rand-core has a new helper trait, `BlockRngCore`, and implementation,
+rand_core has a new helper trait, `BlockRngCore`, and implementation,
 `BlockRng`. These are for use by generators which generate a block of random
 data at a time instead of word-sized values. Using this trait and implementation
 has two advantages: optimised `RngCore` methods are provided, and the PRNG can
