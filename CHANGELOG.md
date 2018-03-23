@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-A [separate changelog is kept for rand-core](rand-core/CHANGELOG.md).
+A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Update Guide](UPDATING.md) useful.
 
@@ -13,7 +13,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 
 ### Crate features and organisation
 - Minimum Rust version update: 1.22.0. (#239)
-- Create a seperate `rand-core` crate. (#288)
+- Create a seperate `rand_core` crate. (#288)
 - Deprecate `rand_derive`. (#256)
 - Add `log` feature. Logging is now available in `JitterRng`, `OsRng`, `EntropyRng` and `ReseedingRng`. (#246)
 - Add `serde-1` feature for some PRNGs. (#189)
@@ -29,9 +29,9 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Deprecate `Rng::gen_iter`. (#286)
 - Deprecate `Rng::gen_ascii_chars`. (#279)
 
-### `rand-core` crate
+### `rand_core` crate
 (changes included here because they greatly influence the Rand crate)
-- `RngCore` and `SeedableRng` are now part of `rand-core`. (#288)
+- `RngCore` and `SeedableRng` are now part of `rand_core`. (#288)
 - Add modules to help implementing RNGs `impl` and `le`. (#209, #228)
 - Add `Error` and `ErrorKind`. (#225)
 - Add `CryptoRng` marker trait. (#273)
