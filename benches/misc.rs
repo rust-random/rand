@@ -38,7 +38,7 @@ fn misc_gen_bool_var(b: &mut Bencher) {
 
 #[bench]
 fn misc_shuffle_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &mut [usize] = &mut [1; 100];
     b.iter(|| {
         rng.shuffle(x);
@@ -48,7 +48,7 @@ fn misc_shuffle_100(b: &mut Bencher) {
 
 #[bench]
 fn misc_sample_iter_10_of_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
     b.iter(|| {
         black_box(sample_iter(&mut rng, x, 10).unwrap_or_else(|e| e));
@@ -57,7 +57,7 @@ fn misc_sample_iter_10_of_100(b: &mut Bencher) {
 
 #[bench]
 fn misc_sample_slice_10_of_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
     b.iter(|| {
         black_box(sample_slice(&mut rng, x, 10));
@@ -66,7 +66,7 @@ fn misc_sample_slice_10_of_100(b: &mut Bencher) {
 
 #[bench]
 fn misc_sample_slice_ref_10_of_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
     b.iter(|| {
         black_box(sample_slice_ref(&mut rng, x, 10));
@@ -77,7 +77,7 @@ macro_rules! sample_indices {
     ($name:ident, $amount:expr, $length:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
-            let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+            let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
             b.iter(|| {
                 black_box(sample_indices(&mut rng, $length, $amount));
             })
