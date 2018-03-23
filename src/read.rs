@@ -16,11 +16,14 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 
 
 /// An RNG that reads random bytes straight from a `Read`. This will
-/// work best with an infinite reader, but this is not required.
+/// work best with an infinite reader, but that is not required.
 ///
 /// # Panics
 ///
-/// It will panic if it there is insufficient data to fulfill a request.
+/// `ReadRng` uses `std::io::read_exact`, which retries on interrupts. All other
+/// errors from the underlying reader, including when it does not have enough
+/// data, will only be reported through `try_fill_bytes`. The other `RngCore`
+/// methods will panic in case of an error error.
 ///
 /// # Example
 ///
@@ -53,9 +56,10 @@ impl<R: Read> RngCore for ReadRng<R> {
     fn next_u64(&mut self) -> u64 {
         impls::next_u64_via_fill(self)
     }
-    
+
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.try_fill_bytes(dest).unwrap();
+        self.try_fill_bytes(dest).unwrap_or_else(|err|
+                panic!("reading random bytes from Read implementation failed; error: {}", err));
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
@@ -63,11 +67,11 @@ impl<R: Read> RngCore for ReadRng<R> {
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
         self.reader.read_exact(dest).map_err(|err| {
             match err.kind() {
-                ::std::io::ErrorKind::WouldBlock => Error::with_cause(
-                    ErrorKind::NotReady,
-                    "reading from random device would block", err),
+                ::std::io::ErrorKind::UnexpectedEof => Error::with_cause(
+                    ErrorKind::Unavailable,
+                    "not enough bytes available, reached end of source", err),
                 _ => Error::with_cause(ErrorKind::Unavailable,
-                    "error reading random device", err)
+                    "error reading from Read source", err)
             }
         })
     }
@@ -90,6 +94,7 @@ mod test {
         assert_eq!(rng.next_u64(), 2_u64.to_be());
         assert_eq!(rng.next_u64(), 3_u64.to_be());
     }
+
     #[test]
     fn test_reader_rng_u32() {
         let v = vec![0u8, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3];
@@ -99,6 +104,7 @@ mod test {
         assert_eq!(rng.next_u32(), 2_u32.to_be());
         assert_eq!(rng.next_u32(), 3_u32.to_be());
     }
+
     #[test]
     fn test_reader_rng_fill_bytes() {
         let v = [1u8, 2, 3, 4, 5, 6, 7, 8];
