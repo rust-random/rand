@@ -3,6 +3,10 @@ Rand
 
 A Rust library for random number generators and other randomness functionality.
 
+See also:
+
+*   [rand_core](https://crates.io/crates/rand_core)
+
 [![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/rand)
 [![Build status](https://ci.appveyor.com/api/projects/status/rm5c9o33k3jhchbw?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
 
@@ -14,7 +18,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.4"
+rand = "0.5.0-pre.0"
 ```
 
 and this to your crate root:
@@ -44,34 +48,31 @@ Travis CI always has a build with a pinned version of Rustc matching the oldest
 supported Rust release. The current policy is that this can be updated in any
 Rand release if required, but the change must be noted in the changelog.
 
-## Examples
+## Functionality
 
-There is built-in support for a random number generator (RNG) associated with each thread stored in thread-local storage. This RNG can be accessed via thread_rng, or used implicitly via random. This RNG is normally randomly seeded from an operating-system source of randomness, e.g. /dev/urandom on Unix systems, and will automatically reseed itself from this source after generating 32 KiB of random data.
+The `rand_core` crate provides:
 
-```rust
-let tuple = rand::random::<(f64, char)>();
-println!("{:?}", tuple)
-```
+-   base random number generator traits
+-   error-reporting types
+-   functionality to aid implementation of RNGs
 
-```rust
-use rand::Rng;
+The `rand` crate provides:
 
-let mut rng = rand::thread_rng();
-if rng.gen() { // random bool
-    println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
-}
-```
+-   most content from `rand_core` (re-exported)
+-   fresh entropy: `EntropyRng`, `OsRng`, `JitterRng`
+-   pseudo-random number generators: `StdRng`, `SmallRng`, `prng` module
+-   convenient, auto-seeded crypto-grade thread-local generator: `thread_rng`
+-   `distributions` producing many different types of random values:
+    -   `Uniform`-ly distributed integers and floats of many types
+    -   unbiased sampling from specified `Range`s
+    -   sampling from exponential/normal/gamma distributions
+    -   sampling from binomial/poisson distributions
+    -   `gen_bool` aka Bernoulli distribution
+-   `seq`-uence related functionality:
+    -   sampling a subset of elements
+    -   randomly shuffling a list
 
-It is also possible to use other RNG types, which have a similar interface. The following uses the "ChaCha" algorithm instead of the default.
-
-```rust
-use rand::{Rng, ChaChaRng};
-
-let mut rng = rand::ChaChaRng::new_unseeded();
-println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
-```
-
-## Features
+## Crate Features
 
 By default, Rand is built with all stable features available. The following
 optional features are available:
