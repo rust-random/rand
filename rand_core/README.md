@@ -1,4 +1,4 @@
-rand-core
+rand_core
 ====
 
 Core traits and error types of the [rand] library, plus tools for implementing
@@ -14,7 +14,7 @@ applications (including sampling from restricted ranges, conversion to floating
 point, list permutations and secure initialisation of RNGs). Most users should
 prefer to use the main [rand] crate.
 
-[Documentation](https://docs.rs/rand-core)
+[Documentation](https://docs.rs/rand_core)
 
 [rand]: ../README.md
 

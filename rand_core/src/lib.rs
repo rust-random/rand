@@ -30,7 +30,7 @@
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://docs.rs/rand-core/0.1")]
+       html_root_url = "https://docs.rs/rand_core/0.1")]
 
 #![deny(missing_debug_implementations)]
 
