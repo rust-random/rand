@@ -349,7 +349,7 @@ impl SeedableRng for IsaacRng {
         init(seed_extended, 2)
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
+    fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
         // Custom `from_rng` implementation that fills a seed with the same size
         // as the entire state.
         let mut seed = [w(0u32); RAND_SIZE];
@@ -380,7 +380,7 @@ mod test {
         let mut rng1 = IsaacRng::from_seed(seed);
         assert_eq!(rng1.next_u32(), 2869442790);
 
-        let mut rng2 = IsaacRng::from_rng(&mut rng1).unwrap();
+        let mut rng2 = IsaacRng::from_rng(rng1).unwrap();
         assert_eq!(rng2.next_u32(), 3094074039);
     }
 

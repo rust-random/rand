@@ -332,15 +332,39 @@ pub trait Rand : Sized {
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
 /// 
-/// This is the primary trait to use when generating random values. Example:
+/// This is the primary trait to use when generating random values.
+/// 
+/// # Generic usage
+/// 
+/// The basic pattern is `fn foo<R: Rng + ?Sized>(rng: &mut R)`. Some
+/// things are worth noting here:
+/// 
+/// - Since `Rng: RngCore` and every `RngCore` implements `Rng`, it makes no
+///   difference whether we use `R: Rng` or `R: RngCore`.
+/// - The `+ ?Sized` un-bounding allows functions to be called directly on
+///   type-erased references; i.e. `foo(r)` where `r: &mut RngCore`. Without
+///   this it would be necessary to write `foo(&mut r)`.
+/// 
+/// An alternative pattern is possible: `fn foo<R: Rng>(rng: R)`. This has some
+/// trade-offs. It allows the argument to be consumed directly without a `&mut`
+/// (which is how `from_rng(thread_rng())` works); also it still works directly
+/// on references (including type-erased references). Unfortunately within the
+/// function `foo` it is not known whether `rng` is a reference type or not,
+/// hence many uses of `rng` require an extra reference, either explicitly
+/// (`distr.sample(&mut rng)`) or implicitly (`rng.gen()`); one may hope the
+/// optimiser can remove redundant references later.
+/// 
+/// Example:
 /// 
 /// ```rust
 /// use rand::Rng;
 /// 
-/// fn use_rng<R: Rng + ?Sized>(rng: &mut R) -> f32 {
+/// fn foo<R: Rng + ?Sized>(rng: &mut R) -> f32 {
 ///     rng.gen()
 /// }
 /// ```
+/// 
+/// # Iteration
 /// 
 /// Iteration over an `Rng` can be achieved using `iter::repeat` as follows:
 /// 
@@ -635,7 +659,7 @@ pub trait Rng: RngCore {
     }
 }
 
-impl<R: RngCore> Rng for R {}
+impl<R: RngCore + ?Sized> Rng for R {}
 
 /// Trait for casting types to byte slices
 /// 
@@ -800,7 +824,7 @@ pub trait NewRng: SeedableRng {
     /// 
     /// fn foo() -> Result<(), Error> {
     ///     // This uses StdRng, but is valid for any R: SeedableRng
-    ///     let mut rng = StdRng::from_rng(&mut EntropyRng::new())?;
+    ///     let mut rng = StdRng::from_rng(EntropyRng::new())?;
     ///     
     ///     println!("random number: {}", rng.gen_range(1, 10));
     ///     Ok(())
@@ -812,7 +836,7 @@ pub trait NewRng: SeedableRng {
 #[cfg(feature="std")]
 impl<R: SeedableRng> NewRng for R {
     fn new() -> R {
-        R::from_rng(&mut EntropyRng::new()).unwrap_or_else(|err|
+        R::from_rng(EntropyRng::new()).unwrap_or_else(|err|
             panic!("NewRng::new() failed: {}", err))
     }
 }
@@ -860,8 +884,8 @@ impl SeedableRng for StdRng {
         StdRng(Hc128Rng::from_seed(seed))
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
-        Hc128Rng::from_rng(rng).map(|rng| StdRng(rng))
+    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
+        Hc128Rng::from_rng(rng).map(|result| StdRng(result))
     }
 }
 
@@ -896,14 +920,18 @@ impl CryptoRng for StdRng {}
 /// efficient:
 ///
 /// ```
+/// use std::iter;
 /// use rand::{SeedableRng, SmallRng, thread_rng};
 ///
 /// // Create a big, expensive to initialize and slower, but unpredictable RNG.
 /// // This is cached and done only once per thread.
 /// let mut thread_rng = thread_rng();
-/// // Create small, cheap to initialize and fast RNG with a random seed.
-/// // This is very unlikely to fail.
-/// let mut small_rng = SmallRng::from_rng(&mut thread_rng).unwrap();
+/// // Create small, cheap to initialize and fast RNGs with random seeds.
+/// // One can generally assume this won't fail.
+/// let rngs: Vec<SmallRng> = iter::repeat(())
+///     .map(|()| SmallRng::from_rng(&mut thread_rng).unwrap())
+///     .take(10)
+///     .collect();
 /// ```
 ///
 /// [Xorshift]: struct.XorShiftRng.html
@@ -937,8 +965,8 @@ impl SeedableRng for SmallRng {
         SmallRng(XorShiftRng::from_seed(seed))
     }
 
-    fn from_rng<R: RngCore>(rng: &mut R) -> Result<Self, Error> {
-        XorShiftRng::from_rng(rng).map(|rng| SmallRng(rng))
+    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
+        XorShiftRng::from_rng(rng).map(|result| SmallRng(result))
     }
 }
 
@@ -955,7 +983,7 @@ impl SeedableRng for SmallRng {
 #[deprecated(since="0.5.0", note="removed in favor of SmallRng")]
 #[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
-    XorShiftRng::from_rng(&mut thread_rng()).unwrap_or_else(|err|
+    XorShiftRng::from_rng(thread_rng()).unwrap_or_else(|err|
         panic!("weak_rng failed: {:?}", err))
 }
 
@@ -1182,7 +1210,7 @@ mod test {
         let mut rng1 = StdRng::from_seed(seed);
         assert_eq!(rng1.next_u64(), 15759097995037006553);
 
-        let mut rng2 = StdRng::from_rng(&mut rng1).unwrap();
+        let mut rng2 = StdRng::from_rng(rng1).unwrap();
         assert_eq!(rng2.next_u64(), 6766915756997287454);
     }
 }
