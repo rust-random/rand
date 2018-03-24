@@ -121,6 +121,9 @@ impl fmt::Debug for IsaacRng {
 impl IsaacRng {
     /// Create an ISAAC random number generator using the default
     /// fixed seed.
+    ///
+    /// DEPRECATED. `IsaacRng::new_from_u64(0)` will produce identical results.
+    #[deprecated(since="0.5.0", note="use the NewRng or SeedableRng trait")]
     pub fn new_unseeded() -> IsaacRng {
         Self::new_from_u64(0)
     }
