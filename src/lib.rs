@@ -20,46 +20,54 @@
 //! let mut rng = rand::thread_rng();
 //! if rng.gen() { // random bool
 //!     let x: f64 = rng.gen(); // random number in range (0, 1)
-//!     println!("x is: {}");
+//!     println!("x is: {}", x);
 //!     println!("Number from 0 to 9: {}", rng.gen_range(0, 10));
 //! }
 //! ```
 //!
-//! The key function is `Rng::gen()`. It is polymorphic and so can be used to
+//! The key function is [`Rng::gen()`]. It is polymorphic and so can be used to
 //! generate many types; the [`Uniform`] distribution carries the
 //! implementations. In some cases type annotation is required, e.g.
 //! `rng.gen::<f64>()`.
 //!
 //! # Getting random values
 //!
-//! The most convenient source of randomness is likely `thread_rng()`, which
+//! The most convenient source of randomness is likely [`thread_rng`], which
 //! automatically initialises a fast algorithmic generator on first use per
 //! thread with thread-local storage.
 //! 
 //! If one wants to obtain random data directly from an external source it is
-//! recommended to use `EntropyRng` which manages multiple available sources
-//! or `OsRng` which retrieves random data directly from the OS. It should be
+//! recommended to use [`EntropyRng`] which manages multiple available sources
+//! or [`OsRng`] which retrieves random data directly from the OS. It should be
 //! noted that this is significantly slower than using a local generator like
-//! `thread_rng` and potentially much slower if `EntropyRng` must fall back to
-//! `JitterRng` as a source.
+//! [`thread_rng`] and potentially much slower if [`EntropyRng`] must fall back to
+//! [`JitterRng`] as a source.
 //! 
-//! It is also common to use an algorithmic generator in local memory; for
-//! example `StdRng` or `SmallRng` (the main advantages of the latter are
-//! much smaller state and faster initialisation while its disadvantage is
-//! that it may be easy for an attacker to predict; actual performance varies).
-//! These can be seeded from a parent generator (`SeedableRng::thread_rng`) or
-//! with fresh entropy using `NewRng`:
+//! It is also common to use an algorithmic generator in local memory; this may
+//! be faster than `thread_rng` and provides more control. In this case
+//! [`StdRng`] (the generator behind `thread_rng`) or [`SmallRng`] (a fast
+//! generator with much smaller state and faster initialisation, but not
+//! suitable for cryptography) are good choices; more are found in the [`prng`]
+//! module or other crates.
+//! 
+//! Local generators need to be seeded. It is recommended to use [`NewRng`] or
+//! to seed from a strong parent generator with [`from_rng`]:
 //! 
 //! ```
+//! // seed with fresh entropy:
 //! use rand::{SmallRng, NewRng};
 //! let mut rng = SmallRng::new();
+//! 
+//! // seed from thread_rng:
+//! use rand::{SeedableRng, thread_rng};
+//! let mut rng = SmallRng::from_rng(thread_rng());
 //! ```
 //! 
-//! In case one wants specifically to have a reproducible stream of "random"
+//! In case you specifically want to have a reproducible stream of "random"
 //! data (e.g. to procedurally generate a game world), select a named algorithm
-//! (i.e. not `StdRng`/`SmallRng` which may be adjusted in the future), and
-//! use `SeedableRng::from_seed`. Some generators provide additional
-//! constructors suitable for some applications, e.g. `IsaacRng::new_from_u64`.
+//! (i.e. not [`StdRng`]/[`SmallRng`] which may be adjusted in the future), and
+//! use `SeedableRng::from_seed` or a constructor specific to the generator
+//! (e.g. [`IsaacRng::new_from_u64`]).
 //! 
 //! # Applying / converting random data
 //! 
