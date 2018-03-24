@@ -24,13 +24,19 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 ///
 /// Platform sources:
 ///
-/// - Unix-like systems (Linux, Android, Mac OSX): read directly from
-///   `/dev/urandom`, or from `getrandom(2)` system call if available.
-/// - OpenBSD: calls `getentropy(2)`
-/// - FreeBSD: uses the `kern.arandom` `sysctl(2)` mib
+/// - Linux, Android: read from `getrandom(2)` system call if available,
+///   otherwise from` /dev/urandom`.
+/// - MacOS, iOS: calls SecRandomCopyBytes.
 /// - Windows: calls `RtlGenRandom`, exported from `advapi32.dll` as
 ///   `SystemFunction036`.
-/// - iOS: calls SecRandomCopyBytes as /dev/(u)random is sandboxed.
+/// - WASM: calls `window.crypto.getRandomValues` in browsers,
+///   `require("crypto").randomBytes` in Node.js.
+/// - OpenBSD: calls `getentropy(2)`.
+/// - FreeBSD: uses the `kern.arandom` `sysctl(2)` mib.
+/// - Fuchsia: calls `cprng_draw`.
+/// - Redox: reads from `rand:` device.
+/// - CloudABI: calls `random_get`.
+/// - Other Unix-like systems: read directly from `/dev/urandom`.
 ///
 /// This usually does not block. On some systems (e.g. FreeBSD, OpenBSD,
 /// Max OS X, and modern Linux) this may block very early in the init
@@ -38,6 +44,7 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 ///
 /// [1] See <https://www.python.org/dev/peps/pep-0524/> for a more
 ///     in-depth discussion.
+
 #[allow(unused)]    // not used by all targets
 pub struct OsRng(imp::OsRng);
 
@@ -186,7 +193,7 @@ impl ReadRng {
           not(target_os = "freebsd"),
           not(target_os = "fuchsia"),
           not(target_os = "ios"),
-          not(target_os = "nacl"),
+          not(target_os = "macos"),
           not(target_os = "openbsd"),
           not(target_os = "redox")))]
 mod imp {
@@ -369,7 +376,7 @@ mod imp {
     }
 }
 
-#[cfg(target_os = "ios")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 mod imp {
     extern crate libc;
 
