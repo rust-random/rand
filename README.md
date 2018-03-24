@@ -25,6 +25,10 @@ and this to your crate root:
 
 ```rust
 extern crate rand;
+
+// example usage:
+use rand::{Rng, thread_rng};
+let x: f64 = thread_rng().gen();
 ```
 
 ## Versions

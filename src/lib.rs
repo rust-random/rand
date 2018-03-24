@@ -9,83 +9,128 @@
 // except according to those terms.
 
 //! Utilities for random number generation
-//!
-//! The key function is `Rng::gen()`. It is polymorphic and so can be used to
-//! generate any type supporting the [`Uniform`] distribution (i.e. `T` where
-//! `Uniform`: `Distribution<T>`). Type inference means that often a simple call
-//! to `rng.gen()` will suffice, but sometimes an annotation is required, e.g.
-//! `rng.gen::<f64>()`.
-//!
-//! See the `distributions` submodule for sampling random numbers from
-//! distributions like normal and exponential.
-//!
-//! # Usage
-//!
-//! This crate is [on crates.io](https://crates.io/crates/rand) and can be
-//! used by adding `rand` to the dependencies in your project's `Cargo.toml`.
-//!
-//! ```toml
-//! [dependencies]
-//! rand = "0.4"
-//! ```
-//!
-//! and this to your crate root:
-//!
+//! 
+//! ## Example
+//! 
 //! ```rust
-//! extern crate rand;
-//! ```
+//! // Rng is the main trait and needs to be imported:
+//! use rand::{Rng, thread_rng};
 //!
-//! # Thread-local RNG
-//!
-//! There is built-in support for a RNG associated with each thread stored
-//! in thread-local storage. This RNG can be accessed via `thread_rng`, or
-//! used implicitly via `random`. This RNG is normally randomly seeded
-//! from an operating-system source of randomness, e.g. `/dev/urandom` on
-//! Unix systems, and will automatically reseed itself from this source
-//! after generating 32 KiB of random data.
-//!
-//! # Cryptographic security
-//!
-//! An application that requires an entropy source for cryptographic purposes
-//! must use `OsRng`, which reads randomness from the source that the operating
-//! system provides (e.g. `/dev/urandom` on Unixes or `CryptGenRandom()` on
-//! Windows).
-//! The other random number generators provided by this module are not suitable
-//! for such purposes.
-//!
-//! *Note*: many Unix systems provide `/dev/random` as well as `/dev/urandom`.
-//! This module uses `/dev/urandom` for the following reasons:
-//!
-//! -   On Linux, `/dev/random` may block if entropy pool is empty;
-//!     `/dev/urandom` will not block.  This does not mean that `/dev/random`
-//!     provides better output than `/dev/urandom`; the kernel internally runs a
-//!     cryptographically secure pseudorandom number generator (CSPRNG) based on
-//!     entropy pool for random number generation, so the "quality" of
-//!     `/dev/random` is not better than `/dev/urandom` in most cases.  However,
-//!     this means that `/dev/urandom` can yield somewhat predictable randomness
-//!     if the entropy pool is very small, such as immediately after first
-//!     booting.  Linux 3.17 added the `getrandom(2)` system call which solves
-//!     the issue: it blocks if entropy pool is not initialized yet, but it does
-//!     not block once initialized.  `OsRng` tries to use `getrandom(2)` if
-//!     available, and use `/dev/urandom` fallback if not.  If an application
-//!     does not have `getrandom` and likely to be run soon after first booting,
-//!     or on a system with very few entropy sources, one should consider using
-//!     `/dev/random` via `ReadRng`.
-//! -   On some systems (e.g. FreeBSD, OpenBSD and Mac OS X) there is no
-//!     difference between the two sources. (Also note that, on some systems
-//!     e.g.  FreeBSD, both `/dev/random` and `/dev/urandom` may block once if
-//!     the CSPRNG has not seeded yet.)
-//!
-//! # Examples
-//!
-//! ```rust
-//! use rand::Rng;
-//!
+//! // thread_rng is often the most convenient source of randomness:
 //! let mut rng = rand::thread_rng();
 //! if rng.gen() { // random bool
-//!     println!("i32: {}, u32: {}", rng.gen::<i32>(), rng.gen::<u32>())
+//!     let x: f64 = rng.gen(); // random number in range (0, 1)
+//!     println!("x is: {}");
+//!     println!("Number from 0 to 9: {}", rng.gen_range(0, 10));
 //! }
 //! ```
+//!
+//! The key function is `Rng::gen()`. It is polymorphic and so can be used to
+//! generate many types; the [`Uniform`] distribution carries the
+//! implementations. In some cases type annotation is required, e.g.
+//! `rng.gen::<f64>()`.
+//!
+//! # Getting random values
+//!
+//! The most convenient source of randomness is likely `thread_rng()`, which
+//! automatically initialises a fast algorithmic generator on first use per
+//! thread with thread-local storage.
+//! 
+//! If one wants to obtain random data directly from an external source it is
+//! recommended to use `EntropyRng` which manages multiple available sources
+//! or `OsRng` which retrieves random data directly from the OS. It should be
+//! noted that this is significantly slower than using a local generator like
+//! `thread_rng` and potentially much slower if `EntropyRng` must fall back to
+//! `JitterRng` as a source.
+//! 
+//! It is also common to use an algorithmic generator in local memory; for
+//! example `StdRng` or `SmallRng` (the main advantages of the latter are
+//! much smaller state and faster initialisation while its disadvantage is
+//! that it may be easy for an attacker to predict; actual performance varies).
+//! These can be seeded from a parent generator (`SeedableRng::thread_rng`) or
+//! with fresh entropy using `NewRng`:
+//! 
+//! ```
+//! use rand::{SmallRng, NewRng};
+//! let mut rng = SmallRng::new();
+//! ```
+//! 
+//! In case one wants specifically to have a reproducible stream of "random"
+//! data (e.g. to procedurally generate a game world), select a named algorithm
+//! (i.e. not `StdRng`/`SmallRng` which may be adjusted in the future), and
+//! use `SeedableRng::from_seed`. Some generators provide additional
+//! constructors suitable for some applications, e.g. `IsaacRng::new_from_u64`.
+//! 
+//! # Applying / converting random data
+//! 
+//! The `RngCore` trait allows generators to implement a common interface for
+//! retrieving random data, but how should you use this? Typically users should
+//! use the `Rng` trait not `RngCore`; this provides more flexible ways to
+//! access the same data (e.g. `gen()` can output many more types than
+//! `next_u32()` and `next_u64()`; Rust's optimiser should eliminate any
+//! overhead). It also provides several useful algorithms,
+//! e.g. `gen_bool(p)` to generate events with weighted probability and
+//! `shuffle(&mut v[..])` to randomly-order a vector.
+//! 
+//! The `distributions` module provides several more ways to convert random
+//! data to useful values, e.g. time of decay is often modelled with an
+//! exponential distribution, and the log-normal distribution provides a good
+//! model of many natural phenomona.
+//! 
+//! The `seq` module has a few tools applicable to sliceable or iterable data.
+//! 
+//! # Cryptographic security
+//!
+//! Security analysis requires a threat model and expert review; we can provide
+//! neither, but can provide some guidance. We assume that the goal is to
+//! obtain secret random data and that some source of secrets ("entropy") is
+//! available; that is, `EntropyRng` is functional.
+//! 
+//! Potential threat: is the entropy source secure? The primary entropy source
+//! is `OsRng` which is simply a wrapper around the platform's native "secure
+//! entropy source"; usually this is available (outside of embedded platforms)
+//! and usually you can trust this (some caveats may apply; see `OsRng` doc).
+//! The fallback source used by `EntropyRng` is `JitterRng` which runs extensive
+//! tests on the quality of the CPU timer and is conservative in its estimates
+//! of the entropy harvested from each time sample; this makes it slow but very
+//! strong. Using `EntropyRng` directly should therefore be secure; the main
+//! reason not to is performance, which is why many applications use local
+//! algorithmic generators.
+//! 
+//! Potential threat: are algorithmic generators predictable? Certainly some
+//! are; algorithmic generators fall broadly into two categories: those using a
+//! small amount of state (e.g. one to four 32- or 64-bit words) designed for
+//! non-security applications and those designed to be secure, typically with
+//! much larger state space and complex initialisation. The former should not be
+//! trusted to be secure, the latter may or may not have known weaknesses or
+//! may even have been proven secure under a specified adversarial model. We
+//! provide some notes on the security of the cryptographic algorithmic
+//! generators provided by this crate, `Hc128Rng` and `ChaChaRng`. Note that
+//! previously `IsaacRng` and `Isaac64Rng` were used as "reasonably strong
+//! generators"; these have no known weaknesses but also have no proofs of
+//! security, thus are not recommended for cryptographic uses.
+//! 
+//! Potential threat: could the internal state of a cryptographic generator be
+//! leaked? This falls under the topic of "side channel attacks", and multiple
+//! variants are possible: the state of the generators being accidentally
+//! printed in log files or some other application output, the process's memory
+//! being copied somehow, the process being forked and both sub-processes
+//! outputting the same random sequence but such that one of those can be read;
+//! likely some other side-channel attacks are possible in some circumstances.
+//! It is typically impossible to prove immunity to all side-channel attacks,
+//! however some mitigation of known threats is usually possible, for example
+//! all generators implemented in this crate have a custom `Debug`
+//! implementation omitting all internal state, and `ReseedingRng` allows
+//! periodic reseeding such that a long-running process with leaked generator
+//! state should eventually recover to an unknown state. In the future we plan
+//! to add further mitigations; see issue #314.
+//! 
+//! We provide the `CryptoRng` marker trait as an indication of which random
+//! generators/sources may be used for cryptographic applications; this should
+//! be considered advisory only does not imply any protection against
+//! side-channel attacks.
+//! 
+//! # Examples
 //!
 //! ## Monte Carlo estimation of π
 //!
@@ -785,8 +830,8 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 }
 
 
-/// A convenient way to seed new algorithmic generators, otherwise known as
-/// pseudo-random number generators (PRNGs).
+/// A convenient way to seed new algorithmic generators with fresh entropy from
+/// `EntropyRng`.
 ///
 /// This is the recommended way to create PRNGs, unless a deterministic seed is
 /// desired (in which case [`SeedableRng::from_seed`] should be used).
