@@ -45,63 +45,62 @@
 //! 
 //! It is also common to use an algorithmic generator in local memory; this may
 //! be faster than `thread_rng` and provides more control. In this case
-//! [`StdRng`] (the generator behind `thread_rng`) or [`SmallRng`] (a fast
-//! generator with much smaller state and faster initialisation, but not
-//! suitable for cryptography) are good choices; more are found in the [`prng`]
-//! module or other crates.
+//! [`StdRng`] — the generator behind [`thread_rng`] — and [`SmallRng`] — a
+//! small, fast, weak generator — are good choices; more options can be found in
+//! the [`prng`] module as well as in other crates.
 //! 
 //! Local generators need to be seeded. It is recommended to use [`NewRng`] or
 //! to seed from a strong parent generator with [`from_rng`]:
 //! 
 //! ```
 //! // seed with fresh entropy:
-//! use rand::{SmallRng, NewRng};
-//! let mut rng = SmallRng::new();
+//! use rand::{StdRng, NewRng};
+//! let mut rng = StdRng::new();
 //! 
 //! // seed from thread_rng:
-//! use rand::{SeedableRng, thread_rng};
+//! use rand::{SmallRng, SeedableRng, thread_rng};
 //! let mut rng = SmallRng::from_rng(thread_rng());
 //! ```
 //! 
 //! In case you specifically want to have a reproducible stream of "random"
 //! data (e.g. to procedurally generate a game world), select a named algorithm
 //! (i.e. not [`StdRng`]/[`SmallRng`] which may be adjusted in the future), and
-//! use `SeedableRng::from_seed` or a constructor specific to the generator
+//! use [`SeedableRng::from_seed`] or a constructor specific to the generator
 //! (e.g. [`IsaacRng::new_from_u64`]).
 //! 
 //! # Applying / converting random data
 //! 
-//! The `RngCore` trait allows generators to implement a common interface for
+//! The [`RngCore`] trait allows generators to implement a common interface for
 //! retrieving random data, but how should you use this? Typically users should
-//! use the `Rng` trait not `RngCore`; this provides more flexible ways to
+//! use the [`Rng`] trait not [`RngCore`]; this provides more flexible ways to
 //! access the same data (e.g. `gen()` can output many more types than
 //! `next_u32()` and `next_u64()`; Rust's optimiser should eliminate any
 //! overhead). It also provides several useful algorithms,
 //! e.g. `gen_bool(p)` to generate events with weighted probability and
 //! `shuffle(&mut v[..])` to randomly-order a vector.
 //! 
-//! The `distributions` module provides several more ways to convert random
+//! The [`distributions`] module provides several more ways to convert random
 //! data to useful values, e.g. time of decay is often modelled with an
 //! exponential distribution, and the log-normal distribution provides a good
 //! model of many natural phenomona.
 //! 
-//! The `seq` module has a few tools applicable to sliceable or iterable data.
+//! The [`seq`] module has a few tools applicable to sliceable or iterable data.
 //! 
 //! # Cryptographic security
 //!
 //! Security analysis requires a threat model and expert review; we can provide
 //! neither, but can provide some guidance. We assume that the goal is to
 //! obtain secret random data and that some source of secrets ("entropy") is
-//! available; that is, `EntropyRng` is functional.
+//! available; that is, [`EntropyRng`] is functional.
 //! 
 //! Potential threat: is the entropy source secure? The primary entropy source
-//! is `OsRng` which is simply a wrapper around the platform's native "secure
+//! is [`OsRng`] which is simply a wrapper around the platform's native "secure
 //! entropy source"; usually this is available (outside of embedded platforms)
-//! and usually you can trust this (some caveats may apply; see `OsRng` doc).
-//! The fallback source used by `EntropyRng` is `JitterRng` which runs extensive
+//! and usually you can trust this (some caveats may apply; see [`OsRng`] doc).
+//! The fallback source used by [`EntropyRng`] is [`JitterRng`] which runs extensive
 //! tests on the quality of the CPU timer and is conservative in its estimates
 //! of the entropy harvested from each time sample; this makes it slow but very
-//! strong. Using `EntropyRng` directly should therefore be secure; the main
+//! strong. Using [`EntropyRng`] directly should therefore be secure; the main
 //! reason not to is performance, which is why many applications use local
 //! algorithmic generators.
 //! 
@@ -113,8 +112,8 @@
 //! trusted to be secure, the latter may or may not have known weaknesses or
 //! may even have been proven secure under a specified adversarial model. We
 //! provide some notes on the security of the cryptographic algorithmic
-//! generators provided by this crate, `Hc128Rng` and `ChaChaRng`. Note that
-//! previously `IsaacRng` and `Isaac64Rng` were used as "reasonably strong
+//! generators provided by this crate, [`Hc128Rng`] and [`ChaChaRng`]. Note that
+//! previously [`IsaacRng`] and [`Isaac64Rng`] were used as "reasonably strong
 //! generators"; these have no known weaknesses but also have no proofs of
 //! security, thus are not recommended for cryptographic uses.
 //! 
@@ -128,12 +127,12 @@
 //! It is typically impossible to prove immunity to all side-channel attacks,
 //! however some mitigation of known threats is usually possible, for example
 //! all generators implemented in this crate have a custom `Debug`
-//! implementation omitting all internal state, and `ReseedingRng` allows
+//! implementation omitting all internal state, and [`ReseedingRng`] allows
 //! periodic reseeding such that a long-running process with leaked generator
 //! state should eventually recover to an unknown state. In the future we plan
 //! to add further mitigations; see issue #314.
 //! 
-//! We provide the `CryptoRng` marker trait as an indication of which random
+//! We provide the [`CryptoRng`] marker trait as an indication of which random
 //! generators/sources may be used for cryptographic applications; this should
 //! be considered advisory only does not imply any protection against
 //! side-channel attacks.
@@ -147,6 +146,28 @@
 //! *   [Monty Hall Problem](
 //!     https://github.com/rust-lang-nursery/rand/blob/master/examples/monty-hall.rs)
 //!
+//! [`Rng`]: trait.Rng.html
+//! [`Rng::gen()`]: trait.Rng.html#method.gen
+//! [`RngCore`]: trait.RngCore.html
+//! [`NewRng`]: trait.NewRng.html
+//! [`SeedableRng::from_seed`]: trait.SeedableRng.html#tymethod.from_seed
+//! [`from_rng`]: trait.SeedableRng.html#method.from_rng
+//! [`CryptoRng`]: trait.CryptoRng.html
+//! [`thread_rng`]: fn.thread_rng.html
+//! [`EntropyRng`]: struct.EntropyRng.html
+//! [`OsRng`]: os/struct.OsRng.html
+//! [`JitterRng`]: jitter/struct.JitterRng.html
+//! [`StdRng`]: struct.StdRng.html
+//! [`SmallRng`]: struct.SmallRng.html
+//! [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
+//! [`prng`]: prng/index.html
+//! [`IsaacRng::new_from_u64`]: struct.IsaacRng.html#method.new_from_u64
+//! [`Hc128Rng`]: prng/hc128/struct.Hc128Rng.html
+//! [`ChaChaRng`]: prng/chacha/struct.ChaChaRng.html
+//! [`IsaacRng`]: prng/struct.IsaacRng.html
+//! [`Isaac64Rng`]: prng/struct.Isaac64Rng.html
+//! [`seq`]: seq/index.html
+//! [`distributions`]: distributions/index.html
 //! [`Uniform`]: distributions/struct.Uniform.html
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
@@ -767,7 +788,7 @@ impl<R: SeedableRng> NewRng for R {
 /// produce different output depending on the architecture. If you require
 /// reproducible output, use a named RNG, for example `ChaChaRng`.
 ///
-/// [HC-128]: struct.Hc128Rng.html
+/// [HC-128]: prng/hc128/struct.Hc128Rng.html
 #[derive(Clone, Debug)]
 pub struct StdRng(Hc128Rng);
 
