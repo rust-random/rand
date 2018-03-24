@@ -33,7 +33,7 @@ matrix:
         - cargo test --all --features=alloc
         - cargo test --features serde-1,log,nightly
         - cargo test --benches
-        - cargo doc --no-deps --all-features
+        - cargo doc --no-deps --all --all-features
       after_success:
         - travis-cargo --only nightly doc-upload
 
