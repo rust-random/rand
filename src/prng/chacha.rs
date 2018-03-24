@@ -121,6 +121,7 @@ impl ChaChaRng {
     ///
     /// - 2917185654
     /// - 2419978656
+    #[deprecated(since="0.5.0", note="use the NewRng or SeedableRng trait")]
     pub fn new_unseeded() -> ChaChaRng {
         ChaChaRng::from_seed([0; SEED_WORDS*4])
     }
