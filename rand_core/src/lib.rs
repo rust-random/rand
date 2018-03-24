@@ -44,6 +44,8 @@
 
 #[cfg(feature="std")] extern crate core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
+#[cfg(feature="serde-1")] extern crate serde;
+#[cfg(feature="serde-1")] #[macro_use] extern crate serde_derive;
 
 
 use core::default::Default;
