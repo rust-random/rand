@@ -16,7 +16,29 @@ prefer to use the main [rand] crate.
 
 [Documentation](https://docs.rs/rand_core)
 
-[rand]: ../README.md
+[rand]: https://crates.io/crates/rand
+
+
+## Functionality
+
+The `rand_core` crate provides:
+
+-   base random number generator traits
+-   error-reporting types
+-   functionality to aid implementation of RNGs
+
+The traits and error types are also available via `rand`.
+
+## Crate Features
+
+`rand_core` supports `no_std` and `alloc`-only configurations, as well as full
+`std` functionality. The differences between `no_std` and full `std` are small,
+comprising `RngCore` support for `Box<R>` types where `R: RngCore`, as well as
+extensions to the `Error` type's functionality.
+
+Due to a bug in Cargo, `rand_core` is built without `std` support by default.
+Since features are unioned across the whole dependency tree, any crate using
+`rand` with its default features will also enable `std` support in `rand_core`.
 
 
 # License
