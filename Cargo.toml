@@ -17,8 +17,8 @@ categories = ["algorithms"]
 default = ["std"]
 nightly = ["i128_support"] # enables all features requiring nightly rust
 
-std = ["rand_core/std", "winapi", "libc"] # default feature; without this rand uses libcore
-alloc = ["rand_core/alloc"]  # enables Vec and Box support without std
+std = ["rand_core/std", "winapi", "libc", "alloc"] # default feature; without this rand uses libcore
+alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 
 i128_support = [] # enables i128 and u128 support
 
