@@ -1,14 +1,15 @@
-Rand
-====
+# Rand
+
+[![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/rand)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-lang-nursery/rand?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
+[![crates.io](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
+[![docs.rs](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
 
 A Rust library for random number generators and other randomness functionality.
 
 See also:
 
 *   [rand_core](https://crates.io/crates/rand_core)
-
-[![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/rand)
-[![Build status](https://ci.appveyor.com/api/projects/status/rm5c9o33k3jhchbw?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
 
 Documentation:
 [master branch](https://rust-lang-nursery.github.io/rand/rand/index.html),
