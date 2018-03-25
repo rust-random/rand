@@ -27,6 +27,7 @@ alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 i128_support = [] # enables i128 and u128 support
 
 serde-1 = ["serde", "serde_derive"]
+wasm-stdweb = ["stdweb"]
 
 
 [target.'cfg(unix)'.dependencies]
@@ -39,9 +40,10 @@ winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "
 rand_core = { path = 'rand_core', default-features = false }
 
 log = { version = "0.4", optional = true }
-
-serde = {version="1",optional=true}
+serde = {version="1", optional=true}
 serde_derive = {version="1", optional=true}
+stdweb = {version="0.4", optional=true}
+
 
 [workspace]
 members = ["rand_core"]
@@ -57,6 +59,3 @@ cloudabi = "0.0.3"
 
 [target.'cfg(target_os = "fuchsia")'.dependencies]
 fuchsia-zircon = "0.3.2"
-
-[target.wasm32-unknown-unknown.dependencies]
-stdweb = "0.4"
