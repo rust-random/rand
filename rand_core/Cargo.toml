@@ -13,6 +13,10 @@ Core random number generator traits and tools for implementation.
 keywords = ["random", "rng"]
 categories = ["algorithms"]
 
+[badges]
+travis-ci = { repository = "rust-lang-nursery/rand" }
+appveyor = { repository = "alexcrichton/rand" }
+
 [features]
 # Bug: https://github.com/rust-lang/cargo/issues/4361
 # default = ["std"]

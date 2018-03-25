@@ -13,6 +13,10 @@ Random number generators and other randomness functionality.
 keywords = ["random", "rng"]
 categories = ["algorithms"]
 
+[badges]
+travis-ci = { repository = "rust-lang-nursery/rand" }
+appveyor = { repository = "alexcrichton/rand" }
+
 [features]
 default = ["std"]
 nightly = ["i128_support"] # enables all features requiring nightly rust
