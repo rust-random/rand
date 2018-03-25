@@ -171,12 +171,10 @@ pub fn random<T>() -> T where Uniform: Distribution<T> {
 
 #[cfg(test)]
 mod test {
-    use Rng;
-
     #[test]
-    #[cfg(feature="std")]
     #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
     fn test_thread_rng() {
+        use Rng;
         let mut r = ::thread_rng();
         r.gen::<i32>();
         let mut v = [1, 1, 1];
