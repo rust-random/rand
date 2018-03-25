@@ -14,55 +14,44 @@
 use std::fmt;
 use rand_core::{RngCore, Error, impls};
 
-/// A random number generator that retrieves randomness straight from
-/// the operating system.
+/// A random number generator that retrieves randomness straight from the
+/// operating system. This is the preferred external source of randomness for
+/// most applications. Commonly it is used to initialize a user-space RNG, which
+/// can then be used with much lower overhead.
 ///
-/// Platform sources:
+/// You may prefer to use [`EntropyRng`] instead of `OsRng`. Is is unlikely, but
+/// not entirely theoretical, for `OsRng` to fail. In such cases `EntropyRng`
+/// falls back on a good alternative entropy source.
 ///
-/// - Linux, Android: read from `getrandom(2)` system call if available,
-///   otherwise from` /dev/urandom`.
-/// - MacOS, iOS: calls SecRandomCopyBytes.
-/// - Windows: calls `RtlGenRandom`, exported from `advapi32.dll` as
-///   `SystemFunction036`.
+/// `OsRng` usually does not block. On some systems, and notably virtual
+/// machines, it may block very early in the init process, when the OS CSPRNG
+/// has not yet been seeded.
+///
+/// `OsRng::new()` is guaranteed to be very cheap (after first call), and will
+/// never consume more than one file handle per process.
+///
+/// ## Platform sources:
+///
+/// - Linux, Android: reads from the `getrandom(2)` system call if available,
+///   otherwise from `/dev/urandom`.
+/// - macOS, iOS: calls `SecRandomCopyBytes`.
+/// - Windows: calls `RtlGenRandom`.
 /// - WASM: calls `window.crypto.getRandomValues` in browsers,
-///   `require("crypto").randomBytes` in Node.js.
+///   and in Node.js `require("crypto").randomBytes`.
 /// - OpenBSD: calls `getentropy(2)`.
 /// - FreeBSD: uses the `kern.arandom` `sysctl(2)` mib.
 /// - Fuchsia: calls `cprng_draw`.
 /// - Redox: reads from `rand:` device.
 /// - CloudABI: calls `random_get`.
-/// - Other Unix-like systems: read directly from `/dev/urandom`.
+/// - Other Unix-like systems: reads directly from `/dev/urandom`.
+///   Note: many Unix systems provide `/dev/random` as well as `/dev/urandom`.
+///   On all modern systems these two interfaces offer identical quality, with
+///   the difference that on some systems `/dev/random` may block. This is a
+///   dated design, and `/dev/urandom` is preferred by cryptography experts. [1]
 ///
-/// This usually does not block. On some systems (e.g. FreeBSD, OpenBSD,
-/// Max OS X, and modern Linux) this may block very early in the init
-/// process, if the CSPRNG has not been seeded yet.[1]
+/// [1] See [Myths about urandom](https://www.2uo.de/myths-about-urandom/).
 ///
-/// *Note*: many Unix systems provide `/dev/random` as well as `/dev/urandom`.
-/// This module uses `getrandom` if available, otherwise `/dev/urandom`, for
-/// the following reasons:
-///
-/// -   On Linux, `/dev/random` may block if entropy pool is empty;
-///     `/dev/urandom` will not block.  This does not mean that `/dev/random`
-///     provides better output than `/dev/urandom`; the kernel internally runs a
-///     cryptographically secure pseudorandom number generator (CSPRNG) based on
-///     entropy pool for random number generation, so the "quality" of
-///     `/dev/random` is not better than `/dev/urandom` in most cases.  However,
-///     this means that `/dev/urandom` can yield somewhat predictable randomness
-///     if the entropy pool is very small, such as immediately after first
-///     booting.  Linux 3.17 added the `getrandom(2)` system call which solves
-///     the issue: it blocks if entropy pool is not initialized yet, but it does
-///     not block once initialized.  `OsRng` tries to use `getrandom(2)` if
-///     available, and use `/dev/urandom` fallback if not.  If an application
-///     does not have `getrandom` and likely to be run soon after first booting,
-///     or on a system with very few entropy sources, one should consider using
-///     `/dev/random` via `ReadRng`.
-/// -   On some systems (e.g. FreeBSD, OpenBSD and Mac OS X) there is no
-///     difference between the two sources. (Also note that, on some systems
-///     e.g.  FreeBSD, both `/dev/random` and `/dev/urandom` may block once if
-///     the CSPRNG has not seeded yet.)
-///
-/// [1] See <https://www.python.org/dev/peps/pep-0524/> for a more
-///     in-depth discussion.
+/// [`EntropyRng`]: struct.EntropyRng.html
 
 #[allow(unused)]    // not used by all targets
 pub struct OsRng(imp::OsRng);
