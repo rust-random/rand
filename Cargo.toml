@@ -11,7 +11,7 @@ description = """
 Random number generators and other randomness functionality.
 """
 keywords = ["random", "rng"]
-categories = ["algorithms"]
+categories = ["algorithms", "no_std"]
 
 [badges]
 travis-ci = { repository = "rust-lang-nursery/rand" }
