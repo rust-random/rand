@@ -117,7 +117,7 @@ mod test {
     use super::Poisson;
 
     #[test]
-    fn test_poisson() {
+    fn test_poisson_10() {
         let poisson = Poisson::new(10.0);
         let mut rng = ::test::rng(123);
         let mut sum = 0;
@@ -127,6 +127,20 @@ mod test {
         let avg = (sum as f64) / 1000.0;
         println!("Poisson average: {}", avg);
         assert!((avg - 10.0).abs() < 0.5); // not 100% certain, but probable enough
+    }
+
+    #[test]
+    fn test_poisson_15() {
+        // Take the 'high expected values' path
+        let poisson = Poisson::new(15.0);
+        let mut rng = ::test::rng(123);
+        let mut sum = 0;
+        for _ in 0..1000 {
+            sum += poisson.sample(&mut rng);
+        }
+        let avg = (sum as f64) / 1000.0;
+        println!("Poisson average: {}", avg);
+        assert!((avg - 15.0).abs() < 0.5); // not 100% certain, but probable enough
     }
 
     #[test]
