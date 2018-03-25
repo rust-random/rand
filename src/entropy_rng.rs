@@ -13,12 +13,16 @@
 use rand_core::{RngCore, CryptoRng, Error, impls};
 use {OsRng, JitterRng};
 
-/// An RNG provided specifically for seeding PRNGs.
+/// A generator provided specifically for securely seeding algorithmic
+/// generators (PRNGs).
 /// 
 /// Where possible, `EntropyRng` retrieves random data from the operating
 /// system's interface for random numbers ([`OsRng`]); if that fails it will
 /// fall back to the [`JitterRng`] entropy collector. In the latter case it will
 /// still try to use [`OsRng`] on the next usage.
+/// 
+/// If no secure source of entropy is available `EntropyRng` will panic on use;
+/// i.e. it should never output predictable data.
 /// 
 /// This is either a little slow ([`OsRng`] requires a system call) or extremely
 /// slow ([`JitterRng`] must use significant CPU time to generate sufficient
