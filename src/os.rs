@@ -152,7 +152,8 @@ impl RngCore for OsRng {
 mod imp {
     extern crate libc;
     use {Error, ErrorKind};
-    use std::fs::File;
+    use std::fs::{OpenOptions, File};
+    use std::os::unix::fs::OpenOptionsExt;
     use std::io;
     use std::io::Read;
     use std::sync::{Once, Mutex, ONCE_INIT};
@@ -175,7 +176,7 @@ mod imp {
             open_dev_random()?;
             Ok(OsRng(OsRngMethod::RandomDevice))
         }
-        
+
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             match self.0 {
                 OsRngMethod::GetRandom => getrandom_try_fill(dest),
@@ -183,7 +184,7 @@ mod imp {
             }
         }
     }
-    
+
     #[cfg(all(target_os = "linux",
               any(target_arch = "x86_64",
                   target_arch = "x86",
@@ -289,11 +290,31 @@ mod imp {
     static mut READ_RNG_FILE: Option<Mutex<Option<File>>> = None;
     static READ_RNG_ONCE: Once = ONCE_INIT;
 
-    // Note: all instances use a single internal file handle
-    // Open a `File` for the given `path`.
+    // Note: all instances use a single internal file handle, to prevent
+    // possible exhaustion of file descriptors.
     //
-    // Uses a mutex on a static object to limit `OsRng` to a single file descriptor.
+    // On some systems reading from `/dev/urandom` "may return data prior to the
+    // to the entropy pool being initialized". I.e., early in the boot process,
+    // and especially on virtual machines, `/dev/urandom` may return data that
+    // is less random.
+    //
+    // As a countermeasure we try to do a single read from `/dev/random` in
+    // non-blocking mode. If the OS RNG is not yet properly seeded, we will get
+    // an error. Because we keep `/dev/urandom` open when succesful, this is
+    // only a small one-time cost.
     fn open_dev_random() -> Result<(), Error> {
+        fn map_err(err: io::Error) -> Error {
+            match err.kind() {
+                io::ErrorKind::Interrupted =>
+                        Error::new(ErrorKind::Transient, "interrupted"),
+                io::ErrorKind::WouldBlock =>
+                        Error::with_cause(ErrorKind::NotReady,
+                        "OS RNG not yet seeded", err),
+                _ => Error::with_cause(ErrorKind::Unavailable,
+                        "error while opening random device", err)
+            }
+        }
+
         READ_RNG_ONCE.call_once(|| {
             unsafe { READ_RNG_FILE = Some(Mutex::new(None)) }
         });
@@ -301,22 +322,22 @@ mod imp {
         // We try opening the file outside the `call_once` fn because we cannot
         // clone the error, thus we must retry on failure.
 
-        let path = "/dev/urandom";
-
-        let mutex = unsafe{ READ_RNG_FILE.as_ref().unwrap() };
+        let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
         let mut guard = mutex.lock().unwrap();
         if (*guard).is_none() {
-            info!("OsRng: opening random device {}", path.as_ref().display());
-            let file = File::open(path).map_err(|err| {
-                use std::io::ErrorKind::*;
-                match err.kind() {
-                    Interrupted => Error::new(ErrorKind::Transient, "interrupted"),
-                    WouldBlock => Error::with_cause(ErrorKind::NotReady,
-                            "opening random device would block", err),
-                    _ => Error::with_cause(ErrorKind::Unavailable,
-                            "error while opening random device", err)
-                }
-            })?;
+            {
+                info!("OsRng: opening random device /dev/random");
+                let mut file = OpenOptions::new()
+                    .read(true)
+                    .custom_flags(libc::O_NONBLOCK)
+                    .open("/dev/random")
+                    .map_err(|err| map_err(err))?;
+                let mut buf = [0u8; 1];
+                file.read_exact(&mut buf).map_err(|err| map_err(err))?;
+            }
+
+            info!("OsRng: opening random device /dev/urandom");
+            let file = File::open("/dev/urandom").map_err(|err| map_err(err))?;
             *guard = Some(file);
         };
         Ok(())
