@@ -530,32 +530,53 @@ mod imp {
     use std::fs::File;
     use std::io::Read;
     use std::io::ErrorKind::*;
+    use std::sync::{Once, Mutex, ONCE_INIT};
 
     #[derive(Debug)]
-    pub struct OsRng {
-        dev_random: File,
-    }
+    pub struct OsRng();
+
+    // TODO: remove outer Option when `Mutex::new(None)` is a constant expression
+    static mut READ_RNG_FILE: Option<Mutex<Option<File>>> = None;
+    static READ_RNG_ONCE: Once = ONCE_INIT;
 
     impl OsRng {
         pub fn new() -> Result<OsRng, Error> {
-            let dev_random = File::open("rand:").map_err(|err| {
-                match err.kind() {
-                    Interrupted => Error::new(ErrorKind::Transient, "interrupted"),
-                    WouldBlock => Error::with_cause(ErrorKind::NotReady,
-                            "opening random device would block", err),
-                    _ => Error::with_cause(ErrorKind::Unavailable,
-                            "error while opening random device", err)
-                }
-            })?;
-            Ok(OsRng { dev_random: dev_random })
+            READ_RNG_ONCE.call_once(|| {
+                unsafe { READ_RNG_FILE = Some(Mutex::new(None)) }
+            });
+
+            // We try opening the file outside the `call_once` fn because we cannot
+            // clone the error, thus we must retry on failure.
+
+            let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
+            let mut guard = mutex.lock().unwrap();
+            if (*guard).is_none() {
+                info!("OsRng: opening random device 'rand:'");
+                let file = File::open("rand:").map_err(|err| {
+                    match err.kind() {
+                        Interrupted => Error::new(ErrorKind::Transient, "interrupted"),
+                        WouldBlock => Error::with_cause(ErrorKind::NotReady,
+                                "opening random device would block", err),
+                        _ => Error::with_cause(ErrorKind::Unavailable,
+                                "error while opening random device", err)
+                    }
+                })?;
+                *guard = Some(file);
+            };
+            Ok(OsRng())
         }
 
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             if dest.len() == 0 { return Ok(()); }
             trace!("OsRng: reading {} bytes from random device", dest.len());
 
+            // Since we have an instance of Self, we can assume that our memory was
+            // set with a valid object.
+            let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
+            let mut guard = mutex.lock().unwrap();
+            let file = (*guard).as_mut().unwrap();
             // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-            self.dev_random.read_exact(dest).map_err(|err| {
+            file.read_exact(dest).map_err(|err| {
                 Error::with_cause(ErrorKind::Unavailable,
                                   "error reading random device", err)
             })
