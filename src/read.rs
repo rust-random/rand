@@ -80,7 +80,7 @@ impl<R: Read> RngCore for ReadRng<R> {
 #[cfg(test)]
 mod test {
     use super::ReadRng;
-    use RngCore;
+    use {RngCore, ErrorKind};
 
     #[test]
     fn test_reader_rng_u64() {
@@ -117,10 +117,12 @@ mod test {
     }
 
     #[test]
-    #[should_panic]
     fn test_reader_rng_insufficient_bytes() {
-        let mut rng = ReadRng::new(&[][..]);
-        let mut v = [0u8; 3];
-        rng.fill_bytes(&mut v);
+        let v = [1u8, 2, 3, 4, 5, 6, 7, 8];
+        let mut w = [0u8; 9];
+
+        let mut rng = ReadRng::new(&v[..]);
+
+        assert!(rng.try_fill_bytes(&mut w).err().unwrap().kind == ErrorKind::Unavailable);
     }
 }
