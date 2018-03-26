@@ -141,8 +141,8 @@ impl RngCore for OsRng {
         }
     }
 
-    fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
-        self.0.try_fill_bytes(v)
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.0.try_fill_bytes(dest)
     }
 }
 
@@ -266,12 +266,12 @@ mod imp {
                       target_arch = "powerpc"))))]
     fn getrandom(_buf: &mut [u8]) -> libc::c_long { -1 }
 
-    fn getrandom_try_fill(v: &mut [u8]) -> Result<(), Error> {
-        trace!("OsRng: reading {} bytes via getrandom", v.len());
+    fn getrandom_try_fill(dest: &mut [u8]) -> Result<(), Error> {
+        trace!("OsRng: reading {} bytes via getrandom", dest.len());
         let mut read = 0;
-        let len = v.len();
+        let len = dest.len();
         while read < len {
-            let result = getrandom(&mut v[read..]);
+            let result = getrandom(&mut dest[read..]);
             if result == -1 {
                 let err = io::Error::last_os_error();
                 let kind = err.kind();
@@ -280,7 +280,7 @@ mod imp {
                 } else if kind == io::ErrorKind::WouldBlock {
                     // Potentially this would waste bytes, but since we use
                     // /dev/urandom blocking only happens if not initialised.
-                    // Also, wasting the bytes in v doesn't matter very much.
+                    // Also, wasting the bytes in dest doesn't matter very much.
                     return Err(Error::with_cause(
                         ErrorKind::NotReady,
                         "getrandom not ready",
@@ -359,10 +359,10 @@ mod imp {
             Ok(OsRng { inner: OsReadRng(reader_rng) })
         }
         
-        pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             match self.inner {
-                OsGetrandomRng => getrandom_try_fill(v),
-                OsReadRng(ref mut rng) => rng.try_fill_bytes(v)
+                OsGetrandomRng => getrandom_try_fill(dest),
+                OsReadRng(ref mut rng) => rng.try_fill_bytes(dest)
             }
         }
     }
@@ -382,9 +382,9 @@ mod imp {
             Ok(OsRng)
         }
 
-        pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
-            trace!("OsRng: reading {} bytes via cloadabi::random_get", v.len());
-            let errno = unsafe { cloudabi::random_get(v) };
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            trace!("OsRng: reading {} bytes via cloadabi::random_get", dest.len());
+            let errno = unsafe { cloudabi::random_get(dest) };
             if errno == cloudabi::errno::SUCCESS {
                 Ok(())
             } else {
@@ -427,10 +427,10 @@ mod imp {
         pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-        pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
-            trace!("OsRng: reading {} bytes via SecRandomCopyBytes", v.len());
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            trace!("OsRng: reading {} bytes via SecRandomCopyBytes", dest.len());
             let ret = unsafe {
-                SecRandomCopyBytes(kSecRandomDefault, v.len() as size_t, v.as_mut_ptr())
+                SecRandomCopyBytes(kSecRandomDefault, dest.len() as size_t, dest.as_mut_ptr())
             };
             if ret == -1 {
                 Err(Error::with_cause(
@@ -460,11 +460,11 @@ mod imp {
         pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-        pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             let mib = [libc::CTL_KERN, libc::KERN_ARND];
-            trace!("OsRng: reading {} bytes via kern.arandom", v.len());
+            trace!("OsRng: reading {} bytes via kern.arandom", dest.len());
             // kern.arandom permits a maximum buffer size of 256 bytes
-            for s in v.chunks_mut(256) {
+            for s in dest.chunks_mut(256) {
                 let mut s_len = s.len();
                 let ret = unsafe {
                     libc::sysctl(mib.as_ptr(), mib.len() as libc::c_uint,
@@ -498,9 +498,9 @@ mod imp {
         pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-        pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             // getentropy(2) permits a maximum buffer size of 256 bytes
-            for s in v.chunks_mut(256) {
+            for s in dest.chunks_mut(256) {
                 trace!("OsRng: reading {} bytes via getentropy", s.len());
                 let ret = unsafe {
                     libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s.len())
@@ -532,8 +532,8 @@ mod imp {
             let reader_rng = ReadRng::open("rand:")?;
             Ok(OsRng { inner: reader_rng })
         }
-        pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
-            self.inner.try_fill_bytes(v)
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            self.inner.try_fill_bytes(dest)
         }
     }
 }
@@ -553,8 +553,8 @@ mod imp {
         pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-        pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
-            for s in v.chunks_mut(fuchsia_zircon::sys::ZX_CPRNG_DRAW_MAX_LEN) {
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            for s in dest.chunks_mut(fuchsia_zircon::sys::ZX_CPRNG_DRAW_MAX_LEN) {
                 trace!("OsRng: reading {} bytes via cprng_draw", s.len());
                 let mut filled = 0;
                 while filled < s.len() {
@@ -593,10 +593,10 @@ mod imp {
         pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
-        pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             // RtlGenRandom takes an ULONG (u32) for the length so we need to
             // split up the buffer.
-            for slice in v.chunks_mut(<ULONG>::max_value() as usize) {
+            for slice in dest.chunks_mut(<ULONG>::max_value() as usize) {
                 trace!("OsRng: reading {} bytes via RtlGenRandom", slice.len());
                 let ret = unsafe {
                     RtlGenRandom(slice.as_mut_ptr() as PVOID, slice.len() as ULONG)
@@ -687,11 +687,11 @@ mod imp {
             }
         }
 
-        pub fn try_fill_bytes(&mut self, v: &mut [u8]) -> Result<(), Error> {
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             assert_eq!(mem::size_of::<usize>(), 4);
 
-            let len = v.len() as u32;
-            let ptr = v.as_mut_ptr() as i32;
+            let len = dest.len() as u32;
+            let ptr = dest.as_mut_ptr() as i32;
 
             let result = match self.0 {
                 OsRngInner::Browser => js! {
