@@ -802,10 +802,6 @@ mod test_jitter_init {
             Ok(ref mut rng) => {
                 // false positives are possible, but extremely unlikely
                 assert!(rng.next_u32() | rng.next_u32() != 0);
-                assert!(rng.next_u64() != 0);
-                let mut buf = [0u8; 6];
-                rng.try_fill_bytes(&mut buf).unwrap();
-                assert!(!buf.iter().all(|&x| x == 0));
             },
             Err(_) => {},
         }
