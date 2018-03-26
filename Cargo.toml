@@ -27,7 +27,6 @@ alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 i128_support = [] # enables i128 and u128 support
 
 serde-1 = ["serde", "serde_derive"]
-wasm-stdweb = ["stdweb"]
 
 
 [target.'cfg(unix)'.dependencies]
