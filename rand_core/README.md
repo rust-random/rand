@@ -1,5 +1,9 @@
-rand_core
-====
+# rand_core
+
+[![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg)](https://travis-ci.org/rust-lang-nursery/rand)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-lang-nursery/rand?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
+[![crates.io](https://img.shields.io/crates/v/rand_core.svg)](https://crates.io/crates/rand_core)
+[![docs.rs](https://docs.rs/rand_core/badge.svg)](https://docs.rs/rand_core)
 
 Core traits and error types of the [rand] library, plus tools for implementing
 RNGs.
@@ -14,7 +18,11 @@ applications (including sampling from restricted ranges, conversion to floating
 point, list permutations and secure initialisation of RNGs). Most users should
 prefer to use the main [rand] crate.
 
-[Documentation](https://docs.rs/rand_core)
+Documentation:
+[master branch](https://rust-lang-nursery.github.io/rand/rand_core/index.html),
+[by release](https://docs.rs/rand_core)
+
+[Changelog](CHANGELOG.md)
 
 [rand]: https://crates.io/crates/rand
 
@@ -36,14 +44,15 @@ The traits and error types are also available via `rand`.
 comprising `RngCore` support for `Box<R>` types where `R: RngCore`, as well as
 extensions to the `Error` type's functionality.
 
-Due to a bug in Cargo, `rand_core` is built without `std` support by default.
-Since features are unioned across the whole dependency tree, any crate using
-`rand` with its default features will also enable `std` support in `rand_core`.
+Due to [rust-lang/cargo#1596](https://github.com/rust-lang/cargo/issues/1596),
+`rand_core` is built without `std` support by default. Since features are
+unioned across the whole dependency tree, any crate using `rand` with its
+default features will also enable `std` support in `rand_core`.
 
 
 # License
 
-`rand` is primarily distributed under the terms of both the MIT
-license and the Apache License (Version 2.0).
+`rand_core` is distributed under the terms of both the MIT license and the
+Apache License (Version 2.0).
 
-See LICENSE-APACHE, and LICENSE-MIT for details.
+See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
