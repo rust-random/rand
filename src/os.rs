@@ -520,20 +520,38 @@ mod imp {
 #[cfg(target_os = "redox")]
 mod imp {
     use {Error, ErrorKind};
-    use super::ReadRng;
+    use std::fs::File;
+    use std::io::Read;
+    use std::io::ErrorKind::*;
 
     #[derive(Debug)]
     pub struct OsRng {
-        inner: ReadRng,
+        dev_random: File,
     }
 
     impl OsRng {
         pub fn new() -> Result<OsRng, Error> {
-            let reader_rng = ReadRng::open("rand:")?;
-            Ok(OsRng { inner: reader_rng })
+            let dev_random = File::open("rand:").map_err(|err| {
+                match err.kind() {
+                    Interrupted => Error::new(ErrorKind::Transient, "interrupted"),
+                    WouldBlock => Error::with_cause(ErrorKind::NotReady,
+                            "opening random device would block", err),
+                    _ => Error::with_cause(ErrorKind::Unavailable,
+                            "error while opening random device", err)
+                }
+            })?;
+            Ok(OsRng { dev_random: dev_random })
         }
+
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            self.inner.try_fill_bytes(dest)
+            if dest.len() == 0 { return Ok(()); }
+            trace!("OsRng: reading {} bytes from random device", dest.len());
+
+            // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
+            self.dev_random.read_exact(dest).map_err(|err| {
+                Error::with_cause(ErrorKind::Unavailable,
+                                  "error reading random device", err)
+            })
         }
     }
 }
