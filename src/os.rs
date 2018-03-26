@@ -613,7 +613,31 @@ mod imp {
     }
 }
 
-#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
+#[cfg(all(target_arch = "wasm32",
+          not(target_os = "emscripten"),
+          not(feature = "stdweb")))]
+mod imp {
+    use {Error, ErrorKind};
+
+    #[derive(Debug)]
+    pub struct OsRng;
+
+    impl OsRng {
+        pub fn new() -> Result<OsRng, Error> {
+            Err(Error::new(ErrorKind::Unavailable,
+                           "not supported on WASM without stdweb"))
+        }
+
+        pub fn try_fill_bytes(&mut self, _v: &mut [u8]) -> Result<(), Error> {
+            Err(Error::new(ErrorKind::Unavailable,
+                           "not supported on WASM without stdweb"))
+        }
+    }
+}
+
+#[cfg(all(target_arch = "wasm32",
+          not(target_os = "emscripten"),
+          feature = "stdweb"))]
 mod imp {
     use std::mem;
     use stdweb::unstable::TryInto;
