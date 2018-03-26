@@ -17,6 +17,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Deprecate `rand_derive`. (#256)
 - Add `log` feature. Logging is now available in `JitterRng`, `OsRng`, `EntropyRng` and `ReseedingRng`. (#246)
 - Add `serde-1` feature for some PRNGs. (#189)
+- `stdweb` feature for `OsRng` support on WASM via stdweb. (#272, #336)
 
 ### `Rng` trait
 - Split `Rng` in `RngCore` and `Rng` extension trait.
@@ -68,7 +69,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 ### Platform support and `OsRng`
 - Add support for CloudABI. (#224)
 - Remove support for NaCl. (#225)
-- Replace stubs with proper WASM support in `OsRng`. (#272)
+- WASM support for `OsRng` via stdweb, behind the `stdweb` feature. (#272, #336)
 - On systems that do not have a syscall interface, only keep a single file descriptor open for `OsRng`. (#239)
 - Better error handling and reporting in `OsRng` (using new error type). (#225)
 - `OsRng` now uses non-blocking when available. (#225)
