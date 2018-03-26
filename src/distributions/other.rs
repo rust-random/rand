@@ -62,8 +62,12 @@ impl Distribution<char> for Alphanumeric {
             b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                 abcdefghijklmnopqrstuvwxyz\
                 0123456789";
+        // We can pick from 62 characters. This is so close to a power of 2, 64,
+        // that we can do better than `Range`. Use a simple bitshift and
+        // rejection sampling. We do not use a bitmask, because for small RNGs
+        // the most significant bits are usually of higher quality.
         loop {
-            let var = rng.next_u32() >> 26;
+            let var = rng.next_u32() >> (32 - 6);
             if var < RANGE {
                 return GEN_ASCII_STR_CHARSET[var as usize] as char
             }
@@ -161,8 +165,9 @@ impl<T> Distribution<Option<T>> for Uniform where Uniform: Distribution<T> {
 #[cfg(test)]
 mod tests {
     use {Rng, RngCore, Uniform};
+    use distributions::Alphanumeric;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::String;
-    
+
     #[test]
     fn test_misc() {
         let rng: &mut RngCore = &mut ::test::rng(820);
@@ -175,14 +180,28 @@ mod tests {
     #[test]
     fn test_chars() {
         use core::iter;
-        use distributions::Alphanumeric;
         let mut rng = ::test::rng(805);
-        
-        let c = rng.sample(Alphanumeric);
-        assert!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
-        
+
+        // Test by generating a relatively large number of chars, so we also
+        // take the rejection sampling path.
         let word: String = iter::repeat(())
-                .map(|()| rng.sample(Alphanumeric)).take(5).collect();
-        assert_eq!(word.len(), 5);
+                .map(|()| rng.gen::<char>()).take(1000).collect();
+        assert!(word.len() != 0);
+    }
+
+    #[test]
+    fn test_alphanumeric() {
+        let mut rng = ::test::rng(806);
+
+        // Test by generating a relatively large number of chars, so we also
+        // take the rejection sampling path.
+        let mut incorrect = false;
+        for _ in 0..100 {
+            let c = rng.sample(Alphanumeric);
+            incorrect |= !((c >= '0' && c <= '9') ||
+                           (c >= 'A' && c <= 'Z') ||
+                           (c >= 'a' && c <= 'z') );
+        }
+        assert!(incorrect == false);
     }
 }
