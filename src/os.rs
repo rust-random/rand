@@ -185,12 +185,11 @@ mod imp {
         }
     }
 
-    #[cfg(all(target_os = "linux",
-              any(target_arch = "x86_64",
-                  target_arch = "x86",
-                  target_arch = "arm",
-                  target_arch = "aarch64",
-                  target_arch = "powerpc")))]
+    #[cfg(all(any(target_os = "linux", target_os = "android"),
+              any(target_arch = "x86_64", target_arch = "x86",
+                  target_arch = "arm", target_arch = "aarch64",
+                  target_arch = "s390x", target_arch = "powerpc",
+                  target_arch = "mips", target_arch = "mips64")))]
     fn getrandom(buf: &mut [u8]) -> libc::c_long {
         extern "C" {
             fn syscall(number: libc::c_long, ...) -> libc::c_long;
@@ -204,15 +203,28 @@ mod imp {
         const NR_GETRANDOM: libc::c_long = 384;
         #[cfg(target_arch = "aarch64")]
         const NR_GETRANDOM: libc::c_long = 278;
+         #[cfg(target_arch = "s390x")]
+        const NR_GETRANDOM: libc::c_long = 349;
         #[cfg(target_arch = "powerpc")]
-        const NR_GETRANDOM: libc::c_long = 384;
-        
+        const NR_GETRANDOM: libc::c_long = 359;
+        #[cfg(target_arch = "mips")] // old ABI
+        const NR_GETRANDOM: libc::c_long = 4353;
+        #[cfg(target_arch = "mips64")]
+        const NR_GETRANDOM: libc::c_long = 5313;
+
         const GRND_NONBLOCK: libc::c_uint = 0x0001;
 
         unsafe {
             syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(), GRND_NONBLOCK)
         }
     }
+
+    #[cfg(not(all(any(target_os = "linux", target_os = "android"),
+                  any(target_arch = "x86_64", target_arch = "x86",
+                      target_arch = "arm", target_arch = "aarch64",
+                      target_arch = "s390x", target_arch = "powerpc",
+                      target_arch = "mips", target_arch = "mips64"))))]
+    fn getrandom(_buf: &mut [u8]) -> libc::c_long { -1 }
 
     fn getrandom_try_fill(dest: &mut [u8]) -> Result<(), Error> {
         trace!("OsRng: reading {} bytes via getrandom", dest.len());
@@ -248,12 +260,11 @@ mod imp {
         Ok(())
     }
 
-    #[cfg(all(target_os = "linux",
-              any(target_arch = "x86_64",
-                  target_arch = "x86",
-                  target_arch = "arm",
-                  target_arch = "aarch64",
-                  target_arch = "powerpc")))]
+    #[cfg(all(any(target_os = "linux", target_os = "android"),
+              any(target_arch = "x86_64", target_arch = "x86",
+                  target_arch = "arm", target_arch = "aarch64",
+                  target_arch = "s390x", target_arch = "powerpc",
+                  target_arch = "mips", target_arch = "mips64")))]
     fn is_getrandom_available() -> bool {
         use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
         use std::sync::{Once, ONCE_INIT};
@@ -278,12 +289,11 @@ mod imp {
         AVAILABLE.load(Ordering::Relaxed)
     }
 
-    #[cfg(not(all(target_os = "linux",
-                  any(target_arch = "x86_64",
-                      target_arch = "x86",
-                      target_arch = "arm",
-                      target_arch = "aarch64",
-                      target_arch = "powerpc"))))]
+    #[cfg(not(all(any(target_os = "linux", target_os = "android"),
+                  any(target_arch = "x86_64", target_arch = "x86",
+                      target_arch = "arm", target_arch = "aarch64",
+                      target_arch = "s390x", target_arch = "powerpc",
+                      target_arch = "mips", target_arch = "mips64"))))]
     fn is_getrandom_available() -> bool { false }
 
     // TODO: remove outer Option when `Mutex::new(None)` is a constant expression
