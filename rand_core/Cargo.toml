@@ -16,5 +16,5 @@ categories = ["algorithms"]
 [features]
 # Bug: https://github.com/rust-lang/cargo/issues/4361
 # default = ["std"]
-std = []    # use std library; should be default but for above bug
+std = ["alloc"]    # use std library; should be default but for above bug
 alloc = []  # enables Vec and Box support without std
