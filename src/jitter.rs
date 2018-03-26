@@ -785,5 +785,32 @@ impl RngCore for JitterRng {
 
 impl CryptoRng for JitterRng {}
 
-// There are no tests included because (1) this is an "external" RNG, so output
-// is not reproducible and (2) `test_timer` *will* fail on some platforms.
+#[cfg(test)]
+mod test_jitter_init {
+    use JitterRng;
+
+    #[cfg(feature="std")]
+    #[test]
+    fn test_jitter_init() {
+        use RngCore;
+        // Because this is a debug build, measurements here are not representive
+        // of the final release build.
+        // Don't fail this test if initializing `JitterRng` fails because of a
+        // bad timer (the timer from the standard library may not have enough
+        // accuracy on all platforms).
+        match JitterRng::new() {
+            Ok(ref mut rng) => {
+                // false positives are possible, but extremely unlikely
+                assert!(rng.next_u32() | rng.next_u32() != 0);
+            },
+            Err(_) => {},
+        }
+    }
+
+    #[test]
+    fn test_jitter_bad_timer() {
+        fn bad_timer() -> u64 { 0 }
+        let mut rng = JitterRng::new_with_timer(bad_timer);
+        assert!(rng.test_timer().is_err());
+    }
+}

@@ -10,19 +10,13 @@
 
 //! The implementations of the `Uniform` distribution for integer types.
 
-use core::mem;
-
 use {Rng};
 use distributions::{Distribution, Uniform};
 
 impl Distribution<isize> for Uniform {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> isize {
-        if mem::size_of::<isize>() == 4 {
-            rng.gen::<i32>() as isize
-        } else {
-            rng.gen::<i64>() as isize
-        }
+        rng.gen::<usize>() as isize
     }
 }
 
@@ -64,12 +58,15 @@ impl Distribution<i128> for Uniform {
 
 impl Distribution<usize> for Uniform {
     #[inline]
+    #[cfg(any(target_pointer_width = "32", target_pointer_width = "16"))]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        if mem::size_of::<usize>() == 4 {
-            rng.gen::<u32>() as usize
-        } else {
-            rng.gen::<u64>() as usize
-        }
+        rng.next_u32() as usize
+    }
+
+    #[inline]
+    #[cfg(target_pointer_width = "64")]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
+        rng.next_u64() as usize
     }
 }
 

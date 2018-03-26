@@ -434,7 +434,7 @@ mod test {
         // filling the remainder of the buffer.
         let mut buffer = [0u8; 16*4*2];
         // Consume a value so that we have a remainder.
-        let _ = rng.next_u64();
+        assert!(rng.next_u64() == 0x04b4930a518251a4);
         rng.fill_bytes(&mut buffer);
 
         // [u8; 128] doesn't implement PartialEq

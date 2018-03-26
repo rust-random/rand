@@ -500,6 +500,17 @@ mod tests {
                             let v: $ty = rng.sample(my_range);
                             assert!(low <= v && v < high);
                         }
+
+                        let my_range = Range::new_inclusive(low, high);
+                        for _ in 0..1000 {
+                            let v: $ty = rng.sample(my_range);
+                            assert!(low <= v && v <= high);
+                        }
+
+                        for _ in 0..1000 {
+                            let v: $ty = Range::sample_single(low, high, &mut rng);
+                            assert!(low <= v && v < high);
+                        }
                     }
                  )*
             }}

@@ -126,20 +126,36 @@ impl Distribution<u64> for Binomial {
 
 #[cfg(test)]
 mod test {
+    use Rng;
     use distributions::Distribution;
     use super::Binomial;
 
+    fn test_binomial_mean_and_variance<R: Rng>(n: u64, p: f64, rng: &mut R) {
+        let binomial = Binomial::new(n, p);
+
+        let expected_mean = n as f64 * p;
+        let expected_variance = n as f64 * p * (1.0 - p);
+
+        let mut results = [0.0; 1000];
+        for i in results.iter_mut() { *i = binomial.sample(rng) as f64; }
+
+        let mean = results.iter().sum::<f64>() / results.len() as f64;
+        assert!((mean as f64 - expected_mean).abs() < expected_mean / 50.0);
+
+        let variance =
+            results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>()
+            / results.len() as f64;
+        assert!((variance - expected_variance).abs() < expected_variance / 10.0);
+    }
+
     #[test]
     fn test_binomial() {
-        let binomial = Binomial::new(150, 0.1);
         let mut rng = ::test::rng(123);
-        let mut sum = 0;
-        for _ in 0..1000 {
-            sum += binomial.sample(&mut rng);
-        }
-        let avg = (sum as f64) / 1000.0;
-        println!("Binomial average: {}", avg);
-        assert!((avg - 15.0).abs() < 0.5); // not 100% certain, but probable enough
+        test_binomial_mean_and_variance(150, 0.1, &mut rng);
+        test_binomial_mean_and_variance(70, 0.6, &mut rng);
+        test_binomial_mean_and_variance(40, 0.5, &mut rng);
+        test_binomial_mean_and_variance(20, 0.7, &mut rng);
+        test_binomial_mean_and_variance(20, 0.5, &mut rng);
     }
 
     #[test]
