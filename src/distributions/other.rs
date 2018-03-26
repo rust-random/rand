@@ -171,7 +171,7 @@ mod tests {
         rng.sample::<bool, _>(Uniform);
     }
     
-    #[cfg(any(feature="std", feature="alloc"))]
+    #[cfg(feature="alloc")]
     #[test]
     fn test_chars() {
         use core::iter;

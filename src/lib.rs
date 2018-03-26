@@ -234,7 +234,7 @@ pub mod mock;
 #[cfg(feature="std")] pub mod os;
 #[cfg(feature="std")] pub mod read;
 pub mod reseeding;
-#[cfg(any(feature="std", feature = "alloc"))] pub mod seq;
+#[cfg(feature = "alloc")] pub mod seq;
 
 // These tiny modules are here to avoid API breakage, probably only temporarily
 pub mod chacha {
@@ -1123,7 +1123,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(any(feature="std", feature="alloc"))]
+    #[cfg(feature="alloc")]
     fn test_rng_boxed_trait() {
         use distributions::{Distribution, Uniform};
         let rng = rng(110);
