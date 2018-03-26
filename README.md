@@ -89,7 +89,7 @@ optional features are available:
 -   `log` enables some logging via the `log` crate
 -   `nightly` enables all unstable features (`i128_support`)
 -   `serde-1` enables serialisation for some types, via Serde version 1
--   `wasm-stdweb` enables support for `OsRng` on WASM via stdweb.
+-   `stdweb` enables support for `OsRng` on WASM via stdweb.
 -   `std` enabled by default; by setting "default-features = false" `no_std`
     mode is activated; this removes features depending on `std` functionality:
     -   `OsRng` is entirely unavailable

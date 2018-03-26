@@ -615,7 +615,7 @@ mod imp {
 
 #[cfg(all(target_arch = "wasm32",
           not(target_os = "emscripten"),
-          not(feature = "wasm-stdweb")))]
+          not(feature = "stdweb")))]
 mod imp {
     use {Error, ErrorKind};
 
@@ -637,7 +637,7 @@ mod imp {
 
 #[cfg(all(target_arch = "wasm32",
           not(target_os = "emscripten"),
-          feature = "wasm-stdweb"))]
+          feature = "stdweb"))]
 mod imp {
     use std::mem;
     use stdweb::unstable::TryInto;

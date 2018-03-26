@@ -47,7 +47,7 @@ matrix:
         # Cargo has errors with sub-commands so ignore updating for now:
         - cargo --list | egrep "^\s*web$" -q || cargo install cargo-web
       script:
-        - cargo web test --target wasm32-unknown-unknown --nodejs --features=wasm-stdweb
+        - cargo web test --target wasm32-unknown-unknown --nodejs --features=stdweb
     
     # Trust cross-built/emulated targets. We must repeat all non-default values.
     - rust: stable
