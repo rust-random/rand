@@ -357,9 +357,10 @@ mod imp {
         if dest.len() == 0 { return Ok(()); }
         trace!("OsRng: reading {} bytes from random device", dest.len());
 
-        // Since we have an instance of Self, we can assume that our memory was
-        // set with a valid object.
-        let mutex = unsafe{ READ_RNG_FILE.as_ref().unwrap() };
+        // We expect this function only to be used after `open_dev_random` was
+        // succesful. Therefore we can assume that our memory was set with a
+        // valid object.
+        let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
         let mut guard = mutex.lock().unwrap();
         let file = (*guard).as_mut().unwrap();
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
