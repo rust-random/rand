@@ -37,13 +37,26 @@ let x: f64 = thread_rng().gen();
 
 ## Versions
 
-Version 0.5 is in development and contains many breaking changes; expected
-release date is approx. end of March 2018 if all goes well.
+Version 0.5 is available as a pre-release and contains many breaking changes.
+See [the Upgrade Guide](UPDATING.md) for guidance on updating from previous
+versions.
 
 Version 0.4 was released in December 2017. It contains almost no breaking
 changes since the 0.3 series.
 
 For more details, see the [changelog](CHANGELOG.md).
+
+### Compatibility shims
+
+**As of now there is no compatibility shim between Rand 0.4 and 0.5.**
+It is also not entirely obvious how to make one due to the large differences
+between the two versions, although it would be possible to implement the new
+`RngCore` for any implementation of the old `Rng` (or vice-versa; unfortunately
+not both as that would result in circular implementation). If we implement a
+compatibility shim it will be optional (opt-in via a feature).
+
+There is a compatibility shim from 0.3 to 0.4 forcibly upgrading all Rand 0.3
+users; this is largely due to the small differences between the two versions.
 
 ### Rust version requirements
 
