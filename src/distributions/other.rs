@@ -58,7 +58,7 @@ impl Distribution<char> for Uniform {
 impl Distribution<char> for Alphanumeric {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> char {
         const RANGE: u32 = 26 + 26 + 10;
-        const GEN_ASCII_STR_CHARSET: &'static [u8] =
+        const GEN_ASCII_STR_CHARSET: &[u8] =
             b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                 abcdefghijklmnopqrstuvwxyz\
                 0123456789";

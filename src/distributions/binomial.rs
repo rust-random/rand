@@ -41,7 +41,7 @@ impl Binomial {
     pub fn new(n: u64, p: f64) -> Binomial {
         assert!(p > 0.0, "Binomial::new called with p <= 0");
         assert!(p < 1.0, "Binomial::new called with p >= 1");
-        Binomial { n: n, p: p }
+        Binomial { n, p }
     }
 }
 

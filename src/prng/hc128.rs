@@ -92,7 +92,7 @@ impl SeedableRng for Hc128Rng {
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        BlockRng::<Hc128Core>::from_rng(rng).map(|result| Hc128Rng(result))
+        BlockRng::<Hc128Core>::from_rng(rng).map(Hc128Rng)
     }
 }
 
@@ -303,7 +303,7 @@ impl Hc128Core {
                    .wrapping_add(t[i-16]).wrapping_add(256 + i as u32);
         }
 
-        let mut core = Self { t: t, counter1024: 0 };
+        let mut core = Self { t, counter1024: 0 };
 
         // run the cipher 1024 steps
         for _ in 0..64 { core.sixteen_steps() };

@@ -260,7 +260,7 @@ impl RngCore for IsaacRng {
 /// Creates a new ISAAC random number generator.
 ///
 /// The author Bob Jenkins describes how to best initialize ISAAC here:
-/// https://rt.cpan.org/Public/Bug/Display.html?id=64324
+/// <https://rt.cpan.org/Public/Bug/Display.html?id=64324>
 /// The answer is included here just in case:
 ///
 /// "No, you don't need a full 8192 bits of seed data. Normal key sizes will do
@@ -315,7 +315,7 @@ fn init(mut mem: [w32; RAND_SIZE], rounds: u32) -> IsaacRng {
 
     let mut rng = IsaacRng {
         rsl: [0; RAND_SIZE],
-        mem: mem,
+        mem,
         a: w(0),
         b: w(0),
         c: w(0),

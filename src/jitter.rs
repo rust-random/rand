@@ -196,7 +196,7 @@ impl JitterRng {
         JitterRng {
             data: 0,
             rounds: 64,
-            timer: timer,
+            timer,
             mem_prev_index: 0,
             data_half_used: false,
         }
@@ -238,7 +238,7 @@ impl JitterRng {
         let mask = (1 << n_bits) - 1;
         for _ in 0..folds {
             rounds ^= time & mask;
-            time = time >> n_bits;
+            time >>= n_bits;
         }
 
         rounds as u32
@@ -259,7 +259,7 @@ impl JitterRng {
         fn lfsr(mut data: u64, time: u64) -> u64{
             for i in 1..65 {
                 let mut tmp = time << (64 - i);
-                tmp = tmp >> (64 - 1);
+                tmp >>= 64 - 1;
 
                 // Fibonacci LSFR with polynomial of
                 // x^64 + x^61 + x^56 + x^31 + x^28 + x^23 + 1 which is
