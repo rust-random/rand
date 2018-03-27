@@ -95,7 +95,7 @@ impl SeedableRng for ChaChaRng {
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        BlockRng::<ChaChaCore>::from_rng(rng).map(|result| ChaChaRng(result))
+        BlockRng::<ChaChaCore>::from_rng(rng).map(ChaChaRng)
     }
 }
 

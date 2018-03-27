@@ -46,9 +46,9 @@ impl Poisson {
         assert!(lambda > 0.0, "Poisson::new called with lambda <= 0");
         let log_lambda = lambda.ln();
         Poisson {
-            lambda: lambda,
+            lambda,
             exp_lambda: (-lambda).exp(),
-            log_lambda: log_lambda,
+            log_lambda,
             sqrt_2lambda: (2.0 * lambda).sqrt(),
             magic_val: lambda * log_lambda - log_gamma(1.0 + lambda),
         }

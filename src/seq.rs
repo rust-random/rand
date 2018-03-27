@@ -163,8 +163,8 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize
 /// This allocates the entire `length` of indices and randomizes only the first `amount`.
 /// It then truncates to `amount` and returns.
 ///
-/// This is better than using a HashMap "cache" when `amount >= length / 2` since it does not
-/// require allocating an extra cache and is much faster.
+/// This is better than using a `HashMap` "cache" when `amount >= length / 2`
+/// since it does not require allocating an extra cache and is much faster.
 fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
     where R: Rng + ?Sized,
 {
@@ -173,9 +173,7 @@ fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<u
     indices.extend(0..length);
     for i in 0..amount {
         let j: usize = rng.gen_range(i, length);
-        let tmp = indices[i];
-        indices[i] = indices[j];
-        indices[j] = tmp;
+        indices.swap(i, j);
     }
     indices.truncate(amount);
     debug_assert_eq!(indices.len(), amount);
@@ -183,11 +181,11 @@ fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<u
 }
 
 
-/// This method performs a partial fisher-yates on a range of indices using a HashMap
-/// as a cache to record potential collisions.
+/// This method performs a partial fisher-yates on a range of indices using a
+/// `HashMap` as a cache to record potential collisions.
 ///
 /// The cache avoids allocating the entire `length` of values. This is especially useful when
-/// `amount <<< length`, i.e. select 3 non-repeating from 1_000_000
+/// `amount <<< length`, i.e. select 3 non-repeating from `1_000_000`
 fn sample_indices_cache<R>(
     rng: &mut R,
     length: usize,

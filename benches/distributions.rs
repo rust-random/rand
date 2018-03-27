@@ -43,7 +43,7 @@ macro_rules! distr_float {
                 let mut accum = 0.0;
                 for _ in 0..::RAND_BENCH_N {
                     let x: $ty = distr.sample(&mut rng);
-                    accum = accum + x;
+                    accum += x;
                 }
                 black_box(accum);
             });

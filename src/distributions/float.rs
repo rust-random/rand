@@ -25,7 +25,6 @@ pub(crate) trait IntoFloat {
     /// The resulting value will fall in a range that depends on the exponent.
     /// As an example the range with exponent 0 will be
     /// [2<sup>0</sup>..2<sup>1</sup>), which is [1..2).
-    #[inline(always)]
     fn into_float_with_exponent(self, exponent: i32) -> Self::F;
 }
 
