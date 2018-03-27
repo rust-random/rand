@@ -226,18 +226,14 @@ distribution).
 
 The `Open01` and `Closed01` wrappers have been removed. `Rng::gen()` (via
 `Uniform`) now yields samples from `(0, 1)` for floats; i.e. the same as the old
-`Open01`. This is considered sufficient for most uses. If you require more
-precision, use the `HighPrecision01` distribution.
+`Open01`. This is considered sufficient for most uses.
 
 #### Uniform distributions
 
-Three new distributions are available:
+Two new distributions are available:
 
 -   `Uniform` produces uniformly-distributed samples for many different types,
     and acts as a replacement for `Rand`
--   `HighPrecision01` generates floating-point numbers in the range `[0, 1)`
-    (similar to `Uniform`) but with as much precision as the floating point
-    format can represent
 -   `Alphanumeric` samples `char`s from the ranges `a-z A-Z 0-9`
 
 ##### Ranges
