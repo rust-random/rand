@@ -2,8 +2,9 @@
 
 [![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/rand)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-lang-nursery/rand?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
-[![crates.io](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
-[![docs.rs](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
+[![Latest version](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
+[![Documentation](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
 
 A Rust library for random number generators and other randomness functionality.
 

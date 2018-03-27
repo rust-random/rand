@@ -2,8 +2,9 @@
 
 [![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg)](https://travis-ci.org/rust-lang-nursery/rand)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-lang-nursery/rand?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
-[![crates.io](https://img.shields.io/crates/v/rand_core.svg)](https://crates.io/crates/rand_core)
-[![docs.rs](https://docs.rs/rand_core/badge.svg)](https://docs.rs/rand_core)
+[![Latest version](https://img.shields.io/crates/v/rand_core.svg)](https://crates.io/crates/rand_core)
+[![Documentation](https://docs.rs/rand_core/badge.svg)](https://docs.rs/rand_core)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
 
 Core traits and error types of the [rand] library, plus tools for implementing
 RNGs.
