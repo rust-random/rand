@@ -60,7 +60,6 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - All PRNGs are now portable across big- and little-endian architectures. (#209)
 - `Isaac64Rng::next_u32` no longer throws away half the results. (#209)
 - Add `IsaacRng::new_from_u64` and `Isaac64Rng::new_from_u64`. (#209)
-- Remove `IsaacWordRng` wrapper. (#277)
 - Add the HC-128 CSPRNG `Hc128Rng`. (#210)
 - Add `ChaChaRng::set_rounds` method. (#243)
 - Changes to `JitterRng` to get its size down from 2112 to 24 bytes. (#251)
@@ -71,6 +70,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Remove support for NaCl. (#225)
 - WASM support for `OsRng` via stdweb, behind the `stdweb` feature. (#272, #336)
 - Use `getrandom` on more platforms for Linux, and on Android. (#338)
+- Use the `SecRandomCopyBytes` interface on macOS. (#322)
 - On systems that do not have a syscall interface, only keep a single file descriptor open for `OsRng`. (#239)
 - On Unix, first try a single read from `/dev/random`, then `/dev/urandom`. (#338)
 - Better error handling and reporting in `OsRng` (using new error type). (#225)
@@ -90,7 +90,6 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Use widening multiply method for much faster integer range reduction. (#274)
 - `Uniform` distributions for `bool` uses `Range`. (#274)
 - `Uniform` distributions for `bool` uses sign test. (#274)
-- Add `HighPrecision01` distribution. (#320)
 
 
 ## [0.4.2] - 2018-01-06
