@@ -16,7 +16,7 @@ This release also contains many optimisations, which are not detailed below.
 We have a new crate: `rand_core`! This crate houses some important traits,
 `RngCore`, `BlockRngCore`, `SeedableRng` and `CryptoRng`, the error types, as
 well as two modules with helpers for implementations: `le` and `impls`. It is
-recommended that implementations of generators use the `rand_core` trait while
+recommended that implementations of generators use the `rand_core` crate while
 other users use only the `rand` crate, which re-exports most parts of `rand_core`.
 
 The `rand_derive` crate has been deprecated due to very low usage and
