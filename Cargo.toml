@@ -11,23 +11,29 @@ description = """
 Random number generators and other randomness functionality.
 """
 keywords = ["random", "rng"]
-categories = ["algorithms", "no_std"]
+categories = ["algorithms", "no-std"]
 
 [badges]
 travis-ci = { repository = "rust-lang-nursery/rand" }
 appveyor = { repository = "alexcrichton/rand" }
 
 [features]
-default = ["std"]
+default = ["std" ] # without "std" rand uses libcore
 nightly = ["i128_support"] # enables all features requiring nightly rust
-
-std = ["rand_core/std", "winapi", "libc", "alloc"] # default feature; without this rand uses libcore
+std = ["rand_core/std", "alloc", "libc", "winapi", "cloudabi", "fuchsia-zircon"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
-
 i128_support = [] # enables i128 and u128 support
+serde-1 = ["serde", "serde_derive"] # enables serialisation for PRNGs
 
-serde-1 = ["serde", "serde_derive"]
+[workspace]
+members = ["rand_core"]
 
+[dependencies]
+rand_core = { version = '0.1.0-pre.0', default-features = false }
+log = { version = "0.4", optional = true }
+serde = { version = "1", optional = true }
+serde_derive = { version = "1", optional = true }
+stdweb = { version = "0.4", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = { version = "0.2", optional = true }
@@ -35,26 +41,13 @@ libc = { version = "0.2", optional = true }
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"], optional = true }
 
-[dependencies]
-rand_core = { version = '0.1.0-pre.0', default-features = false }
-
-log = { version = "0.4", optional = true }
-serde = {version="1", optional=true}
-serde_derive = {version="1", optional=true}
-stdweb = {version="0.4", optional=true}
-
-
-[workspace]
-members = ["rand_core"]
-
-[dev-dependencies]
-# This is for testing serde, unfortunately
-# we can't specify feature-gated dev deps yet,
-# see: https://github.com/rust-lang/cargo/issues/1596
-bincode = "1.0"
-
 [target.'cfg(target_os = "cloudabi")'.dependencies]
-cloudabi = "0.0.3"
+cloudabi = { version = "0.0.3", optional = true }
 
 [target.'cfg(target_os = "fuchsia")'.dependencies]
-fuchsia-zircon = "0.3.2"
+fuchsia-zircon = { version = "0.3.2", optional = true }
+
+[dev-dependencies]
+# This is for testing serde, unfortunately we can't specify feature-gated dev
+# deps yet, see: https://github.com/rust-lang/cargo/issues/1596
+bincode = "1.0"
