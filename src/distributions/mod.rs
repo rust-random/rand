@@ -273,7 +273,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
         assert!(running_total != 0, "WeightedChoice::new called with a total weight of 0");
 
         WeightedChoice {
-            items: items,
+            items,
             // we're likely to be generating numbers in this range
             // relatively often, so might as well cache it
             weight_range: Range::new(0, running_total)
@@ -320,7 +320,7 @@ impl<'a, T: Clone> Distribution<T> for WeightedChoice<'a, T> {
             }
             modifier /= 2;
         }
-        return self.items[idx + 1].item.clone();
+        self.items[idx + 1].item.clone()
     }
 }
 

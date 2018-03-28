@@ -77,7 +77,7 @@ where R: BlockRngCore + SeedableRng,
             BlockRng {
                 core: ReseedingCore {
                     inner: rng,
-                    reseeder: reseeder,
+                    reseeder,
                     threshold: threshold as i64,
                     bytes_until_reseed: threshold as i64,
                 },

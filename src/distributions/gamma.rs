@@ -109,7 +109,7 @@ impl Gamma {
         } else {
             Large(GammaLargeShape::new_raw(shape, scale))
         };
-        Gamma { repr: repr }
+        Gamma { repr }
     }
 }
 
@@ -126,9 +126,9 @@ impl GammaLargeShape {
     fn new_raw(shape: f64, scale: f64) -> GammaLargeShape {
         let d = shape - 1. / 3.;
         GammaLargeShape {
-            scale: scale,
+            scale,
             c: 1. / (9. * d).sqrt(),
-            d: d
+            d
         }
     }
 }
@@ -211,7 +211,7 @@ impl ChiSquared {
             assert!(k > 0.0, "ChiSquared::new called with `k` < 0");
             DoFAnythingElse(Gamma::new(0.5 * k, 2.0))
         };
-        ChiSquared { repr: repr }
+        ChiSquared { repr }
     }
 }
 impl Distribution<f64> for ChiSquared {

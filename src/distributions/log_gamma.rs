@@ -39,13 +39,13 @@ pub fn log_gamma(x: f64) -> f64 {
     // the first few terms of the series for Ag(x)
     let mut a = 1.000000000190015;
     let mut denom = x;
-    for j in 0..6 {
+    for coeff in &coefficients {
         denom += 1.0;
-        a += coefficients[j] / denom;
+        a += coeff / denom;
     }
 
     // get everything together
     // a is Ag(x)
     // 2.5066... is sqrt(2pi)
-    return log + (2.5066282746310005 * a / x).ln();
+    log + (2.5066282746310005 * a / x).ln()
 }

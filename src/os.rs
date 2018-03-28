@@ -330,13 +330,13 @@ mod imp {
                     .read(true)
                     .custom_flags(libc::O_NONBLOCK)
                     .open("/dev/random")
-                    .map_err(|err| map_err(err))?;
+                    .map_err(map_err)?;
                 let mut buf = [0u8; 1];
-                file.read_exact(&mut buf).map_err(|err| map_err(err))?;
+                file.read_exact(&mut buf).map_err(map_err)?;
             }
 
             info!("OsRng: opening random device /dev/urandom");
-            let file = File::open("/dev/urandom").map_err(|err| map_err(err))?;
+            let file = File::open("/dev/urandom").map_err(map_err)?;
             *guard = Some(file);
         };
         Ok(())

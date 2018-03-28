@@ -55,6 +55,12 @@ impl EntropyRng {
     }
 }
 
+impl Default for EntropyRng {
+    fn default() -> Self {
+        EntropyRng::new()
+    }
+}
+
 impl RngCore for EntropyRng {
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
