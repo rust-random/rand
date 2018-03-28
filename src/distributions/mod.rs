@@ -177,7 +177,7 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// use rand::distributions::Uniform;
 ///
 /// let val: f32 = SmallRng::new().sample(Uniform);
-/// println!("f32 from [0,1): {}", val);
+/// println!("f32 from (0,1): {}", val);
 /// ```
 ///
 /// With dynamic dispatch (type erasure of `Rng`):
@@ -189,8 +189,28 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// let mut rng = thread_rng();
 /// let mut erased_rng: &mut RngCore = &mut rng;
 /// let val: f32 = erased_rng.sample(Uniform);
-/// println!("f32 from [0,1): {}", val);
+/// println!("f32 from (0,1): {}", val);
 /// ```
+///
+/// # Open interval for floats
+/// In theory it is possible to choose between an open interval `(0, 1)`, and
+/// the half-open intervals `[0, 1)` and `(0, 1]`. All can give a distribution
+/// with perfectly uniform intervals. Many libraries in other programming
+/// languages default to the closed-open interval `[0, 1)`. We choose here to go
+/// with *open*, with the arguments:
+///
+/// - The chance to generate a specific value, like exactly 0.0, is *tiny*. No
+///   (or almost no) sensible code relies on an exact floating-point value to be
+///   generated with a very small chance (1 in ~8 million (2^23) for `f32`, and
+///   1 in 2^52 for `f64`). What is relied on is having a uniform distribution
+///   and a mean of `0.5`.
+/// - Several common algorithms rely on never seeing the value `0.0` generated,
+///   i.e. they rely on an open interval. For example when the logarithm of the
+///   value is taken, or used as a devisor.
+///
+/// In other words, the guarantee some value *could* be generated is less useful
+/// than the guarantee some value (`0.0`) is never generated. That makes an open
+/// interval a nicer choice.
 ///
 /// [`Exp1`]: struct.Exp1.html
 /// [`StandardNormal`]: struct.StandardNormal.html

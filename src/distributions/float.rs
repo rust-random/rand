@@ -45,15 +45,6 @@ macro_rules! float_impls {
         impl Distribution<$ty> for Uniform {
             /// Generate a floating point number in the open interval `(0, 1)`
             /// (not including either endpoint) with a uniform distribution.
-            ///
-            /// # Example
-            /// ```rust
-            /// use rand::{NewRng, SmallRng, Rng};
-            /// use rand::distributions::Uniform;
-            ///
-            /// let val: f32 = SmallRng::new().sample(Uniform);
-            /// println!("f32 from (0,1): {}", val);
-            /// ```
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 const EPSILON: $ty = 1.0 / (1u64 << $fraction_bits) as $ty;
                 let float_size = mem::size_of::<$ty>() * 8;
