@@ -99,10 +99,10 @@ impl Error {
     /// Create a new instance, with specified kind and a message.
     pub fn new(kind: ErrorKind, msg: &'static str) -> Self {
         #[cfg(feature="std")] {
-            Error { kind: kind, msg: msg, cause: None }
+            Error { kind, msg, cause: None }
         }
         #[cfg(not(feature="std"))] {
-            Error { kind: kind, msg: msg }
+            Error { kind, msg }
         }
     }
     
@@ -119,7 +119,7 @@ impl Error {
     pub fn with_cause<E>(kind: ErrorKind, msg: &'static str, cause: E) -> Self
         where E: Into<Box<stdError + Send + Sync>>
     {
-        Error { kind: kind, msg: msg, cause: Some(cause.into()) }
+        Error { kind, msg, cause: Some(cause.into()) }
     }
     
     /// Create a new instance, with specified kind, message, and a
@@ -128,7 +128,7 @@ impl Error {
     /// In `no_std` mode the *cause* is ignored.
     #[cfg(not(feature="std"))]
     pub fn with_cause<E>(kind: ErrorKind, msg: &'static str, _cause: E) -> Self {
-        Error { kind: kind, msg: msg }
+        Error { kind, msg }
     }
     
     /// Take the cause, if any. This allows the embedded cause to be extracted.
