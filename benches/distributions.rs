@@ -74,9 +74,9 @@ macro_rules! distr {
 distr_int!(distr_range_i8, i8, Range::new(20i8, 100));
 distr_int!(distr_range_i16, i16, Range::new(-500i16, 2000));
 distr_int!(distr_range_i32, i32, Range::new(-200_000_000i32, 800_000_000));
-distr_int!(distr_range_i64, i64, Range::new(3i64, 12345678901234));
+distr_int!(distr_range_i64, i64, Range::new(3i64, 123_456_789_123));
 #[cfg(feature = "i128_support")]
-distr_int!(distr_range_i128, i128, Range::new(-12345678901234i128, 12345678901234567890));
+distr_int!(distr_range_i128, i128, Range::new(-123_456_789_123i128, 123_456_789_123_456_789));
 
 distr_float!(distr_range_f32, f32, Range::new(2.26f32, 2.319));
 distr_float!(distr_range_f64, f64, Range::new(2.26f64, 2.319));
@@ -97,9 +97,9 @@ distr_float!(distr_uniform_f32, f32, Uniform);
 distr_float!(distr_uniform_f64, f64, Uniform);
 
 // distributions
-distr_float!(distr_exp, f64, Exp::new(2.71828 * 3.14159));
-distr_float!(distr_normal, f64, Normal::new(-2.71828, 3.14159));
-distr_float!(distr_log_normal, f64, LogNormal::new(-2.71828, 3.14159));
+distr_float!(distr_exp, f64, Exp::new(1.23 * 4.56));
+distr_float!(distr_normal, f64, Normal::new(-1.23, 4.56));
+distr_float!(distr_log_normal, f64, LogNormal::new(-1.23, 4.56));
 distr_float!(distr_gamma_large_shape, f64, Gamma::new(10., 1.0));
 distr_float!(distr_gamma_small_shape, f64, Gamma::new(0.1, 1.0));
 distr_int!(distr_binomial, u64, Binomial::new(20, 0.7));
@@ -131,6 +131,6 @@ macro_rules! gen_range_int {
 gen_range_int!(gen_range_i8, i8, -20i8, 100);
 gen_range_int!(gen_range_i16, i16, -500i16, 2000);
 gen_range_int!(gen_range_i32, i32, -200_000_000i32, 800_000_000);
-gen_range_int!(gen_range_i64, i64, 3i64, 12345678901234);
+gen_range_int!(gen_range_i64, i64, 3i64, 123_456_789_123);
 #[cfg(feature = "i128_support")]
-gen_range_int!(gen_range_i128, i128, -12345678901234i128, 12345678901234567890);
+gen_range_int!(gen_range_i128, i128, -12345678901234i128, 123_456_789_123_456_789);
