@@ -64,10 +64,11 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// }
 /// ```
 ///
-/// See for more information the description in rand::prng::IsaacRng.
+/// See for more information the documentation of [`IsaacRng`].
 ///
 /// [1]: Bob Jenkins, [*ISAAC and RC4*](
 ///      http://burtleburtle.net/bob/rand/isaac.html)
+/// [`IsaacRng`]: prng/isaac/struct.IsaacRng.html
 #[cfg_attr(feature="serde-1", derive(Serialize,Deserialize))]
 pub struct Isaac64Rng {
     #[cfg_attr(feature="serde-1",serde(with="super::isaac_serde::rand_size_serde"))]
@@ -294,7 +295,7 @@ fn init(mut mem: [w64; RAND_SIZE], rounds: u32) -> Isaac64Rng {
 
     Isaac64Rng {
         rsl: [0; RAND_SIZE],
-        mem: mem,
+        mem,
         a: w(0),
         b: w(0),
         c: w(0),

@@ -511,7 +511,7 @@ pub trait Rng: RngCore {
     fn gen_bool(&mut self, p: f64) -> bool {
         assert!(p >= 0.0 && p <= 1.0);
         // If `p` is constant, this will be evaluated at compile-time.
-        let p_int = (p * core::u32::MAX as f64) as u32;
+        let p_int = (p * f64::from(core::u32::MAX)) as u32;
         self.gen::<u32>() <= p_int
     }
 
@@ -604,14 +604,14 @@ impl<R: RngCore + ?Sized> Rng for R {}
 /// [`try_fill`]: trait.Rng.html#method.try_fill
 pub trait AsByteSliceMut {
     /// Return a mutable reference to self as a byte slice
-    fn as_byte_slice_mut<'a>(&'a mut self) -> &'a mut [u8];
+    fn as_byte_slice_mut(&mut self) -> &mut [u8];
     
     /// Call `to_le` on each element (i.e. byte-swap on Big Endian platforms).
     fn to_le(&mut self);
 }
 
 impl AsByteSliceMut for [u8] {
-    fn as_byte_slice_mut<'a>(&'a mut self) -> &'a mut [u8] {
+    fn as_byte_slice_mut(&mut self) -> &mut [u8] {
         self
     }
     
@@ -621,7 +621,7 @@ impl AsByteSliceMut for [u8] {
 macro_rules! impl_as_byte_slice {
     ($t:ty) => {
         impl AsByteSliceMut for [$t] {
-            fn as_byte_slice_mut<'a>(&'a mut self) -> &'a mut [u8] {
+            fn as_byte_slice_mut(&mut self) -> &mut [u8] {
                 unsafe {
                     slice::from_raw_parts_mut(&mut self[0]
                         as *mut $t
@@ -658,7 +658,7 @@ macro_rules! impl_as_byte_slice_arrays {
         impl_as_byte_slice_arrays!($n - 1, $($NN,)*);
         
         impl<T> AsByteSliceMut for [T; $n] where [T]: AsByteSliceMut {
-            fn as_byte_slice_mut<'a>(&'a mut self) -> &'a mut [u8] {
+            fn as_byte_slice_mut(&mut self) -> &mut [u8] {
                 self[..].as_byte_slice_mut()
             }
             
@@ -711,7 +711,7 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
     type Item = char;
 
     fn next(&mut self) -> Option<char> {
-        const GEN_ASCII_STR_CHARSET: &'static [u8] =
+        const GEN_ASCII_STR_CHARSET: &[u8] =
             b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
               abcdefghijklmnopqrstuvwxyz\
               0123456789";
@@ -820,7 +820,7 @@ impl SeedableRng for StdRng {
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        Hc128Rng::from_rng(rng).map(|result| StdRng(result))
+        Hc128Rng::from_rng(rng).map(StdRng)
     }
 }
 
@@ -901,7 +901,7 @@ impl SeedableRng for SmallRng {
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        XorShiftRng::from_rng(rng).map(|result| SmallRng(result))
+        XorShiftRng::from_rng(rng).map(SmallRng)
     }
 }
 
@@ -914,7 +914,7 @@ impl SeedableRng for SmallRng {
 /// seeded `Rng` for consistency over time you should pick one algorithm and
 /// create the `Rng` yourself.
 ///
-/// This will seed the generator with randomness from thread_rng.
+/// This will seed the generator with randomness from `thread_rng`.
 #[deprecated(since="0.5.0", note="removed in favor of SmallRng")]
 #[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
