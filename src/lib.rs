@@ -508,6 +508,16 @@ pub trait Rng: RngCore {
     /// let mut rng = thread_rng();
     /// println!("{}", rng.gen_bool(1.0 / 3.0));
     /// ```
+    ///
+    /// # Accuracy note
+    ///
+    /// `gen_bool` uses 32 bits of the RNG, so if you use it to generate close
+    /// to or more than 2^32 results, a tiny bias may become noticable.
+    /// A notable consequence of the method used here is that the worst case is
+    /// `rng.gen_bool(0.0)`: it has a chance of 1 in 2^32 of being true, while
+    /// it should always be false. But using `gen_bool` to consume *many* values
+    /// from an RNG just to consistently generate `false` does not match with
+    /// the intent of this method.
     fn gen_bool(&mut self, p: f64) -> bool {
         assert!(p >= 0.0 && p <= 1.0);
         // If `p` is constant, this will be evaluated at compile-time.
