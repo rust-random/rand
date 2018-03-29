@@ -188,7 +188,7 @@
 #[cfg(feature="serde-1")] extern crate serde;
 #[cfg(feature="serde-1")] #[macro_use] extern crate serde_derive;
 
-#[cfg(feature = "stdweb")]
+#[cfg(all(target_arch = "wasm32", feature = "stdweb"))]
 #[macro_use]
 extern crate stdweb;
 
