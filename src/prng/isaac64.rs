@@ -29,15 +29,19 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// series of array based random number generator designed by Robert Jenkins
 /// in 1996[1].
 ///
-/// Although ISAAC is designed to be cryptographically secure, its design is not
-/// founded in cryptographic theory. Therefore it is _not recommended for_
-/// cryptographic purposes. It is however one of the strongest non-cryptograpic
-/// RNGs, and that while still being reasonably fast.
-///
 /// ISAAC-64 is mostly similar to ISAAC. Because it operates on 64-bit integers
 /// instead of 32-bit, it uses twice as much memory to hold its state and
 /// results. Also it uses different constants for shifts and indirect indexing,
 /// optimized to give good results for 64bit arithmetic.
+///
+/// ISAAC-64 is notably fast and produces excellent quality random numbers for
+/// non-cryptographic applications.
+///
+/// In spite of being designed with cryptographic security in mind, ISAAC hasn't
+/// been stringently cryptanalyzed and thus cryptographers do not not
+/// consensually trust it to be secure. When looking for a secure RNG, prefer
+/// [`Hc128Rng`] instead, which, like ISAAC, is an array-based RNG and one of
+/// the stream-ciphers selected the by eSTREAM contest.
 ///
 /// ## Overview of the ISAAC-64 algorithm:
 /// (in pseudo-code)
@@ -68,7 +72,9 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///
 /// [1]: Bob Jenkins, [*ISAAC and RC4*](
 ///      http://burtleburtle.net/bob/rand/isaac.html)
+///
 /// [`IsaacRng`]: prng/isaac/struct.IsaacRng.html
+/// [`Hc128Rng`]: prng/hc128/struct.Hc128Rng.html
 #[cfg_attr(feature="serde-1", derive(Serialize,Deserialize))]
 pub struct Isaac64Rng {
     #[cfg_attr(feature="serde-1",serde(with="super::isaac_serde::rand_size_serde"))]
