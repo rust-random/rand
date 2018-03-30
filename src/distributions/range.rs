@@ -52,38 +52,35 @@ use distributions::float::IntoFloat;
 /// }
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Range<T: RangeImpl> {
-    inner: T,
+pub struct Range<X: SampleRange> {
+    inner: X::T,
 }
 
-/// Ignore the `RangeInt<i32>` parameterisation; these non-member functions are
-/// available to all range types. (Rust requires a type, and won't accept
-/// `T: RangeImpl`. Consider this a minor language issue.)
-impl Range<RangeInt<i32>> {
+impl<X: SampleRange> Range<X> {
     /// Create a new `Range` instance which samples uniformly from the half
     /// open range `[low, high)` (excluding `high`). Panics if `low >= high`.
-    pub fn new<X: SampleRange>(low: X, high: X) -> Range<X::T> {
+    pub fn new(low: X, high: X) -> Range<X> {
         assert!(low < high, "Range::new called with `low >= high`");
-        Range { inner: RangeImpl::new(low, high) }
+        Range { inner: X::T::new(low, high) }
     }
 
     /// Create a new `Range` instance which samples uniformly from the closed
     /// range `[low, high]` (inclusive). Panics if `low >= high`.
-    pub fn new_inclusive<X: SampleRange>(low: X, high: X) -> Range<X::T> {
+    pub fn new_inclusive(low: X, high: X) -> Range<X> {
         assert!(low < high, "Range::new called with `low >= high`");
-        Range { inner: RangeImpl::new_inclusive(low, high) }
+        Range { inner: X::T::new_inclusive(low, high) }
     }
 
     /// Sample a single value uniformly from `[low, high)`.
     /// Panics if `low >= high`.
-    pub fn sample_single<X: SampleRange, R: Rng + ?Sized>(low: X, high: X, rng: &mut R) -> X {
+    pub fn sample_single<R: Rng + ?Sized>(low: X, high: X, rng: &mut R) -> X {
         assert!(low < high, "Range::sample_single called with low >= high");
         X::T::sample_single(low, high, rng)
     }
 }
 
-impl<T: RangeImpl> Distribution<T::X> for Range<T> {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T::X {
+impl<X: SampleRange> Distribution<X> for Range<X> {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> X {
         self.inner.sample(rng)
     }
 }

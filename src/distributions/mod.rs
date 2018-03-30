@@ -83,7 +83,7 @@ mod impls {
     use distributions::gamma::{Gamma, ChiSquared, FisherF, StudentT};
     #[cfg(feature="std")]
     use distributions::normal::{Normal, LogNormal};
-    use distributions::range::{Range, RangeImpl};
+    use distributions::range::{Range, SampleRange};
     
     impl<'a, T: Clone> Sample<T> for WeightedChoice<'a, T> {
         fn sample<R: Rng>(&mut self, rng: &mut R) -> T {
@@ -96,13 +96,13 @@ mod impls {
         }
     }
     
-    impl<T: RangeImpl> Sample<T::X> for Range<T> {
-        fn sample<R: Rng>(&mut self, rng: &mut R) -> T::X {
+    impl<T: SampleRange> Sample<T> for Range<T> {
+        fn sample<R: Rng>(&mut self, rng: &mut R) -> T {
             Distribution::sample(self, rng)
         }
     }
-    impl<T: RangeImpl> IndependentSample<T::X> for Range<T> {
-        fn ind_sample<R: Rng>(&self, rng: &mut R) -> T::X {
+    impl<T: SampleRange> IndependentSample<T> for Range<T> {
+        fn ind_sample<R: Rng>(&self, rng: &mut R) -> T {
             Distribution::sample(self, rng)
         }
     }
@@ -241,7 +241,7 @@ pub struct Weighted<T> {
 #[derive(Debug)]
 pub struct WeightedChoice<'a, T:'a> {
     items: &'a mut [Weighted<T>],
-    weight_range: Range<range::RangeInt<u32>>,
+    weight_range: Range<u32>,
 }
 
 impl<'a, T: Clone> WeightedChoice<'a, T> {
