@@ -17,7 +17,7 @@
 //! use rand::{Rng, thread_rng};
 //!
 //! // thread_rng is often the most convenient source of randomness:
-//! let mut rng = rand::thread_rng();
+//! let mut rng = thread_rng();
 //! if rng.gen() { // random bool
 //!     let x: f64 = rng.gen(); // random number in range (0, 1)
 //!     println!("x is: {}", x);
