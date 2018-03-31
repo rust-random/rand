@@ -299,33 +299,6 @@ pub trait Rand : Sized {
 /// }
 /// ```
 /// 
-/// # Iteration
-/// 
-/// Iteration over an `Rng` can be achieved using `iter::repeat` as follows:
-/// 
-/// ```rust
-/// use std::iter;
-/// use rand::{Rng, thread_rng};
-/// use rand::distributions::{Alphanumeric, Range};
-/// 
-/// let mut rng = thread_rng();
-/// 
-/// // Vec of 16 x f32:
-/// let v: Vec<f32> = iter::repeat(()).map(|()| rng.gen()).take(16).collect();
-/// 
-/// // String:
-/// let s: String = iter::repeat(())
-///         .map(|()| rng.sample(Alphanumeric))
-///         .take(7).collect();
-/// 
-/// // Dice-rolling:
-/// let die_range = Range::new_inclusive(1, 6);
-/// let mut roll_die = iter::repeat(()).map(|()| rng.sample(die_range));
-/// while roll_die.next().unwrap() != 6 {
-///     println!("Not a 6; rolling again!");
-/// }
-/// ```
-/// 
 /// [`RngCore`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html
 pub trait Rng: RngCore {
     /// Fill `dest` entirely with random bytes (uniform value distribution),
@@ -442,7 +415,7 @@ pub trait Rng: RngCore {
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
     #[allow(deprecated)]
-    #[deprecated(since="0.5.0", note="use iter::repeat instead")]
+    #[deprecated(since="0.5.0", note="use Distribution::sample_iter instead")]
     fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Uniform: Distribution<T> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
@@ -678,7 +651,7 @@ impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
 /// [`Rng`]: trait.Rng.html
 #[derive(Debug)]
 #[allow(deprecated)]
-#[deprecated(since="0.5.0", note="use iter::repeat instead")]
+#[deprecated(since="0.5.0", note="use Distribution::sample_iter instead")]
 pub struct Generator<T, R: RngCore> {
     rng: R,
     _marker: marker::PhantomData<fn() -> T>,

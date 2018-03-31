@@ -130,9 +130,68 @@ mod impls {
 
 /// Types (distributions) that can be used to create a random instance of `T`.
 pub trait Distribution<T> {
-    /// Generate a random value of `T`, using `rng` as the
-    /// source of randomness.
+    /// Generate a random value of `T`, using `rng` as the source of randomness.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T;
+
+    /// Create an iterator that generates random values of `T`, using `rng` as
+    /// the source of randomness.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rand::thread_rng;
+    /// use rand::distributions::{Distribution, Alphanumeric, Range, Uniform};
+    ///
+    /// let mut rng = thread_rng();
+    ///
+    /// // Vec of 16 x f32:
+    /// let v: Vec<f32> = Uniform.sample_iter(&mut rng).take(16).collect();
+    ///
+    /// // String:
+    /// let s: String = Alphanumeric.sample_iter(&mut rng).take(7).collect();
+    ///
+    /// // Dice-rolling:
+    /// let die_range = Range::new_inclusive(1, 6);
+    /// let mut roll_die = die_range.sample_iter(&mut rng);
+    /// while roll_die.next().unwrap() != 6 {
+    ///     println!("Not a 6; rolling again!");
+    /// }
+    /// ```
+    fn sample_iter<'a, R: Rng>(&'a self, rng: &'a mut R)
+        -> DistIter<'a, Self, R, T> where Self: Sized
+    {
+        DistIter {
+            distr: self,
+            rng: rng,
+            phantom: ::core::marker::PhantomData,
+        }
+    }
+}
+
+/// An iterator that generates random values of `T` with distribution `D`,
+/// using `R` as the source of randomness.
+///
+/// This `struct` is created by the [`sample_iter`] method on [`Distribution`].
+/// See its documentation for more.
+///
+/// [`Distribution`]: trait.Distribution.html
+/// [`sample_iter`]: trait.Distribution.html#method.sample_iter
+#[derive(Debug)]
+pub struct DistIter<'a, D, R, T> where D: Distribution<T> + 'a, R: Rng + 'a {
+    distr: &'a D,
+    rng: &'a mut R,
+    phantom: ::core::marker::PhantomData<T>,
+}
+
+impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
+    where D: Distribution<T>, R: Rng + 'a
+{
+    type Item = T;
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<T> {
+        Some(self.distr.sample(self.rng))
+    }
 }
 
 impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
@@ -518,5 +577,15 @@ mod tests {
         use distributions::{IndependentSample, Exp};
         let sampler = Exp::new(1.0);
         sampler.ind_sample(&mut ::test::rng(235));
+    }
+
+    #[cfg(feature="std")]
+    #[test]
+    fn test_distributions_iter() {
+        use distributions::Normal;
+        let mut rng = ::test::rng(210);
+        let distr = Normal::new(10.0, 10.0);
+        let results: Vec<_> = distr.sample_iter(&mut rng).take(100).collect();
+        println!("{:?}", results);
     }
 }

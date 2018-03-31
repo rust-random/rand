@@ -134,3 +134,19 @@ gen_range_int!(gen_range_i32, i32, -200_000_000i32, 800_000_000);
 gen_range_int!(gen_range_i64, i64, 3i64, 123_456_789_123);
 #[cfg(feature = "i128_support")]
 gen_range_int!(gen_range_i128, i128, -12345678901234i128, 123_456_789_123_456_789);
+
+#[bench]
+fn dist_iter(b: &mut Bencher) {
+    let mut rng = XorShiftRng::new();
+    let distr = Normal::new(-2.71828, 3.14159);
+    let mut iter = distr.sample_iter(&mut rng);
+
+    b.iter(|| {
+        let mut accum = 0.0;
+        for _ in 0..::RAND_BENCH_N {
+            accum += iter.next().unwrap();
+        }
+        black_box(accum);
+    });
+    b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
+}
