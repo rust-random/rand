@@ -88,3 +88,47 @@ macro_rules! sample_indices {
 sample_indices!(misc_sample_indices_10_of_1k, 10, 1000);
 sample_indices!(misc_sample_indices_50_of_1k, 50, 1000);
 sample_indices!(misc_sample_indices_100_of_1k, 100, 1000);
+
+#[bench]
+fn gen_1k_iter_repeat(b: &mut Bencher) {
+    use std::iter;
+    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    b.iter(|| {
+        let v: Vec<u64> = iter::repeat(()).map(|()| rng.gen()).take(128).collect();
+        black_box(v);
+    });
+    b.bytes = 1024;
+}
+
+#[bench]
+#[allow(deprecated)]
+fn gen_1k_gen_iter(b: &mut Bencher) {
+    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    b.iter(|| {
+        let v: Vec<u64> = rng.gen_iter().take(128).collect();
+        black_box(v);
+    });
+    b.bytes = 1024;
+}
+
+#[bench]
+fn gen_1k_sample_iter(b: &mut Bencher) {
+    use rand::distributions::{Distribution, Uniform};
+    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    b.iter(|| {
+        let v: Vec<u64> = Uniform.sample_iter(&mut rng).take(128).collect();
+        black_box(v);
+    });
+    b.bytes = 1024;
+}
+
+#[bench]
+fn gen_1k_fill(b: &mut Bencher) {
+    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    let mut buf = [0u64; 128];
+    b.iter(|| {
+        rng.fill(&mut buf[..]);
+        black_box(buf);
+    });
+    b.bytes = 1024;
+}
