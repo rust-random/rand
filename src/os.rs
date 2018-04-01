@@ -15,7 +15,9 @@ use std::fmt;
 use rand_core::{RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness straight from the
-/// operating system. This is the preferred external source of entropy for most
+/// operating system.
+///
+/// This is the preferred external source of entropy for most
 /// applications. Commonly it is used to initialize a user-space RNG, which can
 /// then be used to generate random values with much less overhead than `OsRng`.
 ///
