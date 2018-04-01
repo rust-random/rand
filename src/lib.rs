@@ -182,6 +182,7 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://docs.rs/rand/0.5")]
 
+#![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
