@@ -299,6 +299,12 @@ pub trait SeedableRng: Sized {
     /// reference implementation of the PRNG given equivalent seed; if necessary
     /// another constructor replicating behaviour from a reference
     /// implementation can be added.
+    ///
+    /// PRNG implementations should make sure `from_seed` never panics. In the
+    /// case that some special values (like an all zero seed) are not viable
+    /// seeds it is preferable to map these to alternative constant value(s),
+    /// for example `0xBAD5EEDu32` or `0x0DDB1A5E5BAD5EEDu64` ("odd biases? bad
+    /// seed"). This is assuming only a small number of values must be rejected.
     fn from_seed(seed: Self::Seed) -> Self;
 
     /// Create a new PRNG seeded from another `Rng`.
