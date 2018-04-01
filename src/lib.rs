@@ -380,6 +380,39 @@ pub trait Rng: RngCore {
     fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
         distr.sample(self)
     }
+
+    /// Create an iterator that generates values using the given distribution.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rand::{thread_rng, Rng};
+    /// use rand::distributions::{Alphanumeric, Range, Uniform};
+    ///
+    /// let mut rng = thread_rng();
+    ///
+    /// // Vec of 16 x f32:
+    /// let v: Vec<f32> = thread_rng().sample_iter(&Uniform).take(16).collect();
+    ///
+    /// // String:
+    /// let s: String = rng.sample_iter(&Alphanumeric).take(7).collect();
+    ///
+    /// // Combined values
+    /// println!("{:?}", thread_rng().sample_iter(&Uniform).take(5)
+    ///                              .collect::<Vec<(f64, bool)>>());
+    ///
+    /// // Dice-rolling:
+    /// let die_range = Range::new_inclusive(1, 6);
+    /// let mut roll_die = rng.sample_iter(&die_range);
+    /// while roll_die.next().unwrap() != 6 {
+    ///     println!("Not a 6; rolling again!");
+    /// }
+    /// ```
+    fn sample_iter<'a, T, D: Distribution<T>>(&'a mut self, distr: &'a D)
+        -> distributions::DistIter<'a, D, Self, T> where Self: Sized
+    {
+        distr.sample_iter(self)
+    }
     
     /// Return a random value supporting the [`Uniform`] distribution.
     /// 
@@ -415,7 +448,7 @@ pub trait Rng: RngCore {
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
     #[allow(deprecated)]
-    #[deprecated(since="0.5.0", note="use Distribution::sample_iter instead")]
+    #[deprecated(since="0.5.0", note="use Rng::sample_iter(&Uniform) instead")]
     fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Uniform: Distribution<T> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
@@ -500,7 +533,7 @@ pub trait Rng: RngCore {
     /// println!("{}", s);
     /// ```
     #[allow(deprecated)]
-    #[deprecated(since="0.5.0", note="use distributions::Alphanumeric instead")]
+    #[deprecated(since="0.5.0", note="use sample_iter(&Alphanumeric) instead")]
     fn gen_ascii_chars(&mut self) -> AsciiGenerator<&mut Self> {
         AsciiGenerator { rng: self }
     }
@@ -651,7 +684,7 @@ impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
 /// [`Rng`]: trait.Rng.html
 #[derive(Debug)]
 #[allow(deprecated)]
-#[deprecated(since="0.5.0", note="use Distribution::sample_iter instead")]
+#[deprecated(since="0.5.0", note="use Rng::sample_iter instead")]
 pub struct Generator<T, R: RngCore> {
     rng: R,
     _marker: marker::PhantomData<fn() -> T>,
