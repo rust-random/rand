@@ -88,6 +88,7 @@ impl<X: SampleRange> Distribution<X> for Range<X> {
 /// Helper trait for creating objects using the correct implementation of
 /// `RangeImpl` for the sampling type; this enables `Range::new(a, b)` to work.
 pub trait SampleRange: PartialOrd+Sized {
+    /// Actual `RangeImpl` implementation for `X`.
     type T: RangeImpl<X = Self>;
 }
 

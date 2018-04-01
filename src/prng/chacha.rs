@@ -182,6 +182,7 @@ impl ChaChaRng {
     }
 }
 
+/// The core of `ChaChaRng`, used with `BlockRng`.
 #[derive(Clone)]
 pub struct ChaChaCore {
     state: [u32; STATE_WORDS],
