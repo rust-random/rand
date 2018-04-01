@@ -45,8 +45,10 @@ use reseeding::ReseedingRng;
 const THREAD_RNG_RESEED_THRESHOLD: u64 = 32*1024*1024; // 32 MiB
 
 /// The type returned by [`thread_rng`], essentially just a reference to the
-/// PRNG in thread-local memory. Cloning this handle just produces a new
-/// reference to the same thread-local generator.
+/// PRNG in thread-local memory.
+///
+/// Cloning this handle just produces a new reference to the same thread-local
+/// generator.
 /// 
 /// [`thread_rng`]: fn.thread_rng.html
 #[derive(Clone, Debug)]

@@ -260,11 +260,12 @@ pub mod isaac {
 #[cfg(feature="std")] mod thread_rng;
 
 
-/// A type that can be randomly generated using an `Rng`.
+/// A type that can be randomly generated using an [`Rng`].
 /// 
 /// This is merely an adaptor around the [`Uniform`] distribution for
 /// convenience and backwards-compatibility.
 /// 
+/// [`Rng`]: trait.Rng.html
 /// [`Uniform`]: distributions/struct.Uniform.html
 #[deprecated(since="0.5.0", note="replaced by distributions::Uniform")]
 pub trait Rand : Sized {
@@ -765,7 +766,7 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 
 
 /// A convenient way to seed new algorithmic generators with fresh entropy from
-/// `EntropyRng`.
+/// [`EntropyRng`].
 ///
 /// This is the recommended way to create PRNGs, unless a deterministic seed is
 /// desired (in which case [`SeedableRng::from_seed`] should be used).
@@ -782,6 +783,7 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
+/// [`EntropyRng`]: struct.EntropyRng.html
 /// [`SeedableRng`]: https://docs.rs/rand_core/0.1/rand_core/trait.SeedableRng.html
 /// [`SeedableRng::from_seed`]: https://docs.rs/rand_core/0.1/rand_core/trait.SeedableRng.html#tymethod.from_seed
 #[cfg(feature="std")]
@@ -833,9 +835,10 @@ impl<R: SeedableRng> NewRng for R {
 /// future library versions may use a different internal generator with
 /// different output. Further, this generator may not be portable and can
 /// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG, for example `ChaChaRng`.
+/// reproducible output, use a named RNG, for example [`ChaChaRng`].
 ///
 /// [HC-128]: prng/hc128/struct.Hc128Rng.html
+/// [`ChaChaRng`]: prng/chacha/struct.ChaChaRng.html
 #[derive(Clone, Debug)]
 pub struct StdRng(Hc128Rng);
 
@@ -876,19 +879,19 @@ impl CryptoRng for StdRng {}
 /// An RNG recommended when small state, cheap initialization and good
 /// performance are required. The PRNG algorithm in `SmallRng` is chosen to be
 /// efficient on the current platform, **without consideration for cryptography
-/// or security**. The size of its state is much smaller than for `StdRng`.
+/// or security**. The size of its state is much smaller than for [`StdRng`].
 ///
 /// Reproducibility of output from this generator is however not required, thus
 /// future library versions may use a different internal generator with
 /// different output. Further, this generator may not be portable and can
 /// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG, for example `XorShiftRng`.
+/// reproducible output, use a named RNG, for example [`XorShiftRng`].
 ///
 /// The current algorithm used on all platforms is [Xorshift].
 ///
 /// # Examples
 ///
-/// Initializing `StdRng` with a random seed can be done using `NewRng`:
+/// Initializing `SmallRng` with a random seed can be done using [`NewRng`]:
 ///
 /// ```
 /// # use rand::Rng;
@@ -900,7 +903,7 @@ impl CryptoRng for StdRng {}
 /// # let v: u32 = small_rng.gen();
 /// ```
 ///
-/// When initializing a lot of `SmallRng`, using `thread_rng` can be more
+/// When initializing a lot of `SmallRng`'s, using [`thread_rng`] can be more
 /// efficient:
 ///
 /// ```
@@ -918,7 +921,11 @@ impl CryptoRng for StdRng {}
 ///     .collect();
 /// ```
 ///
-/// [Xorshift]: struct.XorShiftRng.html
+/// [`NewRng`]: trait.NewRng.html
+/// [`StdRng`]: struct.StdRng.html
+/// [`thread_rng`]: fn.thread_rng.html
+/// [Xorshift]: prng/struct.XorShiftRng.html
+/// [`XorShiftRng`]: prng/struct.XorShiftRng.html
 #[derive(Clone, Debug)]
 pub struct SmallRng(XorShiftRng);
 
@@ -954,7 +961,7 @@ impl SeedableRng for SmallRng {
     }
 }
 
-/// DEPRECATED: use `SmallRng` instead.
+/// DEPRECATED: use [`SmallRng`] instead.
 ///
 /// Create a weak random number generator with a default algorithm and seed.
 ///
@@ -964,6 +971,8 @@ impl SeedableRng for SmallRng {
 /// create the `Rng` yourself.
 ///
 /// This will seed the generator with randomness from `thread_rng`.
+///
+/// [`SmallRng`]: struct.SmallRng.html
 #[deprecated(since="0.5.0", note="removed in favor of SmallRng")]
 #[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
