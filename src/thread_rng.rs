@@ -129,6 +129,7 @@ impl CryptoRng for ThreadRng {}
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// let x = rand::random::<u8>();
 /// println!("{}", x);
 ///
@@ -144,6 +145,7 @@ impl CryptoRng for ThreadRng {}
 /// following example can increase performance.
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use rand::Rng;
 ///
 /// let mut v = vec![1, 2, 3];

@@ -246,7 +246,7 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// use rand::distributions::Uniform;
 ///
 /// let mut rng = thread_rng();
-/// let mut erased_rng: &mut RngCore = &mut rng;
+/// let erased_rng: &mut RngCore = &mut rng;
 /// let val: f32 = erased_rng.sample(Uniform);
 /// println!("f32 from (0,1): {}", val);
 /// ```
