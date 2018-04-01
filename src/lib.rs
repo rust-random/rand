@@ -220,15 +220,13 @@ pub use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng};
 pub use rand_core::{ErrorKind, Error};
 
 // external rngs
-pub use jitter::JitterRng;
-#[cfg(feature="std")] pub use os::OsRng;
+#[doc(inline)] pub use jitter::JitterRng;
+#[cfg(feature="std")] #[doc(inline)] pub use os::OsRng;
 
 // pseudo rngs
 pub mod prng;
-pub use isaac::{IsaacRng, Isaac64Rng};
-pub use chacha::ChaChaRng;
-pub use prng::XorShiftRng;
-pub use prng::Hc128Rng;
+#[doc(no_inline)]
+pub use prng::{ChaChaRng, Hc128Rng, IsaacRng, Isaac64Rng, XorShiftRng};
 
 // convenience and derived rngs
 #[cfg(feature="std")] pub use entropy_rng::EntropyRng;
