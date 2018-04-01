@@ -661,6 +661,20 @@ macro_rules! impl_as_byte_slice_arrays {
             fn as_byte_slice_mut(&mut self) -> &mut [u8] {
                 self[..].as_byte_slice_mut()
             }
+
+            fn to_le(&mut self) {
+                self[..].to_le()
+            }
+        }
+    };
+    (!div $n:expr,) => {};
+    (!div $n:expr, $N:ident, $($NN:ident,)*) => {
+        impl_as_byte_slice_arrays!(!div $n / 2, $($NN,)*);
+
+        impl<T> AsByteSliceMut for [T; $n] where [T]: AsByteSliceMut {
+            fn as_byte_slice_mut(&mut self) -> &mut [u8] {
+                self[..].as_byte_slice_mut()
+            }
             
             fn to_le(&mut self) {
                 self[..].to_le()
@@ -669,6 +683,7 @@ macro_rules! impl_as_byte_slice_arrays {
     };
 }
 impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
+impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
 
 /// Iterator which will generate a stream of random items.
 ///
