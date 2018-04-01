@@ -417,7 +417,7 @@ pub trait Rng: RngCore {
     
     /// Return a random value supporting the [`Uniform`] distribution.
     /// 
-    /// [`Uniform`]: struct.Uniform.html
+    /// [`Uniform`]: distributions/struct.Uniform.html
     ///
     /// # Example
     ///
