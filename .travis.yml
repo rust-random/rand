@@ -59,24 +59,22 @@ matrix:
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=mips-unknown-linux-gnu
+      env: TARGET=powerpc-unknown-linux-gnu
     - rust: stable
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=armv7-linux-androideabi DISABLE_TESTS=1
+      env: TARGET=powerpc64-unknown-linux-gnu
     - rust: stable
-      os: osx
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=armv7-apple-ios DISABLE_TESTS=1
-    - rust: nightly
+      env: TARGET=powerpc64le-unknown-linux-gnu
+    - rust: stable
       sudo: required
       dist: trusty
       services: docker
-      # Bare metal target; no std; only works on nightly
-      env: TARGET=thumbv6m-none-eabi DISABLE_TESTS=1 DISABLE_STD=1
+      env: TARGET=s390x-unknown-linux-gnu
 
 before_install:
   - set -e
