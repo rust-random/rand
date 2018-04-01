@@ -53,13 +53,21 @@
 //! to seed from a strong parent generator with [`from_rng`]:
 //! 
 //! ```
+//! # use rand::{Rng, Error};
 //! // seed with fresh entropy:
 //! use rand::{StdRng, NewRng};
 //! let mut rng = StdRng::new();
+//! # let v: u32 = rng.gen();
 //! 
 //! // seed from thread_rng:
 //! use rand::{SmallRng, SeedableRng, thread_rng};
-//! let mut rng = SmallRng::from_rng(thread_rng());
+//!
+//! # fn try_inner() -> Result<(), Error> {
+//! let mut rng = SmallRng::from_rng(thread_rng())?;
+//! # let v: u32 = rng.gen();
+//! # Ok(())
+//! # }
+//! # try_inner().unwrap()
 //! ```
 //! 
 //! In case you specifically want to have a reproducible stream of "random"
@@ -175,6 +183,7 @@
        html_root_url = "https://docs.rs/rand/0.5")]
 
 #![deny(missing_debug_implementations)]
+#![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
 #![cfg_attr(not(feature="std"), no_std)]
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
@@ -293,11 +302,14 @@ pub trait Rand : Sized {
 /// Example:
 /// 
 /// ```rust
+/// # use rand::thread_rng;
 /// use rand::Rng;
 /// 
 /// fn foo<R: Rng + ?Sized>(rng: &mut R) -> f32 {
 ///     rng.gen()
 /// }
+///
+/// # let v = foo(&mut thread_rng());
 /// ```
 /// 
 /// [`RngCore`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html
@@ -319,7 +331,7 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     /// 
     /// let mut arr = [0i8; 20];
-    /// thread_rng().try_fill(&mut arr[..]);
+    /// thread_rng().fill(&mut arr[..]);
     /// ```
     /// 
     /// [`fill_bytes`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html#method.fill_bytes
@@ -440,6 +452,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
@@ -487,7 +500,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```rust
-    /// #[allow(deprecated)]
+    /// # #![allow(deprecated)]
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
@@ -537,7 +550,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```rust
-    /// #[allow(deprecated)]
+    /// # #![allow(deprecated)]
     /// use rand::{thread_rng, Rng};
     ///
     /// let s: String = thread_rng().gen_ascii_chars().take(10).collect();
@@ -782,20 +795,23 @@ pub trait NewRng: SeedableRng {
     /// almost certainly be platform limitations or build issues, i.e. most
     /// applications targetting PC/mobile platforms should not need to worry
     /// about this failing.
-    /// 
+    ///
     /// If all entropy sources fail this will panic. If you need to handle
     /// errors, use the following code, equivalent aside from error handling:
-    /// 
+    ///
     /// ```rust
-    /// use rand::{Rng, StdRng, EntropyRng, SeedableRng, Error};
-    /// 
-    /// fn foo() -> Result<(), Error> {
-    ///     // This uses StdRng, but is valid for any R: SeedableRng
-    ///     let mut rng = StdRng::from_rng(EntropyRng::new())?;
-    ///     
-    ///     println!("random number: {}", rng.gen_range(1, 10));
-    ///     Ok(())
-    /// }
+    /// # use rand::Error;
+    /// use rand::{Rng, StdRng, EntropyRng, SeedableRng};
+    ///
+    /// # fn try_inner() -> Result<(), Error> {
+    /// // This uses StdRng, but is valid for any R: SeedableRng
+    /// let mut rng = StdRng::from_rng(EntropyRng::new())?;
+    ///
+    /// println!("random number: {}", rng.gen_range(1, 10));
+    /// # Ok(())
+    /// # }
+    ///
+    /// # try_inner().unwrap()
     /// ```
     fn new() -> Self;
 }
@@ -876,11 +892,13 @@ impl CryptoRng for StdRng {}
 /// Initializing `StdRng` with a random seed can be done using `NewRng`:
 ///
 /// ```
+/// # use rand::Rng;
 /// use rand::{NewRng, SmallRng};
 ///
 /// // Create small, cheap to initialize and fast RNG with a random seed.
 /// // The randomness is supplied by the operating system.
 /// let mut small_rng = SmallRng::new();
+/// # let v: u32 = small_rng.gen();
 /// ```
 ///
 /// When initializing a lot of `SmallRng`, using `thread_rng` can be more
@@ -962,6 +980,7 @@ pub fn weak_rng() -> XorShiftRng {
 /// # Example
 ///
 /// ```rust
+/// # #![allow(deprecated)]
 /// use rand::{thread_rng, sample};
 ///
 /// let mut rng = thread_rng();
