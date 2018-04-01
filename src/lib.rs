@@ -312,7 +312,7 @@ pub trait Rand : Sized {
 /// # let v = foo(&mut thread_rng());
 /// ```
 /// 
-/// [`RngCore`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html
+/// [`RngCore`]: trait.RngCore.html
 pub trait Rng: RngCore {
     /// Fill `dest` entirely with random bytes (uniform value distribution),
     /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
@@ -334,7 +334,7 @@ pub trait Rng: RngCore {
     /// thread_rng().fill(&mut arr[..]);
     /// ```
     /// 
-    /// [`fill_bytes`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html#method.fill_bytes
+    /// [`fill_bytes`]: trait.RngCore.html#method.fill_bytes
     /// [`try_fill`]: trait.Rng.html#method.try_fill
     /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
     fn fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) {
@@ -369,8 +369,8 @@ pub trait Rng: RngCore {
     /// # try_inner().unwrap()
     /// ```
     /// 
-    /// [`ErrorKind`]: https://docs.rs/rand_core/0.1/rand_core/enum.ErrorKind.html
-    /// [`try_fill_bytes`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html#method.try_fill_bytes
+    /// [`ErrorKind`]: enum.ErrorKind.html
+    /// [`try_fill_bytes`]: trait.RngCore.html#method.try_fill_bytes
     /// [`fill`]: trait.Rng.html#method.fill
     /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
     fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
@@ -784,8 +784,8 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 /// ```
 ///
 /// [`EntropyRng`]: struct.EntropyRng.html
-/// [`SeedableRng`]: https://docs.rs/rand_core/0.1/rand_core/trait.SeedableRng.html
-/// [`SeedableRng::from_seed`]: https://docs.rs/rand_core/0.1/rand_core/trait.SeedableRng.html#tymethod.from_seed
+/// [`SeedableRng`]: trait.SeedableRng.html
+/// [`SeedableRng::from_seed`]: trait.SeedableRng.html#tymethod.from_seed
 #[cfg(feature="std")]
 pub trait NewRng: SeedableRng {
     /// Creates a new instance, automatically seeded with fresh entropy.
