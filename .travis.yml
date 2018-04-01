@@ -8,75 +8,11 @@ sudo: false
 # - x86_64, ARMv7, a Big-Endian arch (MIPS)
 matrix:
   include:
-    - rust: 1.22.0
-      install:
-      script:
-        - cargo test --all --tests --no-default-features
-        - cargo test --features serde-1,log
-    - rust: stable
-      os: osx
-      install:
-      script:
-        - cargo test --all --tests --no-default-features
-        - cargo test --features serde-1,log
-    - rust: beta
-      install:
-      script:
-        - cargo test --all --tests --no-default-features
-        - cargo test --tests --no-default-features --features=serde-1
-    - rust: nightly
-      install:
-      before_script:
-        - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
-      script:
-        - cargo test --all --tests --no-default-features --features=alloc
-        - cargo test --all --features=alloc
-        - cargo test --features serde-1,log,nightly
-        - cargo test --benches
-        - cargo doc --no-deps --all --all-features
-      after_success:
-        - travis-cargo --only nightly doc-upload
-
-    - rust: nightly
-      install:
-        - rustup target add wasm32-unknown-unknown
-        # Use cargo-update since we need a real update-or-install command
-        # Only install if not already installed:
-        #- cargo --list | egrep "\binstall-update$" -q || cargo install cargo-update
-        #- cargo install-update -i cargo-web
-        # Cargo has errors with sub-commands so ignore updating for now:
-        - cargo --list | egrep "^\s*web$" -q || cargo install cargo-web
-      script:
-        - cargo web test --target wasm32-unknown-unknown --nodejs --features=stdweb
-    
-    # Trust cross-built/emulated targets. We must repeat all non-default values.
     - rust: stable
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=x86_64-unknown-freebsd DISABLE_TESTS=1
-    - rust: stable
-      sudo: required
-      dist: trusty
-      services: docker
-      env: TARGET=mips-unknown-linux-gnu
-    - rust: stable
-      sudo: required
-      dist: trusty
-      services: docker
-      env: TARGET=armv7-linux-androideabi DISABLE_TESTS=1
-    - rust: stable
-      os: osx
-      sudo: required
-      dist: trusty
-      services: docker
-      env: TARGET=armv7-apple-ios DISABLE_TESTS=1
-    - rust: nightly
-      sudo: required
-      dist: trusty
-      services: docker
-      # Bare metal target; no std; only works on nightly
-      env: TARGET=thumbv6m-none-eabi DISABLE_TESTS=1 DISABLE_STD=1
+      env: TARGET=s390x-unknown-linux-gnu
 
 before_install:
   - set -e
