@@ -54,3 +54,7 @@ stdweb = { version = "0.4", optional = true }
 # This is for testing serde, unfortunately we can't specify feature-gated dev
 # deps yet, see: https://github.com/rust-lang/cargo/issues/1596
 bincode = "1.0"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = [ "--all" ] # also document rand_core
