@@ -73,8 +73,8 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// [1]: Bob Jenkins, [*ISAAC and RC4*](
 ///      http://burtleburtle.net/bob/rand/isaac.html)
 ///
-/// [`IsaacRng`]: prng/isaac/struct.IsaacRng.html
-/// [`Hc128Rng`]: prng/hc128/struct.Hc128Rng.html
+/// [`IsaacRng`]: ../isaac/struct.IsaacRng.html
+/// [`Hc128Rng`]: hc128/struct.Hc128Rng.html
 #[cfg_attr(feature="serde-1", derive(Serialize,Deserialize))]
 pub struct Isaac64Rng {
     #[cfg_attr(feature="serde-1",serde(with="super::isaac_serde::rand_size_serde"))]

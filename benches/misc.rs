@@ -113,10 +113,10 @@ fn gen_1k_gen_iter(b: &mut Bencher) {
 
 #[bench]
 fn gen_1k_sample_iter(b: &mut Bencher) {
-    use rand::distributions::{Distribution, Uniform};
+    use rand::distributions::{Distribution, Standard};
     let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
-        let v: Vec<u64> = Uniform.sample_iter(&mut rng).take(128).collect();
+        let v: Vec<u64> = Standard.sample_iter(&mut rng).take(128).collect();
         black_box(v);
     });
     b.bytes = 1024;
