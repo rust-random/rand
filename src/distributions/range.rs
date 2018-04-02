@@ -53,7 +53,7 @@ use distributions::float::IntoFloat;
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Range<X: SampleRange> {
-    inner: X::T,
+    inner: X::Impl,
 }
 
 impl<X: SampleRange> Range<X> {
@@ -61,21 +61,21 @@ impl<X: SampleRange> Range<X> {
     /// open range `[low, high)` (excluding `high`). Panics if `low >= high`.
     pub fn new(low: X, high: X) -> Range<X> {
         assert!(low < high, "Range::new called with `low >= high`");
-        Range { inner: X::T::new(low, high) }
+        Range { inner: X::Impl::new(low, high) }
     }
 
     /// Create a new `Range` instance which samples uniformly from the closed
     /// range `[low, high]` (inclusive). Panics if `low >= high`.
     pub fn new_inclusive(low: X, high: X) -> Range<X> {
         assert!(low < high, "Range::new called with `low >= high`");
-        Range { inner: X::T::new_inclusive(low, high) }
+        Range { inner: X::Impl::new_inclusive(low, high) }
     }
 
     /// Sample a single value uniformly from `[low, high)`.
     /// Panics if `low >= high`.
     pub fn sample_single<R: Rng + ?Sized>(low: X, high: X, rng: &mut R) -> X {
         assert!(low < high, "Range::sample_single called with low >= high");
-        X::T::sample_single(low, high, rng)
+        X::Impl::sample_single(low, high, rng)
     }
 }
 
@@ -88,7 +88,8 @@ impl<X: SampleRange> Distribution<X> for Range<X> {
 /// Helper trait for creating objects using the correct implementation of
 /// `RangeImpl` for the sampling type; this enables `Range::new(a, b)` to work.
 pub trait SampleRange: PartialOrd+Sized {
-    type T: RangeImpl<X = Self>;
+    /// The `RangeImpl` implementation supporting type `X`.
+    type Impl: RangeImpl<X = Self>;
 }
 
 /// Helper trait handling actual range sampling.
@@ -124,7 +125,7 @@ pub trait SampleRange: PartialOrd+Sized {
 /// }
 ///
 /// impl SampleRange for MyF32 {
-///     type T = RangeMyF32;
+///     type Impl = RangeMyF32;
 /// }
 ///
 /// let (low, high) = (MyF32(17.0f32), MyF32(22.0f32));
@@ -183,7 +184,7 @@ macro_rules! range_int_impl {
     ($ty:ty, $signed:ty, $unsigned:ident,
      $i_large:ident, $u_large:ident) => {
         impl SampleRange for $ty {
-            type T = RangeInt<$ty>;
+            type Impl = RangeInt<$ty>;
         }
 
         impl RangeImpl for RangeInt<$ty> {
@@ -428,7 +429,7 @@ pub struct RangeFloat<X> {
 macro_rules! range_float_impl {
     ($ty:ty, $bits_to_discard:expr, $next_u:ident) => {
         impl SampleRange for $ty {
-            type T = RangeFloat<$ty>;
+            type Impl = RangeFloat<$ty>;
         }
 
         impl RangeImpl for RangeFloat<$ty> {
@@ -566,7 +567,7 @@ mod tests {
             }
         }
         impl SampleRange for MyF32 {
-            type T = RangeMyF32;
+            type Impl = RangeMyF32;
         }
 
         let (low, high) = (MyF32{ x: 17.0f32 }, MyF32{ x: 22.0f32 });

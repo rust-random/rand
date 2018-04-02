@@ -53,13 +53,21 @@
 //! to seed from a strong parent generator with [`from_rng`]:
 //! 
 //! ```
+//! # use rand::{Rng, Error};
 //! // seed with fresh entropy:
 //! use rand::{StdRng, NewRng};
 //! let mut rng = StdRng::new();
+//! # let v: u32 = rng.gen();
 //! 
 //! // seed from thread_rng:
 //! use rand::{SmallRng, SeedableRng, thread_rng};
-//! let mut rng = SmallRng::from_rng(thread_rng());
+//!
+//! # fn try_inner() -> Result<(), Error> {
+//! let mut rng = SmallRng::from_rng(thread_rng())?;
+//! # let v: u32 = rng.gen();
+//! # Ok(())
+//! # }
+//! # try_inner().unwrap()
 //! ```
 //! 
 //! In case you specifically want to have a reproducible stream of "random"
@@ -161,11 +169,11 @@
 //! [`SmallRng`]: struct.SmallRng.html
 //! [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
 //! [`prng`]: prng/index.html
-//! [`IsaacRng::new_from_u64`]: struct.IsaacRng.html#method.new_from_u64
+//! [`IsaacRng::new_from_u64`]: prng/isaac/struct.IsaacRng.html#method.new_from_u64
 //! [`Hc128Rng`]: prng/hc128/struct.Hc128Rng.html
 //! [`ChaChaRng`]: prng/chacha/struct.ChaChaRng.html
-//! [`IsaacRng`]: prng/struct.IsaacRng.html
-//! [`Isaac64Rng`]: prng/struct.Isaac64Rng.html
+//! [`IsaacRng`]: prng/isaac/struct.IsaacRng.html
+//! [`Isaac64Rng`]: prng/isaac64/struct.Isaac64Rng.html
 //! [`seq`]: seq/index.html
 //! [`distributions`]: distributions/index.html
 //! [`Uniform`]: distributions/struct.Uniform.html
@@ -174,7 +182,9 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://docs.rs/rand/0.5")]
 
+#![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
+#![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
 #![cfg_attr(not(feature="std"), no_std)]
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
@@ -203,45 +213,36 @@ extern crate rand_core;
 #[cfg(all(feature="std", not(feature = "log")))] macro_rules! error { ($($x:tt)*) => () }
 
 
-use core::{marker, mem, slice};
-
-// re-exports from rand_core
+// Re-exports from rand_core
 pub use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng};
 pub use rand_core::{ErrorKind, Error};
 
-// external rngs
-pub use jitter::JitterRng;
-#[cfg(feature="std")] pub use os::OsRng;
-
-// pseudo rngs
-pub mod prng;
-pub use isaac::{IsaacRng, Isaac64Rng};
-pub use chacha::ChaChaRng;
-pub use prng::XorShiftRng;
-pub use prng::Hc128Rng;
-
-// convenience and derived rngs
+// Public exports
 #[cfg(feature="std")] pub use entropy_rng::EntropyRng;
+#[cfg(feature="std")] pub use os::OsRng;
+pub use reseeding::ReseedingRng;
 #[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng};
 #[cfg(feature="std")] #[allow(deprecated)] pub use thread_rng::random;
 
-use distributions::{Distribution, Uniform, Range};
-use distributions::range::SampleRange;
-
-// public modules
+// Public modules
 pub mod distributions;
-pub mod jitter;
-pub mod mock;
-#[cfg(feature="std")] pub mod os;
+pub mod jitter; // Public because of the error type.
+pub mod mock;   // Public so we don't export `StepRng` directly, making it a bit
+                // more clear it is intended for testing.
+pub mod prng;
 #[cfg(feature="std")] pub mod read;
-pub mod reseeding;
 #[cfg(feature = "alloc")] pub mod seq;
 
-// These tiny modules are here to avoid API breakage, probably only temporarily
+// These modules are public to avoid API breakage, probably only temporarily.
+// Hidden in the documentation.
+#[cfg(feature="std")] #[doc(hidden)] pub mod os;
+#[doc(hidden)] pub use prng::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
+#[doc(hidden)]
 pub mod chacha {
     //! The ChaCha random number generator.
     pub use prng::ChaChaRng;
 }
+#[doc(hidden)]
 pub mod isaac {
     //! The ISAAC random number generator.
     pub use prng::{IsaacRng, Isaac64Rng};
@@ -249,14 +250,23 @@ pub mod isaac {
 
 // private modules
 #[cfg(feature="std")] mod entropy_rng;
+mod reseeding;
 #[cfg(feature="std")] mod thread_rng;
 
 
-/// A type that can be randomly generated using an `Rng`.
+// Normal imports just for this file
+use core::{marker, mem, slice};
+use distributions::{Distribution, Uniform, Range};
+use distributions::range::SampleRange;
+use prng::hc128::Hc128Rng;
+
+
+/// A type that can be randomly generated using an [`Rng`].
 /// 
 /// This is merely an adaptor around the [`Uniform`] distribution for
 /// convenience and backwards-compatibility.
 /// 
+/// [`Rng`]: trait.Rng.html
 /// [`Uniform`]: distributions/struct.Uniform.html
 #[deprecated(since="0.5.0", note="replaced by distributions::Uniform")]
 pub trait Rand : Sized {
@@ -293,88 +303,73 @@ pub trait Rand : Sized {
 /// Example:
 /// 
 /// ```rust
+/// # use rand::thread_rng;
 /// use rand::Rng;
 /// 
 /// fn foo<R: Rng + ?Sized>(rng: &mut R) -> f32 {
 ///     rng.gen()
 /// }
+///
+/// # let v = foo(&mut thread_rng());
 /// ```
 /// 
-/// [`RngCore`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html
+/// [`RngCore`]: trait.RngCore.html
 pub trait Rng: RngCore {
-    /// Fill `dest` entirely with random bytes (uniform value distribution),
-    /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
-    /// and arrays over primitive integer types (`i8`, `i16`, `u32`, etc.).
-    /// 
-    /// On big-endian platforms this performs byte-swapping to ensure
-    /// portability of results from reproducible generators.
-    /// 
-    /// This uses [`fill_bytes`] internally which may handle some RNG errors
-    /// implicitly (e.g. waiting if the OS generator is not ready), but panics
-    /// on other errors. See also [`try_fill`] which returns errors.
-    /// 
+    /// Return a random value supporting the [`Uniform`] distribution.
+    ///
+    /// [`Uniform`]: distributions/struct.Uniform.html
+    ///
     /// # Example
-    /// 
+    ///
     /// ```rust
     /// use rand::{thread_rng, Rng};
-    /// 
-    /// let mut arr = [0i8; 20];
-    /// thread_rng().try_fill(&mut arr[..]);
+    ///
+    /// let mut rng = thread_rng();
+    /// let x: u32 = rng.gen();
+    /// println!("{}", x);
+    /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
-    /// 
-    /// [`fill_bytes`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html#method.fill_bytes
-    /// [`try_fill`]: trait.Rng.html#method.try_fill
-    /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
-    fn fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) {
-        self.fill_bytes(dest.as_byte_slice_mut());
-        dest.to_le();
+    #[inline(always)]
+    fn gen<T>(&mut self) -> T where Uniform: Distribution<T> {
+        Uniform.sample(self)
     }
-    
-    /// Fill `dest` entirely with random bytes (uniform value distribution),
-    /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
-    /// and arrays over primitive integer types (`i8`, `i16`, `u32`, etc.).
-    /// 
-    /// On big-endian platforms this performs byte-swapping to ensure
-    /// portability of results from reproducible generators.
-    /// 
-    /// This uses [`try_fill_bytes`] internally and forwards all RNG errors. In
-    /// some cases errors may be resolvable; see [`ErrorKind`] and
-    /// documentation for the RNG in use. If you do not plan to handle these
-    /// errors you may prefer to use [`fill`].
-    /// 
+
+    /// Generate a random value in the range [`low`, `high`), i.e. inclusive of
+    /// `low` and exclusive of `high`.
+    ///
+    /// This is a convenience wrapper around
+    /// `distributions::Range`. If this function will be called
+    /// repeatedly with the same arguments, one should use `Range`, as
+    /// that will amortize the computations that allow for perfect
+    /// uniformity, as they only happen when constructing the `Range`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `low >= high`.
+    ///
     /// # Example
-    /// 
+    ///
     /// ```rust
-    /// # use rand::Error;
     /// use rand::{thread_rng, Rng};
-    /// 
-    /// # fn try_inner() -> Result<(), Error> {
-    /// let mut arr = [0u64; 4];
-    /// thread_rng().try_fill(&mut arr[..])?;
-    /// # Ok(())
-    /// # }
-    /// 
-    /// # try_inner().unwrap()
+    ///
+    /// let mut rng = thread_rng();
+    /// let n: u32 = rng.gen_range(0, 10);
+    /// println!("{}", n);
+    /// let m: f64 = rng.gen_range(-40.0f64, 1.3e5f64);
+    /// println!("{}", m);
     /// ```
-    /// 
-    /// [`ErrorKind`]: https://docs.rs/rand_core/0.1/rand_core/enum.ErrorKind.html
-    /// [`try_fill_bytes`]: https://docs.rs/rand_core/0.1/rand_core/trait.RngCore.html#method.try_fill_bytes
-    /// [`fill`]: trait.Rng.html#method.fill
-    /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
-    fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
-        self.try_fill_bytes(dest.as_byte_slice_mut())?;
-        dest.to_le();
-        Ok(())
+    fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T {
+        Range::sample_single(low, high, self)
     }
-    
+
     /// Sample a new value, using the given distribution.
-    /// 
+    ///
     /// ### Example
-    /// 
+    ///
     /// ```rust
     /// use rand::{thread_rng, Rng};
     /// use rand::distributions::Range;
-    /// 
+    ///
     /// let mut rng = thread_rng();
     /// let x: i32 = rng.sample(Range::new(10, 15));
     /// ```
@@ -414,95 +409,70 @@ pub trait Rng: RngCore {
     {
         distr.sample_iter(self)
     }
-    
-    /// Return a random value supporting the [`Uniform`] distribution.
-    /// 
-    /// [`Uniform`]: distributions/struct.Uniform.html
+
+    /// Fill `dest` entirely with random bytes (uniform value distribution),
+    /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
+    /// and arrays over primitive integer types (`i8`, `i16`, `u32`, etc.).
+    ///
+    /// On big-endian platforms this performs byte-swapping to ensure
+    /// portability of results from reproducible generators.
+    ///
+    /// This uses [`fill_bytes`] internally which may handle some RNG errors
+    /// implicitly (e.g. waiting if the OS generator is not ready), but panics
+    /// on other errors. See also [`try_fill`] which returns errors.
     ///
     /// # Example
     ///
     /// ```rust
     /// use rand::{thread_rng, Rng};
     ///
-    /// let mut rng = thread_rng();
-    /// let x: u32 = rng.gen();
-    /// println!("{}", x);
-    /// println!("{:?}", rng.gen::<(f64, bool)>());
+    /// let mut arr = [0i8; 20];
+    /// thread_rng().fill(&mut arr[..]);
     /// ```
-    #[inline(always)]
-    fn gen<T>(&mut self) -> T where Uniform: Distribution<T> {
-        Uniform.sample(self)
+    ///
+    /// [`fill_bytes`]: trait.RngCore.html#method.fill_bytes
+    /// [`try_fill`]: trait.Rng.html#method.try_fill
+    /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
+    fn fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) {
+        self.fill_bytes(dest.as_byte_slice_mut());
+        dest.to_le();
     }
 
-    /// Return an iterator that will yield an infinite number of randomly
-    /// generated items.
+    /// Fill `dest` entirely with random bytes (uniform value distribution),
+    /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
+    /// and arrays over primitive integer types (`i8`, `i16`, `u32`, etc.).
     ///
-    /// # Example
+    /// On big-endian platforms this performs byte-swapping to ensure
+    /// portability of results from reproducible generators.
     ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
-    /// let x = rng.gen_iter::<u32>().take(10).collect::<Vec<u32>>();
-    /// println!("{:?}", x);
-    /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
-    ///                     .collect::<Vec<(f64, bool)>>());
-    /// ```
-    #[allow(deprecated)]
-    #[deprecated(since="0.5.0", note="use Rng::sample_iter(&Uniform) instead")]
-    fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Uniform: Distribution<T> {
-        Generator { rng: self, _marker: marker::PhantomData }
-    }
-
-    /// Generate a random value in the range [`low`, `high`), i.e. inclusive of
-    /// `low` and exclusive of `high`.
-    ///
-    /// This is a convenience wrapper around
-    /// `distributions::Range`. If this function will be called
-    /// repeatedly with the same arguments, one should use `Range`, as
-    /// that will amortize the computations that allow for perfect
-    /// uniformity, as they only happen when constructing the `Range`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `low >= high`.
+    /// This uses [`try_fill_bytes`] internally and forwards all RNG errors. In
+    /// some cases errors may be resolvable; see [`ErrorKind`] and
+    /// documentation for the RNG in use. If you do not plan to handle these
+    /// errors you may prefer to use [`fill`].
     ///
     /// # Example
     ///
     /// ```rust
+    /// # use rand::Error;
     /// use rand::{thread_rng, Rng};
     ///
-    /// let mut rng = thread_rng();
-    /// let n: u32 = rng.gen_range(0, 10);
-    /// println!("{}", n);
-    /// let m: f64 = rng.gen_range(-40.0f64, 1.3e5f64);
-    /// println!("{}", m);
+    /// # fn try_inner() -> Result<(), Error> {
+    /// let mut arr = [0u64; 4];
+    /// thread_rng().try_fill(&mut arr[..])?;
+    /// # Ok(())
+    /// # }
+    ///
+    /// # try_inner().unwrap()
     /// ```
-    fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T {
-        Range::sample_single(low, high, self)
-    }
-
-    /// Return a bool with a 1 in n chance of true
     ///
-    /// # Example
-    ///
-    /// ```rust
-    /// #[allow(deprecated)]
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
-    /// assert_eq!(rng.gen_weighted_bool(0), true);
-    /// assert_eq!(rng.gen_weighted_bool(1), true);
-    /// // Just like `rng.gen::<bool>()` a 50-50% chance, but using a slower
-    /// // method with different results.
-    /// println!("{}", rng.gen_weighted_bool(2));
-    /// // First meaningful use of `gen_weighted_bool`.
-    /// println!("{}", rng.gen_weighted_bool(3));
-    /// ```
-    #[deprecated(since="0.5.0", note="use gen_bool instead")]
-    fn gen_weighted_bool(&mut self, n: u32) -> bool {
-        // Short-circuit after `n <= 1` to avoid panic in `gen_range`
-        n <= 1 || self.gen_range(0, n) == 0
+    /// [`ErrorKind`]: enum.ErrorKind.html
+    /// [`try_fill_bytes`]: trait.RngCore.html#method.try_fill_bytes
+    /// [`fill`]: trait.Rng.html#method.fill
+    /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
+    fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
+        self.try_fill_bytes(dest.as_byte_slice_mut())?;
+        dest.to_le();
+        Ok(())
     }
 
     /// Return a bool with a probability `p` of being true.
@@ -530,23 +500,6 @@ pub trait Rng: RngCore {
         // If `p` is constant, this will be evaluated at compile-time.
         let p_int = (p * f64::from(core::u32::MAX)) as u32;
         self.gen::<u32>() <= p_int
-    }
-
-    /// Return an iterator of random characters from the set A-Z,a-z,0-9.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// #[allow(deprecated)]
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let s: String = thread_rng().gen_ascii_chars().take(10).collect();
-    /// println!("{}", s);
-    /// ```
-    #[allow(deprecated)]
-    #[deprecated(since="0.5.0", note="use sample_iter(&Alphanumeric) instead")]
-    fn gen_ascii_chars(&mut self) -> AsciiGenerator<&mut Self> {
-        AsciiGenerator { rng: self }
     }
 
     /// Return a random element from `values`.
@@ -585,7 +538,8 @@ pub trait Rng: RngCore {
 
     /// Shuffle a mutable slice in place.
     ///
-    /// This applies Durstenfeld's algorithm for the [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
+    /// This applies Durstenfeld's algorithm for the [Fisher–Yates shuffle](
+    /// https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
     /// which produces an unbiased permutation.
     ///
     /// # Example
@@ -608,6 +562,67 @@ pub trait Rng: RngCore {
             // lock element i in place.
             values.swap(i, self.gen_range(0, i + 1));
         }
+    }
+
+    /// Return an iterator that will yield an infinite number of randomly
+    /// generated items.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #![allow(deprecated)]
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// let x = rng.gen_iter::<u32>().take(10).collect::<Vec<u32>>();
+    /// println!("{:?}", x);
+    /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
+    ///                     .collect::<Vec<(f64, bool)>>());
+    /// ```
+    #[allow(deprecated)]
+    #[deprecated(since="0.5.0", note="use Rng::sample_iter(&Uniform) instead")]
+    fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Uniform: Distribution<T> {
+        Generator { rng: self, _marker: marker::PhantomData }
+    }
+
+    /// Return a bool with a 1 in n chance of true
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # #![allow(deprecated)]
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// assert_eq!(rng.gen_weighted_bool(0), true);
+    /// assert_eq!(rng.gen_weighted_bool(1), true);
+    /// // Just like `rng.gen::<bool>()` a 50-50% chance, but using a slower
+    /// // method with different results.
+    /// println!("{}", rng.gen_weighted_bool(2));
+    /// // First meaningful use of `gen_weighted_bool`.
+    /// println!("{}", rng.gen_weighted_bool(3));
+    /// ```
+    #[deprecated(since="0.5.0", note="use gen_bool instead")]
+    fn gen_weighted_bool(&mut self, n: u32) -> bool {
+        // Short-circuit after `n <= 1` to avoid panic in `gen_range`
+        n <= 1 || self.gen_range(0, n) == 0
+    }
+
+    /// Return an iterator of random characters from the set A-Z,a-z,0-9.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # #![allow(deprecated)]
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let s: String = thread_rng().gen_ascii_chars().take(10).collect();
+    /// println!("{}", s);
+    /// ```
+    #[allow(deprecated)]
+    #[deprecated(since="0.5.0", note="use sample_iter(&Alphanumeric) instead")]
+    fn gen_ascii_chars(&mut self) -> AsciiGenerator<&mut Self> {
+        AsciiGenerator { rng: self }
     }
 }
 
@@ -753,7 +768,7 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 
 
 /// A convenient way to seed new algorithmic generators with fresh entropy from
-/// `EntropyRng`.
+/// [`EntropyRng`].
 ///
 /// This is the recommended way to create PRNGs, unless a deterministic seed is
 /// desired (in which case [`SeedableRng::from_seed`] should be used).
@@ -770,8 +785,9 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
-/// [`SeedableRng`]: https://docs.rs/rand_core/0.1/rand_core/trait.SeedableRng.html
-/// [`SeedableRng::from_seed`]: https://docs.rs/rand_core/0.1/rand_core/trait.SeedableRng.html#tymethod.from_seed
+/// [`EntropyRng`]: struct.EntropyRng.html
+/// [`SeedableRng`]: trait.SeedableRng.html
+/// [`SeedableRng::from_seed`]: trait.SeedableRng.html#tymethod.from_seed
 #[cfg(feature="std")]
 pub trait NewRng: SeedableRng {
     /// Creates a new instance, automatically seeded with fresh entropy.
@@ -782,20 +798,23 @@ pub trait NewRng: SeedableRng {
     /// almost certainly be platform limitations or build issues, i.e. most
     /// applications targetting PC/mobile platforms should not need to worry
     /// about this failing.
-    /// 
+    ///
     /// If all entropy sources fail this will panic. If you need to handle
     /// errors, use the following code, equivalent aside from error handling:
-    /// 
+    ///
     /// ```rust
-    /// use rand::{Rng, StdRng, EntropyRng, SeedableRng, Error};
-    /// 
-    /// fn foo() -> Result<(), Error> {
-    ///     // This uses StdRng, but is valid for any R: SeedableRng
-    ///     let mut rng = StdRng::from_rng(EntropyRng::new())?;
-    ///     
-    ///     println!("random number: {}", rng.gen_range(1, 10));
-    ///     Ok(())
-    /// }
+    /// # use rand::Error;
+    /// use rand::{Rng, StdRng, EntropyRng, SeedableRng};
+    ///
+    /// # fn try_inner() -> Result<(), Error> {
+    /// // This uses StdRng, but is valid for any R: SeedableRng
+    /// let mut rng = StdRng::from_rng(EntropyRng::new())?;
+    ///
+    /// println!("random number: {}", rng.gen_range(1, 10));
+    /// # Ok(())
+    /// # }
+    ///
+    /// # try_inner().unwrap()
     /// ```
     fn new() -> Self;
 }
@@ -818,9 +837,10 @@ impl<R: SeedableRng> NewRng for R {
 /// future library versions may use a different internal generator with
 /// different output. Further, this generator may not be portable and can
 /// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG, for example `ChaChaRng`.
+/// reproducible output, use a named RNG, for example [`ChaChaRng`].
 ///
 /// [HC-128]: prng/hc128/struct.Hc128Rng.html
+/// [`ChaChaRng`]: prng/chacha/struct.ChaChaRng.html
 #[derive(Clone, Debug)]
 pub struct StdRng(Hc128Rng);
 
@@ -861,29 +881,31 @@ impl CryptoRng for StdRng {}
 /// An RNG recommended when small state, cheap initialization and good
 /// performance are required. The PRNG algorithm in `SmallRng` is chosen to be
 /// efficient on the current platform, **without consideration for cryptography
-/// or security**. The size of its state is much smaller than for `StdRng`.
+/// or security**. The size of its state is much smaller than for [`StdRng`].
 ///
 /// Reproducibility of output from this generator is however not required, thus
 /// future library versions may use a different internal generator with
 /// different output. Further, this generator may not be portable and can
 /// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG, for example `XorShiftRng`.
+/// reproducible output, use a named RNG, for example [`XorShiftRng`].
 ///
 /// The current algorithm used on all platforms is [Xorshift].
 ///
 /// # Examples
 ///
-/// Initializing `StdRng` with a random seed can be done using `NewRng`:
+/// Initializing `SmallRng` with a random seed can be done using [`NewRng`]:
 ///
 /// ```
+/// # use rand::Rng;
 /// use rand::{NewRng, SmallRng};
 ///
 /// // Create small, cheap to initialize and fast RNG with a random seed.
 /// // The randomness is supplied by the operating system.
 /// let mut small_rng = SmallRng::new();
+/// # let v: u32 = small_rng.gen();
 /// ```
 ///
-/// When initializing a lot of `SmallRng`, using `thread_rng` can be more
+/// When initializing a lot of `SmallRng`'s, using [`thread_rng`] can be more
 /// efficient:
 ///
 /// ```
@@ -901,7 +923,11 @@ impl CryptoRng for StdRng {}
 ///     .collect();
 /// ```
 ///
-/// [Xorshift]: struct.XorShiftRng.html
+/// [`NewRng`]: trait.NewRng.html
+/// [`StdRng`]: struct.StdRng.html
+/// [`thread_rng`]: fn.thread_rng.html
+/// [Xorshift]: prng/struct.XorShiftRng.html
+/// [`XorShiftRng`]: prng/struct.XorShiftRng.html
 #[derive(Clone, Debug)]
 pub struct SmallRng(XorShiftRng);
 
@@ -937,7 +963,7 @@ impl SeedableRng for SmallRng {
     }
 }
 
-/// DEPRECATED: use `SmallRng` instead.
+/// DEPRECATED: use [`SmallRng`] instead.
 ///
 /// Create a weak random number generator with a default algorithm and seed.
 ///
@@ -947,6 +973,8 @@ impl SeedableRng for SmallRng {
 /// create the `Rng` yourself.
 ///
 /// This will seed the generator with randomness from `thread_rng`.
+///
+/// [`SmallRng`]: struct.SmallRng.html
 #[deprecated(since="0.5.0", note="removed in favor of SmallRng")]
 #[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
@@ -962,6 +990,7 @@ pub fn weak_rng() -> XorShiftRng {
 /// # Example
 ///
 /// ```rust
+/// # #![allow(deprecated)]
 /// use rand::{thread_rng, sample};
 ///
 /// let mut rng = thread_rng();

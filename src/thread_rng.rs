@@ -45,8 +45,10 @@ use reseeding::ReseedingRng;
 const THREAD_RNG_RESEED_THRESHOLD: u64 = 32*1024*1024; // 32 MiB
 
 /// The type returned by [`thread_rng`], essentially just a reference to the
-/// PRNG in thread-local memory. Cloning this handle just produces a new
-/// reference to the same thread-local generator.
+/// PRNG in thread-local memory.
+///
+/// Cloning this handle just produces a new reference to the same thread-local
+/// generator.
 /// 
 /// [`thread_rng`]: fn.thread_rng.html
 #[derive(Clone, Debug)]
@@ -91,7 +93,7 @@ thread_local!(
 /// [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
 /// [`StdRng`]: struct.StdRng.html
 /// [`EntropyRng`]: struct.EntropyRng.html
-/// [HC-128]: struct.Hc128Rng.html
+/// [HC-128]: prng/hc128/struct.Hc128Rng.html
 pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
 }
@@ -129,6 +131,7 @@ impl CryptoRng for ThreadRng {}
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// let x = rand::random::<u8>();
 /// println!("{}", x);
 ///
@@ -144,6 +147,7 @@ impl CryptoRng for ThreadRng {}
 /// following example can increase performance.
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use rand::Rng;
 ///
 /// let mut v = vec![1, 2, 3];

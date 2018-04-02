@@ -108,6 +108,7 @@ impl ChaChaRng {
     /// # Examples
     ///
     /// ```rust
+    /// # #![allow(deprecated)]
     /// use rand::{RngCore, ChaChaRng};
     ///
     /// let mut ra = ChaChaRng::new_unseeded();
@@ -140,11 +141,10 @@ impl ChaChaRng {
     /// # Examples
     ///
     /// ```rust
-    /// use rand::{RngCore, ChaChaRng};
+    /// use rand::{ChaChaRng, RngCore, SeedableRng};
     ///
-    /// let mut rng1 = ChaChaRng::new_unseeded(); // Use `ChaChaRng::new()` or
-    ///                                           // `ChaChaRng::from_rng()`
-    ///                                           // outside of testing.
+    /// // Note: Use `NewRng` or `ChaChaRng::from_rng()` outside of testing.
+    /// let mut rng1 = ChaChaRng::from_seed([0; 32]);
     /// let mut rng2 = rng1.clone();
     ///
     /// // Skip to round 20. Because every round generates 16 `u32` values, this
@@ -168,11 +168,10 @@ impl ChaChaRng {
     /// # Examples
     ///
     /// ```rust
-    /// use rand::{RngCore, ChaChaRng};
+    /// use rand::{ChaChaRng, RngCore, SeedableRng};
     ///
-    /// let mut rng = ChaChaRng::new_unseeded(); // Use `ChaChaRng::new()` or
-    ///                                           // `ChaChaRng::from_rng()`
-    ///                                           // outside of testing.
+    /// // Note: Use `NewRng` or `ChaChaRng::from_rng()` outside of testing.
+    /// let mut rng = ChaChaRng::from_seed([0; 32]);
     /// rng.set_rounds(8);
     ///
     /// assert_eq!(rng.next_u32(), 0x2fef003e);
@@ -183,6 +182,7 @@ impl ChaChaRng {
     }
 }
 
+/// The core of `ChaChaRng`, used with `BlockRng`.
 #[derive(Clone)]
 pub struct ChaChaCore {
     state: [u32; STATE_WORDS],
