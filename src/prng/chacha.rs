@@ -37,11 +37,13 @@ const STATE_WORDS: usize = 16;
 /// and security, 8 rounds are considered the minimum to be secure. A different
 /// number of rounds can be set using [`set_rounds`].
 ///
-/// We deviate slightly from the ChaCha specification regarding the nonce, which
-/// is used to extend the counter to 128 bits. This is provably as strong as the
-/// original cipher, though, since any distinguishing attack on our variant also
-/// works against ChaCha with a chosen-nonce. See the XSalsa20 [3] security
-/// proof for a more involved example of this.
+/// We deviate slightly from the ChaCha specification regarding the nonce and
+/// the counter. Instead of a 64-bit nonce and 64-bit counter (or a 96-bit nonce
+/// and 32-bit counter in the IETF variant [3]), we use a 128-bit counter. This
+/// is because a nonce does not give a meaningful advantage for ChaCha when used
+/// as an RNG. The modification is provably as strong as the original cipher,
+/// though, since any distinguishing attack on our variant also works against
+/// ChaCha with a chosen nonce.
 ///
 /// The modified word layout is:
 ///
@@ -58,8 +60,8 @@ const STATE_WORDS: usize = 16;
 /// [2]: [eSTREAM: the ECRYPT Stream Cipher Project](
 ///      http://www.ecrypt.eu.org/stream/)
 ///
-/// [3]: Daniel J. Bernstein. [*Extending the Salsa20 nonce.*](
-///      http://cr.yp.to/papers.html#xsalsa)
+/// [3]: [ChaCha20 and Poly1305 for IETF Protocols](
+///       https://tools.ietf.org/html/rfc7539)
 ///
 /// [`set_rounds`]: #method.set_counter
 #[derive(Clone, Debug)]
