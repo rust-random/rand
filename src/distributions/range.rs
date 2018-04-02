@@ -11,7 +11,7 @@
 //! A distribution generating numbers within a given range.
 
 use Rng;
-use distributions::{Distribution, Uniform};
+use distributions::Distribution;
 use distributions::float::IntoFloat;
 
 /// Sample values uniformly between two bounds.
@@ -274,7 +274,7 @@ macro_rules! range_int_impl {
                     // casting is a no-op.
                     let zone = self.zone as $signed as $i_large as $u_large;
                     loop {
-                        let v: $u_large = Uniform.sample(rng);
+                        let v: $u_large = rng.gen();
                         let (hi, lo) = v.wmul(range);
                         if lo <= zone {
                             return self.low.wrapping_add(hi as $ty);
@@ -282,7 +282,7 @@ macro_rules! range_int_impl {
                     }
                 } else {
                     // Sample from the entire integer range.
-                    Uniform.sample(rng)
+                    rng.gen()
                 }
             }
 
@@ -306,7 +306,7 @@ macro_rules! range_int_impl {
                     };
 
                 loop {
-                    let v: $u_large = Uniform.sample(rng);
+                    let v: $u_large = rng.gen();
                     let (hi, lo) = v.wmul(range);
                     if lo <= zone {
                         return low.wrapping_add(hi as $ty);
