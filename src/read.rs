@@ -15,8 +15,9 @@ use std::io::Read;
 use rand_core::{RngCore, Error, ErrorKind, impls};
 
 
-/// An RNG that reads random bytes straight from a `Read`. This will
-/// work best with an infinite reader, but that is not required.
+/// An RNG that reads random bytes straight from a `Read`.
+///
+/// This will work best with an infinite reader, but that is not required.
 ///
 /// # Panics
 ///

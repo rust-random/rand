@@ -11,7 +11,8 @@
 //! Entropy generator, or wrapper around external generators
 
 use rand_core::{RngCore, CryptoRng, Error, impls};
-use {OsRng, JitterRng};
+use os::OsRng;
+use jitter::JitterRng;
 
 /// A generator provided specifically for securely seeding algorithmic
 /// generators (PRNGs).

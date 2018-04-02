@@ -213,43 +213,36 @@ extern crate rand_core;
 #[cfg(all(feature="std", not(feature = "log")))] macro_rules! error { ($($x:tt)*) => () }
 
 
-use core::{marker, mem, slice};
-
-// re-exports from rand_core
+// Re-exports from rand_core
 pub use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng};
 pub use rand_core::{ErrorKind, Error};
 
-// external rngs
-#[doc(inline)] pub use jitter::JitterRng;
-#[cfg(feature="std")] #[doc(inline)] pub use os::OsRng;
-
-// pseudo rngs
-pub mod prng;
-#[doc(no_inline)]
-pub use prng::{ChaChaRng, Hc128Rng, IsaacRng, Isaac64Rng, XorShiftRng};
-
-// convenience and derived rngs
+// Public exports
 #[cfg(feature="std")] pub use entropy_rng::EntropyRng;
+#[cfg(feature="std")] pub use os::OsRng;
+pub use reseeding::ReseedingRng;
 #[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng};
 #[cfg(feature="std")] #[allow(deprecated)] pub use thread_rng::random;
 
-use distributions::{Distribution, Uniform, Range};
-use distributions::range::SampleRange;
-
-// public modules
+// Public modules
 pub mod distributions;
-pub mod jitter;
-pub mod mock;
-#[cfg(feature="std")] pub mod os;
+pub mod jitter; // Public because of the error type.
+pub mod mock;   // Public so we don't export `StepRng` directly, making it a bit
+                // more clear it is intended for testing.
+pub mod prng;
 #[cfg(feature="std")] pub mod read;
-pub mod reseeding;
 #[cfg(feature = "alloc")] pub mod seq;
 
-// These tiny modules are here to avoid API breakage, probably only temporarily
+// These modules are public to avoid API breakage, probably only temporarily.
+// Hidden in the documentation.
+#[cfg(feature="std")] #[doc(hidden)] pub mod os;
+#[doc(hidden)] pub use prng::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
+#[doc(hidden)]
 pub mod chacha {
     //! The ChaCha random number generator.
     pub use prng::ChaChaRng;
 }
+#[doc(hidden)]
 pub mod isaac {
     //! The ISAAC random number generator.
     pub use prng::{IsaacRng, Isaac64Rng};
@@ -257,7 +250,15 @@ pub mod isaac {
 
 // private modules
 #[cfg(feature="std")] mod entropy_rng;
+mod reseeding;
 #[cfg(feature="std")] mod thread_rng;
+
+
+// Normal imports just for this file
+use core::{marker, mem, slice};
+use distributions::{Distribution, Uniform, Range};
+use distributions::range::SampleRange;
+use prng::hc128::Hc128Rng;
 
 
 /// A type that can be randomly generated using an [`Rng`].
