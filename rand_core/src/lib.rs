@@ -83,8 +83,8 @@ pub mod le;
 /// output (except by communicating that the release has breaking changes).
 /// 
 /// Typically implementators will implement only one of the methods available
-/// in this trait directly, then use the helper functions from the [`impls`]
-/// module to implement the other methods.
+/// in this trait directly, then use the helper functions from the
+/// [`rand_core::impls`] module to implement the other methods.
 /// 
 /// It is recommended that implementations also implement:
 /// 
@@ -131,7 +131,7 @@ pub mod le;
 /// [rand]: https://crates.io/crates/rand
 /// [`Rng`]: ../rand/trait.Rng.html
 /// [`SeedableRng`]: trait.SeedableRng.html
-/// [`impls`]: impls/index.html
+/// [`rand_core::impls`]: ../rand_core/impls/index.html
 /// [`try_fill_bytes`]: trait.RngCore.html#tymethod.try_fill_bytes
 /// [`fill_bytes`]: trait.RngCore.html#tymethod.fill_bytes
 /// [`next_u32`]: trait.RngCore.html#tymethod.next_u32
@@ -143,23 +143,23 @@ pub trait RngCore {
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
     /// using `self.next_u64() as u32` or
-    /// [via `fill_bytes`](impls/fn.next_u32_via_fill.html).
+    /// [via `fill_bytes`](../rand_core/impls/fn.next_u32_via_fill.html).
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random `u64`.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// [via `next_u32`](impls/fn.next_u64_via_u32.html) or
-    /// [via `fill_bytes`](impls/fn.next_u64_via_fill.html).
+    /// [via `next_u32`](../rand_core/impls/fn.next_u64_via_u32.html) or
+    /// [via `fill_bytes`](../rand_core/impls/fn.next_u64_via_fill.html).
     fn next_u64(&mut self) -> u64;
 
     /// Fill `dest` with random data.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// [via `next_u32`](impls/fn.fill_bytes_via_u32.html) or
-    /// [via `next_u64`](impls/fn.fill_bytes_via_u64.html) or
+    /// [via `next_u32`](../rand_core/impls/fn.fill_bytes_via_u32.html) or
+    /// [via `next_u64`](../rand_core/impls/fn.fill_bytes_via_u64.html) or
     /// via `try_fill_bytes`; if this generator can fail the implementation
     /// must choose how best to handle errors here (e.g. panic with a
     /// descriptive message or log a warning and retry a few times).
@@ -329,7 +329,7 @@ pub trait SeedableRng: Sized {
     ///
     /// Seeding a small PRNG from another small PRNG is possible, but
     /// something to be careful with. An extreme example of how this can go
-    /// wrong is seeding an [`XorShiftRng`] from another [`XorShiftRng`], which
+    /// wrong is seeding an Xorshift RNG from another Xorshift RNG, which
     /// will effectively clone the generator. In general seeding from a
     /// generator which is hard to predict is probably okay.
     ///
@@ -338,7 +338,6 @@ pub trait SeedableRng: Sized {
     /// 
     /// [`NewRng`]: ../rand/trait.NewRng.html
     /// [`OsRng`]: ../rand/os/struct.OsRng.html
-    /// [`XorShiftRng`]: ../rand/struct.XorShiftRng.html
     fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;
