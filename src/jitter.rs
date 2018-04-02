@@ -203,7 +203,7 @@ impl JitterRng {
     ///
     /// ```rust
     /// # use rand::{Rng, Error};
-    /// use rand::JitterRng;
+    /// use rand::jitter::JitterRng;
     ///
     /// # fn try_inner() -> Result<(), Error> {
     /// fn get_nstime() -> u64 {
@@ -682,7 +682,7 @@ impl JitterRng {
     /// for the available entropy.
     ///
     /// ```rust,no_run
-    /// use rand::JitterRng;
+    /// use rand::jitter::JitterRng;
     /// #
     /// # use std::error::Error;
     /// # use std::fs::File;
@@ -816,7 +816,7 @@ impl CryptoRng for JitterRng {}
 
 #[cfg(test)]
 mod test_jitter_init {
-    use JitterRng;
+    use jitter::JitterRng;
 
     #[cfg(feature="std")]
     #[test]
