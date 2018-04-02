@@ -26,7 +26,7 @@
 //! ```
 //!
 //! The key function is [`Rng::gen()`]. It is polymorphic and so can be used to
-//! generate many types; the [`Uniform`] distribution carries the
+//! generate many types; the [`Standard`] distribution carries the
 //! implementations. In some cases type annotation is required, e.g.
 //! `rng.gen::<f64>()`.
 //!
@@ -176,7 +176,7 @@
 //! [`Isaac64Rng`]: prng/isaac64/struct.Isaac64Rng.html
 //! [`seq`]: seq/index.html
 //! [`distributions`]: distributions/index.html
-//! [`Uniform`]: distributions/struct.Uniform.html
+//! [`Standard`]: distributions/struct.Standard.html
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
@@ -256,19 +256,19 @@ mod reseeding;
 
 // Normal imports just for this file
 use core::{marker, mem, slice};
-use distributions::{Distribution, Uniform, Range};
+use distributions::{Distribution, Standard, Range};
 use distributions::range::SampleRange;
 use prng::hc128::Hc128Rng;
 
 
 /// A type that can be randomly generated using an [`Rng`].
 /// 
-/// This is merely an adaptor around the [`Uniform`] distribution for
+/// This is merely an adaptor around the [`Standard`] distribution for
 /// convenience and backwards-compatibility.
 /// 
 /// [`Rng`]: trait.Rng.html
-/// [`Uniform`]: distributions/struct.Uniform.html
-#[deprecated(since="0.5.0", note="replaced by distributions::Uniform")]
+/// [`Standard`]: distributions/struct.Standard.html
+#[deprecated(since="0.5.0", note="replaced by distributions::Standard")]
 pub trait Rand : Sized {
     /// Generates a random instance of this type using the specified source of
     /// randomness.
@@ -315,9 +315,9 @@ pub trait Rand : Sized {
 /// 
 /// [`RngCore`]: trait.RngCore.html
 pub trait Rng: RngCore {
-    /// Return a random value supporting the [`Uniform`] distribution.
+    /// Return a random value supporting the [`Standard`] distribution.
     ///
-    /// [`Uniform`]: distributions/struct.Uniform.html
+    /// [`Standard`]: distributions/struct.Standard.html
     ///
     /// # Example
     ///
@@ -330,8 +330,8 @@ pub trait Rng: RngCore {
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
     #[inline(always)]
-    fn gen<T>(&mut self) -> T where Uniform: Distribution<T> {
-        Uniform.sample(self)
+    fn gen<T>(&mut self) -> T where Standard: Distribution<T> {
+        Standard.sample(self)
     }
 
     /// Generate a random value in the range [`low`, `high`), i.e. inclusive of
@@ -383,18 +383,18 @@ pub trait Rng: RngCore {
     ///
     /// ```rust
     /// use rand::{thread_rng, Rng};
-    /// use rand::distributions::{Alphanumeric, Range, Uniform};
+    /// use rand::distributions::{Alphanumeric, Range, Standard};
     ///
     /// let mut rng = thread_rng();
     ///
     /// // Vec of 16 x f32:
-    /// let v: Vec<f32> = thread_rng().sample_iter(&Uniform).take(16).collect();
+    /// let v: Vec<f32> = thread_rng().sample_iter(&Standard).take(16).collect();
     ///
     /// // String:
     /// let s: String = rng.sample_iter(&Alphanumeric).take(7).collect();
     ///
     /// // Combined values
-    /// println!("{:?}", thread_rng().sample_iter(&Uniform).take(5)
+    /// println!("{:?}", thread_rng().sample_iter(&Standard).take(5)
     ///                              .collect::<Vec<(f64, bool)>>());
     ///
     /// // Dice-rolling:
@@ -580,8 +580,8 @@ pub trait Rng: RngCore {
     ///                     .collect::<Vec<(f64, bool)>>());
     /// ```
     #[allow(deprecated)]
-    #[deprecated(since="0.5.0", note="use Rng::sample_iter(&Uniform) instead")]
-    fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Uniform: Distribution<T> {
+    #[deprecated(since="0.5.0", note="use Rng::sample_iter(&Standard) instead")]
+    fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Standard: Distribution<T> {
         Generator { rng: self, _marker: marker::PhantomData }
     }
 
@@ -732,7 +732,7 @@ pub struct Generator<T, R: RngCore> {
 }
 
 #[allow(deprecated)]
-impl<T, R: RngCore> Iterator for Generator<T, R> where Uniform: Distribution<T> {
+impl<T, R: RngCore> Iterator for Generator<T, R> where Standard: Distribution<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -1170,7 +1170,7 @@ mod test {
 
     #[test]
     fn test_rng_trait_object() {
-        use distributions::{Distribution, Uniform};
+        use distributions::{Distribution, Standard};
         let mut rng = rng(109);
         let mut r = &mut rng as &mut RngCore;
         r.next_u32();
@@ -1180,13 +1180,13 @@ mod test {
         let b: &[_] = &[1, 1, 1];
         assert_eq!(v, b);
         assert_eq!(r.gen_range(0, 1), 0);
-        let _c: u8 = Uniform.sample(&mut r);
+        let _c: u8 = Standard.sample(&mut r);
     }
 
     #[test]
     #[cfg(feature="alloc")]
     fn test_rng_boxed_trait() {
-        use distributions::{Distribution, Uniform};
+        use distributions::{Distribution, Standard};
         let rng = rng(110);
         let mut r = Box::new(rng) as Box<RngCore>;
         r.next_u32();
@@ -1196,7 +1196,7 @@ mod test {
         let b: &[_] = &[1, 1, 1];
         assert_eq!(v, b);
         assert_eq!(r.gen_range(0, 1), 0);
-        let _c: u8 = Uniform.sample(&mut r);
+        let _c: u8 = Standard.sample(&mut r);
     }
 
     #[test]

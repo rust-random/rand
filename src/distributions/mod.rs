@@ -140,12 +140,12 @@ pub trait Distribution<T> {
     ///
     /// ```rust
     /// use rand::thread_rng;
-    /// use rand::distributions::{Distribution, Alphanumeric, Range, Uniform};
+    /// use rand::distributions::{Distribution, Alphanumeric, Range, Standard};
     ///
     /// let mut rng = thread_rng();
     ///
     /// // Vec of 16 x f32:
-    /// let v: Vec<f32> = Uniform.sample_iter(&mut rng).take(16).collect();
+    /// let v: Vec<f32> = Standard.sample_iter(&mut rng).take(16).collect();
     ///
     /// // String:
     /// let s: String = Alphanumeric.sample_iter(&mut rng).take(7).collect();
@@ -208,7 +208,7 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///
 /// ## Built-in Implementations
 ///
-/// This crate implements the distribution `Uniform` for various primitive
+/// This crate implements the distribution `Standard` for various primitive
 /// types.  Assuming the provided `Rng` is well-behaved, these implementations
 /// generate values with the following ranges and distributions:
 ///
@@ -222,20 +222,20 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// * Floating point types (`f32` and `f64`): Uniformly distributed in the
 ///   open range `(0, 1)`.
 ///
-/// The following aggregate types also implement the distribution `Uniform` as
+/// The following aggregate types also implement the distribution `Standard` as
 /// long as their component types implement it:
 ///
 /// * Tuples and arrays: Each element of the tuple or array is generated
-///   independently, using the `Uniform` distribution recursively.
+///   independently, using the `Standard` distribution recursively.
 /// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
 ///   random `T` and returns `Some(T)`.
 ///
 /// # Example
 /// ```rust
 /// use rand::{NewRng, SmallRng, Rng};
-/// use rand::distributions::Uniform;
+/// use rand::distributions::Standard;
 ///
-/// let val: f32 = SmallRng::new().sample(Uniform);
+/// let val: f32 = SmallRng::new().sample(Standard);
 /// println!("f32 from (0,1): {}", val);
 /// ```
 ///
@@ -243,11 +243,11 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// 
 /// ```rust
 /// use rand::{thread_rng, Rng, RngCore};
-/// use rand::distributions::Uniform;
+/// use rand::distributions::Standard;
 ///
 /// let mut rng = thread_rng();
 /// let erased_rng: &mut RngCore = &mut rng;
-/// let val: f32 = erased_rng.sample(Uniform);
+/// let val: f32 = erased_rng.sample(Standard);
 /// println!("f32 from (0,1): {}", val);
 /// ```
 ///
@@ -274,12 +274,12 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// [`Exp1`]: struct.Exp1.html
 /// [`StandardNormal`]: struct.StandardNormal.html
 #[derive(Debug)]
-pub struct Uniform;
+pub struct Standard;
 
 #[allow(deprecated)]
-impl<T> ::Rand for T where Uniform: Distribution<T> {
+impl<T> ::Rand for T where Standard: Distribution<T> {
     fn rand<R: Rng>(rng: &mut R) -> Self {
-        Uniform.sample(rng)
+        Standard.sample(rng)
     }
 }
 

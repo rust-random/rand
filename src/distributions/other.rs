@@ -8,12 +8,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The implementations of the `Uniform` distribution for other built-in types.
+//! The implementations of the `Standard` distribution for other built-in types.
 
 use core::char;
 
 use {Rng};
-use distributions::{Distribution, Uniform, Range};
+use distributions::{Distribution, Standard, Range};
 
 // ----- Sampling distributions -----
 
@@ -40,7 +40,7 @@ pub struct Alphanumeric;
 
 // ----- Implementations of distributions -----
 
-impl Distribution<char> for Uniform {
+impl Distribution<char> for Standard {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> char {
         let range = Range::new(0u32, 0x11_0000);
@@ -75,7 +75,7 @@ impl Distribution<char> for Alphanumeric {
     }
 }
 
-impl Distribution<bool> for Uniform {
+impl Distribution<bool> for Standard {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
         // We can compare against an arbitrary bit of an u32 to get a bool.
@@ -92,8 +92,8 @@ macro_rules! tuple_impl {
         // the trailing commas are for the 1 tuple
         impl< $( $tyvar ),* >
             Distribution<( $( $tyvar ),* , )>
-            for Uniform
-            where $( Uniform: Distribution<$tyvar> ),*
+            for Standard
+            where $( Standard: Distribution<$tyvar> ),*
         {
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> ( $( $tyvar ),* , ) {
@@ -110,7 +110,7 @@ macro_rules! tuple_impl {
     }
 }
 
-impl Distribution<()> for Uniform {
+impl Distribution<()> for Standard {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, _: &mut R) -> () { () }
 }
@@ -132,7 +132,7 @@ macro_rules! array_impl {
     {$n:expr, $t:ident, $($ts:ident,)*} => {
         array_impl!{($n - 1), $($ts,)*}
 
-        impl<T> Distribution<[T; $n]> for Uniform where Uniform: Distribution<T> {
+        impl<T> Distribution<[T; $n]> for Standard where Standard: Distribution<T> {
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; $n] {
                 [_rng.gen::<$t>(), $(_rng.gen::<$ts>()),*]
@@ -141,7 +141,7 @@ macro_rules! array_impl {
     };
     // empty case:
     {$n:expr,} => {
-        impl<T> Distribution<[T; $n]> for Uniform {
+        impl<T> Distribution<[T; $n]> for Standard {
             fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; $n] { [] }
         }
     };
@@ -149,7 +149,7 @@ macro_rules! array_impl {
 
 array_impl!{32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
 
-impl<T> Distribution<Option<T>> for Uniform where Uniform: Distribution<T> {
+impl<T> Distribution<Option<T>> for Standard where Standard: Distribution<T> {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Option<T> {
         // UFCS is needed here: https://github.com/rust-lang/rust/issues/24066
@@ -164,7 +164,7 @@ impl<T> Distribution<Option<T>> for Uniform where Uniform: Distribution<T> {
 
 #[cfg(test)]
 mod tests {
-    use {Rng, RngCore, Uniform};
+    use {Rng, RngCore, Standard};
     use distributions::Alphanumeric;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::String;
 
@@ -172,8 +172,8 @@ mod tests {
     fn test_misc() {
         let rng: &mut RngCore = &mut ::test::rng(820);
         
-        rng.sample::<char, _>(Uniform);
-        rng.sample::<bool, _>(Uniform);
+        rng.sample::<char, _>(Standard);
+        rng.sample::<bool, _>(Standard);
     }
     
     #[cfg(feature="alloc")]

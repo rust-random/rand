@@ -15,7 +15,7 @@ use std::rc::Rc;
 
 use {RngCore, CryptoRng, SeedableRng, EntropyRng};
 use prng::hc128::Hc128Core;
-use {Distribution, Uniform, Rng, Error};
+use {Distribution, Standard, Rng, Error};
 use reseeding::ReseedingRng;
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
@@ -169,7 +169,7 @@ impl CryptoRng for ThreadRng {}
 /// [`Rand`]: trait.Rand.html
 #[deprecated(since="0.5.0", note="removed in favor of thread_rng().gen()")]
 #[inline]
-pub fn random<T>() -> T where Uniform: Distribution<T> {
+pub fn random<T>() -> T where Standard: Distribution<T> {
     thread_rng().gen()
 }
 

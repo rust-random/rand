@@ -198,8 +198,8 @@ cryptographic generator, used by `StdRng` and `thread_rng()`.
 ### Helper functions/traits
 
 The `Rand` trait has been deprecated. Instead, users are encouraged to use
-`Uniform` which is a real distribution and supports the same sampling as `Rand`.
-`Rng::gen()` now uses `Uniform` and should work exactly as before.
+`Standard` which is a real distribution and supports the same sampling as
+ `Rand`.`Rng::gen()` now uses `Standard` and should work exactly as before.
 
 The `random()` function has been removed; users may simply use
 `thread_rng().gen()` instead or may choose to cache
@@ -221,18 +221,18 @@ removed in a future release.
 `Distribution::sample` (as well as several other functions) can now be called
 directly on type-erased (unsized) RNGs.
 
-`RandSample` has been removed (see `Rand` deprecation and new `Uniform`
+`RandSample` has been removed (see `Rand` deprecation and new `Standard`
 distribution).
 
 The `Open01` and `Closed01` wrappers have been removed. `Rng::gen()` (via
-`Uniform`) now yields samples from `(0, 1)` for floats; i.e. the same as the old
-`Open01`. This is considered sufficient for most uses.
+`Standard`) now yields samples from `(0, 1)` for floats; i.e. the same as the
+old `Open01`. This is considered sufficient for most uses.
 
 #### Uniform distributions
 
 Two new distributions are available:
 
--   `Uniform` produces uniformly-distributed samples for many different types,
+-   `Standard` produces uniformly-distributed samples for many different types,
     and acts as a replacement for `Rand`
 -   `Alphanumeric` samples `char`s from the ranges `a-z A-Z 0-9`
 

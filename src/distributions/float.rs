@@ -12,7 +12,7 @@
 
 use core::mem;
 use Rng;
-use distributions::{Distribution, Uniform};
+use distributions::{Distribution, Standard};
 
 pub(crate) trait IntoFloat {
     type F;
@@ -42,7 +42,7 @@ macro_rules! float_impls {
             }
         }
 
-        impl Distribution<$ty> for Uniform {
+        impl Distribution<$ty> for Standard {
             /// Generate a floating point number in the open interval `(0, 1)`
             /// (not including either endpoint) with a uniform distribution.
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {

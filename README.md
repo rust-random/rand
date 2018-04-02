@@ -84,7 +84,8 @@ The `rand` crate provides:
 -   pseudo-random number generators: `StdRng`, `SmallRng`, `prng` module
 -   convenient, auto-seeded crypto-grade thread-local generator: `thread_rng`
 -   `distributions` producing many different types of random values:
-    -   `Uniform`-ly distributed integers and floats of many types
+    -   a `Standard` distribution for integers, floats,and derived types
+        including tuples, arrays and `Option`
     -   unbiased sampling from specified `Range`s
     -   sampling from exponential/normal/gamma distributions
     -   sampling from binomial/poisson distributions

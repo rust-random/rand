@@ -80,16 +80,16 @@ You may also find the [Update Guide](UPDATING.md) useful.
 ### Distributions
 - New `Distribution` trait. (#256)
 - Deprecate `Rand`, `Sample` and `IndependentSample` traits. (#256)
-- Add a `Uniform` distribution (replaces most `Rand` implementations). (#256)
+- Add a `Standard` distribution (replaces most `Rand` implementations). (#256)
 - Add `Binomial` and `Poisson` distributions. (#96)
 - Add `Alphanumeric` distribution. (#279)
-- Remove `Open01` and `Closed01` distributions, use `Uniform` instead (open distribution). (#274)
+- Remove `Open01` and `Closed01` distributions, use `Standard` instead (open distribution). (#274)
 - Rework `Range` type, making it possible to implement it for user types. (#274)
 - Add `Range::new_inclusive` for inclusive ranges. (#274)
 - Add `Range::sample_single` to allow for optimized implementations. (#274)
 - Use widening multiply method for much faster integer range reduction. (#274)
-- `Uniform` distributions for `bool` uses `Range`. (#274)
-- `Uniform` distributions for `bool` uses sign test. (#274)
+- `Standard` distributions for `bool` uses `Range`. (#274)
+- `Standard` distributions for `bool` uses sign test. (#274)
 
 
 ## [0.4.2] - 2018-01-06
