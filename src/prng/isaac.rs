@@ -84,7 +84,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// [3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*](
 ///      https://eprint.iacr.org/2006/438)
 ///
-/// [`Hc128Rng`]: prng/hc128/struct.Hc128Rng.html
+/// [`Hc128Rng`]: hc128/struct.Hc128Rng.html
 #[cfg_attr(feature="serde-1", derive(Serialize,Deserialize))]
 pub struct IsaacRng {
     #[cfg_attr(feature="serde-1",serde(with="super::isaac_serde::rand_size_serde"))]
