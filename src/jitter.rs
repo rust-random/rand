@@ -50,7 +50,7 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 /// This implementation is based on
 /// [Jitterentropy](http://www.chronox.de/jent.html) version 2.1.0.
 ///
-/// [`OsRng`]: os/struct.OsRng.html
+/// [`OsRng`]: ../os/struct.OsRng.html
 pub struct JitterRng {
     data: u64, // Actual random number
     // Number of rounds to run the entropy collector per 64 bits
@@ -496,7 +496,7 @@ impl JitterRng {
     /// to collect 64 bits of entropy. Otherwise a [`TimerError`] with the cause
     /// of the failure will be returned.
     ///
-    /// [`TimerError`]: jitter/enum.TimerError.html
+    /// [`TimerError`]: enum.TimerError.html
     #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
     pub fn test_timer(&mut self) -> Result<u8, TimerError> {
         debug!("JitterRng: testing timer ...");

@@ -93,7 +93,7 @@ thread_local!(
 /// [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
 /// [`StdRng`]: struct.StdRng.html
 /// [`EntropyRng`]: struct.EntropyRng.html
-/// [HC-128]: struct.Hc128Rng.html
+/// [HC-128]: prng/hc128/struct.Hc128Rng.html
 pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
 }

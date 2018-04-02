@@ -169,11 +169,11 @@
 //! [`SmallRng`]: struct.SmallRng.html
 //! [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
 //! [`prng`]: prng/index.html
-//! [`IsaacRng::new_from_u64`]: struct.IsaacRng.html#method.new_from_u64
+//! [`IsaacRng::new_from_u64`]: prng/isaac/struct.IsaacRng.html#method.new_from_u64
 //! [`Hc128Rng`]: prng/hc128/struct.Hc128Rng.html
 //! [`ChaChaRng`]: prng/chacha/struct.ChaChaRng.html
-//! [`IsaacRng`]: prng/struct.IsaacRng.html
-//! [`Isaac64Rng`]: prng/struct.Isaac64Rng.html
+//! [`IsaacRng`]: prng/isaac/struct.IsaacRng.html
+//! [`Isaac64Rng`]: prng/isaac64/struct.Isaac64Rng.html
 //! [`seq`]: seq/index.html
 //! [`distributions`]: distributions/index.html
 //! [`Uniform`]: distributions/struct.Uniform.html
