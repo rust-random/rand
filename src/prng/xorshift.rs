@@ -25,7 +25,7 @@ use rand_core::{RngCore, SeedableRng, Error, impls, le};
 /// RNGs"](https://www.jstatsoft.org/v08/i14/paper). *Journal of
 /// Statistical Software*. Vol. 8 (Issue 14).
 #[derive(Clone)]
-#[cfg_attr(feature="serde-1", derive(Serialize,Deserialize))]
+#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
 pub struct XorShiftRng {
     x: w<u32>,
     y: w<u32>,
@@ -195,7 +195,7 @@ mod tests {
         }
     }
 
-    #[cfg(all(feature="serde-1", feature="std"))]
+    #[cfg(all(feature="serde1", feature="std"))]
     #[test]
     fn test_xorshift_serde() {
         use bincode;

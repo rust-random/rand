@@ -27,7 +27,7 @@ deprecation of `Rand`.
 Several new Cargo feature flags have been added:
 
 -   `alloc`, used without `std`, allows use of `Box` and `Vec`
--   `serde-1` adds serialisation support to some PRNGs
+-   `serde1` adds serialization support to some PRNGs
 -   `log` adds logging in a few places (primarily to `OsRng` and `JitterRng`)
 
 ### `Rng` and friends (core traits)

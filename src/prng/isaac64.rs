@@ -77,7 +77,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// [`IsaacRng`]: ../isaac/struct.IsaacRng.html
 /// [`Hc128Rng`]: ../hc128/struct.Hc128Rng.html
 #[derive(Clone, Debug)]
-#[cfg_attr(feature="serde-1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct Isaac64Rng(BlockRng64<Isaac64Core>);
 
 impl RngCore for Isaac64Rng {
@@ -132,9 +132,9 @@ impl Isaac64Rng {
 
 /// The core of `Isaac64Rng`, used with `BlockRng`.
 #[derive(Clone)]
-#[cfg_attr(feature="serde-1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct Isaac64Core {
-    #[cfg_attr(feature="serde-1",serde(with="super::isaac_array::isaac_array_serde"))]
+    #[cfg_attr(feature="serde1",serde(with="super::isaac_array::isaac_array_serde"))]
     mem: [w64; RAND_SIZE],
     a: w64,
     b: w64,
@@ -448,7 +448,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(all(feature="serde-1", feature="std"))]
+    #[cfg(all(feature="serde1", feature="std"))]
     fn test_isaac64_serde() {
         use bincode;
         use std::io::{BufWriter, BufReader};
