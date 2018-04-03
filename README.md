@@ -103,7 +103,7 @@ optional features are available:
 -   `i128_support` enables support for generating `u128` and `i128` values
 -   `log` enables some logging via the `log` crate
 -   `nightly` enables all unstable features (`i128_support`)
--   `serde-1` enables serialisation for some types, via Serde version 1
+-   `serde1` enables serialization for some types, via Serde version 1
 -   `stdweb` enables support for `OsRng` on WASM via stdweb.
 -   `std` enabled by default; by setting "default-features = false" `no_std`
     mode is activated; this removes features depending on `std` functionality:
@@ -132,7 +132,7 @@ cargo test --tests --no-default-features
 cargo test --tests --no-default-features --features alloc
 
 # Test log and serde support
-cargo test --features serde-1,log
+cargo test --features serde1,log
 
 # Test 128-bit support (requires nightly)
 cargo test --all --features nightly

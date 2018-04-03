@@ -22,7 +22,7 @@ appveyor = { repository = "alexcrichton/rand" }
 # default = ["std"]
 std = ["alloc"]    # use std library; should be default but for above bug
 alloc = []  # enables Vec and Box support without std
-serde-1 = ["serde", "serde_derive"] # enables serde for BlockRng wrapper
+serde1 = ["serde", "serde_derive"] # enables serde for BlockRng wrapper
 
 [dependencies]
 serde = { version = "1", optional = true }
