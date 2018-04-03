@@ -8,9 +8,60 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! ISAAC serde helper functions.
+//! ISAAC helper functions for 256-element arrays.
 
-pub(super) mod rand_size_serde {
+// Terrible workaround because arrays with more than 32 elements do not
+// implement `AsRef`, `Default`, `Serialize`, `Deserialize`, or any other
+// traits for that matter.
+
+#[cfg(feature="serde-1")] use serde::{Serialize, Deserialize};
+
+const RAND_SIZE_LEN: usize = 8;
+const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
+
+
+#[derive(Copy, Clone)]
+#[allow(missing_debug_implementations)]
+#[cfg_attr(feature="serde-1", derive(Serialize, Deserialize))]
+pub struct IsaacArray<T> where T: Default + Copy {
+    #[cfg_attr(feature="serde-1",serde(with="isaac_array_serde"))]
+    #[cfg_attr(feature="serde-1", serde(bound(
+        serialize = "T: Serialize",
+        deserialize = "T: Deserialize<'de>")))]
+    inner: [T; RAND_SIZE]
+}
+
+impl<T> ::core::convert::AsRef<[T]> for IsaacArray<T> where T: Default + Copy {
+    #[inline(always)]
+    fn as_ref(&self) -> &[T] {
+        &self.inner[..]
+    }
+}
+
+impl<T> ::core::ops::Deref for IsaacArray<T> where T: Default + Copy {
+    type Target = [T; RAND_SIZE];
+    #[inline(always)]
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<T> ::core::ops::DerefMut for IsaacArray<T> where T: Default + Copy {
+    #[inline(always)]
+    fn deref_mut(&mut self) -> &mut [T; RAND_SIZE] {
+        &mut self.inner
+    }
+}
+
+impl<T> ::core::default::Default for IsaacArray<T> where T: Default + Copy {
+    fn default() -> IsaacArray<T> {
+        IsaacArray { inner: [T::default(); RAND_SIZE] }
+    }
+}
+
+
+#[cfg(feature="serde-1")]
+pub(super) mod isaac_array_serde {
     const RAND_SIZE_LEN: usize = 8;
     const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 
@@ -20,10 +71,10 @@ pub(super) mod rand_size_serde {
 
     use core::fmt;
 
-    pub fn serialize<T, S>(arr: &[T;RAND_SIZE], ser: S) -> Result<S::Ok, S::Error> 
+    pub fn serialize<T, S>(arr: &[T;RAND_SIZE], ser: S) -> Result<S::Ok, S::Error>
     where
         T: Serialize,
-        S: Serializer 
+        S: Serializer
     {
         use serde::ser::SerializeTuple;
 
