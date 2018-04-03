@@ -23,22 +23,22 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 #[derive(Copy, Clone)]
 #[allow(missing_debug_implementations)]
 #[cfg_attr(feature="serde-1", derive(Serialize, Deserialize))]
-pub struct IsaacArray<T> where T: Default + Copy {
+pub struct IsaacArray<T> {
     #[cfg_attr(feature="serde-1",serde(with="isaac_array_serde"))]
     #[cfg_attr(feature="serde-1", serde(bound(
         serialize = "T: Serialize",
-        deserialize = "T: Deserialize<'de>")))]
+        deserialize = "T: Deserialize<'de> + Copy + Default")))]
     inner: [T; RAND_SIZE]
 }
 
-impl<T> ::core::convert::AsRef<[T]> for IsaacArray<T> where T: Default + Copy {
+impl<T> ::core::convert::AsRef<[T]> for IsaacArray<T> {
     #[inline(always)]
     fn as_ref(&self) -> &[T] {
         &self.inner[..]
     }
 }
 
-impl<T> ::core::ops::Deref for IsaacArray<T> where T: Default + Copy {
+impl<T> ::core::ops::Deref for IsaacArray<T> {
     type Target = [T; RAND_SIZE];
     #[inline(always)]
     fn deref(&self) -> &Self::Target {
@@ -46,14 +46,14 @@ impl<T> ::core::ops::Deref for IsaacArray<T> where T: Default + Copy {
     }
 }
 
-impl<T> ::core::ops::DerefMut for IsaacArray<T> where T: Default + Copy {
+impl<T> ::core::ops::DerefMut for IsaacArray<T> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut [T; RAND_SIZE] {
         &mut self.inner
     }
 }
 
-impl<T> ::core::default::Default for IsaacArray<T> where T: Default + Copy {
+impl<T> ::core::default::Default for IsaacArray<T> where T: Copy + Default {
     fn default() -> IsaacArray<T> {
         IsaacArray { inner: [T::default(); RAND_SIZE] }
     }
