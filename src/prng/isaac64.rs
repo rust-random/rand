@@ -75,7 +75,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///      http://burtleburtle.net/bob/rand/isaac.html)
 ///
 /// [`IsaacRng`]: ../isaac/struct.IsaacRng.html
-/// [`Hc128Rng`]: hc128/struct.Hc128Rng.html
+/// [`Hc128Rng`]: ../hc128/struct.Hc128Rng.html
 #[derive(Clone, Debug)]
 #[cfg_attr(feature="serde-1", derive(Serialize, Deserialize))]
 pub struct Isaac64Rng(BlockRng64<Isaac64Core>);
@@ -143,6 +143,7 @@ impl Isaac64Rng {
     }
 }
 
+/// The core of `Isaac64Rng`, used with `BlockRng`.
 #[derive(Clone)]
 #[cfg_attr(feature="serde-1", derive(Serialize, Deserialize))]
 pub struct Isaac64Core {
