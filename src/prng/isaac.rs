@@ -14,6 +14,7 @@ use core::{fmt, slice};
 use core::num::Wrapping as w;
 use rand_core::{BlockRngCore, RngCore, SeedableRng, Error, le};
 use rand_core::impls::BlockRng;
+use prng::isaac_array::IsaacArray;
 
 #[allow(non_camel_case_types)]
 type w32 = w<u32>;
@@ -86,6 +87,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///
 /// [`Hc128Rng`]: hc128/struct.Hc128Rng.html
 #[derive(Clone, Debug)]
+#[cfg_attr(feature="serde-1", derive(Serialize, Deserialize))]
 pub struct IsaacRng(BlockRng<IsaacCore>);
 
 impl RngCore for IsaacRng {
@@ -145,14 +147,16 @@ impl IsaacRng {
             // `seed == 0` this method produces exactly the same state as the
             // reference implementation when used unseeded.
             core: IsaacCore::init(key, 1),
-            results: IsaacArray([0; RAND_SIZE]),
+            results: IsaacArray::default(),
             index: RAND_SIZE, // generate on first use
         })
     }
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature="serde-1", derive(Serialize, Deserialize))]
 pub struct IsaacCore {
+    #[cfg_attr(feature="serde-1",serde(with="super::isaac_array::isaac_array_serde"))]
     mem: [w32; RAND_SIZE],
     a: w32,
     b: w32,
@@ -166,37 +170,9 @@ impl fmt::Debug for IsaacCore {
     }
 }
 
-// Terrible workaround because arrays with more than 32 elements do not
-// implement `AsRef` (or any other traits for that matter)
-#[derive(Copy, Clone)]
-#[allow(missing_debug_implementations)]
-pub struct IsaacArray([u32; RAND_SIZE]);
-impl ::core::convert::AsRef<[u32]> for IsaacArray {
-    #[inline(always)]
-    fn as_ref(&self) -> &[u32] {
-        &self.0[..]
-    }
-}
-impl ::core::ops::Deref for IsaacArray {
-    type Target = [u32; RAND_SIZE];
-    #[inline(always)]
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl ::core::ops::DerefMut for IsaacArray {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut [u32; RAND_SIZE] {
-        &mut self.0
-    }
-}
-impl ::core::default::Default for IsaacArray {
-    fn default() -> IsaacArray { IsaacArray([0u32; RAND_SIZE]) }
-}
-
 impl BlockRngCore for IsaacCore {
     type Item = u32;
-    type Results = IsaacArray;
+    type Results = IsaacArray<Self::Item>;
 
     /// Refills the output buffer (`results`)
     /// See also the pseudocode desciption of the algorithm at the top of this
@@ -217,7 +193,7 @@ impl BlockRngCore for IsaacCore {
     ///   from `results` in reverse. We read them in the normal direction, to
     ///   make `fill_bytes` a memcopy. To maintain compatibility we fill in
     ///   reverse.
-    fn generate(&mut self, results: &mut IsaacArray) {
+    fn generate(&mut self, results: &mut IsaacArray<Self::Item>) {
         self.c += w(1);
         // abbreviations
         let mut a = self.a;
@@ -493,17 +469,17 @@ mod test {
         let mut read = BufReader::new(&buf[..]);
         let mut deserialized: IsaacRng = bincode::deserialize_from(&mut read).expect("Could not deserialize");
 
-        assert_eq!(rng.index, deserialized.index);
+        assert_eq!(rng.0.index, deserialized.0.index);
         /* Can't assert directly because of the array size */
-        for (orig,deser) in rng.rsl.iter().zip(deserialized.rsl.iter()) {
+        for (orig,deser) in rng.0.results.iter().zip(deserialized.0.results.iter()) {
             assert_eq!(orig, deser);
         }
-        for (orig,deser) in rng.mem.iter().zip(deserialized.mem.iter()) {
+        for (orig,deser) in rng.0.core.mem.iter().zip(deserialized.0.core.mem.iter()) {
             assert_eq!(orig, deser);
         }
-        assert_eq!(rng.a, deserialized.a);
-        assert_eq!(rng.b, deserialized.b);
-        assert_eq!(rng.c, deserialized.c);
+        assert_eq!(rng.0.core.a, deserialized.0.core.a);
+        assert_eq!(rng.0.core.b, deserialized.0.core.b);
+        assert_eq!(rng.0.core.c, deserialized.0.core.c);
 
         for _ in 0..16 {
             assert_eq!(rng.next_u64(), deserialized.next_u64());
