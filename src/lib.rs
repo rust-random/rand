@@ -76,7 +76,7 @@
 //! use [`SeedableRng::from_seed`] or a constructor specific to the generator
 //! (e.g. [`IsaacRng::new_from_u64`]).
 //! 
-//! # Applying / converting random data
+//! ## Applying / converting random data
 //! 
 //! The [`RngCore`] trait allows generators to implement a common interface for
 //! retrieving random data, but how should you use this? Typically users should
@@ -94,56 +94,43 @@
 //! 
 //! The [`seq`] module has a few tools applicable to sliceable or iterable data.
 //! 
-//! # Cryptographic security
+//! ## Cryptographic security
+//! 
+//! First, lets recap some terminology:
+//!
+//! - **PRNG:** *Pseudo-Random-Number-Generator* is another name for an
+//!   *algorithmic generator*
+//! - **CSPRNG:** a *Cryptographically Secure* PRNG
 //!
 //! Security analysis requires a threat model and expert review; we can provide
-//! neither, but can provide some guidance. We assume that the goal is to
-//! obtain secret random data and that some source of secrets ("entropy") is
-//! available; that is, [`EntropyRng`] is functional.
+//! neither, but we can provide a few hints. We assume that the goal is to
+//! produce secret apparently-random data. Therefore, we need:
 //! 
-//! Potential threat: is the entropy source secure? The primary entropy source
-//! is [`OsRng`] which is simply a wrapper around the platform's native "secure
-//! entropy source"; usually this is available (outside of embedded platforms)
-//! and usually you can trust this (some caveats may apply; see [`OsRng`] doc).
-//! The fallback source used by [`EntropyRng`] is [`JitterRng`] which runs extensive
-//! tests on the quality of the CPU timer and is conservative in its estimates
-//! of the entropy harvested from each time sample; this makes it slow but very
-//! strong. Using [`EntropyRng`] directly should therefore be secure; the main
-//! reason not to is performance, which is why many applications use local
-//! algorithmic generators.
-//! 
-//! Potential threat: are algorithmic generators predictable? Certainly some
-//! are; algorithmic generators fall broadly into two categories: those using a
-//! small amount of state (e.g. one to four 32- or 64-bit words) designed for
-//! non-security applications and those designed to be secure, typically with
-//! much larger state space and complex initialisation. The former should not be
-//! trusted to be secure, the latter may or may not have known weaknesses or
-//! may even have been proven secure under a specified adversarial model. We
-//! provide some notes on the security of the cryptographic algorithmic
-//! generators provided by this crate, [`Hc128Rng`] and [`ChaChaRng`]. Note that
-//! previously [`IsaacRng`] and [`Isaac64Rng`] were used as "reasonably strong
-//! generators"; these have no known weaknesses but also have no proofs of
-//! security, thus are not recommended for cryptographic uses.
-//! 
-//! Potential threat: could the internal state of a cryptographic generator be
-//! leaked? This falls under the topic of "side channel attacks", and multiple
-//! variants are possible: the state of the generators being accidentally
-//! printed in log files or some other application output, the process's memory
-//! being copied somehow, the process being forked and both sub-processes
-//! outputting the same random sequence but such that one of those can be read;
-//! likely some other side-channel attacks are possible in some circumstances.
-//! It is typically impossible to prove immunity to all side-channel attacks,
-//! however some mitigation of known threats is usually possible, for example
-//! all generators implemented in this crate have a custom `Debug`
-//! implementation omitting all internal state, and [`ReseedingRng`] allows
-//! periodic reseeding such that a long-running process with leaked generator
-//! state should eventually recover to an unknown state. In the future we plan
-//! to add further mitigations; see issue #314.
-//! 
-//! We provide the [`CryptoRng`] marker trait as an indication of which random
-//! generators/sources may be used for cryptographic applications; this should
-//! be considered advisory only does not imply any protection against
-//! side-channel attacks.
+//! - A good source of entropy. A known algorithm given known input data is
+//!   trivial to predict, and likewise if there's a non-negligable chance that
+//!   the input to a PRNG is guessable then there's a chance its output is too.
+//!   We recommend seeding CSPRNGs with [`EntropyRng`] or [`OsRng`] which
+//!   provide fresh "random" values from an external source.
+//!   One can also seed from another CSPRNG, e.g. `thread_rng`, which is faster,
+//!   but adds another component which must be trusted.
+//! - A strong algorithmic generator. It is possible to use a good entropy
+//!   source like `OsRng` directly, and in some cases this is the best option,
+//!   but for better performance (or if requiring reproducible values generated
+//!   from a fixed seed) it is common to use a local CSPRNG. The basic security
+//!   that CSPRNGs must provide is making it infeasible to predict future output
+//!   given a sample of past output. A further security that *some* CSPRNGs
+//!   provide is *forward secrecy*; this ensures that in the event that the
+//!   algorithm's state is revealed, it is infeasible to reconstruct past
+//!   output. See the [`CryptoRng`] trait and notes on individual algorithms.
+//! - To be careful not to leak secrets like keys and CSPRNG's internal state
+//!   and robust against "side channel attacks". This goes well beyond the scope
+//!   of random number generation, but this crate takes some precautions:
+//!   - to avoid printing CSPRNG state in log files, implementations have a
+//!     custom `Debug` implementation which omits all internal state
+//!   - `thread_rng` uses [`ReseedingRng`] to periodically refresh its state
+//!   - in the future we plan to add some protection against fork attacks
+//!     (where the process is forked and each clone generates the same "random"
+//!     numbers); this is not yet implemented (see issues #314, #370)
 //! 
 //! # Examples
 //!

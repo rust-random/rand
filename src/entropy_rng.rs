@@ -14,8 +14,8 @@ use rand_core::{RngCore, CryptoRng, Error, impls};
 use os::OsRng;
 use jitter::JitterRng;
 
-/// A generator provided specifically for securely seeding algorithmic
-/// generators (PRNGs).
+/// An interface returning random data from external source(s), provided
+/// specifically for securely seeding algorithmic generators (PRNGs).
 /// 
 /// Where possible, `EntropyRng` retrieves random data from the operating
 /// system's interface for random numbers ([`OsRng`]); if that fails it will
@@ -27,8 +27,9 @@ use jitter::JitterRng;
 /// 
 /// This is either a little slow ([`OsRng`] requires a system call) or extremely
 /// slow ([`JitterRng`] must use significant CPU time to generate sufficient
-/// jitter). It is recommended to only use `EntropyRng` to seed a PRNG (as in
-/// [`thread_rng`]) or to generate a small key.
+/// jitter); for better performance it is common to seed a local PRNG from
+/// external entropy then primarily use the local PRNG ([`thread_rng`] is
+/// provided as a convenient, local, automatically-seeded CSPRNG).
 ///
 /// [`OsRng`]: os/struct.OsRng.html
 /// [`JitterRng`]: jitter/struct.JitterRng.html
