@@ -191,9 +191,9 @@ pub struct BlockRng<R: BlockRngCore + ?Sized> {
     #[cfg_attr(feature="serde-1", serde(bound(
         serialize = "R::Results: Serialize",
         deserialize = "R::Results: Deserialize<'de>")))]
-    pub results: R::Results,
-    pub index: usize,
-    pub core: R,
+    results: R::Results,
+    index: usize,
+    core: R,
 }
 
 // Custom Debug implementation that does not expose the contents of `results`.
@@ -204,6 +204,35 @@ impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng<R> {
            .field("result_len", &self.results.as_ref().len())
            .field("index", &self.index)
            .finish()
+    }
+}
+
+impl<R: BlockRngCore> BlockRng<R> {
+    /// Create a new `BlockRng` from an existing RNG implementing
+    /// `BlockRngCore`. Results will be generated on first use.
+    pub fn new(core: R) -> BlockRng<R>{
+        let results_empty = R::Results::default();
+        BlockRng {
+            core,
+            index: results_empty.as_ref().len(),
+            results: results_empty,
+        }
+    }
+
+    /// Return a reference the wrapped `BlockRngCore`.
+    pub fn inner(&self) -> &R {
+        &self.core
+    }
+
+    /// Return a mutable reference the wrapped `BlockRngCore`.
+    pub fn inner_mut(&mut self) -> &mut R {
+        &mut self.core
+    }
+
+    // Reset the number of available results.
+    // This will force a new set of results to be generated on next use.
+    pub fn reset(&mut self) {
+        self.index = self.results.as_ref().len();
     }
 }
 
@@ -323,21 +352,11 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
     type Seed = R::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        let results_empty = R::Results::default();
-        Self {
-            core: R::from_seed(seed),
-            index: results_empty.as_ref().len(), // generate on first use
-            results: results_empty,
-        }
+        Self::new(R::from_seed(seed))
     }
 
     fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
-        let results_empty = R::Results::default();
-        Ok(Self {
-            core: R::from_rng(rng)?,
-            index: results_empty.as_ref().len(), // generate on first use
-            results: results_empty,
-        })
+        Ok(Self::new(R::from_rng(rng)?))
     }
 }
 
@@ -358,10 +377,10 @@ pub struct BlockRng64<R: BlockRngCore + ?Sized> {
     #[cfg_attr(feature="serde-1", serde(bound(
         serialize = "R::Results: Serialize",
         deserialize = "R::Results: Deserialize<'de>")))]
-    pub results: R::Results,
-    pub index: usize,
-    pub half_used: bool, // true if only half of the previous result is used
-    pub core: R,
+    results: R::Results,
+    index: usize,
+    half_used: bool, // true if only half of the previous result is used
+    core: R,
 }
 
 // Custom Debug implementation that does not expose the contents of `results`.
@@ -373,6 +392,31 @@ impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng64<R> {
            .field("index", &self.index)
            .field("half_used", &self.half_used)
            .finish()
+    }
+}
+
+impl<R: BlockRngCore> BlockRng64<R> {
+    /// Create a new `BlockRng` from an existing RNG implementing
+    /// `BlockRngCore`. Results will be generated on first use.
+    pub fn new(core: R) -> BlockRng64<R>{
+        let results_empty = R::Results::default();
+        BlockRng64 {
+            core,
+            index: results_empty.as_ref().len(),
+            half_used: false,
+            results: results_empty,
+        }
+    }
+
+    /// Return a mutable reference the wrapped `BlockRngCore`.
+    pub fn inner(&mut self) -> &mut R {
+        &mut self.core
+    }
+
+    // Reset the number of available results.
+    // This will force a new set of results to be generated on next use.
+    pub fn reset(&mut self) {
+        self.index = self.results.as_ref().len();
     }
 }
 
@@ -424,6 +468,7 @@ where <R as BlockRngCore>::Results: AsRef<[u64]>
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         let mut filled = 0;
+        self.half_used = false;
 
         // Continue filling from the current set of results
         if self.index < self.results.as_ref().len() {
@@ -461,11 +506,11 @@ where <R as BlockRngCore>::Results: AsRef<[u64]>
     #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         let mut read_len = 0;
+        self.half_used = false;
         while read_len < dest.len() {
             if self.index as usize >= self.results.as_ref().len() {
                 self.core.generate(&mut self.results);
                 self.index = 0;
-                self.half_used = false;
             }
 
             let (consumed_u64, filled_u8) =
@@ -486,23 +531,11 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng64<R> {
     type Seed = R::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        let results_empty = R::Results::default();
-        Self {
-            core: R::from_seed(seed),
-            index: results_empty.as_ref().len(), // generate on first use
-            half_used: false,
-            results: results_empty,
-        }
+        Self::new(R::from_seed(seed))
     }
 
     fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
-        let results_empty = R::Results::default();
-        Ok(Self {
-            core: R::from_rng(rng)?,
-            index: results_empty.as_ref().len(), // generate on first use
-            half_used: false,
-            results: results_empty,
-        })
+        Ok(Self::new(R::from_rng(rng)?))
     }
 }
 
