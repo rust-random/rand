@@ -23,7 +23,7 @@ nightly = ["i128_support"] # enables all features requiring nightly rust
 std = ["rand_core/std", "alloc", "libc", "winapi", "cloudabi", "fuchsia-zircon"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 i128_support = [] # enables i128 and u128 support
-serde-1 = ["serde", "serde_derive"] # enables serialisation for PRNGs
+serde1 = ["serde", "serde_derive", "rand_core/serde1"] # enables serialization for PRNGs
 
 [workspace]
 members = ["rand_core"]

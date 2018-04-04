@@ -156,8 +156,8 @@ impl ChaChaRng {
     /// assert_eq!(rng1.next_u32(), rng2.next_u32());
     /// ```
     pub fn set_counter(&mut self, counter_low: u64, counter_high: u64) {
-        self.0.core.set_counter(counter_low, counter_high);
-        self.0.index = STATE_WORDS; // force recomputation on next use
+        self.0.inner_mut().set_counter(counter_low, counter_high);
+        self.0.reset(); // force recomputation on next use
     }
 
     /// Sets the number of rounds to run the ChaCha core algorithm per block to
@@ -179,8 +179,8 @@ impl ChaChaRng {
     /// assert_eq!(rng.next_u32(), 0x2fef003e);
     /// ```
     pub fn set_rounds(&mut self, rounds: usize) {
-        self.0.core.set_rounds(rounds);
-        self.0.index = STATE_WORDS; // force recomputation on next use
+        self.0.inner_mut().set_rounds(rounds);
+        self.0.reset(); // force recomputation on next use
     }
 }
 

@@ -12,8 +12,9 @@
 
 use core::{fmt, slice};
 use core::num::Wrapping as w;
-
-use rand_core::{RngCore, SeedableRng, Error, impls, le};
+use rand_core::{BlockRngCore, RngCore, SeedableRng, Error, le};
+use rand_core::impls::BlockRng64;
+use prng::isaac_array::IsaacArray;
 
 #[allow(non_camel_case_types)]
 type w64 = w<u64>;
@@ -74,40 +75,40 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///      http://burtleburtle.net/bob/rand/isaac.html)
 ///
 /// [`IsaacRng`]: ../isaac/struct.IsaacRng.html
-/// [`Hc128Rng`]: hc128/struct.Hc128Rng.html
-#[cfg_attr(feature="serde-1", derive(Serialize,Deserialize))]
-pub struct Isaac64Rng {
-    #[cfg_attr(feature="serde-1",serde(with="super::isaac_serde::rand_size_serde"))]
-    rsl: [u64; RAND_SIZE],
-    #[cfg_attr(feature="serde-1",serde(with="super::isaac_serde::rand_size_serde"))]
-    mem: [w64; RAND_SIZE],
-    a: w64,
-    b: w64,
-    c: w64,
-    index: u32,
-    half_used: bool, // true if only half of the previous result is used
-}
+/// [`Hc128Rng`]: ../hc128/struct.Hc128Rng.html
+#[derive(Clone, Debug)]
+#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
+pub struct Isaac64Rng(BlockRng64<Isaac64Core>);
 
-// Cannot be derived because [u64; 256] does not implement Clone
-// FIXME: remove once RFC 2000 gets implemented
-impl Clone for Isaac64Rng {
-    fn clone(&self) -> Isaac64Rng {
-        Isaac64Rng {
-            rsl: self.rsl,
-            mem: self.mem,
-            a: self.a,
-            b: self.b,
-            c: self.c,
-            index: self.index,
-            half_used: self.half_used,
-        }
+impl RngCore for Isaac64Rng {
+    #[inline(always)]
+    fn next_u32(&mut self) -> u32 {
+        self.0.next_u32()
+    }
+
+    #[inline(always)]
+    fn next_u64(&mut self) -> u64 {
+        self.0.next_u64()
+    }
+
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.0.fill_bytes(dest)
+    }
+
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.0.try_fill_bytes(dest)
     }
 }
 
-// Custom Debug implementation that does not expose the internal state
-impl fmt::Debug for Isaac64Rng {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Isaac64Rng {{}}")
+impl SeedableRng for Isaac64Rng {
+    type Seed = <Isaac64Core as SeedableRng>::Seed;
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        Isaac64Rng(BlockRng64::<Isaac64Core>::from_seed(seed))
+    }
+
+    fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
+        BlockRng64::<Isaac64Core>::from_rng(rng).map(|rng| Isaac64Rng(rng))
     }
 }
 
@@ -117,26 +118,41 @@ impl Isaac64Rng {
     ///
     /// DEPRECATED. `Isaac64Rng::new_from_u64(0)` will produce identical results.
     #[deprecated(since="0.5.0", note="use the NewRng or SeedableRng trait")]
-    pub fn new_unseeded() -> Isaac64Rng {
+    pub fn new_unseeded() -> Self {
         Self::new_from_u64(0)
     }
 
-    /// Creates an ISAAC-64 random number generator using an u64 as seed.
+    /// Create an ISAAC-64 random number generator using an `u64` as seed.
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.
-    pub fn new_from_u64(seed: u64) -> Isaac64Rng {
-        let mut key = [w(0); RAND_SIZE];
-        key[0] = w(seed);
-        // Initialize with only one pass.
-        // A second pass does not improve the quality here, because all of
-        // the seed was already available in the first round.
-        // Not doing the second pass has the small advantage that if `seed == 0`
-        // this method produces exactly the same state as the reference
-        // implementation when used unseeded.
-        init(key, 1)
+    pub fn new_from_u64(seed: u64) -> Self {
+        Isaac64Rng(BlockRng64::new(Isaac64Core::new_from_u64(seed)))
     }
+}
 
-    /// Refills the output buffer (`self.rsl`)
+/// The core of `Isaac64Rng`, used with `BlockRng`.
+#[derive(Clone)]
+#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
+pub struct Isaac64Core {
+    #[cfg_attr(feature="serde1",serde(with="super::isaac_array::isaac_array_serde"))]
+    mem: [w64; RAND_SIZE],
+    a: w64,
+    b: w64,
+    c: w64,
+}
+
+// Custom Debug implementation that does not expose the internal state
+impl fmt::Debug for Isaac64Core {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Isaac64Core {{}}")
+    }
+}
+
+impl BlockRngCore for Isaac64Core {
+    type Item = u64;
+    type Results = IsaacArray<Self::Item>;
+
+    /// Refills the output buffer (`results`)
     /// See also the pseudocode desciption of the algorithm at the top of this
     /// file.
     ///
@@ -151,10 +167,11 @@ impl Isaac64Rng {
     /// - We maintain one index `i` and add `m` or `m2` as base (m2 for the
     ///   `s[i+128 mod 256]`), relying on the optimizer to turn it into pointer
     ///   arithmetic.
-    /// - We fill `rsl` backwards. The reference implementation reads values
-    ///   from `rsl` in reverse. We read them in the normal direction, to make
-    ///   `fill_bytes` a memcopy. To maintain compatibility we fill in reverse.
-    fn isaac64(&mut self) {
+    /// - We fill `results` backwards. The reference implementation reads values
+    ///   from `results` in reverse. We read them in the normal direction, to
+    ///   make `fill_bytes` a memcopy. To maintain compatibility we fill in
+    ///   reverse.
+    fn generate(&mut self, results: &mut IsaacArray<Self::Item>) {
         self.c += w(1);
         // abbreviations
         let mut a = self.a;
@@ -168,171 +185,120 @@ impl Isaac64Rng {
         }
 
         #[inline]
-        fn rngstep(ctx: &mut Isaac64Rng,
+        fn rngstep(mem: &mut [w64; RAND_SIZE],
+                   results: &mut [u64; RAND_SIZE],
                    mix: w64,
                    a: &mut w64,
                    b: &mut w64,
                    base: usize,
                    m: usize,
                    m2: usize) {
-            let x = ctx.mem[base + m];
-            *a = mix + ctx.mem[base + m2];
-            let y = *a + *b + ind(&ctx.mem, x, 3);
-            ctx.mem[base + m] = y;
-            *b = x + ind(&ctx.mem, y, 3 + RAND_SIZE_LEN);
-            ctx.rsl[RAND_SIZE - 1 - base - m] = (*b).0;
+            let x = mem[base + m];
+            *a = mix + mem[base + m2];
+            let y = *a + *b + ind(&mem, x, 3);
+            mem[base + m] = y;
+            *b = x + ind(&mem, y, 3 + RAND_SIZE_LEN);
+            results[RAND_SIZE - 1 - base - m] = (*b).0;
         }
 
         let mut m = 0;
         let mut m2 = MIDPOINT;
         for i in (0..MIDPOINT/4).map(|i| i * 4) {
-            rngstep(self, !(a ^ (a << 21)), &mut a, &mut b, i + 0, m, m2);
-            rngstep(self,   a ^ (a >> 5 ),  &mut a, &mut b, i + 1, m, m2);
-            rngstep(self,   a ^ (a << 12),  &mut a, &mut b, i + 2, m, m2);
-            rngstep(self,   a ^ (a >> 33),  &mut a, &mut b, i + 3, m, m2);
+            rngstep(&mut self.mem, results, !(a ^ (a << 21)), &mut a, &mut b, i + 0, m, m2);
+            rngstep(&mut self.mem, results,   a ^ (a >> 5 ),  &mut a, &mut b, i + 1, m, m2);
+            rngstep(&mut self.mem, results,   a ^ (a << 12),  &mut a, &mut b, i + 2, m, m2);
+            rngstep(&mut self.mem, results,   a ^ (a >> 33),  &mut a, &mut b, i + 3, m, m2);
         }
 
         m = MIDPOINT;
         m2 = 0;
         for i in (0..MIDPOINT/4).map(|i| i * 4) {
-            rngstep(self, !(a ^ (a << 21)), &mut a, &mut b, i + 0, m, m2);
-            rngstep(self,   a ^ (a >> 5 ),  &mut a, &mut b, i + 1, m, m2);
-            rngstep(self,   a ^ (a << 12),  &mut a, &mut b, i + 2, m, m2);
-            rngstep(self,   a ^ (a >> 33),  &mut a, &mut b, i + 3, m, m2);
+            rngstep(&mut self.mem, results, !(a ^ (a << 21)), &mut a, &mut b, i + 0, m, m2);
+            rngstep(&mut self.mem, results,   a ^ (a >> 5 ),  &mut a, &mut b, i + 1, m, m2);
+            rngstep(&mut self.mem, results,   a ^ (a << 12),  &mut a, &mut b, i + 2, m, m2);
+            rngstep(&mut self.mem, results,   a ^ (a >> 33),  &mut a, &mut b, i + 3, m, m2);
         }
 
         self.a = a;
         self.b = b;
-        self.index = 0;
-        self.half_used = false;
     }
 }
 
-impl RngCore for Isaac64Rng {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        // Using a local variable for `index`, and checking the size avoids a
-        // bounds check later on.
-        let mut index = self.index as usize * 2 - self.half_used as usize;
-        if index >= RAND_SIZE * 2 {
-            self.isaac64();
-            index = 0;
+impl Isaac64Core {
+    /// Create a new ISAAC-64 random number generator.
+    fn init(mut mem: [w64; RAND_SIZE], rounds: u32) -> Self {
+        fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
+               e: &mut w64, f: &mut w64, g: &mut w64, h: &mut w64) {
+            *a -= *e; *f ^= *h >> 9;  *h += *a;
+            *b -= *f; *g ^= *a << 9;  *a += *b;
+            *c -= *g; *h ^= *b >> 23; *b += *c;
+            *d -= *h; *a ^= *c << 15; *c += *d;
+            *e -= *a; *b ^= *d >> 14; *d += *e;
+            *f -= *b; *c ^= *e << 20; *e += *f;
+            *g -= *c; *d ^= *f >> 17; *f += *g;
+            *h -= *d; *e ^= *g << 14; *g += *h;
         }
 
-        self.half_used = !self.half_used;
-        self.index += self.half_used as u32;
+        // These numbers are the result of initializing a...h with the
+        // fractional part of the golden ratio in binary (0x9e3779b97f4a7c13)
+        // and applying mix() 4 times.
+        let mut a = w(0x647c4677a2884b7c);
+        let mut b = w(0xb9f8b322c73ac862);
+        let mut c = w(0x8c0ea5053d4712a0);
+        let mut d = w(0xb29b2e824a595524);
+        let mut e = w(0x82f053db8355e0ce);
+        let mut f = w(0x48fe4a0fa5a09315);
+        let mut g = w(0xae985bf2cbfc89ed);
+        let mut h = w(0x98f5704f6c44c0ab);
 
-        // Index as if this is a u32 slice.
-        let rsl = unsafe { &*(&mut self.rsl as *mut [u64; RAND_SIZE]
-                                            as *mut [u32; RAND_SIZE * 2]) };
-
-        if cfg!(target_endian = "little") {
-            rsl[index]
-        } else {
-            rsl[index ^ 1]
-        }
-    }
-
-    #[inline]
-    fn next_u64(&mut self) -> u64 {
-        let mut index = self.index as usize;
-        if index >= RAND_SIZE {
-            self.isaac64();
-            index = 0;
-        }
-
-        let value = self.rsl[index];
-        self.index += 1;
-        self.half_used = false;
-        value
-    }
-
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        let mut read_len = 0;
-        while read_len < dest.len() {
-            if self.index as usize >= RAND_SIZE {
-                self.isaac64();
+        // Normally this should do two passes, to make all of the seed effect
+        // all of `mem`
+        for _ in 0..rounds {
+            for i in (0..RAND_SIZE/8).map(|i| i * 8) {
+                a += mem[i  ]; b += mem[i+1];
+                c += mem[i+2]; d += mem[i+3];
+                e += mem[i+4]; f += mem[i+5];
+                g += mem[i+6]; h += mem[i+7];
+                mix(&mut a, &mut b, &mut c, &mut d,
+                    &mut e, &mut f, &mut g, &mut h);
+                mem[i  ] = a; mem[i+1] = b;
+                mem[i+2] = c; mem[i+3] = d;
+                mem[i+4] = e; mem[i+5] = f;
+                mem[i+6] = g; mem[i+7] = h;
             }
-
-            let (consumed_u64, filled_u8) =
-                impls::fill_via_u64_chunks(&self.rsl[self.index as usize..],
-                                           &mut dest[read_len..]);
-
-            self.index += consumed_u64 as u32;
-            read_len += filled_u8;
         }
+
+        Self { mem, a: w(0), b: w(0), c: w(0) }
     }
 
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
-    }
-}
-
-/// Creates a new ISAAC-64 random number generator.
-fn init(mut mem: [w64; RAND_SIZE], rounds: u32) -> Isaac64Rng {
-    // These numbers are the result of initializing a...h with the
-    // fractional part of the golden ratio in binary (0x9e3779b97f4a7c13)
-    // and applying mix() 4 times.
-    let mut a = w(0x647c4677a2884b7c);
-    let mut b = w(0xb9f8b322c73ac862);
-    let mut c = w(0x8c0ea5053d4712a0);
-    let mut d = w(0xb29b2e824a595524);
-    let mut e = w(0x82f053db8355e0ce);
-    let mut f = w(0x48fe4a0fa5a09315);
-    let mut g = w(0xae985bf2cbfc89ed);
-    let mut h = w(0x98f5704f6c44c0ab);
-
-    // Normally this should do two passes, to make all of the seed effect all
-    // of `mem`
-    for _ in 0..rounds {
-        for i in (0..RAND_SIZE/8).map(|i| i * 8) {
-            a += mem[i  ]; b += mem[i+1];
-            c += mem[i+2]; d += mem[i+3];
-            e += mem[i+4]; f += mem[i+5];
-            g += mem[i+6]; h += mem[i+7];
-            mix(&mut a, &mut b, &mut c, &mut d,
-                &mut e, &mut f, &mut g, &mut h);
-            mem[i  ] = a; mem[i+1] = b;
-            mem[i+2] = c; mem[i+3] = d;
-            mem[i+4] = e; mem[i+5] = f;
-            mem[i+6] = g; mem[i+7] = h;
-        }
-    }
-
-    Isaac64Rng {
-        rsl: [0; RAND_SIZE],
-        mem,
-        a: w(0),
-        b: w(0),
-        c: w(0),
-        index: RAND_SIZE as u32, // generate on first use
-        half_used: false,
+    /// Create an ISAAC-64 random number generator using an `u64` as seed.
+    /// If `seed == 0` this will produce the same stream of random numbers as
+    /// the reference implementation when used unseeded.
+    pub fn new_from_u64(seed: u64) -> Self {
+        let mut key = [w(0); RAND_SIZE];
+        key[0] = w(seed);
+        // Initialize with only one pass.
+        // A second pass does not improve the quality here, because all of the
+        // seed was already available in the first round.
+        // Not doing the second pass has the small advantage that if
+        // `seed == 0` this method produces exactly the same state as the
+        // reference implementation when used unseeded.
+        Self::init(key, 1)
     }
 }
 
-fn mix(a: &mut w64, b: &mut w64, c: &mut w64, d: &mut w64,
-       e: &mut w64, f: &mut w64, g: &mut w64, h: &mut w64) {
-    *a -= *e; *f ^= *h >> 9;  *h += *a;
-    *b -= *f; *g ^= *a << 9;  *a += *b;
-    *c -= *g; *h ^= *b >> 23; *b += *c;
-    *d -= *h; *a ^= *c << 15; *c += *d;
-    *e -= *a; *b ^= *d >> 14; *d += *e;
-    *f -= *b; *c ^= *e << 20; *e += *f;
-    *g -= *c; *d ^= *f >> 17; *f += *g;
-    *h -= *d; *e ^= *g << 14; *g += *h;
-}
-
-impl SeedableRng for Isaac64Rng {
+impl SeedableRng for Isaac64Core {
     type Seed = [u8; 32];
 
     fn from_seed(seed: Self::Seed) -> Self {
         let mut seed_u64 = [0u64; 4];
         le::read_u64_into(&seed, &mut seed_u64);
+        // Convert the seed to `Wrapping<u64>` and zero-extend to `RAND_SIZE`.
         let mut seed_extended = [w(0); RAND_SIZE];
         for (x, y) in seed_extended.iter_mut().zip(seed_u64.iter()) {
             *x = w(*y);
         }
-        init(seed_extended, 2)
+        Self::init(seed_extended, 2)
     }
 
     fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
@@ -341,7 +307,6 @@ impl SeedableRng for Isaac64Rng {
         let mut seed = [w(0u64); RAND_SIZE];
         unsafe {
             let ptr = seed.as_mut_ptr() as *mut u8;
-
             let slice = slice::from_raw_parts_mut(ptr, RAND_SIZE * 8);
             rng.try_fill_bytes(slice)?;
         }
@@ -349,7 +314,7 @@ impl SeedableRng for Isaac64Rng {
             *i = w(i.0.to_le());
         }
 
-        Ok(init(seed, 2))
+        Ok(Self::init(seed, 2))
     }
 }
 
@@ -483,7 +448,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(all(feature="serde-1", feature="std"))]
+    #[cfg(all(feature="serde1", feature="std"))]
     fn test_isaac64_serde() {
         use bincode;
         use std::io::{BufWriter, BufReader};
@@ -500,20 +465,7 @@ mod test {
         let mut read = BufReader::new(&buf[..]);
         let mut deserialized: Isaac64Rng = bincode::deserialize_from(&mut read).expect("Could not deserialize");
 
-        assert_eq!(rng.index, deserialized.index);
-        assert_eq!(rng.half_used, deserialized.half_used);
-        /* Can't assert directly because of the array size */
-        for (orig,deser) in rng.rsl.iter().zip(deserialized.rsl.iter()) {
-            assert_eq!(orig, deser);
-        }
-        for (orig,deser) in rng.mem.iter().zip(deserialized.mem.iter()) {
-            assert_eq!(orig, deser);
-        }
-        assert_eq!(rng.a, deserialized.a);
-        assert_eq!(rng.b, deserialized.b);
-        assert_eq!(rng.c, deserialized.c);
-
-        for _ in 0..16 {
+        for _ in 0..300 { // more than the 256 buffered results
             assert_eq!(rng.next_u64(), deserialized.next_u64());
         }
     }
