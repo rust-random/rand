@@ -118,28 +118,15 @@ impl Isaac64Rng {
     ///
     /// DEPRECATED. `Isaac64Rng::new_from_u64(0)` will produce identical results.
     #[deprecated(since="0.5.0", note="use the NewRng or SeedableRng trait")]
-    pub fn new_unseeded() -> Isaac64Rng {
+    pub fn new_unseeded() -> Self {
         Self::new_from_u64(0)
     }
 
-    /// Create an ISAAC-64 random number generator using an u64 as seed.
+    /// Create an ISAAC-64 random number generator using an `u64` as seed.
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.
-    pub fn new_from_u64(seed: u64) -> Isaac64Rng {
-        let mut key = [w(0); RAND_SIZE];
-        key[0] = w(seed);
-        Isaac64Rng(BlockRng64 {
-            // Initialize with only one pass.
-            // A second pass does not improve the quality here, because all of
-            // the seed was already available in the first round.
-            // Not doing the second pass has the small advantage that if
-            // `seed == 0` this method produces exactly the same state as the
-            // reference implementation when used unseeded.
-            core: Isaac64Core::init(key, 1),
-            results: IsaacArray::default(),
-            index: RAND_SIZE, // generate on first use
-            half_used: false,
-        })
+    pub fn new_from_u64(seed: u64) -> Self {
+        Isaac64Rng(BlockRng64::new(Isaac64Core::new_from_u64(seed)))
     }
 }
 
@@ -282,6 +269,21 @@ impl Isaac64Core {
         }
 
         Self { mem, a: w(0), b: w(0), c: w(0) }
+    }
+
+    /// Create an ISAAC-64 random number generator using an `u64` as seed.
+    /// If `seed == 0` this will produce the same stream of random numbers as
+    /// the reference implementation when used unseeded.
+    pub fn new_from_u64(seed: u64) -> Self {
+        let mut key = [w(0); RAND_SIZE];
+        key[0] = w(seed);
+        // Initialize with only one pass.
+        // A second pass does not improve the quality here, because all of the
+        // seed was already available in the first round.
+        // Not doing the second pass has the small advantage that if
+        // `seed == 0` this method produces exactly the same state as the
+        // reference implementation when used unseeded.
+        Self::init(key, 1)
     }
 }
 
@@ -463,20 +465,7 @@ mod test {
         let mut read = BufReader::new(&buf[..]);
         let mut deserialized: Isaac64Rng = bincode::deserialize_from(&mut read).expect("Could not deserialize");
 
-        assert_eq!(rng.0.index, deserialized.0.index);
-        assert_eq!(rng.0.half_used, deserialized.0.half_used);
-        /* Can't assert directly because of the array size */
-        for (orig,deser) in rng.0.results.iter().zip(deserialized.0.results.iter()) {
-            assert_eq!(orig, deser);
-        }
-        for (orig,deser) in rng.0.core.mem.iter().zip(deserialized.0.core.mem.iter()) {
-            assert_eq!(orig, deser);
-        }
-        assert_eq!(rng.0.core.a, deserialized.0.core.a);
-        assert_eq!(rng.0.core.b, deserialized.0.core.b);
-        assert_eq!(rng.0.core.c, deserialized.0.core.c);
-
-        for _ in 0..16 {
+        for _ in 0..300 { // more than the 256 buffered results
             assert_eq!(rng.next_u64(), deserialized.next_u64());
         }
     }
