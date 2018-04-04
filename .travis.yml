@@ -12,18 +12,18 @@ matrix:
       install:
       script:
         - cargo test --all --tests --no-default-features
-        - cargo test --features serde-1,log
+        - cargo test --features serde1,log
     - rust: stable
       os: osx
       install:
       script:
         - cargo test --all --tests --no-default-features
-        - cargo test --features serde-1,log
+        - cargo test --features serde1,log
     - rust: beta
       install:
       script:
         - cargo test --all --tests --no-default-features
-        - cargo test --tests --no-default-features --features=serde-1
+        - cargo test --tests --no-default-features --features=serde1
     - rust: nightly
       install:
       before_script:
@@ -31,7 +31,7 @@ matrix:
       script:
         - cargo test --all --tests --no-default-features --features=alloc
         - cargo test --all --features=alloc
-        - cargo test --features serde-1,log,nightly
+        - cargo test --features serde1,log,nightly
         - cargo test --benches
         - cargo doc --no-deps --all --all-features
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks

@@ -16,7 +16,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Create a seperate `rand_core` crate. (#288)
 - Deprecate `rand_derive`. (#256)
 - Add `log` feature. Logging is now available in `JitterRng`, `OsRng`, `EntropyRng` and `ReseedingRng`. (#246)
-- Add `serde-1` feature for some PRNGs. (#189)
+- Add `serde1` feature for some PRNGs. (#189)
 - `stdweb` feature for `OsRng` support on WASM via stdweb. (#272, #336)
 
 ### `Rng` trait
@@ -55,7 +55,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Change `thread_rng` reseeding threshold to 32 MiB. (#277)
 - PRNGs no longer implement `Copy`. (#209)
 - `Debug` implementations no longer show internals. (#209)
-- Implement serialisation for `XorShiftRng`, `IsaacRng` and `Isaac64Rng` under the `serde-1` feature. (#189)
+- Implement serialization for `XorShiftRng`, `IsaacRng` and `Isaac64Rng` under the `serde1` feature. (#189)
 - Implement `BlockRngCore` for `ChaChaCore` and `Hc128Core`. (#281)
 - All PRNGs are now portable across big- and little-endian architectures. (#209)
 - `Isaac64Rng::next_u32` no longer throws away half the results. (#209)
