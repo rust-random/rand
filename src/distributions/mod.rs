@@ -10,10 +10,18 @@
 
 //! Sampling from random distributions.
 //!
-//! A distribution may have internal state describing the distribution of
-//! generated values; for example `Range` needs to know its upper and lower
-//! bounds. Distributions use the `Distribution` trait to yield values: call
-//! `distr.sample(&mut rng)` to get a random variable.
+//! Distributions are stateless (i.e. immutable) objects controlling the
+//! production of values of some type `T` from a presumed uniform randomness
+//! source. These objects may have internal parameters set at contruction time
+//! (e.g. [`Range`], which has configurable bounds) or may have no internal
+//! parameters (e.g. [`Standard`]).
+//! 
+//! All distributions support the [`Distribution`] trait, and support usage
+//! via `distr.sample(&mut rng)` as well as via `rng.sample(distr)`.
+//! 
+//! [`Distribution`]: distributions/trait.Distribution.html
+//! [`Range`]: distributions/range/struct.Range.html
+//! [`Standard`]: distributions/struct.Standard.html
 
 use Rng;
 
@@ -129,6 +137,10 @@ mod impls {
 }
 
 /// Types (distributions) that can be used to create a random instance of `T`.
+/// 
+/// All implementations are expected to be immutable; this has the significant
+/// advantage of not needing to consider thread safety, and for most
+/// distributions efficient state-less sampling algorithms are available.
 pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the source of randomness.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T;
