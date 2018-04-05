@@ -77,14 +77,14 @@ A few methods from the old `Rng` have been removed or deprecated:
 
 ##### New randomly-initialised PRNGs
 
-A new trait has been added: `NewRng`. This is automatically implemented for any
-type supporting `SeedableRng`, and provides construction from fresh, strong
+A new trait has been added: `FromEntropy`. This is automatically implemented for
+any type supporting `SeedableRng`, and provides construction from fresh, strong
 entropy:
 
 ```rust
-use rand::{ChaChaRng, NewRng};
+use rand::{ChaChaRng, FromEntropy};
 
-let mut rng = ChaChaRng::new();
+let mut rng = ChaChaRng::from_entropy();
 ```
 
 ##### Seeding PRNGs
@@ -142,7 +142,7 @@ The following use the new error type:
 -   `RngCore::try_fill_bytes`
 -   `Rng::try_fill`
 -   `OsRng::new`
--   `jitter::new`
+-   `JitterRng::new`
 
 ### External generators
 
@@ -150,7 +150,7 @@ We have a new generator, `EntropyRng`, which wraps `OsRng` and `JitterRng`
 (preferring to use the former, but falling back to the latter if necessary).
 This allows easy construction with fallback via `SeedableRng::from_rng`,
 e.g. `IsaacRng::from_rng(EntropyRng::new())?`. This is equivalent to using
-`NewRng` except for error handling.
+`FromEntropy` except for error handling.
 
 It is recommended to use `EntropyRng` over `OsRng` to avoid errors on platforms
 with broken system generator, but it should be noted that the `JitterRng`
@@ -205,7 +205,7 @@ The `random()` function has been removed; users may simply use
 `thread_rng().gen()` instead or may choose to cache
 `let mut rng = thread_rng();` locally, or even use a different generator.
 
-`weak_rng()` has been deprecated; use `SmallRng::new()` instead.
+`weak_rng()` has been deprecated; use `SmallRng::from_entropy()` instead.
 
 ### Distributions
 

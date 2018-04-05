@@ -244,10 +244,10 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///
 /// # Example
 /// ```rust
-/// use rand::{NewRng, SmallRng, Rng};
+/// use rand::{FromEntropy, SmallRng, Rng};
 /// use rand::distributions::Standard;
 ///
-/// let val: f32 = SmallRng::new().sample(Standard);
+/// let val: f32 = SmallRng::from_entropy().sample(Standard);
 /// println!("f32 from (0,1): {}", val);
 /// ```
 ///

@@ -49,14 +49,14 @@
 //! small, fast, weak generator — are good choices; more options can be found in
 //! the [`prng`] module as well as in other crates.
 //! 
-//! Local generators need to be seeded. It is recommended to use [`NewRng`] or
+//! Local generators need to be seeded. It is recommended to use [`FromEntropy`] or
 //! to seed from a strong parent generator with [`from_rng`]:
 //! 
 //! ```
 //! # use rand::{Rng, Error};
 //! // seed with fresh entropy:
-//! use rand::{StdRng, NewRng};
-//! let mut rng = StdRng::new();
+//! use rand::{StdRng, FromEntropy};
+//! let mut rng = StdRng::from_entropy();
 //! # let v: u32 = rng.gen();
 //! 
 //! // seed from thread_rng:
@@ -144,7 +144,7 @@
 //! [`Rng`]: trait.Rng.html
 //! [`Rng::gen()`]: trait.Rng.html#method.gen
 //! [`RngCore`]: trait.RngCore.html
-//! [`NewRng`]: trait.NewRng.html
+//! [`FromEntropy`]: trait.FromEntropy.html
 //! [`SeedableRng::from_seed`]: trait.SeedableRng.html#tymethod.from_seed
 //! [`from_rng`]: trait.SeedableRng.html#method.from_rng
 //! [`CryptoRng`]: trait.CryptoRng.html
@@ -754,21 +754,27 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 }
 
 
-/// A convenient way to seed new algorithmic generators with fresh entropy from
-/// [`EntropyRng`].
-///
-/// This is the recommended way to create PRNGs, unless a deterministic seed is
-/// desired (in which case [`SeedableRng::from_seed`] should be used).
-///
-/// Note: this trait is automatically implemented for any PRNG implementing
+/// A convenience extension to [`SeedableRng`] allowing construction from fresh
+/// entropy. This trait is automatically implemented for any PRNG implementing
 /// [`SeedableRng`] and is not intended to be implemented by users.
+///
+/// This is equivalent to using `SeedableRng::from_rng(EntropyRng::new())` then
+/// unwrapping the result.
+///
+/// Since this is convenient and secure, it is the recommended way to create
+/// PRNGs, though two alternatives may be considered:
+///
+/// *   Deterministic creation using [`SeedableRng::from_seed`] with a fixed seed
+/// *   Seeding from `thread_rng`: `SeedableRng::from_rng(thread_rng())?`;
+///     this will usually be faster and should also be secure, but requires
+///     trusting one extra component.
 ///
 /// ## Example
 ///
 /// ```
-/// use rand::{StdRng, Rng, NewRng};
+/// use rand::{StdRng, Rng, FromEntropy};
 ///
-/// let mut rng = StdRng::new();
+/// let mut rng = StdRng::from_entropy();
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
@@ -776,7 +782,7 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 /// [`SeedableRng`]: trait.SeedableRng.html
 /// [`SeedableRng::from_seed`]: trait.SeedableRng.html#tymethod.from_seed
 #[cfg(feature="std")]
-pub trait NewRng: SeedableRng {
+pub trait FromEntropy: SeedableRng {
     /// Creates a new instance, automatically seeded with fresh entropy.
     ///
     /// Normally this will use `OsRng`, but if that fails `JitterRng` will be
@@ -803,14 +809,14 @@ pub trait NewRng: SeedableRng {
     ///
     /// # try_inner().unwrap()
     /// ```
-    fn new() -> Self;
+    fn from_entropy() -> Self;
 }
 
 #[cfg(feature="std")]
-impl<R: SeedableRng> NewRng for R {
-    fn new() -> R {
+impl<R: SeedableRng> FromEntropy for R {
+    fn from_entropy() -> R {
         R::from_rng(EntropyRng::new()).unwrap_or_else(|err|
-            panic!("NewRng::new() failed: {}", err))
+            panic!("FromEntropy::from_entropy() failed: {}", err))
     }
 }
 
@@ -880,15 +886,15 @@ impl CryptoRng for StdRng {}
 ///
 /// # Examples
 ///
-/// Initializing `SmallRng` with a random seed can be done using [`NewRng`]:
+/// Initializing `SmallRng` with a random seed can be done using [`FromEntropy`]:
 ///
 /// ```
 /// # use rand::Rng;
-/// use rand::{NewRng, SmallRng};
+/// use rand::{FromEntropy, SmallRng};
 ///
 /// // Create small, cheap to initialize and fast RNG with a random seed.
 /// // The randomness is supplied by the operating system.
-/// let mut small_rng = SmallRng::new();
+/// let mut small_rng = SmallRng::from_entropy();
 /// # let v: u32 = small_rng.gen();
 /// ```
 ///
@@ -910,7 +916,7 @@ impl CryptoRng for StdRng {}
 ///     .collect();
 /// ```
 ///
-/// [`NewRng`]: trait.NewRng.html
+/// [`FromEntropy`]: trait.FromEntropy.html
 /// [`StdRng`]: struct.StdRng.html
 /// [`thread_rng`]: fn.thread_rng.html
 /// [Xorshift]: prng/struct.XorShiftRng.html

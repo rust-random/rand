@@ -9,14 +9,14 @@ const RAND_BENCH_N: u64 = 1000;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{Rng, NewRng, XorShiftRng};
+use rand::{Rng, FromEntropy, XorShiftRng};
 use rand::distributions::*;
 
 macro_rules! distr_int {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::new();
+            let mut rng = XorShiftRng::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -36,7 +36,7 @@ macro_rules! distr_float {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::new();
+            let mut rng = XorShiftRng::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -56,7 +56,7 @@ macro_rules! distr {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::new();
+            let mut rng = XorShiftRng::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -111,7 +111,7 @@ macro_rules! gen_range_int {
     ($fnn:ident, $ty:ident, $low:expr, $high:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::new();
+            let mut rng = XorShiftRng::from_entropy();
 
             b.iter(|| {
                 let mut high = $high;
@@ -137,7 +137,7 @@ gen_range_int!(gen_range_i128, i128, -12345678901234i128, 123_456_789_123_456_78
 
 #[bench]
 fn dist_iter(b: &mut Bencher) {
-    let mut rng = XorShiftRng::new();
+    let mut rng = XorShiftRng::from_entropy();
     let distr = Normal::new(-2.71828, 3.14159);
     let mut iter = distr.sample_iter(&mut rng);
 

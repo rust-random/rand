@@ -124,7 +124,7 @@ impl ChaChaRng {
     ///
     /// - 2917185654
     /// - 2419978656
-    #[deprecated(since="0.5.0", note="use the NewRng or SeedableRng trait")]
+    #[deprecated(since="0.5.0", note="use the FromEntropy or SeedableRng trait")]
     pub fn new_unseeded() -> ChaChaRng {
         ChaChaRng::from_seed([0; SEED_WORDS*4])
     }
@@ -145,7 +145,7 @@ impl ChaChaRng {
     /// ```rust
     /// use rand::{ChaChaRng, RngCore, SeedableRng};
     ///
-    /// // Note: Use `NewRng` or `ChaChaRng::from_rng()` outside of testing.
+    /// // Note: Use `FromEntropy` or `ChaChaRng::from_rng()` outside of testing.
     /// let mut rng1 = ChaChaRng::from_seed([0; 32]);
     /// let mut rng2 = rng1.clone();
     ///
@@ -172,7 +172,7 @@ impl ChaChaRng {
     /// ```rust
     /// use rand::{ChaChaRng, RngCore, SeedableRng};
     ///
-    /// // Note: Use `NewRng` or `ChaChaRng::from_rng()` outside of testing.
+    /// // Note: Use `FromEntropy` or `ChaChaRng::from_rng()` outside of testing.
     /// let mut rng = ChaChaRng::from_seed([0; 32]);
     /// rng.set_rounds(8);
     ///

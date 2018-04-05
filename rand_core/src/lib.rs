@@ -98,7 +98,7 @@ pub mod le;
 ///   original (i.e. all deterministic PRNGs but not external generators)
 /// - *never* implement `Copy` (accidental copies may cause repeated values)
 /// - also *do not* implement `Default`, but instead implement `SeedableRng`
-///   thus allowing use of `rand::NewRng` (which is automatically implemented)
+///   thus allowing use of `rand::FromEntropy` (which is automatically implemented)
 /// - `Eq` and `PartialEq` could be implemented, but are probably not useful
 /// 
 /// # Example
@@ -270,10 +270,11 @@ pub trait CryptoRng {}
 /// This trait encapsulates the low-level functionality common to all
 /// pseudo-random number generators (PRNGs, or algorithmic generators).
 /// 
-/// The [`rand::NewRng`] trait is automatically implemented for every type
-/// implementing `SeedableRng`, providing a convenient `new()` method.
+/// The [`rand::FromEntropy`] trait is automatically implemented for every type
+/// implementing `SeedableRng`, providing a convenient `from_entropy()`
+/// constructor.
 /// 
-/// [`rand::NewRng`]: ../rand/trait.NewRng.html
+/// [`rand::FromEntropy`]: ../rand/trait.FromEntropy.html
 pub trait SeedableRng: Sized {
     /// Seed type, which is restricted to types mutably-dereferencable as `u8`
     /// arrays (we recommend `[u8; N]` for some `N`).
@@ -348,7 +349,8 @@ pub trait SeedableRng: Sized {
     /// Create a new PRNG seeded from another `Rng`.
     ///
     /// This is the recommended way to initialize PRNGs with fresh entropy. The
-    /// [`NewRng`] trait provides a convenient new method based on `from_rng`.
+    /// [`FromEntropy`] trait provides a convenient `from_entropy` method
+    /// based on `from_rng`.
     /// 
     /// Usage of this method is not recommended when reproducibility is required
     /// since implementing PRNGs are not required to fix Endianness and are
@@ -374,7 +376,7 @@ pub trait SeedableRng: Sized {
     /// PRNG implementations are allowed to assume that a good RNG is provided
     /// for seeding, and that it is cryptographically secure when appropriate.
     /// 
-    /// [`NewRng`]: ../rand/trait.NewRng.html
+    /// [`FromEntropy`]: ../rand/trait.FromEntropy.html
     /// [`OsRng`]: ../rand/os/struct.OsRng.html
     fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();

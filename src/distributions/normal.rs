@@ -28,10 +28,10 @@ use distributions::{ziggurat, ziggurat_tables, Distribution};
 ///
 /// # Example
 /// ```rust
-/// use rand::{NewRng, SmallRng, Rng};
+/// use rand::{FromEntropy, SmallRng, Rng};
 /// use rand::distributions::StandardNormal;
 ///
-/// let val: f64 = SmallRng::new().sample(StandardNormal);
+/// let val: f64 = SmallRng::from_entropy().sample(StandardNormal);
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]

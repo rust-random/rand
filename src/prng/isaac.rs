@@ -127,7 +127,7 @@ impl IsaacRng {
     /// fixed seed.
     ///
     /// DEPRECATED. `IsaacRng::new_from_u64(0)` will produce identical results.
-    #[deprecated(since="0.5.0", note="use the NewRng or SeedableRng trait")]
+    #[deprecated(since="0.5.0", note="use the FromEntropy or SeedableRng trait")]
     pub fn new_unseeded() -> Self {
         Self::new_from_u64(0)
     }

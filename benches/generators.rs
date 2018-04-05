@@ -9,7 +9,7 @@ const BYTES_LEN: usize = 1024;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{RngCore, Rng, SeedableRng, NewRng};
+use rand::{RngCore, Rng, SeedableRng, FromEntropy};
 use rand::{StdRng, SmallRng, OsRng, EntropyRng, ReseedingRng};
 use rand::prng::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 use rand::prng::hc128::Hc128Core;
@@ -33,12 +33,12 @@ macro_rules! gen_bytes {
     }
 }
 
-gen_bytes!(gen_bytes_xorshift, XorShiftRng::new());
-gen_bytes!(gen_bytes_hc128, Hc128Rng::new());
-gen_bytes!(gen_bytes_isaac, IsaacRng::new());
-gen_bytes!(gen_bytes_isaac64, Isaac64Rng::new());
-gen_bytes!(gen_bytes_std, StdRng::new());
-gen_bytes!(gen_bytes_small, SmallRng::new());
+gen_bytes!(gen_bytes_xorshift, XorShiftRng::from_entropy());
+gen_bytes!(gen_bytes_hc128, Hc128Rng::from_entropy());
+gen_bytes!(gen_bytes_isaac, IsaacRng::from_entropy());
+gen_bytes!(gen_bytes_isaac64, Isaac64Rng::from_entropy());
+gen_bytes!(gen_bytes_std, StdRng::from_entropy());
+gen_bytes!(gen_bytes_small, SmallRng::from_entropy());
 gen_bytes!(gen_bytes_os, OsRng::new().unwrap());
 
 macro_rules! gen_uint {
@@ -58,20 +58,20 @@ macro_rules! gen_uint {
     }
 }
 
-gen_uint!(gen_u32_xorshift, u32, XorShiftRng::new());
-gen_uint!(gen_u32_hc128, u32, Hc128Rng::new());
-gen_uint!(gen_u32_isaac, u32, IsaacRng::new());
-gen_uint!(gen_u32_isaac64, u32, Isaac64Rng::new());
-gen_uint!(gen_u32_std, u32, StdRng::new());
-gen_uint!(gen_u32_small, u32, SmallRng::new());
+gen_uint!(gen_u32_xorshift, u32, XorShiftRng::from_entropy());
+gen_uint!(gen_u32_hc128, u32, Hc128Rng::from_entropy());
+gen_uint!(gen_u32_isaac, u32, IsaacRng::from_entropy());
+gen_uint!(gen_u32_isaac64, u32, Isaac64Rng::from_entropy());
+gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
+gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng::new().unwrap());
 
-gen_uint!(gen_u64_xorshift, u64, XorShiftRng::new());
-gen_uint!(gen_u64_hc128, u64, Hc128Rng::new());
-gen_uint!(gen_u64_isaac, u64, IsaacRng::new());
-gen_uint!(gen_u64_isaac64, u64, Isaac64Rng::new());
-gen_uint!(gen_u64_std, u64, StdRng::new());
-gen_uint!(gen_u64_small, u64, SmallRng::new());
+gen_uint!(gen_u64_xorshift, u64, XorShiftRng::from_entropy());
+gen_uint!(gen_u64_hc128, u64, Hc128Rng::from_entropy());
+gen_uint!(gen_u64_isaac, u64, IsaacRng::from_entropy());
+gen_uint!(gen_u64_isaac64, u64, Isaac64Rng::from_entropy());
+gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
+gen_uint!(gen_u64_small, u64, SmallRng::from_entropy());
 gen_uint!(gen_u64_os, u64, OsRng::new().unwrap());
 
 // Do not test JitterRng like the others by running it RAND_BENCH_N times per,
@@ -89,7 +89,7 @@ macro_rules! init_gen {
     ($fnn:ident, $gen:ident) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::new();
+            let mut rng = XorShiftRng::from_entropy();
             b.iter(|| {
                 let r2 = $gen::from_rng(&mut rng).unwrap();
                 black_box(r2);
@@ -115,7 +115,7 @@ macro_rules! chacha_rounds {
     ($fn1:ident, $fn2:ident, $fn3:ident, $rounds:expr) => {
         #[bench]
         fn $fn1(b: &mut Bencher) {
-            let mut rng = ChaChaRng::new();
+            let mut rng = ChaChaRng::from_entropy();
             rng.set_rounds($rounds);
             let mut buf = [0u8; BYTES_LEN];
             b.iter(|| {
@@ -129,7 +129,7 @@ macro_rules! chacha_rounds {
 
         #[bench]
         fn $fn2(b: &mut Bencher) {
-            let mut rng = ChaChaRng::new();
+            let mut rng = ChaChaRng::from_entropy();
             rng.set_rounds($rounds);
             b.iter(|| {
                 let mut accum: u32 = 0;
@@ -143,7 +143,7 @@ macro_rules! chacha_rounds {
 
         #[bench]
         fn $fn3(b: &mut Bencher) {
-            let mut rng = ChaChaRng::new();
+            let mut rng = ChaChaRng::from_entropy();
             rng.set_rounds($rounds);
             b.iter(|| {
                 let mut accum: u64 = 0;
@@ -167,7 +167,7 @@ const RESEEDING_THRESHOLD: u64 = 1024*1024*1024; // something high enough to get
 
 #[bench]
 fn reseeding_hc128_bytes(b: &mut Bencher) {
-    let mut rng = ReseedingRng::new(Hc128Core::new(),
+    let mut rng = ReseedingRng::new(Hc128Core::from_entropy(),
                                     RESEEDING_THRESHOLD,
                                     EntropyRng::new());
     let mut buf = [0u8; BYTES_LEN];
@@ -184,7 +184,7 @@ macro_rules! reseeding_uint {
     ($fnn:ident, $ty:ty) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = ReseedingRng::new(Hc128Core::new(),
+            let mut rng = ReseedingRng::new(Hc128Core::from_entropy(),
                                             RESEEDING_THRESHOLD,
                                             EntropyRng::new());
             b.iter(|| {
