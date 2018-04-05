@@ -476,9 +476,9 @@ pub trait Rng: RngCore {
     /// # Accuracy note
     ///
     /// `gen_bool` uses 32 bits of the RNG, so if you use it to generate close
-    /// to or more than 2^32 results, a tiny bias may become noticable.
+    /// to or more than `2^32` results, a tiny bias may become noticable.
     /// A notable consequence of the method used here is that the worst case is
-    /// `rng.gen_bool(0.0)`: it has a chance of 1 in 2^32 of being true, while
+    /// `rng.gen_bool(0.0)`: it has a chance of 1 in `2^32` of being true, while
     /// it should always be false. But using `gen_bool` to consume *many* values
     /// from an RNG just to consistently generate `false` does not match with
     /// the intent of this method.

@@ -162,11 +162,11 @@ impl BlockRngCore for IsaacCore {
     type Item = u32;
     type Results = IsaacArray<Self::Item>;
 
-    /// Refills the output buffer (`results`)
-    /// See also the pseudocode desciption of the algorithm at the top of this
-    /// file.
+    /// Refills the output buffer, `results`. See also the pseudocode desciption
+    /// of the algorithm in the [`Isaac64Rng`] documentation.
     ///
     /// Optimisations used (similar to the reference implementation):
+    /// 
     /// - The loop is unrolled 4 times, once for every constant of mix().
     /// - The contents of the main loop are moved to a function `rngstep`, to
     ///   reduce code duplication.
@@ -181,6 +181,8 @@ impl BlockRngCore for IsaacCore {
     ///   from `results` in reverse. We read them in the normal direction, to
     ///   make `fill_bytes` a memcopy. To maintain compatibility we fill in
     ///   reverse.
+    /// 
+    /// [`IsaacRng`]: struct.IsaacRng.html
     fn generate(&mut self, results: &mut IsaacArray<Self::Item>) {
         self.c += w(1);
         // abbreviations

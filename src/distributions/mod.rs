@@ -272,9 +272,9 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///
 /// - The chance to generate a specific value, like exactly 0.0, is *tiny*. No
 ///   (or almost no) sensible code relies on an exact floating-point value to be
-///   generated with a very small chance (1 in ~8 million (2^23) for `f32`, and
-///   1 in 2^52 for `f64`). What is relied on is having a uniform distribution
-///   and a mean of `0.5`.
+///   generated with a very small chance (1 in 2<sup>23</sup> (approx. 8
+///   million) for `f32`, and 1 in 2<sup>52</sup> for `f64`). What is relied on
+///   is having a uniform distribution and a mean of `0.5`.
 /// - Several common algorithms rely on never seeing the value `0.0` generated,
 ///   i.e. they rely on an open interval. For example when the logarithm of the
 ///   value is taken, or used as a devisor.
