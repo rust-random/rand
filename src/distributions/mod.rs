@@ -19,9 +19,9 @@
 //! All distributions support the [`Distribution`] trait, and support usage
 //! via `distr.sample(&mut rng)` as well as via `rng.sample(distr)`.
 //! 
-//! [`Distribution`]: distributions/trait.Distribution.html
-//! [`Range`]: distributions/range/struct.Range.html
-//! [`Standard`]: distributions/struct.Standard.html
+//! [`Distribution`]: trait.Distribution.html
+//! [`Range`]: range/struct.Range.html
+//! [`Standard`]: struct.Standard.html
 
 use Rng;
 
