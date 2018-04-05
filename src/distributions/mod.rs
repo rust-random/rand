@@ -10,10 +10,18 @@
 
 //! Sampling from random distributions.
 //!
-//! A distribution may have internal state describing the distribution of
-//! generated values; for example `Range` needs to know its upper and lower
-//! bounds. Distributions use the `Distribution` trait to yield values: call
-//! `distr.sample(&mut rng)` to get a random variable.
+//! Distributions are stateless (i.e. immutable) objects controlling the
+//! production of values of some type `T` from a presumed uniform randomness
+//! source. These objects may have internal parameters set at contruction time
+//! (e.g. [`Range`], which has configurable bounds) or may have no internal
+//! parameters (e.g. [`Standard`]).
+//! 
+//! All distributions support the [`Distribution`] trait, and support usage
+//! via `distr.sample(&mut rng)` as well as via `rng.sample(distr)`.
+//! 
+//! [`Distribution`]: trait.Distribution.html
+//! [`Range`]: range/struct.Range.html
+//! [`Standard`]: struct.Standard.html
 
 use Rng;
 
@@ -129,6 +137,10 @@ mod impls {
 }
 
 /// Types (distributions) that can be used to create a random instance of `T`.
+/// 
+/// All implementations are expected to be immutable; this has the significant
+/// advantage of not needing to consider thread safety, and for most
+/// distributions efficient state-less sampling algorithms are available.
 pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the source of randomness.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T;
@@ -260,9 +272,9 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///
 /// - The chance to generate a specific value, like exactly 0.0, is *tiny*. No
 ///   (or almost no) sensible code relies on an exact floating-point value to be
-///   generated with a very small chance (1 in ~8 million (2^23) for `f32`, and
-///   1 in 2^52 for `f64`). What is relied on is having a uniform distribution
-///   and a mean of `0.5`.
+///   generated with a very small chance (1 in 2<sup>23</sup> (approx. 8
+///   million) for `f32`, and 1 in 2<sup>52</sup> for `f64`). What is relied on
+///   is having a uniform distribution and a mean of `0.5`.
 /// - Several common algorithms rely on never seeing the value `0.0` generated,
 ///   i.e. they rely on an open interval. For example when the logarithm of the
 ///   value is taken, or used as a devisor.

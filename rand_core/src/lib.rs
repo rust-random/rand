@@ -251,7 +251,7 @@ pub trait BlockRngCore {
 /// predict the next bit with probability significantly greater than 50%.
 /// 
 /// Some generators may satisfy an additional property, however this is not
-/// required: if the CSPRNG's state is revealed, it should not be
+/// required by this trait: if the CSPRNG's state is revealed, it should not be
 /// computationally-feasible to reconstruct output prior to this. Some other
 /// generators allow backwards-computation and are consided *reversible*.
 /// 
