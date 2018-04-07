@@ -117,6 +117,9 @@ use Rng;
 use distributions::Distribution;
 use distributions::float::IntoFloat;
 
+#[cfg(feature="simd_support")]
+use core::simd::*;
+
 /// Sample values uniformly between two bounds.
 ///
 /// [`Uniform::new`] and [`Uniform::new_inclusive`] construct a uniform
@@ -580,7 +583,7 @@ pub struct UniformFloat<X> {
 }
 
 macro_rules! uniform_float_impl {
-    ($ty:ty, $bits_to_discard:expr, $next_u:ident) => {
+    ($ty:ty, $uty:ident, $bits_to_discard:expr) => {
         impl SampleUniform for $ty {
             type Sampler = UniformFloat<$ty>;
         }
@@ -621,8 +624,8 @@ macro_rules! uniform_float_impl {
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 // Generate a value in the range [1, 2)
-                let value1_2 = (rng.$next_u() >> $bits_to_discard)
-                               .into_float_with_exponent(0);
+                let value: $uty = rng.gen::<$uty>() >> $bits_to_discard;
+                let value1_2 = value.into_float_with_exponent(0);
                 // We don't use `f64::mul_add`, because it is not available with
                 // `no_std`. Furthermore, it is slower for some targets (but
                 // faster for others). However, the order of multiplication and
@@ -643,8 +646,8 @@ macro_rules! uniform_float_impl {
                 let scale = high - low;
                 let offset = low - scale;
                 // Generate a value in the range [1, 2)
-                let value1_2 = (rng.$next_u() >> $bits_to_discard)
-                               .into_float_with_exponent(0);
+                let value: $uty = rng.gen::<$uty>() >> $bits_to_discard;
+                let value1_2 = value.into_float_with_exponent(0);
                 // Doing multiply before addition allows some architectures to
                 // use a single instruction.
                 value1_2 * scale + offset
@@ -653,8 +656,24 @@ macro_rules! uniform_float_impl {
     }
 }
 
-uniform_float_impl! { f32, 32 - 23, next_u32 }
-uniform_float_impl! { f64, 64 - 52, next_u64 }
+uniform_float_impl! { f32, u32, 32 - 23 }
+uniform_float_impl! { f64, u64, 64 - 52 }
+
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f32x2, u32x2, 32 - 23 }
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f32x4, u32x4, 32 - 23 }
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f32x8, u32x8, 32 - 23 }
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f32x16, u32x16, 32 - 23 }
+
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f64x2, u64x2, 64 - 52 }
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f64x4, u64x4, 64 - 52 }
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f64x8, u64x8, 64 - 52 }
 
 
 
