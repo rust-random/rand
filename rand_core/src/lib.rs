@@ -385,7 +385,9 @@ pub trait SeedableRng: Sized {
     }
 }
 
-
+// Implement `RngCore` for references to an `RngCore`.
+// Force inlining all functions, so that it is up to the `RngCore`
+// implementation and the optimizer to decide on inlining.
 impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -397,15 +399,20 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
         (**self).next_u64()
     }
 
+    #[inline(always)]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
     }
 
+    #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill_bytes(dest)
     }
 }
 
+// Implement `RngCore` for boxed references to an `RngCore`.
+// Force inlining all functions, so that it is up to the `RngCore`
+// implementation and the optimizer to decide on inlining.
 #[cfg(feature="alloc")]
 impl<R: RngCore + ?Sized> RngCore for Box<R> {
     #[inline(always)]
@@ -418,10 +425,12 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
         (**self).next_u64()
     }
 
+    #[inline(always)]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         (**self).fill_bytes(dest)
     }
 
+    #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill_bytes(dest)
     }
