@@ -320,6 +320,13 @@ macro_rules! range_int_impl {
                 RangeInt::<$ty>::new(r.start, r.end)
             }
         }
+
+        impl From<::core::ops::Range<$ty>> for Range<$ty>
+        {
+            fn from(r: ::core::ops::Range<$ty>) -> Range<$ty> {
+                Range { inner: <$ty as SampleRange>::Impl::from(r) }
+            }
+        }
     }
 }
 
@@ -586,9 +593,16 @@ mod tests {
     }
 
     #[test]
-    fn test_from_std_range() {
+    fn test_rangeint_from_std_range() {
         let r = RangeInt::from(2..7);
         assert_eq!(r.low, 2);
         assert_eq!(r.range, 5);
+    }
+
+    #[test]
+    fn test_range_from_std_range() {
+        let r = Range::<u32>::from(2..7);
+        assert_eq!(r.inner.low, 2u32);
+        assert_eq!(r.inner.range, 5u32);
     }
 }
