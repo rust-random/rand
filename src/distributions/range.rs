@@ -42,7 +42,7 @@ use distributions::float::IntoFloat;
 /// use rand::distributions::{Distribution, Range};
 ///
 /// fn main() {
-///     let between = Range::new(10, 10000);
+///     let between = Range::from(10..10000);
 ///     let mut rng = rand::thread_rng();
 ///     let mut sum = 0;
 ///     for _ in 0..1000 {
