@@ -284,6 +284,28 @@ pub trait SeedableRng: Sized {
     /// partially overlapping periods.
     ///
     /// For cryptographic RNG's a seed of 256 bits is recommended, `[u8; 32]`.
+    ///
+    ///
+    /// # Implementing `SeedableRng` for RNGs with large seeds
+    ///
+    /// Note that the required traits `core::default::Default` and
+    /// `core::convert::AsMut<u8>` are not implemented for large arrays
+    /// `[u8; N]` with `N` > 32. To be able to implement the traits required by
+    /// `SeedableRng` for RNGs with such large seeds, the newtype pattern can be
+    /// used:
+    ///
+    /// ```ignore
+    /// pub struct MyRngSeed(pub [u8; N]);
+    ///
+    /// impl Default for MyRngSeed { ... }
+    /// impl AsMut<u8> for MyRngSeed { ... }
+    ///
+    /// impl SeedableRng for MyRng {
+    ///     type Seed = MyRngSeed;
+    ///
+    ///     fn from_seed(seed: MyRngSeed) -> MyRng { ... }
+    /// }
+    /// ```
     type Seed: Sized + Default + AsMut<[u8]>;
 
     /// Create a new PRNG using the given seed.
@@ -307,6 +329,25 @@ pub trait SeedableRng: Sized {
     /// seeds it is preferable to map these to alternative constant value(s),
     /// for example `0xBAD5EEDu32` or `0x0DDB1A5E5BAD5EEDu64` ("odd biases? bad
     /// seed"). This is assuming only a small number of values must be rejected.
+    /// Alternatively, the newtype pattern can be used to make sure only valid
+    /// seeds can be constructed:
+    ///
+    /// ```ignore
+    /// pub struct MyRngSeed([u8; N]);
+    ///
+    /// impl MyRngSeed {
+    ///     fn new(seed: [u8; N]) -> Option<MyRngSeed> { ... }
+    /// }
+    ///
+    /// impl Default for MyRngSeed { ... }
+    /// impl AsMut<u8> for MyRngSeed { ... }
+    ///
+    /// impl SeedableRng for MyRng {
+    ///     type Seed = MyRngSeed;
+    ///
+    ///     fn from_seed(seed: MyRngSeed) -> MyRng { ... }
+    /// }
+    /// ```
     fn from_seed(seed: Self::Seed) -> Self;
 
     /// Create a new PRNG seeded from another `Rng`.
