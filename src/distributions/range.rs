@@ -314,6 +314,12 @@ macro_rules! range_int_impl {
                 }
             }
         }
+
+        impl From<::core::ops::Range<$ty>> for RangeInt<$ty> {
+            fn from(r: ::core::ops::Range<$ty>) -> RangeInt<$ty> {
+                RangeInt::<$ty>::new(r.start, r.end)
+            }
+        }
     }
 }
 
@@ -469,7 +475,7 @@ range_float_impl! { f64, 64 - 52, next_u64 }
 #[cfg(test)]
 mod tests {
     use Rng;
-    use distributions::range::{Range, RangeImpl, RangeFloat, SampleRange};
+    use distributions::range::{Range, RangeImpl, RangeInt, RangeFloat, SampleRange};
 
     #[should_panic]
     #[test]
@@ -577,5 +583,12 @@ mod tests {
             let x: MyF32 = rng.sample(range);
             assert!(low <= x && x < high);
         }
+    }
+
+    #[test]
+    fn test_from_std_range() {
+        let r = RangeInt::from(2..7);
+        assert_eq!(r.low, 2);
+        assert_eq!(r.range, 5);
     }
 }
