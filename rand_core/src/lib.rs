@@ -329,25 +329,6 @@ pub trait SeedableRng: Sized {
     /// seeds it is preferable to map these to alternative constant value(s),
     /// for example `0xBAD5EEDu32` or `0x0DDB1A5E5BAD5EEDu64` ("odd biases? bad
     /// seed"). This is assuming only a small number of values must be rejected.
-    /// Alternatively, the newtype pattern can be used to make sure only valid
-    /// seeds can be constructed:
-    ///
-    /// ```ignore
-    /// pub struct MyRngSeed([u8; N]);
-    ///
-    /// impl MyRngSeed {
-    ///     fn new(seed: [u8; N]) -> Option<MyRngSeed> { ... }
-    /// }
-    ///
-    /// impl Default for MyRngSeed { ... }
-    /// impl AsMut<u8> for MyRngSeed { ... }
-    ///
-    /// impl SeedableRng for MyRng {
-    ///     type Seed = MyRngSeed;
-    ///
-    ///     fn from_seed(seed: MyRngSeed) -> MyRng { ... }
-    /// }
-    /// ```
     fn from_seed(seed: Self::Seed) -> Self;
 
     /// Create a new PRNG seeded from another `Rng`.
