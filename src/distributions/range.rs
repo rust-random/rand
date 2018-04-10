@@ -320,13 +320,15 @@ macro_rules! range_int_impl {
                 RangeInt::<$ty>::new(r.start, r.end)
             }
         }
+    }
+}
 
-        impl From<::core::ops::Range<$ty>> for Range<$ty>
-        {
-            fn from(r: ::core::ops::Range<$ty>) -> Range<$ty> {
-                Range { inner: <$ty as SampleRange>::Impl::from(r) }
-            }
-        }
+impl<X> From<::core::ops::Range<X>> for Range<X>
+    where X: SampleRange,
+          <X as SampleRange>::Impl: From<::core::ops::Range<X>>
+{
+    fn from(r: ::core::ops::Range<X>) -> Range<X> {
+        Range { inner: <X as SampleRange>::Impl::from(r) }
     }
 }
 
@@ -472,6 +474,12 @@ macro_rules! range_float_impl {
                 value1_2 * self.scale + self.offset
             }
         }
+
+        impl From<::core::ops::Range<$ty>> for RangeFloat<$ty> {
+            fn from(r: ::core::ops::Range<$ty>) -> RangeFloat<$ty> {
+                RangeFloat::<$ty>::new(r.start, r.end)
+            }
+        }
     }
 }
 
@@ -597,12 +605,18 @@ mod tests {
         let r = RangeInt::from(2..7);
         assert_eq!(r.low, 2);
         assert_eq!(r.range, 5);
+        let r = RangeFloat::from(2.0..7.0);
+        assert_eq!(r.offset, -3.0);
+        assert_eq!(r.scale, 5.0);
     }
 
     #[test]
     fn test_range_from_std_range() {
-        let r = Range::<u32>::from(2..7);
-        assert_eq!(r.inner.low, 2u32);
-        assert_eq!(r.inner.range, 5u32);
+        let r = Range::from(2u32..7);
+        assert_eq!(r.inner.low, 2);
+        assert_eq!(r.inner.range, 5);
+        let r = Range::from(2.0f64..7.0);
+        assert_eq!(r.inner.offset, -3.0);
+        assert_eq!(r.inner.scale, 5.0);
     }
 }
