@@ -26,6 +26,7 @@ matrix:
         - cargo test --tests --no-default-features --features=serde1
     - rust: nightly
       install:
+        - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
       before_script:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
@@ -34,7 +35,6 @@ matrix:
         - cargo test --features serde1,log,nightly
         - cargo test --benches
         - cargo doc --no-deps --all --all-features
-        - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
         - cargo deadlinks --dir target/doc
       after_success:
         - travis-cargo --only nightly doc-upload
@@ -50,7 +50,14 @@ matrix:
         - cargo --list | egrep "^\s*web$" -q || cargo install cargo-web
       script:
         - cargo web test --target wasm32-unknown-unknown --nodejs --features=stdweb
-    
+
+    - rust: nightly
+      install:
+        - rustup target add thumbv6m-none-eabi
+      script:
+        # Bare metal target; no std; only works on nightly
+        - cargo build --all --no-default-features --target thumbv6m-none-eabi --release
+
     # Trust cross-built/emulated targets. We must repeat all non-default values.
     - rust: stable
       sudo: required
@@ -73,12 +80,6 @@ matrix:
       dist: trusty
       services: docker
       env: TARGET=armv7-apple-ios DISABLE_TESTS=1
-    - rust: nightly
-      sudo: required
-      dist: trusty
-      services: docker
-      # Bare metal target; no std; only works on nightly
-      env: TARGET=thumbv6m-none-eabi DISABLE_TESTS=1 DISABLE_STD=1
 
 before_install:
   - set -e
