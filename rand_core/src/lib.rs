@@ -294,16 +294,35 @@ pub trait SeedableRng: Sized {
     /// `SeedableRng` for RNGs with such large seeds, the newtype pattern can be
     /// used:
     ///
-    /// ```ignore
-    /// pub struct MyRngSeed(pub [u8; N]);
+    /// ```
+    /// use rand_core::SeedableRng;
     ///
-    /// impl Default for MyRngSeed { ... }
-    /// impl AsMut<u8> for MyRngSeed { ... }
+    /// pub struct MyRngSeed(pub [u8; 64]);
+    /// pub struct MyRng(MyRngSeed);
+    ///
+    /// impl Default for MyRngSeed {
+    ///     fn default() -> MyRngSeed {
+    ///         MyRngSeed([
+    ///             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ///             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ///             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ///             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    ///         ])
+    ///     }
+    /// }
+    ///
+    /// impl AsMut<[u8]> for MyRngSeed {
+    ///     fn as_mut(&mut self) -> &mut [u8] {
+    ///         &mut self.0
+    ///     }
+    /// }
     ///
     /// impl SeedableRng for MyRng {
     ///     type Seed = MyRngSeed;
     ///
-    ///     fn from_seed(seed: MyRngSeed) -> MyRng { ... }
+    ///     fn from_seed(seed: MyRngSeed) -> MyRng {
+    ///         MyRng(MyRngSeed)
+    ///     }
     /// }
     /// ```
     type Seed: Sized + Default + AsMut<[u8]>;
