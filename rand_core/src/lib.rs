@@ -317,7 +317,7 @@ pub trait SeedableRng: Sized {
     ///     type Seed = MyRngSeed;
     ///
     ///     fn from_seed(seed: MyRngSeed) -> MyRng {
-    ///         MyRng(MyRngSeed)
+    ///         MyRng(seed)
     ///     }
     /// }
     /// ```
