@@ -469,9 +469,7 @@ macro_rules! range_float_impl {
                 // Generate a value in the range [1, 2)
                 let value1_2 = (rng.$next_u() >> $bits_to_discard)
                                .into_float_with_exponent(0);
-                // Doing multiply before addition allows some architectures to
-                // use a single instruction.
-                value1_2 * self.scale + self.offset
+                value1_2.mul_add(self.scale, self.offset)
             }
         }
 
