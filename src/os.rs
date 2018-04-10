@@ -29,8 +29,8 @@ use rand_core::{RngCore, Error, impls};
 /// machines, it may block very early in the init process, when the OS CSPRNG
 /// has not yet been seeded.
 ///
-/// `OsRng::new()` is guaranteed to be very cheap (after first call), and will
-/// never consume more than one file handle per process.
+/// `OsRng::new()` is guaranteed to be very cheap (after the first successful
+/// call), and will never consume more than one file handle per process.
 ///
 /// ## Platform sources:
 ///

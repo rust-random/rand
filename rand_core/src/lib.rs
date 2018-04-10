@@ -91,15 +91,16 @@ pub mod le;
 /// It is recommended that implementations also implement:
 /// 
 /// - `Debug` with a custom implementation which *does not* print any internal
-///   state (at least, [`CryptoRng`]s should not risk leaking state through Debug)
+///   state (at least, [`CryptoRng`]s should not risk leaking state through
+///   `Debug`).
 /// - `Serialize` and `Deserialize` (from Serde), preferably making Serde
-///   support optional at the crate level in PRNG libs
-/// - `Clone` if, and only if, the clone will have identical output to the
-///   original (i.e. all deterministic PRNGs but not external generators)
-/// - *never* implement `Copy` (accidental copies may cause repeated values)
-/// - also *do not* implement `Default`, but instead implement `SeedableRng`
-///   thus allowing use of `rand::FromEntropy` (which is automatically implemented)
-/// - `Eq` and `PartialEq` could be implemented, but are probably not useful
+///   support optional at the crate level in PRNG libs.
+/// - `Clone`, if possible.
+/// - *never* implement `Copy` (accidental copies may cause repeated values).
+/// - *do not* implement `Default` for pseudorandom generators, but instead
+///   implement [`SeedableRng`], to guide users towards proper seeding.
+///   External / hardware RNGs can choose to implement `Default`.
+/// - `Eq` and `PartialEq` could be implemented, but are probably not useful.
 /// 
 /// # Example
 /// 
