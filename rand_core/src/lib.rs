@@ -297,17 +297,13 @@ pub trait SeedableRng: Sized {
     /// ```
     /// use rand_core::SeedableRng;
     ///
-    /// pub struct MyRngSeed(pub [u8; 64]);
+    /// const N: usize = 64;
+    /// pub struct MyRngSeed(pub [u8; N]);
     /// pub struct MyRng(MyRngSeed);
     ///
     /// impl Default for MyRngSeed {
     ///     fn default() -> MyRngSeed {
-    ///         MyRngSeed([
-    ///             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ///             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ///             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ///             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    ///         ])
+    ///         MyRngSeed([0; N])
     ///     }
     /// }
     ///
