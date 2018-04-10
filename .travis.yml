@@ -26,6 +26,7 @@ matrix:
         - cargo test --tests --no-default-features --features=serde1
     - rust: nightly
       install:
+        - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
       before_script:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
@@ -34,7 +35,6 @@ matrix:
         - cargo test --features serde1,log,nightly
         - cargo test --benches
         - cargo doc --no-deps --all --all-features
-        - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
         - cargo deadlinks --dir target/doc
       after_success:
         - travis-cargo --only nightly doc-upload
