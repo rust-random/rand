@@ -56,6 +56,7 @@ use rand_core::{RngCore, Error, impls};
 /// [`EntropyRng`]: struct.EntropyRng.html
 
 #[allow(unused)]    // not used by all targets
+#[derive(Clone)]
 pub struct OsRng(imp::OsRng);
 
 impl fmt::Debug for OsRng {
@@ -149,10 +150,10 @@ mod imp {
     use std::io::Read;
     use std::sync::{Once, Mutex, ONCE_INIT};
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct OsRng(OsRngMethod);
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     enum OsRngMethod {
         GetRandom,
         RandomDevice,
@@ -373,7 +374,7 @@ mod imp {
 
     use {Error, ErrorKind};
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct OsRng;
 
     impl OsRng {
@@ -408,7 +409,7 @@ mod imp {
     use std::io;
     use self::libc::{c_int, size_t};
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct OsRng;
 
     enum SecRandom {}
@@ -452,7 +453,7 @@ mod imp {
     use std::ptr;
     use std::io;
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct OsRng;
 
     impl OsRng {
@@ -490,7 +491,7 @@ mod imp {
     
     use std::io;
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct OsRng;
 
     impl OsRng {
@@ -524,7 +525,7 @@ mod imp {
     use std::io::ErrorKind::*;
     use std::sync::{Once, Mutex, ONCE_INIT};
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct OsRng();
 
     // TODO: remove outer Option when `Mutex::new(None)` is a constant expression
@@ -584,7 +585,7 @@ mod imp {
     
     use std::io;
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct OsRng;
 
     impl OsRng {
@@ -624,7 +625,7 @@ mod imp {
     use self::winapi::um::ntsecapi::RtlGenRandom;
     use self::winapi::um::winnt::PVOID;
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct OsRng;
 
     impl OsRng {
@@ -657,7 +658,7 @@ mod imp {
 mod imp {
     use {Error, ErrorKind};
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct OsRng;
 
     impl OsRng {
@@ -682,13 +683,13 @@ mod imp {
     use stdweb::web::error::Error as WebError;
     use {Error, ErrorKind};
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     enum OsRngInner {
         Browser,
         Node
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct OsRng(OsRngInner);
 
     impl OsRng {
