@@ -469,7 +469,10 @@ macro_rules! range_float_impl {
                 // Generate a value in the range [1, 2)
                 let value1_2 = (rng.$next_u() >> $bits_to_discard)
                                .into_float_with_exponent(0);
-                value1_2.mul_add(self.scale, self.offset)
+                // We don't use `f64::mul_add`, because it is not available with
+                // `no_std`. Furthermore, it is slower for some targets (but
+                // faster for others).
+                value1_2 * self.scale + self.offset
             }
         }
 
