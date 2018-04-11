@@ -323,12 +323,9 @@ macro_rules! range_int_impl {
     }
 }
 
-impl<X> From<::core::ops::Range<X>> for Range<X>
-    where X: SampleRange,
-          <X as SampleRange>::Impl: From<::core::ops::Range<X>>
-{
+impl<X: SampleRange> From<::core::ops::Range<X>> for Range<X> {
     fn from(r: ::core::ops::Range<X>) -> Range<X> {
-        Range { inner: <X as SampleRange>::Impl::from(r) }
+        Range::new(r.start, r.end)
     }
 }
 
