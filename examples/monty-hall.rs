@@ -33,7 +33,7 @@
 extern crate rand;
 
 use rand::Rng;
-use rand::distributions::{Distribution, Range};
+use rand::distributions::{Distribution, Uniform};
 
 struct SimulationResult {
     win: bool,
@@ -41,7 +41,7 @@ struct SimulationResult {
 }
 
 // Run a single simulation of the Monty Hall problem.
-fn simulate<R: Rng>(random_door: &Range<u32>, rng: &mut R)
+fn simulate<R: Rng>(random_door: &Uniform<u32>, rng: &mut R)
                     -> SimulationResult {
     let car = random_door.sample(rng);
 
@@ -82,7 +82,7 @@ fn main() {
     let num_simulations = 10000;
 
     let mut rng = rand::thread_rng();
-    let random_door = Range::new(0u32, 3);
+    let random_door = Uniform::new(0u32, 3);
 
     let (mut switch_wins, mut switch_losses) = (0, 0);
     let (mut keep_wins, mut keep_losses) = (0, 0);

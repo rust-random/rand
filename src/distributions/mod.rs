@@ -13,20 +13,20 @@
 //! Distributions are stateless (i.e. immutable) objects controlling the
 //! production of values of some type `T` from a presumed uniform randomness
 //! source. These objects may have internal parameters set at contruction time
-//! (e.g. [`Range`], which has configurable bounds) or may have no internal
+//! (e.g. [`Uniform`], which has configurable bounds) or may have no internal
 //! parameters (e.g. [`Standard`]).
 //! 
 //! All distributions support the [`Distribution`] trait, and support usage
 //! via `distr.sample(&mut rng)` as well as via `rng.sample(distr)`.
 //! 
 //! [`Distribution`]: trait.Distribution.html
-//! [`Range`]: range/struct.Range.html
+//! [`Uniform`]: uniform/struct.Uniform.html
 //! [`Standard`]: struct.Standard.html
 
 use Rng;
 
 pub use self::other::Alphanumeric;
-pub use self::range::Range;
+pub use self::uniform::Uniform;
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 #[cfg(feature="std")]
@@ -38,7 +38,7 @@ pub use self::poisson::Poisson;
 #[cfg(feature = "std")]
 pub use self::binomial::Binomial;
 
-pub mod range;
+pub mod uniform;
 #[cfg(feature="std")]
 pub mod gamma;
 #[cfg(feature="std")]
@@ -78,6 +78,15 @@ pub trait Sample<Support> {
 pub trait IndependentSample<Support>: Sample<Support> {
     /// Generate a random value.
     fn ind_sample<R: Rng>(&self, &mut R) -> Support;
+}
+
+/// DEPRECATED: Use `distributions::uniform` instead.
+#[deprecated(since="0.5.0", note="use uniform instead")]
+pub mod range {
+    pub use distributions::uniform::Uniform as Range;
+    pub use distributions::uniform::UniformInt as RangeInt;
+    pub use distributions::uniform::UniformFloat as RangeFloat;
+    pub use distributions::uniform::SampleUniform as SampleRange;
 }
 
 #[allow(deprecated)]
@@ -152,7 +161,7 @@ pub trait Distribution<T> {
     ///
     /// ```rust
     /// use rand::thread_rng;
-    /// use rand::distributions::{Distribution, Alphanumeric, Range, Standard};
+    /// use rand::distributions::{Distribution, Alphanumeric, Uniform, Standard};
     ///
     /// let mut rng = thread_rng();
     ///
@@ -163,7 +172,7 @@ pub trait Distribution<T> {
     /// let s: String = Alphanumeric.sample_iter(&mut rng).take(7).collect();
     ///
     /// // Dice-rolling:
-    /// let die_range = Range::new_inclusive(1, 6);
+    /// let die_range = Uniform::new_inclusive(1, 6);
     /// let mut roll_die = die_range.sample_iter(&mut rng);
     /// while roll_die.next().unwrap() != 6 {
     ///     println!("Not a 6; rolling again!");
@@ -343,7 +352,7 @@ pub struct Weighted<T> {
 #[derive(Debug)]
 pub struct WeightedChoice<'a, T:'a> {
     items: &'a mut [Weighted<T>],
-    weight_range: Range<u32>,
+    weight_range: Uniform<u32>,
 }
 
 impl<'a, T: Clone> WeightedChoice<'a, T> {
@@ -378,7 +387,7 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
             items,
             // we're likely to be generating numbers in this range
             // relatively often, so might as well cache it
-            weight_range: Range::new(0, running_total)
+            weight_range: Uniform::new(0, running_total)
         }
     }
 }
@@ -499,7 +508,7 @@ mod tests {
     fn test_weighted_choice() {
         // this makes assumptions about the internal implementation of
         // WeightedChoice. It may fail when the implementation in
-        // `distributions::range::RangeInt changes.
+        // `distributions::uniform::UniformInt` changes.
 
         macro_rules! t {
             ($items:expr, $expected:expr) => {{
@@ -511,7 +520,7 @@ mod tests {
                 let expected = $expected;
 
                 // Use extremely large steps between the random numbers, because
-                // we test with small ranges and RangeInt is designed to prefer
+                // we test with small ranges and `UniformInt` is designed to prefer
                 // the most significant bits.
                 let mut rng = StepRng::new(0, !0 / (total_weight as u64));
 
