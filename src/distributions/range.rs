@@ -287,8 +287,8 @@ macro_rules! range_int_impl {
             }
 
             fn sample_single<R: Rng + ?Sized>(low: Self::X,
-                                                  high: Self::X,
-                                                  rng: &mut R) -> Self::X
+                                              high: Self::X,
+                                              rng: &mut R) -> Self::X
             {
                 let range = (high as $u_large)
                             .wrapping_sub(low as $u_large);
@@ -457,6 +457,19 @@ macro_rules! range_float_impl {
                 // Doing multiply before addition allows some architectures to
                 // use a single instruction.
                 value1_2 * self.scale + self.offset
+            }
+
+            fn sample_single<R: Rng + ?Sized>(low: Self::X,
+                                              high: Self::X,
+                                              rng: &mut R) -> Self::X {
+                let scale = high - low;
+                let offset = low - scale;
+                // Generate a value in the range [1, 2)
+                let value1_2 = (rng.$next_u() >> $bits_to_discard)
+                               .into_float_with_exponent(0);
+                // Doing multiply before addition allows some architectures to
+                // use a single instruction.
+                value1_2 * scale + offset
             }
         }
     }
