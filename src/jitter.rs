@@ -51,6 +51,7 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 /// [Jitterentropy](http://www.chronox.de/jent.html) version 2.1.0.
 ///
 /// [`OsRng`]: ../os/struct.OsRng.html
+#[derive(Clone)]
 pub struct JitterRng {
     data: u64, // Actual random number
     // Number of rounds to run the entropy collector per 64 bits
@@ -62,6 +63,22 @@ pub struct JitterRng {
     // Make `next_u32` not waste 32 bits
     data_half_used: bool,
 }
+
+// Note: `JitterRng` maintains a small 64-bit entropy pool. With every
+// `generate` 64 new bits should be integrated in the pool. If a round of
+// `generate` were to collect less than the expected 64 bit, then the returned
+// value, and the new state of the entropy pool, would be in some way related to
+// the initial state. It is therefore better if the initial state of the entropy
+// pool is different on each call to `generate`. This has a few implications:
+// - `generate` should be called once before using `JitterRng` to produce the
+//   first usable value (this is done by default in `new`);
+// - We do not zero the entropy pool after generating a result. The reference
+//   implementation also does not support zeroing, but recommends generating a
+//   new value without using it if you want to protect a previously generated
+//   'secret' value from someone inspecting the memory;
+// - Implementing `Clone` seems acceptable, as it would not cause the systematic
+//   bias a constant might cause. Only instead of one value that could be
+//   potentially related to the same initial state, there are now two.
 
 // Entropy collector state.
 // These values are not necessary to preserve across runs.
