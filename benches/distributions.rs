@@ -1,5 +1,6 @@
 #![feature(test)]
-#![cfg_attr(feature = "i128_support", feature(i128_type, i128))]
+#![cfg_attr(all(feature="i128_support", feature="nightly"), allow(stable_features))] // stable since 2018-03-27
+#![cfg_attr(all(feature="i128_support", feature="nightly"), feature(i128_type, i128))]
 
 extern crate test;
 extern crate rand;
