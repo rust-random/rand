@@ -101,6 +101,10 @@ where R: BlockRngCore<Item = u32> + SeedableRng,
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.0.try_fill_bytes(dest)
     }
+
+    fn bytes_per_round(&self) -> usize {
+        self.0.bytes_per_round()
+    }
 }
 
 impl<R, Rsdr> CryptoRng for ReseedingRng<R, Rsdr>

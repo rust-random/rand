@@ -849,6 +849,10 @@ impl RngCore for StdRng {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.0.try_fill_bytes(dest)
     }
+
+    fn bytes_per_round(&self) -> usize {
+        self.0.bytes_per_round()
+    }
 }
 
 impl SeedableRng for StdRng {
@@ -936,6 +940,10 @@ impl RngCore for SmallRng {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.0.try_fill_bytes(dest)
     }
+
+    fn bytes_per_round(&self) -> usize {
+        self.0.bytes_per_round()
+    }
 }
 
 impl SeedableRng for SmallRng {
@@ -1016,6 +1024,9 @@ mod test {
         }
         fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             self.inner.try_fill_bytes(dest)
+        }
+        fn bytes_per_round(&self) -> usize {
+            self.inner.bytes_per_round()
         }
     }
 
