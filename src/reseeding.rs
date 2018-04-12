@@ -103,6 +103,17 @@ where R: BlockRngCore<Item = u32> + SeedableRng,
     }
 }
 
+impl<R, Rsdr> Clone for ReseedingRng<R, Rsdr>
+where R: BlockRngCore + SeedableRng + Clone,
+      Rsdr: RngCore + Clone
+{
+    fn clone(&self) -> ReseedingRng<R, Rsdr> {
+        // Recreating `BlockRng` seems easier than cloning it and resetting
+        // the index.
+        ReseedingRng(BlockRng::new(self.0.inner().clone()))
+    }
+}
+
 impl<R, Rsdr> CryptoRng for ReseedingRng<R, Rsdr>
 where R: BlockRngCore + SeedableRng + CryptoRng,
       Rsdr: RngCore + CryptoRng {}
@@ -186,6 +197,20 @@ where R: BlockRngCore + SeedableRng,
         let num_bytes = results.as_ref().len() * size_of::<<R as BlockRngCore>::Item>();
         self.bytes_until_reseed = threshold - num_bytes as i64;
         self.inner.generate(results);
+    }
+}
+
+impl<R, Rsdr> Clone for ReseedingCore<R, Rsdr>
+where R: BlockRngCore + SeedableRng + Clone,
+      Rsdr: RngCore + Clone
+{
+    fn clone(&self) -> ReseedingCore<R, Rsdr> {
+        ReseedingCore {
+            inner: self.inner.clone(),
+            reseeder: self.reseeder.clone(),
+            threshold: self.threshold,
+            bytes_until_reseed: 0, // reseed clone on first use
+        }
     }
 }
 
