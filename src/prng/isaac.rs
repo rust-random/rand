@@ -14,7 +14,7 @@ use core::{fmt, slice};
 use core::num::Wrapping as w;
 use rand_core::{BlockRngCore, RngCore, SeedableRng, Error, le};
 use rand_core::impls::BlockRng;
-use prng::isaac_array::IsaacArray;
+use prng::isaac_array::IsaacArray32;
 
 #[allow(non_camel_case_types)]
 type w32 = w<u32>;
@@ -160,7 +160,7 @@ impl fmt::Debug for IsaacCore {
 
 impl BlockRngCore for IsaacCore {
     type Item = u32;
-    type Results = IsaacArray<Self::Item>;
+    type Results = IsaacArray32;
 
     /// Refills the output buffer, `results`. See also the pseudocode desciption
     /// of the algorithm in the [`Isaac64Rng`] documentation.
@@ -183,12 +183,13 @@ impl BlockRngCore for IsaacCore {
     ///   reverse.
     /// 
     /// [`IsaacRng`]: struct.IsaacRng.html
-    fn generate(&mut self, results: &mut IsaacArray<Self::Item>) {
+    fn generate(&mut self, results: &mut IsaacArray32) {
         self.c += w(1);
         // abbreviations
         let mut a = self.a;
         let mut b = self.b + self.c;
         const MIDPOINT: usize = RAND_SIZE / 2;
+        let results = results.inner_mut();
 
         #[inline]
         fn ind(mem:&[w32; RAND_SIZE], v: w32, amount: usize) -> w32 {
