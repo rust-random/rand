@@ -42,7 +42,7 @@ use distributions::float::IntoFloat;
 /// use rand::distributions::{Distribution, Range};
 ///
 /// fn main() {
-///     let between = Range::new(10, 10000);
+///     let between = Range::from(10..10000);
 ///     let mut rng = rand::thread_rng();
 ///     let mut sum = 0;
 ///     for _ in 0..1000 {
@@ -173,6 +173,9 @@ pub trait RangeImpl: Sized {
 }
 
 /// Implementation of `RangeImpl` for integer types.
+///
+/// Unless you are implementing `RangeImpl` for your own type, this type should
+/// not be used directly, use `Range` instead.
 #[derive(Clone, Copy, Debug)]
 pub struct RangeInt<X> {
     low: X,
@@ -317,6 +320,12 @@ macro_rules! range_int_impl {
     }
 }
 
+impl<X: SampleRange> From<::core::ops::Range<X>> for Range<X> {
+    fn from(r: ::core::ops::Range<X>) -> Range<X> {
+        Range::new(r.start, r.end)
+    }
+}
+
 range_int_impl! { i8, i8, u8, i32, u32 }
 range_int_impl! { i16, i16, u16, i32, u32 }
 range_int_impl! { i32, i32, u32, i32, u32 }
@@ -420,6 +429,9 @@ wmul_impl_usize! { u64 }
 
 
 /// Implementation of `RangeImpl` for float types.
+///
+/// Unless you are implementing `RangeImpl` for your own type, this type should
+/// not be used directly, use `Range` instead.
 #[derive(Clone, Copy, Debug)]
 pub struct RangeFloat<X> {
     scale: X,
@@ -454,8 +466,11 @@ macro_rules! range_float_impl {
                 // Generate a value in the range [1, 2)
                 let value1_2 = (rng.$next_u() >> $bits_to_discard)
                                .into_float_with_exponent(0);
-                // Doing multiply before addition allows some architectures to
-                // use a single instruction.
+                // We don't use `f64::mul_add`, because it is not available with
+                // `no_std`. Furthermore, it is slower for some targets (but
+                // faster for others). However, the order of multiplication and
+                // addition is important, because on some platforms (e.g. ARM)
+                // it will be optimized to a single (non-FMA) instruction.
                 value1_2 * self.scale + self.offset
             }
         }
@@ -469,7 +484,7 @@ range_float_impl! { f64, 64 - 52, next_u64 }
 #[cfg(test)]
 mod tests {
     use Rng;
-    use distributions::range::{Range, RangeImpl, RangeFloat, SampleRange};
+    use distributions::range::{Range, RangeImpl, RangeInt, RangeFloat, SampleRange};
 
     #[should_panic]
     #[test]
@@ -577,5 +592,15 @@ mod tests {
             let x: MyF32 = rng.sample(range);
             assert!(low <= x && x < high);
         }
+    }
+
+    #[test]
+    fn test_range_from_std_range() {
+        let r = Range::from(2u32..7);
+        assert_eq!(r.inner.low, 2);
+        assert_eq!(r.inner.range, 5);
+        let r = Range::from(2.0f64..7.0);
+        assert_eq!(r.inner.offset, -3.0);
+        assert_eq!(r.inner.scale, 5.0);
     }
 }
