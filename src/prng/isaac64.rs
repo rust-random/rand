@@ -13,8 +13,8 @@
 use core::{fmt, slice};
 use core::num::Wrapping as w;
 use rand_core::{BlockRngCore, RngCore, SeedableRng, Error, le};
-use rand_core::impls::BlockRng64;
-use prng::isaac_array::IsaacArray;
+use rand_core::impls::BlockRng;
+use prng::isaac_array::IsaacArray64;
 
 #[allow(non_camel_case_types)]
 type w64 = w<u64>;
@@ -78,7 +78,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// [`Hc128Rng`]: ../hc128/struct.Hc128Rng.html
 #[derive(Clone, Debug)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
-pub struct Isaac64Rng(BlockRng64<Isaac64Core>);
+pub struct Isaac64Rng(BlockRng<Isaac64Core>);
 
 impl RngCore for Isaac64Rng {
     #[inline(always)]
@@ -104,11 +104,11 @@ impl SeedableRng for Isaac64Rng {
     type Seed = <Isaac64Core as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        Isaac64Rng(BlockRng64::<Isaac64Core>::from_seed(seed))
+        Isaac64Rng(BlockRng::<Isaac64Core>::from_seed(seed))
     }
 
     fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
-        BlockRng64::<Isaac64Core>::from_rng(rng).map(|rng| Isaac64Rng(rng))
+        BlockRng::<Isaac64Core>::from_rng(rng).map(|rng| Isaac64Rng(rng))
     }
 }
 
@@ -126,7 +126,7 @@ impl Isaac64Rng {
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.
     pub fn new_from_u64(seed: u64) -> Self {
-        Isaac64Rng(BlockRng64::new(Isaac64Core::new_from_u64(seed)))
+        Isaac64Rng(BlockRng::new(Isaac64Core::new_from_u64(seed)))
     }
 }
 
@@ -149,8 +149,8 @@ impl fmt::Debug for Isaac64Core {
 }
 
 impl BlockRngCore for Isaac64Core {
-    type Item = u64;
-    type Results = IsaacArray<Self::Item>;
+    type Item = u32;
+    type Results = IsaacArray64;
 
     /// Refills the output buffer, `results`. See also the pseudocode desciption
     /// of the algorithm in the [`Isaac64Rng`] documentation.
@@ -173,12 +173,13 @@ impl BlockRngCore for Isaac64Core {
     ///   reverse.
     /// 
     /// [`Isaac64Rng`]: struct.Isaac64Rng.html
-    fn generate(&mut self, results: &mut IsaacArray<Self::Item>) {
+    fn generate(&mut self, results: &mut IsaacArray64) {
         self.c += w(1);
         // abbreviations
         let mut a = self.a;
         let mut b = self.b + self.c;
         const MIDPOINT: usize = RAND_SIZE / 2;
+        let results = results.inner_mut();
 
         #[inline]
         fn ind(mem:&[w64; RAND_SIZE], v: w64, amount: usize) -> w64 {
@@ -398,9 +399,8 @@ mod test {
         assert_eq!(rng.next_u32(), 1797495790);
         assert_eq!(rng.next_u64(), 10836773366498097981);
         assert_eq!(rng.next_u32(), 4044335064);
-        // Skip one u32
-        assert_eq!(rng.next_u64(), 12890513357046278984);
-        assert_eq!(rng.next_u32(), 69157722);
+        assert_eq!(rng.next_u64(), 17522357470945776958);
+        assert_eq!(rng.next_u32(), 3001306521);
     }
 
     #[test]
