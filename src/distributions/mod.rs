@@ -260,7 +260,7 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// let mut rng = thread_rng();
 /// let erased_rng: &mut RngCore = &mut rng;
 /// let val: f32 = erased_rng.sample(Standard);
-/// println!("f32 from (0,1): {}", val);
+/// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
 /// # Open interval for floats
@@ -282,6 +282,17 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// In other words, the guarantee some value *could* be generated is less useful
 /// than the guarantee some value (`0.0`) is never generated. That makes an open
 /// interval a nicer choice.
+///
+/// Consider using `Rng::gen_range` if you really need a half-open interval (as
+/// the ranges use a half-open interval). It has the same performance. Example:
+///
+/// ```
+/// use rand::{thread_rng, Rng};
+///
+/// let mut rng = thread_rng();
+/// let val = rng.gen_range(0.0f32, 1.0);
+/// println!("f32 from [0, 1): {}", val);
+/// ```
 ///
 /// [`Exp1`]: struct.Exp1.html
 /// [`StandardNormal`]: struct.StandardNormal.html
