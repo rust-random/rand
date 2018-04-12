@@ -173,6 +173,8 @@ pub trait RangeImpl: Sized {
 }
 
 /// Implementation of `RangeImpl` for integer types.
+///
+/// This type should not be used directly, use `Range` instead.
 #[derive(Clone, Copy, Debug)]
 pub struct RangeInt<X> {
     low: X,
@@ -432,6 +434,8 @@ wmul_impl_usize! { u64 }
 
 
 /// Implementation of `RangeImpl` for float types.
+///
+/// This type should not be used directly, use `Range` instead.
 #[derive(Clone, Copy, Debug)]
 pub struct RangeFloat<X> {
     scale: X,
