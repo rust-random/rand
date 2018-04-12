@@ -316,12 +316,6 @@ macro_rules! range_int_impl {
                 }
             }
         }
-
-        impl From<::core::ops::Range<$ty>> for RangeInt<$ty> {
-            fn from(r: ::core::ops::Range<$ty>) -> RangeInt<$ty> {
-                RangeInt::<$ty>::new(r.start, r.end)
-            }
-        }
     }
 }
 
@@ -478,12 +472,6 @@ macro_rules! range_float_impl {
                 value1_2 * self.scale + self.offset
             }
         }
-
-        impl From<::core::ops::Range<$ty>> for RangeFloat<$ty> {
-            fn from(r: ::core::ops::Range<$ty>) -> RangeFloat<$ty> {
-                RangeFloat::<$ty>::new(r.start, r.end)
-            }
-        }
     }
 }
 
@@ -602,16 +590,6 @@ mod tests {
             let x: MyF32 = rng.sample(range);
             assert!(low <= x && x < high);
         }
-    }
-
-    #[test]
-    fn test_rangeint_from_std_range() {
-        let r = RangeInt::from(2..7);
-        assert_eq!(r.low, 2);
-        assert_eq!(r.range, 5);
-        let r = RangeFloat::from(2.0..7.0);
-        assert_eq!(r.offset, -3.0);
-        assert_eq!(r.scale, 5.0);
     }
 
     #[test]
