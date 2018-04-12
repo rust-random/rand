@@ -70,31 +70,31 @@ macro_rules! distr {
     }
 }
 
-// range
-distr_int!(distr_range_i8, i8, Range::new(20i8, 100));
-distr_int!(distr_range_i16, i16, Range::new(-500i16, 2000));
-distr_int!(distr_range_i32, i32, Range::new(-200_000_000i32, 800_000_000));
-distr_int!(distr_range_i64, i64, Range::new(3i64, 123_456_789_123));
-#[cfg(feature = "i128_support")]
-distr_int!(distr_range_i128, i128, Range::new(-123_456_789_123i128, 123_456_789_123_456_789));
-
-distr_float!(distr_range_f32, f32, Range::new(2.26f32, 2.319));
-distr_float!(distr_range_f64, f64, Range::new(2.26f64, 2.319));
-
 // uniform
-distr_int!(distr_uniform_i8, i8, Standard);
-distr_int!(distr_uniform_i16, i16, Standard);
-distr_int!(distr_uniform_i32, i32, Standard);
-distr_int!(distr_uniform_i64, i64, Standard);
+distr_int!(distr_uniform_i8, i8, Uniform::new(20i8, 100));
+distr_int!(distr_uniform_i16, i16, Uniform::new(-500i16, 2000));
+distr_int!(distr_uniform_i32, i32, Uniform::new(-200_000_000i32, 800_000_000));
+distr_int!(distr_uniform_i64, i64, Uniform::new(3i64, 123_456_789_123));
 #[cfg(feature = "i128_support")]
-distr_int!(distr_uniform_i128, i128, Standard);
+distr_int!(distr_uniform_i128, i128, Uniform::new(-123_456_789_123i128, 123_456_789_123_456_789));
 
-distr!(distr_uniform_bool, bool, Standard);
-distr!(distr_uniform_alphanumeric, char, Alphanumeric);
-distr!(distr_uniform_codepoint, char, Standard);
+distr_float!(distr_uniform_f32, f32, Uniform::new(2.26f32, 2.319));
+distr_float!(distr_uniform_f64, f64, Uniform::new(2.26f64, 2.319));
 
-distr_float!(distr_uniform_f32, f32, Standard);
-distr_float!(distr_uniform_f64, f64, Standard);
+// standard
+distr_int!(distr_standard_i8, i8, Standard);
+distr_int!(distr_standard_i16, i16, Standard);
+distr_int!(distr_standard_i32, i32, Standard);
+distr_int!(distr_standard_i64, i64, Standard);
+#[cfg(feature = "i128_support")]
+distr_int!(distr_standard_i128, i128, Standard);
+
+distr!(distr_standard_bool, bool, Standard);
+distr!(distr_standard_alphanumeric, char, Alphanumeric);
+distr!(distr_standard_codepoint, char, Standard);
+
+distr_float!(distr_standard_f32, f32, Standard);
+distr_float!(distr_standard_f64, f64, Standard);
 
 // distributions
 distr_float!(distr_exp, f64, Exp::new(1.23 * 4.56));
