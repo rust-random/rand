@@ -468,7 +468,9 @@ macro_rules! range_float_impl {
                                .into_float_with_exponent(0);
                 // We don't use `f64::mul_add`, because it is not available with
                 // `no_std`. Furthermore, it is slower for some targets (but
-                // faster for others).
+                // faster for others). However, the order of multiplication and
+                // addition is important, because on some platforms (e.g. ARM)
+                // it will be optimized to a single (non-FMA) instruction.
                 value1_2 * self.scale + self.offset
             }
         }
