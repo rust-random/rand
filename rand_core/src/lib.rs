@@ -121,7 +121,7 @@ pub mod le;
 ///     }
 ///     
 ///     fn fill_bytes(&mut self, dest: &mut [u8]) {
-///         impls::fill_bytes_via_u64(self, dest)
+///         impls::fill_bytes_via_next(self, dest)
 ///     }
 ///     
 ///     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
@@ -160,8 +160,7 @@ pub trait RngCore {
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// [via `next_u32`](../rand_core/impls/fn.fill_bytes_via_u32.html) or
-    /// [via `next_u64`](../rand_core/impls/fn.fill_bytes_via_u64.html) or
+    /// [via `next_u*`](../rand_core/impls/fn.fill_bytes_via_next.html) or
     /// via `try_fill_bytes`; if this generator can fail the implementation
     /// must choose how best to handle errors here (e.g. panic with a
     /// descriptive message or log a warning and retry a few times).

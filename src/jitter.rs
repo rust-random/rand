@@ -804,7 +804,7 @@ impl RngCore for JitterRng {
         //
         // This is done especially for wrappers that implement `next_u32`
         // themselves via `fill_bytes`.
-        impls::fill_bytes_via_u32(self, dest)
+        impls::fill_bytes_via_next(self, dest)
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
