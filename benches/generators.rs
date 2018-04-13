@@ -46,6 +46,7 @@ gen_bytes!(gen_bytes_os, OsRng::new().unwrap());
 macro_rules! gen_uint {
     ($fnn:ident, $ty:ty, $gen:expr) => {
         #[bench]
+        #[allow(unused_mut)]
         fn $fnn(b: &mut Bencher) {
             let mut rng = $gen;
             b.iter(|| {
@@ -79,6 +80,8 @@ gen_uint!(gen_u64_os, u64, OsRng::new().unwrap());
 #[cfg(feature = "i128_support")] gen_uint!(gen_u128_xorshift, u128, XorShiftRng::new());
 #[cfg(feature = "i128_support")] gen_uint!(gen_u128_hc128, u128, Hc128Rng::new());
 #[cfg(feature = "i128_support")] gen_uint!(gen_u128_os, u128, OsRng::new().unwrap());
+#[cfg(feature = "i128_support")]
+gen_uint!(gen_u128_hc128_trait_obj, u128, &mut Hc128Rng::new() as &mut RngCore);
 
 // Do not test JitterRng like the others by running it RAND_BENCH_N times per,
 // measurement, because it is way too slow. Only run it once.
