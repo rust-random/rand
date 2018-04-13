@@ -37,7 +37,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Add `Error` and `ErrorKind`. (#225)
 - Add `CryptoRng` marker trait. (#273)
 - Add `BlockRngCore` trait. (#281)
-- Add `BlockRng` wrapper to help implementations. (#281)
+- Add `BlockRng` and `BlockRng64` wrappers to help implementations. (#281, #325)
 - Revise the `SeedableRng` trait. (#233)
 - Remove default implementations for `RngCore::next_u64` and `RngCore::fill_bytes`. (#288)
 - Add `RngCore::try_fill_bytes`. (#225)
