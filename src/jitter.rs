@@ -51,7 +51,6 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 /// [Jitterentropy](http://www.chronox.de/jent.html) version 2.1.0.
 ///
 /// [`OsRng`]: ../os/struct.OsRng.html
-#[derive(Clone)]
 pub struct JitterRng {
     data: u64, // Actual random number
     // Number of rounds to run the entropy collector per 64 bits
@@ -117,6 +116,20 @@ impl EcState {
 impl fmt::Debug for JitterRng {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "JitterRng {{}}")
+    }
+}
+
+impl Clone for JitterRng {
+    fn clone(&self) -> JitterRng {
+        JitterRng {
+            data: self.data,
+            rounds: self.rounds,
+            timer: self.timer,
+            mem_prev_index: self.mem_prev_index,
+            // The 32 bits that may still be unused from the previous round are
+            // for the original to use, not for the clone.
+            data_half_used: false,
+        }
     }
 }
 
