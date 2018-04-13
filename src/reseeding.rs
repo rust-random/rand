@@ -19,6 +19,8 @@ use rand_core::impls::BlockRng;
 /// A wrapper around any PRNG which reseeds the underlying PRNG after it has
 /// generated a certain number of random bytes.
 ///
+/// When the RNG gets cloned, the clone is reseeded on first use.
+///
 /// Reseeding is never strictly *necessary*. Cryptographic PRNGs don't have a
 /// limited number of bytes they can output, or at least not a limit reachable
 /// in any practical way. There is no such thing as 'running out of entropy'.
@@ -241,5 +243,18 @@ mod test {
             reseeding.fill(&mut buf);
             assert_eq!(buf, seq);
         }
+    }
+
+    #[test]
+    fn test_clone_reseeding() {
+        let mut zero = StepRng::new(0, 0);
+        let rng = ChaChaCore::from_rng(&mut zero).unwrap();
+        let mut rng1 = ReseedingRng::new(rng, 32*4, zero);
+
+        let first: u32 = rng1.gen();
+        for _ in 0..10 { let _ = rng1.gen::<u32>(); }
+
+        let mut rng2 = rng1.clone();
+        assert_eq!(first, rng2.gen::<u32>());
     }
 }
