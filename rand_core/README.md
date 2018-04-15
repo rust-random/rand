@@ -50,6 +50,9 @@ Due to [rust-lang/cargo#1596](https://github.com/rust-lang/cargo/issues/1596),
 unioned across the whole dependency tree, any crate using `rand` with its
 default features will also enable `std` support in `rand_core`.
 
+The `serde1` feature can be used to derive `Serialize` and `Deserialize` for RNG
+implementations that use the `BlockRng` or `BlockRng64` wrappers.
+
 
 # License
 
