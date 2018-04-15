@@ -43,7 +43,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Add `RngCore::try_fill_bytes`. (#225)
 
 ### Other traits and types
-- Add `NewRng` trait. (#233)
+- Add `FromEntropy` trait. (#233, #375)
 - Add `SmallRng` wrapper. (#296)
 - Rewrite `ReseedingRng` to only work with `BlockRngCore` (substantial performance improvement). (#281)
 - Deprecate `weak_rng`. Use `SmallRng` instead. (#296)
@@ -52,6 +52,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 
 ### Random number generators
 - Switch `StdRng` and `thread_rng` to HC-128. (#277)
+- `StdRng` must now be created with `from_entropy` instead of `new`
 - Change `thread_rng` reseeding threshold to 32 MiB. (#277)
 - PRNGs no longer implement `Copy`. (#209)
 - `Debug` implementations no longer show internals. (#209)
