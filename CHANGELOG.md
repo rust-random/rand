@@ -31,7 +31,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Deprecate `Rng::gen_ascii_chars`. (#279)
 
 ### `rand_core` crate
-(changes included here because they greatly influence the Rand crate)
+- `rand` now depends on new `rand_core` crate (#288)
 - `RngCore` and `SeedableRng` are now part of `rand_core`. (#288)
 - Add modules to help implementing RNGs `impl` and `le`. (#209, #228)
 - Add `Error` and `ErrorKind`. (#225)
