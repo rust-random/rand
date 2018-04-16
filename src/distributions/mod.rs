@@ -26,6 +26,7 @@
 use Rng;
 
 pub use self::other::Alphanumeric;
+pub use self::float::HighPrecision01;
 pub use self::range::Range;
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
