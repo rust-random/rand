@@ -86,8 +86,6 @@ pub trait IndependentSample<Support>: Sample<Support> {
 #[deprecated(since="0.5.0", note="use uniform instead")]
 pub mod range {
     pub use distributions::uniform::Uniform as Range;
-    pub use distributions::uniform::UniformInt as RangeInt;
-    pub use distributions::uniform::UniformFloat as RangeFloat;
     pub use distributions::uniform::SampleUniform as SampleRange;
 }
 
