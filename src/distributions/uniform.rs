@@ -16,8 +16,9 @@ use distributions::float::IntoFloat;
 
 /// Sample values uniformly between two bounds.
 ///
-/// `Uniform::new` and `Uniform::new_inclusive` will set up a `Uniform`, which does
-/// some preparations up front to make sampling values faster.
+/// `Uniform::new` and `Uniform::new_inclusive` construct a `Uniform`
+/// distribution sampling from the closed-open and the closed (inclusive) range.
+/// Some preparations are performed up front to make sampling values faster.
 /// `Uniform::sample_single` is optimized for sampling values once or only a
 /// limited number of times from a range.
 ///
