@@ -66,9 +66,9 @@ impl<X: SampleUniform> Uniform<X> {
     }
 
     /// Create a new `Uniform` instance which samples uniformly from the closed
-    /// range `[low, high]` (inclusive). Panics if `low >= high`.
+    /// range `[low, high]` (inclusive). Panics if `low > high`.
     pub fn new_inclusive(low: X, high: X) -> Uniform<X> {
-        assert!(low < high, "Uniform::new called with `low >= high`");
+        assert!(low <= high, "Uniform::new_inclusive called with `low > high`");
         Uniform { inner: X::Impl::new_inclusive(low, high) }
     }
 
@@ -502,14 +502,44 @@ mod tests {
 
     #[should_panic]
     #[test]
-    fn test_uniform_bad_limits_equal() {
+    fn test_uniform_bad_limits_equal_int() {
         Uniform::new(10, 10);
     }
 
     #[should_panic]
     #[test]
-    fn test_uniform_bad_limits_flipped() {
+    fn test_uniform_bad_limits_equal_float() {
+        Uniform::new(10., 10.);
+    }
+
+    #[test]
+    fn test_uniform_good_limits_equal_int() {
+        let mut rng = ::test::rng(804);
+        let dist = Uniform::new_inclusive(10, 10);
+        for _ in 0..20 {
+            assert_eq!(rng.sample(dist), 10);
+        }
+    }
+
+    #[test]
+    fn test_uniform_good_limits_equal_float() {
+        let mut rng = ::test::rng(805);
+        let dist = Uniform::new_inclusive(10., 10.);
+        for _ in 0..20 {
+            assert_eq!(rng.sample(dist), 10.);
+        }
+    }
+
+    #[should_panic]
+    #[test]
+    fn test_uniform_bad_limits_flipped_int() {
         Uniform::new(10, 5);
+    }
+
+    #[should_panic]
+    #[test]
+    fn test_uniform_bad_limits_flipped_float() {
+        Uniform::new(10., 5.);
     }
 
     #[test]
