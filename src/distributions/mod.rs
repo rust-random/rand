@@ -27,7 +27,7 @@ use Rng;
 
 pub use self::other::Alphanumeric;
 pub use self::uniform::Uniform;
-#[deprecated(since="0.5.0", note="use Distribution instead")]
+#[deprecated(since="0.5.0", note="use Uniform instead")]
 pub use self::uniform::Uniform as Range;
 #[cfg(feature="std")]
 pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
