@@ -213,6 +213,10 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
     fn next(&mut self) -> Option<T> {
         Some(self.distr.sample(self.rng))
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (usize::max_value(), None)
+    }
 }
 
 impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
