@@ -178,8 +178,8 @@ pub trait Distribution<T> {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    fn sample_iter<'a, R: Rng>(&'a self, rng: &'a mut R)
-        -> DistIter<'a, Self, R, T> where Self: Sized
+    fn sample_iter<'a, R>(&'a self, rng: &'a mut R) -> DistIter<'a, Self, R, T>
+        where Self: Sized, R: Rng
     {
         DistIter {
             distr: self,
@@ -188,6 +188,13 @@ pub trait Distribution<T> {
         }
     }
 }
+
+impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
+        (*self).sample(rng)
+    }
+}
+
 
 /// An iterator that generates random values of `T` with distribution `D`,
 /// using `R` as the source of randomness.
@@ -198,7 +205,7 @@ pub trait Distribution<T> {
 /// [`Distribution`]: trait.Distribution.html
 /// [`sample_iter`]: trait.Distribution.html#method.sample_iter
 #[derive(Debug)]
-pub struct DistIter<'a, D, R, T> where D: Distribution<T> + 'a, R: Rng + 'a {
+pub struct DistIter<'a, D: 'a, R: 'a, T> {
     distr: &'a D,
     rng: &'a mut R,
     phantom: ::core::marker::PhantomData<T>,
@@ -219,11 +226,6 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
     }
 }
 
-impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
-        (*self).sample(rng)
-    }
-}
 
 /// A generic random value distribution. Generates values for various types
 /// with numerically uniform distribution.
