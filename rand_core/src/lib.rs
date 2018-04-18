@@ -186,6 +186,19 @@ pub trait RngCore {
     /// 
     /// [`fill_bytes`]: trait.RngCore.html#method.fill_bytes
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
+
+    /// Number of bytes generated per round of this RNG.
+    ///
+    /// Some algorithms would benefit from knowing some basic properties about
+    /// the RNG. In terms of performance an algorithm may want to know whether
+    /// an RNG is best at generating `u32`s, or could provide `u64`s or more at
+    /// little to no extra cost.
+    ///
+    /// For many RNGs a simple definition is: the smallest number of bytes this
+    /// RNG can generate without throwing away part of the generated value.
+    ///
+    /// `bytes_per_round` has a default implementation that returns `4` (bytes).
+    fn bytes_per_round(&self) -> usize { 4 }
 }
 
 /// A trait for RNGs which do not generate random numbers individually, but in
@@ -409,6 +422,10 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill_bytes(dest)
     }
+
+    fn bytes_per_round(&self) -> usize {
+        (**self).bytes_per_round()
+    }
 }
 
 // Implement `RngCore` for boxed references to an `RngCore`.
@@ -434,5 +451,9 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
     #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         (**self).try_fill_bytes(dest)
+    }
+
+    fn bytes_per_round(&self) -> usize {
+        (**self).bytes_per_round()
     }
 }

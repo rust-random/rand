@@ -131,6 +131,14 @@ impl RngCore for OsRng {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.0.try_fill_bytes(dest)
     }
+
+    fn bytes_per_round(&self) -> usize {
+        // The overhead of doing a syscall is large compared to the time
+        // it takes to generate the values. Requesting many values at a time is
+        // often faster than only one at a time.
+        // 256 is the limit some operating systems have per system call.
+        256
+    }
 }
 
 #[cfg(all(unix,

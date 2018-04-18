@@ -58,4 +58,6 @@ impl RngCore for StepRng {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         Ok(self.fill_bytes(dest))
     }
+
+    fn bytes_per_round(&self) -> usize { 8 }
 }
