@@ -243,8 +243,8 @@ mod reseeding;
 
 // Normal imports just for this file
 use core::{marker, mem, slice};
-use distributions::{Distribution, Standard, Range};
-use distributions::range::SampleRange;
+use distributions::{Distribution, Standard, Uniform};
+use distributions::uniform::SampleUniform;
 use prng::hc128::Hc128Rng;
 
 
@@ -325,10 +325,10 @@ pub trait Rng: RngCore {
     /// `low` and exclusive of `high`.
     ///
     /// This is a convenience wrapper around
-    /// `distributions::Range`. If this function will be called
-    /// repeatedly with the same arguments, one should use `Range`, as
+    /// `distributions::Uniform`. If this function will be called
+    /// repeatedly with the same arguments, one should use `Uniform`, as
     /// that will amortize the computations that allow for perfect
-    /// uniformity, as they only happen when constructing the `Range`.
+    /// uniformity, as they only happen when constructing the `Uniform`.
     ///
     /// # Panics
     ///
@@ -345,8 +345,8 @@ pub trait Rng: RngCore {
     /// let m: f64 = rng.gen_range(-40.0f64, 1.3e5f64);
     /// println!("{}", m);
     /// ```
-    fn gen_range<T: PartialOrd + SampleRange>(&mut self, low: T, high: T) -> T {
-        Range::sample_single(low, high, self)
+    fn gen_range<T: PartialOrd + SampleUniform>(&mut self, low: T, high: T) -> T {
+        Uniform::sample_single(low, high, self)
     }
 
     /// Sample a new value, using the given distribution.
@@ -355,10 +355,10 @@ pub trait Rng: RngCore {
     ///
     /// ```rust
     /// use rand::{thread_rng, Rng};
-    /// use rand::distributions::Range;
+    /// use rand::distributions::Uniform;
     ///
     /// let mut rng = thread_rng();
-    /// let x: i32 = rng.sample(Range::new(10, 15));
+    /// let x: i32 = rng.sample(Uniform::new(10, 15));
     /// ```
     fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
         distr.sample(self)
@@ -370,7 +370,7 @@ pub trait Rng: RngCore {
     ///
     /// ```rust
     /// use rand::{thread_rng, Rng};
-    /// use rand::distributions::{Alphanumeric, Range, Standard};
+    /// use rand::distributions::{Alphanumeric, Uniform, Standard};
     ///
     /// let mut rng = thread_rng();
     ///
@@ -385,7 +385,7 @@ pub trait Rng: RngCore {
     ///                              .collect::<Vec<(f64, bool)>>());
     ///
     /// // Dice-rolling:
-    /// let die_range = Range::new_inclusive(1, 6);
+    /// let die_range = Uniform::new_inclusive(1, 6);
     /// let mut roll_die = rng.sample_iter(&die_range);
     /// while roll_die.next().unwrap() != 6 {
     ///     println!("Not a 6; rolling again!");

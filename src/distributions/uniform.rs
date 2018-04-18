@@ -8,7 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! A distribution generating numbers within a given range.
+//! A distribution uniformly generating numbers within a given range.
 
 use Rng;
 use distributions::Distribution;
@@ -16,9 +16,10 @@ use distributions::float::IntoFloat;
 
 /// Sample values uniformly between two bounds.
 ///
-/// `Range::new` and `Range::new_inclusive` will set up a `Range`, which does
-/// some preparations up front to make sampling values faster.
-/// `Range::sample_single` is optimized for sampling values once or only a
+/// `Uniform::new` and `Uniform::new_inclusive` construct a `Uniform`
+/// distribution sampling from the closed-open and the closed (inclusive) range.
+/// Some preparations are performed up front to make sampling values faster.
+/// `Uniform::sample_single` is optimized for sampling values once or only a
 /// limited number of times from a range.
 ///
 /// If you need to sample many values from a range, consider using `new` or
@@ -31,7 +32,7 @@ use distributions::float::IntoFloat;
 /// `high = 170u8`, for which a naive modulo operation would return numbers less
 /// than 85 with double the probability to those greater than 85.
 ///
-/// Types should attempt to sample in `[low, high)` for `Range::new(low, high)`,
+/// Types should attempt to sample in `[low, high)` for `Uniform::new(low, high)`,
 /// i.e., excluding `high`, but this may be very difficult. All the primitive
 /// integer types satisfy this property, and the float types normally satisfy
 /// it, but rounding may mean `high` can occur.
@@ -39,10 +40,10 @@ use distributions::float::IntoFloat;
 /// # Example
 ///
 /// ```rust
-/// use rand::distributions::{Distribution, Range};
+/// use rand::distributions::{Distribution, Uniform};
 ///
 /// fn main() {
-///     let between = Range::from(10..10000);
+///     let between = Uniform::from(10..10000);
 ///     let mut rng = rand::thread_rng();
 ///     let mut sum = 0;
 ///     for _ in 0..1000 {
@@ -52,87 +53,87 @@ use distributions::float::IntoFloat;
 /// }
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Range<X: SampleRange> {
+pub struct Uniform<X: SampleUniform> {
     inner: X::Impl,
 }
 
-impl<X: SampleRange> Range<X> {
-    /// Create a new `Range` instance which samples uniformly from the half
+impl<X: SampleUniform> Uniform<X> {
+    /// Create a new `Uniform` instance which samples uniformly from the half
     /// open range `[low, high)` (excluding `high`). Panics if `low >= high`.
-    pub fn new(low: X, high: X) -> Range<X> {
-        assert!(low < high, "Range::new called with `low >= high`");
-        Range { inner: X::Impl::new(low, high) }
+    pub fn new(low: X, high: X) -> Uniform<X> {
+        assert!(low < high, "Uniform::new called with `low >= high`");
+        Uniform { inner: X::Impl::new(low, high) }
     }
 
-    /// Create a new `Range` instance which samples uniformly from the closed
-    /// range `[low, high]` (inclusive). Panics if `low >= high`.
-    pub fn new_inclusive(low: X, high: X) -> Range<X> {
-        assert!(low < high, "Range::new called with `low >= high`");
-        Range { inner: X::Impl::new_inclusive(low, high) }
+    /// Create a new `Uniform` instance which samples uniformly from the closed
+    /// range `[low, high]` (inclusive). Panics if `low > high`.
+    pub fn new_inclusive(low: X, high: X) -> Uniform<X> {
+        assert!(low <= high, "Uniform::new_inclusive called with `low > high`");
+        Uniform { inner: X::Impl::new_inclusive(low, high) }
     }
 
     /// Sample a single value uniformly from `[low, high)`.
     /// Panics if `low >= high`.
     pub fn sample_single<R: Rng + ?Sized>(low: X, high: X, rng: &mut R) -> X {
-        assert!(low < high, "Range::sample_single called with low >= high");
+        assert!(low < high, "Uniform::sample_single called with low >= high");
         X::Impl::sample_single(low, high, rng)
     }
 }
 
-impl<X: SampleRange> Distribution<X> for Range<X> {
+impl<X: SampleUniform> Distribution<X> for Uniform<X> {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> X {
         self.inner.sample(rng)
     }
 }
 
 /// Helper trait for creating objects using the correct implementation of
-/// `RangeImpl` for the sampling type; this enables `Range::new(a, b)` to work.
-pub trait SampleRange: PartialOrd+Sized {
-    /// The `RangeImpl` implementation supporting type `X`.
-    type Impl: RangeImpl<X = Self>;
+/// `UniformImpl` for the sampling type; this enables `Uniform::new(a, b)` to work.
+pub trait SampleUniform: PartialOrd+Sized {
+    /// The `UniformImpl` implementation supporting type `X`.
+    type Impl: UniformImpl<X = Self>;
 }
 
-/// Helper trait handling actual range sampling.
+/// Helper trait handling actual uniform sampling.
 ///
-/// If you want to implement `Range` sampling for your own type, then
-/// implement both this trait and `SampleRange`:
+/// If you want to implement `Uniform` sampling for your own type, then
+/// implement both this trait and `SampleUniform`:
 ///
 /// ```rust
 /// use rand::{Rng, thread_rng};
 /// use rand::distributions::Distribution;
-/// use rand::distributions::range::{Range, SampleRange, RangeImpl, RangeFloat};
+/// use rand::distributions::uniform::{Uniform, SampleUniform, UniformImpl, UniformFloat};
 ///
 /// #[derive(Clone, Copy, PartialEq, PartialOrd)]
 /// struct MyF32(f32);
 ///
 /// #[derive(Clone, Copy, Debug)]
-/// struct RangeMyF32 {
-///     inner: RangeFloat<f32>,
+/// struct UniformMyF32 {
+///     inner: UniformFloat<f32>,
 /// }
-/// impl RangeImpl for RangeMyF32 {
+/// impl UniformImpl for UniformMyF32 {
 ///     type X = MyF32;
 ///     fn new(low: Self::X, high: Self::X) -> Self {
-///         RangeMyF32 {
-///             inner: RangeFloat::<f32>::new(low.0, high.0),
+///         UniformMyF32 {
+///             inner: UniformFloat::<f32>::new(low.0, high.0),
 ///         }
 ///     }
 ///     fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-///         RangeImpl::new(low, high)
+///         UniformImpl::new(low, high)
 ///     }
 ///     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
 ///         MyF32(self.inner.sample(rng))
 ///     }
 /// }
 ///
-/// impl SampleRange for MyF32 {
-///     type Impl = RangeMyF32;
+/// impl SampleUniform for MyF32 {
+///     type Impl = UniformMyF32;
 /// }
 ///
 /// let (low, high) = (MyF32(17.0f32), MyF32(22.0f32));
-/// let range = Range::new(low, high);
-/// let x = range.sample(&mut thread_rng());
+/// let uniform = Uniform::new(low, high);
+/// let x = uniform.sample(&mut thread_rng());
 /// ```
-pub trait RangeImpl: Sized {
+pub trait UniformImpl: Sized {
     /// The type sampled by this implementation.
     type X: PartialOrd;
 
@@ -140,13 +141,13 @@ pub trait RangeImpl: Sized {
     /// `[low, high)`.
     ///
     /// Usually users should not call this directly but instead use
-    /// `Range::new`, which asserts that `low < high` before calling this.
+    /// `Uniform::new`, which asserts that `low < high` before calling this.
     fn new(low: Self::X, high: Self::X) -> Self;
 
     /// Construct self, with inclusive bounds `[low, high]`.
     ///
     /// Usually users should not call this directly but instead use
-    /// `Range::new_inclusive`, which asserts that `low < high` before calling
+    /// `Uniform::new_inclusive`, which asserts that `low < high` before calling
     /// this.
     fn new_inclusive(low: Self::X, high: Self::X) -> Self;
 
@@ -157,40 +158,40 @@ pub trait RangeImpl: Sized {
     /// and exclusive upper bound `[low, high)`.
     ///
     /// Usually users should not call this directly but instead use
-    /// `Range::sample_single`, which asserts that `low < high` before calling
+    /// `Uniform::sample_single`, which asserts that `low < high` before calling
     /// this.
     ///
-    /// Via this method range implementations can provide a method optimized for
-    /// sampling only a limited number of values from range. The default
-    /// implementation just sets up a range with `RangeImpl::new` and samples
+    /// Via this method, implementations can provide a method optimized for
+    /// sampling only a limited number of values from the range. The default
+    /// implementation just sets up a `Uniform` with `UniformImpl::new` and samples
     /// from that.
     fn sample_single<R: Rng + ?Sized>(low: Self::X, high: Self::X, rng: &mut R)
         -> Self::X
     {
-        let range: Self = RangeImpl::new(low, high);
-        range.sample(rng)
+        let uniform: Self = UniformImpl::new(low, high);
+        uniform.sample(rng)
     }
 }
 
-/// Implementation of `RangeImpl` for integer types.
+/// Implementation of `UniformImpl` for integer types.
 ///
-/// Unless you are implementing `RangeImpl` for your own type, this type should
-/// not be used directly, use `Range` instead.
+/// Unless you are implementing `UniformImpl` for your own type, this type should
+/// not be used directly, use `Uniform` instead.
 #[derive(Clone, Copy, Debug)]
-pub struct RangeInt<X> {
+pub struct UniformInt<X> {
     low: X,
     range: X,
     zone: X,
 }
 
-macro_rules! range_int_impl {
+macro_rules! uniform_int_impl {
     ($ty:ty, $signed:ty, $unsigned:ident,
      $i_large:ident, $u_large:ident) => {
-        impl SampleRange for $ty {
-            type Impl = RangeInt<$ty>;
+        impl SampleUniform for $ty {
+            type Impl = UniformInt<$ty>;
         }
 
-        impl RangeImpl for RangeInt<$ty> {
+        impl UniformImpl for UniformInt<$ty> {
             // We play free and fast with unsigned vs signed here
             // (when $ty is signed), but that's fine, since the
             // contract of this macro is for $ty and $unsigned to be
@@ -201,13 +202,13 @@ macro_rules! range_int_impl {
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new(low: Self::X, high: Self::X) -> Self {
-                RangeImpl::new_inclusive(low, high - 1)
+                UniformImpl::new_inclusive(low, high - 1)
             }
 
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-                // For a closed range the number of possible numbers we should
+                // For a closed range, the number of possible numbers we should
                 // generate is `range = (high - low + 1)`. It is not possible to
                 // end up with a uniform distribution if we map _all_ the random
                 // integers that can be generated to this range. We have to map
@@ -222,7 +223,7 @@ macro_rules! range_int_impl {
                 // arithmetic even makes representing `unsigned_max + 1` as 0
                 // simple.
                 //
-                // We don't calculate zone directly, but first calculate the
+                // We don't calculate `zone` directly, but first calculate the
                 // number of integers to reject. To handle `unsigned_max + 1`
                 // not fitting in the type, we use:
                 // ints_to_reject = (unsigned_max + 1) % range;
@@ -236,7 +237,7 @@ macro_rules! range_int_impl {
                 // the zone to 998 in 1000 in the worst case.
                 //
                 // There is a problem however: we can't store such a large range
-                // in `RangeInt`, that can only hold values of the size of $ty.
+                // in `UniformInt`, that can only hold values of the size of $ty.
                 // `ints_to_reject` is always less than half the size of the
                 // small integer. For an u8 it only ever uses 7 bits. This means
                 // that all but the last 7 bits of `zone` are always 1's (or 15
@@ -259,7 +260,7 @@ macro_rules! range_int_impl {
                     };
                 let zone = unsigned_max - ints_to_reject;
 
-                RangeInt {
+                UniformInt {
                     low: low,
                     // These are really $unsigned values, but store as $ty:
                     range: range as $ty,
@@ -320,26 +321,26 @@ macro_rules! range_int_impl {
     }
 }
 
-impl<X: SampleRange> From<::core::ops::Range<X>> for Range<X> {
-    fn from(r: ::core::ops::Range<X>) -> Range<X> {
-        Range::new(r.start, r.end)
+impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
+    fn from(r: ::core::ops::Range<X>) -> Uniform<X> {
+        Uniform::new(r.start, r.end)
     }
 }
 
-range_int_impl! { i8, i8, u8, i32, u32 }
-range_int_impl! { i16, i16, u16, i32, u32 }
-range_int_impl! { i32, i32, u32, i32, u32 }
-range_int_impl! { i64, i64, u64, i64, u64 }
+uniform_int_impl! { i8, i8, u8, i32, u32 }
+uniform_int_impl! { i16, i16, u16, i32, u32 }
+uniform_int_impl! { i32, i32, u32, i32, u32 }
+uniform_int_impl! { i64, i64, u64, i64, u64 }
 #[cfg(feature = "i128_support")]
-range_int_impl! { i128, i128, u128, u128, u128 }
-range_int_impl! { isize, isize, usize, isize, usize }
-range_int_impl! { u8, i8, u8, i32, u32 }
-range_int_impl! { u16, i16, u16, i32, u32 }
-range_int_impl! { u32, i32, u32, i32, u32 }
-range_int_impl! { u64, i64, u64, i64, u64 }
-range_int_impl! { usize, isize, usize, isize, usize }
+uniform_int_impl! { i128, i128, u128, u128, u128 }
+uniform_int_impl! { isize, isize, usize, isize, usize }
+uniform_int_impl! { u8, i8, u8, i32, u32 }
+uniform_int_impl! { u16, i16, u16, i32, u32 }
+uniform_int_impl! { u32, i32, u32, i32, u32 }
+uniform_int_impl! { u64, i64, u64, i64, u64 }
+uniform_int_impl! { usize, isize, usize, isize, usize }
 #[cfg(feature = "i128_support")]
-range_int_impl! { u128, u128, u128, i128, u128 }
+uniform_int_impl! { u128, u128, u128, i128, u128 }
 
 
 trait WideningMultiply<RHS = Self> {
@@ -428,29 +429,29 @@ wmul_impl_usize! { u64 }
 
 
 
-/// Implementation of `RangeImpl` for float types.
+/// Implementation of `UniformImpl` for float types.
 ///
-/// Unless you are implementing `RangeImpl` for your own type, this type should
-/// not be used directly, use `Range` instead.
+/// Unless you are implementing `UniformImpl` for your own type, this type should
+/// not be used directly, use `Uniform` instead.
 #[derive(Clone, Copy, Debug)]
-pub struct RangeFloat<X> {
+pub struct UniformFloat<X> {
     scale: X,
     offset: X,
 }
 
-macro_rules! range_float_impl {
+macro_rules! uniform_float_impl {
     ($ty:ty, $bits_to_discard:expr, $next_u:ident) => {
-        impl SampleRange for $ty {
-            type Impl = RangeFloat<$ty>;
+        impl SampleUniform for $ty {
+            type Impl = UniformFloat<$ty>;
         }
 
-        impl RangeImpl for RangeFloat<$ty> {
+        impl UniformImpl for UniformFloat<$ty> {
             type X = $ty;
 
             fn new(low: Self::X, high: Self::X) -> Self {
                 let scale = high - low;
                 let offset = low - scale;
-                RangeFloat {
+                UniformFloat {
                     scale: scale,
                     offset: offset,
                 }
@@ -459,7 +460,7 @@ macro_rules! range_float_impl {
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
                 // Same as `new`, because the boundaries of a floats range are
                 // (at least currently) not exact due to rounding errors.
-                RangeImpl::new(low, high)
+                UniformImpl::new(low, high)
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
@@ -490,25 +491,55 @@ macro_rules! range_float_impl {
     }
 }
 
-range_float_impl! { f32, 32 - 23, next_u32 }
-range_float_impl! { f64, 64 - 52, next_u64 }
+uniform_float_impl! { f32, 32 - 23, next_u32 }
+uniform_float_impl! { f64, 64 - 52, next_u64 }
 
 
 #[cfg(test)]
 mod tests {
     use Rng;
-    use distributions::range::{Range, RangeImpl, RangeInt, RangeFloat, SampleRange};
+    use distributions::uniform::{Uniform, UniformImpl, UniformFloat, SampleUniform};
 
     #[should_panic]
     #[test]
-    fn test_range_bad_limits_equal() {
-        Range::new(10, 10);
+    fn test_uniform_bad_limits_equal_int() {
+        Uniform::new(10, 10);
     }
 
     #[should_panic]
     #[test]
-    fn test_range_bad_limits_flipped() {
-        Range::new(10, 5);
+    fn test_uniform_bad_limits_equal_float() {
+        Uniform::new(10., 10.);
+    }
+
+    #[test]
+    fn test_uniform_good_limits_equal_int() {
+        let mut rng = ::test::rng(804);
+        let dist = Uniform::new_inclusive(10, 10);
+        for _ in 0..20 {
+            assert_eq!(rng.sample(dist), 10);
+        }
+    }
+
+    #[test]
+    fn test_uniform_good_limits_equal_float() {
+        let mut rng = ::test::rng(805);
+        let dist = Uniform::new_inclusive(10., 10.);
+        for _ in 0..20 {
+            assert_eq!(rng.sample(dist), 10.);
+        }
+    }
+
+    #[should_panic]
+    #[test]
+    fn test_uniform_bad_limits_flipped_int() {
+        Uniform::new(10, 5);
+    }
+
+    #[should_panic]
+    #[test]
+    fn test_uniform_bad_limits_flipped_float() {
+        Uniform::new(10., 5.);
     }
 
     #[test]
@@ -521,20 +552,20 @@ mod tests {
                                             (10, 127),
                                             (::core::$ty::MIN, ::core::$ty::MAX)];
                    for &(low, high) in v.iter() {
-                        let my_range = Range::new(low, high);
+                        let my_uniform = Uniform::new(low, high);
                         for _ in 0..1000 {
-                            let v: $ty = rng.sample(my_range);
+                            let v: $ty = rng.sample(my_uniform);
                             assert!(low <= v && v < high);
                         }
 
-                        let my_range = Range::new_inclusive(low, high);
+                        let my_uniform = Uniform::new_inclusive(low, high);
                         for _ in 0..1000 {
-                            let v: $ty = rng.sample(my_range);
+                            let v: $ty = rng.sample(my_uniform);
                             assert!(low <= v && v <= high);
                         }
 
                         for _ in 0..1000 {
-                            let v: $ty = Range::sample_single(low, high, &mut rng);
+                            let v: $ty = Uniform::sample_single(low, high, &mut rng);
                             assert!(low <= v && v < high);
                         }
                     }
@@ -558,9 +589,9 @@ mod tests {
                                             (1e-35, 1e-25),
                                             (-1e35, 1e35)];
                    for &(low, high) in v.iter() {
-                        let my_range = Range::new(low, high);
+                        let my_uniform = Uniform::new(low, high);
                         for _ in 0..1000 {
-                            let v: $ty = rng.sample(my_range);
+                            let v: $ty = rng.sample(my_uniform);
                             assert!(low <= v && v < high);
                         }
                     }
@@ -571,48 +602,48 @@ mod tests {
         t!(f32, f64)
     }
     #[test]
-    fn test_custom_range() {
+    fn test_custom_uniform() {
         #[derive(Clone, Copy, PartialEq, PartialOrd)]
         struct MyF32 {
             x: f32,
         }
         #[derive(Clone, Copy, Debug)]
-        struct RangeMyF32 {
-            inner: RangeFloat<f32>,
+        struct UniformMyF32 {
+            inner: UniformFloat<f32>,
         }
-        impl RangeImpl for RangeMyF32 {
+        impl UniformImpl for UniformMyF32 {
             type X = MyF32;
             fn new(low: Self::X, high: Self::X) -> Self {
-                RangeMyF32 {
-                    inner: RangeFloat::<f32>::new(low.x, high.x),
+                UniformMyF32 {
+                    inner: UniformFloat::<f32>::new(low.x, high.x),
                 }
             }
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-                RangeImpl::new(low, high)
+                UniformImpl::new(low, high)
             }
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 MyF32 { x: self.inner.sample(rng) }
             }
         }
-        impl SampleRange for MyF32 {
-            type Impl = RangeMyF32;
+        impl SampleUniform for MyF32 {
+            type Impl = UniformMyF32;
         }
 
         let (low, high) = (MyF32{ x: 17.0f32 }, MyF32{ x: 22.0f32 });
-        let range = Range::new(low, high);
+        let uniform = Uniform::new(low, high);
         let mut rng = ::test::rng(804);
         for _ in 0..100 {
-            let x: MyF32 = rng.sample(range);
+            let x: MyF32 = rng.sample(uniform);
             assert!(low <= x && x < high);
         }
     }
 
     #[test]
-    fn test_range_from_std_range() {
-        let r = Range::from(2u32..7);
+    fn test_uniform_from_std_range() {
+        let r = Uniform::from(2u32..7);
         assert_eq!(r.inner.low, 2);
         assert_eq!(r.inner.range, 5);
-        let r = Range::from(2.0f64..7.0);
+        let r = Uniform::from(2.0f64..7.0);
         assert_eq!(r.inner.offset, -3.0);
         assert_eq!(r.inner.scale, 5.0);
     }
