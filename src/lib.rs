@@ -325,10 +325,11 @@ pub trait Rng: RngCore {
     /// `low` and exclusive of `high`.
     ///
     /// This is a convenience wrapper around
-    /// `distributions::Uniform`. If this function will be called
-    /// repeatedly with the same arguments, one should use `Uniform`, as
-    /// that will amortize the computations that allow for perfect
-    /// uniformity, as they only happen when constructing the `Uniform`.
+    /// `distributions::Uniform::sample_single`. If this function will be called
+    /// repeatedly with the same arguments, it will likely be faster to
+    /// construct a `Uniform` distribution object and sample from that; this
+    /// allows amortization of the computations that allow for perfect
+    /// uniformity within the `Uniform::new` constructor.
     ///
     /// # Panics
     ///

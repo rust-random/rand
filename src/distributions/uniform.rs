@@ -162,9 +162,9 @@ pub trait UniformImpl: Sized {
     /// this.
     ///
     /// Via this method, implementations can provide a method optimized for
-    /// sampling only a limited number of values from the range. The default
-    /// implementation just sets up a `Uniform` with `UniformImpl::new` and samples
-    /// from that.
+    /// sampling only a single value from the specified range. The default
+    /// implementation simply calls `UniformImpl::new` then `sample` on the
+    /// result.
     fn sample_single<R: Rng + ?Sized>(low: Self::X, high: Self::X, rng: &mut R)
         -> Self::X
     {
