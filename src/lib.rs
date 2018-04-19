@@ -483,6 +483,10 @@ pub trait Rng: RngCore {
     /// println!("{}", rng.gen_bool(1.0 / 3.0));
     /// ```
     ///
+    /// # Panics
+    ///
+    /// If `p` < 0 or `p` > 1.
+    ///
     /// # Accuracy note
     ///
     /// `gen_bool` uses 32 bits of the RNG, so if you use it to generate close
