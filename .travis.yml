@@ -11,29 +11,32 @@ matrix:
     - rust: 1.22.0
       install:
       script:
-        - cargo test --all --tests --no-default-features
+        - cargo test --tests --no-default-features
+        - cargo test --package rand_core --no-default-features
         - cargo test --features serde1,log
     - rust: stable
       os: osx
       install:
       script:
-        - cargo test --all --tests --no-default-features
+        - cargo test --tests --no-default-features
+        - cargo test --package rand_core --no-default-features
         - cargo test --features serde1,log
     - rust: beta
       install:
       script:
-        - cargo test --all --tests --no-default-features
-        - cargo test --tests --no-default-features --features=serde1
+        - cargo test --tests --no-default-features
+        - cargo test --package rand_core --no-default-features
+        - cargo test --features serde1,log
     - rust: nightly
       install:
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
       before_script:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
-        - cargo test --all --tests --no-default-features --features=alloc
-        - cargo test --all --features=alloc
-        - cargo test --features serde1,log,nightly
-        - cargo test --benches
+        - cargo test --tests --no-default-features --features=alloc
+        - cargo test --package rand_core --no-default-features --features=alloc,serde1
+        - cargo test --features serde1,log,nightly,alloc
+        - cargo test --all --benches
         - cargo doc --no-deps --all --all-features
         - cargo deadlinks --dir target/doc
       after_success:
@@ -56,7 +59,7 @@ matrix:
         - rustup target add thumbv6m-none-eabi
       script:
         # Bare metal target; no std; only works on nightly
-        - cargo build --all --no-default-features --target thumbv6m-none-eabi --release
+        - cargo build --no-default-features --target thumbv6m-none-eabi --release
 
     # Trust cross-built/emulated targets. We must repeat all non-default values.
     - rust: stable
