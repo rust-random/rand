@@ -37,6 +37,34 @@ fn misc_gen_bool_var(b: &mut Bencher) {
 }
 
 #[bench]
+fn misc_bernoulli(b: &mut Bencher) {
+    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    let d = rand::distributions::Bernoulli::new(0.18);
+    b.iter(|| {
+        let mut accum = true;
+        for _ in 0..::RAND_BENCH_N {
+            accum ^= rng.sample(d);
+        }
+        black_box(accum);
+    })
+}
+
+#[bench]
+fn misc_bernoulli_var(b: &mut Bencher) {
+    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    b.iter(|| {
+        let mut p = 0.18;
+        let mut accum = true;
+        for _ in 0..::RAND_BENCH_N {
+            let d = rand::distributions::Bernoulli::new(p);
+            accum ^= rng.sample(d);
+            p += 0.0001;
+        }
+        black_box(accum);
+    })
+}
+
+#[bench]
 fn misc_shuffle_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &mut [usize] = &mut [1; 100];
