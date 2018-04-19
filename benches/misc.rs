@@ -11,14 +11,15 @@ use rand::prelude::*;
 use rand::seq::*;
 
 #[bench]
-fn misc_gen_bool(b: &mut Bencher) {
+fn misc_gen_bool_const(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
+        // Can be evaluated at compile time.
         let mut accum = true;
         for _ in 0..::RAND_BENCH_N {
             accum ^= rng.gen_bool(0.18);
         }
-        black_box(accum);
+        accum
     })
 }
 
@@ -27,25 +28,24 @@ fn misc_gen_bool_var(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut p = 0.18;
-        let mut accum = true;
+        black_box(&mut p);  // Avoid constant folding.
         for _ in 0..::RAND_BENCH_N {
-            accum ^= rng.gen_bool(p);
-            p += 0.0001;
+            black_box(rng.gen_bool(p));
         }
-        black_box(accum);
     })
 }
 
 #[bench]
-fn misc_bernoulli(b: &mut Bencher) {
+fn misc_bernoulli_const(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
     let d = rand::distributions::Bernoulli::new(0.18);
     b.iter(|| {
+        // Can be evaluated at compile time.
         let mut accum = true;
         for _ in 0..::RAND_BENCH_N {
             accum ^= rng.sample(d);
         }
-        black_box(accum);
+        accum
     })
 }
 
@@ -54,13 +54,11 @@ fn misc_bernoulli_var(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut p = 0.18;
-        let mut accum = true;
+        black_box(&mut p);  // Avoid constant folding.
+        let d = rand::distributions::Bernoulli::new(p);
         for _ in 0..::RAND_BENCH_N {
-            let d = rand::distributions::Bernoulli::new(p);
-            accum ^= rng.sample(d);
-            p += 0.0001;
+            black_box(rng.sample(d));
         }
-        black_box(accum);
     })
 }
 
