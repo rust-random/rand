@@ -13,7 +13,7 @@ use distributions::Distribution;
 /// use rand::distributions::{Bernoulli, Distribution};
 ///
 /// let d = Bernoulli::new(0.3);
-/// let v: u64 = d.sample(&mut rand::thread_rng());
+/// let v = d.sample(&mut rand::thread_rng());
 /// println!("{} is from a Bernoulli distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -42,36 +42,6 @@ impl Distribution<bool> for Bernoulli {
         rng.gen_bool(self.p)
     }
 }
-
-macro_rules! impl_bernoulli_int {
-    ($($t: ty), *) => {
-        $(
-            impl Distribution<$t> for Bernoulli {
-                #[inline]
-                fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $t {
-                    rng.gen_bool(self.p) as $t
-                }
-            }
-        )*
-    }
-}
-
-impl_bernoulli_int!(u8, u16, u32, u64, i8, i16, i32, i64);
-
-macro_rules! impl_bernoulli_float {
-    ($($t: ty), *) => {
-        $(
-            impl Distribution<$t> for Bernoulli {
-                #[inline]
-                fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $t {
-                    rng.gen_bool(self.p) as u8 as $t
-                }
-            }
-        )*
-    }
-}
-
-impl_bernoulli_float!(f32, f64);
 
 #[cfg(test)]
 mod test {
@@ -108,22 +78,5 @@ mod test {
         let avg = (sum as f64) / (N as f64);
 
         assert!((avg - P).abs() < 1e-3);
-    }
-
-    #[test]
-    fn test_nonbool() {
-
-        macro_rules! assert_nonbool {
-            ($($t: ty), *) => {
-                let d = Bernoulli::new(0.3);
-                let r = SmallRng::from_entropy();
-                $(
-                    assert_eq!(r.clone().sample::<$t, _>(&d) as f64 != 0.,
-                               r.clone().sample::<bool, _>(&d));
-                )*
-            }
-        }
-
-        assert_nonbool!(u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
     }
 }
