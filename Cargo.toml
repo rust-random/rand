@@ -31,6 +31,7 @@ members = ["rand_core"]
 [dependencies]
 rand_core = { path = "rand_core", version = "0.1.0", default-features = false }
 log = { version = "0.4", optional = true }
+rayon = { version = "1", optional = true }
 serde = { version = "1", optional = true }
 serde_derive = { version = "1", optional = true }
 

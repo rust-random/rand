@@ -24,6 +24,10 @@
 //! [`Standard`]: struct.Standard.html
 
 use Rng;
+#[cfg(feature = "rayon")]
+use SeedableRng;
+#[cfg(feature = "rayon")]
+use distributions::rayon::ParallelDistIter;
 
 pub use self::other::Alphanumeric;
 pub use self::uniform::Uniform;
@@ -51,6 +55,8 @@ pub mod exponential;
 pub mod poisson;
 #[cfg(feature = "std")]
 pub mod binomial;
+#[cfg(feature = "rayon")]
+mod rayon;
 
 mod float;
 mod integer;
@@ -178,8 +184,8 @@ pub trait Distribution<T> {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    fn sample_iter<'a, R: Rng>(&'a self, rng: &'a mut R)
-        -> DistIter<'a, Self, R, T> where Self: Sized
+    fn sample_iter<'a, R>(&'a self, rng: &'a mut R) -> DistIter<'a, Self, R, T>
+        where Self: Sized, R: Rng
     {
         DistIter {
             distr: self,
@@ -187,7 +193,24 @@ pub trait Distribution<T> {
             phantom: ::core::marker::PhantomData,
         }
     }
+
+    /// Create a parallel iterator.
+    #[cfg(feature = "rayon")]
+    fn sample_par_iter<'a, R>(&'a self, rng: &mut R, amount: usize)
+        -> ParallelDistIter<'a, Self, R, T>
+        where Self: Sized,
+              R: Rng + SeedableRng,
+    {
+        ParallelDistIter::new(self, rng, amount)
+    }
 }
+
+impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
+        (*self).sample(rng)
+    }
+}
+
 
 /// An iterator that generates random values of `T` with distribution `D`,
 /// using `R` as the source of randomness.
@@ -198,7 +221,7 @@ pub trait Distribution<T> {
 /// [`Distribution`]: trait.Distribution.html
 /// [`sample_iter`]: trait.Distribution.html#method.sample_iter
 #[derive(Debug)]
-pub struct DistIter<'a, D, R, T> where D: Distribution<T> + 'a, R: Rng + 'a {
+pub struct DistIter<'a, D: 'a, R: 'a, T> {
     distr: &'a D,
     rng: &'a mut R,
     phantom: ::core::marker::PhantomData<T>,
@@ -215,11 +238,6 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
     }
 }
 
-impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
-        (*self).sample(rng)
-    }
-}
 
 /// A generic random value distribution. Generates values for various types
 /// with numerically uniform distribution.
@@ -639,5 +657,19 @@ mod tests {
         let distr = Normal::new(10.0, 10.0);
         let results: Vec<_> = distr.sample_iter(&mut rng).take(100).collect();
         println!("{:?}", results);
+    }
+
+    #[cfg(all(feature="std", feature="rayon"))]
+    #[test]
+    fn test_distributions_par_iter() {
+        use distributions::Range;
+        use rayon::iter::ParallelIterator;
+        use NewRng;
+        use prng::XorShiftRng; // *EXTREMELY* bad choice!
+        let mut rng = XorShiftRng::new();
+        let range = Range::new(100, 200);
+        let results: Vec<_> = range.sample_par_iter(&mut rng, 1000).collect();
+        println!("{:?}", results);
+        panic!();
     }
 }
