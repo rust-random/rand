@@ -14,6 +14,11 @@ matrix:
         - cargo test --tests --no-default-features
         - cargo test --package rand_core --no-default-features
         - cargo test --features serde1,log
+    - rust: 1.9.0
+      install:
+      script:
+        # Ensure minimum rustc version for rand_core.
+        - cargo test --package rand_core --lib
     - rust: stable
       os: osx
       install:
