@@ -13,63 +13,6 @@
 use {Rng};
 use distributions::{Distribution, Standard};
 
-impl Distribution<isize> for Standard {
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> isize {
-        rng.gen::<usize>() as isize
-    }
-}
-
-impl Distribution<i8> for Standard {
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> i8 {
-        rng.next_u32() as i8
-    }
-}
-
-impl Distribution<i16> for Standard {
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> i16 {
-        rng.next_u32() as i16
-    }
-}
-
-impl Distribution<i32> for Standard {
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> i32 {
-        rng.next_u32() as i32
-    }
-}
-
-impl Distribution<i64> for Standard {
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> i64 {
-        rng.next_u64() as i64
-    }
-}
-
-#[cfg(feature = "i128_support")]
-impl Distribution<i128> for Standard {
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> i128 {
-        rng.gen::<u128>() as i128
-    }
-}
-
-impl Distribution<usize> for Standard {
-    #[inline]
-    #[cfg(any(target_pointer_width = "32", target_pointer_width = "16"))]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        rng.next_u32() as usize
-    }
-
-    #[inline]
-    #[cfg(target_pointer_width = "64")]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        rng.next_u64() as usize
-    }
-}
-
 impl Distribution<u8> for Standard {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u8 {
@@ -108,6 +51,38 @@ impl Distribution<u128> for Standard {
         (y << 64) | x
     }
 }
+
+impl Distribution<usize> for Standard {
+    #[inline]
+    #[cfg(any(target_pointer_width = "32", target_pointer_width = "16"))]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
+        rng.next_u32() as usize
+    }
+
+    #[inline]
+    #[cfg(target_pointer_width = "64")]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
+        rng.next_u64() as usize
+    }
+}
+
+macro_rules! impl_int_from_uint {
+    ($ty:ty, $uty:ty) => {
+        impl Distribution<$ty> for Standard {
+            #[inline]
+            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                rng.gen::<$uty>() as $ty
+            }
+        }
+    }
+}
+
+impl_int_from_uint! { i8, u8 }
+impl_int_from_uint! { i16, u16 }
+impl_int_from_uint! { i32, u32 }
+impl_int_from_uint! { i64, u64 }
+#[cfg(feature = "i128_support")] impl_int_from_uint! { i128, u128 }
+impl_int_from_uint! { isize, usize }
 
 
 #[cfg(test)]
