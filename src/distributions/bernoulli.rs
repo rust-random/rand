@@ -28,6 +28,12 @@ impl Bernoulli {
     /// # Panics
     ///
     /// If `p < 0` or `p > 1`.
+    ///
+    /// # Precision
+    ///
+    /// For `p = 1.0`, the resulting distribution will always generate true.
+    /// For `p = 0.0`, there is a chance of 2<sup>64</sup> to incorrectly
+    /// generate true.
     #[inline]
     pub fn new(p: f64) -> Bernoulli {
         assert!(p >= 0.0, "Bernoulli::new called with p < 0");
