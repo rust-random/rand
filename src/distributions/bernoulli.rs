@@ -18,8 +18,8 @@ use distributions::Distribution;
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Bernoulli {
-    /// Probability of success.
-    p: f64,
+    /// Probability of success, relative to the maximal integer.
+    p_int: u32,
 }
 
 impl Bernoulli {
@@ -32,14 +32,16 @@ impl Bernoulli {
     pub fn new(p: f64) -> Bernoulli {
         assert!(p >= 0.0, "Bernoulli::new called with p < 0");
         assert!(p <= 1.0, "Bernoulli::new called with p > 1");
-        Bernoulli { p }
+        let p_int = (p * f64::from(::core::u32::MAX)) as u32;
+        Bernoulli { p_int }
     }
 }
 
 impl Distribution<bool> for Bernoulli {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
-        rng.gen_bool(self.p)
+        // If `p` is constant, this will be evaluated at compile-time.
+        rng.gen::<u32>() <= self.p_int
     }
 }
 

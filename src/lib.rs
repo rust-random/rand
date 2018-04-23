@@ -497,10 +497,8 @@ pub trait Rng: RngCore {
     /// from an RNG just to consistently generate `false` does not match with
     /// the intent of this method.
     fn gen_bool(&mut self, p: f64) -> bool {
-        assert!(p >= 0.0 && p <= 1.0);
-        // If `p` is constant, this will be evaluated at compile-time.
-        let p_int = (p * f64::from(core::u32::MAX)) as u32;
-        self.gen::<u32>() <= p_int
+        let d = distributions::Bernoulli::new(p);
+        self.sample(d)
     }
 
     /// Return a random element from `values`.
