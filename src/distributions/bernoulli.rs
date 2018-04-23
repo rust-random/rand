@@ -19,7 +19,7 @@ use distributions::Distribution;
 #[derive(Clone, Copy, Debug)]
 pub struct Bernoulli {
     /// Probability of success, relative to the maximal integer.
-    p: f64,
+    p_int: u64,
 }
 
 impl Bernoulli {
@@ -32,14 +32,20 @@ impl Bernoulli {
     pub fn new(p: f64) -> Bernoulli {
         assert!(p >= 0.0, "Bernoulli::new called with p < 0");
         assert!(p <= 1.0, "Bernoulli::new called with p > 1");
-        Bernoulli { p }
+        let p_int = if p != 1.0 {
+            (p * (::core::u64::MAX as f64)) as u64
+        } else {
+            ::core::u64::MAX
+        };
+        Bernoulli { p_int }
     }
 }
 
 impl Distribution<bool> for Bernoulli {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
-        rng.gen::<f64>() <= self.p
+        let r: u64 = rng.gen();
+        r <= self.p_int
     }
 }
 
