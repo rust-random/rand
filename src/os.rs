@@ -12,7 +12,7 @@
 //! generators.
 
 use std::fmt;
-use rand_core::{RngCore, Error, impls};
+use rand_core::{CryptoRng, RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness straight from the
 /// operating system.
@@ -71,6 +71,8 @@ impl OsRng {
         imp::OsRng::new().map(OsRng)
     }
 }
+
+impl CryptoRng for OsRng {}
 
 impl RngCore for OsRng {
     fn next_u32(&mut self) -> u32 {
