@@ -25,6 +25,12 @@ use distributions::Distribution;
 /// let v = d.sample(&mut rand::thread_rng());
 /// println!("{} is from a Bernoulli distribution", v);
 /// ```
+///
+/// # Precision
+///
+/// This `Bernoulli` distribution uses 64 bits from the RNG (a `u64`), making
+/// its bias less than 1 in 2<sup>64</sup>. In practice the floating point
+/// accuracy of `p` will usually be the limiting factor.
 #[derive(Clone, Copy, Debug)]
 pub struct Bernoulli {
     /// Probability of success, relative to the maximal integer.
