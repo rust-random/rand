@@ -13,7 +13,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 
 ### Crate features and organisation
 - Minimum Rust version update: 1.22.0. (#239)
-- Create a seperate `rand_core` crate. (#288)
+- Create a separate `rand_core` crate. (#288)
 - Deprecate `rand_derive`. (#256)
 - Add `log` feature. Logging is now available in `JitterRng`, `OsRng`, `EntropyRng` and `ReseedingRng`. (#246)
 - Add `serde1` feature for some PRNGs. (#189)
@@ -282,7 +282,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Compatible with Rust master
 
 ### Removed
-- Removed Copy inplementaions from RNGs
+- Removed Copy implementations from RNGs
 
 
 ## [0.1.2] - 2015-02-03
