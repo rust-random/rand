@@ -32,15 +32,15 @@ impl Bernoulli {
     /// # Precision
     ///
     /// For `p = 1.0`, the resulting distribution will always generate true.
-    /// For `p = 0.0`, there is a chance of 2<sup>64</sup> to incorrectly
-    /// generate true.
+    /// For `p = 0.0`, the resulting distribution will always generate false.
     #[inline]
     pub fn new(p: f64) -> Bernoulli {
         assert!(p >= 0.0, "Bernoulli::new called with p < 0");
         assert!(p <= 1.0, "Bernoulli::new called with p > 1");
-        let p_int = if p != 1.0 {
+        let p_int = if p < 1.0 {
             (p * (::core::u64::MAX as f64)) as u64
         } else {
+            // Avoid overflow: u64::MAX as f64 cannot be represented as u64.
             ::core::u64::MAX
         };
         Bernoulli { p_int }
@@ -50,8 +50,12 @@ impl Bernoulli {
 impl Distribution<bool> for Bernoulli {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
+        // Make sure to always return true for p = 1.0.
+        if self.p_int == ::core::u64::MAX {
+            return true;
+        }
         let r: u64 = rng.gen();
-        r <= self.p_int
+        r < self.p_int
     }
 }
 
