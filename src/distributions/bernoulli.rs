@@ -28,9 +28,9 @@ use distributions::Distribution;
 ///
 /// # Precision
 ///
-/// This `Bernoulli` distribution uses 64 bits from the RNG (a `u64`), making
-/// its bias less than 1 in 2<sup>64</sup>. In practice the floating point
-/// accuracy of `p` will usually be the limiting factor.
+/// This `Bernoulli` distribution uses 64 bits from the RNG (a `u64`),
+/// so only probabilities that are multiples of 2<sup>-64</sup> can be
+/// represented.
 #[derive(Clone, Copy, Debug)]
 pub struct Bernoulli {
     /// Probability of success, relative to the maximal integer.
@@ -48,6 +48,10 @@ impl Bernoulli {
     ///
     /// For `p = 1.0`, the resulting distribution will always generate true.
     /// For `p = 0.0`, the resulting distribution will always generate false.
+    /// Due to the limitations of floating point numbers, not all internally
+    /// supported probabilities (multiples of 2<sup>-64</sup>) can be specified
+    /// using this constructor. If you need more precision, use
+    /// `Bernoulli::from_int` instead.
     #[inline]
     pub fn new(p: f64) -> Bernoulli {
         assert!(p >= 0.0, "Bernoulli::new called with p < 0");
@@ -58,6 +62,18 @@ impl Bernoulli {
             // Avoid overflow: u64::MAX as f64 cannot be represented as u64.
             ::core::u64::MAX
         };
+        Bernoulli { p_int }
+    }
+
+    /// Construct a new `Bernoulli` with the probability of success given as an
+    /// integer `p_int = p * 2^64`.
+    ///
+    /// `p_int = 0` corresponds to `p = 0.0`.
+    /// `p_int = u64::MAX` corresponds to `p = 1.0`.
+    ///
+    /// This is more precise than using `Bernoulli::new`.
+    #[inline]
+    pub fn from_int(p_int: u64) -> Bernoulli {
         Bernoulli { p_int }
     }
 }
