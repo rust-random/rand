@@ -48,32 +48,20 @@ impl Bernoulli {
     ///
     /// For `p = 1.0`, the resulting distribution will always generate true.
     /// For `p = 0.0`, the resulting distribution will always generate false.
-    /// Due to the limitations of floating point numbers, not all internally
-    /// supported probabilities (multiples of 2<sup>-64</sup>) can be specified
-    /// using this constructor. If you need more precision, use
-    /// `Bernoulli::from_int` instead.
+    ///
+    /// This method is accurate for any input `p` in the range `[0, 1]` which is
+    /// a multiple of 2<sup>-64</sup>. If you need more precision, use `Uniform`
+    /// and a comparison instead. (Note that not all multiples of
+    /// 2<sup>-64</sup> in `[0, 1]` can be represented as a `f64`.)
     #[inline]
     pub fn new(p: f64) -> Bernoulli {
-        assert!(p >= 0.0, "Bernoulli::new called with p < 0");
-        assert!(p <= 1.0, "Bernoulli::new called with p > 1");
+        assert!(p >= 0.0 & p <= 1.0, "Bernoulli::new not called with 0 <= p <= 0");
         let p_int = if p < 1.0 {
             (p * (::core::u64::MAX as f64)) as u64
         } else {
             // Avoid overflow: u64::MAX as f64 cannot be represented as u64.
             ::core::u64::MAX
         };
-        Bernoulli { p_int }
-    }
-
-    /// Construct a new `Bernoulli` with the probability of success given as an
-    /// integer `p_int = p * 2^64`.
-    ///
-    /// `p_int = 0` corresponds to `p = 0.0`.
-    /// `p_int = u64::MAX` corresponds to `p = 1.0`.
-    ///
-    /// This is more precise than using `Bernoulli::new`.
-    #[inline]
-    pub fn from_int(p_int: u64) -> Bernoulli {
         Bernoulli { p_int }
     }
 }
