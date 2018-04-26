@@ -50,8 +50,7 @@ impl Bernoulli {
     /// For `p = 0.0`, the resulting distribution will always generate false.
     ///
     /// This method is accurate for any input `p` in the range `[0, 1]` which is
-    /// a multiple of 2<sup>-64</sup>. If you need more precision, use `Uniform`
-    /// and a comparison instead. (Note that not all multiples of
+    /// a multiple of 2<sup>-64</sup>. (Note that not all multiples of
     /// 2<sup>-64</sup> in `[0, 1]` can be represented as a `f64`.)
     #[inline]
     pub fn new(p: f64) -> Bernoulli {
