@@ -57,4 +57,3 @@ bincode = "1.0"
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = [ "--all" ] # also document rand_core
