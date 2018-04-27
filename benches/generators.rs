@@ -34,6 +34,7 @@ macro_rules! gen_bytes {
 }
 
 gen_bytes!(gen_bytes_xorshift, XorShiftRng::from_entropy());
+gen_bytes!(gen_bytes_chacha20, ChaChaRng::from_entropy());
 gen_bytes!(gen_bytes_hc128, Hc128Rng::from_entropy());
 gen_bytes!(gen_bytes_isaac, IsaacRng::from_entropy());
 gen_bytes!(gen_bytes_isaac64, Isaac64Rng::from_entropy());
@@ -59,6 +60,7 @@ macro_rules! gen_uint {
 }
 
 gen_uint!(gen_u32_xorshift, u32, XorShiftRng::from_entropy());
+gen_uint!(gen_u32_chacha20, u32, ChaChaRng::from_entropy());
 gen_uint!(gen_u32_hc128, u32, Hc128Rng::from_entropy());
 gen_uint!(gen_u32_isaac, u32, IsaacRng::from_entropy());
 gen_uint!(gen_u32_isaac64, u32, Isaac64Rng::from_entropy());
@@ -67,6 +69,7 @@ gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng::new().unwrap());
 
 gen_uint!(gen_u64_xorshift, u64, XorShiftRng::from_entropy());
+gen_uint!(gen_u64_chacha20, u64, ChaChaRng::from_entropy());
 gen_uint!(gen_u64_hc128, u64, Hc128Rng::from_entropy());
 gen_uint!(gen_u64_isaac, u64, IsaacRng::from_entropy());
 gen_uint!(gen_u64_isaac64, u64, Isaac64Rng::from_entropy());
@@ -110,56 +113,6 @@ fn init_jitter(b: &mut Bencher) {
         black_box(JitterRng::new().unwrap());
     });
 }
-
-macro_rules! chacha_rounds {
-    ($fn1:ident, $fn2:ident, $fn3:ident, $rounds:expr) => {
-        #[bench]
-        fn $fn1(b: &mut Bencher) {
-            let mut rng = ChaChaRng::from_entropy();
-            rng.set_rounds($rounds);
-            let mut buf = [0u8; BYTES_LEN];
-            b.iter(|| {
-                for _ in 0..RAND_BENCH_N {
-                    rng.fill_bytes(&mut buf);
-                    black_box(buf);
-                }
-            });
-            b.bytes = BYTES_LEN as u64 * RAND_BENCH_N;
-        }
-
-        #[bench]
-        fn $fn2(b: &mut Bencher) {
-            let mut rng = ChaChaRng::from_entropy();
-            rng.set_rounds($rounds);
-            b.iter(|| {
-                let mut accum: u32 = 0;
-                for _ in 0..RAND_BENCH_N {
-                    accum = accum.wrapping_add(rng.gen::<u32>());
-                }
-                black_box(accum);
-            });
-            b.bytes = size_of::<u32>() as u64 * RAND_BENCH_N;
-        }
-
-        #[bench]
-        fn $fn3(b: &mut Bencher) {
-            let mut rng = ChaChaRng::from_entropy();
-            rng.set_rounds($rounds);
-            b.iter(|| {
-                let mut accum: u64 = 0;
-                for _ in 0..RAND_BENCH_N {
-                    accum = accum.wrapping_add(rng.gen::<u64>());
-                }
-                black_box(accum);
-            });
-            b.bytes = size_of::<u64>() as u64 * RAND_BENCH_N;
-        }
-    }
-}
-
-chacha_rounds!(gen_bytes_chacha8, gen_u32_chacha8, gen_u64_chacha8, 8);
-chacha_rounds!(gen_bytes_chacha12, gen_u32_chacha12, gen_u64_chacha12, 12);
-chacha_rounds!(gen_bytes_chacha20, gen_u32_chacha20, gen_u64_chacha20, 20);
 
 
 const RESEEDING_THRESHOLD: u64 = 1024*1024*1024; // something high enough to get

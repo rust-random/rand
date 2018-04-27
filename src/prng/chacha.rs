@@ -32,10 +32,11 @@ const STATE_WORDS: usize = 16;
 /// provided by auto-vectorisation.
 ///
 /// With the ChaCha algorithm it is possible to choose the number of rounds the
-/// core algorithm should run. By default `ChaChaRng` is created as ChaCha20,
-/// which means 20 rounds. The number of rounds is a tradeoff between performance
-/// and security, 8 rounds are considered the minimum to be secure. A different
-/// number of rounds can be set using [`set_rounds`].
+/// core algorithm should run. The number of rounds is a tradeoff between
+/// performance and security, where 8 rounds is the minimum potentially
+/// secure configuration, and 20 rounds is widely used as a conservative choice.
+/// We use 20 rounds in this implementation, but hope to allow type-level
+/// configuration in the future.
 ///
 /// We deviate slightly from the ChaCha specification regarding the nonce and
 /// the counter. Instead of a 64-bit nonce and 64-bit counter (or a 96-bit nonce
@@ -160,35 +161,12 @@ impl ChaChaRng {
         self.0.reset(); // force recomputation on next use
     }
 
-    /// Sets the number of rounds to run the ChaCha core algorithm per block to
-    /// generate.
-    ///
-    /// By default this is set to 20. Other recommended values are 12 and 8,
-    /// which trade security for performance. `rounds` only supports values
-    /// that are multiples of 4 and less than or equal to 20.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use rand::{ChaChaRng, RngCore, SeedableRng};
-    ///
-    /// // Note: Use `FromEntropy` or `ChaChaRng::from_rng()` outside of testing.
-    /// let mut rng = ChaChaRng::from_seed([0; 32]);
-    /// rng.set_rounds(8);
-    ///
-    /// assert_eq!(rng.next_u32(), 0x2fef003e);
-    /// ```
-    pub fn set_rounds(&mut self, rounds: usize) {
-        self.0.inner_mut().set_rounds(rounds);
-        self.0.reset(); // force recomputation on next use
-    }
 }
 
 /// The core of `ChaChaRng`, used with `BlockRng`.
 #[derive(Clone)]
 pub struct ChaChaCore {
     state: [u32; STATE_WORDS],
-    rounds:  usize,
 }
 
 // Custom Debug implementation that does not expose the internal state
@@ -230,10 +208,10 @@ impl BlockRngCore for ChaChaCore {
         // For some reason extracting this part into a separate function
         // improves performance by 50%.
         fn core(results: &mut [u32; STATE_WORDS],
-                state: &[u32; STATE_WORDS],
-                rounds: usize)
+                state: &[u32; STATE_WORDS])
         {
             let mut tmp = *state;
+            let rounds = 20;
             for _ in 0..rounds / 2 {
                 double_round!(tmp);
             }
@@ -242,7 +220,7 @@ impl BlockRngCore for ChaChaCore {
             }
         }
 
-        core(results, &self.state, self.rounds);
+        core(results, &self.state);
 
         // update 128-bit counter
         self.state[12] = self.state[12].wrapping_add(1);
@@ -265,13 +243,6 @@ impl ChaChaCore {
         self.state[14] = counter_high as u32;
         self.state[15] = (counter_high >> 32) as u32;
     }
-
-    /// Sets the number of rounds to run the ChaCha core algorithm per block to
-    /// generate.
-    pub fn set_rounds(&mut self, rounds: usize) {
-        assert!([4usize, 8, 12, 16, 20].iter().any(|x| *x == rounds));
-        self.rounds = rounds;
-    }
 }
 
 impl SeedableRng for ChaChaCore {
@@ -285,7 +256,6 @@ impl SeedableRng for ChaChaCore {
                     seed_le[0], seed_le[1], seed_le[2], seed_le[3], // seed
                     seed_le[4], seed_le[5], seed_le[6], seed_le[7], // seed
                     0, 0, 0, 0], // counter
-            rounds: 20,
          }
     }
 }
@@ -432,22 +402,6 @@ mod test {
                         0x88228b1a, 0x96a4dfb3, 0x5b76ab72, 0xc727ee54,
                         0x0e0e978a, 0xf3145c95, 0x1b748ea8, 0xf786c297,
                         0x99c28f5f, 0x628314e8, 0x398a19fa, 0x6ded1b53];
-        assert_eq!(results, expected);
-    }
-
-    #[test]
-    fn test_chacha_set_rounds() {
-        let seed = [0u8; 32];
-        let mut rng = ChaChaRng::from_seed(seed);
-        rng.set_rounds(8);
-
-        let mut results = [0u32; 16];
-        for i in results.iter_mut() { *i = rng.next_u32(); }
-
-        let expected = [0x2fef003e, 0xd6405f89, 0xe8b85b7f, 0xa1a5091f,
-                        0xc30e842c, 0x3b7f9ace, 0x88e11b18, 0x1e1a71ef,
-                        0x72e14c98, 0x416f21b9, 0x6753449f, 0x19566d45,
-                        0xa3424a31, 0x01b086da, 0xb8fd7b38, 0x42fe0c0e];
         assert_eq!(results, expected);
     }
 
