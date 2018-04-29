@@ -27,7 +27,6 @@ use core::cmp::min;
 use core::mem::size_of;
 use {RngCore, BlockRngCore, CryptoRng, SeedableRng, Error};
 
-#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
 pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
@@ -187,9 +186,6 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
 #[derive(Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng<R: BlockRngCore + ?Sized> {
-    #[cfg_attr(feature="serde1", serde(bound(
-        serialize = "R::Results: Serialize",
-        deserialize = "R::Results: Deserialize<'de>")))]
     results: R::Results,
     index: usize,
     core: R,
@@ -386,9 +382,6 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
 #[derive(Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng64<R: BlockRngCore + ?Sized> {
-    #[cfg_attr(feature="serde1", serde(bound(
-        serialize = "R::Results: Serialize",
-        deserialize = "R::Results: Deserialize<'de>")))]
     results: R::Results,
     index: usize,
     half_used: bool, // true if only half of the previous result is used
