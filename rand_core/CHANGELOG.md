@@ -5,7 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [0.1.0] - TODO - date
+## [0.2.0] - Unreleased
+- Enable the `std` feature by default. (#409)
+- Change `BlockRng64::inner` and add `BlockRng64::inner_mut` to mirror `BlockRng`. (#419)
+- Add `BlockRng{64}::index` and `BlockRng{64}::generate_and_set`. (#374, #419)
+
+## [0.1.0] - 2018-04-17
 (Split out of the Rand crate, changes here are relative to rand 0.4.2)
 - `RngCore` and `SeedableRng` are now part of `rand_core`. (#288)
 - Add modules to help implementing RNGs `impl` and `le`. (#209, #228)
