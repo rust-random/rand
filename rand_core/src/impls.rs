@@ -430,10 +430,27 @@ impl<R: BlockRngCore> BlockRng64<R> {
         &mut self.core
     }
 
-    // Reset the number of available results.
-    // This will force a new set of results to be generated on next use.
+    /// Get the index into the result buffer.
+    ///
+    /// If this is equal to or larger than the size of the result buffer then
+    /// the buffer is "empty" and `generate()` must be called to produce new
+    /// results.
+    pub fn index(&self) -> usize {
+        self.index
+    }
+
+    /// Reset the number of available results.
+    /// This will force a new set of results to be generated on next use.
     pub fn reset(&mut self) {
         self.index = self.results.as_ref().len();
+    }
+
+    /// Generate a new set of results immediately, setting the index to the
+    /// given value.
+    pub fn generate_and_set(&mut self, index: usize) {
+        assert!(index < self.results.as_ref().len());
+        self.core.generate(&mut self.results);
+        self.index = index;
     }
 }
 
