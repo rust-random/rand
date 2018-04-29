@@ -4,7 +4,7 @@
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-lang-nursery/rand?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
 [![Latest version](https://img.shields.io/crates/v/rand_core.svg)](https://crates.io/crates/rand_core)
 [![Documentation](https://docs.rs/rand_core/badge.svg)](https://docs.rs/rand_core)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.9+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.13+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
 
 Core traits and error types of the [rand] library, plus tools for implementing
 RNGs.
@@ -56,7 +56,7 @@ implementations that use the `BlockRng` or `BlockRng64` wrappers.
 ### Rust version requirements
 
 `rand_core` works with a wide range of Rustc versions, with the oldest supported
-version being **Rustc 1.9.0**. The optional `serde1` feature requires a higher
+version being **Rustc 1.13.0**. The optional `serde1` feature requires a higher
 Rustc version, as it depends on the minimum version supported by Serde.
 
 Travis CI always has a build with a pinned version of Rustc matching the oldest

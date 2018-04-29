@@ -381,7 +381,7 @@ pub trait SeedableRng: Sized {
     /// [`OsRng`]: ../rand/os/struct.OsRng.html
     fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
-        try!(rng.try_fill_bytes(seed.as_mut()));
+        rng.try_fill_bytes(seed.as_mut())?;
         Ok(Self::from_seed(seed))
     }
 }
