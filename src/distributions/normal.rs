@@ -11,7 +11,7 @@
 //! The normal and derived distributions.
 
 use Rng;
-use distributions::{ziggurat, ziggurat_tables, Distribution};
+use distributions::{ziggurat, ziggurat_tables, Distribution, Open01};
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a.  a standard normal, or Gaussian). This is equivalent to
@@ -55,8 +55,8 @@ impl Distribution<f64> for StandardNormal {
             let mut y = 0.0f64;
 
             while -2.0 * y < x * x {
-                let x_: f64 = rng.gen();
-                let y_: f64 = rng.gen();
+                let x_: f64 = rng.sample(Open01);
+                let y_: f64 = rng.sample(Open01);
 
                 x = x_.ln() / ziggurat_tables::ZIG_NORM_R;
                 y = y_.ln();
