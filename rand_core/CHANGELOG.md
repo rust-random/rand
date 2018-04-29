@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enable the `std` feature by default. (#409)
 - Change `BlockRng64::inner` and add `BlockRng64::inner_mut` to mirror `BlockRng`. (#419)
 - Add `BlockRng{64}::index` and `BlockRng{64}::generate_and_set`. (#374, #419)
+- Change `BlockRngCore::Results` bound to also require `AsMut<[Self::Item]>`. (#419)
 
 ## [0.1.0] - 2018-04-17
 (Split out of the Rand crate, changes here are relative to rand 0.4.2)

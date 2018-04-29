@@ -249,7 +249,7 @@ impl<R: BlockRngCore> BlockRng<R> {
 }
 
 impl<R: BlockRngCore<Item=u32>> RngCore for BlockRng<R>
-where <R as BlockRngCore>::Results: AsRef<[u32]>
+where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
 {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -448,7 +448,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
 }
 
 impl<R: BlockRngCore<Item=u64>> RngCore for BlockRng64<R>
-where <R as BlockRngCore>::Results: AsRef<[u64]>
+where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
