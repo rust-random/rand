@@ -420,8 +420,13 @@ impl<R: BlockRngCore> BlockRng64<R> {
         }
     }
 
+    /// Return a reference the wrapped `BlockRngCore`.
+    pub fn inner(&self) -> &R {
+        &self.core
+    }
+
     /// Return a mutable reference the wrapped `BlockRngCore`.
-    pub fn inner(&mut self) -> &mut R {
+    pub fn inner_mut(&mut self) -> &mut R {
         &mut self.core
     }
 
