@@ -325,8 +325,8 @@ where <R as BlockRngCore>::Results: AsRef<[u32]>
             };
             self.core.generate(dest_u32);
             filled += self.results.as_ref().len() * 4;
+            self.index = self.results.as_ref().len();
         }
-        self.index = self.results.as_ref().len();
 
         if len_remainder > 0 {
             self.core.generate(&mut self.results);
@@ -502,8 +502,8 @@ where <R as BlockRngCore>::Results: AsRef<[u64]>
             };
             self.core.generate(dest_u64);
             filled += self.results.as_ref().len() * 8;
+            self.index = self.results.as_ref().len();
         }
-        self.index = self.results.as_ref().len();
 
         if len_remainder > 0 {
             self.core.generate(&mut self.results);

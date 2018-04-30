@@ -133,6 +133,9 @@ impl ChaChaRng {
     /// counter is 64-bits, the offset is a 68-bit number. Sub-word offsets are
     /// not supported, hence the result can simply be multiplied by 4 to get a
     /// byte-offset.
+    /// 
+    /// Note: this function is currently only available when the `i128_support`
+    /// feature is enabled. In the future this will be enabled by default.
     #[cfg(feature = "i128_support")]
     pub fn get_word_pos(&self) -> u128 {
         let core = self.0.inner();
@@ -153,6 +156,9 @@ impl ChaChaRng {
     /// As with `get_word_pos`, we use a 68-bit number. Since the generator
     /// simply cycles at the end of its period (1 ZiB), we ignore the upper
     /// 60 bits.
+    /// 
+    /// Note: this function is currently only available when the `i128_support`
+    /// feature is enabled. In the future this will be enabled by default.
     #[cfg(feature = "i128_support")]
     pub fn set_word_pos(&mut self, word_offset: u128) {
         let index = (word_offset as usize) & 0xF;
@@ -170,6 +176,13 @@ impl ChaChaRng {
     ///
     /// This is initialized to zero; 2<sup>64</sup> unique streams of output
     /// are available per seed/key.
+    /// 
+    /// Note that in order to reproduce ChaCha output with a specific 64-bit
+    /// nonce, one can convert that nonce to a `u64` in little-endian fashion
+    /// and pass to this function. In theory a 96-bit nonce can be used by
+    /// passing the last 64-bits to this function and using the first 32-bits as
+    /// the most significant half of the 64-bit counter (which may be set
+    /// indirectly via `set_word_pos`), but this is not directly supported.
     pub fn set_stream(&mut self, stream: u64) {
         let index = self.0.index();
         self.0.inner_mut().state[14] = stream as u32;
@@ -354,6 +367,7 @@ mod test {
                         0xa78dea8f, 0x5e269039, 0xa1bebbc1, 0xcaf09aae,
                         0xa25ab213, 0x48a6b46c, 0x1b9d9bcb, 0x092c5be6,
                         0x546ca624, 0x1bec45d5, 0x87f47473, 0x96f0992e];
+        let expected_end = 3 * 16;
         let mut results = [0u32; 16];
 
         // Test block 2 by skipping block 0 and 1
@@ -361,12 +375,28 @@ mod test {
         for _ in 0..32 { rng1.next_u32(); }
         for i in results.iter_mut() { *i = rng1.next_u32(); }
         assert_eq!(results, expected);
+        assert_eq!(rng1.get_word_pos(), expected_end);
 
         // Test block 2 by using `set_word_pos`
         let mut rng2 = ChaChaRng::from_seed(seed);
         rng2.set_word_pos(2 * 16);
         for i in results.iter_mut() { *i = rng2.next_u32(); }
         assert_eq!(results, expected);
+        assert_eq!(rng2.get_word_pos(), expected_end);
+        
+        // Test skipping behaviour with other types
+        let mut buf = [0u8; 32];
+        rng2.fill_bytes(&mut buf[..]);
+        assert_eq!(rng2.get_word_pos(), expected_end + 8);
+        rng2.fill_bytes(&mut buf[0..25]);
+        assert_eq!(rng2.get_word_pos(), expected_end + 15);
+        rng2.next_u64();
+        assert_eq!(rng2.get_word_pos(), expected_end + 17);
+        rng2.next_u32();
+        rng2.next_u64();
+        assert_eq!(rng2.get_word_pos(), expected_end + 20);
+        rng2.fill_bytes(&mut buf[0..1]);
+        assert_eq!(rng2.get_word_pos(), expected_end + 21);
     }
 
     #[test]
