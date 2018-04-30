@@ -32,26 +32,26 @@ const STATE_WORDS: usize = 16;
 /// provided by auto-vectorisation.
 ///
 /// With the ChaCha algorithm it is possible to choose the number of rounds the
-/// core algorithm should run. By default `ChaChaRng` is created as ChaCha20,
-/// which means 20 rounds. The number of rounds is a tradeoff between performance
-/// and security, 8 rounds are considered the minimum to be secure. A different
-/// number of rounds can be set using [`set_rounds`].
+/// core algorithm should run. The number of rounds is a tradeoff between
+/// performance and security, where 8 rounds is the minimum potentially
+/// secure configuration, and 20 rounds is widely used as a conservative choice.
+/// We use 20 rounds in this implementation, but hope to allow type-level
+/// configuration in the future.
 ///
-/// We deviate slightly from the ChaCha specification regarding the nonce and
-/// the counter. Instead of a 64-bit nonce and 64-bit counter (or a 96-bit nonce
-/// and 32-bit counter in the IETF variant [3]), we use a 128-bit counter. This
-/// is because a nonce does not give a meaningful advantage for ChaCha when used
-/// as an RNG. The modification is provably as strong as the original cipher,
-/// though, since any distinguishing attack on our variant also works against
-/// ChaCha with a chosen nonce.
+/// We use a 64-bit counter and 64-bit stream identifier as in Benstein's
+/// implementation [1] except that we use a stream identifier in place of a
+/// nonce. A 64-bit counter over 64-byte (16 word) blocks allows 1 ZiB of output
+/// before cycling, and the stream identifier allows 2<sup>64</sup> unique
+/// streams of output per seed. Both counter and stream are initialized to zero
+/// but may be set via [`set_word_pos`] and [`set_stream`].
 ///
-/// The modified word layout is:
+/// The word layout is:
 ///
 /// ```text
 /// constant constant constant constant
-/// key      key      key      key
-/// key      key      key      key
-/// counter  counter  counter  counter
+/// seed     seed     seed     seed
+/// seed     seed     seed     seed
+/// counter  counter  nonce    nonce
 /// ```
 ///
 /// [1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
@@ -60,10 +60,8 @@ const STATE_WORDS: usize = 16;
 /// [2]: [eSTREAM: the ECRYPT Stream Cipher Project](
 ///      http://www.ecrypt.eu.org/stream/)
 ///
-/// [3]: [ChaCha20 and Poly1305 for IETF Protocols](
-///       https://tools.ietf.org/html/rfc7539)
-///
-/// [`set_rounds`]: #method.set_counter
+/// [`set_word_pos`]: #method.set_word_pos
+/// [`set_stream`]: #method.set_stream
 #[derive(Clone, Debug)]
 pub struct ChaChaRng(BlockRng<ChaChaCore>);
 
@@ -129,58 +127,78 @@ impl ChaChaRng {
         ChaChaRng::from_seed([0; SEED_WORDS*4])
     }
 
-    /// Sets the internal 128-bit ChaCha counter to a user-provided value. This
-    /// permits jumping arbitrarily ahead (or backwards) in the pseudorandom
-    /// stream.
-    ///
-    /// The 128 bits used for the counter overlap with the nonce and smaller
-    /// counter of ChaCha when used as a stream cipher. It is in theory possible
-    /// to use `set_counter` to obtain the conventional ChaCha pseudorandom
-    /// stream associated with a particular nonce. This is not a supported use
-    /// of the RNG, because a nonce set that way is not treated as a constant
-    /// value but still as part of the counter, besides endian issues.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use rand::{ChaChaRng, RngCore, SeedableRng};
-    ///
-    /// // Note: Use `FromEntropy` or `ChaChaRng::from_rng()` outside of testing.
-    /// let mut rng1 = ChaChaRng::from_seed([0; 32]);
-    /// let mut rng2 = rng1.clone();
-    ///
-    /// // Skip to round 20. Because every round generates 16 `u32` values, this
-    /// // actually means skipping 320 values.
-    /// for _ in 0..(20*16) { rng1.next_u32(); }
-    /// rng2.set_counter(20, 0);
-    /// assert_eq!(rng1.next_u32(), rng2.next_u32());
-    /// ```
-    pub fn set_counter(&mut self, counter_low: u64, counter_high: u64) {
-        self.0.inner_mut().set_counter(counter_low, counter_high);
-        self.0.reset(); // force recomputation on next use
+    /// Get the offset from the start of the stream, in 32-bit words.
+    /// 
+    /// Since the generated blocks are 16 words (2<sup>4</sup>) long and the
+    /// counter is 64-bits, the offset is a 68-bit number. Sub-word offsets are
+    /// not supported, hence the result can simply be multiplied by 4 to get a
+    /// byte-offset.
+    /// 
+    /// Note: this function is currently only available when the `i128_support`
+    /// feature is enabled. In the future this will be enabled by default.
+    #[cfg(feature = "i128_support")]
+    pub fn get_word_pos(&self) -> u128 {
+        let core = self.0.inner();
+        let mut c = (core.state[13] as u64) << 32
+                  | (core.state[12] as u64);
+        let mut index = self.0.index();
+        // c is the end of the last block generated, unless index is at end
+        if index >= STATE_WORDS {
+            index = 0;
+        } else {
+            c = c.wrapping_sub(1);
+        }
+        ((c as u128) << 4) | (index as u128)
     }
 
-    /// Sets the number of rounds to run the ChaCha core algorithm per block to
-    /// generate.
+    /// Set the offset from the start of the stream, in 32-bit words.
+    /// 
+    /// As with `get_word_pos`, we use a 68-bit number. Since the generator
+    /// simply cycles at the end of its period (1 ZiB), we ignore the upper
+    /// 60 bits.
+    /// 
+    /// Note: this function is currently only available when the `i128_support`
+    /// feature is enabled. In the future this will be enabled by default.
+    #[cfg(feature = "i128_support")]
+    pub fn set_word_pos(&mut self, word_offset: u128) {
+        let index = (word_offset as usize) & 0xF;
+        let counter = (word_offset >> 4) as u64;
+        self.0.inner_mut().state[12] = counter as u32;
+        self.0.inner_mut().state[13] = (counter >> 32) as u32;
+        if index != 0 {
+            self.0.generate_and_set(index); // also increments counter
+        } else {
+            self.0.reset();
+        }
+    }
+
+    /// Set the stream number.
     ///
-    /// By default this is set to 20. Other recommended values are 12 and 8,
-    /// which trade security for performance. `rounds` only supports values
-    /// that are multiples of 4 and less than or equal to 20.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use rand::{ChaChaRng, RngCore, SeedableRng};
-    ///
-    /// // Note: Use `FromEntropy` or `ChaChaRng::from_rng()` outside of testing.
-    /// let mut rng = ChaChaRng::from_seed([0; 32]);
-    /// rng.set_rounds(8);
-    ///
-    /// assert_eq!(rng.next_u32(), 0x2fef003e);
-    /// ```
-    pub fn set_rounds(&mut self, rounds: usize) {
-        self.0.inner_mut().set_rounds(rounds);
-        self.0.reset(); // force recomputation on next use
+    /// This is initialized to zero; 2<sup>64</sup> unique streams of output
+    /// are available per seed/key.
+    /// 
+    /// Note that in order to reproduce ChaCha output with a specific 64-bit
+    /// nonce, one can convert that nonce to a `u64` in little-endian fashion
+    /// and pass to this function. In theory a 96-bit nonce can be used by
+    /// passing the last 64-bits to this function and using the first 32-bits as
+    /// the most significant half of the 64-bit counter (which may be set
+    /// indirectly via `set_word_pos`), but this is not directly supported.
+    pub fn set_stream(&mut self, stream: u64) {
+        let index = self.0.index();
+        self.0.inner_mut().state[14] = stream as u32;
+        self.0.inner_mut().state[15] = (stream >> 32) as u32;
+        if index < STATE_WORDS {
+            // we need to regenerate a partial result buffer
+            {
+                // reverse of counter adjustment in generate()
+                let core = self.0.inner_mut();
+                if core.state[12] == 0 {
+                    core.state[13] = core.state[13].wrapping_sub(1);
+                }
+                core.state[12] = core.state[12].wrapping_sub(1);
+            }
+            self.0.generate_and_set(index);
+        }
     }
 }
 
@@ -188,7 +206,6 @@ impl ChaChaRng {
 #[derive(Clone)]
 pub struct ChaChaCore {
     state: [u32; STATE_WORDS],
-    rounds:  usize,
 }
 
 // Custom Debug implementation that does not expose the internal state
@@ -230,10 +247,10 @@ impl BlockRngCore for ChaChaCore {
         // For some reason extracting this part into a separate function
         // improves performance by 50%.
         fn core(results: &mut [u32; STATE_WORDS],
-                state: &[u32; STATE_WORDS],
-                rounds: usize)
+                state: &[u32; STATE_WORDS])
         {
             let mut tmp = *state;
+            let rounds = 20;
             for _ in 0..rounds / 2 {
                 double_round!(tmp);
             }
@@ -242,35 +259,12 @@ impl BlockRngCore for ChaChaCore {
             }
         }
 
-        core(results, &self.state, self.rounds);
+        core(results, &self.state);
 
-        // update 128-bit counter
+        // update 64-bit counter
         self.state[12] = self.state[12].wrapping_add(1);
         if self.state[12] != 0 { return; };
         self.state[13] = self.state[13].wrapping_add(1);
-        if self.state[13] != 0 { return; };
-        self.state[14] = self.state[14].wrapping_add(1);
-        if self.state[14] != 0 { return; };
-        self.state[15] = self.state[15].wrapping_add(1);
-    }
-}
-
-impl ChaChaCore {
-    /// Sets the internal 128-bit ChaCha counter to a user-provided value. This
-    /// permits jumping arbitrarily ahead (or backwards) in the pseudorandom
-    /// stream.
-    pub fn set_counter(&mut self, counter_low: u64, counter_high: u64) {
-        self.state[12] = counter_low as u32;
-        self.state[13] = (counter_low >> 32) as u32;
-        self.state[14] = counter_high as u32;
-        self.state[15] = (counter_high >> 32) as u32;
-    }
-
-    /// Sets the number of rounds to run the ChaCha core algorithm per block to
-    /// generate.
-    pub fn set_rounds(&mut self, rounds: usize) {
-        assert!([4usize, 8, 12, 16, 20].iter().any(|x| *x == rounds));
-        self.rounds = rounds;
     }
 }
 
@@ -285,12 +279,17 @@ impl SeedableRng for ChaChaCore {
                     seed_le[0], seed_le[1], seed_le[2], seed_le[3], // seed
                     seed_le[4], seed_le[5], seed_le[6], seed_le[7], // seed
                     0, 0, 0, 0], // counter
-            rounds: 20,
          }
     }
 }
 
 impl CryptoRng for ChaChaCore {}
+
+impl From<ChaChaCore> for ChaChaRng {
+    fn from(core: ChaChaCore) -> Self {
+        ChaChaRng(BlockRng::new(core))
+    }
+}
 
 #[cfg(test)]
 mod test {
@@ -356,6 +355,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "i128_support")]
     fn test_chacha_true_values_c() {
         // Test vector 4 from
         // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
@@ -367,6 +367,7 @@ mod test {
                         0xa78dea8f, 0x5e269039, 0xa1bebbc1, 0xcaf09aae,
                         0xa25ab213, 0x48a6b46c, 0x1b9d9bcb, 0x092c5be6,
                         0x546ca624, 0x1bec45d5, 0x87f47473, 0x96f0992e];
+        let expected_end = 3 * 16;
         let mut results = [0u32; 16];
 
         // Test block 2 by skipping block 0 and 1
@@ -374,12 +375,28 @@ mod test {
         for _ in 0..32 { rng1.next_u32(); }
         for i in results.iter_mut() { *i = rng1.next_u32(); }
         assert_eq!(results, expected);
+        assert_eq!(rng1.get_word_pos(), expected_end);
 
-        // Test block 2 by using `set_counter`
+        // Test block 2 by using `set_word_pos`
         let mut rng2 = ChaChaRng::from_seed(seed);
-        rng2.set_counter(2, 0);
+        rng2.set_word_pos(2 * 16);
         for i in results.iter_mut() { *i = rng2.next_u32(); }
         assert_eq!(results, expected);
+        assert_eq!(rng2.get_word_pos(), expected_end);
+        
+        // Test skipping behaviour with other types
+        let mut buf = [0u8; 32];
+        rng2.fill_bytes(&mut buf[..]);
+        assert_eq!(rng2.get_word_pos(), expected_end + 8);
+        rng2.fill_bytes(&mut buf[0..25]);
+        assert_eq!(rng2.get_word_pos(), expected_end + 15);
+        rng2.next_u64();
+        assert_eq!(rng2.get_word_pos(), expected_end + 17);
+        rng2.next_u32();
+        rng2.next_u64();
+        assert_eq!(rng2.get_word_pos(), expected_end + 20);
+        rng2.fill_bytes(&mut buf[0..1]);
+        assert_eq!(rng2.get_word_pos(), expected_end + 21);
     }
 
     #[test]
@@ -417,14 +434,15 @@ mod test {
     }
 
     #[test]
-    fn test_chacha_set_counter() {
+    fn test_chacha_nonce() {
         // Test vector 5 from
         // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
         // Although we do not support setting a nonce, we try it here anyway so
         // we can use this test vector.
         let seed = [0u8; 32];
         let mut rng = ChaChaRng::from_seed(seed);
-        rng.set_counter(0, 2u64 << 56);
+        // 96-bit nonce in LE order is: 0,0,0,0, 0,0,0,0, 0,0,0,2
+        rng.set_stream(2u64 << (24 + 32));
 
         let mut results = [0u32; 16];
         for i in results.iter_mut() { *i = rng.next_u32(); }
@@ -436,28 +454,21 @@ mod test {
     }
 
     #[test]
-    fn test_chacha_set_rounds() {
-        let seed = [0u8; 32];
-        let mut rng = ChaChaRng::from_seed(seed);
-        rng.set_rounds(8);
-
-        let mut results = [0u32; 16];
-        for i in results.iter_mut() { *i = rng.next_u32(); }
-
-        let expected = [0x2fef003e, 0xd6405f89, 0xe8b85b7f, 0xa1a5091f,
-                        0xc30e842c, 0x3b7f9ace, 0x88e11b18, 0x1e1a71ef,
-                        0x72e14c98, 0x416f21b9, 0x6753449f, 0x19566d45,
-                        0xa3424a31, 0x01b086da, 0xb8fd7b38, 0x42fe0c0e];
-        assert_eq!(results, expected);
-    }
-
-    #[test]
-    fn test_chacha_clone() {
+    fn test_chacha_clone_streams() {
         let seed = [0,0,0,0, 1,0,0,0, 2,0,0,0, 3,0,0,0, 4,0,0,0, 5,0,0,0, 6,0,0,0, 7,0,0,0];
         let mut rng = ChaChaRng::from_seed(seed);
         let mut clone = rng.clone();
         for _ in 0..16 {
             assert_eq!(rng.next_u64(), clone.next_u64());
+        }
+        
+        rng.set_stream(51);
+        for _ in 0..7 {
+            assert!(rng.next_u32() != clone.next_u32());
+        }
+        clone.set_stream(51);   // switch part way through block
+        for _ in 7..16 {
+            assert_eq!(rng.next_u32(), clone.next_u32());
         }
     }
 }

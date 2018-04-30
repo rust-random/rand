@@ -228,10 +228,27 @@ impl<R: BlockRngCore> BlockRng<R> {
         &mut self.core
     }
 
-    // Reset the number of available results.
-    // This will force a new set of results to be generated on next use.
+    /// Get the index into the result buffer.
+    /// 
+    /// If this is equal to or larger than the size of the result buffer then
+    /// the buffer is "empty" and `generate()` must be called to produce new
+    /// results.
+    pub fn index(&self) -> usize {
+        self.index
+    }
+
+    /// Reset the number of available results.
+    /// This will force a new set of results to be generated on next use.
     pub fn reset(&mut self) {
         self.index = self.results.as_ref().len();
+    }
+
+    /// Generate a new set of results immediately, setting the index to the
+    /// given value.
+    pub fn generate_and_set(&mut self, index: usize) {
+        assert!(index < self.results.as_ref().len());
+        self.core.generate(&mut self.results);
+        self.index = index;
     }
 }
 
@@ -241,8 +258,7 @@ where <R as BlockRngCore>::Results: AsRef<[u32]>
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         if self.index >= self.results.as_ref().len() {
-            self.core.generate(&mut self.results);
-            self.index = 0;
+            self.generate_and_set(0);
         }
 
         let value = self.results.as_ref()[self.index];
@@ -271,13 +287,11 @@ where <R as BlockRngCore>::Results: AsRef<[u32]>
             // Read an u64 from the current index
             read_u64(self.results.as_ref(), index)
         } else if index >= len {
-            self.core.generate(&mut self.results);
-            self.index = 2;
+            self.generate_and_set(2);
             read_u64(self.results.as_ref(), 0)
         } else {
             let x = u64::from(self.results.as_ref()[len-1]);
-            self.core.generate(&mut self.results);
-            self.index = 1;
+            self.generate_and_set(1);
             let y = u64::from(self.results.as_ref()[0]);
             (y << 32) | x
         }
@@ -311,8 +325,8 @@ where <R as BlockRngCore>::Results: AsRef<[u32]>
             };
             self.core.generate(dest_u32);
             filled += self.results.as_ref().len() * 4;
+            self.index = self.results.as_ref().len();
         }
-        self.index = self.results.as_ref().len();
 
         if len_remainder > 0 {
             self.core.generate(&mut self.results);
@@ -329,8 +343,7 @@ where <R as BlockRngCore>::Results: AsRef<[u32]>
         let mut read_len = 0;
         while read_len < dest.len() {
             if self.index >= self.results.as_ref().len() {
-                self.core.generate(&mut self.results);
-                self.index = 0;
+                self.generate_and_set(0);
             }
             let (consumed_u32, filled_u8) =
                 fill_via_u32_chunks(&self.results.as_ref()[self.index..],
@@ -489,8 +502,8 @@ where <R as BlockRngCore>::Results: AsRef<[u64]>
             };
             self.core.generate(dest_u64);
             filled += self.results.as_ref().len() * 8;
+            self.index = self.results.as_ref().len();
         }
-        self.index = self.results.as_ref().len();
 
         if len_remainder > 0 {
             self.core.generate(&mut self.results);
