@@ -9,6 +9,76 @@
 // except according to those terms.
 
 //! A distribution uniformly generating numbers within a given range.
+//!
+//! [`Uniform`] is the standard distribution to sample from uniform ranges, and
+//! forms the basis for [`Rng::gen_range`].
+//!
+//! To make sampling from a uniform range also possible for custom types
+//! [`Uniform`] depends on the [`SampleUniform`] and [`UniformImpl`] traits.
+//!
+//! Rand comes with an implementation of [`Uniform`] for sampling from integers
+//! and from floats, via [`UniformInt`] and [`UniformFloat`]. They are mostly an
+//! implementation detail and should not be used directly, but may be useful
+//! when you want to reuse the logic to implement range sampling for a custom
+//! type.
+//!
+//! Also implemented is a distribution for `Duration`.
+//!
+//! # Implementing `Uniform` for a custom type
+//!
+//! For the type you will need to create a struct that holds the lower and upper
+//! bounds of the range, and possibly some helper variables. The struct has to
+//! implement the [`UniformImpl`] trait to do the uniform range sampling.
+//!
+//! Additionally the type must implement the [`SampleUniform`] trait, which
+//! doesn't do anything but point to the struct implementing [`UniformImpl`].
+//!
+//! ## Examples
+//!
+//! ```
+//! use rand::{Rng, thread_rng};
+//! use rand::distributions::Distribution;
+//! use rand::distributions::uniform::{Uniform, SampleUniform};
+//! use rand::distributions::uniform::{UniformImpl, UniformFloat};
+//!
+//! #[derive(Clone, Copy, PartialEq, PartialOrd)]
+//! struct MyF32(f32);
+//!
+//! #[derive(Clone, Copy, Debug)]
+//! struct UniformMyF32 {
+//!     inner: UniformFloat<f32>,
+//! }
+//! impl UniformImpl for UniformMyF32 {
+//!     type X = MyF32;
+//!     fn new(low: Self::X, high: Self::X) -> Self {
+//!         UniformMyF32 {
+//!             inner: UniformFloat::<f32>::new(low.0, high.0),
+//!         }
+//!     }
+//!     fn new_inclusive(low: Self::X, high: Self::X) -> Self {
+//!         UniformImpl::new(low, high)
+//!     }
+//!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+//!         MyF32(self.inner.sample(rng))
+//!     }
+//! }
+//!
+//! impl SampleUniform for MyF32 {
+//!     type Impl = UniformMyF32;
+//! }
+//!
+//! let (low, high) = (MyF32(17.0f32), MyF32(22.0f32));
+//! let uniform = Uniform::new(low, high);
+//! let x = uniform.sample(&mut thread_rng());
+//! ```
+//!
+//! [`Uniform`]: struct.Uniform.html
+//! [`Rng::gen_range`]: ../../trait.Rng.html#method.gen_range
+//! [`SampleUniform`]: trait.SampleUniform.html
+//! [`UniformImpl`]: trait.UniformImpl.html
+//! [`UniformInt`]: struct.UniformInt.html
+//! [`UniformFloat`]: struct.UniformFloat.html
+
 #[cfg(feature = "std")]
 use std::time::Duration;
 
@@ -18,16 +88,16 @@ use distributions::float::IntoFloat;
 
 /// Sample values uniformly between two bounds.
 ///
-/// `Uniform::new` and `Uniform::new_inclusive` construct a `Uniform`
+/// [`Uniform::new`] and [`Uniform::new_inclusive`] construct a `Uniform`
 /// distribution sampling from the closed-open and the closed (inclusive) range.
 /// Some preparations are performed up front to make sampling values faster.
-/// `Uniform::sample_single` is optimized for sampling values once or only a
+/// [`Uniform::sample_single`] is optimized for sampling values once or only a
 /// limited number of times from a range.
 ///
-/// If you need to sample many values from a range, consider using `new` or
-/// `new_inclusive`. This is also the best choice if the range is constant,
+/// If you need to sample many values from a range, consider using [`new`] or
+/// [`new_inclusive`]. This is also the best choice if the range is constant,
 /// because then the preparations can be evaluated at compile-time.
-/// Otherwise `sample_single` may be the best choice.
+/// Otherwise [`sample_single`] may be the best choice.
 ///
 /// Sampling uniformly from a range can be surprisingly complicated to be both
 /// generic and correct. Consider for example edge cases like `low = 0u8`,
@@ -41,7 +111,7 @@ use distributions::float::IntoFloat;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{Distribution, Uniform};
 ///
 /// fn main() {
@@ -54,6 +124,13 @@ use distributions::float::IntoFloat;
 ///     println!("{}", sum);
 /// }
 /// ```
+///
+/// [`Uniform::new`]: struct.Uniform.html#method.new
+/// [`Uniform::new_inclusive`]: struct.Uniform.html#method.new_inclusive
+/// [`Uniform::sample_single`]: struct.Uniform.html#method.sample_single
+/// [`new`]: struct.Uniform.html#method.new
+/// [`new_inclusive`]: struct.Uniform.html#method.new_inclusive
+/// [`sample_single`]: struct.Uniform.html#method.sample_single
 #[derive(Clone, Copy, Debug)]
 pub struct Uniform<X: SampleUniform> {
     inner: X::Impl,
@@ -89,7 +166,14 @@ impl<X: SampleUniform> Distribution<X> for Uniform<X> {
 }
 
 /// Helper trait for creating objects using the correct implementation of
-/// `UniformImpl` for the sampling type; this enables `Uniform::new(a, b)` to work.
+/// [`UniformImpl`] for the sampling type.
+///
+/// See the [module documentation] on how to implement [`Uniform`] range
+/// sampling for a custom type.
+///
+/// [`UniformImpl`]: trait.UniformImpl.html
+/// [module documentation]: index.html
+/// [`Uniform`]: struct.Uniform.html
 pub trait SampleUniform: PartialOrd+Sized {
     /// The `UniformImpl` implementation supporting type `X`.
     type Impl: UniformImpl<X = Self>;
@@ -97,44 +181,11 @@ pub trait SampleUniform: PartialOrd+Sized {
 
 /// Helper trait handling actual uniform sampling.
 ///
-/// If you want to implement `Uniform` sampling for your own type, then
-/// implement both this trait and `SampleUniform`:
+/// See the [module documentation] on how to implement [`Uniform`] range
+/// sampling for a custom type.
 ///
-/// ```rust
-/// use rand::{Rng, thread_rng};
-/// use rand::distributions::Distribution;
-/// use rand::distributions::uniform::{Uniform, SampleUniform, UniformImpl, UniformFloat};
-///
-/// #[derive(Clone, Copy, PartialEq, PartialOrd)]
-/// struct MyF32(f32);
-///
-/// #[derive(Clone, Copy, Debug)]
-/// struct UniformMyF32 {
-///     inner: UniformFloat<f32>,
-/// }
-/// impl UniformImpl for UniformMyF32 {
-///     type X = MyF32;
-///     fn new(low: Self::X, high: Self::X) -> Self {
-///         UniformMyF32 {
-///             inner: UniformFloat::<f32>::new(low.0, high.0),
-///         }
-///     }
-///     fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-///         UniformImpl::new(low, high)
-///     }
-///     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-///         MyF32(self.inner.sample(rng))
-///     }
-/// }
-///
-/// impl SampleUniform for MyF32 {
-///     type Impl = UniformMyF32;
-/// }
-///
-/// let (low, high) = (MyF32(17.0f32), MyF32(22.0f32));
-/// let uniform = Uniform::new(low, high);
-/// let x = uniform.sample(&mut thread_rng());
-/// ```
+/// [module documentation]: index.html
+/// [`Uniform`]: struct.Uniform.html
 pub trait UniformImpl: Sized {
     /// The type sampled by this implementation.
     type X: PartialOrd;
@@ -175,10 +226,50 @@ pub trait UniformImpl: Sized {
     }
 }
 
-/// Implementation of `UniformImpl` for integer types.
+/// Implementation of [`UniformImpl`] for integer types.
 ///
-/// Unless you are implementing `UniformImpl` for your own type, this type should
-/// not be used directly, use `Uniform` instead.
+/// Unless you are implementing [`UniformImpl`] for your own type, this type
+/// should not be used directly, use [`Uniform`] instead.
+///
+/// # Implementation notes
+///
+/// For a closed range, the number of possible numbers we should generate is
+/// `range = (high - low + 1)`. It is not possible to end up with a uniform
+/// distribution if we map *all* the random integers that can be generated to
+/// this range. We have to map integers from a `zone` that is a multiple of the
+/// range. The rest of the integers, that cause a bias, are rejected.
+///
+/// The problem with `range` is that to cover the full range of the type, it has
+/// to store `unsigned_max + 1`, which can't be represented. But if the range
+/// covers the full range of the type, no modulus is needed. A range of size 0
+/// can't exist, so we use that to represent this special case. Wrapping
+/// arithmetic even makes representing `unsigned_max + 1` as 0 simple.
+///
+/// We don't calculate `zone` directly, but first calculate the number of
+/// integers to reject. To handle `unsigned_max + 1` not fitting in the type,
+/// we use:
+/// `ints_to_reject = (unsigned_max + 1) % range;`
+/// `ints_to_reject = (unsigned_max - range + 1) % range;`
+///
+/// The smallest integer PRNGs generate is `u32`. That is why for small integer
+/// sizes (`i8`/`u8` and `i16`/`u16`) there is an optimisation: don't pick the
+/// largest zone that can fit in the small type, but pick the largest zone that
+/// can fit in an `u32`. This improves the chance to get a random integer that
+/// fits in the zone to 998 in 1000 in the worst case.
+///
+/// There is a problem however: we can't store the acceptable `zone` of  such a
+/// larger type in `UniformInt`, which only holds values with the size of the
+/// type. `ints_to_reject` is always less than half the size of the small
+/// integer. For an `u8` it only ever uses 7 bits. This means that all but the
+/// last 7 bits of `zone` are always 1's (or 15 in the case of `u16`). So
+/// nothing is lost by trucating `zone`.
+///
+/// An alternative to using a modulus is widening multiply: After a widening
+/// multiply by `range`, the result is in the high word. Then comparing the low
+/// word against `zone` makes sure our distribution is uniform.
+///
+/// [`UniformImpl`]: trait.UniformImpl.html
+/// [`Uniform`]: struct.Uniform.html
 #[derive(Clone, Copy, Debug)]
 pub struct UniformInt<X> {
     low: X,
@@ -210,45 +301,6 @@ macro_rules! uniform_int_impl {
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-                // For a closed range, the number of possible numbers we should
-                // generate is `range = (high - low + 1)`. It is not possible to
-                // end up with a uniform distribution if we map _all_ the random
-                // integers that can be generated to this range. We have to map
-                // integers from a `zone` that is a multiple of the range. The
-                // rest of the integers, that cause a bias, are rejected.
-                //
-                // The problem with `range` is that to cover the full range of
-                // the type, it has to store `unsigned_max + 1`, which can't be
-                // represented. But if the range covers the full range of the
-                // type, no modulus is needed. A range of size 0 can't exist, so
-                // we use that to represent this special case. Wrapping
-                // arithmetic even makes representing `unsigned_max + 1` as 0
-                // simple.
-                //
-                // We don't calculate `zone` directly, but first calculate the
-                // number of integers to reject. To handle `unsigned_max + 1`
-                // not fitting in the type, we use:
-                // ints_to_reject = (unsigned_max + 1) % range;
-                // ints_to_reject = (unsigned_max - range + 1) % range;
-                //
-                // The smallest integer prngs generate is u32. That is why for
-                // small integer sizes (i8/u8 and i16/u16) there is an
-                // optimisation: don't pick the largest zone that can fit in the
-                // small type, but pick the largest zone that can fit in an u32.
-                // This improves the chance to get a random integer that fits in
-                // the zone to 998 in 1000 in the worst case.
-                //
-                // There is a problem however: we can't store such a large range
-                // in `UniformInt`, that can only hold values of the size of $ty.
-                // `ints_to_reject` is always less than half the size of the
-                // small integer. For an u8 it only ever uses 7 bits. This means
-                // that all but the last 7 bits of `zone` are always 1's (or 15
-                // in the case of u16). So nothing is lost by trucating `zone`.
-                //
-                // An alternative to using a modulus is widening multiply:
-                // After a widening multiply by `range`, the result is in the
-                // high word. Then comparing the low word against `zone` makes
-                // sure our distribution is uniform.
                 let unsigned_max: $u_large = ::core::$u_large::MAX;
 
                 let range = (high as $u_large)
@@ -431,10 +483,31 @@ wmul_impl_usize! { u64 }
 
 
 
-/// Implementation of `UniformImpl` for float types.
+/// Implementation of [`UniformImpl`] for float types.
 ///
-/// Unless you are implementing `UniformImpl` for your own type, this type should
-/// not be used directly, use `Uniform` instead.
+/// Unless you are implementing [`UniformImpl`] for your own type, this type
+/// should not be used directly, use [`Uniform`] instead.
+///
+/// # Implementation notes
+///
+/// Instead of generating a float in the `[0, 1)` range using [`Standard`], the
+/// `UniformFloat` implementation converts the output of an PRNG itself. This
+/// way one or two steps can be optimized out.
+///
+/// The floats are first converted to a value in the `[1, 2)` interval using a
+/// transmute-based method, and then mapped to the expected range with a
+/// multiply and addition. Values produced this way have what equals 22 bits of
+/// random digits for an `f32`, and 52 for an `f64`.
+///
+/// Currently there is no difference between [`new`] and [`new_inclusive`],
+/// because the boundaries of a floats range are a bit of a fuzzy concept due to
+/// rounding errors.
+///
+/// [`UniformImpl`]: trait.UniformImpl.html
+/// [`new`]: trait.UniformImpl.html#tymethod.new
+/// [`new_inclusive`]: trait.UniformImpl.html#tymethod.new_inclusive
+/// [`Uniform`]: struct.Uniform.html
+/// [`Standard`]: ../struct.Standard.html
 #[derive(Clone, Copy, Debug)]
 pub struct UniformFloat<X> {
     scale: X,
@@ -460,8 +533,6 @@ macro_rules! uniform_float_impl {
             }
 
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-                // Same as `new`, because the boundaries of a floats range are
-                // (at least currently) not exact due to rounding errors.
                 UniformImpl::new(low, high)
             }
 
@@ -496,10 +567,13 @@ macro_rules! uniform_float_impl {
 uniform_float_impl! { f32, 32 - 23, next_u32 }
 uniform_float_impl! { f64, 64 - 52, next_u64 }
 
-/// Implementation of `UniformImpl` for `Duration`.
-/// 
-/// Unless you are implementing `UniformImpl` for your own types, this type should
-/// not be used directly, use `Uniform` instead.
+/// Implementation of [`UniformImpl`] for `Duration`.
+///
+/// Unless you are implementing [`UniformImpl`] for your own types, this type
+/// should not be used directly, use [`Uniform`] instead.
+///
+/// [`UniformImpl`]: trait.UniformImpl.html
+/// [`Uniform`]: struct.Uniform.html
 #[cfg(feature = "std")]
 #[derive(Clone, Copy, Debug)]
 pub struct UniformDuration {
