@@ -120,18 +120,15 @@ impl RngCore for ThreadRng {
 
 impl CryptoRng for ThreadRng {}
 
-/// DEPRECATED: use `thread_rng().gen()` instead.
-///
 /// Generates a random value using the thread-local random number generator.
 ///
 /// This is simply a shortcut for `thread_rng().gen()`. See [`thread_rng`] for
-/// documentation of the entropy source and [`Rand`] for documentation of
+/// documentation of the entropy source and [`Standard`] for documentation of
 /// distributions and type-specific generation.
 ///
 /// # Examples
 ///
-/// ```
-/// # #![allow(deprecated)]
+/// ```rust
 /// let x = rand::random::<u8>();
 /// println!("{}", x);
 ///
@@ -146,7 +143,7 @@ impl CryptoRng for ThreadRng {}
 /// If you're calling `random()` in a loop, caching the generator as in the
 /// following example can increase performance.
 ///
-/// ```
+/// ```rust
 /// # #![allow(deprecated)]
 /// use rand::Rng;
 ///
@@ -166,8 +163,7 @@ impl CryptoRng for ThreadRng {}
 /// ```
 ///
 /// [`thread_rng`]: fn.thread_rng.html
-/// [`Rand`]: trait.Rand.html
-#[deprecated(since="0.5.0", note="removed in favor of thread_rng().gen()")]
+/// [`Standard`]: distributions/struct.Standard.html
 #[inline]
 pub fn random<T>() -> T where Standard: Distribution<T> {
     thread_rng().gen()
