@@ -165,18 +165,28 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
     impl_uint_from_fill!(rng, u64, 8)
 }
 
-/// Wrapper around PRNGs that implement [`BlockRngCore`] to keep a results
-/// buffer and offer the methods from [`RngCore`].
+/// A wrapper type implementing [`RngCore`] for some type implementing
+/// [`BlockRngCore`] with `u32` array buffer; i.e. this can be used to implement
+/// a full RNG from just a `generate` function.
+///
+/// The `core` field may be accessed directly but the results buffer may not.
+/// PRNG implementations can simply use a type alias
+/// (`pub type MyRng = BlockRng<MyRngCore>;`) but might prefer to use a
+/// wrapper type (`pub struct MyRng(BlockRng<MyRngCore>);`); the latter must
+/// re-implement `RngCore` but hides the implementation details and allows
+/// extra functionality to be defined on the RNG
+/// (e.g. `impl MyRng { fn set_stream(...){...} }`).
 ///
 /// `BlockRng` has heavily optimized implementations of the [`RngCore`] methods
 /// reading values from the results buffer, as well as
 /// calling `BlockRngCore::generate` directly on the output array when
 /// `fill_bytes` / `try_fill_bytes` is called on a large array. These methods
 /// also handle the bookkeeping of when to generate a new batch of values.
-/// No generated values are ever thown away.
+/// No generated values are ever thown away and all values are consumed
+/// in-order (this may be important for reproducibility).
 ///
-/// Currently `BlockRng` only implements `RngCore` for buffers which are slices
-/// of `u32` elements; this may be extended to other types in the future.
+/// See also [`BlockRng64`] which uses `u64` array buffers. Currently there is
+/// no direct support for other buffer types.
 ///
 /// For easy initialization `BlockRng` also implements [`SeedableRng`].
 ///
@@ -188,7 +198,8 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
 pub struct BlockRng<R: BlockRngCore + ?Sized> {
     results: R::Results,
     index: usize,
-    core: R,
+    /// The *core* part of the RNG, implementing the `generate` function.
+    pub core: R,
 }
 
 // Custom Debug implementation that does not expose the contents of `results`.
@@ -212,16 +223,6 @@ impl<R: BlockRngCore> BlockRng<R> {
             index: results_empty.as_ref().len(),
             results: results_empty,
         }
-    }
-
-    /// Return a reference the wrapped `BlockRngCore`.
-    pub fn inner(&self) -> &R {
-        &self.core
-    }
-
-    /// Return a mutable reference the wrapped `BlockRngCore`.
-    pub fn inner_mut(&mut self) -> &mut R {
-        &mut self.core
     }
 
     /// Get the index into the result buffer.
@@ -370,11 +371,19 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
 
 
 
-/// Wrapper around PRNGs that implement [`BlockRngCore`] to keep a results
-/// buffer and offer the methods from [`RngCore`].
+/// A wrapper type implementing [`RngCore`] for some type implementing
+/// [`BlockRngCore`] with `u64` array buffer; i.e. this can be used to implement
+/// a full RNG from just a `generate` function.
 ///
 /// This is similar to [`BlockRng`], but specialized for algorithms that operate
 /// on `u64` values.
+///
+/// Like [`BlockRng`], this wrapper does not throw away whole results and does
+/// use all generated values in-order. The behaviour of `next_u32` is however
+/// a bit special: half of a `u64` is consumed, leaving the other half in the
+/// buffer. If the next function called is `next_u32` then the other half is
+/// then consumed, however both `next_u64` and `fill_bytes` discard any
+/// half-consumed `u64`s when called.
 ///
 /// [`BlockRngCore`]: ../BlockRngCore.t.html
 /// [`RngCore`]: ../RngCore.t.html
@@ -385,7 +394,8 @@ pub struct BlockRng64<R: BlockRngCore + ?Sized> {
     results: R::Results,
     index: usize,
     half_used: bool, // true if only half of the previous result is used
-    core: R,
+    /// The *core* part of the RNG, implementing the `generate` function.
+    pub core: R,
 }
 
 // Custom Debug implementation that does not expose the contents of `results`.
@@ -413,16 +423,6 @@ impl<R: BlockRngCore> BlockRng64<R> {
         }
     }
 
-    /// Return a reference the wrapped `BlockRngCore`.
-    pub fn inner(&self) -> &R {
-        &self.core
-    }
-
-    /// Return a mutable reference the wrapped `BlockRngCore`.
-    pub fn inner_mut(&mut self) -> &mut R {
-        &mut self.core
-    }
-
     /// Get the index into the result buffer.
     ///
     /// If this is equal to or larger than the size of the result buffer then
@@ -436,6 +436,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
     /// This will force a new set of results to be generated on next use.
     pub fn reset(&mut self) {
         self.index = self.results.as_ref().len();
+        self.half_used = false;
     }
 
     /// Generate a new set of results immediately, setting the index to the
@@ -444,6 +445,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
         assert!(index < self.results.as_ref().len());
         self.core.generate(&mut self.results);
         self.index = index;
+        self.half_used = false;
     }
 }
 
