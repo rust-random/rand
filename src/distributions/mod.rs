@@ -10,48 +10,178 @@
 
 //! Sampling from random distributions.
 //!
-//! Distributions are stateless (i.e. immutable) objects controlling the
-//! production of values of some type `T` from a presumed uniform randomness
-//! source. These objects may have internal parameters set at contruction time
-//! (e.g. [`Uniform`], which has configurable bounds) or may have no internal
-//! parameters (e.g. [`Standard`]).
-//! 
-//! All distributions support the [`Distribution`] trait, and support usage
-//! via `distr.sample(&mut rng)` as well as via `rng.sample(distr)`.
+//! This module is the home of the [`Distribution`] trait, and several
+//! implementations. It is the workhorse behind some of the convenient methods
+//! of the [`Rng`] trait, like [`gen`] and [`gen_range`]. A distribution takes
+//! one or more values of an RNG to produce a value with the type and
+//! distribution you need.
+//!
+//! Any type implementing [`Distribution`] is stateless (i.e. immutable), but it
+//! may have internal parameters set at construction time. [`Uniform`] for
+//! example has configurable bounds for the range, while [`Standard`] is just a
+//! unit struct.
+//!
+//! Is is possible to sample from a distribution through both the
+//! [`Distribution`] and [`Rng`] traits, via `distr.sample(&mut rng)` and
+//! `rng.sample(distr)`. They also both offer the [`sample_iter`] method, which
+//! produces an iterator that samples from the distribution.
+//!
+//!
+//! # The `Standard` distribution
+//!
+//! The [`Standard`] distribution is important to call out. This is the
+//! distribution used by [`Rng::gen()`]. [`Standard`] will generate a value in
+//! a way that is the most appropriate for some type. See the documentation of
+//! [`Standard`] for more details, like for which primitive types Rand contains
+//! an implementation, and what is deemed 'most appropriate' for some type.
+//!
+//! Implementing [`Standard`] for a user type makes it available for use with
+//! [`Rng::gen()`], and by extension for the simple [`random()`] function.
+//!
+//!
+//! # Distribution to sample from a `Uniform` range
+//!
+//! The [`Uniform`] distribution is the basis to sample values from a range
+//! using [`Rng::gen_range`]. It is possible to implement [`Uniform`] for custom
+//! types, so that they also work with [`gen_range`]. More documentation on that
+//! in the [`uniform` module].
+//!
+//! Sometimes you may want to sample from [`Uniform`] directly. For one it can
+//! provide better performance when you need to sample multiple values from the
+//! same range, because the set-up cost then needs to be done only once. Also it
+//! supports setting up an inclusive range with [`new_inclusive`], and offers a
+//! `From` implementation for range syntax.
+//!
+//!
+//! # Other distributions
+//!
+//! There are surprisingly many ways to uniformly generate random floats. A
+//! range between 0 and 1 is standard, but the exact bounds (open vs closed)
+//! and accuracy differ. In addition to the `Standard` distribution Rand offers
+//! [`Open01`] and [`OpenClosed01`]. See [Floating point implementation] for
+//! more details.
+//!
+//! [`Alphanumeric`] is a simple distribution to generate `Char`s, which can
+//! often be more useful than sampling from the full set of possible Unicode
+//! characters, which [`Standard`] does.
+//!
+//!
+//! # Probability distributions
+//!
+//! Rand currently provides the following probability distributions (but needs
+//! expansion):
+//!
+//! - Related to real-valued quantities that grow linearly
+//!   (e.g. errors, offsets)
+//!   - [`Normal`] distribution, and [`StandardNormal`] as a primitive
+//! - Related to Bernoulli trials (yes/no events, with a given probability)
+//!   - [`Binomial`] distribution
+//! - Related to positive real-valued quantities that grow exponentially
+//!   (e.g. prices, incomes, populations)
+//!   - [`LogNormal`] distribution
+//! - Related to events in a Poisson process (events that occur independently
+//!   with a given rate)
+//!   - [`Poisson`] distribution
+//!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
+//!   - [`Gamma`] distribution
+//! - Related to normally distributed quantities operated with sum of squares
+//!   (for hypothesis testing)
+//!   - [`ChiSquared`] distribution
+//!   - [`StudentT`] distribution
+//!   - [`FisherF`] distribution
+//!
+//!
+//! # Examples
+//!
+//! Sampling from a distribution:
+//!
+//! ```
+//! use rand::{thread_rng, Rng};
+//! use rand::distributions::Exp;
+//!
+//! let exp = Exp::new(2.0);
+//! let v = thread_rng().sample(exp);
+//! println!("{} is from an Exp(2) distribution", v);
+//! ```
+//!
+//! Implementing the [`Standard`] distribution for a user type:
+//!
+//! ```
+//! # #![allow(dead_code)]
+//! use rand::Rng;
+//! use rand::distributions::{Distribution, Standard};
+//!
+//! struct MyF32 {
+//!     x: f32,
+//! }
+//!
+//! impl Distribution<MyF32> for Standard {
+//!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> MyF32 {
+//!         MyF32 { x: rng.gen() }
+//!     }
+//! }
+//! ```
+//!
 //! 
 //! [`Distribution`]: trait.Distribution.html
-//! [`Uniform`]: uniform/struct.Uniform.html
+//! [`gen_range`]: ../trait.Rng.html#method.gen_range
+//! [`gen`]: ../trait.Rng.html#method.gen
+//! [`new_inclusive`]: struct.Uniform.html#method.new_inclusive
+//! [`random()`]: ../fn.random.html
+//! [`Rng::gen_bool`]: ../trait.Rng.html#method.gen_bool
+//! [`Rng::gen_range`]: ../trait.Rng.html#method.gen_range
+//! [`Rng::gen()`]: ../trait.Rng.html#method.gen
+//! [`Rng`]: ../trait.Rng.html
+//! [`sample_iter`]: trait.Distribution.html#method.sample_iter
+//! [`uniform` module]: uniform/index.html
+//! [Floating point implementation]: struct.Standard.html#floating-point-implementation
+// distributions
+//! [`Alphanumeric`]: struct.Alphanumeric.html
+//! [`Binomial`]: struct.Binomial.html
+//! [`ChiSquared`]: struct.ChiSquared.html
+//! [`Exp`]: struct.Exp.html
+//! [`Exp1`]: struct.Exp1.html
+//! [`FisherF`]: struct.FisherF.html
+//! [`Gamma`]: struct.Gamma.html
+//! [`LogNormal`]: struct.LogNormal.html
+//! [`Normal`]: struct.Normal.html
+//! [`Open01`]: struct.Open01.html
+//! [`OpenClosed01`]: struct.OpenClosed01.html
+//! [`Poisson`]: struct.Poisson.html
 //! [`Standard`]: struct.Standard.html
+//! [`StandardNormal`]: struct.StandardNormal.html
+//! [`StudentT`]: struct.StudentT.html
+//! [`Uniform`]: struct.Uniform.html
 
 use Rng;
 
-pub use self::other::Alphanumeric;
-pub use self::uniform::Uniform;
-pub use self::float::{OpenClosed01, Open01};
+#[doc(inline)] pub use self::other::Alphanumeric;
+#[doc(inline)] pub use self::uniform::Uniform;
+#[doc(inline)] pub use self::float::{OpenClosed01, Open01};
 #[deprecated(since="0.5.0", note="use Uniform instead")]
 pub use self::uniform::Uniform as Range;
 #[cfg(feature="std")]
-pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
+#[doc(inline)] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 #[cfg(feature="std")]
-pub use self::normal::{Normal, LogNormal, StandardNormal};
+#[doc(inline)] pub use self::normal::{Normal, LogNormal, StandardNormal};
 #[cfg(feature="std")]
-pub use self::exponential::{Exp, Exp1};
+#[doc(inline)] pub use self::exponential::{Exp, Exp1};
 #[cfg(feature = "std")]
-pub use self::poisson::Poisson;
+#[doc(inline)] pub use self::poisson::Poisson;
 #[cfg(feature = "std")]
-pub use self::binomial::Binomial;
+#[doc(inline)] pub use self::binomial::Binomial;
 
 pub mod uniform;
 #[cfg(feature="std")]
-pub mod gamma;
+#[doc(hidden)] pub mod gamma;
 #[cfg(feature="std")]
-pub mod normal;
+#[doc(hidden)] pub mod normal;
 #[cfg(feature="std")]
-pub mod exponential;
+#[doc(hidden)] pub mod exponential;
 #[cfg(feature = "std")]
-pub mod poisson;
+#[doc(hidden)] pub mod poisson;
 #[cfg(feature = "std")]
-pub mod binomial;
+#[doc(hidden)] pub mod binomial;
 
 mod float;
 mod integer;
@@ -160,7 +290,7 @@ pub trait Distribution<T> {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// use rand::thread_rng;
     /// use rand::distributions::{Distribution, Alphanumeric, Uniform, Standard};
     ///
@@ -256,7 +386,7 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
 ///   probability 0.5; otherwise generates a random `x: T` and returns `Some(x)`.
 ///
 /// # Example
-/// ```rust
+/// ```
 /// use rand::{FromEntropy, SmallRng, Rng};
 /// use rand::distributions::Standard;
 ///
@@ -314,7 +444,7 @@ pub struct Weighted<T> {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{Weighted, WeightedChoice, Distribution};
 ///
 /// let mut items = vec!(Weighted { weight: 2, item: 'a' },
