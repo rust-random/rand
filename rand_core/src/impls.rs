@@ -27,7 +27,6 @@ use core::cmp::min;
 use core::mem::size_of;
 use {RngCore, BlockRngCore, CryptoRng, SeedableRng, Error};
 
-#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
 pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
@@ -187,9 +186,6 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
 #[derive(Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng<R: BlockRngCore + ?Sized> {
-    #[cfg_attr(feature="serde1", serde(bound(
-        serialize = "R::Results: Serialize",
-        deserialize = "R::Results: Deserialize<'de>")))]
     results: R::Results,
     index: usize,
     core: R,
@@ -253,7 +249,7 @@ impl<R: BlockRngCore> BlockRng<R> {
 }
 
 impl<R: BlockRngCore<Item=u32>> RngCore for BlockRng<R>
-where <R as BlockRngCore>::Results: AsRef<[u32]>
+where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
 {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -386,9 +382,6 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
 #[derive(Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng64<R: BlockRngCore + ?Sized> {
-    #[cfg_attr(feature="serde1", serde(bound(
-        serialize = "R::Results: Serialize",
-        deserialize = "R::Results: Deserialize<'de>")))]
     results: R::Results,
     index: usize,
     half_used: bool, // true if only half of the previous result is used
@@ -420,20 +413,42 @@ impl<R: BlockRngCore> BlockRng64<R> {
         }
     }
 
+    /// Return a reference the wrapped `BlockRngCore`.
+    pub fn inner(&self) -> &R {
+        &self.core
+    }
+
     /// Return a mutable reference the wrapped `BlockRngCore`.
-    pub fn inner(&mut self) -> &mut R {
+    pub fn inner_mut(&mut self) -> &mut R {
         &mut self.core
     }
 
-    // Reset the number of available results.
-    // This will force a new set of results to be generated on next use.
+    /// Get the index into the result buffer.
+    ///
+    /// If this is equal to or larger than the size of the result buffer then
+    /// the buffer is "empty" and `generate()` must be called to produce new
+    /// results.
+    pub fn index(&self) -> usize {
+        self.index
+    }
+
+    /// Reset the number of available results.
+    /// This will force a new set of results to be generated on next use.
     pub fn reset(&mut self) {
         self.index = self.results.as_ref().len();
+    }
+
+    /// Generate a new set of results immediately, setting the index to the
+    /// given value.
+    pub fn generate_and_set(&mut self, index: usize) {
+        assert!(index < self.results.as_ref().len());
+        self.core.generate(&mut self.results);
+        self.index = index;
     }
 }
 
 impl<R: BlockRngCore<Item=u64>> RngCore for BlockRng64<R>
-where <R as BlockRngCore>::Results: AsRef<[u64]>
+where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {

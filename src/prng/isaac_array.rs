@@ -38,6 +38,13 @@ impl<T> ::core::convert::AsRef<[T]> for IsaacArray<T> {
     }
 }
 
+impl<T> ::core::convert::AsMut<[T]> for IsaacArray<T> {
+    #[inline(always)]
+    fn as_mut(&mut self) -> &mut [T] {
+        &mut self.inner[..]
+    }
+}
+
 impl<T> ::core::ops::Deref for IsaacArray<T> {
     type Target = [T; RAND_SIZE];
     #[inline(always)]

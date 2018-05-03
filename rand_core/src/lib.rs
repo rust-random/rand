@@ -37,7 +37,9 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://docs.rs/rand_core/0.1.0")]
 
+#![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
+#![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
 #![cfg_attr(not(feature="std"), no_std)]
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
@@ -107,6 +109,7 @@ pub mod le;
 /// A simple example, obviously not generating very *random* output:
 /// 
 /// ```rust
+/// #![allow(dead_code)]
 /// use rand_core::{RngCore, Error, impls};
 /// 
 /// struct CountingRng(u64);
@@ -235,7 +238,7 @@ pub trait BlockRngCore {
     
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u32; 16]`.
-    type Results: AsRef<[Self::Item]> + Default;
+    type Results: AsRef<[Self::Item]> + AsMut<[Self::Item]> + Default;
 
     /// Generate a new block of results.
     fn generate(&mut self, results: &mut Self::Results);
