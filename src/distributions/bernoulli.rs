@@ -54,7 +54,7 @@ impl Bernoulli {
     /// 2<sup>-64</sup> in `[0, 1]` can be represented as a `f64`.)
     #[inline]
     pub fn new(p: f64) -> Bernoulli {
-        assert!(p >= 0.0 & p <= 1.0, "Bernoulli::new not called with 0 <= p <= 0");
+        assert!((p >= 0.0) & (p <= 1.0), "Bernoulli::new not called with 0 <= p <= 0");
         let p_int = if p < 1.0 {
             (p * (::core::u64::MAX as f64)) as u64
         } else {
