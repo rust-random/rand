@@ -37,6 +37,8 @@ matrix:
         - cargo test --package rand_core --no-default-features --features=alloc,serde1
         - cargo test --features serde1,log,nightly,alloc
         - cargo test --all --benches
+        # remove cached documentation, otherwise files from previous PRs can get included
+        - rm -rf target/doc
         - cargo doc --no-deps --all --all-features
         - cargo deadlinks --dir target/doc
       after_success:
