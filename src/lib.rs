@@ -352,6 +352,7 @@ pub trait Rng: RngCore {
     /// [`Uniform`]: distributions/uniform/struct.Uniform.html
     /// [`Uniform::new`]: distributions/uniform/struct.Uniform.html#method.new
     /// [`Uniform::sample_single`]: distributions/uniform/struct.Uniform.html#method.sample_single
+    #[inline]
     fn gen_range<T: PartialOrd + SampleUniform>(&mut self, low: T, high: T) -> T {
         Uniform::sample_single(low, high, self)
     }
@@ -370,6 +371,7 @@ pub trait Rng: RngCore {
     /// // distribution can be inferred.
     /// let y = rng.sample::<u16, _>(Uniform::new(10, 15));
     /// ```
+    #[inline]
     fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
         distr.sample(self)
     }
@@ -401,6 +403,7 @@ pub trait Rng: RngCore {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
+    #[inline]
     fn sample_iter<'a, T, D: Distribution<T>>(&'a mut self, distr: &'a D)
         -> distributions::DistIter<'a, D, Self, T> where Self: Sized
     {
@@ -490,6 +493,7 @@ pub trait Rng: RngCore {
     /// If `p` < 0 or `p` > 1.
     ///
     /// [`distributions::Bernoulli`]: distributions/bernoulli/struct.Bernoulli.html
+    #[inline]
     fn gen_bool(&mut self, p: f64) -> bool {
         let d = distributions::Bernoulli::new(p);
         self.sample(d)
