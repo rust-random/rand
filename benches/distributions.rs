@@ -96,6 +96,10 @@ distr!(distr_standard_codepoint, char, Standard);
 
 distr_float!(distr_standard_f32, f32, Standard);
 distr_float!(distr_standard_f64, f64, Standard);
+distr_float!(distr_open01_f32, f32, Open01);
+distr_float!(distr_open01_f64, f64, Open01);
+distr_float!(distr_openclosed01_f32, f32, OpenClosed01);
+distr_float!(distr_openclosed01_f64, f64, OpenClosed01);
 
 // distributions
 distr_float!(distr_exp, f64, Exp::new(1.23 * 4.56));

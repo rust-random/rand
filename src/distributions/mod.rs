@@ -27,6 +27,7 @@ use Rng;
 
 pub use self::other::Alphanumeric;
 pub use self::uniform::Uniform;
+pub use self::float::{OpenClosed01, Open01};
 #[deprecated(since="0.5.0", note="use Uniform instead")]
 pub use self::uniform::Uniform as Range;
 #[cfg(feature="std")]
@@ -227,16 +228,13 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
 }
 
 
-/// A generic random value distribution. Generates values for various types
-/// with numerically uniform distribution.
+/// A generic random value distribution, implemented for many primitive types.
+/// Usually generates values with a numerically uniform distribution, and with a
+/// range appropriate to the type.
 /// 
-/// For floating-point numbers, this generates values from the open range
-/// `(0, 1)` (i.e. excluding 0.0 and 1.0).
-///
 /// ## Built-in Implementations
 ///
-/// This crate implements the distribution `Standard` for various primitive
-/// types.  Assuming the provided `Rng` is well-behaved, these implementations
+/// Assuming the provided `Rng` is well-behaved, these implementations
 /// generate values with the following ranges and distributions:
 ///
 /// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
@@ -247,15 +245,15 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
 ///   unassigned/reserved code points.
 /// * `bool`: Generates `false` or `true`, each with probability 0.5.
 /// * Floating point types (`f32` and `f64`): Uniformly distributed in the
-///   open range `(0, 1)`.
+///   half-open range `[0, 1)`. See notes below.
 ///
 /// The following aggregate types also implement the distribution `Standard` as
 /// long as their component types implement it:
 ///
 /// * Tuples and arrays: Each element of the tuple or array is generated
 ///   independently, using the `Standard` distribution recursively.
-/// * `Option<T>`: Returns `None` with probability 0.5; otherwise generates a
-///   random `T` and returns `Some(T)`.
+/// * `Option<T>` where `Standard` is implemented for `T`: Returns `None` with
+///   probability 0.5; otherwise generates a random `x: T` and returns `Some(x)`.
 ///
 /// # Example
 /// ```rust
@@ -263,55 +261,29 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
 /// use rand::distributions::Standard;
 ///
 /// let val: f32 = SmallRng::from_entropy().sample(Standard);
-/// println!("f32 from (0,1): {}", val);
-/// ```
-///
-/// With dynamic dispatch (type erasure of `Rng`):
-/// 
-/// ```rust
-/// use rand::{thread_rng, Rng, RngCore};
-/// use rand::distributions::Standard;
-///
-/// let mut rng = thread_rng();
-/// let erased_rng: &mut RngCore = &mut rng;
-/// let val: f32 = erased_rng.sample(Standard);
-/// println!("f32 from (0, 1): {}", val);
-/// ```
-///
-/// # Open interval for floats
-/// In theory it is possible to choose between an open interval `(0, 1)`, and
-/// the half-open intervals `[0, 1)` and `(0, 1]`. All can give a distribution
-/// with perfectly uniform intervals. Many libraries in other programming
-/// languages default to the closed-open interval `[0, 1)`. We choose here to go
-/// with *open*, with the arguments:
-///
-/// - The chance to generate a specific value, like exactly 0.0, is *tiny*. No
-///   (or almost no) sensible code relies on an exact floating-point value to be
-///   generated with a very small chance (1 in 2<sup>23</sup> (approx. 8
-///   million) for `f32`, and 1 in 2<sup>52</sup> for `f64`). What is relied on
-///   is having a uniform distribution and a mean of `0.5`.
-/// - Several common algorithms rely on never seeing the value `0.0` generated,
-///   i.e. they rely on an open interval. For example when the logarithm of the
-///   value is taken, or used as a devisor.
-///
-/// In other words, the guarantee some value *could* be generated is less useful
-/// than the guarantee some value (`0.0`) is never generated. That makes an open
-/// interval a nicer choice.
-///
-/// Consider using `Rng::gen_range` if you really need a half-open interval (as
-/// the ranges use a half-open interval). It has the same performance. Example:
-///
-/// ```
-/// use rand::{thread_rng, Rng};
-///
-/// let mut rng = thread_rng();
-/// let val = rng.gen_range(0.0f32, 1.0);
 /// println!("f32 from [0, 1): {}", val);
 /// ```
 ///
-/// [`Exp1`]: struct.Exp1.html
-/// [`StandardNormal`]: struct.StandardNormal.html
-#[derive(Debug)]
+/// # Floating point implementation
+/// The floating point implementations for `Standard` generate a random value in
+/// the half-open interval `[0, 1)`, i.e. including 0 but not 1.
+///
+/// All values that can be generated are of the form `n * ε/2`. For `f32`
+/// the 23 most significant random bits of a `u32` are used and for `f64` the
+/// 53 most significant bits of a `u64` are used. The conversion uses the
+/// multiplicative method: `(rng.gen::<$uty>() >> N) as $ty * (ε/2)`.
+///
+/// See also: [`Open01`] which samples from `(0, 1)`, [`OpenClosed01`] which
+/// samples from `(0, 1]` and `Rng::gen_range(0, 1)` which also samples from
+/// `[0, 1)`. Note that `Open01` and `gen_range` (which uses [`Uniform`]) use
+/// transmute-based methods which yield 1 bit less precision but may perform
+/// faster on some architectures (on modern Intel CPUs all methods have
+/// approximately equal performance).
+///
+/// [`Open01`]: struct.Open01.html
+/// [`OpenClosed01`]: struct.OpenClosed01.html
+/// [`Uniform`]: uniform/struct.Uniform.html
+#[derive(Clone, Copy, Debug)]
 pub struct Standard;
 
 #[allow(deprecated)]
