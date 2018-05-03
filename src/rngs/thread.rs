@@ -49,7 +49,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32*1024*1024; // 32 MiB
 /// Cloning this handle just produces a new reference to the same thread-local
 /// generator.
 /// 
-/// [`thread_rng`]: fn.thread_rng.html
+/// [`thread_rng`]: ../fn.thread_rng.html
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
     rng: Rc<UnsafeCell<ReseedingRng<Hc128Core, EntropyRng>>>,
@@ -90,7 +90,7 @@ thread_local!(
 /// used in `ThreadRng` before rand 0.5.
 ///
 /// [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
-/// [`StdRng`]: struct.StdRng.html
+/// [`StdRng`]: rngs/struct.StdRng.html
 /// [`EntropyRng`]: struct.EntropyRng.html
 /// [HC-128]: prng/hc128/struct.Hc128Rng.html
 pub fn thread_rng() -> ThreadRng {
@@ -118,6 +118,7 @@ impl RngCore for ThreadRng {
 }
 
 impl CryptoRng for ThreadRng {}
+
 
 #[cfg(test)]
 mod test {

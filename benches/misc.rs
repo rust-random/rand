@@ -7,7 +7,8 @@ const RAND_BENCH_N: u64 = 1000;
 
 use test::{black_box, Bencher};
 
-use rand::{SeedableRng, SmallRng, Rng, thread_rng};
+use rand::{SeedableRng, Rng, thread_rng};
+use rand::rngs::SmallRng;
 use rand::seq::*;
 
 #[bench]

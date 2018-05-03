@@ -30,7 +30,8 @@ use distributions::{ziggurat, ziggurat_tables, Distribution};
 ///
 /// # Example
 /// ```rust
-/// use rand::{FromEntropy, SmallRng, Rng};
+/// use rand::{FromEntropy, Rng};
+/// use rand::rngs::SmallRng;
 /// use rand::distributions::Exp1;
 ///
 /// let val: f64 = SmallRng::from_entropy().sample(Exp1);

@@ -28,7 +28,8 @@ use distributions::{ziggurat, ziggurat_tables, Distribution, Open01};
 ///
 /// # Example
 /// ```rust
-/// use rand::{FromEntropy, SmallRng, Rng};
+/// use rand::{FromEntropy, Rng};
+/// use rand::rngs::SmallRng;
 /// use rand::distributions::StandardNormal;
 ///
 /// let val: f64 = SmallRng::from_entropy().sample(StandardNormal);

@@ -10,9 +10,10 @@ use std::mem::size_of;
 use test::{black_box, Bencher};
 
 use rand::{RngCore, Rng, SeedableRng, FromEntropy};
-use rand::{StdRng, SmallRng, OsRng, EntropyRng, ReseedingRng};
+use rand::{OsRng, EntropyRng, ReseedingRng};
 use rand::prng::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 use rand::prng::hc128::Hc128Core;
+use rand::rngs::{StdRng, SmallRng};
 use rand::jitter::JitterRng;
 use rand::thread_rng;
 
