@@ -11,8 +11,7 @@
 //! Entropy generator, or wrapper around external generators
 
 use rand_core::{RngCore, CryptoRng, Error, impls};
-use os::OsRng;
-use jitter::JitterRng;
+use {OsRng, JitterRng};
 
 /// An interface returning random data from external source(s), provided
 /// specifically for securely seeding algorithmic generators (PRNGs).
@@ -33,7 +32,7 @@ use jitter::JitterRng;
 ///
 /// [`OsRng`]: os/struct.OsRng.html
 /// [`JitterRng`]: jitter/struct.JitterRng.html
-/// [`thread_rng`]: fn.thread_rng.html
+/// [`thread_rng`]: ../fn.thread_rng.html
 #[derive(Debug)]
 pub struct EntropyRng {
     rng: EntropySource,

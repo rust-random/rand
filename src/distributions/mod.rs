@@ -479,7 +479,7 @@ fn ziggurat<R: Rng + ?Sized, P, Z>(
 #[cfg(test)]
 mod tests {
     use Rng;
-    use mock::StepRng;
+    use rngs::mock::StepRng;
     use super::{WeightedChoice, Weighted, Distribution};
 
     #[test]
