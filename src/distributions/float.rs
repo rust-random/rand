@@ -14,6 +14,33 @@ use core::mem;
 use Rng;
 use distributions::{Distribution, Standard};
 
+/// A distribution to sample floating point numbers uniformly in the half-open
+/// interval `(0, 1]`, i.e. including 1 but not 0.
+///
+/// All values that can be generated are of the form `n * ε/2`. For `f32`
+/// the 23 most significant random bits of a `u32` are used and for `f64` the
+/// 53 most significant bits of a `u64` are used. The conversion uses the
+/// multiplicative method.
+///
+/// See also: [`Standard`] which samples from `[0, 1)`, [`Open01`]
+/// which samples from `(0, 1)` and [`Uniform`] which samples from arbitrary
+/// ranges.
+///
+/// # Example
+/// ```rust
+/// use rand::{thread_rng, Rng};
+/// use rand::distributions::OpenClosed01;
+///
+/// let val: f32 = thread_rng().sample(OpenClosed01);
+/// println!("f32 from (0, 1): {}", val);
+/// ```
+///
+/// [`Standard`]: struct.Standard.html
+/// [`Open01`]: struct.Open01.html
+/// [`Uniform`]: uniform/struct.Uniform.html
+#[derive(Clone, Copy, Debug)]
+pub struct OpenClosed01;
+
 /// A distribution to sample floating point numbers uniformly in the open
 /// interval `(0, 1)`, i.e. not including either endpoint.
 ///
@@ -21,8 +48,9 @@ use distributions::{Distribution, Standard};
 /// the 22 most significant random bits of an `u32` are used, for `f64` 52 from
 /// an `u64`. The conversion uses a transmute-based method.
 ///
-/// To sample from the half-open range `[0, 1)` instead, use the [`Standard`]
-/// distribution.
+/// See also: [`Standard`] which samples from `[0, 1)`, [`OpenClosed01`]
+/// which samples from `(0, 1]` and [`Uniform`] which samples from arbitrary
+/// ranges.
 ///
 /// # Example
 /// ```rust
@@ -34,6 +62,8 @@ use distributions::{Distribution, Standard};
 /// ```
 ///
 /// [`Standard`]: struct.Standard.html
+/// [`OpenClosed01`]: struct.OpenClosed01.html
+/// [`Uniform`]: uniform/struct.Uniform.html
 #[derive(Clone, Copy, Debug)]
 pub struct Open01;
 
@@ -79,6 +109,22 @@ macro_rules! float_impls {
             }
         }
 
+        impl Distribution<$ty> for OpenClosed01 {
+            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                // Multiply-based method; 24/53 random bits; (0, 1] interval.
+                // We use the most significant bits because for simple RNGs
+                // those are usually more random.
+                let float_size = mem::size_of::<$ty>() * 8;
+                let precision = $fraction_bits + 1;
+                let scale = 1.0 / ((1 as $uty << precision) as $ty);
+
+                let value: $uty = rng.gen();
+                let value = value >> (float_size - precision);
+                // Add 1 to shift up; will not overflow because of right-shift:
+                scale * (value + 1) as $ty
+            }
+        }
+
         impl Distribution<$ty> for Open01 {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 // Transmute-based method; 23/52 random bits; (0, 1) interval.
@@ -101,14 +147,14 @@ float_impls! { f64, u64, 52, 1023 }
 #[cfg(test)]
 mod tests {
     use Rng;
-    use distributions::Open01;
+    use distributions::{Open01, OpenClosed01};
     use mock::StepRng;
 
     const EPSILON32: f32 = ::core::f32::EPSILON;
     const EPSILON64: f64 = ::core::f64::EPSILON;
 
     #[test]
-    fn floating_point_edge_cases() {
+    fn standard_fp_edge_cases() {
         let mut zeros = StepRng::new(0, 0);
         assert_eq!(zeros.gen::<f32>(), 0.0);
         assert_eq!(zeros.gen::<f64>(), 0.0);
@@ -122,6 +168,23 @@ mod tests {
         let mut max = StepRng::new(!0, 0);
         assert_eq!(max.gen::<f32>(), 1.0 - EPSILON32 / 2.0);
         assert_eq!(max.gen::<f64>(), 1.0 - EPSILON64 / 2.0);
+    }
+
+    #[test]
+    fn openclosed01_edge_cases() {
+        let mut zeros = StepRng::new(0, 0);
+        assert_eq!(zeros.sample::<f32, _>(OpenClosed01), 0.0 + EPSILON32 / 2.0);
+        assert_eq!(zeros.sample::<f64, _>(OpenClosed01), 0.0 + EPSILON64 / 2.0);
+
+        let mut one32 = StepRng::new(1 << 8, 0);
+        assert_eq!(one32.sample::<f32, _>(OpenClosed01), EPSILON32);
+
+        let mut one64 = StepRng::new(1 << 11, 0);
+        assert_eq!(one64.sample::<f64, _>(OpenClosed01), EPSILON64);
+
+        let mut max = StepRng::new(!0, 0);
+        assert_eq!(max.sample::<f32, _>(OpenClosed01), 1.0);
+        assert_eq!(max.sample::<f64, _>(OpenClosed01), 1.0);
     }
 
     #[test]
