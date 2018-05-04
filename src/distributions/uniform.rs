@@ -9,7 +9,8 @@
 // except according to those terms.
 
 //! A distribution uniformly generating numbers within a given range.
-use core::time::Duration;
+#[cfg(feature = "std")]
+use std::time::Duration;
 
 use Rng;
 use distributions::Distribution;
@@ -499,16 +500,19 @@ uniform_float_impl! { f64, 64 - 52, next_u64 }
 /// 
 /// Unless you are implementing `UniformImpl` for your own types, this type should
 /// not be used directly, use `Uniform` instead.
+#[cfg(feature = "std")]
 #[derive(Clone, Copy, Debug)]
 pub struct UniformDuration {
     size: Duration,
     offset: Duration,
 }
 
+#[cfg(feature = "std")]
 impl SampleUniform for Duration {
     type Impl = UniformDuration;
 }
 
+#[cfg(feature = "std")]
 impl UniformImpl for UniformDuration {
     type X = Duration;
 
@@ -536,9 +540,11 @@ impl UniformImpl for UniformDuration {
             let nanos = Uniform::new_inclusive(0, self.size.subsec_nanos()).sample(rng);
             Duration::new(0, nanos)
         } else {
+            let sec_gen = Uniform::new_inclusive(0, self.size.as_secs());
+            let nsec_gen = Uniform::new(0, 1_000_000_000);
             loop {
-                let secs = Uniform::new_inclusive(0, self.size.as_secs()).sample(rng);
-                let nanos = rng.gen_range(0, 1_000_000_000);
+                let secs = sec_gen.sample(rng);
+                let nanos = nsec_gen.sample(rng);
                 let d = Duration::new(secs, nanos);
                 if d <= self.size {
                     break d;
@@ -552,7 +558,6 @@ impl UniformImpl for UniformDuration {
 
 #[cfg(test)]
 mod tests {
-    use core::time::Duration;
     use Rng;
     use distributions::uniform::{Uniform, UniformImpl, UniformFloat, SampleUniform};
 
@@ -659,7 +664,10 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     fn test_durations() {
+        use std::time::Duration;
+
         let mut rng = ::test::rng(253);
 
         let v = &[(Duration::new(10, 50000), Duration::new(100, 1234)),
