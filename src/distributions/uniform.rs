@@ -9,6 +9,7 @@
 // except according to those terms.
 
 //! A distribution uniformly generating numbers within a given range.
+use core::time::Duration;
 
 use Rng;
 use distributions::Distribution;
@@ -494,9 +495,64 @@ macro_rules! uniform_float_impl {
 uniform_float_impl! { f32, 32 - 23, next_u32 }
 uniform_float_impl! { f64, 64 - 52, next_u64 }
 
+/// Implementation of `UniformImpl` for `Duration`.
+/// 
+/// Unless you are implementing `UniformImpl` for your own types, this type should
+/// not be used directly, use `Uniform` instead.
+#[derive(Clone, Copy, Debug)]
+pub struct UniformDuration {
+    size: Duration,
+    offset: Duration,
+}
+
+impl SampleUniform for Duration {
+    type Impl = UniformDuration;
+}
+
+impl UniformImpl for UniformDuration {
+    type X = Duration;
+
+    #[inline]
+    fn new(low: Duration, high: Duration) -> UniformDuration {
+        UniformDuration::new_inclusive(low, high - Duration::new(0, 1))
+    }
+
+    #[inline]
+    fn new_inclusive(low: Duration, high: Duration) -> UniformDuration {
+        UniformDuration {
+            size: high - low,
+            offset: low,
+        }
+    }
+
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Duration {
+        // the basic approach here is to "round up" to the next second and
+        // uniformly sample from that, retrying if we get a value outside of
+        // the range. As long as our range is larger than 1 second this has a
+        // > 50% chance of succeeding. We special case subsecond sizes because
+        // they're easy and to avoid low success rates of the normal approach.
+        let d = if self.size < Duration::from_secs(1) {
+            let nanos = Uniform::new_inclusive(0, self.size.subsec_nanos()).sample(rng);
+            Duration::new(0, nanos)
+        } else {
+            loop {
+                let secs = Uniform::new_inclusive(0, self.size.as_secs()).sample(rng);
+                let nanos = rng.gen_range(0, 1_000_000_000);
+                let d = Duration::new(secs, nanos);
+                if d <= self.size {
+                    break d;
+                }
+            }
+        };
+
+        self.offset + d
+    }
+}
 
 #[cfg(test)]
 mod tests {
+    use core::time::Duration;
     use Rng;
     use distributions::uniform::{Uniform, UniformImpl, UniformFloat, SampleUniform};
 
@@ -601,6 +657,23 @@ mod tests {
 
         t!(f32, f64)
     }
+
+    #[test]
+    fn test_durations() {
+        let mut rng = ::test::rng(253);
+
+        let v = &[(Duration::new(10, 50000), Duration::new(100, 1234)),
+                  (Duration::new(0, 100), Duration::new(1, 50)),
+                  (Duration::new(0, 0), Duration::new(u64::max_value(), 999_999_999))];
+        for &(low, high) in v.iter() {
+            let my_uniform = Uniform::new(low, high);
+            for _ in 0..1000 {
+                let v = rng.sample(my_uniform);
+                assert!(low <= v && v < high);
+            }
+        }
+    }
+
     #[test]
     fn test_custom_uniform() {
         #[derive(Clone, Copy, PartialEq, PartialOrd)]

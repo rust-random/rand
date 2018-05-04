@@ -8,7 +8,7 @@ sudo: false
 # - x86_64, ARMv7, a Big-Endian arch (MIPS)
 matrix:
   include:
-    - rust: 1.22.0
+    - rust: 1.24.0
       install:
       script:
         - cargo test --tests --no-default-features
