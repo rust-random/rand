@@ -10,17 +10,18 @@
 
 //! XoShiro128 generator
 
+use core::num::Wrapping as w;
 use core::{fmt, slice};
 use rand_core::{RngCore, SeedableRng, Error, impls, le};
 
 #[inline(always)]
-fn rotl(x: u64, k: usize) -> u64 {
+fn rotl(x: w<u64>, k: usize) -> w<u64> {
     (x << k)| (x >> (64 - k))
 }
 
 /// An XoroShiro256 random number generator.
 pub struct XoShiro128 {
-    s: [u64; 2]
+    s: [w<u64>; 2]
 }
 
 // Custom Debug implementation that does not expose the internal state
@@ -40,13 +41,13 @@ impl RngCore for XoShiro128 {
     fn next_u64(&mut self) -> u64 {
         let s0 = self.s[0];
         let mut s1 = self.s[1];
-        let result = rotl(s0 * 5, 7) * 9;
+        let result = rotl(s0 * w(5), 7) * w(9);
 
         s1 ^= s0;
         self.s[0] = rotl(s0, 24) ^ s1 ^ (s1 << 16);
         self.s[1] = rotl(s1, 37);
 
-        result
+        result.0
     }
 
     #[inline]
@@ -74,7 +75,7 @@ impl SeedableRng for XoShiro128 {
         }
 
         XoShiro128 {
-            s: seed_u64
+            s: [w(seed_u64[0]), w(seed_u64[0])]
         }
     }
 
@@ -91,7 +92,7 @@ impl SeedableRng for XoShiro128 {
         }
 
         Ok(XoShiro128 {
-            s: seed_u64
+            s: [w(seed_u64[0]), w(seed_u64[0])]
         })
     }
 }
