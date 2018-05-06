@@ -503,8 +503,20 @@ uniform_float_impl! { f64, 64 - 52, next_u64 }
 #[cfg(feature = "std")]
 #[derive(Clone, Copy, Debug)]
 pub struct UniformDuration {
-    size: Duration,
     offset: Duration,
+    mode: UniformDurationMode,
+}
+
+#[derive(Debug, Copy, Clone)]
+enum UniformDurationMode {
+    Small {
+        nanos: Uniform<u64>,
+    },
+    Large {
+        size: Duration,
+        secs: Uniform<u64>,
+        nanos: Uniform<u32>,
+    }
 }
 
 #[cfg(feature = "std")]
@@ -523,31 +535,40 @@ impl UniformImpl for UniformDuration {
 
     #[inline]
     fn new_inclusive(low: Duration, high: Duration) -> UniformDuration {
+        let size = high - low;
+        let max_nanos = u64::max_value();
+        let max_small = Duration::new(max_nanos / 1_000_000_000, (max_nanos % 1_000_000_000) as u32);
+        let mode = if size <= max_small {
+            UniformDurationMode::Small {
+                nanos: Uniform::new_inclusive(0, size.as_secs() * 1_000_000_000 + size.subsec_nanos() as u64),
+            }
+        } else {
+            UniformDurationMode::Large {
+                size: size,
+                secs: Uniform::new_inclusive(0, size.as_secs()),
+                nanos: Uniform::new(0, 1_000_000_000),
+            }
+        };
+
         UniformDuration {
-            size: high - low,
+            mode,
             offset: low,
         }
     }
 
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Duration {
-        // the basic approach here is to "round up" to the next second and
-        // uniformly sample from that, retrying if we get a value outside of
-        // the range. As long as our range is larger than 1 second this has a
-        // > 50% chance of succeeding. We special case subsecond sizes because
-        // they're easy and to avoid low success rates of the normal approach.
-        let d = if self.size < Duration::from_secs(1) {
-            let nanos = Uniform::new_inclusive(0, self.size.subsec_nanos()).sample(rng);
-            Duration::new(0, nanos)
-        } else {
-            let sec_gen = Uniform::new_inclusive(0, self.size.as_secs());
-            let nsec_gen = Uniform::new(0, 1_000_000_000);
-            loop {
-                let secs = sec_gen.sample(rng);
-                let nanos = nsec_gen.sample(rng);
-                let d = Duration::new(secs, nanos);
-                if d <= self.size {
-                    break d;
+        let d = match self.mode {
+            UniformDurationMode::Small { nanos } => {
+                let nanos = nanos.sample(rng);
+                Duration::new(nanos / 1_000_000_000, (nanos % 1_000_000_000) as u32)
+            }
+            UniformDurationMode::Large { size, nanos, secs } => {
+                loop {
+                    let d = Duration::new(secs.sample(rng), nanos.sample(rng));
+                    if d <= size {
+                        break d;
+                    }
                 }
             }
         };
