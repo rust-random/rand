@@ -536,16 +536,22 @@ impl UniformImpl for UniformDuration {
     #[inline]
     fn new_inclusive(low: Duration, high: Duration) -> UniformDuration {
         let size = high - low;
-        let max_nanos = u64::max_value();
-        let max_small = Duration::new(max_nanos / 1_000_000_000, (max_nanos % 1_000_000_000) as u32);
-        let mode = if size <= max_small {
-            UniformDurationMode::Small {
-                nanos: Uniform::new_inclusive(0, size.as_secs() * 1_000_000_000 + size.subsec_nanos() as u64),
+        let nanos = size
+            .as_secs()
+            .checked_mul(1_000_000_000)
+            .and_then(|n| n.checked_add(size.subsec_nanos() as u64));
+
+        let mode = match nanos {
+            Some(nanos) => {
+                UniformDurationMode::Small {
+                    nanos: Uniform::new_inclusive(0, nanos),
+                }
             }
-        } else {
-            UniformDurationMode::Large {
-                size: size,
-                secs: Uniform::new_inclusive(0, size.as_secs()),
+            None => {
+                UniformDurationMode::Large {
+                    size: size,
+                    secs: Uniform::new_inclusive(0, size.as_secs()),
+                }
             }
         };
 
