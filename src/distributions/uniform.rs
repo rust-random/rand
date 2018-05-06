@@ -9,6 +9,8 @@
 // except according to those terms.
 
 //! A distribution uniformly generating numbers within a given range.
+#[cfg(feature = "std")]
+use std::time::Duration;
 
 use Rng;
 use distributions::Distribution;
@@ -494,6 +496,91 @@ macro_rules! uniform_float_impl {
 uniform_float_impl! { f32, 32 - 23, next_u32 }
 uniform_float_impl! { f64, 64 - 52, next_u64 }
 
+/// Implementation of `UniformImpl` for `Duration`.
+/// 
+/// Unless you are implementing `UniformImpl` for your own types, this type should
+/// not be used directly, use `Uniform` instead.
+#[cfg(feature = "std")]
+#[derive(Clone, Copy, Debug)]
+pub struct UniformDuration {
+    offset: Duration,
+    mode: UniformDurationMode,
+}
+
+#[cfg(feature = "std")]
+#[derive(Debug, Copy, Clone)]
+enum UniformDurationMode {
+    Small {
+        nanos: Uniform<u64>,
+    },
+    Large {
+        size: Duration,
+        secs: Uniform<u64>,
+    }
+}
+
+#[cfg(feature = "std")]
+impl SampleUniform for Duration {
+    type Impl = UniformDuration;
+}
+
+#[cfg(feature = "std")]
+impl UniformImpl for UniformDuration {
+    type X = Duration;
+
+    #[inline]
+    fn new(low: Duration, high: Duration) -> UniformDuration {
+        UniformDuration::new_inclusive(low, high - Duration::new(0, 1))
+    }
+
+    #[inline]
+    fn new_inclusive(low: Duration, high: Duration) -> UniformDuration {
+        let size = high - low;
+        let nanos = size
+            .as_secs()
+            .checked_mul(1_000_000_000)
+            .and_then(|n| n.checked_add(size.subsec_nanos() as u64));
+
+        let mode = match nanos {
+            Some(nanos) => {
+                UniformDurationMode::Small {
+                    nanos: Uniform::new_inclusive(0, nanos),
+                }
+            }
+            None => {
+                UniformDurationMode::Large {
+                    size: size,
+                    secs: Uniform::new_inclusive(0, size.as_secs()),
+                }
+            }
+        };
+
+        UniformDuration {
+            mode,
+            offset: low,
+        }
+    }
+
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Duration {
+        let d = match self.mode {
+            UniformDurationMode::Small { nanos } => {
+                let nanos = nanos.sample(rng);
+                Duration::new(nanos / 1_000_000_000, (nanos % 1_000_000_000) as u32)
+            }
+            UniformDurationMode::Large { size, secs } => {
+                loop {
+                    let d = Duration::new(secs.sample(rng), rng.gen_range(0, 1_000_000_000));
+                    if d <= size {
+                        break d;
+                    }
+                }
+            }
+        };
+
+        self.offset + d
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -601,6 +688,26 @@ mod tests {
 
         t!(f32, f64)
     }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn test_durations() {
+        use std::time::Duration;
+
+        let mut rng = ::test::rng(253);
+
+        let v = &[(Duration::new(10, 50000), Duration::new(100, 1234)),
+                  (Duration::new(0, 100), Duration::new(1, 50)),
+                  (Duration::new(0, 0), Duration::new(u64::max_value(), 999_999_999))];
+        for &(low, high) in v.iter() {
+            let my_uniform = Uniform::new(low, high);
+            for _ in 0..1000 {
+                let v = rng.sample(my_uniform);
+                assert!(low <= v && v < high);
+            }
+        }
+    }
+
     #[test]
     fn test_custom_uniform() {
         #[derive(Clone, Copy, PartialEq, PartialOrd)]
