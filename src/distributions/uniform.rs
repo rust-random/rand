@@ -507,6 +507,7 @@ pub struct UniformDuration {
     mode: UniformDurationMode,
 }
 
+#[cfg(feature = "std")]
 #[derive(Debug, Copy, Clone)]
 enum UniformDurationMode {
     Small {
@@ -515,7 +516,6 @@ enum UniformDurationMode {
     Large {
         size: Duration,
         secs: Uniform<u64>,
-        nanos: Uniform<u32>,
     }
 }
 
@@ -546,7 +546,6 @@ impl UniformImpl for UniformDuration {
             UniformDurationMode::Large {
                 size: size,
                 secs: Uniform::new_inclusive(0, size.as_secs()),
-                nanos: Uniform::new(0, 1_000_000_000),
             }
         };
 
@@ -563,9 +562,9 @@ impl UniformImpl for UniformDuration {
                 let nanos = nanos.sample(rng);
                 Duration::new(nanos / 1_000_000_000, (nanos % 1_000_000_000) as u32)
             }
-            UniformDurationMode::Large { size, nanos, secs } => {
+            UniformDurationMode::Large { size, secs } => {
                 loop {
-                    let d = Duration::new(secs.sample(rng), nanos.sample(rng));
+                    let d = Duration::new(secs.sample(rng), rng.gen_range(0, 1_000_000_000));
                     if d <= size {
                         break d;
                     }
