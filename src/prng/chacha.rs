@@ -138,9 +138,8 @@ impl ChaChaRng {
     /// feature is enabled. In the future this will be enabled by default.
     #[cfg(feature = "i128_support")]
     pub fn get_word_pos(&self) -> u128 {
-        let core = self.0.inner();
-        let mut c = (core.state[13] as u64) << 32
-                  | (core.state[12] as u64);
+        let mut c = (self.0.core.state[13] as u64) << 32
+                  | (self.0.core.state[12] as u64);
         let mut index = self.0.index();
         // c is the end of the last block generated, unless index is at end
         if index >= STATE_WORDS {
@@ -163,8 +162,8 @@ impl ChaChaRng {
     pub fn set_word_pos(&mut self, word_offset: u128) {
         let index = (word_offset as usize) & 0xF;
         let counter = (word_offset >> 4) as u64;
-        self.0.inner_mut().state[12] = counter as u32;
-        self.0.inner_mut().state[13] = (counter >> 32) as u32;
+        self.0.core.state[12] = counter as u32;
+        self.0.core.state[13] = (counter >> 32) as u32;
         if index != 0 {
             self.0.generate_and_set(index); // also increments counter
         } else {
@@ -185,17 +184,16 @@ impl ChaChaRng {
     /// indirectly via `set_word_pos`), but this is not directly supported.
     pub fn set_stream(&mut self, stream: u64) {
         let index = self.0.index();
-        self.0.inner_mut().state[14] = stream as u32;
-        self.0.inner_mut().state[15] = (stream >> 32) as u32;
+        self.0.core.state[14] = stream as u32;
+        self.0.core.state[15] = (stream >> 32) as u32;
         if index < STATE_WORDS {
             // we need to regenerate a partial result buffer
             {
                 // reverse of counter adjustment in generate()
-                let core = self.0.inner_mut();
-                if core.state[12] == 0 {
-                    core.state[13] = core.state[13].wrapping_sub(1);
+                if self.0.core.state[12] == 0 {
+                    self.0.core.state[13] = self.0.core.state[13].wrapping_sub(1);
                 }
-                core.state[12] = core.state[12].wrapping_sub(1);
+                self.0.core.state[12] = self.0.core.state[12].wrapping_sub(1);
             }
             self.0.generate_and_set(index);
         }

@@ -76,7 +76,7 @@ where R: BlockRngCore + SeedableRng,
 
     /// Reseed the internal PRNG.
     pub fn reseed(&mut self) -> Result<(), Error> {
-        self.0.inner_mut().reseed()
+        self.0.core.reseed()
     }
 }
 
@@ -112,7 +112,7 @@ where R: BlockRngCore + SeedableRng + Clone,
     fn clone(&self) -> ReseedingRng<R, Rsdr> {
         // Recreating `BlockRng` seems easier than cloning it and resetting
         // the index.
-        ReseedingRng(BlockRng::new(self.0.inner().clone()))
+        ReseedingRng(BlockRng::new(self.0.core.clone()))
     }
 }
 
