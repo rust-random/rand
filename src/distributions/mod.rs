@@ -8,84 +8,88 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Sampling from random distributions.
+//! Generating random samples from [probability distributions].
 //!
-//! This module is the home of the [`Distribution`] trait, and several
-//! implementations. It is the workhorse behind some of the convenient methods
-//! of the [`Rng`] trait, like [`gen`] and [`gen_range`]. A distribution takes
-//! one or more values of an RNG to produce a value with the type and
-//! distribution you need.
-//!
-//! Any type implementing [`Distribution`] is stateless (i.e. immutable), but it
-//! may have internal parameters set at construction time. [`Uniform`] for
-//! example has configurable bounds for the range, while [`Standard`] is just a
-//! unit struct.
-//!
-//! Is is possible to sample from a distribution through both the
-//! [`Distribution`] and [`Rng`] traits, via `distr.sample(&mut rng)` and
-//! `rng.sample(distr)`. They also both offer the [`sample_iter`] method, which
-//! produces an iterator that samples from the distribution.
+//! This module is the home of the [`Distribution`] trait and several of its
+//! implementations, which is the workhorse behind some of the convenient
+//! functionality of the [`Rng`] trait, including [`gen`], [`gen_range`] and
+//! of course [`sample`].
+//! 
+//! Abstractly, a probability distribution describes the probability of
+//! occurance of each value in its sample space.
+//! More concretely, an implementation of `Distribution<T>` for type `X` is an
+//! algorithm for choosing values from the sample space (a subset of `T`)
+//! according to the distribution `X` represents, using an external source of
+//! randomness (an RNG supplied to the `sample` function).
+//! A type `X` may implement `Distribution<T>` for multiple types `T`.
+//! Any type implementing [`Distribution`] is stateless (i.e. immutable),
+//! but it may have internal parameters set at construction time (for example,
+//! [`Uniform`] allows specification of its sample space as a range within `T`).
 //!
 //!
 //! # The `Standard` distribution
 //!
-//! The [`Standard`] distribution is important to call out. This is the
-//! distribution used by [`Rng::gen()`]. [`Standard`] will generate a value in
-//! a way that is the most appropriate for some type. See the documentation of
-//! [`Standard`] for more details, like for which primitive types Rand contains
-//! an implementation, and what is deemed 'most appropriate' for some type.
+//! The [`Standard`] distribution is important to mention. This is the
+//! distribution used by [`Rng::gen()`] and represents the "default" way to
+//! produce a random value for many different types, including most primitive
+//! types, tuples, arrays, and a few derived types. See the documentation of
+//! [`Standard`] for more details.
 //!
-//! Implementing [`Standard`] for a user type makes it available for use with
-//! [`Rng::gen()`], and by extension for the simple [`random()`] function.
+//! It is possible to implement `Distribution<T>` for [`Standard`] for user
+//! types `T`; doing so makes it possible to generate type `T` with
+//! [`Rng::gen()`], and by extension also with the [`random()`] function.
 //!
 //!
 //! # Distribution to sample from a `Uniform` range
 //!
-//! The [`Uniform`] distribution is the basis to sample values from a range
-//! using [`Rng::gen_range`]. It is possible to implement [`Uniform`] for custom
-//! types, so that they also work with [`gen_range`]. More documentation on that
-//! in the [`uniform` module].
+//! The [`Uniform`] distribution is more flexible than [`Standard`], but also
+//! more specialised: it supports fewer target types, but allows the sample
+//! space to be specified as an arbitrary range within its target type `T`.
+//! Both [`Standard`] and [`Uniform`] are in some sense uniform distributions.
 //!
-//! Sometimes you may want to sample from [`Uniform`] directly. For one it can
-//! provide better performance when you need to sample multiple values from the
-//! same range, because the set-up cost then needs to be done only once. Also it
-//! supports setting up an inclusive range with [`new_inclusive`], and offers a
-//! `From` implementation for range syntax.
+//! Values may be sampled from this distribution using [`Rng::gen_range`] or
+//! by creating a distribution object with [`Uniform::new`],
+//! [`Uniform::new_inclusive`] or `From<Range>`;
+//! when the range limits are not known at compile time it is typically faster
+//! to reuse an existing distribution object than to call [`Rng::gen_range`].
+//!
+//! User types `T` may also implement `Distribution<T>` for [`Uniform`],
+//! although this is less straightforward than for [`Standard`] (see the
+//! documentation in the [`uniform` module]. Doing so enables generation of
+//! values of type `T` with  [`Rng::gen_range`].
 //!
 //!
 //! # Other distributions
 //!
 //! There are surprisingly many ways to uniformly generate random floats. A
 //! range between 0 and 1 is standard, but the exact bounds (open vs closed)
-//! and accuracy differ. In addition to the `Standard` distribution Rand offers
+//! and accuracy differ. In addition to the [`Standard`] distribution Rand offers
 //! [`Open01`] and [`OpenClosed01`]. See [Floating point implementation] for
 //! more details.
 //!
-//! [`Alphanumeric`] is a simple distribution to generate `Char`s, which can
-//! often be more useful than sampling from the full set of possible Unicode
-//! characters, which [`Standard`] does.
+//! [`Alphanumeric`] is a simple distribution to sample random letters and
+//! numbers of the `char` type; in contrast [`Standard`] may sample any valid
+//! `char`.
 //!
 //!
-//! # Probability distributions
+//! # Non-uniform probability distributions
 //!
-//! Rand currently provides the following probability distributions (but needs
-//! expansion):
+//! Rand currently provides the following probability distributions:
 //!
 //! - Related to real-valued quantities that grow linearly
-//!   (e.g. errors, offsets)
+//!   (e.g. errors, offsets):
 //!   - [`Normal`] distribution, and [`StandardNormal`] as a primitive
-//! - Related to Bernoulli trials (yes/no events, with a given probability)
+//! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
 //! - Related to positive real-valued quantities that grow exponentially
-//!   (e.g. prices, incomes, populations)
+//!   (e.g. prices, incomes, populations):
 //!   - [`LogNormal`] distribution
-//! - Related to events in a Poisson process (events that occur independently
+//! - Related to rate of occurrance of indenpendant events:
 //!   with a given rate)
 //!   - [`Poisson`] distribution
 //!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
+//! - Gamma and derived distributions:
 //!   - [`Gamma`] distribution
-//! - Related to normally distributed quantities operated with sum of squares
-//!   (for hypothesis testing)
 //!   - [`ChiSquared`] distribution
 //!   - [`StudentT`] distribution
 //!   - [`FisherF`] distribution
@@ -123,9 +127,11 @@
 //! ```
 //!
 //! 
+//! [probability distributions]: https://en.wikipedia.org/wiki/Probability_distribution
 //! [`Distribution`]: trait.Distribution.html
 //! [`gen_range`]: ../trait.Rng.html#method.gen_range
 //! [`gen`]: ../trait.Rng.html#method.gen
+//! [`sample`]: ../trait.Rng.html#method.sample
 //! [`new_inclusive`]: struct.Uniform.html#method.new_inclusive
 //! [`random()`]: ../fn.random.html
 //! [`Rng::gen_bool`]: ../trait.Rng.html#method.gen_bool
@@ -278,6 +284,11 @@ mod impls {
 
 /// Types (distributions) that can be used to create a random instance of `T`.
 /// 
+/// It is possible to sample from a distribution through both the
+/// [`Distribution`] and [`Rng`] traits, via `distr.sample(&mut rng)` and
+/// `rng.sample(distr)`. They also both offer the [`sample_iter`] method, which
+/// produces an iterator that samples from the distribution.
+///
 /// All implementations are expected to be immutable; this has the significant
 /// advantage of not needing to consider thread safety, and for most
 /// distributions efficient state-less sampling algorithms are available.
