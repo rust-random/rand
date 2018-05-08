@@ -14,6 +14,8 @@ use core::fmt;
 
 #[cfg(feature="std")]
 use std::error::Error as stdError;
+#[cfg(feature="std")]
+use std::io;
 
 /// Error kind which can be matched over.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
@@ -159,5 +161,19 @@ impl stdError for Error {
 
     fn cause(&self) -> Option<&stdError> {
         self.cause.as_ref().map(|e| e.as_ref() as &stdError)
+    }
+}
+
+#[cfg(feature="std")]
+impl From<Error> for io::Error {
+    fn from(error: Error) -> Self {
+        use std::io::ErrorKind::*;
+        match error.kind {
+            ErrorKind::Unavailable => io::Error::new(NotFound, error),
+            ErrorKind::Unexpected |
+            ErrorKind::Transient => io::Error::new(Other, error),
+            ErrorKind::NotReady => io::Error::new(WouldBlock, error),
+            ErrorKind::__Nonexhaustive => unreachable!(),
+        }
     }
 }
