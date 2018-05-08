@@ -8,32 +8,49 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! A distribution uniformly generating numbers within a given range.
+//! A distribution uniformly sampling numbers within a given range.
 //!
-//! [`Uniform`] is the standard distribution to sample from uniform ranges, and
-//! forms the basis for [`Rng::gen_range`].
+//! [`Uniform`] is the standard distribution to sample uniformly from a range;
+//! e.g. `Uniform::new_inclusive(1, 6)` can sample integers from 1 to 6, like a
+//! standard die. [`Rng::gen_range`] simply uses [`Uniform::sample_single`],
+//! thus supports any type supported by [`Uniform`].
 //!
-//! To make sampling from a uniform range also possible for custom types
-//! [`Uniform`] depends on the [`SampleUniform`] and [`UniformImpl`] traits.
+//! This distribution is provided with support for several primitive types
+//! (all integer and floating-point types) as well as `std::time::Duration`,
+//! and supports extension to user-defined types via a type-specific *back-end*
+//! implementation.
 //!
-//! Rand comes with an implementation of [`Uniform`] for sampling from integers
-//! and from floats, via [`UniformInt`] and [`UniformFloat`]. They are mostly an
-//! implementation detail and should not be used directly, but may be useful
-//! when you want to reuse the logic to implement range sampling for a custom
-//! type.
+//! The types [`UniformInt`], [`UniformFloat`] and [`UniformDuration`] are the
+//! back-ends supporting sampling from primitive integer and floating-point
+//! ranges as well as from `std::time::Duration`; these types do not normally
+//! need to be used directly (unless implementing a derived back-end).
 //!
-//! Also implemented is a distribution for `Duration`.
+//! # Example usage
 //!
-//! # Implementing `Uniform` for a custom type
+//! ```
+//! use rand::{Rng, thread_rng};
+//! use rand::distributions::Uniform;
+//! 
+//! let mut rng = thread_rng();
+//! let side = Uniform::new(-10.0, 10.0);
+//! 
+//! // sample between 1 and 10 points
+//! for _ in 0..rng.gen_range(1, 11) {
+//!     // sample a point from the square with sides -10 - 10 in two dimensions
+//!     let (x, y) = (rng.sample(side), rng.sample(side));
+//!     println!("Point: {}, {}", x, y);
+//! }
+//! ```
 //!
-//! For the type you will need to create a struct that holds the lower and upper
-//! bounds of the range, and possibly some helper variables. The struct has to
-//! implement the [`UniformImpl`] trait to do the uniform range sampling.
+//! # Extending `Uniform` to support a custom type
 //!
-//! Additionally the type must implement the [`SampleUniform`] trait, which
-//! doesn't do anything but point to the struct implementing [`UniformImpl`].
+//! To extend [`Uniform`] to support your own types, write a back-end which
+//! implements the [`UniformImpl`] trait, then implement the [`SampleUniform`]
+//! helper trait to "register" your back-end. See the `MyF32` example below.
 //!
-//! ## Examples
+//! At a minimum, the back-end needs to store any parameters needed for sampling
+//! (e.g. the target range) and implement `new`, `new_inclusive` and `sample`.
+//! The example below merely wraps another back-end.
 //!
 //! ```
 //! use rand::{Rng, thread_rng};
@@ -73,11 +90,13 @@
 //! ```
 //!
 //! [`Uniform`]: struct.Uniform.html
+//! [`Uniform::sample_single`]: struct.Uniform.html#method.sample_single
 //! [`Rng::gen_range`]: ../../trait.Rng.html#method.gen_range
 //! [`SampleUniform`]: trait.SampleUniform.html
 //! [`UniformImpl`]: trait.UniformImpl.html
 //! [`UniformInt`]: struct.UniformInt.html
 //! [`UniformFloat`]: struct.UniformFloat.html
+//! [`UniformDuration`]: struct.UniformDuration.html
 
 #[cfg(feature = "std")]
 use std::time::Duration;
@@ -88,26 +107,30 @@ use distributions::float::IntoFloat;
 
 /// Sample values uniformly between two bounds.
 ///
-/// [`Uniform::new`] and [`Uniform::new_inclusive`] construct a `Uniform`
-/// distribution sampling from the closed-open and the closed (inclusive) range.
-/// Some preparations are performed up front to make sampling values faster.
-/// [`Uniform::sample_single`] is optimized for sampling values once or only a
-/// limited number of times from a range.
+/// [`Uniform::new`] and [`Uniform::new_inclusive`] construct a uniform
+/// distribution sampling from the given range; these functions may do extra
+/// work up front to make sampling of multiple values faster.
 ///
-/// If you need to sample many values from a range, consider using [`new`] or
-/// [`new_inclusive`]. This is also the best choice if the range is constant,
-/// because then the preparations can be evaluated at compile-time.
-/// Otherwise [`sample_single`] may be the best choice.
+/// [`Uniform::sample_single`] instead samples directly from the given range,
+/// and (depending on the back-end) may be faster when sampling a very small
+/// number of values or only a single value from this range.
 ///
-/// Sampling uniformly from a range can be surprisingly complicated to be both
-/// generic and correct. Consider for example edge cases like `low = 0u8`,
-/// `high = 170u8`, for which a naive modulo operation would return numbers less
-/// than 85 with double the probability to those greater than 85.
+/// When sampling from a constant range, many calculations can happen at
+/// compile-time and all methods should be fast; for floating-point ranges and
+/// the full range of integer types this should have comparable performance to
+/// the `Standard` distribution.
 ///
-/// Types should attempt to sample in `[low, high)` for `Uniform::new(low, high)`,
-/// i.e., excluding `high`, but this may be very difficult. All the primitive
-/// integer types satisfy this property, and the float types normally satisfy
-/// it, but rounding may mean `high` can occur.
+/// Steps are taken to avoid bias which might be present in naive
+/// implementations; for example `rng.gen::<u8>() % 170` samples from the range
+/// `[0, 169]` but is twice as likely to select numbers less than 85 than other
+/// values. Further, the implementations here give more weight to the high-bits
+/// generated by the RNG than the low bits, since with some RNGs the low-bits
+/// are of lower quality than the high bits.
+///
+/// Implementations should attempt to sample in `[low, high)` for
+/// `Uniform::new(low, high)`, i.e., excluding `high`, but this may be very
+/// difficult. All the primitive integer types satisfy this property, and the
+/// float types normally satisfy it, but rounding may mean `high` can occur.
 ///
 /// # Example
 ///
@@ -184,8 +207,12 @@ pub trait SampleUniform: PartialOrd+Sized {
 /// See the [module documentation] on how to implement [`Uniform`] range
 /// sampling for a custom type.
 ///
+/// Implementation of [`sample_single`] is optional, and is only useful when
+/// the implementation can be faster than `Self::new(low, high).sample(rng)`.
+///
 /// [module documentation]: index.html
 /// [`Uniform`]: struct.Uniform.html
+/// [`sample_single`]: struct.UniformImpl.html#method.sample_single
 pub trait UniformImpl: Sized {
     /// The type sampled by this implementation.
     type X: PartialOrd;
@@ -200,8 +227,8 @@ pub trait UniformImpl: Sized {
     /// Construct self, with inclusive bounds `[low, high]`.
     ///
     /// Usually users should not call this directly but instead use
-    /// `Uniform::new_inclusive`, which asserts that `low < high` before calling
-    /// this.
+    /// `Uniform::new_inclusive`, which asserts that `low <= high` before
+    /// calling this.
     fn new_inclusive(low: Self::X, high: Self::X) -> Self;
 
     /// Sample a value.
@@ -226,7 +253,7 @@ pub trait UniformImpl: Sized {
     }
 }
 
-/// Implementation of [`UniformImpl`] for integer types.
+/// The back-end implementing [`UniformImpl`] for integer types.
 ///
 /// Unless you are implementing [`UniformImpl`] for your own type, this type
 /// should not be used directly, use [`Uniform`] instead.
@@ -483,7 +510,7 @@ wmul_impl_usize! { u64 }
 
 
 
-/// Implementation of [`UniformImpl`] for float types.
+/// The back-end implementing [`UniformImpl`] for floating-point types.
 ///
 /// Unless you are implementing [`UniformImpl`] for your own type, this type
 /// should not be used directly, use [`Uniform`] instead.

@@ -325,11 +325,11 @@ pub trait Rng: RngCore {
     /// `low` and exclusive of `high`.
     ///
     /// This is a convenience wrapper around
-    /// `distributions::Uniform::sample_single`. If this function will be called
+    /// [`Uniform::sample_single`]. If this function will be called
     /// repeatedly with the same arguments, it will likely be faster to
-    /// construct a `Uniform` distribution object and sample from that; this
+    /// construct a [`Uniform`] distribution object and sample from that; this
     /// allows amortization of the computations that allow for perfect
-    /// uniformity within the `Uniform::new` constructor.
+    /// uniformity within the [`Uniform::new`] constructor.
     ///
     /// # Panics
     ///
@@ -346,6 +346,10 @@ pub trait Rng: RngCore {
     /// let m: f64 = rng.gen_range(-40.0f64, 1.3e5f64);
     /// println!("{}", m);
     /// ```
+    ///
+    /// [`Uniform`]: distributions/uniform/struct.Uniform.html
+    /// [`Uniform::new`]: distributions/uniform/struct.Uniform.html#method.new
+    /// [`Uniform::sample_single`]: distributions/uniform/struct.Uniform.html#method.sample_single
     fn gen_range<T: PartialOrd + SampleUniform>(&mut self, low: T, high: T) -> T {
         Uniform::sample_single(low, high, self)
     }
