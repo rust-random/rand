@@ -212,7 +212,7 @@ pub trait SampleUniform: PartialOrd+Sized {
 ///
 /// [module documentation]: index.html
 /// [`Uniform`]: struct.Uniform.html
-/// [`sample_single`]: struct.UniformSampler.html#method.sample_single
+/// [`sample_single`]: trait.UniformSampler.html#method.sample_single
 pub trait UniformSampler: Sized {
     /// The type sampled by this implementation.
     type X: PartialOrd;
