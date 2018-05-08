@@ -45,7 +45,7 @@
 //! # Extending `Uniform` to support a custom type
 //!
 //! To extend [`Uniform`] to support your own types, write a back-end which
-//! implements the [`UniformImpl`] trait, then implement the [`SampleUniform`]
+//! implements the [`UniformSampler`] trait, then implement the [`SampleUniform`]
 //! helper trait to "register" your back-end. See the `MyF32` example below.
 //!
 //! At a minimum, the back-end needs to store any parameters needed for sampling
@@ -56,7 +56,7 @@
 //! use rand::{Rng, thread_rng};
 //! use rand::distributions::Distribution;
 //! use rand::distributions::uniform::{Uniform, SampleUniform};
-//! use rand::distributions::uniform::{UniformImpl, UniformFloat};
+//! use rand::distributions::uniform::{UniformSampler, UniformFloat};
 //!
 //! #[derive(Clone, Copy, PartialEq, PartialOrd)]
 //! struct MyF32(f32);
@@ -65,7 +65,7 @@
 //! struct UniformMyF32 {
 //!     inner: UniformFloat<f32>,
 //! }
-//! impl UniformImpl for UniformMyF32 {
+//! impl UniformSampler for UniformMyF32 {
 //!     type X = MyF32;
 //!     fn new(low: Self::X, high: Self::X) -> Self {
 //!         UniformMyF32 {
@@ -73,7 +73,7 @@
 //!         }
 //!     }
 //!     fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-//!         UniformImpl::new(low, high)
+//!         UniformSampler::new(low, high)
 //!     }
 //!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
 //!         MyF32(self.inner.sample(rng))
@@ -81,7 +81,7 @@
 //! }
 //!
 //! impl SampleUniform for MyF32 {
-//!     type Impl = UniformMyF32;
+//!     type Sampler = UniformMyF32;
 //! }
 //!
 //! let (low, high) = (MyF32(17.0f32), MyF32(22.0f32));
@@ -93,7 +93,7 @@
 //! [`Uniform::sample_single`]: struct.Uniform.html#method.sample_single
 //! [`Rng::gen_range`]: ../../trait.Rng.html#method.gen_range
 //! [`SampleUniform`]: trait.SampleUniform.html
-//! [`UniformImpl`]: trait.UniformImpl.html
+//! [`UniformSampler`]: trait.UniformSampler.html
 //! [`UniformInt`]: struct.UniformInt.html
 //! [`UniformFloat`]: struct.UniformFloat.html
 //! [`UniformDuration`]: struct.UniformDuration.html
@@ -156,7 +156,7 @@ use distributions::float::IntoFloat;
 /// [`sample_single`]: struct.Uniform.html#method.sample_single
 #[derive(Clone, Copy, Debug)]
 pub struct Uniform<X: SampleUniform> {
-    inner: X::Impl,
+    inner: X::Sampler,
 }
 
 impl<X: SampleUniform> Uniform<X> {
@@ -164,21 +164,21 @@ impl<X: SampleUniform> Uniform<X> {
     /// open range `[low, high)` (excluding `high`). Panics if `low >= high`.
     pub fn new(low: X, high: X) -> Uniform<X> {
         assert!(low < high, "Uniform::new called with `low >= high`");
-        Uniform { inner: X::Impl::new(low, high) }
+        Uniform { inner: X::Sampler::new(low, high) }
     }
 
     /// Create a new `Uniform` instance which samples uniformly from the closed
     /// range `[low, high]` (inclusive). Panics if `low > high`.
     pub fn new_inclusive(low: X, high: X) -> Uniform<X> {
         assert!(low <= high, "Uniform::new_inclusive called with `low > high`");
-        Uniform { inner: X::Impl::new_inclusive(low, high) }
+        Uniform { inner: X::Sampler::new_inclusive(low, high) }
     }
 
     /// Sample a single value uniformly from `[low, high)`.
     /// Panics if `low >= high`.
     pub fn sample_single<R: Rng + ?Sized>(low: X, high: X, rng: &mut R) -> X {
         assert!(low < high, "Uniform::sample_single called with low >= high");
-        X::Impl::sample_single(low, high, rng)
+        X::Sampler::sample_single(low, high, rng)
     }
 }
 
@@ -189,17 +189,17 @@ impl<X: SampleUniform> Distribution<X> for Uniform<X> {
 }
 
 /// Helper trait for creating objects using the correct implementation of
-/// [`UniformImpl`] for the sampling type.
+/// [`UniformSampler`] for the sampling type.
 ///
 /// See the [module documentation] on how to implement [`Uniform`] range
 /// sampling for a custom type.
 ///
-/// [`UniformImpl`]: trait.UniformImpl.html
+/// [`UniformSampler`]: trait.UniformSampler.html
 /// [module documentation]: index.html
 /// [`Uniform`]: struct.Uniform.html
 pub trait SampleUniform: PartialOrd+Sized {
-    /// The `UniformImpl` implementation supporting type `X`.
-    type Impl: UniformImpl<X = Self>;
+    /// The `UniformSampler` implementation supporting type `X`.
+    type Sampler: UniformSampler<X = Self>;
 }
 
 /// Helper trait handling actual uniform sampling.
@@ -212,8 +212,8 @@ pub trait SampleUniform: PartialOrd+Sized {
 ///
 /// [module documentation]: index.html
 /// [`Uniform`]: struct.Uniform.html
-/// [`sample_single`]: struct.UniformImpl.html#method.sample_single
-pub trait UniformImpl: Sized {
+/// [`sample_single`]: struct.UniformSampler.html#method.sample_single
+pub trait UniformSampler: Sized {
     /// The type sampled by this implementation.
     type X: PartialOrd;
 
@@ -243,19 +243,19 @@ pub trait UniformImpl: Sized {
     ///
     /// Via this method, implementations can provide a method optimized for
     /// sampling only a single value from the specified range. The default
-    /// implementation simply calls `UniformImpl::new` then `sample` on the
+    /// implementation simply calls `UniformSampler::new` then `sample` on the
     /// result.
     fn sample_single<R: Rng + ?Sized>(low: Self::X, high: Self::X, rng: &mut R)
         -> Self::X
     {
-        let uniform: Self = UniformImpl::new(low, high);
+        let uniform: Self = UniformSampler::new(low, high);
         uniform.sample(rng)
     }
 }
 
-/// The back-end implementing [`UniformImpl`] for integer types.
+/// The back-end implementing [`UniformSampler`] for integer types.
 ///
-/// Unless you are implementing [`UniformImpl`] for your own type, this type
+/// Unless you are implementing [`UniformSampler`] for your own type, this type
 /// should not be used directly, use [`Uniform`] instead.
 ///
 /// # Implementation notes
@@ -295,7 +295,7 @@ pub trait UniformImpl: Sized {
 /// multiply by `range`, the result is in the high word. Then comparing the low
 /// word against `zone` makes sure our distribution is uniform.
 ///
-/// [`UniformImpl`]: trait.UniformImpl.html
+/// [`UniformSampler`]: trait.UniformSampler.html
 /// [`Uniform`]: struct.Uniform.html
 #[derive(Clone, Copy, Debug)]
 pub struct UniformInt<X> {
@@ -308,10 +308,10 @@ macro_rules! uniform_int_impl {
     ($ty:ty, $signed:ty, $unsigned:ident,
      $i_large:ident, $u_large:ident) => {
         impl SampleUniform for $ty {
-            type Impl = UniformInt<$ty>;
+            type Sampler = UniformInt<$ty>;
         }
 
-        impl UniformImpl for UniformInt<$ty> {
+        impl UniformSampler for UniformInt<$ty> {
             // We play free and fast with unsigned vs signed here
             // (when $ty is signed), but that's fine, since the
             // contract of this macro is for $ty and $unsigned to be
@@ -322,7 +322,7 @@ macro_rules! uniform_int_impl {
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new(low: Self::X, high: Self::X) -> Self {
-                UniformImpl::new_inclusive(low, high - 1)
+                UniformSampler::new_inclusive(low, high - 1)
             }
 
             #[inline] // if the range is constant, this helps LLVM to do the
@@ -510,9 +510,9 @@ wmul_impl_usize! { u64 }
 
 
 
-/// The back-end implementing [`UniformImpl`] for floating-point types.
+/// The back-end implementing [`UniformSampler`] for floating-point types.
 ///
-/// Unless you are implementing [`UniformImpl`] for your own type, this type
+/// Unless you are implementing [`UniformSampler`] for your own type, this type
 /// should not be used directly, use [`Uniform`] instead.
 ///
 /// # Implementation notes
@@ -530,9 +530,9 @@ wmul_impl_usize! { u64 }
 /// because the boundaries of a floats range are a bit of a fuzzy concept due to
 /// rounding errors.
 ///
-/// [`UniformImpl`]: trait.UniformImpl.html
-/// [`new`]: trait.UniformImpl.html#tymethod.new
-/// [`new_inclusive`]: trait.UniformImpl.html#tymethod.new_inclusive
+/// [`UniformSampler`]: trait.UniformSampler.html
+/// [`new`]: trait.UniformSampler.html#tymethod.new
+/// [`new_inclusive`]: trait.UniformSampler.html#tymethod.new_inclusive
 /// [`Uniform`]: struct.Uniform.html
 /// [`Standard`]: ../struct.Standard.html
 #[derive(Clone, Copy, Debug)]
@@ -544,10 +544,10 @@ pub struct UniformFloat<X> {
 macro_rules! uniform_float_impl {
     ($ty:ty, $bits_to_discard:expr, $next_u:ident) => {
         impl SampleUniform for $ty {
-            type Impl = UniformFloat<$ty>;
+            type Sampler = UniformFloat<$ty>;
         }
 
-        impl UniformImpl for UniformFloat<$ty> {
+        impl UniformSampler for UniformFloat<$ty> {
             type X = $ty;
 
             fn new(low: Self::X, high: Self::X) -> Self {
@@ -560,7 +560,7 @@ macro_rules! uniform_float_impl {
             }
 
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-                UniformImpl::new(low, high)
+                UniformSampler::new(low, high)
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
@@ -594,12 +594,12 @@ macro_rules! uniform_float_impl {
 uniform_float_impl! { f32, 32 - 23, next_u32 }
 uniform_float_impl! { f64, 64 - 52, next_u64 }
 
-/// Implementation of [`UniformImpl`] for `Duration`.
+/// Implementation of [`UniformSampler`] for `Duration`.
 ///
-/// Unless you are implementing [`UniformImpl`] for your own types, this type
+/// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
 ///
-/// [`UniformImpl`]: trait.UniformImpl.html
+/// [`UniformSampler`]: trait.UniformSampler.html
 /// [`Uniform`]: struct.Uniform.html
 #[cfg(feature = "std")]
 #[derive(Clone, Copy, Debug)]
@@ -622,11 +622,11 @@ enum UniformDurationMode {
 
 #[cfg(feature = "std")]
 impl SampleUniform for Duration {
-    type Impl = UniformDuration;
+    type Sampler = UniformDuration;
 }
 
 #[cfg(feature = "std")]
-impl UniformImpl for UniformDuration {
+impl UniformSampler for UniformDuration {
     type X = Duration;
 
     #[inline]
@@ -686,7 +686,7 @@ impl UniformImpl for UniformDuration {
 #[cfg(test)]
 mod tests {
     use Rng;
-    use distributions::uniform::{Uniform, UniformImpl, UniformFloat, SampleUniform};
+    use distributions::uniform::{Uniform, UniformSampler, UniformFloat, SampleUniform};
 
     #[should_panic]
     #[test]
@@ -819,7 +819,7 @@ mod tests {
         struct UniformMyF32 {
             inner: UniformFloat<f32>,
         }
-        impl UniformImpl for UniformMyF32 {
+        impl UniformSampler for UniformMyF32 {
             type X = MyF32;
             fn new(low: Self::X, high: Self::X) -> Self {
                 UniformMyF32 {
@@ -827,14 +827,14 @@ mod tests {
                 }
             }
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-                UniformImpl::new(low, high)
+                UniformSampler::new(low, high)
             }
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 MyF32 { x: self.inner.sample(rng) }
             }
         }
         impl SampleUniform for MyF32 {
-            type Impl = UniformMyF32;
+            type Sampler = UniformMyF32;
         }
 
         let (low, high) = (MyF32{ x: 17.0f32 }, MyF32{ x: 22.0f32 });
