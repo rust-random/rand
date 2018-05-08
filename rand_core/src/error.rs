@@ -97,13 +97,14 @@ pub struct Error {
 
 impl Error {
     /// Create a new instance, with specified kind and a message.
+    #[cfg(feature="std")]
     pub fn new(kind: ErrorKind, msg: &'static str) -> Self {
-        #[cfg(feature="std")] {
-            Error { kind, msg, cause: None }
-        }
-        #[cfg(not(feature="std"))] {
-            Error { kind, msg }
-        }
+        Error { kind: kind, msg: msg, cause: None }
+    }
+    /// Create a new instance, with specified kind and a message.
+    #[cfg(not(feature="std"))]
+    pub fn new(kind: ErrorKind, msg: &'static str) -> Self {
+        Error { kind: kind, msg: msg }
     }
     
     /// Create a new instance, with specified kind, message, and a
@@ -119,7 +120,7 @@ impl Error {
     pub fn with_cause<E>(kind: ErrorKind, msg: &'static str, cause: E) -> Self
         where E: Into<Box<stdError + Send + Sync>>
     {
-        Error { kind, msg, cause: Some(cause.into()) }
+        Error { kind: kind, msg: msg, cause: Some(cause.into()) }
     }
     
     /// Create a new instance, with specified kind, message, and a
@@ -128,7 +129,7 @@ impl Error {
     /// In `no_std` mode the *cause* is ignored.
     #[cfg(not(feature="std"))]
     pub fn with_cause<E>(kind: ErrorKind, msg: &'static str, _cause: E) -> Self {
-        Error { kind, msg }
+        Error { kind: kind, msg: msg }
     }
     
     /// Take the cause, if any. This allows the embedded cause to be extracted.
@@ -139,14 +140,20 @@ impl Error {
     }
 }
 
+#[cfg(feature="std")]
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        #[cfg(feature="std")] {
-            if let Some(ref cause) = self.cause {
-                return write!(f, "{} ({}); cause: {}",
-                        self.msg, self.kind.description(), cause);
-            }
+        if let Some(ref cause) = self.cause {
+            return write!(f, "{} ({}); cause: {}",
+                    self.msg, self.kind.description(), cause);
         }
+        write!(f, "{} ({})", self.msg, self.kind.description())
+    }
+}
+
+#[cfg(not(feature="std"))]
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} ({})", self.msg, self.kind.description())
     }
 }
