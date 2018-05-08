@@ -8,19 +8,21 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Generating random samples from [probability distributions].
+//! Generating random samples from probability distributions.
 //!
 //! This module is the home of the [`Distribution`] trait and several of its
-//! implementations, which is the workhorse behind some of the convenient
+//! implementations. It is the workhorse behind some of the convenient
 //! functionality of the [`Rng`] trait, including [`gen`], [`gen_range`] and
 //! of course [`sample`].
-//! 
-//! Abstractly, a probability distribution describes the probability of
+//!
+//! Abstractly, a [probability distribution] describes the probability of
 //! occurance of each value in its sample space.
+//!
 //! More concretely, an implementation of `Distribution<T>` for type `X` is an
 //! algorithm for choosing values from the sample space (a subset of `T`)
 //! according to the distribution `X` represents, using an external source of
 //! randomness (an RNG supplied to the `sample` function).
+//!
 //! A type `X` may implement `Distribution<T>` for multiple types `T`.
 //! Any type implementing [`Distribution`] is stateless (i.e. immutable),
 //! but it may have internal parameters set at construction time (for example,
@@ -35,9 +37,9 @@
 //! types, tuples, arrays, and a few derived types. See the documentation of
 //! [`Standard`] for more details.
 //!
-//! It is possible to implement `Distribution<T>` for [`Standard`] for user
-//! types `T`; doing so makes it possible to generate type `T` with
-//! [`Rng::gen()`], and by extension also with the [`random()`] function.
+//! Implementing `Distribution<T>` for [`Standard`] for user types `T` makes it
+//! possible to generate type `T` with [`Rng::gen()`], and by extension also
+//! with the [`random()`] function.
 //!
 //!
 //! # Distribution to sample from a `Uniform` range
@@ -49,9 +51,9 @@
 //!
 //! Values may be sampled from this distribution using [`Rng::gen_range`] or
 //! by creating a distribution object with [`Uniform::new`],
-//! [`Uniform::new_inclusive`] or `From<Range>`;
-//! when the range limits are not known at compile time it is typically faster
-//! to reuse an existing distribution object than to call [`Rng::gen_range`].
+//! [`Uniform::new_inclusive`] or `From<Range>`. When the range limits are not
+//! known at compile time it is typically faster to reuse an existing
+//! distribution object than to call [`Rng::gen_range`].
 //!
 //! User types `T` may also implement `Distribution<T>` for [`Uniform`],
 //! although this is less straightforward than for [`Standard`] (see the
@@ -126,8 +128,8 @@
 //! }
 //! ```
 //!
-//! 
-//! [probability distributions]: https://en.wikipedia.org/wiki/Probability_distribution
+//!
+//! [probability distribution]: https://en.wikipedia.org/wiki/Probability_distribution
 //! [`Distribution`]: trait.Distribution.html
 //! [`gen_range`]: ../trait.Rng.html#method.gen_range
 //! [`gen`]: ../trait.Rng.html#method.gen
