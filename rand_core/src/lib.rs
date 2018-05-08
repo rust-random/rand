@@ -439,3 +439,11 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
         (**self).try_fill_bytes(dest)
     }
 }
+
+#[cfg(feature="std")]
+impl std::io::Read for RngCore {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
+        self.try_fill_bytes(buf)?;
+        Ok(buf.len())
+    }
+}
