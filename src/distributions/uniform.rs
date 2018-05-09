@@ -50,7 +50,8 @@
 //!
 //! At a minimum, the back-end needs to store any parameters needed for sampling
 //! (e.g. the target range) and implement `new`, `new_inclusive` and `sample`.
-//! The example below merely wraps another back-end.
+//! Those methods should include an assert to check the range is valid (i.e.
+//! `low < high`). The example below merely wraps another back-end.
 //!
 //! ```
 //! use rand::{Rng, thread_rng};
@@ -163,21 +164,18 @@ impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance which samples uniformly from the half
     /// open range `[low, high)` (excluding `high`). Panics if `low >= high`.
     pub fn new(low: X, high: X) -> Uniform<X> {
-        assert!(low < high, "Uniform::new called with `low >= high`");
         Uniform { inner: X::Sampler::new(low, high) }
     }
 
     /// Create a new `Uniform` instance which samples uniformly from the closed
     /// range `[low, high]` (inclusive). Panics if `low > high`.
     pub fn new_inclusive(low: X, high: X) -> Uniform<X> {
-        assert!(low <= high, "Uniform::new_inclusive called with `low > high`");
         Uniform { inner: X::Sampler::new_inclusive(low, high) }
     }
 
     /// Sample a single value uniformly from `[low, high)`.
     /// Panics if `low >= high`.
     pub fn sample_single<R: Rng + ?Sized>(low: X, high: X, rng: &mut R) -> X {
-        assert!(low < high, "Uniform::sample_single called with low >= high");
         X::Sampler::sample_single(low, high, rng)
     }
 }
@@ -197,7 +195,7 @@ impl<X: SampleUniform> Distribution<X> for Uniform<X> {
 /// [`UniformSampler`]: trait.UniformSampler.html
 /// [module documentation]: index.html
 /// [`Uniform`]: struct.Uniform.html
-pub trait SampleUniform: PartialOrd+Sized {
+pub trait SampleUniform: Sized {
     /// The `UniformSampler` implementation supporting type `X`.
     type Sampler: UniformSampler<X = Self>;
 }
@@ -215,7 +213,7 @@ pub trait SampleUniform: PartialOrd+Sized {
 /// [`sample_single`]: trait.UniformSampler.html#method.sample_single
 pub trait UniformSampler: Sized {
     /// The type sampled by this implementation.
-    type X: PartialOrd;
+    type X;
 
     /// Construct self, with inclusive lower bound and exclusive upper bound
     /// `[low, high)`.
@@ -322,12 +320,15 @@ macro_rules! uniform_int_impl {
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new(low: Self::X, high: Self::X) -> Self {
+                assert!(low < high, "Uniform::new called with `low >= high`");
                 UniformSampler::new_inclusive(low, high - 1)
             }
 
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
+                assert!(low <= high,
+                        "Uniform::new_inclusive called with `low > high`");
                 let unsigned_max: $u_large = ::core::$u_large::MAX;
 
                 let range = (high as $u_large)
@@ -375,6 +376,8 @@ macro_rules! uniform_int_impl {
                                               high: Self::X,
                                               rng: &mut R) -> Self::X
             {
+                assert!(low < high,
+                        "Uniform::sample_single called with low >= high");
                 let range = (high as $u_large)
                             .wrapping_sub(low as $u_large);
                 let zone =
@@ -551,6 +554,7 @@ macro_rules! uniform_float_impl {
             type X = $ty;
 
             fn new(low: Self::X, high: Self::X) -> Self {
+                assert!(low < high, "Uniform::new called with `low >= high`");
                 let scale = high - low;
                 let offset = low - scale;
                 UniformFloat {
@@ -560,7 +564,14 @@ macro_rules! uniform_float_impl {
             }
 
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-                UniformSampler::new(low, high)
+                assert!(low <= high,
+                        "Uniform::new_inclusive called with `low > high`");
+                let scale = high - low;
+                let offset = low - scale;
+                UniformFloat {
+                    scale: scale,
+                    offset: offset,
+                }
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
@@ -578,6 +589,8 @@ macro_rules! uniform_float_impl {
             fn sample_single<R: Rng + ?Sized>(low: Self::X,
                                               high: Self::X,
                                               rng: &mut R) -> Self::X {
+                assert!(low < high,
+                        "Uniform::sample_single called with low >= high");
                 let scale = high - low;
                 let offset = low - scale;
                 // Generate a value in the range [1, 2)
@@ -631,11 +644,13 @@ impl UniformSampler for UniformDuration {
 
     #[inline]
     fn new(low: Duration, high: Duration) -> UniformDuration {
+        assert!(low < high, "Uniform::new called with `low >= high`");
         UniformDuration::new_inclusive(low, high - Duration::new(0, 1))
     }
 
     #[inline]
     fn new_inclusive(low: Duration, high: Duration) -> UniformDuration {
+        assert!(low <= high, "Uniform::new_inclusive called with `low > high`");
         let size = high - low;
         let nanos = size
             .as_secs()
