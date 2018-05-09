@@ -59,13 +59,13 @@
 //! use rand::distributions::uniform::{Uniform, SampleUniform};
 //! use rand::distributions::uniform::{UniformSampler, UniformFloat};
 //!
-//! #[derive(Clone, Copy, PartialEq, PartialOrd)]
 //! struct MyF32(f32);
 //!
 //! #[derive(Clone, Copy, Debug)]
 //! struct UniformMyF32 {
 //!     inner: UniformFloat<f32>,
 //! }
+//!
 //! impl UniformSampler for UniformMyF32 {
 //!     type X = MyF32;
 //!     fn new(low: Self::X, high: Self::X) -> Self {
@@ -251,6 +251,17 @@ pub trait UniformSampler: Sized {
     }
 }
 
+impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
+    fn from(r: ::core::ops::Range<X>) -> Uniform<X> {
+        Uniform::new(r.start, r.end)
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// What follows are all back-ends.
+
+
 /// The back-end implementing [`UniformSampler`] for integer types.
 ///
 /// Unless you are implementing [`UniformSampler`] for your own type, this type
@@ -405,12 +416,6 @@ macro_rules! uniform_int_impl {
     }
 }
 
-impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
-    fn from(r: ::core::ops::Range<X>) -> Uniform<X> {
-        Uniform::new(r.start, r.end)
-    }
-}
-
 uniform_int_impl! { i8, i8, u8, i32, u32 }
 uniform_int_impl! { i16, i16, u16, i32, u32 }
 uniform_int_impl! { i32, i32, u32, i32, u32 }
@@ -446,7 +451,6 @@ macro_rules! wmul_impl {
         }
     }
 }
-
 wmul_impl! { u8, u16, 8 }
 wmul_impl! { u16, u32, 16 }
 wmul_impl! { u32, u64, 32 }
@@ -485,12 +489,10 @@ macro_rules! wmul_impl_large {
         }
     }
 }
-
 #[cfg(not(feature = "i128_support"))]
 wmul_impl_large! { u64, 32 }
 #[cfg(feature = "i128_support")]
 wmul_impl_large! { u128, 64 }
-
 
 macro_rules! wmul_impl_usize {
     ($ty:ty) => {
@@ -505,7 +507,6 @@ macro_rules! wmul_impl_usize {
         }
     }
 }
-
 #[cfg(target_pointer_width = "32")]
 wmul_impl_usize! { u32 }
 #[cfg(target_pointer_width = "64")]
@@ -607,7 +608,9 @@ macro_rules! uniform_float_impl {
 uniform_float_impl! { f32, 32 - 23, next_u32 }
 uniform_float_impl! { f64, 64 - 52, next_u64 }
 
-/// Implementation of [`UniformSampler`] for `Duration`.
+
+
+/// The back-end implementing [`UniformSampler`] for `Duration`.
 ///
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
