@@ -288,17 +288,12 @@ impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
 /// `ints_to_reject = (unsigned_max - range + 1) % range;`
 ///
 /// The smallest integer PRNGs generate is `u32`. That is why for small integer
-/// sizes (`i8`/`u8` and `i16`/`u16`) there is an optimisation: don't pick the
+/// sizes (`i8`/`u8` and `i16`/`u16`) there is an optimization: don't pick the
 /// largest zone that can fit in the small type, but pick the largest zone that
-/// can fit in an `u32`. This improves the chance to get a random integer that
-/// fits in the zone to 998 in 1000 in the worst case.
-///
-/// There is a problem however: we can't store the acceptable `zone` of  such a
-/// larger type in `UniformInt`, which only holds values with the size of the
-/// type. `ints_to_reject` is always less than half the size of the small
-/// integer. For an `u8` it only ever uses 7 bits. This means that all but the
-/// last 7 bits of `zone` are always 1's (or 15 in the case of `u16`). So
-/// nothing is lost by trucating `zone`.
+/// can fit in an `u32`. `ints_to_reject` is always less than half the size of
+/// the small integer. This means the first bit of `zone` is always 1, and so
+/// are all the other preceding bits of a larger integer. The easiest way to
+/// grow the `zone` for the larger type is to simply sign extend it.
 ///
 /// An alternative to using a modulus is widening multiply: After a widening
 /// multiply by `range`, the result is in the high word. Then comparing the low
@@ -340,11 +335,9 @@ macro_rules! uniform_int_impl {
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
                 assert!(low <= high,
                         "Uniform::new_inclusive called with `low > high`");
-                let unsigned_max: $u_large = ::core::$u_large::MAX;
+                let unsigned_max = ::core::$unsigned::MAX;
 
-                let range = (high as $u_large)
-                            .wrapping_sub(low as $u_large)
-                            .wrapping_add(1);
+                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
                 let ints_to_reject =
                     if range > 0 {
                         (unsigned_max - range + 1) % range
@@ -364,9 +357,9 @@ macro_rules! uniform_int_impl {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range = self.range as $unsigned as $u_large;
                 if range > 0 {
-                    // Some casting to recover the trucated bits of `zone`:
-                    // First bit-cast to a signed int. Next sign-extend to the
-                    // larger type. Then bit-cast to unsigned.
+                    // Grow `zone` to fit a type of at least 32 bits, by
+                    // sign-extending it (the first bit is always 1, so are all
+                    // the preceding bits of the larger type).
                     // For types that already have the right size, all the
                     // casting is a no-op.
                     let zone = self.zone as $signed as $i_large as $u_large;
@@ -389,8 +382,7 @@ macro_rules! uniform_int_impl {
             {
                 assert!(low < high,
                         "Uniform::sample_single called with low >= high");
-                let range = (high as $u_large)
-                            .wrapping_sub(low as $u_large);
+                let range = high.wrapping_sub(low) as $unsigned as $u_large;
                 let zone =
                     if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
                         // Using a modulus is faster than the approximation for
