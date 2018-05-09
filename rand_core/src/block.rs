@@ -8,7 +8,50 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! [`BlockRng`] trait and implementation helpers
+//! The `BlockRngCore` trait and implementation helpers
+//!
+//! The [`BlockRngCore`] trait exists to assist in the implementation of RNGs
+//! which generate a block of data in a cache instead of returning generated
+//! values directly.
+//!
+//! Usage of this trait is optional, but provides two advantages:
+//! implementations only need to concern themselves with generation of the
+//! block, not the various [`RngCore`] methods (especially [`fill_bytes`], where
+//! the optimal implementations are not trivial), and this allows
+//! [`ReseedingRng`] perform periodic reseeding with very low overhead.
+//!
+//! # Example
+//! 
+//! ```norun
+//! use rand_core::block::{BlockRngCore, BlockRng};
+//! 
+//! struct MyRngCore;
+//! 
+//! impl BlockRngCore for MyRngCore {
+//!     type Results = [u32; 16];
+//!     
+//!     fn generate(&mut self, results: &mut Self::Results) {
+//!         unimplemented!()
+//!     }
+//! }
+//! 
+//! impl SeedableRng for MyRngCore {
+//!     type Seed = unimplemented!();
+//!     fn from_seed(seed: Self::Seed) -> Self {
+//!         unimplemented!()
+//!     }
+//! }
+//! 
+//! // optionally, also implement CryptoRng for MyRngCore
+//! 
+//! // Final RNG.
+//! type MyRng = BlockRng<u32, MyRngCore>;
+//! ```
+//! 
+//! [`BlockRngCore`]: trait.BlockRngCore.html
+//! [`RngCore`]: ../trait.RngCore.html
+//! [`fill_bytes`]: ../trait.RngCore.html#tymethod.fill_bytes
+//! [`ReseedingRng`]: ../../rand/rngs/adaptor/struct.ReseedingRng.html
 
 use core::convert::AsRef;
 use core::fmt;
@@ -19,42 +62,7 @@ use impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 /// blocks (typically `[u32; N]`). This technique is commonly used by
 /// cryptographic RNGs to improve performance.
 /// 
-/// Usage of this trait is optional, but provides two advantages:
-/// implementations only need to concern themselves with generation of the
-/// block, not the various [`RngCore`] methods (especially [`fill_bytes`], where the
-/// optimal implementations are not trivial), and this allows `ReseedingRng` to
-/// perform periodic reseeding with very low overhead.
-/// 
-/// # Example
-/// 
-/// ```norun
-/// use rand_core::block::{BlockRngCore, BlockRng};
-/// 
-/// struct MyRngCore;
-/// 
-/// impl BlockRngCore for MyRngCore {
-///     type Results = [u32; 16];
-///     
-///     fn generate(&mut self, results: &mut Self::Results) {
-///         unimplemented!()
-///     }
-/// }
-/// 
-/// impl SeedableRng for MyRngCore {
-///     type Seed = unimplemented!();
-///     fn from_seed(seed: Self::Seed) -> Self {
-///         unimplemented!()
-///     }
-/// }
-/// 
-/// // optionally, also implement CryptoRng for MyRngCore
-/// 
-/// // Final RNG.
-/// type MyRng = BlockRng<u32, MyRngCore>;
-/// ```
-/// 
-/// [`RngCore`]: ../trait.RngCore.html
-/// [`fill_bytes`]: ../trait.RngCore.html#tymethod.fill_bytes
+/// See the [module documentation](index.html) for details.
 pub trait BlockRngCore {
     /// Results element type, e.g. `u32`.
     type Item;
