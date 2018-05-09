@@ -209,7 +209,6 @@ pub use rand_core::{ErrorKind, Error};
 #[cfg(feature="std")] pub use os::OsRng;
 pub use reseeding::ReseedingRng;
 #[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng};
-#[cfg(feature="std")] #[allow(deprecated)] pub use thread_rng::random;
 
 // Public modules
 pub mod distributions;
@@ -983,6 +982,56 @@ pub fn weak_rng() -> XorShiftRng {
         panic!("weak_rng failed: {:?}", err))
 }
 
+/// Generates a random value using the thread-local random number generator.
+///
+/// This is simply a shortcut for `thread_rng().gen()`. See [`thread_rng`] for
+/// documentation of the entropy source and [`Standard`] for documentation of
+/// distributions and type-specific generation.
+///
+/// # Examples
+///
+/// ```rust
+/// let x = rand::random::<u8>();
+/// println!("{}", x);
+///
+/// let y = rand::random::<f64>();
+/// println!("{}", y);
+///
+/// if rand::random() { // generates a boolean
+///     println!("Better lucky than good!");
+/// }
+/// ```
+///
+/// If you're calling `random()` in a loop, caching the generator as in the
+/// following example can increase performance.
+///
+/// ```rust
+/// # #![allow(deprecated)]
+/// use rand::Rng;
+///
+/// let mut v = vec![1, 2, 3];
+///
+/// for x in v.iter_mut() {
+///     *x = rand::random()
+/// }
+///
+/// // can be made faster by caching thread_rng
+///
+/// let mut rng = rand::thread_rng();
+///
+/// for x in v.iter_mut() {
+///     *x = rng.gen();
+/// }
+/// ```
+///
+/// [`thread_rng`]: fn.thread_rng.html
+/// [`Standard`]: distributions/struct.Standard.html
+#[cfg(feature="std")]
+#[inline]
+pub fn random<T>() -> T where Standard: Distribution<T> {
+    thread_rng().gen()
+}
+
 /// DEPRECATED: use `seq::sample_iter` instead.
 ///
 /// Randomly sample up to `amount` elements from a finite iterator.
@@ -1209,5 +1258,20 @@ mod test {
 
         let mut rng2 = StdRng::from_rng(rng1).unwrap();
         assert_eq!(rng2.next_u64(), 6766915756997287454);
+    }
+
+    #[test]
+    #[cfg(feature="std")]
+    fn test_random() {
+        // not sure how to test this aside from just getting some values
+        let _n : usize = random();
+        let _f : f32 = random();
+        let _o : Option<Option<i8>> = random();
+        let _many : ((),
+                     (usize,
+                      isize,
+                      Option<(u32, (bool,))>),
+                     (u8, i8, u16, i16, u32, i32, u64, i64),
+                     (f32, (f64, (f64,)))) = random();
     }
 }
