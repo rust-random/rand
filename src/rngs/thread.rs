@@ -14,9 +14,9 @@ use std::cell::UnsafeCell;
 use std::rc::Rc;
 
 use {RngCore, CryptoRng, SeedableRng, Error};
+use rngs::adaptor::ReseedingRng;
 use rngs::EntropyRng;
 use prng::hc128::Hc128Core;
-use reseeding::ReseedingRng;
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
 //
@@ -90,7 +90,7 @@ thread_local!(
 /// usage for better performance. This makes it similar to ISAAC, the algorithm
 /// used in `ThreadRng` before rand 0.5.
 ///
-/// [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
+/// [`ReseedingRng`]: rngs/adaptor/struct.ReseedingRng.html
 /// [`StdRng`]: rngs/struct.StdRng.html
 /// [`EntropyRng`]: rngs/struct.EntropyRng.html
 /// [HC-128]: prng/hc128/struct.Hc128Rng.html
