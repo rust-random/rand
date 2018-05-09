@@ -11,7 +11,7 @@ use test::{black_box, Bencher};
 
 use rand::{RngCore, Rng, SeedableRng, FromEntropy};
 use rand::{StdRng, SmallRng, OsRng, EntropyRng, ReseedingRng};
-use rand::prng::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
+use rand::prng::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, XoShiro128, ChaChaRng};
 use rand::prng::hc128::Hc128Core;
 use rand::jitter::JitterRng;
 use rand::thread_rng;
@@ -41,6 +41,7 @@ gen_bytes!(gen_bytes_isaac64, Isaac64Rng::from_entropy());
 gen_bytes!(gen_bytes_std, StdRng::from_entropy());
 gen_bytes!(gen_bytes_small, SmallRng::from_entropy());
 gen_bytes!(gen_bytes_os, OsRng::new().unwrap());
+gen_bytes!(gen_bytes_xoshiro128, XoShiro128::from_entropy());
 
 macro_rules! gen_uint {
     ($fnn:ident, $ty:ty, $gen:expr) => {
@@ -67,6 +68,7 @@ gen_uint!(gen_u32_isaac64, u32, Isaac64Rng::from_entropy());
 gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
 gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng::new().unwrap());
+gen_bytes!(gen_u32_xoshiro128, XoShiro128::from_entropy());
 
 gen_uint!(gen_u64_xorshift, u64, XorShiftRng::from_entropy());
 gen_uint!(gen_u64_chacha20, u64, ChaChaRng::from_entropy());
@@ -76,6 +78,7 @@ gen_uint!(gen_u64_isaac64, u64, Isaac64Rng::from_entropy());
 gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
 gen_uint!(gen_u64_small, u64, SmallRng::from_entropy());
 gen_uint!(gen_u64_os, u64, OsRng::new().unwrap());
+gen_bytes!(gen_u64_xoshiro128, XoShiro128::from_entropy());
 
 // Do not test JitterRng like the others by running it RAND_BENCH_N times per,
 // measurement, because it is way too slow. Only run it once.
