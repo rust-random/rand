@@ -203,7 +203,7 @@ extern crate rand_core;
 
 
 // Re-exports from rand_core
-pub use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng};
+pub use rand_core::{RngCore, CryptoRng, SeedableRng};
 pub use rand_core::{ErrorKind, Error};
 
 // Public exports

@@ -12,8 +12,8 @@
 
 use core::{fmt, slice};
 use core::num::Wrapping as w;
-use rand_core::{BlockRngCore, RngCore, SeedableRng, Error, le};
-use rand_core::impls::BlockRng64;
+use rand_core::{RngCore, SeedableRng, Error, le};
+use rand_core::block::{BlockRngCore, BlockRng64};
 use prng::isaac_array::IsaacArray;
 
 #[allow(non_camel_case_types)]
