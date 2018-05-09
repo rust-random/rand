@@ -10,11 +10,11 @@ use std::mem::size_of;
 use test::{black_box, Bencher};
 
 use rand::{RngCore, Rng, SeedableRng, FromEntropy};
-use rand::{OsRng, EntropyRng, ReseedingRng};
+use rand::ReseedingRng;
 use rand::prng::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 use rand::prng::hc128::Hc128Core;
+use rand::rngs::{OsRng, JitterRng, EntropyRng};
 use rand::rngs::{StdRng, SmallRng};
-use rand::jitter::JitterRng;
 use rand::thread_rng;
 
 macro_rules! gen_bytes {

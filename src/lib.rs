@@ -151,9 +151,9 @@
 //! [`from_rng`]: trait.SeedableRng.html#method.from_rng
 //! [`CryptoRng`]: trait.CryptoRng.html
 //! [`thread_rng`]: fn.thread_rng.html
-//! [`EntropyRng`]: struct.EntropyRng.html
-//! [`OsRng`]: os/struct.OsRng.html
-//! [`JitterRng`]: jitter/struct.JitterRng.html
+//! [`EntropyRng`]: rngs/struct.EntropyRng.html
+//! [`OsRng`]: rngs/struct.OsRng.html
+//! [`JitterRng`]: rngs/struct.JitterRng.html
 //! [`StdRng`]: rngs/struct.StdRng.html
 //! [`SmallRng`]: rngs/struct.SmallRng.html
 //! [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
@@ -207,14 +207,11 @@ pub use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng};
 pub use rand_core::{ErrorKind, Error};
 
 // Public exports
-#[cfg(feature="std")] pub use entropy_rng::EntropyRng;
-#[cfg(feature="std")] pub use os::OsRng;
 pub use reseeding::ReseedingRng;
 #[cfg(feature="std")] pub use rngs::thread::thread_rng;
 
 // Public modules
 pub mod distributions;
-pub mod jitter; // Public because of the error type.
 pub mod mock;   // Public so we don't export `StepRng` directly, making it a bit
                 // more clear it is intended for testing.
 pub mod prng;
@@ -223,11 +220,10 @@ pub mod rngs;
 #[cfg(feature = "alloc")] pub mod seq;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Compatibility re-exports
+// Compatibility re-exports. Documentation is hidden; will be removed eventually.
 
-// These modules are public to avoid API breakage, probably only temporarily.
-// Hidden in the documentation.
-#[cfg(feature="std")] #[doc(hidden)] pub mod os;
+#[doc(hidden)] pub use rngs::jitter;
+#[cfg(feature="std")] #[doc(hidden)] pub use rngs::{os, EntropyRng, OsRng};
 
 #[doc(hidden)] pub use prng::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
 #[doc(hidden)] pub use rngs::StdRng;
@@ -248,7 +244,6 @@ pub mod isaac {
 ////////////////////////////////////////////////////////////////////////////////
 
 // private modules
-#[cfg(feature="std")] mod entropy_rng;
 mod reseeding;
 
 
@@ -796,7 +791,7 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
-/// [`EntropyRng`]: struct.EntropyRng.html
+/// [`EntropyRng`]: rngs/struct.EntropyRng.html
 /// [`SeedableRng`]: trait.SeedableRng.html
 /// [`SeedableRng::from_seed`]: trait.SeedableRng.html#tymethod.from_seed
 #[cfg(feature="std")]
@@ -815,7 +810,8 @@ pub trait FromEntropy: SeedableRng {
     ///
     /// ```rust
     /// # use rand::Error;
-    /// use rand::{Rng, StdRng, EntropyRng, SeedableRng};
+    /// use rand::{Rng, SeedableRng};
+    /// use rand::rngs::{EntropyRng, StdRng};
     ///
     /// # fn try_inner() -> Result<(), Error> {
     /// // This uses StdRng, but is valid for any R: SeedableRng

@@ -10,9 +10,17 @@
 
 //! Convenience RNGs
 
+#[cfg(feature="std")] mod entropy;
+#[doc(hidden)] pub mod jitter;
+#[cfg(feature="std")] #[doc(hidden)] pub mod os;
 mod small;
 mod std;
 #[cfg(feature="std")] pub(crate) mod thread;
+
+
+pub use self::jitter::{JitterRng, TimerError};
+#[cfg(feature="std")] pub use self::entropy::EntropyRng;
+#[cfg(feature="std")] pub use self::os::OsRng;
 
 pub use self::small::SmallRng;
 pub use self::std::StdRng;

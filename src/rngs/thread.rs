@@ -13,7 +13,8 @@
 use std::cell::UnsafeCell;
 use std::rc::Rc;
 
-use {RngCore, CryptoRng, SeedableRng, EntropyRng, Error};
+use {RngCore, CryptoRng, SeedableRng, Error};
+use rngs::EntropyRng;
 use prng::hc128::Hc128Core;
 use reseeding::ReseedingRng;
 
@@ -91,7 +92,7 @@ thread_local!(
 ///
 /// [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
 /// [`StdRng`]: rngs/struct.StdRng.html
-/// [`EntropyRng`]: struct.EntropyRng.html
+/// [`EntropyRng`]: rngs/struct.EntropyRng.html
 /// [HC-128]: prng/hc128/struct.Hc128Rng.html
 pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }

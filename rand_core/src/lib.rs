@@ -381,7 +381,7 @@ pub trait SeedableRng: Sized {
     /// for seeding, and that it is cryptographically secure when appropriate.
     /// 
     /// [`FromEntropy`]: ../rand/trait.FromEntropy.html
-    /// [`OsRng`]: ../rand/os/struct.OsRng.html
+    /// [`OsRng`]: ../rand/rngs/struct.OsRng.html
     fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;

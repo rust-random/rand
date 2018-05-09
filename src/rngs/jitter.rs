@@ -50,7 +50,7 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 /// This implementation is based on
 /// [Jitterentropy](http://www.chronox.de/jent.html) version 2.1.0.
 ///
-/// [`OsRng`]: ../os/struct.OsRng.html
+/// [`OsRng`]: struct.OsRng.html
 pub struct JitterRng {
     data: u64, // Actual random number
     // Number of rounds to run the entropy collector per 64 bits
