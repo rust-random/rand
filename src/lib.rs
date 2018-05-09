@@ -213,6 +213,7 @@ pub use rand_core::{ErrorKind, Error};
 pub mod distributions;
 pub mod mock;   // Public so we don't export `StepRng` directly, making it a bit
                 // more clear it is intended for testing.
+pub mod prelude;
 pub mod prng;
 pub mod rngs;
 #[cfg(feature = "alloc")] pub mod seq;
@@ -809,8 +810,8 @@ pub trait FromEntropy: SeedableRng {
     ///
     /// ```rust
     /// # use rand::Error;
-    /// use rand::{Rng, SeedableRng};
-    /// use rand::rngs::{EntropyRng, StdRng};
+    /// use rand::prelude::*;
+    /// use rand::rngs::EntropyRng;
     ///
     /// # fn try_inner() -> Result<(), Error> {
     /// // This uses StdRng, but is valid for any R: SeedableRng

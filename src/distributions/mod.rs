@@ -400,8 +400,7 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
 ///
 /// # Example
 /// ```
-/// use rand::{FromEntropy, Rng};
-/// use rand::rngs::SmallRng;
+/// use rand::prelude::*;
 /// use rand::distributions::Standard;
 ///
 /// let val: f32 = SmallRng::from_entropy().sample(Standard);

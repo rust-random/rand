@@ -53,10 +53,9 @@
 //! The example below merely wraps another back-end.
 //!
 //! ```
-//! use rand::{Rng, thread_rng};
-//! use rand::distributions::Distribution;
-//! use rand::distributions::uniform::{Uniform, SampleUniform};
-//! use rand::distributions::uniform::{UniformSampler, UniformFloat};
+//! use rand::prelude::*;
+//! use rand::distributions::uniform::{Uniform, SampleUniform,
+//!         UniformSampler, UniformFloat};
 //!
 //! #[derive(Clone, Copy, PartialEq, PartialOrd)]
 //! struct MyF32(f32);
