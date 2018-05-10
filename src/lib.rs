@@ -211,8 +211,6 @@ pub use rand_core::{ErrorKind, Error};
 
 // Public modules
 pub mod distributions;
-pub mod mock;   // Public so we don't export `StepRng` directly, making it a bit
-                // more clear it is intended for testing.
 pub mod prelude;
 pub mod prng;
 pub mod rngs;
@@ -933,7 +931,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 
 #[cfg(test)]
 mod test {
-    use mock::StepRng;
+    use rngs::mock::StepRng;
     use super::*;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 

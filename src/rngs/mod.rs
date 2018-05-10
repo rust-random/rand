@@ -14,6 +14,8 @@ pub mod adaptor;
 
 #[cfg(feature="std")] mod entropy;
 #[doc(hidden)] pub mod jitter;
+pub mod mock;   // Public so we don't export `StepRng` directly, making it a bit
+                // more clear it is intended for testing.
 #[cfg(feature="std")] #[doc(hidden)] pub mod os;
 mod small;
 mod std;

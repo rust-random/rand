@@ -20,7 +20,7 @@ use rand_core::{RngCore, Error, impls};
 /// 
 /// ```rust
 /// use rand::Rng;
-/// use rand::mock::StepRng;
+/// use rand::rngs::mock::StepRng;
 /// 
 /// let mut my_rng = StepRng::new(2, 1);
 /// let sample: [u64; 3] = my_rng.gen();

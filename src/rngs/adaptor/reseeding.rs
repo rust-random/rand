@@ -224,7 +224,7 @@ where R: BlockRngCore + SeedableRng + CryptoRng,
 mod test {
     use {Rng, SeedableRng};
     use prng::chacha::ChaChaCore;
-    use mock::StepRng;
+    use rngs::mock::StepRng;
     use super::ReseedingRng;
 
     #[test]
