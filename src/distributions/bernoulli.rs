@@ -79,7 +79,8 @@ impl Distribution<bool> for Bernoulli {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SmallRng, FromEntropy};
+    use rngs::SmallRng;
+    use {Rng, FromEntropy};
     use distributions::Distribution;
     use super::Bernoulli;
 

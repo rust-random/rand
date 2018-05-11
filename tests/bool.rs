@@ -3,7 +3,8 @@
 extern crate rand;
 extern crate libc;
 
-use rand::{FromEntropy, SmallRng};
+use rand::rngs::SmallRng;
+use rand::FromEntropy;
 use rand::distributions::{Distribution, Bernoulli};
 
 #[link_name = "m"]
