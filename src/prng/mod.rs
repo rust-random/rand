@@ -39,6 +39,50 @@
 //! short periods for some seeds. If one PRNG is seeded from another using the
 //! same algorithm, it is possible that both will yield the same sequence of
 //! values (with some lag).
+//!
+//! ## Cryptographic security
+//!
+//! First, lets recap some terminology:
+//!
+//! - **PRNG:** *Pseudo-Random-Number-Generator* is another name for an
+//!   *algorithmic generator*
+//! - **CSPRNG:** a *Cryptographically Secure* PRNG
+//!
+//! Security analysis requires a threat model and expert review; we can provide
+//! neither, but we can provide a few hints. We assume that the goal is to
+//! produce secret apparently-random data. Therefore, we need:
+//!
+//! - A good source of entropy. A known algorithm given known input data is
+//!   trivial to predict, and likewise if there's a non-negligable chance that
+//!   the input to a PRNG is guessable then there's a chance its output is too.
+//!   We recommend seeding CSPRNGs with [`EntropyRng`] or [`OsRng`] which
+//!   provide fresh "random" values from an external source.
+//!   One can also seed from another CSPRNG, e.g. [`thread_rng`], which is faster,
+//!   but adds another component which must be trusted.
+//! - A strong algorithmic generator. It is possible to use a good entropy
+//!   source like [`OsRng`] directly, and in some cases this is the best option,
+//!   but for better performance (or if requiring reproducible values generated
+//!   from a fixed seed) it is common to use a local CSPRNG. The basic security
+//!   that CSPRNGs must provide is making it infeasible to predict future output
+//!   given a sample of past output. A further security that *some* CSPRNGs
+//!   provide is *forward secrecy*; this ensures that in the event that the
+//!   algorithm's state is revealed, it is infeasible to reconstruct past
+//!   output. See the [`CryptoRng`] trait and notes on individual algorithms.
+//! - To be careful not to leak secrets like keys and CSPRNG's internal state
+//!   and robust against "side channel attacks". This goes well beyond the scope
+//!   of random number generation, but this crate takes some precautions:
+//!   - to avoid printing CSPRNG state in log files, implementations have a
+//!     custom `Debug` implementation which omits all internal state
+//!   - [`thread_rng`] uses [`ReseedingRng`] to periodically refresh its state
+//!   - in the future we plan to add some protection against fork attacks
+//!     (where the process is forked and each clone generates the same "random"
+//!     numbers); this is not yet implemented (see issues #314, #370)
+//!
+//! [`CryptoRng`]: ../trait.CryptoRng.html
+//! [`EntropyRng`]: ../rngs/struct.EntropyRng.html
+//! [`OsRng`]: ../rngs/struct.OsRng.html
+//! [`ReseedingRng`]: ../rngs/adaptor/struct.ReseedingRng.html
+//! [`thread_rng`]: ../fn.thread_rng.html
 
 pub mod chacha;
 pub mod hc128;
