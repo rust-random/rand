@@ -25,8 +25,6 @@
 //! the square at random, calculate the fraction that fall within the circle,
 //! and multiply this fraction by 4.
 
-#![cfg(feature="std")]
-
 
 extern crate rand;
 
