@@ -10,7 +10,7 @@
 
 //! Convenience RNGs
 
-pub mod adaptor;
+pub mod adapter;
 
 #[cfg(feature="std")] mod entropy;
 #[doc(hidden)] pub mod jitter;

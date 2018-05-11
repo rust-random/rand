@@ -51,7 +51,7 @@
 //! [`BlockRngCore`]: trait.BlockRngCore.html
 //! [`RngCore`]: ../trait.RngCore.html
 //! [`fill_bytes`]: ../trait.RngCore.html#tymethod.fill_bytes
-//! [`ReseedingRng`]: ../../rand/rngs/adaptor/struct.ReseedingRng.html
+//! [`ReseedingRng`]: ../../rand/rngs/adapter/struct.ReseedingRng.html
 
 use core::convert::AsRef;
 use core::fmt;
