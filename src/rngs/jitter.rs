@@ -18,8 +18,8 @@
 
 // Note: the C implementation of `Jitterentropy` relies on being compiled
 // without optimizations. This implementation goes through lengths to make the
-// compiler not optimise out what is technically dead code, but that does
-// influence timing jitter.
+// compiler not optimize out code which does influence timing jitter, but is
+// technically dead code.
 
 use rand_core::{RngCore, CryptoRng, Error, ErrorKind, impls};
 
@@ -47,10 +47,90 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 /// Use of `JitterRng` is recommended for initializing cryptographic PRNGs when
 /// [`OsRng`] is not available.
 ///
+/// `JitterRng` can be used without the standard library, but not conveniently,
+/// you must provide a high-precision timer and carefully have to follow the
+/// instructions of [`new_with_timer`].
+///
 /// This implementation is based on
 /// [Jitterentropy](http://www.chronox.de/jent.html) version 2.1.0.
 ///
+/// # Quality testing
+///
+/// [`JitterRng::new()`] has build-in, but limited, quality testing, however
+/// before using `JitterRng` on untested hardware, or after changes that could
+/// effect how the code is optimized (such as a new LLVM version), it is
+/// recommend to run the much more stringent
+/// [NIST SP 800-90B Entropy Estimation Suite](
+/// https://github.com/usnistgov/SP800-90B_EntropyAssessment).
+///
+/// Use the following code using [`timer_stats`] to collect the data:
+///
+/// ```no_run
+/// use rand::jitter::JitterRng;
+/// #
+/// # use std::error::Error;
+/// # use std::fs::File;
+/// # use std::io::Write;
+/// #
+/// # fn try_main() -> Result<(), Box<Error>> {
+/// let mut rng = JitterRng::new()?;
+///
+/// // 1_000_000 results are required for the
+/// // NIST SP 800-90B Entropy Estimation Suite
+/// const ROUNDS: usize = 1_000_000;
+/// let mut deltas_variable: Vec<u8> = Vec::with_capacity(ROUNDS);
+/// let mut deltas_minimal: Vec<u8> = Vec::with_capacity(ROUNDS);
+///
+/// for _ in 0..ROUNDS {
+///     deltas_variable.push(rng.timer_stats(true) as u8);
+///     deltas_minimal.push(rng.timer_stats(false) as u8);
+/// }
+///
+/// // Write out after the statistics collection loop, to not disturb the
+/// // test results.
+/// File::create("jitter_rng_var.bin")?.write(&deltas_variable)?;
+/// File::create("jitter_rng_min.bin")?.write(&deltas_minimal)?;
+/// #
+/// # Ok(())
+/// # }
+/// #
+/// # fn main() {
+/// #     try_main().unwrap();
+/// # }
+/// ```
+///
+/// This will produce two files: `jitter_rng_var.bin` and `jitter_rng_min.bin`.
+/// Run the Entropy Estimation Suite in three configurations, as outlined below.
+/// Every run has two steps. One step to produce an estimation, another to
+/// validate the estimation.
+///
+/// 1. Estimate the expected amount of entropy that is at least available with
+///    each round of the entropy collector. This number should be greater than
+///    the amount estimated with `64 / test_timer()`.
+///    ```sh
+///    python noniid_main.py -v jitter_rng_var.bin 8
+///    restart.py -v jitter_rng_var.bin 8 <min-entropy>
+///    ```
+/// 2. Estimate the expected amount of entropy that is available in the last 4
+///    bits of the timer delta after running noice sources. Note that a value of
+///    `3.70` is the minimum estimated entropy for true randomness.
+///    ```sh
+///    python noniid_main.py -v -u 4 jitter_rng_var.bin 4
+///    restart.py -v -u 4 jitter_rng_var.bin 4 <min-entropy>
+///    ```
+/// 3. Estimate the expected amount of entropy that is available to the entropy
+///    collector if both noice sources only run their minimal number of times.
+///    This measures the absolute worst-case, and gives a lower bound for the
+///    available entropy.
+///    ```sh
+///    python noniid_main.py -v -u 4 jitter_rng_min.bin 4
+///    restart.py -v -u 4 jitter_rng_min.bin 4 <min-entropy>
+///    ```
+///
 /// [`OsRng`]: struct.OsRng.html
+/// [`JitterRng::new()`]: struct.JitterRng.html#method.new
+/// [`new_with_timer`]: struct.JitterRng.html#method.new_with_timer
+/// [`timer_stats`]: struct.JitterRng.html#method.timer_stats
 pub struct JitterRng {
     data: u64, // Actual random number
     // Number of rounds to run the entropy collector per 64 bits
@@ -670,81 +750,19 @@ impl JitterRng {
     }
 
     /// Statistical test: return the timer delta of one normal run of the
-    /// `JitterEntropy` entropy collector.
+    /// `JitterRng` entropy collector.
     ///
     /// Setting `var_rounds` to `true` will execute the memory access and the
     /// CPU jitter noice sources a variable amount of times (just like a real
-    /// `JitterEntropy` round).
+    /// `JitterRng` round).
     ///
     /// Setting `var_rounds` to `false` will execute the noice sources the
     /// minimal number of times. This can be used to measure the minimum amount
-    /// of entropy one round of entropy collector can collect in the worst case.
+    /// of entropy one round of the entropy collector can collect in the worst
+    /// case.
     ///
-    /// # Example
-    ///
-    /// Use `timer_stats` to run the [NIST SP 800-90B Entropy Estimation Suite](
-    /// https://github.com/usnistgov/SP800-90B_EntropyAssessment).
-    ///
-    /// This is the recommended way to test the quality of `JitterRng`. It
-    /// should be run before using the RNG on untested hardware, after changes
-    /// that could effect how the code is optimised, and after major compiler
-    /// compiler changes, like a new LLVM version.
-    ///
-    /// First generate two files `jitter_rng_var.bin` and `jitter_rng_var.min`.
-    ///
-    /// Execute `python noniid_main.py -v jitter_rng_var.bin 8`, and validate it
-    /// with `restart.py -v jitter_rng_var.bin 8 <min-entropy>`.
-    /// This number is the expected amount of entropy that is at least available
-    /// for each round of the entropy collector. This number should be greater
-    /// than the amount estimated with `64 / test_timer()`.
-    ///
-    /// Execute `python noniid_main.py -v -u 4 jitter_rng_var.bin 4`, and
-    /// validate it with `restart.py -v -u 4 jitter_rng_var.bin 4 <min-entropy>`.
-    /// This number is the expected amount of entropy that is available in the
-    /// last 4 bits of the timer delta after running noice sources. Note that
-    /// a value of 3.70 is the minimum estimated entropy for true randomness.
-    ///
-    /// Execute `python noniid_main.py -v -u 4 jitter_rng_var.bin 4`, and
-    /// validate it with `restart.py -v -u 4 jitter_rng_var.bin 4 <min-entropy>`.
-    /// This number is the expected amount of entropy that is available to the
-    /// entropy collecter if both noice sources only run their minimal number of
-    /// times. This measures the absolute worst-case, and gives a lower bound
-    /// for the available entropy.
-    ///
-    /// ```rust,no_run
-    /// use rand::jitter::JitterRng;
-    /// #
-    /// # use std::error::Error;
-    /// # use std::fs::File;
-    /// # use std::io::Write;
-    /// #
-    /// # fn try_main() -> Result<(), Box<Error>> {
-    /// let mut rng = JitterRng::new()?;
-    ///
-    /// // 1_000_000 results are required for the NIST SP 800-90B Entropy
-    /// // Estimation Suite
-    /// const ROUNDS: usize = 1_000_000;
-    /// let mut deltas_variable: Vec<u8> = Vec::with_capacity(ROUNDS);
-    /// let mut deltas_minimal: Vec<u8> = Vec::with_capacity(ROUNDS);
-    ///
-    /// for _ in 0..ROUNDS {
-    ///     deltas_variable.push(rng.timer_stats(true) as u8);
-    ///     deltas_minimal.push(rng.timer_stats(false) as u8);
-    /// }
-    ///
-    /// // Write out after the statistics collection loop, to not disturb the
-    /// // test results.
-    /// File::create("jitter_rng_var.bin")?.write(&deltas_variable)?;
-    /// File::create("jitter_rng_min.bin")?.write(&deltas_minimal)?;
-    /// #
-    /// # Ok(())
-    /// # }
-    /// #
-    /// # fn main() {
-    /// #     try_main().unwrap();
-    /// # }
-    /// ```
-    ///
+    /// See [Quality testing](struct.JitterRng.html#quality-testing) on how to
+    /// use `timer_stats` to test the quality of `JitterRng`.
     #[cfg(feature="std")]
     pub fn timer_stats(&mut self, var_rounds: bool) -> i64 {
         let mut mem = [0; MEMORY_SIZE];
