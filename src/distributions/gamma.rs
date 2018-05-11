@@ -35,7 +35,7 @@ use distributions::{Distribution, Exp, Open01};
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{Distribution, Gamma};
 ///
 /// let gamma = Gamma::new(2.0, 5.0);
@@ -178,7 +178,7 @@ impl Distribution<f64> for GammaLargeShape {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{ChiSquared, Distribution};
 ///
 /// let chi = ChiSquared::new(11.0);
@@ -233,7 +233,7 @@ impl Distribution<f64> for ChiSquared {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{FisherF, Distribution};
 ///
 /// let f = FisherF::new(2.0, 32.0);
@@ -274,7 +274,7 @@ impl Distribution<f64> for FisherF {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{StudentT, Distribution};
 ///
 /// let t = StudentT::new(11.0);

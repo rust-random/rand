@@ -32,7 +32,7 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::{read, Rng};
 ///
 /// let data = vec![1, 2, 3, 4, 5, 6, 7, 8];

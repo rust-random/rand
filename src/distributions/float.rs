@@ -27,7 +27,7 @@ use distributions::{Distribution, Standard};
 /// ranges.
 ///
 /// # Example
-/// ```rust
+/// ```
 /// use rand::{thread_rng, Rng};
 /// use rand::distributions::OpenClosed01;
 ///
@@ -53,7 +53,7 @@ pub struct OpenClosed01;
 /// ranges.
 ///
 /// # Example
-/// ```rust
+/// ```
 /// use rand::{thread_rng, Rng};
 /// use rand::distributions::Open01;
 ///

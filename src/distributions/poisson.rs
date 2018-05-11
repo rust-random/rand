@@ -22,7 +22,7 @@ use std::f64::consts::PI;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{Poisson, Distribution};
 ///
 /// let poi = Poisson::new(2.0);

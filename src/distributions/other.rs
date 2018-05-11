@@ -23,7 +23,7 @@ use distributions::{Distribution, Standard, Uniform};
 /// 
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use std::iter;
 /// use rand::{Rng, thread_rng};
 /// use rand::distributions::Alphanumeric;

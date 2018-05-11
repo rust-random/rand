@@ -308,7 +308,7 @@ pub trait Rand : Sized {
 /// 
 /// Example:
 /// 
-/// ```rust
+/// ```
 /// # use rand::thread_rng;
 /// use rand::Rng;
 /// 
@@ -327,7 +327,7 @@ pub trait Rng: RngCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
@@ -355,7 +355,7 @@ pub trait Rng: RngCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
@@ -376,7 +376,7 @@ pub trait Rng: RngCore {
     ///
     /// ### Example
     ///
-    /// ```rust
+    /// ```
     /// use rand::{thread_rng, Rng};
     /// use rand::distributions::Uniform;
     ///
@@ -394,7 +394,7 @@ pub trait Rng: RngCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// use rand::{thread_rng, Rng};
     /// use rand::distributions::{Alphanumeric, Uniform, Standard};
     ///
@@ -436,7 +436,7 @@ pub trait Rng: RngCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut arr = [0i8; 20];
@@ -465,7 +465,7 @@ pub trait Rng: RngCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use rand::Error;
     /// use rand::{thread_rng, Rng};
     ///
@@ -494,7 +494,7 @@ pub trait Rng: RngCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
@@ -554,7 +554,7 @@ pub trait Rng: RngCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
@@ -599,7 +599,7 @@ pub trait Rng: RngCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # #![allow(deprecated)]
     /// use rand::{thread_rng, Rng};
     ///
@@ -622,7 +622,7 @@ pub trait Rng: RngCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # #![allow(deprecated)]
     /// use rand::{thread_rng, Rng};
     ///
@@ -819,7 +819,7 @@ pub trait FromEntropy: SeedableRng {
     /// If all entropy sources fail this will panic. If you need to handle
     /// errors, use the following code, equivalent aside from error handling:
     ///
-    /// ```rust
+    /// ```
     /// # use rand::Error;
     /// use rand::prelude::*;
     /// use rand::rngs::EntropyRng;
@@ -873,7 +873,7 @@ pub fn weak_rng() -> XorShiftRng {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```
 /// let x = rand::random::<u8>();
 /// println!("{}", x);
 ///
@@ -888,7 +888,7 @@ pub fn weak_rng() -> XorShiftRng {
 /// If you're calling `random()` in a loop, caching the generator as in the
 /// following example can increase performance.
 ///
-/// ```rust
+/// ```
 /// # #![allow(deprecated)]
 /// use rand::Rng;
 ///
@@ -921,7 +921,7 @@ pub fn random<T>() -> T where Standard: Distribution<T> {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// # #![allow(deprecated)]
 /// use rand::{thread_rng, sample};
 ///

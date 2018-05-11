@@ -29,7 +29,7 @@ use distributions::{ziggurat, ziggurat_tables, Distribution};
 /// College, Oxford
 ///
 /// # Example
-/// ```rust
+/// ```
 /// use rand::prelude::*;
 /// use rand::distributions::Exp1;
 ///
@@ -66,7 +66,7 @@ impl Distribution<f64> for Exp1 {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{Exp, Distribution};
 ///
 /// let exp = Exp::new(2.0);

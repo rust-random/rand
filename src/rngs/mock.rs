@@ -18,7 +18,7 @@ use rand_core::{RngCore, Error, impls};
 /// over a `u64` number, using wrapping arithmetic. If the increment is 0
 /// the generator yields a constant.
 /// 
-/// ```rust
+/// ```
 /// use rand::Rng;
 /// use rand::rngs::mock::StepRng;
 /// 

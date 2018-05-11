@@ -119,7 +119,7 @@ macro_rules! fill_via_chunks {
 /// # Example
 /// (from `IsaacRng`)
 ///
-/// ```rust,ignore
+/// ```ignore
 /// fn fill_bytes(&mut self, dest: &mut [u8]) {
 ///     let mut read_len = 0;
 ///     while read_len < dest.len() {

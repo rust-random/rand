@@ -32,7 +32,7 @@ use super::Rng;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::{thread_rng, seq};
 ///
 /// let mut rng = thread_rng();
@@ -77,7 +77,7 @@ pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<V
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::{thread_rng, seq};
 ///
 /// let mut rng = thread_rng();
@@ -105,7 +105,7 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::{thread_rng, seq};
 ///
 /// let mut rng = thread_rng();

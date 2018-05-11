@@ -112,7 +112,7 @@ impl ChaChaRng {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```
     /// # #![allow(deprecated)]
     /// use rand::{RngCore, ChaChaRng};
     ///

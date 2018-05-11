@@ -109,7 +109,7 @@ pub mod le;
 /// 
 /// A simple example, obviously not generating very *random* output:
 /// 
-/// ```rust
+/// ```
 /// #![allow(dead_code)]
 /// use rand_core::{RngCore, Error, impls};
 /// 
