@@ -79,14 +79,13 @@ impl Distribution<bool> for Bernoulli {
 
 #[cfg(test)]
 mod test {
-    use rngs::SmallRng;
-    use {Rng, FromEntropy};
+    use Rng;
     use distributions::Distribution;
     use super::Bernoulli;
 
     #[test]
     fn test_trivial() {
-        let mut r = SmallRng::from_entropy();
+        let mut r = ::test::rng(1);
         let always_false = Bernoulli::new(0.0);
         let always_true = Bernoulli::new(1.0);
         for _ in 0..5 {
@@ -104,7 +103,7 @@ mod test {
         const N: u32 = 10_000_000;
 
         let mut sum: u32 = 0;
-        let mut rng = SmallRng::from_entropy();
+        let mut rng = ::test::rng(2);
         for _ in 0..N {
             if d.sample(&mut rng) {
                 sum += 1;
