@@ -59,6 +59,7 @@ pub use error::{ErrorKind, Error};
 
 
 mod error;
+pub mod block;
 pub mod impls;
 pub mod le;
 
@@ -191,59 +192,6 @@ pub trait RngCore {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
 
-/// A trait for RNGs which do not generate random numbers individually, but in
-/// blocks (typically `[u32; N]`). This technique is commonly used by
-/// cryptographic RNGs to improve performance.
-/// 
-/// Usage of this trait is optional, but provides two advantages:
-/// implementations only need to concern themselves with generation of the
-/// block, not the various [`RngCore`] methods (especially [`fill_bytes`], where the
-/// optimal implementations are not trivial), and this allows `ReseedingRng` to
-/// perform periodic reseeding with very low overhead.
-/// 
-/// # Example
-/// 
-/// ```norun
-/// use rand_core::BlockRngCore;
-/// use rand_core::impls::BlockRng;
-/// 
-/// struct MyRngCore;
-/// 
-/// impl BlockRngCore for MyRngCore {
-///     type Results = [u32; 16];
-///     
-///     fn generate(&mut self, results: &mut Self::Results) {
-///         unimplemented!()
-///     }
-/// }
-/// 
-/// impl SeedableRng for MyRngCore {
-///     type Seed = unimplemented!();
-///     fn from_seed(seed: Self::Seed) -> Self {
-///         unimplemented!()
-///     }
-/// }
-/// 
-/// // optionally, also implement CryptoRng for MyRngCore
-/// 
-/// // Final RNG.
-/// type MyRng = BlockRng<u32, MyRngCore>;
-/// ```
-/// 
-/// [`RngCore`]: trait.RngCore.html
-/// [`fill_bytes`]: trait.RngCore.html#tymethod.fill_bytes
-pub trait BlockRngCore {
-    /// Results element type, e.g. `u32`.
-    type Item;
-    
-    /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
-    /// generates, which will usually be an array like `[u32; 16]`.
-    type Results: AsRef<[Self::Item]> + AsMut<[Self::Item]> + Default;
-
-    /// Generate a new block of results.
-    fn generate(&mut self, results: &mut Self::Results);
-}
-
 /// A marker trait used to indicate that an [`RngCore`] or [`BlockRngCore`]
 /// implementation is supposed to be cryptographically secure.
 /// 
@@ -266,7 +214,7 @@ pub trait BlockRngCore {
 /// weaknesses such as seeding from a weak entropy source or leaking state.
 /// 
 /// [`RngCore`]: trait.RngCore.html
-/// [`BlockRngCore`]: trait.BlockRngCore.html
+/// [`BlockRngCore`]: ../rand_core/block/trait.BlockRngCore.html
 pub trait CryptoRng {}
 
 /// A random number generator that can be explicitly seeded.
@@ -381,7 +329,7 @@ pub trait SeedableRng: Sized {
     /// for seeding, and that it is cryptographically secure when appropriate.
     /// 
     /// [`FromEntropy`]: ../rand/trait.FromEntropy.html
-    /// [`OsRng`]: ../rand/os/struct.OsRng.html
+    /// [`OsRng`]: ../rand/rngs/struct.OsRng.html
     fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;

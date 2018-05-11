@@ -9,12 +9,11 @@ const BYTES_LEN: usize = 1024;
 use std::mem::size_of;
 use test::{black_box, Bencher};
 
-use rand::{RngCore, Rng, SeedableRng, FromEntropy};
-use rand::{StdRng, SmallRng, OsRng, EntropyRng, ReseedingRng};
+use rand::prelude::*;
 use rand::prng::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 use rand::prng::hc128::Hc128Core;
-use rand::jitter::JitterRng;
-use rand::thread_rng;
+use rand::rngs::adaptor::ReseedingRng;
+use rand::rngs::{OsRng, JitterRng, EntropyRng};
 
 macro_rules! gen_bytes {
     ($fnn:ident, $gen:expr) => {

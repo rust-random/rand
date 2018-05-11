@@ -13,8 +13,8 @@
 
 use core::mem::size_of;
 
-use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng, Error, ErrorKind};
-use rand_core::impls::BlockRng;
+use rand_core::{RngCore, CryptoRng, SeedableRng, Error, ErrorKind};
+use rand_core::block::{BlockRngCore, BlockRng};
 
 /// A wrapper around any PRNG which reseeds the underlying PRNG after it has
 /// generated a certain number of random bytes.
@@ -224,7 +224,7 @@ where R: BlockRngCore + SeedableRng + CryptoRng,
 mod test {
     use {Rng, SeedableRng};
     use prng::chacha::ChaChaCore;
-    use mock::StepRng;
+    use rngs::mock::StepRng;
     use super::ReseedingRng;
 
     #[test]

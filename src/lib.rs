@@ -55,12 +55,14 @@
 //! ```
 //! # use rand::{Rng, Error};
 //! // seed with fresh entropy:
-//! use rand::{StdRng, FromEntropy};
+//! use rand::FromEntropy;
+//! use rand::rngs::StdRng;
 //! let mut rng = StdRng::from_entropy();
 //! # let v: u32 = rng.gen();
 //! 
 //! // seed from thread_rng:
-//! use rand::{SmallRng, SeedableRng, thread_rng};
+//! use rand::{SeedableRng, thread_rng};
+//! use rand::rngs::SmallRng;
 //!
 //! # fn try_inner() -> Result<(), Error> {
 //! let mut rng = SmallRng::from_rng(thread_rng())?;
@@ -149,12 +151,12 @@
 //! [`from_rng`]: trait.SeedableRng.html#method.from_rng
 //! [`CryptoRng`]: trait.CryptoRng.html
 //! [`thread_rng`]: fn.thread_rng.html
-//! [`EntropyRng`]: struct.EntropyRng.html
-//! [`OsRng`]: os/struct.OsRng.html
-//! [`JitterRng`]: jitter/struct.JitterRng.html
-//! [`StdRng`]: struct.StdRng.html
-//! [`SmallRng`]: struct.SmallRng.html
-//! [`ReseedingRng`]: reseeding/struct.ReseedingRng.html
+//! [`EntropyRng`]: rngs/struct.EntropyRng.html
+//! [`OsRng`]: rngs/struct.OsRng.html
+//! [`JitterRng`]: rngs/struct.JitterRng.html
+//! [`StdRng`]: rngs/struct.StdRng.html
+//! [`SmallRng`]: rngs/struct.SmallRng.html
+//! [`ReseedingRng`]: rngs/adaptor/struct.ReseedingRng.html
 //! [`prng`]: prng/index.html
 //! [`IsaacRng::new_from_u64`]: prng/isaac/struct.IsaacRng.html#method.new_from_u64
 //! [`Hc128Rng`]: prng/hc128/struct.Hc128Rng.html
@@ -201,29 +203,32 @@ extern crate rand_core;
 
 
 // Re-exports from rand_core
-pub use rand_core::{RngCore, BlockRngCore, CryptoRng, SeedableRng};
+pub use rand_core::{RngCore, CryptoRng, SeedableRng};
 pub use rand_core::{ErrorKind, Error};
 
 // Public exports
-#[cfg(feature="std")] pub use entropy_rng::EntropyRng;
-#[cfg(feature="std")] pub use os::OsRng;
-pub use reseeding::ReseedingRng;
-#[cfg(feature="std")] pub use thread_rng::{ThreadRng, thread_rng};
-#[cfg(feature="std")] #[allow(deprecated)] pub use thread_rng::random;
+#[cfg(feature="std")] pub use rngs::thread::thread_rng;
 
 // Public modules
 pub mod distributions;
-pub mod jitter; // Public because of the error type.
-pub mod mock;   // Public so we don't export `StepRng` directly, making it a bit
-                // more clear it is intended for testing.
+pub mod prelude;
 pub mod prng;
-#[cfg(feature="std")] pub mod read;
+pub mod rngs;
 #[cfg(feature = "alloc")] pub mod seq;
 
-// These modules are public to avoid API breakage, probably only temporarily.
-// Hidden in the documentation.
-#[cfg(feature="std")] #[doc(hidden)] pub mod os;
+////////////////////////////////////////////////////////////////////////////////
+// Compatibility re-exports. Documentation is hidden; will be removed eventually.
+
+#[cfg(feature="std")] #[doc(hidden)] pub use rngs::adaptor::read;
+#[doc(hidden)] pub use rngs::adaptor::ReseedingRng;
+
+#[doc(hidden)] pub use rngs::jitter;
+#[cfg(feature="std")] #[doc(hidden)] pub use rngs::{os, EntropyRng, OsRng};
+
 #[doc(hidden)] pub use prng::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
+#[doc(hidden)] pub use rngs::StdRng;
+
+
 #[doc(hidden)]
 pub mod chacha {
     //! The ChaCha random number generator.
@@ -235,17 +240,14 @@ pub mod isaac {
     pub use prng::{IsaacRng, Isaac64Rng};
 }
 
-// private modules
-#[cfg(feature="std")] mod entropy_rng;
-mod reseeding;
-#[cfg(feature="std")] mod thread_rng;
+#[cfg(feature="std")] #[doc(hidden)] pub use rngs::ThreadRng;
+
+////////////////////////////////////////////////////////////////////////////////
 
 
-// Normal imports just for this file
 use core::{marker, mem, slice};
 use distributions::{Distribution, Standard, Uniform};
 use distributions::uniform::SampleUniform;
-use prng::hc128::Hc128Rng;
 
 
 /// A type that can be randomly generated using an [`Rng`].
@@ -780,13 +782,14 @@ impl<R: RngCore> Iterator for AsciiGenerator<R> {
 /// ## Example
 ///
 /// ```
-/// use rand::{StdRng, Rng, FromEntropy};
+/// use rand::{Rng, FromEntropy};
+/// use rand::rngs::StdRng;
 ///
 /// let mut rng = StdRng::from_entropy();
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
-/// [`EntropyRng`]: struct.EntropyRng.html
+/// [`EntropyRng`]: rngs/struct.EntropyRng.html
 /// [`SeedableRng`]: trait.SeedableRng.html
 /// [`SeedableRng::from_seed`]: trait.SeedableRng.html#tymethod.from_seed
 #[cfg(feature="std")]
@@ -805,7 +808,8 @@ pub trait FromEntropy: SeedableRng {
     ///
     /// ```rust
     /// # use rand::Error;
-    /// use rand::{Rng, StdRng, EntropyRng, SeedableRng};
+    /// use rand::prelude::*;
+    /// use rand::rngs::EntropyRng;
     ///
     /// # fn try_inner() -> Result<(), Error> {
     /// // This uses StdRng, but is valid for any R: SeedableRng
@@ -828,141 +832,6 @@ impl<R: SeedableRng> FromEntropy for R {
     }
 }
 
-/// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
-/// on the current platform, to be statistically strong and unpredictable
-/// (meaning a cryptographically secure PRNG).
-///
-/// The current algorithm used on all platforms is [HC-128].
-///
-/// Reproducibility of output from this generator is however not required, thus
-/// future library versions may use a different internal generator with
-/// different output. Further, this generator may not be portable and can
-/// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG, for example [`ChaChaRng`].
-///
-/// [HC-128]: prng/hc128/struct.Hc128Rng.html
-/// [`ChaChaRng`]: prng/chacha/struct.ChaChaRng.html
-#[derive(Clone, Debug)]
-pub struct StdRng(Hc128Rng);
-
-impl RngCore for StdRng {
-    #[inline(always)]
-    fn next_u32(&mut self) -> u32 {
-        self.0.next_u32()
-    }
-
-    #[inline(always)]
-    fn next_u64(&mut self) -> u64 {
-        self.0.next_u64()
-    }
-
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.0.fill_bytes(dest);
-    }
-
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.0.try_fill_bytes(dest)
-    }
-}
-
-impl SeedableRng for StdRng {
-    type Seed = <Hc128Rng as SeedableRng>::Seed;
-
-    fn from_seed(seed: Self::Seed) -> Self {
-        StdRng(Hc128Rng::from_seed(seed))
-    }
-
-    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        Hc128Rng::from_rng(rng).map(StdRng)
-    }
-}
-
-impl CryptoRng for StdRng {}
-
-/// An RNG recommended when small state, cheap initialization and good
-/// performance are required. The PRNG algorithm in `SmallRng` is chosen to be
-/// efficient on the current platform, **without consideration for cryptography
-/// or security**. The size of its state is much smaller than for [`StdRng`].
-///
-/// Reproducibility of output from this generator is however not required, thus
-/// future library versions may use a different internal generator with
-/// different output. Further, this generator may not be portable and can
-/// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG, for example [`XorShiftRng`].
-///
-/// The current algorithm used on all platforms is [Xorshift].
-///
-/// # Examples
-///
-/// Initializing `SmallRng` with a random seed can be done using [`FromEntropy`]:
-///
-/// ```
-/// # use rand::Rng;
-/// use rand::{FromEntropy, SmallRng};
-///
-/// // Create small, cheap to initialize and fast RNG with a random seed.
-/// // The randomness is supplied by the operating system.
-/// let mut small_rng = SmallRng::from_entropy();
-/// # let v: u32 = small_rng.gen();
-/// ```
-///
-/// When initializing a lot of `SmallRng`'s, using [`thread_rng`] can be more
-/// efficient:
-///
-/// ```
-/// use std::iter;
-/// use rand::{SeedableRng, SmallRng, thread_rng};
-///
-/// // Create a big, expensive to initialize and slower, but unpredictable RNG.
-/// // This is cached and done only once per thread.
-/// let mut thread_rng = thread_rng();
-/// // Create small, cheap to initialize and fast RNGs with random seeds.
-/// // One can generally assume this won't fail.
-/// let rngs: Vec<SmallRng> = iter::repeat(())
-///     .map(|()| SmallRng::from_rng(&mut thread_rng).unwrap())
-///     .take(10)
-///     .collect();
-/// ```
-///
-/// [`FromEntropy`]: trait.FromEntropy.html
-/// [`StdRng`]: struct.StdRng.html
-/// [`thread_rng`]: fn.thread_rng.html
-/// [Xorshift]: prng/struct.XorShiftRng.html
-/// [`XorShiftRng`]: prng/struct.XorShiftRng.html
-#[derive(Clone, Debug)]
-pub struct SmallRng(XorShiftRng);
-
-impl RngCore for SmallRng {
-    #[inline(always)]
-    fn next_u32(&mut self) -> u32 {
-        self.0.next_u32()
-    }
-
-    #[inline(always)]
-    fn next_u64(&mut self) -> u64 {
-        self.0.next_u64()
-    }
-
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.0.fill_bytes(dest);
-    }
-
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.0.try_fill_bytes(dest)
-    }
-}
-
-impl SeedableRng for SmallRng {
-    type Seed = <XorShiftRng as SeedableRng>::Seed;
-
-    fn from_seed(seed: Self::Seed) -> Self {
-        SmallRng(XorShiftRng::from_seed(seed))
-    }
-
-    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        XorShiftRng::from_rng(rng).map(SmallRng)
-    }
-}
 
 /// DEPRECATED: use [`SmallRng`] instead.
 ///
@@ -975,12 +844,62 @@ impl SeedableRng for SmallRng {
 ///
 /// This will seed the generator with randomness from `thread_rng`.
 ///
-/// [`SmallRng`]: struct.SmallRng.html
+/// [`SmallRng`]: rngs/struct.SmallRng.html
 #[deprecated(since="0.5.0", note="removed in favor of SmallRng")]
 #[cfg(feature="std")]
 pub fn weak_rng() -> XorShiftRng {
     XorShiftRng::from_rng(thread_rng()).unwrap_or_else(|err|
         panic!("weak_rng failed: {:?}", err))
+}
+
+/// Generates a random value using the thread-local random number generator.
+///
+/// This is simply a shortcut for `thread_rng().gen()`. See [`thread_rng`] for
+/// documentation of the entropy source and [`Standard`] for documentation of
+/// distributions and type-specific generation.
+///
+/// # Examples
+///
+/// ```rust
+/// let x = rand::random::<u8>();
+/// println!("{}", x);
+///
+/// let y = rand::random::<f64>();
+/// println!("{}", y);
+///
+/// if rand::random() { // generates a boolean
+///     println!("Better lucky than good!");
+/// }
+/// ```
+///
+/// If you're calling `random()` in a loop, caching the generator as in the
+/// following example can increase performance.
+///
+/// ```rust
+/// # #![allow(deprecated)]
+/// use rand::Rng;
+///
+/// let mut v = vec![1, 2, 3];
+///
+/// for x in v.iter_mut() {
+///     *x = rand::random()
+/// }
+///
+/// // can be made faster by caching thread_rng
+///
+/// let mut rng = rand::thread_rng();
+///
+/// for x in v.iter_mut() {
+///     *x = rng.gen();
+/// }
+/// ```
+///
+/// [`thread_rng`]: fn.thread_rng.html
+/// [`Standard`]: distributions/struct.Standard.html
+#[cfg(feature="std")]
+#[inline]
+pub fn random<T>() -> T where Standard: Distribution<T> {
+    thread_rng().gen()
 }
 
 /// DEPRECATED: use `seq::sample_iter` instead.
@@ -1012,7 +931,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 
 #[cfg(test)]
 mod test {
-    use mock::StepRng;
+    use rngs::mock::StepRng;
     use super::*;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 
@@ -1199,15 +1118,19 @@ mod test {
         assert_eq!(r.gen_range(0, 1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
-
+    
     #[test]
-    fn test_stdrng_construction() {
-        let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
-                    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
-        let mut rng1 = StdRng::from_seed(seed);
-        assert_eq!(rng1.next_u64(), 15759097995037006553);
-
-        let mut rng2 = StdRng::from_rng(rng1).unwrap();
-        assert_eq!(rng2.next_u64(), 6766915756997287454);
+    #[cfg(feature="std")]
+    fn test_random() {
+        // not sure how to test this aside from just getting some values
+        let _n : usize = random();
+        let _f : f32 = random();
+        let _o : Option<Option<i8>> = random();
+        let _many : ((),
+                     (usize,
+                      isize,
+                      Option<(u32, (bool,))>),
+                     (u8, i8, u16, i16, u32, i32, u64, i64),
+                     (f32, (f64, (f64,)))) = random();
     }
 }
