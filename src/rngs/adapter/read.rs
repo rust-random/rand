@@ -15,9 +15,13 @@ use std::io::Read;
 use rand_core::{RngCore, Error, ErrorKind, impls};
 
 
-/// An RNG that reads random bytes straight from a `Read`.
+/// An RNG that reads random bytes straight from any type supporting
+/// `std::io::Read`, for example files.
 ///
 /// This will work best with an infinite reader, but that is not required.
+///
+/// This can be used with `/dev/urandom` on Unix but it is recommended to use
+/// [`OsRng`] instead.
 ///
 /// # Panics
 ///
@@ -35,6 +39,8 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 /// let mut rng = read::ReadRng::new(&data[..]);
 /// println!("{:x}", rng.gen::<u32>());
 /// ```
+///
+/// [`OsRng`]: ../struct.OsRng.html
 #[derive(Debug)]
 pub struct ReadRng<R> {
     reader: R
