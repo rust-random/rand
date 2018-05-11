@@ -11,6 +11,7 @@
 //! The implementations of the `Standard` distribution for other built-in types.
 
 use core::char;
+use core::num::Wrapping;
 
 use {Rng};
 use distributions::{Distribution, Standard, Uniform};
@@ -158,6 +159,13 @@ impl<T> Distribution<Option<T>> for Standard where Standard: Distribution<T> {
         } else {
             None
         }
+    }
+}
+
+impl<T> Distribution<Wrapping<T>> for Standard where Standard: Distribution<T> {
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Wrapping<T> {
+        Wrapping(rng.gen())
     }
 }
 

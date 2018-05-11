@@ -389,6 +389,8 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
 /// * `bool`: Generates `false` or `true`, each with probability 0.5.
 /// * Floating point types (`f32` and `f64`): Uniformly distributed in the
 ///   half-open range `[0, 1)`. See notes below.
+/// * Wrapping integers (`Wrapping<T>`), besides the type identical to their
+///   normal integer variants.
 ///
 /// The following aggregate types also implement the distribution `Standard` as
 /// long as their component types implement it:

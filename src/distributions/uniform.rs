@@ -50,20 +50,21 @@
 //!
 //! At a minimum, the back-end needs to store any parameters needed for sampling
 //! (e.g. the target range) and implement `new`, `new_inclusive` and `sample`.
-//! The example below merely wraps another back-end.
+//! Those methods should include an assert to check the range is valid (i.e.
+//! `low < high`). The example below merely wraps another back-end.
 //!
 //! ```
 //! use rand::prelude::*;
 //! use rand::distributions::uniform::{Uniform, SampleUniform,
 //!         UniformSampler, UniformFloat};
 //!
-//! #[derive(Clone, Copy, PartialEq, PartialOrd)]
 //! struct MyF32(f32);
 //!
 //! #[derive(Clone, Copy, Debug)]
 //! struct UniformMyF32 {
 //!     inner: UniformFloat<f32>,
 //! }
+//!
 //! impl UniformSampler for UniformMyF32 {
 //!     type X = MyF32;
 //!     fn new(low: Self::X, high: Self::X) -> Self {
@@ -162,21 +163,18 @@ impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance which samples uniformly from the half
     /// open range `[low, high)` (excluding `high`). Panics if `low >= high`.
     pub fn new(low: X, high: X) -> Uniform<X> {
-        assert!(low < high, "Uniform::new called with `low >= high`");
         Uniform { inner: X::Sampler::new(low, high) }
     }
 
     /// Create a new `Uniform` instance which samples uniformly from the closed
     /// range `[low, high]` (inclusive). Panics if `low > high`.
     pub fn new_inclusive(low: X, high: X) -> Uniform<X> {
-        assert!(low <= high, "Uniform::new_inclusive called with `low > high`");
         Uniform { inner: X::Sampler::new_inclusive(low, high) }
     }
 
     /// Sample a single value uniformly from `[low, high)`.
     /// Panics if `low >= high`.
     pub fn sample_single<R: Rng + ?Sized>(low: X, high: X, rng: &mut R) -> X {
-        assert!(low < high, "Uniform::sample_single called with low >= high");
         X::Sampler::sample_single(low, high, rng)
     }
 }
@@ -196,7 +194,7 @@ impl<X: SampleUniform> Distribution<X> for Uniform<X> {
 /// [`UniformSampler`]: trait.UniformSampler.html
 /// [module documentation]: index.html
 /// [`Uniform`]: struct.Uniform.html
-pub trait SampleUniform: PartialOrd+Sized {
+pub trait SampleUniform: Sized {
     /// The `UniformSampler` implementation supporting type `X`.
     type Sampler: UniformSampler<X = Self>;
 }
@@ -214,7 +212,7 @@ pub trait SampleUniform: PartialOrd+Sized {
 /// [`sample_single`]: trait.UniformSampler.html#method.sample_single
 pub trait UniformSampler: Sized {
     /// The type sampled by this implementation.
-    type X: PartialOrd;
+    type X;
 
     /// Construct self, with inclusive lower bound and exclusive upper bound
     /// `[low, high)`.
@@ -252,6 +250,17 @@ pub trait UniformSampler: Sized {
     }
 }
 
+impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
+    fn from(r: ::core::ops::Range<X>) -> Uniform<X> {
+        Uniform::new(r.start, r.end)
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// What follows are all back-ends.
+
+
 /// The back-end implementing [`UniformSampler`] for integer types.
 ///
 /// Unless you are implementing [`UniformSampler`] for your own type, this type
@@ -278,17 +287,12 @@ pub trait UniformSampler: Sized {
 /// `ints_to_reject = (unsigned_max - range + 1) % range;`
 ///
 /// The smallest integer PRNGs generate is `u32`. That is why for small integer
-/// sizes (`i8`/`u8` and `i16`/`u16`) there is an optimisation: don't pick the
+/// sizes (`i8`/`u8` and `i16`/`u16`) there is an optimization: don't pick the
 /// largest zone that can fit in the small type, but pick the largest zone that
-/// can fit in an `u32`. This improves the chance to get a random integer that
-/// fits in the zone to 998 in 1000 in the worst case.
-///
-/// There is a problem however: we can't store the acceptable `zone` of  such a
-/// larger type in `UniformInt`, which only holds values with the size of the
-/// type. `ints_to_reject` is always less than half the size of the small
-/// integer. For an `u8` it only ever uses 7 bits. This means that all but the
-/// last 7 bits of `zone` are always 1's (or 15 in the case of `u16`). So
-/// nothing is lost by trucating `zone`.
+/// can fit in an `u32`. `ints_to_reject` is always less than half the size of
+/// the small integer. This means the first bit of `zone` is always 1, and so
+/// are all the other preceding bits of a larger integer. The easiest way to
+/// grow the `zone` for the larger type is to simply sign extend it.
 ///
 /// An alternative to using a modulus is widening multiply: After a widening
 /// multiply by `range`, the result is in the high word. Then comparing the low
@@ -321,17 +325,18 @@ macro_rules! uniform_int_impl {
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new(low: Self::X, high: Self::X) -> Self {
+                assert!(low < high, "Uniform::new called with `low >= high`");
                 UniformSampler::new_inclusive(low, high - 1)
             }
 
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-                let unsigned_max: $u_large = ::core::$u_large::MAX;
+                assert!(low <= high,
+                        "Uniform::new_inclusive called with `low > high`");
+                let unsigned_max = ::core::$unsigned::MAX;
 
-                let range = (high as $u_large)
-                            .wrapping_sub(low as $u_large)
-                            .wrapping_add(1);
+                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
                 let ints_to_reject =
                     if range > 0 {
                         (unsigned_max - range + 1) % range
@@ -351,9 +356,9 @@ macro_rules! uniform_int_impl {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range = self.range as $unsigned as $u_large;
                 if range > 0 {
-                    // Some casting to recover the trucated bits of `zone`:
-                    // First bit-cast to a signed int. Next sign-extend to the
-                    // larger type. Then bit-cast to unsigned.
+                    // Grow `zone` to fit a type of at least 32 bits, by
+                    // sign-extending it (the first bit is always 1, so are all
+                    // the preceding bits of the larger type).
                     // For types that already have the right size, all the
                     // casting is a no-op.
                     let zone = self.zone as $signed as $i_large as $u_large;
@@ -374,8 +379,9 @@ macro_rules! uniform_int_impl {
                                               high: Self::X,
                                               rng: &mut R) -> Self::X
             {
-                let range = (high as $u_large)
-                            .wrapping_sub(low as $u_large);
+                assert!(low < high,
+                        "Uniform::sample_single called with low >= high");
+                let range = high.wrapping_sub(low) as $unsigned as $u_large;
                 let zone =
                     if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
                         // Using a modulus is faster than the approximation for
@@ -398,12 +404,6 @@ macro_rules! uniform_int_impl {
                 }
             }
         }
-    }
-}
-
-impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
-    fn from(r: ::core::ops::Range<X>) -> Uniform<X> {
-        Uniform::new(r.start, r.end)
     }
 }
 
@@ -442,7 +442,6 @@ macro_rules! wmul_impl {
         }
     }
 }
-
 wmul_impl! { u8, u16, 8 }
 wmul_impl! { u16, u32, 16 }
 wmul_impl! { u32, u64, 32 }
@@ -481,12 +480,10 @@ macro_rules! wmul_impl_large {
         }
     }
 }
-
 #[cfg(not(feature = "i128_support"))]
 wmul_impl_large! { u64, 32 }
 #[cfg(feature = "i128_support")]
 wmul_impl_large! { u128, 64 }
-
 
 macro_rules! wmul_impl_usize {
     ($ty:ty) => {
@@ -501,7 +498,6 @@ macro_rules! wmul_impl_usize {
         }
     }
 }
-
 #[cfg(target_pointer_width = "32")]
 wmul_impl_usize! { u32 }
 #[cfg(target_pointer_width = "64")]
@@ -550,6 +546,7 @@ macro_rules! uniform_float_impl {
             type X = $ty;
 
             fn new(low: Self::X, high: Self::X) -> Self {
+                assert!(low < high, "Uniform::new called with `low >= high`");
                 let scale = high - low;
                 let offset = low - scale;
                 UniformFloat {
@@ -559,7 +556,14 @@ macro_rules! uniform_float_impl {
             }
 
             fn new_inclusive(low: Self::X, high: Self::X) -> Self {
-                UniformSampler::new(low, high)
+                assert!(low <= high,
+                        "Uniform::new_inclusive called with `low > high`");
+                let scale = high - low;
+                let offset = low - scale;
+                UniformFloat {
+                    scale: scale,
+                    offset: offset,
+                }
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
@@ -577,6 +581,8 @@ macro_rules! uniform_float_impl {
             fn sample_single<R: Rng + ?Sized>(low: Self::X,
                                               high: Self::X,
                                               rng: &mut R) -> Self::X {
+                assert!(low < high,
+                        "Uniform::sample_single called with low >= high");
                 let scale = high - low;
                 let offset = low - scale;
                 // Generate a value in the range [1, 2)
@@ -593,7 +599,9 @@ macro_rules! uniform_float_impl {
 uniform_float_impl! { f32, 32 - 23, next_u32 }
 uniform_float_impl! { f64, 64 - 52, next_u64 }
 
-/// Implementation of [`UniformSampler`] for `Duration`.
+
+
+/// The back-end implementing [`UniformSampler`] for `Duration`.
 ///
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
@@ -630,11 +638,13 @@ impl UniformSampler for UniformDuration {
 
     #[inline]
     fn new(low: Duration, high: Duration) -> UniformDuration {
+        assert!(low < high, "Uniform::new called with `low >= high`");
         UniformDuration::new_inclusive(low, high - Duration::new(0, 1))
     }
 
     #[inline]
     fn new_inclusive(low: Duration, high: Duration) -> UniformDuration {
+        assert!(low <= high, "Uniform::new_inclusive called with `low > high`");
         let size = high - low;
         let nanos = size
             .as_secs()
