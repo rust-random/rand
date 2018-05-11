@@ -11,13 +11,13 @@ A Rust library for random number generation.
 Rand provides utilities to generate random numbers, to convert them to useful
 types and distributions, and some randomness-related algorithms.
 
-Part of the functionality of Rand lives in the [rand_core](
-https://crates.io/crates/rand_core) crate, which is not intended for users but
-primarily for crates implementing RNGs.
+The core random number generation traits of Rand live in the [rand_core](
+https://crates.io/crates/rand_core) crate; this crate is most useful when
+implementing RNGs.
 
 API reference:
 [master branch](https://rust-lang-nursery.github.io/rand/rand/index.html),
-[by release](https://docs.rs/rand).
+[by release](https://docs.rs/rand/0.5).
 
 ## Usage
 
@@ -36,13 +36,13 @@ extern crate rand;
 use rand::prelude::*;
 
 // basic usage with random():
-let x: u8 = rand::random();
+let x: u8 = random();
 println!("{}", x);
 
-let y = rand::random::<f64>();
+let y = random::<f64>();
 println!("{}", y);
 
-if rand::random() { // generates a boolean
+if random() { // generates a boolean
     println!("Heads!");
 }
 
@@ -67,8 +67,8 @@ The Rand crate provides:
 - Pseudo-random number generators: `StdRng`, `SmallRng`, `prng` module.
 - Functionality for seeding PRNGs: the `FromEntropy` trait, and as sources of
   external randomness `EntropyRng`, `OsRng` and `JitterRng`.
-- Most content from `rand_core` (re-exported): base random number generator
-  traits and error-reporting types.
+- Most content from [`rand_core`](https://crates.io/crates/rand_core)
+  (re-exported): base random number generator traits and error-reporting types.
 - 'Distributions' producing many different types of random values:
   - A `Standard` distribution for integers, floats, and derived types including
     tuples, arrays and `Option`
@@ -83,7 +83,7 @@ The Rand crate provides:
 
 ## Versions
 
-Version 0.5 is available as a pre-release and contains many breaking changes.
+Version 0.5 is the latest version and contains many breaking changes.
 See [the Upgrade Guide](UPDATING.md) for guidance on updating from previous
 versions.
 
@@ -94,7 +94,7 @@ For more details, see the [changelog](CHANGELOG.md).
 
 ### Rust version requirements
 
-The 0.5 release of Rand will require **Rustc version 1.22 or greater**.
+The 0.5 release of Rand requires **Rustc version 1.22 or greater**.
 Rand 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
 greater. Subsets of the Rand code may work with older Rust versions, but this
 is not supported.
@@ -120,8 +120,8 @@ optional features are available:
 functionality depending on `std`:
 
 - `thread_rng()`, and `random()` are not available, as they require thread-local
-  storage.
-- `OsRng` is unavailable.
+  storage and an entropy source.
+- `OsRng` and `EntropyRng` are unavailable.
 - `JitterRng` code is still present, but a nanosecond timer must be provided via
   `JitterRng::new_with_timer`
 - Since no external entropy is available, it is not possible to create
