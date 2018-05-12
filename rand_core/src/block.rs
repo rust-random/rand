@@ -90,11 +90,17 @@ pub trait BlockRngCore {
 ///
 /// `BlockRng` has heavily optimized implementations of the [`RngCore`] methods
 /// reading values from the results buffer, as well as
-/// calling `BlockRngCore::generate` directly on the output array when
-/// `fill_bytes` / `try_fill_bytes` is called on a large array. These methods
+/// calling [`BlockRngCore::generate`] directly on the output array when
+/// [`fill_bytes`] / [`try_fill_bytes`] is called on a large array. These methods
 /// also handle the bookkeeping of when to generate a new batch of values.
-/// No generated values are ever thown away and all values are consumed
-/// in-order (this may be important for reproducibility).
+///
+/// No whole generated `u32` values are thown away and all values are consumed
+/// in-order. [`next_u32`] simply takes the next available `u32` value.
+/// [`next_u64`] is implemented by combining two `u32` values, least
+/// significant first. [`fill_bytes`] and [`try_fill_bytes`] consume a whole
+/// number of `u32` values, converting each `u32` to a byte slice in
+/// little-endian order. If the requested byte length is not a multiple of 4,
+/// some bytes will be discarded.
 ///
 /// See also [`BlockRng64`] which uses `u64` array buffers. Currently there is
 /// no direct support for other buffer types.
@@ -102,7 +108,13 @@ pub trait BlockRngCore {
 /// For easy initialization `BlockRng` also implements [`SeedableRng`].
 ///
 /// [`BlockRngCore`]: BlockRngCore.t.html
+/// [`BlockRngCore::generate`]: trait.BlockRngCore.html#tymethod.generate
+/// [`BlockRng64`]: struct.BlockRng64.html
 /// [`RngCore`]: ../RngCore.t.html
+/// [`next_u32`]: ../trait.RngCore.html#tymethod.next_u32
+/// [`next_u64`]: ../trait.RngCore.html#tymethod.next_u64
+/// [`fill_bytes`]: ../trait.RngCore.html#tymethod.fill_bytes
+/// [`try_fill_bytes`]: ../trait.RngCore.html#tymethod.try_fill_bytes
 /// [`SeedableRng`]: ../SeedableRng.t.html
 #[derive(Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
@@ -289,15 +301,23 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
 /// This is similar to [`BlockRng`], but specialized for algorithms that operate
 /// on `u64` values.
 ///
-/// Like [`BlockRng`], this wrapper does not throw away whole results and does
-/// use all generated values in-order. The behaviour of `next_u32` is however
-/// a bit special: half of a `u64` is consumed, leaving the other half in the
-/// buffer. If the next function called is `next_u32` then the other half is
-/// then consumed, however both `next_u64` and `fill_bytes` discard any
-/// half-consumed `u64`s when called.
+/// No whole generated `u64` values are thrown away and all values are consumed
+/// in-order. [`next_u64`] simply takes the next available `u64` value.
+/// [`next_u32`] is however a bit special: half of a `u64` is consumed, leaving
+/// the other half in the buffer. If the next function called is [`next_u32`]
+/// then the other half is then consumed, however both [`next_u64`] and
+/// [`fill_bytes`] discard the rest of any half-consumed `u64`s when called.
+///
+/// [`fill_bytes`] and [`try_fill_bytes`] consume a whole number of `u64`
+/// values. If the requested length is not a multiple of 8, some bytes will be
+/// discarded.
 ///
 /// [`BlockRngCore`]: BlockRngCore.t.html
 /// [`RngCore`]: ../RngCore.t.html
+/// [`next_u32`]: ../trait.RngCore.html#tymethod.next_u32
+/// [`next_u64`]: ../trait.RngCore.html#tymethod.next_u64
+/// [`fill_bytes`]: ../trait.RngCore.html#tymethod.fill_bytes
+/// [`try_fill_bytes`]: ../trait.RngCore.html#tymethod.try_fill_bytes
 /// [`BlockRng`]: struct.BlockRng.html
 #[derive(Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]

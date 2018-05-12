@@ -54,6 +54,9 @@ const STATE_WORDS: usize = 16;
 /// counter  counter  nonce    nonce
 /// ```
 ///
+/// This implementation uses an output buffer of sixteen `u32` words, and uses
+/// [`BlockRng`] to implement the [`RngCore`] methods.
+///
 /// [1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
 ///      https://cr.yp.to/chacha.html)
 ///
@@ -62,6 +65,8 @@ const STATE_WORDS: usize = 16;
 ///
 /// [`set_word_pos`]: #method.set_word_pos
 /// [`set_stream`]: #method.set_stream
+/// [`BlockRng`]: ../../../rand_core/block/struct.BlockRng.html
+/// [`RngCore`]: ../../trait.RngCore.html
 #[derive(Clone, Debug)]
 pub struct ChaChaRng(BlockRng<ChaChaCore>);
 

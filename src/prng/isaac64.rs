@@ -69,6 +69,8 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// }
 /// ```
 ///
+/// This implementation uses [`BlockRng64`] to implement the [`RngCore`] methods.
+///
 /// See for more information the documentation of [`IsaacRng`].
 ///
 /// [1]: Bob Jenkins, [*ISAAC and RC4*](
@@ -76,6 +78,8 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///
 /// [`IsaacRng`]: ../isaac/struct.IsaacRng.html
 /// [`Hc128Rng`]: ../hc128/struct.Hc128Rng.html
+/// [`BlockRng64`]: ../../../rand_core/block/struct.BlockRng64.html
+/// [`RngCore`]: ../../trait.RngCore.html
 #[derive(Clone, Debug)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct Isaac64Rng(BlockRng64<Isaac64Core>);
