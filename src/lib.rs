@@ -13,10 +13,10 @@
 //! Rand provides utilities to generate random numbers, to convert them to
 //! useful types and distributions, and some randomness-related algorithms.
 //!
-//! # Basic use
+//! # Basic usage
 //!
-//! To quickly get you started, the easiest and most high-level way to just get
-//! some random value is to use [`random()`].
+//! To get you started quickly, the easiest and highist-level way to get
+//! a random value is to use [`random()`].
 //!
 //! ```
 //! let x: u8 = rand::random();
@@ -30,55 +30,76 @@
 //! }
 //! ```
 //!
-//! This functionality is however very basic. As soon as you need something
-//! slightly more specific, like a random value in some range, you have to know
-//! a bit more about how things work.
+//! This supports generating most common types but is not very flexible, thus
+//! you probably want to learn a bit more about the Rand library.
 //!
 //!
 //! # The two-step process to get a random value
 //!
-//! To get a random value, you usually need two pieces:
+//! Generating random values is typically a two-step process:
 //!
-//! - a random number generator (RNG);
-//! - some function to transform the 'bag of bits' from the RNG to a value you
-//!   can use (which we call a distribution, although we use the term for a bit
-//!   more functionality than what fits the meaning).
+//! - get some *random data* (an integer or bit/byte sequence) from a random
+//!   number generator (RNG)
+//! - use some function to transform that *data* into the type of value you want
+//!   (this function is an implementation of some *distribution* describing the
+//!   kind of value produced)
 //!
-//! There are many kinds of RNGs, with different trade-offs. Rand comes with a
-//! good all-use default, [`ThreadRng`]. Is is easily available through the
-//! [`thread_rng()`] function. It is reasonably fast and has good quality (secure
-//! and without patterns).
+//! Rand represents the first step with the [`RngCore`] trait and the second
+//! step via a combination of the [`Rng`] extension trait and the
+//! [`distributions` module].
+//! In practice you probably won't use [`RngCore`] directly unless you are
+//! implementing a random number generator (RNG).
+//!
+//! There are many kinds of RNGs, with different trade-offs. You can read more
+//! about them in the [`rngs` module] and even more in the [`prng` module],
+//! however, often you can just use [`thread_rng()`]. This function
+//! automatically initialises an RNG in thread-local memory, then returns a
+//! reference to it. It is fast, good quality, and secure (unpredictable).
 //!
 //! To turn the output of the RNG into something usable, you usually want to use
-//! the methods from the [`Rng`] trait:
+//! the methods from the [`Rng`] trait. Some of the most useful methods are:
 //!
-//! - [`gen`] generates a random value appropriate for the type.
-//!   For example `let val: u16 = rng.gen()` will produces a random value
-//!   between 0 and `std::u16::MAX`. But for floats the value will be generated
-//!   uniformly between 0 and 1, which is more useful than a completely random
-//!   float value (including NaN and infinity);
-//! - [`gen_range`] samples from a specific range of values;
-//! - [`sample`] samples directly from some distribution, useful for all
-//!   situations where you need something slightly more complex.
+//! - [`gen`] generates a random value appropriate for the type (just like
+//!   [`random()`]). For integers this is normally the full representable range
+//!   (e.g. from `0u32` to `std::u32::MAX`), for floats this is between 0 and 1,
+//!   and some other types are supported, including arrays and tuples. See the
+//!   [`Standard`] distribution which provides the implementations.
+//! - [`gen_range`] samples from a specific range of values; this is like
+//!   [`gen`] but with specific upper and lower bounds.
+//! - [`sample`] samples directly from some distribution.
 //!
-//! [`random()`] is nothing more than `thread_rng().gen()`.
+//! [`random()`] is defined using just the above: `thread_rng().gen()`.
+//!
+//! ## Distributions
+//!
+//! What are distributions, you ask? Specifying only the type and range of
+//! values (known as the *sample space*) is not enough; samples must also have
+//! a *probability distribution*, describing the relative probability of
+//! sampling each value in that space.
+//!
+//! In many cases a *uniform* distribution is used, meaning roughly that each
+//! value is equally likely (or for "continuous" types like floats, that each
+//! equal-sized sub-range has the same probability of containing a sample).
+//! [`gen`] and [`gen_range`] both use statistically uniform distributions.
+//!
+//! The [`distributions` module] provides implementations
+//! of some other distributions, including Normal, Log-Normal and Exponential.
+//! 
+//! It is worth noting that the functionality already mentioned is implemented
+//! with distributions: [`gen`] samples values using the [`Standard`]
+//! distribution, while [`gen_range`] uses [`Uniform`].
+//!
+//! ## Importing (prelude)
 //!
 //! The most convenient way to import items from Rand is to use the [prelude].
-//! Doing so is also recommended because we changed the module organization in
-//! Rand 0.5, and currently provide the old structure using re-exports (but
-//! hidden in the documentation). Using the prelude, or the new paths, avoids
-//! breakage when the compatibility re-exports get removed.
+//! This includes the most important parts of Rand, but only those unlikely to
+//! cause name conflicts.
 //!
-//!
-//! ## Further reading
-//!
-//! The [`rngs` module] provides more background on RNGs. For example: What are
-//! [`StdRng`] and [`SmallRng`], and why use them? Why do some RNGs need
-//! seeding, and where do you get a seed?
-//!
-//! The [`distributions` module] provides more documentation on distributions.
-//! How do you make [`Rng::gen`] available for a custom type? What are
-//! distributions good for? How do you sample from probability distributions?
+//! Note that Rand 0.5 has significantly changed the module organization and
+//! contents relative to previous versions. Where possible old names have been
+//! kept (but are hidden in the documentation), however these will be removed
+//! in the future. We therefore recommend migrating to use the prelude or the
+//! new module organization in your imports.
 //!
 //!
 //! ## Examples
@@ -88,64 +109,70 @@
 //!
 //! // thread_rng is often the most convenient source of randomness:
 //! let mut rng = thread_rng();
+//! 
 //! if rng.gen() { // random bool
 //!     let x: f64 = rng.gen(); // random number in range (0, 1)
 //!     println!("x is: {}", x);
-//!     let char = rng.gen::<char>(); // Sometimes you need type annotation
+//!     let char = rng.gen::<char>(); // using type annotation
 //!     println!("char is: {}", char);
 //!     println!("Number from 0 to 9: {}", rng.gen_range(0, 10));
 //! }
 //! ```
 //!
 //!
-//! # Other functionality
+//! # More functionality
 //!
-//! The ability to generate random values is not the only thing Rand provides.
-//! Most functionality is available through the [`Rng`] trait, so that is useful
-//! to explore. Some of its methods include:
+//! The [`Rng`] trait includes a few more methods not mentioned above:
 //!
-//! - [`Rng::sample_iter`] to get an iterator for the choosen distribution.
-//! - [`Rng::gen_bool`] to generate events with weighted probability.
-//! - [`Rng::fill`] and [`Rng::try_fill`] as fast alternatives to fill a slice
+//! - [`Rng::sample_iter`] allows iterating over values from a chosen
+//!   distribution.
+//! - [`Rng::gen_bool`] generates boolean "events" with a given probability.
+//! - [`Rng::fill`] and [`Rng::try_fill`] are fast alternatives to fill a slice
 //!   of integers.
-//! - [`Rng::shuffle`] can be used to shuffle slices.
-//! - [`Rng::choose`] to pick one element at random from a slice, and the
-//!   functions in the [`seq`] module to the pick multiple.
+//! - [`Rng::shuffle`] randomly shuffles elements in a slice.
+//! - [`Rng::choose`] picks one element at random from a slice.
 //!
-//! Also there is [`distributions::WeightedChoice`], which can be used to pick
+//! For more slice/sequence related functionality, look in the [`seq` module].
+//!
+//! There is also [`distributions::WeightedChoice`], which can be used to pick
 //! elements at random with some probability. But it does not work well at the
 //! moment and is going through a redesign.
 //!
 //!
 //! # Error handling
 //!
-//! The story around error handling in Rand is a bit of a practical compromise.
-//! On one hand PRNGs and distributions are never supposed to produce an error.
-//! Threading error handling through them would be unnecessary and make Rand
-//! very unergonomic to use. On the other hand external RNGs, like those from
-//! the OS or a hardware device, very well may produce an error.
+//! Error handling in Rand is a compromise between simplicity and necessity.
+//! Most RNGs and sampling functions will never produce errors, and making these
+//! able to handle errors would add significant overhead (to code complexity
+//! and ergonomics of usage at least, and potentially also performance,
+//! depending on the approach).
+//! However, external RNGs can fail, and being able to handle this is important.
 //!
-//! All methods that normally would only be used in combination with a PRNG
-//! always just produce a value. This might mean a fallible RNG has to panic
-//! if it is unable to return a value when used in combination with these
-//! methods.
-//!
-//! Only the handful of methods that are usually desired for external RNGs can
-//! report errors, such as [`Rng::try_fill`], [`RngCore::try_fill_bytes`], and
+//! It has therefore been decided that *most* methods should not return a
+//! `Result` type, and must therefore panic if an error does occur. The
+//! exceptions are [`Rng::try_fill`], [`RngCore::try_fill_bytes`], and
 //! [`SeedableRng::from_rng`].
 //!
+//! To reduce the risk of panic due to failure to access the operating system's
+//! generator, we recommend using [`EntropyRng`] which uses [`OsRng`] but will
+//! fall back to a local implementation of a jitter collector when necessary.
+//! To properly handle errors due to inability to access external entropy, we
+//! recommend testing [`EntropyRng`] with one of the above methods at
+//! application startup.
+//! 
 //!
 //! # Distinction between Rand and `rand_core`
 //!
-//! [`rand_core`] provides all the parts necessary for implementing RNGs, among
-//! which are the [`RngCore`] and [`SeedableRng`] traits, and an [`Error`] type.
-//! Crates implementing RNGs would ideally depend on [`rand_core`].
+//! The [`rand_core`] crate provides the necessary traits and functionality for
+//! implementing RNGs; this includes the [`RngCore`] and [`SeedableRng`] traits
+//! and the [`Error`] type.
+//! Crates implementing RNGs should depend on [`rand_core`].
 //!
-//! Common applicaties and libraries however are encouraged to use the Rand
-//! crate instead, which re-exports the main traits and error types.
+//! Applications and libraries consuming random values are encouraged to use the
+//! Rand crate, which re-exports the common parts of [`rand_core`].
 //!
 //!
-//! # Examples
+//! # More examples
 //!
 //! For some inspiration, see the examples:
 //!
@@ -172,16 +199,21 @@
 //! [`RngCore`]: trait.RngCore.html
 //! [`RngCore::try_fill_bytes`]: trait.RngCore.html#method.try_fill_bytes
 //! [`rngs` module]: rngs/index.html
+//! [`prng` module]: prng/index.html
 //! [`Rng`]: trait.Rng.html
 //! [`Rng::try_fill`]: trait.Rng.html#method.try_fill
 //! [`sample`]: trait.Rng.html#method.sample
 //! [`SeedableRng`]: trait.SeedableRng.html
 //! [`SeedableRng::from_rng`]: trait.SeedableRng.html#method.from_rng
-//! [`seq`]: seq/index.html
+//! [`seq` module]: seq/index.html
 //! [`SmallRng`]: rngs/struct.SmallRng.html
 //! [`StdRng`]: rngs/struct.StdRng.html
 //! [`thread_rng()`]: fn.thread_rng.html
 //! [`ThreadRng`]: rngs/struct.ThreadRng.html
+//! [`Standard`]: distributions/struct.Standard.html
+//! [`Uniform`]: distributions/struct.Uniform.html
+//! [`EntropyRng`]: rngs/struct.EntropyRng.html
+//! [`OsRng`]: rngs/struct.OsRng.html
 
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
