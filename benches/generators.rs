@@ -12,7 +12,7 @@ use test::{black_box, Bencher};
 use rand::prelude::*;
 use rand::prng::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
 use rand::prng::hc128::Hc128Core;
-use rand::rngs::adaptor::ReseedingRng;
+use rand::rngs::adapter::ReseedingRng;
 use rand::rngs::{OsRng, JitterRng, EntropyRng};
 
 macro_rules! gen_bytes {

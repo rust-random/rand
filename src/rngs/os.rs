@@ -8,8 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Interfaces to the operating system provided random number
-//! generators.
+//! Interface to the random number generator of the operating system.
 
 use std::fmt;
 use rand_core::{CryptoRng, RngCore, Error, impls};
@@ -17,12 +16,12 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// A random number generator that retrieves randomness straight from the
 /// operating system.
 ///
-/// This is the preferred external source of entropy for most
-/// applications. Commonly it is used to initialize a user-space RNG, which can
-/// then be used to generate random values with much less overhead than `OsRng`.
+/// This is the preferred external source of entropy for most applications.
+/// Commonly it is used to initialize a user-space RNG, which can then be used
+/// to generate random values with much less overhead than `OsRng`.
 ///
-/// You may prefer to use [`EntropyRng`] instead of `OsRng`. Is is unlikely, but
-/// not entirely theoretical, for `OsRng` to fail. In such cases `EntropyRng`
+/// You may prefer to use [`EntropyRng`] instead of `OsRng`. It is unlikely, but
+/// not entirely theoretical, for `OsRng` to fail. In such cases [`EntropyRng`]
 /// falls back on a good alternative entropy source.
 ///
 /// `OsRng` usually does not block. On some systems, and notably virtual
@@ -32,7 +31,7 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// `OsRng::new()` is guaranteed to be very cheap (after the first successful
 /// call), and will never consume more than one file handle per process.
 ///
-/// ## Platform sources:
+/// # Platform sources
 ///
 /// - Linux, Android: reads from the `getrandom(2)` system call if available,
 ///   otherwise from `/dev/urandom`.
@@ -46,14 +45,25 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// - Redox: reads from `rand:` device.
 /// - CloudABI: calls `random_get`.
 /// - Other Unix-like systems: reads directly from `/dev/urandom`.
-///   Note: many Unix systems provide `/dev/random` as well as `/dev/urandom`.
-///   On all modern systems these two interfaces offer identical quality, with
-///   the difference that on some systems `/dev/random` may block. This is a
-///   dated design, and `/dev/urandom` is preferred by cryptography experts. [1]
 ///
-/// [1] See [Myths about urandom](https://www.2uo.de/myths-about-urandom/).
+/// ## Notes on Unix `/dev/urandom`
+///
+/// Many Unix systems provide `/dev/random` as well as `/dev/urandom`. On all
+/// modern systems these two interfaces offer identical quality, with the
+/// difference that on some systems `/dev/random` may block. This is a dated
+/// design, and `/dev/urandom` is preferred by cryptography experts.
+/// See [Myths about urandom](https://www.2uo.de/myths-about-urandom/).
+///
+/// On some systems reading from `/dev/urandom` “may return data prior to the
+/// entropy pool being initialized”. I.e., early in the boot process, and
+/// especially on virtual machines, `/dev/urandom` may return data that is less
+/// random. As a countermeasure we try to do a single read from `/dev/random` in
+/// non-blocking mode. If the OS RNG is not yet properly seeded, we will get an
+/// error. Because we keep one file descriptor to `/dev/urandom` open when
+/// succesful, this is only a small one-time cost.
 ///
 /// [`EntropyRng`]: struct.EntropyRng.html
+
 
 #[allow(unused)]    // not used by all targets
 #[derive(Clone)]
@@ -297,15 +307,10 @@ mod imp {
     // Note: all instances use a single internal file handle, to prevent
     // possible exhaustion of file descriptors.
     //
-    // On some systems reading from `/dev/urandom` "may return data prior to the
-    // to the entropy pool being initialized". I.e., early in the boot process,
-    // and especially on virtual machines, `/dev/urandom` may return data that
-    // is less random.
-    //
-    // As a countermeasure we try to do a single read from `/dev/random` in
-    // non-blocking mode. If the OS RNG is not yet properly seeded, we will get
-    // an error. Because we keep `/dev/urandom` open when succesful, this is
-    // only a small one-time cost.
+    // We do a single read from `/dev/random` in non-blocking mode. If the OS
+    // RNG is not yet properly seeded, we will get an error, instead of silently
+    // getting less random bytes, as `/dev/urandom` can return. Because we keep
+    // `/dev/urandom` open when succesful, this is only a small one-time cost.
     fn open_dev_random() -> Result<(), Error> {
         fn map_err(err: io::Error) -> Error {
             match err.kind() {

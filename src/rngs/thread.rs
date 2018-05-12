@@ -14,7 +14,7 @@ use std::cell::UnsafeCell;
 use std::rc::Rc;
 
 use {RngCore, CryptoRng, SeedableRng, Error};
-use rngs::adaptor::ReseedingRng;
+use rngs::adapter::ReseedingRng;
 use rngs::EntropyRng;
 use prng::hc128::Hc128Core;
 
@@ -47,10 +47,31 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32*1024*1024; // 32 MiB
 /// The type returned by [`thread_rng`], essentially just a reference to the
 /// PRNG in thread-local memory.
 ///
+/// `ThreadRng` uses [`ReseedingRng`] wrapping the same PRNG as [`StdRng`],
+/// which is reseeded after generating 32 MiB of random data. A single instance
+/// is cached per thread and the returned `ThreadRng` is a reference to this
+/// instance — hence `ThreadRng` is neither `Send` nor `Sync` but is safe to use
+/// within a single thread. This RNG is seeded and reseeded via [`EntropyRng`]
+/// as required.
+///
+/// Note that the reseeding is done as an extra precaution against entropy
+/// leaks and is in theory unnecessary — to predict `ThreadRng`'s output, an
+/// attacker would have to either determine most of the RNG's seed or internal
+/// state, or crack the algorithm used.
+///
+/// Like [`StdRng`], `ThreadRng` is a cryptographically secure PRNG. The current
+/// algorithm used is [HC-128], which is an array-based PRNG that trades memory
+/// usage for better performance. This makes it similar to ISAAC, the algorithm
+/// used in `ThreadRng` before rand 0.5.
+///
 /// Cloning this handle just produces a new reference to the same thread-local
 /// generator.
 /// 
 /// [`thread_rng`]: ../fn.thread_rng.html
+/// [`ReseedingRng`]: adapter/struct.ReseedingRng.html
+/// [`StdRng`]: struct.StdRng.html
+/// [`EntropyRng`]: struct.EntropyRng.html
+/// [HC-128]: ../prng/hc128/struct.Hc128Rng.html
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
     rng: Rc<UnsafeCell<ReseedingRng<Hc128Core, EntropyRng>>>,
@@ -73,27 +94,9 @@ thread_local!(
 /// chaining style, e.g. `thread_rng().gen::<i32>()`, or cached locally, e.g.
 /// `let mut rng = thread_rng();`.
 ///
-/// `ThreadRng` uses [`ReseedingRng`] wrapping the same PRNG as [`StdRng`],
-/// which is reseeded after generating 32 MiB of random data. A single instance
-/// is cached per thread and the returned `ThreadRng` is a reference to this
-/// instance — hence `ThreadRng` is neither `Send` nor `Sync` but is safe to use
-/// within a single thread. This RNG is seeded and reseeded via [`EntropyRng`]
-/// as required.
-/// 
-/// Note that the reseeding is done as an extra precaution against entropy
-/// leaks and is in theory unnecessary — to predict `thread_rng`'s output, an
-/// attacker would have to either determine most of the RNG's seed or internal
-/// state, or crack the algorithm used.
-/// 
-/// Like [`StdRng`], `ThreadRng` is a cryptographically secure PRNG. The current
-/// algorithm used is [HC-128], which is an array-based PRNG that trades memory
-/// usage for better performance. This makes it similar to ISAAC, the algorithm
-/// used in `ThreadRng` before rand 0.5.
+/// For more information see [`ThreadRng`].
 ///
-/// [`ReseedingRng`]: rngs/adaptor/struct.ReseedingRng.html
-/// [`StdRng`]: rngs/struct.StdRng.html
-/// [`EntropyRng`]: rngs/struct.EntropyRng.html
-/// [HC-128]: prng/hc128/struct.Hc128Rng.html
+/// [`ThreadRng`]: rngs/struct.ThreadRng.html
 pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
 }

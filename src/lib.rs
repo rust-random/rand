@@ -156,7 +156,7 @@
 //! [`JitterRng`]: rngs/struct.JitterRng.html
 //! [`StdRng`]: rngs/struct.StdRng.html
 //! [`SmallRng`]: rngs/struct.SmallRng.html
-//! [`ReseedingRng`]: rngs/adaptor/struct.ReseedingRng.html
+//! [`ReseedingRng`]: rngs/adapter/struct.ReseedingRng.html
 //! [`prng`]: prng/index.html
 //! [`IsaacRng::new_from_u64`]: prng/isaac/struct.IsaacRng.html#method.new_from_u64
 //! [`Hc128Rng`]: prng/hc128/struct.Hc128Rng.html
@@ -219,8 +219,8 @@ pub mod rngs;
 ////////////////////////////////////////////////////////////////////////////////
 // Compatibility re-exports. Documentation is hidden; will be removed eventually.
 
-#[cfg(feature="std")] #[doc(hidden)] pub use rngs::adaptor::read;
-#[doc(hidden)] pub use rngs::adaptor::ReseedingRng;
+#[cfg(feature="std")] #[doc(hidden)] pub use rngs::adapter::read;
+#[doc(hidden)] pub use rngs::adapter::ReseedingRng;
 
 #[doc(hidden)] pub use rngs::jitter;
 #[cfg(feature="std")] #[doc(hidden)] pub use rngs::{os, EntropyRng, OsRng};
@@ -252,7 +252,7 @@ use distributions::uniform::SampleUniform;
 
 /// A type that can be randomly generated using an [`Rng`].
 /// 
-/// This is merely an adaptor around the [`Standard`] distribution for
+/// This is merely an adapter around the [`Standard`] distribution for
 /// convenience and backwards-compatibility.
 /// 
 /// [`Rng`]: trait.Rng.html

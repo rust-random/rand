@@ -8,7 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Wrappers / adaptors forming RNGs
+//! Wrappers / adapters forming RNGs
 
 #[cfg(feature="std")] #[doc(hidden)] pub mod read;
 mod reseeding;
