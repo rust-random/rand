@@ -30,9 +30,17 @@ use rngs::{OsRng, JitterRng};
 /// external entropy then primarily use the local PRNG ([`thread_rng`] is
 /// provided as a convenient, local, automatically-seeded CSPRNG).
 ///
+/// # Panics
+///
+/// In the extraordinary situation that both [`OsRng`] and [`JitterRng`] fail,
+/// only [`try_fill_bytes`] is able to report the error, and only the one from
+/// `OsRng`. The other [`RngCore`] methods will panic in case of an error.
+///
 /// [`OsRng`]: struct.OsRng.html
 /// [`JitterRng`]: jitter/struct.JitterRng.html
 /// [`thread_rng`]: ../fn.thread_rng.html
+/// [`RngCore`]: ../trait.RngCore.html
+/// [`try_fill_bytes`]: ../trait.RngCore.html#method.tymethod.try_fill_bytes
 #[derive(Debug)]
 pub struct EntropyRng {
     rng: EntropySource,

@@ -847,6 +847,8 @@ pub trait FromEntropy: SeedableRng {
     /// applications targetting PC/mobile platforms should not need to worry
     /// about this failing.
     ///
+    /// # Panics
+    ///
     /// If all entropy sources fail this will panic. If you need to handle
     /// errors, use the following code, equivalent aside from error handling:
     ///

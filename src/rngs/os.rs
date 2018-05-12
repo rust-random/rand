@@ -65,7 +65,16 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// error. Because we keep one file descriptor to `/dev/urandom` open when
 /// succesful, this is only a small one-time cost.
 ///
+/// # Panics
+///
+/// `OsRng` is extremely unlikely to fail if `OsRng::new()` was succesfull. But
+/// in case it does fail, only [`try_fill_bytes`] is able to report the cause.
+/// Depending on the error the other [`RngCore`] methods will retry several
+/// times, and panic in case the error remains.
+///
 /// [`EntropyRng`]: struct.EntropyRng.html
+/// [`RngCore`]: ../trait.RngCore.html
+/// [`try_fill_bytes`]: ../trait.RngCore.html#method.tymethod.try_fill_bytes
 
 
 #[allow(unused)]    // not used by all targets
