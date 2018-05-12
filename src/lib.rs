@@ -15,7 +15,7 @@
 //!
 //! # Basic usage
 //!
-//! To get you started quickly, the easiest and highist-level way to get
+//! To get you started quickly, the easiest and highest-level way to get
 //! a random value is to use [`random()`].
 //!
 //! ```
@@ -39,10 +39,10 @@
 //! Generating random values is typically a two-step process:
 //!
 //! - get some *random data* (an integer or bit/byte sequence) from a random
-//!   number generator (RNG)
+//!   number generator (RNG);
 //! - use some function to transform that *data* into the type of value you want
 //!   (this function is an implementation of some *distribution* describing the
-//!   kind of value produced)
+//!   kind of value produced).
 //!
 //! Rand represents the first step with the [`RngCore`] trait and the second
 //! step via a combination of the [`Rng`] extension trait and the
@@ -53,7 +53,7 @@
 //! There are many kinds of RNGs, with different trade-offs. You can read more
 //! about them in the [`rngs` module] and even more in the [`prng` module],
 //! however, often you can just use [`thread_rng()`]. This function
-//! automatically initialises an RNG in thread-local memory, then returns a
+//! automatically initializes an RNG in thread-local memory, then returns a
 //! reference to it. It is fast, good quality, and secure (unpredictable).
 //!
 //! To turn the output of the RNG into something usable, you usually want to use
@@ -149,17 +149,15 @@
 //! However, external RNGs can fail, and being able to handle this is important.
 //!
 //! It has therefore been decided that *most* methods should not return a
-//! `Result` type, and must therefore panic if an error does occur. The
-//! exceptions are [`Rng::try_fill`], [`RngCore::try_fill_bytes`], and
-//! [`SeedableRng::from_rng`].
+//! `Result` type, with as exceptions [`Rng::try_fill`],
+//! [`RngCore::try_fill_bytes`], and [`SeedableRng::from_rng`].
 //!
-//! To reduce the risk of panic due to failure to access the operating system's
-//! generator, we recommend using [`EntropyRng`] which uses [`OsRng`] but will
-//! fall back to a local implementation of a jitter collector when necessary.
-//! To properly handle errors due to inability to access external entropy, we
-//! recommend testing [`EntropyRng`] with one of the above methods at
-//! application startup.
-//! 
+//! Note that it is the RNG that panics when it fails but is not used through a
+//! method that can report errors. Currently Rand contains only three RNGs that
+//! can return an error (and thus may panic), and documents this property:
+//! [`OsRng`], [`EntropyRng`] and [`ReadRng`]. Other RNGs, like [`ThreadRng`]
+//! and [`StdRng`], can be used with all methods without concern.
+//!
 //!
 //! # Distinction between Rand and `rand_core`
 //!
@@ -184,12 +182,15 @@
 //!
 //! [`distributions` module]: distributions/index.html
 //! [`distributions::WeightedChoice`]: distributions/struct.WeightedChoice.html
+//! [`EntropyRng`]: rngs/struct.EntropyRng.html
 //! [`Error`]: struct.Error.html
 //! [`gen_range`]: trait.Rng.html#method.gen_range
 //! [`gen`]: trait.Rng.html#method.gen
+//! [`OsRng`]: rngs/struct.OsRng.html
 //! [prelude]: prelude/index.html
 //! [`rand_core`]: https://crates.io/crates/rand_core
 //! [`random()`]: fn.random.html
+//! [`ReadRng`]: rngs/adapter/struct.ReadRng.html
 //! [`Rng::choose`]: trait.Rng.html#method.choose
 //! [`Rng::fill`]: trait.Rng.html#method.fill
 //! [`Rng::gen_bool`]: trait.Rng.html#method.gen_bool
@@ -212,8 +213,6 @@
 //! [`ThreadRng`]: rngs/struct.ThreadRng.html
 //! [`Standard`]: distributions/struct.Standard.html
 //! [`Uniform`]: distributions/struct.Uniform.html
-//! [`EntropyRng`]: rngs/struct.EntropyRng.html
-//! [`OsRng`]: rngs/struct.OsRng.html
 
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
