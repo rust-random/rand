@@ -37,8 +37,11 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 ///   otherwise from `/dev/urandom`.
 /// - macOS, iOS: calls `SecRandomCopyBytes`.
 /// - Windows: calls `RtlGenRandom`.
-/// - WASM: calls `window.crypto.getRandomValues` in browsers,
-///   and in Node.js `require("crypto").randomBytes`.
+/// - WASM (with `stdweb` feature): calls `window.crypto.getRandomValues` in
+///   browsers, and in Node.js `require("crypto").randomBytes`.
+/// - Emscripten: reads from emulated `/dev/urandom`, which maps to the same
+///   interfaces as `stdweb`, but falls back to the insecure `Math.random()` if
+///   unavailable.
 /// - OpenBSD: calls `getentropy(2)`.
 /// - FreeBSD: uses the `kern.arandom` `sysctl(2)` mib.
 /// - Fuchsia: calls `cprng_draw`.
