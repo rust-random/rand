@@ -72,7 +72,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// runs once every 256 times you ask for a next random number. In all other
 /// circumstances the last element of the results array is returned.
 ///
-/// ISAAC therefore needs a lot of memory, relative to other non-vrypto RNGs.
+/// ISAAC therefore needs a lot of memory, relative to other non-crypto RNGs.
 /// 2 * 256 * 4 = 2 kb to hold the state and results.
 ///
 /// This implementation uses [`BlockRng`] to implement the [`RngCore`] methods.
