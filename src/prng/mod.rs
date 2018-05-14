@@ -145,6 +145,21 @@
 //! unpredictable. This implies there must be no obvious correlations between
 //! output values.
 //!
+//! ### Quality stars:
+// 5. reserved for crypto-level (e.g. ChaCha8, ISAAC)
+// 4. good performance on TestU01 and PractRand, good theory
+//    (e.g. PCG, truncated Xorshift*)
+// 3. good performance on TestU01 and PractRand, but "falling through the
+//    cracks" or insufficient theory (e.g. SFC, Xoshiro)
+// 2. imperfect performance on tests or other limiting properties, but not
+//    terrible (e.g. Xoroshiro128+)
+// 1. clear deficiencies in test results, cycle length, theory, or other
+//    properties (e.g. Xorshift)
+//!
+//! PRNGs with 3 stars or more should be good enough for any purpose.
+//! 1 or 2 stars may be good enough for typical apps and games, but do not work
+//! well with all algorithms.
+//!
 //! ## Period
 //!
 //! The *period* or *cycle length* of a PRNG is the number of values that can be
