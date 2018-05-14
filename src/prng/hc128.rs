@@ -44,6 +44,9 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 /// We support seeding with a 256-bit array, which matches the 128-bit key
 /// concatenated with a 128-bit IV from the stream cipher.
 ///
+/// This implementation uses an output buffer of sixteen `u32` words, and uses
+/// [`BlockRng`] to implement the [`RngCore`] methods.
+///
 /// ## References
 /// [1]: Hongjun Wu (2008). ["The Stream Cipher HC-128"](
 ///      http://www.ecrypt.eu.org/stream/p3ciphers/hc/hc128_p3.pdf).
@@ -61,6 +64,9 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 ///
 /// [5]: Internet Engineering Task Force (Februari 2015),
 ///      ["Prohibiting RC4 Cipher Suites"](https://tools.ietf.org/html/rfc7465).
+///
+/// [`BlockRng`]: ../../../rand_core/block/struct.BlockRng.html
+/// [`RngCore`]: ../../trait.RngCore.html
 #[derive(Clone, Debug)]
 pub struct Hc128Rng(BlockRng<Hc128Core>);
 

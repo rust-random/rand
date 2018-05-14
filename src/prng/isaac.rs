@@ -75,6 +75,8 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// ISAAC therefore needs a lot of memory, relative to other non-vrypto RNGs.
 /// 2 * 256 * 4 = 2 kb to hold the state and results.
 ///
+/// This implementation uses [`BlockRng`] to implement the [`RngCore`] methods.
+///
 /// ## References
 /// [1]: Bob Jenkins, [*ISAAC: A fast cryptographic random number generator*](
 ///      http://burtleburtle.net/bob/rand/isaacafa.html)
@@ -86,6 +88,8 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///      https://eprint.iacr.org/2006/438)
 ///
 /// [`Hc128Rng`]: ../hc128/struct.Hc128Rng.html
+/// [`BlockRng`]: ../../../rand_core/block/struct.BlockRng.html
+/// [`RngCore`]: ../../trait.RngCore.html
 #[derive(Clone, Debug)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct IsaacRng(BlockRng<IsaacCore>);
