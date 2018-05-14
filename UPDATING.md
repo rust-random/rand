@@ -199,11 +199,9 @@ cryptographic generator, used by `StdRng` and `thread_rng()`.
 
 The `Rand` trait has been deprecated. Instead, users are encouraged to use
 `Standard` which is a real distribution and supports the same sampling as
- `Rand`.`Rng::gen()` now uses `Standard` and should work exactly as before.
-
-The `random()` function has been removed; users may simply use
-`thread_rng().gen()` instead or may choose to cache
-`let mut rng = thread_rng();` locally, or even use a different generator.
+`Rand`. `Rng::gen()` now uses `Standard` and should work exactly as before.
+See the documentation of the `distributions` module on how to implement
+`Distribution<T>` for `Standard` for user types `T`
 
 `weak_rng()` has been deprecated; use `SmallRng::from_entropy()` instead.
 
@@ -224,9 +222,7 @@ directly on type-erased (unsized) RNGs.
 `RandSample` has been removed (see `Rand` deprecation and new `Standard`
 distribution).
 
-The `Open01` and `Closed01` wrappers have been removed. `Rng::gen()` (via
-`Standard`) now yields samples from `(0, 1)` for floats; i.e. the same as the
-old `Open01`. This is considered sufficient for most uses.
+The `Closed01` wrapper has been removed, but `OpenClosed01` has been added.
 
 #### Uniform distributions
 
@@ -238,15 +234,13 @@ Two new distributions are available:
 
 ##### Ranges
 
-The `Range` distribution has been heavily adapted, while remaining largely
-backwards compatible:
+The `Range` distribution has been heavily adapted, and renamed to `Uniform`:
 
--   `Range::new(low, high)` remains (half open `[low, high)`)
--   `Range::new_inclusive(low, high)` has been added, including `high` in the sample range
--   `Range::sample_single(low, high, rng)` is a faster variant for single usage sampling from `[low, high)`
+-   `Uniform::new(low, high)` remains (half open `[low, high)`)
+-   `Uniform::new_inclusive(low, high)` has been added, including `high` in the sample range
+-   `Uniform::sample_single(low, high, rng)` is a faster variant for single usage sampling from `[low, high)`
 
-`Range` can now be implemented for user-defined types; see the `RangeImpl` type.
-`SampleRange` has been adapted to suit the new `Range` model.
+`Uniform` can now be implemented for user-defined types; see the `uniform` module.
 
 #### Non-uniform distributions
 
