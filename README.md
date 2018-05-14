@@ -127,6 +127,7 @@ recommended:
 cargo test --all
 
 # Test no_std support
+# Note that the examples and doctests don't compile without the `std` feature.
 cargo test --tests --no-default-features
 # Test no_std+alloc support
 cargo test --tests --no-default-features --features alloc
