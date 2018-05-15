@@ -11,7 +11,7 @@
 //! The binomial distribution.
 
 use Rng;
-use distributions::Distribution;
+use distributions::{Distribution, Bernoulli};
 use distributions::log_gamma::log_gamma;
 use std::f64::consts::PI;
 
@@ -51,6 +51,18 @@ impl Binomial {
 
 impl Distribution<u64> for Binomial {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
+        // For low n, it is faster to sample directly. For both methods,
+        // performance is independent of p. On Intel Haswell CPU this method
+        // appears to be faster for approx n < 300.
+        if self.n < 300 {
+            let mut result = 0;
+            let d = Bernoulli::new(self.p);
+            for _ in 0 .. self.n {
+                result += rng.sample(d) as u32;
+            }
+            return result as u64;
+        }
+        
         // binomial distribution is symmetrical with respect to p -> 1-p, k -> n-k
         // switch p so that it is less than 0.5 - this allows for lower expected values
         // we will just invert the result at the end
@@ -60,70 +72,52 @@ impl Distribution<u64> for Binomial {
             1.0 - self.p
         };
 
-        // expected value of the sample
+        // prepare some cached values
+        let float_n = self.n as f64;
+        let ln_fact_n = log_gamma(float_n + 1.0);
+        let pc = 1.0 - p;
+        let log_p = p.ln();
+        let log_pc = pc.ln();
         let expected = self.n as f64 * p;
+        let sq = (expected * (2.0 * pc)).sqrt();
 
-        let result =
-            // for low expected values we just simulate n drawings
-            if expected < 25.0 {
-                let mut lresult = 0.0;
-                for _ in 0 .. self.n {
-                    if rng.gen_bool(p) {
-                        lresult += 1.0;
-                    }
+        let mut lresult;
+
+        loop {
+            let mut comp_dev: f64;
+            // we use the lorentzian distribution as the comparison distribution
+            // f(x) ~ 1/(1+x/^2)
+            loop {
+                // draw from the lorentzian distribution
+                comp_dev = (PI*rng.gen::<f64>()).tan();
+                // shift the peak of the comparison ditribution
+                lresult = expected + sq * comp_dev;
+                // repeat the drawing until we are in the range of possible values
+                if lresult >= 0.0 && lresult < float_n + 1.0 {
+                    break;
                 }
-                lresult
             }
-            // high expected value - do the rejection method
-            else {
-                // prepare some cached values
-                let float_n = self.n as f64;
-                let ln_fact_n = log_gamma(float_n + 1.0);
-                let pc = 1.0 - p;
-                let log_p = p.ln();
-                let log_pc = pc.ln();
-                let sq = (expected * (2.0 * pc)).sqrt();
 
-                let mut lresult;
+            // the result should be discrete
+            lresult = lresult.floor();
 
-                loop {
-                    let mut comp_dev: f64;
-                    // we use the lorentzian distribution as the comparison distribution
-                    // f(x) ~ 1/(1+x/^2)
-                    loop {
-                        // draw from the lorentzian distribution
-                        comp_dev = (PI*rng.gen::<f64>()).tan();
-                        // shift the peak of the comparison ditribution
-                        lresult = expected + sq * comp_dev;
-                        // repeat the drawing until we are in the range of possible values
-                        if lresult >= 0.0 && lresult < float_n + 1.0 {
-                            break;
-                        }
-                    }
+            let log_binomial_dist = ln_fact_n - log_gamma(lresult+1.0) -
+                log_gamma(float_n - lresult + 1.0) + lresult*log_p + (float_n - lresult)*log_pc;
+            // this is the binomial probability divided by the comparison probability
+            // we will generate a uniform random value and if it is larger than this,
+            // we interpret it as a value falling out of the distribution and repeat
+            let comparison_coeff = (log_binomial_dist.exp() * sq) * (1.2 * (1.0 + comp_dev*comp_dev));
 
-                    // the result should be discrete
-                    lresult = lresult.floor();
-
-                    let log_binomial_dist = ln_fact_n - log_gamma(lresult+1.0) -
-                        log_gamma(float_n - lresult + 1.0) + lresult*log_p + (float_n - lresult)*log_pc;
-                    // this is the binomial probability divided by the comparison probability
-                    // we will generate a uniform random value and if it is larger than this,
-                    // we interpret it as a value falling out of the distribution and repeat
-                    let comparison_coeff = (log_binomial_dist.exp() * sq) * (1.2 * (1.0 + comp_dev*comp_dev));
-
-                    if comparison_coeff >= rng.gen() {
-                        break;
-                    }
-                }
-
-                lresult
-            };
+            if comparison_coeff >= rng.gen() {
+                break;
+            }
+        }
 
         // invert the result for p < 0.5
         if p != self.p {
-            self.n - result as u64
+            self.n - lresult as u64
         } else {
-            result as u64
+            lresult as u64
         }
     }
 }
