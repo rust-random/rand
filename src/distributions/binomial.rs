@@ -41,16 +41,23 @@ impl Binomial {
     /// Construct a new `Binomial` with the given shape parameters `n` (number
     /// of trials) and `p` (probability of success).
     ///
-    /// Panics if `p <= 0` or `p >= 1`.
+    /// Panics if `p < 0` or `p > 1`.
     pub fn new(n: u64, p: f64) -> Binomial {
-        assert!(p > 0.0, "Binomial::new called with p <= 0");
-        assert!(p < 1.0, "Binomial::new called with p >= 1");
+        assert!(p >= 0.0, "Binomial::new called with p < 0");
+        assert!(p <= 1.0, "Binomial::new called with p > 1");
         Binomial { n, p }
     }
 }
 
 impl Distribution<u64> for Binomial {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
+        // Handle these values directly.
+        if self.p == 0.0 {
+            return 0;
+        } else if self.p == 1.0 {
+            return self.n;
+        }
+        
         // For low n, it is faster to sample directly. For both methods,
         // performance is independent of p. On Intel Haswell CPU this method
         // appears to be faster for approx n < 300.
@@ -148,7 +155,7 @@ mod test {
 
     #[test]
     fn test_binomial() {
-        let mut rng = ::test::rng(123);
+        let mut rng = ::test::rng(351);
         test_binomial_mean_and_variance(150, 0.1, &mut rng);
         test_binomial_mean_and_variance(70, 0.6, &mut rng);
         test_binomial_mean_and_variance(40, 0.5, &mut rng);
@@ -157,9 +164,10 @@ mod test {
     }
 
     #[test]
-    #[should_panic]
-    fn test_binomial_invalid_lambda_zero() {
-        Binomial::new(20, 0.0);
+    fn test_binomial_end_points() {
+        let mut rng = ::test::rng(352);
+        assert_eq!(rng.sample(Binomial::new(20, 0.0)), 0);
+        assert_eq!(rng.sample(Binomial::new(20, 1.0)), 20);
     }
 
     #[test]
