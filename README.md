@@ -6,15 +6,18 @@
 [![Documentation](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
 
-A Rust library for random number generators and other randomness functionality.
+A Rust library for random number generation.
 
-See also:
+Rand provides utilities to generate random numbers, to convert them to useful
+types and distributions, and some randomness-related algorithms.
 
-*   [rand_core](https://crates.io/crates/rand_core)
+The core random number generation traits of Rand live in the [rand_core](
+https://crates.io/crates/rand_core) crate; this crate is most useful when
+implementing RNGs.
 
-Documentation:
+API reference:
 [master branch](https://rust-lang-nursery.github.io/rand/rand/index.html),
-[by release](https://docs.rs/rand)
+[by release](https://docs.rs/rand/0.5).
 
 ## Usage
 
@@ -30,14 +33,57 @@ and this to your crate root:
 ```rust
 extern crate rand;
 
-// example usage:
-use rand::{Rng, thread_rng};
-let x: f64 = thread_rng().gen();
+use rand::prelude::*;
+
+// basic usage with random():
+let x: u8 = random();
+println!("{}", x);
+
+let y = random::<f64>();
+println!("{}", y);
+
+if random() { // generates a boolean
+    println!("Heads!");
+}
+
+// normal usage needs both an RNG and a function to generate the appropriate
+// type, range, distribution, etc.
+let mut rng = thread_rng();
+if rng.gen() { // random bool
+    let x: f64 = rng.gen(); // random number in range (0, 1)
+    println!("x is: {}", x);
+    let char = rng.gen::<char>(); // Sometimes you need type annotation
+    println!("char is: {}", char);
+    println!("Number from 0 to 9: {}", rng.gen_range(0, 10));
+}
 ```
+
+## Functionality
+
+The Rand crate provides:
+
+- A convenient to use default RNG, `thread_rng`: an automatically seeded,
+  crypto-grade generator stored in thread-local memory.
+- Pseudo-random number generators: `StdRng`, `SmallRng`, `prng` module.
+- Functionality for seeding PRNGs: the `FromEntropy` trait, and as sources of
+  external randomness `EntropyRng`, `OsRng` and `JitterRng`.
+- Most content from [`rand_core`](https://crates.io/crates/rand_core)
+  (re-exported): base random number generator traits and error-reporting types.
+- 'Distributions' producing many different types of random values:
+  - A `Standard` distribution for integers, floats, and derived types including
+    tuples, arrays and `Option`
+  - Unbiased sampling from specified `Uniform` ranges.
+  - Sampling from exponential/normal/gamma distributions.
+  - Sampling from binomial/poisson distributions.
+  - `gen_bool` aka Bernoulli distribution.
+- `seq`-uence related functionality:
+  - Sampling a subset of elements.
+  - Randomly shuffling a list.
+
 
 ## Versions
 
-Version 0.5 is available as a pre-release and contains many breaking changes.
+Version 0.5 is the latest version and contains many breaking changes.
 See [the Upgrade Guide](UPDATING.md) for guidance on updating from previous
 versions.
 
@@ -46,21 +92,9 @@ changes since the 0.3 series.
 
 For more details, see the [changelog](CHANGELOG.md).
 
-### Compatibility shims
-
-**As of now there is no compatibility shim between Rand 0.4 and 0.5.**
-It is also not entirely obvious how to make one due to the large differences
-between the two versions, although it would be possible to implement the new
-`RngCore` for any implementation of the old `Rng` (or vice-versa; unfortunately
-not both as that would result in circular implementation). If we implement a
-compatibility shim it will be optional (opt-in via a feature).
-
-There is a compatibility shim from 0.3 to 0.4 forcibly upgrading all Rand 0.3
-users; this is largely due to the small differences between the two versions.
-
 ### Rust version requirements
 
-The 0.5 release of Rand will require **Rustc version 1.22 or greater**.
+The 0.5 release of Rand requires **Rustc version 1.22 or greater**.
 Rand 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
 greater. Subsets of the Rand code may work with older Rust versions, but this
 is not supported.
@@ -69,84 +103,38 @@ Travis CI always has a build with a pinned version of Rustc matching the oldest
 supported Rust release. The current policy is that this can be updated in any
 Rand release if required, but the change must be noted in the changelog.
 
-## Functionality
-
-The `rand_core` crate provides:
-
--   base random number generator traits
--   error-reporting types
--   functionality to aid implementation of RNGs
-
-The `rand` crate provides:
-
--   most content from `rand_core` (re-exported)
--   fresh entropy: `EntropyRng`, `OsRng`, `JitterRng`
--   pseudo-random number generators: `StdRng`, `SmallRng`, `prng` module
--   convenient, auto-seeded crypto-grade thread-local generator: `thread_rng`
--   `distributions` producing many different types of random values:
-    -   a `Standard` distribution for integers, floats,and derived types
-        including tuples, arrays and `Option`
-    -   unbiased sampling from specified `Range`s
-    -   sampling from exponential/normal/gamma distributions
-    -   sampling from binomial/poisson distributions
-    -   `gen_bool` aka Bernoulli distribution
--   `seq`-uence related functionality:
-    -   sampling a subset of elements
-    -   randomly shuffling a list
 
 ## Crate Features
 
-By default, Rand is built with all stable features available. The following
+Rand is built with only the `std` feature anabled by default. The following
 optional features are available:
 
--   `alloc` can be used instead of `std` to provide `Vec` and `Box`
--   `i128_support` enables support for generating `u128` and `i128` values
--   `log` enables some logging via the `log` crate
--   `nightly` enables all unstable features (`i128_support`)
--   `serde1` enables serialization for some types, via Serde version 1
--   `stdweb` enables support for `OsRng` on WASM via stdweb.
--   `std` enabled by default; by setting "default-features = false" `no_std`
-    mode is activated; this removes features depending on `std` functionality:
-    -   `OsRng` is entirely unavailable
-    -   `JitterRng` code is still present, but a nanosecond timer must be
-        provided via `JitterRng::new_with_timer`
-    -   Since no external entropy is available, it is not possible to create
-        generators with fresh seeds (user must provide entropy)
-    -   `thread_rng`, `weak_rng` and `random` are all disabled
-    -   exponential, normal and gamma type distributions are unavailable
-        since `exp` and `log` functions are not provided in `core`
-    -   any code requiring `Vec` or `Box`
+- `alloc` can be used instead of `std` to provide `Vec` and `Box`.
+- `i128_support` enables support for generating `u128` and `i128` values.
+- `log` enables some logging via the `log` crate.
+- `nightly` enables all unstable features (`i128_support`).
+- `serde1` enables serialization for some types, via Serde version 1.
+- `stdweb` enables support for `OsRng` on WASM via stdweb.
 
-## Testing
+`no_std` mode is activated by setting `default-features = false`; this removes
+functionality depending on `std`:
 
-Unfortunately, `cargo test` does not test everything. The following tests are
-recommended:
-
-```
-# Basic tests for Rand and sub-crates
-cargo test --all
-
-# Test no_std support
-cargo test --tests --no-default-features
-# Test no_std+alloc support
-cargo test --tests --no-default-features --features alloc
-
-# Test log and serde support
-cargo test --features serde1,log
-
-# Test 128-bit support (requires nightly)
-cargo test --all --features nightly
-
-# Benchmarks (requires nightly)
-cargo bench
-# or just to test the benchmark code:
-cargo test --benches
-```
+- `thread_rng()`, and `random()` are not available, as they require thread-local
+  storage and an entropy source.
+- `OsRng` and `EntropyRng` are unavailable.
+- `JitterRng` code is still present, but a nanosecond timer must be provided via
+  `JitterRng::new_with_timer`
+- Since no external entropy is available, it is not possible to create
+  generators with fresh seeds using the `FromEntropy` trait (user must provide
+  a seed).
+- Exponential, normal and gamma type distributions are unavailable since `exp`
+  and `log` functions are not provided in `core`.
+- The `seq`-uence module is unavailable, as it requires `Vec`.
 
 
 # License
 
-Rand is distributed under the terms of both the MIT
-license and the Apache License (Version 2.0).
+Rand is distributed under the terms of both the MIT license and the
+Apache License (Version 2.0).
 
 See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
