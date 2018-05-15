@@ -318,7 +318,6 @@ pub trait Rng: RngCore {
     /// println!("{}", x);
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
-    #[inline(always)]
     fn gen<T>(&mut self) -> T where Standard: Distribution<T> {
         Standard.sample(self)
     }
@@ -474,6 +473,8 @@ pub trait Rng: RngCore {
 
     /// Return a bool with a probability `p` of being true.
     ///
+    /// This is a wrapper around [`distributions::Bernoulli`].
+    ///
     /// # Example
     ///
     /// ```rust
@@ -483,20 +484,15 @@ pub trait Rng: RngCore {
     /// println!("{}", rng.gen_bool(1.0 / 3.0));
     /// ```
     ///
-    /// # Accuracy note
+    /// # Panics
     ///
-    /// `gen_bool` uses 32 bits of the RNG, so if you use it to generate close
-    /// to or more than `2^32` results, a tiny bias may become noticable.
-    /// A notable consequence of the method used here is that the worst case is
-    /// `rng.gen_bool(0.0)`: it has a chance of 1 in `2^32` of being true, while
-    /// it should always be false. But using `gen_bool` to consume *many* values
-    /// from an RNG just to consistently generate `false` does not match with
-    /// the intent of this method.
+    /// If `p` < 0 or `p` > 1.
+    ///
+    /// [`distributions::Bernoulli`]: distributions/bernoulli/struct.Bernoulli.html
+    #[inline]
     fn gen_bool(&mut self, p: f64) -> bool {
-        assert!(p >= 0.0 && p <= 1.0);
-        // If `p` is constant, this will be evaluated at compile-time.
-        let p_int = (p * f64::from(core::u32::MAX)) as u32;
-        self.gen::<u32>() <= p_int
+        let d = distributions::Bernoulli::new(p);
+        self.sample(d)
     }
 
     /// Return a random element from `values`.
@@ -897,7 +893,6 @@ pub fn weak_rng() -> XorShiftRng {
 /// [`thread_rng`]: fn.thread_rng.html
 /// [`Standard`]: distributions/struct.Standard.html
 #[cfg(feature="std")]
-#[inline]
 pub fn random<T>() -> T where Standard: Distribution<T> {
     thread_rng().gen()
 }
@@ -918,7 +913,6 @@ pub fn random<T>() -> T where Standard: Distribution<T> {
 /// println!("{:?}", sample);
 /// ```
 #[cfg(feature="std")]
-#[inline(always)]
 #[deprecated(since="0.4.0", note="renamed to seq::sample_iter")]
 pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     where I: IntoIterator<Item=T>,

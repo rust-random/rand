@@ -178,6 +178,7 @@ pub use self::uniform::Uniform as Range;
 #[doc(inline)] pub use self::poisson::Poisson;
 #[cfg(feature = "std")]
 #[doc(inline)] pub use self::binomial::Binomial;
+#[doc(inline)] pub use self::bernoulli::Bernoulli;
 
 pub mod uniform;
 #[cfg(feature="std")]
@@ -190,6 +191,7 @@ pub mod uniform;
 #[doc(hidden)] pub mod poisson;
 #[cfg(feature = "std")]
 #[doc(hidden)] pub mod binomial;
+#[doc(hidden)] pub mod bernoulli;
 
 mod float;
 mod integer;

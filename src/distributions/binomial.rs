@@ -31,13 +31,17 @@ use std::f64::consts::PI;
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Binomial {
-    n: u64, // number of trials
-    p: f64, // probability of success
+    /// Number of trials.
+    n: u64,
+    /// Probability of success.
+    p: f64,
 }
 
 impl Binomial {
-    /// Construct a new `Binomial` with the given shape parameters
-    /// `n`, `p`. Panics if `p <= 0` or `p >= 1`.
+    /// Construct a new `Binomial` with the given shape parameters `n` (number
+    /// of trials) and `p` (probability of success).
+    ///
+    /// Panics if `p <= 0` or `p >= 1`.
     pub fn new(n: u64, p: f64) -> Binomial {
         assert!(p > 0.0, "Binomial::new called with p <= 0");
         assert!(p < 1.0, "Binomial::new called with p >= 1");
