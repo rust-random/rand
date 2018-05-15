@@ -311,7 +311,7 @@ impl JitterRng {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use rand::{Rng, Error};
     /// use rand::jitter::JitterRng;
     ///

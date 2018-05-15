@@ -27,12 +27,12 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 ///
 /// `ReadRng` uses `std::io::read_exact`, which retries on interrupts. All other
 /// errors from the underlying reader, including when it does not have enough
-/// data, will only be reported through `try_fill_bytes`. The other `RngCore`
-/// methods will panic in case of an error error.
+/// data, will only be reported through [`try_fill_bytes`]. The other
+/// [`RngCore`] methods will panic in case of an error.
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::{read, Rng};
 ///
 /// let data = vec![1, 2, 3, 4, 5, 6, 7, 8];
@@ -41,6 +41,8 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 /// ```
 ///
 /// [`OsRng`]: ../struct.OsRng.html
+/// [`RngCore`]: ../../trait.RngCore.html
+/// [`try_fill_bytes`]: ../../trait.RngCore.html#method.tymethod.try_fill_bytes
 #[derive(Debug)]
 pub struct ReadRng<R> {
     reader: R

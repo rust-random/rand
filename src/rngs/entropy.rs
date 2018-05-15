@@ -15,12 +15,12 @@ use rngs::{OsRng, JitterRng};
 
 /// An interface returning random data from external source(s), provided
 /// specifically for securely seeding algorithmic generators (PRNGs).
-/// 
+///
 /// Where possible, `EntropyRng` retrieves random data from the operating
 /// system's interface for random numbers ([`OsRng`]); if that fails it will
 /// fall back to the [`JitterRng`] entropy collector. In the latter case it will
 /// still try to use [`OsRng`] on the next usage.
-/// 
+///
 /// If no secure source of entropy is available `EntropyRng` will panic on use;
 /// i.e. it should never output predictable data.
 /// 
@@ -30,9 +30,20 @@ use rngs::{OsRng, JitterRng};
 /// external entropy then primarily use the local PRNG ([`thread_rng`] is
 /// provided as a convenient, local, automatically-seeded CSPRNG).
 ///
+/// # Panics
+///
+/// On most systems, like Windows, Linux, macOS and *BSD on common hardware, it
+/// is highly unlikely for both [`OsRng`] and [`JitterRng`] to fail. But on
+/// combinations like webassembly without Emscripten or stdweb both sources are
+/// unavailable. If both sources fail, only [`try_fill_bytes`] is able to
+/// report the error, and only the one from `OsRng`. The other [`RngCore`]
+/// methods will panic in case of an error.
+///
 /// [`OsRng`]: struct.OsRng.html
 /// [`JitterRng`]: jitter/struct.JitterRng.html
 /// [`thread_rng`]: ../fn.thread_rng.html
+/// [`RngCore`]: ../trait.RngCore.html
+/// [`try_fill_bytes`]: ../trait.RngCore.html#method.tymethod.try_fill_bytes
 #[derive(Debug)]
 pub struct EntropyRng {
     rng: EntropySource,

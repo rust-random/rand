@@ -27,7 +27,7 @@ use distributions::{ziggurat, ziggurat_tables, Distribution, Open01};
 /// College, Oxford
 ///
 /// # Example
-/// ```rust
+/// ```
 /// use rand::prelude::*;
 /// use rand::distributions::StandardNormal;
 ///
@@ -79,7 +79,7 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{Normal, Distribution};
 ///
 /// // mean 2, standard deviation 3
@@ -124,7 +124,7 @@ impl Distribution<f64> for Normal {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{LogNormal, Distribution};
 ///
 /// // mean 2, standard deviation 3

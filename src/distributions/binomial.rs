@@ -22,7 +22,7 @@ use std::f64::consts::PI;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// use rand::distributions::{Binomial, Distribution};
 ///
 /// let bin = Binomial::new(20, 0.3);

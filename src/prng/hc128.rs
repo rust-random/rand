@@ -40,7 +40,7 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 /// current state of known attacks / weaknesses of HC-128 is given in [4].
 ///
 /// The average cycle length is expected to be
-/// 2<sup>1024*32-1</sup> = 2<sup>32767</sup>.
+/// 2<sup>1024*32+10-1</sup> = 2<sup>32777</sup>.
 /// We support seeding with a 256-bit array, which matches the 128-bit key
 /// concatenated with a 128-bit IV from the stream cipher.
 ///
@@ -50,7 +50,7 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 /// ## References
 /// [1]: Hongjun Wu (2008). ["The Stream Cipher HC-128"](
 ///      http://www.ecrypt.eu.org/stream/p3ciphers/hc/hc128_p3.pdf).
-///      *The eSTREAM Finalists*, LNCS 4986, pp. 39--47, Springer-Verlag.
+///      *The eSTREAM Finalists*, LNCS 4986, pp. 39–47, Springer-Verlag.
 ///
 /// [2]: [eSTREAM: the ECRYPT Stream Cipher Project](
 ///      http://www.ecrypt.eu.org/stream/)
