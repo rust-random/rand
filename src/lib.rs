@@ -300,8 +300,8 @@ pub mod isaac {
 
 
 use core::{marker, mem, slice};
-use distributions::{Distribution, Standard, Uniform};
-use distributions::uniform::SampleUniform;
+use distributions::{Distribution, Standard};
+use distributions::uniform::{SampleUniform, UniformSampler};
 
 
 /// A type that can be randomly generated using an [`Rng`].
@@ -407,7 +407,7 @@ pub trait Rng: RngCore {
     /// [`Uniform::new`]: distributions/uniform/struct.Uniform.html#method.new
     /// [`Uniform::sample_single`]: distributions/uniform/struct.Uniform.html#method.sample_single
     fn gen_range<T: PartialOrd + SampleUniform>(&mut self, low: T, high: T) -> T {
-        Uniform::sample_single(low, high, self)
+        T::Sampler::sample_single(low, high, self)
     }
 
     /// Sample a new value, using the given distribution.
