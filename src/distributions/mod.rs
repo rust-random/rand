@@ -87,8 +87,7 @@
 //! - Related to positive real-valued quantities that grow exponentially
 //!   (e.g. prices, incomes, populations):
 //!   - [`LogNormal`] distribution
-//! - Related to rate of occurrance of indenpendant events:
-//!   with a given rate)
+//! - Related to the occurrence of independent events at a given rate:
 //!   - [`Poisson`] distribution
 //!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
 //! - Gamma and derived distributions:
