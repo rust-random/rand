@@ -83,6 +83,7 @@
 //!   - [`Normal`] distribution, and [`StandardNormal`] as a primitive
 //! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
+//!   - [`Bernoulli`] distribution, similar to [`Rng::gen_bool`].
 //! - Related to positive real-valued quantities that grow exponentially
 //!   (e.g. prices, incomes, populations):
 //!   - [`LogNormal`] distribution
@@ -145,6 +146,7 @@
 //! [Floating point implementation]: struct.Standard.html#floating-point-implementation
 // distributions
 //! [`Alphanumeric`]: struct.Alphanumeric.html
+//! [`Bernoulli`]: struct.Bernoulli.html
 //! [`Binomial`]: struct.Binomial.html
 //! [`ChiSquared`]: struct.ChiSquared.html
 //! [`Exp`]: struct.Exp.html

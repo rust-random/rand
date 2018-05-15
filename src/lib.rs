@@ -158,6 +158,12 @@
 //! [`OsRng`], [`EntropyRng`] and [`ReadRng`]. Other RNGs, like [`ThreadRng`]
 //! and [`StdRng`], can be used with all methods without concern.
 //!
+//! One further problem is that if Rand is unable to get any external randomness
+//! when initializing an RNG with [`EntropyRng`], it will panic in
+//! [`FromEntropy::from_entropy`], and notably in [`thread_rng`]. Except by
+//! compromising security, this problem is as unsolvable as running out of
+//! memory.
+//!
 //!
 //! # Distinction between Rand and `rand_core`
 //!
@@ -366,6 +372,7 @@ pub trait Rng: RngCore {
     /// println!("{}", x);
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
+    #[inline]
     fn gen<T>(&mut self) -> T where Standard: Distribution<T> {
         Standard.sample(self)
     }
@@ -943,6 +950,7 @@ pub fn weak_rng() -> XorShiftRng {
 /// [`thread_rng`]: fn.thread_rng.html
 /// [`Standard`]: distributions/struct.Standard.html
 #[cfg(feature="std")]
+#[inline]
 pub fn random<T>() -> T where Standard: Distribution<T> {
     thread_rng().gen()
 }
@@ -963,6 +971,7 @@ pub fn random<T>() -> T where Standard: Distribution<T> {
 /// println!("{:?}", sample);
 /// ```
 #[cfg(feature="std")]
+#[inline]
 #[deprecated(since="0.4.0", note="renamed to seq::sample_iter")]
 pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     where I: IntoIterator<Item=T>,

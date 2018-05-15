@@ -16,10 +16,10 @@
 //!
 //! As mentioned there, PRNGs fall in two broad categories:
 //!
-//! - [normal PRNGs], primarily designed for simulations
+//! - [basic PRNGs], primarily designed for simulations
 //! - [CSPRNGs], primarily designed for cryptography
 //!
-//! In simple terms, the normal PRNGs are often predictable; CSPRNGs should not
+//! In simple terms, the basic PRNGs are often predictable; CSPRNGs should not
 //! be predictable *when used correctly*.
 //! 
 //! Contents of this documentation:
@@ -34,9 +34,9 @@
 //!
 //! # The generators
 //!
-//! ## Normal pseudo-random number generators (PRNGs)
+//! ## Basic pseudo-random number generators (PRNGs)
 //!
-//! The goal of normal, non-cryptographic PRNGs is usually to find a good
+//! The goal of regular, non-cryptographic PRNGs is usually to find a good
 //! balance between simplicity, quality, memory usage and performance. These
 //! algorithms are very important to Monte Carlo simulations, and also suitable
 //! for several other problems such as randomized algorithms and games (except
@@ -47,13 +47,33 @@
 //!
 //! | name | full name | performance | memory | quality | period | features |
 //! |------|-----------|-------------|--------|---------|--------|----------|
-//! | [`XorShiftRng`] | Xorshift 32/128 | ⭐⭐⭐ | 16 bytes | ⭐ | `u32` * 2<sup>128</sup> - 1 | — |
+//! | [`XorShiftRng`] | Xorshift 32/128 | ★★★☆☆ | 16 bytes | ★☆☆☆☆ | `u32` * 2<sup>128</sup> - 1 | — |
 //!
+// Quality stars [not rendered in documentation]:
+// 5. reserved for crypto-level (e.g. ChaCha8, ISAAC)
+// 4. good performance on TestU01 and PractRand, good theory
+//    (e.g. PCG, truncated Xorshift*)
+// 3. good performance on TestU01 and PractRand, but "falling through the
+//    cracks" or insufficient theory (e.g. SFC, Xoshiro)
+// 2. imperfect performance on tests or other limiting properties, but not
+//    terrible (e.g. Xoroshiro128+)
+// 1. clear deficiencies in test results, cycle length, theory, or other
+//    properties (e.g. Xorshift)
+//
+// Performance stars [not rendered in documentation]:
+// Meant to give an indication of relative performance. Roughly follows a log
+// scale, based on the performance of `next_u64` on a current i5/i7:
+// - 5. 8000 MB/s+
+// - 4. 4000 MB/s+
+// - 3. 2000 MB/s+
+// - 2. 1000 MB/s+
+// - 1. < 1000 MB/s
+//
 //! ## Cryptographically secure pseudo-random number generators (CSPRNGs)
 //!
-//! CSPRNGs have much higher requirements than normal PRNGs. The primary
+//! CSPRNGs have much higher requirements than basic PRNGs. The primary
 //! consideration is security. Performance and simplicity are also important,
-//! but in general CSPRNGs are more complex and slower than normal PRNGs.
+//! but in general CSPRNGs are more complex and slower than regular PRNGs.
 //! Quality is no longer a concern, as it is a requirement for a
 //! CSPRNG that the output is basically indistinguishable from true randomness
 //! since any bias or correlation makes the output more predictable.
@@ -65,12 +85,12 @@
 //!
 //! Rand currently provides two trustworthy CSPRNGs and two CSPRNG-like PRNGs:
 //!
-//! | name | full name |  performance | initialization | memory | predictability | backtracking resistance |
+//! | name | full name |  performance | initialization | memory | predictability | forward secrecy |
 //! |------|-----------|--------------|--------------|----------|----------------|-------------------------|
-//! | [`ChaChaRng`] | ChaCha20 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 136 bytes | secure | no |
-//! | [`Hc128Rng`] | HC-128 | ⭐⭐⭐⭐⭐ | ⭐ | 4176 bytes | secure | no |
-//! | [`IsaacRng`] | ISAAC | ⭐⭐⭐⭐ | ⭐ | 2072 bytes | unknown | unknown |
-//! | [`Isaac64Rng`] | ISAAC-64 | ⭐⭐⭐⭐⭐ | ⭐ | 4136 bytes| unknown | unknown |
+//! | [`ChaChaRng`] | ChaCha20 | ★☆☆☆☆ | fast | 136 bytes | secure | no |
+//! | [`Hc128Rng`] | HC-128 | ★★☆☆☆ | slow | 4176 bytes | secure | no |
+//! | [`IsaacRng`] | ISAAC | ★★☆☆☆ | slow | 2072 bytes | unknown | unknown |
+//! | [`Isaac64Rng`] | ISAAC-64 | ★★☆☆☆ | slow | 4136 bytes| unknown | unknown |
 //!
 //! It should be noted that the ISAAC generators are only included for
 //! historical reasons, they have been with the Rust language since the very
@@ -83,7 +103,7 @@
 //! First it has to be said most PRNGs are very fast, and will rarely be a
 //! performance bottleneck.
 //!
-//! Performance of normal PRNGs is a bit of a subtle thing. It depends a lot on
+//! Performance of basic PRNGs is a bit of a subtle thing. It depends a lot on
 //! the CPU architecture (32 vs. 64 bits), inlining, and also on the number of
 //! available registers. This often causes the performance to be affected by
 //! surrounding code due to inlining and other usage of registers.
@@ -92,27 +112,30 @@
 //! application due to interactions between PRNGs and surrounding code and
 //! dependence on the CPU architecture as well as the impact of the size of
 //! data requested. Because of all this, we do not include performance numbers
-//! here but merely a qualitative rating (which is not comparable between PRNGs
-//! and CSPRNGs).
+//! here but merely a qualitative rating.
 //!
 //! CSPRNGs are a little different in that they typically generate a block of
 //! output in a cache, and pull outputs from the cache. This allows them to have
 //! good amortised performance, and reduces or completely removes the influence
-//! of surrounding code on the CSPRNG performance. It does however cause *poor
-//! worst case performance*.
+//! of surrounding code on the CSPRNG performance.
+//!
+//! ### Worst-case performance
+//! Because CSPRNGs usually produce a block of values into a cache, they have
+//! poor worst case performance (in contrast to basic PRNGs, where the
+//! performance is usually quite regular).
 //!
 //! ## State size
 //!
-//! Normal PRNGs often use very little memory, commonly only a few words, where
-//! a *word* is usually either `u32` or `u64`. This is not universal however,
-//! for example the historically popular Mersenne Twister MT19937 algorithm
-//! requires 2.5 kB of state.
+//! Simple PRNGs often use very little memory, commonly only a few words, where
+//! a *word* is usually either `u32` or `u64`. This is not true for all
+//! non-cryptographic PRNGs however, for example the historically popular
+//! Mersenne Twister MT19937 algorithm requires 2.5 kB of state.
 //!
 //! CSPRNGs typically require more memory; since the seed size is recommended
 //! to be at least 192 bits and some more may be required for the algorithm,
 //! 256 bits would be approximately the minimum secure size. In practice,
 //! CSPRNGs tend to use quite a bit more, [`ChaChaRng`] is relatively small with
-//! 136 bytes.
+//! 136 bytes of state.
 //! 
 //! ## Initialization time
 //!
@@ -124,7 +147,7 @@
 //!
 //! # Quality
 //!
-//! Many normal PRNGs are not much more than a couple of bitwise and arithmetic
+//! Many basic PRNGs are not much more than a couple of bitwise and arithmetic
 //! operations. Their simplicity gives good performance, but also means there
 //! are small regularities hidden in the generated random number stream.
 //!
@@ -146,16 +169,6 @@
 //! output values.
 //!
 //! ### Quality stars:
-// 5. reserved for crypto-level (e.g. ChaCha8, ISAAC)
-// 4. good performance on TestU01 and PractRand, good theory
-//    (e.g. PCG, truncated Xorshift*)
-// 3. good performance on TestU01 and PractRand, but "falling through the
-//    cracks" or insufficient theory (e.g. SFC, Xoshiro)
-// 2. imperfect performance on tests or other limiting properties, but not
-//    terrible (e.g. Xoroshiro128+)
-// 1. clear deficiencies in test results, cycle length, theory, or other
-//    properties (e.g. Xorshift)
-//!
 //! PRNGs with 3 stars or more should be good enough for any purpose.
 //! 1 or 2 stars may be good enough for typical apps and games, but do not work
 //! well with all algorithms.
@@ -204,16 +217,16 @@
 //!
 //! From the context of any PRNG, one can ask the question *given some previous
 //! output from the PRNG, is it possible to predict the next output value?*
+//! This is an important property in any situation where there might be an
+//! adversary.
 //!
-//! Normal PRNGs tend to fall into one of two categories here; *yes* and
-//! *with effort*. In some cases prediction is trivial; e.g. plain Xorshift
-//! outputs part of its state without mutation, and prediction is as simple as
-//! seeding a new Xorshift generator from four `u32` outputs. The widely-used
-//! Mersenne Twister algorithms are also easy to predict, though more samples
-//! are required (624 `u32` samples, in the case of MT19937). Other generators,
-//! like [PCG](http://www.pcg-random.org/predictability.html) and truncated
-//! Xorshift* are harder to predict, but not outside the realm of common
-//! mathematics and a desktop PC.
+//! Regular PRNGs tend to be predictable, although with varying difficulty. In
+//! some cases prediction is trivial, for example plain Xorshift outputs part of
+//! its state without mutation, and prediction is as simple as seeding a new
+//! Xorshift generator from four `u32` outputs. Other generators, like
+//! [PCG](http://www.pcg-random.org/predictability.html) and truncated Xorshift*
+//! are harder to predict, but not outside the realm of common mathematics and a
+//! desktop PC.
 //!
 //! The basic security that CSPRNGs must provide is the infeasibility to predict
 //! output. This requirement is formalized as the [next-bit test]; this is
@@ -221,10 +234,10 @@
 //! sequence satisfies the next-bit test if there is no algorithm able to
 //! predict the next bit using reasonable computing power.
 //!
-//! A further security that *some* CSPRNGs provide is backtracking resistance:
+//! A further security that *some* CSPRNGs provide is forward secrecy:
 //! in the event that the CSPRNGs state is revealed at some point, it must be
 //! infeasible to reconstruct previous states or output. Note that many CSPRNGs
-//! *do not* have backtracking resistance in their usual formulations.
+//! *do not* have forward secrecy in their usual formulations.
 //!
 //! As an outsider it is hard to get a good idea about the security of an
 //! algorithm. People in the field of cryptography spend a lot of effort
@@ -283,7 +296,7 @@
 //!
 //!
 //! [`rngs` module]: ../rngs/index.html
-//! [normal PRNGs]: #normal-pseudo-random-number-generators-prngs
+//! [basic PRNGs]: #basic-pseudo-random-number-generators-prngs
 //! [CSPRNGs]: #cryptographically-secure-pseudo-random-number-generators-csprngs
 //! [`XorShiftRng`]: struct.XorShiftRng.html
 //! [`ChaChaRng`]: chacha/struct.ChaChaRng.html
