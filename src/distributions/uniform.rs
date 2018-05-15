@@ -12,8 +12,8 @@
 //!
 //! [`Uniform`] is the standard distribution to sample uniformly from a range;
 //! e.g. `Uniform::new_inclusive(1, 6)` can sample integers from 1 to 6, like a
-//! standard die. [`Rng::gen_range`] simply uses [`Uniform::sample_single`],
-//! thus supports any type supported by [`Uniform`].
+//! standard die. [`Rng::gen_range`] supports any type supported by
+//! [`Uniform`].
 //!
 //! This distribution is provided with support for several primitive types
 //! (all integer and floating-point types) as well as `std::time::Duration`,
@@ -90,7 +90,6 @@
 //! ```
 //!
 //! [`Uniform`]: struct.Uniform.html
-//! [`Uniform::sample_single`]: struct.Uniform.html#method.sample_single
 //! [`Rng::gen_range`]: ../../trait.Rng.html#method.gen_range
 //! [`SampleUniform`]: trait.SampleUniform.html
 //! [`UniformSampler`]: trait.UniformSampler.html
@@ -110,10 +109,6 @@ use distributions::float::IntoFloat;
 /// [`Uniform::new`] and [`Uniform::new_inclusive`] construct a uniform
 /// distribution sampling from the given range; these functions may do extra
 /// work up front to make sampling of multiple values faster.
-///
-/// [`Uniform::sample_single`] instead samples directly from the given range,
-/// and (depending on the back-end) may be faster when sampling a very small
-/// number of values or only a single value from this range.
 ///
 /// When sampling from a constant range, many calculations can happen at
 /// compile-time and all methods should be fast; for floating-point ranges and
@@ -150,10 +145,8 @@ use distributions::float::IntoFloat;
 ///
 /// [`Uniform::new`]: struct.Uniform.html#method.new
 /// [`Uniform::new_inclusive`]: struct.Uniform.html#method.new_inclusive
-/// [`Uniform::sample_single`]: struct.Uniform.html#method.sample_single
 /// [`new`]: struct.Uniform.html#method.new
 /// [`new_inclusive`]: struct.Uniform.html#method.new_inclusive
-/// [`sample_single`]: struct.Uniform.html#method.sample_single
 #[derive(Clone, Copy, Debug)]
 pub struct Uniform<X: SampleUniform> {
     inner: X::Sampler,
@@ -170,12 +163,6 @@ impl<X: SampleUniform> Uniform<X> {
     /// range `[low, high]` (inclusive). Panics if `low > high`.
     pub fn new_inclusive(low: X, high: X) -> Uniform<X> {
         Uniform { inner: X::Sampler::new_inclusive(low, high) }
-    }
-
-    /// Sample a single value uniformly from `[low, high)`.
-    /// Panics if `low >= high`.
-    pub fn sample_single<R: Rng + ?Sized>(low: X, high: X, rng: &mut R) -> X {
-        X::Sampler::sample_single(low, high, rng)
     }
 }
 
@@ -762,7 +749,7 @@ mod tests {
                         }
 
                         for _ in 0..1000 {
-                            let v: $ty = Uniform::sample_single(low, high, &mut rng);
+                            let v: $ty = rng.gen_range(low, high);
                             assert!(low <= v && v < high);
                         }
                     }
