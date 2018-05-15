@@ -62,6 +62,26 @@ fn misc_bernoulli_var(b: &mut Bencher) {
     })
 }
 
+macro_rules! sample_binomial {
+    ($name:ident, $n:expr, $p:expr) => {
+        #[bench]
+        fn $name(b: &mut Bencher) {
+            let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+            let (n, p) = ($n, $p);
+            b.iter(|| {
+                let d = rand::distributions::Binomial::new(n, p);
+                black_box(rng.sample(d));
+            })
+        }
+    }
+}
+
+sample_binomial!(misc_binomial_1, 1, 0.9);
+sample_binomial!(misc_binomial_10, 10, 0.9);
+sample_binomial!(misc_binomial_100, 100, 0.99);
+sample_binomial!(misc_binomial_1000, 1000, 0.01);
+sample_binomial!(misc_binomial_1e12, 1000_000_000_000, 0.2);
+
 #[bench]
 fn misc_shuffle_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
