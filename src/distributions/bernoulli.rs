@@ -55,10 +55,14 @@ impl Bernoulli {
     #[inline]
     pub fn new(p: f64) -> Bernoulli {
         assert!((p >= 0.0) & (p <= 1.0), "Bernoulli::new not called with 0 <= p <= 0");
+        // Technically, this should be 2^64 or `u64::MAX + 1` because we compare
+        // using `<` when sampling. However, `u64::MAX` rounds to an `f64`
+        // larger than `u64::MAX` anyway.
+        const MAX_P_INT: f64 = ::core::u64::MAX as f64;
         let p_int = if p < 1.0 {
-            (p * (::core::u64::MAX as f64)) as u64
+            (p * MAX_P_INT) as u64
         } else {
-            // Avoid overflow: u64::MAX as f64 cannot be represented as u64.
+            // Avoid overflow: `MAX_P_INT` cannot be represented as u64.
             ::core::u64::MAX
         };
         Bernoulli { p_int }
