@@ -112,8 +112,8 @@ impl RngCore for ThreadRng {
         unsafe { (*self.rng.get()).next_u64() }
     }
 
-    fn fill_bytes(&mut self, bytes: &mut [u8]) {
-        unsafe { (*self.rng.get()).fill_bytes(bytes) }
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        unsafe { (*self.rng.get()).fill_bytes(dest) }
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
