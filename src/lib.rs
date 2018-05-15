@@ -318,7 +318,6 @@ pub trait Rng: RngCore {
     /// println!("{}", x);
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
-    #[inline(always)]
     fn gen<T>(&mut self) -> T where Standard: Distribution<T> {
         Standard.sample(self)
     }
@@ -352,7 +351,6 @@ pub trait Rng: RngCore {
     /// [`Uniform`]: distributions/uniform/struct.Uniform.html
     /// [`Uniform::new`]: distributions/uniform/struct.Uniform.html#method.new
     /// [`Uniform::sample_single`]: distributions/uniform/struct.Uniform.html#method.sample_single
-    #[inline]
     fn gen_range<T: PartialOrd + SampleUniform>(&mut self, low: T, high: T) -> T {
         Uniform::sample_single(low, high, self)
     }
@@ -371,7 +369,6 @@ pub trait Rng: RngCore {
     /// // distribution can be inferred.
     /// let y = rng.sample::<u16, _>(Uniform::new(10, 15));
     /// ```
-    #[inline]
     fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
         distr.sample(self)
     }
@@ -403,7 +400,6 @@ pub trait Rng: RngCore {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    #[inline]
     fn sample_iter<'a, T, D: Distribution<T>>(&'a mut self, distr: &'a D)
         -> distributions::DistIter<'a, D, Self, T> where Self: Sized
     {
@@ -897,7 +893,6 @@ pub fn weak_rng() -> XorShiftRng {
 /// [`thread_rng`]: fn.thread_rng.html
 /// [`Standard`]: distributions/struct.Standard.html
 #[cfg(feature="std")]
-#[inline]
 pub fn random<T>() -> T where Standard: Distribution<T> {
     thread_rng().gen()
 }
@@ -918,7 +913,6 @@ pub fn random<T>() -> T where Standard: Distribution<T> {
 /// println!("{:?}", sample);
 /// ```
 #[cfg(feature="std")]
-#[inline(always)]
 #[deprecated(since="0.4.0", note="renamed to seq::sample_iter")]
 pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
     where I: IntoIterator<Item=T>,
