@@ -702,12 +702,19 @@ macro_rules! impl_as_byte_slice {
     ($t:ty) => {
         impl AsByteSliceMut for [$t] {
             fn as_byte_slice_mut(&mut self) -> &mut [u8] {
-                unsafe {
-                    slice::from_raw_parts_mut(&mut self[0]
-                        as *mut $t
-                        as *mut u8,
-                        self.len() * mem::size_of::<$t>()
-                    )
+                if self.len() == 0 {
+                    unsafe {
+                        // must not use null pointer
+                        slice::from_raw_parts_mut(0x1 as *mut u8, 0)
+                    }
+                } else {
+                    unsafe {
+                        slice::from_raw_parts_mut(&mut self[0]
+                            as *mut $t
+                            as *mut u8,
+                            self.len() * mem::size_of::<$t>()
+                        )
+                    }
                 }
             }
             
@@ -762,7 +769,7 @@ macro_rules! impl_as_byte_slice_arrays {
         }
     };
 }
-impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
+impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
 impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
 
 /// Iterator which will generate a stream of random items.
@@ -1060,6 +1067,14 @@ mod test {
         rng.fill(&mut array[..]);
         assert_eq!(array, [x as u32, (x >> 32) as u32]);
         assert_eq!(rng.next_u32(), x as u32);
+    }
+    
+    #[test]
+    fn test_fill_empty() {
+        let mut array = [0u32; 0];
+        let mut rng = StepRng::new(0, 1);
+        rng.fill(&mut array);
+        rng.fill(&mut array[..]);
     }
 
     #[test]
