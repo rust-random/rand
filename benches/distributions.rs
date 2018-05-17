@@ -8,7 +8,7 @@ extern crate rand;
 const RAND_BENCH_N: u64 = 1000;
 
 use std::mem::size_of;
-use test::{black_box, Bencher};
+use test::Bencher;
 
 use rand::{Rng, FromEntropy, XorShiftRng};
 use rand::distributions::*;
@@ -26,7 +26,7 @@ macro_rules! distr_int {
                     let x: $ty = distr.sample(&mut rng);
                     accum = accum.wrapping_add(x);
                 }
-                black_box(accum);
+                accum
             });
             b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
         }
@@ -46,7 +46,7 @@ macro_rules! distr_float {
                     let x: $ty = distr.sample(&mut rng);
                     accum += x;
                 }
-                black_box(accum);
+                accum
             });
             b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
         }
@@ -61,10 +61,12 @@ macro_rules! distr {
             let distr = $distr;
 
             b.iter(|| {
+                let mut accum = 0u32;
                 for _ in 0..::RAND_BENCH_N {
                     let x: $ty = distr.sample(&mut rng);
-                    black_box(x);
+                    accum = accum.wrapping_add(x as u32);
                 }
+                accum
             });
             b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
         }
@@ -109,6 +111,7 @@ distr_float!(distr_gamma_large_shape, f64, Gamma::new(10., 1.0));
 distr_float!(distr_gamma_small_shape, f64, Gamma::new(0.1, 1.0));
 distr_int!(distr_binomial, u64, Binomial::new(20, 0.7));
 distr_int!(distr_poisson, u64, Poisson::new(4.0));
+distr!(distr_bernoulli, bool, Bernoulli::new(0.18));
 
 
 // construct and sample from a range
@@ -126,7 +129,7 @@ macro_rules! gen_range_int {
                     // force recalculation of range each time
                     high = high.wrapping_add(1) & std::$ty::MAX;
                 }
-                black_box(accum);
+                accum
             });
             b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
         }
@@ -151,7 +154,7 @@ fn dist_iter(b: &mut Bencher) {
         for _ in 0..::RAND_BENCH_N {
             accum += iter.next().unwrap();
         }
-        black_box(accum);
+        accum
     });
     b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
 }

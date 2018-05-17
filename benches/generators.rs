@@ -51,7 +51,7 @@ macro_rules! gen_uint {
                 for _ in 0..RAND_BENCH_N {
                     accum = accum.wrapping_add(rng.gen::<$ty>());
                 }
-                black_box(accum);
+                accum
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
@@ -82,7 +82,7 @@ gen_uint!(gen_u64_os, u64, OsRng::new().unwrap());
 fn gen_u64_jitter(b: &mut Bencher) {
     let mut rng = JitterRng::new().unwrap();
     b.iter(|| {
-        black_box(rng.gen::<u64>());
+        rng.gen::<u64>()
     });
     b.bytes = size_of::<u64>() as u64;
 }
@@ -94,7 +94,7 @@ macro_rules! init_gen {
             let mut rng = XorShiftRng::from_entropy();
             b.iter(|| {
                 let r2 = $gen::from_rng(&mut rng).unwrap();
-                black_box(r2);
+                r2
             });
         }
     }
@@ -109,7 +109,7 @@ init_gen!(init_chacha, ChaChaRng);
 #[bench]
 fn init_jitter(b: &mut Bencher) {
     b.iter(|| {
-        black_box(JitterRng::new().unwrap());
+        JitterRng::new().unwrap()
     });
 }
 
@@ -144,7 +144,7 @@ macro_rules! reseeding_uint {
                 for _ in 0..RAND_BENCH_N {
                     accum = accum.wrapping_add(rng.gen::<$ty>());
                 }
-                black_box(accum);
+                accum
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
@@ -165,7 +165,7 @@ macro_rules! threadrng_uint {
                 for _ in 0..RAND_BENCH_N {
                     accum = accum.wrapping_add(rng.gen::<$ty>());
                 }
-                black_box(accum);
+                accum
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
