@@ -15,6 +15,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Minimum Rust version update: 1.22.0. (#239)
 - Create a separate `rand_core` crate. (#288)
 - Deprecate `rand_derive`. (#256)
+- Add `prelude` (and module reorganisation). (#435)
 - Add `log` feature. Logging is now available in `JitterRng`, `OsRng`, `EntropyRng` and `ReseedingRng`. (#246)
 - Add `serde1` feature for some PRNGs. (#189)
 - `stdweb` feature for `OsRng` support on WASM via stdweb. (#272, #336)
@@ -47,7 +48,6 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Add `SmallRng` wrapper. (#296)
 - Rewrite `ReseedingRng` to only work with `BlockRngCore` (substantial performance improvement). (#281)
 - Deprecate `weak_rng`. Use `SmallRng` instead. (#296)
-- Deprecate `random`. (#296)
 - Deprecate `AsciiGenerator`. (#279)
 
 ### Random number generators
@@ -56,13 +56,14 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Change `thread_rng` reseeding threshold to 32 MiB. (#277)
 - PRNGs no longer implement `Copy`. (#209)
 - `Debug` implementations no longer show internals. (#209)
+- Implement `Clone` for `ReseedingRng`, `JitterRng`, OsRng`. (#383, #384)
 - Implement serialization for `XorShiftRng`, `IsaacRng` and `Isaac64Rng` under the `serde1` feature. (#189)
 - Implement `BlockRngCore` for `ChaChaCore` and `Hc128Core`. (#281)
 - All PRNGs are now portable across big- and little-endian architectures. (#209)
 - `Isaac64Rng::next_u32` no longer throws away half the results. (#209)
 - Add `IsaacRng::new_from_u64` and `Isaac64Rng::new_from_u64`. (#209)
 - Add the HC-128 CSPRNG `Hc128Rng`. (#210)
-- Add `ChaChaRng::set_rounds` method. (#243)
+- Change ChaCha20 to have 64-bit counter and 64-bit stream. (#349)
 - Changes to `JitterRng` to get its size down from 2112 to 24 bytes. (#251)
 - Various performance improvements to all PRNGs.
 
@@ -80,17 +81,21 @@ You may also find the [Update Guide](UPDATING.md) useful.
 
 ### Distributions
 - New `Distribution` trait. (#256)
+- Add `Distribution::sample_iter` and `Rng::::sample_iter`. (#361)
 - Deprecate `Rand`, `Sample` and `IndependentSample` traits. (#256)
 - Add a `Standard` distribution (replaces most `Rand` implementations). (#256)
 - Add `Binomial` and `Poisson` distributions. (#96)
+- Add `Bernoulli` dsitribution. (#411)
 - Add `Alphanumeric` distribution. (#279)
-- Remove `Open01` and `Closed01` distributions, use `Standard` instead (open distribution). (#274)
+- Remove `Closed01` distribution, add `OpenClosed01`. (#274, #420)
 - Rework `Range` type, making it possible to implement it for user types. (#274)
-- Add `Range::new_inclusive` for inclusive ranges. (#274)
-- Add `Range::sample_single` to allow for optimized implementations. (#274)
+- Rename `Range` to `Uniform`. (#395)
+- Add `Uniform::new_inclusive` for inclusive ranges. (#274)
 - Use widening multiply method for much faster integer range reduction. (#274)
-- `Standard` distributions for `bool` uses `Range`. (#274)
-- `Standard` distributions for `bool` uses sign test. (#274)
+- `Standard` distribution for `char` uses `Uniform` internally. (#274)
+- `Standard` distribution for `bool` uses sign test. (#274)
+- Implement `Standard` distribution for `Wrapping<T>`. (#436)
+- Implement `Uniform` distribution for `Duration`. (#427)
 
 
 ## [0.4.2] - 2018-01-06
