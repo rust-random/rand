@@ -81,6 +81,7 @@
 //! - Related to real-valued quantities that grow linearly
 //!   (e.g. errors, offsets):
 //!   - [`Normal`] distribution, and [`StandardNormal`] as a primitive
+//!   - [`Cauchy`] distribution
 //! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
 //!   - [`Bernoulli`] distribution, similar to [`Rng::gen_bool`].
@@ -147,6 +148,7 @@
 //! [`Alphanumeric`]: struct.Alphanumeric.html
 //! [`Bernoulli`]: struct.Bernoulli.html
 //! [`Binomial`]: struct.Binomial.html
+//! [`Cauchy`]: struct.Cauchy.html
 //! [`ChiSquared`]: struct.ChiSquared.html
 //! [`Exp`]: struct.Exp.html
 //! [`Exp1`]: struct.Exp1.html
@@ -180,6 +182,8 @@ pub use self::uniform::Uniform as Range;
 #[cfg(feature = "std")]
 #[doc(inline)] pub use self::binomial::Binomial;
 #[doc(inline)] pub use self::bernoulli::Bernoulli;
+#[cfg(feature = "std")]
+#[doc(inline)] pub use self::cauchy::Cauchy;
 
 pub mod uniform;
 #[cfg(feature="std")]
@@ -193,6 +197,8 @@ pub mod uniform;
 #[cfg(feature = "std")]
 #[doc(hidden)] pub mod binomial;
 #[doc(hidden)] pub mod bernoulli;
+#[cfg(feature = "std")]
+#[doc(hidden)] pub mod cauchy;
 
 mod float;
 mod integer;

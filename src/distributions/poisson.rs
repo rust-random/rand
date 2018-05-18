@@ -11,9 +11,8 @@
 //! The Poisson distribution.
 
 use Rng;
-use distributions::Distribution;
+use distributions::{Distribution, Cauchy};
 use distributions::log_gamma::log_gamma;
-use std::f64::consts::PI;
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///
@@ -73,23 +72,16 @@ impl Distribution<u64> for Poisson {
         else {
             let mut int_result: u64;
 
+            // we use the Cauchy distribution as the comparison distribution
+            // f(x) ~ 1/(1+x^2)
+            let cauchy = Cauchy::new(0.0, 1.0);
             loop {
-                let mut result;
-                let mut comp_dev;
+                // draw from the Cauchy distribution
+                let comp_dev = rng.sample(cauchy);
+                // shift the peak of the comparison ditribution
+                let mut result = self.sqrt_2lambda * comp_dev + self.lambda;
 
-                // we use the lorentzian distribution as the comparison distribution
-                // f(x) ~ 1/(1+x/^2)
-                loop {
-                    // draw from the lorentzian distribution
-                    comp_dev = (PI * rng.gen::<f64>()).tan();
-                    // shift the peak of the comparison ditribution
-                    result = self.sqrt_2lambda * comp_dev + self.lambda;
-                    // repeat the drawing until we are in the range of possible values
-                    if result >= 0.0 {
-                        break;
-                    }
-                }
-                // now the result is a random variable greater than 0 with Lorentzian distribution
+                // now the result is a random variable greater than 0 with Cauchy distribution
                 // the result should be an integer value
                 result = result.floor();
                 int_result = result as u64;
