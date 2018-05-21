@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2018-05-21
 - Enable the `std` feature by default. (#409)
 - Remove `BlockRng{64}::inner` and `BlockRng::inner_mut`; instead making `core` public
 - Add `BlockRng{64}::index` and `BlockRng{64}::generate_and_set`. (#374, #419)

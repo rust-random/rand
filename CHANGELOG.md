@@ -9,7 +9,7 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Update Guide](UPDATING.md) useful.
 
 
-## [0.5.0] - Unreleased
+## [0.5.0] - 2018-05-21
 
 ### Crate features and organisation
 - Minimum Rust version update: 1.22.0. (#239)

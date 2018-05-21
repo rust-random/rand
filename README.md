@@ -25,7 +25,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.5.0-pre.1"
+rand = "0.5"
 ```
 
 and this to your crate root:
