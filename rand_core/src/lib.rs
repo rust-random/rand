@@ -395,3 +395,10 @@ impl std::io::Read for RngCore {
         Ok(buf.len())
     }
 }
+
+// Implement `CryptoRng` for references to an `CryptoRng`.
+impl<'a, R: CryptoRng + ?Sized> CryptoRng for &'a mut R {}
+
+// Implement `CryptoRng` for boxed references to an `CryptoRng`.
+#[cfg(feature="alloc")]
+impl<R: CryptoRng + ?Sized> CryptoRng for Box<R> {}
