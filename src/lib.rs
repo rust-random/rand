@@ -385,7 +385,8 @@ pub trait Rng: RngCore {
     /// repeatedly with the same arguments, it will likely be faster to
     /// construct a [`Uniform`] distribution object and sample from that; this
     /// allows amortization of the computations that allow for perfect
-    /// uniformity within the [`Uniform::new`] constructor.
+    /// uniformity within the [`Uniform::new`] constructor and the
+    /// computations allow faster sampling with [`Uniform::sample`].
     ///
     /// # Panics
     ///
@@ -406,6 +407,7 @@ pub trait Rng: RngCore {
     /// [`Uniform`]: distributions/uniform/struct.Uniform.html
     /// [`Uniform::new`]: distributions/uniform/struct.Uniform.html#method.new
     /// [`Uniform::sample_single`]: distributions/uniform/struct.Uniform.html#method.sample_single
+    /// [`Uniform::sample`]: distributions/uniform/struct.Uniform.html#method.sample
     fn gen_range<T: PartialOrd + SampleUniform>(&mut self, low: T, high: T) -> T {
         T::Sampler::sample_single(low, high, self)
     }
