@@ -49,13 +49,14 @@ impl Cauchy {
 
 impl Distribution<f64> for Cauchy {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let mut x = rng.gen::<f64>();
-        // guard against the extremely unlikely event we get 0 or 1 from the generator
-        while x <= 0.0 || x >= 1.0 {
+        // sample from [0, 1)
+        let mut x: f64 = rng.gen::<f64>();
+        // guard against the extremely unlikely case we get the invalid 0.5
+        while x == 0.5 {
             x = rng.gen::<f64>();
         }
         // get standard cauchy random number
-        let comp_dev = (2.0 * PI * x).tan();
+        let comp_dev = (PI * x).tan();
         // shift and scale according to parameters
         let result = self.median + self.scale * comp_dev;
         result
