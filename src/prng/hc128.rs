@@ -62,7 +62,7 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 ///      Implementation Of HC-128 Stream Cipher"](
 ///      http://library.isical.ac.in:8080/jspui/bitstream/123456789/6636/1/TH431.pdf).
 ///
-/// [5]: Internet Engineering Task Force (Februari 2015),
+/// [5]: Internet Engineering Task Force (February 2015),
 ///      ["Prohibiting RC4 Cipher Suites"](https://tools.ietf.org/html/rfc7465).
 ///
 /// [`BlockRng`]: ../../../rand_core/block/struct.BlockRng.html
