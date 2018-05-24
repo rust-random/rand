@@ -50,7 +50,7 @@ impl Cauchy {
 impl Distribution<f64> for Cauchy {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         // sample from [0, 1)
-        let mut x: f64 = rng.gen::<f64>();
+        let mut x = rng.gen::<f64>();
         // guard against the extremely unlikely case we get the invalid 0.5
         while x == 0.5 {
             x = rng.gen::<f64>();

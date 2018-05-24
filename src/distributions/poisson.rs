@@ -75,12 +75,21 @@ impl Distribution<u64> for Poisson {
             // we use the Cauchy distribution as the comparison distribution
             // f(x) ~ 1/(1+x^2)
             let cauchy = Cauchy::new(0.0, 1.0);
-            loop {
-                // draw from the Cauchy distribution
-                let comp_dev = rng.sample(cauchy);
-                // shift the peak of the comparison ditribution
-                let mut result = self.sqrt_2lambda * comp_dev + self.lambda;
 
+            loop {
+                let mut result;
+                let mut comp_dev;
+
+                loop {
+                    // draw from the Cauchy distribution
+                    comp_dev = rng.sample(cauchy);
+                    // shift the peak of the comparison ditribution
+                    result = self.sqrt_2lambda * comp_dev + self.lambda;
+                    // repeat the drawing until we are in the range of possible values
+                    if result >= 0.0 {
+                        break;
+                    }
+                }
                 // now the result is a random variable greater than 0 with Cauchy distribution
                 // the result should be an integer value
                 result = result.floor();

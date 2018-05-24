@@ -93,10 +93,17 @@ impl Distribution<u64> for Binomial {
         // f(x) ~ 1/(1+x^2)
         let cauchy = Cauchy::new(0.0, 1.0);
         loop {
-            // draw from the Cauchy distribution
-            let comp_dev = rng.sample(cauchy);
-            // shift the peak of the comparison distribution
-            lresult = expected + sq * comp_dev;
+            let mut comp_dev: f64;
+            loop {
+                // draw from the Cauchy distribution
+                comp_dev = rng.sample(cauchy);
+                // shift the peak of the comparison ditribution
+                lresult = expected + sq * comp_dev;
+                // repeat the drawing until we are in the range of possible values
+                if lresult >= 0.0 && lresult < float_n + 1.0 {
+                    break;
+                }
+            }
 
             // the result should be discrete
             lresult = lresult.floor();
