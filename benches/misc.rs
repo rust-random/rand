@@ -37,6 +37,30 @@ fn misc_gen_bool_var(b: &mut Bencher) {
 }
 
 #[bench]
+fn misc_gen_ratio_const(b: &mut Bencher) {
+    let mut rng = StdRng::from_rng(&mut thread_rng()).unwrap();
+    b.iter(|| {
+        let mut accum = true;
+        for _ in 0..::RAND_BENCH_N {
+            accum ^= rng.gen_ratio(2, 3);
+        }
+        accum
+    })
+}
+
+#[bench]
+fn misc_gen_ratio_var(b: &mut Bencher) {
+    let mut rng = StdRng::from_rng(&mut thread_rng()).unwrap();
+    b.iter(|| {
+        let mut accum = true;
+        for i in 2..(::RAND_BENCH_N as u32 + 2) {
+            accum ^= rng.gen_ratio(i, i + 1);
+        }
+        accum
+    })
+}
+
+#[bench]
 fn misc_bernoulli_const(b: &mut Bencher) {
     let mut rng = StdRng::from_rng(&mut thread_rng()).unwrap();
     let d = rand::distributions::Bernoulli::new(0.18);
