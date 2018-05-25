@@ -380,12 +380,9 @@ pub trait Rng: RngCore {
     /// Generate a random value in the range [`low`, `high`), i.e. inclusive of
     /// `low` and exclusive of `high`.
     ///
-    /// This is a convenience wrapper around
-    /// [`Uniform::sample_single`]. If this function will be called
-    /// repeatedly with the same arguments, it will likely be faster to
-    /// construct a [`Uniform`] distribution object and sample from that; this
-    /// allows amortization of the computations that allow for perfect
-    /// uniformity within the [`Uniform::new`] constructor.
+    /// This function is optimised for the case that only a single sample is
+    /// made from the given range. See also the [`Uniform`] distribution
+    /// type which may be faster if sampling from the same range repeatedly.
     ///
     /// # Panics
     ///
@@ -404,8 +401,6 @@ pub trait Rng: RngCore {
     /// ```
     ///
     /// [`Uniform`]: distributions/uniform/struct.Uniform.html
-    /// [`Uniform::new`]: distributions/uniform/struct.Uniform.html#method.new
-    /// [`Uniform::sample_single`]: distributions/uniform/struct.Uniform.html#method.sample_single
     fn gen_range<T: PartialOrd + SampleUniform>(&mut self, low: T, high: T) -> T {
         T::Sampler::sample_single(low, high, self)
     }
