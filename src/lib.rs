@@ -113,8 +113,8 @@
 //! if rng.gen() { // random bool
 //!     let x: f64 = rng.gen(); // random number in range (0, 1)
 //!     println!("x is: {}", x);
-//!     let char = rng.gen::<char>(); // using type annotation
-//!     println!("char is: {}", char);
+//!     let ch = rng.gen::<char>(); // using type annotation
+//!     println!("char is: {}", ch);
 //!     println!("Number from 0 to 9: {}", rng.gen_range(0, 10));
 //! }
 //! ```
