@@ -666,8 +666,10 @@ impl UniformSampler for UniformDuration {
                 Duration::new(nanos / 1_000_000_000, (nanos % 1_000_000_000) as u32)
             }
             UniformDurationMode::Large { size, secs } => {
+                // constant folding means this is at least as fast as `gen_range`
+                let nano_range = Uniform::new(0, 1_000_000_000);
                 loop {
-                    let d = Duration::new(secs.sample(rng), rng.gen_range(0, 1_000_000_000));
+                    let d = Duration::new(secs.sample(rng), nano_range.sample(rng));
                     if d <= size {
                         break d;
                     }
