@@ -9,6 +9,8 @@
 // except according to those terms.
 
 //! Functions for randomly accessing and sampling sequences.
+//! 
+//! TODO: module doc
 
 use super::Rng;
 
@@ -18,6 +20,158 @@ use super::Rng;
 #[cfg(not(feature="std"))] use alloc::btree_map::BTreeMap;
 
 #[cfg(not(feature="std"))] use alloc::Vec;
+
+
+/// Extension trait on slices, providing random mutation and sampling methods.
+/// 
+/// An implementation is provided for slices. This may also be implementable for
+/// other types.
+pub trait SliceExt {
+    /// The element type.
+    type Item;
+
+    /// Returns a reference to one random element of the slice, or `None` if the
+    /// slice is empty.
+    /// 
+    /// Depending on the implementation, complexity is expected to be `O(1)`.
+    fn choose<R>(&self, rng: &mut R) -> Option<&Self::Item>
+        where R: Rng + ?Sized;
+
+    /// Returns a mutable reference to one random element of the slice, or
+    /// `None` if the slice is empty.
+    /// 
+    /// Depending on the implementation, complexity is expected to be `O(1)`.
+    fn choose_mut<R>(&mut self, rng: &mut R) -> Option<&mut Self::Item>
+        where R: Rng + ?Sized;
+
+    /// Produces an iterator that chooses `amount` elements from the slice at
+    /// random without repeating any.
+    ///
+    /// In case this API is not sufficiently flexible, use `sample_indices` then
+    /// apply the indices to the slice.
+    /// 
+    /// Although the elements are selected randomly, the order of returned
+    /// elements is neither stable nor fully random. If random ordering is
+    /// desired, either use `partial_shuffle` or use this method and shuffle
+    /// the result. If stable order is desired, use `sample_indices`, sort the
+    /// result, then apply to the slice.
+    /// 
+    /// Complexity is expected to be the same as `sample_indices`.
+    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> Vec<&Self::Item>
+        where R: Rng + ?Sized;
+
+    /// Shuffle a slice in place.
+    /// 
+    /// Depending on the implementation, complexity is expected to be `O(1)`.
+    fn shuffle<R>(&mut self, rng: &mut R) where R: Rng + ?Sized;
+
+    /// Shuffle a slice in place, but exit early.
+    ///
+    /// Returns two mutable slices from the source slice. The first contains
+    /// `amount` elements randomly permuted. The second has the remaining
+    /// elements that are not fully shuffled.
+    ///
+    /// This is an efficient method to select `amount` elements at random from
+    /// the slice, provided the slice may be mutated.
+    ///
+    /// If you only need to chose elements randomly and `amount > self.len()/2`
+    /// then you may improve performance by taking
+    /// `amount = values.len() - amount` and using only the second slice.
+    ///
+    /// If `amount` is greater than the number of elements in the slice, this
+    /// will perform a full shuffle.
+    ///
+    /// Depending on the implementation, complexity is expected to be `O(m)`,
+    /// where `m = amount`.
+    fn partial_shuffle<R>(&mut self, rng: &mut R, amount: usize)
+        -> (&mut [Self::Item], &mut [Self::Item]) where R: Rng + ?Sized;
+}
+
+/// Extension trait on iterators, providing random sampling methods.
+pub trait IteratorExt: Iterator + Sized {
+    /// Choose one element at random from the iterator.
+    ///
+    /// Returns `None` if and only if the iterator is empty.
+    /// 
+    /// Complexity is `O(n)`, where `n` is the length of the iterator.
+    /// This likely consumes multiple random numbers, but the exact number
+    /// is unspecified.
+    fn choose<R>(self, rng: &mut R) -> Option<Self::Item>
+        where R: Rng + ?Sized
+    {
+        unimplemented!()
+    }
+
+    /// Collects `amount` values at random from the iterator into a supplied
+    /// buffer.
+    ///
+    /// Returns the number of elements added to the buffer. This equals `amount`
+    /// unless the iterator contains insufficient elements, in which case this
+    /// equals the number of elements available.
+    /// 
+    /// Complexity is TODO
+    fn choose_multiple_fill<R>(self, rng: &mut R, amount: usize) -> usize
+        where R: Rng + ?Sized
+    {
+        unimplemented!()
+    }
+
+    /// Collects `amount` values at random from the iterator into a vector.
+    ///
+    /// This is a convenience wrapper around `choose_multiple_fill`.
+    ///
+    /// The length of the returned vector equals `amount` unless the iterator
+    /// contains insufficient elements, in which case it equals the number of
+    /// elements available.
+    /// 
+    /// Complexity is TODO
+    #[cfg(any(feature="std", feature="alloc"))]
+    fn choose_multiple<R>(self, rng: &mut R, amount: usize) -> Vec<Self::Item>
+        where R: Rng + ?Sized
+    {
+        // Note: I think this must use unsafe to create an uninitialised buffer, then restrict length
+        unimplemented!()
+    }
+}
+
+
+impl<T> SliceExt for [T] {
+    type Item = T;
+
+    fn choose<R>(&self, rng: &mut R) -> Option<&Self::Item>
+        where R: Rng + ?Sized
+    {
+        unimplemented!()
+    }
+
+    fn choose_mut<R>(&mut self, rng: &mut R) -> Option<&mut Self::Item>
+        where R: Rng + ?Sized
+    {
+        unimplemented!()
+    }
+
+    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> Vec<&Self::Item>
+        where R: Rng + ?Sized
+    {
+        unimplemented!()
+    }
+
+    fn shuffle<R>(&mut self, rng: &mut R) where R: Rng + ?Sized
+    {
+        unimplemented!()
+    }
+
+    fn partial_shuffle<R>(&mut self, rng: &mut R, amount: usize)
+        -> (&mut [Self::Item], &mut [Self::Item]) where R: Rng + ?Sized
+    {
+        unimplemented!()
+    }
+}
+
+// ———
+// TODO: remove below methods once implemented above
+// TODO: also revise signature of `sample_indices`?
+// ———
 
 /// Randomly sample `amount` elements from a finite iterator.
 ///
