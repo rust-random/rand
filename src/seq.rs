@@ -33,6 +33,18 @@ pub trait SliceExt {
     /// slice is empty.
     /// 
     /// Depending on the implementation, complexity is expected to be `O(1)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::thread_rng;
+    /// use rand::seq::SliceExt;
+    ///
+    /// let choices = [1, 2, 4, 8, 16, 32];
+    /// let mut rng = thread_rng();
+    /// println!("{:?}", choices.choose(&mut rng));
+    /// assert_eq!(choices[..0].choose(&mut rng), None);
+    /// ```
     fn choose<R>(&self, rng: &mut R) -> Option<&Self::Item>
         where R: Rng + ?Sized;
 
@@ -60,9 +72,22 @@ pub trait SliceExt {
     fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> Vec<&Self::Item>
         where R: Rng + ?Sized;
 
-    /// Shuffle a slice in place.
+    /// Shuffle a mutable slice in place.
     /// 
     /// Depending on the implementation, complexity is expected to be `O(1)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::thread_rng;
+    /// use rand::seq::SliceExt;
+    ///
+    /// let mut rng = thread_rng();
+    /// let mut y = [1, 2, 3, 4, 5];
+    /// println!("Unshuffled: {:?}", y);
+    /// y.shuffle(&mut rng);
+    /// println!("Shuffled:   {:?}", y);
+    /// ```
     fn shuffle<R>(&mut self, rng: &mut R) where R: Rng + ?Sized;
 
     /// Shuffle a slice in place, but exit early.
@@ -141,13 +166,22 @@ impl<T> SliceExt for [T] {
     fn choose<R>(&self, rng: &mut R) -> Option<&Self::Item>
         where R: Rng + ?Sized
     {
-        unimplemented!()
+        if self.is_empty() {
+            None
+        } else {
+            Some(&self[rng.gen_range(0, self.len())])
+        }
     }
 
     fn choose_mut<R>(&mut self, rng: &mut R) -> Option<&mut Self::Item>
         where R: Rng + ?Sized
     {
-        unimplemented!()
+        if self.is_empty() {
+            None
+        } else {
+            let len = self.len();
+            Some(&mut self[rng.gen_range(0, len)])
+        }
     }
 
     #[cfg(feature = "alloc")]
@@ -159,7 +193,13 @@ impl<T> SliceExt for [T] {
 
     fn shuffle<R>(&mut self, rng: &mut R) where R: Rng + ?Sized
     {
-        unimplemented!()
+        let mut i = self.len();
+        while i >= 2 {
+            // invariant: elements with index >= i have been locked in place.
+            i -= 1;
+            // lock element i in place.
+            self.swap(i, rng.gen_range(0, i + 1));
+        }
     }
 
     fn partial_shuffle<R>(&mut self, rng: &mut R, amount: usize)
@@ -390,6 +430,35 @@ mod test {
     use {XorShiftRng, Rng, SeedableRng};
     #[cfg(all(feature="alloc", not(feature="std")))]
     use alloc::Vec;
+
+    #[test]
+    fn test_choose() {
+        let mut r = ::test::rng(107);
+        assert_eq!([1, 1, 1].choose(&mut r).map(|&x|x), Some(1));
+
+        let v: &[isize] = &[];
+        assert_eq!(v.choose(&mut r), None);
+    }
+
+    #[test]
+    fn test_shuffle() {
+        let mut r = ::test::rng(108);
+        let empty: &mut [isize] = &mut [];
+        empty.shuffle(&mut r);
+        let mut one = [1];
+        one.shuffle(&mut r);
+        let b: &[_] = &[1];
+        assert_eq!(one, b);
+
+        let mut two = [1, 2];
+        two.shuffle(&mut r);
+        assert!(two == [1, 2] || two == [2, 1]);
+
+        let mut x = [1, 1, 1];
+        x.shuffle(&mut r);
+        let b: &[_] = &[1, 1, 1];
+        assert_eq!(x, b);
+    }
 
     #[test]
     #[cfg(feature = "alloc")]
