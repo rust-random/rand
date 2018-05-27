@@ -150,17 +150,6 @@ fn gen_1k_iter_repeat(b: &mut Bencher) {
 }
 
 #[bench]
-#[allow(deprecated)]
-fn gen_1k_gen_iter(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
-    b.iter(|| {
-        let v: Vec<u64> = rng.gen_iter().take(128).collect();
-        v
-    });
-    b.bytes = 1024;
-}
-
-#[bench]
 fn gen_1k_sample_iter(b: &mut Bencher) {
     use rand::distributions::{Distribution, Standard};
     let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
