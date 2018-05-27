@@ -284,7 +284,20 @@ impl<T> SliceRandom for [T] {
     fn partial_shuffle<R>(&mut self, rng: &mut R, amount: usize)
         -> (&mut [Self::Item], &mut [Self::Item]) where R: Rng + ?Sized
     {
-        unimplemented!()
+        // This applies Durstenfeld's algorithm for the
+        // [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
+        // for an unbiased permutation, but exits early after choosing `amount`
+        // elements.
+        
+        let len = self.len();
+        let end = if amount >= len { 0 } else { len - amount };
+        
+        for i in (end..len).rev() {
+            // invariant: elements with index > i have been locked in place.
+            self.swap(i, rng.gen_range(0, i + 1));
+        }
+        let r = self.split_at_mut(end);
+        (r.1, r.0)
     }
 }
 
@@ -499,8 +512,7 @@ fn sample_indices_cache<R>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use Rng;
-    #[cfg(feature = "alloc")] use SeedableRng;
+    #[cfg(feature = "alloc")] use {Rng, SeedableRng};
     #[cfg(feature = "alloc")] use prng::XorShiftRng;
     #[cfg(all(feature="alloc", not(feature="std")))]
     use alloc::Vec;
@@ -539,6 +551,22 @@ mod test {
         x.shuffle(&mut r);
         let b: &[_] = &[1, 1, 1];
         assert_eq!(x, b);
+    }
+    
+    #[test]
+    fn test_partial_shuffle() {
+        let mut r = ::test::rng(118);
+        
+        let mut empty: [u32; 0] = [];
+        let res = empty.partial_shuffle(&mut r, 10);
+        assert_eq!((res.0.len(), res.1.len()), (0, 0));
+        
+        let mut v = [1, 2, 3, 4, 5];
+        let res = v.partial_shuffle(&mut r, 2);
+        assert_eq!((res.0.len(), res.1.len()), (2, 3));
+        assert!(res.0[0] != res.0[1]);
+        // First elements are only modified if selected, so at least one isn't modified:
+        assert!(res.1[0] == 1 || res.1[1] == 2 || res.1[2] == 3);
     }
 
     #[test]
