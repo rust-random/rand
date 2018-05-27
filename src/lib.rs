@@ -588,64 +588,35 @@ pub trait Rng: RngCore {
 
     /// Return a random element from `values`.
     ///
-    /// Return `None` if `values` is empty.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let choices = [1, 2, 4, 8, 16, 32];
-    /// let mut rng = thread_rng();
-    /// println!("{:?}", rng.choose(&choices));
-    /// assert_eq!(rng.choose(&choices[..0]), None);
-    /// ```
+    /// Deprecated: use [`SliceRandom::choose`] instead.
+    /// 
+    /// [`SliceRandom::choose`]: seq/trait.SliceRandom.html#method.choose
+    #[deprecated(since="0.6.0", note="use SliceRandom::choose instead")]
     fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
-        if values.is_empty() {
-            None
-        } else {
-            Some(&values[self.gen_range(0, values.len())])
-        }
+        use seq::SliceRandom;
+        values.choose(self)
     }
 
     /// Return a mutable pointer to a random element from `values`.
     ///
-    /// Return `None` if `values` is empty.
+    /// Deprecated: use [`SliceRandom::choose_mut`] instead.
+    /// 
+    /// [`SliceRandom::choose_mut`]: seq/trait.SliceRandom.html#method.choose_mut
+    #[deprecated(since="0.6.0", note="use SliceRandom::choose_mut instead")]
     fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> {
-        if values.is_empty() {
-            None
-        } else {
-            let len = values.len();
-            Some(&mut values[self.gen_range(0, len)])
-        }
+        use seq::SliceRandom;
+        values.choose_mut(self)
     }
 
     /// Shuffle a mutable slice in place.
     ///
-    /// This applies Durstenfeld's algorithm for the [Fisher–Yates shuffle](
-    /// https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
-    /// which produces an unbiased permutation.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
-    /// let mut y = [1, 2, 3];
-    /// rng.shuffle(&mut y);
-    /// println!("{:?}", y);
-    /// rng.shuffle(&mut y);
-    /// println!("{:?}", y);
-    /// ```
+    /// Deprecated: use [`SliceRandom::shuffle`] instead.
+    /// 
+    /// [`SliceRandom::shuffle`]: seq/trait.SliceRandom.html#method.shuffle
+    #[deprecated(since="0.6.0", note="use SliceRandom::shuffle instead")]
     fn shuffle<T>(&mut self, values: &mut [T]) {
-        let mut i = values.len();
-        while i >= 2 {
-            // invariant: elements with index >= i have been locked in place.
-            i -= 1;
-            // lock element i in place.
-            values.swap(i, self.gen_range(0, i + 1));
-        }
+        use seq::SliceRandom;
+        values.shuffle(self)
     }
 }
 
@@ -1000,45 +971,12 @@ mod test {
     }
 
     #[test]
-    fn test_choose() {
-        let mut r = rng(107);
-        assert_eq!(r.choose(&[1, 1, 1]).map(|&x|x), Some(1));
-
-        let v: &[isize] = &[];
-        assert_eq!(r.choose(v), None);
-    }
-
-    #[test]
-    fn test_shuffle() {
-        let mut r = rng(108);
-        let empty: &mut [isize] = &mut [];
-        r.shuffle(empty);
-        let mut one = [1];
-        r.shuffle(&mut one);
-        let b: &[_] = &[1];
-        assert_eq!(one, b);
-
-        let mut two = [1, 2];
-        r.shuffle(&mut two);
-        assert!(two == [1, 2] || two == [2, 1]);
-
-        let mut x = [1, 1, 1];
-        r.shuffle(&mut x);
-        let b: &[_] = &[1, 1, 1];
-        assert_eq!(x, b);
-    }
-
-    #[test]
     fn test_rng_trait_object() {
         use distributions::{Distribution, Standard};
         let mut rng = rng(109);
         let mut r = &mut rng as &mut RngCore;
         r.next_u32();
         r.gen::<i32>();
-        let mut v = [1, 1, 1];
-        r.shuffle(&mut v);
-        let b: &[_] = &[1, 1, 1];
-        assert_eq!(v, b);
         assert_eq!(r.gen_range(0, 1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
@@ -1051,10 +989,6 @@ mod test {
         let mut r = Box::new(rng) as Box<RngCore>;
         r.next_u32();
         r.gen::<i32>();
-        let mut v = [1, 1, 1];
-        r.shuffle(&mut v);
-        let b: &[_] = &[1, 1, 1];
-        assert_eq!(v, b);
         assert_eq!(r.gen_range(0, 1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
