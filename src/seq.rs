@@ -139,10 +139,24 @@ pub trait IteratorRandom: Iterator + Sized {
     /// Complexity is `O(n)`, where `n` is the length of the iterator.
     /// This likely consumes multiple random numbers, but the exact number
     /// is unspecified.
-    fn choose<R>(self, rng: &mut R) -> Option<Self::Item>
+    fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
         where R: Rng + ?Sized
     {
-        unimplemented!()
+        if let Some(elem) = self.next() {
+            let mut result = elem;
+            
+            // Continue until the iterator is exhausted
+            for (i, elem) in self.enumerate() {
+                let denom = (i + 2) as f64; // accurate to 2^53 elements
+                if rng.gen_bool(1.0 / denom) {
+                    result = elem;
+                }
+            }
+            
+            Some(result)
+        } else {
+            None
+        }
     }
 
     /// Collects `amount` values at random from the iterator into a supplied
@@ -494,7 +508,14 @@ mod test {
     #[test]
     fn test_choose() {
         let mut r = ::test::rng(107);
-        assert_eq!([1, 1, 1].choose(&mut r).map(|&x|x), Some(1));
+        assert_eq!([1, 1, 1].choose(&mut r), Some(&1));
+        
+        let mut v = [2];
+        v.choose_mut(&mut r).map(|x| *x = 5);
+        assert_eq!(v[0], 5);
+
+        let v = [3, 3, 3, 3];
+        assert_eq!(v.iter().choose(&mut r), Some(&3));
 
         let v: &[isize] = &[];
         assert_eq!(v.choose(&mut r), None);
