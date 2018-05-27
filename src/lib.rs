@@ -268,7 +268,7 @@ pub mod distributions;
 pub mod prelude;
 pub mod prng;
 pub mod rngs;
-#[cfg(feature = "alloc")] pub mod seq;
+pub mod seq;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Compatibility re-exports. Documentation is hidden; will be removed eventually.
