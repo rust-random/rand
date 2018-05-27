@@ -12,14 +12,16 @@
 //! 
 //! TODO: module doc
 
-use super::Rng;
+#[cfg(feature="alloc")] use core::ops::Index;
+
+#[cfg(feature="std")] use std::vec;
+#[cfg(all(feature="alloc", not(feature="std")))] use alloc::{vec, Vec};
 
 // BTreeMap is not as fast in tests, but better than nothing.
 #[cfg(feature="std")] use std::collections::HashMap;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::btree_map::BTreeMap;
 
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::Vec;
-
+use super::Rng;
 
 /// Extension trait on slices, providing random mutation and sampling methods.
 /// 
@@ -69,7 +71,7 @@ pub trait SliceExt {
     /// 
     /// Complexity is expected to be the same as `sample_indices`.
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> Vec<&Self::Item>
+    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
         where R: Rng + ?Sized;
 
     /// Shuffle a mutable slice in place.
@@ -129,33 +131,78 @@ pub trait IteratorExt: Iterator + Sized {
 
     /// Collects `amount` values at random from the iterator into a supplied
     /// buffer.
-    ///
+    /// 
+    /// Although the elements are selected randomly, the order of elements in
+    /// the buffer is neither stable nor fully random. If random ordering is
+    /// desired, shuffle the result.
+    /// 
     /// Returns the number of elements added to the buffer. This equals `amount`
     /// unless the iterator contains insufficient elements, in which case this
     /// equals the number of elements available.
     /// 
-    /// Complexity is TODO
-    fn choose_multiple_fill<R>(self, rng: &mut R, amount: usize) -> usize
-        where R: Rng + ?Sized
+    /// Complexity is `O(n)` where `n` is the length of the iterator.
+    fn choose_multiple_fill<R>(mut self, rng: &mut R, buf: &mut [Self::Item])
+        -> usize where R: Rng + ?Sized
     {
-        unimplemented!()
+        let amount = buf.len();
+        let mut len = 0;
+        while len < amount {
+            if let Some(elem) = self.next() {
+                buf[len] = elem;
+                len += 1;
+            } else {
+                // Iterator exhausted; stop early
+                return len;
+            }
+        }
+
+        // Continue, since the iterator was not exhausted
+        for (i, elem) in self.enumerate() {
+            let k = rng.gen_range(0, i + 1 + amount);
+            if k < amount {
+                buf[k] = elem;
+            }
+        }
+        len
     }
 
     /// Collects `amount` values at random from the iterator into a vector.
     ///
-    /// This is a convenience wrapper around `choose_multiple_fill`.
+    /// This is equivalent to `choose_multiple_fill` except for the result type.
     ///
+    /// Although the elements are selected randomly, the order of elements in
+    /// the buffer is neither stable nor fully random. If random ordering is
+    /// desired, shuffle the result.
+    /// 
     /// The length of the returned vector equals `amount` unless the iterator
     /// contains insufficient elements, in which case it equals the number of
     /// elements available.
     /// 
-    /// Complexity is TODO
+    /// Complexity is `O(n)` where `n` is the length of the iterator.
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(self, rng: &mut R, amount: usize) -> Vec<Self::Item>
+    fn choose_multiple<R>(mut self, rng: &mut R, amount: usize) -> Vec<Self::Item>
         where R: Rng + ?Sized
     {
-        // Note: I think this must use unsafe to create an uninitialised buffer, then restrict length
-        unimplemented!()
+        let mut reservoir = Vec::with_capacity(amount);
+         reservoir.extend(self.by_ref().take(amount));
+
+        // Continue unless the iterator was exhausted
+        //
+        // note: this prevents iterators that "restart" from causing problems.
+        // If the iterator stops once, then so do we.
+        if reservoir.len() == amount {
+            for (i, elem) in self.enumerate() {
+                let k = rng.gen_range(0, i + 1 + amount);
+                if let Some(spot) = reservoir.get_mut(k) {
+                    *spot = elem;
+                }
+            }
+        } else {
+            // Don't hang onto extra memory. There is a corner case where
+            // `amount` was much less than `self.len()`.
+            reservoir.shrink_to_fit();
+        }
+        reservoir
     }
 }
 
@@ -185,10 +232,15 @@ impl<T> SliceExt for [T] {
     }
 
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> Vec<&Self::Item>
+    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
         where R: Rng + ?Sized
     {
-        unimplemented!()
+        let amount = ::core::cmp::min(amount, self.len());
+        SliceChooseIter {
+            slice: self,
+            _phantom: Default::default(),
+            indices: sample_indices(rng, self.len(), amount).into_iter(),
+        }
     }
 
     fn shuffle<R>(&mut self, rng: &mut R) where R: Rng + ?Sized
@@ -209,57 +261,55 @@ impl<T> SliceExt for [T] {
     }
 }
 
+impl<I> IteratorExt for I where I: Iterator + Sized {}
+
+
+/// Iterator over multiple choices, as returned by [`SliceExt::choose_multiple](
+/// trait.SliceExt.html#method.choose_multiple).
+#[cfg(feature = "alloc")]
+#[derive(Debug)]
+pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
+    slice: &'a S,
+    _phantom: ::core::marker::PhantomData<T>,
+    indices: vec::IntoIter<usize>,
+}
+
+#[cfg(feature = "alloc")]
+impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceChooseIter<'a, S, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.indices.next().map(|i| &(*self.slice)[i])
+    }
+    
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.indices.len(), Some(self.indices.len()))
+    }
+}
+
+
 // ———
-// TODO: remove below methods once implemented above
 // TODO: also revise signature of `sample_indices`?
 // ———
 
 /// Randomly sample `amount` elements from a finite iterator.
 ///
-/// The following can be returned:
-///
-/// - `Ok`: `Vec` of `amount` non-repeating randomly sampled elements. The order is not random.
-/// - `Err`: `Vec` of all the elements from `iterable` in sequential order. This happens when the
-///   length of `iterable` was less than `amount`. This is considered an error since exactly
-///   `amount` elements is typically expected.
-///
-/// This implementation uses `O(len(iterable))` time and `O(amount)` memory.
-///
-/// # Example
-///
-/// ```
-/// use rand::{thread_rng, seq};
-///
-/// let mut rng = thread_rng();
-/// let sample = seq::sample_iter(&mut rng, 1..100, 5).unwrap();
-/// println!("{:?}", sample);
-/// ```
+/// Deprecated: use [`IteratorExt::choose_multiple`] instead.
+/// 
+/// [`IteratorExt::choose_multiple`]: trait.IteratorExt.html#method.choose_multiple
 #[cfg(feature = "alloc")]
+#[deprecated(since="0.6.0", note="use IteratorExt::choose_multiple instead")]
 pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<Vec<T>, Vec<T>>
     where I: IntoIterator<Item=T>,
           R: Rng + ?Sized,
 {
-    let mut iter = iterable.into_iter();
-    let mut reservoir = Vec::with_capacity(amount);
-    reservoir.extend(iter.by_ref().take(amount));
-
-    // Continue unless the iterator was exhausted
-    //
-    // note: this prevents iterators that "restart" from causing problems.
-    // If the iterator stops once, then so do we.
-    if reservoir.len() == amount {
-        for (i, elem) in iter.enumerate() {
-            let k = rng.gen_range(0, i + 1 + amount);
-            if let Some(spot) = reservoir.get_mut(k) {
-                *spot = elem;
-            }
-        }
-        Ok(reservoir)
+    use seq::IteratorExt;
+    let iter = iterable.into_iter();
+    let result = iter.choose_multiple(rng, amount);
+    if result.len() == amount {
+        Ok(result)
     } else {
-        // Don't hang onto extra memory. There is a corner case where
-        // `amount` was much less than `len(iterable)`.
-        reservoir.shrink_to_fit();
-        Err(reservoir)
+        Err(result)
     }
 }
 
@@ -426,6 +476,7 @@ fn sample_indices_cache<R>(
 #[cfg(test)]
 mod test {
     use super::*;
+    use super::IteratorExt;
     #[cfg(feature = "alloc")]
     use {XorShiftRng, Rng, SeedableRng};
     #[cfg(all(feature="alloc", not(feature="std")))]
@@ -468,8 +519,8 @@ mod test {
 
         let mut r = ::test::rng(401);
         let vals = (min_val..max_val).collect::<Vec<i32>>();
-        let small_sample = sample_iter(&mut r, vals.iter(), 5).unwrap();
-        let large_sample = sample_iter(&mut r, vals.iter(), vals.len() + 5).unwrap_err();
+        let small_sample = vals.iter().choose_multiple(&mut r, 5);
+        let large_sample = vals.iter().choose_multiple(&mut r, vals.len() + 5);
 
         assert_eq!(small_sample.len(), 5);
         assert_eq!(large_sample.len(), vals.len());
