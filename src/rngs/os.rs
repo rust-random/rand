@@ -61,7 +61,7 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// `wasm32-unknown-emscripten` and `wasm32-experimental-emscripten` use
 /// Emscripten's emulation of `/dev/random` on web browsers and Node.js.
 /// Unfortunately it falls back to the insecure `Math.random()` if a browser
-/// doesn't support [`Crypto.getRandomValues`][12].a browser doesn't support Crypto.getRandomValues.
+/// doesn't support [`Crypto.getRandomValues`][12].
 ///
 /// The bare Wasm target `wasm32-unknown-unknown` tries to call the javascript
 /// methods directly, using `stdweb` in combination with `cargo-web`.
@@ -248,7 +248,7 @@ mod unix {
     // Read a single byte from `/dev/random` in non-blocking mode, to determine
     // if the OS RNG is already seeded.
     fn try_dev_random() -> Result<(), io::Error> {
-        info!("OsRng: opening random device /dev/random");
+        info!("OsRng: testing random device /dev/random");
         let mut file = OpenOptions::new()
             .read(true)
             .custom_flags(libc::O_NONBLOCK)
@@ -309,44 +309,40 @@ mod imp {
         }
     }
 
-    #[cfg(any(target_arch = "x86_64", target_arch = "x86",
-              target_arch = "arm", target_arch = "aarch64",
-              target_arch = "s390x", target_arch = "powerpc",
-              target_arch = "mips", target_arch = "mips64"))]
+    #[cfg(target_arch = "x86_64")]
+    const NR_GETRANDOM: libc::c_long = 318;
+    #[cfg(target_arch = "x86")]
+    const NR_GETRANDOM: libc::c_long = 355;
+    #[cfg(target_arch = "arm")]
+    const NR_GETRANDOM: libc::c_long = 384;
+    #[cfg(target_arch = "aarch64")]
+    const NR_GETRANDOM: libc::c_long = 278;
+     #[cfg(target_arch = "s390x")]
+    const NR_GETRANDOM: libc::c_long = 349;
+    #[cfg(target_arch = "powerpc")]
+    const NR_GETRANDOM: libc::c_long = 359;
+    #[cfg(target_arch = "mips")] // old ABI
+    const NR_GETRANDOM: libc::c_long = 4353;
+    #[cfg(target_arch = "mips64")]
+    const NR_GETRANDOM: libc::c_long = 5313;
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "x86",
+                  target_arch = "arm", target_arch = "aarch64",
+                  target_arch = "s390x", target_arch = "powerpc",
+                  target_arch = "mips", target_arch = "mips64")))]
+    const NR_GETRANDOM: libc::c_long = 0;
+
     fn getrandom(buf: &mut [u8]) -> libc::c_long {
         extern "C" {
             fn syscall(number: libc::c_long, ...) -> libc::c_long;
         }
-
-        #[cfg(target_arch = "x86_64")]
-        const NR_GETRANDOM: libc::c_long = 318;
-        #[cfg(target_arch = "x86")]
-        const NR_GETRANDOM: libc::c_long = 355;
-        #[cfg(target_arch = "arm")]
-        const NR_GETRANDOM: libc::c_long = 384;
-        #[cfg(target_arch = "aarch64")]
-        const NR_GETRANDOM: libc::c_long = 278;
-         #[cfg(target_arch = "s390x")]
-        const NR_GETRANDOM: libc::c_long = 349;
-        #[cfg(target_arch = "powerpc")]
-        const NR_GETRANDOM: libc::c_long = 359;
-        #[cfg(target_arch = "mips")] // old ABI
-        const NR_GETRANDOM: libc::c_long = 4353;
-        #[cfg(target_arch = "mips64")]
-        const NR_GETRANDOM: libc::c_long = 5313;
-
         const GRND_NONBLOCK: libc::c_uint = 0x0001;
+
+        if NR_GETRANDOM == 0 { return -1 };
 
         unsafe {
             syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(), GRND_NONBLOCK)
         }
     }
-
-    #[cfg(not(any(target_arch = "x86_64", target_arch = "x86",
-                  target_arch = "arm", target_arch = "aarch64",
-                  target_arch = "s390x", target_arch = "powerpc",
-                  target_arch = "mips", target_arch = "mips64")))]
-    fn getrandom(_buf: &mut [u8]) -> libc::c_long { -1 }
 
     fn getrandom_try_fill(dest: &mut [u8]) -> Result<(), Error> {
         trace!("OsRng: reading {} bytes via getrandom", dest.len());
@@ -382,16 +378,14 @@ mod imp {
         Ok(())
     }
 
-    #[cfg(any(target_arch = "x86_64", target_arch = "x86",
-              target_arch = "arm", target_arch = "aarch64",
-              target_arch = "s390x", target_arch = "powerpc",
-              target_arch = "mips", target_arch = "mips64"))]
     fn is_getrandom_available() -> bool {
         use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
         use std::sync::{Once, ONCE_INIT};
 
         static CHECKER: Once = ONCE_INIT;
         static AVAILABLE: AtomicBool = ATOMIC_BOOL_INIT;
+
+        if NR_GETRANDOM == 0 { return false };
 
         CHECKER.call_once(|| {
             debug!("OsRng: testing getrandom");
@@ -409,12 +403,6 @@ mod imp {
 
         AVAILABLE.load(Ordering::Relaxed)
     }
-
-    #[cfg(not(any(target_arch = "x86_64", target_arch = "x86",
-                  target_arch = "arm", target_arch = "aarch64",
-                  target_arch = "s390x", target_arch = "powerpc",
-                  target_arch = "mips", target_arch = "mips64")))]
-    fn is_getrandom_available() -> bool { false }
 }
 
 // Read from `/dev/urandom`, after reading from `/dev/random` once
@@ -449,7 +437,7 @@ mod imp {
 
     impl OsRng {
         pub fn new() -> Result<OsRng, Error> {
-            open_random_device("/dev/urandom", false)?;
+            open_random_device("/dev/random", false)?;
             Ok(OsRng())
         }
 
