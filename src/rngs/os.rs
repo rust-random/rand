@@ -33,20 +33,22 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 ///
 /// # Platform sources
 ///
-/// | OS              | interface
-/// |-----------------|---------------------------------------------------------
-/// | Linux, Android  | [`getrandom`][1] system call if available, otherwise [`/dev/urandom`][2] after reading from `/dev/random` once
-/// | Windows         | [`RtlGenRandom`][3]
-/// | macOS, iOS      | [`SecRandomCopyBytes`][4]
-/// | FreeBSD         | [`kern.arandom`][5]
-/// | OpenBSD, Bitrig | [`getentropy`][6]
-/// | NetBSD          | [`/dev/urandom`][7] after reading from `/dev/random` once
-/// | Dragonfly BSD   | [`/dev/random`][8]
-/// | Fuchsia OS      | [`cprng_draw`][9]
-/// | Redox           | [`rand:`][10]
-/// | CloudABI        | [`random_get`][11]
-/// | Web browsers    | [`Crypto.getRandomValues`][12] (see [Support for WebAssembly and ams.js][14])
-/// | Node.js         | [`crypto.randomBytes`][13] (see [Support for WebAssembly and ams.js][14])
+/// | OS               | interface
+/// |------------------|---------------------------------------------------------
+/// | Linux, Android   | [`getrandom`][1] system call if available, otherwise [`/dev/urandom`][2] after reading from `/dev/random` once
+/// | Windows          | [`RtlGenRandom`][3]
+/// | macOS, iOS       | [`SecRandomCopyBytes`][4]
+/// | FreeBSD          | [`kern.arandom`][5]
+/// | OpenBSD, Bitrig  | [`getentropy`][6]
+/// | NetBSD           | [`/dev/urandom`][7] after reading from `/dev/random` once
+/// | Dragonfly BSD    | [`/dev/random`][8]
+/// | Solaris, illumos | [`getrandom`][9] system call if available, otherwise [`/dev/random`][10]
+/// | Fuchsia OS       | [`cprng_draw`][11]
+/// | Redox            | [`rand:`][12]
+/// | CloudABI         | [`random_get`][13]
+/// | Haiku            | `/dev/random` (identical to `/dev/urandom`)
+/// | Web browsers     | [`Crypto.getRandomValues`][14] (see [Support for WebAssembly and ams.js][14])
+/// | Node.js          | [`crypto.randomBytes`][15] (see [Support for WebAssembly and ams.js][16])
 ///
 /// Rand doesn't have a blanket implementation for all Unix-like operating
 /// systems that reads from `/dev/urandom`. This ensures all supported operating
@@ -100,12 +102,14 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// [6]: https://man.openbsd.org/getentropy.2
 /// [7]: http://netbsd.gw.com/cgi-bin/man-cgi?random+4+NetBSD-current
 /// [8]: https://leaf.dragonflybsd.org/cgi/web-man?command=random&section=4
-/// [9]: https://fuchsia.googlesource.com/zircon/+/HEAD/docs/syscalls/cprng_draw.md
-/// [10]: https://github.com/redox-os/randd/blob/master/src/main.rs
-/// [11]: https://github.com/NuxiNL/cloudabi/blob/v0.20/cloudabi.txt#L1826
-/// [12]: https://www.w3.org/TR/WebCryptoAPI/#Crypto-method-getRandomValues
-/// [13]: https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
-/// [14]: #support-for-webassembly-and-amsjs
+/// [9]: https://docs.oracle.com/cd/E88353_01/html/E37841/getrandom-2.html
+/// [10]: https://docs.oracle.com/cd/E86824_01/html/E54777/random-7d.html
+/// [11]: https://fuchsia.googlesource.com/zircon/+/HEAD/docs/syscalls/cprng_draw.md
+/// [12]: https://github.com/redox-os/randd/blob/master/src/main.rs
+/// [13]: https://github.com/NuxiNL/cloudabi/blob/v0.20/cloudabi.txt#L1826
+/// [14]: https://www.w3.org/TR/WebCryptoAPI/#Crypto-method-getRandomValues
+/// [15]: https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+/// [16]: #support-for-webassembly-and-amsjs
 
 
 #[derive(Clone)]
@@ -193,7 +197,8 @@ impl RngCore for OsRng {
 // exhaustion of file descriptors.
 #[cfg(any(target_os = "linux", target_os = "android",
           target_os = "netbsd", target_os = "dragonfly",
-          target_os = "emscripten", target_os = "redox"))]
+          target_os = "solaris", target_os = "redox",
+          target_os = "haiku", target_os = "emscripten"))]
 mod unix {
     extern crate libc;
     use {Error, ErrorKind};
@@ -434,7 +439,7 @@ mod imp {
 }
 
 // Read from `/dev/random`
-#[cfg(target_os = "dragonfly")]
+#[cfg(any(target_os = "dragonfly", target_os = "haiku"))]
 mod imp {
     use Error;
     use super::unix::*;
@@ -480,6 +485,127 @@ mod imp {
             }
             Ok(())
         }
+    }
+}
+
+// Read from `/dev/random`, with chunks of limited size (1040 bytes).
+// `/dev/random` uses the Hash_DRBG with SHA512 algorithm from NIST SP 800-90A.
+// `/dev/urandom` uses the FIPS 186-2 algorithm, which is considered less
+// secure. We choose to read from `/dev/random`.
+//
+// Since Solaris 11.3 the `getrandom` syscall is available. To make sure we can
+// compile on both Solaris and on OpenSolaris derivatives, that do not have the
+// function, we do a direct syscall instead of calling a library function.
+//
+// We have no way to differentiate between Solaris, illumos, SmartOS, etc.
+#[cfg(target_os = "solaris")]
+mod imp {
+    extern crate libc;
+    use {Error, ErrorKind};
+    use std::io;
+    use super::unix::*;
+
+    #[derive(Clone, Debug)]
+    pub struct OsRng(OsRngMethod);
+
+    #[derive(Clone, Debug)]
+    enum OsRngMethod {
+        GetRandom,
+        RandomDevice,
+    }
+
+    impl OsRng {
+        pub fn new() -> Result<OsRng, Error> {
+            if is_getrandom_available() {
+                return Ok(OsRng(OsRngMethod::GetRandom));
+            }
+
+            open_random_device("/dev/random", false)?;
+            Ok(OsRng(OsRngMethod::RandomDevice))
+        }
+
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            for slice in dest.chunks_mut(1040) {
+                match self.0 {
+                    OsRngMethod::GetRandom => getrandom_try_fill(slice)?,
+                    OsRngMethod::RandomDevice => read_random_device(slice)?,
+                 }
+            }
+            Ok(())
+        }
+    }
+
+    fn getrandom(buf: &mut [u8]) -> libc::c_long {
+        extern "C" {
+            fn syscall(number: libc::c_long, ...) -> libc::c_long;
+        }
+
+        const SYS_GETRANDOM: libc::c_long = 143;
+        const GRND_NONBLOCK: libc::c_uint = 0x0001;
+        const GRND_RANDOM: libc::c_uint = 0x0002;
+
+        unsafe {
+            syscall(SYS_GETRANDOM, buf.as_mut_ptr(), buf.len(),
+                    GRND_NONBLOCK | GRND_RANDOM)
+        }
+    }
+
+    fn getrandom_try_fill(dest: &mut [u8]) -> Result<(), Error> {
+        trace!("OsRng: reading {} bytes via getrandom", dest.len());
+        let mut read = 0;
+        let len = dest.len();
+        while read < len {
+            let result = getrandom(&mut dest[read..]);
+            if result == -1 {
+                let err = io::Error::last_os_error();
+                let kind = err.kind();
+                if kind == io::ErrorKind::Interrupted {
+                    continue;
+                } else if kind == io::ErrorKind::WouldBlock {
+                    // Potentially this would waste bytes, but since we use
+                    // /dev/urandom blocking only happens if not initialised.
+                    // Also, wasting the bytes in dest doesn't matter very much.
+                    return Err(Error::with_cause(
+                        ErrorKind::NotReady,
+                        "getrandom not ready",
+                        err,
+                    ));
+                } else {
+                    return Err(Error::with_cause(
+                        ErrorKind::Unavailable,
+                        "unexpected getrandom error",
+                        err,
+                    ));
+                }
+            } else {
+                read += result as usize;
+            }
+        }
+        Ok(())
+    }
+
+    fn is_getrandom_available() -> bool {
+        use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
+        use std::sync::{Once, ONCE_INIT};
+
+        static CHECKER: Once = ONCE_INIT;
+        static AVAILABLE: AtomicBool = ATOMIC_BOOL_INIT;
+
+        CHECKER.call_once(|| {
+            debug!("OsRng: testing getrandom");
+            let mut buf: [u8; 0] = [];
+            let result = getrandom(&mut buf);
+            let available = if result == -1 {
+                let err = io::Error::last_os_error().raw_os_error();
+                err != Some(libc::ENOSYS)
+            } else {
+                true
+            };
+            AVAILABLE.store(available, Ordering::Relaxed);
+            info!("OsRng: using {}", if available { "getrandom" } else { "/dev/random" });
+        });
+
+        AVAILABLE.load(Ordering::Relaxed)
     }
 }
 
@@ -862,6 +988,14 @@ mod test {
 
         let mut empty = [0u8; 0];
         r.fill_bytes(&mut empty);
+    }
+
+    #[test]
+    fn test_os_rng_huge() {
+        let mut r = OsRng::new().unwrap();
+
+        let mut huge = [0u8; 100_000];
+        r.fill_bytes(&mut huge);
     }
 
     #[cfg(not(any(target_arch = "wasm32", target_arch = "asmjs")))]
