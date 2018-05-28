@@ -20,10 +20,11 @@
 //! and supports extension to user-defined types via a type-specific *back-end*
 //! implementation.
 //!
-//! The types [`UniformInt`], [`UniformFloat`] and [`UniformDuration`] are the
-//! back-ends supporting sampling from primitive integer and floating-point
-//! ranges as well as from `std::time::Duration`; these types do not normally
-//! need to be used directly (unless implementing a derived back-end).
+//! The types [`UniformInt`], [`UniformFloat`], [`UniformWrapping`] and
+//! [`UniformDuration`] are the back-ends supporting sampling from primitive
+//! integer and floating-point ranges as well as from `std::time::Duration`;
+//! these types do not normally need to be used directly (unless implementing a
+//! derived back-end).
 //!
 //! # Example usage
 //!
@@ -97,6 +98,7 @@
 //! [`UniformFloat`]: struct.UniformFloat.html
 //! [`UniformDuration`]: struct.UniformDuration.html
 
+use core::num::Wrapping;
 #[cfg(feature = "std")]
 use std::time::Duration;
 
@@ -492,6 +494,139 @@ wmul_impl_usize! { u64 }
 
 
 
+/// The back-end implementing [`UniformSampler`] for `Wrapping<T>`.
+///
+/// Unless you are implementing [`UniformSampler`] for your own types, this type
+/// should not be used directly, use [`Uniform`] instead.
+///
+/// The method used is the same as for [`UniformInt`], with one exception: it is
+/// not required that `low <= high`. If `low` is greater than `high`, the range
+/// to sample from contains both `low..MAX` and `MIN..high`, i.e. the range
+/// wraps around.
+///
+/// [`UniformSampler`]: trait.UniformSampler.html
+/// [`Uniform`]: struct.Uniform.html
+/// [`UniformInt`]: struct.UniformInt.html
+#[derive(Clone, Copy, Debug)]
+pub struct UniformWrapping<X> {
+    low: X,
+    range: X,
+    zone: X,
+}
+
+macro_rules! uniform_wrapping_int_impl {
+    ($ty:ty, $signed:ty, $unsigned:ident,
+     $i_large:ident, $u_large:ident) => {
+        impl SampleUniform for Wrapping<$ty>  {
+            type Sampler = UniformWrapping<$ty>;
+        }
+
+        impl UniformSampler for UniformWrapping<$ty> {
+            // We play free and fast with unsigned vs signed here
+            // (when $ty is signed), but that's fine, since the
+            // contract of this macro is for $ty and $unsigned to be
+            // "bit-equal", so casting between them is a no-op.
+
+            type X = Wrapping<$ty>;
+
+            #[inline] // if the range is constant, this helps LLVM to do the
+                      // calculations at compile-time.
+            fn new(low: Self::X, high: Self::X) -> Self {
+                UniformSampler::new_inclusive(low, high - Wrapping(1))
+            }
+
+            #[inline] // if the range is constant, this helps LLVM to do the
+                      // calculations at compile-time.
+            fn new_inclusive(low: Self::X, high: Self::X) -> Self {
+                let unsigned_max = ::core::$unsigned::MAX;
+
+                let range =
+                    high.0.wrapping_sub(low.0).wrapping_add(1) as $unsigned;
+                let ints_to_reject =
+                    if range > 0 {
+                        (unsigned_max - range + 1) % range
+                    } else {
+                        0
+                    };
+                let zone = unsigned_max - ints_to_reject;
+
+                UniformWrapping {
+                    low: low.0,
+                    // These are really $unsigned values, but store as $ty:
+                    range: range as $ty,
+                    zone: zone as $ty
+                }
+            }
+
+            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+                let range = self.range as $unsigned as $u_large;
+                if range > 0 {
+                    // Grow `zone` to fit a type of at least 32 bits, by
+                    // sign-extending it (the first bit is always 1, so are all
+                    // the preceding bits of the larger type).
+                    // For types that already have the right size, all the
+                    // casting is a no-op.
+                    let zone = self.zone as $signed as $i_large as $u_large;
+                    loop {
+                        let v: $u_large = rng.gen();
+                        let (hi, lo) = v.wmul(range);
+                        if lo <= zone {
+                            return Wrapping(self.low.wrapping_add(hi as $ty));
+                        }
+                    }
+                } else {
+                    // Sample from the entire integer range.
+                    rng.gen()
+                }
+            }
+
+            fn sample_single<R: Rng + ?Sized>(low: Self::X,
+                                              high: Self::X,
+                                              rng: &mut R) -> Self::X
+            {
+                let range = high.0.wrapping_sub(low.0) as $unsigned as $u_large;
+                let zone =
+                    if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+                        // Using a modulus is faster than the approximation for
+                        // i8 and i16. I suppose we trade the cost of one
+                        // modulus for near-perfect branch prediction.
+                        let unsigned_max: $u_large = ::core::$u_large::MAX;
+                        let ints_to_reject = (unsigned_max - range + 1) % range;
+                        unsigned_max - ints_to_reject
+                    } else {
+                        // conservative but fast approximation
+                       range << range.leading_zeros()
+                    };
+
+                loop {
+                    let v: $u_large = rng.gen();
+                    let (hi, lo) = v.wmul(range);
+                    if lo <= zone {
+                        return Wrapping(low.0.wrapping_add(hi as $ty));
+                    }
+                }
+            }
+        }
+    }
+}
+
+uniform_wrapping_int_impl! { i8, i8, u8, i32, u32 }
+uniform_wrapping_int_impl! { i16, i16, u16, i32, u32 }
+uniform_wrapping_int_impl! { i32, i32, u32, i32, u32 }
+uniform_wrapping_int_impl! { i64, i64, u64, i64, u64 }
+#[cfg(feature = "i128_support")]
+uniform_wrapping_int_impl! { i128, i128, u128, u128, u128 }
+uniform_wrapping_int_impl! { isize, isize, usize, isize, usize }
+uniform_wrapping_int_impl! { u8, i8, u8, i32, u32 }
+uniform_wrapping_int_impl! { u16, i16, u16, i32, u32 }
+uniform_wrapping_int_impl! { u32, i32, u32, i32, u32 }
+uniform_wrapping_int_impl! { u64, i64, u64, i64, u64 }
+uniform_wrapping_int_impl! { usize, isize, usize, isize, usize }
+#[cfg(feature = "i128_support")]
+uniform_wrapping_int_impl! { u128, u128, u128, i128, u128 }
+
+
+
 /// The back-end implementing [`UniformSampler`] for floating-point types.
 ///
 /// Unless you are implementing [`UniformSampler`] for your own type, this type
@@ -685,6 +820,7 @@ impl UniformSampler for UniformDuration {
 mod tests {
     use Rng;
     use distributions::uniform::{Uniform, UniformSampler, UniformFloat, SampleUniform};
+    use core::num::Wrapping;
 
     #[should_panic]
     #[test]
@@ -734,10 +870,10 @@ mod tests {
         macro_rules! t {
             ($($ty:ident),*) => {{
                 $(
-                   let v: &[($ty, $ty)] = &[(0, 10),
-                                            (10, 127),
-                                            (::core::$ty::MIN, ::core::$ty::MAX)];
-                   for &(low, high) in v.iter() {
+                    let v: &[($ty, $ty)] = &[(0, 10),
+                                             (10, 127),
+                                             (::core::$ty::MIN, ::core::$ty::MAX)];
+                    for &(low, high) in v.iter() {
                         let my_uniform = Uniform::new(low, high);
                         for _ in 0..1000 {
                             let v: $ty = rng.sample(my_uniform);
@@ -753,6 +889,63 @@ mod tests {
                         for _ in 0..1000 {
                             let v: $ty = rng.gen_range(low, high);
                             assert!(low <= v && v < high);
+                        }
+                    }
+                 )*
+            }}
+        }
+        t!(i8, i16, i32, i64, isize,
+           u8, u16, u32, u64, usize);
+        #[cfg(feature = "i128_support")]
+        t!(i128, u128)
+    }
+
+    #[test]
+    fn test_wrapping() {
+        let mut rng = ::test::rng(251);
+        macro_rules! t {
+            ($($ty:ident),*) => {{
+                $(
+                    let v: &[(Wrapping<$ty>, Wrapping<$ty>)] =
+                        &[(Wrapping(0), Wrapping(10)),
+                          (Wrapping(10), Wrapping(127)),
+                          (Wrapping(::core::$ty::MIN), Wrapping(::core::$ty::MAX))];
+                    for &(low, high) in v.iter() {
+                        let my_uniform = Uniform::new(low, high);
+                        for _ in 0..1000 {
+                            let v: Wrapping<$ty> = rng.sample(my_uniform);
+                            assert!(low <= v && v < high);
+                        }
+
+                        let my_uniform = Uniform::new_inclusive(low, high);
+                        for _ in 0..1000 {
+                            let v: Wrapping<$ty> = rng.sample(my_uniform);
+                            assert!(low <= v && v <= high);
+                        }
+
+                        for _ in 0..1000 {
+                            let v: Wrapping<$ty> = rng.gen_range(low, high);
+                            assert!(low <= v && v < high);
+                        }
+                    }
+
+                    // Switch the bounds to test wrapping around
+                    for &(low, high) in v.iter() {
+                        let my_uniform = Uniform::new(high, low);
+                        for _ in 0..1000 {
+                            let v: Wrapping<$ty> = rng.sample(my_uniform);
+                            assert!(v >= high || v < low);
+                        }
+
+                        let my_uniform = Uniform::new_inclusive(high, low);
+                        for _ in 0..1000 {
+                            let v: Wrapping<$ty> = rng.sample(my_uniform);
+                            assert!(v >= high || v <= low);
+                        }
+
+                        for _ in 0..1000 {
+                            let v: Wrapping<$ty> = rng.gen_range(high, low);
+                            assert!(v >= high || v < low);
                         }
                     }
                  )*
