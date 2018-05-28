@@ -33,21 +33,37 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 ///
 /// # Platform sources
 ///
-/// - Linux, Android: reads from the `getrandom(2)` system call if available,
-///   otherwise from `/dev/urandom`.
-/// - macOS, iOS: calls `SecRandomCopyBytes`.
-/// - Windows: calls `RtlGenRandom`.
-/// - WASM (with `stdweb` feature): calls `window.crypto.getRandomValues` in
-///   browsers, and in Node.js `require("crypto").randomBytes`.
-/// - Emscripten: reads from emulated `/dev/urandom`, which maps to the same
-///   interfaces as `stdweb`, but falls back to the insecure `Math.random()` if
-///   unavailable.
-/// - OpenBSD: calls `getentropy(2)`.
-/// - FreeBSD: uses the `kern.arandom` `sysctl(2)` mib.
-/// - Fuchsia: calls `cprng_draw`.
-/// - Redox: reads from `rand:` device.
-/// - CloudABI: calls `random_get`.
-/// - Other Unix-like systems: reads directly from `/dev/urandom`.
+/// | OS              | interface
+/// |-----------------|---------------------------------------------------------
+/// | Linux, Android  | [`getrandom`][1] system call if available, otherwise [`/dev/urandom`][2] after reading from `/dev/random` once
+/// | Windows         | [`RtlGenRandom`][3]
+/// | macOS, iOS      | [`SecRandomCopyBytes`][4]
+/// | FreeBSD         | [`kern.arandom`][5]
+/// | OpenBSD, Bitrig | [`getentropy`][6]
+/// | NetBSD          | [`/dev/urandom`][7] after reading from `/dev/random` once
+/// | Dragonfly BSD   | [`/dev/random`][8]
+/// | Fuchsia OS      | [`cprng_draw`][9]
+/// | Redox           | [`rand:`][10]
+/// | CloudABI        | [`random_get`][11]
+/// | Web browsers    | [`Crypto.getRandomValues`][12] (see [Support for WebAssembly and ams.js][14])
+/// | Node.js         | [`crypto.randomBytes`][13] (see [Support for WebAssembly and ams.js][14])
+///
+/// Rand doesn't have a blanket implementation for all Unix-like operating
+/// systems that reads from `/dev/urandom`. This ensures all supported operating
+/// systems are tested to have a working implementation, and use the currently
+/// recommended interface.
+///
+/// ## Support for WebAssembly and ams.js
+///
+/// The three Emscripten targets `asmjs-unknown-emscripten`,
+/// `wasm32-unknown-emscripten` and `wasm32-experimental-emscripten` use
+/// Emscripten's emulation of `/dev/random` on web browsers and Node.js.
+/// Unfortunately it falls back to the insecure `Math.random()` if a browser
+/// doesn't support [`Crypto.getRandomValues`][12].a browser doesn't support Crypto.getRandomValues.
+///
+/// The bare Wasm target `wasm32-unknown-unknown` tries to call the javascript
+/// methods directly, using `stdweb` in combination with `cargo-web`.
+/// `wasm-bindgen` is not yet supported.
 ///
 /// ## Notes on Unix `/dev/urandom`
 ///
@@ -75,9 +91,23 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// [`EntropyRng`]: struct.EntropyRng.html
 /// [`RngCore`]: ../trait.RngCore.html
 /// [`try_fill_bytes`]: ../trait.RngCore.html#method.tymethod.try_fill_bytes
+///
+/// [1]: http://man7.org/linux/man-pages/man2/getrandom.2.html
+/// [2]: http://man7.org/linux/man-pages/man4/urandom.4.html
+/// [3]: https://msdn.microsoft.com/en-us/library/windows/desktop/aa387694.aspx
+/// [4]: https://developer.apple.com/documentation/security/1399291-secrandomcopybytes?language=objc
+/// [5]: https://www.freebsd.org/cgi/man.cgi?query=random&sektion=4
+/// [6]: https://man.openbsd.org/getentropy.2
+/// [7]: http://netbsd.gw.com/cgi-bin/man-cgi?random+4+NetBSD-current
+/// [8]: https://leaf.dragonflybsd.org/cgi/web-man?command=random&section=4
+/// [9]: https://fuchsia.googlesource.com/zircon/+/HEAD/docs/syscalls/cprng_draw.md
+/// [10]: https://github.com/redox-os/randd/blob/master/src/main.rs
+/// [11]: https://github.com/NuxiNL/cloudabi/blob/v0.20/cloudabi.txt#L1826
+/// [12]: https://www.w3.org/TR/WebCryptoAPI/#Crypto-method-getRandomValues
+/// [13]: https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+/// [14]: #support-for-webassembly-and-amsjs
 
 
-#[allow(unused)]    // not used by all targets
 #[derive(Clone)]
 pub struct OsRng(imp::OsRng);
 
@@ -157,15 +187,14 @@ impl RngCore for OsRng {
     }
 }
 
-#[cfg(all(unix,
-          not(target_os = "cloudabi"),
-          not(target_os = "freebsd"),
-          not(target_os = "fuchsia"),
-          not(target_os = "ios"),
-          not(target_os = "macos"),
-          not(target_os = "openbsd"),
-          not(target_os = "redox")))]
-mod imp {
+// Helper functions to read from a random device such as `/dev/urandom`.
+//
+// All instances use a single internal file handle, to prevent possible
+// exhaustion of file descriptors.
+#[cfg(any(target_os = "linux", target_os = "android",
+          target_os = "netbsd", target_os = "dragonfly",
+          target_os = "emscripten", target_os = "redox"))]
+mod unix {
     extern crate libc;
     use {Error, ErrorKind};
     use std::fs::{OpenOptions, File};
@@ -173,6 +202,80 @@ mod imp {
     use std::io;
     use std::io::Read;
     use std::sync::{Once, Mutex, ONCE_INIT};
+
+    // TODO: remove outer Option when `Mutex::new(None)` is a constant expression
+    static mut READ_RNG_FILE: Option<Mutex<Option<File>>> = None;
+    static READ_RNG_ONCE: Once = ONCE_INIT;
+
+    pub fn open_random_device(path: &str, test_dev_random: bool)
+        -> Result<(), Error>
+    {
+        fn map_err(err: io::Error) -> Error {
+            match err.kind() {
+                io::ErrorKind::Interrupted =>
+                        Error::new(ErrorKind::Transient, "interrupted"),
+                io::ErrorKind::WouldBlock =>
+                        Error::with_cause(ErrorKind::NotReady,
+                        "OS RNG not yet seeded", err),
+                _ => Error::with_cause(ErrorKind::Unavailable,
+                        "error while opening random device", err)
+            }
+        }
+
+        READ_RNG_ONCE.call_once(|| {
+            unsafe { READ_RNG_FILE = Some(Mutex::new(None)) }
+        });
+
+        // We try opening the file outside the `call_once` fn because we cannot
+        // clone the error, thus we must retry on failure.
+
+        let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
+        let mut guard = mutex.lock().unwrap();
+        if (*guard).is_none() {
+            if test_dev_random { try_dev_random().map_err(map_err)?; }
+            info!("OsRng: opening random device {}", path);
+            let file = File::open(path).map_err(map_err)?;
+            *guard = Some(file);
+        };
+        Ok(())
+    }
+
+    // Read a single byte from `/dev/random` in non-blocking mode, to determine
+    // if the OS RNG is already seeded.
+    fn try_dev_random() -> Result<(), io::Error> {
+        info!("OsRng: opening random device /dev/random");
+        let mut file = OpenOptions::new()
+            .read(true)
+            .custom_flags(libc::O_NONBLOCK)
+            .open("/dev/random")?;
+        let mut buf = [0u8; 1];
+        file.read_exact(&mut buf)
+    }
+
+    pub fn read_random_device(dest: &mut [u8]) -> Result<(), Error> {
+        if dest.len() == 0 { return Ok(()); }
+        trace!("OsRng: reading {} bytes from random device", dest.len());
+
+        // We expect this function only to be used after `open_random_device`
+        // was succesful. Therefore we can assume that our memory was set with a
+        // valid object.
+        let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
+        let mut guard = mutex.lock().unwrap();
+        let file = (*guard).as_mut().unwrap();
+        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
+        file.read_exact(dest).map_err(|err| {
+            Error::with_cause(ErrorKind::Unavailable,
+                              "error reading random device", err)
+        })
+    }
+}
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+mod imp {
+    extern crate libc;
+    use {Error, ErrorKind};
+    use std::io;
+    use super::unix::*;
 
     #[derive(Clone, Debug)]
     pub struct OsRng(OsRngMethod);
@@ -189,23 +292,22 @@ mod imp {
                 return Ok(OsRng(OsRngMethod::GetRandom));
             }
 
-            open_dev_random()?;
+            open_random_device("/dev/urandom", true)?;
             Ok(OsRng(OsRngMethod::RandomDevice))
         }
 
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             match self.0 {
                 OsRngMethod::GetRandom => getrandom_try_fill(dest),
-                OsRngMethod::RandomDevice => dev_random_try_fill(dest),
+                OsRngMethod::RandomDevice => read_random_device(dest),
             }
         }
     }
 
-    #[cfg(all(any(target_os = "linux", target_os = "android"),
-              any(target_arch = "x86_64", target_arch = "x86",
-                  target_arch = "arm", target_arch = "aarch64",
-                  target_arch = "s390x", target_arch = "powerpc",
-                  target_arch = "mips", target_arch = "mips64")))]
+    #[cfg(any(target_arch = "x86_64", target_arch = "x86",
+              target_arch = "arm", target_arch = "aarch64",
+              target_arch = "s390x", target_arch = "powerpc",
+              target_arch = "mips", target_arch = "mips64"))]
     fn getrandom(buf: &mut [u8]) -> libc::c_long {
         extern "C" {
             fn syscall(number: libc::c_long, ...) -> libc::c_long;
@@ -235,11 +337,10 @@ mod imp {
         }
     }
 
-    #[cfg(not(all(any(target_os = "linux", target_os = "android"),
-                  any(target_arch = "x86_64", target_arch = "x86",
-                      target_arch = "arm", target_arch = "aarch64",
-                      target_arch = "s390x", target_arch = "powerpc",
-                      target_arch = "mips", target_arch = "mips64"))))]
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "x86",
+                  target_arch = "arm", target_arch = "aarch64",
+                  target_arch = "s390x", target_arch = "powerpc",
+                  target_arch = "mips", target_arch = "mips64")))]
     fn getrandom(_buf: &mut [u8]) -> libc::c_long { -1 }
 
     fn getrandom_try_fill(dest: &mut [u8]) -> Result<(), Error> {
@@ -276,11 +377,10 @@ mod imp {
         Ok(())
     }
 
-    #[cfg(all(any(target_os = "linux", target_os = "android"),
-              any(target_arch = "x86_64", target_arch = "x86",
-                  target_arch = "arm", target_arch = "aarch64",
-                  target_arch = "s390x", target_arch = "powerpc",
-                  target_arch = "mips", target_arch = "mips64")))]
+    #[cfg(any(target_arch = "x86_64", target_arch = "x86",
+              target_arch = "arm", target_arch = "aarch64",
+              target_arch = "s390x", target_arch = "powerpc",
+              target_arch = "mips", target_arch = "mips64"))]
     fn is_getrandom_available() -> bool {
         use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
         use std::sync::{Once, ONCE_INIT};
@@ -305,85 +405,81 @@ mod imp {
         AVAILABLE.load(Ordering::Relaxed)
     }
 
-    #[cfg(not(all(any(target_os = "linux", target_os = "android"),
-                  any(target_arch = "x86_64", target_arch = "x86",
-                      target_arch = "arm", target_arch = "aarch64",
-                      target_arch = "s390x", target_arch = "powerpc",
-                      target_arch = "mips", target_arch = "mips64"))))]
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "x86",
+                  target_arch = "arm", target_arch = "aarch64",
+                  target_arch = "s390x", target_arch = "powerpc",
+                  target_arch = "mips", target_arch = "mips64")))]
     fn is_getrandom_available() -> bool { false }
+}
 
-    // TODO: remove outer Option when `Mutex::new(None)` is a constant expression
-    static mut READ_RNG_FILE: Option<Mutex<Option<File>>> = None;
-    static READ_RNG_ONCE: Once = ONCE_INIT;
+// Read from `/dev/urandom`, after reading from `/dev/random` once
+#[cfg(target_os = "netbsd")]
+mod imp {
+    use Error;
+    use super::unix::*;
 
-    // Note: all instances use a single internal file handle, to prevent
-    // possible exhaustion of file descriptors.
-    //
-    // We do a single read from `/dev/random` in non-blocking mode. If the OS
-    // RNG is not yet properly seeded, we will get an error, instead of silently
-    // getting less random bytes, as `/dev/urandom` can return. Because we keep
-    // `/dev/urandom` open when succesful, this is only a small one-time cost.
-    fn open_dev_random() -> Result<(), Error> {
-        fn map_err(err: io::Error) -> Error {
-            match err.kind() {
-                io::ErrorKind::Interrupted =>
-                        Error::new(ErrorKind::Transient, "interrupted"),
-                io::ErrorKind::WouldBlock =>
-                        Error::with_cause(ErrorKind::NotReady,
-                        "OS RNG not yet seeded", err),
-                _ => Error::with_cause(ErrorKind::Unavailable,
-                        "error while opening random device", err)
-            }
+    #[derive(Clone, Debug)]
+    pub struct OsRng();
+
+    impl OsRng {
+        pub fn new() -> Result<OsRng, Error> {
+            open_random_device("/dev/urandom", true)?;
+            Ok(OsRng())
         }
 
-        READ_RNG_ONCE.call_once(|| {
-            unsafe { READ_RNG_FILE = Some(Mutex::new(None)) }
-        });
-
-        // We try opening the file outside the `call_once` fn because we cannot
-        // clone the error, thus we must retry on failure.
-
-        let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
-        let mut guard = mutex.lock().unwrap();
-        if (*guard).is_none() {
-            {
-                info!("OsRng: opening random device /dev/random");
-                let mut file = OpenOptions::new()
-                    .read(true)
-                    .custom_flags(libc::O_NONBLOCK)
-                    .open("/dev/random")
-                    .map_err(map_err)?;
-                let mut buf = [0u8; 1];
-                file.read_exact(&mut buf).map_err(map_err)?;
-            }
-
-            info!("OsRng: opening random device /dev/urandom");
-            let file = File::open("/dev/urandom").map_err(map_err)?;
-            *guard = Some(file);
-        };
-        Ok(())
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            read_random_device(dest)
+        }
     }
+}
 
-    fn dev_random_try_fill(dest: &mut [u8]) -> Result<(), Error> {
-        if dest.len() == 0 { return Ok(()); }
-        trace!("OsRng: reading {} bytes from random device", dest.len());
+// Read from `/dev/random`
+#[cfg(target_os = "dragonfly")]
+mod imp {
+    use Error;
+    use super::unix::*;
 
-        // We expect this function only to be used after `open_dev_random` was
-        // succesful. Therefore we can assume that our memory was set with a
-        // valid object.
-        let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
-        let mut guard = mutex.lock().unwrap();
-        let file = (*guard).as_mut().unwrap();
-        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-        file.read_exact(dest).map_err(|err| {
-            match err.kind() {
-                ::std::io::ErrorKind::WouldBlock => Error::with_cause(
-                    ErrorKind::NotReady,
-                    "reading from random device would block", err),
-                _ => Error::with_cause(ErrorKind::Unavailable,
-                    "error reading random device", err)
+    #[derive(Clone, Debug)]
+    pub struct OsRng();
+
+    impl OsRng {
+        pub fn new() -> Result<OsRng, Error> {
+            open_random_device("/dev/urandom", false)?;
+            Ok(OsRng())
+        }
+
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            read_random_device(dest)
+        }
+    }
+}
+
+// Read from `/dev/urandom`, but with chunks of limited size.
+//
+// `Crypto.getRandomValues` documents `dest` should be at most 65536 bytes.
+// `crypto.randomBytes` documents: "To minimize threadpool task length
+// variation, partition large randomBytes requests when doing so as part of
+// fulfilling a client request.
+#[cfg(target_os = "emscripten")]
+mod imp {
+    use Error;
+    use super::unix::*;
+
+    #[derive(Clone, Debug)]
+    pub struct OsRng();
+
+    impl OsRng {
+        pub fn new() -> Result<OsRng, Error> {
+            open_random_device("/dev/urandom", false)?;
+            Ok(OsRng())
+        }
+
+        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            for slice in dest.chunks_mut(65536) {
+                read_random_device(slice)?;
             }
-        })
+            Ok(())
+        }
     }
 }
 
@@ -446,6 +542,7 @@ mod imp {
         pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
+
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             trace!("OsRng: reading {} bytes via SecRandomCopyBytes", dest.len());
             let ret = unsafe {
@@ -479,6 +576,7 @@ mod imp {
         pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
+
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             let mib = [libc::CTL_KERN, libc::KERN_ARND];
             trace!("OsRng: reading {} bytes via kern.arandom", dest.len());
@@ -502,7 +600,7 @@ mod imp {
     }
 }
 
-#[cfg(target_os = "openbsd")]
+#[cfg(any(target_os = "openbsd", target_os = "bitrig"))]
 mod imp {
     extern crate libc;
 
@@ -538,60 +636,20 @@ mod imp {
 
 #[cfg(target_os = "redox")]
 mod imp {
-    use {Error, ErrorKind};
-    use std::fs::File;
-    use std::io::Read;
-    use std::io::ErrorKind::*;
-    use std::sync::{Once, Mutex, ONCE_INIT};
+    use Error;
+    use super::unix::*;
 
     #[derive(Clone, Debug)]
     pub struct OsRng();
 
-    // TODO: remove outer Option when `Mutex::new(None)` is a constant expression
-    static mut READ_RNG_FILE: Option<Mutex<Option<File>>> = None;
-    static READ_RNG_ONCE: Once = ONCE_INIT;
-
     impl OsRng {
         pub fn new() -> Result<OsRng, Error> {
-            READ_RNG_ONCE.call_once(|| {
-                unsafe { READ_RNG_FILE = Some(Mutex::new(None)) }
-            });
-
-            // We try opening the file outside the `call_once` fn because we cannot
-            // clone the error, thus we must retry on failure.
-
-            let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
-            let mut guard = mutex.lock().unwrap();
-            if (*guard).is_none() {
-                info!("OsRng: opening random device 'rand:'");
-                let file = File::open("rand:").map_err(|err| {
-                    match err.kind() {
-                        Interrupted => Error::new(ErrorKind::Transient, "interrupted"),
-                        WouldBlock => Error::with_cause(ErrorKind::NotReady,
-                                "opening random device would block", err),
-                        _ => Error::with_cause(ErrorKind::Unavailable,
-                                "error while opening random device", err)
-                    }
-                })?;
-                *guard = Some(file);
-            };
+            open_random_device("rand:", false)?;
             Ok(OsRng())
         }
 
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            if dest.len() == 0 { return Ok(()); }
-            trace!("OsRng: reading {} bytes from random device", dest.len());
-
-            // Since we have an instance of Self, we can assume that our memory was
-            // set with a valid object.
-            let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
-            let mut guard = mutex.lock().unwrap();
-            let file = (*guard).as_mut().unwrap();
-            // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-            file.read_exact(dest).map_err(|err| {
-                Error::with_cause(ErrorKind::Unavailable,
-                                  "error reading random device", err)
-            })
+            read_random_device(dest)
         }
     }
 }
@@ -651,6 +709,7 @@ mod imp {
         pub fn new() -> Result<OsRng, Error> {
             Ok(OsRng)
         }
+
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             // RtlGenRandom takes an ULONG (u32) for the length so we need to
             // split up the buffer.
@@ -667,28 +726,6 @@ mod imp {
                 }
             }
             Ok(())
-        }
-    }
-}
-
-#[cfg(all(target_arch = "wasm32",
-          not(target_os = "emscripten"),
-          not(feature = "stdweb")))]
-mod imp {
-    use {Error, ErrorKind};
-
-    #[derive(Clone, Debug)]
-    pub struct OsRng;
-
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
-            Err(Error::new(ErrorKind::Unavailable,
-                           "not supported on WASM without stdweb"))
-        }
-
-        pub fn try_fill_bytes(&mut self, _v: &mut [u8]) -> Result<(), Error> {
-            Err(Error::new(ErrorKind::Unavailable,
-                           "not supported on WASM without stdweb"))
         }
     }
 }
@@ -746,6 +783,13 @@ mod imp {
         }
 
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            for slice in dest.chunks_mut(65536) {
+                self.fill_chunk(slice)?;
+            }
+            Ok(())
+        }
+
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             assert_eq!(mem::size_of::<usize>(), 4);
 
             let len = dest.len() as u32;
@@ -810,6 +854,14 @@ mod test {
 
         // Check at least 1 bit per byte differs. p(failure) < 1e-1000 with random input.
         assert!(n_diff_bits >= v1.len() as u32);
+    }
+
+    #[test]
+    fn test_os_rng_empty() {
+        let mut r = OsRng::new().unwrap();
+
+        let mut empty = [0u8; 0];
+        r.fill_bytes(&mut empty);
     }
 
     #[cfg(not(any(target_arch = "wasm32", target_arch = "asmjs")))]
