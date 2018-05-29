@@ -52,8 +52,8 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 ///
 /// Rand doesn't have a blanket implementation for all Unix-like operating
 /// systems that reads from `/dev/urandom`. This ensures all supported operating
-/// systems are tested to have a working implementation, and use the currently
-/// recommended interface.
+/// systems are using the recommended interface and maximum permitted buffer
+/// sizes.
 ///
 /// ## Support for WebAssembly and ams.js
 ///
@@ -187,6 +187,7 @@ impl RngCore for OsRng {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        if dest.len() == 0 { return Ok(()); }
         self.0.try_fill_bytes(dest)
     }
 }
@@ -257,10 +258,9 @@ mod unix {
         file.read_exact(&mut buf)
     }
 
-    pub fn read_random_device(dest: &mut [u8]) -> Result<(), Error> {
-        if dest.len() == 0 { return Ok(()); }
-        trace!("OsRng: reading {} bytes from random device", dest.len());
-
+    pub fn read_random_device(dest: &mut [u8], limit: Option<usize>)
+        -> Result<(), Error>
+    {
         // We expect this function only to be used after `open_random_device`
         // was succesful. Therefore we can assume that our memory was set with a
         // valid object.
@@ -268,10 +268,22 @@ mod unix {
         let mut guard = mutex.lock().unwrap();
         let file = (*guard).as_mut().unwrap();
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-        file.read_exact(dest).map_err(|err| {
-            Error::with_cause(ErrorKind::Unavailable,
-                              "error reading random device", err)
-        })
+
+        let max = limit.unwrap_or(dest.len());
+        if dest.len() <= max {
+            trace!("OsRng: reading {} bytes from random device", dest.len());
+        } else {
+            trace!("OsRng: reading {} bytes from random device in {} chunks of {} bytes",
+                   dest.len(), (dest.len() + max) / max, max);
+        }
+        for slice in dest.chunks_mut(max) {
+            file.read_exact(slice).map_err(|err| {
+                Error::with_cause(ErrorKind::Unavailable,
+                                  "error reading random device", err)
+            })?;
+        }
+        Ok(())
+
     }
 }
 
@@ -304,7 +316,7 @@ mod imp {
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             match self.0 {
                 OsRngMethod::GetRandom => getrandom_try_fill(dest),
-                OsRngMethod::RandomDevice => read_random_device(dest),
+                OsRngMethod::RandomDevice => read_random_device(dest, None),
             }
         }
     }
@@ -356,9 +368,6 @@ mod imp {
                 if kind == io::ErrorKind::Interrupted {
                     continue;
                 } else if kind == io::ErrorKind::WouldBlock {
-                    // Potentially this would waste bytes, but since we use
-                    // /dev/urandom blocking only happens if not initialised.
-                    // Also, wasting the bytes in dest doesn't matter very much.
                     return Err(Error::with_cause(
                         ErrorKind::NotReady,
                         "getrandom not ready",
@@ -421,7 +430,7 @@ mod imp {
         }
 
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(dest)
+            read_random_device(dest, None)
         }
     }
 }
@@ -442,7 +451,7 @@ mod imp {
         }
 
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(dest)
+            read_random_device(dest, None)
         }
     }
 }
@@ -468,10 +477,7 @@ mod imp {
         }
 
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            for slice in dest.chunks_mut(65536) {
-                read_random_device(slice)?;
-            }
-            Ok(())
+            read_random_device(slice, Some(65536))
         }
     }
 }
@@ -513,13 +519,10 @@ mod imp {
         }
 
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            for slice in dest.chunks_mut(1040) {
-                match self.0 {
-                    OsRngMethod::GetRandom => getrandom_try_fill(slice)?,
-                    OsRngMethod::RandomDevice => read_random_device(slice)?,
-                 }
-            }
-            Ok(())
+            match self.0 {
+                OsRngMethod::GetRandom => getrandom_try_fill(slice),
+                OsRngMethod::RandomDevice => read_random_device(slice, Some(1040)),
+             }
         }
     }
 
@@ -539,20 +542,21 @@ mod imp {
     }
 
     fn getrandom_try_fill(dest: &mut [u8]) -> Result<(), Error> {
-        trace!("OsRng: reading {} bytes via getrandom", dest.len());
-        let mut read = 0;
-        let len = dest.len();
-        while read < len {
-            let result = getrandom(&mut dest[read..]);
-            if result == -1 {
+        let max = 1024; // maximum buffer size permitted by getrandom
+        if dest.len() <= max {
+            trace!("OsRng: reading {} bytes via getrandom", dest.len());
+        } else {
+            trace!("OsRng: reading {} bytes via getrandom in {} chunks of {} bytes",
+                   dest.len(), (dest.len() + max) / max, max);
+        }
+        for slice in dest.chunks_mut(max) {
+            let result = getrandom(&mut slice);
+            if result == -1 || result == 0 {
                 let err = io::Error::last_os_error();
                 let kind = err.kind();
                 if kind == io::ErrorKind::Interrupted {
                     continue;
                 } else if kind == io::ErrorKind::WouldBlock {
-                    // Potentially this would waste bytes, but since we use
-                    // /dev/urandom blocking only happens if not initialised.
-                    // Also, wasting the bytes in dest doesn't matter very much.
                     return Err(Error::with_cause(
                         ErrorKind::NotReady,
                         "getrandom not ready",
@@ -565,8 +569,9 @@ mod imp {
                         err,
                     ));
                 }
-            } else {
-                read += result as usize;
+            } else if result != slice.len() {
+                return Err(Error::new(ErrorKind::Unavailable,
+                                      "unexpected getrandom error"));
             }
         }
         Ok(())
@@ -693,16 +698,21 @@ mod imp {
 
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             let mib = [libc::CTL_KERN, libc::KERN_ARND];
-            trace!("OsRng: reading {} bytes via kern.arandom", dest.len());
-            // kern.arandom permits a maximum buffer size of 256 bytes
-            for s in dest.chunks_mut(256) {
-                let mut s_len = s.len();
+            let max = 256;
+            if dest.len() <= max {
+                trace!("OsRng: reading {} bytes via kern.arandom", dest.len());
+            } else {
+                trace!("OsRng: reading {} bytes via kern.arandom in {} chunks of {} bytes",
+                       dest.len(), (dest.len() + max) / max, max);
+            }
+            for slice in dest.chunks_mut(max) {
+                let mut s_len = slice.len();
                 let ret = unsafe {
                     libc::sysctl(mib.as_ptr(), mib.len() as libc::c_uint,
-                                 s.as_mut_ptr() as *mut _, &mut s_len,
+                                 slice.as_mut_ptr() as *mut _, &mut s_len,
                                  ptr::null(), 0)
                 };
-                if ret == -1 || s_len != s.len() {
+                if ret == -1 || s_len != slice.len() {
                     return Err(Error::with_cause(
                         ErrorKind::Unavailable,
                         "kern.arandom sysctl failed",
@@ -730,9 +740,14 @@ mod imp {
             Ok(OsRng)
         }
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            // getentropy(2) permits a maximum buffer size of 256 bytes
+            let max = 256; // maximum buffer size permitted by getentropy(2)
+            if dest.len() <= max {
+                trace!("OsRng: reading {} bytes via getentropy", dest.len());
+            } else {
+                trace!("OsRng: reading {} bytes via getentropy in {} chunks of {} bytes",
+                       dest.len(), (dest.len() + max) / max, max);
+            }
             for s in dest.chunks_mut(256) {
-                trace!("OsRng: reading {} bytes via getentropy", s.len());
                 let ret = unsafe {
                     libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s.len())
                 };
@@ -763,7 +778,7 @@ mod imp {
         }
 
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(dest)
+            read_random_device(dest, None)
         }
     }
 }
@@ -827,8 +842,14 @@ mod imp {
         pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             // RtlGenRandom takes an ULONG (u32) for the length so we need to
             // split up the buffer.
-            for slice in dest.chunks_mut(<ULONG>::max_value() as usize) {
-                trace!("OsRng: reading {} bytes via RtlGenRandom", slice.len());
+            let max = <ULONG>::max_value() as usize;
+            if dest.len() <= max {
+                trace!("OsRng: reading {} bytes via RtlGenRandom", dest.len());
+            } else {
+                trace!("OsRng: reading {} bytes via RtlGenRandom in {} chunks of {} bytes",
+                       dest.len(), (dest.len() + max) / max, max);
+            }
+            for slice in dest.chunks_mut(max) {
                 let ret = unsafe {
                     RtlGenRandom(slice.as_mut_ptr() as PVOID, slice.len() as ULONG)
                 };
