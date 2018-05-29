@@ -221,11 +221,9 @@ trait OsRngImpl where Self: Sized {
           target_os = "netbsd", target_os = "dragonfly",
           target_os = "solaris", target_os = "redox",
           target_os = "haiku", target_os = "emscripten"))]
-mod unix {
-    extern crate libc;
+mod random_device {
     use {Error, ErrorKind};
-    use std::fs::{OpenOptions, File};
-    use std::os::unix::fs::OpenOptionsExt;
+    use std::fs::File;
     use std::io;
     use std::io::Read;
     use std::sync::{Once, Mutex, ONCE_INIT};
@@ -234,7 +232,13 @@ mod unix {
     static mut READ_RNG_FILE: Option<Mutex<Option<File>>> = None;
     static READ_RNG_ONCE: Once = ONCE_INIT;
 
-    pub fn open_random_device(path: &str, test_dev_random: bool)
+    #[allow(unused)]
+    pub fn open(path: &str) -> Result<(), Error> {
+        fn test() -> Result<(), io::Error> { Ok(()) }
+        open_with_test(path, &test)
+    }
+
+    pub fn open_with_test(path: &str, test: &Fn() -> Result<(), io::Error>)
         -> Result<(), Error>
     {
         fn map_err(err: io::Error) -> Error {
@@ -259,7 +263,7 @@ mod unix {
         let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
         let mut guard = mutex.lock().unwrap();
         if (*guard).is_none() {
-            if test_dev_random { try_dev_random().map_err(map_err)?; }
+            test().map_err(map_err)?;
             info!("OsRng: opening random device {}", path);
             let file = File::open(path).map_err(map_err)?;
             *guard = Some(file);
@@ -267,22 +271,8 @@ mod unix {
         Ok(())
     }
 
-    // Read a single byte from `/dev/random` in non-blocking mode, to determine
-    // if the OS RNG is already seeded.
-    fn try_dev_random() -> Result<(), io::Error> {
-        info!("OsRng: testing random device /dev/random");
-        let mut file = OpenOptions::new()
-            .read(true)
-            .custom_flags(libc::O_NONBLOCK)
-            .open("/dev/random")?;
-        let mut buf = [0u8; 1];
-        file.read_exact(&mut buf) // FIXME: should test for -1
-    }
-
-    pub fn read_random_device(dest: &mut [u8])
-        -> Result<(), Error>
-    {
-        // We expect this function only to be used after `open_random_device`
+    pub fn read(dest: &mut [u8]) -> Result<(), Error> {
+        // We expect this function only to be used after `random_device::open`
         // was succesful. Therefore we can assume that our memory was set with a
         // valid object.
         let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
@@ -304,7 +294,10 @@ mod imp {
     extern crate libc;
     use {Error, ErrorKind};
     use std::io;
-    use super::unix::*;
+    use std::io::Read;
+    use std::fs::OpenOptions;
+    use std::os::unix::fs::OpenOptionsExt;
+    use super::random_device;
     use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
@@ -323,14 +316,14 @@ mod imp {
             }
 
             // Use `/dev/urandom`, after reading from `/dev/random` once
-            open_random_device("/dev/urandom", true)?;
+            random_device::open_with_test("/dev/urandom", &try_dev_random)?;
             Ok(OsRng(OsRngMethod::RandomDevice))
         }
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             match self.0 {
                 OsRngMethod::GetRandom => getrandom_try_fill(dest),
-                OsRngMethod::RandomDevice => read_random_device(dest),
+                OsRngMethod::RandomDevice => random_device::read(dest),
             }
         }
 
@@ -340,6 +333,20 @@ mod imp {
                 OsRngMethod::RandomDevice => "/dev/urandom",
             }
         }
+    }
+
+    // Read a single byte from `/dev/random` in non-blocking mode, to determine
+    // if the OS RNG is already seeded. In theory only `EAGAIN` indicates the
+    // entropy pool is empty, but we treat any error as an indication.
+    fn try_dev_random() -> Result<(), io::Error> {
+        info!("OsRng: testing random device /dev/random");
+        let mut file = OpenOptions::new()
+            .read(true)
+            .custom_flags(libc::O_NONBLOCK)
+            .open("/dev/random")?;
+        let mut buf = [0u8; 1];
+        file.read(&mut buf)?;
+        Ok(())
     }
 
     #[cfg(target_arch = "x86_64")]
@@ -437,24 +444,36 @@ mod imp {
 #[cfg(target_os = "netbsd")]
 mod imp {
     use Error;
-    use super::unix::*;
+    use super::random_device;
     use super::OsRngImpl;
+    use std::fs::File;
+    use std::io;
+    use std::io::Read;
 
     #[derive(Clone, Debug)]
     pub struct OsRng();
 
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
-            // Use `/dev/urandom`, after reading from `/dev/random` once
-            open_random_device("/dev/urandom", true)?;
+            random_device::open_with_test("/dev/urandom", &try_dev_random)?;
             Ok(OsRng())
         }
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(dest)
+            random_device::read(dest)
         }
 
         fn method_str(&self) -> &'static str { "/dev/urandom" }
+    }
+
+    // Read a single byte from `/dev/random` to determine if the OS RNG is
+    // already seeded. NetBSD always blocks if not yet ready.
+    fn try_dev_random() -> Result<(), io::Error> {
+        info!("OsRng: testing random device /dev/random");
+        let mut file = File::open("/dev/random")?;
+        let mut buf = [0u8; 1];
+        file.read(&mut buf)?;
+        Ok(())
     }
 }
 
@@ -462,7 +481,7 @@ mod imp {
 #[cfg(any(target_os = "dragonfly", target_os = "haiku"))]
 mod imp {
     use Error;
-    use super::unix::*;
+    use super::random_device;
     use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
@@ -470,12 +489,12 @@ mod imp {
 
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
-            open_random_device("/dev/random", false)?;
+            random_device::open("/dev/random")?;
             Ok(OsRng())
         }
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(dest)
+            random_device::read(dest)
         }
 
         fn method_str(&self) -> &'static str { "/dev/random" }
@@ -486,7 +505,7 @@ mod imp {
 #[cfg(target_os = "emscripten")]
 mod imp {
     use Error;
-    use super::unix::*;
+    use super::random_device;
     use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
@@ -494,12 +513,12 @@ mod imp {
 
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
-            open_random_device("/dev/random", false)?;
+            random_device::open("/dev/random")?;
             Ok(OsRng())
         }
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(dest)
+            random_device::read(dest)
         }
 
         fn max_chunk_size(&self) -> Option<usize> {
@@ -530,7 +549,7 @@ mod imp {
     extern crate libc;
     use {Error, ErrorKind};
     use std::io;
-    use super::unix::*;
+    use super::random_device;
     use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
@@ -548,14 +567,14 @@ mod imp {
                 return Ok(OsRng(OsRngMethod::GetRandom));
             }
 
-            open_random_device("/dev/random", false)?;
+            random_device::open("/dev/random")?;
             Ok(OsRng(OsRngMethod::RandomDevice))
         }
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             match self.0 {
                 OsRngMethod::GetRandom => getrandom_try_fill(dest),
-                OsRngMethod::RandomDevice => read_random_device(dest),
+                OsRngMethod::RandomDevice => random_device::read(dest),
             }
         }
 
@@ -802,7 +821,7 @@ mod imp {
 #[cfg(target_os = "redox")]
 mod imp {
     use Error;
-    use super::unix::*;
+    use super::random_device;
     use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
@@ -810,12 +829,12 @@ mod imp {
 
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
-            open_random_device("rand:", false)?;
+            random_device::open("rand:")?;
             Ok(OsRng())
         }
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(dest)
+            random_device::read(dest)
         }
 
         fn method_str(&self) -> &'static str { "'rand:'" }
