@@ -188,9 +188,30 @@ impl RngCore for OsRng {
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         if dest.len() == 0 { return Ok(()); }
-        self.0.try_fill_bytes(dest)
+        let max = self.0.max_chunk_size().unwrap_or(dest.len());
+        if dest.len() <= max {
+            trace!("OsRng: reading {} bytes via {}",
+                   dest.len(), self.0.method_str());
+        } else {
+            trace!("OsRng: reading {} bytes via {} in {} chunks of {} bytes",
+                   dest.len(), self.0.method_str(), (dest.len() + max) / max, max);
+        }
+        for slice in dest.chunks_mut(max) {
+            self.0.fill_chunk(slice)?;
+        }
+        Ok(())
     }
 }
+
+trait OsRngImpl where Self: Sized {
+    fn new() -> Result<Self, Error>;
+    fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error>;
+    fn max_chunk_size(&self) -> Option<usize> { None }
+    fn method_str(&self) -> &'static str;
+}
+
+
+
 
 // Helper functions to read from a random device such as `/dev/urandom`.
 //
@@ -255,10 +276,10 @@ mod unix {
             .custom_flags(libc::O_NONBLOCK)
             .open("/dev/random")?;
         let mut buf = [0u8; 1];
-        file.read_exact(&mut buf)
+        file.read_exact(&mut buf) // FIXME: should test for -1
     }
 
-    pub fn read_random_device(dest: &mut [u8], limit: Option<usize>)
+    pub fn read_random_device(dest: &mut [u8])
         -> Result<(), Error>
     {
         // We expect this function only to be used after `open_random_device`
@@ -267,25 +288,16 @@ mod unix {
         let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
         let mut guard = mutex.lock().unwrap();
         let file = (*guard).as_mut().unwrap();
-        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
 
-        let max = limit.unwrap_or(dest.len());
-        if dest.len() <= max {
-            trace!("OsRng: reading {} bytes from random device", dest.len());
-        } else {
-            trace!("OsRng: reading {} bytes from random device in {} chunks of {} bytes",
-                   dest.len(), (dest.len() + max) / max, max);
-        }
-        for slice in dest.chunks_mut(max) {
-            file.read_exact(slice).map_err(|err| {
-                Error::with_cause(ErrorKind::Unavailable,
-                                  "error reading random device", err)
-            })?;
-        }
-        Ok(())
+        // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
+        file.read_exact(dest).map_err(|err| {
+            Error::with_cause(ErrorKind::Unavailable,
+                              "error reading random device", err)
+        })
 
     }
 }
+
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 mod imp {
@@ -293,6 +305,7 @@ mod imp {
     use {Error, ErrorKind};
     use std::io;
     use super::unix::*;
+    use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
     pub struct OsRng(OsRngMethod);
@@ -303,20 +316,28 @@ mod imp {
         RandomDevice,
     }
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
             if is_getrandom_available() {
                 return Ok(OsRng(OsRngMethod::GetRandom));
             }
 
+            // Use `/dev/urandom`, after reading from `/dev/random` once
             open_random_device("/dev/urandom", true)?;
             Ok(OsRng(OsRngMethod::RandomDevice))
         }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             match self.0 {
                 OsRngMethod::GetRandom => getrandom_try_fill(dest),
-                OsRngMethod::RandomDevice => read_random_device(dest, None),
+                OsRngMethod::RandomDevice => read_random_device(dest),
+            }
+        }
+
+        fn method_str(&self) -> &'static str {
+            match self.0 {
+                OsRngMethod::GetRandom => "getrandom",
+                OsRngMethod::RandomDevice => "/dev/urandom",
             }
         }
     }
@@ -357,10 +378,8 @@ mod imp {
     }
 
     fn getrandom_try_fill(dest: &mut [u8]) -> Result<(), Error> {
-        trace!("OsRng: reading {} bytes via getrandom", dest.len());
         let mut read = 0;
-        let len = dest.len();
-        while read < len {
+        while read < dest.len() {
             let result = getrandom(&mut dest[read..]);
             if result == -1 {
                 let err = io::Error::last_os_error();
@@ -414,73 +433,87 @@ mod imp {
     }
 }
 
-// Read from `/dev/urandom`, after reading from `/dev/random` once
+
 #[cfg(target_os = "netbsd")]
 mod imp {
     use Error;
     use super::unix::*;
+    use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
     pub struct OsRng();
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
+            // Use `/dev/urandom`, after reading from `/dev/random` once
             open_random_device("/dev/urandom", true)?;
             Ok(OsRng())
         }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(dest, None)
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            read_random_device(dest)
         }
+
+        fn method_str(&self) -> &'static str { "/dev/urandom" }
     }
 }
 
-// Read from `/dev/random`
+
 #[cfg(any(target_os = "dragonfly", target_os = "haiku"))]
 mod imp {
     use Error;
     use super::unix::*;
+    use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
     pub struct OsRng();
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
             open_random_device("/dev/random", false)?;
             Ok(OsRng())
         }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(dest, None)
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            read_random_device(dest)
         }
+
+        fn method_str(&self) -> &'static str { "/dev/random" }
     }
 }
 
-// Read from `/dev/urandom`, but with chunks of limited size.
-//
-// `Crypto.getRandomValues` documents `dest` should be at most 65536 bytes.
-// `crypto.randomBytes` documents: "To minimize threadpool task length
-// variation, partition large randomBytes requests when doing so as part of
-// fulfilling a client request.
+
 #[cfg(target_os = "emscripten")]
 mod imp {
     use Error;
     use super::unix::*;
+    use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
     pub struct OsRng();
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
-            open_random_device("/dev/urandom", false)?;
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
+            open_random_device("/dev/random", false)?;
             Ok(OsRng())
         }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(slice, Some(65536))
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            read_random_device(dest)
         }
+
+        fn max_chunk_size(&self) -> Option<usize> {
+            // `Crypto.getRandomValues` documents `dest` should be at most 65536
+            // bytes. `crypto.randomBytes` documents: "To minimize threadpool
+            // task length variation, partition large randomBytes requests when
+            // doing so as part of fulfilling a client request.
+            Some(65536)
+        }
+
+        fn method_str(&self) -> &'static str { "/dev/random" }
     }
 }
+
 
 // Read from `/dev/random`, with chunks of limited size (1040 bytes).
 // `/dev/random` uses the Hash_DRBG with SHA512 algorithm from NIST SP 800-90A.
@@ -498,6 +531,7 @@ mod imp {
     use {Error, ErrorKind};
     use std::io;
     use super::unix::*;
+    use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
     pub struct OsRng(OsRngMethod);
@@ -508,8 +542,8 @@ mod imp {
         RandomDevice,
     }
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
             if is_getrandom_available() {
                 return Ok(OsRng(OsRngMethod::GetRandom));
             }
@@ -518,11 +552,25 @@ mod imp {
             Ok(OsRng(OsRngMethod::RandomDevice))
         }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             match self.0 {
-                OsRngMethod::GetRandom => getrandom_try_fill(slice),
-                OsRngMethod::RandomDevice => read_random_device(slice, Some(1040)),
-             }
+                OsRngMethod::GetRandom => getrandom_try_fill(dest),
+                OsRngMethod::RandomDevice => read_random_device(dest),
+            }
+        }
+
+        fn max_chunk_size(&self) -> Option<usize> {
+            match self.0 {
+                OsRngMethod::GetRandom => Some(1024),
+                OsRngMethod::RandomDevice => Some(1040),
+            }
+        }
+
+        fn method_str(&self) -> &'static str {
+            match self.0 {
+                OsRngMethod::GetRandom => "getrandom",
+                OsRngMethod::RandomDevice => "/dev/random",
+            }
         }
     }
 
@@ -542,37 +590,28 @@ mod imp {
     }
 
     fn getrandom_try_fill(dest: &mut [u8]) -> Result<(), Error> {
-        let max = 1024; // maximum buffer size permitted by getrandom
-        if dest.len() <= max {
-            trace!("OsRng: reading {} bytes via getrandom", dest.len());
-        } else {
-            trace!("OsRng: reading {} bytes via getrandom in {} chunks of {} bytes",
-                   dest.len(), (dest.len() + max) / max, max);
-        }
-        for slice in dest.chunks_mut(max) {
-            let result = getrandom(&mut slice);
-            if result == -1 || result == 0 {
-                let err = io::Error::last_os_error();
-                let kind = err.kind();
-                if kind == io::ErrorKind::Interrupted {
-                    continue;
-                } else if kind == io::ErrorKind::WouldBlock {
-                    return Err(Error::with_cause(
-                        ErrorKind::NotReady,
-                        "getrandom not ready",
-                        err,
-                    ));
-                } else {
-                    return Err(Error::with_cause(
-                        ErrorKind::Unavailable,
-                        "unexpected getrandom error",
-                        err,
-                    ));
-                }
-            } else if result != slice.len() {
-                return Err(Error::new(ErrorKind::Unavailable,
-                                      "unexpected getrandom error"));
+        let result = getrandom(&mut dest);
+        if result == -1 || result == 0 {
+            let err = io::Error::last_os_error();
+            let kind = err.kind();
+            if kind == io::ErrorKind::Interrupted {
+                continue;
+            } else if kind == io::ErrorKind::WouldBlock {
+                return Err(Error::with_cause(
+                    ErrorKind::NotReady,
+                    "getrandom not ready",
+                    err,
+                ));
+            } else {
+                return Err(Error::with_cause(
+                    ErrorKind::Unavailable,
+                    "unexpected getrandom error",
+                    err,
+                ));
             }
+        } else if result != dest.len() {
+            return Err(Error::new(ErrorKind::Unavailable,
+                                  "unexpected getrandom error"));
         }
         Ok(())
     }
@@ -602,22 +641,22 @@ mod imp {
     }
 }
 
+
 #[cfg(target_os = "cloudabi")]
 mod imp {
     extern crate cloudabi;
 
+    use std::io;
     use {Error, ErrorKind};
+    use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
     pub struct OsRng;
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
-            Ok(OsRng)
-        }
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> { Ok(OsRng) }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            trace!("OsRng: reading {} bytes via cloadabi::random_get", dest.len());
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             let errno = unsafe { cloudabi::random_get(dest) };
             if errno == cloudabi::errno::SUCCESS {
                 Ok(())
@@ -627,19 +666,23 @@ mod imp {
                 Err(Error::with_cause(
                     ErrorKind::Unavailable,
                     "random_get() system call failed",
-                    io::Error::from_raw_os_error(errno),
+                    io::Error::from_raw_os_error(errno as i32),
                 ))
             }
         }
+
+        fn method_str(&self) -> &'static str { "cloudabi::random_get" }
     }
 }
+
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 mod imp {
     extern crate libc;
 
     use {Error, ErrorKind};
-    
+    use super::OsRngImpl;
+
     use std::io;
     use self::libc::{c_int, size_t};
 
@@ -657,15 +700,14 @@ mod imp {
                               count: size_t, bytes: *mut u8) -> c_int;
     }
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
-            Ok(OsRng)
-        }
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> { Ok(OsRng) }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            trace!("OsRng: reading {} bytes via SecRandomCopyBytes", dest.len());
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             let ret = unsafe {
-                SecRandomCopyBytes(kSecRandomDefault, dest.len() as size_t, dest.as_mut_ptr())
+                SecRandomCopyBytes(kSecRandomDefault,
+                                   dest.len() as size_t,
+                                   dest.as_mut_ptr())
             };
             if ret == -1 {
                 Err(Error::with_cause(
@@ -676,155 +718,156 @@ mod imp {
                 Ok(())
             }
         }
+
+        fn method_str(&self) -> &'static str { "SecRandomCopyBytes" }
     }
 }
+
 
 #[cfg(target_os = "freebsd")]
 mod imp {
     extern crate libc;
 
     use {Error, ErrorKind};
-    
+    use super::OsRngImpl;
+
     use std::ptr;
     use std::io;
 
     #[derive(Clone, Debug)]
     pub struct OsRng;
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
-            Ok(OsRng)
-        }
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> { Ok(OsRng) }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             let mib = [libc::CTL_KERN, libc::KERN_ARND];
-            let max = 256;
-            if dest.len() <= max {
-                trace!("OsRng: reading {} bytes via kern.arandom", dest.len());
-            } else {
-                trace!("OsRng: reading {} bytes via kern.arandom in {} chunks of {} bytes",
-                       dest.len(), (dest.len() + max) / max, max);
-            }
-            for slice in dest.chunks_mut(max) {
-                let mut s_len = slice.len();
-                let ret = unsafe {
-                    libc::sysctl(mib.as_ptr(), mib.len() as libc::c_uint,
-                                 slice.as_mut_ptr() as *mut _, &mut s_len,
-                                 ptr::null(), 0)
-                };
-                if ret == -1 || s_len != slice.len() {
-                    return Err(Error::with_cause(
-                        ErrorKind::Unavailable,
-                        "kern.arandom sysctl failed",
-                        io::Error::last_os_error()));
-                }
+            let mut len = dest.len();
+            let ret = unsafe {
+                libc::sysctl(mib.as_ptr(), mib.len() as libc::c_uint,
+                             dest.as_mut_ptr() as *mut _, &mut len,
+                             ptr::null(), 0)
+            };
+            if ret == -1 || len != dest.len() {
+                return Err(Error::with_cause(
+                    ErrorKind::Unavailable,
+                    "kern.arandom sysctl failed",
+                    io::Error::last_os_error()));
             }
             Ok(())
         }
+
+        fn max_chunk_size(&self) -> Option<usize> { Some(256) }
+
+        fn method_str(&self) -> &'static str { "kern.arandom" }
     }
 }
+
 
 #[cfg(any(target_os = "openbsd", target_os = "bitrig"))]
 mod imp {
     extern crate libc;
 
     use {Error, ErrorKind};
-    
+    use super::OsRngImpl;
+
     use std::io;
 
     #[derive(Clone, Debug)]
     pub struct OsRng;
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
-            Ok(OsRng)
-        }
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            let max = 256; // maximum buffer size permitted by getentropy(2)
-            if dest.len() <= max {
-                trace!("OsRng: reading {} bytes via getentropy", dest.len());
-            } else {
-                trace!("OsRng: reading {} bytes via getentropy in {} chunks of {} bytes",
-                       dest.len(), (dest.len() + max) / max, max);
-            }
-            for s in dest.chunks_mut(256) {
-                let ret = unsafe {
-                    libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s.len())
-                };
-                if ret == -1 {
-                    return Err(Error::with_cause(
-                        ErrorKind::Unavailable,
-                        "getentropy failed",
-                        io::Error::last_os_error()));
-                }
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> { Ok(OsRng) }
+
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            let ret = unsafe {
+                libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s.len())
+            };
+            if ret == -1 {
+                return Err(Error::with_cause(
+                    ErrorKind::Unavailable,
+                    "getentropy failed",
+                    io::Error::last_os_error()));
             }
             Ok(())
         }
+
+        fn max_chunk_size(&self) -> Option<usize> { Some(256) }
+
+        fn method_str(&self) -> &'static str { "getentropy" }
     }
 }
+
 
 #[cfg(target_os = "redox")]
 mod imp {
     use Error;
     use super::unix::*;
+    use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
     pub struct OsRng();
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
             open_random_device("rand:", false)?;
             Ok(OsRng())
         }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            read_random_device(dest, None)
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            read_random_device(dest)
         }
+
+        fn method_str(&self) -> &'static str { "'rand:'" }
     }
 }
+
 
 #[cfg(target_os = "fuchsia")]
 mod imp {
     extern crate fuchsia_zircon;
 
     use {Error, ErrorKind};
-    
-    use std::io;
+    use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
     pub struct OsRng;
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
-            Ok(OsRng)
-        }
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            for s in dest.chunks_mut(fuchsia_zircon::sys::ZX_CPRNG_DRAW_MAX_LEN) {
-                trace!("OsRng: reading {} bytes via cprng_draw", s.len());
-                let mut filled = 0;
-                while filled < s.len() {
-                    match fuchsia_zircon::cprng_draw(&mut s[filled..]) {
-                        Ok(actual) => filled += actual,
-                        Err(e) => {
-                            return Err(Error::with_cause(
-                                ErrorKind::Unavailable,
-                                "cprng_draw failed",
-                                e));
-                        }
-                    };
-                }
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> { Ok(OsRng) }
+
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            let mut read = 0;
+            while read < dest.len() {
+                match fuchsia_zircon::cprng_draw(&mut dest[read..]) {
+                    Ok(actual) => read += actual,
+                    Err(e) => {
+                        return Err(Error::with_cause(
+                            ErrorKind::Unavailable,
+                            "cprng_draw failed",
+                            e.into_io_error()));
+                    }
+                };
             }
             Ok(())
         }
+
+        fn max_chunk_size(&self) -> Option<usize> {
+            Some(fuchsia_zircon::sys::ZX_CPRNG_DRAW_MAX_LEN)
+        }
+
+        fn method_str(&self) -> &'static str { "cprng_draw" }
     }
 }
+
 
 #[cfg(windows)]
 mod imp {
     extern crate winapi;
     
     use {Error, ErrorKind};
-    
+    use super::OsRngImpl;
+
     use std::io;
 
     use self::winapi::shared::minwindef::ULONG;
@@ -834,36 +877,30 @@ mod imp {
     #[derive(Clone, Debug)]
     pub struct OsRng;
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
-            Ok(OsRng)
-        }
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> { Ok(OsRng) }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            // RtlGenRandom takes an ULONG (u32) for the length so we need to
-            // split up the buffer.
-            let max = <ULONG>::max_value() as usize;
-            if dest.len() <= max {
-                trace!("OsRng: reading {} bytes via RtlGenRandom", dest.len());
-            } else {
-                trace!("OsRng: reading {} bytes via RtlGenRandom in {} chunks of {} bytes",
-                       dest.len(), (dest.len() + max) / max, max);
-            }
-            for slice in dest.chunks_mut(max) {
-                let ret = unsafe {
-                    RtlGenRandom(slice.as_mut_ptr() as PVOID, slice.len() as ULONG)
-                };
-                if ret == 0 {
-                    return Err(Error::with_cause(
-                        ErrorKind::Unavailable,
-                        "couldn't generate random bytes",
-                        io::Error::last_os_error()));
-                }
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            let ret = unsafe {
+                RtlGenRandom(dest.as_mut_ptr() as PVOID, dest.len() as ULONG)
+            };
+            if ret == 0 {
+                return Err(Error::with_cause(
+                    ErrorKind::Unavailable,
+                    "couldn't generate random bytes",
+                    io::Error::last_os_error()));
             }
             Ok(())
         }
+
+        fn max_chunk_size(&self) -> Option<usize> {
+            Some(<ULONG>::max_value() as usize)
+        }
+
+        fn method_str(&self) -> &'static str { "RtlGenRandom" }
     }
 }
+
 
 #[cfg(all(target_arch = "wasm32",
           not(target_os = "emscripten"),
@@ -873,18 +910,19 @@ mod imp {
     use stdweb::unstable::TryInto;
     use stdweb::web::error::Error as WebError;
     use {Error, ErrorKind};
+    use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
-    enum OsRngInner {
+    enum OsRngMethod {
         Browser,
         Node
     }
 
     #[derive(Clone, Debug)]
-    pub struct OsRng(OsRngInner);
+    pub struct OsRng(OsRngMethod);
 
-    impl OsRng {
-        pub fn new() -> Result<OsRng, Error> {
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
             let result = js! {
                 try {
                     if (
@@ -908,8 +946,8 @@ mod imp {
             if js!{ return @{ result.as_ref() }.success } == true {
                 let ty = js!{ return @{ result }.ty };
 
-                if ty == 1 { Ok(OsRng(OsRngInner::Browser)) }
-                else if ty == 2 { Ok(OsRng(OsRngInner::Node)) }
+                if ty == 1 { Ok(OsRng(OsRngMethod::Browser)) }
+                else if ty == 2 { Ok(OsRng(OsRngMethod::Node)) }
                 else { unreachable!() }
             } else {
                 let err: WebError = js!{ return @{ result }.error }.try_into().unwrap();
@@ -917,12 +955,6 @@ mod imp {
             }
         }
 
-        pub fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            for slice in dest.chunks_mut(65536) {
-                self.fill_chunk(slice)?;
-            }
-            Ok(())
-        }
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             assert_eq!(mem::size_of::<usize>(), 4);
@@ -931,7 +963,7 @@ mod imp {
             let ptr = dest.as_mut_ptr() as i32;
 
             let result = match self.0 {
-                OsRngInner::Browser => js! {
+                OsRngMethod::Browser => js! {
                     try {
                         let array = new Uint8Array(@{ len });
                         window.crypto.getRandomValues(array);
@@ -942,7 +974,7 @@ mod imp {
                         return { success: false, error: err };
                     }
                 },
-                OsRngInner::Node => js! {
+                OsRngMethod::Node => js! {
                     try {
                         let bytes = require("crypto").randomBytes(@{ len });
                         HEAPU8.set(new Uint8Array(bytes), @{ ptr });
@@ -961,8 +993,18 @@ mod imp {
                 Err(Error::with_cause(ErrorKind::Unexpected, "WASM Error", err))
             }
         }
+
+        fn max_chunk_size(&self) -> Option<usize> { Some(65536) }
+
+        fn method_str(&self) -> &'static str {
+            match self.0 {
+                OsRngMethod::Browser => "Crypto.getRandomValues",
+                OsRngMethod::Node => "crypto.randomBytes",
+            }
+        }
     }
 }
+
 
 #[cfg(test)]
 mod test {
