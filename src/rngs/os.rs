@@ -187,8 +187,11 @@ impl RngCore for OsRng {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        // Some systems do not support reading 0 random bytes.
+        // (And why waste a system call?)
         if dest.len() == 0 { return Ok(()); }
-        let max = self.0.max_chunk_size().unwrap_or(dest.len());
+
+        let max = self.0.max_chunk_size();
         if dest.len() <= max {
             trace!("OsRng: reading {} bytes via {}",
                    dest.len(), self.0.method_str());
@@ -206,7 +209,7 @@ impl RngCore for OsRng {
 trait OsRngImpl where Self: Sized {
     fn new() -> Result<Self, Error>;
     fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error>;
-    fn max_chunk_size(&self) -> Option<usize> { None }
+    fn max_chunk_size(&self) -> usize { ::core::usize::MAX }
     fn method_str(&self) -> &'static str;
 }
 
@@ -521,12 +524,12 @@ mod imp {
             random_device::read(dest)
         }
 
-        fn max_chunk_size(&self) -> Option<usize> {
+        fn max_chunk_size(&self) -> usize {
             // `Crypto.getRandomValues` documents `dest` should be at most 65536
             // bytes. `crypto.randomBytes` documents: "To minimize threadpool
             // task length variation, partition large randomBytes requests when
             // doing so as part of fulfilling a client request.
-            Some(65536)
+            65536
         }
 
         fn method_str(&self) -> &'static str { "/dev/random" }
@@ -578,11 +581,10 @@ mod imp {
             }
         }
 
-        fn max_chunk_size(&self) -> Option<usize> {
-            match self.0 {
-                OsRngMethod::GetRandom => Some(1024),
-                OsRngMethod::RandomDevice => Some(1040),
-            }
+        fn max_chunk_size(&self) -> usize {
+            // The documentation says 1024 is the maximum for getrandom, but
+            // 1040 for /dev/random.
+            1024
         }
 
         fn method_str(&self) -> &'static str {
@@ -776,7 +778,7 @@ mod imp {
             Ok(())
         }
 
-        fn max_chunk_size(&self) -> Option<usize> { Some(256) }
+        fn max_chunk_size(&self) -> usize { 256 }
 
         fn method_str(&self) -> &'static str { "kern.arandom" }
     }
@@ -811,7 +813,7 @@ mod imp {
             Ok(())
         }
 
-        fn max_chunk_size(&self) -> Option<usize> { Some(256) }
+        fn max_chunk_size(&self) -> usize { 256 }
 
         fn method_str(&self) -> &'static str { "getentropy" }
     }
@@ -871,8 +873,8 @@ mod imp {
             Ok(())
         }
 
-        fn max_chunk_size(&self) -> Option<usize> {
-            Some(fuchsia_zircon::sys::ZX_CPRNG_DRAW_MAX_LEN)
+        fn max_chunk_size(&self) -> usize {
+            fuchsia_zircon::sys::ZX_CPRNG_DRAW_MAX_LEN
         }
 
         fn method_str(&self) -> &'static str { "cprng_draw" }
@@ -912,9 +914,7 @@ mod imp {
             Ok(())
         }
 
-        fn max_chunk_size(&self) -> Option<usize> {
-            Some(<ULONG>::max_value() as usize)
-        }
+        fn max_chunk_size(&self) -> usize { <ULONG>::max_value() as usize }
 
         fn method_str(&self) -> &'static str { "RtlGenRandom" }
     }
@@ -1013,7 +1013,7 @@ mod imp {
             }
         }
 
-        fn max_chunk_size(&self) -> Option<usize> { Some(65536) }
+        fn max_chunk_size(&self) -> usize { 65536 }
 
         fn method_str(&self) -> &'static str {
             match self.0 {
