@@ -85,10 +85,10 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 ///
 /// # Panics
 ///
-/// `OsRng` is extremely unlikely to fail if `OsRng::new()` was succesfull. But
-/// in case it does fail, only [`try_fill_bytes`] is able to report the cause.
-/// Depending on the error the other [`RngCore`] methods will retry several
-/// times, and panic in case the error remains.
+/// `OsRng` is extremely unlikely to fail if `OsRng::new()`, and one read from
+/// it, where succesfull. But in case it does fail, only [`try_fill_bytes`] is
+/// able to report the cause. Depending on the error the other [`RngCore`]
+/// methods will retry several times, and panic in case the error remains.
 ///
 /// [`EntropyRng`]: struct.EntropyRng.html
 /// [`RngCore`]: ../trait.RngCore.html
@@ -151,6 +151,11 @@ impl RngCore for OsRng {
         let mut err_count = 0;
         let mut error_logged = false;
 
+        // Maybe block until the OS RNG is initialized
+        let mut read = 0;
+        if let Ok(n) = self.0.test_initialized(dest, true) { read = n };
+        let dest = &mut dest[read..];
+
         loop {
             if let Err(e) = self.try_fill_bytes(dest) {
                 if err_count >= RETRY_LIMIT {
@@ -191,6 +196,9 @@ impl RngCore for OsRng {
         // (And why waste a system call?)
         if dest.len() == 0 { return Ok(()); }
 
+        let read = self.0.test_initialized(dest, false)?;
+        let dest = &mut dest[read..];
+
         let max = self.0.max_chunk_size();
         if dest.len() <= max {
             trace!("OsRng: reading {} bytes via {}",
@@ -207,9 +215,27 @@ impl RngCore for OsRng {
 }
 
 trait OsRngImpl where Self: Sized {
+    // Create a new `OsRng` platform interface.
     fn new() -> Result<Self, Error>;
+
+    // Fill a chunk with random bytes.
     fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error>;
+
+    // Test whether the OS RNG is initialized. This method may not be possible
+    // to support cheaply (or at all) on all operating systems.
+    //
+    // If `blocking` is set, this will cause the OS the block execution until
+    // its RNG is initialized.
+    //
+    // Random values that are read while this are stored in `dest`, the amount
+    // of read bytes is returned.
+    fn test_initialized(&mut self, _dest: &mut [u8], _blocking: bool)
+        -> Result<usize, Error> { Ok(0) }
+
+    // Maximum chunk size supported.
     fn max_chunk_size(&self) -> usize { ::core::usize::MAX }
+
+    // Name of the OS interface (used for logging).
     fn method_str(&self) -> &'static str;
 }
 
@@ -237,25 +263,6 @@ mod random_device {
 
     #[allow(unused)]
     pub fn open(path: &str) -> Result<(), Error> {
-        fn test() -> Result<(), io::Error> { Ok(()) }
-        open_with_test(path, &test)
-    }
-
-    pub fn open_with_test(path: &str, test: &Fn() -> Result<(), io::Error>)
-        -> Result<(), Error>
-    {
-        fn map_err(err: io::Error) -> Error {
-            match err.kind() {
-                io::ErrorKind::Interrupted =>
-                        Error::new(ErrorKind::Transient, "interrupted"),
-                io::ErrorKind::WouldBlock =>
-                        Error::with_cause(ErrorKind::NotReady,
-                        "OS RNG not yet seeded", err),
-                _ => Error::with_cause(ErrorKind::Unavailable,
-                        "error while opening random device", err)
-            }
-        }
-
         READ_RNG_ONCE.call_once(|| {
             unsafe { READ_RNG_FILE = Some(Mutex::new(None)) }
         });
@@ -266,7 +273,6 @@ mod random_device {
         let mutex = unsafe { READ_RNG_FILE.as_ref().unwrap() };
         let mut guard = mutex.lock().unwrap();
         if (*guard).is_none() {
-            test().map_err(map_err)?;
             info!("OsRng: opening random device {}", path);
             let file = File::open(path).map_err(map_err)?;
             *guard = Some(file);
@@ -289,22 +295,41 @@ mod random_device {
         })
 
     }
+
+    pub fn map_err(err: io::Error) -> Error {
+        match err.kind() {
+            io::ErrorKind::Interrupted =>
+                    Error::new(ErrorKind::Transient, "interrupted"),
+            io::ErrorKind::WouldBlock =>
+                    Error::with_cause(ErrorKind::NotReady,
+                    "OS RNG not yet seeded", err),
+            _ => Error::with_cause(ErrorKind::Unavailable,
+                    "error while opening random device", err)
+        }
+    }
 }
 
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 mod imp {
     extern crate libc;
+
     use {Error, ErrorKind};
+    use super::random_device;
+    use super::OsRngImpl;
+
     use std::io;
     use std::io::Read;
     use std::fs::OpenOptions;
     use std::os::unix::fs::OpenOptionsExt;
-    use super::random_device;
-    use super::OsRngImpl;
+    use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
+    use std::sync::{Once, ONCE_INIT};
 
     #[derive(Clone, Debug)]
-    pub struct OsRng(OsRngMethod);
+    pub struct OsRng {
+        method: OsRngMethod,
+        initialized: bool,
+    }
 
     #[derive(Clone, Debug)]
     enum OsRngMethod {
@@ -315,41 +340,56 @@ mod imp {
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
             if is_getrandom_available() {
-                return Ok(OsRng(OsRngMethod::GetRandom));
+                return Ok(OsRng { method: OsRngMethod::GetRandom,
+                                  initialized: false });
             }
-
-            // Use `/dev/urandom`, after reading from `/dev/random` once
-            random_device::open_with_test("/dev/urandom", &try_dev_random)?;
-            Ok(OsRng(OsRngMethod::RandomDevice))
+            random_device::open("/dev/urandom")?;
+            Ok(OsRng { method: OsRngMethod::RandomDevice, initialized: false })
         }
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            match self.0 {
-                OsRngMethod::GetRandom => getrandom_try_fill(dest),
+            match self.method {
+                OsRngMethod::GetRandom => getrandom_try_fill(dest, false),
                 OsRngMethod::RandomDevice => random_device::read(dest),
             }
         }
 
+        fn test_initialized(&mut self, dest: &mut [u8], blocking: bool)
+            -> Result<usize, Error>
+        {
+            static OS_RNG_INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
+            if !self.initialized {
+                self.initialized = OS_RNG_INITIALIZED.load(Ordering::Relaxed);
+            }
+            if self.initialized { return Ok(0); }
+
+            let result = match self.method {
+                OsRngMethod::GetRandom => {
+                    getrandom_try_fill(dest, blocking)?;
+                    Ok(dest.len())
+                }
+                OsRngMethod::RandomDevice => {
+                    info!("OsRng: testing random device /dev/random");
+                    let mut file = OpenOptions::new()
+                        .read(true)
+                        .custom_flags(if blocking { 0 } else { libc::O_NONBLOCK })
+                        .open("/dev/random")
+                        .map_err(random_device::map_err)?;
+                    file.read(&mut dest[..1]).map_err(random_device::map_err)?;
+                    Ok(1)
+                }
+            };
+            OS_RNG_INITIALIZED.store(true, Ordering::Relaxed);
+            self.initialized = true;
+            result
+        }
+
         fn method_str(&self) -> &'static str {
-            match self.0 {
+            match self.method {
                 OsRngMethod::GetRandom => "getrandom",
                 OsRngMethod::RandomDevice => "/dev/urandom",
             }
         }
-    }
-
-    // Read a single byte from `/dev/random` in non-blocking mode, to determine
-    // if the OS RNG is already seeded. In theory only `EAGAIN` indicates the
-    // entropy pool is empty, but we treat any error as an indication.
-    fn try_dev_random() -> Result<(), io::Error> {
-        info!("OsRng: testing random device /dev/random");
-        let mut file = OpenOptions::new()
-            .read(true)
-            .custom_flags(libc::O_NONBLOCK)
-            .open("/dev/random")?;
-        let mut buf = [0u8; 1];
-        file.read(&mut buf)?;
-        Ok(())
     }
 
     #[cfg(target_arch = "x86_64")]
@@ -374,7 +414,7 @@ mod imp {
                   target_arch = "mips", target_arch = "mips64")))]
     const NR_GETRANDOM: libc::c_long = 0;
 
-    fn getrandom(buf: &mut [u8]) -> libc::c_long {
+    fn getrandom(buf: &mut [u8], blocking: bool) -> libc::c_long {
         extern "C" {
             fn syscall(number: libc::c_long, ...) -> libc::c_long;
         }
@@ -383,14 +423,15 @@ mod imp {
         if NR_GETRANDOM == 0 { return -1 };
 
         unsafe {
-            syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(), GRND_NONBLOCK)
+            syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(),
+                    if blocking { 0 } else { GRND_NONBLOCK })
         }
     }
 
-    fn getrandom_try_fill(dest: &mut [u8]) -> Result<(), Error> {
+    fn getrandom_try_fill(dest: &mut [u8], blocking: bool) -> Result<(), Error> {
         let mut read = 0;
         while read < dest.len() {
-            let result = getrandom(&mut dest[read..]);
+            let result = getrandom(&mut dest[read..], blocking);
             if result == -1 {
                 let err = io::Error::last_os_error();
                 let kind = err.kind();
@@ -417,9 +458,6 @@ mod imp {
     }
 
     fn is_getrandom_available() -> bool {
-        use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
-        use std::sync::{Once, ONCE_INIT};
-
         static CHECKER: Once = ONCE_INIT;
         static AVAILABLE: AtomicBool = ATOMIC_BOOL_INIT;
 
@@ -428,7 +466,7 @@ mod imp {
         CHECKER.call_once(|| {
             debug!("OsRng: testing getrandom");
             let mut buf: [u8; 0] = [];
-            let result = getrandom(&mut buf);
+            let result = getrandom(&mut buf, false);
             let available = if result == -1 {
                 let err = io::Error::last_os_error().raw_os_error();
                 err != Some(libc::ENOSYS)
@@ -449,34 +487,46 @@ mod imp {
     use Error;
     use super::random_device;
     use super::OsRngImpl;
+
     use std::fs::File;
-    use std::io;
     use std::io::Read;
+    use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
 
     #[derive(Clone, Debug)]
-    pub struct OsRng();
+    pub struct OsRng { initialized: bool }
 
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
-            random_device::open_with_test("/dev/urandom", &try_dev_random)?;
-            Ok(OsRng())
+            random_device::open("/dev/urandom")?;
+            Ok(OsRng { initialized: false })
         }
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             random_device::read(dest)
         }
 
-        fn method_str(&self) -> &'static str { "/dev/urandom" }
-    }
+        // Read a single byte from `/dev/random` to determine if the OS RNG is
+        // already seeded. NetBSD always blocks if not yet ready.
+        fn test_initialized(&mut self, dest: &mut [u8], _blocking: bool)
+            -> Result<usize, Error>
+        {
+            static OS_RNG_INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
+            if !self.initialized {
+                self.initialized = OS_RNG_INITIALIZED.load(Ordering::Relaxed);
+            }
+            if self.initialized { return Ok(0); }
 
-    // Read a single byte from `/dev/random` to determine if the OS RNG is
-    // already seeded. NetBSD always blocks if not yet ready.
-    fn try_dev_random() -> Result<(), io::Error> {
-        info!("OsRng: testing random device /dev/random");
-        let mut file = File::open("/dev/random")?;
-        let mut buf = [0u8; 1];
-        file.read(&mut buf)?;
-        Ok(())
+            info!("OsRng: testing random device /dev/random");
+            let mut file =
+                File::open("/dev/random").map_err(random_device::map_err)?;
+            file.read(&mut dest[..1]).map_err(random_device::map_err)?;
+
+            OS_RNG_INITIALIZED.store(true, Ordering::Relaxed);
+            self.initialized = true;
+            Ok(1)
+        }
+
+        fn method_str(&self) -> &'static str { "/dev/urandom" }
     }
 }
 
@@ -550,13 +600,22 @@ mod imp {
 #[cfg(target_os = "solaris")]
 mod imp {
     extern crate libc;
+
     use {Error, ErrorKind};
-    use std::io;
     use super::random_device;
     use super::OsRngImpl;
 
+    use std::io;
+    use std::io::Read;
+    use std::fs::OpenOptions;
+    use std::os::unix::fs::OpenOptionsExt;
+    use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
+
     #[derive(Clone, Debug)]
-    pub struct OsRng(OsRngMethod);
+    pub struct OsRng {
+        method: OsRngMethod,
+        initialized: bool,
+    }
 
     #[derive(Clone, Debug)]
     enum OsRngMethod {
@@ -567,18 +626,51 @@ mod imp {
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
             if is_getrandom_available() {
-                return Ok(OsRng(OsRngMethod::GetRandom));
+                return Ok(OsRng { method: OsRngMethod::GetRandom,
+                                  initialized: false });
             }
-
             random_device::open("/dev/random")?;
-            Ok(OsRng(OsRngMethod::RandomDevice))
+            Ok(OsRng { method: OsRngMethod::RandomDevice, initialized: false })
         }
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            match self.0 {
-                OsRngMethod::GetRandom => getrandom_try_fill(dest),
+            match self.method {
+                OsRngMethod::GetRandom => getrandom_try_fill(dest, false),
                 OsRngMethod::RandomDevice => random_device::read(dest),
             }
+        }
+
+        fn test_initialized(&mut self, dest: &mut [u8], blocking: bool)
+            -> Result<usize, Error>
+        {
+            static OS_RNG_INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
+            if !self.initialized {
+                self.initialized = OS_RNG_INITIALIZED.load(Ordering::Relaxed);
+            }
+            if self.initialized { return Ok(0); }
+
+            let chunk_len = ::core::cmp::min(1024, dest.len());
+            let dest = &mut dest[..chunk_len];
+
+            match self.method {
+                OsRngMethod::GetRandom => getrandom_try_fill(dest, blocking)?,
+                OsRngMethod::RandomDevice => {
+                    if blocking {
+                        info!("OsRng: testing random device /dev/random");
+                        let mut file = OpenOptions::new()
+                            .read(true)
+                            .custom_flags(libc::O_NONBLOCK)
+                            .open("/dev/random")
+                            .map_err(random_device::map_err)?;
+                        file.read(dest).map_err(random_device::map_err)?;
+                    } else {
+                        self.fill_chunk(dest)?;
+                    }
+                }
+            };
+            OS_RNG_INITIALIZED.store(true, Ordering::Relaxed);
+            self.initialized = true;
+            Ok(chunk_len)
         }
 
         fn max_chunk_size(&self) -> usize {
@@ -588,14 +680,14 @@ mod imp {
         }
 
         fn method_str(&self) -> &'static str {
-            match self.0 {
+            match self.method {
                 OsRngMethod::GetRandom => "getrandom",
                 OsRngMethod::RandomDevice => "/dev/random",
             }
         }
     }
 
-    fn getrandom(buf: &mut [u8]) -> libc::c_long {
+    fn getrandom(buf: &mut [u8], blocking: bool) -> libc::c_long {
         extern "C" {
             fn syscall(number: libc::c_long, ...) -> libc::c_long;
         }
@@ -606,18 +698,16 @@ mod imp {
 
         unsafe {
             syscall(SYS_GETRANDOM, buf.as_mut_ptr(), buf.len(),
-                    GRND_NONBLOCK | GRND_RANDOM)
+                    if blocking { 0 } else { GRND_NONBLOCK } | GRND_RANDOM)
         }
     }
 
-    fn getrandom_try_fill(dest: &mut [u8]) -> Result<(), Error> {
-        let result = getrandom(&mut dest);
+    fn getrandom_try_fill(dest: &mut [u8], blocking: bool) -> Result<(), Error> {
+        let result = getrandom(dest, blocking);
         if result == -1 || result == 0 {
             let err = io::Error::last_os_error();
             let kind = err.kind();
-            if kind == io::ErrorKind::Interrupted {
-                continue;
-            } else if kind == io::ErrorKind::WouldBlock {
+            if kind == io::ErrorKind::WouldBlock {
                 return Err(Error::with_cause(
                     ErrorKind::NotReady,
                     "getrandom not ready",
@@ -630,7 +720,7 @@ mod imp {
                     err,
                 ));
             }
-        } else if result != dest.len() {
+        } else if result != dest.len() as i64 {
             return Err(Error::new(ErrorKind::Unavailable,
                                   "unexpected getrandom error"));
         }
@@ -647,7 +737,7 @@ mod imp {
         CHECKER.call_once(|| {
             debug!("OsRng: testing getrandom");
             let mut buf: [u8; 0] = [];
-            let result = getrandom(&mut buf);
+            let result = getrandom(&mut buf, false);
             let available = if result == -1 {
                 let err = io::Error::last_os_error().raw_os_error();
                 err != Some(libc::ENOSYS)
