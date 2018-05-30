@@ -181,6 +181,7 @@ pub use self::uniform::Uniform as Range;
 #[cfg(feature = "std")]
 #[doc(inline)] pub use self::binomial::Binomial;
 #[doc(inline)] pub use self::bernoulli::Bernoulli;
+#[cfg(feature = "std")]
 #[doc(inline)] pub use self::dirichlet::Dirichlet;
 
 pub mod uniform;
@@ -195,6 +196,7 @@ pub mod uniform;
 #[cfg(feature = "std")]
 #[doc(hidden)] pub mod binomial;
 #[doc(hidden)] pub mod bernoulli;
+#[cfg(feature = "std")]
 #[doc(hidden)] pub mod dirichlet;
 
 mod float;
@@ -206,6 +208,7 @@ mod other;
 mod ziggurat_tables;
 #[cfg(feature="std")]
 use distributions::float::IntoFloat;
+
 
 /// Types that can be used to create a random instance of `Support`.
 #[deprecated(since="0.5.0", note="use Distribution instead")]
