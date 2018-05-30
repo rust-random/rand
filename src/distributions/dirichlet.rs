@@ -11,7 +11,8 @@
 //! The dirichlet distribution.
 
 use Rng;
-use distributions::{Distribution, gamma::Gamma};
+use distributions::Distribution;
+use distributions::gamma::Gamma;
 
 /// The dirichelet distribution `Dirichlet(alpha)`.
 ///
