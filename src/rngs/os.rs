@@ -262,7 +262,9 @@ mod random_device {
     static READ_RNG_ONCE: Once = ONCE_INIT;
 
     #[allow(unused)]
-    pub fn open(path: &str) -> Result<(), Error> {
+    pub fn open<F>(path: &'static str, open_fn: F) -> Result<(), Error>
+        where F: Fn(&'static str) -> Result<File, io::Error>
+    {
         READ_RNG_ONCE.call_once(|| {
             unsafe { READ_RNG_FILE = Some(Mutex::new(None)) }
         });
@@ -274,7 +276,7 @@ mod random_device {
         let mut guard = mutex.lock().unwrap();
         if (*guard).is_none() {
             info!("OsRng: opening random device {}", path);
-            let file = File::open(path).map_err(map_err)?;
+            let file = open_fn(path).map_err(map_err)?;
             *guard = Some(file);
         };
         Ok(())
@@ -320,7 +322,7 @@ mod imp {
 
     use std::io;
     use std::io::Read;
-    use std::fs::OpenOptions;
+    use std::fs::{File, OpenOptions};
     use std::os::unix::fs::OpenOptionsExt;
     use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
     use std::sync::{Once, ONCE_INIT};
@@ -343,7 +345,7 @@ mod imp {
                 return Ok(OsRng { method: OsRngMethod::GetRandom,
                                   initialized: false });
             }
-            random_device::open("/dev/urandom")?;
+            random_device::open("/dev/urandom", &|p| File::open(p))?;
             Ok(OsRng { method: OsRngMethod::RandomDevice, initialized: false })
         }
 
@@ -497,7 +499,7 @@ mod imp {
 
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
-            random_device::open("/dev/urandom")?;
+            random_device::open("/dev/urandom", &|p| File::open(p))?;
             Ok(OsRng { initialized: false })
         }
 
@@ -536,13 +538,14 @@ mod imp {
     use Error;
     use super::random_device;
     use super::OsRngImpl;
+    use std::fs::File;
 
     #[derive(Clone, Debug)]
     pub struct OsRng();
 
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
-            random_device::open("/dev/random")?;
+            random_device::open("/dev/random", &|p| File::open(p))?;
             Ok(OsRng())
         }
 
@@ -560,13 +563,14 @@ mod imp {
     use Error;
     use super::random_device;
     use super::OsRngImpl;
+    use std::fs::File;
 
     #[derive(Clone, Debug)]
     pub struct OsRng();
 
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
-            random_device::open("/dev/random")?;
+            random_device::open("/dev/random", &|p| File::open(p))?;
             Ok(OsRng())
         }
 
@@ -607,7 +611,7 @@ mod imp {
 
     use std::io;
     use std::io::Read;
-    use std::fs::OpenOptions;
+    use std::fs::{File, OpenOptions};
     use std::os::unix::fs::OpenOptionsExt;
     use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
 
@@ -629,7 +633,11 @@ mod imp {
                 return Ok(OsRng { method: OsRngMethod::GetRandom,
                                   initialized: false });
             }
-            random_device::open("/dev/random")?;
+            let open = |p| OpenOptions::new()
+                .read(true)
+                .custom_flags(libc::O_NONBLOCK)
+                .open(p);
+            random_device::open("/dev/random", &open)?;
             Ok(OsRng { method: OsRngMethod::RandomDevice, initialized: false })
         }
 
@@ -657,10 +665,9 @@ mod imp {
                 OsRngMethod::RandomDevice => {
                     if blocking {
                         info!("OsRng: testing random device /dev/random");
-                        let mut file = OpenOptions::new()
-                            .read(true)
-                            .custom_flags(libc::O_NONBLOCK)
-                            .open("/dev/random")
+                        // We already have a non-blocking handle, but now need a
+                        // blocking one. Not much choice except opening it twice
+                        let mut file = File::open("/dev/random")
                             .map_err(random_device::map_err)?;
                         file.read(dest).map_err(random_device::map_err)?;
                     } else {
@@ -915,13 +922,14 @@ mod imp {
     use Error;
     use super::random_device;
     use super::OsRngImpl;
+    use std::fs::File;
 
     #[derive(Clone, Debug)]
     pub struct OsRng();
 
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
-            random_device::open("rand:")?;
+            random_device::open("rand:", &|p| File::open(p))?;
             Ok(OsRng())
         }
 
