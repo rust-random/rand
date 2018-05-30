@@ -24,10 +24,6 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// not entirely theoretical, for `OsRng` to fail. In such cases [`EntropyRng`]
 /// falls back on a good alternative entropy source.
 ///
-/// `OsRng` usually does not block. On some systems, and notably virtual
-/// machines, it may block very early in the init process, when the OS CSPRNG
-/// has not yet been seeded.
-///
 /// `OsRng::new()` is guaranteed to be very cheap (after the first successful
 /// call), and will never consume more than one file handle per process.
 ///
@@ -52,7 +48,7 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 ///
 /// Rand doesn't have a blanket implementation for all Unix-like operating
 /// systems that reads from `/dev/urandom`. This ensures all supported operating
-/// systems are using the recommended interface and maximum permitted buffer
+/// systems are using the recommended interface and respect maximum buffer
 /// sizes.
 ///
 /// ## Support for WebAssembly and ams.js
@@ -67,21 +63,26 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// methods directly, using `stdweb` in combination with `cargo-web`.
 /// `wasm-bindgen` is not yet supported.
 ///
-/// ## Notes on Unix `/dev/urandom`
+/// ## Early boot
 ///
-/// Many Unix systems provide `/dev/random` as well as `/dev/urandom`. On all
-/// modern systems these two interfaces offer identical quality, with the
-/// difference that on some systems `/dev/random` may block. This is a dated
-/// design, and `/dev/urandom` is preferred by cryptography experts.
-/// See [Myths about urandom](https://www.2uo.de/myths-about-urandom/).
+/// It is possible that early in the boot process the OS hasn't had enough time
+/// yet to collect entropy to securely seed its RNG, especially on virtual
+/// machines.
 ///
-/// On some systems reading from `/dev/urandom` “may return data prior to the
-/// entropy pool being initialized”. I.e., early in the boot process, and
-/// especially on virtual machines, `/dev/urandom` may return data that is less
-/// random. As a countermeasure we try to do a single read from `/dev/random` in
-/// non-blocking mode. If the OS RNG is not yet properly seeded, we will get an
-/// error. Because we keep one file descriptor to `/dev/urandom` open when
-/// succesful, this is only a small one-time cost.
+/// Some operating systems always block the thread until the RNG is securely
+/// seeded. This can take anywhere from a few seconds to more than a minute.
+/// Others make a best effort to use a seed from before the shutdown and don't
+/// document much.
+///
+/// A few, Linux, NetBSD and Solaris, offer a choice between blocking, and
+/// getting an error. With `try_fill_bytes` we choose to get the error
+/// ([`ErrorKind::NotReady`]), while the other methods use a blocking interface.
+///
+/// On Linux (when the `genrandom` system call is not available) and on NetBSD
+/// reading from `/dev/urandom` never blocks, even when the OS hasn't collected
+/// enough entropy yet. As a countermeasure we try to do a single read from
+/// `/dev/random` until we know the OS RNG is initialized (and store this in a
+/// global static).
 ///
 /// # Panics
 ///
@@ -93,6 +94,7 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// [`EntropyRng`]: struct.EntropyRng.html
 /// [`RngCore`]: ../trait.RngCore.html
 /// [`try_fill_bytes`]: ../trait.RngCore.html#method.tymethod.try_fill_bytes
+/// [`ErrorKind::NotReady`]: ../enum.ErrorKind.html#variant.NotReady
 ///
 /// [1]: http://man7.org/linux/man-pages/man2/getrandom.2.html
 /// [2]: http://man7.org/linux/man-pages/man4/urandom.4.html
