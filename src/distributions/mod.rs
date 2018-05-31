@@ -96,6 +96,7 @@
 //!   - [`StudentT`] distribution
 //!   - [`FisherF`] distribution
 //! - Dirichlet distribution
+//!   - [`Dirichlet`] distribution
 //!
 //! # Examples
 //!
