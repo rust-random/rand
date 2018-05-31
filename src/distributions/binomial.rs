@@ -11,9 +11,8 @@
 //! The binomial distribution.
 
 use Rng;
-use distributions::{Distribution, Bernoulli};
+use distributions::{Distribution, Bernoulli, Cauchy};
 use distributions::log_gamma::log_gamma;
-use std::f64::consts::PI;
 
 /// The binomial distribution `Binomial(n, p)`.
 ///
@@ -90,13 +89,14 @@ impl Distribution<u64> for Binomial {
 
         let mut lresult;
 
+        // we use the Cauchy distribution as the comparison distribution
+        // f(x) ~ 1/(1+x^2)
+        let cauchy = Cauchy::new(0.0, 1.0);
         loop {
             let mut comp_dev: f64;
-            // we use the lorentzian distribution as the comparison distribution
-            // f(x) ~ 1/(1+x/^2)
             loop {
-                // draw from the lorentzian distribution
-                comp_dev = (PI*rng.gen::<f64>()).tan();
+                // draw from the Cauchy distribution
+                comp_dev = rng.sample(cauchy);
                 // shift the peak of the comparison ditribution
                 lresult = expected + sq * comp_dev;
                 // repeat the drawing until we are in the range of possible values

@@ -109,6 +109,7 @@ distr_float!(distr_normal, f64, Normal::new(-1.23, 4.56));
 distr_float!(distr_log_normal, f64, LogNormal::new(-1.23, 4.56));
 distr_float!(distr_gamma_large_shape, f64, Gamma::new(10., 1.0));
 distr_float!(distr_gamma_small_shape, f64, Gamma::new(0.1, 1.0));
+distr_float!(distr_cauchy, f64, Cauchy::new(4.2, 6.9));
 distr_int!(distr_binomial, u64, Binomial::new(20, 0.7));
 distr_int!(distr_poisson, u64, Poisson::new(4.0));
 distr!(distr_bernoulli, bool, Bernoulli::new(0.18));
