@@ -48,7 +48,7 @@ impl Dirichlet {
             assert!(a[i] > 0.0);
         }
 
-        Dirichlet { alpha: a.into() }
+        Dirichlet { alpha: a }
     }
 
     /// Construct a new `Dirichlet` with the given shape parameter and size

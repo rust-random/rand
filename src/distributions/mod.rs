@@ -95,7 +95,7 @@
 //!   - [`ChiSquared`] distribution
 //!   - [`StudentT`] distribution
 //!   - [`FisherF`] distribution
-//! - Dirichlet distribution
+//! - Related to continuous multivariate probability distributions
 //!   - [`Dirichlet`] distribution
 //!
 //! # Examples
