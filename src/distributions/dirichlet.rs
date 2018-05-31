@@ -17,7 +17,7 @@ use distributions::gamma::Gamma;
 /// The dirichelet distribution `Dirichlet(alpha)`.
 ///
 /// The Dirichlet distribution } is a family of continuous multivariate probability distributions parameterized by
-/// a vector alpha of positive reals
+/// a vector alpha of positive reals. https://en.wikipedia.org/wiki/Dirichlet_distribution
 /// It is a multivariate generalization of the beta distribution.
 ///
 /// # Example
@@ -26,7 +26,7 @@ use distributions::gamma::Gamma;
 /// use rand::prelude::*;
 /// use rand::distributions::Dirichlet;
 ///
-/// let dirichlet = Dirichlet::new(&vec![1.0, 2.0, 3.0]);
+/// let dirichlet = Dirichlet::new(vec![1.0, 2.0, 3.0]);
 /// let samples = dirichlet.sample(&mut rand::thread_rng());
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
@@ -41,21 +41,14 @@ impl Dirichlet {
     /// Construct a new `Dirichlet` with the given alpha parameter
     /// `alpha`. Panics if `alpha.len() < 2`.
     #[inline]
-    pub fn new(alpha: &[f64]) -> Dirichlet {
-        assert!(
-            alpha.len() > 1,
-            "Dirichlet::new called with `alpha` with length <  2"
-        );
-        for i in 0..alpha.len() {
-            assert!(
-                alpha[i] > 0.0,
-                "Dirichlet::new called with `alpha`  <=  0.0"
-            );
+    pub fn new<V: Into<Vec<f64>>>(alpha: V) -> Dirichlet {
+        let a = alpha.into();
+        assert!(a.len() > 1);
+        for i in 0..a.len() {
+            assert!(a[i] > 0.0);
         }
 
-        Dirichlet {
-            alpha: alpha.to_vec(),
-        }
+        Dirichlet { alpha: a.into() }
     }
 
     /// Construct a new `Dirichlet` with the given shape parameter and size
@@ -63,8 +56,8 @@ impl Dirichlet {
     /// `size` . Panic if `size < 2`
     #[inline]
     pub fn new_with_param(alpha: f64, size: usize) -> Dirichlet {
-        assert!(alpha > 0.0, "Dirichlet::new called with `alpha`  <=  0.0");
-        assert!(size > 1, "Dirichlet::new called with `size`  <=  1");
+        assert!(alpha > 0.0);
+        assert!(size > 1);
         Dirichlet {
             alpha: vec![alpha; size],
         }
@@ -97,7 +90,7 @@ mod test {
 
     #[test]
     fn test_dirichlet() {
-        let d = Dirichlet::new(&vec![1.0, 2.0, 3.0]);
+        let d = Dirichlet::new(vec![1.0, 2.0, 3.0]);
         let mut rng = ::test::rng(221);
         let samples = d.sample(&mut rng);
         let _: Vec<f64> = samples
