@@ -16,7 +16,7 @@ use distributions::gamma::Gamma;
 
 /// The dirichelet distribution `Dirichlet(alpha)`.
 ///
-/// The Dirichlet distribution } is a family of continuous multivariate probability distributions parameterized by
+/// The Dirichlet distribution is a family of continuous multivariate probability distributions parameterized by
 /// a vector alpha of positive reals. https://en.wikipedia.org/wiki/Dirichlet_distribution
 /// It is a multivariate generalization of the beta distribution.
 ///
