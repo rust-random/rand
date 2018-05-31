@@ -183,6 +183,7 @@ pub use self::uniform::Uniform as Range;
 #[cfg(feature = "std")]
 #[doc(inline)] pub use self::binomial::Binomial;
 #[doc(inline)] pub use self::bernoulli::Bernoulli;
+#[cfg(feature = "std")]
 #[doc(inline)] pub use self::cauchy::Cauchy;
 #[cfg(feature = "std")]
 #[doc(inline)] pub use self::dirichlet::Dirichlet;
@@ -199,6 +200,7 @@ pub mod uniform;
 #[cfg(feature = "std")]
 #[doc(hidden)] pub mod binomial;
 #[doc(hidden)] pub mod bernoulli;
+#[cfg(feature = "std")]
 #[doc(hidden)] pub mod cauchy;
 #[cfg(feature = "std")]
 #[doc(hidden)] pub mod dirichlet;
