@@ -38,8 +38,11 @@ pub struct Dirichlet {
 }
 
 impl Dirichlet {
-    /// Construct a new `Dirichlet` with the given alpha parameter
-    /// `alpha`. Panics if `alpha.len() < 2`.
+    /// Construct a new `Dirichlet` with the given alpha parameter `alpha`.
+    ///
+    /// # Panics
+    /// - if `alpha.len() < 2`
+    ///
     #[inline]
     pub fn new<V: Into<Vec<f64>>>(alpha: V) -> Dirichlet {
         let a = alpha.into();
@@ -51,9 +54,12 @@ impl Dirichlet {
         Dirichlet { alpha: a }
     }
 
-    /// Construct a new `Dirichlet` with the given shape parameter and size
-    /// `alpha`. Panics if `alpha <= 0.0`.
-    /// `size` . Panic if `size < 2`
+    /// Construct a new `Dirichlet` with the given shape parameter `alpha` and `size`.
+    ///
+    /// # Panics
+    /// - if `alpha <= 0.0`
+    /// - if `size < 2`
+    ///
     #[inline]
     pub fn new_with_param(alpha: f64, size: usize) -> Dirichlet {
         assert!(alpha > 0.0);
