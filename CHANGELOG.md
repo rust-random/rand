@@ -9,6 +9,19 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Update Guide](UPDATING.md) useful.
 
 
+## [0.5.1] - Unreleased
+
+### Platform support and `OsRng`
+- Remove blanket Unix implementation. (#484)
+- Remove Wasm unimplemented stub. (#484)
+- Dragonfly BSD: read from `/dev/random`. (#484)
+- Bitrig: use `getentropy` like OpenBSD. (#484)
+- Solaris: (untested) use `getrandom` if available, otherwise `/dev/random`. (#484)
+- Emscripten, `stdweb`: split the read up in chunks. (#484)
+- Emscripten, Haiku: don't do an extra blocking read from `/dev/random`. (#484)
+- Linux, NetBSD, Solaris: read in blocking mode on first use in `fill_bytes`. (#484)
+- Fuchsia, CloudABI: fix compilation (broken in Rand 0.5). (#484)
+
 ## [0.5.0] - 2018-05-21
 
 ### Crate features and organisation
