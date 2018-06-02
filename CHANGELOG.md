@@ -8,6 +8,11 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Update Guide](UPDATING.md) useful.
 
+## [0.6.0] - Unreleased
+
+### Sequences module
+- Optimised and changed return type of the `sample_indices` function. (#479)
+
 ## [0.5.4] - 2018-07-11
 ### Platform support
 - Make `OsRng` work via WASM/stdweb for WebWorkers
