@@ -108,7 +108,7 @@ Rand release if required, but the change must be noted in the changelog.
 
 ## Crate Features
 
-Rand is built with only the `std` feature anabled by default. The following
+Rand is built with only the `std` feature enabled by default. The following
 optional features are available:
 
 - `alloc` can be used instead of `std` to provide `Vec` and `Box`.
