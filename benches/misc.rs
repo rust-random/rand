@@ -172,6 +172,17 @@ fn gen_1k_sample_iter(b: &mut Bencher) {
 }
 
 #[bench]
+fn gen_1k_gen_array(b: &mut Bencher) {
+    let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+    b.iter(|| {
+        // max supported array length is 32!
+        let v: [[u64; 32]; 4] = rng.gen();
+        v
+    });
+    b.bytes = 1024;
+}
+
+#[bench]
 fn gen_1k_fill(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
     let mut buf = [0u64; 128];
