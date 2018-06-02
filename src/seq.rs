@@ -538,17 +538,17 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize,
     // https://github.com/rust-lang-nursery/rand/pull/479
     // We do some calculations with u64 to avoid overflow.
 
-    if amount < 517 {
-        const C: [[u64; 2]; 2] = [[1, 36], [200, 440]];
+    if amount < 442 {
+        const C: [[u64; 2]; 2] = [[5, 45], [50, 350]];
         let j = if length < 500_000 { 0 } else { 1 };
-        let m4 = 4 * amount as u64;
+        let m4 = 6 * amount as u64;
         if C[0][j] * (length as u64) < (C[1][j] + m4) * amount as u64 {
             sample_indices_inplace(rng, length, amount)
         } else {
             sample_indices_floyd(rng, length, amount, shuffled)
         }
     } else {
-        const C: [[u64; 2]; 2] = [[1, 36], [62*40, 68*40]];
+        const C: [[u64; 2]; 2] = [[1, 9], [590, 600]];
         let j = if length < 500_000 { 0 } else { 1 };
         if C[0][j] * (length as u64) < C[1][j] * amount as u64 {
             sample_indices_inplace(rng, length, amount)
