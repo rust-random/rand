@@ -50,12 +50,9 @@ impl Cauchy {
 impl Distribution<f64> for Cauchy {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         // sample from [0, 1)
-        let mut x = rng.gen::<f64>();
-        // guard against the extremely unlikely case we get the invalid 0.5
-        while x == 0.5 {
-            x = rng.gen::<f64>();
-        }
+        let x = rng.gen::<f64>();
         // get standard cauchy random number
+        // note that π/2 is not exactly representable, even if x=0.5 the result is finite
         let comp_dev = (PI * x).tan();
         // shift and scale according to parameters
         let result = self.median + self.scale * comp_dev;

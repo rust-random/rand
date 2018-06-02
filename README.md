@@ -108,7 +108,7 @@ Rand release if required, but the change must be noted in the changelog.
 
 ## Crate Features
 
-Rand is built with only the `std` feature anabled by default. The following
+Rand is built with only the `std` feature enabled by default. The following
 optional features are available:
 
 - `alloc` can be used instead of `std` to provide `Vec` and `Box`.
@@ -116,7 +116,8 @@ optional features are available:
 - `log` enables some logging via the `log` crate.
 - `nightly` enables all unstable features (`i128_support`).
 - `serde1` enables serialization for some types, via Serde version 1.
-- `stdweb` enables support for `OsRng` on WASM via stdweb.
+- `stdweb` enables support for `OsRng` on `wasm-unknown-unknown` via `stdweb`
+  combined with `cargo-web`.
 
 `no_std` mode is activated by setting `default-features = false`; this removes
 functionality depending on `std`:
