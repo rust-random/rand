@@ -11,8 +11,7 @@
 //! The Cauchy distribution.
 
 use Rng;
-use distributions::Distribution;
-use std::f64::consts::PI;
+use distributions::{Distribution, Open01};
 
 /// The Cauchy distribution `Cauchy(median, scale)`.
 ///
@@ -49,13 +48,43 @@ impl Cauchy {
 
 impl Distribution<f64> for Cauchy {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        // sample from [0, 1)
-        let x = rng.gen::<f64>();
-        // get standard cauchy random number
-        // note that π/2 is not exactly representable, even if x=0.5 the result is finite
-        let comp_dev = (PI * x).tan();
-        // shift and scale according to parameters
-        let result = self.median + self.scale * comp_dev;
+        // Algorithim from the paper:
+        //     Efficient table-free sampling methods for the exponential, Cauchy, and normal distributions
+        //     by Joachim H. Ahrens and Ulrich Dieter
+
+        // ~magic values~
+        // these are precomputed values for numerically approximating a Cauchy quantile function
+        let a = 0.6380_6313_6607_7803;
+        let b = 0.5959_4860_6052_9070;
+        let q = 0.9339_9629_5760_3656;
+        let w = 0.2488_7022_8008_3841;
+        let c = 0.6366_1977_2367_5813;
+        let d = 0.5972_9975_9353_9963;
+        let h = 0.0214_9490_0457_0452;
+        let p = 4.9125_0139_5303_3204;
+
+        let mut std_cau: f64;
+        let mut uni: f64 = rng.sample(Open01);
+        let mut x = uni - 0.5;
+        let mut s = w - x*x;
+        if s > 0.0 {
+            std_cau = x * ((c / s) + d);
+        }
+        else {
+            // fall back to rejection method
+            loop {
+                uni = rng.sample(Open01);
+                x = uni - 0.5;
+                s = 0.25 - x*x;
+                std_cau = x * ((a / s) + b);
+                let uni1: f64 = rng.sample(Open01);
+                let test = s*s * ((1.0 + std_cau*std_cau) * (h * uni1 + p) - q) + s;
+                if test <= 0.5 {
+                    break;
+                }
+            }
+        }
+        let result = self.median + self.scale * std_cau; // shift and scale according to parameters
         result
     }
 }
@@ -77,21 +106,21 @@ mod test {
 
     #[test]
     fn test_cauchy_median() {
-        let cauchy = Cauchy::new(10.0, 5.0);
-        let mut rng = ::test::rng(123);
+        let cauchy = Cauchy::new(5.0, 10.0);
+        let mut rng = ::test::rng(321);
         let mut numbers: [f64; 1000] = [0.0; 1000];
         for i in 0..1000 {
             numbers[i] = cauchy.sample(&mut rng);
         }
         let median = median(&mut numbers);
         println!("Cauchy median: {}", median);
-        assert!((median - 10.0).abs() < 0.5); // not 100% certain, but probable enough
+        assert!((median - 5.0).abs() < 0.5); // not 100% certain, but probable enough
     }
 
     #[test]
     fn test_cauchy_mean() {
-        let cauchy = Cauchy::new(10.0, 5.0);
-        let mut rng = ::test::rng(123);
+        let cauchy = Cauchy::new(5.0, 10.0);
+        let mut rng = ::test::rng(322);
         let mut sum = 0.0;
         for _ in 0..1000 {
             sum += cauchy.sample(&mut rng);
@@ -99,7 +128,7 @@ mod test {
         let mean = sum / 1000.0;
         println!("Cauchy mean: {}", mean);
         // for a Cauchy distribution the mean should not converge
-        assert!((mean - 10.0).abs() > 0.5); // not 100% certain, but probable enough
+        assert!((mean - 5.0).abs() > 0.5); // not 100% certain, but probable enough
     }
 
     #[test]
