@@ -32,6 +32,9 @@ pub struct Pareto {
 impl Pareto {
     /// Construct a new Pareto distribution with given `scale` and `shape`.
     ///
+    /// In the literature, `scale` is commonly written as x<sub>m</sub> or k and
+    /// `shape` is often written as α.
+    ///
     /// # Panics
     ///
     /// `scale` and `shape` have to be non-zero and positive.
