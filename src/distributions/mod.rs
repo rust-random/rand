@@ -178,6 +178,7 @@ pub use self::uniform::Uniform as Range;
 #[doc(inline)] pub use self::normal::{Normal, LogNormal, StandardNormal};
 #[cfg(feature="std")]
 #[doc(inline)] pub use self::exponential::{Exp, Exp1};
+#[cfg(feature="std")]
 #[doc(inline)] pub use self::pareto::Pareto;
 #[cfg(feature = "std")]
 #[doc(inline)] pub use self::poisson::Poisson;
@@ -194,6 +195,7 @@ pub mod uniform;
 #[doc(hidden)] pub mod normal;
 #[cfg(feature="std")]
 #[doc(hidden)] pub mod exponential;
+#[cfg(feature="std")]
 #[doc(hidden)] pub mod pareto;
 #[cfg(feature = "std")]
 #[doc(hidden)] pub mod poisson;
