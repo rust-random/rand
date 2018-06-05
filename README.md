@@ -51,7 +51,7 @@ fn main() {
   // type, range, distribution, etc.
   let mut rng = thread_rng();
   if rng.gen() { // random bool
-      let x: f64 = rng.gen(); // random number in range (0, 1)
+      let x: f64 = rng.gen(); // random number in range [0, 1)
       println!("x is: {}", x);
       let ch = rng.gen::<char>(); // Sometimes you need type annotation
       println!("char is: {}", ch);
