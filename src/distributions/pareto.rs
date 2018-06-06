@@ -64,10 +64,13 @@ mod tests {
 
     #[test]
     fn sample() {
-        let d = Pareto::new(1.0, 2.0);
+        let scale = 1.0;
+        let shape = 2.0;
+        let d = Pareto::new(scale, shape);
         let mut rng = ::test::rng(1);
         for _ in 0..1000 {
-            d.sample(&mut rng);
+            let r = d.sample(&mut rng);
+            assert!(r >= scale);
         }
     }
 }
