@@ -26,7 +26,7 @@ use distributions::{Distribution, OpenClosed01};
 #[derive(Clone, Copy, Debug)]
 pub struct Pareto {
     scale: f64,
-    shape: f64,
+    inv_neg_shape: f64,
 }
 
 impl Pareto {
@@ -40,14 +40,14 @@ impl Pareto {
     /// `scale` and `shape` have to be non-zero and positive.
     pub fn new(scale: f64, shape: f64) -> Pareto {
         assert!((scale > 0.) & (shape > 0.));
-        Pareto { scale, shape }
+        Pareto { scale, inv_neg_shape: -1.0 / shape }
     }
 }
 
 impl Distribution<f64> for Pareto {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         let u: f64 = rng.sample(OpenClosed01);
-        self.scale * u.powf(-1.0 / self.shape)
+        self.scale * u.powf(self.inv_neg_shape)
     }
 }
 
