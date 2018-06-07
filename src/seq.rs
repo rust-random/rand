@@ -522,76 +522,78 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize
     // and a trade off could probably be made between memory/cpu, since hashmap operations
     // are slower than array index swapping.
     if amount >= length / 20 {
-        sample_indices_inplace(rng, length, amount)
+        sample_indices_inplace(rng, length as u32, amount as u32)
+            .into_iter().map(|x| x as usize).collect()
     } else {
         sample_indices_cache(rng, length, amount)
     }
 }
 
-/// Sample an amount of indices using an inplace partial fisher yates method.
+/// Randomly sample exactly `amount` indices from `0..length`, using an inplace
+/// partial Fisher-Yates method.
 ///
 /// This allocates the entire `length` of indices and randomizes only the first `amount`.
 /// It then truncates to `amount` and returns.
+/// 
+/// This method is not appropriate for large `length` and potentially uses a lot
+/// of memory; because of this we only implement for `u32` index (which improves
+/// performance in all cases).
 ///
-/// This is better than using a `HashMap` "cache" when `amount >= length / 2`
-/// since it does not require allocating an extra cache and is much faster.
+/// This is likely the fastest for small lengths since it avoids the need for
+/// allocations. Set-up is `O(length)` time and memory and shuffling is
+/// `O(amount)` time.
 #[cfg(feature = "alloc")]
-fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
+fn sample_indices_inplace<R>(rng: &mut R, length: u32, amount: u32)
+    -> Vec<u32>
     where R: Rng + ?Sized,
 {
     debug_assert!(amount <= length);
-    let mut indices: Vec<usize> = Vec::with_capacity(length);
+    let mut indices: Vec<u32> = Vec::with_capacity(length as usize);
     indices.extend(0..length);
     for i in 0..amount {
-        let j: usize = rng.gen_range(i, length);
-        indices.swap(i, j);
+        let j: u32 = rng.gen_range(i, length);
+        indices.swap(i as usize, j as usize);
     }
-    indices.truncate(amount);
-    debug_assert_eq!(indices.len(), amount);
+    indices.truncate(amount as usize);
+    debug_assert_eq!(indices.len(), amount as usize);
     indices
 }
 
-
-/// This method performs a partial fisher-yates on a range of indices using a
-/// `HashMap` as a cache to record potential collisions.
+/// Randomly sample exactly `amount` indices from `0..length`, using a
+/// dynamically-cached partial Fisher-Yates method.
 ///
-/// The cache avoids allocating the entire `length` of values. This is especially useful when
-/// `amount <<< length`, i.e. select 3 non-repeating from `1_000_000`
+/// The cache avoids allocating the entire `length` of values. This is
+/// especially useful when `amount <<< length`; e.g. selecting 3 non-repeating
+/// values from `1_000_000`. The algorithm is `O(amount)` time and memory,
+/// but due to overheads will often be slower than other approaches.
 #[cfg(feature = "alloc")]
-fn sample_indices_cache<R>(
-    rng: &mut R,
-    length: usize,
-    amount: usize,
-) -> Vec<usize>
+fn sample_indices_cache<R>(rng: &mut R, length: usize, amount: usize)
+    -> Vec<usize>
     where R: Rng + ?Sized,
 {
     debug_assert!(amount <= length);
     #[cfg(feature="std")] let mut cache = HashMap::with_capacity(amount);
     #[cfg(not(feature="std"))] let mut cache = BTreeMap::new();
-    let mut out = Vec::with_capacity(amount);
+    let mut indices = Vec::with_capacity(amount);
     for i in 0..amount {
         let j: usize = rng.gen_range(i, length);
 
-        // equiv: let tmp = slice[i];
-        let tmp = match cache.get(&i) {
-            Some(e) => *e,
+        // get the current values at i and j ...
+        let x_i = match cache.get(&i) {
+            Some(x) => *x,
             None => i,
         };
-
-        // equiv: slice[i] = slice[j];
-        let x = match cache.get(&j) {
+        let x_j = match cache.get(&j) {
             Some(x) => *x,
             None => j,
         };
 
-        // equiv: slice[j] = tmp;
-        cache.insert(j, tmp);
-
-        // note that in the inplace version, slice[i] is automatically "returned" value
-        out.push(x);
+        // ... and swap them
+        cache.insert(j, x_i);
+        indices.push(x_j);  // push at position i
     }
-    debug_assert_eq!(out.len(), amount);
-    out
+    debug_assert_eq!(indices.len(), amount);
+    indices
 }
 
 #[cfg(test)]
@@ -752,14 +754,19 @@ mod test {
         let v = sample_slice(&mut r, &[42, 133], 2);
         assert!(&v[..] == [42, 133] || v[..] == [133, 42]);
 
-        assert_eq!(&sample_indices_inplace(&mut r, 0, 0)[..], [0usize; 0]);
-        assert_eq!(&sample_indices_inplace(&mut r, 1, 0)[..], [0usize; 0]);
+        assert_eq!(&sample_indices_inplace(&mut r, 0, 0)[..], [0; 0]);
+        assert_eq!(&sample_indices_inplace(&mut r, 1, 0)[..], [0; 0]);
         assert_eq!(&sample_indices_inplace(&mut r, 1, 1)[..], [0]);
 
-        assert_eq!(&sample_indices_cache(&mut r, 0, 0)[..], [0usize; 0]);
-        assert_eq!(&sample_indices_cache(&mut r, 1, 0)[..], [0usize; 0]);
+        assert_eq!(&sample_indices_cache(&mut r, 0, 0)[..], [0; 0]);
+        assert_eq!(&sample_indices_cache(&mut r, 1, 0)[..], [0; 0]);
         assert_eq!(&sample_indices_cache(&mut r, 1, 1)[..], [0]);
 
+        // These algorithms should be fast with big numbers. Test average.
+        let sum = sample_indices_cache(&mut r, 1 << 50, 10)
+            .iter().fold(0, |a, b| a + b);
+        assert!(1 << 50 < sum && sum < (1 << 50) * 25);
+        
         // Make sure lucky 777's aren't lucky
         let slice = &[42, 777];
         let mut num_42 = 0;
@@ -783,27 +790,19 @@ mod test {
     fn test_sample_slice() {
         let xor_rng = XorShiftRng::from_seed;
 
-        let max_range = 100;
         let mut r = ::test::rng(403);
 
-        for length in 1usize..max_range {
+        for n in 1usize..20 {
+            let length = 5*n - 4;   // 1, 6, ...
             let amount = r.gen_range(0, length);
             let mut seed = [0u8; 16];
             r.fill(&mut seed);
-
-            // assert that the two index methods give exactly the same result
-            let inplace = sample_indices_inplace(
-                &mut xor_rng(seed), length, amount);
-            let cache = sample_indices_cache(
-                &mut xor_rng(seed), length, amount);
-            assert_eq!(inplace, cache);
 
             // assert the basics work
             let regular = sample_indices(
                 &mut xor_rng(seed), length, amount);
             assert_eq!(regular.len(), amount);
             assert!(regular.iter().all(|e| *e < length));
-            assert_eq!(regular, inplace);
 
             // also test that sampling the slice works
             let vec: Vec<usize> = (0..length).collect();
