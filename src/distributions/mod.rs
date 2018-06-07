@@ -158,6 +158,7 @@
 //! [`Normal`]: struct.Normal.html
 //! [`Open01`]: struct.Open01.html
 //! [`OpenClosed01`]: struct.OpenClosed01.html
+//! [`Pareto`]: struct.Pareto.html
 //! [`Poisson`]: struct.Poisson.html
 //! [`Standard`]: struct.Standard.html
 //! [`StandardNormal`]: struct.StandardNormal.html
@@ -177,6 +178,8 @@ pub use self::uniform::Uniform as Range;
 #[doc(inline)] pub use self::normal::{Normal, LogNormal, StandardNormal};
 #[cfg(feature="std")]
 #[doc(inline)] pub use self::exponential::{Exp, Exp1};
+#[cfg(feature="std")]
+#[doc(inline)] pub use self::pareto::Pareto;
 #[cfg(feature = "std")]
 #[doc(inline)] pub use self::poisson::Poisson;
 #[cfg(feature = "std")]
@@ -192,6 +195,8 @@ pub mod uniform;
 #[doc(hidden)] pub mod normal;
 #[cfg(feature="std")]
 #[doc(hidden)] pub mod exponential;
+#[cfg(feature="std")]
+#[doc(hidden)] pub mod pareto;
 #[cfg(feature = "std")]
 #[doc(hidden)] pub mod poisson;
 #[cfg(feature = "std")]
