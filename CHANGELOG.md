@@ -9,7 +9,11 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Update Guide](UPDATING.md) useful.
 
 
-## [0.5.1] - Unreleased
+## [0.5.1] - 2018-06-08
+
+### New distributions
+- Added Cauchy distribution. (#474, #486)
+- Added Pareto distribution. (#495)
 
 ### Platform support and `OsRng`
 - Remove blanket Unix implementation. (#484)
