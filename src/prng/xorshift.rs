@@ -40,24 +40,6 @@ impl fmt::Debug for XorShiftRng {
     }
 }
 
-impl XorShiftRng {
-    /// Creates a new XorShiftRng instance which is not seeded.
-    ///
-    /// The initial values of this RNG are constants, so all generators created
-    /// by this function will yield the same stream of random numbers. It is
-    /// highly recommended that this is created through `SeedableRng` instead of
-    /// this function
-    #[deprecated(since="0.5.0", note="use the FromEntropy or SeedableRng trait")]
-    pub fn new_unseeded() -> XorShiftRng {
-        XorShiftRng {
-            x: w(0x193a6754),
-            y: w(0xa8a7d469),
-            z: w(0x97830e05),
-            w: w(0x113ba7bb),
-        }
-    }
-}
-
 impl RngCore for XorShiftRng {
     #[inline]
     fn next_u32(&mut self) -> u32 {

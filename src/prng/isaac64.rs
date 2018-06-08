@@ -117,15 +117,6 @@ impl SeedableRng for Isaac64Rng {
 }
 
 impl Isaac64Rng {
-    /// Create a 64-bit ISAAC random number generator using the
-    /// default fixed seed.
-    ///
-    /// DEPRECATED. `Isaac64Rng::new_from_u64(0)` will produce identical results.
-    #[deprecated(since="0.5.0", note="use the FromEntropy or SeedableRng trait")]
-    pub fn new_unseeded() -> Self {
-        Self::new_from_u64(0)
-    }
-
     /// Create an ISAAC-64 random number generator using an `u64` as seed.
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.

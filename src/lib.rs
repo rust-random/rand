@@ -299,24 +299,10 @@ pub mod isaac {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-use core::{marker, mem, slice};
+use core::{mem, slice};
 use distributions::{Distribution, Standard};
 use distributions::uniform::{SampleUniform, UniformSampler};
 
-
-/// A type that can be randomly generated using an [`Rng`].
-/// 
-/// This is merely an adapter around the [`Standard`] distribution for
-/// convenience and backwards-compatibility.
-/// 
-/// [`Rng`]: trait.Rng.html
-/// [`Standard`]: distributions/struct.Standard.html
-#[deprecated(since="0.5.0", note="replaced by distributions::Standard")]
-pub trait Rand : Sized {
-    /// Generates a random instance of this type using the specified source of
-    /// randomness.
-    fn rand<R: Rng>(rng: &mut R) -> Self;
-}
 
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
@@ -606,67 +592,6 @@ pub trait Rng: RngCore {
             values.swap(i, self.gen_range(0, i + 1));
         }
     }
-
-    /// Return an iterator that will yield an infinite number of randomly
-    /// generated items.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
-    /// let x = rng.gen_iter::<u32>().take(10).collect::<Vec<u32>>();
-    /// println!("{:?}", x);
-    /// println!("{:?}", rng.gen_iter::<(f64, bool)>().take(5)
-    ///                     .collect::<Vec<(f64, bool)>>());
-    /// ```
-    #[allow(deprecated)]
-    #[deprecated(since="0.5.0", note="use Rng::sample_iter(&Standard) instead")]
-    fn gen_iter<T>(&mut self) -> Generator<T, &mut Self> where Standard: Distribution<T> {
-        Generator { rng: self, _marker: marker::PhantomData }
-    }
-
-    /// Return a bool with a 1 in n chance of true
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
-    /// assert_eq!(rng.gen_weighted_bool(0), true);
-    /// assert_eq!(rng.gen_weighted_bool(1), true);
-    /// // Just like `rng.gen::<bool>()` a 50-50% chance, but using a slower
-    /// // method with different results.
-    /// println!("{}", rng.gen_weighted_bool(2));
-    /// // First meaningful use of `gen_weighted_bool`.
-    /// println!("{}", rng.gen_weighted_bool(3));
-    /// ```
-    #[deprecated(since="0.5.0", note="use gen_bool instead")]
-    fn gen_weighted_bool(&mut self, n: u32) -> bool {
-        // Short-circuit after `n <= 1` to avoid panic in `gen_range`
-        n <= 1 || self.gen_range(0, n) == 0
-    }
-
-    /// Return an iterator of random characters from the set A-Z,a-z,0-9.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let s: String = thread_rng().gen_ascii_chars().take(10).collect();
-    /// println!("{}", s);
-    /// ```
-    #[allow(deprecated)]
-    #[deprecated(since="0.5.0", note="use sample_iter(&Alphanumeric) instead")]
-    fn gen_ascii_chars(&mut self) -> AsciiGenerator<&mut Self> {
-        AsciiGenerator { rng: self }
-    }
 }
 
 impl<R: RngCore + ?Sized> Rng for R {}
@@ -767,55 +692,6 @@ macro_rules! impl_as_byte_slice_arrays {
 impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
 impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
 
-/// Iterator which will generate a stream of random items.
-///
-/// This iterator is created via the [`gen_iter`] method on [`Rng`].
-///
-/// [`gen_iter`]: trait.Rng.html#method.gen_iter
-/// [`Rng`]: trait.Rng.html
-#[derive(Debug)]
-#[allow(deprecated)]
-#[deprecated(since="0.5.0", note="use Rng::sample_iter instead")]
-pub struct Generator<T, R: RngCore> {
-    rng: R,
-    _marker: marker::PhantomData<fn() -> T>,
-}
-
-#[allow(deprecated)]
-impl<T, R: RngCore> Iterator for Generator<T, R> where Standard: Distribution<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<T> {
-        Some(self.rng.gen())
-    }
-}
-
-/// Iterator which will continuously generate random ascii characters.
-///
-/// This iterator is created via the [`gen_ascii_chars`] method on [`Rng`].
-///
-/// [`gen_ascii_chars`]: trait.Rng.html#method.gen_ascii_chars
-/// [`Rng`]: trait.Rng.html
-#[derive(Debug)]
-#[allow(deprecated)]
-#[deprecated(since="0.5.0", note="use distributions::Alphanumeric instead")]
-pub struct AsciiGenerator<R: RngCore> {
-    rng: R,
-}
-
-#[allow(deprecated)]
-impl<R: RngCore> Iterator for AsciiGenerator<R> {
-    type Item = char;
-
-    fn next(&mut self) -> Option<char> {
-        const GEN_ASCII_STR_CHARSET: &[u8] =
-            b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-              abcdefghijklmnopqrstuvwxyz\
-              0123456789";
-        Some(*self.rng.choose(GEN_ASCII_STR_CHARSET).unwrap() as char)
-    }
-}
-
 
 /// A convenience extension to [`SeedableRng`] allowing construction from fresh
 /// entropy. This trait is automatically implemented for any PRNG implementing
@@ -888,25 +764,6 @@ impl<R: SeedableRng> FromEntropy for R {
 }
 
 
-/// DEPRECATED: use [`SmallRng`] instead.
-///
-/// Create a weak random number generator with a default algorithm and seed.
-///
-/// It returns the fastest `Rng` algorithm currently available in Rust without
-/// consideration for cryptography or security. If you require a specifically
-/// seeded `Rng` for consistency over time you should pick one algorithm and
-/// create the `Rng` yourself.
-///
-/// This will seed the generator with randomness from `thread_rng`.
-///
-/// [`SmallRng`]: rngs/struct.SmallRng.html
-#[deprecated(since="0.5.0", note="removed in favor of SmallRng")]
-#[cfg(feature="std")]
-pub fn weak_rng() -> XorShiftRng {
-    XorShiftRng::from_rng(thread_rng()).unwrap_or_else(|err|
-        panic!("weak_rng failed: {:?}", err))
-}
-
 /// Generates a random value using the thread-local random number generator.
 ///
 /// This is simply a shortcut for `thread_rng().gen()`. See [`thread_rng`] for
@@ -931,7 +788,6 @@ pub fn weak_rng() -> XorShiftRng {
 /// following example can increase performance.
 ///
 /// ```
-/// # #![allow(deprecated)]
 /// use rand::Rng;
 ///
 /// let mut v = vec![1, 2, 3];
@@ -955,33 +811,6 @@ pub fn weak_rng() -> XorShiftRng {
 #[inline]
 pub fn random<T>() -> T where Standard: Distribution<T> {
     thread_rng().gen()
-}
-
-/// DEPRECATED: use `seq::sample_iter` instead.
-///
-/// Randomly sample up to `amount` elements from a finite iterator.
-/// The order of elements in the sample is not random.
-///
-/// # Example
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use rand::{thread_rng, sample};
-///
-/// let mut rng = thread_rng();
-/// let sample = sample(&mut rng, 1..100, 5);
-/// println!("{:?}", sample);
-/// ```
-#[cfg(feature="std")]
-#[inline]
-#[deprecated(since="0.4.0", note="renamed to seq::sample_iter")]
-pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
-    where I: IntoIterator<Item=T>,
-          R: Rng,
-{
-    // the legacy sample didn't care whether amount was met
-    seq::sample_iter(rng, iterable, amount)
-        .unwrap_or_else(|e| e)
 }
 
 #[cfg(test)]
@@ -1103,14 +932,6 @@ mod test {
     fn test_gen_range_panic_usize() {
         let mut r = rng(103);
         r.gen_range(5, 2);
-    }
-
-    #[test]
-    #[allow(deprecated)]
-    fn test_gen_weighted_bool() {
-        let mut r = rng(104);
-        assert_eq!(r.gen_weighted_bool(0), true);
-        assert_eq!(r.gen_weighted_bool(1), true);
     }
 
     #[test]

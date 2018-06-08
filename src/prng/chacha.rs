@@ -107,31 +107,6 @@ impl SeedableRng for ChaChaRng {
 impl CryptoRng for ChaChaRng {}
 
 impl ChaChaRng {
-    /// Create an ChaCha random number generator using the default
-    /// fixed key of 8 zero words.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use rand::{RngCore, ChaChaRng};
-    ///
-    /// let mut ra = ChaChaRng::new_unseeded();
-    /// println!("{:?}", ra.next_u32());
-    /// println!("{:?}", ra.next_u32());
-    /// ```
-    ///
-    /// Since this equivalent to a RNG with a fixed seed, repeated executions
-    /// of an unseeded RNG will produce the same result. This code sample will
-    /// consistently produce:
-    ///
-    /// - 2917185654
-    /// - 2419978656
-    #[deprecated(since="0.5.0", note="use the FromEntropy or SeedableRng trait")]
-    pub fn new_unseeded() -> ChaChaRng {
-        ChaChaRng::from_seed([0; SEED_WORDS*4])
-    }
-
     /// Get the offset from the start of the stream, in 32-bit words.
     /// 
     /// Since the generated blocks are 16 words (2<sup>4</sup>) long and the
