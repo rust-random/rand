@@ -811,7 +811,7 @@ pub trait FromEntropy: SeedableRng {
 #[cfg(feature="std")]
 impl<R: SeedableRng> FromEntropy for R {
     fn from_entropy() -> R {
-        R::from_rng(EntropyRng::new()).unwrap_or_else(|err|
+        R::from_rng(rngs::EntropyRng::new()).unwrap_or_else(|err|
             panic!("FromEntropy::from_entropy() failed: {}", err))
     }
 }
@@ -869,6 +869,7 @@ pub fn random<T>() -> T where Standard: Distribution<T> {
 #[cfg(test)]
 mod test {
     use rngs::mock::StepRng;
+    use rngs::StdRng;
     use super::*;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 

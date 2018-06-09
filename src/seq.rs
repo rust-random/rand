@@ -225,7 +225,8 @@ fn sample_indices_cache<R>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use {XorShiftRng, Rng, SeedableRng};
+    use {Rng, SeedableRng};
+    use prng::XorShiftRng;
     #[cfg(not(feature="std"))]
     use alloc::Vec;
 
