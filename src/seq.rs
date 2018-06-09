@@ -70,6 +70,23 @@ pub trait SliceExt {
     /// result, then apply to the slice.
     /// 
     /// Complexity is expected to be the same as `sample_indices`.
+    /// 
+    /// # Example
+    /// ```
+    /// use rand::seq::SliceExt;
+    /// 
+    /// let mut rng = &mut rand::thread_rng();
+    /// let sample = "Hello, audience!".as_bytes();
+    /// 
+    /// // collect the results into a vector:
+    /// let v: Vec<u8> = sample.choose_multiple(&mut rng, 3).cloned().collect();
+    /// 
+    /// // store in a buffer:
+    /// let mut buf = [0u8; 5];
+    /// for (b, slot) in sample.choose_multiple(&mut rng, buf.len()).zip(buf.iter_mut()) {
+    ///     *slot = *b;
+    /// }
+    /// ```
     #[cfg(feature = "alloc")]
     fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
         where R: Rng + ?Sized;
@@ -131,8 +148,8 @@ pub trait IteratorExt: Iterator + Sized {
             
             // Continue until the iterator is exhausted
             for (i, elem) in self.enumerate() {
-                let k = rng.gen_range(0, i + 2);
-                if k == 0 {
+                // TODO: benchmark using gen_ratio instead
+                if rng.gen_range(0, i + 2) == 0 {
                     result = elem;
                 }
             }
@@ -198,7 +215,7 @@ pub trait IteratorExt: Iterator + Sized {
         where R: Rng + ?Sized
     {
         let mut reservoir = Vec::with_capacity(amount);
-         reservoir.extend(self.by_ref().take(amount));
+        reservoir.extend(self.by_ref().take(amount));
 
         // Continue unless the iterator was exhausted
         //
@@ -240,8 +257,7 @@ impl<T> SliceExt for [T] {
         if self.is_empty() {
             None
         } else {
-            let len = self.len();
-            Some(&mut self[rng.gen_range(0, len)])
+            Some(&mut self[rng.gen_range(0, self.len())])
         }
     }
 
@@ -259,11 +275,8 @@ impl<T> SliceExt for [T] {
 
     fn shuffle<R>(&mut self, rng: &mut R) where R: Rng + ?Sized
     {
-        let mut i = self.len();
-        while i >= 2 {
-            // invariant: elements with index >= i have been locked in place.
-            i -= 1;
-            // lock element i in place.
+        for i in (1..self.len()).rev() {
+            // invariant: elements with index > i have been locked in place.
             self.swap(i, rng.gen_range(0, i + 1));
         }
     }
@@ -277,16 +290,13 @@ impl<T> SliceExt for [T] {
         // elements.
         
         let len = self.len();
-        let mut i = len;
         let end = if amount >= len { 0 } else { len - amount };
         
-        while i > end {
+        for i in (end..len).rev() {
             // invariant: elements with index > i have been locked in place.
-            i -= 1;
-            // lock element i in place.
             self.swap(i, rng.gen_range(0, i + 1));
         }
-        let r = self.split_at_mut(i);
+        let r = self.split_at_mut(end);
         (r.1, r.0)
     }
 }
@@ -309,11 +319,21 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceCho
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
+        // TODO: get_unchecked?
         self.indices.next().map(|i| &(*self.slice)[i])
     }
     
     fn size_hint(&self) -> (usize, Option<usize>) {
         (self.indices.len(), Some(self.indices.len()))
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
+    for SliceChooseIter<'a, S, T>
+{
+    fn len(&self) -> usize {
+        self.indices.len()
     }
 }
 
