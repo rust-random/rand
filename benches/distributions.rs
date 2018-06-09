@@ -10,7 +10,8 @@ const RAND_BENCH_N: u64 = 1000;
 use std::mem::size_of;
 use test::Bencher;
 
-use rand::{Rng, FromEntropy, XorShiftRng};
+use rand::{Rng, FromEntropy};
+use rand::prng::XorShiftRng;
 use rand::distributions::*;
 
 macro_rules! distr_int {
