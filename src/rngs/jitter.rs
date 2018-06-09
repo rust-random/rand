@@ -66,7 +66,7 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 /// Use the following code using [`timer_stats`] to collect the data:
 ///
 /// ```no_run
-/// use rand::jitter::JitterRng;
+/// use rand::rngs::JitterRng;
 /// #
 /// # use std::error::Error;
 /// # use std::fs::File;
@@ -313,7 +313,7 @@ impl JitterRng {
     ///
     /// ```
     /// # use rand::{Rng, Error};
-    /// use rand::jitter::JitterRng;
+    /// use rand::rngs::JitterRng;
     ///
     /// # fn try_inner() -> Result<(), Error> {
     /// fn get_nstime() -> u64 {
@@ -864,7 +864,7 @@ impl CryptoRng for JitterRng {}
 
 #[cfg(test)]
 mod test_jitter_init {
-    use jitter::JitterRng;
+    use super::JitterRng;
 
     #[cfg(feature="std")]
     #[test]

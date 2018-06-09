@@ -905,7 +905,7 @@ pub trait FromEntropy: SeedableRng {
 #[cfg(feature="std")]
 impl<R: SeedableRng> FromEntropy for R {
     fn from_entropy() -> R {
-        R::from_rng(EntropyRng::new()).unwrap_or_else(|err|
+        R::from_rng(rngs::EntropyRng::new()).unwrap_or_else(|err|
             panic!("FromEntropy::from_entropy() failed: {}", err))
     }
 }
@@ -925,8 +925,8 @@ impl<R: SeedableRng> FromEntropy for R {
 /// [`SmallRng`]: rngs/struct.SmallRng.html
 #[deprecated(since="0.5.0", note="removed in favor of SmallRng")]
 #[cfg(feature="std")]
-pub fn weak_rng() -> XorShiftRng {
-    XorShiftRng::from_rng(thread_rng()).unwrap_or_else(|err|
+pub fn weak_rng() -> prng::XorShiftRng {
+    prng::XorShiftRng::from_rng(thread_rng()).unwrap_or_else(|err|
         panic!("weak_rng failed: {:?}", err))
 }
 
@@ -1010,6 +1010,7 @@ pub fn sample<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Vec<T>
 #[cfg(test)]
 mod test {
     use rngs::mock::StepRng;
+    use rngs::StdRng;
     use super::*;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 

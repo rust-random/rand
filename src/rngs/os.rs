@@ -1106,7 +1106,7 @@ mod imp {
 #[cfg(test)]
 mod test {
     use RngCore;
-    use OsRng;
+    use super::OsRng;
 
     #[test]
     fn test_os_rng() {
