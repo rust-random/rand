@@ -607,7 +607,6 @@ impl JitterRng {
     /// of the failure will be returned.
     ///
     /// [`TimerError`]: enum.TimerError.html
-    #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
     pub fn test_timer(&mut self) -> Result<u8, TimerError> {
         debug!("JitterRng: testing timer ...");
         // We could add a check for system capabilities such as `clock_getres`
@@ -744,10 +743,6 @@ impl JitterRng {
             Ok(log2_lookup[delta_average as usize])
         }
     }
-    #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
-    pub fn test_timer(&mut self) -> Result<u8, TimerError> {
-        return Err(TimerError::NoTimer);
-    }
 
     /// Statistical test: return the timer delta of one normal run of the
     /// `JitterRng` entropy collector.
@@ -763,14 +758,13 @@ impl JitterRng {
     ///
     /// See [Quality testing](struct.JitterRng.html#quality-testing) on how to
     /// use `timer_stats` to test the quality of `JitterRng`.
-    #[cfg(feature="std")]
     pub fn timer_stats(&mut self, var_rounds: bool) -> i64 {
         let mut mem = [0; MEMORY_SIZE];
 
-        let time = platform::get_nstime();
+        let time = (self.timer)();
         self.memaccess(&mut mem, var_rounds);
         self.lfsr_time(time, var_rounds);
-        let time2 = platform::get_nstime();
+        let time2 = (self.timer)();
         time2.wrapping_sub(time) as i64
     }
 }
@@ -814,7 +808,12 @@ mod platform {
 
     #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
     pub fn get_nstime() -> u64 {
-        unreachable!()
+        // We don't use the timer from the standard library, because it panics
+        // at runtime.
+        //
+        // There is no accurate timer available on Wasm platforms, to help
+        // prevent fingerprinting or timing side-channel attacks.
+        0 // Will make `test_timer` fail with `NoTimer`.
     }
 }
 
