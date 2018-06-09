@@ -67,6 +67,28 @@ impl Bernoulli {
         };
         Bernoulli { p_int }
     }
+
+    /// Construct a new `Bernoulli` with the probability of success of
+    /// `numerator`-in-`denominator`. I.e. `new_ratio(2, 3)` will return
+    /// a `Bernoulli` with a 2-in-3 chance, or about 67%, of returning `true`.
+    ///
+    /// If `numerator == denominator` then the returned `Bernoulli` will always
+    /// return `true`. If `numerator == 0` it will always return `false`.
+    ///
+    /// # Panics
+    ///
+    /// If `denominator == 0` or `numerator > denominator`.
+    ///
+    #[inline]
+    pub fn from_ratio(numerator: u32, denominator: u32) -> Bernoulli {
+        assert!(numerator <= denominator);
+        if numerator == denominator {
+            return Bernoulli { p_int: ::core::u64::MAX }
+        }
+        const SCALE: f64 = 2.0 * (1u64 << 63) as f64;
+        let p_int = ((numerator as f64 / denominator as f64) * SCALE) as u64;
+        Bernoulli { p_int }
+    }
 }
 
 impl Distribution<bool> for Bernoulli {
@@ -103,18 +125,27 @@ mod test {
     #[test]
     fn test_average() {
         const P: f64 = 0.3;
-        let d = Bernoulli::new(P);
-        const N: u32 = 10_000_000;
+        const NUM: u32 = 3;
+        const DENOM: u32 = 10;
+        let d1 = Bernoulli::new(P);
+        let d2 = Bernoulli::from_ratio(NUM, DENOM);
+        const N: u32 = 100_000;
 
-        let mut sum: u32 = 0;
+        let mut sum1: u32 = 0;
+        let mut sum2: u32 = 0;
         let mut rng = ::test::rng(2);
         for _ in 0..N {
-            if d.sample(&mut rng) {
-                sum += 1;
+            if d1.sample(&mut rng) {
+                sum1 += 1;
+            }
+            if d2.sample(&mut rng) {
+                sum2 += 1;
             }
         }
-        let avg = (sum as f64) / (N as f64);
+        let avg1 = (sum1 as f64) / (N as f64);
+        assert!((avg1 - P).abs() < 5e-3);
 
-        assert!((avg - P).abs() < 1e-3);
+        let avg2 = (sum2 as f64) / (N as f64);
+        assert!((avg2 - (NUM as f64)/(DENOM as f64)).abs() < 5e-3);
     }
 }

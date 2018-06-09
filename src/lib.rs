@@ -387,7 +387,7 @@ pub trait Rng: RngCore {
     /// ```
     ///
     /// [`Uniform`]: distributions/uniform/struct.Uniform.html
-    fn gen_range<T: PartialOrd + SampleUniform>(&mut self, low: T, high: T) -> T {
+    fn gen_range<T: SampleUniform>(&mut self, low: T, high: T) -> T {
         T::Sampler::sample_single(low, high, self)
     }
 
@@ -509,7 +509,8 @@ pub trait Rng: RngCore {
 
     /// Return a bool with a probability `p` of being true.
     ///
-    /// This is a wrapper around [`distributions::Bernoulli`].
+    /// See also the [`Bernoulli`] distribution, which may be faster if
+    /// sampling from the same probability repeatedly.
     ///
     /// # Example
     ///
@@ -522,12 +523,41 @@ pub trait Rng: RngCore {
     ///
     /// # Panics
     ///
-    /// If `p` < 0 or `p` > 1.
+    /// If `p < 0` or `p > 1`.
     ///
-    /// [`distributions::Bernoulli`]: distributions/bernoulli/struct.Bernoulli.html
+    /// [`Bernoulli`]: distributions/bernoulli/struct.Bernoulli.html
     #[inline]
     fn gen_bool(&mut self, p: f64) -> bool {
         let d = distributions::Bernoulli::new(p);
+        self.sample(d)
+    }
+
+    /// Return a bool with a probability of `numerator/denominator` of being
+    /// true. I.e. `gen_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
+    /// returning true. If `numerator == denominator`, then the returned value
+    /// is guaranteed to be `true`. If `numerator == 0`, then the returned
+    /// value is guaranteed to be `false`.
+    ///
+    /// See also the [`Bernoulli`] distribution, which may be faster if
+    /// sampling from the same `numerator` and `denominator` repeatedly.
+    ///
+    /// # Panics
+    ///
+    /// If `denominator == 0` or `numerator > denominator`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// println!("{}", rng.gen_ratio(2, 3));
+    /// ```
+    ///
+    /// [`Bernoulli`]: distributions/bernoulli/struct.Bernoulli.html
+    #[inline]
+    fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
+        let d = distributions::Bernoulli::from_ratio(numerator, denominator);
         self.sample(d)
     }
 
@@ -1016,5 +1046,22 @@ mod test {
                       Option<(u32, (bool,))>),
                      (u8, i8, u16, i16, u32, i32, u64, i64),
                      (f32, (f64, (f64,)))) = random();
+    }
+
+    #[test]
+    fn test_gen_ratio_average() {
+        const NUM: u32 = 3;
+        const DENOM: u32 = 10;
+        const N: u32 = 100_000;
+
+        let mut sum: u32 = 0;
+        let mut rng = rng(111);
+        for _ in 0..N {
+            if rng.gen_ratio(NUM, DENOM) {
+                sum += 1;
+            }
+        }
+        let avg = (sum as f64) / (N as f64);
+        assert!((avg - (NUM as f64)/(DENOM as f64)).abs() < 1e-3);
     }
 }
