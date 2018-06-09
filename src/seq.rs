@@ -351,16 +351,11 @@ pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<V
 ///
 /// Panics if `amount > slice.len()`
 ///
-/// # Example
-///
-/// ```
-/// use rand::{thread_rng, seq};
-///
-/// let mut rng = thread_rng();
-/// let values = vec![5, 6, 1, 3, 4, 6, 7];
-/// println!("{:?}", seq::sample_slice(&mut rng, &values, 3));
-/// ```
+/// Deprecated: use [`SliceExt::choose_multiple`] instead.
+/// 
+/// [`SliceExt::choose_multiple`]: trait.SliceExt.html#method.choose_multiple
 #[cfg(feature = "alloc")]
+#[deprecated(since="0.6.0", note="use SliceExt::choose_multiple instead")]
 pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
     where R: Rng + ?Sized,
           T: Clone
@@ -380,16 +375,11 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 ///
 /// Panics if `amount > slice.len()`
 ///
-/// # Example
-///
-/// ```
-/// use rand::{thread_rng, seq};
-///
-/// let mut rng = thread_rng();
-/// let values = vec![5, 6, 1, 3, 4, 6, 7];
-/// println!("{:?}", seq::sample_slice_ref(&mut rng, &values, 3));
-/// ```
+/// Deprecated: use [`SliceExt::choose_multiple`] instead.
+/// 
+/// [`SliceExt::choose_multiple`]: trait.SliceExt.html#method.choose_multiple
 #[cfg(feature = "alloc")]
+#[deprecated(since="0.6.0", note="use SliceExt::choose_multiple instead")]
 pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>
     where R: Rng + ?Sized
 {
@@ -586,6 +576,7 @@ mod test {
     }
     #[test]
     #[cfg(feature = "alloc")]
+    #[allow(deprecated)]
     fn test_sample_slice_boundaries() {
         let empty: &[u8] = &[];
 
@@ -631,6 +622,7 @@ mod test {
 
     #[test]
     #[cfg(feature = "alloc")]
+    #[allow(deprecated)]
     fn test_sample_slice() {
         let xor_rng = XorShiftRng::from_seed;
 
