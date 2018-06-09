@@ -9,39 +9,44 @@ use rand::prelude::*;
 use rand::seq::*;
 
 #[bench]
-fn misc_shuffle_100(b: &mut Bencher) {
+fn seq_shuffle_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &mut [usize] = &mut [1; 100];
     b.iter(|| {
-        rng.shuffle(x);
+        x.shuffle(&mut rng);
         x[0]
     })
 }
 
 #[bench]
-fn misc_sample_iter_10_of_100(b: &mut Bencher) {
+fn seq_slice_choose_multiple_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
+    let mut buf = [0; 10];
     b.iter(|| {
-        sample_iter(&mut rng, x, 10).unwrap_or_else(|e| e)
+        for (v, slot) in x.choose_multiple(&mut rng, buf.len()).zip(buf.iter_mut()) {
+            *slot = *v;
+        }
+        buf
     })
 }
 
 #[bench]
-fn misc_sample_slice_10_of_100(b: &mut Bencher) {
+fn seq_iter_choose_multiple_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
     b.iter(|| {
-        sample_slice(&mut rng, x, 10)
+        x.iter().cloned().choose_multiple(&mut rng, 10) /*.unwrap_or_else(|e| e)*/
     })
 }
 
 #[bench]
-fn misc_sample_slice_ref_10_of_100(b: &mut Bencher) {
+fn seq_iter_choose_multiple_fill_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
+    let mut buf = [0; 10];
     b.iter(|| {
-        sample_slice_ref(&mut rng, x, 10)
+        x.iter().cloned().choose_multiple_fill(&mut rng, &mut buf)
     })
 }
 
@@ -57,6 +62,6 @@ macro_rules! sample_indices {
     }
 }
 
-sample_indices!(misc_sample_indices_10_of_1k, 10, 1000);
-sample_indices!(misc_sample_indices_50_of_1k, 50, 1000);
-sample_indices!(misc_sample_indices_100_of_1k, 100, 1000);
+sample_indices!(seq_sample_indices_10_of_1k, 10, 1000);
+sample_indices!(seq_sample_indices_50_of_1k, 50, 1000);
+sample_indices!(seq_sample_indices_100_of_1k, 100, 1000);
