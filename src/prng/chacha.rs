@@ -20,10 +20,10 @@ const STATE_WORDS: usize = 16;
 /// A cryptographically secure random number generator that uses the ChaCha
 /// algorithm.
 ///
-/// ChaCha is a stream cipher designed by Daniel J. Bernstein [1], that we use
+/// ChaCha is a stream cipher designed by Daniel J. Bernstein [^1], that we use
 /// as an RNG. It is an improved variant of the Salsa20 cipher family, which was
 /// selected as one of the "stream ciphers suitable for widespread adoption" by
-/// eSTREAM [2].
+/// eSTREAM [^2].
 ///
 /// ChaCha uses add-rotate-xor (ARX) operations as its basis. These are safe
 /// against timing attacks, although that is mostly a concern for ciphers and
@@ -39,7 +39,7 @@ const STATE_WORDS: usize = 16;
 /// configuration in the future.
 ///
 /// We use a 64-bit counter and 64-bit stream identifier as in Benstein's
-/// implementation [1] except that we use a stream identifier in place of a
+/// implementation [^1] except that we use a stream identifier in place of a
 /// nonce. A 64-bit counter over 64-byte (16 word) blocks allows 1 ZiB of output
 /// before cycling, and the stream identifier allows 2<sup>64</sup> unique
 /// streams of output per seed. Both counter and stream are initialized to zero
@@ -57,11 +57,11 @@ const STATE_WORDS: usize = 16;
 /// This implementation uses an output buffer of sixteen `u32` words, and uses
 /// [`BlockRng`] to implement the [`RngCore`] methods.
 ///
-/// [1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
-///      https://cr.yp.to/chacha.html)
+/// [^1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
+///       https://cr.yp.to/chacha.html)
 ///
-/// [2]: [eSTREAM: the ECRYPT Stream Cipher Project](
-///      http://www.ecrypt.eu.org/stream/)
+/// [^2]: [eSTREAM: the ECRYPT Stream Cipher Project](
+///       http://www.ecrypt.eu.org/stream/)
 ///
 /// [`set_word_pos`]: #method.set_word_pos
 /// [`set_stream`]: #method.set_stream

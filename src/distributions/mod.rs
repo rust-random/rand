@@ -141,7 +141,6 @@
 //! [`Rng::gen_range`]: ../trait.Rng.html#method.gen_range
 //! [`Rng::gen()`]: ../trait.Rng.html#method.gen
 //! [`Rng`]: ../trait.Rng.html
-//! [`sample_iter`]: trait.Distribution.html#method.sample_iter
 //! [`uniform` module]: uniform/index.html
 //! [Floating point implementation]: struct.Standard.html#floating-point-implementation
 // distributions
@@ -164,6 +163,8 @@
 //! [`StandardNormal`]: struct.StandardNormal.html
 //! [`StudentT`]: struct.StudentT.html
 //! [`Uniform`]: struct.Uniform.html
+//! [`Uniform::new`]: struct.Uniform.html#method.new
+//! [`Uniform::new_inclusive`]: struct.Uniform.html#method.new_inclusive
 
 use Rng;
 
@@ -299,15 +300,18 @@ mod impls {
 }
 
 /// Types (distributions) that can be used to create a random instance of `T`.
-/// 
+///
 /// It is possible to sample from a distribution through both the
-/// [`Distribution`] and [`Rng`] traits, via `distr.sample(&mut rng)` and
+/// `Distribution` and [`Rng`] traits, via `distr.sample(&mut rng)` and
 /// `rng.sample(distr)`. They also both offer the [`sample_iter`] method, which
 /// produces an iterator that samples from the distribution.
 ///
 /// All implementations are expected to be immutable; this has the significant
 /// advantage of not needing to consider thread safety, and for most
 /// distributions efficient state-less sampling algorithms are available.
+///
+/// [`Rng`]: ../trait.Rng.html
+/// [`sample_iter`]: trait.Distribution.html#method.sample_iter
 pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the source of randomness.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T;
