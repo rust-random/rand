@@ -1103,6 +1103,43 @@ mod imp {
 }
 
 
+#[cfg(not(any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
+mod imp {
+    use {Error, ErrorKind};
+    use super::OsRngImpl;
+
+    #[derive(Clone, Debug)]
+    pub struct OsRng;
+
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
+            Err(Error::new(ErrorKind::Unavailable,
+               "not supported on this platform"))
+        }
+
+        fn fill_chunk(&mut self, _dest: &mut [u8]) -> Result<(), Error> {
+            unreachable!()
+        }
+
+        fn method_str(&self) -> &'static str { unreachable!() }
+    }
+}
+
+
 #[cfg(test)]
 mod test {
     use RngCore;
