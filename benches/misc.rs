@@ -63,9 +63,8 @@ fn misc_gen_ratio_var(b: &mut Bencher) {
 #[bench]
 fn misc_bernoulli_const(b: &mut Bencher) {
     let mut rng = StdRng::from_rng(&mut thread_rng()).unwrap();
-    let d = rand::distributions::Bernoulli::new(0.18);
     b.iter(|| {
-        // Can be evaluated at compile time.
+        let d = rand::distributions::Bernoulli::new(0.18);
         let mut accum = true;
         for _ in 0..::RAND_BENCH_N {
             accum ^= rng.sample(d);
