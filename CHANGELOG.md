@@ -9,6 +9,12 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Update Guide](UPDATING.md) useful.
 
 
+## [0.5.2] - 2018-06-10
+### Changed
+- Use newtypes to get deprecation warnings for compatibility re-exports. (#502)
+- Add back dummy implementation for `OsRng` on unsupported platforms. (#505)
+
+
 ## [0.5.1] - 2018-06-08
 
 ### New distributions
@@ -25,6 +31,7 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Emscripten, Haiku: don't do an extra blocking read from `/dev/random`. (#484)
 - Linux, NetBSD, Solaris: read in blocking mode on first use in `fill_bytes`. (#484)
 - Fuchsia, CloudABI: fix compilation (broken in Rand 0.5). (#484)
+
 
 ## [0.5.0] - 2018-05-21
 
