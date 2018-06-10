@@ -300,9 +300,9 @@ pub mod isaac {
 
 
 use core::{mem, slice};
+use core::borrow::Borrow;
 use distributions::{Distribution, Standard};
 use distributions::uniform::{SampleUniform, UniformSampler};
-
 
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
@@ -387,7 +387,9 @@ pub trait Rng: RngCore {
     /// ```
     ///
     /// [`Uniform`]: distributions/uniform/struct.Uniform.html
-    fn gen_range<T: SampleUniform>(&mut self, low: T, high: T) -> T {
+    fn gen_range<T: SampleUniform, B1, B2>(&mut self, low: B1, high: B2) -> T
+        where B1: Borrow<T> + Sized,
+              B2: Borrow<T> + Sized {
         T::Sampler::sample_single(low, high, self)
     }
 
@@ -935,19 +937,19 @@ mod test {
     fn test_gen_range() {
         let mut r = rng(101);
         for _ in 0..1000 {
-            let a = r.gen_range(-3, 42);
-            assert!(a >= -3 && a < 42);
-            assert_eq!(r.gen_range(0, 1), 0);
-            assert_eq!(r.gen_range(-12, -11), -12);
-        }
+            let a = r.gen_range(-4711, 17);
+            assert!(a >= -4711 && a < 17);
+            let a = r.gen_range(-3i8, 42);
+            assert!(a >= -3i8 && a < 42i8);
+            let a = r.gen_range(&10u16, 99);
+            assert!(a >= 10u16 && a < 99u16);
+            let a = r.gen_range(-100i32, &2000);
+            assert!(a >= -100i32 && a < 2000i32);
 
-        for _ in 0..1000 {
-            let a = r.gen_range(10, 42);
-            assert!(a >= 10 && a < 42);
-            assert_eq!(r.gen_range(0, 1), 0);
+            assert_eq!(r.gen_range(0u32, 1), 0u32);
+            assert_eq!(r.gen_range(-12i64, -11), -12i64);
             assert_eq!(r.gen_range(3_000_000, 3_000_001), 3_000_000);
         }
-
     }
 
     #[test]
