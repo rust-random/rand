@@ -563,34 +563,34 @@ pub trait Rng: RngCore {
 
     /// Return a random element from `values`.
     ///
-    /// Deprecated: use [`SliceExt::choose`] instead.
+    /// Deprecated: use [`SliceRandom::choose`] instead.
     /// 
-    /// [`SliceExt::choose`]: seq/trait.SliceExt.html#method.choose
-    #[deprecated(since="0.6.0", note="use SliceExt::choose instead")]
+    /// [`SliceRandom::choose`]: seq/trait.SliceRandom.html#method.choose
+    #[deprecated(since="0.6.0", note="use SliceRandom::choose instead")]
     fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
-        use seq::SliceExt;
+        use seq::SliceRandom;
         values.choose(self)
     }
 
     /// Return a mutable pointer to a random element from `values`.
     ///
-    /// Deprecated: use [`SliceExt::choose_mut`] instead.
+    /// Deprecated: use [`SliceRandom::choose_mut`] instead.
     /// 
-    /// [`SliceExt::choose_mut`]: seq/trait.SliceExt.html#method.choose_mut
-    #[deprecated(since="0.6.0", note="use SliceExt::choose_mut instead")]
+    /// [`SliceRandom::choose_mut`]: seq/trait.SliceRandom.html#method.choose_mut
+    #[deprecated(since="0.6.0", note="use SliceRandom::choose_mut instead")]
     fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> {
-        use seq::SliceExt;
+        use seq::SliceRandom;
         values.choose_mut(self)
     }
 
     /// Shuffle a mutable slice in place.
     ///
-    /// Deprecated: use [`SliceExt::shuffle`] instead.
+    /// Deprecated: use [`SliceRandom::shuffle`] instead.
     /// 
-    /// [`SliceExt::shuffle`]: seq/trait.SliceExt.html#method.shuffle
-    #[deprecated(since="0.6.0", note="use SliceExt::shuffle instead")]
+    /// [`SliceRandom::shuffle`]: seq/trait.SliceRandom.html#method.shuffle
+    #[deprecated(since="0.6.0", note="use SliceRandom::shuffle instead")]
     fn shuffle<T>(&mut self, values: &mut [T]) {
-        use seq::SliceExt;
+        use seq::SliceRandom;
         values.shuffle(self)
     }
 }

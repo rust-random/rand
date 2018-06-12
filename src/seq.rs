@@ -27,7 +27,7 @@ use super::Rng;
 /// 
 /// An implementation is provided for slices. This may also be implementable for
 /// other types.
-pub trait SliceExt {
+pub trait SliceRandom {
     /// The element type.
     type Item;
 
@@ -40,7 +40,7 @@ pub trait SliceExt {
     ///
     /// ```
     /// use rand::thread_rng;
-    /// use rand::seq::SliceExt;
+    /// use rand::seq::SliceRandom;
     ///
     /// let choices = [1, 2, 4, 8, 16, 32];
     /// let mut rng = thread_rng();
@@ -73,7 +73,7 @@ pub trait SliceExt {
     /// 
     /// # Example
     /// ```
-    /// use rand::seq::SliceExt;
+    /// use rand::seq::SliceRandom;
     /// 
     /// let mut rng = &mut rand::thread_rng();
     /// let sample = "Hello, audience!".as_bytes();
@@ -99,7 +99,7 @@ pub trait SliceExt {
     ///
     /// ```
     /// use rand::thread_rng;
-    /// use rand::seq::SliceExt;
+    /// use rand::seq::SliceRandom;
     ///
     /// let mut rng = thread_rng();
     /// let mut y = [1, 2, 3, 4, 5];
@@ -132,7 +132,7 @@ pub trait SliceExt {
 }
 
 /// Extension trait on iterators, providing random sampling methods.
-pub trait IteratorExt: Iterator + Sized {
+pub trait IteratorRandom: Iterator + Sized {
     /// Choose one element at random from the iterator.
     ///
     /// Returns `None` if and only if the iterator is empty.
@@ -239,7 +239,7 @@ pub trait IteratorExt: Iterator + Sized {
 }
 
 
-impl<T> SliceExt for [T] {
+impl<T> SliceRandom for [T] {
     type Item = T;
 
     fn choose<R>(&self, rng: &mut R) -> Option<&Self::Item>
@@ -302,11 +302,11 @@ impl<T> SliceExt for [T] {
     }
 }
 
-impl<I> IteratorExt for I where I: Iterator + Sized {}
+impl<I> IteratorRandom for I where I: Iterator + Sized {}
 
 
-/// Iterator over multiple choices, as returned by [`SliceExt::choose_multiple](
-/// trait.SliceExt.html#method.choose_multiple).
+/// Iterator over multiple choices, as returned by [`SliceRandom::choose_multiple](
+/// trait.SliceRandom.html#method.choose_multiple).
 #[cfg(feature = "alloc")]
 #[derive(Debug)]
 pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
@@ -345,16 +345,16 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 
 /// Randomly sample `amount` elements from a finite iterator.
 ///
-/// Deprecated: use [`IteratorExt::choose_multiple`] instead.
+/// Deprecated: use [`IteratorRandom::choose_multiple`] instead.
 /// 
-/// [`IteratorExt::choose_multiple`]: trait.IteratorExt.html#method.choose_multiple
+/// [`IteratorRandom::choose_multiple`]: trait.IteratorRandom.html#method.choose_multiple
 #[cfg(feature = "alloc")]
-#[deprecated(since="0.6.0", note="use IteratorExt::choose_multiple instead")]
+#[deprecated(since="0.6.0", note="use IteratorRandom::choose_multiple instead")]
 pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<Vec<T>, Vec<T>>
     where I: IntoIterator<Item=T>,
           R: Rng + ?Sized,
 {
-    use seq::IteratorExt;
+    use seq::IteratorRandom;
     let iter = iterable.into_iter();
     let result = iter.choose_multiple(rng, amount);
     if result.len() == amount {
@@ -372,11 +372,11 @@ pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<V
 ///
 /// Panics if `amount > slice.len()`
 ///
-/// Deprecated: use [`SliceExt::choose_multiple`] instead.
+/// Deprecated: use [`SliceRandom::choose_multiple`] instead.
 /// 
-/// [`SliceExt::choose_multiple`]: trait.SliceExt.html#method.choose_multiple
+/// [`SliceRandom::choose_multiple`]: trait.SliceRandom.html#method.choose_multiple
 #[cfg(feature = "alloc")]
-#[deprecated(since="0.6.0", note="use SliceExt::choose_multiple instead")]
+#[deprecated(since="0.6.0", note="use SliceRandom::choose_multiple instead")]
 pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
     where R: Rng + ?Sized,
           T: Clone
@@ -396,11 +396,11 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 ///
 /// Panics if `amount > slice.len()`
 ///
-/// Deprecated: use [`SliceExt::choose_multiple`] instead.
+/// Deprecated: use [`SliceRandom::choose_multiple`] instead.
 /// 
-/// [`SliceExt::choose_multiple`]: trait.SliceExt.html#method.choose_multiple
+/// [`SliceRandom::choose_multiple`]: trait.SliceRandom.html#method.choose_multiple
 #[cfg(feature = "alloc")]
-#[deprecated(since="0.6.0", note="use SliceExt::choose_multiple instead")]
+#[deprecated(since="0.6.0", note="use SliceRandom::choose_multiple instead")]
 pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>
     where R: Rng + ?Sized
 {
@@ -517,7 +517,7 @@ fn sample_indices_cache<R>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use super::IteratorExt;
+    use super::IteratorRandom;
     #[cfg(feature = "alloc")]
     use {XorShiftRng, Rng, SeedableRng};
     #[cfg(all(feature="alloc", not(feature="std")))]
