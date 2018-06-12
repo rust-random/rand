@@ -22,6 +22,7 @@
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::btree_map::BTreeMap;
 
 use super::Rng;
+use distributions::uniform::SampleUniform;
 
 /// Extension trait on slices, providing random mutation and sampling methods.
 /// 
@@ -515,6 +516,133 @@ fn sample_indices_cache<R>(
     out
 }
 
+/// Return a random element from `items` where the chance of a given item
+/// being picked is proportional to the corresponding value in `weights`.
+/// `weights` and `items` must return exactly the same number of values.
+///
+/// All values returned by `weights` must be `>= 0`.
+///
+/// This function iterates over `weights` twice. Once to get the total
+/// weight, and once while choosing the random value. If you know the total
+/// weight, or plan to call this function multiple times, you should
+/// consider using [`choose_weighted_with_total`] instead.
+///
+/// Return `None` if `items` and `weights` is empty.
+///
+/// # Panics
+///
+/// If a value in `weights < 0`.
+/// If `weights` and `items` return different number of items.
+///
+/// # Example
+///
+/// ```
+/// use rand::thread_rng;
+/// use rand::seq::choose_weighted;
+///
+/// let choices = ['a', 'b', 'c'];
+/// let weights = [2,   1,   1];
+/// let mut rng = thread_rng();
+/// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
+/// println!("{}", choose_weighted(&mut rng, choices.iter(), weights.iter().cloned()).unwrap());
+/// ```
+/// [`choose_weighted_with_total`]: seq/fn.choose_weighted_with_total.html
+pub fn choose_weighted<R, IterItems, IterWeights>(rng: &mut R,
+                                                  items: IterItems,
+                                                  weights: IterWeights) -> Option<IterItems::Item>
+    where R: Rng + ?Sized,
+          IterItems: Iterator,
+          IterWeights: Iterator + Clone,
+          IterWeights::Item: SampleUniform +
+                             Default +
+                             ::core::ops::Add<IterWeights::Item, Output=IterWeights::Item> +
+                             ::core::cmp::PartialOrd<IterWeights::Item> +
+                             Clone { // Clone is only needed for debug assertions
+    let total_weight: IterWeights::Item =
+        weights.clone().fold(Default::default(), |acc, w| {
+            assert!(w >= Default::default(), "Weight must be larger than zero");
+            acc + w
+        });
+    choose_weighted_with_total(rng, items, weights, total_weight)
+}
+
+/// Return a random element from `items` where. The chance of a given item
+/// being picked, is proportional to the corresponding value in `weights`.
+/// `weights` and `items` must return exactly the same number of values.
+///
+/// All values returned by `weights` must be `>= 0`.
+///
+/// `total_weight` must be exactly the sum of all values returned by
+/// `weights`. Builds with debug_assertions turned on will assert that this
+/// equality holds. Simply storing the result of `weights.sum()` and using
+/// that as `total_weight` should work.
+///
+/// Return `None` if `items` and `weights` is empty.
+///
+/// # Example
+///
+/// ```
+/// use rand::thread_rng;
+/// use rand::seq::choose_weighted_with_total;
+///
+/// let choices = ['a', 'b', 'c'];
+/// let weights = [2,   1,   1];
+/// let mut rng = thread_rng();
+/// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
+/// println!("{}", choose_weighted_with_total(&mut rng, choices.iter(), weights.iter().cloned(), 4).unwrap());
+/// ```
+pub fn choose_weighted_with_total<R, IterItems, IterWeights>(rng: &mut R,
+                                                             mut items: IterItems,
+                                                             mut weights: IterWeights,
+                                                             total_weight: IterWeights::Item) -> Option<IterItems::Item>
+    where R: Rng + ?Sized,
+          IterItems: Iterator,
+          IterWeights: Iterator,
+          IterWeights::Item: SampleUniform +
+                             Default +
+                             ::core::ops::Add<IterWeights::Item, Output=IterWeights::Item> +
+                             ::core::cmp::PartialOrd<IterWeights::Item> +
+                             Clone { // Clone is only needed for debug assertions
+
+    if total_weight == Default::default() {
+        debug_assert!(items.next().is_none());
+        return None;
+    }
+
+    // Only used when debug_assertions are turned on
+    let mut debug_result = None;
+    let debug_total_weight = if cfg!(debug_assertions) { Some(total_weight.clone()) } else { None };
+
+    let chosen_weight = rng.gen_range(Default::default(), total_weight);
+    let mut cumulative_weight: IterWeights::Item = Default::default();
+
+    for item in items {
+        let weight_opt = weights.next();
+        assert!(weight_opt.is_some(), "`weights` returned fewer items than `items` did");
+        let weight = weight_opt.unwrap();
+        assert!(weight >= Default::default(), "Weight must be larger than zero");
+
+        cumulative_weight = cumulative_weight + weight;
+
+        if cumulative_weight > chosen_weight {
+            if !cfg!(debug_assertions) {
+                return Some(item);
+            }
+            if debug_result.is_none() {
+                debug_result = Some(item);
+            }
+        }
+    }
+
+    assert!(weights.next().is_none(), "`weights` returned more items than `items` did");
+    debug_assert!(debug_total_weight.unwrap() == cumulative_weight);
+    if cfg!(debug_assertions) && debug_result.is_some() {
+      return debug_result;
+    }
+
+    panic!("total_weight did not match up with sum of weights");
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -523,6 +651,8 @@ mod test {
     use {XorShiftRng, Rng, SeedableRng};
     #[cfg(all(feature="alloc", not(feature="std")))]
     use alloc::Vec;
+    #[cfg(feature="std")]
+    use core::panic::catch_unwind;
 
     #[test]
     fn test_choose() {
@@ -682,6 +812,110 @@ mod test {
                 let expected = regular.iter().map(|v| v).collect::<Vec<_>>();
                 assert_eq!(result, expected);
             }
+        }
+    }
+
+    #[test]
+    fn test_choose_weighted() {
+        let mut r = ::test::rng(406);
+        let chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n'];
+        let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
+        let total_weight = weights.iter().sum();
+        assert_eq!(chars.len(), weights.len());
+
+        let mut chosen = [0i32; 14];
+        for _ in 0..1000 {
+            let picked = *choose_weighted(&mut r,
+                                          chars.iter(),
+                                          weights.iter().cloned()).unwrap();
+            chosen[(picked as usize) - ('a' as usize)] += 1;
+        }
+        for (i, count) in chosen.iter().enumerate() {
+            let err = *count - ((weights[i] * 1000 / total_weight) as i32);
+            assert!(-25 <= err && err <= 25);
+        }
+
+        // Mutable items
+        chosen.iter_mut().for_each(|x| *x = 0);
+        for _ in 0..1000 {
+            *choose_weighted(&mut r,
+                             chosen.iter_mut(),
+                             weights.iter().cloned()).unwrap() += 1;
+        }
+        for (i, count) in chosen.iter().enumerate() {
+            let err = *count - ((weights[i] * 1000 / total_weight) as i32);
+            assert!(-25 <= err && err <= 25);
+        }
+
+        // choose_weighted_with_total
+        chosen.iter_mut().for_each(|x| *x = 0);
+        for _ in 0..1000 {
+            let picked = *choose_weighted_with_total(&mut r,
+                                                     chars.iter(),
+                                                     weights.iter().cloned(),
+                                                     total_weight).unwrap();
+            chosen[(picked as usize) - ('a' as usize)] += 1;
+        }
+        for (i, count) in chosen.iter().enumerate() {
+            let err = *count - ((weights[i] * 1000 / total_weight) as i32);
+            assert!(-25 <= err && err <= 25);
+        }
+    }
+
+    #[test]
+    #[cfg(all(feature="std",
+              not(target_arch = "wasm32"),
+              not(target_arch = "asmjs")))]
+    fn test_choose_weighted_assertions() {
+        fn inner_delta(delta: i32) {
+            let items = vec![1, 2, 3];
+            let mut r = ::test::rng(407);
+            if cfg!(debug_assertions) || delta == 0 {
+                choose_weighted_with_total(&mut r,
+                                           items.iter(),
+                                           items.iter().cloned(),
+                                           6+delta);
+            } else {
+                loop {
+                    choose_weighted_with_total(&mut r,
+                                               items.iter(),
+                                               items.iter().cloned(),
+                                               6+delta);
+                }
+            }
+        }
+
+        assert!(catch_unwind(|| inner_delta(0)).is_ok());
+        assert!(catch_unwind(|| inner_delta(1)).is_err());
+        assert!(catch_unwind(|| inner_delta(1000)).is_err());
+        if cfg!(debug_assertions) {
+            // The non-debug-assertions code can't detect too small total_weight
+            assert!(catch_unwind(|| inner_delta(-1)).is_err());
+            assert!(catch_unwind(|| inner_delta(-1000)).is_err());
+        }
+
+        fn inner_size(items: usize, weights: usize, with_total: bool) {
+            let mut r = ::test::rng(408);
+            if with_total {
+                choose_weighted_with_total(&mut r,
+                                           ::core::iter::repeat(1usize).take(items),
+                                           ::core::iter::repeat(1usize).take(weights),
+                                           weights);
+            } else {
+                choose_weighted(&mut r,
+                                ::core::iter::repeat(1usize).take(items),
+                                ::core::iter::repeat(1usize).take(weights));
+            }
+        }
+
+        assert!(catch_unwind(|| inner_size(2, 2, true)).is_ok());
+        assert!(catch_unwind(|| inner_size(2, 2, false)).is_ok());
+        assert!(catch_unwind(|| inner_size(2, 1, true)).is_err());
+        assert!(catch_unwind(|| inner_size(2, 1, false)).is_err());
+        if cfg!(debug_assertions) {
+            // The non-debug-assertions code can't detect too many weights
+            assert!(catch_unwind(|| inner_size(2, 3, true)).is_err());
+            assert!(catch_unwind(|| inner_size(2, 3, false)).is_err());
         }
     }
 }
