@@ -22,6 +22,7 @@
 
 
 use super::Rng;
+use distributions::uniform::SampleUniform;
 
 /// Extension trait on slices, providing random mutation and sampling methods.
 /// 
@@ -233,6 +234,124 @@ pub trait IteratorRandom: Iterator + Sized {
             reservoir.shrink_to_fit();
         }
         reservoir
+    }
+
+    /// Return a the index of a random element from this iterator where the
+    /// chance of a given item being picked is proportional to the value of
+    /// the item.
+    ///
+    /// All values returned by the iterator must be `>= 0`.
+    ///
+    /// This function iterates over the iterator twice. Once to get the total
+    /// weight, and once while choosing the random item. If you know the total
+    /// weight, or plan to call this function multiple times, you should
+    /// consider using [`choose_weighted_with_total`] instead.
+    ///
+    /// Return `None` if `items` and `weights` is empty.
+    ///
+    /// # Panics
+    ///
+    /// If a value in the iterator is `< 0`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::prelude::*;
+    ///
+    /// let choices = ['a', 'b', 'c'];
+    /// let weights = [2,   1,   1];
+    /// let mut rng = thread_rng();
+    /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
+    /// println!("{}", weights.iter().cloned()
+    ///                       .choose_index_weighted(&mut rng).map(|ix| choices[ix]).unwrap());
+    /// ```
+    /// [`choose_weighted_with_total`]: seq/fn.choose_weighted_with_total.html
+    fn choose_index_weighted<R>(self, rng: &mut R) -> Option<usize>
+        where Self: Clone,
+              R: Rng + ?Sized,
+              Self::Item: SampleUniform +
+                          Default +
+                          ::core::ops::Add<Self::Item, Output=Self::Item> +
+                          ::core::cmp::PartialOrd<Self::Item> +
+                          Clone { // Clone is only needed for debug assertions
+        let total_weight: Self::Item =
+            self.clone().fold(Default::default(), |acc, w| {
+                assert!(w >= Default::default(), "Weight must be larger than zero");
+                acc + w
+            });
+        self.choose_index_weighted_with_total(rng, total_weight)
+    }
+
+    /// Return a the index of a random element from this iterator where the
+    /// chance of a given item being picked is proportional to the value of
+    /// the item.
+    ///
+    /// All values returned by the iterator must be `>= 0`.
+    ///
+    /// `total_weight` must be exactly the sum of all values returned by
+    /// the iterator. Builds with debug_assertions turned on will assert that this
+    /// equality holds. Simply storing the result of `self.sum()` and using
+    /// that as `total_weight` should work.
+    ///
+    /// Return `None` if the iterator is empty.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::prelude::*;
+    ///
+    /// let choices = ['a', 'b', 'c'];
+    /// let weights = [2,   1,   1];
+    /// let mut rng = thread_rng();
+    /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
+    /// println!("{}", weights.iter()
+    ///                       .cloned()
+    ///                       .choose_index_weighted_with_total(&mut rng, 4)
+    ///                       .map(|ix| choices[ix]).unwrap());
+    /// ```
+    fn choose_index_weighted_with_total<R>(mut self,
+                                           rng: &mut R,
+                                           total_weight: Self::Item) -> Option<usize>
+        where R: Rng + ?Sized,
+              Self::Item: SampleUniform +
+                          Default +
+                          ::core::ops::Add<Self::Item, Output=Self::Item> +
+                          ::core::cmp::PartialOrd<Self::Item> +
+                          Clone { // Clone is only needed for debug assertions
+
+        if total_weight == Default::default() {
+            assert!(self.next().is_none());
+            return None;
+        }
+
+        // Only used when debug_assertions are turned on
+        let mut debug_result = None;
+        let debug_total_weight = if cfg!(debug_assertions) { Some(total_weight.clone()) } else { None };
+
+        let chosen_weight = rng.gen_range(Default::default(), total_weight);
+        let mut cumulative_weight: Self::Item = Default::default();
+
+        for (i, weight) in self.enumerate() {
+            assert!(weight >= Default::default(), "Weight must be larger than zero");
+
+            cumulative_weight = cumulative_weight + weight;
+
+            if cumulative_weight > chosen_weight {
+                if !cfg!(debug_assertions) {
+                    return Some(i);
+                }
+                if debug_result.is_none() {
+                    debug_result = Some(i);
+                }
+            }
+        }
+
+        debug_assert!(debug_total_weight.unwrap() == cumulative_weight);
+        if cfg!(debug_assertions) && debug_result.is_some() {
+          return debug_result;
+        }
+
+        panic!("total_weight did not match up with sum of weights");
     }
 }
 
@@ -509,6 +628,7 @@ fn sample_indices_cache<R>(
     out
 }
 
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -516,6 +636,8 @@ mod test {
     #[cfg(feature = "alloc")] use prng::XorShiftRng;
     #[cfg(all(feature="alloc", not(feature="std")))]
     use alloc::Vec;
+    #[cfg(feature="std")]
+    use core::panic::catch_unwind;
 
     #[test]
     fn test_choose() {
@@ -677,5 +799,72 @@ mod test {
                 assert_eq!(result, expected);
             }
         }
+    }
+
+    #[test]
+    fn test_weighted() {
+        let mut r = ::test::rng(406);
+        let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
+        let total_weight = weights.iter().sum();
+
+        let mut chosen = [0i32; 14];
+        for _ in 0..1000 {
+            let picked = weights.iter()
+                                .cloned()
+                                .choose_index_weighted(&mut r).unwrap();
+            chosen[picked] += 1;
+        }
+        for (i, count) in chosen.iter().enumerate() {
+            let err = *count - ((weights[i] * 1000 / total_weight) as i32);
+            assert!(-25 <= err && err <= 25);
+        }
+
+        // choose_weighted_with_total
+        chosen.iter_mut().for_each(|x| *x = 0);
+        for _ in 0..1000 {
+            let picked = weights.iter()
+                                .cloned()
+                                .choose_index_weighted_with_total(&mut r, total_weight).unwrap();
+            chosen[picked] += 1;
+        }
+        for (i, count) in chosen.iter().enumerate() {
+            let err = *count - ((weights[i] * 1000 / total_weight) as i32);
+            assert!(-25 <= err && err <= 25);
+        }
+    }
+
+    #[test]
+    #[cfg(all(feature="std",
+              not(target_arch = "wasm32"),
+              not(target_arch = "asmjs")))]
+    fn test_weighted_assertions() {
+        fn inner_delta(delta: i32) {
+            let mut r = ::test::rng(407);
+            loop {
+                (1..4).choose_index_weighted_with_total(&mut r, 6+delta);
+                if cfg!(debug_assertions) || delta == 0 {
+                    break;
+                }
+            }
+        }
+
+        assert!(catch_unwind(|| inner_delta(0)).is_ok());
+        assert!(catch_unwind(|| inner_delta(1)).is_err());
+        assert!(catch_unwind(|| inner_delta(1000)).is_err());
+        if cfg!(debug_assertions) {
+            // The non-debug-assertions code can't detect too small total_weight
+            assert!(catch_unwind(|| inner_delta(-1)).is_err());
+            assert!(catch_unwind(|| inner_delta(-1000)).is_err());
+        }
+
+        fn inner_vals(slice: &[i32]) {
+            let mut r = ::test::rng(408);
+            let total = slice.iter().cloned().sum::<i32>();
+            slice.iter().cloned().choose_index_weighted_with_total(&mut r, total);
+        }
+
+        assert!(catch_unwind(|| inner_vals(&[1, 2, 3])).is_ok());
+        assert!(catch_unwind(|| inner_vals(&[10, -1, 10])).is_err());
+        assert!(catch_unwind(|| inner_vals(&[1, -1])).is_err());
     }
 }
