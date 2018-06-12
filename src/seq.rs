@@ -76,19 +76,19 @@ pub trait SliceRandom {
     /// use rand::seq::SliceRandom;
     /// 
     /// let mut rng = &mut rand::thread_rng();
-    /// let sample = "Hello, audience!".as_bytes();
+    /// let sequence = "Hello, audience!".as_bytes();
     /// 
     /// // collect the results into a vector:
-    /// let v: Vec<u8> = sample.choose_multiple(&mut rng, 3).cloned().collect();
+    /// let v: Vec<u8> = sequence.sample(&mut rng, 3).cloned().collect();
     /// 
     /// // store in a buffer:
     /// let mut buf = [0u8; 5];
-    /// for (b, slot) in sample.choose_multiple(&mut rng, buf.len()).zip(buf.iter_mut()) {
+    /// for (b, slot) in sequence.sample(&mut rng, buf.len()).zip(buf.iter_mut()) {
     ///     *slot = *b;
     /// }
     /// ```
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
+    fn sample<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
         where R: Rng + ?Sized;
 
     /// Shuffle a mutable slice in place.
@@ -173,7 +173,7 @@ pub trait IteratorRandom: Iterator + Sized {
     /// equals the number of elements available.
     /// 
     /// Complexity is `O(n)` where `n` is the length of the iterator.
-    fn choose_multiple_fill<R>(mut self, rng: &mut R, buf: &mut [Self::Item])
+    fn sample_fill<R>(mut self, rng: &mut R, buf: &mut [Self::Item])
         -> usize where R: Rng + ?Sized
     {
         let amount = buf.len();
@@ -200,7 +200,7 @@ pub trait IteratorRandom: Iterator + Sized {
 
     /// Collects `amount` values at random from the iterator into a vector.
     ///
-    /// This is equivalent to `choose_multiple_fill` except for the result type.
+    /// This is equivalent to `sample_fill` except for the result type.
     ///
     /// Although the elements are selected randomly, the order of elements in
     /// the buffer is neither stable nor fully random. If random ordering is
@@ -212,7 +212,7 @@ pub trait IteratorRandom: Iterator + Sized {
     /// 
     /// Complexity is `O(n)` where `n` is the length of the iterator.
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(mut self, rng: &mut R, amount: usize) -> Vec<Self::Item>
+    fn sample<R>(mut self, rng: &mut R, amount: usize) -> Vec<Self::Item>
         where R: Rng + ?Sized
     {
         let mut reservoir = Vec::with_capacity(amount);
@@ -264,7 +264,7 @@ impl<T> SliceRandom for [T] {
     }
 
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
+    fn sample<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
         where R: Rng + ?Sized
     {
         let amount = ::core::cmp::min(amount, self.len());
@@ -306,8 +306,8 @@ impl<T> SliceRandom for [T] {
 impl<I> IteratorRandom for I where I: Iterator + Sized {}
 
 
-/// Iterator over multiple choices, as returned by [`SliceRandom::choose_multiple](
-/// trait.SliceRandom.html#method.choose_multiple).
+/// Iterator over multiple choices, as returned by [`SliceRandom::sample](
+/// trait.SliceRandom.html#method.sample).
 #[cfg(feature = "alloc")]
 #[derive(Debug)]
 pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
@@ -346,18 +346,18 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 
 /// Randomly sample `amount` elements from a finite iterator.
 ///
-/// Deprecated: use [`IteratorRandom::choose_multiple`] instead.
+/// Deprecated: use [`IteratorRandom::sample`] instead.
 /// 
-/// [`IteratorRandom::choose_multiple`]: trait.IteratorRandom.html#method.choose_multiple
+/// [`IteratorRandom::sample`]: trait.IteratorRandom.html#method.sample
 #[cfg(feature = "alloc")]
-#[deprecated(since="0.6.0", note="use IteratorRandom::choose_multiple instead")]
+#[deprecated(since="0.6.0", note="use IteratorRandom::sample instead")]
 pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<Vec<T>, Vec<T>>
     where I: IntoIterator<Item=T>,
           R: Rng + ?Sized,
 {
     use seq::IteratorRandom;
     let iter = iterable.into_iter();
-    let result = iter.choose_multiple(rng, amount);
+    let result = iter.sample(rng, amount);
     if result.len() == amount {
         Ok(result)
     } else {
@@ -373,11 +373,11 @@ pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<V
 ///
 /// Panics if `amount > slice.len()`
 ///
-/// Deprecated: use [`SliceRandom::choose_multiple`] instead.
+/// Deprecated: use [`SliceRandom::sample`] instead.
 /// 
-/// [`SliceRandom::choose_multiple`]: trait.SliceRandom.html#method.choose_multiple
+/// [`SliceRandom::sample`]: trait.SliceRandom.html#method.sample
 #[cfg(feature = "alloc")]
-#[deprecated(since="0.6.0", note="use SliceRandom::choose_multiple instead")]
+#[deprecated(since="0.6.0", note="use SliceRandom::sample instead")]
 pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
     where R: Rng + ?Sized,
           T: Clone
@@ -397,11 +397,11 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 ///
 /// Panics if `amount > slice.len()`
 ///
-/// Deprecated: use [`SliceRandom::choose_multiple`] instead.
+/// Deprecated: use [`SliceRandom::sample`] instead.
 /// 
-/// [`SliceRandom::choose_multiple`]: trait.SliceRandom.html#method.choose_multiple
+/// [`SliceRandom::sample`]: trait.SliceRandom.html#method.sample
 #[cfg(feature = "alloc")]
-#[deprecated(since="0.6.0", note="use SliceRandom::choose_multiple instead")]
+#[deprecated(since="0.6.0", note="use SliceRandom::sample instead")]
 pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>
     where R: Rng + ?Sized
 {
@@ -584,8 +584,8 @@ mod test {
 
         let mut r = ::test::rng(401);
         let vals = (min_val..max_val).collect::<Vec<i32>>();
-        let small_sample = vals.iter().choose_multiple(&mut r, 5);
-        let large_sample = vals.iter().choose_multiple(&mut r, vals.len() + 5);
+        let small_sample = vals.iter().sample(&mut r, 5);
+        let large_sample = vals.iter().sample(&mut r, vals.len() + 5);
 
         assert_eq!(small_sample.len(), 5);
         assert_eq!(large_sample.len(), vals.len());

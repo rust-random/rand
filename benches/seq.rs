@@ -19,12 +19,12 @@ fn seq_shuffle_100(b: &mut Bencher) {
 }
 
 #[bench]
-fn seq_slice_choose_multiple_10_of_100(b: &mut Bencher) {
+fn seq_slice_sample_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
     let mut buf = [0; 10];
     b.iter(|| {
-        for (v, slot) in x.choose_multiple(&mut rng, buf.len()).zip(buf.iter_mut()) {
+        for (v, slot) in x.sample(&mut rng, buf.len()).zip(buf.iter_mut()) {
             *slot = *v;
         }
         buf
@@ -41,21 +41,21 @@ fn seq_iter_choose_from_100(b: &mut Bencher) {
 }
 
 #[bench]
-fn seq_iter_choose_multiple_10_of_100(b: &mut Bencher) {
+fn seq_iter_sample_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
     b.iter(|| {
-        x.iter().cloned().choose_multiple(&mut rng, 10) /*.unwrap_or_else(|e| e)*/
+        x.iter().cloned().sample(&mut rng, 10) /*.unwrap_or_else(|e| e)*/
     })
 }
 
 #[bench]
-fn seq_iter_choose_multiple_fill_10_of_100(b: &mut Bencher) {
+fn seq_iter_sample_fill_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
     let mut buf = [0; 10];
     b.iter(|| {
-        x.iter().cloned().choose_multiple_fill(&mut rng, &mut buf)
+        x.iter().cloned().sample_fill(&mut rng, &mut buf)
     })
 }
 
