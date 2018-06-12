@@ -81,6 +81,7 @@
 //! - Related to real-valued quantities that grow linearly
 //!   (e.g. errors, offsets):
 //!   - [`Normal`] distribution, and [`StandardNormal`] as a primitive
+//!   - [`Cauchy`] distribution
 //! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
 //!   - [`Bernoulli`] distribution, similar to [`Rng::gen_bool`].
@@ -95,7 +96,7 @@
 //!   - [`ChiSquared`] distribution
 //!   - [`StudentT`] distribution
 //!   - [`FisherF`] distribution
-//! - Related to continuous multivariate probability distributions
+//! - Multivariate probability distributions
 //!   - [`Dirichlet`] distribution
 //!
 //! # Examples
