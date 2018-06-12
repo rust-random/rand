@@ -148,8 +148,9 @@ pub trait IteratorExt: Iterator + Sized {
             
             // Continue until the iterator is exhausted
             for (i, elem) in self.enumerate() {
-                // TODO: benchmark using gen_ratio instead
-                if rng.gen_range(0, i + 2) == 0 {
+                let denom = (i + 2) as u32;
+                assert_eq!(denom as usize, i + 2);  // check against overflow
+                if rng.gen_ratio(1, denom) {
                     result = elem;
                 }
             }

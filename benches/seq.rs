@@ -32,6 +32,15 @@ fn seq_slice_choose_multiple_10_of_100(b: &mut Bencher) {
 }
 
 #[bench]
+fn seq_iter_choose_from_100(b: &mut Bencher) {
+    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+    let x : &[usize] = &[1; 100];
+    b.iter(|| {
+        x.iter().cloned().choose(&mut rng)
+    })
+}
+
+#[bench]
 fn seq_iter_choose_multiple_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
