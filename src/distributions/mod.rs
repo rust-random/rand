@@ -81,7 +81,6 @@
 //! - Related to real-valued quantities that grow linearly
 //!   (e.g. errors, offsets):
 //!   - [`Normal`] distribution, and [`StandardNormal`] as a primitive
-//!   - [`Cauchy`] distribution
 //! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
 //!   - [`Bernoulli`] distribution, similar to [`Rng::gen_bool`].
@@ -96,7 +95,8 @@
 //!   - [`ChiSquared`] distribution
 //!   - [`StudentT`] distribution
 //!   - [`FisherF`] distribution
-//!
+//! - Related to continuous multivariate probability distributions
+//!   - [`Dirichlet`] distribution
 //!
 //! # Examples
 //!
@@ -150,6 +150,7 @@
 //! [`Binomial`]: struct.Binomial.html
 //! [`Cauchy`]: struct.Cauchy.html
 //! [`ChiSquared`]: struct.ChiSquared.html
+//! [`Dirichlet`]: struct.Dirichlet.html
 //! [`Exp`]: struct.Exp.html
 //! [`Exp1`]: struct.Exp1.html
 //! [`FisherF`]: struct.FisherF.html
@@ -185,6 +186,8 @@ use Rng;
 #[doc(inline)] pub use self::bernoulli::Bernoulli;
 #[cfg(feature = "std")]
 #[doc(inline)] pub use self::cauchy::Cauchy;
+#[cfg(feature = "std")]
+#[doc(inline)] pub use self::dirichlet::Dirichlet;
 
 pub mod uniform;
 #[cfg(feature="std")]
@@ -202,6 +205,8 @@ pub mod uniform;
 #[doc(hidden)] pub mod bernoulli;
 #[cfg(feature = "std")]
 #[doc(hidden)] pub mod cauchy;
+#[cfg(feature = "std")]
+#[doc(hidden)] pub mod dirichlet;
 
 mod float;
 mod integer;
