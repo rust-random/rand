@@ -258,7 +258,8 @@ impl<T> SliceRandom for [T] {
         if self.is_empty() {
             None
         } else {
-            Some(&mut self[rng.gen_range(0, self.len())])
+            let len = self.len();
+            Some(&mut self[rng.gen_range(0, len)])
         }
     }
 
