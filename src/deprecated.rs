@@ -20,7 +20,7 @@ use rand_core::block::BlockRngCore;
 use std::io::Read;
 
 #[derive(Clone, Debug)]
-#[deprecated(since="0.5.2",
+#[deprecated(since="0.6.0",
     note="import with rand::prng::IsaacRng instead, or use the newer Hc128Rng")]
 pub struct IsaacRng(prng::IsaacRng);
 
@@ -66,7 +66,7 @@ impl IsaacRng {
 
 
 #[derive(Clone, Debug)]
-#[deprecated(since="0.5.2",
+#[deprecated(since="0.6.0",
     note="import with rand::prng::Isaac64Rng instead, or use newer Hc128Rng")]
 pub struct Isaac64Rng(prng::Isaac64Rng);
 
@@ -112,7 +112,7 @@ impl Isaac64Rng {
 
 
 #[derive(Clone, Debug)]
-#[deprecated(since="0.5.2", note="import with rand::prng::ChaChaRng instead")]
+#[deprecated(since="0.6.0", note="import with rand::prng::ChaChaRng instead")]
 pub struct ChaChaRng(prng::ChaChaRng);
 
 impl RngCore for ChaChaRng {
@@ -169,7 +169,7 @@ impl CryptoRng for ChaChaRng {}
 
 
 #[derive(Clone, Debug)]
-#[deprecated(since="0.5.2", note="import with rand::prng::XorShiftRng instead")]
+#[deprecated(since="0.6.0", note="import with rand::prng::XorShiftRng instead")]
 pub struct XorShiftRng(prng::XorShiftRng);
 
 impl RngCore for XorShiftRng {
@@ -208,7 +208,7 @@ impl SeedableRng for XorShiftRng {
 
 
 #[derive(Clone, Debug)]
-#[deprecated(since="0.5.2",
+#[deprecated(since="0.6.0",
     note="import with rand::prelude::* or rand::rngs::StdRng instead")]
 pub struct StdRng(rngs::StdRng);
 
@@ -251,7 +251,7 @@ impl CryptoRng for StdRng {}
 
 #[cfg(feature="std")]
 #[derive(Clone, Debug)]
-#[deprecated(since="0.5.2", note="import with rand::rngs::OsRng instead")]
+#[deprecated(since="0.6.0", note="import with rand::rngs::OsRng instead")]
 pub struct OsRng(rngs::OsRng);
 
 #[cfg(feature="std")]
@@ -290,7 +290,7 @@ impl CryptoRng for OsRng {}
 
 #[cfg(feature="std")]
 #[derive(Debug)]
-#[deprecated(since="0.5.2", note="import with rand::rngs::EntropyRng instead")]
+#[deprecated(since="0.6.0", note="import with rand::rngs::EntropyRng instead")]
 pub struct EntropyRng(rngs::EntropyRng);
 
 #[cfg(feature="std")]
@@ -335,7 +335,7 @@ impl CryptoRng for EntropyRng {}
 
 
 #[derive(Clone, Debug)]
-#[deprecated(since="0.5.2", note="import with rand::rngs::JitterRng instead")]
+#[deprecated(since="0.6.0", note="import with rand::rngs::JitterRng instead")]
 pub struct JitterRng(rngs::JitterRng);
 
 impl RngCore for JitterRng {
@@ -389,7 +389,7 @@ impl CryptoRng for JitterRng {}
 
 #[cfg(feature="std")]
 #[derive(Clone, Debug)]
-#[deprecated(since="0.5.2",
+#[deprecated(since="0.6.0",
     note="import with rand::prelude::* or rand::rngs::ThreadRng instead")]
 pub struct ThreadRng(rngs::ThreadRng);
 
@@ -422,7 +422,7 @@ impl CryptoRng for ThreadRng {}
 
 #[cfg(feature="std")]
 #[derive(Debug)]
-#[deprecated(since="0.5.2", note="import with rand::rngs::adapter::ReadRng instead")]
+#[deprecated(since="0.6.0", note="import with rand::rngs::adapter::ReadRng instead")]
 pub struct ReadRng<R>(rngs::adapter::ReadRng<R>);
 
 #[cfg(feature="std")]
