@@ -22,7 +22,8 @@
 
 
 use super::Rng;
-use distributions::uniform::SampleUniform;
+use distributions::uniform::{SampleUniform, SampleBorrow};
+use distributions::Distribution;
 
 /// Extension trait on slices, providing random mutation and sampling methods.
 /// 
@@ -235,6 +236,10 @@ pub trait IteratorRandom: Iterator + Sized {
         }
         reservoir
     }
+}
+
+/// Extension trait on iterators, providing random sampling methods.
+pub trait IntoIteratorRandom: IntoIterator + Sized {
 
     /// Return a the index of a random element from this iterator where the
     /// chance of a given item being picked is proportional to the value of
@@ -243,11 +248,11 @@ pub trait IteratorRandom: Iterator + Sized {
     /// All values returned by the iterator must be `>= 0`.
     ///
     /// This function iterates over the iterator twice. Once to get the total
-    /// weight, and once while choosing the random item. If you know the total
-    /// weight, or plan to call this function multiple times, you should
-    /// consider using [`choose_weighted_with_total`] instead.
+    /// weight, and once while choosing the random item. If you plan to call
+    /// this function multiple times, it would be more performant to use
+    /// [`into_weighted_index_distribution`].
     ///
-    /// Return `None` if `items` and `weights` is empty.
+    /// Return `None` if self is empty, or contains only `0`s.
     ///
     /// # Panics
     ///
@@ -262,38 +267,50 @@ pub trait IteratorRandom: Iterator + Sized {
     /// let weights = [2,   1,   1];
     /// let mut rng = thread_rng();
     /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
-    /// println!("{}", weights.iter().cloned()
-    ///                       .choose_index_weighted(&mut rng).map(|ix| choices[ix]).unwrap());
+    /// println!("{}", weights.choose_index_weighted(&mut rng).map(|ix| choices[ix]).unwrap());
     /// ```
-    /// [`choose_weighted_with_total`]: seq/fn.choose_weighted_with_total.html
-    fn choose_index_weighted<R>(self, rng: &mut R) -> Option<usize>
-        where Self: Clone,
+    /// [`into_weighted_index_distribution`]: trait.IntoIteratorRandom.html#method.into_weighted_index_distribution
+    fn choose_index_weighted<R, X>(self, rng: &mut R) -> Option<usize>
+        where Self::IntoIter: Clone,
               R: Rng + ?Sized,
-              Self::Item: SampleUniform +
-                          Default +
-                          ::core::ops::Add<Self::Item, Output=Self::Item> +
-                          ::core::cmp::PartialOrd<Self::Item> +
-                          Clone { // Clone is only needed for debug assertions
-        let total_weight: Self::Item =
-            self.clone().fold(Default::default(), |acc, w| {
-                assert!(w >= Default::default(), "Weight must be larger than zero");
-                acc + w
-            });
-        self.choose_index_weighted_with_total(rng, total_weight)
+              X: SampleUniform +
+                 for<'a> ::core::ops::AddAssign<&'a X> +
+                 ::core::cmp::PartialOrd<X> +
+                 Default,
+              Self::Item: SampleBorrow<X> {
+        let iter = self.into_iter();
+        let mut total_weight: X = Default::default();
+        let zero: X = Default::default();
+        for w in iter.clone() {
+            assert!(*w.borrow() >= zero, "Weight must be >= zero");
+            total_weight += w.borrow();
+        }
+
+        if *total_weight.borrow() == zero {
+            return None;
+        }
+
+        let chosen_weight = rng.gen_range(zero, total_weight);
+        let mut cumulative_weight = <X as Default>::default();
+
+        for (i, weight) in iter.enumerate() {
+            cumulative_weight += weight.borrow();
+            if cumulative_weight > chosen_weight {
+                return Some(i);
+            }
+        }
+
+        panic!("Weights changed during cloning");
     }
 
-    /// Return a the index of a random element from this iterator where the
-    /// chance of a given item being picked is proportional to the value of
-    /// the item.
+    /// Returns a [`Distribution`] which when sampled from, returns a random
+    /// element from this iterator where the chance of a given item being
+    /// picked is proportional to the value of the item.
     ///
-    /// All values returned by the iterator must be `>= 0`.
+    /// # Panics
     ///
-    /// `total_weight` must be exactly the sum of all values returned by
-    /// the iterator. Builds with debug_assertions turned on will assert that this
-    /// equality holds. Simply storing the result of `self.sum()` and using
-    /// that as `total_weight` should work.
-    ///
-    /// Return `None` if the iterator is empty.
+    /// If a value in the iterator is `< 0`, or if all the values in the
+    /// iterator returns `0`.
     ///
     /// # Example
     ///
@@ -302,59 +319,37 @@ pub trait IteratorRandom: Iterator + Sized {
     ///
     /// let choices = ['a', 'b', 'c'];
     /// let weights = [2,   1,   1];
+    /// let dist = weights.into_weighted_index_distribution();
     /// let mut rng = thread_rng();
-    /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
-    /// println!("{}", weights.iter()
-    ///                       .cloned()
-    ///                       .choose_index_weighted_with_total(&mut rng, 4)
-    ///                       .map(|ix| choices[ix]).unwrap());
+    /// for _ in 0..100 {
+    ///     // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
+    ///     println!("{}", choices[dist.sample(&mut rng)]);
+    /// }
     /// ```
-    fn choose_index_weighted_with_total<R>(mut self,
-                                           rng: &mut R,
-                                           total_weight: Self::Item) -> Option<usize>
-        where R: Rng + ?Sized,
-              Self::Item: SampleUniform +
-                          Default +
-                          ::core::ops::Add<Self::Item, Output=Self::Item> +
-                          ::core::cmp::PartialOrd<Self::Item> +
-                          Clone { // Clone is only needed for debug assertions
+    fn into_weighted_index_distribution<X>(self) -> WeightedIndex<X>
+        where X: SampleUniform +
+                 for<'a> ::core::ops::AddAssign<&'a X> +
+                 ::core::cmp::PartialOrd<X> +
+                 Clone +
+                 Default,
+              Self::Item: SampleBorrow<X> {
+        let mut iter = self.into_iter();
+        let mut total_weight: X = iter.next()
+                                      .expect("Can't create Distribution for empty set of weights")
+                                      .borrow()
+                                      .clone();
+        let weights = iter.map(|w| {
+            let prev_weight = total_weight.clone();
+            total_weight += w.borrow();
+            prev_weight
+        }).collect::<Vec<X>>();
 
-        if total_weight == Default::default() {
-            assert!(self.next().is_none());
-            return None;
-        }
+        assert!(total_weight > Default::default(), "Can't create Distribution for all-zero weights");
 
-        // Only used when debug_assertions are turned on
-        let mut debug_result = None;
-        let debug_total_weight = if cfg!(debug_assertions) { Some(total_weight.clone()) } else { None };
+        WeightedIndex { cumulative_weights: weights, total_weight }
 
-        let chosen_weight = rng.gen_range(Default::default(), total_weight);
-        let mut cumulative_weight: Self::Item = Default::default();
-
-        for (i, weight) in self.enumerate() {
-            assert!(weight >= Default::default(), "Weight must be larger than zero");
-
-            cumulative_weight = cumulative_weight + weight;
-
-            if cumulative_weight > chosen_weight {
-                if !cfg!(debug_assertions) {
-                    return Some(i);
-                }
-                if debug_result.is_none() {
-                    debug_result = Some(i);
-                }
-            }
-        }
-
-        debug_assert!(debug_total_weight.unwrap() == cumulative_weight);
-        if cfg!(debug_assertions) && debug_result.is_some() {
-          return debug_result;
-        }
-
-        panic!("total_weight did not match up with sum of weights");
     }
 }
-
 
 impl<T> SliceRandom for [T] {
     type Item = T;
@@ -421,6 +416,7 @@ impl<T> SliceRandom for [T] {
 }
 
 impl<I> IteratorRandom for I where I: Iterator + Sized {}
+impl<I> IntoIteratorRandom for I where I: IntoIterator + Sized {}
 
 
 /// Iterator over multiple choices, as returned by [`SliceRandom::choose_multiple](
@@ -456,6 +452,38 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
     }
 }
 
+/// Distribution over weighted indexes. Returned by
+/// into_weighted_index_distribution.
+#[derive(Debug, Clone)]
+pub struct WeightedIndex<X> {
+    cumulative_weights: Vec<X>,
+    total_weight: X,
+}
+
+impl<X> Distribution<usize> for WeightedIndex<X> where
+    X: SampleUniform +
+       ::core::cmp::PartialOrd<X> +
+       Default {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
+        let chosen_weight = rng.gen_range(<X as Default>::default(), &self.total_weight);
+        // Invariants: indexes in range [start, end] (inclusive) are candidate indexes
+        //             cumulative_weights[start-1] <= chosen_weight
+        //             chosen_weight < cumulative_weights[end]
+        // The returned index is the first one whose value is >= chosen_weight
+        let mut start = 0usize;
+        let mut end = self.cumulative_weights.len();
+        while start < end {
+            let mid = (start + end) / 2;   // 1 2 3 1   ->    1 [3] 6      0 1-2 3-5 6
+            if  chosen_weight >= self.cumulative_weights[mid] { // XXX use get_unchecked
+                start = mid + 1;
+            } else {
+                end = mid;
+            }
+        }
+        debug_assert_eq!(start, end);
+        start
+    }
+}
 
 /// Randomly sample `amount` elements from a finite iterator.
 ///
@@ -627,7 +655,6 @@ fn sample_indices_cache<R>(
     debug_assert_eq!(out.len(), amount);
     out
 }
-
 
 #[cfg(test)]
 mod test {
@@ -805,32 +832,49 @@ mod test {
     fn test_weighted() {
         let mut r = ::test::rng(406);
         let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
-        let total_weight = weights.iter().sum();
+        let total_weight = weights.iter().sum::<u32>();
 
+        let verify = |result: [i32; 14]| {
+            for (i, count) in result.iter().enumerate() {
+                let err = *count - ((weights[i] * 1000 / total_weight) as i32);
+                assert!(-25 <= err && err <= 25);
+            }
+        };
+
+        // choose_weighted array
         let mut chosen = [0i32; 14];
+        for _ in 0..1000 {
+            let picked = weights.choose_index_weighted(&mut r).unwrap();
+            chosen[picked] += 1;
+        }
+        verify(chosen);
+
+        // choose_weighted ref iterator
+        chosen = [0i32; 14];
+        for _ in 0..1000 {
+            let picked = weights.iter()
+                                .choose_index_weighted(&mut r).unwrap();
+            chosen[picked] += 1;
+        }
+        verify(chosen);
+
+        // choose_weighted value iterator
+        chosen = [0i32; 14];
         for _ in 0..1000 {
             let picked = weights.iter()
                                 .cloned()
                                 .choose_index_weighted(&mut r).unwrap();
             chosen[picked] += 1;
         }
-        for (i, count) in chosen.iter().enumerate() {
-            let err = *count - ((weights[i] * 1000 / total_weight) as i32);
-            assert!(-25 <= err && err <= 25);
-        }
+        verify(chosen);
 
-        // choose_weighted_with_total
-        chosen.iter_mut().for_each(|x| *x = 0);
+        // choose_weighted value iterator
+        chosen = [0i32; 14];
+        let distr = weights.into_weighted_index_distribution();
         for _ in 0..1000 {
-            let picked = weights.iter()
-                                .cloned()
-                                .choose_index_weighted_with_total(&mut r, total_weight).unwrap();
-            chosen[picked] += 1;
+            chosen[distr.sample(&mut r)] += 1;
         }
-        for (i, count) in chosen.iter().enumerate() {
-            let err = *count - ((weights[i] * 1000 / total_weight) as i32);
-            assert!(-25 <= err && err <= 25);
-        }
+        verify(chosen);
     }
 
     #[test]
@@ -838,29 +882,9 @@ mod test {
               not(target_arch = "wasm32"),
               not(target_arch = "asmjs")))]
     fn test_weighted_assertions() {
-        fn inner_delta(delta: i32) {
-            let mut r = ::test::rng(407);
-            loop {
-                (1..4).choose_index_weighted_with_total(&mut r, 6+delta);
-                if cfg!(debug_assertions) || delta == 0 {
-                    break;
-                }
-            }
-        }
-
-        assert!(catch_unwind(|| inner_delta(0)).is_ok());
-        assert!(catch_unwind(|| inner_delta(1)).is_err());
-        assert!(catch_unwind(|| inner_delta(1000)).is_err());
-        if cfg!(debug_assertions) {
-            // The non-debug-assertions code can't detect too small total_weight
-            assert!(catch_unwind(|| inner_delta(-1)).is_err());
-            assert!(catch_unwind(|| inner_delta(-1000)).is_err());
-        }
-
         fn inner_vals(slice: &[i32]) {
             let mut r = ::test::rng(408);
-            let total = slice.iter().cloned().sum::<i32>();
-            slice.iter().cloned().choose_index_weighted_with_total(&mut r, total);
+            slice.iter().cloned().choose_index_weighted(&mut r);
         }
 
         assert!(catch_unwind(|| inner_vals(&[1, 2, 3])).is_ok());
