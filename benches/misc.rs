@@ -8,7 +8,6 @@ const RAND_BENCH_N: u64 = 1000;
 use test::Bencher;
 
 use rand::prelude::*;
-use rand::seq::*;
 
 #[bench]
 fn misc_gen_bool_const(b: &mut Bencher) {
@@ -107,59 +106,6 @@ sample_binomial!(misc_binomial_10, 10, 0.9);
 sample_binomial!(misc_binomial_100, 100, 0.99);
 sample_binomial!(misc_binomial_1000, 1000, 0.01);
 sample_binomial!(misc_binomial_1e12, 1000_000_000_000, 0.2);
-
-#[bench]
-fn misc_shuffle_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &mut [usize] = &mut [1; 100];
-    b.iter(|| {
-        rng.shuffle(x);
-        x[0]
-    })
-}
-
-#[bench]
-fn misc_sample_iter_10_of_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 100];
-    b.iter(|| {
-        sample_iter(&mut rng, x, 10).unwrap_or_else(|e| e)
-    })
-}
-
-#[bench]
-fn misc_sample_slice_10_of_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 100];
-    b.iter(|| {
-        sample_slice(&mut rng, x, 10)
-    })
-}
-
-#[bench]
-fn misc_sample_slice_ref_10_of_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 100];
-    b.iter(|| {
-        sample_slice_ref(&mut rng, x, 10)
-    })
-}
-
-macro_rules! sample_indices {
-    ($name:ident, $amount:expr, $length:expr) => {
-        #[bench]
-        fn $name(b: &mut Bencher) {
-            let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-            b.iter(|| {
-                sample_indices(&mut rng, $length, $amount)
-            })
-        }
-    }
-}
-
-sample_indices!(misc_sample_indices_10_of_1k, 10, 1000);
-sample_indices!(misc_sample_indices_50_of_1k, 50, 1000);
-sample_indices!(misc_sample_indices_100_of_1k, 100, 1000);
 
 #[bench]
 fn gen_1k_iter_repeat(b: &mut Bencher) {
