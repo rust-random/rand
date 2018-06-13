@@ -273,28 +273,51 @@ pub mod rngs;
 ////////////////////////////////////////////////////////////////////////////////
 // Compatibility re-exports. Documentation is hidden; will be removed eventually.
 
-#[cfg(feature="std")] #[doc(hidden)] pub use rngs::adapter::read;
-#[doc(hidden)] pub use rngs::adapter::ReseedingRng;
+#[doc(hidden)] mod deprecated;
 
-#[doc(hidden)] pub use rngs::jitter;
-#[cfg(feature="std")] #[doc(hidden)] pub use rngs::{os, EntropyRng, OsRng};
+#[allow(deprecated)]
+#[doc(hidden)] pub use deprecated::ReseedingRng;
 
-#[doc(hidden)] pub use prng::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
-#[doc(hidden)] pub use rngs::StdRng;
+#[allow(deprecated)]
+#[cfg(feature="std")] #[doc(hidden)] pub use deprecated::{EntropyRng, OsRng};
+
+#[allow(deprecated)]
+#[doc(hidden)] pub use deprecated::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
+#[allow(deprecated)]
+#[doc(hidden)] pub use deprecated::StdRng;
 
 
+#[allow(deprecated)]
+#[doc(hidden)]
+pub mod jitter {
+    pub use deprecated::JitterRng;
+    pub use rngs::TimerError;
+}
+#[allow(deprecated)]
+#[cfg(feature="std")]
+#[doc(hidden)]
+pub mod os {
+    pub use deprecated::OsRng;
+}
+#[allow(deprecated)]
 #[doc(hidden)]
 pub mod chacha {
-    //! The ChaCha random number generator.
-    pub use prng::ChaChaRng;
+    pub use deprecated::ChaChaRng;
 }
+#[allow(deprecated)]
 #[doc(hidden)]
 pub mod isaac {
-    //! The ISAAC random number generator.
-    pub use prng::{IsaacRng, Isaac64Rng};
+    pub use deprecated::{IsaacRng, Isaac64Rng};
+}
+#[allow(deprecated)]
+#[cfg(feature="std")]
+#[doc(hidden)]
+pub mod read {
+    pub use deprecated::ReadRng;
 }
 
-#[cfg(feature="std")] #[doc(hidden)] pub use rngs::ThreadRng;
+#[allow(deprecated)]
+#[cfg(feature="std")] #[doc(hidden)] pub use deprecated::ThreadRng;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -790,7 +813,7 @@ pub trait FromEntropy: SeedableRng {
 #[cfg(feature="std")]
 impl<R: SeedableRng> FromEntropy for R {
     fn from_entropy() -> R {
-        R::from_rng(EntropyRng::new()).unwrap_or_else(|err|
+        R::from_rng(rngs::EntropyRng::new()).unwrap_or_else(|err|
             panic!("FromEntropy::from_entropy() failed: {}", err))
     }
 }
@@ -848,6 +871,7 @@ pub fn random<T>() -> T where Standard: Distribution<T> {
 #[cfg(test)]
 mod test {
     use rngs::mock::StepRng;
+    use rngs::StdRng;
     use super::*;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 
