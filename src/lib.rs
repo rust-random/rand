@@ -249,11 +249,16 @@ extern crate stdweb;
 extern crate rand_core;
 
 #[cfg(feature = "log")] #[macro_use] extern crate log;
+#[allow(unused)]
 #[cfg(not(feature = "log"))] macro_rules! trace { ($($x:tt)*) => () }
+#[allow(unused)]
 #[cfg(not(feature = "log"))] macro_rules! debug { ($($x:tt)*) => () }
-#[cfg(all(feature="std", not(feature = "log")))] macro_rules! info { ($($x:tt)*) => () }
+#[allow(unused)]
+#[cfg(not(feature = "log"))] macro_rules! info { ($($x:tt)*) => () }
+#[allow(unused)]
 #[cfg(not(feature = "log"))] macro_rules! warn { ($($x:tt)*) => () }
-#[cfg(all(feature="std", not(feature = "log")))] macro_rules! error { ($($x:tt)*) => () }
+#[allow(unused)]
+#[cfg(not(feature = "log"))] macro_rules! error { ($($x:tt)*) => () }
 
 
 // Re-exports from rand_core
