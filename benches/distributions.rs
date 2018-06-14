@@ -1,4 +1,6 @@
 #![feature(test)]
+#![cfg(features = "alloc")]
+
 #![cfg_attr(all(feature="i128_support", feature="nightly"), allow(stable_features))] // stable since 2018-03-27
 #![cfg_attr(all(feature="i128_support", feature="nightly"), feature(i128_type, i128))]
 
