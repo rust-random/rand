@@ -284,7 +284,27 @@ pub mod rngs;
 #[doc(hidden)] pub use deprecated::ReseedingRng;
 
 #[allow(deprecated)]
-#[cfg(feature="std")] #[doc(hidden)] pub use deprecated::{EntropyRng, OsRng};
+#[cfg(feature="std")] #[doc(hidden)] pub use deprecated::EntropyRng;
+
+#[allow(deprecated)]
+#[cfg(all(feature="std",
+          any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
+#[doc(hidden)]
+pub use deprecated::OsRng;
 
 #[allow(deprecated)]
 #[doc(hidden)] pub use deprecated::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
@@ -299,7 +319,22 @@ pub mod jitter {
     pub use rngs::TimerError;
 }
 #[allow(deprecated)]
-#[cfg(feature="std")]
+#[cfg(all(feature="std",
+          any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
 #[doc(hidden)]
 pub mod os {
     pub use deprecated::OsRng;
