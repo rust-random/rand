@@ -24,7 +24,7 @@
 use rand_core::{RngCore, CryptoRng, Error, ErrorKind, impls};
 
 use core::{fmt, mem, ptr};
-#[cfg(feature="std")]
+#[cfg(all(feature="std", not(target_arch = "wasm32")))]
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 
 const MEMORY_BLOCKS: usize = 64;
@@ -53,6 +53,10 @@ const MEMORY_SIZE: usize = MEMORY_BLOCKS * MEMORY_BLOCKSIZE;
 ///
 /// This implementation is based on
 /// [Jitterentropy](http://www.chronox.de/jent.html) version 2.1.0.
+///
+/// Note: There is no accurate timer available on Wasm platforms, to help
+/// prevent fingerprinting or timing side-channel attacks. Therefore
+/// [`JitterRng::new()`] is not available on Wasm.
 ///
 /// # Quality testing
 ///
@@ -268,7 +272,7 @@ impl From<TimerError> for Error {
 }
 
 // Initialise to zero; must be positive
-#[cfg(feature="std")]
+#[cfg(all(feature="std", not(target_arch = "wasm32")))]
 static JITTER_ROUNDS: AtomicUsize = ATOMIC_USIZE_INIT;
 
 impl JitterRng {
@@ -279,7 +283,7 @@ impl JitterRng {
     /// During initialization CPU execution timing jitter is measured a few
     /// hundred times. If this does not pass basic quality tests, an error is
     /// returned. The test result is cached to make subsequent calls faster.
-    #[cfg(feature="std")]
+    #[cfg(all(feature="std", not(target_arch = "wasm32")))]
     pub fn new() -> Result<JitterRng, TimerError> {
         let mut state = JitterRng::new_with_timer(platform::get_nstime);
         let mut rounds = JITTER_ROUNDS.load(Ordering::Relaxed) as u8;
@@ -607,7 +611,6 @@ impl JitterRng {
     /// of the failure will be returned.
     ///
     /// [`TimerError`]: enum.TimerError.html
-    #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
     pub fn test_timer(&mut self) -> Result<u8, TimerError> {
         debug!("JitterRng: testing timer ...");
         // We could add a check for system capabilities such as `clock_getres`
@@ -744,10 +747,6 @@ impl JitterRng {
             Ok(log2_lookup[delta_average as usize])
         }
     }
-    #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
-    pub fn test_timer(&mut self) -> Result<u8, TimerError> {
-        return Err(TimerError::NoTimer);
-    }
 
     /// Statistical test: return the timer delta of one normal run of the
     /// `JitterRng` entropy collector.
@@ -763,22 +762,22 @@ impl JitterRng {
     ///
     /// See [Quality testing](struct.JitterRng.html#quality-testing) on how to
     /// use `timer_stats` to test the quality of `JitterRng`.
-    #[cfg(feature="std")]
     pub fn timer_stats(&mut self, var_rounds: bool) -> i64 {
         let mut mem = [0; MEMORY_SIZE];
 
-        let time = platform::get_nstime();
+        let time = (self.timer)();
         self.memaccess(&mut mem, var_rounds);
         self.lfsr_time(time, var_rounds);
-        let time2 = platform::get_nstime();
+        let time2 = (self.timer)();
         time2.wrapping_sub(time) as i64
     }
 }
 
 #[cfg(feature="std")]
 mod platform {
-    #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "windows",
-                  all(target_arch = "wasm32", not(target_os = "emscripten")))))]
+    #[cfg(not(any(target_os = "macos", target_os = "ios",
+                  target_os = "windows",
+                  target_arch = "wasm32")))]
     pub fn get_nstime() -> u64 {
         use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -810,11 +809,6 @@ mod platform {
             winapi::um::profileapi::QueryPerformanceCounter(&mut t);
             *t.QuadPart() as u64
         }
-    }
-
-    #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
-    pub fn get_nstime() -> u64 {
-        unreachable!()
     }
 }
 
@@ -866,7 +860,7 @@ impl CryptoRng for JitterRng {}
 mod test_jitter_init {
     use jitter::JitterRng;
 
-    #[cfg(feature="std")]
+    #[cfg(all(feature="std", not(target_arch = "wasm32")))]
     #[test]
     fn test_jitter_init() {
         use RngCore;

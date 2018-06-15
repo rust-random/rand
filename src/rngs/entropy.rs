@@ -10,8 +10,9 @@
 
 //! Entropy generator, or wrapper around external generators
 
-use rand_core::{RngCore, CryptoRng, Error, impls};
-use rngs::{OsRng, JitterRng};
+use rand_core::{RngCore, CryptoRng, Error, ErrorKind, impls};
+#[allow(unused)]
+use rngs;
 
 /// An interface returning random data from external source(s), provided
 /// specifically for securely seeding algorithmic generators (PRNGs).
@@ -46,13 +47,14 @@ use rngs::{OsRng, JitterRng};
 /// [`try_fill_bytes`]: ../trait.RngCore.html#method.tymethod.try_fill_bytes
 #[derive(Debug)]
 pub struct EntropyRng {
-    rng: EntropySource,
+    source: Source,
 }
 
 #[derive(Debug)]
-enum EntropySource {
-    Os(OsRng),
-    Jitter(JitterRng),
+enum Source {
+    Os(Os),
+    Custom(Custom),
+    Jitter(Jitter),
     None,
 }
 
@@ -63,7 +65,7 @@ impl EntropyRng {
     /// those are done on first use. This is done to make `new` infallible,
     /// and `try_fill_bytes` the only place to report errors.
     pub fn new() -> Self {
-        EntropyRng { rng: EntropySource::None }
+        EntropyRng { source: Source::None }
     }
 }
 
@@ -88,81 +90,198 @@ impl RngCore for EntropyRng {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        fn try_os_new(dest: &mut [u8]) -> Result<OsRng, Error>
-        {
-            let mut rng = OsRng::new()?;
-            rng.try_fill_bytes(dest)?;
-            Ok(rng)
-        }
+        let mut reported_error = None;
 
-        fn try_jitter_new(dest: &mut [u8]) -> Result<JitterRng, Error>
-        {
-            let mut rng = JitterRng::new()?;
-            rng.try_fill_bytes(dest)?;
-            Ok(rng)
-        }
-
-        let mut switch_rng = None;
-        match self.rng {
-            EntropySource::None => {
-                let os_rng_result = try_os_new(dest);
-                match os_rng_result {
-                    Ok(os_rng) => {
-                        debug!("EntropyRng: using OsRng");
-                        switch_rng = Some(EntropySource::Os(os_rng));
-                    }
-                    Err(os_rng_error) => {
-                        warn!("EntropyRng: OsRng failed [falling back to JitterRng]: {}",
-                              os_rng_error);
-                        match try_jitter_new(dest) {
-                            Ok(jitter_rng) => {
-                                debug!("EntropyRng: using JitterRng");
-                                switch_rng = Some(EntropySource::Jitter(jitter_rng));
-                            }
-                            Err(_jitter_error) => {
-                                warn!("EntropyRng: JitterRng failed: {}",
-                                      _jitter_error);
-                                return Err(os_rng_error);
-                            }
-                        }
-                    }
-                }
+        if let Source::Os(ref mut os_rng) = self.source {
+            match os_rng.fill(dest) {
+                Ok(()) => return Ok(()),
+                Err(err) => {
+                    warn!("EntropyRng: OsRng failed \
+                          [trying other entropy sources]: {}", err);
+                    reported_error = Some(err);
+                },
             }
-            EntropySource::Os(ref mut rng) => {
-                let os_rng_result = rng.try_fill_bytes(dest);
-                if let Err(os_rng_error) = os_rng_result {
-                    warn!("EntropyRng: OsRng failed [falling back to JitterRng]: {}",
-                          os_rng_error);
-                    match try_jitter_new(dest) {
-                        Ok(jitter_rng) => {
-                            debug!("EntropyRng: using JitterRng");
-                            switch_rng = Some(EntropySource::Jitter(jitter_rng));
-                        }
-                        Err(_jitter_error) => {
-                            warn!("EntropyRng: JitterRng failed: {}",
-                                  _jitter_error);
-                            return Err(os_rng_error);
-                        }
-                    }
-                }
-            }
-            EntropySource::Jitter(ref mut rng) => {
-                if let Ok(os_rng) = try_os_new(dest) {
+        } else if Os::is_supported() {
+            match Os::new_and_fill(dest) {
+                Ok(os_rng) => {
                     debug!("EntropyRng: using OsRng");
-                    switch_rng = Some(EntropySource::Os(os_rng));
-                } else {
-                    return rng.try_fill_bytes(dest); // use JitterRng
-                }
+                    self.source = Source::Os(os_rng);
+                    return Ok(());
+                },
+                Err(err) => { reported_error = reported_error.or(Some(err)) },
             }
         }
-        if let Some(rng) = switch_rng {
-            self.rng = rng;
+
+        if let Source::Custom(ref mut rng) = self.source {
+            match rng.fill(dest) {
+                Ok(()) => return Ok(()),
+                Err(err) => {
+                    warn!("EntropyRng: custom entropy source failed \
+                          [trying other entropy sources]: {}", err);
+                    reported_error = Some(err);
+                },
+            }
+        } else if Custom::is_supported() {
+            match Custom::new_and_fill(dest) {
+                Ok(custom) => {
+                    debug!("EntropyRng: using custom entropy source");
+                    self.source = Source::Custom(custom);
+                    return Ok(());
+                },
+                Err(err) => { reported_error = reported_error.or(Some(err)) },
+            }
         }
-        Ok(())
+
+        if let Source::Jitter(ref mut jitter_rng) = self.source {
+            match jitter_rng.fill(dest) {
+                Ok(()) => return Ok(()),
+                Err(err) => {
+                    warn!("EntropyRng: JitterRng failed: {}", err);
+                    reported_error = Some(err);
+                },
+            }
+        } else if Jitter::is_supported() {
+            match Jitter::new_and_fill(dest) {
+                Ok(jitter_rng) => {
+                    debug!("EntropyRng: using JitterRng");
+                    self.source = Source::Jitter(jitter_rng);
+                    return Ok(());
+                },
+                Err(err) => { reported_error = reported_error.or(Some(err)) },
+            }
+        }
+
+        if let Some(err) = reported_error {
+            Err(Error::with_cause(ErrorKind::Unavailable,
+                                  "All entropy sources failed",
+                                  err))
+        } else {
+            Err(Error::new(ErrorKind::Unavailable,
+                           "No entropy sources available"))
+        }
     }
 }
 
 impl CryptoRng for EntropyRng {}
+
+
+
+trait EntropySource {
+    fn new_and_fill(dest: &mut [u8]) -> Result<Self, Error>
+        where Self: Sized;
+
+    fn fill(&mut self, dest: &mut [u8]) -> Result<(), Error>;
+
+    fn is_supported() -> bool { true }
+}
+
+#[allow(unused)]
+#[derive(Clone, Debug)]
+struct NoSource;
+
+#[allow(unused)]
+impl EntropySource for NoSource {
+    fn new_and_fill(dest: &mut [u8]) -> Result<Self, Error> {
+        Err(Error::new(ErrorKind::Unavailable, "Source not supported"))
+    }
+
+    fn fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        unreachable!()
+    }
+
+    fn is_supported() -> bool { false }
+}
+
+
+#[cfg(all(feature="std",
+          any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
+#[derive(Clone, Debug)]
+pub struct Os(rngs::OsRng);
+
+#[cfg(all(feature="std",
+          any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
+impl EntropySource for Os {
+    fn new_and_fill(dest: &mut [u8]) -> Result<Self, Error> {
+        let mut rng = rngs::OsRng::new()?;
+        rng.try_fill_bytes(dest)?;
+        Ok(Os(rng))
+    }
+
+    fn fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.0.try_fill_bytes(dest)
+    }
+}
+
+#[cfg(not(all(feature="std",
+              any(target_os = "linux", target_os = "android",
+                  target_os = "netbsd",
+                  target_os = "dragonfly",
+                  target_os = "haiku",
+                  target_os = "emscripten",
+                  target_os = "solaris",
+                  target_os = "cloudabi",
+                  target_os = "macos", target_os = "ios",
+                  target_os = "freebsd",
+                  target_os = "openbsd", target_os = "bitrig",
+                  target_os = "redox",
+                  target_os = "fuchsia",
+                  windows,
+                  all(target_arch = "wasm32", feature = "stdweb")
+))))]
+type Os = NoSource;
+
+
+type Custom = NoSource;
+
+
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Debug)]
+pub struct Jitter(rngs::JitterRng);
+
+#[cfg(not(target_arch = "wasm32"))]
+impl EntropySource for Jitter {
+    fn new_and_fill(dest: &mut [u8]) -> Result<Self, Error> {
+        let mut rng = rngs::JitterRng::new()?;
+        rng.try_fill_bytes(dest)?;
+        Ok(Jitter(rng))
+    }
+
+    fn fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.0.try_fill_bytes(dest)
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+type Jitter = NoSource;
+
 
 #[cfg(test)]
 mod test {
