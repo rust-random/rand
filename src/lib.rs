@@ -251,7 +251,7 @@ extern crate rand_core;
 #[cfg(feature = "log")] #[macro_use] extern crate log;
 #[cfg(not(feature = "log"))] macro_rules! trace { ($($x:tt)*) => () }
 #[cfg(not(feature = "log"))] macro_rules! debug { ($($x:tt)*) => () }
-#[cfg(all(feature="std", not(feature = "log")))] macro_rules! info { ($($x:tt)*) => () }
+#[cfg(not(feature = "log"))] macro_rules! info { ($($x:tt)*) => () }
 #[cfg(not(feature = "log"))] macro_rules! warn { ($($x:tt)*) => () }
 #[cfg(all(feature="std", not(feature = "log")))] macro_rules! error { ($($x:tt)*) => () }
 
