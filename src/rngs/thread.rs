@@ -132,10 +132,6 @@ mod test {
         use Rng;
         let mut r = ::thread_rng();
         r.gen::<i32>();
-        let mut v = [1, 1, 1];
-        r.shuffle(&mut v);
-        let b: &[_] = &[1, 1, 1];
-        assert_eq!(v, b);
         assert_eq!(r.gen_range(0, 1), 0);
     }
 }
