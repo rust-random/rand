@@ -16,14 +16,6 @@ use core::mem::size_of;
 use rand_core::{RngCore, CryptoRng, SeedableRng, Error, ErrorKind};
 use rand_core::block::{BlockRngCore, BlockRng};
 
-#[cfg(all(feature="std", unix, not(target_os="emscripten")))]
-extern crate libc;
-
-#[cfg(all(feature="std", unix, not(target_os="emscripten")))]
-use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT,
-                        AtomicBool, ATOMIC_BOOL_INIT, Ordering};
-
-
 /// A wrapper around any PRNG which reseeds the underlying PRNG after it has
 /// generated a certain number of random bytes.
 ///
@@ -145,7 +137,7 @@ where R: BlockRngCore + SeedableRng,
     type Results = <R as BlockRngCore>::Results;
 
     fn generate(&mut self, results: &mut Self::Results) {
-        let global_fork_counter = get_fork_counter();
+        let global_fork_counter = fork::get_fork_counter();
         if self.bytes_until_reseed <= 0 ||
            self.is_forked(global_fork_counter) {
             // We get better performance by not calling only `reseed` here
@@ -172,7 +164,7 @@ where R: BlockRngCore + SeedableRng,
     /// * `reseeder`: the RNG to use for reseeding.
     pub fn new(rng: R, threshold: u64, reseeder: Rsdr) -> Self {
         assert!(threshold <= ::core::i64::MAX as u64);
-        register_fork_handler();
+        fork::register_fork_handler();
 
         ReseedingCore {
             inner: rng,
@@ -261,45 +253,52 @@ where R: BlockRngCore + SeedableRng + CryptoRng,
       Rsdr: RngCore + CryptoRng {}
 
 
-// Fork protection
-//
-// We implement fork protection on Unix using `pthread_atfork`.
-// When the process is forked, we increment `RESEEDING_RNG_FORK_COUNTER`.
-// Every `ReseedingRng` stores the last known value of the static in
-// `fork_counter`. If the cached `fork_counter` is less than
-// `RESEEDING_RNG_FORK_COUNTER`, it is time to reseed this RNG.
-//
-// If reseeding fails, we don't deal with this by setting a delay, but just
-// don't update `fork_counter`, so a reseed is attempted a soon as possible.
 #[cfg(all(feature="std", unix, not(target_os="emscripten")))]
-static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
+mod fork {
+    extern crate libc;
 
-#[cfg(all(feature="std", unix, not(target_os="emscripten")))]
-fn get_fork_counter() -> usize {
-    RESEEDING_RNG_FORK_COUNTER.load(Ordering::Relaxed)
-}
-#[cfg(not(all(feature="std", unix, not(target_os="emscripten"))))]
-fn get_fork_counter() -> usize { 0 }
+    use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+    use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT};
 
+    // Fork protection
+    //
+    // We implement fork protection on Unix using `pthread_atfork`.
+    // When the process is forked, we increment `RESEEDING_RNG_FORK_COUNTER`.
+    // Every `ReseedingRng` stores the last known value of the static in
+    // `fork_counter`. If the cached `fork_counter` is less than
+    // `RESEEDING_RNG_FORK_COUNTER`, it is time to reseed this RNG.
+    //
+    // If reseeding fails, we don't deal with this by setting a delay, but just
+    // don't update `fork_counter`, so a reseed is attempted as soon a
+    // possible.
 
-#[cfg(all(feature="std", unix, not(target_os="emscripten")))]
-static FORK_HANDLER_REGISTERED: AtomicBool = ATOMIC_BOOL_INIT;
+    static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
 
-#[cfg(all(feature="std", unix, not(target_os="emscripten")))]
-extern fn fork_handler() {
-    // Note: fetch_add is defined to wrap on overflow (which is what we want)
-    RESEEDING_RNG_FORK_COUNTER.fetch_add(1, Ordering::Relaxed);
-}
+    pub fn get_fork_counter() -> usize {
+        RESEEDING_RNG_FORK_COUNTER.load(Ordering::Relaxed)
+    }
 
-#[cfg(all(feature="std", unix, not(target_os="emscripten")))]
-fn register_fork_handler() {
-    if FORK_HANDLER_REGISTERED.load(Ordering::Relaxed) == false {
-        unsafe { libc::pthread_atfork(None, None, Some(fork_handler)) };
-        FORK_HANDLER_REGISTERED.store(true, Ordering::Relaxed);
+    static FORK_HANDLER_REGISTERED: AtomicBool = ATOMIC_BOOL_INIT;
+
+    extern fn fork_handler() {
+        // Note: fetch_add is defined to wrap on overflow
+        // (which is what we want).
+        RESEEDING_RNG_FORK_COUNTER.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn register_fork_handler() {
+        if FORK_HANDLER_REGISTERED.load(Ordering::Relaxed) == false {
+            unsafe { libc::pthread_atfork(None, None, Some(fork_handler)) };
+            FORK_HANDLER_REGISTERED.store(true, Ordering::Relaxed);
+        }
     }
 }
+
 #[cfg(not(all(feature="std", unix, not(target_os="emscripten"))))]
-fn register_fork_handler() {}
+mod fork {
+    pub fn get_fork_counter() -> usize { 0 }
+    pub fn register_fork_handler() {}
+}
 
 
 #[cfg(test)]
