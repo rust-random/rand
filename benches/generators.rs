@@ -1,5 +1,4 @@
 #![feature(test)]
-#![cfg(features = "alloc")]
 
 extern crate test;
 extern crate rand;
