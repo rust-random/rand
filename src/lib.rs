@@ -281,13 +281,60 @@ pub mod rngs;
 #[cfg(feature="std")] #[doc(hidden)] pub use rngs::adapter::read;
 #[doc(hidden)] pub use rngs::adapter::ReseedingRng;
 
-#[doc(hidden)] pub use rngs::jitter;
-#[cfg(feature="std")] #[doc(hidden)] pub use rngs::{os, EntropyRng, OsRng};
+#[allow(deprecated)]
+#[cfg(feature="std")] #[doc(hidden)] pub use rngs::EntropyRng;
+
+#[allow(deprecated)]
+#[cfg(all(feature="std",
+          any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
+#[doc(hidden)]
+pub use rngs::OsRng;
 
 #[doc(hidden)] pub use prng::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
 #[doc(hidden)] pub use rngs::StdRng;
 
 
+#[allow(deprecated)]
+#[doc(hidden)]
+pub mod jitter {
+    pub use rngs::{JitterRng, TimerError};
+}
+#[allow(deprecated)]
+#[cfg(all(feature="std",
+          any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
+#[doc(hidden)]
+pub mod os {
+    pub use rngs::OsRng;
+}
+#[allow(deprecated)]
 #[doc(hidden)]
 pub mod chacha {
     //! The ChaCha random number generator.
