@@ -15,6 +15,7 @@
 //! - [`EntropyRng`], [`OsRng`] and [`JitterRng`] as entropy sources
 //! - [`mock::StepRng`] as a simple counter for tests
 //! - [`adapter::ReadRng`] to read from a file/stream
+//! - [`adapter::ReseedingRng`] to reseed a PRNG on clone / process fork etc.
 //!
 //! # Background — Random number generators (RNGs)
 //!
@@ -161,6 +162,7 @@
 //! [`thread_rng`]: ../fn.thread_rng.html
 //! [`mock::StepRng`]: mock/struct.StepRng.html
 //! [`adapter::ReadRng`]: adapter/struct.ReadRng.html
+//! [`adapter::ReseedingRng`]: adapter/struct.ReseedingRng.html
 //! [`ChaChaRng`]: ../prng/chacha/struct.ChaChaRng.html
 
 pub mod adapter;
