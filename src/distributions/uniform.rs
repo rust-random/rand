@@ -54,16 +54,15 @@
 //! `low < high`). The example below merely wraps another back-end.
 //!
 //! The `new`, `new_inclusive` and `sample_single` functions use arguments of
-//! type Borrow<X> in order to support passing in values by reference or by
-//! value. In the implementation of these functions, you can choose to simply
-//! use the reference returned by [`Borrow::borrow`], or you can choose to copy
-//! or clone the value, whatever is appropriate for your type.
+//! type SampleBorrow<X> in order to support passing in values by reference or
+//! by value. In the implementation of these functions, you can choose to
+//! simply use the reference returned by [`SampleBorrow::borrow`], or you can choose
+//! to copy or clone the value, whatever is appropriate for your type.
 //!
 //! ```
 //! use rand::prelude::*;
 //! use rand::distributions::uniform::{Uniform, SampleUniform,
-//!         UniformSampler, UniformFloat};
-//! use std::borrow::Borrow;
+//!         UniformSampler, UniformFloat, SampleBorrow};
 //!
 //! struct MyF32(f32);
 //!
@@ -75,16 +74,16 @@
 //! impl UniformSampler for UniformMyF32 {
 //!     type X = MyF32;
 //!     fn new<B1, B2>(low: B1, high: B2) -> Self
-//!         where B1: Borrow<Self::X> + Sized,
-//!               B2: Borrow<Self::X> + Sized
+//!         where B1: SampleBorrow<Self::X> + Sized,
+//!               B2: SampleBorrow<Self::X> + Sized
 //!     {
 //!         UniformMyF32 {
 //!             inner: UniformFloat::<f32>::new(low.borrow().0, high.borrow().0),
 //!         }
 //!     }
 //!     fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
-//!         where B1: Borrow<Self::X> + Sized,
-//!               B2: Borrow<Self::X> + Sized
+//!         where B1: SampleBorrow<Self::X> + Sized,
+//!               B2: SampleBorrow<Self::X> + Sized
 //!     {
 //!         UniformSampler::new(low, high)
 //!     }
@@ -109,11 +108,10 @@
 //! [`UniformInt`]: struct.UniformInt.html
 //! [`UniformFloat`]: struct.UniformFloat.html
 //! [`UniformDuration`]: struct.UniformDuration.html
-//! [`Borrow::borrow`]: https://doc.rust-lang.org/std/borrow/trait.Borrow.html
+//! [`Borrow::borrow`]: trait.SampleBorrow.html
 
 #[cfg(feature = "std")]
 use std::time::Duration;
-use core::borrow::Borrow;
 
 use Rng;
 use distributions::Distribution;
@@ -171,8 +169,8 @@ impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance which samples uniformly from the half
     /// open range `[low, high)` (excluding `high`). Panics if `low >= high`.
     pub fn new<B1, B2>(low: B1, high: B2) -> Uniform<X>
-        where B1: Borrow<X> + Sized,
-              B2: Borrow<X> + Sized
+        where B1: SampleBorrow<X> + Sized,
+              B2: SampleBorrow<X> + Sized
     {
         Uniform { inner: X::Sampler::new(low, high) }
     }
@@ -180,8 +178,8 @@ impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance which samples uniformly from the closed
     /// range `[low, high]` (inclusive). Panics if `low > high`.
     pub fn new_inclusive<B1, B2>(low: B1, high: B2) -> Uniform<X>
-        where B1: Borrow<X> + Sized,
-              B2: Borrow<X> + Sized
+        where B1: SampleBorrow<X> + Sized,
+              B2: SampleBorrow<X> + Sized
     {
         Uniform { inner: X::Sampler::new_inclusive(low, high) }
     }
@@ -228,8 +226,8 @@ pub trait UniformSampler: Sized {
     /// Usually users should not call this directly but instead use
     /// `Uniform::new`, which asserts that `low < high` before calling this.
     fn new<B1, B2>(low: B1, high: B2) -> Self
-        where B1: Borrow<Self::X> + Sized,
-              B2: Borrow<Self::X> + Sized;
+        where B1: SampleBorrow<Self::X> + Sized,
+              B2: SampleBorrow<Self::X> + Sized;
 
     /// Construct self, with inclusive bounds `[low, high]`.
     ///
@@ -237,8 +235,8 @@ pub trait UniformSampler: Sized {
     /// `Uniform::new_inclusive`, which asserts that `low <= high` before
     /// calling this.
     fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
-        where B1: Borrow<Self::X> + Sized,
-              B2: Borrow<Self::X> + Sized;
+        where B1: SampleBorrow<Self::X> + Sized,
+              B2: SampleBorrow<Self::X> + Sized;
 
     /// Sample a value.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X;
@@ -256,8 +254,8 @@ pub trait UniformSampler: Sized {
     /// result.
     fn sample_single<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R)
         -> Self::X
-        where B1: Borrow<Self::X> + Sized,
-              B2: Borrow<Self::X> + Sized
+        where B1: SampleBorrow<Self::X> + Sized,
+              B2: SampleBorrow<Self::X> + Sized
     {
         let uniform: Self = UniformSampler::new(low, high);
         uniform.sample(rng)
@@ -268,6 +266,22 @@ impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
     fn from(r: ::core::ops::Range<X>) -> Uniform<X> {
         Uniform::new(r.start, r.end)
     }
+}
+
+/// Helper trait similar to [`Borrow`] but implemented
+/// only for SampleUniform and references to SampleUniform in
+/// order to resolve ambiguity issues.
+/// [`Borrow`] https://doc.rust-lang.org/std/borrow/trait.Borrow.html
+pub trait SampleBorrow<Borrowed> {
+    /// Immutably borrows from an owned value. See [`Borrow::borrow`]
+    /// [`Borrow::borrow`] https://doc.rust-lang.org/std/borrow/trait.Borrow.html#tymethod.borrow
+    fn borrow(&self) -> &Borrowed;
+}
+impl<Borrowed> SampleBorrow<Borrowed> for Borrowed where Borrowed: SampleUniform {
+    fn borrow(&self) -> &Borrowed { self }
+}
+impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed where Borrowed: SampleUniform {
+   fn borrow(&self) -> &Borrowed { *self }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,8 +353,8 @@ macro_rules! uniform_int_impl {
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new<B1, B2>(low_b: B1, high_b: B2) -> Self
-                where B1: Borrow<Self::X> + Sized,
-                      B2: Borrow<Self::X> + Sized
+                where B1: SampleBorrow<Self::X> + Sized,
+                      B2: SampleBorrow<Self::X> + Sized
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -351,8 +365,8 @@ macro_rules! uniform_int_impl {
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Self
-                where B1: Borrow<Self::X> + Sized,
-                      B2: Borrow<Self::X> + Sized
+                where B1: SampleBorrow<Self::X> + Sized,
+                      B2: SampleBorrow<Self::X> + Sized
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -401,8 +415,8 @@ macro_rules! uniform_int_impl {
 
             fn sample_single<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R)
                 -> Self::X
-                where B1: Borrow<Self::X> + Sized,
-                      B2: Borrow<Self::X> + Sized
+                where B1: SampleBorrow<Self::X> + Sized,
+                      B2: SampleBorrow<Self::X> + Sized
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -573,8 +587,8 @@ macro_rules! uniform_float_impl {
             type X = $ty;
 
             fn new<B1, B2>(low_b: B1, high_b: B2) -> Self
-                where B1: Borrow<Self::X> + Sized,
-                      B2: Borrow<Self::X> + Sized
+                where B1: SampleBorrow<Self::X> + Sized,
+                      B2: SampleBorrow<Self::X> + Sized
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -588,8 +602,8 @@ macro_rules! uniform_float_impl {
             }
 
             fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Self
-                where B1: Borrow<Self::X> + Sized,
-                      B2: Borrow<Self::X> + Sized
+                where B1: SampleBorrow<Self::X> + Sized,
+                      B2: SampleBorrow<Self::X> + Sized
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -617,8 +631,8 @@ macro_rules! uniform_float_impl {
 
             fn sample_single<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R)
                 -> Self::X
-                where B1: Borrow<Self::X> + Sized,
-                      B2: Borrow<Self::X> + Sized
+                where B1: SampleBorrow<Self::X> + Sized,
+                      B2: SampleBorrow<Self::X> + Sized
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -679,8 +693,8 @@ impl UniformSampler for UniformDuration {
 
     #[inline]
     fn new<B1, B2>(low_b: B1, high_b: B2) -> Self
-        where B1: Borrow<Self::X> + Sized,
-              B2: Borrow<Self::X> + Sized
+        where B1: SampleBorrow<Self::X> + Sized,
+              B2: SampleBorrow<Self::X> + Sized
     {
         let low = *low_b.borrow();
         let high = *high_b.borrow();
@@ -690,8 +704,8 @@ impl UniformSampler for UniformDuration {
 
     #[inline]
     fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Self
-        where B1: Borrow<Self::X> + Sized,
-              B2: Borrow<Self::X> + Sized
+        where B1: SampleBorrow<Self::X> + Sized,
+              B2: SampleBorrow<Self::X> + Sized
     {
         let low = *low_b.borrow();
         let high = *high_b.borrow();
@@ -748,7 +762,7 @@ impl UniformSampler for UniformDuration {
 #[cfg(test)]
 mod tests {
     use Rng;
-    use distributions::uniform::{Uniform, UniformSampler, UniformFloat, SampleUniform};
+    use distributions::uniform::Uniform;
 
     #[should_panic]
     #[test]
@@ -885,7 +899,7 @@ mod tests {
 
     #[test]
     fn test_custom_uniform() {
-        use core::borrow::Borrow;
+        use distributions::uniform::{UniformSampler, UniformFloat, SampleUniform, SampleBorrow};
         #[derive(Clone, Copy, PartialEq, PartialOrd)]
         struct MyF32 {
             x: f32,
@@ -897,16 +911,16 @@ mod tests {
         impl UniformSampler for UniformMyF32 {
             type X = MyF32;
             fn new<B1, B2>(low: B1, high: B2) -> Self
-                where B1: Borrow<Self::X> + Sized,
-                      B2: Borrow<Self::X> + Sized
+                where B1: SampleBorrow<Self::X> + Sized,
+                      B2: SampleBorrow<Self::X> + Sized
             {
                 UniformMyF32 {
                     inner: UniformFloat::<f32>::new(low.borrow().x, high.borrow().x),
                 }
             }
             fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
-                where B1: Borrow<Self::X> + Sized,
-                      B2: Borrow<Self::X> + Sized
+                where B1: SampleBorrow<Self::X> + Sized,
+                      B2: SampleBorrow<Self::X> + Sized
             {
                 UniformSampler::new(low, high)
             }
