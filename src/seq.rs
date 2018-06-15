@@ -132,13 +132,17 @@ pub trait SliceRandom {
 
 /// Extension trait on iterators, providing random sampling methods.
 pub trait IteratorRandom: Iterator + Sized {
-    /// Choose one element at random from the iterator.
+    /// Choose one element at random from the iterator. If you have a slice,
+    /// it's significantly faster to call the [`choose`] or [`choose_mut`]
+    /// functions using the slice instead.
     ///
     /// Returns `None` if and only if the iterator is empty.
     /// 
     /// Complexity is `O(n)`, where `n` is the length of the iterator.
     /// This likely consumes multiple random numbers, but the exact number
     /// is unspecified.
+    /// [`choose`]: trait.SliceRandom.html#method.choose
+    /// [`choose_mut`]: trait.SliceRandom.html#method.choose_mut
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
         where R: Rng + ?Sized
     {
@@ -518,23 +522,52 @@ mod test {
     use alloc::Vec;
 
     #[test]
-    fn test_choose() {
+    fn test_slice_choose() {
         let mut r = ::test::rng(107);
-        assert_eq!([1, 1, 1].choose(&mut r), Some(&1));
-        
-        let mut v = [2];
-        v.choose_mut(&mut r).map(|x| *x = 5);
-        assert_eq!(v[0], 5);
+        let chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n'];
+        let mut chosen = [0i32; 14];
+        for _ in 0..1000 {
+            let picked = *chars.choose(&mut r).unwrap();
+            chosen[(picked as usize) - ('a' as usize)] += 1;
+        }
+        for count in chosen.iter() {
+            let err = *count - (1000 / (chars.len() as i32));
+            assert!(-20 <= err && err <= 20);
+        }
 
-        let v = [3, 3, 3, 3];
-        assert_eq!(v.iter().choose(&mut r), Some(&3));
+        chosen.iter_mut().for_each(|x| *x = 0);
+        for _ in 0..1000 {
+            *chosen.choose_mut(&mut r).unwrap() += 1;
+        }
+        for count in chosen.iter() {
+            let err = *count - (1000 / (chosen.len() as i32));
+            assert!(-20 <= err && err <= 20);
+        }
 
-        let v: &[isize] = &[];
+        let mut v: [isize; 0] = [];
         assert_eq!(v.choose(&mut r), None);
+        assert_eq!(v.choose_mut(&mut r), None);
+    }
+
+    #[test]
+    fn test_iterator_choose() {
+        let mut r = ::test::rng(109);
+        let mut chosen = [0i32; 9];
+        for _ in 0..1000 {
+            let picked = (0..9).choose(&mut r).unwrap();
+            chosen[picked] += 1;
+        }
+        for count in chosen.iter() {
+            let err = *count - 1000 / 9;
+            assert!(-25 <= err && err <= 25);
+        }
+
+        assert_eq!((0..0).choose(&mut r), None);
     }
 
     #[test]
     fn test_shuffle() {
+
         let mut r = ::test::rng(108);
         let empty: &mut [isize] = &mut [];
         empty.shuffle(&mut r);
@@ -547,10 +580,37 @@ mod test {
         two.shuffle(&mut r);
         assert!(two == [1, 2] || two == [2, 1]);
 
-        let mut x = [1, 1, 1];
-        x.shuffle(&mut r);
-        let b: &[_] = &[1, 1, 1];
-        assert_eq!(x, b);
+        fn move_last(slice: &mut [usize], pos: usize) {
+            // use slice[pos..].rotate_left(1); once we can use that
+            let last_val = slice[pos];
+            for i in pos..slice.len() - 1 {
+                slice[i] = slice[i + 1];
+            }
+            *slice.last_mut().unwrap() = last_val;
+        }
+        let mut counts = [0i32; 24];
+        for _ in 0..10000 {
+            let mut arr: [usize; 4] = [0, 1, 2, 3];
+            arr.shuffle(&mut r);
+            let mut permutation = 0usize;
+            let mut pos_value = counts.len();
+            for i in 0..4 {
+                pos_value /= 4 - i;
+                let pos = arr.iter().position(|&x| x == i).unwrap();
+                assert!(pos < (4 - i));
+                permutation += pos * pos_value;
+                move_last(&mut arr, pos);
+                assert_eq!(arr[3], i);
+            }
+            for i in 0..4 {
+                assert_eq!(arr[i], i);
+            }
+            counts[permutation] += 1;
+        }
+        for count in counts.iter() {
+            let err = *count - 10000i32 / 24;
+            assert!(-50 <= err && err <= 50);
+        }
     }
     
     #[test]
