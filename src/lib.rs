@@ -323,9 +323,8 @@ pub mod read {
 
 
 use core::{mem, slice};
-use core::borrow::Borrow;
 use distributions::{Distribution, Standard};
-use distributions::uniform::{SampleUniform, UniformSampler};
+use distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
 
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
@@ -411,8 +410,8 @@ pub trait Rng: RngCore {
     ///
     /// [`Uniform`]: distributions/uniform/struct.Uniform.html
     fn gen_range<T: SampleUniform, B1, B2>(&mut self, low: B1, high: B2) -> T
-        where B1: Borrow<T> + Sized,
-              B2: Borrow<T> + Sized {
+        where B1: SampleBorrow<T> + Sized,
+              B2: SampleBorrow<T> + Sized {
         T::Sampler::sample_single(low, high, self)
     }
 
@@ -940,6 +939,8 @@ mod test {
             assert!(a >= 10u16 && a < 99u16);
             let a = r.gen_range(-100i32, &2000);
             assert!(a >= -100i32 && a < 2000i32);
+            let a = r.gen_range(&12u32, &24u32);
+            assert!(a >= 12u32 && a < 24u32);
 
             assert_eq!(r.gen_range(0u32, 1), 0u32);
             assert_eq!(r.gen_range(-12i64, -11), -12i64);
