@@ -271,10 +271,12 @@ impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
 /// Helper trait similar to [`Borrow`] but implemented
 /// only for SampleUniform and references to SampleUniform in
 /// order to resolve ambiguity issues.
-/// [`Borrow`] https://doc.rust-lang.org/std/borrow/trait.Borrow.html
+///
+/// [`Borrow`]: https://doc.rust-lang.org/std/borrow/trait.Borrow.html
 pub trait SampleBorrow<Borrowed> {
     /// Immutably borrows from an owned value. See [`Borrow::borrow`]
-    /// [`Borrow::borrow`] https://doc.rust-lang.org/std/borrow/trait.Borrow.html#tymethod.borrow
+    ///
+    /// [`Borrow::borrow`]: https://doc.rust-lang.org/std/borrow/trait.Borrow.html#tymethod.borrow
     fn borrow(&self) -> &Borrowed;
 }
 impl<Borrowed> SampleBorrow<Borrowed> for Borrowed where Borrowed: SampleUniform {
