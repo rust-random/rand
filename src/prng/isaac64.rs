@@ -28,7 +28,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// ISAAC stands for "Indirection, Shift, Accumulate, Add, and Count" which are
 /// the principal bitwise operations employed. It is the most advanced of a
 /// series of array based random number generator designed by Robert Jenkins
-/// in 1996[1].
+/// in 1996[^1].
 ///
 /// ISAAC-64 is mostly similar to ISAAC. Because it operates on 64-bit integers
 /// instead of 32-bit, it uses twice as much memory to hold its state and
@@ -73,8 +73,8 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///
 /// See for more information the documentation of [`IsaacRng`].
 ///
-/// [1]: Bob Jenkins, [*ISAAC and RC4*](
-///      http://burtleburtle.net/bob/rand/isaac.html)
+/// [^1]: Bob Jenkins, [*ISAAC and RC4*](
+///       http://burtleburtle.net/bob/rand/isaac.html)
 ///
 /// [`IsaacRng`]: ../isaac/struct.IsaacRng.html
 /// [`Hc128Rng`]: ../hc128/struct.Hc128Rng.html

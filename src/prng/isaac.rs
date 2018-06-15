@@ -27,7 +27,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// ISAAC stands for "Indirection, Shift, Accumulate, Add, and Count" which are
 /// the principal bitwise operations employed. It is the most advanced of a
 /// series of array based random number generator designed by Robert Jenkins
-/// in 1996[1][2].
+/// in 1996[^1][^2].
 ///
 /// ISAAC is notably fast and produces excellent quality random numbers for
 /// non-cryptographic applications.
@@ -39,7 +39,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// the stream-ciphers selected the by eSTREAM contest.
 ///
 /// In 2006 an improvement to ISAAC was suggested by Jean-Philippe Aumasson,
-/// named ISAAC+[3]. But because the specification is not complete, because
+/// named ISAAC+[^3]. But because the specification is not complete, because
 /// there is no good implementation, and because the suggested bias may not
 /// exist, it is not implemented here.
 ///
@@ -78,14 +78,14 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// This implementation uses [`BlockRng`] to implement the [`RngCore`] methods.
 ///
 /// ## References
-/// [1]: Bob Jenkins, [*ISAAC: A fast cryptographic random number generator*](
-///      http://burtleburtle.net/bob/rand/isaacafa.html)
+/// [^1]: Bob Jenkins, [*ISAAC: A fast cryptographic random number generator*](
+///       http://burtleburtle.net/bob/rand/isaacafa.html)
 ///
-/// [2]: Bob Jenkins, [*ISAAC and RC4*](
-///      http://burtleburtle.net/bob/rand/isaac.html)
+/// [^2]: Bob Jenkins, [*ISAAC and RC4*](
+///       http://burtleburtle.net/bob/rand/isaac.html)
 ///
-/// [3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*](
-///      https://eprint.iacr.org/2006/438)
+/// [^3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*](
+///       https://eprint.iacr.org/2006/438)
 ///
 /// [`Hc128Rng`]: ../hc128/struct.Hc128Rng.html
 /// [`BlockRng`]: ../../../rand_core/block/struct.BlockRng.html
@@ -243,11 +243,11 @@ impl IsaacCore {
     /// will take as much time to brute force as 40-bit keys usually will). You
     /// could fill the remainder with 0, but set the last array element to the
     /// length of the key provided (to distinguish keys that differ only by
-    /// different amounts of 0 padding). You do still need to call randinit() to
-    /// make sure the initial state isn't uniform-looking."
+    /// different amounts of 0 padding). You do still need to call `randinit()`
+    /// to make sure the initial state isn't uniform-looking."
     /// "After publishing ISAAC, I wanted to limit the key to half the size of
-    /// r[], and repeat it twice. That would have made it hard to provide a key
-    /// that sets the whole internal state to anything convenient. But I'd
+    /// `r[]`, and repeat it twice. That would have made it hard to provide a
+    /// key that sets the whole internal state to anything convenient. But I'd
     /// already published it."
     ///
     /// And his answer to the question "For my code, would repeating the key

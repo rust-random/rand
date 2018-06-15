@@ -249,11 +249,42 @@ impl SeedableRng for StdRng {
 impl CryptoRng for StdRng {}
 
 
-#[cfg(feature="std")]
+#[cfg(all(feature="std",
+          any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
 #[derive(Clone, Debug)]
 #[deprecated(since="0.6.0", note="import with rand::rngs::OsRng instead")]
 pub struct OsRng(rngs::OsRng);
 
+#[cfg(all(feature="std",
+          any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
 #[cfg(feature="std")]
 impl RngCore for OsRng {
     #[inline(always)]
@@ -277,6 +308,22 @@ impl RngCore for OsRng {
     }
 }
 
+#[cfg(all(feature="std",
+          any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
 #[cfg(feature="std")]
 impl OsRng {
     pub fn new() -> Result<Self, Error> {
@@ -284,6 +331,22 @@ impl OsRng {
     }
 }
 
+#[cfg(all(feature="std",
+          any(target_os = "linux", target_os = "android",
+              target_os = "netbsd",
+              target_os = "dragonfly",
+              target_os = "haiku",
+              target_os = "emscripten",
+              target_os = "solaris",
+              target_os = "cloudabi",
+              target_os = "macos", target_os = "ios",
+              target_os = "freebsd",
+              target_os = "openbsd", target_os = "bitrig",
+              target_os = "redox",
+              target_os = "fuchsia",
+              windows,
+              all(target_arch = "wasm32", feature = "stdweb")
+)))]
 #[cfg(feature="std")]
 impl CryptoRng for OsRng {}
 
@@ -361,7 +424,7 @@ impl RngCore for JitterRng {
 }
 
 impl JitterRng {
-    #[cfg(feature="std")]
+    #[cfg(all(feature="std", not(target_arch = "wasm32")))]
     pub fn new() -> Result<JitterRng, rngs::TimerError> {
         rngs::JitterRng::new().map(JitterRng)
     }

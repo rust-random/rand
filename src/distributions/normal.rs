@@ -14,17 +14,17 @@ use Rng;
 use distributions::{ziggurat, ziggurat_tables, Distribution, Open01};
 
 /// Samples floating-point numbers according to the normal distribution
-/// `N(0, 1)` (a.k.a.  a standard normal, or Gaussian). This is equivalent to
+/// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
 /// `Normal::new(0.0, 1.0)` but faster.
 ///
 /// See `Normal` for the general normal distribution.
 ///
-/// Implemented via the ZIGNOR variant[1] of the Ziggurat method.
+/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method.
 ///
-/// [1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
-/// Generate Normal Random
-/// Samples*](https://www.doornik.com/research/ziggurat.pdf). Nuffield
-/// College, Oxford
+/// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
+///       Generate Normal Random Samples*](
+///       https://www.doornik.com/research/ziggurat.pdf).
+///       Nuffield College, Oxford
 ///
 /// # Example
 /// ```
@@ -74,8 +74,8 @@ impl Distribution<f64> for StandardNormal {
 
 /// The normal distribution `N(mean, std_dev**2)`.
 ///
-/// This uses the ZIGNOR variant of the Ziggurat method, see
-/// `StandardNormal` for more details.
+/// This uses the ZIGNOR variant of the Ziggurat method, see `StandardNormal`
+/// for more details.
 ///
 /// # Example
 ///
@@ -119,8 +119,8 @@ impl Distribution<f64> for Normal {
 
 /// The log-normal distribution `ln N(mean, std_dev**2)`.
 ///
-/// If `X` is log-normal distributed, then `ln(X)` is `N(mean,
-/// std_dev**2)` distributed.
+/// If `X` is log-normal distributed, then `ln(X)` is `N(mean, std_dev**2)`
+/// distributed.
 ///
 /// # Example
 ///
