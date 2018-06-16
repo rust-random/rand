@@ -19,13 +19,13 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 /// A cryptographically secure random number generator that uses the HC-128
 /// algorithm.
 ///
-/// HC-128 is a stream cipher designed by Hongjun Wu [1], that we use as an RNG.
-/// It is selected as one of the "stream ciphers suitable for widespread
-/// adoption" by eSTREAM [2].
+/// HC-128 is a stream cipher designed by Hongjun Wu[^1], that we use as an
+/// RNG. It is selected as one of the "stream ciphers suitable for widespread
+/// adoption" by eSTREAM[^2].
 ///
 /// HC-128 is an array based RNG. In this it is similar to RC-4 and ISAAC before
 /// it, but those have never been proven cryptographically secure (or have even
-/// been significantly compromised, as in the case of RC-4 [5]).
+/// been significantly compromised, as in the case of RC-4[^5]).
 ///
 /// Because HC-128 works with simple indexing into a large array and with a few
 /// operations that parallelize well, it has very good performance. The size of
@@ -33,11 +33,12 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 ///
 /// This implementation is not based on the version of HC-128 submitted to the
 /// eSTREAM contest, but on a later version by the author with a few small
-/// improvements from December 15, 2009 [3].
+/// improvements from December 15, 2009[^3].
 ///
 /// HC-128 has no known weaknesses that are easier to exploit than doing a
 /// brute-force search of 2<sup>128</sup>. A very comprehensive analysis of the
-/// current state of known attacks / weaknesses of HC-128 is given in [4].
+/// current state of known attacks / weaknesses of HC-128 is given in *Some
+/// Results On Analysis And Implementation Of HC-128 Stream Cipher*[^4].
 ///
 /// The average cycle length is expected to be
 /// 2<sup>1024*32+10-1</sup> = 2<sup>32777</sup>.
@@ -48,22 +49,22 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 /// [`BlockRng`] to implement the [`RngCore`] methods.
 ///
 /// ## References
-/// [1]: Hongjun Wu (2008). ["The Stream Cipher HC-128"](
-///      http://www.ecrypt.eu.org/stream/p3ciphers/hc/hc128_p3.pdf).
-///      *The eSTREAM Finalists*, LNCS 4986, pp. 39–47, Springer-Verlag.
+/// [^1]: Hongjun Wu (2008). ["The Stream Cipher HC-128"](
+///       http://www.ecrypt.eu.org/stream/p3ciphers/hc/hc128_p3.pdf).
+///       *The eSTREAM Finalists*, LNCS 4986, pp. 39–47, Springer-Verlag.
 ///
-/// [2]: [eSTREAM: the ECRYPT Stream Cipher Project](
-///      http://www.ecrypt.eu.org/stream/)
+/// [^2]: [eSTREAM: the ECRYPT Stream Cipher Project](
+///       http://www.ecrypt.eu.org/stream/)
 ///
-/// [3]: Hongjun Wu, [Stream Ciphers HC-128 and HC-256](
-///      https://www.ntu.edu.sg/home/wuhj/research/hc/index.html)
+/// [^3]: Hongjun Wu, [Stream Ciphers HC-128 and HC-256](
+///       https://www.ntu.edu.sg/home/wuhj/research/hc/index.html)
 ///
-/// [4]: Shashwat Raizada (January 2015),["Some Results On Analysis And
-///      Implementation Of HC-128 Stream Cipher"](
-///      http://library.isical.ac.in:8080/jspui/bitstream/123456789/6636/1/TH431.pdf).
+/// [^4]: Shashwat Raizada (January 2015),["Some Results On Analysis And
+///       Implementation Of HC-128 Stream Cipher"](
+///       http://library.isical.ac.in:8080/jspui/bitstream/123456789/6636/1/TH431.pdf).
 ///
-/// [5]: Internet Engineering Task Force (February 2015),
-///      ["Prohibiting RC4 Cipher Suites"](https://tools.ietf.org/html/rfc7465).
+/// [^5]: Internet Engineering Task Force (February 2015),
+///       ["Prohibiting RC4 Cipher Suites"](https://tools.ietf.org/html/rfc7465).
 ///
 /// [`BlockRng`]: ../../../rand_core/block/struct.BlockRng.html
 /// [`RngCore`]: ../../trait.RngCore.html

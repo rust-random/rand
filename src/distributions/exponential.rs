@@ -19,14 +19,14 @@ use distributions::{ziggurat, ziggurat_tables, Distribution};
 ///
 /// See `Exp` for the general exponential distribution.
 ///
-/// Implemented via the ZIGNOR variant[1] of the Ziggurat method. The
-/// exact description in the paper was adjusted to use tables for the
-/// exponential distribution rather than normal.
+/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method. The exact
+/// description in the paper was adjusted to use tables for the exponential
+/// distribution rather than normal.
 ///
-/// [1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
-/// Generate Normal Random
-/// Samples*](https://www.doornik.com/research/ziggurat.pdf). Nuffield
-/// College, Oxford
+/// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
+///       Generate Normal Random Samples*](
+///       https://www.doornik.com/research/ziggurat.pdf).
+///       Nuffield College, Oxford
 ///
 /// # Example
 /// ```
@@ -61,8 +61,8 @@ impl Distribution<f64> for Exp1 {
 
 /// The exponential distribution `Exp(lambda)`.
 ///
-/// This distribution has density function: `f(x) = lambda *
-/// exp(-lambda * x)` for `x > 0`.
+/// This distribution has density function: `f(x) = lambda * exp(-lambda * x)`
+/// for `x > 0`.
 ///
 /// # Example
 ///

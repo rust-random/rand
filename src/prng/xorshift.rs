@@ -14,16 +14,15 @@ use core::num::Wrapping as w;
 use core::{fmt, slice};
 use rand_core::{RngCore, SeedableRng, Error, impls, le};
 
-/// An Xorshift[1] random number
-/// generator.
+/// An Xorshift random number generator.
 ///
-/// The Xorshift algorithm is not suitable for cryptographic purposes
+/// The Xorshift[^1] algorithm is not suitable for cryptographic purposes
 /// but is very fast. If you do not know for sure that it fits your
 /// requirements, use a more secure one such as `IsaacRng` or `OsRng`.
 ///
-/// [1]: Marsaglia, George (July 2003). ["Xorshift
-/// RNGs"](https://www.jstatsoft.org/v08/i14/paper). *Journal of
-/// Statistical Software*. Vol. 8 (Issue 14).
+/// [^1]: Marsaglia, George (July 2003).
+///       ["Xorshift RNGs"](https://www.jstatsoft.org/v08/i14/paper).
+///       *Journal of Statistical Software*. Vol. 8 (Issue 14).
 #[derive(Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
 pub struct XorShiftRng {
