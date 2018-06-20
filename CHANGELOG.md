@@ -9,6 +9,10 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Update Guide](UPDATING.md) useful.
 
 
+## [0.5.2] - 2018-06-18
+### Platform support
+- Hide `OsRng` and `JitterRng` on unsupported platforms (#512; fixes #503).
+
 ## [0.5.1] - 2018-06-08
 
 ### New distributions
