@@ -23,6 +23,7 @@
 
 use super::Rng;
 use distributions::uniform::{SampleUniform, SampleBorrow};
+#[cfg(feature = "alloc")]
 use distributions::Distribution;
 
 /// Extension trait on slices, providing random mutation and sampling methods.
@@ -102,9 +103,9 @@ pub trait SliceRandom {
     ///
     /// ```
     /// use rand::prelude::*;
-    /// //use rand::distributions::uniform::SampleBorrow;
     ///
     /// let choices = [('a', 2), ('b', 1), ('c', 1)];
+    /// // In rustc version XXX and newer, you can use a closure instead
     /// fn mapping_func(item: &(char, usize)) -> usize {
     ///     item.1
     /// }
@@ -126,22 +127,10 @@ pub trait SliceRandom {
     /// likelyhood of getting returned. The likelyhood of a given item getting
     /// returned is proportional to the value returned by the mapping function
     /// `func`.
-    /// 
-    /// # Example
     ///
-    /// ```
-    /// use rand::prelude::*;
-    /// //use rand::distributions::uniform::SampleBorrow;
-    ///
-    /// let choices = [('a', 2), ('b', 1), ('c', 1)];
-    /// fn mapping_func(item: &(char, usize)) -> usize {
-    ///     item.1
-    /// }
-    /// let mut rng = thread_rng();
-    /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
-    /// println!("{:?}", choices.choose_weighted(&mut rng, &mapping_func).unwrap().0);
-    /// ```
+    /// See also [`choose_weighted`].
     /// [`choose_mut`]: trait.SliceRandom.html#method.choose_mut
+    /// [`choose_weighted`]: trait.SliceRandom.html#method.choose_weighted
     fn choose_weighted_mut<R, F, B, X>(&mut self, rng: &mut R, func: F) -> Option<&mut Self::Item>
         where R: Rng + ?Sized,
               F: Fn(&Self::Item) -> B + Clone,
@@ -296,18 +285,23 @@ pub trait IteratorRandom: Iterator + Sized {
     }
 }
 
-/// Extension trait on iterators, providing random sampling methods.
+/// Extension trait on IntoIterator, providing random sampling methods.
 pub trait IntoIteratorRandom: IntoIterator + Sized {
 
     /// Return a the index of a random element from this iterator where the
     /// chance of a given item being picked is proportional to the value of
     /// the item.
     ///
+    /// If calling this on a [`Vec`], make sure to use
+    /// `(&vec).choose_index_weighted(...)`. Otherwise the [`Vec`] and all of
+    /// its contents will be cloned.
+    ///
     /// All values returned by the iterator must be `>= 0`.
     ///
     /// This function iterates over the iterator twice. Once to get the total
-    /// weight, and once while choosing the random item. If you plan to call
-    /// this function multiple times, it would be more performant to use
+    /// weight, and once while choosing the random item. This is done by
+    /// cloning the iterator. If you plan to call this function multiple times,
+    /// it would be more performant to use
     /// [`into_weighted_index_distribution`].
     ///
     /// Return `None` if self is empty, or contains only `0`s.
@@ -328,6 +322,7 @@ pub trait IntoIteratorRandom: IntoIterator + Sized {
     /// println!("{}", weights.choose_index_weighted(&mut rng).map(|ix| choices[ix]).unwrap());
     /// ```
     /// [`into_weighted_index_distribution`]: trait.IntoIteratorRandom.html#method.into_weighted_index_distribution
+    /// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
     fn choose_index_weighted<R, X>(self, rng: &mut R) -> Option<usize>
         where Self::IntoIter: Clone,
               R: Rng + ?Sized,
@@ -361,9 +356,9 @@ pub trait IntoIteratorRandom: IntoIterator + Sized {
         panic!("Weights changed during cloning");
     }
 
-    /// Returns a [`Distribution`] which when sampled from, returns a random
-    /// element from this iterator where the chance of a given item being
-    /// picked is proportional to the value of the item.
+    /// Returns a [`Distribution`] which when sampled from, returns the index
+    /// of a random element from this iterator where the chance of a given
+    /// item being picked is proportional to the value of the item.
     ///
     /// # Panics
     ///
@@ -454,6 +449,10 @@ impl<T> SliceRandom for [T] {
                  for<'a> ::core::ops::AddAssign<&'a X> +
                  ::core::cmp::PartialOrd<X> +
                  Default {
+        // Technically we could move choose_weighted to IntoIteratorRandom.
+        // That does carry the small risk that someone will do something silly like:
+        // my_vec.clone().choose_weighted(&mut r, |item| ...)
+        // which would clone the vector and its contents 3 times.
         self.iter().map(func).choose_index_weighted(rng).map(|ix| &self[ix])
     }
 
@@ -465,6 +464,10 @@ impl<T> SliceRandom for [T] {
                  for<'a> ::core::ops::AddAssign<&'a X> +
                  ::core::cmp::PartialOrd<X> +
                  Default {
+        // Technically we could move choose_weighted_mut to IntoIteratorRandom.
+        // That does carry the small risk that someone will do something silly like:
+        // my_vec.clone().choose_weighted(&mut r, |item| ...)
+        // which would clone the vector and its contents 3 times.
         let index = self.iter().map(func).choose_index_weighted(rng);
         index.map(move |ix| &mut self[ix])
     }
@@ -925,7 +928,7 @@ mod test {
             }
         };
 
-        // choose_weighted array
+        // choose_index_weighted array
         let mut chosen = [0i32; 14];
         for _ in 0..1000 {
             let picked = weights.choose_index_weighted(&mut r).unwrap();
@@ -933,7 +936,7 @@ mod test {
         }
         verify(chosen);
 
-        // choose_weighted ref iterator
+        // choose_index_weighted ref iterator
         chosen = [0i32; 14];
         for _ in 0..1000 {
             let picked = weights.iter()
@@ -942,7 +945,7 @@ mod test {
         }
         verify(chosen);
 
-        // choose_weighted value iterator
+        // choose_index_weighted value iterator
         chosen = [0i32; 14];
         for _ in 0..1000 {
             let picked = weights.iter()
@@ -952,33 +955,51 @@ mod test {
         }
         verify(chosen);
 
-        // choose_weighted value iterator
-        chosen = [0i32; 14];
-        let distr = weights.into_weighted_index_distribution();
-        for _ in 0..1000 {
-            chosen[distr.sample(&mut r)] += 1;
+        // choose_index_weighted Vec<...>
+        #[cfg(feature = "alloc")]
+        {
+            chosen = [0i32; 14];
+            let vec_weights = weights.to_vec();
+            for _ in 0..1000 {
+                let picked = (&vec_weights).choose_index_weighted(&mut r).unwrap();
+                chosen[picked] += 1;
+            }
+            verify(chosen);
         }
-        verify(chosen);
+
+        // into_weighted_index_distribution
+        #[cfg(feature = "alloc")]
+        {
+            chosen = [0i32; 14];
+            let distr = weights.into_weighted_index_distribution();
+            for _ in 0..1000 {
+                chosen[distr.sample(&mut r)] += 1;
+            }
+            verify(chosen);
+        }
 
         // choose_weighted
+        fn get_weight<T>(item: &(u32, T)) -> u32 {
+            item.0
+        }
         chosen = [0i32; 14];
-        let mut items = [(0u32, 0usize); 14];
+        let mut items = [(0u32, 0usize); 14]; // (weight, index)
         for (i, item) in items.iter_mut().enumerate() {
             *item = (weights[i], i);
         }
         for _ in 0..1000 {
-            let item = items.choose_weighted(&mut r, |item| item.0).unwrap();
+            let item = items.choose_weighted(&mut r, get_weight).unwrap();
             chosen[item.1] += 1;
         }
         verify(chosen);
 
         // choose_weighted_mut
-        let mut items = [(0u32, 0i32); 14];
+        let mut items = [(0u32, 0i32); 14]; // (weight, count)
         for (i, item) in items.iter_mut().enumerate() {
             *item = (weights[i], 0);
         }
         for _ in 0..1000 {
-            items.choose_weighted_mut(&mut r, |item| item.0).unwrap().1 += 1;
+            items.choose_weighted_mut(&mut r, get_weight).unwrap().1 += 1;
         }
         for (ch, item) in chosen.iter_mut().zip(items.iter()) {
             *ch = item.1;
