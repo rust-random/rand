@@ -13,6 +13,7 @@
 use core::mem;
 use Rng;
 use distributions::{Distribution, Standard};
+use distributions::math_helpers::CastFromInt;
 #[cfg(feature="simd_support")]
 use core::simd::*;
 
@@ -85,70 +86,7 @@ pub(crate) trait IntoFloat {
 }
 
 macro_rules! float_impls {
-    ($ty:ty, $uty:ty, $fraction_bits:expr, $exponent_bias:expr) => {
-        impl IntoFloat for $uty {
-            type F = $ty;
-            #[inline(always)]
-            fn into_float_with_exponent(self, exponent: i32) -> $ty {
-                // The exponent is encoded using an offset-binary representation
-                let exponent_bits =
-                    (($exponent_bias + exponent) as $uty) << $fraction_bits;
-                unsafe { mem::transmute(self | exponent_bits) }
-            }
-        }
-
-        impl Distribution<$ty> for Standard {
-            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                // Multiply-based method; 24/53 random bits; [0, 1) interval.
-                // We use the most significant bits because for simple RNGs
-                // those are usually more random.
-                let float_size = mem::size_of::<$ty>() * 8;
-                let precision = $fraction_bits + 1;
-                let scale = 1.0 / ((1 as $uty << precision) as $ty);
-
-                let value: $uty = rng.gen();
-                scale * (value >> (float_size - precision)) as $ty
-            }
-        }
-
-        impl Distribution<$ty> for OpenClosed01 {
-            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                // Multiply-based method; 24/53 random bits; (0, 1] interval.
-                // We use the most significant bits because for simple RNGs
-                // those are usually more random.
-                let float_size = mem::size_of::<$ty>() * 8;
-                let precision = $fraction_bits + 1;
-                let scale = 1.0 / ((1 as $uty << precision) as $ty);
-
-                let value: $uty = rng.gen();
-                let value = value >> (float_size - precision);
-                // Add 1 to shift up; will not overflow because of right-shift:
-                scale * (value + 1) as $ty
-            }
-        }
-
-        impl Distribution<$ty> for Open01 {
-            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                // Transmute-based method; 23/52 random bits; (0, 1) interval.
-                // We use the most significant bits because for simple RNGs
-                // those are usually more random.
-                const EPSILON: $ty = 1.0 / (1u64 << $fraction_bits) as $ty;
-                let float_size = mem::size_of::<$ty>() * 8;
-
-                let value: $uty = rng.gen();
-                let fraction = value >> (float_size - $fraction_bits);
-                fraction.into_float_with_exponent(0) - (1.0 - EPSILON / 2.0)
-            }
-        }
-    }
-}
-float_impls! { f32, u32, 23, 127 }
-float_impls! { f64, u64, 52, 1023 }
-
-
-#[cfg(feature="simd_support")]
-macro_rules! simd_float_impls {
-    ($ty:ident, $uty:ident, $f_scalar:ty, $u_scalar:ty,
+    ($ty:ident, $uty:ident, $f_scalar:ident, $u_scalar:ty,
      $fraction_bits:expr, $exponent_bias:expr) => {
         impl IntoFloat for $uty {
             type F = $ty;
@@ -157,7 +95,7 @@ macro_rules! simd_float_impls {
                 // The exponent is encoded using an offset-binary representation
                 let exponent_bits: $u_scalar =
                     (($exponent_bias + exponent) as $u_scalar) << $fraction_bits;
-                unsafe { mem::transmute(self | $uty::splat(exponent_bits)) }
+                $ty::from_bits(self | exponent_bits)
             }
         }
 
@@ -168,11 +106,11 @@ macro_rules! simd_float_impls {
                 // those are usually more random.
                 let float_size = mem::size_of::<$f_scalar>() * 8;
                 let precision = $fraction_bits + 1;
-                let scale = $ty::splat(1.0 / ((1 as $u_scalar << precision) as $f_scalar));
+                let scale = 1.0 / ((1 as $u_scalar << precision) as $f_scalar);
 
                 let value: $uty = rng.gen();
-                let value = $ty::from(value >> (float_size - precision));
-                scale * value
+                let value = value >> (float_size - precision);
+                scale * $ty::cast_from_int(value)
             }
         }
 
@@ -183,12 +121,12 @@ macro_rules! simd_float_impls {
                 // those are usually more random.
                 let float_size = mem::size_of::<$f_scalar>() * 8;
                 let precision = $fraction_bits + 1;
-                let scale = $ty::splat(1.0 / ((1 as $u_scalar << precision) as $f_scalar));
+                let scale = 1.0 / ((1 as $u_scalar << precision) as $f_scalar);
 
                 let value: $uty = rng.gen();
+                let value = value >> (float_size - precision);
                 // Add 1 to shift up; will not overflow because of right-shift:
-                let value = $ty::from((value >> (float_size - precision)) + 1);
-                scale * value
+                scale * $ty::cast_from_int(value + 1)
             }
         }
 
@@ -197,32 +135,35 @@ macro_rules! simd_float_impls {
                 // Transmute-based method; 23/52 random bits; (0, 1) interval.
                 // We use the most significant bits because for simple RNGs
                 // those are usually more random.
-                const EPSILON: $f_scalar = 1.0 / (1u64 << $fraction_bits) as $f_scalar;
+                use core::$f_scalar::EPSILON;
                 let float_size = mem::size_of::<$f_scalar>() * 8;
 
                 let value: $uty = rng.gen();
                 let fraction = value >> (float_size - $fraction_bits);
-                fraction.into_float_with_exponent(0) - $ty::splat(1.0 - EPSILON / 2.0)
+                fraction.into_float_with_exponent(0) - (1.0 - EPSILON / 2.0)
             }
         }
     }
 }
 
-#[cfg(feature="simd_support")]
-simd_float_impls! { f32x2, u32x2, f32, u32, 23, 127 }
-#[cfg(feature="simd_support")]
-simd_float_impls! { f32x4, u32x4, f32, u32, 23, 127 }
-#[cfg(feature="simd_support")]
-simd_float_impls! { f32x8, u32x8, f32, u32, 23, 127 }
-#[cfg(feature="simd_support")]
-simd_float_impls! { f32x16, u32x16, f32, u32, 23, 127 }
+float_impls! { f32, u32, f32, u32, 23, 127 }
+float_impls! { f64, u64, f64, u64, 52, 1023 }
 
 #[cfg(feature="simd_support")]
-simd_float_impls! { f64x2, u64x2, f64, u64, 52, 1023 }
+float_impls! { f32x2, u32x2, f32, u32, 23, 127 }
 #[cfg(feature="simd_support")]
-simd_float_impls! { f64x4, u64x4, f64, u64, 52, 1023 }
+float_impls! { f32x4, u32x4, f32, u32, 23, 127 }
 #[cfg(feature="simd_support")]
-simd_float_impls! { f64x8, u64x8, f64, u64, 52, 1023 }
+float_impls! { f32x8, u32x8, f32, u32, 23, 127 }
+#[cfg(feature="simd_support")]
+float_impls! { f32x16, u32x16, f32, u32, 23, 127 }
+
+#[cfg(feature="simd_support")]
+float_impls! { f64x2, u64x2, f64, u64, 52, 1023 }
+#[cfg(feature="simd_support")]
+float_impls! { f64x4, u64x4, f64, u64, 52, 1023 }
+#[cfg(feature="simd_support")]
+float_impls! { f64x8, u64x8, f64, u64, 52, 1023 }
 
 
 #[cfg(test)]
@@ -267,7 +208,7 @@ mod tests {
             }
         }
     }
-    test_f32! { f32_edge_cases, f32, 0.0, ::core::f32::EPSILON }
+    test_f32! { f32_edge_cases, f32, 0.0, EPSILON32 }
     #[cfg(feature="simd_support")]
     test_f32! { f32x2_edge_cases, f32x2, f32x2::splat(0.0), f32x2::splat(EPSILON32) }
     #[cfg(feature="simd_support")]
