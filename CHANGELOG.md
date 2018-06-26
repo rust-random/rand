@@ -8,6 +8,9 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Update Guide](UPDATING.md) useful.
 
+## [0.5.3] - 2018-06-26
+### Platform support
+- OpenBSD, Bitrig: fix compilation (broken in 0.5.1) (#530)
 
 ## [0.5.2] - 2018-06-18
 ### Platform support
