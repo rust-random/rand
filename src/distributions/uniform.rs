@@ -116,7 +116,7 @@ use std::time::Duration;
 use Rng;
 use distributions::Distribution;
 use distributions::float::IntoFloat;
-use distributions::math_helpers::{WideningMultiply, NaturalCompare};
+use distributions::utils::{WideningMultiply, CompareAll};
 
 #[cfg(feature="simd_support")]
 use core::simd::*;
@@ -517,7 +517,7 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.cmp_lt(high),
+                assert!(low.all_lt(high),
                         "Uniform::new called with `low >= high`");
                 let scale = high - low;
                 let offset = low - scale;
@@ -533,7 +533,7 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.cmp_le(high),
+                assert!(low.all_le(high),
                         "Uniform::new_inclusive called with `low > high`");
                 let scale = high - low;
                 let offset = low - scale;
@@ -562,7 +562,7 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.cmp_lt(high),
+                assert!(low.all_lt(high),
                         "Uniform::sample_single called with low >= high");
                 let scale = high - low;
                 let offset = low - scale;

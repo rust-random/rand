@@ -125,29 +125,32 @@ macro_rules! simd_float_from_int {
 #[cfg(feature="simd_support")] simd_float_from_int! { f64x8, u64x8 }
 
 
-/// `PartialOrd` for vectors compares lexicographically. We want natural order.
+/// `PartialOrd` for vectors compares lexicographically. We want to compare all
+/// the individual SIMD lanes instead, and get the combined result over all
+/// lanes. This is possible using something like `a.lt(b).all()`, but we
+/// implement it as a trait so we can write the same code for `f32` and `f64`.
 /// Only the comparison functions we need are implemented.
-pub trait NaturalCompare {
-    fn cmp_lt(self, other: Self) -> bool;
-    fn cmp_le(self, other: Self) -> bool;
+pub trait CompareAll {
+    fn all_lt(self, other: Self) -> bool;
+    fn all_le(self, other: Self) -> bool;
 }
 
-impl NaturalCompare for f32 {
-    fn cmp_lt(self, other: Self) -> bool { self < other }
-    fn cmp_le(self, other: Self) -> bool { self <= other }
+impl CompareAll for f32 {
+    fn all_lt(self, other: Self) -> bool { self < other }
+    fn all_le(self, other: Self) -> bool { self <= other }
 }
 
-impl NaturalCompare for f64 {
-    fn cmp_lt(self, other: Self) -> bool { self < other }
-    fn cmp_le(self, other: Self) -> bool { self <= other }
+impl CompareAll for f64 {
+    fn all_lt(self, other: Self) -> bool { self < other }
+    fn all_le(self, other: Self) -> bool { self <= other }
 }
 
 #[cfg(feature="simd_support")]
 macro_rules! simd_less_then {
     ($ty:ident) => {
-        impl NaturalCompare for $ty {
-            fn cmp_lt(self, other: Self) -> bool { self.lt(other).all() }
-            fn cmp_le(self, other: Self) -> bool { self.le(other).all() }
+        impl CompareAll for $ty {
+            fn all_lt(self, other: Self) -> bool { self.lt(other).all() }
+            fn all_le(self, other: Self) -> bool { self.le(other).all() }
         }
     }
 }

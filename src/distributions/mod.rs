@@ -214,8 +214,8 @@ mod float;
 mod integer;
 #[cfg(feature="std")]
 mod log_gamma;
-mod math_helpers;
 mod other;
+mod utils;
 #[cfg(feature="std")]
 mod ziggurat_tables;
 #[cfg(feature="std")]
