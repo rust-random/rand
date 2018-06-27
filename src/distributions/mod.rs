@@ -73,6 +73,8 @@
 //! numbers of the `char` type; in contrast [`Standard`] may sample any valid
 //! `char`.
 //!
+//! [`WeightedIndex`] can be used to do weighted sampling from a set of items,
+//! such as from an array.
 //!
 //! # Non-uniform probability distributions
 //!
@@ -167,12 +169,15 @@
 //! [`Uniform`]: struct.Uniform.html
 //! [`Uniform::new`]: struct.Uniform.html#method.new
 //! [`Uniform::new_inclusive`]: struct.Uniform.html#method.new_inclusive
+//! [`WeightedIndex`]: struct.WeightedIndex.html
 
 use Rng;
 
 #[doc(inline)] pub use self::other::Alphanumeric;
 #[doc(inline)] pub use self::uniform::Uniform;
 #[doc(inline)] pub use self::float::{OpenClosed01, Open01};
+#[cfg(feature="alloc")]
+#[doc(inline)] pub use self::weighted::WeightedIndex;
 #[cfg(feature="std")]
 #[doc(inline)] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 #[cfg(feature="std")]
@@ -192,6 +197,8 @@ use Rng;
 #[doc(inline)] pub use self::dirichlet::Dirichlet;
 
 pub mod uniform;
+#[cfg(feature="alloc")]
+#[doc(hidden)] pub mod weighted;
 #[cfg(feature="std")]
 #[doc(hidden)] pub mod gamma;
 #[cfg(feature="std")]
@@ -373,6 +380,8 @@ pub struct Standard;
 
 
 /// A value with a particular weight for use with `WeightedChoice`.
+#[deprecated(since="0.6.0", note="use WeightedIndex instead")]
+#[allow(deprecated)]
 #[derive(Copy, Clone, Debug)]
 pub struct Weighted<T> {
     /// The numerical weight of this item
@@ -383,34 +392,19 @@ pub struct Weighted<T> {
 
 /// A distribution that selects from a finite collection of weighted items.
 ///
-/// Each item has an associated weight that influences how likely it
-/// is to be chosen: higher weight is more likely.
+/// Deprecated: use [`WeightedIndex`] instead.
 ///
-/// The `Clone` restriction is a limitation of the `Distribution` trait.
-/// Note that `&T` is (cheaply) `Clone` for all `T`, as is `u32`, so one can
-/// store references or indices into another vector.
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{Weighted, WeightedChoice, Distribution};
-///
-/// let mut items = vec!(Weighted { weight: 2, item: 'a' },
-///                      Weighted { weight: 4, item: 'b' },
-///                      Weighted { weight: 1, item: 'c' });
-/// let wc = WeightedChoice::new(&mut items);
-/// let mut rng = rand::thread_rng();
-/// for _ in 0..16 {
-///      // on average prints 'a' 4 times, 'b' 8 and 'c' twice.
-///      println!("{}", wc.sample(&mut rng));
-/// }
-/// ```
+/// [`WeightedIndex`]: struct.WeightedIndex.html
+#[deprecated(since="0.6.0", note="use WeightedIndex instead")]
+#[allow(deprecated)]
 #[derive(Debug)]
 pub struct WeightedChoice<'a, T:'a> {
     items: &'a mut [Weighted<T>],
     weight_range: Uniform<u32>,
 }
 
+#[deprecated(since="0.6.0", note="use WeightedIndex instead")]
+#[allow(deprecated)]
 impl<'a, T: Clone> WeightedChoice<'a, T> {
     /// Create a new `WeightedChoice`.
     ///
@@ -448,6 +442,8 @@ impl<'a, T: Clone> WeightedChoice<'a, T> {
     }
 }
 
+#[deprecated(since="0.6.0", note="use WeightedIndex instead")]
+#[allow(deprecated)]
 impl<'a, T: Clone> Distribution<T> for WeightedChoice<'a, T> {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
         // we want to find the first element that has cumulative
@@ -557,9 +553,11 @@ fn ziggurat<R: Rng + ?Sized, P, Z>(
 #[cfg(test)]
 mod tests {
     use rngs::mock::StepRng;
+    #[allow(deprecated)]
     use super::{WeightedChoice, Weighted, Distribution};
 
     #[test]
+    #[allow(deprecated)]
     fn test_weighted_choice() {
         // this makes assumptions about the internal implementation of
         // WeightedChoice. It may fail when the implementation in
@@ -619,6 +617,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_weighted_clone_initialization() {
         let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
         let clone = initial.clone();
@@ -627,6 +626,7 @@ mod tests {
     }
 
     #[test] #[should_panic]
+    #[allow(deprecated)]
     fn test_weighted_clone_change_weight() {
         let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
         let mut clone = initial.clone();
@@ -635,6 +635,7 @@ mod tests {
     }
 
     #[test] #[should_panic]
+    #[allow(deprecated)]
     fn test_weighted_clone_change_item() {
         let initial : Weighted<u32> = Weighted {weight: 1, item: 1};
         let mut clone = initial.clone();
@@ -644,15 +645,18 @@ mod tests {
     }
 
     #[test] #[should_panic]
+    #[allow(deprecated)]
     fn test_weighted_choice_no_items() {
         WeightedChoice::<isize>::new(&mut []);
     }
     #[test] #[should_panic]
+    #[allow(deprecated)]
     fn test_weighted_choice_zero_weight() {
         WeightedChoice::new(&mut [Weighted { weight: 0, item: 0},
                                   Weighted { weight: 0, item: 1}]);
     }
     #[test] #[should_panic]
+    #[allow(deprecated)]
     fn test_weighted_choice_weight_overflows() {
         let x = ::core::u32::MAX / 2; // x + x + 2 is the overflow
         WeightedChoice::new(&mut [Weighted { weight: x, item: 0 },

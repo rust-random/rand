@@ -134,10 +134,6 @@
 //!
 //! For more slice/sequence related functionality, look in the [`seq` module].
 //!
-//! There is also [`distributions::WeightedChoice`], which can be used to pick
-//! elements at random with some probability. But it does not work well at the
-//! moment and is going through a redesign.
-//!
 //!
 //! # Error handling
 //!
@@ -187,7 +183,6 @@
 //!
 //!
 //! [`distributions` module]: distributions/index.html
-//! [`distributions::WeightedChoice`]: distributions/struct.WeightedChoice.html
 //! [`EntropyRng`]: rngs/struct.EntropyRng.html
 //! [`Error`]: struct.Error.html
 //! [`gen_range`]: trait.Rng.html#method.gen_range

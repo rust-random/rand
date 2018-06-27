@@ -22,6 +22,7 @@
 
 
 use super::Rng;
+#[cfg(feature="alloc")] use distributions::uniform::{SampleUniform, SampleBorrow};
 
 /// Extension trait on slices, providing random mutation and sampling methods.
 /// 
@@ -91,6 +92,53 @@ pub trait SliceRandom {
     fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
         where R: Rng + ?Sized;
 
+    /// Similar to [`choose`], where the likelihood of each outcome may be
+    /// specified. The specified function `weight` maps items `x` to a relative
+    /// likelihood `weight(x)`. The probability of each item being selected is
+    /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::prelude::*;
+    ///
+    /// let choices = [('a', 2), ('b', 1), ('c', 1)];
+    /// let mut rng = thread_rng();
+    /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
+    /// println!("{:?}", choices.choose_weighted(&mut rng, |item| item.1).unwrap().0);
+    /// ```
+    /// [`choose`]: trait.SliceRandom.html#method.choose
+    #[cfg(feature = "alloc")]
+    fn choose_weighted<R, F, B, X>(&self, rng: &mut R, weight: F) -> Option<&Self::Item>
+        where R: Rng + ?Sized,
+              F: Fn(&Self::Item) -> B,
+              B: SampleBorrow<X>,
+              X: SampleUniform +
+                 for<'a> ::core::ops::AddAssign<&'a X> +
+                 ::core::cmp::PartialOrd<X> +
+                 Clone +
+                 Default;
+
+    /// Similar to [`choose_mut`], where the likelihood of each outcome may be
+    /// specified. The specified function `weight` maps items `x` to a relative
+    /// likelihood `weight(x)`. The probability of each item being selected is
+    /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
+    ///
+    /// See also [`choose_weighted`].
+    ///
+    /// [`choose_mut`]: trait.SliceRandom.html#method.choose_mut
+    /// [`choose_weighted`]: trait.SliceRandom.html#method.choose_weighted
+    #[cfg(feature = "alloc")]
+    fn choose_weighted_mut<R, F, B, X>(&mut self, rng: &mut R, weight: F) -> Option<&mut Self::Item>
+        where R: Rng + ?Sized,
+              F: Fn(&Self::Item) -> B,
+              B: SampleBorrow<X>,
+              X: SampleUniform +
+                 for<'a> ::core::ops::AddAssign<&'a X> +
+                 ::core::cmp::PartialOrd<X> +
+                 Clone +
+                 Default;
+
     /// Shuffle a mutable slice in place.
     /// 
     /// Depending on the implementation, complexity is expected to be `O(1)`.
@@ -141,6 +189,7 @@ pub trait IteratorRandom: Iterator + Sized {
     /// Complexity is `O(n)`, where `n` is the length of the iterator.
     /// This likely consumes multiple random numbers, but the exact number
     /// is unspecified.
+    ///
     /// [`choose`]: trait.SliceRandom.html#method.choose
     /// [`choose_mut`]: trait.SliceRandom.html#method.choose_mut
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
@@ -275,6 +324,37 @@ impl<T> SliceRandom for [T] {
             _phantom: Default::default(),
             indices: sample_indices(rng, self.len(), amount).into_iter(),
         }
+    }
+
+    #[cfg(feature = "alloc")]
+    fn choose_weighted<R, F, B, X>(&self, rng: &mut R, weight: F) -> Option<&Self::Item>
+        where R: Rng + ?Sized,
+              F: Fn(&Self::Item) -> B,
+              B: SampleBorrow<X>,
+              X: SampleUniform +
+                 for<'a> ::core::ops::AddAssign<&'a X> +
+                 ::core::cmp::PartialOrd<X> +
+                 Clone +
+                 Default {
+        use distributions::{Distribution, WeightedIndex};
+        WeightedIndex::new(self.iter().map(weight)).ok()
+                                                   .map(|distr| &self[distr.sample(rng)])
+    }
+
+    #[cfg(feature = "alloc")]
+    fn choose_weighted_mut<R, F, B, X>(&mut self, rng: &mut R, weight: F) -> Option<&mut Self::Item>
+        where R: Rng + ?Sized,
+              F: Fn(&Self::Item) -> B,
+              B: SampleBorrow<X>,
+              X: SampleUniform +
+                 for<'a> ::core::ops::AddAssign<&'a X> +
+                 ::core::cmp::PartialOrd<X> +
+                 Clone +
+                 Default {
+        use distributions::{Distribution, WeightedIndex};
+        WeightedIndex::new(self.iter().map(weight)).ok()
+                                                   .map(|distr| distr.sample(rng))
+                                                   .map(move |ix| &mut self[ix])
     }
 
     fn shuffle<R>(&mut self, rng: &mut R) where R: Rng + ?Sized
@@ -737,5 +817,59 @@ mod test {
                 assert_eq!(result, expected);
             }
         }
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_weighted() {
+        let mut r = ::test::rng(406);
+        const N_REPS: u32 = 3000;
+        let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
+        let total_weight = weights.iter().sum::<u32>() as f32;
+
+        let verify = |result: [i32; 14]| {
+            for (i, count) in result.iter().enumerate() {
+                let exp = (weights[i] * N_REPS) as f32 / total_weight;
+                let mut err = (*count as f32 - exp).abs();
+                if err != 0.0 {
+                    err /= exp;
+                }
+                assert!(err <= 0.25);
+            }
+        };
+
+        // choose_weighted
+        fn get_weight<T>(item: &(u32, T)) -> u32 {
+            item.0
+        }
+        let mut chosen = [0i32; 14];
+        let mut items = [(0u32, 0usize); 14]; // (weight, index)
+        for (i, item) in items.iter_mut().enumerate() {
+            *item = (weights[i], i);
+        }
+        for _ in 0..N_REPS {
+            let item = items.choose_weighted(&mut r, get_weight).unwrap();
+            chosen[item.1] += 1;
+        }
+        verify(chosen);
+
+        // choose_weighted_mut
+        let mut items = [(0u32, 0i32); 14]; // (weight, count)
+        for (i, item) in items.iter_mut().enumerate() {
+            *item = (weights[i], 0);
+        }
+        for _ in 0..N_REPS {
+            items.choose_weighted_mut(&mut r, get_weight).unwrap().1 += 1;
+        }
+        for (ch, item) in chosen.iter_mut().zip(items.iter()) {
+            *ch = item.1;
+        }
+        verify(chosen);
+
+        // Check error cases
+        let empty_slice = &mut [10][0..0];
+        assert_eq!(empty_slice.choose_weighted(&mut r, |_| 1), None);
+        assert_eq!(empty_slice.choose_weighted_mut(&mut r, |_| 1), None);
+        assert_eq!(['x'].choose_weighted_mut(&mut r, |_| 0), None);
     }
 }
