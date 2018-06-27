@@ -879,7 +879,7 @@ mod imp {
 
         fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
             let ret = unsafe {
-                libc::getentropy(s.as_mut_ptr() as *mut libc::c_void, s.len())
+                libc::getentropy(dest.as_mut_ptr() as *mut libc::c_void, dest.len())
             };
             if ret == -1 {
                 return Err(Error::with_cause(
