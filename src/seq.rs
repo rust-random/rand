@@ -496,10 +496,12 @@ pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) ->
 
 /// Return type of `sample_indices`.
 #[cfg(feature = "alloc")]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum Indices {
     /// Representation: a vector over `u32` values
-    U32(Vec<u32>)
+    U32(Vec<u32>),
+    /// Representation: a vector over `usize` values
+    USize(Vec<usize>),
 }
 
 #[cfg(feature = "alloc")]
@@ -508,6 +510,7 @@ impl Indices {
     pub fn len(&self) -> usize {
         match self {
             &Indices::U32(ref v) => v.len(),
+            &Indices::USize(ref v) => v.len(),
         }
     }
 
@@ -515,6 +518,7 @@ impl Indices {
     pub fn into_vec_usize(self) -> Vec<usize> {
         match self {
             Indices::U32(v) => v.into_iter().map(|i| i as usize).collect(),
+            Indices::USize(v) => v,
         }
     }
 
@@ -522,6 +526,7 @@ impl Indices {
     pub fn iter_usize<'a>(&'a self) -> IndicesIter<'a> {
         match self {
             &Indices::U32(ref v) => IndicesIter::U32(v.iter()),
+            &Indices::USize(ref v) => IndicesIter::USize(v.iter()),
         }
     }
     
@@ -529,6 +534,20 @@ impl Indices {
     pub fn into_iter_usize(self) -> IndicesIntoIter {
         match self {
             Indices::U32(v) => IndicesIntoIter::U32(v.into_iter()),
+            Indices::USize(v) => IndicesIntoIter::USize(v.into_iter()),
+        }
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl PartialEq for Indices {
+    fn eq(&self, other: &Indices) -> bool {
+        use self::Indices::*;
+        match (self, other) {
+            (&U32(ref v1), &U32(ref v2)) => v1 == v2,
+            (&USize(ref v1), &USize(ref v2)) => v1 == v2,
+            (a @ _, b @ _) => (a.len() == b.len()) &&
+                    (a.iter_usize().zip(b.iter_usize()).all(|(x, y)| x == y)),
         }
     }
 }
@@ -540,11 +559,19 @@ impl From<Vec<u32>> for Indices {
     }
 }
 
+#[cfg(feature = "alloc")]
+impl From<Vec<usize>> for Indices {
+    fn from(v: Vec<usize>) -> Self {
+        Indices::USize(v)
+    }
+}
+
 /// Return type of `Indices::iter_usize`.
 #[cfg(feature = "alloc")]
 #[derive(Debug)]
 pub enum IndicesIter<'a> {
     #[doc(hidden)] U32(slice::Iter<'a, u32>),
+    #[doc(hidden)] USize(slice::Iter<'a, usize>),
 }
 
 #[cfg(feature = "alloc")]
@@ -554,12 +581,14 @@ impl<'a> Iterator for IndicesIter<'a> {
         use self::IndicesIter::*;
         match self {
             &mut U32(ref mut iter) => iter.next().map(|i| *i as usize),
+            &mut USize(ref mut iter) => iter.next().cloned(),
         }
     }
     
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self {
             &IndicesIter::U32(ref v) => v.size_hint(),
+            &IndicesIter::USize(ref v) => v.size_hint(),
         }
     }
 }
@@ -569,6 +598,7 @@ impl<'a> ExactSizeIterator for IndicesIter<'a> {
     fn len(&self) -> usize {
         match self {
             &IndicesIter::U32(ref v) => v.len(),
+            &IndicesIter::USize(ref v) => v.len(),
         }
     }
 }
@@ -578,6 +608,7 @@ impl<'a> ExactSizeIterator for IndicesIter<'a> {
 #[derive(Clone, Debug)]
 pub enum IndicesIntoIter {
     #[doc(hidden)] U32(vec::IntoIter<u32>),
+    #[doc(hidden)] USize(vec::IntoIter<usize>),
 }
 
 #[cfg(feature = "alloc")]
@@ -588,6 +619,7 @@ impl Iterator for IndicesIntoIter {
         use self::IndicesIntoIter::*;
         match self {
             &mut U32(ref mut v) => v.next().map(|i| i as usize),
+            &mut USize(ref mut v) => v.next(),
         }
     }
     
@@ -595,6 +627,7 @@ impl Iterator for IndicesIntoIter {
         use self::IndicesIntoIter::*;
         match self {
             &U32(ref v) => v.size_hint(),
+            &USize(ref v) => v.size_hint(),
         }
     }
 }
@@ -605,6 +638,7 @@ impl ExactSizeIterator for IndicesIntoIter {
         use self::IndicesIntoIter::*;
         match self {
             &U32(ref v) => v.len(),
+            &USize(ref v) => v.len(),
         }
     }
 }
@@ -630,13 +664,14 @@ impl ExactSizeIterator for IndicesIntoIter {
 /// is closer to `O(amount^2)`, and when `length` is close to `amount` then
 /// `O(length)`.
 ///
-/// Note that we only support `u32` indices since this covers the vast majority
-/// of uses, and performance is significantly better than with `u64`.
+/// Note that performance is significantly better over `u32` indices than over
+/// `u64` indices. Because of this we hide the underlying type behind an
+/// abstraction, `Indices`.
 /// 
 /// If an allocation-free `no_std` function is required, it is suggested
 /// to adapt the internal `sample_indices_floyd` implementation.
 ///
-/// Panics if `amount > length` or if `length` is not reprentable as a `u32`.
+/// Panics if `amount > length`.
 #[cfg(feature = "alloc")]
 pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize,
     shuffled: bool) -> Indices
@@ -646,7 +681,9 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize,
         panic!("`amount` of samples must be less than or equal to `length`");
     }
     if length > (::core::u32::MAX as usize) {
-        panic!("`length` is not representable as `u32`");
+        // We never want to use inplace here, but could use floyd's alg
+        // Lazy version: always use the cache alg.
+        return sample_indices_cache(rng, length, amount);
     }
     let amount = amount as u32;
     let length = length as u32;
@@ -672,7 +709,9 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize,
         if (length as f32) < C[j] * (amount as f32) {
             sample_indices_inplace(rng, length, amount)
         } else {
-            sample_indices_cache(rng, length, amount)
+            // note: could have a specific u32 impl, but I'm lazy and
+            // generics don't have usable conversions
+            sample_indices_cache(rng, length as usize, amount as usize)
         }
     }
 }
@@ -745,15 +784,15 @@ fn sample_indices_inplace<R>(rng: &mut R, length: u32, amount: u32) -> Indices
 /// values from `1_000_000`. The algorithm is `O(amount)` time and memory,
 /// but due to overheads will often be slower than other approaches.
 #[cfg(feature = "alloc")]
-fn sample_indices_cache<R>(rng: &mut R, length: u32, amount: u32) -> Indices
+fn sample_indices_cache<R>(rng: &mut R, length: usize, amount: usize) -> Indices
     where R: Rng + ?Sized,
 {
     debug_assert!(amount <= length);
-    #[cfg(feature="std")] let mut cache = HashMap::with_capacity(amount as usize);
+    #[cfg(feature="std")] let mut cache = HashMap::with_capacity(amount);
     #[cfg(not(feature="std"))] let mut cache = BTreeMap::new();
-    let mut indices = Vec::with_capacity(amount as usize);
+    let mut indices = Vec::with_capacity(amount);
     for i in 0..amount {
-        let j: u32 = rng.gen_range(i, length);
+        let j: usize = rng.gen_range(i, length);
 
         // get the current values at i and j ...
         let x_i = match cache.get(&i) {
@@ -769,7 +808,7 @@ fn sample_indices_cache<R>(rng: &mut R, length: u32, amount: u32) -> Indices
         cache.insert(j, x_i);
         indices.push(x_j);  // push at position i
     }
-    debug_assert_eq!(indices.len(), amount as usize);
+    debug_assert_eq!(indices.len(), amount);
     Indices::from(indices)
 }
 
@@ -1035,7 +1074,7 @@ mod test {
         r.fill(&mut seed);
         let (length, amount): (usize, usize) = (1<<20, 600);
         let v1 = sample_indices(&mut xor_rng(seed), length, amount, true);
-        let v2 = sample_indices_cache(&mut xor_rng(seed), length as u32, amount as u32);
+        let v2 = sample_indices_cache(&mut xor_rng(seed), length, amount);
         assert!(v1.iter_usize().all(|e| e < length));
         assert_eq!(v1, v2);
     }
