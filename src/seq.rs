@@ -13,6 +13,7 @@
 //! TODO: module doc
 
 #[cfg(feature="alloc")] use core::ops::Index;
+#[cfg(feature="alloc")] use core::slice;
 
 #[cfg(feature="std")] use std::vec;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec;
@@ -326,7 +327,7 @@ impl<T> SliceRandom for [T] {
         SliceChooseIter {
             slice: self,
             _phantom: Default::default(),
-            indices: sample_indices(rng, self.len(), amount, shuffled).into_iter(),
+            indices: sample_indices(rng, self.len(), amount, shuffled).into_iter_usize(),
         }
     }
 
@@ -398,7 +399,7 @@ impl<I> IteratorRandom for I where I: Iterator + Sized {}
 pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
     slice: &'a S,
     _phantom: ::core::marker::PhantomData<T>,
-    indices: vec::IntoIter<u32>,
+    indices: IndicesIntoIter,
 }
 
 #[cfg(feature = "alloc")]
@@ -466,7 +467,7 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
     let indices = sample_indices(rng, slice.len(), amount, true);
 
     let mut out = Vec::with_capacity(amount);
-    out.extend(indices.iter().map(|i| slice[*i as usize].clone()));
+    out.extend(indices.iter_usize().map(|i| slice[i].clone()));
     out
 }
 
@@ -489,9 +490,125 @@ pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) ->
     let indices = sample_indices(rng, slice.len(), amount, true);
 
     let mut out = Vec::with_capacity(amount);
-    out.extend(indices.iter().map(|i| &slice[*i as usize]));
+    out.extend(indices.iter_usize().map(|i| &slice[i]));
     out
 }
+
+/// Return type of `sample_indices`.
+#[cfg(feature = "alloc")]
+#[derive(Clone, Debug, PartialEq)]
+pub enum Indices {
+    /// Representation: a vector over `u32` values
+    U32(Vec<u32>)
+}
+
+#[cfg(feature = "alloc")]
+impl Indices {
+    /// Returns the number of indices
+    pub fn len(&self) -> usize {
+        match self {
+            &Indices::U32(ref v) => v.len(),
+        }
+    }
+
+    /// Return result as a `Vec<usize>`. Conversion may or may not be trivial.
+    pub fn into_vec_usize(self) -> Vec<usize> {
+        match self {
+            Indices::U32(v) => v.into_iter().map(|i| i as usize).collect(),
+        }
+    }
+
+    /// Iterate over the indices as a sequence of `usize` values
+    pub fn iter_usize<'a>(&'a self) -> IndicesIter<'a> {
+        match self {
+            &Indices::U32(ref v) => IndicesIter::U32(v.iter()),
+        }
+    }
+    
+    /// Convert into an iterator over the indices as a sequence of `usize` values
+    pub fn into_iter_usize(self) -> IndicesIntoIter {
+        match self {
+            Indices::U32(v) => IndicesIntoIter::U32(v.into_iter()),
+        }
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl From<Vec<u32>> for Indices {
+    fn from(v: Vec<u32>) -> Self {
+        Indices::U32(v)
+    }
+}
+
+/// Return type of `Indices::iter_usize`.
+#[cfg(feature = "alloc")]
+#[derive(Debug)]
+pub enum IndicesIter<'a> {
+    #[doc(hidden)] U32(slice::Iter<'a, u32>),
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> Iterator for IndicesIter<'a> {
+    type Item = usize;
+    fn next(&mut self) -> Option<usize> {
+        use self::IndicesIter::*;
+        match self {
+            &mut U32(ref mut iter) => iter.next().map(|i| *i as usize),
+        }
+    }
+    
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self {
+            &IndicesIter::U32(ref v) => v.size_hint(),
+        }
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> ExactSizeIterator for IndicesIter<'a> {
+    fn len(&self) -> usize {
+        match self {
+            &IndicesIter::U32(ref v) => v.len(),
+        }
+    }
+}
+
+/// Return type of `Indices::into_iter_usize`.
+#[cfg(feature = "alloc")]
+#[derive(Clone, Debug)]
+pub enum IndicesIntoIter {
+    #[doc(hidden)] U32(vec::IntoIter<u32>),
+}
+
+#[cfg(feature = "alloc")]
+impl Iterator for IndicesIntoIter {
+    type Item = usize;
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        use self::IndicesIntoIter::*;
+        match self {
+            &mut U32(ref mut v) => v.next().map(|i| i as usize),
+        }
+    }
+    
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        use self::IndicesIntoIter::*;
+        match self {
+            &U32(ref v) => v.size_hint(),
+        }
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl ExactSizeIterator for IndicesIntoIter {
+    fn len(&self) -> usize {
+        use self::IndicesIntoIter::*;
+        match self {
+            &U32(ref v) => v.len(),
+        }
+    }
+}
+
 
 /// Randomly sample exactly `amount` distinct indices from `0..length`.
 ///
@@ -522,7 +639,7 @@ pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) ->
 /// Panics if `amount > length` or if `length` is not reprentable as a `u32`.
 #[cfg(feature = "alloc")]
 pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize,
-    shuffled: bool) -> Vec<u32>
+    shuffled: bool) -> Indices
     where R: Rng + ?Sized,
 {
     if amount > length {
@@ -569,7 +686,7 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize,
 ///
 /// This implementation uses `O(amount)` memory and `O(amount^2)` time.
 #[cfg(feature = "alloc")]
-fn sample_indices_floyd<R>(rng: &mut R, length: u32, amount: u32, shuffled: bool) -> Vec<u32>
+fn sample_indices_floyd<R>(rng: &mut R, length: u32, amount: u32, shuffled: bool) -> Indices
     where R: Rng + ?Sized,
 {
     debug_assert!(amount <= length);
@@ -587,7 +704,7 @@ fn sample_indices_floyd<R>(rng: &mut R, length: u32, amount: u32, shuffled: bool
         // shuffling, but it is slow because it requires arbitrary insertions.
         indices.shuffle(rng);
     }
-    indices
+    Indices::from(indices)
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using an inplace
@@ -605,8 +722,7 @@ fn sample_indices_floyd<R>(rng: &mut R, length: u32, amount: u32, shuffled: bool
 /// allocations. Set-up is `O(length)` time and memory and shuffling is
 /// `O(amount)` time.
 #[cfg(feature = "alloc")]
-fn sample_indices_inplace<R>(rng: &mut R, length: u32, amount: u32)
-    -> Vec<u32>
+fn sample_indices_inplace<R>(rng: &mut R, length: u32, amount: u32) -> Indices
     where R: Rng + ?Sized,
 {
     debug_assert!(amount <= length);
@@ -618,7 +734,7 @@ fn sample_indices_inplace<R>(rng: &mut R, length: u32, amount: u32)
     }
     indices.truncate(amount as usize);
     debug_assert_eq!(indices.len(), amount as usize);
-    indices
+    Indices::from(indices)
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using a
@@ -629,8 +745,7 @@ fn sample_indices_inplace<R>(rng: &mut R, length: u32, amount: u32)
 /// values from `1_000_000`. The algorithm is `O(amount)` time and memory,
 /// but due to overheads will often be slower than other approaches.
 #[cfg(feature = "alloc")]
-fn sample_indices_cache<R>(rng: &mut R, length: u32, amount: u32)
-    -> Vec<u32>
+fn sample_indices_cache<R>(rng: &mut R, length: u32, amount: u32) -> Indices
     where R: Rng + ?Sized,
 {
     debug_assert!(amount <= length);
@@ -655,7 +770,7 @@ fn sample_indices_cache<R>(rng: &mut R, length: u32, amount: u32)
         indices.push(x_j);  // push at position i
     }
     debug_assert_eq!(indices.len(), amount as usize);
-    indices
+    Indices::from(indices)
 }
 
 #[cfg(test)]
@@ -816,25 +931,25 @@ mod test {
         let v = sample_slice(&mut r, &[42, 133], 2);
         assert!(&v[..] == [42, 133] || v[..] == [133, 42]);
 
-        assert_eq!(&sample_indices_inplace(&mut r, 0, 0)[..], [0; 0]);
-        assert_eq!(&sample_indices_inplace(&mut r, 1, 0)[..], [0; 0]);
-        assert_eq!(&sample_indices_inplace(&mut r, 1, 1)[..], [0]);
+        assert_eq!(sample_indices_inplace(&mut r, 0, 0).len(), 0);
+        assert_eq!(sample_indices_inplace(&mut r, 1, 0).len(), 0);
+        assert_eq!(sample_indices_inplace(&mut r, 1, 1).into_vec_usize(), vec![0]);
 
-        assert_eq!(&sample_indices_cache(&mut r, 0, 0)[..], [0; 0]);
-        assert_eq!(&sample_indices_cache(&mut r, 1, 0)[..], [0; 0]);
-        assert_eq!(&sample_indices_cache(&mut r, 1, 1)[..], [0]);
+        assert_eq!(sample_indices_cache(&mut r, 0, 0).len(), 0);
+        assert_eq!(sample_indices_cache(&mut r, 1, 0).len(), 0);
+        assert_eq!(sample_indices_cache(&mut r, 1, 1).into_vec_usize(), vec![0]);
 
-        assert_eq!(&sample_indices_floyd(&mut r, 0, 0, false)[..], [0; 0]);
-        assert_eq!(&sample_indices_floyd(&mut r, 1, 0, false)[..], [0; 0]);
-        assert_eq!(&sample_indices_floyd(&mut r, 1, 1, false)[..], [0]);
+        assert_eq!(sample_indices_floyd(&mut r, 0, 0, false).len(), 0);
+        assert_eq!(sample_indices_floyd(&mut r, 1, 0, false).len(), 0);
+        assert_eq!(sample_indices_floyd(&mut r, 1, 1, false).into_vec_usize(), vec![0]);
         
         // These algorithms should be fast with big numbers. Test average.
-        let sum = sample_indices_cache(&mut r, 1 << 25, 10)
-            .iter().fold(0, |a, b| a + b);
+        let indices = sample_indices_cache(&mut r, 1 << 25, 10);
+        let sum: usize = indices.iter_usize().sum();
         assert!(1 << 25 < sum && sum < (1 << 25) * 25);
         
-        let sum = sample_indices_floyd(&mut r, 1 << 25, 10, false)
-            .iter().fold(0, |a, b| a + b);
+        let indices = sample_indices_floyd(&mut r, 1 << 25, 10, false);
+        let sum: usize = indices.iter_usize().sum();
         assert!(1 << 25 < sum && sum < (1 << 25) * 25);
 
         // Make sure lucky 777's aren't lucky
@@ -872,16 +987,15 @@ mod test {
             let regular = sample_indices(
                 &mut xor_rng(seed), length, amount, true);
             assert_eq!(regular.len(), amount);
-            assert!(regular.iter().all(|e| *e < length as u32));
+            assert!(regular.iter_usize().all(|e| e < length));
 
             // also test that sampling the slice works
             let vec: Vec<u32> = (0..(length as u32)).collect();
             let result = sample_slice(&mut xor_rng(seed), &vec, amount);
-            assert_eq!(result, regular);
+            assert_eq!(result, regular.iter_usize().map(|i| i as u32).collect::<Vec<_>>());
 
             let result = sample_slice_ref(&mut xor_rng(seed), &vec, amount);
-            let expected = regular.iter().map(|v| v).collect::<Vec<_>>();
-            assert_eq!(result, expected);
+            assert!(result.iter().zip(regular.iter_usize()).all(|(i,j)| **i == j as u32));
         }
     }
     
@@ -894,37 +1008,35 @@ mod test {
         let mut seed = [0u8; 16];
         
         // We can't test which algorithm is used directly, but Floyd's alg
-        // should produce different results from the others.
+        // should produce different results from the others. (Also, `inplace`
+        // and `cached` currently use different sizes thus produce different results.)
         
         // A small length and relatively large amount should use inplace
         r.fill(&mut seed);
-        let (length, amount): (u32, u32) = (100, 50);
-        let v1 = sample_indices(&mut xor_rng(seed), length as usize, amount as usize, true);
-        let v2 = sample_indices_inplace(&mut xor_rng(seed), length, amount);
-        assert!(v1.iter().all(|e| *e < length));
+        let (length, amount): (usize, usize) = (100, 50);
+        let v1 = sample_indices(&mut xor_rng(seed), length, amount, true);
+        let v2 = sample_indices_inplace(&mut xor_rng(seed), length as u32, amount as u32);
+        assert!(v1.iter_usize().all(|e| e < length));
         assert_eq!(v1, v2);
         
         // Test Floyd's alg does produce different results
-        let v3 = sample_indices_floyd(&mut xor_rng(seed), length, amount, true);
+        let v3 = sample_indices_floyd(&mut xor_rng(seed), length as u32, amount as u32, true);
         assert!(v1 != v3);
-        // However, the cache alg should produce the same results
-        let v4 = sample_indices_cache(&mut xor_rng(seed), length, amount);
-        assert_eq!(v1, v4);
         
         // A large length and small amount should use Floyd
         r.fill(&mut seed);
-        let (length, amount): (u32, u32) = (1<<20, 50);
-        let v1 = sample_indices(&mut xor_rng(seed), length as usize, amount as usize, true);
-        let v2 = sample_indices_floyd(&mut xor_rng(seed), length, amount, true);
-        assert!(v1.iter().all(|e| *e < length));
+        let (length, amount): (usize, usize) = (1<<20, 50);
+        let v1 = sample_indices(&mut xor_rng(seed), length, amount, true);
+        let v2 = sample_indices_floyd(&mut xor_rng(seed), length as u32, amount as u32, true);
+        assert!(v1.iter_usize().all(|e| e < length));
         assert_eq!(v1, v2);
         
         // A large length and larger amount should use cache
         r.fill(&mut seed);
-        let (length, amount): (u32, u32) = (1<<20, 600);
-        let v1 = sample_indices(&mut xor_rng(seed), length as usize, amount as usize, true);
-        let v2 = sample_indices_cache(&mut xor_rng(seed), length, amount);
-        assert!(v1.iter().all(|e| *e < length as u32));
+        let (length, amount): (usize, usize) = (1<<20, 600);
+        let v1 = sample_indices(&mut xor_rng(seed), length, amount, true);
+        let v2 = sample_indices_cache(&mut xor_rng(seed), length as u32, amount as u32);
+        assert!(v1.iter_usize().all(|e| e < length));
         assert_eq!(v1, v2);
     }
     

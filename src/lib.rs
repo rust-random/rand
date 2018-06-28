@@ -234,7 +234,7 @@
 #![cfg_attr(feature = "wasm-bindgen", feature(wasm_import_module))]
 
 #[cfg(feature = "std")] extern crate core;
-#[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
+#[cfg(all(feature = "alloc", not(feature="std")))] #[macro_use] extern crate alloc;
 
 #[cfg(feature="simd_support")] extern crate packed_simd;
 
