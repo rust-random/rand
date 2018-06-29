@@ -116,6 +116,10 @@ use std::time::Duration;
 use Rng;
 use distributions::Distribution;
 use distributions::float::IntoFloat;
+use distributions::utils::{WideningMultiply, CompareAll};
+
+#[cfg(feature="simd_support")]
+use core::simd::*;
 
 /// Sample values uniformly between two bounds.
 ///
@@ -466,87 +470,6 @@ uniform_int_impl! { usize, isize, usize, isize, usize }
 uniform_int_impl! { u128, u128, u128, i128, u128 }
 
 
-trait WideningMultiply<RHS = Self> {
-    type Output;
-
-    fn wmul(self, x: RHS) -> Self::Output;
-}
-
-macro_rules! wmul_impl {
-    ($ty:ty, $wide:ty, $shift:expr) => {
-        impl WideningMultiply for $ty {
-            type Output = ($ty, $ty);
-
-            #[inline(always)]
-            fn wmul(self, x: $ty) -> Self::Output {
-                let tmp = (self as $wide) * (x as $wide);
-                ((tmp >> $shift) as $ty, tmp as $ty)
-            }
-        }
-    }
-}
-wmul_impl! { u8, u16, 8 }
-wmul_impl! { u16, u32, 16 }
-wmul_impl! { u32, u64, 32 }
-#[cfg(feature = "i128_support")]
-wmul_impl! { u64, u128, 64 }
-
-// This code is a translation of the __mulddi3 function in LLVM's
-// compiler-rt. It is an optimised variant of the common method
-// `(a + b) * (c + d) = ac + ad + bc + bd`.
-//
-// For some reason LLVM can optimise the C version very well, but
-// keeps shuffeling registers in this Rust translation.
-macro_rules! wmul_impl_large {
-    ($ty:ty, $half:expr) => {
-        impl WideningMultiply for $ty {
-            type Output = ($ty, $ty);
-
-            #[inline(always)]
-            fn wmul(self, b: $ty) -> Self::Output {
-                const LOWER_MASK: $ty = !0 >> $half;
-                let mut low = (self & LOWER_MASK).wrapping_mul(b & LOWER_MASK);
-                let mut t = low >> $half;
-                low &= LOWER_MASK;
-                t += (self >> $half).wrapping_mul(b & LOWER_MASK);
-                low += (t & LOWER_MASK) << $half;
-                let mut high = t >> $half;
-                t = low >> $half;
-                low &= LOWER_MASK;
-                t += (b >> $half).wrapping_mul(self & LOWER_MASK);
-                low += (t & LOWER_MASK) << $half;
-                high += t >> $half;
-                high += (self >> $half).wrapping_mul(b >> $half);
-
-                (high, low)
-            }
-        }
-    }
-}
-#[cfg(not(feature = "i128_support"))]
-wmul_impl_large! { u64, 32 }
-#[cfg(feature = "i128_support")]
-wmul_impl_large! { u128, 64 }
-
-macro_rules! wmul_impl_usize {
-    ($ty:ty) => {
-        impl WideningMultiply for usize {
-            type Output = (usize, usize);
-
-            #[inline(always)]
-            fn wmul(self, x: usize) -> Self::Output {
-                let (high, low) = (self as $ty).wmul(x as $ty);
-                (high as usize, low as usize)
-            }
-        }
-    }
-}
-#[cfg(target_pointer_width = "32")]
-wmul_impl_usize! { u32 }
-#[cfg(target_pointer_width = "64")]
-wmul_impl_usize! { u64 }
-
-
 
 /// The back-end implementing [`UniformSampler`] for floating-point types.
 ///
@@ -580,7 +503,7 @@ pub struct UniformFloat<X> {
 }
 
 macro_rules! uniform_float_impl {
-    ($ty:ty, $bits_to_discard:expr, $next_u:ident) => {
+    ($ty:ty, $uty:ident, $bits_to_discard:expr) => {
         impl SampleUniform for $ty {
             type Sampler = UniformFloat<$ty>;
         }
@@ -594,7 +517,8 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low < high, "Uniform::new called with `low >= high`");
+                assert!(low.all_lt(high),
+                        "Uniform::new called with `low >= high`");
                 let scale = high - low;
                 let offset = low - scale;
                 UniformFloat {
@@ -609,7 +533,7 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low <= high,
+                assert!(low.all_le(high),
                         "Uniform::new_inclusive called with `low > high`");
                 let scale = high - low;
                 let offset = low - scale;
@@ -621,8 +545,8 @@ macro_rules! uniform_float_impl {
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 // Generate a value in the range [1, 2)
-                let value1_2 = (rng.$next_u() >> $bits_to_discard)
-                               .into_float_with_exponent(0);
+                let value: $uty = rng.gen::<$uty>() >> $bits_to_discard;
+                let value1_2 = value.into_float_with_exponent(0);
                 // We don't use `f64::mul_add`, because it is not available with
                 // `no_std`. Furthermore, it is slower for some targets (but
                 // faster for others). However, the order of multiplication and
@@ -638,13 +562,13 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low < high,
+                assert!(low.all_lt(high),
                         "Uniform::sample_single called with low >= high");
                 let scale = high - low;
                 let offset = low - scale;
                 // Generate a value in the range [1, 2)
-                let value1_2 = (rng.$next_u() >> $bits_to_discard)
-                               .into_float_with_exponent(0);
+                let value: $uty = rng.gen::<$uty>() >> $bits_to_discard;
+                let value1_2 = value.into_float_with_exponent(0);
                 // Doing multiply before addition allows some architectures to
                 // use a single instruction.
                 value1_2 * scale + offset
@@ -653,8 +577,24 @@ macro_rules! uniform_float_impl {
     }
 }
 
-uniform_float_impl! { f32, 32 - 23, next_u32 }
-uniform_float_impl! { f64, 64 - 52, next_u64 }
+uniform_float_impl! { f32, u32, 32 - 23 }
+uniform_float_impl! { f64, u64, 64 - 52 }
+
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f32x2, u32x2, 32 - 23 }
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f32x4, u32x4, 32 - 23 }
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f32x8, u32x8, 32 - 23 }
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f32x16, u32x16, 32 - 23 }
+
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f64x2, u64x2, 64 - 52 }
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f64x4, u64x4, 64 - 52 }
+#[cfg(feature="simd_support")]
+uniform_float_impl! { f64x8, u64x8, 64 - 52 }
 
 
 

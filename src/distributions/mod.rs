@@ -215,6 +215,7 @@ mod integer;
 #[cfg(feature="std")]
 mod log_gamma;
 mod other;
+mod utils;
 #[cfg(feature="std")]
 mod ziggurat_tables;
 #[cfg(feature="std")]

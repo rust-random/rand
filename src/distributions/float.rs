@@ -13,6 +13,9 @@
 use core::mem;
 use Rng;
 use distributions::{Distribution, Standard};
+use distributions::utils::CastFromInt;
+#[cfg(feature="simd_support")]
+use core::simd::*;
 
 /// A distribution to sample floating point numbers uniformly in the half-open
 /// interval `(0, 1]`, i.e. including 1 but not 0.
@@ -83,15 +86,16 @@ pub(crate) trait IntoFloat {
 }
 
 macro_rules! float_impls {
-    ($ty:ty, $uty:ty, $fraction_bits:expr, $exponent_bias:expr) => {
+    ($ty:ident, $uty:ident, $f_scalar:ident, $u_scalar:ty,
+     $fraction_bits:expr, $exponent_bias:expr) => {
         impl IntoFloat for $uty {
             type F = $ty;
             #[inline(always)]
             fn into_float_with_exponent(self, exponent: i32) -> $ty {
                 // The exponent is encoded using an offset-binary representation
-                let exponent_bits =
-                    (($exponent_bias + exponent) as $uty) << $fraction_bits;
-                unsafe { mem::transmute(self | exponent_bits) }
+                let exponent_bits: $u_scalar =
+                    (($exponent_bias + exponent) as $u_scalar) << $fraction_bits;
+                $ty::from_bits(self | exponent_bits)
             }
         }
 
@@ -100,12 +104,13 @@ macro_rules! float_impls {
                 // Multiply-based method; 24/53 random bits; [0, 1) interval.
                 // We use the most significant bits because for simple RNGs
                 // those are usually more random.
-                let float_size = mem::size_of::<$ty>() * 8;
+                let float_size = mem::size_of::<$f_scalar>() * 8;
                 let precision = $fraction_bits + 1;
-                let scale = 1.0 / ((1 as $uty << precision) as $ty);
+                let scale = 1.0 / ((1 as $u_scalar << precision) as $f_scalar);
 
                 let value: $uty = rng.gen();
-                scale * (value >> (float_size - precision)) as $ty
+                let value = value >> (float_size - precision);
+                scale * $ty::cast_from_int(value)
             }
         }
 
@@ -114,14 +119,14 @@ macro_rules! float_impls {
                 // Multiply-based method; 24/53 random bits; (0, 1] interval.
                 // We use the most significant bits because for simple RNGs
                 // those are usually more random.
-                let float_size = mem::size_of::<$ty>() * 8;
+                let float_size = mem::size_of::<$f_scalar>() * 8;
                 let precision = $fraction_bits + 1;
-                let scale = 1.0 / ((1 as $uty << precision) as $ty);
+                let scale = 1.0 / ((1 as $u_scalar << precision) as $f_scalar);
 
                 let value: $uty = rng.gen();
                 let value = value >> (float_size - precision);
                 // Add 1 to shift up; will not overflow because of right-shift:
-                scale * (value + 1) as $ty
+                scale * $ty::cast_from_int(value + 1)
             }
         }
 
@@ -130,8 +135,8 @@ macro_rules! float_impls {
                 // Transmute-based method; 23/52 random bits; (0, 1) interval.
                 // We use the most significant bits because for simple RNGs
                 // those are usually more random.
-                const EPSILON: $ty = 1.0 / (1u64 << $fraction_bits) as $ty;
-                let float_size = mem::size_of::<$ty>() * 8;
+                use core::$f_scalar::EPSILON;
+                let float_size = mem::size_of::<$f_scalar>() * 8;
 
                 let value: $uty = rng.gen();
                 let fraction = value >> (float_size - $fraction_bits);
@@ -140,8 +145,25 @@ macro_rules! float_impls {
         }
     }
 }
-float_impls! { f32, u32, 23, 127 }
-float_impls! { f64, u64, 52, 1023 }
+
+float_impls! { f32, u32, f32, u32, 23, 127 }
+float_impls! { f64, u64, f64, u64, 52, 1023 }
+
+#[cfg(feature="simd_support")]
+float_impls! { f32x2, u32x2, f32, u32, 23, 127 }
+#[cfg(feature="simd_support")]
+float_impls! { f32x4, u32x4, f32, u32, 23, 127 }
+#[cfg(feature="simd_support")]
+float_impls! { f32x8, u32x8, f32, u32, 23, 127 }
+#[cfg(feature="simd_support")]
+float_impls! { f32x16, u32x16, f32, u32, 23, 127 }
+
+#[cfg(feature="simd_support")]
+float_impls! { f64x2, u64x2, f64, u64, 52, 1023 }
+#[cfg(feature="simd_support")]
+float_impls! { f64x4, u64x4, f64, u64, 52, 1023 }
+#[cfg(feature="simd_support")]
+float_impls! { f64x8, u64x8, f64, u64, 52, 1023 }
 
 
 #[cfg(test)]
@@ -149,58 +171,89 @@ mod tests {
     use Rng;
     use distributions::{Open01, OpenClosed01};
     use rngs::mock::StepRng;
+    #[cfg(feature="simd_support")]
+    use core::simd::*;
 
     const EPSILON32: f32 = ::core::f32::EPSILON;
     const EPSILON64: f64 = ::core::f64::EPSILON;
 
-    #[test]
-    fn standard_fp_edge_cases() {
-        let mut zeros = StepRng::new(0, 0);
-        assert_eq!(zeros.gen::<f32>(), 0.0);
-        assert_eq!(zeros.gen::<f64>(), 0.0);
+    macro_rules! test_f32 {
+        ($fnn:ident, $ty:ident, $ZERO:expr, $EPSILON:expr) => {
+            #[test]
+            fn $fnn() {
+                // Standard
+                let mut zeros = StepRng::new(0, 0);
+                assert_eq!(zeros.gen::<$ty>(), $ZERO);
+                let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
+                assert_eq!(one.gen::<$ty>(), $EPSILON / 2.0);
+                let mut max = StepRng::new(!0, 0);
+                assert_eq!(max.gen::<$ty>(), 1.0 - $EPSILON / 2.0);
 
-        let mut one32 = StepRng::new(1 << 8, 0);
-        assert_eq!(one32.gen::<f32>(), EPSILON32 / 2.0);
+                // OpenClosed01
+                let mut zeros = StepRng::new(0, 0);
+                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01),
+                           0.0 + $EPSILON / 2.0);
+                let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
+                assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
+                let mut max = StepRng::new(!0, 0);
+                assert_eq!(max.sample::<$ty, _>(OpenClosed01), $ZERO + 1.0);
 
-        let mut one64 = StepRng::new(1 << 11, 0);
-        assert_eq!(one64.gen::<f64>(), EPSILON64 / 2.0);
-
-        let mut max = StepRng::new(!0, 0);
-        assert_eq!(max.gen::<f32>(), 1.0 - EPSILON32 / 2.0);
-        assert_eq!(max.gen::<f64>(), 1.0 - EPSILON64 / 2.0);
+                // Open01
+                let mut zeros = StepRng::new(0, 0);
+                assert_eq!(zeros.sample::<$ty, _>(Open01), 0.0 + $EPSILON / 2.0);
+                let mut one = StepRng::new(1 << 9 | 1 << (9 + 32), 0);
+                assert_eq!(one.sample::<$ty, _>(Open01), $EPSILON / 2.0 * 3.0);
+                let mut max = StepRng::new(!0, 0);
+                assert_eq!(max.sample::<$ty, _>(Open01), 1.0 - $EPSILON / 2.0);
+            }
+        }
     }
+    test_f32! { f32_edge_cases, f32, 0.0, EPSILON32 }
+    #[cfg(feature="simd_support")]
+    test_f32! { f32x2_edge_cases, f32x2, f32x2::splat(0.0), f32x2::splat(EPSILON32) }
+    #[cfg(feature="simd_support")]
+    test_f32! { f32x4_edge_cases, f32x4, f32x4::splat(0.0), f32x4::splat(EPSILON32) }
+    #[cfg(feature="simd_support")]
+    test_f32! { f32x8_edge_cases, f32x8, f32x8::splat(0.0), f32x8::splat(EPSILON32) }
+    #[cfg(feature="simd_support")]
+    test_f32! { f32x16_edge_cases, f32x16, f32x16::splat(0.0), f32x16::splat(EPSILON32) }
 
-    #[test]
-    fn openclosed01_edge_cases() {
-        let mut zeros = StepRng::new(0, 0);
-        assert_eq!(zeros.sample::<f32, _>(OpenClosed01), 0.0 + EPSILON32 / 2.0);
-        assert_eq!(zeros.sample::<f64, _>(OpenClosed01), 0.0 + EPSILON64 / 2.0);
+    macro_rules! test_f64 {
+        ($fnn:ident, $ty:ident, $ZERO:expr, $EPSILON:expr) => {
+            #[test]
+            fn $fnn() {
+                // Standard
+                let mut zeros = StepRng::new(0, 0);
+                assert_eq!(zeros.gen::<$ty>(), $ZERO);
+                let mut one = StepRng::new(1 << 11, 0);
+                assert_eq!(one.gen::<$ty>(), $EPSILON / 2.0);
+                let mut max = StepRng::new(!0, 0);
+                assert_eq!(max.gen::<$ty>(), 1.0 - $EPSILON / 2.0);
 
-        let mut one32 = StepRng::new(1 << 8, 0);
-        assert_eq!(one32.sample::<f32, _>(OpenClosed01), EPSILON32);
+                // OpenClosed01
+                let mut zeros = StepRng::new(0, 0);
+                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01),
+                           0.0 + $EPSILON / 2.0);
+                let mut one = StepRng::new(1 << 11, 0);
+                assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
+                let mut max = StepRng::new(!0, 0);
+                assert_eq!(max.sample::<$ty, _>(OpenClosed01), $ZERO + 1.0);
 
-        let mut one64 = StepRng::new(1 << 11, 0);
-        assert_eq!(one64.sample::<f64, _>(OpenClosed01), EPSILON64);
-
-        let mut max = StepRng::new(!0, 0);
-        assert_eq!(max.sample::<f32, _>(OpenClosed01), 1.0);
-        assert_eq!(max.sample::<f64, _>(OpenClosed01), 1.0);
+                // Open01
+                let mut zeros = StepRng::new(0, 0);
+                assert_eq!(zeros.sample::<$ty, _>(Open01), 0.0 + $EPSILON / 2.0);
+                let mut one = StepRng::new(1 << 12, 0);
+                assert_eq!(one.sample::<$ty, _>(Open01), $EPSILON / 2.0 * 3.0);
+                let mut max = StepRng::new(!0, 0);
+                assert_eq!(max.sample::<$ty, _>(Open01), 1.0 - $EPSILON / 2.0);
+            }
+        }
     }
-
-    #[test]
-    fn open01_edge_cases() {
-        let mut zeros = StepRng::new(0, 0);
-        assert_eq!(zeros.sample::<f32, _>(Open01), 0.0 + EPSILON32 / 2.0);
-        assert_eq!(zeros.sample::<f64, _>(Open01), 0.0 + EPSILON64 / 2.0);
-
-        let mut one32 = StepRng::new(1 << 9, 0);
-        assert_eq!(one32.sample::<f32, _>(Open01), EPSILON32 / 2.0 * 3.0);
-
-        let mut one64 = StepRng::new(1 << 12, 0);
-        assert_eq!(one64.sample::<f64, _>(Open01), EPSILON64 / 2.0 * 3.0);
-
-        let mut max = StepRng::new(!0, 0);
-        assert_eq!(max.sample::<f32, _>(Open01), 1.0 - EPSILON32 / 2.0);
-        assert_eq!(max.sample::<f64, _>(Open01), 1.0 - EPSILON64 / 2.0);
-    }
+    test_f64! { f64_edge_cases, f64, 0.0, EPSILON64 }
+    #[cfg(feature="simd_support")]
+    test_f64! { f64x2_edge_cases, f64x2, f64x2::splat(0.0), f64x2::splat(EPSILON64) }
+    #[cfg(feature="simd_support")]
+    test_f64! { f64x4_edge_cases, f64x4, f64x4::splat(0.0), f64x4::splat(EPSILON64) }
+    #[cfg(feature="simd_support")]
+    test_f64! { f64x8_edge_cases, f64x8, f64x8::splat(0.0), f64x8::splat(EPSILON64) }
 }

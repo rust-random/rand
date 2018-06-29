@@ -19,10 +19,11 @@ appveyor = { repository = "alexcrichton/rand" }
 
 [features]
 default = ["std" ] # without "std" rand uses libcore
-nightly = ["i128_support"] # enables all features requiring nightly rust
+nightly = ["i128_support", "simd_support"] # enables all features requiring nightly rust
 std = ["rand_core/std", "alloc", "libc", "winapi", "cloudabi", "fuchsia-zircon"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 i128_support = [] # enables i128 and u128 support
+simd_support = [] # enables SIMD support
 serde1 = ["serde", "serde_derive", "rand_core/serde1"] # enables serialization for PRNGs
 
 [workspace]
