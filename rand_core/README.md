@@ -5,6 +5,7 @@
 [![Latest version](https://img.shields.io/crates/v/rand_core.svg)](https://crates.io/crates/rand_core)
 [![Documentation](https://docs.rs/rand_core/badge.svg)](https://docs.rs/rand_core)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
+[![License](https://img.shields.io/crates/l/rand_core.svg)](https://github.com/rust-lang-nursery/rand/tree/master/rand_core#license)
 
 Core traits and error types of the [rand] library, plus tools for implementing
 RNGs.
