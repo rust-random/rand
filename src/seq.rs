@@ -495,12 +495,16 @@ pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) ->
 ///
 /// The values are non-repeating and in random order.
 ///
-/// This implementation uses `O(amount)` time and memory.
+/// This method is used internally by the slice sampling methods, but it can
+/// sometimes be useful to have the indices themselves so this is provided as
+/// an alternative.
 ///
-/// This method is used internally by the slice sampling methods, but it can sometimes be useful to
-/// have the indices themselves so this is provided as an alternative.
+/// The implementation used is not specified; we automatically select the
+/// fastest available implementation. Roughly speaking, complexity is
+/// `O(amount)` if `amount` is small relative to `length`, otherwise `O(length)`.
 ///
-/// Panics if `amount > length`
+/// Panics if `amount > length`; may panic with extremely large `amount` or
+/// `length` (when `36*length` or `2720*amount` overflows `usize`).
 #[cfg(feature = "alloc")]
 pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
     where R: Rng + ?Sized,
@@ -508,29 +512,58 @@ pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize
     if amount > length {
         panic!("`amount` must be less than or equal to `slice.len()`");
     }
+    
+    // Choice of algorithm here depends on both length and amount. See:
+    // https://github.com/rust-lang-nursery/rand/pull/479
 
-    // We are going to have to allocate at least `amount` for the output no matter what. However,
-    // if we use the `cached` version we will have to allocate `amount` as a HashMap as well since
-    // it inserts an element for every loop.
-    //
-    // Therefore, if `amount >= length / 2` then inplace will be both faster and use less memory.
-    // In fact, benchmarks show the inplace version is faster for length up to about 20 times
-    // faster than amount.
-    //
-    // TODO: there is probably even more fine-tuning that can be done here since
-    // `HashMap::with_capacity(amount)` probably allocates more than `amount` in practice,
-    // and a trade off could probably be made between memory/cpu, since hashmap operations
-    // are slower than array index swapping.
-    if amount >= length / 20 {
-        sample_indices_inplace(rng, length as u32, amount as u32)
-            .into_iter().map(|x| x as usize).collect()
+    if amount < 517 {
+        const C: [[usize; 2]; 2] = [[1, 36], [200, 440]];
+        let j = if length < 500_000 { 0 } else { 1 };
+        let m4 = 4 * amount;
+        if C[0][j] * length < (C[1][j] + m4) * amount {
+            sample_indices_inplace(rng, length as u32, amount as u32)
+                .into_iter()
+                .map(|x| x as usize)
+                .collect()
+        } else {
+            sample_indices_floyd(rng, length, amount)
+        }
     } else {
-        sample_indices_cache(rng, length, amount)
+        const C: [[usize; 2]; 2] = [[1, 36], [62*40, 68*40]];
+        let j = if length < 500_000 { 0 } else { 1 };
+        if C[0][j] * length < C[1][j] * amount {
+            sample_indices_inplace(rng, length as u32, amount as u32)
+                .into_iter()
+                .map(|x| x as usize)
+                .collect()
+        } else {
+            sample_indices_cache(rng, length, amount)
+        }
     }
+}
+
+/// Randomly sample exactly `amount` indices from `0..length`, using Floyd's
+/// combination algorithm.
+///
+/// This implementation uses `O(amount)` memory and `O(amount^2)` time.
+#[cfg(feature = "alloc")]
+fn sample_indices_floyd<R>(rng: &mut R, length: usize, amount: usize)
+    -> Vec<usize>
+    where R: Rng + ?Sized,
+{
+    debug_assert!(amount <= length);
+    let mut indices = Vec::with_capacity(amount);
+    for j in length - amount .. length {
+        let t = rng.gen_range(0, j + 1);
+        let t = if indices.contains(&t) { j } else { t };
+        indices.push( t );
+    }
+    indices
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using an inplace
 /// partial Fisher-Yates method.
+/// Sample an amount of indices using an inplace partial fisher yates method.
 ///
 /// This allocates the entire `length` of indices and randomizes only the first `amount`.
 /// It then truncates to `amount` and returns.
@@ -762,11 +795,19 @@ mod test {
         assert_eq!(&sample_indices_cache(&mut r, 1, 0)[..], [0; 0]);
         assert_eq!(&sample_indices_cache(&mut r, 1, 1)[..], [0]);
 
+        assert_eq!(&sample_indices_floyd(&mut r, 0, 0)[..], [0; 0]);
+        assert_eq!(&sample_indices_floyd(&mut r, 1, 0)[..], [0; 0]);
+        assert_eq!(&sample_indices_floyd(&mut r, 1, 1)[..], [0]);
+        
         // These algorithms should be fast with big numbers. Test average.
         let sum = sample_indices_cache(&mut r, 1 << 50, 10)
             .iter().fold(0, |a, b| a + b);
         assert!(1 << 50 < sum && sum < (1 << 50) * 25);
         
+        let sum = sample_indices_floyd(&mut r, 1 << 50, 10)
+            .iter().fold(0, |a, b| a + b);
+        assert!(1 << 50 < sum && sum < (1 << 50) * 25);
+
         // Make sure lucky 777's aren't lucky
         let slice = &[42, 777];
         let mut num_42 = 0;
@@ -818,7 +859,50 @@ mod test {
             }
         }
     }
+    
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_sample_alg() {
+        let xor_rng = XorShiftRng::from_seed;
 
+        let mut r = ::test::rng(403);
+        let mut seed = [0u8; 16];
+        
+        // We can't test which algorithm is used directly, but each should
+        // produce a different sample with the same parameters.
+        
+        // A small length and relatively large amount should use inplace
+        r.fill(&mut seed);
+        let (length, amount) = (100, 50);
+        let v1 = sample_indices(&mut xor_rng(seed), length, amount);
+        let v2 = sample_indices_inplace(&mut xor_rng(seed),
+            length as u32, amount as u32);
+        assert!(v1.iter().all(|e| *e < length));
+        assert!(v1.iter().zip(v2.iter()).all(|(x,y)| *x == *y as usize));
+        
+        // Test other algs do produce different results
+        let v3 = sample_indices_floyd(&mut xor_rng(seed), length, amount);
+        let v4 = sample_indices_cache(&mut xor_rng(seed), length, amount);
+        assert!(v1 != v3);
+        assert!(v1 != v4);
+        
+        // A large length and small amount should use Floyd
+        r.fill(&mut seed);
+        let (length, amount) = (1<<20, 50);
+        let v1 = sample_indices(&mut xor_rng(seed), length, amount);
+        let v2 = sample_indices_floyd(&mut xor_rng(seed), length, amount);
+        assert!(v1.iter().all(|e| *e < length));
+        assert_eq!(v1, v2);
+        
+        // A large length and larger amount should use cache
+        r.fill(&mut seed);
+        let (length, amount) = (1<<20, 600);
+        let v1 = sample_indices(&mut xor_rng(seed), length, amount);
+        let v2 = sample_indices_cache(&mut xor_rng(seed), length, amount);
+        assert!(v1.iter().all(|e| *e < length));
+        assert_eq!(v1, v2);
+    }
+    
     #[test]
     #[cfg(feature = "alloc")]
     fn test_weighted() {
