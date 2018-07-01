@@ -5,6 +5,7 @@
 [![Latest version](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
 [![Documentation](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
+[![Open issues](https://img.shields.io/github/issues-raw/rust-lang-nursery/rand.svg)](https://github.com/rust-lang-nursery/rand/issues)
 [![License](https://img.shields.io/crates/l/rand.svg)](https://github.com/rust-lang-nursery/rand#license)
 
 A Rust library for random number generation.
