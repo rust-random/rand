@@ -19,12 +19,12 @@
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec::Vec;
 // BTreeMap is not as fast in tests, but better than nothing.
-#[cfg(feature="std")] use std::collections::HashMap;
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::collections::BTreeMap;
+#[cfg(feature="std")] use std::collections::{HashSet};
+#[cfg(all(feature="alloc", not(feature="std")))] use alloc::collections::BTreeSet;
 
-#[cfg(feature = "alloc")] use distributions::WeightedError;
-
-use super::Rng;
+use Rng;
+#[cfg(feature="alloc")] use distributions::{Distribution, Uniform};
+#[cfg(feature="alloc")] use distributions::WeightedError;
 #[cfg(feature="alloc")] use distributions::uniform::{SampleUniform, SampleBorrow};
 
 /// Extension trait on slices, providing random mutation and sampling methods.
@@ -408,7 +408,7 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceCho
 
     fn next(&mut self) -> Option<Self::Item> {
         // TODO: investigate using SliceIndex::get_unchecked when stable
-        self.indices.next().map(|i| &(*self.slice)[i as usize])
+        self.indices.next().map(|i| &self.slice[i as usize])
     }
     
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -776,38 +776,29 @@ fn sample_indices_inplace<R>(rng: &mut R, length: u32, amount: u32) -> Indices
     Indices::from(indices)
 }
 
-/// Randomly sample exactly `amount` indices from `0..length`, using a
-/// dynamically-cached partial Fisher-Yates method.
-///
-/// The cache avoids allocating the entire `length` of values. This is
-/// especially useful when `amount <<< length`; e.g. selecting 3 non-repeating
-/// values from `1_000_000`. The algorithm is `O(amount)` time and memory,
-/// but due to overheads will often be slower than other approaches.
+/// Randomly sample exactly `amount` indices from `0..length`, using rejection
+/// sampling.
+/// 
+/// Since `amount <<< length` there is a low chance of a random sample in
+/// `0..length` being a duplicate. We test for duplicates and resample where
+/// necessary. The algorithm is `O(amount)` time and memory.
 #[cfg(feature = "alloc")]
 fn sample_indices_cache<R>(rng: &mut R, length: usize, amount: usize) -> Indices
     where R: Rng + ?Sized,
 {
-    debug_assert!(amount <= length);
-    #[cfg(feature="std")] let mut cache = HashMap::with_capacity(amount);
-    #[cfg(not(feature="std"))] let mut cache = BTreeMap::new();
+    debug_assert!(amount < length);
+    #[cfg(feature="std")] let mut cache = HashSet::with_capacity(amount);
+    #[cfg(not(feature="std"))] let mut cache = BTreeSet::new();
+    let distr = Uniform::new(0, length);
     let mut indices = Vec::with_capacity(amount);
-    for i in 0..amount {
-        let j: usize = rng.gen_range(i, length);
-
-        // get the current values at i and j ...
-        let x_i = match cache.get(&i) {
-            Some(x) => *x,
-            None => i,
-        };
-        let x_j = match cache.get(&j) {
-            Some(x) => *x,
-            None => j,
-        };
-
-        // ... and swap them
-        cache.insert(j, x_i);
-        indices.push(x_j);  // push at position i
+    for _ in 0..amount {
+        let mut pos = distr.sample(rng);
+        while !cache.insert(pos) {
+            pos = distr.sample(rng);
+        }
+        indices.push(pos);
     }
+    
     debug_assert_eq!(indices.len(), amount);
     Indices::from(indices)
 }
@@ -974,9 +965,7 @@ mod test {
         assert_eq!(sample_indices_inplace(&mut r, 1, 0).len(), 0);
         assert_eq!(sample_indices_inplace(&mut r, 1, 1).into_vec_usize(), vec![0]);
 
-        assert_eq!(sample_indices_cache(&mut r, 0, 0).len(), 0);
         assert_eq!(sample_indices_cache(&mut r, 1, 0).len(), 0);
-        assert_eq!(sample_indices_cache(&mut r, 1, 1).into_vec_usize(), vec![0]);
 
         assert_eq!(sample_indices_floyd(&mut r, 0, 0, false).len(), 0);
         assert_eq!(sample_indices_floyd(&mut r, 1, 0, false).len(), 0);
