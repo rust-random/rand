@@ -87,16 +87,16 @@ macro_rules! sample_indices {
         fn $name(b: &mut Bencher) {
             let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
             b.iter(|| {
-                $fn(&mut rng, $length, $amount, true)
+                index::$fn(&mut rng, $length, $amount, false)
             })
         }
     }
 }
 
-sample_indices!(misc_sample_indices_1_of_1k, sample_indices, 1, 1000);
-sample_indices!(misc_sample_indices_10_of_1k, sample_indices, 10, 1000);
-sample_indices!(misc_sample_indices_100_of_1k, sample_indices, 100, 1000);
-sample_indices!(misc_sample_indices_100_of_1M, sample_indices, 100, 1000_000);
-sample_indices!(misc_sample_indices_100_of_1G, sample_indices, 100, 1000_000_000);
-sample_indices!(misc_sample_indices_400_of_1G, sample_indices, 400, 1000_000_000);
-sample_indices!(misc_sample_indices_600_of_1G, sample_indices, 600, 1000_000_000);
+sample_indices!(misc_sample_indices_1_of_1k, sample, 1, 1000);
+sample_indices!(misc_sample_indices_10_of_1k, sample, 10, 1000);
+sample_indices!(misc_sample_indices_100_of_1k, sample, 100, 1000);
+sample_indices!(misc_sample_indices_100_of_1M, sample, 100, 1000_000);
+sample_indices!(misc_sample_indices_100_of_1G, sample, 100, 1000_000_000);
+sample_indices!(misc_sample_indices_400_of_1G, sample, 400, 1000_000_000);
+sample_indices!(misc_sample_indices_600_of_1G, sample, 600, 1000_000_000);
