@@ -39,7 +39,7 @@ macro_rules! seq_slice_choose_multiple {
                 // Collect full result to prevent unwanted shortcuts getting
                 // first element (in case sample_indices returns an iterator).
                 for (slot, sample) in result.iter_mut().zip(
-                    x.choose_multiple(&mut rng, $amount, false)) {
+                    x.choose_multiple(&mut rng, $amount)) {
                     *slot = *sample;
                 }
                 result[$amount-1]
@@ -87,7 +87,7 @@ macro_rules! sample_indices {
         fn $name(b: &mut Bencher) {
             let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
             b.iter(|| {
-                index::$fn(&mut rng, $length, $amount, false)
+                index::$fn(&mut rng, $length, $amount)
             })
         }
     }
@@ -98,5 +98,6 @@ sample_indices!(misc_sample_indices_10_of_1k, sample, 10, 1000);
 sample_indices!(misc_sample_indices_100_of_1k, sample, 100, 1000);
 sample_indices!(misc_sample_indices_100_of_1M, sample, 100, 1000_000);
 sample_indices!(misc_sample_indices_100_of_1G, sample, 100, 1000_000_000);
+sample_indices!(misc_sample_indices_200_of_1G, sample, 200, 1000_000_000);
 sample_indices!(misc_sample_indices_400_of_1G, sample, 400, 1000_000_000);
 sample_indices!(misc_sample_indices_600_of_1G, sample, 600, 1000_000_000);

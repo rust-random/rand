@@ -58,18 +58,11 @@ pub trait SliceRandom {
         where R: Rng + ?Sized;
 
     /// Produces an iterator that chooses `amount` elements from the slice at
-    /// random without repeating any.
-    ///
+    /// random without repeating any, and returns them in random order.
+    /// 
     /// In case this API is not sufficiently flexible, use `index::sample` then
     /// apply the indices to the slice.
     /// 
-    /// If `shuffled == true` then the sampled values will be fully shuffled;
-    /// otherwise the values may only partially shuffled, depending on the
-    /// algorithm used (i.e. biases may exist in the ordering of sampled
-    /// elements). Depending on the algorithm used internally, full shuffling
-    /// may add significant overhead for `amount` > 10 or so, but not more
-    /// than double the time and often much less.
-    ///
     /// Complexity is expected to be the same as `index::sample`.
     /// 
     /// # Example
@@ -80,16 +73,16 @@ pub trait SliceRandom {
     /// let sample = "Hello, audience!".as_bytes();
     /// 
     /// // collect the results into a vector:
-    /// let v: Vec<u8> = sample.choose_multiple(&mut rng, 3, true).cloned().collect();
+    /// let v: Vec<u8> = sample.choose_multiple(&mut rng, 3).cloned().collect();
     /// 
     /// // store in a buffer:
     /// let mut buf = [0u8; 5];
-    /// for (b, slot) in sample.choose_multiple(&mut rng, buf.len(), true).zip(buf.iter_mut()) {
+    /// for (b, slot) in sample.choose_multiple(&mut rng, buf.len()).zip(buf.iter_mut()) {
     ///     *slot = *b;
     /// }
     /// ```
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(&self, rng: &mut R, amount: usize, shuffled: bool) -> SliceChooseIter<Self, Self::Item>
+    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
         where R: Rng + ?Sized;
 
     /// Similar to [`choose`], where the likelihood of each outcome may be
@@ -315,7 +308,7 @@ impl<T> SliceRandom for [T] {
     }
 
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(&self, rng: &mut R, amount: usize, shuffled: bool)
+    fn choose_multiple<R>(&self, rng: &mut R, amount: usize)
         -> SliceChooseIter<Self, Self::Item>
         where R: Rng + ?Sized
     {
@@ -323,7 +316,7 @@ impl<T> SliceRandom for [T] {
         SliceChooseIter {
             slice: self,
             _phantom: Default::default(),
-            indices: index::sample(rng, self.len(), amount, shuffled).into_iter(),
+            indices: index::sample(rng, self.len(), amount).into_iter(),
         }
     }
 
@@ -460,7 +453,7 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
     where R: Rng + ?Sized,
           T: Clone
 {
-    let indices = index::sample(rng, slice.len(), amount, true).into_iter();
+    let indices = index::sample(rng, slice.len(), amount).into_iter();
 
     let mut out = Vec::with_capacity(amount);
     out.extend(indices.map(|i| slice[i].clone()));
@@ -483,7 +476,7 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>
     where R: Rng + ?Sized
 {
-    let indices = index::sample(rng, slice.len(), amount, true).into_iter();
+    let indices = index::sample(rng, slice.len(), amount).into_iter();
 
     let mut out = Vec::with_capacity(amount);
     out.extend(indices.map(|i| &slice[i]));
@@ -679,8 +672,7 @@ mod test {
             r.fill(&mut seed);
 
             // assert the basics work
-            let regular = index::sample(
-                &mut xor_rng(seed), length, amount, true);
+            let regular = index::sample(&mut xor_rng(seed), length, amount);
             assert_eq!(regular.len(), amount);
             assert!(regular.iter().all(|e| e < length));
 
