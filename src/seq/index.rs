@@ -205,7 +205,7 @@ pub fn sample<R>(rng: &mut R, length: usize, amount: usize,
     // https://github.com/rust-lang-nursery/rand/pull/479
     // We do some calculations with f32. Accuracy is not very important.
 
-    if amount < 442 {
+    if amount < 217 {
         const C: [[f32; 2]; 2] = [[1.2, 6.0/45.0], [10.0, 70.0/9.0]];
         let j = if length < 500_000 { 0 } else { 1 };
         let amount_fp = amount as f32;
@@ -217,7 +217,7 @@ pub fn sample<R>(rng: &mut R, length: usize, amount: usize,
             sample_floyd(rng, length, amount, shuffled)
         }
     } else {
-        const C: [f32; 2] = [590.0, 600.0/9.0];
+        const C: [f32; 2] = [270.0, 330.0/9.0];
         let j = if length < 500_000 { 0 } else { 1 };
         if (length as f32) < C[j] * (amount as f32) {
             sample_inplace(rng, length, amount)
