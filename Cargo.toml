@@ -50,6 +50,7 @@ fuchsia-zircon = { version = "0.3.2", optional = true }
 [target.wasm32-unknown-unknown.dependencies]
 # use with `--target wasm32-unknown-unknown --features=stdweb`
 stdweb = { version = "0.4", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
 
 [dev-dependencies]
 # This is for testing serde, unfortunately we can't specify feature-gated dev

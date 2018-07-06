@@ -197,7 +197,8 @@ pub use self::std::StdRng;
               target_os = "redox",
               target_os = "fuchsia",
               windows,
-              all(target_arch = "wasm32", feature = "stdweb")
+              all(target_arch = "wasm32", feature = "stdweb"),
+              all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
 mod os;
 
@@ -215,6 +216,7 @@ mod os;
               target_os = "redox",
               target_os = "fuchsia",
               windows,
-              all(target_arch = "wasm32", feature = "stdweb")
+              all(target_arch = "wasm32", feature = "stdweb"),
+              all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
 pub use self::os::OsRng;
