@@ -1023,9 +1023,9 @@ mod imp {
             let result = js! {
                 try {
                     if (
-                        typeof window === "object" &&
-                        typeof window.crypto === "object" &&
-                        typeof window.crypto.getRandomValues === "function"
+                        typeof self === "object" &&
+                        typeof self.crypto === "object" &&
+                        typeof self.crypto.getRandomValues === "function"
                     ) {
                         return { success: true, ty: 1 };
                     }
@@ -1063,7 +1063,7 @@ mod imp {
                 OsRngMethod::Browser => js! {
                     try {
                         let array = new Uint8Array(@{ len });
-                        window.crypto.getRandomValues(array);
+                        self.crypto.getRandomValues(array);
                         HEAPU8.set(array, @{ ptr });
 
                         return { success: true };
