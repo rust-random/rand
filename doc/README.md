@@ -43,7 +43,26 @@ TODO
 
 ### Project Scope
 
-TODO
+The `rand_core` library has the following scope:
+
+-   the core traits which RNGs may implement
+-   tools for implementing these traits
+
+The `rand` library has the following scope:
+
+-   re-export all parts of `rand_core` applicable to end users
+-   an interface to request entropy from an external source
+-   hooks to provide entropy from several platform-specific sources
+-   traits covering common RNG functionality
+-   some PRNGs, notably `StdRng` and `SmallRng`
+-   `thread_rng` auto-seeding source of randomness
+-   conversion of random bits to common types and uses
+-   shuffling and sampling from sequences
+-   sampling from various random number distributions
+
+Note: the scope of the project and above libraries may change. We are currently
+discussing moving PRNGs (#431) and distributions (#290) to other libraries or
+projects.
 
 ### Code style
 
