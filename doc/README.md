@@ -61,4 +61,23 @@ and wherever possible within the same function (thus making the function safe).
 
 ### New PRNG Algorithms
 
-TODO
+The Rand library includes several pseudo-random number generators, and we have
+received several requests to adopt new algorithms into the library. We must
+consider such requests in regards to several things:
+
+-   whether the PRNG is cryptographically secure, and if so, how trustworthy
+    such claims are
+-   statistical quality of output
+-   performance and features of the generator
+-   scope of the project
+-   reception and third-party review of the algorithm
+
+In general, we expect:
+
+-   the author of the algorithm to publish an article of some type (e.g.
+    a scientific article or web page) introducing the new algorithm and
+    discussing its utility, strengths and weaknesses
+-   review of statistical quality and any special features by third parties
+-   good performance in automated test suites like PractRand, TestU01 and
+    BigCrush, (unless for some reason this is not expected, e.g. a mock
+    generator)
