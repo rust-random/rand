@@ -174,7 +174,7 @@ impl<T> Distribution<Wrapping<T>> for Standard where Standard: Distribution<T> {
 mod tests {
     use {Rng, RngCore, Standard};
     use distributions::Alphanumeric;
-    #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::String;
+    #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::string::String;
 
     #[test]
     fn test_misc() {
