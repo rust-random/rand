@@ -15,7 +15,7 @@ use ::core::cmp::PartialOrd;
 use ::{Error, ErrorKind};
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
-#[cfg(not(feature="std"))] use alloc::Vec;
+#[cfg(not(feature="std"))] use alloc::vec::Vec;
 
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///

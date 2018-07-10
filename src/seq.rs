@@ -15,10 +15,11 @@
 #[cfg(feature="alloc")] use core::ops::Index;
 
 #[cfg(feature="std")] use std::vec;
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::{vec, Vec};
+#[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec;
+#[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec::Vec;
 // BTreeMap is not as fast in tests, but better than nothing.
 #[cfg(feature="std")] use std::collections::HashMap;
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::btree_map::BTreeMap;
+#[cfg(all(feature="alloc", not(feature="std")))] use alloc::collections::BTreeMap;
 
 
 use super::Rng;
@@ -599,7 +600,7 @@ mod test {
     #[cfg(feature = "alloc")] use {Rng, SeedableRng};
     #[cfg(feature = "alloc")] use prng::XorShiftRng;
     #[cfg(all(feature="alloc", not(feature="std")))]
-    use alloc::Vec;
+    use alloc::vec::Vec;
 
     #[test]
     fn test_slice_choose() {
