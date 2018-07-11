@@ -11,7 +11,8 @@ matrix:
     - rust: 1.22.0
       install:
       script:
-        - cargo test --tests --no-default-features
+        # TODO: use --tests instead of --lib on more recent compiler
+        - cargo test --lib --no-default-features
         - cargo test --package rand_core --no-default-features
         - cargo test --features serde1,log
     - rust: stable
