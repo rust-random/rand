@@ -95,7 +95,9 @@ macro_rules! float_impls {
                 // The exponent is encoded using an offset-binary representation
                 let exponent_bits: $u_scalar =
                     (($exponent_bias + exponent) as $u_scalar) << $fraction_bits;
-                $ty::from_bits(self | exponent_bits)
+                // TODO: use from_bits when min compiler > 1.25 (see #545)
+                // $ty::from_bits(self | exponent_bits)
+                unsafe{ mem::transmute(self | exponent_bits) }
             }
         }
 
