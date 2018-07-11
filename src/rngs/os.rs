@@ -60,8 +60,8 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// doesn't support [`Crypto.getRandomValues`][12].
 ///
 /// The bare Wasm target `wasm32-unknown-unknown` tries to call the javascript
-/// methods directly, using `stdweb` in combination with `cargo-web`.
-/// `wasm-bindgen` is not yet supported.
+/// methods directly, using either `stdweb` in combination with `cargo-web` or
+/// `wasm-bindgen` depending on what features are activated for this crate.
 ///
 /// ## Early boot
 ///
@@ -963,7 +963,7 @@ mod imp {
 #[cfg(windows)]
 mod imp {
     extern crate winapi;
-    
+
     use {Error, ErrorKind};
     use super::OsRngImpl;
 
@@ -1098,6 +1098,100 @@ mod imp {
                 OsRngMethod::Browser => "Crypto.getRandomValues",
                 OsRngMethod::Node => "crypto.randomBytes",
             }
+        }
+    }
+}
+
+#[cfg(all(target_arch = "wasm32",
+          not(target_os = "emscripten"),
+          not(feature = "stdweb"),
+          feature = "wasm-bindgen"))]
+mod imp {
+    use core::fmt;
+
+    use __wbg_shims::*;
+
+    use {Error, ErrorKind};
+    use super::OsRngImpl;
+
+    #[derive(Clone)]
+    pub enum OsRng {
+        Node(NodeCrypto),
+        Browser(BrowserCrypto),
+    }
+
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
+            // First up we need to detect if we're running in node.js or a
+            // browser. Both environments have `this` defined as an object for
+            // our own scope, and we use that to look up other values.
+            //
+            // Here we test if `this.self` is defined. If so we're in a browser
+            // (either main window or web worker) and if not we're in node. If
+            // it turns out we're in node.js then we require the `crypto`
+            // package and use that. The API we're using was added in Node 6.x
+            // so it should be safe to assume tha it works.
+            if this.self_().is_undefined() {
+                return Ok(OsRng::Node(node_require("crypto")))
+            }
+
+            // If `self` is defined then we're in a browser somehow (main window
+            // or web worker). Here we want to try to use
+            // `crypto.getRandomValues`, but if `crypto` isn't defined we assume
+            // we're in an older web browser and the OS RNG isn't available.
+            let crypto = this.crypto();
+            if crypto.is_undefined() {
+                let msg = "self.crypto is undefined";
+                return Err(Error::new(ErrorKind::Unavailable, msg))
+            }
+
+            // Test if `crypto.getRandomValues` is undefined as well
+            let crypto: BrowserCrypto = crypto.into();
+            if crypto.get_random_values_fn().is_undefined() {
+                let msg = "crypto.getRandomValues is undefined";
+                return Err(Error::new(ErrorKind::Unavailable, msg))
+            }
+
+            // Ok! `self.crypto.getRandomValues` is a defined value, so let's
+            // assume we can do browser crypto.
+            Ok(OsRng::Browser(crypto))
+        }
+
+        fn fill_chunk(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            match *self {
+                OsRng::Node(ref n) => n.random_fill_sync(dest),
+                OsRng::Browser(ref n) => n.get_random_values(dest),
+            }
+            Ok(())
+        }
+
+        fn max_chunk_size(&self) -> usize {
+            match *self {
+                OsRng::Node(_) => usize::max_value(),
+                OsRng::Browser(_) => {
+                    // see https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues
+                    //
+                    // where it says:
+                    //
+                    // > A QuotaExceededError DOMException is thrown if the
+                    // > requested length is greater than 65536 bytes.
+                    65536
+                }
+            }
+        }
+
+        fn method_str(&self) -> &'static str {
+            match *self {
+                OsRng::Node(_) => "crypto.randomFillSync",
+                OsRng::Browser(_) => "crypto.getRandomValues",
+            }
+        }
+    }
+
+    // TODO: replace with derive once rustwasm/wasm-bindgen#399 is merged
+    impl fmt::Debug for OsRng {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            f.debug_struct("OsRng").finish()
         }
     }
 }

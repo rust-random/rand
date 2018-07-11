@@ -117,8 +117,12 @@ optional features are available:
 - `log` enables some logging via the `log` crate.
 - `nightly` enables all unstable features (`i128_support`).
 - `serde1` enables serialization for some types, via Serde version 1.
-- `stdweb` enables support for `OsRng` on `wasm-unknown-unknown` via `stdweb`
+- `stdweb` enables support for `OsRng` on `wasm32-unknown-unknown` via `stdweb`
   combined with `cargo-web`.
+- `wasm-bindgen` enables support for `OsRng` on `wasm32-unknown-unknown` via
+  [`wasm-bindgen`]
+
+[`wasm-bindgen`]: https://github.com/rustwasm/wasm-bindgen
 
 `no_std` mode is activated by setting `default-features = false`; this removes
 functionality depending on `std`:

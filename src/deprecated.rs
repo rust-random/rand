@@ -263,7 +263,8 @@ impl CryptoRng for StdRng {}
               target_os = "redox",
               target_os = "fuchsia",
               windows,
-              all(target_arch = "wasm32", feature = "stdweb")
+              all(target_arch = "wasm32", feature = "stdweb"),
+              all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
 #[derive(Clone, Debug)]
 #[deprecated(since="0.6.0", note="import with rand::rngs::OsRng instead")]
@@ -283,7 +284,8 @@ pub struct OsRng(rngs::OsRng);
               target_os = "redox",
               target_os = "fuchsia",
               windows,
-              all(target_arch = "wasm32", feature = "stdweb")
+              all(target_arch = "wasm32", feature = "stdweb"),
+              all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
 #[cfg(feature="std")]
 impl RngCore for OsRng {
@@ -322,7 +324,8 @@ impl RngCore for OsRng {
               target_os = "redox",
               target_os = "fuchsia",
               windows,
-              all(target_arch = "wasm32", feature = "stdweb")
+              all(target_arch = "wasm32", feature = "stdweb"),
+              all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
 #[cfg(feature="std")]
 impl OsRng {
@@ -345,7 +348,8 @@ impl OsRng {
               target_os = "redox",
               target_os = "fuchsia",
               windows,
-              all(target_arch = "wasm32", feature = "stdweb")
+              all(target_arch = "wasm32", feature = "stdweb"),
+              all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
 #[cfg(feature="std")]
 impl CryptoRng for OsRng {}

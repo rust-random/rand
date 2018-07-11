@@ -84,7 +84,7 @@
 //!
 //! The [`distributions` module] provides implementations
 //! of some other distributions, including Normal, Log-Normal and Exponential.
-//! 
+//!
 //! It is worth noting that the functionality already mentioned is implemented
 //! with distributions: [`gen`] samples values using the [`Standard`]
 //! distribution, while [`gen_range`] uses [`Uniform`].
@@ -109,7 +109,7 @@
 //!
 //! // thread_rng is often the most convenient source of randomness:
 //! let mut rng = thread_rng();
-//! 
+//!
 //! if rng.gen() { // random bool
 //!     let x: f64 = rng.gen(); // random number in range [0, 1)
 //!     println!("x is: {}", x);
@@ -230,6 +230,9 @@
 #![cfg_attr(all(feature="i128_support", feature="nightly"), feature(i128_type, i128))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
 #![cfg_attr(feature = "stdweb", recursion_limit="128")]
+#![cfg_attr(feature = "wasm-bindgen", feature(proc_macro))]
+#![cfg_attr(feature = "wasm-bindgen", feature(wasm_import_module))]
+#![cfg_attr(feature = "wasm-bindgen", feature(wasm_custom_section))]
 
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
@@ -241,6 +244,9 @@
 #[cfg(all(target_arch="wasm32", not(target_os="emscripten"), feature="stdweb"))]
 #[macro_use]
 extern crate stdweb;
+
+#[cfg(all(target_arch = "wasm32", feature = "wasm-bindgen"))]
+extern crate wasm_bindgen;
 
 extern crate rand_core;
 
@@ -297,7 +303,8 @@ pub mod seq;
               target_os = "redox",
               target_os = "fuchsia",
               windows,
-              all(target_arch = "wasm32", feature = "stdweb")
+              all(target_arch = "wasm32", feature = "stdweb"),
+              all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
 #[doc(hidden)]
 pub use deprecated::OsRng;
@@ -329,7 +336,8 @@ pub mod jitter {
               target_os = "redox",
               target_os = "fuchsia",
               windows,
-              all(target_arch = "wasm32", feature = "stdweb")
+              all(target_arch = "wasm32", feature = "stdweb"),
+              all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
 #[doc(hidden)]
 pub mod os {
@@ -364,20 +372,20 @@ use distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
 
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
-/// 
+///
 /// This is the primary trait to use when generating random values.
-/// 
+///
 /// # Generic usage
-/// 
+///
 /// The basic pattern is `fn foo<R: Rng + ?Sized>(rng: &mut R)`. Some
 /// things are worth noting here:
-/// 
+///
 /// - Since `Rng: RngCore` and every `RngCore` implements `Rng`, it makes no
 ///   difference whether we use `R: Rng` or `R: RngCore`.
 /// - The `+ ?Sized` un-bounding allows functions to be called directly on
 ///   type-erased references; i.e. `foo(r)` where `r: &mut RngCore`. Without
 ///   this it would be necessary to write `foo(&mut r)`.
-/// 
+///
 /// An alternative pattern is possible: `fn foo<R: Rng>(rng: R)`. This has some
 /// trade-offs. It allows the argument to be consumed directly without a `&mut`
 /// (which is how `from_rng(thread_rng())` works); also it still works directly
@@ -386,20 +394,20 @@ use distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
 /// hence many uses of `rng` require an extra reference, either explicitly
 /// (`distr.sample(&mut rng)`) or implicitly (`rng.gen()`); one may hope the
 /// optimiser can remove redundant references later.
-/// 
+///
 /// Example:
-/// 
+///
 /// ```
 /// # use rand::thread_rng;
 /// use rand::Rng;
-/// 
+///
 /// fn foo<R: Rng + ?Sized>(rng: &mut R) -> f32 {
 ///     rng.gen()
 /// }
 ///
 /// # let v = foo(&mut thread_rng());
 /// ```
-/// 
+///
 /// [`RngCore`]: trait.RngCore.html
 pub trait Rng: RngCore {
     /// Return a random value supporting the [`Standard`] distribution.
@@ -624,7 +632,7 @@ pub trait Rng: RngCore {
     /// Return a random element from `values`.
     ///
     /// Deprecated: use [`SliceRandom::choose`] instead.
-    /// 
+    ///
     /// [`SliceRandom::choose`]: seq/trait.SliceRandom.html#method.choose
     #[deprecated(since="0.6.0", note="use SliceRandom::choose instead")]
     fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
@@ -635,7 +643,7 @@ pub trait Rng: RngCore {
     /// Return a mutable pointer to a random element from `values`.
     ///
     /// Deprecated: use [`SliceRandom::choose_mut`] instead.
-    /// 
+    ///
     /// [`SliceRandom::choose_mut`]: seq/trait.SliceRandom.html#method.choose_mut
     #[deprecated(since="0.6.0", note="use SliceRandom::choose_mut instead")]
     fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> {
@@ -646,7 +654,7 @@ pub trait Rng: RngCore {
     /// Shuffle a mutable slice in place.
     ///
     /// Deprecated: use [`SliceRandom::shuffle`] instead.
-    /// 
+    ///
     /// [`SliceRandom::shuffle`]: seq/trait.SliceRandom.html#method.shuffle
     #[deprecated(since="0.6.0", note="use SliceRandom::shuffle instead")]
     fn shuffle<T>(&mut self, values: &mut [T]) {
@@ -658,15 +666,15 @@ pub trait Rng: RngCore {
 impl<R: RngCore + ?Sized> Rng for R {}
 
 /// Trait for casting types to byte slices
-/// 
+///
 /// This is used by the [`fill`] and [`try_fill`] methods.
-/// 
+///
 /// [`fill`]: trait.Rng.html#method.fill
 /// [`try_fill`]: trait.Rng.html#method.try_fill
 pub trait AsByteSliceMut {
     /// Return a mutable reference to self as a byte slice
     fn as_byte_slice_mut(&mut self) -> &mut [u8];
-    
+
     /// Call `to_le` on each element (i.e. byte-swap on Big Endian platforms).
     fn to_le(&mut self);
 }
@@ -675,7 +683,7 @@ impl AsByteSliceMut for [u8] {
     fn as_byte_slice_mut(&mut self) -> &mut [u8] {
         self
     }
-    
+
     fn to_le(&mut self) {}
 }
 
@@ -698,7 +706,7 @@ macro_rules! impl_as_byte_slice {
                     }
                 }
             }
-            
+
             fn to_le(&mut self) {
                 for x in self {
                     *x = x.to_le();
@@ -724,7 +732,7 @@ macro_rules! impl_as_byte_slice_arrays {
     ($n:expr,) => {};
     ($n:expr, $N:ident, $($NN:ident,)*) => {
         impl_as_byte_slice_arrays!($n - 1, $($NN,)*);
-        
+
         impl<T> AsByteSliceMut for [T; $n] where [T]: AsByteSliceMut {
             fn as_byte_slice_mut(&mut self) -> &mut [u8] {
                 self[..].as_byte_slice_mut()
@@ -743,7 +751,7 @@ macro_rules! impl_as_byte_slice_arrays {
             fn as_byte_slice_mut(&mut self) -> &mut [u8] {
                 self[..].as_byte_slice_mut()
             }
-            
+
             fn to_le(&mut self) {
                 self[..].to_le()
             }
@@ -874,6 +882,68 @@ pub fn random<T>() -> T where Standard: Distribution<T> {
     thread_rng().gen()
 }
 
+// Due to rustwasm/wasm-bindgen#201 this can't be defined in the inner os
+// modules, so hack around it for now and place it at the root.
+#[cfg(all(feature = "wasm-bindgen", target_arch = "wasm32"))]
+#[doc(hidden)]
+#[allow(missing_debug_implementations)]
+pub mod __wbg_shims {
+
+    // `extern { type Foo; }` isn't supported on 1.22 syntactically, so use a
+    // macro to work around that.
+    macro_rules! rust_122_compat {
+        ($($t:tt)*) => ($($t)*)
+    }
+
+    rust_122_compat! {
+        extern crate wasm_bindgen;
+
+        pub use wasm_bindgen::prelude::*;
+
+        #[wasm_bindgen]
+        extern {
+            pub type This;
+            pub static this: This;
+
+            #[wasm_bindgen(method, getter, structural, js_name = self)]
+            pub fn self_(me: &This) -> JsValue;
+            #[wasm_bindgen(method, getter, structural)]
+            pub fn crypto(me: &This) -> JsValue;
+
+            pub type BrowserCrypto;
+
+            // TODO: these `structural` annotations here ideally wouldn't be here to
+            // avoid a JS shim, but for now with feature detection they're
+            // unavoidable.
+            #[wasm_bindgen(method, js_name = getRandomValues, structural, getter)]
+            pub fn get_random_values_fn(me: &BrowserCrypto) -> JsValue;
+            #[wasm_bindgen(method, js_name = getRandomValues, structural)]
+            pub fn get_random_values(me: &BrowserCrypto, buf: &mut [u8]);
+
+            #[wasm_bindgen(js_name = require)]
+            pub fn node_require(s: &str) -> NodeCrypto;
+
+            pub type NodeCrypto;
+
+            #[wasm_bindgen(method, js_name = randomFillSync, structural)]
+            pub fn random_fill_sync(me: &NodeCrypto, buf: &mut [u8]);
+        }
+
+        // TODO: replace with derive once rustwasm/wasm-bindgen#400 is merged
+        impl Clone for BrowserCrypto {
+            fn clone(&self) -> BrowserCrypto {
+                BrowserCrypto { obj: self.obj.clone() }
+            }
+        }
+
+        impl Clone for NodeCrypto {
+            fn clone(&self) -> NodeCrypto {
+                NodeCrypto { obj: self.obj.clone() }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use rngs::mock::StepRng;
@@ -936,25 +1006,25 @@ mod test {
             }
         }
     }
-    
+
     #[test]
     fn test_fill() {
         let x = 9041086907909331047;    // a random u64
         let mut rng = StepRng::new(x, 0);
-        
+
         // Convert to byte sequence and back to u64; byte-swap twice if BE.
         let mut array = [0u64; 2];
         rng.fill(&mut array[..]);
         assert_eq!(array, [x, x]);
         assert_eq!(rng.next_u64(), x);
-        
+
         // Convert to bytes then u32 in LE order
         let mut array = [0u32; 2];
         rng.fill(&mut array[..]);
         assert_eq!(array, [x as u32, (x >> 32) as u32]);
         assert_eq!(rng.next_u32(), x as u32);
     }
-    
+
     #[test]
     fn test_fill_empty() {
         let mut array = [0u32; 0];
@@ -1029,7 +1099,7 @@ mod test {
         assert_eq!(r.gen_range(0, 1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
-    
+
     #[test]
     #[cfg(feature="std")]
     fn test_random() {

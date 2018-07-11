@@ -59,6 +59,12 @@ matrix:
 
     - rust: nightly
       install:
+        - rustup target add wasm32-unknown-unknown
+      script:
+        - cargo build --target wasm32-unknown-unknown --features wasm-bindgen
+
+    - rust: nightly
+      install:
         - rustup target add thumbv6m-none-eabi
       script:
         # Bare metal target; no std; only works on nightly
