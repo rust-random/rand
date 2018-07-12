@@ -177,7 +177,7 @@ use Rng;
 #[doc(inline)] pub use self::uniform::Uniform;
 #[doc(inline)] pub use self::float::{OpenClosed01, Open01};
 #[cfg(feature="alloc")]
-#[doc(inline)] pub use self::weighted::WeightedIndex;
+#[doc(inline)] pub use self::weighted::{WeightedIndex, WeightedError};
 #[cfg(feature="std")]
 #[doc(inline)] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 #[cfg(feature="std")]

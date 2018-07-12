@@ -12,7 +12,7 @@ use Rng;
 use distributions::Distribution;
 use distributions::uniform::{UniformSampler, SampleUniform, SampleBorrow};
 use ::core::cmp::PartialOrd;
-use ::{Error, ErrorKind};
+use core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
 #[cfg(not(feature="std"))] use alloc::vec::Vec;
@@ -63,7 +63,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     ///
     /// [`Distribution`]: trait.Distribution.html
     /// [`Uniform<X>`]: struct.Uniform.html
-    pub fn new<I>(weights: I) -> Result<WeightedIndex<X>, Error>
+    pub fn new<I>(weights: I) -> Result<WeightedIndex<X>, WeightedError>
         where I: IntoIterator,
               I::Item: SampleBorrow<X>,
               X: for<'a> ::core::ops::AddAssign<&'a X> +
@@ -71,26 +71,26 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
                  Default {
         let mut iter = weights.into_iter();
         let mut total_weight: X = iter.next()
-                                      .ok_or(Error::new(ErrorKind::Unexpected, "Empty iterator in WeightedIndex::new"))?
+                                      .ok_or(WeightedError::NoItem)?
                                       .borrow()
                                       .clone();
 
         let zero = <X as Default>::default();
         if total_weight < zero {
-            return Err(Error::new(ErrorKind::Unexpected, "Negative weight in WeightedIndex::new"));
+            return Err(WeightedError::NegativeWeight);
         }
 
         let mut weights = Vec::<X>::with_capacity(iter.size_hint().0);
         for w in iter {
             if *w.borrow() < zero {
-                return Err(Error::new(ErrorKind::Unexpected, "Negative weight in WeightedIndex::new"));
+                return Err(WeightedError::NegativeWeight);
             }
             weights.push(total_weight.clone());
             total_weight += w.borrow();
         }
 
         if total_weight == zero {
-            return Err(Error::new(ErrorKind::Unexpected, "Total weight is zero in WeightedIndex::new"));
+            return Err(WeightedError::AllWeightsZero);
         }
         let distr = X::Sampler::new(zero, total_weight);
 
@@ -161,10 +161,43 @@ mod test {
             assert_eq!(WeightedIndex::new(&[0, 0, 0, 0, 10, 0]).unwrap().sample(&mut r), 4);
         }
 
-        assert!(WeightedIndex::new(&[10][0..0]).is_err());
-        assert!(WeightedIndex::new(&[0]).is_err());
-        assert!(WeightedIndex::new(&[10, 20, -1, 30]).is_err());
-        assert!(WeightedIndex::new(&[-10, 20, 1, 30]).is_err());
-        assert!(WeightedIndex::new(&[-10]).is_err());
+        assert_eq!(WeightedIndex::new(&[10][0..0]).unwrap_err(), WeightedError::NoItem);
+        assert_eq!(WeightedIndex::new(&[0]).unwrap_err(), WeightedError::AllWeightsZero);
+        assert_eq!(WeightedIndex::new(&[10, 20, -1, 30]).unwrap_err(), WeightedError::NegativeWeight);
+        assert_eq!(WeightedIndex::new(&[-10, 20, 1, 30]).unwrap_err(), WeightedError::NegativeWeight);
+        assert_eq!(WeightedIndex::new(&[-10]).unwrap_err(), WeightedError::NegativeWeight);
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WeightedError {
+    NoItem,
+    NegativeWeight,
+    AllWeightsZero,
+}
+
+impl WeightedError {
+    fn msg(&self) -> &str {
+        match *self {
+            WeightedError::NoItem => "No items found",
+            WeightedError::NegativeWeight => "Item has negative weight",
+            WeightedError::AllWeightsZero => "All items had weight zero",
+        }
+    }
+}
+
+#[cfg(feature="std")]
+impl ::std::error::Error for WeightedError {
+    fn description(&self) -> &str {
+        self.msg()
+    }
+    fn cause(&self) -> Option<&::std::error::Error> {
+        None
+    }
+}
+
+impl fmt::Display for WeightedError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.msg())
     }
 }
