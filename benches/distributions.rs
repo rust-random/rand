@@ -150,6 +150,33 @@ gen_range_int!(gen_range_i64, i64, 3i64, 123_456_789_123);
 #[cfg(feature = "i128_support")]
 gen_range_int!(gen_range_i128, i128, -12345678901234i128, 123_456_789_123_456_789);
 
+// construct and sample from a floating-point range
+macro_rules! gen_range_float {
+    ($fnn:ident, $ty:ident, $low:expr, $high:expr) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = XorShiftRng::from_entropy();
+
+            b.iter(|| {
+                let mut high = $high;
+                let mut low = $low;
+                let mut accum: $ty = 0.0;
+                for _ in 0..::RAND_BENCH_N {
+                    accum += rng.gen_range(low, high);
+                    // force recalculation of range each time
+                    low += 0.9;
+                    high += 1.1;
+                }
+                accum
+            });
+            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+        }
+    }
+}
+
+gen_range_float!(gen_range_f32, f32, -20000.0f32, 100000.0);
+gen_range_float!(gen_range_f64, f64, 123.456f64, 7890.12);
+
 #[bench]
 fn dist_iter(b: &mut Bencher) {
     let mut rng = XorShiftRng::from_entropy();
