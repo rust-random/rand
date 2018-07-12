@@ -12,7 +12,7 @@
 
 use Rng;
 use distributions::{Distribution, Cauchy};
-use distributions::log_gamma::log_gamma;
+use distributions::utils::log_gamma;
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///

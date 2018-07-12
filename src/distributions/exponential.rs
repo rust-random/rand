@@ -11,7 +11,8 @@
 //! The exponential distribution.
 
 use {Rng};
-use distributions::{ziggurat, ziggurat_tables, Distribution};
+use distributions::{ziggurat_tables, Distribution};
+use distributions::utils::ziggurat;
 
 /// Samples floating-point numbers according to the exponential distribution,
 /// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or

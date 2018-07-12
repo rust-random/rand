@@ -12,7 +12,7 @@
 
 use Rng;
 use distributions::{Distribution, Bernoulli, Cauchy};
-use distributions::log_gamma::log_gamma;
+use distributions::utils::log_gamma;
 
 /// The binomial distribution `Binomial(n, p)`.
 ///
