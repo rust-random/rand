@@ -11,7 +11,8 @@
 //! The normal and derived distributions.
 
 use Rng;
-use distributions::{ziggurat, ziggurat_tables, Distribution, Open01};
+use distributions::{ziggurat_tables, Distribution, Open01};
+use distributions::utils::ziggurat;
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to

@@ -173,60 +173,37 @@
 
 use Rng;
 
-#[doc(inline)] pub use self::other::Alphanumeric;
+pub use self::other::Alphanumeric;
 #[doc(inline)] pub use self::uniform::Uniform;
-#[doc(inline)] pub use self::float::{OpenClosed01, Open01};
-#[cfg(feature="alloc")]
-#[doc(inline)] pub use self::weighted::{WeightedIndex, WeightedError};
-#[cfg(feature="std")]
-#[doc(inline)] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
-#[cfg(feature="std")]
-#[doc(inline)] pub use self::normal::{Normal, LogNormal, StandardNormal};
-#[cfg(feature="std")]
-#[doc(inline)] pub use self::exponential::{Exp, Exp1};
-#[cfg(feature="std")]
-#[doc(inline)] pub use self::pareto::Pareto;
-#[cfg(feature = "std")]
-#[doc(inline)] pub use self::poisson::Poisson;
-#[cfg(feature = "std")]
-#[doc(inline)] pub use self::binomial::Binomial;
-#[doc(inline)] pub use self::bernoulli::Bernoulli;
-#[cfg(feature = "std")]
-#[doc(inline)] pub use self::cauchy::Cauchy;
-#[cfg(feature = "std")]
-#[doc(inline)] pub use self::dirichlet::Dirichlet;
+pub use self::float::{OpenClosed01, Open01};
+pub use self::bernoulli::Bernoulli;
+#[cfg(feature="alloc")] pub use self::weighted::{WeightedIndex, WeightedError};
+#[cfg(feature="std")] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
+#[cfg(feature="std")] pub use self::normal::{Normal, LogNormal, StandardNormal};
+#[cfg(feature="std")] pub use self::exponential::{Exp, Exp1};
+#[cfg(feature="std")] pub use self::pareto::Pareto;
+#[cfg(feature="std")] pub use self::poisson::Poisson;
+#[cfg(feature="std")] pub use self::binomial::Binomial;
+#[cfg(feature="std")] pub use self::cauchy::Cauchy;
+#[cfg(feature="std")] pub use self::dirichlet::Dirichlet;
 
 pub mod uniform;
-#[cfg(feature="alloc")]
-#[doc(hidden)] pub mod weighted;
-#[cfg(feature="std")]
-#[doc(hidden)] pub mod gamma;
-#[cfg(feature="std")]
-#[doc(hidden)] pub mod normal;
-#[cfg(feature="std")]
-#[doc(hidden)] pub mod exponential;
-#[cfg(feature="std")]
-#[doc(hidden)] pub mod pareto;
-#[cfg(feature = "std")]
-#[doc(hidden)] pub mod poisson;
-#[cfg(feature = "std")]
-#[doc(hidden)] pub mod binomial;
-#[doc(hidden)] pub mod bernoulli;
-#[cfg(feature = "std")]
-#[doc(hidden)] pub mod cauchy;
-#[cfg(feature = "std")]
-#[doc(hidden)] pub mod dirichlet;
+mod bernoulli;
+#[cfg(feature="alloc")] mod weighted;
+#[cfg(feature="std")] mod gamma;
+#[cfg(feature="std")] mod normal;
+#[cfg(feature="std")] mod exponential;
+#[cfg(feature="std")] mod pareto;
+#[cfg(feature="std")] mod poisson;
+#[cfg(feature="std")] mod binomial;
+#[cfg(feature="std")] mod cauchy;
+#[cfg(feature="std")] mod dirichlet;
 
 mod float;
 mod integer;
-#[cfg(feature="std")]
-mod log_gamma;
 mod other;
 mod utils;
-#[cfg(feature="std")]
-mod ziggurat_tables;
-#[cfg(feature="std")]
-use distributions::float::IntoFloat;
+#[cfg(feature="std")] mod ziggurat_tables;
 
 /// Types (distributions) that can be used to create a random instance of `T`.
 ///
@@ -484,69 +461,6 @@ impl<'a, T: Clone> Distribution<T> for WeightedChoice<'a, T> {
             modifier /= 2;
         }
         self.items[idx + 1].item.clone()
-    }
-}
-
-/// Sample a random number using the Ziggurat method (specifically the
-/// ZIGNOR variant from Doornik 2005). Most of the arguments are
-/// directly from the paper:
-///
-/// * `rng`: source of randomness
-/// * `symmetric`: whether this is a symmetric distribution, or one-sided with P(x < 0) = 0.
-/// * `X`: the $x_i$ abscissae.
-/// * `F`: precomputed values of the PDF at the $x_i$, (i.e. $f(x_i)$)
-/// * `F_DIFF`: precomputed values of $f(x_i) - f(x_{i+1})$
-/// * `pdf`: the probability density function
-/// * `zero_case`: manual sampling from the tail when we chose the
-///    bottom box (i.e. i == 0)
-
-// the perf improvement (25-50%) is definitely worth the extra code
-// size from force-inlining.
-#[cfg(feature="std")]
-#[inline(always)]
-fn ziggurat<R: Rng + ?Sized, P, Z>(
-            rng: &mut R,
-            symmetric: bool,
-            x_tab: ziggurat_tables::ZigTable,
-            f_tab: ziggurat_tables::ZigTable,
-            mut pdf: P,
-            mut zero_case: Z)
-            -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
-    loop {
-        // As an optimisation we re-implement the conversion to a f64.
-        // From the remaining 12 most significant bits we use 8 to construct `i`.
-        // This saves us generating a whole extra random number, while the added
-        // precision of using 64 bits for f64 does not buy us much.
-        let bits = rng.next_u64();
-        let i = bits as usize & 0xff;
-
-        let u = if symmetric {
-            // Convert to a value in the range [2,4) and substract to get [-1,1)
-            // We can't convert to an open range directly, that would require
-            // substracting `3.0 - EPSILON`, which is not representable.
-            // It is possible with an extra step, but an open range does not
-            // seem neccesary for the ziggurat algorithm anyway.
-            (bits >> 12).into_float_with_exponent(1) - 3.0
-        } else {
-            // Convert to a value in the range [1,2) and substract to get (0,1)
-            (bits >> 12).into_float_with_exponent(0)
-            - (1.0 - ::core::f64::EPSILON / 2.0)
-        };
-        let x = u * x_tab[i];
-
-        let test_x = if symmetric { x.abs() } else {x};
-
-        // algebraically equivalent to |u| < x_tab[i+1]/x_tab[i] (or u < x_tab[i+1]/x_tab[i])
-        if test_x < x_tab[i + 1] {
-            return x;
-        }
-        if i == 0 {
-            return zero_case(rng, u);
-        }
-        // algebraically equivalent to f1 + DRanU()*(f0 - f1) < 1
-        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * rng.gen::<f64>() < pdf(x) {
-            return x;
-        }
     }
 }
 

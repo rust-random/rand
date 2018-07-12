@@ -169,10 +169,16 @@ mod test {
     }
 }
 
+/// Error type returned from `WeightedIndex::new`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WeightedError {
+    /// The provided iterator contained no items.
     NoItem,
+
+    /// A weight lower than zero was used.
     NegativeWeight,
+
+    /// All items in the provided iterator had a weight of zero.
     AllWeightsZero,
 }
 
