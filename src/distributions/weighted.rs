@@ -169,10 +169,14 @@ mod test {
     }
 }
 
+/// Error type of weighted distribution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WeightedError {
+    /// No items found.
     NoItem,
+    /// Item has negative weight.
     NegativeWeight,
+    /// All items had weight zero.
     AllWeightsZero,
 }
 
