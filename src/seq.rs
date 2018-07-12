@@ -19,7 +19,7 @@
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec::Vec;
 // BTreeMap is not as fast in tests, but better than nothing.
 #[cfg(feature="std")] use std::collections::HashMap;
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::collections::BTreeMap;
+#[cfg(all(feature="alloc", not(feature="std")))] use alloc::btree_map::BTreeMap;
 
 use super::Rng;
 #[cfg(feature="alloc")] use distributions::uniform::{SampleUniform, SampleBorrow};
