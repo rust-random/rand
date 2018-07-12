@@ -21,6 +21,8 @@
 #[cfg(feature="std")] use std::collections::HashMap;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::collections::BTreeMap;
 
+#[cfg(feature = "alloc")] use distributions::WeightedError;
+
 use super::Rng;
 #[cfg(feature="alloc")] use distributions::uniform::{SampleUniform, SampleBorrow};
 
@@ -109,7 +111,7 @@ pub trait SliceRandom {
     /// ```
     /// [`choose`]: trait.SliceRandom.html#method.choose
     #[cfg(feature = "alloc")]
-    fn choose_weighted<R, F, B, X>(&self, rng: &mut R, weight: F) -> Option<&Self::Item>
+    fn choose_weighted<R, F, B, X>(&self, rng: &mut R, weight: F) -> Result<&Self::Item, WeightedError>
         where R: Rng + ?Sized,
               F: Fn(&Self::Item) -> B,
               B: SampleBorrow<X>,
@@ -129,7 +131,7 @@ pub trait SliceRandom {
     /// [`choose_mut`]: trait.SliceRandom.html#method.choose_mut
     /// [`choose_weighted`]: trait.SliceRandom.html#method.choose_weighted
     #[cfg(feature = "alloc")]
-    fn choose_weighted_mut<R, F, B, X>(&mut self, rng: &mut R, weight: F) -> Option<&mut Self::Item>
+    fn choose_weighted_mut<R, F, B, X>(&mut self, rng: &mut R, weight: F) -> Result<&mut Self::Item, WeightedError>
         where R: Rng + ?Sized,
               F: Fn(&Self::Item) -> B,
               B: SampleBorrow<X>,
@@ -327,7 +329,7 @@ impl<T> SliceRandom for [T] {
     }
 
     #[cfg(feature = "alloc")]
-    fn choose_weighted<R, F, B, X>(&self, rng: &mut R, weight: F) -> Option<&Self::Item>
+    fn choose_weighted<R, F, B, X>(&self, rng: &mut R, weight: F) -> Result<&Self::Item, WeightedError>
         where R: Rng + ?Sized,
               F: Fn(&Self::Item) -> B,
               B: SampleBorrow<X>,
@@ -337,12 +339,12 @@ impl<T> SliceRandom for [T] {
                  Clone +
                  Default {
         use distributions::{Distribution, WeightedIndex};
-        WeightedIndex::new(self.iter().map(weight)).ok()
-                                                   .map(|distr| &self[distr.sample(rng)])
+        let distr = WeightedIndex::new(self.iter().map(weight))?;
+        Ok(&self[distr.sample(rng)])
     }
 
     #[cfg(feature = "alloc")]
-    fn choose_weighted_mut<R, F, B, X>(&mut self, rng: &mut R, weight: F) -> Option<&mut Self::Item>
+    fn choose_weighted_mut<R, F, B, X>(&mut self, rng: &mut R, weight: F) -> Result<&mut Self::Item, WeightedError>
         where R: Rng + ?Sized,
               F: Fn(&Self::Item) -> B,
               B: SampleBorrow<X>,
@@ -352,9 +354,8 @@ impl<T> SliceRandom for [T] {
                  Clone +
                  Default {
         use distributions::{Distribution, WeightedIndex};
-        WeightedIndex::new(self.iter().map(weight)).ok()
-                                                   .map(|distr| distr.sample(rng))
-                                                   .map(move |ix| &mut self[ix])
+        let distr = WeightedIndex::new(self.iter().map(weight))?;
+        Ok(&mut self[distr.sample(rng)])
     }
 
     fn shuffle<R>(&mut self, rng: &mut R) where R: Rng + ?Sized
@@ -868,8 +869,10 @@ mod test {
 
         // Check error cases
         let empty_slice = &mut [10][0..0];
-        assert_eq!(empty_slice.choose_weighted(&mut r, |_| 1), None);
-        assert_eq!(empty_slice.choose_weighted_mut(&mut r, |_| 1), None);
-        assert_eq!(['x'].choose_weighted_mut(&mut r, |_| 0), None);
+        assert_eq!(empty_slice.choose_weighted(&mut r, |_| 1), Err(WeightedError::NoItem));
+        assert_eq!(empty_slice.choose_weighted_mut(&mut r, |_| 1), Err(WeightedError::NoItem));
+        assert_eq!(['x'].choose_weighted_mut(&mut r, |_| 0), Err(WeightedError::AllWeightsZero));
+        assert_eq!([0, -1].choose_weighted_mut(&mut r, |x| *x), Err(WeightedError::NegativeWeight));
+        assert_eq!([-1, 0].choose_weighted_mut(&mut r, |x| *x), Err(WeightedError::NegativeWeight));
     }
 }
