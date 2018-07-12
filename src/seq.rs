@@ -21,7 +21,6 @@
 #[cfg(feature="std")] use std::collections::HashMap;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::collections::BTreeMap;
 
-
 use super::Rng;
 #[cfg(feature="alloc")] use distributions::uniform::{SampleUniform, SampleBorrow};
 
