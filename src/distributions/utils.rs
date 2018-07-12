@@ -95,46 +95,18 @@ wmul_impl_usize! { u32 }
 wmul_impl_usize! { u64 }
 
 
-pub trait CastFromInt<T> {
-    fn cast_from_int(i: T) -> Self;
-}
-
-impl CastFromInt<u32> for f32 {
-    fn cast_from_int(i: u32) -> Self { i as f32 }
-}
-
-impl CastFromInt<u64> for f64 {
-    fn cast_from_int(i: u64) -> Self { i as f64 }
-}
-
-#[cfg(feature="simd_support")]
-macro_rules! simd_float_from_int {
-    ($ty:ident, $uty:ident) => {
-        impl CastFromInt<$uty> for $ty {
-            fn cast_from_int(i: $uty) -> Self { $ty::from(i) }
-        }
-    }
-}
-
-#[cfg(feature="simd_support")] simd_float_from_int! { f32x2, u32x2 }
-#[cfg(feature="simd_support")] simd_float_from_int! { f32x4, u32x4 }
-#[cfg(feature="simd_support")] simd_float_from_int! { f32x8, u32x8 }
-#[cfg(feature="simd_support")] simd_float_from_int! { f32x16, u32x16 }
-#[cfg(feature="simd_support")] simd_float_from_int! { f64x2, u64x2 }
-#[cfg(feature="simd_support")] simd_float_from_int! { f64x4, u64x4 }
-#[cfg(feature="simd_support")] simd_float_from_int! { f64x8, u64x8 }
-
-
-/// `PartialOrd` for vectors compares lexicographically. We want to compare all
-/// the individual SIMD lanes instead, and get the combined result over all
-/// lanes. This is possible using something like `a.lt(b).all()`, but we
-/// implement it as a trait so we can write the same code for `f32` and `f64`.
-/// Only the comparison functions we need are implemented.
-pub trait CompareAll {
-    type Mask;
+/// Helper trait when dealing with scalar and SIMD floating point types.
+pub(crate) trait FloatSIMDUtils {
+    // `PartialOrd` for vectors compares lexicographically. We want to compare all
+    // the individual SIMD lanes instead, and get the combined result over all
+    // lanes. This is possible using something like `a.lt(b).all()`, but we
+    // implement it as a trait so we can write the same code for `f32` and `f64`.
+    // Only the comparison functions we need are implemented.
     fn all_lt(self, other: Self) -> bool;
     fn all_le(self, other: Self) -> bool;
     fn all_finite(self) -> bool;
+
+    type Mask;
     fn finite_mask(self) -> Self::Mask;
     fn gt_mask(self, other: Self) -> Self::Mask;
     fn ge_mask(self, other: Self) -> Self::Mask;
@@ -143,9 +115,14 @@ pub trait CompareAll {
     // representable by the floating-point type. At least one of the lanes
     // must be set.
     fn decrease_masked(self, mask: Self::Mask) -> Self;
+
+    // Convert from int value. Conversion is done while retaining the numerical
+    // value, not by retaining the binary representation.
+    type UInt;
+    fn cast_from_int(i: Self::UInt) -> Self;
 }
 
-// Implement functions available in std builds but missing from core primitives
+/// Implement functions available in std builds but missing from core primitives
 #[cfg(not(std))]
 pub(crate) trait Float : Sized {
     type Bits;
@@ -157,7 +134,7 @@ pub(crate) trait Float : Sized {
     fn from_bits(v: Self::Bits) -> Self;
 }
 
-// Implement functions on f32/f64 to give them APIs similar to SIMD types
+/// Implement functions on f32/f64 to give them APIs similar to SIMD types
 pub(crate) trait FloatAsSIMD : Sized {
     #[inline(always)]
     fn lanes() -> usize { 1 }
@@ -217,7 +194,7 @@ macro_rules! scalar_float_impl {
             }
         }
 
-        impl CompareAll for $ty {
+        impl FloatSIMDUtils for $ty {
             type Mask = bool;
             #[inline(always)]
             fn all_lt(self, other: Self) -> bool { self < other }
@@ -236,6 +213,8 @@ macro_rules! scalar_float_impl {
                 debug_assert!(mask, "At least one lane must be set");
                 <$ty>::from_bits(self.to_bits() - 1)
             }
+            type UInt = $uty;
+            fn cast_from_int(i: Self::UInt) -> Self { i as $ty }
         }
 
         impl FloatAsSIMD for $ty {}
@@ -249,7 +228,7 @@ scalar_float_impl!(f64, u64);
 #[cfg(feature="simd_support")]
 macro_rules! simd_impl {
     ($ty:ident, $f_scalar:ident, $mty:ident, $uty:ident) => {
-        impl CompareAll for $ty {
+        impl FloatSIMDUtils for $ty {
             type Mask = $mty;
             #[inline(always)]
             fn all_lt(self, other: Self) -> bool { self.lt(other).all() }
@@ -279,6 +258,8 @@ macro_rules! simd_impl {
                 debug_assert!(mask.any(), "At least one lane must be set");
                 <$ty>::from_bits(<$uty>::from_bits(self) + <$uty>::from_bits(mask))
             }
+            type UInt = $uty;
+            fn cast_from_int(i: Self::UInt) -> Self { $ty::from(i) }
         }
     }
 }

@@ -13,7 +13,7 @@
 use core::mem;
 use Rng;
 use distributions::{Distribution, Standard};
-use distributions::utils::CastFromInt;
+use distributions::utils::FloatSIMDUtils;
 #[cfg(feature="simd_support")]
 use core::simd::*;
 

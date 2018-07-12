@@ -116,7 +116,7 @@ use std::time::Duration;
 use Rng;
 use distributions::Distribution;
 use distributions::float::IntoFloat;
-use distributions::utils::{WideningMultiply, CompareAll, FloatAsSIMD, BoolAsSIMD};
+use distributions::utils::{WideningMultiply, FloatSIMDUtils, FloatAsSIMD, BoolAsSIMD};
 
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
