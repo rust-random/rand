@@ -249,6 +249,7 @@ extern crate stdweb;
 extern crate wasm_bindgen;
 
 extern crate rand_core;
+extern crate rand_isaac;    // only for deprecations
 
 #[cfg(feature = "log")] #[macro_use] extern crate log;
 #[allow(unused)]

@@ -83,7 +83,8 @@
 //! ciphers are basically a CSPRNG and a combining operation, usually XOR. This
 //! means that we can easily use any stream cipher as a CSPRNG.
 //!
-//! Rand currently provides two trustworthy CSPRNGs and two CSPRNG-like PRNGs:
+//! This crate currently provides two CSPRNGs. The sub-crate `rand_isaac`
+//! provides two CSPRNG-like PRNGs:
 //!
 //! | name | full name |  performance | initialization | memory | predictability | forward secrecy |
 //! |------|-----------|--------------|--------------|----------|----------------|-------------------------|
@@ -301,8 +302,8 @@
 //! [`XorShiftRng`]: struct.XorShiftRng.html
 //! [`ChaChaRng`]: chacha/struct.ChaChaRng.html
 //! [`Hc128Rng`]: hc128/struct.Hc128Rng.html
-//! [`IsaacRng`]: isaac/struct.IsaacRng.html
-//! [`Isaac64Rng`]: isaac64/struct.Isaac64Rng.html
+//! [`IsaacRng`]: ../../rand_isaac/isaac/struct.IsaacRng.html
+//! [`Isaac64Rng`]: ../../rand_isaac/isaac64/struct.Isaac64Rng.html
 //! [`ThreadRng`]: ../rngs/struct.ThreadRng.html
 //! [`FromEntropy`]: ../trait.FromEntropy.html
 //! [`EntropyRng`]: ../rngs/struct.EntropyRng.html
@@ -317,14 +318,18 @@
 
 pub mod chacha;
 pub mod hc128;
-pub mod isaac;
-pub mod isaac64;
 mod xorshift;
-
-mod isaac_array;
 
 pub use self::chacha::ChaChaRng;
 pub use self::hc128::Hc128Rng;
-pub use self::isaac::IsaacRng;
-pub use self::isaac64::Isaac64Rng;
 pub use self::xorshift::XorShiftRng;
+
+// Deprecations (to be removed in 0.7)
+#[doc(hidden)] pub mod isaac {
+    // Note: we miss `IsaacCore` here but probably unimportant.
+    #[allow(deprecated)] pub use deprecated::IsaacRng;
+}
+#[doc(hidden)] pub mod isaac64 {
+    #[allow(deprecated)] pub use deprecated::Isaac64Rng;
+}
+#[doc(hidden)] #[allow(deprecated)] pub use deprecated::{IsaacRng, Isaac64Rng};

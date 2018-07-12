@@ -15,14 +15,15 @@
 use {prng, rngs};
 use {RngCore, CryptoRng, SeedableRng, Error};
 use rand_core::block::BlockRngCore;
+use rand_isaac;
 
 #[cfg(feature="std")]
 use std::io::Read;
 
 #[derive(Clone, Debug)]
 #[deprecated(since="0.6.0",
-    note="import with rand::prng::IsaacRng instead, or use the newer Hc128Rng")]
-pub struct IsaacRng(prng::IsaacRng);
+    note="import from rand_isaac crate instead, or use the newer Hc128Rng")]
+pub struct IsaacRng(rand_isaac::IsaacRng);
 
 impl RngCore for IsaacRng {
     #[inline(always)]
@@ -47,28 +48,28 @@ impl RngCore for IsaacRng {
 }
 
 impl SeedableRng for IsaacRng {
-    type Seed = <prng::IsaacRng as SeedableRng>::Seed;
+    type Seed = <rand_isaac::IsaacRng as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        IsaacRng(prng::IsaacRng::from_seed(seed))
+        IsaacRng(rand_isaac::IsaacRng::from_seed(seed))
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        prng::IsaacRng::from_rng(rng).map(IsaacRng)
+        rand_isaac::IsaacRng::from_rng(rng).map(IsaacRng)
     }
 }
 
 impl IsaacRng {
     pub fn new_from_u64(seed: u64) -> Self {
-        IsaacRng(prng::IsaacRng::new_from_u64(seed))
+        IsaacRng(rand_isaac::IsaacRng::new_from_u64(seed))
     }
 }
 
 
 #[derive(Clone, Debug)]
 #[deprecated(since="0.6.0",
-    note="import with rand::prng::Isaac64Rng instead, or use newer Hc128Rng")]
-pub struct Isaac64Rng(prng::Isaac64Rng);
+    note="import from rand_isaac crate instead, or use newer Hc128Rng")]
+pub struct Isaac64Rng(rand_isaac::Isaac64Rng);
 
 impl RngCore for Isaac64Rng {
     #[inline(always)]
@@ -93,20 +94,20 @@ impl RngCore for Isaac64Rng {
 }
 
 impl SeedableRng for Isaac64Rng {
-    type Seed = <prng::Isaac64Rng as SeedableRng>::Seed;
+    type Seed = <rand_isaac::Isaac64Rng as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        Isaac64Rng(prng::Isaac64Rng::from_seed(seed))
+        Isaac64Rng(rand_isaac::Isaac64Rng::from_seed(seed))
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        prng::Isaac64Rng::from_rng(rng).map(Isaac64Rng)
+        rand_isaac::Isaac64Rng::from_rng(rng).map(Isaac64Rng)
     }
 }
 
 impl Isaac64Rng {
     pub fn new_from_u64(seed: u64) -> Self {
-        Isaac64Rng(prng::Isaac64Rng::new_from_u64(seed))
+        Isaac64Rng(rand_isaac::Isaac64Rng::new_from_u64(seed))
     }
 }
 

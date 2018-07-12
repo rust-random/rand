@@ -1,4 +1,4 @@
-// Copyright 2013 The Rust Project Developers. See the COPYRIGHT
+// Copyright 2013-2018 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // https://rust-lang.org/COPYRIGHT.
 //
@@ -14,7 +14,7 @@ use core::{fmt, slice};
 use core::num::Wrapping as w;
 use rand_core::{RngCore, SeedableRng, Error, le};
 use rand_core::block::{BlockRngCore, BlockRng};
-use prng::isaac_array::IsaacArray;
+use isaac_array::IsaacArray;
 
 #[allow(non_camel_case_types)]
 type w32 = w<u32>;
@@ -87,9 +87,9 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// [^3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*](
 ///       https://eprint.iacr.org/2006/438)
 ///
-/// [`Hc128Rng`]: ../hc128/struct.Hc128Rng.html
-/// [`BlockRng`]: ../../../rand_core/block/struct.BlockRng.html
-/// [`RngCore`]: ../../trait.RngCore.html
+/// [`Hc128Rng`]: ../../rand/prng//hc128/struct.Hc128Rng.html
+/// [`BlockRng`]: ../../rand_core/block/struct.BlockRng.html
+/// [`RngCore`]: ../../rand_core/trait.RngCore.html
 #[derive(Clone, Debug)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct IsaacRng(BlockRng<IsaacCore>);
@@ -354,7 +354,7 @@ impl SeedableRng for IsaacCore {
 
 #[cfg(test)]
 mod test {
-    use {RngCore, SeedableRng};
+    use rand_core::{RngCore, SeedableRng};
     use super::IsaacRng;
 
     #[test]
