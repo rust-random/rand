@@ -51,8 +51,8 @@ API-breaking changes and `MAJOR.MINOR.PATCH` versions:
     -   although these are public versions, they are not used by default unless
         opting into using a pre-release on the specific `MAJOR.MINOR.PATCH`
         version
-    -   pre-releases are considered semantically less than their stem (e.g.
-        Cargo may automatically upgrade from `0.5.0-pre.0` to `0.5.0`)
+    -   pre-releases are considered semantically less than their final release
+        (e.g. Cargo may automatically upgrade from `0.5.0-pre.0` to `0.5.0`)
     -   all pre-release versions are unstable and may make any change
     -   we make no commitment to support users of pre-releases
 
@@ -68,8 +68,12 @@ functionality is supposed to be non-deterministic (i.e. depend on something
 external). Some functionality may be deterministic but not value-stable.
 
 A trait should define which of its functions are expected to be value-stable.
-A type (e.g. a PRNG) is value-stable if all implementations of trait functions
-for that type are value-stable where expected to be.
+An implementation of a trait must meet those stability requirements, unless the
+object for which the trait is implemented is explicitly not value-stable.
+As an example, `SeedableRng::from_seed` is required to be value-stable, but
+`SeedableRng::from_rng` is not. RNGs implementing the trait are value-stable
+when they guarantee `SeedableRng::from_seed` is value-stable, while
+`SeedableRng::from_rng` may receive optimisations.
 
 Before 1.0, we allow any new *minor* version to break value-stability, though
 we do expect such changes to be mentioned in the changelog. Post 1.0 we have
@@ -132,12 +136,11 @@ consider such requests in regards to several things:
 -   scope of the project
 -   reception and third-party review of the algorithm
 
-In general, we expect:
+In general, we expect the following, though we may make exceptions:
 
 -   the author of the algorithm to publish an article of some type (e.g.
     a scientific article or web page) introducing the new algorithm and
     discussing its utility, strengths and weaknesses
 -   review of statistical quality and any special features by third parties
--   good performance in automated test suites like PractRand, TestU01 and
-    BigCrush, (unless for some reason this is not expected, e.g. a mock
-    generator)
+-   good performance in automated test suites like PractRand and TestU01
+    (unless for some reason this is not expected, e.g. a mock generator)
