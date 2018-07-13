@@ -98,7 +98,7 @@ impl Bernoulli {
     /// If `denominator == 0` or `numerator > denominator`.
     ///
     #[inline]
-    pub fn from_ratio(numerator: u32, denominator: u32) -> Bernoulli {
+    pub fn with_ratio(numerator: u32, denominator: u32) -> Bernoulli {
         assert!(numerator <= denominator);
         if numerator == denominator {
             return Bernoulli { p_int: ::core::u64::MAX }
@@ -143,7 +143,7 @@ mod test {
         const NUM: u32 = 3;
         const DENOM: u32 = 10;
         let d1 = Bernoulli::new(P);
-        let d2 = Bernoulli::from_ratio(NUM, DENOM);
+        let d2 = Bernoulli::with_ratio(NUM, DENOM);
         const N: u32 = 100_000;
 
         let mut sum1: u32 = 0;

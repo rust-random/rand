@@ -10,25 +10,25 @@ use test::Bencher;
 use rand::prelude::*;
 
 #[bench]
-fn misc_gen_bool_const(b: &mut Bencher) {
+fn misc_with_probability_const(b: &mut Bencher) {
     let mut rng = StdRng::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut accum = true;
         for _ in 0..::RAND_BENCH_N {
-            accum ^= rng.gen_bool(0.18);
+            accum ^= rng.with_probability(0.18);
         }
         accum
     })
 }
 
 #[bench]
-fn misc_gen_bool_var(b: &mut Bencher) {
+fn misc_with_probability_var(b: &mut Bencher) {
     let mut rng = StdRng::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut accum = true;
         let mut p = 0.18;
         for _ in 0..::RAND_BENCH_N {
-            accum ^= rng.gen_bool(p);
+            accum ^= rng.with_probability(p);
             p += 0.0001;
         }
         accum
@@ -36,24 +36,24 @@ fn misc_gen_bool_var(b: &mut Bencher) {
 }
 
 #[bench]
-fn misc_gen_ratio_const(b: &mut Bencher) {
+fn misc_with_ratio_const(b: &mut Bencher) {
     let mut rng = StdRng::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut accum = true;
         for _ in 0..::RAND_BENCH_N {
-            accum ^= rng.gen_ratio(2, 3);
+            accum ^= rng.with_ratio(2, 3);
         }
         accum
     })
 }
 
 #[bench]
-fn misc_gen_ratio_var(b: &mut Bencher) {
+fn misc_with_ratio_var(b: &mut Bencher) {
     let mut rng = StdRng::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut accum = true;
         for i in 2..(::RAND_BENCH_N as u32 + 2) {
-            accum ^= rng.gen_ratio(i, i + 1);
+            accum ^= rng.with_ratio(i, i + 1);
         }
         accum
     })

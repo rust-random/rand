@@ -86,7 +86,7 @@
 //!   - [`Cauchy`] distribution
 //! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
-//!   - [`Bernoulli`] distribution, similar to [`Rng::gen_bool`].
+//!   - [`Bernoulli`] distribution, similar to [`Rng::with_probability`].
 //! - Related to positive real-valued quantities that grow exponentially
 //!   (e.g. prices, incomes, populations):
 //!   - [`LogNormal`] distribution
@@ -140,7 +140,7 @@
 //! [`sample`]: ../trait.Rng.html#method.sample
 //! [`new_inclusive`]: struct.Uniform.html#method.new_inclusive
 //! [`random()`]: ../fn.random.html
-//! [`Rng::gen_bool`]: ../trait.Rng.html#method.gen_bool
+//! [`Rng::with_probability`]: ../trait.Rng.html#method.with_probability
 //! [`Rng::gen_range`]: ../trait.Rng.html#method.gen_range
 //! [`Rng::gen()`]: ../trait.Rng.html#method.gen
 //! [`Rng`]: ../trait.Rng.html
