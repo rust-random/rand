@@ -106,11 +106,11 @@
 //! Sampling from a distribution:
 //!
 //! ```
-//! use rand::{thread_rng, Rng};
+//! use rand::prelude::*;
 //! use rand::distributions::Exp;
 //!
 //! let exp = Exp::new(2.0);
-//! let v = thread_rng().sample(exp);
+//! let v = exp.sample(&mut thread_rng());
 //! println!("{} is from an Exp(2) distribution", v);
 //! ```
 //!
@@ -220,6 +220,20 @@ mod utils;
 /// [`sample_iter`]: trait.Distribution.html#method.sample_iter
 pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the source of randomness.
+    ///
+    /// ### Example
+    ///
+    /// ```
+    /// use rand::prelude::*;
+    /// use rand::distributions::Uniform;
+    ///
+    /// let mut rng = thread_rng();
+    /// let distr = Uniform::new(10u32, 15);
+    /// for _ in 0..10 {
+    ///     let x = distr.sample(&mut rng);
+    ///     println!("{}", x);
+    /// }
+    /// ```
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T;
 
     /// Create an iterator that generates random values of `T`, using `rng` as
@@ -329,7 +343,7 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
 /// use rand::prelude::*;
 /// use rand::distributions::Standard;
 ///
-/// let val: f32 = SmallRng::from_entropy().sample(Standard);
+/// let val: f32 = Standard.sample(&mut SmallRng::from_entropy());
 /// println!("f32 from [0, 1): {}", val);
 /// ```
 ///

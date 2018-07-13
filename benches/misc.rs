@@ -66,7 +66,7 @@ fn misc_bernoulli_const(b: &mut Bencher) {
         let d = rand::distributions::Bernoulli::new(0.18);
         let mut accum = true;
         for _ in 0..::RAND_BENCH_N {
-            accum ^= rng.sample(d);
+            accum ^= d.sample(&mut rng);
         }
         accum
     })
@@ -80,7 +80,7 @@ fn misc_bernoulli_var(b: &mut Bencher) {
         let mut p = 0.18;
         for _ in 0..::RAND_BENCH_N {
             let d = rand::distributions::Bernoulli::new(p);
-            accum ^= rng.sample(d);
+            accum ^= d.sample(&mut rng);
             p += 0.0001;
         }
         accum
@@ -95,7 +95,7 @@ macro_rules! sample_binomial {
             let (n, p) = ($n, $p);
             b.iter(|| {
                 let d = rand::distributions::Binomial::new(n, p);
-                rng.sample(d)
+                d.sample(&mut rng)
             })
         }
     }

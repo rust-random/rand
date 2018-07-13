@@ -82,7 +82,7 @@ impl Distribution<u64> for Poisson {
 
                 loop {
                     // draw from the Cauchy distribution
-                    comp_dev = rng.sample(cauchy);
+                    comp_dev = cauchy.sample(rng);
                     // shift the peak of the comparison ditribution
                     result = self.sqrt_2lambda * comp_dev + self.lambda;
                     // repeat the drawing until we are in the range of possible values

@@ -34,7 +34,7 @@ use distributions::utils::ziggurat;
 /// use rand::prelude::*;
 /// use rand::distributions::Exp1;
 ///
-/// let val: f64 = SmallRng::from_entropy().sample(Exp1);
+/// let val: f64 = Exp1.sample(&mut SmallRng::from_entropy());
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -92,7 +92,7 @@ impl Exp {
 
 impl Distribution<f64> for Exp {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let n: f64 = rng.sample(Exp1);
+        let n: f64 = Exp1.sample(rng);
         n * self.lambda_inverse
     }
 }

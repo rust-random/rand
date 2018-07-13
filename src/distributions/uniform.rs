@@ -28,7 +28,7 @@
 //! # Example usage
 //!
 //! ```
-//! use rand::{Rng, thread_rng};
+//! use rand::prelude::*;
 //! use rand::distributions::Uniform;
 //! 
 //! let mut rng = thread_rng();
@@ -37,7 +37,7 @@
 //! // sample between 1 and 10 points
 //! for _ in 0..rng.gen_range(1, 11) {
 //!     // sample a point from the square with sides -10 - 10 in two dimensions
-//!     let (x, y) = (rng.sample(side), rng.sample(side));
+//!     let (x, y) = (side.sample(&mut rng), side.sample(&mut rng));
 //!     println!("Point: {}, {}", x, y);
 //! }
 //! ```
@@ -783,6 +783,7 @@ impl UniformSampler for UniformDuration {
 mod tests {
     use Rng;
     use rngs::mock::StepRng;
+    use distributions::Distribution;
     use distributions::uniform::Uniform;
     use distributions::utils::FloatAsSIMD;
     #[cfg(feature="simd_support")] use core::simd::*;
@@ -798,7 +799,7 @@ mod tests {
         let mut rng = ::test::rng(804);
         let dist = Uniform::new_inclusive(10, 10);
         for _ in 0..20 {
-            assert_eq!(rng.sample(dist), 10);
+            assert_eq!(dist.sample(&mut rng), 10);
         }
     }
 
@@ -810,7 +811,7 @@ mod tests {
 
     #[test]
     fn test_integers() {
-        let mut rng = ::test::rng(251);
+        let rng = &mut ::test::rng(251);
         macro_rules! t {
             ($($ty:ident),*) => {{
                 $(
@@ -820,25 +821,25 @@ mod tests {
                    for &(low, high) in v.iter() {
                         let my_uniform = Uniform::new(low, high);
                         for _ in 0..1000 {
-                            let v: $ty = rng.sample(my_uniform);
+                            let v: $ty = my_uniform.sample(rng);
                             assert!(low <= v && v < high);
                         }
 
                         let my_uniform = Uniform::new_inclusive(low, high);
                         for _ in 0..1000 {
-                            let v: $ty = rng.sample(my_uniform);
+                            let v: $ty = my_uniform.sample(rng);
                             assert!(low <= v && v <= high);
                         }
 
                         let my_uniform = Uniform::new(&low, high);
                         for _ in 0..1000 {
-                            let v: $ty = rng.sample(my_uniform);
+                            let v: $ty = my_uniform.sample(rng);
                             assert!(low <= v && v < high);
                         }
 
                         let my_uniform = Uniform::new_inclusive(&low, &high);
                         for _ in 0..1000 {
-                            let v: $ty = rng.sample(my_uniform);
+                            let v: $ty = my_uniform.sample(rng);
                             assert!(low <= v && v <= high);
                         }
 
@@ -858,9 +859,9 @@ mod tests {
 
     #[test]
     fn test_floats() {
-        let mut rng = ::test::rng(252);
-        let mut zero_rng = StepRng::new(0, 0);
-        let mut max_rng = StepRng::new(0xffff_ffff_ffff_ffff, 0);
+        let rng = &mut ::test::rng(252);
+        let zero_rng = &mut StepRng::new(0, 0);
+        let max_rng = &mut StepRng::new(0xffff_ffff_ffff_ffff, 0);
         macro_rules! t {
             ($ty:ty, $f_scalar:ident, $bits_shifted:expr) => {{
                 let v: &[($f_scalar, $f_scalar)]=
@@ -886,21 +887,21 @@ mod tests {
                         let my_uniform = Uniform::new(low, high);
                         let my_incl_uniform = Uniform::new_inclusive(low, high);
                         for _ in 0..100 {
-                            let v = rng.sample(my_uniform).extract(lane);
+                            let v = my_uniform.sample(rng).extract(lane);
                             assert!(low_scalar <= v && v < high_scalar);
-                            let v = rng.sample(my_incl_uniform).extract(lane);
+                            let v = my_incl_uniform.sample(rng).extract(lane);
                             assert!(low_scalar <= v && v <= high_scalar);
                             let v = rng.gen_range(low, high).extract(lane);
                             assert!(low_scalar <= v && v < high_scalar);
                         }
 
-                        assert_eq!(rng.sample(Uniform::new_inclusive(low, low)).extract(lane), low_scalar);
+                        assert_eq!(Uniform::new_inclusive(low, low).sample(rng).extract(lane), low_scalar);
 
-                        assert_eq!(zero_rng.sample(my_uniform).extract(lane), low_scalar);
-                        assert_eq!(zero_rng.sample(my_incl_uniform).extract(lane), low_scalar);
+                        assert_eq!(my_uniform.sample(zero_rng).extract(lane), low_scalar);
+                        assert_eq!(my_incl_uniform.sample(zero_rng).extract(lane), low_scalar);
                         assert_eq!(zero_rng.gen_range(low, high).extract(lane), low_scalar);
-                        assert!(max_rng.sample(my_uniform).extract(lane) < high_scalar);
-                        assert!(max_rng.sample(my_incl_uniform).extract(lane) <= high_scalar);
+                        assert!(my_uniform.sample(max_rng).extract(lane) < high_scalar);
+                        assert!(my_incl_uniform.sample(max_rng).extract(lane) <= high_scalar);
 
                         // Don't run this test for really tiny differences between high and low
                         // since for those rounding might result in selecting high for a very
@@ -914,11 +915,11 @@ mod tests {
                     }
                 }
 
-                assert_eq!(rng.sample(Uniform::new_inclusive(::core::$f_scalar::MAX,
-                                                             ::core::$f_scalar::MAX)),
+                assert_eq!(Uniform::new_inclusive(::core::$f_scalar::MAX,
+                                                  ::core::$f_scalar::MAX).sample(rng),
                            ::core::$f_scalar::MAX);
-                assert_eq!(rng.sample(Uniform::new_inclusive(-::core::$f_scalar::MAX,
-                                                             -::core::$f_scalar::MAX)),
+                assert_eq!(Uniform::new_inclusive(-::core::$f_scalar::MAX,
+                                                  -::core::$f_scalar::MAX).sample(rng),
                            -::core::$f_scalar::MAX);
             }}
         }
@@ -1001,7 +1002,7 @@ mod tests {
         for &(low, high) in v.iter() {
             let my_uniform = Uniform::new(low, high);
             for _ in 0..1000 {
-                let v = rng.sample(my_uniform);
+                let v = my_uniform.sample(&mut rng);
                 assert!(low <= v && v < high);
             }
         }
@@ -1046,7 +1047,7 @@ mod tests {
         let uniform = Uniform::new(low, high);
         let mut rng = ::test::rng(804);
         for _ in 0..100 {
-            let x: MyF32 = rng.sample(uniform);
+            let x: MyF32 = uniform.sample(&mut rng);
             assert!(low <= x && x < high);
         }
     }

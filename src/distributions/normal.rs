@@ -32,7 +32,7 @@ use distributions::utils::ziggurat;
 /// use rand::prelude::*;
 /// use rand::distributions::StandardNormal;
 ///
-/// let val: f64 = SmallRng::from_entropy().sample(StandardNormal);
+/// let val: f64 = StandardNormal.sample(&mut SmallRng::from_entropy());
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -56,8 +56,8 @@ impl Distribution<f64> for StandardNormal {
             let mut y = 0.0f64;
 
             while -2.0 * y < x * x {
-                let x_: f64 = rng.sample(Open01);
-                let y_: f64 = rng.sample(Open01);
+                let x_: f64 = Open01.sample(rng);
+                let y_: f64 = Open01.sample(rng);
 
                 x = x_.ln() / ziggurat_tables::ZIG_NORM_R;
                 y = y_.ln();
@@ -112,7 +112,7 @@ impl Normal {
 }
 impl Distribution<f64> for Normal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let n = rng.sample(StandardNormal);
+        let n = StandardNormal.sample(rng);
         self.mean + self.std_dev * n
     }
 }

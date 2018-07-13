@@ -461,49 +461,20 @@ pub trait Rng: RngCore {
 
     /// Sample a new value, using the given distribution.
     ///
-    /// ### Example
+    /// Deprecated: use [`Distribution::sample`] instead.
     ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    /// use rand::distributions::Uniform;
-    ///
-    /// let mut rng = thread_rng();
-    /// let x = rng.sample(Uniform::new(10u32, 15));
-    /// // Type annotation requires two types, the type and distribution; the
-    /// // distribution can be inferred.
-    /// let y = rng.sample::<u16, _>(Uniform::new(10, 15));
-    /// ```
+    /// [`Distribution::sample`]: distributions/trait.Distribution.html#method.sample
+    #[deprecated(since="0.6.0", note="use Distribution::sample instead")]
     fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
         distr.sample(self)
     }
 
     /// Create an iterator that generates values using the given distribution.
     ///
-    /// # Example
+    /// Deprecated: use [`Distribution::sample_iter`] instead.
     ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    /// use rand::distributions::{Alphanumeric, Uniform, Standard};
-    ///
-    /// let mut rng = thread_rng();
-    ///
-    /// // Vec of 16 x f32:
-    /// let v: Vec<f32> = thread_rng().sample_iter(&Standard).take(16).collect();
-    ///
-    /// // String:
-    /// let s: String = rng.sample_iter(&Alphanumeric).take(7).collect();
-    ///
-    /// // Combined values
-    /// println!("{:?}", thread_rng().sample_iter(&Standard).take(5)
-    ///                              .collect::<Vec<(f64, bool)>>());
-    ///
-    /// // Dice-rolling:
-    /// let die_range = Uniform::new_inclusive(1, 6);
-    /// let mut roll_die = rng.sample_iter(&die_range);
-    /// while roll_die.next().unwrap() != 6 {
-    ///     println!("Not a 6; rolling again!");
-    /// }
-    /// ```
+    /// [`Distribution::sample_iter`]: distributions/trait.Distribution.html#method.sample_iter
+    #[deprecated(since="0.6.0", note="use Distribution::sample_iter instead")]
     fn sample_iter<'a, T, D: Distribution<T>>(&'a mut self, distr: &'a D)
         -> distributions::DistIter<'a, D, Self, T> where Self: Sized
     {
@@ -597,7 +568,7 @@ pub trait Rng: RngCore {
     #[inline]
     fn gen_bool(&mut self, p: f64) -> bool {
         let d = distributions::Bernoulli::new(p);
-        self.sample(d)
+        d.sample(self)
     }
 
     /// Return a bool with a probability of `numerator/denominator` of being
@@ -626,7 +597,7 @@ pub trait Rng: RngCore {
     #[inline]
     fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
         let d = distributions::Bernoulli::from_ratio(numerator, denominator);
-        self.sample(d)
+        d.sample(self)
     }
 
     /// Return a random element from `values`.
