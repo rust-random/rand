@@ -299,7 +299,7 @@
 //! [`rngs` module]: ../rngs/index.html
 //! [basic PRNGs]: #basic-pseudo-random-number-generators-prngs
 //! [CSPRNGs]: #cryptographically-secure-pseudo-random-number-generators-csprngs
-//! [`XorShiftRng`]: struct.XorShiftRng.html
+//! [`XorShiftRng`]: ../../rand_xorshift/struct.XorShiftRng.html
 //! [`ChaChaRng`]: chacha/struct.ChaChaRng.html
 //! [`Hc128Rng`]: hc128/struct.Hc128Rng.html
 //! [`IsaacRng`]: ../../rand_isaac/isaac/struct.IsaacRng.html
@@ -318,11 +318,10 @@
 
 pub mod chacha;
 pub mod hc128;
-mod xorshift;
 
 pub use self::chacha::ChaChaRng;
 pub use self::hc128::Hc128Rng;
-pub use self::xorshift::XorShiftRng;
+pub use ::rand_xorshift::XorShiftRng;
 
 // Deprecations (to be removed in 0.7)
 #[doc(hidden)] pub mod isaac {

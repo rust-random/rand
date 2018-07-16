@@ -250,6 +250,7 @@ extern crate wasm_bindgen;
 
 extern crate rand_core;
 extern crate rand_isaac;    // only for deprecations
+extern crate rand_xorshift;
 
 #[cfg(feature = "log")] #[macro_use] extern crate log;
 #[allow(unused)]

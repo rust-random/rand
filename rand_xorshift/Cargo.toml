@@ -1,0 +1,26 @@
+[package]
+name = "rand_xorshift"
+version = "0.1.0" # NB: When modifying, also modify html_root_url in lib.rs
+authors = ["The Rust Project Developers"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/rust-lang-nursery/rand"
+documentation = "https://docs.rs/rand_isaac"
+homepage = "https://crates.io/crates/rand_isaac"
+description = """
+Xorshift random number generator
+"""
+keywords = ["rng"]
+categories = ["algorithms", "no-std"]
+
+[badges]
+travis-ci = { repository = "rust-lang-nursery/rand" }
+appveyor = { repository = "alexcrichton/rand" }
+
+[features]
+serde1 = ["serde", "serde_derive"] # enables serde for BlockRng wrapper
+
+[dependencies]
+rand_core = { path = "../rand_core", version = "0.2", default-features=false }
+serde = { version = "1", optional = true }
+serde_derive = { version = "^1.0.38", optional = true }
