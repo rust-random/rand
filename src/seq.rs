@@ -203,7 +203,7 @@ pub trait IteratorRandom: Iterator + Sized {
             // Continue until the iterator is exhausted
             for (i, elem) in self.enumerate() {
                 let denom = (i + 2) as f64; // accurate to 2^53 elements
-                if rng.gen_bool(1.0 / denom) {
+                if rng.with_probability(1.0 / denom) {
                     result = elem;
                 }
             }

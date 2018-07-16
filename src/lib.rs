@@ -126,7 +126,7 @@
 //!
 //! - [`Rng::sample_iter`] allows iterating over values from a chosen
 //!   distribution.
-//! - [`Rng::gen_bool`] generates boolean "events" with a given probability.
+//! - [`Rng::with_probability`] generates boolean "events" with a given probability.
 //! - [`Rng::fill`] and [`Rng::try_fill`] are fast alternatives to fill a slice
 //!   of integers.
 //! - [`Rng::shuffle`] randomly shuffles elements in a slice.
@@ -194,7 +194,7 @@
 //! [`ReadRng`]: rngs/adapter/struct.ReadRng.html
 //! [`Rng::choose`]: trait.Rng.html#method.choose
 //! [`Rng::fill`]: trait.Rng.html#method.fill
-//! [`Rng::gen_bool`]: trait.Rng.html#method.gen_bool
+//! [`Rng::with_probability`]: trait.Rng.html#method.with_probability
 //! [`Rng::gen`]: trait.Rng.html#method.gen
 //! [`Rng::sample_iter`]: trait.Rng.html#method.sample_iter
 //! [`Rng::shuffle`]: trait.Rng.html#method.shuffle
@@ -587,7 +587,7 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
-    /// println!("{}", rng.gen_bool(1.0 / 3.0));
+    /// println!("{}", rng.with_probability(1.0 / 3.0));
     /// ```
     ///
     /// # Panics
@@ -596,13 +596,22 @@ pub trait Rng: RngCore {
     ///
     /// [`Bernoulli`]: distributions/bernoulli/struct.Bernoulli.html
     #[inline]
-    fn gen_bool(&mut self, p: f64) -> bool {
+    fn with_probability(&mut self, p: f64) -> bool {
         let d = distributions::Bernoulli::new(p);
         self.sample(d)
     }
 
+    /// Return a bool with a probability `p` of being true.
+    ///
+    /// Deprecated: renamed to `with_probability`.
+    #[inline]
+    #[deprecated(since="0.6.0", note="renamed to with_probability")]
+    fn gen_bool(&mut self, p: f64) -> bool {
+        self.with_probability(p)
+    }
+
     /// Return a bool with a probability of `numerator/denominator` of being
-    /// true. I.e. `gen_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
+    /// true. I.e. `with_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
     /// returning true. If `numerator == denominator`, then the returned value
     /// is guaranteed to be `true`. If `numerator == 0`, then the returned
     /// value is guaranteed to be `false`.
@@ -620,13 +629,13 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
-    /// println!("{}", rng.gen_ratio(2, 3));
+    /// println!("{}", rng.with_ratio(2, 3));
     /// ```
     ///
     /// [`Bernoulli`]: distributions/bernoulli/struct.Bernoulli.html
     #[inline]
-    fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
-        let d = distributions::Bernoulli::from_ratio(numerator, denominator);
+    fn with_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
+        let d = distributions::Bernoulli::with_ratio(numerator, denominator);
         self.sample(d)
     }
 
@@ -1070,11 +1079,11 @@ mod test {
     }
 
     #[test]
-    fn test_gen_bool() {
+    fn test_with_probability() {
         let mut r = rng(105);
         for _ in 0..5 {
-            assert_eq!(r.gen_bool(0.0), false);
-            assert_eq!(r.gen_bool(1.0), true);
+            assert_eq!(r.with_probability(0.0), false);
+            assert_eq!(r.with_probability(1.0), true);
         }
     }
 
@@ -1117,7 +1126,7 @@ mod test {
     }
 
     #[test]
-    fn test_gen_ratio_average() {
+    fn test_with_ratio_average() {
         const NUM: u32 = 3;
         const DENOM: u32 = 10;
         const N: u32 = 100_000;
@@ -1125,7 +1134,7 @@ mod test {
         let mut sum: u32 = 0;
         let mut rng = rng(111);
         for _ in 0..N {
-            if rng.gen_ratio(NUM, DENOM) {
+            if rng.with_ratio(NUM, DENOM) {
                 sum += 1;
             }
         }
