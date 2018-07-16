@@ -11,10 +11,11 @@ use std::mem::size_of;
 use test::{black_box, Bencher};
 
 use rand::prelude::*;
-use rand::prng::{XorShiftRng, Hc128Rng, IsaacRng, Isaac64Rng, ChaChaRng};
+use rand::prng::{XorShiftRng, Hc128Rng, ChaChaRng};
 use rand::prng::hc128::Hc128Core;
 use rand::rngs::adapter::ReseedingRng;
 use rand::rngs::{OsRng, JitterRng, EntropyRng};
+use rand_isaac::{IsaacRng, Isaac64Rng};
 
 macro_rules! gen_bytes {
     ($fnn:ident, $gen:expr) => {
