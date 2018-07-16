@@ -20,7 +20,7 @@ use distributions::{Distribution, OpenClosed01};
 /// use rand::prelude::*;
 /// use rand::distributions::Pareto;
 ///
-/// let val: f64 = SmallRng::from_entropy().sample(Pareto::new(1., 2.));
+/// let val: f64 = Pareto::new(1., 2.).sample(&mut SmallRng::from_entropy());
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -46,7 +46,7 @@ impl Pareto {
 
 impl Distribution<f64> for Pareto {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let u: f64 = rng.sample(OpenClosed01);
+        let u: f64 = OpenClosed01.sample(rng);
         self.scale * u.powf(self.inv_neg_shape)
     }
 }

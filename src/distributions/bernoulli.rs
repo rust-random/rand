@@ -120,7 +120,6 @@ impl Distribution<bool> for Bernoulli {
 
 #[cfg(test)]
 mod test {
-    use Rng;
     use distributions::Distribution;
     use super::Bernoulli;
 
@@ -130,10 +129,8 @@ mod test {
         let always_false = Bernoulli::new(0.0);
         let always_true = Bernoulli::new(1.0);
         for _ in 0..5 {
-            assert_eq!(r.sample::<bool, _>(&always_false), false);
-            assert_eq!(r.sample::<bool, _>(&always_true), true);
-            assert_eq!(Distribution::<bool>::sample(&always_false, &mut r), false);
-            assert_eq!(Distribution::<bool>::sample(&always_true, &mut r), true);
+            assert_eq!(always_false.sample(&mut r), false);
+            assert_eq!(always_true.sample(&mut r), true);
         }
     }
 

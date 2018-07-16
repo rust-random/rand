@@ -25,12 +25,12 @@ use distributions::{Distribution, Standard, Uniform};
 ///
 /// ```
 /// use std::iter;
-/// use rand::{Rng, thread_rng};
+/// use rand::prelude::*;
 /// use rand::distributions::Alphanumeric;
 /// 
 /// let mut rng = thread_rng();
 /// let chars: String = iter::repeat(())
-///         .map(|()| rng.sample(Alphanumeric))
+///         .map(|()| Alphanumeric.sample(&mut rng))
 ///         .take(7)
 ///         .collect();
 /// println!("Random chars: {}", chars);
@@ -178,21 +178,22 @@ impl<T> Distribution<Wrapping<T>> for Standard where Standard: Distribution<T> {
 
 #[cfg(test)]
 mod tests {
-    use {Rng, RngCore, Standard};
-    use distributions::Alphanumeric;
+    use Standard;
+    use distributions::{Distribution, Alphanumeric};
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::string::String;
 
     #[test]
     fn test_misc() {
-        let rng: &mut RngCore = &mut ::test::rng(820);
+        let rng = &mut ::test::rng(820);
         
-        rng.sample::<char, _>(Standard);
-        rng.sample::<bool, _>(Standard);
+        let _: char = Standard.sample(rng);
+        let _: bool = Standard.sample(rng);
     }
     
     #[cfg(feature="alloc")]
     #[test]
     fn test_chars() {
+        use Rng;
         use core::iter;
         let mut rng = ::test::rng(805);
 
@@ -211,7 +212,7 @@ mod tests {
         // take the rejection sampling path.
         let mut incorrect = false;
         for _ in 0..100 {
-            let c = rng.sample(Alphanumeric);
+            let c = Alphanumeric.sample(&mut rng);
             incorrect |= !((c >= '0' && c <= '9') ||
                            (c >= 'A' && c <= 'Z') ||
                            (c >= 'a' && c <= 'z') );

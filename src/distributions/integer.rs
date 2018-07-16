@@ -122,27 +122,26 @@ simd_impl!(512, u8x64, i8x64, u16x32, i16x32, u32x16, i32x16, u64x8, i64x8,);
 
 #[cfg(test)]
 mod tests {
-    use Rng;
-    use distributions::{Standard};
+    use distributions::{Distribution, Standard};
     
     #[test]
     fn test_integers() {
-        let mut rng = ::test::rng(806);
+        let rng = &mut ::test::rng(806);
         
-        rng.sample::<isize, _>(Standard);
-        rng.sample::<i8, _>(Standard);
-        rng.sample::<i16, _>(Standard);
-        rng.sample::<i32, _>(Standard);
-        rng.sample::<i64, _>(Standard);
+        let _: isize = Standard.sample(rng);
+        let _: i8 = Standard.sample(rng);
+        let _: i16 = Standard.sample(rng);
+        let _: i32 = Standard.sample(rng);
+        let _: i64 = Standard.sample(rng);
         #[cfg(feature = "i128_support")]
-        rng.sample::<i128, _>(Standard);
+        let _: i128 = Standard.sample(rng);
         
-        rng.sample::<usize, _>(Standard);
-        rng.sample::<u8, _>(Standard);
-        rng.sample::<u16, _>(Standard);
-        rng.sample::<u32, _>(Standard);
-        rng.sample::<u64, _>(Standard);
+        let _: usize = Standard.sample(rng);
+        let _: u8 = Standard.sample(rng);
+        let _: u16 = Standard.sample(rng);
+        let _: u32 = Standard.sample(rng);
+        let _: u64 = Standard.sample(rng);
         #[cfg(feature = "i128_support")]
-        rng.sample::<u128, _>(Standard);
+        let _: u128 = Standard.sample(rng);
     }
 }

@@ -31,10 +31,10 @@ use core::simd::*;
 ///
 /// # Example
 /// ```
-/// use rand::{thread_rng, Rng};
+/// use rand::prelude::*;
 /// use rand::distributions::OpenClosed01;
 ///
-/// let val: f32 = thread_rng().sample(OpenClosed01);
+/// let val: f32 = OpenClosed01.sample(&mut thread_rng());
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
@@ -57,10 +57,10 @@ pub struct OpenClosed01;
 ///
 /// # Example
 /// ```
-/// use rand::{thread_rng, Rng};
+/// use rand::prelude::*;
 /// use rand::distributions::Open01;
 ///
-/// let val: f32 = thread_rng().sample(Open01);
+/// let val: f32 = Open01.sample(&mut thread_rng());
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
@@ -171,7 +171,7 @@ float_impls! { f64x8, u64x8, f64, u64, 52, 1023 }
 #[cfg(test)]
 mod tests {
     use Rng;
-    use distributions::{Open01, OpenClosed01};
+    use distributions::{Distribution, Open01, OpenClosed01};
     use rngs::mock::StepRng;
     #[cfg(feature="simd_support")]
     use core::simd::*;
@@ -179,83 +179,57 @@ mod tests {
     const EPSILON32: f32 = ::core::f32::EPSILON;
     const EPSILON64: f64 = ::core::f64::EPSILON;
 
-    macro_rules! test_f32 {
-        ($fnn:ident, $ty:ident, $ZERO:expr, $EPSILON:expr) => {
+    macro_rules! test_float {
+        ($fnn:ident, $ty:ident, $ZERO:expr, $EPSILON:expr, $ONE_BITS:expr) => {
             #[test]
             fn $fnn() {
                 // Standard
                 let mut zeros = StepRng::new(0, 0);
                 assert_eq!(zeros.gen::<$ty>(), $ZERO);
-                let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
+                let mut one = StepRng::new($ONE_BITS, 0);
                 assert_eq!(one.gen::<$ty>(), $EPSILON / 2.0);
                 let mut max = StepRng::new(!0, 0);
                 assert_eq!(max.gen::<$ty>(), 1.0 - $EPSILON / 2.0);
 
                 // OpenClosed01
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01),
-                           0.0 + $EPSILON / 2.0);
-                let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
-                assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
+                assert_eq!(Distribution::<$ty>::sample(&OpenClosed01, &mut zeros),
+                           (0.0 + $EPSILON / 2.0) as $ty);
+                let mut one = StepRng::new($ONE_BITS, 0);
+                assert_eq!(Distribution::<$ty>::sample(&OpenClosed01, &mut one),
+                           $EPSILON);
                 let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.sample::<$ty, _>(OpenClosed01), $ZERO + 1.0);
+                assert_eq!(Distribution::<$ty>::sample(&OpenClosed01, &mut max),
+                           $ZERO + 1.0);
 
                 // Open01
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(Open01), 0.0 + $EPSILON / 2.0);
-                let mut one = StepRng::new(1 << 9 | 1 << (9 + 32), 0);
-                assert_eq!(one.sample::<$ty, _>(Open01), $EPSILON / 2.0 * 3.0);
-                let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.sample::<$ty, _>(Open01), 1.0 - $EPSILON / 2.0);
-            }
-        }
-    }
-    test_f32! { f32_edge_cases, f32, 0.0, EPSILON32 }
-    #[cfg(feature="simd_support")]
-    test_f32! { f32x2_edge_cases, f32x2, f32x2::splat(0.0), f32x2::splat(EPSILON32) }
-    #[cfg(feature="simd_support")]
-    test_f32! { f32x4_edge_cases, f32x4, f32x4::splat(0.0), f32x4::splat(EPSILON32) }
-    #[cfg(feature="simd_support")]
-    test_f32! { f32x8_edge_cases, f32x8, f32x8::splat(0.0), f32x8::splat(EPSILON32) }
-    #[cfg(feature="simd_support")]
-    test_f32! { f32x16_edge_cases, f32x16, f32x16::splat(0.0), f32x16::splat(EPSILON32) }
-
-    macro_rules! test_f64 {
-        ($fnn:ident, $ty:ident, $ZERO:expr, $EPSILON:expr) => {
-            #[test]
-            fn $fnn() {
-                // Standard
-                let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.gen::<$ty>(), $ZERO);
-                let mut one = StepRng::new(1 << 11, 0);
-                assert_eq!(one.gen::<$ty>(), $EPSILON / 2.0);
-                let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.gen::<$ty>(), 1.0 - $EPSILON / 2.0);
-
-                // OpenClosed01
-                let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01),
+                assert_eq!(Distribution::<$ty>::sample(&Open01, &mut zeros),
                            0.0 + $EPSILON / 2.0);
-                let mut one = StepRng::new(1 << 11, 0);
-                assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
+                let mut one = StepRng::new($ONE_BITS << 1, 0);
+                assert_eq!(Distribution::<$ty>::sample(&Open01, &mut one),
+                           $EPSILON / 2.0 * 3.0);
                 let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.sample::<$ty, _>(OpenClosed01), $ZERO + 1.0);
-
-                // Open01
-                let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(Open01), 0.0 + $EPSILON / 2.0);
-                let mut one = StepRng::new(1 << 12, 0);
-                assert_eq!(one.sample::<$ty, _>(Open01), $EPSILON / 2.0 * 3.0);
-                let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.sample::<$ty, _>(Open01), 1.0 - $EPSILON / 2.0);
+                assert_eq!(Distribution::<$ty>::sample(&Open01, &mut max),
+                           1.0 - $EPSILON / 2.0);
             }
         }
     }
-    test_f64! { f64_edge_cases, f64, 0.0, EPSILON64 }
+    test_float! { f32_edge_cases, f32, 0.0, EPSILON32, 1 << 8 | 1 << (8 + 32) }
     #[cfg(feature="simd_support")]
-    test_f64! { f64x2_edge_cases, f64x2, f64x2::splat(0.0), f64x2::splat(EPSILON64) }
+    test_float! { f32x2_edge_cases, f32x2, f32x2::splat(0.0), f32x2::splat(EPSILON32), 1 << 8 | 1 << (8 + 32) }
     #[cfg(feature="simd_support")]
-    test_f64! { f64x4_edge_cases, f64x4, f64x4::splat(0.0), f64x4::splat(EPSILON64) }
+    test_float! { f32x4_edge_cases, f32x4, f32x4::splat(0.0), f32x4::splat(EPSILON32), 1 << 8 | 1 << (8 + 32) }
     #[cfg(feature="simd_support")]
-    test_f64! { f64x8_edge_cases, f64x8, f64x8::splat(0.0), f64x8::splat(EPSILON64) }
+    test_float! { f32x8_edge_cases, f32x8, f32x8::splat(0.0), f32x8::splat(EPSILON32), 1 << 8 | 1 << (8 + 32) }
+    #[cfg(feature="simd_support")]
+    test_float! { f32x16_edge_cases, f32x16, f32x16::splat(0.0), f32x16::splat(EPSILON32), 1 << 8 | 1 << (8 + 32) }
+
+    test_float! { f64_edge_cases, f64, 0.0, EPSILON64, 1 << 11 }
+    #[cfg(feature="simd_support")]
+    test_float! { f64x2_edge_cases, f64x2, f64x2::splat(0.0), f64x2::splat(EPSILON64), 1 << 11 }
+    #[cfg(feature="simd_support")]
+    test_float! { f64x4_edge_cases, f64x4, f64x4::splat(0.0), f64x4::splat(EPSILON64), 1 << 11 }
+    #[cfg(feature="simd_support")]
+    test_float! { f64x8_edge_cases, f64x8, f64x8::splat(0.0), f64x8::splat(EPSILON64), 1 << 11 }
 }

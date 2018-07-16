@@ -64,7 +64,7 @@ impl Distribution<u64> for Binomial {
             let mut result = 0;
             let d = Bernoulli::new(self.p);
             for _ in 0 .. self.n {
-                result += rng.sample(d) as u32;
+                result += d.sample(rng) as u32;
             }
             return result as u64;
         }
@@ -96,7 +96,7 @@ impl Distribution<u64> for Binomial {
             let mut comp_dev: f64;
             loop {
                 // draw from the Cauchy distribution
-                comp_dev = rng.sample(cauchy);
+                comp_dev = cauchy.sample(rng);
                 // shift the peak of the comparison ditribution
                 lresult = expected + sq * comp_dev;
                 // repeat the drawing until we are in the range of possible values
@@ -166,8 +166,8 @@ mod test {
     #[test]
     fn test_binomial_end_points() {
         let mut rng = ::test::rng(352);
-        assert_eq!(rng.sample(Binomial::new(20, 0.0)), 0);
-        assert_eq!(rng.sample(Binomial::new(20, 1.0)), 20);
+        assert_eq!(Binomial::new(20, 0.0).sample(&mut rng), 0);
+        assert_eq!(Binomial::new(20, 1.0).sample(&mut rng), 20);
     }
 
     #[test]
