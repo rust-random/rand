@@ -2,6 +2,7 @@
 
 extern crate test;
 extern crate rand;
+extern crate rand_isaac;
 
 const RAND_BENCH_N: u64 = 1000;
 const BYTES_LEN: usize = 1024;
