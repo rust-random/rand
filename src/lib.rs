@@ -80,14 +80,15 @@
 //! In many cases a *uniform* distribution is used, meaning roughly that each
 //! value is equally likely (or for "continuous" types like floats, that each
 //! equal-sized sub-range has the same probability of containing a sample).
-//! [`gen`] and [`gen_range`] both use statistically uniform distributions.
+//! [`gen`], [`gen_range`], and [`gen_below`] all use statistically uniform
+//! distributions.
 //!
 //! The [`distributions` module] provides implementations
 //! of some other distributions, including Normal, Log-Normal and Exponential.
 //!
 //! It is worth noting that the functionality already mentioned is implemented
 //! with distributions: [`gen`] samples values using the [`Standard`]
-//! distribution, while [`gen_range`] uses [`Uniform`].
+//! distribution, while [`gen_range`] and [`gen_below`] uses [`Uniform`].
 //!
 //! ## Importing (prelude)
 //!
@@ -115,7 +116,7 @@
 //!     println!("x is: {}", x);
 //!     let ch = rng.gen::<char>(); // using type annotation
 //!     println!("char is: {}", ch);
-//!     println!("Number from 0 to 9: {}", rng.gen_range(0, 10));
+//!     println!("Number from 0 to 9: {}", rng.gen_below(10));
 //! }
 //! ```
 //!
@@ -186,6 +187,7 @@
 //! [`EntropyRng`]: rngs/struct.EntropyRng.html
 //! [`Error`]: struct.Error.html
 //! [`gen_range`]: trait.Rng.html#method.gen_range
+//! [`gen_below`]: trait.Rng.html#method.gen_below
 //! [`gen`]: trait.Rng.html#method.gen
 //! [`OsRng`]: rngs/struct.OsRng.html
 //! [prelude]: prelude/index.html
@@ -457,6 +459,36 @@ pub trait Rng: RngCore {
         where B1: SampleBorrow<T> + Sized,
               B2: SampleBorrow<T> + Sized {
         T::Sampler::sample_single(low, high, self)
+    }
+
+    /// Generate a random value in the range `[0, high)`, i.e. inclusive of
+    /// `0` and exclusive of `high`.
+    ///
+    /// This function is optimised for the case that only a single sample is
+    /// made from the given range. See also the [`Uniform`] distribution
+    /// type which may be faster if sampling from the same range repeatedly.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `high` is `0` or negative.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// let n: u32 = rng.gen_below(10);
+    /// println!("{}", n);
+    /// let m: f64 = rng.gen_below(123.45f64);
+    /// println!("{}", m);
+    /// ```
+    ///
+    /// [`Uniform`]: distributions/uniform/struct.Uniform.html
+    fn gen_below<T: SampleUniform, B>(&mut self, high: B) -> T
+        where B: SampleBorrow<T> + Sized,
+              T: Default {
+        T::Sampler::sample_single(T::default(), high, self)
     }
 
     /// Sample a new value, using the given distribution.
@@ -1055,6 +1087,23 @@ mod test {
     }
 
     #[test]
+    fn test_gen_below() {
+        let mut r = rng(101);
+        for _ in 0..1000 {
+            let a = r.gen_below(17usize);
+            assert!(a < 17);
+            let a = r.gen_below(42i8);
+            assert!(a >= 0 && a < 42i8);
+            let a = r.gen_below(&99u16);
+            assert!(a < 99u16);
+            let a = r.gen_below(12.34f32);
+            assert!(a < 12.34f32);
+        }
+        assert_eq!(r.gen_below(1u16), 0u16);
+        assert_eq!(r.gen_below(1isize), 0isize);
+    }
+
+    #[test]
     #[should_panic]
     fn test_gen_range_panic_int() {
         let mut r = rng(102);
@@ -1066,6 +1115,27 @@ mod test {
     fn test_gen_range_panic_usize() {
         let mut r = rng(103);
         r.gen_range(5, 2);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_gen_below_panic_int() {
+        let mut r = rng(102);
+        r.gen_below(-2);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_gen_below_panic_i8() {
+        let mut r = rng(103);
+        r.gen_below(-10i8);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_gen_below_panic_f64() {
+        let mut r = rng(103);
+        r.gen_below(0.0f64);
     }
 
     #[test]
