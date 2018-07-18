@@ -11,7 +11,7 @@
 //! A small fast RNG
 
 use {RngCore, SeedableRng, Error};
-use prng::XorShiftRng;
+use ::rand_xorshift::XorShiftRng;
 
 /// An RNG recommended when small state, cheap initialization and good
 /// performance are required. The PRNG algorithm in `SmallRng` is chosen to be

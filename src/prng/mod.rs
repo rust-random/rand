@@ -321,9 +321,10 @@ pub mod hc128;
 
 pub use self::chacha::ChaChaRng;
 pub use self::hc128::Hc128Rng;
-pub use ::rand_xorshift::XorShiftRng;
 
 // Deprecations (to be removed in 0.7)
+#[doc(hidden)] #[allow(deprecated)]
+pub use deprecated::XorShiftRng;
 #[doc(hidden)] pub mod isaac {
     // Note: we miss `IsaacCore` here but probably unimportant.
     #[allow(deprecated)] pub use deprecated::IsaacRng;
