@@ -10,7 +10,7 @@ homepage = "https://crates.io/crates/rand_isaac"
 description = """
 Xorshift random number generator
 """
-keywords = ["rng"]
+keywords = ["random", "rng", "xorshift"]
 categories = ["algorithms", "no-std"]
 
 [badges]
