@@ -230,7 +230,7 @@
 #![cfg_attr(all(feature="i128_support", feature="nightly"), feature(i128_type, i128))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
 #![cfg_attr(feature = "stdweb", recursion_limit="128")]
-#![cfg_attr(feature = "wasm-bindgen", feature(proc_macro))]
+#![cfg_attr(feature = "wasm-bindgen", feature(use_extern_macros))]
 #![cfg_attr(feature = "wasm-bindgen", feature(wasm_import_module))]
 #![cfg_attr(feature = "wasm-bindgen", feature(wasm_custom_section))]
 
