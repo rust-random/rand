@@ -239,7 +239,6 @@
 
 #[cfg(test)] #[cfg(feature="serde1")] extern crate bincode;
 #[cfg(feature="serde1")] extern crate serde;
-#[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
 
 #[cfg(all(target_arch="wasm32", not(target_os="emscripten"), feature="stdweb"))]
 #[macro_use]
