@@ -4,6 +4,7 @@
 
 extern crate test;
 extern crate rand;
+extern crate rand_xorshift;
 
 const RAND_BENCH_N: u64 = 1000;
 
@@ -11,7 +12,7 @@ use std::mem::size_of;
 use test::Bencher;
 
 use rand::{Rng, FromEntropy};
-use rand::prng::XorShiftRng;
+use rand_xorshift::XorShiftRng;
 use rand::distributions::*;
 
 macro_rules! distr_int {
