@@ -112,7 +112,7 @@ impl SeedableRng for XorShiftRng {
 
 #[cfg(test)]
 mod tests {
-    use {RngCore, SeedableRng};
+    use ::rand_core::{RngCore, SeedableRng};
     use super::XorShiftRng;
 
     #[test]
