@@ -63,8 +63,8 @@ use ::rand_xorshift::XorShiftRng;
 /// [`FromEntropy`]: ../trait.FromEntropy.html
 /// [`StdRng`]: struct.StdRng.html
 /// [`thread_rng`]: ../fn.thread_rng.html
-/// [Xorshift]: ../prng/struct.XorShiftRng.html
-/// [`XorShiftRng`]: ../prng/struct.XorShiftRng.html
+/// [Xorshift]: ../../rand_xorshift/struct.XorShiftRng.html
+/// [`XorShiftRng`]: ../../rand_xorshift/struct.XorShiftRng.html
 #[derive(Clone, Debug)]
 pub struct SmallRng(XorShiftRng);
 
