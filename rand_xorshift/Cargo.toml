@@ -18,9 +18,15 @@ travis-ci = { repository = "rust-lang-nursery/rand" }
 appveyor = { repository = "alexcrichton/rand" }
 
 [features]
-serde1 = ["serde", "serde_derive"] # enables serde for BlockRng wrapper
+serde1 = ["serde", "serde_derive"]
+std = []
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.2", default-features=false }
 serde = { version = "1", optional = true }
 serde_derive = { version = "^1.0.38", optional = true }
+
+[dev-dependencies]
+# This is for testing serde, unfortunately we can't specify feature-gated dev
+# deps yet, see: https://github.com/rust-lang/cargo/issues/1596
+bincode = "1"
