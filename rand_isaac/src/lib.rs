@@ -18,14 +18,16 @@
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
-#![cfg_attr(not(feature="std"), no_std)]
+#![cfg_attr(not(all(feature="serde1", test)), no_std)]
 
-#[cfg(feature="std")] extern crate std as core;
 extern crate rand_core;
 
-#[cfg(all(feature="serde1", test))] extern crate bincode;
 #[cfg(feature="serde1")] extern crate serde;
 #[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
+
+// To test serialization we need bincode and the standard library
+#[cfg(all(feature="serde1", test))] extern crate bincode;
+#[cfg(all(feature="serde1", test))] extern crate std as core;
 
 pub mod isaac;
 pub mod isaac64;

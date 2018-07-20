@@ -19,7 +19,6 @@ appveyor = { repository = "alexcrichton/rand" }
 
 [features]
 serde1 = ["serde", "serde_derive"]
-std = []
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.2", default-features=false }
