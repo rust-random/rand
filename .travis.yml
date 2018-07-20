@@ -9,35 +9,57 @@ sudo: false
 matrix:
   include:
     - rust: 1.22.0
+      env: DESCRIPTION="pinned stable Rust release"
       install:
       script:
-        # TODO: use --tests instead of --lib on more recent compiler
         - cargo test --lib --no-default-features
+        - cargo test --features=serde1,log
+        - cargo test --examples
+        - cargo test --package rand_core
         - cargo test --package rand_core --no-default-features
-        - cargo test --features serde1,log
+        - cargo test --package rand_isaac --features serde1
+#        - cargo test --package rand_xorshift --features serde1
+
     - rust: stable
+      env: DESCRIPTION="stable Rust release, macOS"
       os: osx
       install:
       script:
-        - cargo test --tests --no-default-features
+        - cargo test --lib --no-default-features
+        - cargo test --features=serde1,log
+        - cargo test --examples
+        - cargo test --package rand_core
         - cargo test --package rand_core --no-default-features
-        - cargo test --features serde1,log
+        - cargo test --package rand_isaac --features serde1
+#        - cargo test --package rand_xorshift --features serde1
+
     - rust: beta
+      env: DESCRIPTION="beta Rust release"
       install:
       script:
-        - cargo test --tests --no-default-features
+        - cargo test --lib --no-default-features
+        - cargo test --features=serde1,log
+        - cargo test --examples
+        - cargo test --package rand_core
         - cargo test --package rand_core --no-default-features
-        - cargo test --features serde1,log
+        - cargo test --package rand_isaac --features serde1
+#        - cargo test --package rand_xorshift --features serde1
+
     - rust: nightly
+      env: DESCRIPTION="nightly features, benchmarks, documentation"
       install:
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
       before_script:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
-        - cargo test --tests --no-default-features --features=alloc
-        - cargo test --package rand_core --no-default-features --features=alloc,serde1
-        - cargo test --features serde1,log,nightly,alloc
-        - cargo test --all --benches
+        - cargo test --lib --no-default-features --features alloc
+        - cargo test --features=serde1,log,nightly
+        - cargo test --benches --features=nightly
+        - cargo test --examples
+        - cargo test --package rand_core
+        - cargo test --package rand_core --no-default-features --features=alloc
+        - cargo test --package rand_isaac --features=serde1
+        - cargo test --package rand_xorshift --features=serde1
         # remove cached documentation, otherwise files from previous PRs can get included
         - rm -rf target/doc
         - cargo doc --no-deps --all --all-features
@@ -46,52 +68,67 @@ matrix:
         - travis-cargo --only nightly doc-upload
 
     - rust: nightly
+      env: DESCRIPTION="WASM via emscripten, stdweb and wasm-bindgen"
       install:
         - rustup target add wasm32-unknown-unknown
-        # Use cargo-update since we need a real update-or-install command
-        # Only install if not already installed:
-        #- cargo --list | egrep "\binstall-update$" -q || cargo install cargo-update
-        #- cargo install-update -i cargo-web
-        # Cargo has errors with sub-commands so ignore updating for now:
+        - rustup target add wasm32-unknown-emscripten
+        # cargo-web takes ±10 min. to install, and cargo and cargo-update offer
+        # no reliable update-or-install command. We ignore updating for now
+        # (just drop the Travis' caches when necessary)
         - cargo --list | egrep "^\s*web$" -q || cargo install cargo-web
+      addons:
+          chrome: stable
       script:
-        - cargo web test --target wasm32-unknown-unknown --nodejs --features=stdweb
+        - cargo web test --target wasm32-unknown-emscripten
+        - cargo web test --nodejs --target wasm32-unknown-emscripten
+        - cargo web test --nodejs --target wasm32-unknown-unknown --features=stdweb
+        - cargo build --target wasm32-unknown-unknown --features=wasm-bindgen
 
     - rust: nightly
+      env: DESCRIPTION="cross-platform builder (doesn't run tests)"
       install:
-        - rustup target add wasm32-unknown-unknown
+        - rustup target add aarch64-apple-ios \
+#                            armv7-linux-androideabi \
+                            wasm32-unknown-emscripten \
+                            x86_64-sun-solaris \
+                            x86_64-unknown-cloudabi \
+                            x86_64-unknown-freebsd \
+                            x86_64-unknown-fuchsia \
+                            x86_64-unknown-redox \
+                            x86_64-unknown-netbsd
       script:
-        - cargo build --target wasm32-unknown-unknown --features wasm-bindgen
-
-    - rust: nightly
-      install:
-        - rustup target add thumbv6m-none-eabi
-      script:
-        # Bare metal target; no std; only works on nightly
-        - cargo build --no-default-features --target thumbv6m-none-eabi --release
+        - cargo build --target=aarch64-apple-ios
+#        - cargo build --target=armv7-linux-androideabi
+        - cargo build --target=wasm32-unknown-emscripten
+        - cargo build --target=x86_64-sun-solaris
+        - cargo build --target=x86_64-unknown-cloudabi
+        - cargo build --target=x86_64-unknown-freebsd
+        - cargo build --target=x86_64-unknown-fuchsia
+        - cargo build --target=x86_64-unknown-redox
+        - cargo build --target=x86_64-unknown-netbsd
 
     # Trust cross-built/emulated targets. We must repeat all non-default values.
     - rust: stable
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=x86_64-unknown-freebsd DISABLE_TESTS=1
+      env: DESCRIPTION="big-endian" TARGET=mips-unknown-linux-gnu
     - rust: stable
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=mips-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-freebsd
     - rust: stable
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=armv7-linux-androideabi DISABLE_TESTS=1
+      env: TARGET=armv7-linux-androideabi
     - rust: stable
       os: osx
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=armv7-apple-ios DISABLE_TESTS=1
+      env: TARGET=armv7-apple-ios
 
 before_install:
   - set -e
