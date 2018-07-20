@@ -237,9 +237,6 @@
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 
-#[cfg(all(feature="serde1", test))] extern crate bincode;
-#[cfg(feature="serde1")] extern crate serde;
-
 #[cfg(all(target_arch="wasm32", not(target_os="emscripten"), feature="stdweb"))]
 #[macro_use]
 extern crate stdweb;
