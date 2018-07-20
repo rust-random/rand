@@ -1107,14 +1107,12 @@ mod imp {
           not(feature = "stdweb"),
           feature = "wasm-bindgen"))]
 mod imp {
-    use core::fmt;
-
     use __wbg_shims::*;
 
     use {Error, ErrorKind};
     use super::OsRngImpl;
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     pub enum OsRng {
         Node(NodeCrypto),
         Browser(BrowserCrypto),
@@ -1185,13 +1183,6 @@ mod imp {
                 OsRng::Node(_) => "crypto.randomFillSync",
                 OsRng::Browser(_) => "crypto.getRandomValues",
             }
-        }
-    }
-
-    // TODO: replace with derive once rustwasm/wasm-bindgen#399 is merged
-    impl fmt::Debug for OsRng {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            f.debug_struct("OsRng").finish()
         }
     }
 }

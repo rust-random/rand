@@ -232,7 +232,6 @@
 #![cfg_attr(feature = "stdweb", recursion_limit="128")]
 #![cfg_attr(feature = "wasm-bindgen", feature(use_extern_macros))]
 #![cfg_attr(feature = "wasm-bindgen", feature(wasm_import_module))]
-#![cfg_attr(feature = "wasm-bindgen", feature(wasm_custom_section))]
 
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
@@ -911,6 +910,7 @@ pub mod __wbg_shims {
             #[wasm_bindgen(method, getter, structural)]
             pub fn crypto(me: &This) -> JsValue;
 
+            #[derive(Clone, Debug)]
             pub type BrowserCrypto;
 
             // TODO: these `structural` annotations here ideally wouldn't be here to
@@ -924,23 +924,11 @@ pub mod __wbg_shims {
             #[wasm_bindgen(js_name = require)]
             pub fn node_require(s: &str) -> NodeCrypto;
 
+            #[derive(Clone, Debug)]
             pub type NodeCrypto;
 
             #[wasm_bindgen(method, js_name = randomFillSync, structural)]
             pub fn random_fill_sync(me: &NodeCrypto, buf: &mut [u8]);
-        }
-
-        // TODO: replace with derive once rustwasm/wasm-bindgen#400 is merged
-        impl Clone for BrowserCrypto {
-            fn clone(&self) -> BrowserCrypto {
-                BrowserCrypto { obj: self.obj.clone() }
-            }
-        }
-
-        impl Clone for NodeCrypto {
-            fn clone(&self) -> NodeCrypto {
-                NodeCrypto { obj: self.obj.clone() }
-            }
         }
     }
 }
