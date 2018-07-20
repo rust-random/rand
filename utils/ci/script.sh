@@ -12,14 +12,22 @@ main() {
     fi
 
     if [ ! -z $NIGHTLY ]; then  # have nightly Rust
-        cross test --tests --no-default-features --features alloc --target $TARGET
-        cross test --package rand_core --no-default-features --features alloc --target $TARGET
-        cross test --features serde1,log,nightly,alloc --target $TARGET
-        cross test --all --benches --target $TARGET
+        cross test --lib --no-default-features --features alloc --target $TARGET
+        cross test --all-features --target $TARGET
+        cross test --benches --features=nightly --target $TARGET
+        cross test --examples --target $TARGET
+        cross test --package rand_core --target $TARGET
+        cross test --package rand_core --no-default-features --features=alloc --target $TARGET
+        cross test --package rand_isaac --features=serde1 --target $TARGET
+        cross test --package rand_xorshift --features=serde1 --target $TARGET
     else    # have stable Rust
-        cross test --tests --no-default-features --target $TARGET
+        cross test --lib --no-default-features --target $TARGET
+        cross test --features=serde1,log,i128_support --target $TARGET
+        cross test --examples --target $TARGET
+        cross test --package rand_core --target $TARGET
         cross test --package rand_core --no-default-features --target $TARGET
-        cross test --features serde1,log --target $TARGET
+        cross test --package rand_isaac --features=serde1 --target $TARGET
+        cross test --package rand_xorshift --features=serde1 --target $TARGET
     fi
 }
 
