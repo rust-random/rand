@@ -124,7 +124,7 @@ use distributions::utils::Float;
 
 
 #[cfg(feature="simd_support")]
-use core::simd::*;
+use packed_simd::*;
 
 /// Sample values uniformly between two bounds.
 ///
@@ -571,7 +571,7 @@ macro_rules! uniform_float_impl {
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 // Generate a value in the range [1, 2)
-                let value1_2 = (rng.gen::<$uty>() >> $bits_to_discard as u8)
+                let value1_2 = (rng.gen::<$uty>() >> $bits_to_discard)
                                .into_float_with_exponent(0);
 
                 // Get a value in the range [0, 1) in order to avoid
@@ -600,7 +600,7 @@ macro_rules! uniform_float_impl {
 
                 loop {
                     // Generate a value in the range [1, 2)
-                    let value1_2 = (rng.gen::<$uty>() >> $bits_to_discard as u32)
+                    let value1_2 = (rng.gen::<$uty>() >> $bits_to_discard)
                                    .into_float_with_exponent(0);
 
                     // Get a value in the range [0, 1) in order to avoid
@@ -785,7 +785,7 @@ mod tests {
     use rngs::mock::StepRng;
     use distributions::uniform::Uniform;
     use distributions::utils::FloatAsSIMD;
-    #[cfg(feature="simd_support")] use core::simd::*;
+    #[cfg(feature="simd_support")] use packed_simd::*;
 
     #[should_panic]
     #[test]
