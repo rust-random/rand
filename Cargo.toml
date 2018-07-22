@@ -23,7 +23,7 @@ nightly = ["i128_support", "simd_support"] # enables all features requiring nigh
 std = ["rand_core/std", "alloc", "libc", "winapi", "cloudabi", "fuchsia-zircon"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 i128_support = [] # enables i128 and u128 support
-simd_support = [] # enables SIMD support
+simd_support = ["packed_simd"] # enables SIMD support
 serde1 = ["serde", "serde_derive", "rand_core/serde1"] # enables serialization for PRNGs
 
 [workspace]
@@ -34,6 +34,7 @@ rand_core = { path = "rand_core", version = "0.2", default-features = false }
 # only for deprecations and benches:
 rand_isaac = { path = "rand_isaac", version = "0.1", default-features = false }
 log = { version = "0.4", optional = true }
+packed_simd = { git = "https://github.com/gnzlbg/packed_simd", optional = true, features = ["into_bits"] }
 serde = { version = "1", optional = true }
 serde_derive = { version = "1", optional = true }
 

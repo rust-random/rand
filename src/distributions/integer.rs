@@ -13,7 +13,7 @@
 use {Rng};
 use distributions::{Distribution, Standard};
 #[cfg(feature="simd_support")]
-use core::simd::*;
+use packed_simd::*;
 
 impl Distribution<u8> for Standard {
     #[inline]
