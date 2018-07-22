@@ -236,6 +236,8 @@
 #[cfg(feature = "std")] extern crate core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 
+#[cfg(feature="simd_support")] extern crate packed_simd;
+
 #[cfg(all(target_arch="wasm32", not(target_os="emscripten"), feature="stdweb"))]
 #[macro_use]
 extern crate stdweb;

@@ -15,7 +15,7 @@ use Rng;
 use distributions::{Distribution, Standard};
 use distributions::utils::FloatSIMDUtils;
 #[cfg(feature="simd_support")]
-use core::simd::*;
+use packed_simd::*;
 
 /// A distribution to sample floating point numbers uniformly in the half-open
 /// interval `(0, 1]`, i.e. including 1 but not 0.
@@ -106,7 +106,7 @@ macro_rules! float_impls {
                 // Multiply-based method; 24/53 random bits; [0, 1) interval.
                 // We use the most significant bits because for simple RNGs
                 // those are usually more random.
-                let float_size = mem::size_of::<$f_scalar>() * 8;
+                let float_size = mem::size_of::<$f_scalar>() as u32 * 8;
                 let precision = $fraction_bits + 1;
                 let scale = 1.0 / ((1 as $u_scalar << precision) as $f_scalar);
 
@@ -121,7 +121,7 @@ macro_rules! float_impls {
                 // Multiply-based method; 24/53 random bits; (0, 1] interval.
                 // We use the most significant bits because for simple RNGs
                 // those are usually more random.
-                let float_size = mem::size_of::<$f_scalar>() * 8;
+                let float_size = mem::size_of::<$f_scalar>() as u32 * 8;
                 let precision = $fraction_bits + 1;
                 let scale = 1.0 / ((1 as $u_scalar << precision) as $f_scalar);
 
@@ -138,7 +138,7 @@ macro_rules! float_impls {
                 // We use the most significant bits because for simple RNGs
                 // those are usually more random.
                 use core::$f_scalar::EPSILON;
-                let float_size = mem::size_of::<$f_scalar>() * 8;
+                let float_size = mem::size_of::<$f_scalar>() as u32 * 8;
 
                 let value: $uty = rng.gen();
                 let fraction = value >> (float_size - $fraction_bits);
@@ -174,7 +174,7 @@ mod tests {
     use distributions::{Open01, OpenClosed01};
     use rngs::mock::StepRng;
     #[cfg(feature="simd_support")]
-    use core::simd::*;
+    use packed_simd::*;
 
     const EPSILON32: f32 = ::core::f32::EPSILON;
     const EPSILON64: f64 = ::core::f64::EPSILON;
