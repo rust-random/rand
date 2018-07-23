@@ -276,6 +276,13 @@ impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
     }
 }
 
+#[cfg(rust_1_27)]
+impl<X: SampleUniform> From<::core::ops::RangeInclusive<X>> for Uniform<X> {
+    fn from(r: ::core::ops::RangeInclusive<X>) -> Uniform<X> {
+        Uniform::new_inclusive(r.start(), r.end())
+    }
+}
+
 /// Helper trait similar to [`Borrow`] but implemented
 /// only for SampleUniform and references to SampleUniform in
 /// order to resolve ambiguity issues.
@@ -1059,5 +1066,17 @@ mod tests {
         let r = Uniform::from(2.0f64..7.0);
         assert_eq!(r.inner.low, 2.0);
         assert_eq!(r.inner.scale, 5.0);
+    }
+
+    #[cfg(rust_1_27)]
+    #[test]
+    fn test_uniform_from_std_range_inclusive() {
+        let r = Uniform::from(2u32..=6);
+        assert_eq!(r.inner.low, 2);
+        assert_eq!(r.inner.range, 5);
+        let r = Uniform::from(2.0f64..=7.0);
+        assert_eq!(r.inner.low, 2.0);
+        assert!(r.inner.scale > 5.0);
+        assert!(r.inner.scale < 5.0 + 1e-14);
     }
 }

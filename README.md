@@ -117,7 +117,7 @@ optional features are available:
 - `alloc` can be used instead of `std` to provide `Vec` and `Box`.
 - `i128_support` enables support for generating `u128` and `i128` values.
 - `log` enables some logging via the `log` crate.
-- `nightly` enables all unstable features (`i128_support`).
+- `nightly` enables all unstable features (`i128_support`, `simd_support`).
 - `serde1` enables serialization for some types, via Serde version 1.
 - `stdweb` enables support for `OsRng` on `wasm32-unknown-unknown` via `stdweb`
   combined with `cargo-web`.
