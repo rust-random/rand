@@ -12,6 +12,7 @@ Random number generators and other randomness functionality.
 """
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
+build = "build.rs"
 
 [badges]
 travis-ci = { repository = "rust-lang-nursery/rand" }
@@ -53,6 +54,9 @@ fuchsia-zircon = { version = "0.3.2", optional = true }
 # use with `--target wasm32-unknown-unknown --features=stdweb`
 stdweb = { version = "0.4", optional = true }
 wasm-bindgen = { version = "0.2.12", optional = true }
+
+[build-dependencies]
+rustc_version = "0.2"
 
 [package.metadata.docs.rs]
 all-features = true
