@@ -236,6 +236,8 @@
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 
+#[cfg(feature="simd_support")] extern crate packed_simd;
+
 #[cfg(test)] #[cfg(feature="serde1")] extern crate bincode;
 #[cfg(feature="serde1")] extern crate serde;
 #[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;

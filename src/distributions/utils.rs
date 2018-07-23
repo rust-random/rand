@@ -11,7 +11,7 @@
 //! Math helper functions
 
 #[cfg(feature="simd_support")]
-use core::simd::*;
+use packed_simd::*;
 #[cfg(feature="std")]
 use distributions::ziggurat_tables;
 #[cfg(feature="std")]
@@ -263,7 +263,7 @@ macro_rules! simd_impl {
                 <$ty>::from_bits(<$uty>::from_bits(self) + <$uty>::from_bits(mask))
             }
             type UInt = $uty;
-            fn cast_from_int(i: Self::UInt) -> Self { $ty::from(i) }
+            fn cast_from_int(i: Self::UInt) -> Self { i.trunc() }
         }
     }
 }
@@ -271,10 +271,10 @@ macro_rules! simd_impl {
 #[cfg(feature="simd_support")] simd_impl! { f32x2, f32, m32x2, u32x2 }
 #[cfg(feature="simd_support")] simd_impl! { f32x4, f32, m32x4, u32x4 }
 #[cfg(feature="simd_support")] simd_impl! { f32x8, f32, m32x8, u32x8 }
-#[cfg(feature="simd_support")] simd_impl! { f32x16, f32, m1x16, u32x16 }
+#[cfg(feature="simd_support")] simd_impl! { f32x16, f32, m32x16, u32x16 }
 #[cfg(feature="simd_support")] simd_impl! { f64x2, f64, m64x2, u64x2 }
 #[cfg(feature="simd_support")] simd_impl! { f64x4, f64, m64x4, u64x4 }
-#[cfg(feature="simd_support")] simd_impl! { f64x8, f64, m1x8, u64x8 }
+#[cfg(feature="simd_support")] simd_impl! { f64x8, f64, m64x8, u64x8 }
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma
 /// function) using the Lanczos approximation.
