@@ -16,9 +16,11 @@ The core random number generation traits of Rand live in the [rand_core](
 https://crates.io/crates/rand_core) crate; this crate is most useful when
 implementing RNGs.
 
-API reference:
-[master branch](https://rust-lang-nursery.github.io/rand/rand/index.html),
-[by release](https://docs.rs/rand/0.5).
+Documentation:
+-   [API reference for latest release](https://docs.rs/rand/0.5)
+-   [API reference for master branch](https://rust-lang-nursery.github.io/rand/rand/index.html)
+-   [Additional documentation (subdir)](doc/README.md)
+
 
 ## Usage
 
