@@ -178,7 +178,7 @@ mod tests {
         }
     }
 
-    #[cfg(all(feature="serde1", feature="std"))]
+    #[cfg(all(feature="serde1"))]
     #[test]
     fn test_xorshift_serde() {
         use bincode;
