@@ -18,7 +18,7 @@ use distributions::{Distribution, Uniform};
 ///
 /// [^1]: Marsaglia, George (1972). [*Choosing a Point from the Surface of a
 ///       Sphere.*](https://doi.org/10.1214/aoms/1177692644)
-///       Ann. Math. Statist. 43 (1972), no. 2, 645--646.
+///       Ann. Math. Statist. 43, no. 2, 645--646.
 #[derive(Clone, Copy, Debug)]
 pub struct UnitSphereSurface {
     uniform: Uniform<f64>,
