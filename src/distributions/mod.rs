@@ -101,6 +101,7 @@
 //! - Multivariate probability distributions
 //!   - [`Dirichlet`] distribution
 //!   - [`UnitSphereSurface`] distribution
+//!   - [`UnitCircle`] distribution
 //!
 //! # Examples
 //!
@@ -171,6 +172,7 @@
 //! [`Uniform::new`]: struct.Uniform.html#method.new
 //! [`Uniform::new_inclusive`]: struct.Uniform.html#method.new_inclusive
 //! [`UnitSphereSurface`]: struct.UnitSphereSurface.html
+//! [`UnitCircle`]: struct.UnitCircle.html
 //! [`WeightedIndex`]: struct.WeightedIndex.html
 
 use Rng;
@@ -181,6 +183,7 @@ pub use self::float::{OpenClosed01, Open01};
 pub use self::bernoulli::Bernoulli;
 #[cfg(feature="alloc")] pub use self::weighted::{WeightedIndex, WeightedError};
 #[cfg(feature="std")] pub use self::unit_sphere::UnitSphereSurface;
+#[cfg(feature="std")] pub use self::unit_circle::UnitCircle;
 #[cfg(feature="std")] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
 #[cfg(feature="std")] pub use self::normal::{Normal, LogNormal, StandardNormal};
 #[cfg(feature="std")] pub use self::exponential::{Exp, Exp1};
@@ -194,6 +197,7 @@ pub mod uniform;
 mod bernoulli;
 #[cfg(feature="alloc")] mod weighted;
 #[cfg(feature="std")] mod unit_sphere;
+#[cfg(feature="std")] mod unit_circle;
 #[cfg(feature="std")] mod gamma;
 #[cfg(feature="std")] mod normal;
 #[cfg(feature="std")] mod exponential;
