@@ -453,7 +453,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(all(feature="serde1"))]
+    #[cfg(feature="serde1")]
     fn test_isaac_serde() {
         use bincode;
         use std::io::{BufWriter, BufReader};
