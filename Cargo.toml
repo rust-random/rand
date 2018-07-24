@@ -55,6 +55,10 @@ fuchsia-zircon = { version = "0.3.2", optional = true }
 stdweb = { version = "0.4", optional = true }
 wasm-bindgen = { version = "0.2.12", optional = true }
 
+[dev-dependencies]
+# This has a histogram implementation used for testing uniformity.
+average = "0.9.2"
+
 [build-dependencies]
 rustc_version = "0.2"
 
