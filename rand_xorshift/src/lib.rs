@@ -8,11 +8,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The ISAAC and ISAAC-64 random number generators.
+//! The xorshift random number generator.
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://docs.rs/rand_isaac/0.1.0")]
+       html_root_url = "https://docs.rs/rand_xorshift/0.1.0")]
 
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
@@ -29,10 +29,6 @@ extern crate rand_core;
 #[cfg(all(feature="serde1", test))] extern crate bincode;
 #[cfg(all(feature="serde1", test))] extern crate std as core;
 
-pub mod isaac;
-pub mod isaac64;
+mod xorshift;
 
-mod isaac_array;
-
-pub use self::isaac::IsaacRng;
-pub use self::isaac64::Isaac64Rng;
+pub use self::xorshift::XorShiftRng;

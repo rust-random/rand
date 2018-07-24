@@ -14,6 +14,8 @@ matrix:
         # TODO: use --tests instead of --lib on more recent compiler
         - cargo test --lib --no-default-features
         - cargo test --package rand_core --no-default-features
+        - cargo test --package rand_isaac --features serde1
+        - cargo test --package rand_xorshift --features serde1
         - cargo test --features serde1,log
     - rust: stable
       os: osx
@@ -21,12 +23,16 @@ matrix:
       script:
         - cargo test --tests --no-default-features
         - cargo test --package rand_core --no-default-features
+        - cargo test --package rand_isaac --features serde1
+        - cargo test --package rand_xorshift --features serde1
         - cargo test --features serde1,log
     - rust: beta
       install:
       script:
         - cargo test --tests --no-default-features
         - cargo test --package rand_core --no-default-features
+        - cargo test --package rand_isaac --features serde1
+        - cargo test --package rand_xorshift --features serde1
         - cargo test --features serde1,log
     - rust: nightly
       install:

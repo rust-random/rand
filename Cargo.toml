@@ -24,18 +24,17 @@ std = ["rand_core/std", "alloc", "libc", "winapi", "cloudabi", "fuchsia-zircon"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 i128_support = [] # enables i128 and u128 support
 simd_support = [] # enables SIMD support
-serde1 = ["serde", "serde_derive", "rand_core/serde1"] # enables serialization for PRNGs
+serde1 = ["rand_core/serde1", "rand_isaac/serde1", "rand_xorshift/serde1"] # enables serialization for PRNGs
 
 [workspace]
-members = ["rand_core", "rand_isaac"]
+members = ["rand_core", "rand_isaac", "rand_xorshift"]
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.2", default-features = false }
 # only for deprecations and benches:
-rand_isaac = { path = "rand_isaac", version = "0.1", default-features = false }
+rand_isaac = { path = "rand_isaac", version = "0.1" }
+rand_xorshift = { path = "rand_xorshift", version = "0.1" }
 log = { version = "0.4", optional = true }
-serde = { version = "1", optional = true }
-serde_derive = { version = "1", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = { version = "0.2", optional = true }
@@ -53,11 +52,6 @@ fuchsia-zircon = { version = "0.3.2", optional = true }
 # use with `--target wasm32-unknown-unknown --features=stdweb`
 stdweb = { version = "0.4", optional = true }
 wasm-bindgen = { version = "0.2.12", optional = true }
-
-[dev-dependencies]
-# This is for testing serde, unfortunately we can't specify feature-gated dev
-# deps yet, see: https://github.com/rust-lang/cargo/issues/1596
-bincode = "1.0"
 
 [package.metadata.docs.rs]
 all-features = true

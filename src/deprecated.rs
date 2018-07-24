@@ -170,8 +170,8 @@ impl CryptoRng for ChaChaRng {}
 
 
 #[derive(Clone, Debug)]
-#[deprecated(since="0.6.0", note="import with rand::prng::XorShiftRng instead")]
-pub struct XorShiftRng(prng::XorShiftRng);
+#[deprecated(since="0.6.0", note="import from rand_xorshift crate instead")]
+pub struct XorShiftRng(::rand_xorshift::XorShiftRng);
 
 impl RngCore for XorShiftRng {
     #[inline(always)]
@@ -196,14 +196,14 @@ impl RngCore for XorShiftRng {
 }
 
 impl SeedableRng for XorShiftRng {
-    type Seed = <prng::XorShiftRng as SeedableRng>::Seed;
+    type Seed = <::rand_xorshift::XorShiftRng as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        XorShiftRng(prng::XorShiftRng::from_seed(seed))
+        XorShiftRng(::rand_xorshift::XorShiftRng::from_seed(seed))
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        prng::XorShiftRng::from_rng(rng).map(XorShiftRng)
+        ::rand_xorshift::XorShiftRng::from_rng(rng).map(XorShiftRng)
     }
 }
 

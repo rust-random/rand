@@ -236,10 +236,6 @@
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 
-#[cfg(test)] #[cfg(feature="serde1")] extern crate bincode;
-#[cfg(feature="serde1")] extern crate serde;
-#[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
-
 #[cfg(all(target_arch="wasm32", not(target_os="emscripten"), feature="stdweb"))]
 #[macro_use]
 extern crate stdweb;
@@ -249,6 +245,7 @@ extern crate wasm_bindgen;
 
 extern crate rand_core;
 extern crate rand_isaac;    // only for deprecations
+extern crate rand_xorshift;
 
 #[cfg(feature = "log")] #[macro_use] extern crate log;
 #[allow(unused)]

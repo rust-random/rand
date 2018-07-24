@@ -445,7 +445,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(all(feature="serde1", feature="std"))]
+    #[cfg(feature="serde1")]
     fn test_isaac64_serde() {
         use bincode;
         use std::io::{BufWriter, BufReader};

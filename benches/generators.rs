@@ -3,6 +3,7 @@
 extern crate test;
 extern crate rand;
 extern crate rand_isaac;
+extern crate rand_xorshift;
 
 const RAND_BENCH_N: u64 = 1000;
 const BYTES_LEN: usize = 1024;
@@ -11,11 +12,12 @@ use std::mem::size_of;
 use test::{black_box, Bencher};
 
 use rand::prelude::*;
-use rand::prng::{XorShiftRng, Hc128Rng, ChaChaRng};
+use rand::prng::{Hc128Rng, ChaChaRng};
 use rand::prng::hc128::Hc128Core;
 use rand::rngs::adapter::ReseedingRng;
 use rand::rngs::{OsRng, JitterRng, EntropyRng};
 use rand_isaac::{IsaacRng, Isaac64Rng};
+use rand_xorshift::XorShiftRng;
 
 macro_rules! gen_bytes {
     ($fnn:ident, $gen:expr) => {
