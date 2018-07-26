@@ -119,6 +119,7 @@ optional features are available:
 - `log` enables some logging via the `log` crate.
 - `nightly` enables all unstable features (`i128_support`, `simd_support`).
 - `serde1` enables serialization for some types, via Serde version 1.
+- `simd_support` enables uniform sampling of SIMD types (integers and floats).
 - `stdweb` enables support for `OsRng` on `wasm32-unknown-unknown` via `stdweb`
   combined with `cargo-web`.
 - `wasm-bindgen` enables support for `OsRng` on `wasm32-unknown-unknown` via
