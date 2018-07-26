@@ -10,7 +10,7 @@
 
 //! The HC-128 random number generator.
 
-use core::fmt;
+use crate::core::fmt;
 use rand_core::{CryptoRng, RngCore, SeedableRng, Error, le};
 use rand_core::block::{BlockRngCore, BlockRng};
 
@@ -336,7 +336,7 @@ impl CryptoRng for Hc128Core {}
 
 #[cfg(test)]
 mod test {
-    use {RngCore, SeedableRng};
+    use crate::{RngCore, SeedableRng};
     use super::Hc128Rng;
 
     #[test]

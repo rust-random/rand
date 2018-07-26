@@ -11,11 +11,11 @@
 //! Math helper functions
 
 #[cfg(feature="simd_support")]
-use core::simd::*;
+use crate::core::simd::*;
 #[cfg(feature="std")]
-use distributions::ziggurat_tables;
+use crate::distributions::ziggurat_tables;
 #[cfg(feature="std")]
-use Rng;
+use crate::Rng;
 
 
 pub trait WideningMultiply<RHS = Self> {
@@ -178,7 +178,7 @@ macro_rules! scalar_float_impl {
 
             #[inline]
             fn is_infinite(self) -> bool {
-                self == ::core::$ty::INFINITY || self == ::core::$ty::NEG_INFINITY
+                self == crate::core::$ty::INFINITY || self == crate::core::$ty::NEG_INFINITY
             }
 
             #[inline]
@@ -188,13 +188,13 @@ macro_rules! scalar_float_impl {
 
             #[inline]
             fn to_bits(self) -> Self::Bits {
-                unsafe { ::core::mem::transmute(self) }
+                unsafe { crate::core::mem::transmute(self) }
             }
 
             #[inline]
             fn from_bits(v: Self::Bits) -> Self {
                 // It turns out the safety issues with sNaN were overblown! Hooray!
-                unsafe { ::core::mem::transmute(v) }
+                unsafe { crate::core::mem::transmute(v) }
             }
         }
 
@@ -243,8 +243,8 @@ macro_rules! simd_impl {
             #[inline(always)]
             fn finite_mask(self) -> Self::Mask {
                 // This can possibly be done faster by checking bit patterns
-                let neg_inf = $ty::splat(::core::$f_scalar::NEG_INFINITY);
-                let pos_inf = $ty::splat(::core::$f_scalar::INFINITY);
+                let neg_inf = $ty::splat(crate::core::$f_scalar::NEG_INFINITY);
+                let pos_inf = $ty::splat(crate::core::$f_scalar::INFINITY);
                 self.gt(neg_inf) & self.lt(pos_inf)
             }
             #[inline(always)]
@@ -344,7 +344,7 @@ pub fn ziggurat<R: Rng + ?Sized, P, Z>(
             mut pdf: P,
             mut zero_case: Z)
             -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
-    use distributions::float::IntoFloat;
+    use crate::distributions::float::IntoFloat;
     loop {
         // As an optimisation we re-implement the conversion to a f64.
         // From the remaining 12 most significant bits we use 8 to construct `i`.
@@ -363,7 +363,7 @@ pub fn ziggurat<R: Rng + ?Sized, P, Z>(
         } else {
             // Convert to a value in the range [1,2) and substract to get (0,1)
             (bits >> 12).into_float_with_exponent(0)
-            - (1.0 - ::core::f64::EPSILON / 2.0)
+            - (1.0 - crate::core::f64::EPSILON / 2.0)
         };
         let x = u * x_tab[i];
 

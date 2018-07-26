@@ -9,8 +9,8 @@
 // except according to those terms.
 //! The Bernoulli distribution.
 
-use Rng;
-use distributions::Distribution;
+use crate::Rng;
+use crate::distributions::Distribution;
 
 /// The Bernoulli distribution.
 ///
@@ -56,7 +56,7 @@ pub struct Bernoulli {
 // the RNG, and pay the performance price for all uses that *are* reasonable.
 // Luckily, if `new()` and `sample` are close, the compiler can optimize out the
 // extra check.
-const ALWAYS_TRUE: u64 = ::core::u64::MAX;
+const ALWAYS_TRUE: u64 = crate::core::u64::MAX;
 
 // This is just `2.0.powi(64)`, but written this way because it is not available
 // in `no_std` mode.
@@ -101,7 +101,7 @@ impl Bernoulli {
     pub fn from_ratio(numerator: u32, denominator: u32) -> Bernoulli {
         assert!(numerator <= denominator);
         if numerator == denominator {
-            return Bernoulli { p_int: ::core::u64::MAX }
+            return Bernoulli { p_int: crate::core::u64::MAX }
         }
         let p_int = ((numerator as f64 / denominator as f64) * SCALE) as u64;
         Bernoulli { p_int }
@@ -120,13 +120,13 @@ impl Distribution<bool> for Bernoulli {
 
 #[cfg(test)]
 mod test {
-    use Rng;
-    use distributions::Distribution;
+    use crate::Rng;
+    use crate::distributions::Distribution;
     use super::Bernoulli;
 
     #[test]
     fn test_trivial() {
-        let mut r = ::test::rng(1);
+        let mut r = crate::test::rng(1);
         let always_false = Bernoulli::new(0.0);
         let always_true = Bernoulli::new(1.0);
         for _ in 0..5 {
@@ -148,7 +148,7 @@ mod test {
 
         let mut sum1: u32 = 0;
         let mut sum2: u32 = 0;
-        let mut rng = ::test::rng(2);
+        let mut rng = crate::test::rng(2);
         for _ in 0..N {
             if d1.sample(&mut rng) {
                 sum1 += 1;

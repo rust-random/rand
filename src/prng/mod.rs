@@ -324,12 +324,12 @@ pub use self::hc128::Hc128Rng;
 
 // Deprecations (to be removed in 0.7)
 #[doc(hidden)] #[allow(deprecated)]
-pub use deprecated::XorShiftRng;
+pub use crate::deprecated::XorShiftRng;
 #[doc(hidden)] pub mod isaac {
     // Note: we miss `IsaacCore` here but probably unimportant.
-    #[allow(deprecated)] pub use deprecated::IsaacRng;
+    #[allow(deprecated)] pub use crate::deprecated::IsaacRng;
 }
 #[doc(hidden)] pub mod isaac64 {
-    #[allow(deprecated)] pub use deprecated::Isaac64Rng;
+    #[allow(deprecated)] pub use crate::deprecated::Isaac64Rng;
 }
-#[doc(hidden)] #[allow(deprecated)] pub use deprecated::{IsaacRng, Isaac64Rng};
+#[doc(hidden)] #[allow(deprecated)] pub use crate::deprecated::{IsaacRng, Isaac64Rng};

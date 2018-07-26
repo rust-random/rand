@@ -235,7 +235,7 @@ trait OsRngImpl where Self: Sized {
         -> Result<usize, Error> { Ok(0) }
 
     // Maximum chunk size supported.
-    fn max_chunk_size(&self) -> usize { ::core::usize::MAX }
+    fn max_chunk_size(&self) -> usize { crate::core::usize::MAX }
 
     // Name of the OS interface (used for logging).
     fn method_str(&self) -> &'static str;
@@ -253,7 +253,7 @@ trait OsRngImpl where Self: Sized {
           target_os = "solaris", target_os = "redox",
           target_os = "haiku", target_os = "emscripten"))]
 mod random_device {
-    use {Error, ErrorKind};
+    use crate::{Error, ErrorKind};
     use std::fs::File;
     use std::io;
     use std::io::Read;
@@ -318,7 +318,7 @@ mod random_device {
 mod imp {
     extern crate libc;
 
-    use {Error, ErrorKind};
+    use crate::{Error, ErrorKind};
     use super::random_device;
     use super::OsRngImpl;
 
@@ -1190,7 +1190,7 @@ mod imp {
 
 #[cfg(test)]
 mod test {
-    use RngCore;
+    use crate::RngCore;
     use super::OsRng;
 
     #[test]

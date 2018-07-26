@@ -10,7 +10,7 @@
 
 //! A small fast RNG
 
-use {RngCore, SeedableRng, Error};
+use crate::{RngCore, SeedableRng, Error};
 use ::rand_xorshift::XorShiftRng;
 
 /// An RNG recommended when small state, cheap initialization and good

@@ -10,9 +10,9 @@
 
 //! The Poisson distribution.
 
-use Rng;
-use distributions::{Distribution, Cauchy};
-use distributions::utils::log_gamma;
+use crate::Rng;
+use crate::distributions::{Distribution, Cauchy};
+use crate::distributions::utils::log_gamma;
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///
@@ -114,13 +114,13 @@ impl Distribution<u64> for Poisson {
 
 #[cfg(test)]
 mod test {
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
     use super::Poisson;
 
     #[test]
     fn test_poisson_10() {
         let poisson = Poisson::new(10.0);
-        let mut rng = ::test::rng(123);
+        let mut rng = crate::test::rng(123);
         let mut sum = 0;
         for _ in 0..1000 {
             sum += poisson.sample(&mut rng);
@@ -134,7 +134,7 @@ mod test {
     fn test_poisson_15() {
         // Take the 'high expected values' path
         let poisson = Poisson::new(15.0);
-        let mut rng = ::test::rng(123);
+        let mut rng = crate::test::rng(123);
         let mut sum = 0;
         for _ in 0..1000 {
             sum += poisson.sample(&mut rng);

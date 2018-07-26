@@ -10,7 +10,7 @@
 
 //! The ChaCha random number generator.
 
-use core::fmt;
+use crate::core::fmt;
 use rand_core::{CryptoRng, RngCore, SeedableRng, Error, le};
 use rand_core::block::{BlockRngCore, BlockRng};
 
@@ -271,7 +271,7 @@ impl From<ChaChaCore> for ChaChaRng {
 
 #[cfg(test)]
 mod test {
-    use {RngCore, SeedableRng};
+    use crate::{RngCore, SeedableRng};
     use super::ChaChaRng;
 
     #[test]

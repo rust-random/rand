@@ -13,10 +13,10 @@
 use std::cell::UnsafeCell;
 use std::rc::Rc;
 
-use {RngCore, CryptoRng, SeedableRng, Error};
-use rngs::adapter::ReseedingRng;
-use rngs::EntropyRng;
-use prng::hc128::Hc128Core;
+use crate::{RngCore, CryptoRng, SeedableRng, Error};
+use crate::rngs::adapter::ReseedingRng;
+use crate::rngs::EntropyRng;
+use crate::prng::hc128::Hc128Core;
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
 //
@@ -129,8 +129,8 @@ mod test {
     #[test]
     #[cfg(not(feature="stdweb"))]
     fn test_thread_rng() {
-        use Rng;
-        let mut r = ::thread_rng();
+        use crate::Rng;
+        let mut r = crate::thread_rng();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0, 1), 0);
     }

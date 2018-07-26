@@ -10,8 +10,8 @@
 
 //! The standard RNG
 
-use {RngCore, CryptoRng, Error, SeedableRng};
-use prng::Hc128Rng;
+use crate::{RngCore, CryptoRng, Error, SeedableRng};
+use crate::prng::Hc128Rng;
 
 /// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
 /// on the current platform, to be statistically strong and unpredictable
@@ -67,8 +67,8 @@ impl CryptoRng for StdRng {}
 
 #[cfg(test)]
 mod test {
-    use {RngCore, SeedableRng};
-    use rngs::StdRng;
+    use crate::{RngCore, SeedableRng};
+    use crate::rngs::StdRng;
 
     #[test]
     fn test_stdrng_construction() {

@@ -10,8 +10,8 @@
 
 //! The implementations of the `Standard` distribution for integer types.
 
-use {Rng};
-use distributions::{Distribution, Standard};
+use crate::{Rng};
+use crate::distributions::{Distribution, Standard};
 #[cfg(feature="simd_support")]
 use core::simd::*;
 
@@ -122,12 +122,12 @@ simd_impl!(512, u8x64, i8x64, u16x32, i16x32, u32x16, i32x16, u64x8, i64x8,);
 
 #[cfg(test)]
 mod tests {
-    use Rng;
-    use distributions::{Standard};
+    use crate::Rng;
+    use crate::distributions::{Standard};
     
     #[test]
     fn test_integers() {
-        let mut rng = ::test::rng(806);
+        let mut rng = crate::test::rng(806);
         
         rng.sample::<isize, _>(Standard);
         rng.sample::<i8, _>(Standard);

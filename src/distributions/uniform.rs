@@ -113,14 +113,14 @@
 #[cfg(feature = "std")]
 use std::time::Duration;
 
-use Rng;
-use distributions::Distribution;
-use distributions::float::IntoFloat;
-use distributions::utils::{WideningMultiply, FloatSIMDUtils, FloatAsSIMD, BoolAsSIMD};
+use crate::Rng;
+use crate::distributions::Distribution;
+use crate::distributions::float::IntoFloat;
+use crate::distributions::utils::{WideningMultiply, FloatSIMDUtils, FloatAsSIMD, BoolAsSIMD};
 
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
-use distributions::utils::Float;
+use crate::distributions::utils::Float;
 
 
 #[cfg(feature="simd_support")]
@@ -271,7 +271,7 @@ pub trait UniformSampler: Sized {
 }
 
 impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
-    fn from(r: ::core::ops::Range<X>) -> Uniform<X> {
+    fn from(r: crate::core::ops::Range<X>) -> Uniform<X> {
         Uniform::new(r.start, r.end)
     }
 }
@@ -384,7 +384,7 @@ macro_rules! uniform_int_impl {
                 let high = *high_b.borrow();
                 assert!(low <= high,
                         "Uniform::new_inclusive called with `low > high`");
-                let unsigned_max = ::core::$unsigned::MAX;
+                let unsigned_max = crate::core::$unsigned::MAX;
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
                 let ints_to_reject =
@@ -436,11 +436,11 @@ macro_rules! uniform_int_impl {
                         "Uniform::sample_single called with low >= high");
                 let range = high.wrapping_sub(low) as $unsigned as $u_large;
                 let zone =
-                    if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+                    if crate::core::$unsigned::MAX <= crate::core::u16::MAX as $unsigned {
                         // Using a modulus is faster than the approximation for
                         // i8 and i16. I suppose we trade the cost of one
                         // modulus for near-perfect branch prediction.
-                        let unsigned_max: $u_large = ::core::$u_large::MAX;
+                        let unsigned_max: $u_large = crate::core::$u_large::MAX;
                         let ints_to_reject = (unsigned_max - range + 1) % range;
                         unsigned_max - ints_to_reject
                     } else {
@@ -781,10 +781,10 @@ impl UniformSampler for UniformDuration {
 
 #[cfg(test)]
 mod tests {
-    use Rng;
-    use rngs::mock::StepRng;
-    use distributions::uniform::Uniform;
-    use distributions::utils::FloatAsSIMD;
+    use crate::Rng;
+    use crate::rngs::mock::StepRng;
+    use crate::distributions::uniform::Uniform;
+    use crate::distributions::utils::FloatAsSIMD;
     #[cfg(feature="simd_support")] use core::simd::*;
 
     #[should_panic]
@@ -795,7 +795,7 @@ mod tests {
 
     #[test]
     fn test_uniform_good_limits_equal_int() {
-        let mut rng = ::test::rng(804);
+        let mut rng = crate::test::rng(804);
         let dist = Uniform::new_inclusive(10, 10);
         for _ in 0..20 {
             assert_eq!(rng.sample(dist), 10);
@@ -810,13 +810,13 @@ mod tests {
 
     #[test]
     fn test_integers() {
-        let mut rng = ::test::rng(251);
+        let mut rng = crate::test::rng(251);
         macro_rules! t {
             ($($ty:ident),*) => {{
                 $(
                    let v: &[($ty, $ty)] = &[(0, 10),
                                             (10, 127),
-                                            (::core::$ty::MIN, ::core::$ty::MAX)];
+                                            (::core::$ty::MIN, crate::core::$ty::MAX)];
                    for &(low, high) in v.iter() {
                         let my_uniform = Uniform::new(low, high);
                         for _ in 0..1000 {
@@ -858,7 +858,7 @@ mod tests {
 
     #[test]
     fn test_floats() {
-        let mut rng = ::test::rng(252);
+        let mut rng = crate::test::rng(252);
         let mut zero_rng = StepRng::new(0, 0);
         let mut max_rng = StepRng::new(0xffff_ffff_ffff_ffff, 0);
         macro_rules! t {
@@ -872,12 +872,12 @@ mod tests {
                       (-<$f_scalar>::from_bits(10), -<$f_scalar>::from_bits(1)),
                       (-<$f_scalar>::from_bits(5), 0.0),
                       (-<$f_scalar>::from_bits(7), -0.0),
-                      (10.0, ::core::$f_scalar::MAX),
-                      (-100.0, ::core::$f_scalar::MAX),
-                      (-::core::$f_scalar::MAX / 5.0, ::core::$f_scalar::MAX),
-                      (-::core::$f_scalar::MAX, ::core::$f_scalar::MAX / 5.0),
-                      (-::core::$f_scalar::MAX * 0.8, ::core::$f_scalar::MAX * 0.7),
-                      (-::core::$f_scalar::MAX, ::core::$f_scalar::MAX),
+                      (10.0, crate::core::$f_scalar::MAX),
+                      (-100.0, crate::core::$f_scalar::MAX),
+                      (-crate::core::$f_scalar::MAX / 5.0, crate::core::$f_scalar::MAX),
+                      (-crate::core::$f_scalar::MAX, crate::core::$f_scalar::MAX / 5.0),
+                      (-crate::core::$f_scalar::MAX * 0.8, crate::core::$f_scalar::MAX * 0.7),
+                      (-crate::core::$f_scalar::MAX, crate::core::$f_scalar::MAX),
                      ];
                 for &(low_scalar, high_scalar) in v.iter() {
                     for lane in 0..<$ty>::lanes() {
@@ -914,12 +914,12 @@ mod tests {
                     }
                 }
 
-                assert_eq!(rng.sample(Uniform::new_inclusive(::core::$f_scalar::MAX,
-                                                             ::core::$f_scalar::MAX)),
-                           ::core::$f_scalar::MAX);
-                assert_eq!(rng.sample(Uniform::new_inclusive(-::core::$f_scalar::MAX,
-                                                             -::core::$f_scalar::MAX)),
-                           -::core::$f_scalar::MAX);
+                assert_eq!(rng.sample(Uniform::new_inclusive(crate::core::$f_scalar::MAX,
+                                                             crate::core::$f_scalar::MAX)),
+                           crate::core::$f_scalar::MAX);
+                assert_eq!(rng.sample(Uniform::new_inclusive(-crate::core::$f_scalar::MAX,
+                                                             -crate::core::$f_scalar::MAX)),
+                           -crate::core::$f_scalar::MAX);
             }}
         }
 
@@ -939,28 +939,28 @@ mod tests {
               not(target_arch = "wasm32"),
               not(target_arch = "asmjs")))]
     fn test_float_assertions() {
-        use core::panic::catch_unwind;
+        use crate::core::panic::catch_unwind;
         use super::SampleUniform;
         fn range<T: SampleUniform>(low: T, high: T) {
-            let mut rng = ::test::rng(253);
+            let mut rng = crate::test::rng(253);
             rng.gen_range(low, high);
         }
 
         macro_rules! t {
             ($ty:ident, $f_scalar:ident) => {{
                 let v: &[($f_scalar, $f_scalar)] =
-                    &[(::std::$f_scalar::NAN, 0.0),
-                      (1.0, ::std::$f_scalar::NAN),
-                      (::std::$f_scalar::NAN, ::std::$f_scalar::NAN),
+                    &[(std::$f_scalar::NAN, 0.0),
+                      (1.0, std::$f_scalar::NAN),
+                      (std::$f_scalar::NAN, std::$f_scalar::NAN),
                       (1.0, 0.5),
-                      (::std::$f_scalar::MAX, -::std::$f_scalar::MAX),
-                      (::std::$f_scalar::INFINITY, ::std::$f_scalar::INFINITY),
-                      (::std::$f_scalar::NEG_INFINITY, ::std::$f_scalar::NEG_INFINITY),
-                      (::std::$f_scalar::NEG_INFINITY, 5.0),
-                      (5.0, ::std::$f_scalar::INFINITY),
-                      (::std::$f_scalar::NAN, ::std::$f_scalar::INFINITY),
-                      (::std::$f_scalar::NEG_INFINITY, ::std::$f_scalar::NAN),
-                      (::std::$f_scalar::NEG_INFINITY, ::std::$f_scalar::INFINITY),
+                      (std::$f_scalar::MAX, -std::$f_scalar::MAX),
+                      (std::$f_scalar::INFINITY, std::$f_scalar::INFINITY),
+                      (std::$f_scalar::NEG_INFINITY, std::$f_scalar::NEG_INFINITY),
+                      (std::$f_scalar::NEG_INFINITY, 5.0),
+                      (5.0, std::$f_scalar::INFINITY),
+                      (std::$f_scalar::NAN, std::$f_scalar::INFINITY),
+                      (std::$f_scalar::NEG_INFINITY, std::$f_scalar::NAN),
+                      (std::$f_scalar::NEG_INFINITY, std::$f_scalar::INFINITY),
                      ];
                 for &(low_scalar, high_scalar) in v.iter() {
                     for lane in 0..<$ty>::lanes() {
@@ -993,7 +993,7 @@ mod tests {
     fn test_durations() {
         use std::time::Duration;
 
-        let mut rng = ::test::rng(253);
+        let mut rng = crate::test::rng(253);
 
         let v = &[(Duration::new(10, 50000), Duration::new(100, 1234)),
                   (Duration::new(0, 100), Duration::new(1, 50)),
@@ -1009,7 +1009,7 @@ mod tests {
 
     #[test]
     fn test_custom_uniform() {
-        use distributions::uniform::{UniformSampler, UniformFloat, SampleUniform, SampleBorrow};
+        use crate::distributions::uniform::{UniformSampler, UniformFloat, SampleUniform, SampleBorrow};
         #[derive(Clone, Copy, PartialEq, PartialOrd)]
         struct MyF32 {
             x: f32,
@@ -1044,7 +1044,7 @@ mod tests {
 
         let (low, high) = (MyF32{ x: 17.0f32 }, MyF32{ x: 22.0f32 });
         let uniform = Uniform::new(low, high);
-        let mut rng = ::test::rng(804);
+        let mut rng = crate::test::rng(804);
         for _ in 0..100 {
             let x: MyF32 = rng.sample(uniform);
             assert!(low <= x && x < high);

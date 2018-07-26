@@ -10,9 +10,9 @@
 
 //! The binomial distribution.
 
-use Rng;
-use distributions::{Distribution, Bernoulli, Cauchy};
-use distributions::utils::log_gamma;
+use crate::Rng;
+use crate::distributions::{Distribution, Bernoulli, Cauchy};
+use crate::distributions::utils::log_gamma;
 
 /// The binomial distribution `Binomial(n, p)`.
 ///
@@ -131,8 +131,8 @@ impl Distribution<u64> for Binomial {
 
 #[cfg(test)]
 mod test {
-    use Rng;
-    use distributions::Distribution;
+    use crate::Rng;
+    use crate::distributions::Distribution;
     use super::Binomial;
 
     fn test_binomial_mean_and_variance<R: Rng>(n: u64, p: f64, rng: &mut R) {
@@ -155,7 +155,7 @@ mod test {
 
     #[test]
     fn test_binomial() {
-        let mut rng = ::test::rng(351);
+        let mut rng = crate::test::rng(351);
         test_binomial_mean_and_variance(150, 0.1, &mut rng);
         test_binomial_mean_and_variance(70, 0.6, &mut rng);
         test_binomial_mean_and_variance(40, 0.5, &mut rng);
@@ -165,7 +165,7 @@ mod test {
 
     #[test]
     fn test_binomial_end_points() {
-        let mut rng = ::test::rng(352);
+        let mut rng = crate::test::rng(352);
         assert_eq!(rng.sample(Binomial::new(20, 0.0)), 0);
         assert_eq!(rng.sample(Binomial::new(20, 1.0)), 20);
     }

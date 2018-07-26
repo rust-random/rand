@@ -8,11 +8,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use Rng;
-use distributions::Distribution;
-use distributions::uniform::{UniformSampler, SampleUniform, SampleBorrow};
-use ::core::cmp::PartialOrd;
-use core::fmt;
+use crate::Rng;
+use crate::distributions::Distribution;
+use crate::distributions::uniform::{UniformSampler, SampleUniform, SampleBorrow};
+use crate::core::cmp::PartialOrd;
+use crate::core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
 #[cfg(not(feature="std"))] use alloc::vec::Vec;
@@ -66,7 +66,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     pub fn new<I>(weights: I) -> Result<WeightedIndex<X>, WeightedError>
         where I: IntoIterator,
               I::Item: SampleBorrow<X>,
-              X: for<'a> ::core::ops::AddAssign<&'a X> +
+              X: for<'a> crate::core::ops::AddAssign<&'a X> +
                  Clone +
                  Default {
         let mut iter = weights.into_iter();
@@ -101,7 +101,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
 impl<X> Distribution<usize> for WeightedIndex<X> where
     X: SampleUniform + PartialOrd {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        use ::core::cmp::Ordering;
+        use core::cmp::Ordering;
         let chosen_weight = self.weight_distribution.sample(rng);
         // Find the first item which has a weight *higher* than the chosen weight.
         self.cumulative_weights.binary_search_by(
@@ -115,7 +115,7 @@ mod test {
 
     #[test]
     fn test_weightedindex() {
-        let mut r = ::test::rng(700);
+        let mut r = crate::test::rng(700);
         const N_REPS: u32 = 5000;
         let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
         let total_weight = weights.iter().sum::<u32>() as f32;

@@ -1,3 +1,5 @@
+cargo-features = ["edition"]
+
 [package]
 name = "rand"
 version = "0.5.4" # NB: When modifying, also modify html_root_url in lib.rs
@@ -12,6 +14,7 @@ Random number generators and other randomness functionality.
 """
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "rust-lang-nursery/rand" }

@@ -224,6 +224,7 @@
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
+#![feature(rust_2018_preview)]
 #![cfg_attr(not(feature="std"), no_std)]
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(all(feature="i128_support", feature="nightly"), allow(stable_features))] // stable since 2018-03-27
@@ -265,7 +266,7 @@ pub use rand_core::{RngCore, CryptoRng, SeedableRng};
 pub use rand_core::{ErrorKind, Error};
 
 // Public exports
-#[cfg(feature="std")] pub use rngs::thread::thread_rng;
+#[cfg(feature="std")] pub use crate::rngs::thread::thread_rng;
 
 // Public modules
 pub mod distributions;
@@ -280,10 +281,10 @@ pub mod seq;
 #[doc(hidden)] mod deprecated;
 
 #[allow(deprecated)]
-#[doc(hidden)] pub use deprecated::ReseedingRng;
+#[doc(hidden)] pub use crate::deprecated::ReseedingRng;
 
 #[allow(deprecated)]
-#[cfg(feature="std")] #[doc(hidden)] pub use deprecated::EntropyRng;
+#[cfg(feature="std")] #[doc(hidden)] pub use crate::deprecated::EntropyRng;
 
 #[allow(deprecated)]
 #[cfg(all(feature="std",
@@ -304,19 +305,19 @@ pub mod seq;
               all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
 #[doc(hidden)]
-pub use deprecated::OsRng;
+pub use crate::deprecated::OsRng;
 
 #[allow(deprecated)]
-#[doc(hidden)] pub use deprecated::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
+#[doc(hidden)] pub use crate::deprecated::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
 #[allow(deprecated)]
-#[doc(hidden)] pub use deprecated::StdRng;
+#[doc(hidden)] pub use crate::deprecated::StdRng;
 
 
 #[allow(deprecated)]
 #[doc(hidden)]
 pub mod jitter {
-    pub use deprecated::JitterRng;
-    pub use rngs::TimerError;
+    pub use crate::deprecated::JitterRng;
+    pub use crate::rngs::TimerError;
 }
 #[allow(deprecated)]
 #[cfg(all(feature="std",
@@ -338,34 +339,34 @@ pub mod jitter {
 )))]
 #[doc(hidden)]
 pub mod os {
-    pub use deprecated::OsRng;
+    pub use crate::deprecated::OsRng;
 }
 #[allow(deprecated)]
 #[doc(hidden)]
 pub mod chacha {
-    pub use deprecated::ChaChaRng;
+    pub use crate::deprecated::ChaChaRng;
 }
 #[allow(deprecated)]
 #[doc(hidden)]
 pub mod isaac {
-    pub use deprecated::{IsaacRng, Isaac64Rng};
+    pub use crate::deprecated::{IsaacRng, Isaac64Rng};
 }
 #[allow(deprecated)]
 #[cfg(feature="std")]
 #[doc(hidden)]
 pub mod read {
-    pub use deprecated::ReadRng;
+    pub use crate::deprecated::ReadRng;
 }
 
 #[allow(deprecated)]
-#[cfg(feature="std")] #[doc(hidden)] pub use deprecated::ThreadRng;
+#[cfg(feature="std")] #[doc(hidden)] pub use crate::deprecated::ThreadRng;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-use core::{mem, slice};
-use distributions::{Distribution, Standard};
-use distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
+use crate::core::{mem, slice};
+use crate::distributions::{Distribution, Standard};
+use crate::distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
 
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
@@ -633,7 +634,7 @@ pub trait Rng: RngCore {
     /// [`SliceRandom::choose`]: seq/trait.SliceRandom.html#method.choose
     #[deprecated(since="0.6.0", note="use SliceRandom::choose instead")]
     fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
-        use seq::SliceRandom;
+        use crate::seq::SliceRandom;
         values.choose(self)
     }
 
@@ -644,7 +645,7 @@ pub trait Rng: RngCore {
     /// [`SliceRandom::choose_mut`]: seq/trait.SliceRandom.html#method.choose_mut
     #[deprecated(since="0.6.0", note="use SliceRandom::choose_mut instead")]
     fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> {
-        use seq::SliceRandom;
+        use crate::seq::SliceRandom;
         values.choose_mut(self)
     }
 
@@ -655,7 +656,7 @@ pub trait Rng: RngCore {
     /// [`SliceRandom::shuffle`]: seq/trait.SliceRandom.html#method.shuffle
     #[deprecated(since="0.6.0", note="use SliceRandom::shuffle instead")]
     fn shuffle<T>(&mut self, values: &mut [T]) {
-        use seq::SliceRandom;
+        use crate::seq::SliceRandom;
         values.shuffle(self)
     }
 }
@@ -932,8 +933,8 @@ pub mod __wbg_shims {
 
 #[cfg(test)]
 mod test {
-    use rngs::mock::StepRng;
-    use rngs::StdRng;
+    use crate::rngs::mock::StepRng;
+    use crate::rngs::StdRng;
     use super::*;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 
@@ -1065,7 +1066,7 @@ mod test {
 
     #[test]
     fn test_rng_trait_object() {
-        use distributions::{Distribution, Standard};
+        use crate::distributions::{Distribution, Standard};
         let mut rng = rng(109);
         let mut r = &mut rng as &mut RngCore;
         r.next_u32();
@@ -1077,7 +1078,7 @@ mod test {
     #[test]
     #[cfg(feature="alloc")]
     fn test_rng_boxed_trait() {
-        use distributions::{Distribution, Standard};
+        use crate::distributions::{Distribution, Standard};
         let rng = rng(110);
         let mut r = Box::new(rng) as Box<RngCore>;
         r.next_u32();

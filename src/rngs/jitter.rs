@@ -23,7 +23,7 @@
 
 use rand_core::{RngCore, CryptoRng, Error, ErrorKind, impls};
 
-use core::{fmt, mem, ptr};
+use crate::core::{fmt, mem, ptr};
 #[cfg(all(feature="std", not(target_arch = "wasm32")))]
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 
@@ -863,7 +863,7 @@ mod test_jitter_init {
     #[cfg(all(feature="std", not(target_arch = "wasm32")))]
     #[test]
     fn test_jitter_init() {
-        use RngCore;
+        use crate::RngCore;
         // Because this is a debug build, measurements here are not representive
         // of the final release build.
         // Don't fail this test if initializing `JitterRng` fails because of a

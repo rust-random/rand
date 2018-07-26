@@ -171,7 +171,7 @@
 //! [`Uniform::new_inclusive`]: struct.Uniform.html#method.new_inclusive
 //! [`WeightedIndex`]: struct.WeightedIndex.html
 
-use Rng;
+use crate::Rng;
 
 pub use self::other::Alphanumeric;
 #[doc(inline)] pub use self::uniform::Uniform;
@@ -252,7 +252,7 @@ pub trait Distribution<T> {
         DistIter {
             distr: self,
             rng: rng,
-            phantom: ::core::marker::PhantomData,
+            phantom: crate::core::marker::PhantomData,
         }
     }
 }
@@ -276,7 +276,7 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 pub struct DistIter<'a, D: 'a, R: 'a, T> {
     distr: &'a D,
     rng: &'a mut R,
-    phantom: ::core::marker::PhantomData<T>,
+    phantom: crate::core::marker::PhantomData<T>,
 }
 
 impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
@@ -466,7 +466,7 @@ impl<'a, T: Clone> Distribution<T> for WeightedChoice<'a, T> {
 
 #[cfg(test)]
 mod tests {
-    use rngs::mock::StepRng;
+    use crate::rngs::mock::StepRng;
     #[allow(deprecated)]
     use super::{WeightedChoice, Weighted, Distribution};
 
@@ -572,7 +572,7 @@ mod tests {
     #[test] #[should_panic]
     #[allow(deprecated)]
     fn test_weighted_choice_weight_overflows() {
-        let x = ::core::u32::MAX / 2; // x + x + 2 is the overflow
+        let x = crate::core::u32::MAX / 2; // x + x + 2 is the overflow
         WeightedChoice::new(&mut [Weighted { weight: x, item: 0 },
                                   Weighted { weight: 1, item: 1 },
                                   Weighted { weight: x, item: 2 },
@@ -582,8 +582,8 @@ mod tests {
     #[cfg(feature="std")]
     #[test]
     fn test_distributions_iter() {
-        use distributions::Normal;
-        let mut rng = ::test::rng(210);
+        use crate::distributions::Normal;
+        let mut rng = crate::test::rng(210);
         let distr = Normal::new(10.0, 10.0);
         let results: Vec<_> = distr.sample_iter(&mut rng).take(100).collect();
         println!("{:?}", results);

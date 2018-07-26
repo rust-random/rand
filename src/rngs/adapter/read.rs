@@ -90,7 +90,7 @@ impl<R: Read> RngCore for ReadRng<R> {
 #[cfg(test)]
 mod test {
     use super::ReadRng;
-    use {RngCore, ErrorKind};
+    use crate::{RngCore, ErrorKind};
 
     #[test]
     fn test_reader_rng_u64() {

@@ -12,8 +12,8 @@
 
 #![allow(deprecated)]
 
-use {prng, rngs};
-use {RngCore, CryptoRng, SeedableRng, Error};
+use crate::{prng, rngs};
+use crate::{RngCore, CryptoRng, SeedableRng, Error};
 use rand_core::block::BlockRngCore;
 use rand_isaac;
 
