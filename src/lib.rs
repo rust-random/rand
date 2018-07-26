@@ -239,47 +239,42 @@
 #[macro_use]
 extern crate stdweb;
 
+macro_rules! trace { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        use log::trace as log_trace;
+        use log::log;
+        log_trace!($($x)*)
+    }
+) }
+macro_rules! debug { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        use log::debug as log_debug;
+        use log::log;
+        log_debug!($($x)*)
+    }
+) }
+macro_rules! info { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        use log::info as log_info;
+        use log::log;
+        log_info!($($x)*)
+    }
+) }
+macro_rules! warn { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        use log::warn as log_warn;
+        use log::log;
+        log_warn!($($x)*)
+    }
+) }
 #[allow(unused)]
-#[cfg(not(feature = "log"))] macro_rules! trace { ($($x:tt)*) => () }
-#[allow(unused)]
-#[cfg(not(feature = "log"))] macro_rules! debug { ($($x:tt)*) => () }
-#[allow(unused)]
-#[cfg(not(feature = "log"))] macro_rules! info { ($($x:tt)*) => () }
-#[allow(unused)]
-#[cfg(not(feature = "log"))] macro_rules! warn { ($($x:tt)*) => () }
-#[allow(unused)]
-#[cfg(not(feature = "log"))] macro_rules! error { ($($x:tt)*) => () }
-
-#[allow(unused)]
-#[cfg(feature = "log")] macro_rules! trace { ($($x:tt)*) => ( {
-    use log::trace as log_trace;
-    use log::log;
-    log_trace!($($x)*)
-} ) }
-#[allow(unused)]
-#[cfg(feature = "log")] macro_rules! debug { ($($x:tt)*) => ( {
-    use log::debug as log_debug;
-    use log::log;
-    log_debug!($($x)*)
-} ) }
-#[allow(unused)]
-#[cfg(feature = "log")] macro_rules! info { ($($x:tt)*) => ( {
-    use log::info as log_info;
-    use log::log;
-    log_info!($($x)*)
-} ) }
-#[allow(unused)]
-#[cfg(feature = "log")] macro_rules! warn { ($($x:tt)*) => ( {
-    use log::warn as log_warn;
-    use log::log;
-    log_warn!($($x)*)
-} ) }
-#[allow(unused)]
-#[cfg(feature = "log")] macro_rules! error { ($($x:tt)*) => ( {
-    use log::error as log_error;
-    use log::log;
-    log_error!($($x)*)
-} ) }
+macro_rules! error { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        use log::error as log_error;
+        use log::log;
+        log_error!($($x)*)
+    }
+) }
 
 // Re-exports from rand_core
 pub use rand_core::{RngCore, CryptoRng, SeedableRng};
