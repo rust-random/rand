@@ -1105,7 +1105,7 @@ mod imp {
           not(feature = "stdweb"),
           feature = "wasm-bindgen"))]
 mod imp {
-    use __wbg_shims::*;
+    use crate::__wbg_shims::*;
 
     use crate::{Error, ErrorKind};
     use super::OsRngImpl;
