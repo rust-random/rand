@@ -11,7 +11,7 @@
 //! A wrapper around another PRNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use crate::core::mem::size_of;
+use core::mem::size_of;
 
 use rand_core::{RngCore, CryptoRng, SeedableRng, Error, ErrorKind};
 use rand_core::block::{BlockRngCore, BlockRng};
@@ -183,7 +183,7 @@ where R: BlockRngCore + SeedableRng,
 {
     /// Create a new `ReseedingCore`.
     fn new(rng: R, threshold: u64, reseeder: Rsdr) -> Self {
-        use crate::core::i64::MAX;
+        use core::i64::MAX;
         fork::register_fork_handler();
 
         // Because generating more values than `i64::MAX` takes centuries on

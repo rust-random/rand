@@ -10,8 +10,8 @@
 
 //! The implementations of the `Standard` distribution for other built-in types.
 
-use crate::core::char;
-use crate::core::num::Wrapping;
+use core::char;
+use core::num::Wrapping;
 
 use crate::{Rng};
 use crate::distributions::{Distribution, Standard, Uniform};
@@ -193,7 +193,7 @@ mod tests {
     #[cfg(feature="alloc")]
     #[test]
     fn test_chars() {
-        use crate::core::iter;
+        use core::iter;
         let mut rng = crate::test::rng(805);
 
         // Test by generating a relatively large number of chars, so we also

@@ -9,6 +9,7 @@
 // except according to those terms.
 //! The Bernoulli distribution.
 
+use core;
 use crate::Rng;
 use crate::distributions::Distribution;
 
@@ -56,7 +57,7 @@ pub struct Bernoulli {
 // the RNG, and pay the performance price for all uses that *are* reasonable.
 // Luckily, if `new()` and `sample` are close, the compiler can optimize out the
 // extra check.
-const ALWAYS_TRUE: u64 = crate::core::u64::MAX;
+const ALWAYS_TRUE: u64 = core::u64::MAX;
 
 // This is just `2.0.powi(64)`, but written this way because it is not available
 // in `no_std` mode.
@@ -101,7 +102,7 @@ impl Bernoulli {
     pub fn from_ratio(numerator: u32, denominator: u32) -> Bernoulli {
         assert!(numerator <= denominator);
         if numerator == denominator {
-            return Bernoulli { p_int: crate::core::u64::MAX }
+            return Bernoulli { p_int: core::u64::MAX }
         }
         let p_int = ((numerator as f64 / denominator as f64) * SCALE) as u64;
         Bernoulli { p_int }

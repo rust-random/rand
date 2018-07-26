@@ -10,7 +10,7 @@
 
 //! Basic floating-point number distributions
 
-use crate::core::mem;
+use core::mem;
 use crate::Rng;
 use crate::distributions::{Distribution, Standard};
 use crate::distributions::utils::FloatSIMDUtils;

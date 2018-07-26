@@ -12,7 +12,8 @@
 //! 
 //! TODO: module doc
 
-#[cfg(feature="alloc")] use crate::core::ops::Index;
+#[cfg(feature = "alloc")] use core;
+#[cfg(feature="alloc")] use core::ops::Index;
 
 #[cfg(feature="std")] use std::vec;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec;
@@ -116,8 +117,8 @@ pub trait SliceRandom {
               F: Fn(&Self::Item) -> B,
               B: SampleBorrow<X>,
               X: SampleUniform +
-                 for<'a> crate::core::ops::AddAssign<&'a X> +
-                 crate::core::cmp::PartialOrd<X> +
+                 for<'a> core::ops::AddAssign<&'a X> +
+                 core::cmp::PartialOrd<X> +
                  Clone +
                  Default;
 
@@ -136,8 +137,8 @@ pub trait SliceRandom {
               F: Fn(&Self::Item) -> B,
               B: SampleBorrow<X>,
               X: SampleUniform +
-                 for<'a> crate::core::ops::AddAssign<&'a X> +
-                 crate::core::cmp::PartialOrd<X> +
+                 for<'a> core::ops::AddAssign<&'a X> +
+                 core::cmp::PartialOrd<X> +
                  Clone +
                  Default;
 
@@ -320,7 +321,7 @@ impl<T> SliceRandom for [T] {
     fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<'_, Self, Self::Item>
         where R: Rng + ?Sized
     {
-        let amount = crate::core::cmp::min(amount, self.len());
+        let amount = core::cmp::min(amount, self.len());
         SliceChooseIter {
             slice: self,
             _phantom: Default::default(),
@@ -334,8 +335,8 @@ impl<T> SliceRandom for [T] {
               F: Fn(&Self::Item) -> B,
               B: SampleBorrow<X>,
               X: SampleUniform +
-                 for<'a> crate::core::ops::AddAssign<&'a X> +
-                 crate::core::cmp::PartialOrd<X> +
+                 for<'a> core::ops::AddAssign<&'a X> +
+                 core::cmp::PartialOrd<X> +
                  Clone +
                  Default {
         use crate::distributions::{Distribution, WeightedIndex};
@@ -349,8 +350,8 @@ impl<T> SliceRandom for [T] {
               F: Fn(&Self::Item) -> B,
               B: SampleBorrow<X>,
               X: SampleUniform +
-                 for<'a> crate::core::ops::AddAssign<&'a X> +
-                 crate::core::cmp::PartialOrd<X> +
+                 for<'a> core::ops::AddAssign<&'a X> +
+                 core::cmp::PartialOrd<X> +
                  Clone +
                  Default {
         use crate::distributions::{Distribution, WeightedIndex};
@@ -395,7 +396,7 @@ impl<I> IteratorRandom for I where I: Iterator + Sized {}
 #[derive(Debug)]
 pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
     slice: &'a S,
-    _phantom: crate::core::marker::PhantomData<T>,
+    _phantom: core::marker::PhantomData<T>,
     indices: vec::IntoIter<usize>,
 }
 

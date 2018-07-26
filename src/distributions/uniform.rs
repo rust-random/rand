@@ -110,6 +110,7 @@
 //! [`UniformDuration`]: struct.UniformDuration.html
 //! [`Borrow::borrow`]: trait.SampleBorrow.html
 
+use core;
 #[cfg(feature = "std")]
 use std::time::Duration;
 
@@ -271,7 +272,7 @@ pub trait UniformSampler: Sized {
 }
 
 impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
-    fn from(r: crate::core::ops::Range<X>) -> Uniform<X> {
+    fn from(r: core::ops::Range<X>) -> Uniform<X> {
         Uniform::new(r.start, r.end)
     }
 }
@@ -384,7 +385,7 @@ macro_rules! uniform_int_impl {
                 let high = *high_b.borrow();
                 assert!(low <= high,
                         "Uniform::new_inclusive called with `low > high`");
-                let unsigned_max = crate::core::$unsigned::MAX;
+                let unsigned_max = core::$unsigned::MAX;
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
                 let ints_to_reject =
@@ -436,11 +437,11 @@ macro_rules! uniform_int_impl {
                         "Uniform::sample_single called with low >= high");
                 let range = high.wrapping_sub(low) as $unsigned as $u_large;
                 let zone =
-                    if crate::core::$unsigned::MAX <= crate::core::u16::MAX as $unsigned {
+                    if core::$unsigned::MAX <= core::u16::MAX as $unsigned {
                         // Using a modulus is faster than the approximation for
                         // i8 and i16. I suppose we trade the cost of one
                         // modulus for near-perfect branch prediction.
-                        let unsigned_max: $u_large = crate::core::$u_large::MAX;
+                        let unsigned_max: $u_large = core::$u_large::MAX;
                         let ints_to_reject = (unsigned_max - range + 1) % range;
                         unsigned_max - ints_to_reject
                     } else {
@@ -781,6 +782,7 @@ impl UniformSampler for UniformDuration {
 
 #[cfg(test)]
 mod tests {
+    use core;
     use crate::Rng;
     use crate::rngs::mock::StepRng;
     use crate::distributions::uniform::Uniform;
@@ -816,7 +818,7 @@ mod tests {
                 $(
                    let v: &[($ty, $ty)] = &[(0, 10),
                                             (10, 127),
-                                            (::core::$ty::MIN, crate::core::$ty::MAX)];
+                                            (::core::$ty::MIN, core::$ty::MAX)];
                    for &(low, high) in v.iter() {
                         let my_uniform = Uniform::new(low, high);
                         for _ in 0..1000 {
@@ -872,12 +874,12 @@ mod tests {
                       (-<$f_scalar>::from_bits(10), -<$f_scalar>::from_bits(1)),
                       (-<$f_scalar>::from_bits(5), 0.0),
                       (-<$f_scalar>::from_bits(7), -0.0),
-                      (10.0, crate::core::$f_scalar::MAX),
-                      (-100.0, crate::core::$f_scalar::MAX),
-                      (-crate::core::$f_scalar::MAX / 5.0, crate::core::$f_scalar::MAX),
-                      (-crate::core::$f_scalar::MAX, crate::core::$f_scalar::MAX / 5.0),
-                      (-crate::core::$f_scalar::MAX * 0.8, crate::core::$f_scalar::MAX * 0.7),
-                      (-crate::core::$f_scalar::MAX, crate::core::$f_scalar::MAX),
+                      (10.0, core::$f_scalar::MAX),
+                      (-100.0, core::$f_scalar::MAX),
+                      (-core::$f_scalar::MAX / 5.0, core::$f_scalar::MAX),
+                      (-core::$f_scalar::MAX, core::$f_scalar::MAX / 5.0),
+                      (-core::$f_scalar::MAX * 0.8, core::$f_scalar::MAX * 0.7),
+                      (-core::$f_scalar::MAX, core::$f_scalar::MAX),
                      ];
                 for &(low_scalar, high_scalar) in v.iter() {
                     for lane in 0..<$ty>::lanes() {
@@ -914,12 +916,12 @@ mod tests {
                     }
                 }
 
-                assert_eq!(rng.sample(Uniform::new_inclusive(crate::core::$f_scalar::MAX,
-                                                             crate::core::$f_scalar::MAX)),
-                           crate::core::$f_scalar::MAX);
-                assert_eq!(rng.sample(Uniform::new_inclusive(-crate::core::$f_scalar::MAX,
-                                                             -crate::core::$f_scalar::MAX)),
-                           -crate::core::$f_scalar::MAX);
+                assert_eq!(rng.sample(Uniform::new_inclusive(core::$f_scalar::MAX,
+                                                             core::$f_scalar::MAX)),
+                           core::$f_scalar::MAX);
+                assert_eq!(rng.sample(Uniform::new_inclusive(-core::$f_scalar::MAX,
+                                                             -core::$f_scalar::MAX)),
+                           -core::$f_scalar::MAX);
             }}
         }
 
@@ -939,7 +941,7 @@ mod tests {
               not(target_arch = "wasm32"),
               not(target_arch = "asmjs")))]
     fn test_float_assertions() {
-        use crate::core::panic::catch_unwind;
+        use std::panic::catch_unwind;
         use super::SampleUniform;
         fn range<T: SampleUniform>(low: T, high: T) {
             let mut rng = crate::test::rng(253);

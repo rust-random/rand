@@ -23,7 +23,7 @@
 
 use rand_core::{RngCore, CryptoRng, Error, ErrorKind, impls};
 
-use crate::core::{fmt, mem, ptr};
+use core::{fmt, mem, ptr};
 #[cfg(all(feature="std", not(target_arch = "wasm32")))]
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 

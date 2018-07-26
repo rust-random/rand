@@ -11,8 +11,9 @@
 use crate::Rng;
 use crate::distributions::Distribution;
 use crate::distributions::uniform::{UniformSampler, SampleUniform, SampleBorrow};
-use crate::core::cmp::PartialOrd;
-use crate::core::fmt;
+use core;
+use core::cmp::PartialOrd;
+use core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
 #[cfg(not(feature="std"))] use alloc::vec::Vec;
@@ -66,7 +67,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     pub fn new<I>(weights: I) -> Result<WeightedIndex<X>, WeightedError>
         where I: IntoIterator,
               I::Item: SampleBorrow<X>,
-              X: for<'a> crate::core::ops::AddAssign<&'a X> +
+              X: for<'a> core::ops::AddAssign<&'a X> +
                  Clone +
                  Default {
         let mut iter = weights.into_iter();

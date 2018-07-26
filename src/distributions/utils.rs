@@ -10,8 +10,9 @@
 
 //! Math helper functions
 
+use core;
 #[cfg(feature="simd_support")]
-use crate::core::simd::*;
+use core::simd::*;
 #[cfg(feature="std")]
 use crate::distributions::ziggurat_tables;
 #[cfg(feature="std")]
@@ -178,7 +179,7 @@ macro_rules! scalar_float_impl {
 
             #[inline]
             fn is_infinite(self) -> bool {
-                self == crate::core::$ty::INFINITY || self == crate::core::$ty::NEG_INFINITY
+                self == core::$ty::INFINITY || self == core::$ty::NEG_INFINITY
             }
 
             #[inline]
@@ -188,13 +189,13 @@ macro_rules! scalar_float_impl {
 
             #[inline]
             fn to_bits(self) -> Self::Bits {
-                unsafe { crate::core::mem::transmute(self) }
+                unsafe { core::mem::transmute(self) }
             }
 
             #[inline]
             fn from_bits(v: Self::Bits) -> Self {
                 // It turns out the safety issues with sNaN were overblown! Hooray!
-                unsafe { crate::core::mem::transmute(v) }
+                unsafe { core::mem::transmute(v) }
             }
         }
 
@@ -243,8 +244,8 @@ macro_rules! simd_impl {
             #[inline(always)]
             fn finite_mask(self) -> Self::Mask {
                 // This can possibly be done faster by checking bit patterns
-                let neg_inf = $ty::splat(crate::core::$f_scalar::NEG_INFINITY);
-                let pos_inf = $ty::splat(crate::core::$f_scalar::INFINITY);
+                let neg_inf = $ty::splat(core::$f_scalar::NEG_INFINITY);
+                let pos_inf = $ty::splat(core::$f_scalar::INFINITY);
                 self.gt(neg_inf) & self.lt(pos_inf)
             }
             #[inline(always)]
@@ -363,7 +364,7 @@ crate fn ziggurat<R: Rng + ?Sized, P, Z>(
         } else {
             // Convert to a value in the range [1,2) and substract to get (0,1)
             (bits >> 12).into_float_with_exponent(0)
-            - (1.0 - crate::core::f64::EPSILON / 2.0)
+            - (1.0 - core::f64::EPSILON / 2.0)
         };
         let x = u * x_tab[i];
 

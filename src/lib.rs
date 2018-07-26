@@ -235,8 +235,6 @@
 #![cfg_attr(feature = "wasm-bindgen", feature(use_extern_macros))]
 #![cfg_attr(feature = "wasm-bindgen", feature(wasm_import_module))]
 
-#[cfg(feature="std")] extern crate std as core;
-
 #[cfg(all(target_arch="wasm32", not(target_os="emscripten"), feature="stdweb"))]
 #[macro_use]
 extern crate stdweb;
@@ -386,7 +384,7 @@ pub mod read {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-use crate::core::{mem, slice};
+use core::{mem, slice};
 use crate::distributions::{Distribution, Standard};
 use crate::distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
 

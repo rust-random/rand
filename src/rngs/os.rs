@@ -10,6 +10,7 @@
 
 //! Interface to the random number generator of the operating system.
 
+use core;
 use std::fmt;
 use rand_core::{CryptoRng, RngCore, Error, impls};
 
@@ -235,7 +236,7 @@ trait OsRngImpl where Self: Sized {
         -> Result<usize, Error> { Ok(0) }
 
     // Maximum chunk size supported.
-    fn max_chunk_size(&self) -> usize { crate::core::usize::MAX }
+    fn max_chunk_size(&self) -> usize { core::usize::MAX }
 
     // Name of the OS interface (used for logging).
     fn method_str(&self) -> &'static str;
@@ -587,6 +588,7 @@ mod imp {
     use super::random_device;
     use super::OsRngImpl;
 
+    use core;
     use std::io;
     use std::io::Read;
     use std::fs::{File, OpenOptions};
@@ -635,7 +637,7 @@ mod imp {
             }
             if self.initialized { return Ok(0); }
 
-            let chunk_len = ::core::cmp::min(1024, dest.len());
+            let chunk_len = core::cmp::min(1024, dest.len());
             let dest = &mut dest[..chunk_len];
 
             match self.method {
