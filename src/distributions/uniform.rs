@@ -939,7 +939,7 @@ mod tests {
               not(target_arch = "wasm32"),
               not(target_arch = "asmjs")))]
     fn test_float_assertions() {
-        use core::panic::catch_unwind;
+        use std::panic::catch_unwind;
         use super::SampleUniform;
         fn range<T: SampleUniform>(low: T, high: T) {
             let mut rng = ::test::rng(253);
