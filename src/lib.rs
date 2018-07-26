@@ -236,14 +236,10 @@
 #![cfg_attr(feature = "wasm-bindgen", feature(wasm_import_module))]
 
 #[cfg(feature="std")] extern crate std as core;
-#[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 
 #[cfg(all(target_arch="wasm32", not(target_os="emscripten"), feature="stdweb"))]
 #[macro_use]
 extern crate stdweb;
-
-#[cfg(all(target_arch = "wasm32", feature = "wasm-bindgen"))]
-extern crate wasm_bindgen;
 
 #[cfg(feature = "log")] #[macro_use] extern crate log;
 #[allow(unused)]
@@ -256,7 +252,6 @@ extern crate wasm_bindgen;
 #[cfg(not(feature = "log"))] macro_rules! warn { ($($x:tt)*) => () }
 #[allow(unused)]
 #[cfg(not(feature = "log"))] macro_rules! error { ($($x:tt)*) => () }
-
 
 // Re-exports from rand_core
 pub use rand_core::{RngCore, CryptoRng, SeedableRng};

@@ -1004,7 +1004,7 @@ mod imp {
     use std::mem;
     use stdweb::unstable::TryInto;
     use stdweb::web::error::Error as WebError;
-    use {Error, ErrorKind};
+    use crate::{Error, ErrorKind};
     use super::OsRngImpl;
 
     #[derive(Clone, Debug)]
@@ -1107,7 +1107,7 @@ mod imp {
 mod imp {
     use __wbg_shims::*;
 
-    use {Error, ErrorKind};
+    use crate::{Error, ErrorKind};
     use super::OsRngImpl;
 
     #[derive(Clone, Debug)]

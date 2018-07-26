@@ -320,8 +320,8 @@ mod fork {
 
 #[cfg(not(all(feature="std", unix, not(target_os="emscripten"))))]
 mod fork {
-    pub fn get_fork_counter() -> usize { 0 }
-    pub fn register_fork_handler() {}
+    crate fn get_fork_counter() -> usize { 0 }
+    crate fn register_fork_handler() {}
 }
 
 
