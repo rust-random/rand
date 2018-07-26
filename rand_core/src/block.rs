@@ -55,6 +55,7 @@
 
 use core::convert::AsRef;
 use core::fmt;
+#[cfg(feature="serde1")] use serde_derive::{Serialize, Deserialize};
 use crate::{RngCore, CryptoRng, SeedableRng, Error};
 use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 
@@ -127,7 +128,7 @@ pub struct BlockRng<R: BlockRngCore + ?Sized> {
 
 // Custom Debug implementation that does not expose the contents of `results`.
 impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng<R> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.debug_struct("BlockRng")
            .field("core", &self.core)
            .field("result_len", &self.results.as_ref().len())
@@ -331,7 +332,7 @@ pub struct BlockRng64<R: BlockRngCore + ?Sized> {
 
 // Custom Debug implementation that does not expose the contents of `results`.
 impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng64<R> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.debug_struct("BlockRng64")
            .field("core", &self.core)
            .field("result_len", &self.results.as_ref().len())

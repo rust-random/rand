@@ -94,7 +94,7 @@ pub struct Error {
     /// The error message
     pub msg: &'static str,
     #[cfg(feature="std")]
-    cause: Option<Box<stdError + Send + Sync>>,
+    cause: Option<Box<dyn stdError + Send + Sync>>,
 }
 
 impl Error {
@@ -119,7 +119,7 @@ impl Error {
     /// `cause` is ignored.
     #[cfg(feature="std")]
     pub fn with_cause<E>(kind: ErrorKind, msg: &'static str, cause: E) -> Self
-        where E: Into<Box<stdError + Send + Sync>>
+        where E: Into<Box<dyn stdError + Send + Sync>>
     {
         Error { kind, msg, cause: Some(cause.into()) }
     }
@@ -136,13 +136,13 @@ impl Error {
     /// Take the cause, if any. This allows the embedded cause to be extracted.
     /// This uses `Option::take`, leaving `self` with no cause.
     #[cfg(feature="std")]
-    pub fn take_cause(&mut self) -> Option<Box<stdError + Send + Sync>> {
+    pub fn take_cause(&mut self) -> Option<Box<dyn stdError + Send + Sync>> {
         self.cause.take()
     }
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         #[cfg(feature="std")] {
             if let Some(ref cause) = self.cause {
                 return write!(f, "{} ({}); cause: {}",
@@ -159,8 +159,8 @@ impl stdError for Error {
         self.msg
     }
 
-    fn cause(&self) -> Option<&stdError> {
-        self.cause.as_ref().map(|e| e.as_ref() as &stdError)
+    fn cause(&self) -> Option<&dyn stdError> {
+        self.cause.as_ref().map(|e| e.as_ref() as &dyn stdError)
     }
 }
 

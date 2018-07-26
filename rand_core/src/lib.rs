@@ -39,18 +39,13 @@
 
 #![feature(rust_2018_preview)]
 
+#![warn(rust_2018_idioms)]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
 #![cfg_attr(not(feature="std"), no_std)]
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
-
-#[cfg(feature="std")] extern crate core;
-#[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
-#[cfg(feature="serde1")] extern crate serde;
-#[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
-
 
 use core::default::Default;
 use core::convert::AsMut;
@@ -391,7 +386,7 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
 }
 
 #[cfg(feature="std")]
-impl std::io::Read for RngCore {
+impl std::io::Read for dyn RngCore {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         self.try_fill_bytes(buf)?;
         Ok(buf.len())
