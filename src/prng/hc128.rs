@@ -114,7 +114,7 @@ pub struct Hc128Core {
 
 // Custom Debug implementation that does not expose the internal state
 impl fmt::Debug for Hc128Core {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Hc128Core {{}}")
     }
 }

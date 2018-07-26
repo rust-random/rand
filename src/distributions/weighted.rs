@@ -193,17 +193,17 @@ impl WeightedError {
 }
 
 #[cfg(feature="std")]
-impl ::std::error::Error for WeightedError {
+impl std::error::Error for WeightedError {
     fn description(&self) -> &str {
         self.msg()
     }
-    fn cause(&self) -> Option<&::std::error::Error> {
+    fn cause(&self) -> Option<&dyn std::error::Error> {
         None
     }
 }
 
 impl fmt::Display for WeightedError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.msg())
     }
 }

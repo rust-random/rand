@@ -91,7 +91,7 @@ pub trait SliceRandom {
     /// }
     /// ```
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
+    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<'_, Self, Self::Item>
         where R: Rng + ?Sized;
 
     /// Similar to [`choose`], where the likelihood of each outcome may be
@@ -317,7 +317,7 @@ impl<T> SliceRandom for [T] {
     }
 
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
+    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<'_, Self, Self::Item>
         where R: Rng + ?Sized
     {
         let amount = crate::core::cmp::min(amount, self.len());

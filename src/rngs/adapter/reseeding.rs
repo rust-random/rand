@@ -281,8 +281,6 @@ where R: BlockRngCore + SeedableRng + CryptoRng,
 
 #[cfg(all(feature="std", unix, not(target_os="emscripten")))]
 mod fork {
-    extern crate libc;
-
     use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
     use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT};
 
@@ -300,7 +298,7 @@ mod fork {
 
     static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
 
-    pub fn get_fork_counter() -> usize {
+    crate fn get_fork_counter() -> usize {
         RESEEDING_RNG_FORK_COUNTER.load(Ordering::Relaxed)
     }
 
@@ -312,7 +310,7 @@ mod fork {
         RESEEDING_RNG_FORK_COUNTER.fetch_add(1, Ordering::Relaxed);
     }
 
-    pub fn register_fork_handler() {
+    crate fn register_fork_handler() {
         if FORK_HANDLER_REGISTERED.load(Ordering::Relaxed) == false {
             unsafe { libc::pthread_atfork(None, None, Some(fork_handler)) };
             FORK_HANDLER_REGISTERED.store(true, Ordering::Relaxed);

@@ -245,10 +245,6 @@ extern crate stdweb;
 #[cfg(all(target_arch = "wasm32", feature = "wasm-bindgen"))]
 extern crate wasm_bindgen;
 
-extern crate rand_core;
-extern crate rand_isaac;    // only for deprecations
-extern crate rand_xorshift;
-
 #[cfg(feature = "log")] #[macro_use] extern crate log;
 #[allow(unused)]
 #[cfg(not(feature = "log"))] macro_rules! trace { ($($x:tt)*) => () }
@@ -939,7 +935,7 @@ mod test {
     use super::*;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 
-    pub struct TestRng<R> { inner: R }
+    crate struct TestRng<R> { inner: R }
 
     impl<R: RngCore> RngCore for TestRng<R> {
         fn next_u32(&mut self) -> u32 {
@@ -956,7 +952,7 @@ mod test {
         }
     }
 
-    pub fn rng(seed: u64) -> TestRng<StdRng> {
+    crate fn rng(seed: u64) -> TestRng<StdRng> {
         // TODO: use from_hashable
         let mut state = seed;
         let mut seed = <StdRng as SeedableRng>::Seed::default();
@@ -1069,7 +1065,7 @@ mod test {
     fn test_rng_trait_object() {
         use crate::distributions::{Distribution, Standard};
         let mut rng = rng(109);
-        let mut r = &mut rng as &mut RngCore;
+        let mut r = &mut rng as &mut dyn RngCore;
         r.next_u32();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0, 1), 0);
@@ -1081,7 +1077,7 @@ mod test {
     fn test_rng_boxed_trait() {
         use crate::distributions::{Distribution, Standard};
         let rng = rng(110);
-        let mut r = Box::new(rng) as Box<RngCore>;
+        let mut r = Box::new(rng) as Box<dyn RngCore>;
         r.next_u32();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0, 1), 0);

@@ -211,7 +211,7 @@ impl EntropySource for NoSource {
               all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
 #[derive(Clone, Debug)]
-pub struct Os(rngs::OsRng);
+crate struct Os(rngs::OsRng);
 
 #[cfg(all(feature="std",
           any(target_os = "linux", target_os = "android",
@@ -267,7 +267,7 @@ type Custom = NoSource;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Debug)]
-pub struct Jitter(rngs::JitterRng);
+crate struct Jitter(rngs::JitterRng);
 
 #[cfg(not(target_arch = "wasm32"))]
 impl EntropySource for Jitter {

@@ -198,7 +198,7 @@ impl EcState {
 
 // Custom Debug implementation that does not expose the internal state
 impl fmt::Debug for JitterRng {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "JitterRng {{}}")
     }
 }
@@ -250,13 +250,13 @@ impl TimerError {
 }
 
 impl fmt::Display for TimerError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.description())
     }
 }
 
 #[cfg(feature="std")]
-impl ::std::error::Error for TimerError {
+impl std::error::Error for TimerError {
     fn description(&self) -> &str {
         self.description()
     }
@@ -778,7 +778,7 @@ mod platform {
     #[cfg(not(any(target_os = "macos", target_os = "ios",
                   target_os = "windows",
                   target_arch = "wasm32")))]
-    pub fn get_nstime() -> u64 {
+    crate fn get_nstime() -> u64 {
         use std::time::{SystemTime, UNIX_EPOCH};
 
         let dur = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();

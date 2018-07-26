@@ -118,7 +118,7 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 pub struct OsRng(imp::OsRng);
 
 impl fmt::Debug for OsRng {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
 }
@@ -264,7 +264,7 @@ mod random_device {
     static READ_RNG_ONCE: Once = ONCE_INIT;
 
     #[allow(unused)]
-    pub fn open<F>(path: &'static str, open_fn: F) -> Result<(), Error>
+    crate fn open<F>(path: &'static str, open_fn: F) -> Result<(), Error>
         where F: Fn(&'static str) -> Result<File, io::Error>
     {
         READ_RNG_ONCE.call_once(|| {
@@ -284,7 +284,7 @@ mod random_device {
         Ok(())
     }
 
-    pub fn read(dest: &mut [u8]) -> Result<(), Error> {
+    crate fn read(dest: &mut [u8]) -> Result<(), Error> {
         // We expect this function only to be used after `random_device::open`
         // was succesful. Therefore we can assume that our memory was set with a
         // valid object.
@@ -300,7 +300,7 @@ mod random_device {
 
     }
 
-    pub fn map_err(err: io::Error) -> Error {
+    crate fn map_err(err: io::Error) -> Error {
         match err.kind() {
             io::ErrorKind::Interrupted =>
                     Error::new(ErrorKind::Transient, "interrupted"),
@@ -316,8 +316,6 @@ mod random_device {
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 mod imp {
-    extern crate libc;
-
     use crate::{Error, ErrorKind};
     use super::random_device;
     use super::OsRngImpl;
@@ -330,7 +328,7 @@ mod imp {
     use std::sync::{Once, ONCE_INIT};
 
     #[derive(Clone, Debug)]
-    pub struct OsRng {
+    crate struct OsRng {
         method: OsRngMethod,
         initialized: bool,
     }

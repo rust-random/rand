@@ -18,7 +18,7 @@ use crate::distributions::ziggurat_tables;
 use crate::Rng;
 
 
-pub trait WideningMultiply<RHS = Self> {
+crate trait WideningMultiply<RHS = Self> {
     type Output;
 
     fn wmul(self, x: RHS) -> Self::Output;
@@ -290,7 +290,7 @@ macro_rules! simd_impl {
 /// ahead of time - we use just the first 6 terms, which is good enough
 /// for most purposes.
 #[cfg(feature="std")]
-pub fn log_gamma(x: f64) -> f64 {
+crate fn log_gamma(x: f64) -> f64 {
     // precalculated 6 coefficients for the first 6 terms of the series
     let coefficients: [f64; 6] = [
         76.18009172947146,
@@ -336,7 +336,7 @@ pub fn log_gamma(x: f64) -> f64 {
 // size from force-inlining.
 #[cfg(feature="std")]
 #[inline(always)]
-pub fn ziggurat<R: Rng + ?Sized, P, Z>(
+crate fn ziggurat<R: Rng + ?Sized, P, Z>(
             rng: &mut R,
             symmetric: bool,
             x_tab: ziggurat_tables::ZigTable,
