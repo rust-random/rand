@@ -37,6 +37,8 @@
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://docs.rs/rand_core/0.2.1")]
 
+#![feature(rust_2018_preview)]
+
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
@@ -55,7 +57,7 @@ use core::convert::AsMut;
 
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
-pub use error::{ErrorKind, Error};
+pub use crate::error::{ErrorKind, Error};
 
 
 mod error;
