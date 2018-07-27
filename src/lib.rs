@@ -226,8 +226,6 @@
 
 #![cfg_attr(not(feature="std"), no_std)]
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
-#![cfg_attr(all(feature="i128_support", feature="nightly"), allow(stable_features))] // stable since 2018-03-27
-#![cfg_attr(all(feature="i128_support", feature="nightly"), feature(i128_type, i128))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
 #![cfg_attr(feature = "stdweb", recursion_limit="128")]
 #![cfg_attr(feature = "wasm-bindgen", feature(use_extern_macros))]
@@ -718,13 +716,13 @@ macro_rules! impl_as_byte_slice {
 impl_as_byte_slice!(u16);
 impl_as_byte_slice!(u32);
 impl_as_byte_slice!(u64);
-#[cfg(feature="i128_support")] impl_as_byte_slice!(u128);
+#[cfg(rust_1_26)] impl_as_byte_slice!(u128);
 impl_as_byte_slice!(usize);
 impl_as_byte_slice!(i8);
 impl_as_byte_slice!(i16);
 impl_as_byte_slice!(i32);
 impl_as_byte_slice!(i64);
-#[cfg(feature="i128_support")] impl_as_byte_slice!(i128);
+#[cfg(rust_1_26)] impl_as_byte_slice!(i128);
 impl_as_byte_slice!(isize);
 
 macro_rules! impl_as_byte_slice_arrays {

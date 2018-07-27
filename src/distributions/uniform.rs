@@ -471,7 +471,7 @@ uniform_int_impl! { i8, i8, u8, i32, u32 }
 uniform_int_impl! { i16, i16, u16, i32, u32 }
 uniform_int_impl! { i32, i32, u32, i32, u32 }
 uniform_int_impl! { i64, i64, u64, i64, u64 }
-#[cfg(feature = "i128_support")]
+#[cfg(rust_1_26)]
 uniform_int_impl! { i128, i128, u128, u128, u128 }
 uniform_int_impl! { isize, isize, usize, isize, usize }
 uniform_int_impl! { u8, i8, u8, i32, u32 }
@@ -479,7 +479,7 @@ uniform_int_impl! { u16, i16, u16, i32, u32 }
 uniform_int_impl! { u32, i32, u32, i32, u32 }
 uniform_int_impl! { u64, i64, u64, i64, u64 }
 uniform_int_impl! { usize, isize, usize, isize, usize }
-#[cfg(feature = "i128_support")]
+#[cfg(rust_1_26)]
 uniform_int_impl! { u128, u128, u128, i128, u128 }
 
 
@@ -859,7 +859,7 @@ mod tests {
         }
         t!(i8, i16, i32, i64, isize,
            u8, u16, u32, u64, usize);
-        #[cfg(feature = "i128_support")]
+        #[cfg(rust_1_26)]
         t!(i128, u128)
     }
 
