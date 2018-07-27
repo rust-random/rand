@@ -17,6 +17,7 @@
 
 use core::marker::PhantomData;
 use core::{cmp, hash, mem, ptr, slice};
+use rand_core::{RngCore, SeedableRng, Error, le, impls};
 
 /// A portable implementation of SipHash 2-4.
 /// 
@@ -37,6 +38,19 @@ use core::{cmp, hash, mem, ptr, slice};
 #[derive(Debug, Clone, Default)]
 pub struct SipHasher {
     hasher: Hasher<Sip24Rounds>,
+}
+
+/// An RNG based around a SipHash core.
+/// 
+/// This implementation is fixed to use two rounds between output values
+/// (similar to how SipHash uses 2 between input values). The construction
+/// from a `SipHasher` adds two extra rounds so that there are still four
+/// rounds between final input consumption and first output production.
+/// The first result is however not equivalent.
+#[derive(Debug, Clone)]
+pub struct SipRng {
+    state: State,
+    adj: u64,
 }
 
 #[derive(Debug)]
@@ -106,6 +120,60 @@ impl SipHasher {
             hasher: Hasher::new_with_keys(key0, key1)
         }
     }
+    
+    /// Finish writes and convert the core into an RNG
+    pub fn make_rng(self) -> SipRng {
+        self.hasher.make_rng()
+    }
+}
+
+impl SipRng {
+    // private constructor
+    fn from_state(state: State) -> SipRng {
+        SipRng {
+            state,
+            adj: 0x13,
+        }
+    }
+}
+
+impl RngCore for SipRng {
+    fn next_u32(&mut self) -> u32 {
+        // Lazy way to implement. Good enough for seeding RNGs.
+        self.next_u64() as u32
+    }
+    
+    fn next_u64(&mut self) -> u64 {
+        self.state.v2 ^= self.adj;
+        self.adj = self.adj.wrapping_sub(0x11);
+        
+        Sip24Rounds::c_rounds(&mut self.state);
+        
+        self.state.v0 ^ self.state.v1 ^ self.state.v2 ^ self.state.v3
+    }
+    
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        impls::fill_bytes_via_next(self, dest)
+    }
+    
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        Ok(self.fill_bytes(dest))
+    }
+}
+
+impl SeedableRng for SipRng {
+    type Seed = [u8; 32];
+    
+    fn from_seed(seed: Self::Seed) -> Self {
+        let mut keys = [0u64; 4];
+        le::read_u64_into(&seed, &mut keys);
+        SipRng::from_state(State {
+            v0: keys[0],
+            v1: keys[1],
+            v2: keys[2],
+            v3: keys[3],
+        })
+    }
 }
 
 impl<S: Sip> Hasher<S> {
@@ -168,6 +236,23 @@ impl<S: Sip> Hasher<S> {
         // Buffered tail is now flushed, process new input.
         self.ntail = length - needed;
         self.tail = unsafe { u8to64_le(msg, needed, self.ntail) };
+    }
+    
+    /// Finish writes and convert the core into an RNG
+    pub fn make_rng(self) -> SipRng {
+        let mut state = self.state;
+
+        // Finish
+        let b: u64 = ((self.length as u64 & 0xff) << 56) | self.tail;
+
+        state.v3 ^= b;
+        S::c_rounds(&mut state);
+        state.v0 ^= b;
+        
+        // This is supposed to be d - c rounds (here 4 - 2 = 2)
+        S::c_rounds(&mut state);
+        
+        SipRng::from_state(state)
     }
 }
 
@@ -370,6 +455,47 @@ mod test {
             let mut hasher = SipHasher::new_with_keys(k0, k1);
             hasher.write(&msg[0..*len]);
             assert_eq!(hasher.finish(), *val, "mismatch with reference vector for i={}", *len);
+        }
+    }
+    
+    #[test]
+    fn test_rng_vectors() {
+        // SipRng has no external reference. These vectors are defined here.
+        
+        let mut seed = [0u8; 32];
+        let mut rng = SipRng::from_seed(seed);
+        
+        let vector = [0x4c022e4ec04e602a, 0xc2c0399c269058d6,
+            0xf5c7399cde9c362c, 0x37e5b9491363680a,
+            0x9582782644903316, 0x2a9d2e160aad88d,
+            0x983958db9376e6f6, 0xdead8960b8524928,
+            0xcfa886c6642c1b2f, 0x8f8f91fcf7045f2a,
+            0x1bbda585fc387fb3, 0x242485d9cc54c688,
+            0x9be110f767d8cee, 0xd61076dfc3569ab3,
+            0x8f6092dd2692af57, 0xbdf362ab8e29260b];
+        // for _ in 0..8 {
+        //     println!("0x{:x}, 0x{:x},", rng.next_u64(), rng.next_u64());
+        // }
+        for i in 0..16 {
+            assert_eq!(rng.next_u64(), vector[i]);
+        }
+        
+        // set seed to 0, 1, 2, ..., 31
+        for (pos, i) in seed.iter_mut().zip(0u8..32) {
+            *pos = i;
+        }
+        let mut rng = SipRng::from_seed(seed);
+        
+        let vector = [0x479bf2823a7a923e, 0xf04e2cbc75d554d,
+            0xd589aceb3b65f36b, 0x91f8758ab30951a,
+            0x10d2bebadd90c381, 0xb3a6345b6273b101,
+            0xd05dbd603684e153, 0xabaaa983f818f5db,
+            0x2a063ed10d464bf2, 0x1d395c4c511e9073,
+            0x43011ca87ead4d7c, 0x22acb2bfbca6a069,
+            0xdd6b8dd2abb4d8f, 0xb3bc3889e7142461,
+            0x62cbac703609d15, 0x74aec28d9fdd44bf];
+        for i in 0..16 {
+            assert_eq!(rng.next_u64(), vector[i]);
         }
     }
 }

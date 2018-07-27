@@ -24,6 +24,8 @@
 
 #![no_std]
 
+extern crate rand_core;
+
 mod sip;
 
-pub use sip::{SipHasher};
+pub use sip::{SipHasher, SipRng};
