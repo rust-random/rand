@@ -95,13 +95,13 @@ macro_rules! simd_impl {
         impl Distribution<$ty> for Standard {
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let mut vec = Default::default();
+                let mut vec: $ty = Default::default();
                 unsafe {
                     let ptr = &mut vec;
                     let b_ptr = &mut *(ptr as *mut $ty as *mut [u8; $bits/8]);
                     rng.fill_bytes(b_ptr);
                 }
-                vec
+                vec.to_le()
             }
         }
     }
