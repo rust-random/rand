@@ -1,49 +1,118 @@
 language: rust
 sudo: false
 
-# We aim to test all the following in any combination:
-# - standard tests, benches, documentation, all available features
-# - pinned stable, latest stable, beta and nightly Rust releases
-# - Linux, OS X, Android, iOS, bare metal (i.e. no_std)
-# - x86_64, ARMv7, a Big-Endian arch (MIPS)
+# We support too many combinations of Rust releases, crate features, operating
+# systems, and architectures to even remotely test all combinations.
+# Yet it turns out we can test most of these independent of each other, because
+# they serve different goals or test different pieces of code.
+#
+# RUST RELEASES
+# Goal: make sure we don't use language features unavailable on a certain
+#       version, and build without warnings.
+# We have different builders use 4 Rust releases, a pinned stable release,
+# the latest stable, beta and nightly.
+#
+# ARCHITECTURES
+# Goal: test against issues caused by differences in endianness, pointer sizes,
+#       etc.
+# We run tests on 4 different architectures.
+# - x64_84, default on Travis (Linux) and AppVeyor (Windows)
+# - i686, second AppVeyor (Windows) configuration
+# - MIPS, big-endian Linux emulated with QEMU (thanks to Trust)
+# - ARMv7, Android emulated with QEMU (thanks to Trust)
+#
+# OPERATING SYSTEMS
+# Goal: test on many operating systems, to verify the OsRng code, which is
+#       mostly architecture-independent.
+# We run tests on Linux, OS X, Windows, Android (emulated), and Node.js (using
+# cargo-web).
+# One builder cross-compiles for many of the remaining OSes, which ensures we
+# keep building, but doesn't run tests.
+# OSes supported by Rand but which we can't cross-compile because there
+# is no pre-built standard library available: Dragonfly BSD, Haiku, OpenBSD.
+#
+# CRATE FEATURES, TESTS, AND SUB-CRATES
+# Goal: Run unit tests, doctests, examples, and test benchmarks for all crates,
+#       in configurations that cover all interesting combinations of features.
+# (`--lib` only runs unit tests just like `--tests`, but the latter is not
+# available in Rust 1.22.0)
+# Tests run on rand:
+# - test no_std support, but only the unit tests:
+#   `cargo test --lib --no-default-features`
+# - run unit tests and doctests with all features which are available on stable:
+#   `cargo test --features=serde1,log`
+# - test examples:
+#   `cargo test --examples`
+# Additional tests on nightly:
+# - run unit tests and doctests with all features which are available on nightly:
+#   `cargo test --all-features`
+# - test no_std support, including the nightly alloc feature:
+#   cargo test --lib --no-default-features --features=alloc
+# - run benchmarks as tests:
+#   `cargo test --benches --features=nightly`
+# Tests on subcrates:
+#   `cargo test --package rand_core`
+#   `cargo test --package rand_core --features=alloc` (requires nightly)
+#   `cargo test --package rand_core --no-default-features`
+#   `cargo test --package rand_isaac --features=serde1`
+#   `cargo test --package rand_xorshift --features=serde1`
 matrix:
   include:
     - rust: 1.22.0
+      env: DESCRIPTION="pinned stable Rust release"
       install:
       script:
-        # TODO: use --tests instead of --lib on more recent compiler
         - cargo test --lib --no-default-features
+        - cargo test --features=serde1,log
+        - cargo test --examples
+        - cargo test --package rand_core
         - cargo test --package rand_core --no-default-features
-        - cargo test --package rand_isaac --features serde1
-        - cargo test --package rand_xorshift --features serde1
-        - cargo test --features serde1,log
+        - cargo test --package rand_isaac --features=serde1
+        # - cargo test --package rand_xorshift --features=serde1
+
     - rust: stable
+      env: DESCRIPTION="stable Rust release, macOS, iOS (cross-compile only)"
       os: osx
       install:
+        - rustup target add aarch64-apple-ios
       script:
-        - cargo test --tests --no-default-features
+        - cargo test --lib --no-default-features
+        - cargo test --features=serde1,log,i128_support
+        - cargo test --examples
+        - cargo test --package rand_core
         - cargo test --package rand_core --no-default-features
-        - cargo test --package rand_isaac --features serde1
-        - cargo test --package rand_xorshift --features serde1
-        - cargo test --features serde1,log
+        - cargo test --package rand_isaac --features=serde1
+        - cargo test --package rand_xorshift --features=serde1
+        - cargo build --target=aarch64-apple-ios
+
     - rust: beta
+      env: DESCRIPTION="beta Rust release"
       install:
       script:
-        - cargo test --tests --no-default-features
+        - cargo test --lib --no-default-features
+        - cargo test --features=serde1,log,i128_support
+        - cargo test --examples
+        - cargo test --package rand_core
         - cargo test --package rand_core --no-default-features
-        - cargo test --package rand_isaac --features serde1
-        - cargo test --package rand_xorshift --features serde1
-        - cargo test --features serde1,log
+        - cargo test --package rand_isaac --features=serde1
+        - cargo test --package rand_xorshift --features=serde1
+
     - rust: nightly
+      env: DESCRIPTION="nightly features, benchmarks, documentation"
       install:
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
+        - cargo deadlinks -V
       before_script:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
-        - cargo test --tests --no-default-features --features=alloc
-        - cargo test --package rand_core --no-default-features --features=alloc,serde1
-        - cargo test --features serde1,log,nightly,alloc
-        - cargo test --all --benches
+        - cargo test --lib --no-default-features --features=alloc
+        - cargo test --all-features
+        - cargo test --benches --features=nightly
+        - cargo test --examples
+        - cargo test --package rand_core
+        - cargo test --package rand_core --no-default-features --features=alloc
+        - cargo test --package rand_isaac --features=serde1
+        # - cargo test --package rand_xorshift --features=serde1
         # remove cached documentation, otherwise files from previous PRs can get included
         - rm -rf target/doc
         - cargo doc --no-deps --all --all-features
@@ -52,52 +121,54 @@ matrix:
         - travis-cargo --only nightly doc-upload
 
     - rust: nightly
+      env: DESCRIPTION="WASM via emscripten, stdweb and wasm-bindgen"
       install:
         - rustup target add wasm32-unknown-unknown
-        # Use cargo-update since we need a real update-or-install command
-        # Only install if not already installed:
-        #- cargo --list | egrep "\binstall-update$" -q || cargo install cargo-update
-        #- cargo install-update -i cargo-web
-        # Cargo has errors with sub-commands so ignore updating for now:
+        - rustup target add wasm32-unknown-emscripten
+        # cargo-web takes ±10 min. to install, and cargo and cargo-update offer
+        # no reliable update-or-install command. We ignore updating for now
+        # (just drop the Travis' caches when necessary)
         - cargo --list | egrep "^\s*web$" -q || cargo install cargo-web
+        - cargo web -V
+      addons:
+        chrome: stable
       script:
-        - cargo web test --target wasm32-unknown-unknown --nodejs --features=stdweb
+        # testing wasm32-unknown-emscripten fails because of rust-lang/rust#49877
+        - cargo build --target wasm32-unknown-emscripten
+        #- cargo web test --target wasm32-unknown-emscripten
+        #- cargo web test --nodejs --target wasm32-unknown-emscripten
+        - cargo build --target wasm32-unknown-unknown # without any features
+        - cargo web test --nodejs --target wasm32-unknown-unknown --features=stdweb
+        - cargo build --target wasm32-unknown-unknown --features=wasm-bindgen
 
     - rust: nightly
+      env: DESCRIPTION="cross-platform builder (doesn't run tests)"
       install:
-        - rustup target add wasm32-unknown-unknown
+        - rustup target add x86_64-sun-solaris
+        - rustup target add x86_64-unknown-cloudabi
+        - rustup target add x86_64-unknown-freebsd
+        - rustup target add x86_64-unknown-fuchsia
+        - rustup target add x86_64-unknown-netbsd
+        - rustup target add x86_64-unknown-redox
       script:
-        - cargo build --target wasm32-unknown-unknown --features wasm-bindgen
-
-    - rust: nightly
-      install:
-        - rustup target add thumbv6m-none-eabi
-      script:
-        # Bare metal target; no std; only works on nightly
-        - cargo build --no-default-features --target thumbv6m-none-eabi --release
+        - cargo build --target=x86_64-sun-solaris --all-features
+        - cargo build --target=x86_64-unknown-cloudabi --all-features
+        - cargo build --target=x86_64-unknown-freebsd --all-features
+        - cargo build --target=x86_64-unknown-fuchsia --all-features
+        - cargo build --target=x86_64-unknown-netbsd --all-features
+        - cargo build --target=x86_64-unknown-redox --all-features
 
     # Trust cross-built/emulated targets. We must repeat all non-default values.
     - rust: stable
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=x86_64-unknown-freebsd DISABLE_TESTS=1
+      env: DESCRIPTION="Linux (MIPS, big-endian)" TARGET=mips-unknown-linux-gnu
     - rust: stable
       sudo: required
       dist: trusty
       services: docker
-      env: TARGET=mips-unknown-linux-gnu
-    - rust: stable
-      sudo: required
-      dist: trusty
-      services: docker
-      env: TARGET=armv7-linux-androideabi DISABLE_TESTS=1
-    - rust: stable
-      os: osx
-      sudo: required
-      dist: trusty
-      services: docker
-      env: TARGET=armv7-apple-ios DISABLE_TESTS=1
+      env: DESCRIPTION="Android (ARMv7)" TARGET=armv7-linux-androideabi
 
 before_install:
   - set -e
