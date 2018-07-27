@@ -28,7 +28,7 @@ simd_support = ["packed_simd"] # enables SIMD support
 serde1 = ["rand_core/serde1", "rand_isaac/serde1", "rand_xorshift/serde1"] # enables serialization for PRNGs
 
 [workspace]
-members = ["rand_core", "rand_isaac", "rand_xorshift"]
+members = ["rand_core", "rand_isaac", "rand_xorshift", "rand_seeder"]
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.2", default-features = false }
