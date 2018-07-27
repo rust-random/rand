@@ -3,6 +3,7 @@
 extern crate test;
 extern crate rand;
 extern crate rand_isaac;
+extern crate rand_seeder;
 extern crate rand_xorshift;
 
 const RAND_BENCH_N: u64 = 1000;
@@ -17,6 +18,7 @@ use rand::prng::hc128::Hc128Core;
 use rand::rngs::adapter::ReseedingRng;
 use rand::rngs::{OsRng, JitterRng, EntropyRng};
 use rand_isaac::{IsaacRng, Isaac64Rng};
+use rand_seeder::SipRng;
 use rand_xorshift::XorShiftRng;
 
 macro_rules! gen_bytes {
@@ -41,6 +43,7 @@ gen_bytes!(gen_bytes_chacha20, ChaChaRng::from_entropy());
 gen_bytes!(gen_bytes_hc128, Hc128Rng::from_entropy());
 gen_bytes!(gen_bytes_isaac, IsaacRng::from_entropy());
 gen_bytes!(gen_bytes_isaac64, Isaac64Rng::from_entropy());
+gen_bytes!(gen_bytes_sip, SipRng::from_entropy());
 gen_bytes!(gen_bytes_std, StdRng::from_entropy());
 gen_bytes!(gen_bytes_small, SmallRng::from_entropy());
 gen_bytes!(gen_bytes_os, OsRng::new().unwrap());
@@ -67,6 +70,7 @@ gen_uint!(gen_u32_chacha20, u32, ChaChaRng::from_entropy());
 gen_uint!(gen_u32_hc128, u32, Hc128Rng::from_entropy());
 gen_uint!(gen_u32_isaac, u32, IsaacRng::from_entropy());
 gen_uint!(gen_u32_isaac64, u32, Isaac64Rng::from_entropy());
+gen_uint!(gen_u32_sip, u32, SipRng::from_entropy());
 gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
 gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng::new().unwrap());
@@ -76,6 +80,7 @@ gen_uint!(gen_u64_chacha20, u64, ChaChaRng::from_entropy());
 gen_uint!(gen_u64_hc128, u64, Hc128Rng::from_entropy());
 gen_uint!(gen_u64_isaac, u64, IsaacRng::from_entropy());
 gen_uint!(gen_u64_isaac64, u64, Isaac64Rng::from_entropy());
+gen_uint!(gen_u64_sip, u64, SipRng::from_entropy());
 gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
 gen_uint!(gen_u64_small, u64, SmallRng::from_entropy());
 gen_uint!(gen_u64_os, u64, OsRng::new().unwrap());
@@ -108,6 +113,7 @@ init_gen!(init_xorshift, XorShiftRng);
 init_gen!(init_hc128, Hc128Rng);
 init_gen!(init_isaac, IsaacRng);
 init_gen!(init_isaac64, Isaac64Rng);
+init_gen!(init_sip, SipRng);
 init_gen!(init_chacha, ChaChaRng);
 
 #[bench]
