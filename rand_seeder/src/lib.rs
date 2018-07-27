@@ -23,3 +23,7 @@
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
 #![no_std]
+
+mod sip;
+
+pub use sip::{SipHasher};
