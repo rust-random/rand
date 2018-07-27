@@ -9,6 +9,31 @@
 
 A universal seeder based on [`SipHash`](https://131002.net/siphash/).
 
+This crate provides three things:
+
+-   a portable implementation of SipHash-2-4, `SipHasher`
+-   `SipRng`, based around the `SipHash` state and mixing operations
+-   `Seeder`, a convenience wrapper
+
+`Seeder` can be used to seed any `SeedableRng` from any hashable value. It is
+portable and reproducible, and should turn any input into a good RNG seed.
+It is intended for use in simulations and games where reproducibility is
+important.
+
+We do not recommend using `Seeder` for cryptographic applications and
+strongly advise against usage for authentication (password hashing).
+
+Example:
+
+```rust
+use rand_core::RngCore;         // for next_u32
+use rand::prng::XorShiftRng;    // or whatever you like
+use rand_seeder::Seeder;
+
+let mut rng: XorShiftRng = Seeder::from("stripy zebra").make_rng();
+println!("First value: {}", rng.next_u32());
+```
+
 Documentation:
 [master branch](https://rust-lang-nursery.github.io/rand/rand_seeder/index.html),
 [by release](https://docs.rs/rand_seeder)
