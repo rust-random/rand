@@ -12,18 +12,15 @@
 //! 
 //! TODO: module doc
 
+
+#[cfg(feature="alloc")] pub mod index;
+
 #[cfg(feature="alloc")] use core::ops::Index;
 
-#[cfg(feature="std")] use std::vec;
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec::Vec;
-// BTreeMap is not as fast in tests, but better than nothing.
-#[cfg(feature="std")] use std::collections::HashMap;
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::collections::BTreeMap;
 
-#[cfg(feature = "alloc")] use distributions::WeightedError;
-
-use super::Rng;
+use Rng;
+#[cfg(feature="alloc")] use distributions::WeightedError;
 #[cfg(feature="alloc")] use distributions::uniform::{SampleUniform, SampleBorrow};
 
 /// Extension trait on slices, providing random mutation and sampling methods.
@@ -61,18 +58,12 @@ pub trait SliceRandom {
         where R: Rng + ?Sized;
 
     /// Produces an iterator that chooses `amount` elements from the slice at
-    /// random without repeating any.
-    ///
-    /// In case this API is not sufficiently flexible, use `sample_indices` then
+    /// random without repeating any, and returns them in random order.
+    /// 
+    /// In case this API is not sufficiently flexible, use `index::sample` then
     /// apply the indices to the slice.
     /// 
-    /// Although the elements are selected randomly, the order of returned
-    /// elements is neither stable nor fully random. If random ordering is
-    /// desired, either use `partial_shuffle` or use this method and shuffle
-    /// the result. If stable order is desired, use `sample_indices`, sort the
-    /// result, then apply to the slice.
-    /// 
-    /// Complexity is expected to be the same as `sample_indices`.
+    /// Complexity is expected to be the same as `index::sample`.
     /// 
     /// # Example
     /// ```
@@ -317,14 +308,15 @@ impl<T> SliceRandom for [T] {
     }
 
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
+    fn choose_multiple<R>(&self, rng: &mut R, amount: usize)
+        -> SliceChooseIter<Self, Self::Item>
         where R: Rng + ?Sized
     {
         let amount = ::core::cmp::min(amount, self.len());
         SliceChooseIter {
             slice: self,
             _phantom: Default::default(),
-            indices: sample_indices(rng, self.len(), amount).into_iter(),
+            indices: index::sample(rng, self.len(), amount).into_iter(),
         }
     }
 
@@ -396,7 +388,7 @@ impl<I> IteratorRandom for I where I: Iterator + Sized {}
 pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
     slice: &'a S,
     _phantom: ::core::marker::PhantomData<T>,
-    indices: vec::IntoIter<usize>,
+    indices: index::IndexVecIntoIter,
 }
 
 #[cfg(feature = "alloc")]
@@ -405,7 +397,7 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceCho
 
     fn next(&mut self) -> Option<Self::Item> {
         // TODO: investigate using SliceIndex::get_unchecked when stable
-        self.indices.next().map(|i| &(*self.slice)[i])
+        self.indices.next().map(|i| &self.slice[i as usize])
     }
     
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -461,10 +453,10 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
     where R: Rng + ?Sized,
           T: Clone
 {
-    let indices = sample_indices(rng, slice.len(), amount);
+    let indices = index::sample(rng, slice.len(), amount).into_iter();
 
     let mut out = Vec::with_capacity(amount);
-    out.extend(indices.iter().map(|i| slice[*i].clone()));
+    out.extend(indices.map(|i| slice[i].clone()));
     out
 }
 
@@ -484,113 +476,10 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>
     where R: Rng + ?Sized
 {
-    let indices = sample_indices(rng, slice.len(), amount);
+    let indices = index::sample(rng, slice.len(), amount).into_iter();
 
     let mut out = Vec::with_capacity(amount);
-    out.extend(indices.iter().map(|i| &slice[*i]));
-    out
-}
-
-/// Randomly sample exactly `amount` indices from `0..length`.
-///
-/// The values are non-repeating and in random order.
-///
-/// This implementation uses `O(amount)` time and memory.
-///
-/// This method is used internally by the slice sampling methods, but it can sometimes be useful to
-/// have the indices themselves so this is provided as an alternative.
-///
-/// Panics if `amount > length`
-#[cfg(feature = "alloc")]
-pub fn sample_indices<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
-    where R: Rng + ?Sized,
-{
-    if amount > length {
-        panic!("`amount` must be less than or equal to `slice.len()`");
-    }
-
-    // We are going to have to allocate at least `amount` for the output no matter what. However,
-    // if we use the `cached` version we will have to allocate `amount` as a HashMap as well since
-    // it inserts an element for every loop.
-    //
-    // Therefore, if `amount >= length / 2` then inplace will be both faster and use less memory.
-    // In fact, benchmarks show the inplace version is faster for length up to about 20 times
-    // faster than amount.
-    //
-    // TODO: there is probably even more fine-tuning that can be done here since
-    // `HashMap::with_capacity(amount)` probably allocates more than `amount` in practice,
-    // and a trade off could probably be made between memory/cpu, since hashmap operations
-    // are slower than array index swapping.
-    if amount >= length / 20 {
-        sample_indices_inplace(rng, length, amount)
-    } else {
-        sample_indices_cache(rng, length, amount)
-    }
-}
-
-/// Sample an amount of indices using an inplace partial fisher yates method.
-///
-/// This allocates the entire `length` of indices and randomizes only the first `amount`.
-/// It then truncates to `amount` and returns.
-///
-/// This is better than using a `HashMap` "cache" when `amount >= length / 2`
-/// since it does not require allocating an extra cache and is much faster.
-#[cfg(feature = "alloc")]
-fn sample_indices_inplace<R>(rng: &mut R, length: usize, amount: usize) -> Vec<usize>
-    where R: Rng + ?Sized,
-{
-    debug_assert!(amount <= length);
-    let mut indices: Vec<usize> = Vec::with_capacity(length);
-    indices.extend(0..length);
-    for i in 0..amount {
-        let j: usize = rng.gen_range(i, length);
-        indices.swap(i, j);
-    }
-    indices.truncate(amount);
-    debug_assert_eq!(indices.len(), amount);
-    indices
-}
-
-
-/// This method performs a partial fisher-yates on a range of indices using a
-/// `HashMap` as a cache to record potential collisions.
-///
-/// The cache avoids allocating the entire `length` of values. This is especially useful when
-/// `amount <<< length`, i.e. select 3 non-repeating from `1_000_000`
-#[cfg(feature = "alloc")]
-fn sample_indices_cache<R>(
-    rng: &mut R,
-    length: usize,
-    amount: usize,
-) -> Vec<usize>
-    where R: Rng + ?Sized,
-{
-    debug_assert!(amount <= length);
-    #[cfg(feature="std")] let mut cache = HashMap::with_capacity(amount);
-    #[cfg(not(feature="std"))] let mut cache = BTreeMap::new();
-    let mut out = Vec::with_capacity(amount);
-    for i in 0..amount {
-        let j: usize = rng.gen_range(i, length);
-
-        // equiv: let tmp = slice[i];
-        let tmp = match cache.get(&i) {
-            Some(e) => *e,
-            None => i,
-        };
-
-        // equiv: slice[i] = slice[j];
-        let x = match cache.get(&j) {
-            Some(x) => *x,
-            None => j,
-        };
-
-        // equiv: slice[j] = tmp;
-        cache.insert(j, tmp);
-
-        // note that in the inplace version, slice[i] is automatically "returned" value
-        out.push(x);
-    }
-    debug_assert_eq!(out.len(), amount);
+    out.extend(indices.map(|i| &slice[i]));
     out
 }
 
@@ -648,7 +537,6 @@ mod test {
 
     #[test]
     fn test_shuffle() {
-
         let mut r = ::test::rng(108);
         let empty: &mut [isize] = &mut [];
         empty.shuffle(&mut r);
@@ -752,14 +640,6 @@ mod test {
         let v = sample_slice(&mut r, &[42, 133], 2);
         assert!(&v[..] == [42, 133] || v[..] == [133, 42]);
 
-        assert_eq!(&sample_indices_inplace(&mut r, 0, 0)[..], [0usize; 0]);
-        assert_eq!(&sample_indices_inplace(&mut r, 1, 0)[..], [0usize; 0]);
-        assert_eq!(&sample_indices_inplace(&mut r, 1, 1)[..], [0]);
-
-        assert_eq!(&sample_indices_cache(&mut r, 0, 0)[..], [0usize; 0]);
-        assert_eq!(&sample_indices_cache(&mut r, 1, 0)[..], [0usize; 0]);
-        assert_eq!(&sample_indices_cache(&mut r, 1, 1)[..], [0]);
-
         // Make sure lucky 777's aren't lucky
         let slice = &[42, 777];
         let mut num_42 = 0;
@@ -783,43 +663,29 @@ mod test {
     fn test_sample_slice() {
         let xor_rng = XorShiftRng::from_seed;
 
-        let max_range = 100;
         let mut r = ::test::rng(403);
 
-        for length in 1usize..max_range {
+        for n in 1..20 {
+            let length = 5*n - 4;   // 1, 6, ...
             let amount = r.gen_range(0, length);
             let mut seed = [0u8; 16];
             r.fill(&mut seed);
 
-            // assert that the two index methods give exactly the same result
-            let inplace = sample_indices_inplace(
-                &mut xor_rng(seed), length, amount);
-            let cache = sample_indices_cache(
-                &mut xor_rng(seed), length, amount);
-            assert_eq!(inplace, cache);
-
             // assert the basics work
-            let regular = sample_indices(
-                &mut xor_rng(seed), length, amount);
+            let regular = index::sample(&mut xor_rng(seed), length, amount);
             assert_eq!(regular.len(), amount);
-            assert!(regular.iter().all(|e| *e < length));
-            assert_eq!(regular, inplace);
+            assert!(regular.iter().all(|e| e < length));
 
             // also test that sampling the slice works
-            let vec: Vec<usize> = (0..length).collect();
-            {
-                let result = sample_slice(&mut xor_rng(seed), &vec, amount);
-                assert_eq!(result, regular);
-            }
+            let vec: Vec<u32> = (0..(length as u32)).collect();
+            let result = sample_slice(&mut xor_rng(seed), &vec, amount);
+            assert_eq!(result, regular.iter().map(|i| i as u32).collect::<Vec<_>>());
 
-            {
-                let result = sample_slice_ref(&mut xor_rng(seed), &vec, amount);
-                let expected = regular.iter().map(|v| v).collect::<Vec<_>>();
-                assert_eq!(result, expected);
-            }
+            let result = sample_slice_ref(&mut xor_rng(seed), &vec, amount);
+            assert!(result.iter().zip(regular.iter()).all(|(i,j)| **i == j as u32));
         }
     }
-
+    
     #[test]
     #[cfg(feature = "alloc")]
     fn test_weighted() {
