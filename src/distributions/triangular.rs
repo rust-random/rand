@@ -53,7 +53,7 @@ impl Distribution<f64> for Triangular {
         let f: f64 = rng.sample(Standard);
         let diff_mode_min = self.mode - self.min;
         let diff_max_min = self.max - self.min;
-        if f < diff_mode_min / diff_max_min {
+        if f * diff_max_min < diff_mode_min {
             self.min + (f * diff_max_min * diff_mode_min).sqrt()
         } else {
             self.max - ((1. - f) * diff_max_min * (self.max - self.mode)).sqrt()
