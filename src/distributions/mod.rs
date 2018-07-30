@@ -91,6 +91,7 @@
 //!   (e.g. prices, incomes, populations):
 //!   - [`LogNormal`] distribution
 //! - Related to the occurrence of independent events at a given rate:
+//!   - [`Pareto`] distribution
 //!   - [`Poisson`] distribution
 //!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
 //!   - [`Weibull`] distribution
