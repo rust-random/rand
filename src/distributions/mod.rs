@@ -98,6 +98,8 @@
 //!   - [`ChiSquared`] distribution
 //!   - [`StudentT`] distribution
 //!   - [`FisherF`] distribution
+//! - Triangular distribution:
+//!  - [`Triangular`] distribution
 //! - Multivariate probability distributions
 //!   - [`Dirichlet`] distribution
 //!   - [`UnitSphereSurface`] distribution
@@ -168,6 +170,7 @@
 //! [`Standard`]: struct.Standard.html
 //! [`StandardNormal`]: struct.StandardNormal.html
 //! [`StudentT`]: struct.StudentT.html
+//! [`Triangular`]: struct.Triangular.html
 //! [`Uniform`]: struct.Uniform.html
 //! [`Uniform::new`]: struct.Uniform.html#method.new
 //! [`Uniform::new_inclusive`]: struct.Uniform.html#method.new_inclusive
@@ -192,6 +195,7 @@ pub use self::bernoulli::Bernoulli;
 #[cfg(feature="std")] pub use self::binomial::Binomial;
 #[cfg(feature="std")] pub use self::cauchy::Cauchy;
 #[cfg(feature="std")] pub use self::dirichlet::Dirichlet;
+#[cfg(feature="std")] pub use self::triangular::Triangular;
 
 pub mod uniform;
 mod bernoulli;
@@ -206,6 +210,7 @@ mod bernoulli;
 #[cfg(feature="std")] mod binomial;
 #[cfg(feature="std")] mod cauchy;
 #[cfg(feature="std")] mod dirichlet;
+#[cfg(feature="std")] mod triangular;
 
 mod float;
 mod integer;
