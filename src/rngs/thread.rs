@@ -9,7 +9,6 @@
 //! Thread-local random number generator
 
 use std::cell::UnsafeCell;
-use std::rc::Rc;
 
 use {RngCore, CryptoRng, SeedableRng, Error};
 use rngs::adapter::ReseedingRng;
@@ -72,18 +71,19 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32*1024*1024; // 32 MiB
 /// [HC-128]: ../prng/hc128/struct.Hc128Rng.html
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
-    rng: Rc<UnsafeCell<ReseedingRng<Hc128Core, EntropyRng>>>,
+    // use of raw pointer implies type is neither Send nor Sync
+    rng: *mut ReseedingRng<Hc128Core, EntropyRng>,
 }
 
 thread_local!(
-    static THREAD_RNG_KEY: Rc<UnsafeCell<ReseedingRng<Hc128Core, EntropyRng>>> = {
+    static THREAD_RNG_KEY: UnsafeCell<ReseedingRng<Hc128Core, EntropyRng>> = {
         let mut entropy_source = EntropyRng::new();
         let r = Hc128Core::from_rng(&mut entropy_source).unwrap_or_else(|err|
                 panic!("could not initialize thread_rng: {}", err));
         let rng = ReseedingRng::new(r,
                                     THREAD_RNG_RESEED_THRESHOLD,
                                     entropy_source);
-        Rc::new(UnsafeCell::new(rng))
+        UnsafeCell::new(rng)
     }
 );
 
@@ -96,26 +96,26 @@ thread_local!(
 ///
 /// [`ThreadRng`]: rngs/struct.ThreadRng.html
 pub fn thread_rng() -> ThreadRng {
-    ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.clone()) }
+    ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.get()) }
 }
 
 impl RngCore for ThreadRng {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
-        unsafe { (*self.rng.get()).next_u32() }
+        unsafe { (*self.rng).next_u32() }
     }
 
     #[inline(always)]
     fn next_u64(&mut self) -> u64 {
-        unsafe { (*self.rng.get()).next_u64() }
+        unsafe { (*self.rng).next_u64() }
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        unsafe { (*self.rng.get()).fill_bytes(dest) }
+        unsafe { (*self.rng).fill_bytes(dest) }
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        unsafe { (*self.rng.get()).try_fill_bytes(dest) }
+        unsafe { (*self.rng).try_fill_bytes(dest) }
     }
 }
 
