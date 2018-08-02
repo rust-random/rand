@@ -1,5 +1,5 @@
 [package]
-name = "rand_isaac"
+name = "rand_xorshift"
 version = "0.1.0" # NB: When modifying, also modify html_root_url in lib.rs
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
@@ -8,9 +8,9 @@ repository = "https://github.com/rust-lang-nursery/rand"
 documentation = "https://docs.rs/rand_isaac"
 homepage = "https://crates.io/crates/rand_isaac"
 description = """
-ISAAC random number generator
+Xorshift random number generator
 """
-keywords = ["random", "rng", "isaac"]
+keywords = ["random", "rng", "xorshift"]
 categories = ["algorithms", "no-std"]
 
 [badges]
@@ -18,7 +18,7 @@ travis-ci = { repository = "rust-lang-nursery/rand" }
 appveyor = { repository = "alexcrichton/rand" }
 
 [features]
-serde1 = ["serde", "serde_derive", "rand_core/serde1"]
+serde1 = ["serde", "serde_derive"]
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.2", default-features=false }

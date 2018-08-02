@@ -16,9 +16,11 @@ The core random number generation traits of Rand live in the [rand_core](
 https://crates.io/crates/rand_core) crate; this crate is most useful when
 implementing RNGs.
 
-API reference:
-[master branch](https://rust-lang-nursery.github.io/rand/rand/index.html),
-[by release](https://docs.rs/rand/0.5).
+Documentation:
+-   [API reference for latest release](https://docs.rs/rand/0.5)
+-   [API reference for master branch](https://rust-lang-nursery.github.io/rand/rand/index.html)
+-   [Additional documentation (subdir)](doc/README.md)
+
 
 ## Usage
 
@@ -113,10 +115,10 @@ Rand is built with only the `std` feature enabled by default. The following
 optional features are available:
 
 - `alloc` can be used instead of `std` to provide `Vec` and `Box`.
-- `i128_support` enables support for generating `u128` and `i128` values.
 - `log` enables some logging via the `log` crate.
-- `nightly` enables all unstable features (`i128_support`).
+- `nightly` enables all unstable features (`simd_support`).
 - `serde1` enables serialization for some types, via Serde version 1.
+- `simd_support` enables uniform sampling of SIMD types (integers and floats).
 - `stdweb` enables support for `OsRng` on `wasm32-unknown-unknown` via `stdweb`
   combined with `cargo-web`.
 - `wasm-bindgen` enables support for `OsRng` on `wasm32-unknown-unknown` via

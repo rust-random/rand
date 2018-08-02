@@ -1,4 +1,5 @@
 #![feature(test)]
+#![allow(non_snake_case)]
 
 extern crate test;
 extern crate rand;
@@ -27,27 +28,30 @@ fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
     })
 }
 
-#[bench]
-fn seq_slice_choose_multiple_1_of_1000(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 1000];
-    b.iter(|| {
-        x.choose_multiple(&mut rng, 1).cloned().next()
-    })
+macro_rules! seq_slice_choose_multiple {
+    ($name:ident, $amount:expr, $length:expr) => {
+        #[bench]
+        fn $name(b: &mut Bencher) {
+            let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+            let x : &[i32] = &[$amount; $length];
+            let mut result = [0i32; $amount];
+            b.iter(|| {
+                // Collect full result to prevent unwanted shortcuts getting
+                // first element (in case sample_indices returns an iterator).
+                for (slot, sample) in result.iter_mut().zip(
+                    x.choose_multiple(&mut rng, $amount)) {
+                    *slot = *sample;
+                }
+                result[$amount-1]
+            })
+        }
+    }
 }
 
-#[bench]
-fn seq_slice_choose_multiple_10_of_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 100];
-    let mut buf = [0; 10];
-    b.iter(|| {
-        for (v, slot) in x.choose_multiple(&mut rng, buf.len()).zip(buf.iter_mut()) {
-            *slot = *v;
-        }
-        buf
-    })
-}
+seq_slice_choose_multiple!(seq_slice_choose_multiple_1_of_1000, 1, 1000);
+seq_slice_choose_multiple!(seq_slice_choose_multiple_950_of_1000, 950, 1000);
+seq_slice_choose_multiple!(seq_slice_choose_multiple_10_of_100, 10, 100);
+seq_slice_choose_multiple!(seq_slice_choose_multiple_90_of_100, 90, 100);
 
 #[bench]
 fn seq_iter_choose_from_100(b: &mut Bencher) {
@@ -78,17 +82,22 @@ fn seq_iter_choose_multiple_fill_10_of_100(b: &mut Bencher) {
 }
 
 macro_rules! sample_indices {
-    ($name:ident, $amount:expr, $length:expr) => {
+    ($name:ident, $fn:ident, $amount:expr, $length:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
             let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
             b.iter(|| {
-                sample_indices(&mut rng, $length, $amount)
+                index::$fn(&mut rng, $length, $amount)
             })
         }
     }
 }
 
-sample_indices!(seq_sample_indices_10_of_1k, 10, 1000);
-sample_indices!(seq_sample_indices_50_of_1k, 50, 1000);
-sample_indices!(seq_sample_indices_100_of_1k, 100, 1000);
+sample_indices!(misc_sample_indices_1_of_1k, sample, 1, 1000);
+sample_indices!(misc_sample_indices_10_of_1k, sample, 10, 1000);
+sample_indices!(misc_sample_indices_100_of_1k, sample, 100, 1000);
+sample_indices!(misc_sample_indices_100_of_1M, sample, 100, 1000_000);
+sample_indices!(misc_sample_indices_100_of_1G, sample, 100, 1000_000_000);
+sample_indices!(misc_sample_indices_200_of_1G, sample, 200, 1000_000_000);
+sample_indices!(misc_sample_indices_400_of_1G, sample, 400, 1000_000_000);
+sample_indices!(misc_sample_indices_600_of_1G, sample, 600, 1000_000_000);

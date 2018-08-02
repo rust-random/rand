@@ -276,6 +276,13 @@ impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
     }
 }
 
+#[cfg(rust_1_27)]
+impl<X: SampleUniform> From<::core::ops::RangeInclusive<X>> for Uniform<X> {
+    fn from(r: ::core::ops::RangeInclusive<X>) -> Uniform<X> {
+        Uniform::new_inclusive(r.start(), r.end())
+    }
+}
+
 /// Helper trait similar to [`Borrow`] but implemented
 /// only for SampleUniform and references to SampleUniform in
 /// order to resolve ambiguity issues.
@@ -464,7 +471,7 @@ uniform_int_impl! { i8, i8, u8, i32, u32 }
 uniform_int_impl! { i16, i16, u16, i32, u32 }
 uniform_int_impl! { i32, i32, u32, i32, u32 }
 uniform_int_impl! { i64, i64, u64, i64, u64 }
-#[cfg(feature = "i128_support")]
+#[cfg(rust_1_26)]
 uniform_int_impl! { i128, i128, u128, u128, u128 }
 uniform_int_impl! { isize, isize, usize, isize, usize }
 uniform_int_impl! { u8, i8, u8, i32, u32 }
@@ -472,7 +479,7 @@ uniform_int_impl! { u16, i16, u16, i32, u32 }
 uniform_int_impl! { u32, i32, u32, i32, u32 }
 uniform_int_impl! { u64, i64, u64, i64, u64 }
 uniform_int_impl! { usize, isize, usize, isize, usize }
-#[cfg(feature = "i128_support")]
+#[cfg(rust_1_26)]
 uniform_int_impl! { u128, u128, u128, i128, u128 }
 
 #[cfg(feature = "simd_support")]
@@ -956,7 +963,7 @@ mod tests {
     fn test_integers() {
         use core::{i8, i16, i32, i64, isize};
         use core::{u8, u16, u32, u64, usize};
-        #[cfg(feature = "i128_support")]
+        #[cfg(rust_1_26)]
         use core::{i128, u128};
 
         let mut rng = ::test::rng(251);
@@ -1020,7 +1027,7 @@ mod tests {
         }
         t!(i8, i16, i32, i64, isize,
            u8, u16, u32, u64, usize);
-        #[cfg(feature = "i128_support")]
+        #[cfg(rust_1_26)]
         t!(i128, u128);
 
         #[cfg(feature = "simd_support")]
@@ -1122,7 +1129,7 @@ mod tests {
               not(target_arch = "wasm32"),
               not(target_arch = "asmjs")))]
     fn test_float_assertions() {
-        use core::panic::catch_unwind;
+        use std::panic::catch_unwind;
         use super::SampleUniform;
         fn range<T: SampleUniform>(low: T, high: T) {
             let mut rng = ::test::rng(253);
@@ -1245,5 +1252,17 @@ mod tests {
         let r = Uniform::from(2.0f64..7.0);
         assert_eq!(r.inner.low, 2.0);
         assert_eq!(r.inner.scale, 5.0);
+    }
+
+    #[cfg(rust_1_27)]
+    #[test]
+    fn test_uniform_from_std_range_inclusive() {
+        let r = Uniform::from(2u32..=6);
+        assert_eq!(r.inner.low, 2);
+        assert_eq!(r.inner.range, 5);
+        let r = Uniform::from(2.0f64..=7.0);
+        assert_eq!(r.inner.low, 2.0);
+        assert!(r.inner.scale > 5.0);
+        assert!(r.inner.scale < 5.0 + 1e-14);
     }
 }

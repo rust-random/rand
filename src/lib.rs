@@ -226,22 +226,15 @@
 
 #![cfg_attr(not(feature="std"), no_std)]
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
-#![cfg_attr(all(feature="i128_support", feature="nightly"), allow(stable_features))] // stable since 2018-03-27
-#![cfg_attr(all(feature="i128_support", feature="nightly"), feature(i128_type, i128))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
 #![cfg_attr(feature = "stdweb", recursion_limit="128")]
 #![cfg_attr(feature = "wasm-bindgen", feature(use_extern_macros))]
 #![cfg_attr(feature = "wasm-bindgen", feature(wasm_import_module))]
-#![cfg_attr(feature = "wasm-bindgen", feature(wasm_custom_section))]
 
-#[cfg(feature="std")] extern crate std as core;
-#[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
+#[cfg(feature = "std")] extern crate core;
+#[cfg(all(feature = "alloc", not(feature="std")))] #[macro_use] extern crate alloc;
 
 #[cfg(feature="simd_support")] extern crate packed_simd;
-
-#[cfg(test)] #[cfg(feature="serde1")] extern crate bincode;
-#[cfg(feature="serde1")] extern crate serde;
-#[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
 
 #[cfg(all(target_arch="wasm32", not(target_os="emscripten"), feature="stdweb"))]
 #[macro_use]
@@ -252,6 +245,7 @@ extern crate wasm_bindgen;
 
 extern crate rand_core;
 extern crate rand_isaac;    // only for deprecations
+extern crate rand_xorshift;
 
 #[cfg(feature = "log")] #[macro_use] extern crate log;
 #[allow(unused)]
@@ -722,13 +716,13 @@ macro_rules! impl_as_byte_slice {
 impl_as_byte_slice!(u16);
 impl_as_byte_slice!(u32);
 impl_as_byte_slice!(u64);
-#[cfg(feature="i128_support")] impl_as_byte_slice!(u128);
+#[cfg(rust_1_26)] impl_as_byte_slice!(u128);
 impl_as_byte_slice!(usize);
 impl_as_byte_slice!(i8);
 impl_as_byte_slice!(i16);
 impl_as_byte_slice!(i32);
 impl_as_byte_slice!(i64);
-#[cfg(feature="i128_support")] impl_as_byte_slice!(i128);
+#[cfg(rust_1_26)] impl_as_byte_slice!(i128);
 impl_as_byte_slice!(isize);
 
 macro_rules! impl_as_byte_slice_arrays {
@@ -913,6 +907,7 @@ pub mod __wbg_shims {
             #[wasm_bindgen(method, getter, structural)]
             pub fn crypto(me: &This) -> JsValue;
 
+            #[derive(Clone, Debug)]
             pub type BrowserCrypto;
 
             // TODO: these `structural` annotations here ideally wouldn't be here to
@@ -926,23 +921,11 @@ pub mod __wbg_shims {
             #[wasm_bindgen(js_name = require)]
             pub fn node_require(s: &str) -> NodeCrypto;
 
+            #[derive(Clone, Debug)]
             pub type NodeCrypto;
 
             #[wasm_bindgen(method, js_name = randomFillSync, structural)]
             pub fn random_fill_sync(me: &NodeCrypto, buf: &mut [u8]);
-        }
-
-        // TODO: replace with derive once rustwasm/wasm-bindgen#400 is merged
-        impl Clone for BrowserCrypto {
-            fn clone(&self) -> BrowserCrypto {
-                BrowserCrypto { obj: self.obj.clone() }
-            }
-        }
-
-        impl Clone for NodeCrypto {
-            fn clone(&self) -> NodeCrypto {
-                NodeCrypto { obj: self.obj.clone() }
-            }
         }
     }
 }

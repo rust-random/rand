@@ -8,6 +8,29 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Update Guide](UPDATING.md) useful.
 
+## [0.6.0] - Unreleased
+
+### Crate features and organisation
+- The ISAAC and Xorshift RNGs have been moved to their own crates: `rand_isaac`
+  and `rand_xorshift`. (#551, #557)
+- `Uniform` supports inclusive ranges: `Uniform::from(a..=b)`. This is
+  automatically enabled for Rust >= 1.27. (#566)
+- Support for `i128` and `u128` is automatically enabled for Rust >= 1.26. This
+  renders the `i128_support` feature obsolete. It still exists for backwards
+  compatibility but does not have any effect. This breaks programs using Rand
+  with `i128_support` on nightlies older than Rust 1.26. (#571)
+
+### New distributions
+- Added sampling from the unit sphere and circle. (#567)
+
+### Sequences module
+- Optimised and changed return type of the `sample_indices` function. (#479)
+- Added weighted sampling. (#518)
+
+### Platform support
+- Added support for wasm-bindgen. (#541)
+- Added basic SIMD support. (#523)
+
 ## [0.5.4] - 2018-07-11
 ### Platform support
 - Make `OsRng` work via WASM/stdweb for WebWorkers

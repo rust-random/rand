@@ -63,7 +63,7 @@ macro_rules! wmul_impl {
 wmul_impl! { u8, u16, 8 }
 wmul_impl! { u16, u32, 16 }
 wmul_impl! { u32, u64, 32 }
-#[cfg(feature = "i128_support")]
+#[cfg(rust_1_26)]
 wmul_impl! { u64, u128, 64 }
 
 // This code is a translation of the __mulddi3 function in LLVM's
@@ -127,9 +127,9 @@ macro_rules! wmul_impl_large {
         )+
     };
 }
-#[cfg(not(feature = "i128_support"))]
+#[cfg(not(rust_1_26))]
 wmul_impl_large! { u64, 32 }
-#[cfg(feature = "i128_support")]
+#[cfg(rust_1_26)]
 wmul_impl_large! { u128, 64 }
 
 macro_rules! wmul_impl_usize {

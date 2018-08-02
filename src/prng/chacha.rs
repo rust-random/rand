@@ -114,9 +114,8 @@ impl ChaChaRng {
     /// not supported, hence the result can simply be multiplied by 4 to get a
     /// byte-offset.
     /// 
-    /// Note: this function is currently only available when the `i128_support`
-    /// feature is enabled. In the future this will be enabled by default.
-    #[cfg(feature = "i128_support")]
+    /// Note: this function is currently only available with Rust 1.26 or later.
+    #[cfg(rust_1_26)]
     pub fn get_word_pos(&self) -> u128 {
         let mut c = (self.0.core.state[13] as u64) << 32
                   | (self.0.core.state[12] as u64);
@@ -136,9 +135,8 @@ impl ChaChaRng {
     /// simply cycles at the end of its period (1 ZiB), we ignore the upper
     /// 60 bits.
     /// 
-    /// Note: this function is currently only available when the `i128_support`
-    /// feature is enabled. In the future this will be enabled by default.
-    #[cfg(feature = "i128_support")]
+    /// Note: this function is currently only available with Rust 1.26 or later.
+    #[cfg(rust_1_26)]
     pub fn set_word_pos(&mut self, word_offset: u128) {
         let index = (word_offset as usize) & 0xF;
         let counter = (word_offset >> 4) as u64;
@@ -333,7 +331,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "i128_support")]
+    #[cfg(rust_1_26)]
     fn test_chacha_true_values_c() {
         // Test vector 4 from
         // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04

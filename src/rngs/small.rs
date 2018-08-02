@@ -11,7 +11,7 @@
 //! A small fast RNG
 
 use {RngCore, SeedableRng, Error};
-use prng::XorShiftRng;
+use ::rand_xorshift::XorShiftRng;
 
 /// An RNG recommended when small state, cheap initialization and good
 /// performance are required. The PRNG algorithm in `SmallRng` is chosen to be
@@ -63,8 +63,8 @@ use prng::XorShiftRng;
 /// [`FromEntropy`]: ../trait.FromEntropy.html
 /// [`StdRng`]: struct.StdRng.html
 /// [`thread_rng`]: ../fn.thread_rng.html
-/// [Xorshift]: ../prng/struct.XorShiftRng.html
-/// [`XorShiftRng`]: ../prng/struct.XorShiftRng.html
+/// [Xorshift]: ../../rand_xorshift/struct.XorShiftRng.html
+/// [`XorShiftRng`]: ../../rand_xorshift/struct.XorShiftRng.html
 #[derive(Clone, Debug)]
 pub struct SmallRng(XorShiftRng);
 

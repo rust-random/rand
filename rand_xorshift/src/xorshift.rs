@@ -18,7 +18,7 @@ use rand_core::{RngCore, SeedableRng, Error, impls, le};
 ///
 /// The Xorshift[^1] algorithm is not suitable for cryptographic purposes
 /// but is very fast. If you do not know for sure that it fits your
-/// requirements, use a more secure one such as `IsaacRng` or `OsRng`.
+/// requirements, use a more secure one such as `StdRng` or `OsRng`.
 ///
 /// [^1]: Marsaglia, George (July 2003).
 ///       ["Xorshift RNGs"](https://www.jstatsoft.org/v08/i14/paper).
@@ -112,7 +112,7 @@ impl SeedableRng for XorShiftRng {
 
 #[cfg(test)]
 mod tests {
-    use {RngCore, SeedableRng};
+    use ::rand_core::{RngCore, SeedableRng};
     use super::XorShiftRng;
 
     #[test]
@@ -178,7 +178,7 @@ mod tests {
         }
     }
 
-    #[cfg(all(feature="serde1", feature="std"))]
+    #[cfg(feature="serde1")]
     #[test]
     fn test_xorshift_serde() {
         use bincode;

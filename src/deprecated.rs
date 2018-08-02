@@ -151,12 +151,12 @@ impl SeedableRng for ChaChaRng {
 }
 
 impl ChaChaRng {
-    #[cfg(feature = "i128_support")]
+    #[cfg(rust_1_26)]
     pub fn get_word_pos(&self) -> u128 {
         self.0.get_word_pos()
     }
 
-    #[cfg(feature = "i128_support")]
+    #[cfg(rust_1_26)]
     pub fn set_word_pos(&mut self, word_offset: u128) {
         self.0.set_word_pos(word_offset)
     }
@@ -170,8 +170,8 @@ impl CryptoRng for ChaChaRng {}
 
 
 #[derive(Clone, Debug)]
-#[deprecated(since="0.6.0", note="import with rand::prng::XorShiftRng instead")]
-pub struct XorShiftRng(prng::XorShiftRng);
+#[deprecated(since="0.6.0", note="import from rand_xorshift crate instead")]
+pub struct XorShiftRng(::rand_xorshift::XorShiftRng);
 
 impl RngCore for XorShiftRng {
     #[inline(always)]
@@ -196,14 +196,14 @@ impl RngCore for XorShiftRng {
 }
 
 impl SeedableRng for XorShiftRng {
-    type Seed = <prng::XorShiftRng as SeedableRng>::Seed;
+    type Seed = <::rand_xorshift::XorShiftRng as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        XorShiftRng(prng::XorShiftRng::from_seed(seed))
+        XorShiftRng(::rand_xorshift::XorShiftRng::from_seed(seed))
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        prng::XorShiftRng::from_rng(rng).map(XorShiftRng)
+        ::rand_xorshift::XorShiftRng::from_rng(rng).map(XorShiftRng)
     }
 }
 

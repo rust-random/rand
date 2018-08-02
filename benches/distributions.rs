@@ -11,14 +11,14 @@ use std::mem::size_of;
 use test::Bencher;
 
 use rand::{Rng, FromEntropy};
-use rand::prng::XorShiftRng;
+use rand::rngs::SmallRng;
 use rand::distributions::*;
 
 macro_rules! distr_int {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::from_entropy();
+            let mut rng = SmallRng::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -38,7 +38,7 @@ macro_rules! distr_float {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::from_entropy();
+            let mut rng = SmallRng::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -58,7 +58,7 @@ macro_rules! distr {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::from_entropy();
+            let mut rng = SmallRng::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -126,7 +126,7 @@ macro_rules! gen_range_int {
     ($fnn:ident, $ty:ident, $low:expr, $high:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::from_entropy();
+            let mut rng = SmallRng::from_entropy();
 
             b.iter(|| {
                 let mut high = $high;
@@ -155,7 +155,7 @@ macro_rules! gen_range_float {
     ($fnn:ident, $ty:ident, $low:expr, $high:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = XorShiftRng::from_entropy();
+            let mut rng = SmallRng::from_entropy();
 
             b.iter(|| {
                 let mut high = $high;
@@ -179,7 +179,7 @@ gen_range_float!(gen_range_f64, f64, 123.456f64, 7890.12);
 
 #[bench]
 fn dist_iter(b: &mut Bencher) {
-    let mut rng = XorShiftRng::from_entropy();
+    let mut rng = SmallRng::from_entropy();
     let distr = Normal::new(-2.71828, 3.14159);
     let mut iter = distr.sample_iter(&mut rng);
 
