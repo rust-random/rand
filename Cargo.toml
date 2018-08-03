@@ -23,7 +23,7 @@ default = ["std" ] # without "std" rand uses libcore
 nightly = ["simd_support"] # enables all features requiring nightly rust
 std = ["rand_core/std", "alloc", "libc", "winapi", "cloudabi", "fuchsia-zircon"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
-i128_support = [] # dummy feature for backwards compatibility
+i128_support = [] # enables i128 and u128 support
 simd_support = ["packed_simd"] # enables SIMD support
 serde1 = ["rand_core/serde1", "rand_isaac/serde1", "rand_xorshift/serde1"] # enables serialization for PRNGs
 
