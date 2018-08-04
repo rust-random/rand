@@ -101,7 +101,8 @@
 //!   - [`StudentT`] distribution
 //!   - [`FisherF`] distribution
 //! - Triangular distribution:
-//!  - [`Triangular`] distribution
+//!   - [`Beta`] distribution
+//!   - [`Triangular`] distribution
 //! - Multivariate probability distributions
 //!   - [`Dirichlet`] distribution
 //!   - [`UnitSphereSurface`] distribution
@@ -155,6 +156,7 @@
 // distributions
 //! [`Alphanumeric`]: struct.Alphanumeric.html
 //! [`Bernoulli`]: struct.Bernoulli.html
+//! [`Beta`]: struct.Beta.html
 //! [`Binomial`]: struct.Binomial.html
 //! [`Cauchy`]: struct.Cauchy.html
 //! [`ChiSquared`]: struct.ChiSquared.html
@@ -190,7 +192,8 @@ pub use self::bernoulli::Bernoulli;
 #[cfg(feature="alloc")] pub use self::weighted::{WeightedIndex, WeightedError};
 #[cfg(feature="std")] pub use self::unit_sphere::UnitSphereSurface;
 #[cfg(feature="std")] pub use self::unit_circle::UnitCircle;
-#[cfg(feature="std")] pub use self::gamma::{Gamma, ChiSquared, FisherF, StudentT};
+#[cfg(feature="std")] pub use self::gamma::{Gamma, ChiSquared, FisherF,
+    StudentT, Beta};
 #[cfg(feature="std")] pub use self::normal::{Normal, LogNormal, StandardNormal};
 #[cfg(feature="std")] pub use self::exponential::{Exp, Exp1};
 #[cfg(feature="std")] pub use self::pareto::Pareto;
