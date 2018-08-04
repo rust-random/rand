@@ -175,7 +175,7 @@ mod std;
 
 
 pub use self::jitter::{JitterRng, TimerError};
-#[cfg(feature="std")] pub use self::entropy::EntropyRng;
+#[cfg(feature="std")] pub use self::entropy::{EntropyRng, CustomEntropySource, set_custom_entropy};
 
 pub use self::small::SmallRng;
 pub use self::std::StdRng;

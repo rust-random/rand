@@ -8,6 +8,10 @@
 
 //! Entropy generator, or wrapper around external generators
 
+use core::fmt;
+use std::sync::{Once, Mutex, MutexGuard, ONCE_INIT};
+use std::marker::PhantomData;
+
 use rand_core::{RngCore, CryptoRng, Error, ErrorKind, impls};
 #[allow(unused)]
 use rngs;
@@ -28,6 +32,8 @@ use rngs;
 /// jitter); for better performance it is common to seed a local PRNG from
 /// external entropy then primarily use the local PRNG ([`thread_rng`] is
 /// provided as a convenient, local, automatically-seeded CSPRNG).
+/// 
+/// `EntropyRng` instances are explicitly not `Send` or `Sync`.
 ///
 /// # Panics
 ///
@@ -46,6 +52,7 @@ use rngs;
 #[derive(Debug)]
 pub struct EntropyRng {
     source: Source,
+    _not_send: PhantomData<*mut ()>,    // enforce !Send
 }
 
 #[derive(Debug)]
@@ -63,7 +70,7 @@ impl EntropyRng {
     /// those are done on first use. This is done to make `new` infallible,
     /// and `try_fill_bytes` the only place to report errors.
     pub fn new() -> Self {
-        EntropyRng { source: Source::None }
+        EntropyRng { source: Source::None, _not_send: Default::default() }
     }
 }
 
@@ -239,8 +246,122 @@ impl EntropySource for Os {
 ))))]
 type Os = NoSource;
 
+#[derive(Clone)]
+struct Custom {
+    source: &'static CustomEntropySource,
+    param: u64,
+    _not_send: PhantomData<*mut ()>,    // enforce !Send
+}
 
-type Custom = NoSource;
+impl fmt::Debug for Custom {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Custom {{ ... }}")
+    }
+}
+
+#[test]
+fn test_size() {
+    use core::mem::size_of;
+    println!("Size of Custom: {}", size_of::<Custom>());
+    assert!(size_of::<Custom>() <= size_of::<rngs::JitterRng>());
+}
+
+/// Properties of a custom entropy source.
+pub trait CustomEntropySource {
+    /// Name of this source
+    fn name(&self) -> &'static str;
+    
+    /// Is this source available?
+    /// 
+    /// The default implementation returns `true`.
+    fn is_available(&self) -> bool { true }
+    
+    /// Prepare the entropy source for use.
+    /// 
+    /// This is always called before `fill` on each thread. This may be called
+    /// multiple times.
+    /// 
+    /// A `u64` parameter may be returned, which is passed to `fill` when
+    /// called, and is considered `!Send` (i.e. is never passed to a different
+    /// thread).
+    fn init(&self) -> Result<u64, Error>;
+
+    /// Fill `dest` with random data from the entropy source.
+    /// 
+    /// The `u64` parameter from `init` is passed.
+    fn fill(&self, param: &mut u64, dest: &mut [u8]) -> Result<(), Error>;
+}
+
+struct CustomNoSource;
+impl CustomEntropySource for CustomNoSource {
+    fn name(&self) -> &'static str {
+        "no source"
+    }
+    
+    fn is_available(&self) -> bool { false }
+    
+    fn init(&self) -> Result<u64, Error> {
+        unreachable!()
+    }
+
+    fn fill(&self, _: &mut u64, _: &mut [u8]) -> Result<(), Error> {
+        unreachable!()
+    }
+}
+
+// TODO: remove outer Option when `Mutex::new(&...)` is a constant expression
+static mut CUSTOM_SOURCE: Option<Mutex<&CustomEntropySource>> = None;
+static CUSTOM_SOURCE_ONCE: Once = ONCE_INIT;
+
+fn access_custom_entropy() -> MutexGuard<'static, &'static CustomEntropySource> {
+    CUSTOM_SOURCE_ONCE.call_once(|| {
+        unsafe { CUSTOM_SOURCE = Some(Mutex::new(&CustomNoSource)) }
+    });
+    let mutex = unsafe { CUSTOM_SOURCE.as_ref().unwrap() };
+    mutex.lock().unwrap()
+}
+
+fn get_custom_entropy() -> &'static CustomEntropySource {
+    *access_custom_entropy()
+}
+
+/// Specify a custom entropy source.
+/// 
+/// This must be a static reference to an object implementing the
+/// `CustomEntropySource` trait.
+pub fn set_custom_entropy(source: &'static CustomEntropySource) {
+    let mut guard = access_custom_entropy();
+    *guard = source;
+}
+
+impl EntropySource for Custom {
+    fn name() -> &'static str {
+        get_custom_entropy().name()
+    }
+    
+    /// Is this source available?
+    /// 
+    /// The default implementation returns `true`.
+    fn is_available() -> bool {
+        get_custom_entropy().is_available()
+    }
+    
+    /// Create an instance
+    fn new() -> Result<Self, Error> where Self: Sized {
+        let source = get_custom_entropy();
+        let param = source.init()?;
+        Ok(Custom {
+            source,
+            param,
+            _not_send: Default::default(),
+        })
+    }
+
+    /// Fill `dest` with random data from the entropy source
+    fn fill(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.source.fill(&mut self.param, dest)
+    }
+}
 
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -275,5 +396,22 @@ mod test {
         let mut rng = EntropyRng::new();
         let n = (rng.next_u32() ^ rng.next_u32()).count_ones();
         assert!(n >= 2);    // p(failure) approx 1e-7
+    }
+    
+    #[test]
+    fn test_custom_entropy() {
+        struct FakeEntropy;
+        impl CustomEntropySource for FakeEntropy {
+            fn name(&self) -> &'static str { "fake entropy" }
+            fn init(&self) -> Result<u64, Error> { Ok(0) }
+            fn fill(&self, _: &mut u64, dest: &mut [u8]) -> Result<(), Error> {
+                for x in dest { *x = 0 }
+                Ok(())
+            }
+        }
+        set_custom_entropy(&FakeEntropy);
+        let mut entropy = EntropyRng::new();
+        // we can't properly test this because we can't disable `OsRng`
+        assert!(entropy.next_u64() != 1);
     }
 }
