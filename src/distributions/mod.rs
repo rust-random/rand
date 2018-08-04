@@ -91,8 +91,10 @@
 //!   (e.g. prices, incomes, populations):
 //!   - [`LogNormal`] distribution
 //! - Related to the occurrence of independent events at a given rate:
+//!   - [`Pareto`] distribution
 //!   - [`Poisson`] distribution
 //!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
+//!   - [`Weibull`] distribution
 //! - Gamma and derived distributions:
 //!   - [`Gamma`] distribution
 //!   - [`ChiSquared`] distribution
@@ -176,6 +178,7 @@
 //! [`Uniform::new_inclusive`]: struct.Uniform.html#method.new_inclusive
 //! [`UnitSphereSurface`]: struct.UnitSphereSurface.html
 //! [`UnitCircle`]: struct.UnitCircle.html
+//! [`Weibull`]: struct.Weibull.html
 //! [`WeightedIndex`]: struct.WeightedIndex.html
 
 use Rng;
@@ -196,6 +199,7 @@ pub use self::bernoulli::Bernoulli;
 #[cfg(feature="std")] pub use self::cauchy::Cauchy;
 #[cfg(feature="std")] pub use self::dirichlet::Dirichlet;
 #[cfg(feature="std")] pub use self::triangular::Triangular;
+#[cfg(feature="std")] pub use self::weibull::Weibull;
 
 pub mod uniform;
 mod bernoulli;
@@ -211,6 +215,7 @@ mod bernoulli;
 #[cfg(feature="std")] mod cauchy;
 #[cfg(feature="std")] mod dirichlet;
 #[cfg(feature="std")] mod triangular;
+#[cfg(feature="std")] mod weibull;
 
 mod float;
 mod integer;
