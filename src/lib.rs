@@ -156,7 +156,7 @@
 //!
 //! One further problem is that if Rand is unable to get any external randomness
 //! when initializing an RNG with [`EntropyRng`], it will panic in
-//! [`FromEntropy::from_entropy`], and notably in [`thread_rng`]. Except by
+//! [`FromEntropy::from_entropy`], and notably in [`thread_rng()`]. Except by
 //! compromising security, this problem is as unsolvable as running out of
 //! memory.
 //!
@@ -183,6 +183,7 @@
 //!
 //!
 //! [`distributions` module]: distributions/index.html
+//! [`FromEntropy::from_entropy`]: trait.FromEntropy.html#tymethod.from_entropy
 //! [`EntropyRng`]: rngs/struct.EntropyRng.html
 //! [`Error`]: struct.Error.html
 //! [`gen_range`]: trait.Rng.html#method.gen_range
