@@ -31,6 +31,10 @@ You may also find the [Update Guide](UPDATING.md) useful.
 - Added support for wasm-bindgen. (#541)
 - Added basic SIMD support. (#523)
 
+## [0.5.5] - 2018-08-07
+### Documentation
+- Fix links in documentation (#582)
+
 ## [0.5.4] - 2018-07-11
 ### Platform support
 - Make `OsRng` work via WASM/stdweb for WebWorkers
