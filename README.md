@@ -1,11 +1,11 @@
 # Rand
 
-[![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/rand)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-lang-nursery/rand?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
+[![Build Status](https://travis-ci.org/rust-random/rand.svg?branch=master)](https://travis-ci.org/rust-random/rand)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/dhardy/rand)
 [![Latest version](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
 [![Documentation](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
-[![License](https://img.shields.io/crates/l/rand.svg)](https://github.com/rust-lang-nursery/rand#license)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![License](https://img.shields.io/crates/l/rand.svg)](https://github.com/rust-random/rand#license)
 
 A Rust library for random number generation.
 
@@ -18,7 +18,7 @@ implementing RNGs.
 
 Documentation:
 -   [API reference for latest release](https://docs.rs/rand/0.5)
--   [API reference for master branch](https://rust-lang-nursery.github.io/rand/rand/index.html)
+-   [API reference for master branch](https://rust-random.github.io/rand/rand/index.html)
 -   [Additional documentation (subdir)](doc/README.md)
 
 

@@ -1,11 +1,11 @@
 # rand_isaac
 
-[![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg)](https://travis-ci.org/rust-lang-nursery/rand)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-lang-nursery/rand?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
+[![Build Status](https://travis-ci.org/rust-random/rand.svg)](https://travis-ci.org/rust-random/rand)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/dhardy/rand)
 [![Latest version](https://img.shields.io/crates/v/rand_isaac.svg)](https://crates.io/crates/rand_isaac)
 [![Documentation](https://docs.rs/rand_isaac/badge.svg)](https://docs.rs/rand_isaac)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
-[![License](https://img.shields.io/crates/l/rand_isaac.svg)](https://github.com/rust-lang-nursery/rand/tree/master/rand_isaac#license)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![License](https://img.shields.io/crates/l/rand_isaac.svg)](https://github.com/rust-random/rand/tree/master/rand_isaac#license)
 
 Implements the ISAAC and ISAAC-64 random number generators.
 
@@ -18,7 +18,7 @@ ISAAC is notably fast and produces excellent quality random numbers for
 non-cryptographic applications.
 
 Documentation:
-[master branch](https://rust-lang-nursery.github.io/rand/rand_isaac/index.html),
+[master branch](https://rust-random.github.io/rand/rand_isaac/index.html),
 [by release](https://docs.rs/rand_isaac)
 
 [Changelog](CHANGELOG.md)
