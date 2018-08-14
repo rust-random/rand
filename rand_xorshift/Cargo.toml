@@ -4,7 +4,7 @@ version = "0.1.0" # NB: When modifying, also modify html_root_url in lib.rs
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/rust-lang-nursery/rand"
+repository = "https://github.com/rust-random/rand"
 documentation = "https://docs.rs/rand_isaac"
 homepage = "https://crates.io/crates/rand_isaac"
 description = """
@@ -14,8 +14,8 @@ keywords = ["random", "rng", "xorshift"]
 categories = ["algorithms", "no-std"]
 
 [badges]
-travis-ci = { repository = "rust-lang-nursery/rand" }
-appveyor = { repository = "alexcrichton/rand" }
+travis-ci = { repository = "rust-random/rand" }
+appveyor = { repository = "dhardy/rand" }
 
 [features]
 serde1 = ["serde", "serde_derive"]

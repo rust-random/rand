@@ -9,8 +9,8 @@ documentation.
 
 The following example programs may be of interest:
 
-- [examples/monte-carlo.rs](https://github.com/rust-lang-nursery/rand/blob/master/examples/monte-carlo.rs)
-- [examples/monty-hall.rs](https://github.com/rust-lang-nursery/rand/blob/master/examples/monty-hall.rs)
+- [examples/monte-carlo.rs](https://github.com/rust-random/rand/blob/master/examples/monte-carlo.rs)
+- [examples/monty-hall.rs](https://github.com/rust-random/rand/blob/master/examples/monty-hall.rs)
 
 ## References
 
@@ -18,7 +18,7 @@ API documentation can be found:
 
 - [`rand` API on docs.rs](https://docs.rs/rand/)
 - [`rand_core` API on docs.rs](https://docs.rs/rand_core/)
-- [self-published API on github.io](https://rust-lang-nursery.github.io/rand/rand/index.html) (latest code in master branch)
+- [self-published API on github.io](https://rust-random.github.io/rand/rand/index.html) (latest code in master branch)
 - by running `cargo doc --no-deps --all --all-features`
 
 ## Project policies

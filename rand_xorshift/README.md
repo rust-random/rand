@@ -1,11 +1,11 @@
 # rand_xorshift
 
-[![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg)](https://travis-ci.org/rust-lang-nursery/rand)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-lang-nursery/rand?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
+[![Build Status](https://travis-ci.org/rust-random/rand.svg)](https://travis-ci.org/rust-random/rand)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/dhardy/rand)
 [![Latest version](https://img.shields.io/crates/v/rand_xorshift.svg)](https://crates.io/crates/rand_xorshift)
 [![Documentation](https://docs.rs/rand_xorshift/badge.svg)](https://docs.rs/rand_xorshift)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
-[![License](https://img.shields.io/crates/l/rand_xorshift.svg)](https://github.com/rust-lang-nursery/rand/tree/master/rand_xorshift#license)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![License](https://img.shields.io/crates/l/rand_xorshift.svg)](https://github.com/rust-random/rand/tree/master/rand_xorshift#license)
 
 Implements the Xorshift random number generator.
 
@@ -18,7 +18,7 @@ requirements, use a more secure one such as `StdRng` or `OsRng`.
       *Journal of Statistical Software*. Vol. 8 (Issue 14).
 
 Documentation:
-[master branch](https://rust-lang-nursery.github.io/rand/rand_xorshift/index.html),
+[master branch](https://rust-random.github.io/rand/rand_xorshift/index.html),
 [by release](https://docs.rs/rand_isaac)
 
 [Changelog](CHANGELOG.md)

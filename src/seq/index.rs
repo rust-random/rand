@@ -195,7 +195,7 @@ pub fn sample<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
     let length = length as u32;
     
     // Choice of algorithm here depends on both length and amount. See:
-    // https://github.com/rust-lang-nursery/rand/pull/479
+    // https://github.com/rust-random/rand/pull/479
     // We do some calculations with f32. Accuracy is not very important.
 
     if amount < 163 {

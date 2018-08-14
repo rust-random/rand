@@ -177,9 +177,9 @@
 //! For some inspiration, see the examples:
 //!
 //! - [Monte Carlo estimation of π](
-//!   https://github.com/rust-lang-nursery/rand/blob/master/examples/monte-carlo.rs)
+//!   https://github.com/rust-random/rand/blob/master/examples/monte-carlo.rs)
 //! - [Monty Hall Problem](
-//!    https://github.com/rust-lang-nursery/rand/blob/master/examples/monty-hall.rs)
+//!    https://github.com/rust-random/rand/blob/master/examples/monty-hall.rs)
 //!
 //!
 //! [`distributions` module]: distributions/index.html
