@@ -694,6 +694,7 @@ uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 #[derive(Clone, Copy, Debug)]
 pub struct UniformDuration {
     mode: UniformDurationMode,
+    offset: u32,
 }
 
 #[cfg(feature = "std")]
@@ -707,8 +708,6 @@ enum UniformDurationMode {
         nanos: Uniform<u64>,
     },
     Large {
-        min_secs: u64,
-        min_nanos: u32,
         max_secs: u64,
         max_nanos: u32,
         secs: Uniform<u64>,
@@ -743,11 +742,19 @@ impl UniformSampler for UniformDuration {
         let low = *low_b.borrow();
         let high = *high_b.borrow();
         assert!(low <= high, "Uniform::new_inclusive called with `low > high`");
-        
+
         let low_s = low.as_secs();
         let low_n = low.subsec_nanos();
-        let high_s = high.as_secs();
-        let high_n = high.subsec_nanos();
+        let mut high_s = high.as_secs();
+        let mut high_n = high.subsec_nanos();
+
+        if high_n < low_n {
+            high_s = high_s - 1;
+            high_n = high_n + 1_000_000_000;
+        } else {
+            high_s = high_s;
+            high_n = high_n;
+        }
 
         let mode = if low_s == high_s {
             UniformDurationMode::Small {
@@ -765,17 +772,18 @@ impl UniformSampler for UniformDuration {
                     nanos: Uniform::new_inclusive(lower_bound, higher_bound),
                 }
             } else {
+                // An offset is applied to simplify generation of nanoseconds
+                let max_nanos = high_n - low_n;
                 UniformDurationMode::Large {
-                    min_secs: low_s,
-                    min_nanos: low_n,
                     max_secs: high_s,
-                    max_nanos: high_n,
+                    max_nanos,
                     secs: Uniform::new_inclusive(low_s, high_s),
                 }
             }
         };
         UniformDuration {
-            mode
+            mode,
+            offset: low_n,
         }
     }
 
@@ -790,14 +798,15 @@ impl UniformSampler for UniformDuration {
                 let nanos = nanos.sample(rng);
                 Duration::new(nanos / 1_000_000_000, (nanos % 1_000_000_000) as u32)
             }
-            UniformDurationMode::Large { min_secs, min_nanos, max_secs, max_nanos, secs } => {
+            UniformDurationMode::Large { max_secs, max_nanos, secs } => {
                 // constant folding means this is at least as fast as `gen_range`
                 let nano_range = Uniform::new(0, 1_000_000_000);
                 loop {
                     let s = secs.sample(rng);
                     let n = nano_range.sample(rng);
-                    if !((s == max_secs && n > max_nanos) || (s == min_secs && n < min_nanos))  {
-                        break Duration::new(s, n);
+                    if !(s == max_secs && n > max_nanos) {
+                        let sum = n + self.offset;
+                        break Duration::new(s, sum);
                     }
                 }
             }
