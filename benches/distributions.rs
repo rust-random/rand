@@ -106,11 +106,13 @@ distr_int!(distr_uniform_i128, i128, Uniform::new(-123_456_789_123i128, 123_456_
 distr_float!(distr_uniform_f32, f32, Uniform::new(2.26f32, 2.319));
 distr_float!(distr_uniform_f64, f64, Uniform::new(2.26f64, 2.319));
 
+const LARGE_SEC: u64 = u64::max_value() / 1000;
+
 distr_duration!(distr_uniform_duration_largest,
     Uniform::new_inclusive(Duration::new(0, 0), Duration::new(u64::max_value(), 999_999_999))
 );
 distr_duration!(distr_uniform_duration_large,
-    Uniform::new(Duration::new(0, 0), Duration::new(u64::max_value() / 1000, 1_000_000_000 / 2))
+    Uniform::new(Duration::new(0, 0), Duration::new(LARGE_SEC, 1_000_000_000 / 2))
 );
 distr_duration!(distr_uniform_duration_one,
     Uniform::new(Duration::new(0, 0), Duration::new(1, 0))
@@ -119,7 +121,7 @@ distr_duration!(distr_uniform_duration_variety,
     Uniform::new(Duration::new(10000, 423423), Duration::new(200000, 6969954))
 );
 distr_duration!(distr_uniform_duration_edge,
-    Uniform::new_inclusive(Duration::new(u64::max_value() / 10, 999_999_999), Duration::new((u64::max_value() / 10) + 1, 0))
+    Uniform::new_inclusive(Duration::new(LARGE_SEC, 999_999_999), Duration::new(LARGE_SEC + 1, 1))
 );
 
 
