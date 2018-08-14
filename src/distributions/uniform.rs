@@ -751,9 +751,6 @@ impl UniformSampler for UniformDuration {
         if high_n < low_n {
             high_s = high_s - 1;
             high_n = high_n + 1_000_000_000;
-        } else {
-            high_s = high_s;
-            high_n = high_n;
         }
 
         let mode = if low_s == high_s {
