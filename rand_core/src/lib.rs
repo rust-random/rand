@@ -1,3 +1,4 @@
+// Copyright 2018 Developers of the Rand project.
 // Copyright 2017-2018 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // https://rust-lang.org/COPYRIGHT.
