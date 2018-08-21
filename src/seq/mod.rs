@@ -188,20 +188,57 @@ pub trait IteratorRandom: Iterator + Sized {
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
         where R: Rng + ?Sized
     {
-        if let Some(elem) = self.next() {
-            let mut result = elem;
-            
-            // Continue until the iterator is exhausted
-            for (i, elem) in self.enumerate() {
-                let denom = (i + 2) as f64; // accurate to 2^53 elements
+        let (mut lower, mut upper) = self.size_hint();
+        let mut consumed = 0;
+        let mut result = None;
+
+        if upper == Some(lower) {
+            // Remove this once we can specialize on ExactSizeIterator
+            return if lower == 0 { None } else { self.nth(rng.gen_range(0, lower)) };
+        } else if lower <= 1 {
+            result = self.next();
+            if result.is_none() {
+                return result;
+            }
+            consumed = 1;
+            let hint = self.size_hint();
+            lower = hint.0;
+            upper = hint.1;
+        }
+
+        // Continue until the iterator is exhausted
+        loop {
+            if lower > 1 {
+                let ix = rng.gen_range(0, lower + consumed);
+                let skip;
+                if ix < lower {
+                    result = self.nth(ix);
+                    skip = lower - (ix + 1);
+                } else {
+                    skip = lower;
+                }
+                if upper == Some(lower) {
+                    return result;
+                }
+                consumed += lower;
+                if skip > 0 {
+                    self.nth(skip - 1);
+                }
+            } else {
+                let elem = self.next();
+                if elem.is_none() {
+                    return result;
+                }
+                consumed += 1;
+                let denom = consumed as f64; // accurate to 2^53 elements
                 if rng.gen_bool(1.0 / denom) {
                     result = elem;
                 }
             }
-            
-            Some(result)
-        } else {
-            None
+
+            let hint = self.size_hint();
+            lower = hint.0;
+            upper = hint.1;
         }
     }
 
@@ -519,20 +556,85 @@ mod test {
         assert_eq!(v.choose_mut(&mut r), None);
     }
 
+    #[derive(Clone)]
+    struct UnhintedIterator<I: Iterator + Clone> {
+        iter: I,
+    }
+    impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
+        type Item = I::Item;
+        fn next(&mut self) -> Option<Self::Item> {
+            self.iter.next()
+        }
+    }
+
+    #[derive(Clone)]
+    struct ChunkHintedIterator<I: ExactSizeIterator + Iterator + Clone> {
+        iter: I,
+        chunk_remaining: usize,
+        chunk_size: usize,
+        hint_total_size: bool,
+    }
+    impl<I: ExactSizeIterator + Iterator + Clone> Iterator for ChunkHintedIterator<I> {
+        type Item = I::Item;
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.chunk_remaining == 0 {
+                self.chunk_remaining = ::core::cmp::min(self.chunk_size,
+                                                        self.iter.len());
+            }
+            self.chunk_remaining = self.chunk_remaining.saturating_sub(1);
+
+            self.iter.next()
+        }
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            (self.chunk_remaining,
+             if self.hint_total_size { Some(self.iter.len()) } else { None })
+        }
+    }
+
+    #[derive(Clone)]
+    struct WindowHintedIterator<I: ExactSizeIterator + Iterator + Clone> {
+        iter: I,
+        window_size: usize,
+        hint_total_size: bool,
+    }
+    impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<I> {
+        type Item = I::Item;
+        fn next(&mut self) -> Option<Self::Item> {
+            self.iter.next()
+        }
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            (::core::cmp::min(self.iter.len(), self.window_size),
+             if self.hint_total_size { Some(self.iter.len()) } else { None })
+        }
+    }
+
     #[test]
     fn test_iterator_choose() {
-        let mut r = ::test::rng(109);
-        let mut chosen = [0i32; 9];
-        for _ in 0..1000 {
-            let picked = (0..9).choose(&mut r).unwrap();
-            chosen[picked] += 1;
-        }
-        for count in chosen.iter() {
-            let err = *count - 1000 / 9;
-            assert!(-25 <= err && err <= 25);
+        let r = &mut ::test::rng(109);
+        fn test_iter<R: Rng + ?Sized, Iter: Iterator<Item=usize> + Clone>(r: &mut R, iter: Iter) {
+            let mut chosen = [0i32; 9];
+            for _ in 0..1000 {
+                let picked = iter.clone().choose(r).unwrap();
+                chosen[picked] += 1;
+            }
+            for count in chosen.iter() {
+                let err = *count - 1000 / 9;
+                assert!(-25 <= err && err <= 25);
+            }
         }
 
-        assert_eq!((0..0).choose(&mut r), None);
+        test_iter(r, 0..9);
+        test_iter(r, [0, 1, 2, 3, 4, 5, 6, 7, 8].iter().cloned());
+        #[cfg(feature = "alloc")]
+        test_iter(r, (0..9).collect::<Vec<_>>().into_iter());
+        test_iter(r, UnhintedIterator { iter: 0..9 });
+        test_iter(r, ChunkHintedIterator { iter: 0..9, chunk_size: 4, chunk_remaining: 4, hint_total_size: false });
+        test_iter(r, ChunkHintedIterator { iter: 0..9, chunk_size: 4, chunk_remaining: 4, hint_total_size: true });
+        test_iter(r, WindowHintedIterator { iter: 0..9, window_size: 2, hint_total_size: false });
+        test_iter(r, WindowHintedIterator { iter: 0..9, window_size: 2, hint_total_size: true });
+
+        assert_eq!((0..0).choose(r), None);
+        assert_eq!(UnhintedIterator{ iter: 0..0 }.choose(r), None);
     }
 
     #[test]

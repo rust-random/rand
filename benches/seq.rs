@@ -8,6 +8,9 @@ use test::Bencher;
 
 use rand::prelude::*;
 use rand::seq::*;
+use std::mem::size_of;
+
+const RAND_BENCH_N: u64 = 1000;
 
 #[bench]
 fn seq_shuffle_100(b: &mut Bencher) {
@@ -22,10 +25,18 @@ fn seq_shuffle_100(b: &mut Bencher) {
 #[bench]
 fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 1000];
+    let x : &mut [usize] = &mut [1; 1000];
+    for i in 0..1000 {
+        x[i] = i;
+    }
     b.iter(|| {
-        x.choose(&mut rng)
-    })
+        let mut s = 0;
+        for _ in 0..RAND_BENCH_N {
+            s += x.choose(&mut rng).unwrap();
+        }
+        s
+    });
+    b.bytes = size_of::<usize>() as u64 * ::RAND_BENCH_N;
 }
 
 macro_rules! seq_slice_choose_multiple {
@@ -54,11 +65,63 @@ seq_slice_choose_multiple!(seq_slice_choose_multiple_10_of_100, 10, 100);
 seq_slice_choose_multiple!(seq_slice_choose_multiple_90_of_100, 90, 100);
 
 #[bench]
-fn seq_iter_choose_from_100(b: &mut Bencher) {
+fn seq_iter_choose_from_1000(b: &mut Bencher) {
+    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+    let x : &mut [usize] = &mut [1; 1000];
+    for i in 0..1000 {
+        x[i] = i;
+    }
+    b.iter(|| {
+        let mut s = 0;
+        for _ in 0..RAND_BENCH_N {
+            s += x.iter().choose(&mut rng).unwrap();
+        }
+        s
+    });
+    b.bytes = size_of::<usize>() as u64 * ::RAND_BENCH_N;
+}
+
+#[derive(Clone)]
+struct UnhintedIterator<I: Iterator + Clone> {
+    iter: I,
+}
+impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
+    type Item = I::Item;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
+
+#[derive(Clone)]
+struct WindowHintedIterator<I: ExactSizeIterator + Iterator + Clone> {
+    iter: I,
+    window_size: usize,
+}
+impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<I> {
+    type Item = I::Item;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (std::cmp::min(self.iter.len(), self.window_size), None)
+    }
+}
+
+#[bench]
+fn seq_iter_unhinted_choose_from_100(b: &mut Bencher) {
+    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+    let x : &[usize] = &[1; 1000];
+    b.iter(|| {
+        UnhintedIterator { iter: x.iter() }.choose(&mut rng).unwrap()
+    })
+}
+
+#[bench]
+fn seq_iter_window_hinted_choose_from_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 100];
     b.iter(|| {
-        x.iter().cloned().choose(&mut rng)
+        WindowHintedIterator { iter: x.iter(), window_size: 7 }.choose(&mut rng)
     })
 }
 
