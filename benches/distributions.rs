@@ -9,6 +9,7 @@ const RAND_BENCH_N: u64 = 1000;
 
 use std::mem::size_of;
 use test::Bencher;
+use std::time::Duration;
 
 use rand::{Rng, FromEntropy};
 use rand::rngs::SmallRng;
@@ -54,6 +55,26 @@ macro_rules! distr_float {
     }
 }
 
+macro_rules! distr_duration {
+    ($fnn:ident, $distr:expr) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = SmallRng::from_entropy();
+            let distr = $distr;
+
+            b.iter(|| {
+                let mut accum = Duration::new(0, 0);
+                for _ in 0..::RAND_BENCH_N {
+                    let x: Duration = distr.sample(&mut rng);
+                    accum = accum.checked_add(x).unwrap_or(Duration::new(u64::max_value(), 999_999_999));
+                }
+                accum
+            });
+            b.bytes = size_of::<Duration>() as u64 * ::RAND_BENCH_N;
+        }
+    }
+}
+
 macro_rules! distr {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
@@ -84,6 +105,25 @@ distr_int!(distr_uniform_i128, i128, Uniform::new(-123_456_789_123i128, 123_456_
 
 distr_float!(distr_uniform_f32, f32, Uniform::new(2.26f32, 2.319));
 distr_float!(distr_uniform_f64, f64, Uniform::new(2.26f64, 2.319));
+
+const LARGE_SEC: u64 = u64::max_value() / 1000;
+
+distr_duration!(distr_uniform_duration_largest,
+    Uniform::new_inclusive(Duration::new(0, 0), Duration::new(u64::max_value(), 999_999_999))
+);
+distr_duration!(distr_uniform_duration_large,
+    Uniform::new(Duration::new(0, 0), Duration::new(LARGE_SEC, 1_000_000_000 / 2))
+);
+distr_duration!(distr_uniform_duration_one,
+    Uniform::new(Duration::new(0, 0), Duration::new(1, 0))
+);
+distr_duration!(distr_uniform_duration_variety,
+    Uniform::new(Duration::new(10000, 423423), Duration::new(200000, 6969954))
+);
+distr_duration!(distr_uniform_duration_edge,
+    Uniform::new_inclusive(Duration::new(LARGE_SEC, 999_999_999), Duration::new(LARGE_SEC + 1, 1))
+);
+
 
 // standard
 distr_int!(distr_standard_i8, i8, Standard);
