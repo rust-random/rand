@@ -231,16 +231,6 @@ pub fn sample<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
 fn sample_floyd<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
     where R: Rng + ?Sized,
 {
-    // Shouldn't this be on std::slice?
-    fn find_pos<T: Copy + PartialEq<T>>(slice: &[T], elt: T) -> Option<usize> {
-        for i in 0..slice.len() {
-            if slice[i] == elt {
-                return Some(i);
-            }
-        }
-        None
-    }
-    
     // For small amount we use Floyd's fully-shuffled variant. For larger
     // amounts this is slow due to Vec::insert performance, so we shuffle
     // afterwards. Benchmarks show little overhead from extra logic.
@@ -251,7 +241,7 @@ fn sample_floyd<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
     for j in length - amount .. length {
         let t = rng.gen_range(0, j + 1);
         if floyd_shuffle {
-            if let Some(pos) = find_pos(&indices, t) {
+            if let Some(pos) = indices.iter().position(|&x| x == t) {
                 indices.insert(pos, j);
                 continue;
             }
