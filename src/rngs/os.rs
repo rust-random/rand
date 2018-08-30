@@ -1129,7 +1129,7 @@ mod imp {
             // it turns out we're in node.js then we require the `crypto`
             // package and use that. The API we're using was added in Node 6.x
             // so it should be safe to assume tha it works.
-            if this.self_().is_undefined() {
+            if window.self_().is_undefined() {
                 return Ok(OsRng::Node(node_require("crypto")))
             }
 
@@ -1137,9 +1137,9 @@ mod imp {
             // or web worker). Here we want to try to use
             // `crypto.getRandomValues`, but if `crypto` isn't defined we assume
             // we're in an older web browser and the OS RNG isn't available.
-            let crypto = this.crypto();
+            let crypto = window.crypto();
             if crypto.is_undefined() {
-                let msg = "self.crypto is undefined";
+                let msg = "window.crypto is undefined";
                 return Err(Error::new(ErrorKind::Unavailable, msg))
             }
 
