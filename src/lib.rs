@@ -899,13 +899,13 @@ pub mod __wbg_shims {
 
         #[wasm_bindgen]
         extern {
-            pub type This;
-            pub static this: This;
+            pub type Window;
+            pub static window: Window;
 
             #[wasm_bindgen(method, getter, structural, js_name = self)]
-            pub fn self_(me: &This) -> JsValue;
+            pub fn self_(me: &Window) -> JsValue;
             #[wasm_bindgen(method, getter, structural)]
-            pub fn crypto(me: &This) -> JsValue;
+            pub fn crypto(me: &Window) -> JsValue;
 
             #[derive(Clone, Debug)]
             pub type BrowserCrypto;
