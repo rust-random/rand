@@ -320,8 +320,8 @@ pub trait SeedableRng: Sized {
         
         let mut seed = Self::Seed::default();
         for chunk in seed.as_mut().chunks_mut(4) {
-            // We advance the state first (to get away from input, which may
-            // have low Hamming Weight).
+            // We advance the state first (to get away from the input value,
+            // in case it has low Hamming Weight).
             state = state.wrapping_mul(MUL).wrapping_add(INC);
             
             // Use PCG output function with to_le to generate x:
@@ -469,7 +469,10 @@ mod test {
         
         for (i1, r1) in results.iter().enumerate() {
             let weight = r1.count_ones();
-            assert!(weight >= 20);
+            // This is the binomial distribution B(64, 0.5), so chance of
+            // weight < 20 is binocdf(19, 64, 0.5) = 7.8e-4, and same for
+            // weight > 44.
+            assert!(weight >= 20 && weight <= 44);
             
             for (i2, r2) in results.iter().enumerate() {
                 if i1 == i2 { continue; }
