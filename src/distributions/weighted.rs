@@ -17,13 +17,34 @@ use core::fmt;
 // Note that this whole module is only imported if feature="alloc" is enabled.
 #[cfg(not(feature="std"))] use alloc::vec::Vec;
 
-/// A distribution using weighted sampling to pick a discretely selected item.
+/// A distribution using weighted sampling to pick a discretely selected
+/// item.
 ///
 /// Sampling a `WeightedIndex` distribution returns the index of a randomly
 /// selected element from the iterator used when the `WeightedIndex` was
 /// created. The chance of a given element being picked is proportional to the
 /// value of the element. The weights can use any type `X` for which an
 /// implementation of [`Uniform<X>`] exists.
+///
+/// # Performance
+///
+/// A `WeightedIndex<X>` contains a `Vec<X>` and a [`Uniform<X>`] and so its
+/// size is the sum of the size of those objects, possibly plus some alignment.
+///
+/// Creating a `WeightedIndex<X>` will allocate enough space to hold `N - 1`
+/// weights of type `X`, where `N` is the number of weights. However, since
+/// `Vec` doesn't guarantee a particular growth strategy, additional memory
+/// might be allocated but not used. Since the `WeightedIndex` object also
+/// contains, this might cause additional allocations, though for primitive
+/// types, ['Uniform<X>`] doesn't allocate any memory.
+///
+/// Time complexity of sampling from `WeightedIndex` is `O(log N)` where
+/// `N` is the number of weights.
+///
+/// Sampling from `WeightedIndex` will result in a single call to
+/// [`Uniform<X>::sample`], which typically will request a single value from
+/// the underlying [`RngCore`], though the exact number depends on the
+/// implementaiton of [`Uniform<X>::sample`].
 ///
 /// # Example
 ///
@@ -47,6 +68,10 @@ use core::fmt;
 ///     println!("{}", items[dist2.sample(&mut rng)].0);
 /// }
 /// ```
+///
+/// [`Uniform<X>`]: struct.Uniform.html
+/// [`Uniform<X>::sample`]: struct.Uniform.html#method.sample
+/// [`RngCore`]: ../trait.RngCore.html
 #[derive(Debug, Clone)]
 pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
     cumulative_weights: Vec<X>,
