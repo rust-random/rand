@@ -1102,7 +1102,8 @@ mod test {
                 sum += 1;
             }
         }
-        let avg = (sum as f64) / (N as f64);
-        assert!((avg - (NUM as f64)/(DENOM as f64)).abs() < 1e-3);
+        // Have Binomial(N, NUM/DENOM) distribution
+        let expected = (NUM * N) / DENOM;   // exact integer
+        assert!(((sum - expected) as i32).abs() < 500);
     }
 }

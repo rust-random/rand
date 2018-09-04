@@ -616,8 +616,9 @@ mod test {
                 chosen[picked] += 1;
             }
             for count in chosen.iter() {
+                // Samples should follow Binomial(1000, 1/9)
                 let err = *count - 1000 / 9;
-                assert!(-25 <= err && err <= 25);
+                assert!(-30 <= err && err <= 30);
             }
         }
 

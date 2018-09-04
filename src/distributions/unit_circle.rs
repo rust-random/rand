@@ -95,8 +95,8 @@ mod tests {
     fn value_stability() {
         let mut rng = ::test::rng(2);
         let dist = UnitCircle::new();
-        assert_eq!(dist.sample(&mut rng), [-0.8150602311723979, 0.5793762331690843]);
-        assert_eq!(dist.sample(&mut rng), [-0.056204569973983196, 0.998419273809375]);
-        assert_eq!(dist.sample(&mut rng), [0.7761923749562624, -0.630496151502733]);
+        assert_eq!(dist.sample(&mut rng), [-0.8032118336637037, 0.5956935036263119]);
+        assert_eq!(dist.sample(&mut rng), [-0.4742919588505423, -0.880367615130018]);
+        assert_eq!(dist.sample(&mut rng), [0.9297328981467168, 0.368234623716601]);
     }
 }
