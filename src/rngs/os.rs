@@ -1121,15 +1121,17 @@ mod imp {
     impl OsRngImpl for OsRng {
         fn new() -> Result<OsRng, Error> {
             // First up we need to detect if we're running in node.js or a
-            // browser. Both environments have `this` defined as an object for
-            // our own scope, and we use that to look up other values.
+            // browser. To do this we get ahold of the `this` object (in a bit
+            // of a roundabout fashion).
             //
-            // Here we test if `this.self` is defined. If so we're in a browser
-            // (either main window or web worker) and if not we're in node. If
-            // it turns out we're in node.js then we require the `crypto`
-            // package and use that. The API we're using was added in Node 6.x
-            // so it should be safe to assume tha it works.
-            if this.self_().is_undefined() {
+            // Once we have `this` we look at its `self` property, which is
+            // only defined on the web (either a main window or web worker).
+            let this = Function::new("return this").call(&JsValue::undefined());
+            assert!(this != JsValue::undefined());
+            let this = This::from(this);
+            let is_browser = this.self_() != JsValue::undefined();
+
+            if !is_browser {
                 return Ok(OsRng::Node(node_require("crypto")))
             }
 

@@ -229,7 +229,6 @@
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
 #![cfg_attr(feature = "stdweb", recursion_limit="128")]
-#![cfg_attr(feature = "wasm-bindgen", feature(use_extern_macros))]
 
 #[cfg(feature = "std")] extern crate core;
 #[cfg(all(feature = "alloc", not(feature="std")))] #[macro_use] extern crate alloc;
@@ -898,10 +897,14 @@ pub mod __wbg_shims {
         pub use wasm_bindgen::prelude::*;
 
         #[wasm_bindgen]
-        extern {
-            pub type This;
-            pub static this: This;
+        extern "C" {
+            pub type Function;
+            #[wasm_bindgen(constructor)]
+            pub fn new(s: &str) -> Function;
+            #[wasm_bindgen(method)]
+            pub fn call(this: &Function, self_: &JsValue) -> JsValue;
 
+            pub type This;
             #[wasm_bindgen(method, getter, structural, js_name = self)]
             pub fn self_(me: &This) -> JsValue;
             #[wasm_bindgen(method, getter, structural)]
