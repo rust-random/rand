@@ -33,7 +33,8 @@ build: false
 
 test_script:
   - cargo test --lib --no-default-features --features alloc
-  - cargo test --all-features
+  # TODO: use --all-features once simd_support is sufficiently stable:
+  - cargo test --features=serde1,log,i128_support
   - cargo test --benches --features=nightly
   - cargo test --examples
   - cargo test --package rand_core
