@@ -391,8 +391,12 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
 // Implement `RngCore` for Rc<RefCell<..>> references to a `RngCore`.
 // Force inlining all functions, so that it is up to the `RngCore`
 // implementation and the optimizer to decide on inlining.
-#[cfg(feature="std")]
-impl<R: RngCore> RngCore for ::std::rc::Rc<::std::cell::RefCell<R>> {
+//
+// We do not actually use `Rc` here because it requires `std` but its
+// `Deref` should make this suffice, and this can be used on the stack.
+// #[cfg(feature="std")]
+// impl<R: RngCore> RngCore for ::std::rc::Rc<::std::cell::RefCell<R>> {
+impl<'a,R: RngCore> RngCore for &'a ::core::cell::RefCell<R> {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.borrow_mut().next_u32()
