@@ -1089,6 +1089,19 @@ mod test {
     }
 
     #[test]
+    // #[cfg(feature="stc")]
+    fn test_rng_rc_refcell_trait() {
+		use std::ops::Deref;
+        use distributions::{Distribution, Standard};
+        // let rng = rng(110);
+        let mut r = & *::std::rc::Rc::new(::std::cell::RefCell::new(rng(110)));
+        r.next_u32();
+        r.gen::<i32>();
+        assert_eq!(r.gen_range(0, 1), 0);
+        let _c: u8 = Standard.sample(&mut r);
+    }
+
+    #[test]
     #[cfg(feature="std")]
     fn test_random() {
         // not sure how to test this aside from just getting some values
