@@ -388,6 +388,32 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
     }
 }
 
+// Implement `RngCore` for Rc<RefCell<..>> references to a `RngCore`.
+// Force inlining all functions, so that it is up to the `RngCore`
+// implementation and the optimizer to decide on inlining.
+#[cfg(feature="std")]
+impl<R: RngCore> RngCore for ::std::rc::Rc<::std::cell::RefCell<R>> {
+    #[inline(always)]
+    fn next_u32(&mut self) -> u32 {
+        self.borrow_mut().next_u32()
+    }
+
+    #[inline(always)]
+    fn next_u64(&mut self) -> u64 {
+        self.borrow_mut().next_u64()
+    }
+
+    #[inline(always)]
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.borrow_mut().fill_bytes(dest)
+    }
+
+    #[inline(always)]
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.borrow_mut().try_fill_bytes(dest)
+    }
+}
+
 #[cfg(feature="std")]
 impl std::io::Read for RngCore {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
