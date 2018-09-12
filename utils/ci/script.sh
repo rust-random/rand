@@ -22,7 +22,7 @@ main() {
         cross test --package rand_xorshift --features=serde1 --target $TARGET
     else    # have stable Rust
         cross test --lib --no-default-features --target $TARGET
-        cross test --features=serde1,log,i128_support --target $TARGET
+        cross test --features=serde1,log --target $TARGET
         cross test --examples --target $TARGET
         cross test --package rand_core --target $TARGET
         cross test --package rand_core --no-default-features --target $TARGET

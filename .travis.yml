@@ -82,7 +82,7 @@ matrix:
       script:
         - cargo test --lib --no-default-features
         # TODO: add simd_support feature:
-        - cargo test --features=serde1,log,i128_support
+        - cargo test --features=serde1,log
         - cargo test --examples
         - cargo test --package rand_core
         - cargo test --package rand_core --no-default-features
@@ -96,7 +96,7 @@ matrix:
       script:
         - cargo test --lib --no-default-features
         # TODO: add simd_support feature:
-        - cargo test --features=serde1,log,i128_support
+        - cargo test --features=serde1,log
         - cargo test --examples
         - cargo test --package rand_core
         - cargo test --package rand_core --no-default-features
@@ -113,7 +113,7 @@ matrix:
       script:
         - cargo test --lib --no-default-features --features=alloc
         # TODO: use --all-features once simd_support is sufficiently stable:
-        - cargo test --features=serde1,log,i128_support
+        - cargo test --features=serde1,log
         - cargo test --benches --features=nightly
         - cargo test --examples
         - cargo test --package rand_core
@@ -159,12 +159,12 @@ matrix:
         - rustup target add x86_64-unknown-redox
       script:
         # TODO: use --all-features once simd_support is sufficiently stable:
-        - cargo build --target=x86_64-sun-solaris --features=serde1,log,i128_support
-        - cargo build --target=x86_64-unknown-cloudabi --features=serde1,log,i128_support
-        - cargo build --target=x86_64-unknown-freebsd --features=serde1,log,i128_support
-        #- cargo build --target=x86_64-unknown-fuchsia --features=serde1,log,i128_support
-        - cargo build --target=x86_64-unknown-netbsd --features=serde1,log,i128_support
-        - cargo build --target=x86_64-unknown-redox --features=serde1,log,i128_support
+        - cargo build --target=x86_64-sun-solaris --features=serde1,log
+        - cargo build --target=x86_64-unknown-cloudabi --features=serde1,log
+        - cargo build --target=x86_64-unknown-freebsd --features=serde1,log
+        #- cargo build --target=x86_64-unknown-fuchsia --features=serde1,log
+        - cargo build --target=x86_64-unknown-netbsd --features=serde1,log
+        - cargo build --target=x86_64-unknown-redox --features=serde1,log
 
     # Trust cross-built/emulated targets. We must repeat all non-default values.
     - rust: stable
