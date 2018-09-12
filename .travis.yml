@@ -57,9 +57,8 @@ sudo: false
 #   `cargo test --package rand_isaac --features=serde1`
 #   `cargo test --package rand_xorshift --features=serde1`
 # 
-# TODO: SIMD support
-# All tests using packed_simd are disabled for now due to general instability
-# of the crate (both releases and the git tree failing on nightly and stable).
+# TODO: SIMD support on stable releases
+# NOTE: SIMD support is unreliable on nightly; we track the latest release
 matrix:
   include:
     - rust: 1.22.0
@@ -112,8 +111,7 @@ matrix:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
         - cargo test --lib --no-default-features --features=alloc
-        # TODO: use --all-features once simd_support is sufficiently stable:
-        - cargo test --features=serde1,log
+        - cargo test --all-features
         - cargo test --benches --features=nightly
         - cargo test --examples
         - cargo test --package rand_core
@@ -158,13 +156,12 @@ matrix:
         - rustup target add x86_64-unknown-netbsd
         - rustup target add x86_64-unknown-redox
       script:
-        # TODO: use --all-features once simd_support is sufficiently stable:
-        - cargo build --target=x86_64-sun-solaris --features=serde1,log
-        - cargo build --target=x86_64-unknown-cloudabi --features=serde1,log
-        - cargo build --target=x86_64-unknown-freebsd --features=serde1,log
-        #- cargo build --target=x86_64-unknown-fuchsia --features=serde1,log
-        - cargo build --target=x86_64-unknown-netbsd --features=serde1,log
-        - cargo build --target=x86_64-unknown-redox --features=serde1,log
+        - cargo build --target=x86_64-sun-solaris --all-features
+        - cargo build --target=x86_64-unknown-cloudabi --all-features
+        - cargo build --target=x86_64-unknown-freebsd --all-features
+        #- cargo build --target=x86_64-unknown-fuchsia --all-features
+        - cargo build --target=x86_64-unknown-netbsd --all-features
+        - cargo build --target=x86_64-unknown-redox --all-features
 
     # Trust cross-built/emulated targets. We must repeat all non-default values.
     - rust: stable

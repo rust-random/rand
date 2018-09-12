@@ -39,7 +39,7 @@ log = { version = "0.4", optional = true }
 
 [dependencies.packed_simd]
 # NOTE: so far no version works reliably due to dependence on unstable features
-version = "0.2"
+version = "0.3"
 # git = "https://github.com/rust-lang-nursery/packed_simd"
 optional = true
 features = ["into_bits"]
