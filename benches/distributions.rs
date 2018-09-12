@@ -7,8 +7,6 @@
 // except according to those terms.
 
 #![feature(test)]
-#![cfg_attr(all(feature="i128_support", feature="nightly"), allow(stable_features))] // stable since 2018-03-27
-#![cfg_attr(all(feature="i128_support", feature="nightly"), feature(i128_type, i128))]
 
 extern crate test;
 extern crate rand;
@@ -108,7 +106,6 @@ distr_int!(distr_uniform_i8, i8, Uniform::new(20i8, 100));
 distr_int!(distr_uniform_i16, i16, Uniform::new(-500i16, 2000));
 distr_int!(distr_uniform_i32, i32, Uniform::new(-200_000_000i32, 800_000_000));
 distr_int!(distr_uniform_i64, i64, Uniform::new(3i64, 123_456_789_123));
-#[cfg(feature = "i128_support")]
 distr_int!(distr_uniform_i128, i128, Uniform::new(-123_456_789_123i128, 123_456_789_123_456_789));
 
 distr_float!(distr_uniform_f32, f32, Uniform::new(2.26f32, 2.319));
@@ -138,7 +135,6 @@ distr_int!(distr_standard_i8, i8, Standard);
 distr_int!(distr_standard_i16, i16, Standard);
 distr_int!(distr_standard_i32, i32, Standard);
 distr_int!(distr_standard_i64, i64, Standard);
-#[cfg(feature = "i128_support")]
 distr_int!(distr_standard_i128, i128, Standard);
 
 distr!(distr_standard_bool, bool, Standard);
@@ -195,7 +191,6 @@ gen_range_int!(gen_range_i8, i8, -20i8, 100);
 gen_range_int!(gen_range_i16, i16, -500i16, 2000);
 gen_range_int!(gen_range_i32, i32, -200_000_000i32, 800_000_000);
 gen_range_int!(gen_range_i64, i64, 3i64, 123_456_789_123);
-#[cfg(feature = "i128_support")]
 gen_range_int!(gen_range_i128, i128, -12345678901234i128, 123_456_789_123_456_789);
 
 // construct and sample from a floating-point range

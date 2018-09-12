@@ -56,6 +56,9 @@ sudo: false
 #   `cargo test --package rand_core --no-default-features`
 #   `cargo test --package rand_isaac --features=serde1`
 #   `cargo test --package rand_xorshift --features=serde1`
+# 
+# TODO: SIMD support on stable releases
+# NOTE: SIMD support is unreliable on nightly; we track the latest release
 matrix:
   include:
     - rust: 1.22.0
@@ -77,7 +80,8 @@ matrix:
         - rustup target add aarch64-apple-ios
       script:
         - cargo test --lib --no-default-features
-        - cargo test --features=serde1,log,i128_support
+        # TODO: add simd_support feature:
+        - cargo test --features=serde1,log
         - cargo test --examples
         - cargo test --package rand_core
         - cargo test --package rand_core --no-default-features
@@ -90,7 +94,8 @@ matrix:
       install:
       script:
         - cargo test --lib --no-default-features
-        - cargo test --features=serde1,log,i128_support
+        # TODO: add simd_support feature:
+        - cargo test --features=serde1,log
         - cargo test --examples
         - cargo test --package rand_core
         - cargo test --package rand_core --no-default-features

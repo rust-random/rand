@@ -36,7 +36,13 @@ rand_core = { path = "rand_core", version = "0.2", default-features = false }
 rand_isaac = { path = "rand_isaac", version = "0.1" }
 rand_xorshift = { path = "rand_xorshift", version = "0.1" }
 log = { version = "0.4", optional = true }
-packed_simd = { version = "0.1", optional = true, features = ["into_bits"] }
+
+[dependencies.packed_simd]
+# NOTE: so far no version works reliably due to dependence on unstable features
+version = "0.3"
+# git = "https://github.com/rust-lang-nursery/packed_simd"
+optional = true
+features = ["into_bits"]
 
 [target.'cfg(unix)'.dependencies]
 libc = { version = "0.2", optional = true }

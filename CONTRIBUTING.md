@@ -88,6 +88,6 @@ benchmark results in the PR (or to report nothing's changed).
 ```sh
 # Benchmarks (requires nightly)
 cargo bench
-# Some benchmarks have a faster path with i128_support
+# Potentially nightly features allow different code paths
 cargo bench --features=nightly
 ```

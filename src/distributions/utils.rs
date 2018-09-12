@@ -148,7 +148,7 @@ wmul_impl_usize! { u32 }
 #[cfg(target_pointer_width = "64")]
 wmul_impl_usize! { u64 }
 
-#[cfg(feature = "simd_support")]
+#[cfg(all(feature = "simd_support", feature = "nightly"))]
 mod simd_wmul {
     #[cfg(target_arch = "x86")]
     use core::arch::x86::*;
@@ -215,7 +215,7 @@ mod simd_wmul {
     wmul_impl_large! { (u32x16,) u32, 16 }
     wmul_impl_large! { (u64x2, u64x4, u64x8,) u64, 32 }
 }
-#[cfg(feature = "simd_support")]
+#[cfg(all(feature = "simd_support", feature = "nightly"))]
 pub use self::simd_wmul::*;
 
 
