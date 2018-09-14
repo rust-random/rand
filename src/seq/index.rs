@@ -20,7 +20,7 @@
 use Rng;
 
 /// A vector of indices.
-/// 
+///
 /// Multiple internal representations are possible.
 #[derive(Clone, Debug)]
 pub enum IndexVec {
@@ -36,9 +36,9 @@ impl IndexVec {
             &IndexVec::USize(ref v) => v.len(),
         }
     }
-    
+
     /// Return the value at the given `index`.
-    /// 
+    ///
     /// (Note: we cannot implement `std::ops::Index` because of lifetime
     /// restrictions.)
     pub fn index(&self, index: usize) -> usize {
@@ -63,7 +63,7 @@ impl IndexVec {
             &IndexVec::USize(ref v) => IndexVecIter::USize(v.iter()),
         }
     }
-    
+
     /// Convert into an iterator over the indices as a sequence of `usize` values
     pub fn into_iter(self) -> IndexVecIntoIter {
         match self {
@@ -115,7 +115,7 @@ impl<'a> Iterator for IndexVecIter<'a> {
             &mut USize(ref mut iter) => iter.next().cloned(),
         }
     }
-    
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self {
             &IndexVecIter::U32(ref v) => v.size_hint(),
@@ -135,7 +135,7 @@ pub enum IndexVecIntoIter {
 
 impl Iterator for IndexVecIntoIter {
     type Item = usize;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         use self::IndexVecIntoIter::*;
         match self {
@@ -143,7 +143,7 @@ impl Iterator for IndexVecIntoIter {
             &mut USize(ref mut v) => v.next(),
         }
     }
-    
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         use self::IndexVecIntoIter::*;
         match self {
@@ -191,7 +191,7 @@ pub fn sample<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
     }
     let amount = amount as u32;
     let length = length as u32;
-    
+
     // Choice of algorithm here depends on both length and amount. See:
     // https://github.com/rust-random/rand/pull/479
     // We do some calculations with f32. Accuracy is not very important.
@@ -222,7 +222,7 @@ pub fn sample<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
 
 /// Randomly sample exactly `amount` indices from `0..length`, using Floyd's
 /// combination algorithm.
-/// 
+///
 /// The output values are fully shuffled. (Overhead is under 50%.)
 ///
 /// This implementation uses `O(amount)` memory and `O(amount^2)` time.
@@ -233,7 +233,7 @@ fn sample_floyd<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
     // amounts this is slow due to Vec::insert performance, so we shuffle
     // afterwards. Benchmarks show little overhead from extra logic.
     let floyd_shuffle = amount < 50;
-    
+
     debug_assert!(amount <= length);
     let mut indices = Vec::with_capacity(amount as usize);
     for j in length - amount .. length {
@@ -267,7 +267,7 @@ fn sample_floyd<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
 ///
 /// This allocates the entire `length` of indices and randomizes only the first `amount`.
 /// It then truncates to `amount` and returns.
-/// 
+///
 /// This method is not appropriate for large `length` and potentially uses a lot
 /// of memory; because of this we only implement for `u32` index (which improves
 /// performance in all cases).
@@ -309,7 +309,7 @@ fn sample_rejection<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
         }
         indices.push(pos);
     }
-    
+
     debug_assert_eq!(indices.len(), amount);
     IndexVec::from(indices)
 }
@@ -317,11 +317,11 @@ fn sample_rejection<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
 #[cfg(test)]
 mod test {
     use super::*;
-    
+
     #[test]
     fn test_sample_boundaries() {
         let mut r = ::test::rng(404);
-        
+
         assert_eq!(sample_inplace(&mut r, 0, 0).len(), 0);
         assert_eq!(sample_inplace(&mut r, 1, 0).len(), 0);
         assert_eq!(sample_inplace(&mut r, 1, 1).into_vec(), vec![0]);
@@ -331,17 +331,17 @@ mod test {
         assert_eq!(sample_floyd(&mut r, 0, 0).len(), 0);
         assert_eq!(sample_floyd(&mut r, 1, 0).len(), 0);
         assert_eq!(sample_floyd(&mut r, 1, 1).into_vec(), vec![0]);
-        
+
         // These algorithms should be fast with big numbers. Test average.
         let sum: usize = sample_rejection(&mut r, 1 << 25, 10)
                 .into_iter().sum();
         assert!(1 << 25 < sum && sum < (1 << 25) * 25);
-        
+
         let sum: usize = sample_floyd(&mut r, 1 << 25, 10)
                 .into_iter().sum();
         assert!(1 << 25 < sum && sum < (1 << 25) * 25);
     }
-    
+
     #[test]
     fn test_sample_alg() {
         let seed_rng = ::test::rng;
@@ -349,25 +349,25 @@ mod test {
         // We can't test which algorithm is used directly, but Floyd's alg
         // should produce different results from the others. (Also, `inplace`
         // and `cached` currently use different sizes thus produce different results.)
-        
+
         // A small length and relatively large amount should use inplace
         let (length, amount): (usize, usize) = (100, 50);
         let v1 = sample(&mut seed_rng(420), length, amount);
         let v2 = sample_inplace(&mut seed_rng(420), length as u32, amount as u32);
         assert!(v1.iter().all(|e| e < length));
         assert_eq!(v1, v2);
-        
+
         // Test Floyd's alg does produce different results
         let v3 = sample_floyd(&mut seed_rng(420), length as u32, amount as u32);
         assert!(v1 != v3);
-        
+
         // A large length and small amount should use Floyd
         let (length, amount): (usize, usize) = (1<<20, 50);
         let v1 = sample(&mut seed_rng(421), length, amount);
         let v2 = sample_floyd(&mut seed_rng(421), length as u32, amount as u32);
         assert!(v1.iter().all(|e| e < length));
         assert_eq!(v1, v2);
-        
+
         // A large length and larger amount should use cache
         let (length, amount): (usize, usize) = (1<<20, 600);
         let v1 = sample(&mut seed_rng(422), length, amount);
