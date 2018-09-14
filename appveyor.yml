@@ -41,3 +41,5 @@ test_script:
   - cargo test --package rand_core --no-default-features --features=alloc
   - cargo test --package rand_isaac --features=serde1
   - cargo test --package rand_xorshift --features=serde1
+  - cargo test --package rand_chacha
+  - cargo test --package rand_hc128

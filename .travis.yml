@@ -56,7 +56,9 @@ sudo: false
 #   `cargo test --package rand_core --no-default-features`
 #   `cargo test --package rand_isaac --features=serde1`
 #   `cargo test --package rand_xorshift --features=serde1`
-# 
+#   `cargo test --package rand_chacha`
+#   `cargo test --package rand_hc128`
+#
 # TODO: SIMD support on stable releases
 # NOTE: SIMD support is unreliable on nightly; we track the latest release
 matrix:
@@ -72,6 +74,8 @@ matrix:
         - cargo test --package rand_core --no-default-features
         - cargo test --package rand_isaac --features=serde1
         # - cargo test --package rand_xorshift --features=serde1
+        - cargo test --package rand_chacha
+        - cargo test --package rand_hc128
 
     - rust: stable
       env: DESCRIPTION="stable Rust release, macOS, iOS (cross-compile only)"
@@ -87,6 +91,8 @@ matrix:
         - cargo test --package rand_core --no-default-features
         - cargo test --package rand_isaac --features=serde1
         - cargo test --package rand_xorshift --features=serde1
+        - cargo test --package rand_chacha
+        - cargo test --package rand_hc128
         - cargo build --target=aarch64-apple-ios
 
     - rust: beta
@@ -101,6 +107,8 @@ matrix:
         - cargo test --package rand_core --no-default-features
         - cargo test --package rand_isaac --features=serde1
         - cargo test --package rand_xorshift --features=serde1
+        - cargo test --package rand_chacha
+        - cargo test --package rand_hc128
 
     - rust: nightly
       env: DESCRIPTION="nightly features, benchmarks, documentation"
@@ -118,6 +126,8 @@ matrix:
         - cargo test --package rand_core --no-default-features --features=alloc
         - cargo test --package rand_isaac --features=serde1
         # - cargo test --package rand_xorshift --features=serde1
+        - cargo test --package rand_chacha
+        - cargo test --package rand_hc128
         # remove cached documentation, otherwise files from previous PRs can get included
         - rm -rf target/doc
         - cargo doc --no-deps --all --all-features

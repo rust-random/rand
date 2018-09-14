@@ -64,8 +64,8 @@ const STATE_WORDS: usize = 16;
 ///
 /// [`set_word_pos`]: #method.set_word_pos
 /// [`set_stream`]: #method.set_stream
-/// [`BlockRng`]: ../../../rand_core/block/struct.BlockRng.html
-/// [`RngCore`]: ../../trait.RngCore.html
+/// [`BlockRng`]: ../rand_core/block/struct.BlockRng.html
+/// [`RngCore`]: ../rand_core/trait.RngCore.html
 #[derive(Clone, Debug)]
 pub struct ChaChaRng(BlockRng<ChaChaCore>);
 
@@ -107,12 +107,12 @@ impl CryptoRng for ChaChaRng {}
 
 impl ChaChaRng {
     /// Get the offset from the start of the stream, in 32-bit words.
-    /// 
+    ///
     /// Since the generated blocks are 16 words (2<sup>4</sup>) long and the
     /// counter is 64-bits, the offset is a 68-bit number. Sub-word offsets are
     /// not supported, hence the result can simply be multiplied by 4 to get a
     /// byte-offset.
-    /// 
+    ///
     /// Note: this function is currently only available with Rust 1.26 or later.
     #[cfg(rust_1_26)]
     pub fn get_word_pos(&self) -> u128 {
@@ -129,11 +129,11 @@ impl ChaChaRng {
     }
 
     /// Set the offset from the start of the stream, in 32-bit words.
-    /// 
+    ///
     /// As with `get_word_pos`, we use a 68-bit number. Since the generator
     /// simply cycles at the end of its period (1 ZiB), we ignore the upper
     /// 60 bits.
-    /// 
+    ///
     /// Note: this function is currently only available with Rust 1.26 or later.
     #[cfg(rust_1_26)]
     pub fn set_word_pos(&mut self, word_offset: u128) {
@@ -152,7 +152,7 @@ impl ChaChaRng {
     ///
     /// This is initialized to zero; 2<sup>64</sup> unique streams of output
     /// are available per seed/key.
-    /// 
+    ///
     /// Note that in order to reproduce ChaCha output with a specific 64-bit
     /// nonce, one can convert that nonce to a `u64` in little-endian fashion
     /// and pass to this function. In theory a 96-bit nonce can be used by
@@ -268,7 +268,7 @@ impl From<ChaChaCore> for ChaChaRng {
 
 #[cfg(test)]
 mod test {
-    use {RngCore, SeedableRng};
+    use ::rand_core::{RngCore, SeedableRng};
     use super::ChaChaRng;
 
     #[test]
@@ -358,7 +358,7 @@ mod test {
         for i in results.iter_mut() { *i = rng2.next_u32(); }
         assert_eq!(results, expected);
         assert_eq!(rng2.get_word_pos(), expected_end);
-        
+
         // Test skipping behaviour with other types
         let mut buf = [0u8; 32];
         rng2.fill_bytes(&mut buf[..]);
@@ -436,7 +436,7 @@ mod test {
         for _ in 0..16 {
             assert_eq!(rng.next_u64(), clone.next_u64());
         }
-        
+
         rng.set_stream(51);
         for _ in 0..7 {
             assert!(rng.next_u32() != clone.next_u32());

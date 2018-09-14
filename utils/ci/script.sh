@@ -19,6 +19,8 @@ main() {
         cross test --package rand_core --target $TARGET
         cross test --package rand_core --no-default-features --features=alloc --target $TARGET
         cross test --package rand_isaac --features=serde1 --target $TARGET
+        cross test --package rand_chacha --target $TARGET
+        cross test --package rand_hc128 --target $TARGET
         cross test --package rand_xorshift --features=serde1 --target $TARGET
     else    # have stable Rust
         cross test --lib --no-default-features --target $TARGET
@@ -27,6 +29,8 @@ main() {
         cross test --package rand_core --target $TARGET
         cross test --package rand_core --no-default-features --target $TARGET
         cross test --package rand_isaac --features=serde1 --target $TARGET
+        cross test --package rand_chacha --target $TARGET
+        cross test --package rand_hc128 ---target $TARGET
         cross test --package rand_xorshift --features=serde1 --target $TARGET
     fi
 }
