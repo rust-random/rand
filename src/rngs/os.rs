@@ -407,14 +407,22 @@ mod imp {
     const NR_GETRANDOM: libc::c_long = 349;
     #[cfg(target_arch = "powerpc")]
     const NR_GETRANDOM: libc::c_long = 359;
+    #[cfg(target_arch = "powerpc64")]
+    const NR_GETRANDOM: libc::c_long = 359;
     #[cfg(target_arch = "mips")] // old ABI
     const NR_GETRANDOM: libc::c_long = 4353;
     #[cfg(target_arch = "mips64")]
     const NR_GETRANDOM: libc::c_long = 5313;
+    #[cfg(target_arch = "sparc")]
+    const NR_GETRANDOM: libc::c_long = 347;
+    #[cfg(target_arch = "sparc64")]
+    const NR_GETRANDOM: libc::c_long = 347;
     #[cfg(not(any(target_arch = "x86_64", target_arch = "x86",
                   target_arch = "arm", target_arch = "aarch64",
                   target_arch = "s390x", target_arch = "powerpc",
-                  target_arch = "mips", target_arch = "mips64")))]
+                  target_arch = "powerpc64", target_arch = "mips",
+                  target_arch = "mips64", target_arch = "sparc",
+                  target_arch = "sparc64")))]
     const NR_GETRANDOM: libc::c_long = 0;
 
     fn getrandom(buf: &mut [u8], blocking: bool) -> libc::c_long {
