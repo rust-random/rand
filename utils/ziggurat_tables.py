@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #
+# Copyright 2018 Developers of the Rand project.
 # Copyright 2013 The Rust Project Developers.
 #
 # Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -103,7 +104,8 @@ def render_table(name, values):
 
 
 with open('ziggurat_tables.rs', 'w') as f:
-    f.write('''// Copyright 2013 The Rust Project Developers.
+    f.write('''// Copyright 2018 Developers of the Rand project.
+// Copyright 2013 The Rust Project Developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
