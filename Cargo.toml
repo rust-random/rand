@@ -1,7 +1,7 @@
 [package]
 name = "rand"
 version = "0.5.5" # NB: When modifying, also modify html_root_url in lib.rs
-authors = ["The Rust Project Developers"]
+authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-random/rand"
