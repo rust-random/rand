@@ -1,4 +1,6 @@
-//! Support for `#[derive(Rand)]`
+//! Support for `#[derive(Rand)]` (deprecated)
+//! 
+//! **Both the `Rand` trait and the `derive(Rand)` macro are deprecated.**
 //!
 //! # Examples
 //!
@@ -17,6 +19,8 @@
 //!     println!("{:?}", rand::random::<MyStruct>());
 //! }
 //! ```
+
+#![deprecated(since="0.5.0", note="this crate is deprecated without replacement")]
 
 extern crate proc_macro;
 #[macro_use]
@@ -106,9 +110,13 @@ fn impl_rand_derive(ast: &syn::MacroInput) -> quote::Tokens {
     };
 
     quote! {
-        impl #impl_generics ::rand::Rand for #name #ty_generics #where_clause {
+        impl #impl_generics ::rand::distributions::Distribution<#name>
+            for ::rand::distributions::Standard
+            #ty_generics
+            #where_clause
+        {
             #[inline]
-            fn rand<__R: ::rand::Rng>(__rng: &mut __R) -> Self {
+            fn sample<__R: ::rand::Rng + ?Sized>(&self, __rng: &mut __R) -> #name {
                 #rand
             }
         }

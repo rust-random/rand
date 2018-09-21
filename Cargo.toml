@@ -45,7 +45,7 @@ stdweb = {version="0.4", optional=true}
 
 
 [workspace]
-members = ["rand_core"]
+members = ["rand_core", "rand-derive"]
 
 [dev-dependencies]
 # This is for testing serde, unfortunately

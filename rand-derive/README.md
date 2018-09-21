@@ -1,19 +1,21 @@
 rand_derive
 ====
 
-`#[derive(Rand)]` functionality for the `rand::Rand` trait.
+`#[derive(Rand)]` functionality enabling sampling of random instances.
 
-**This module is deprecated as of rand 0.5**, due in part to breaking changes
-in rand and in part to lack of use. Code is preserved because in theory it
-should be straightforward to modify for use with rand's new distribution code.
+**This crate is deprecated as of rand 0.5** since the `Rand` trait has been
+deprecated and since it appears to have very little use.
+
+This crate has been updated to work with Rand 0.5, however note that it now
+implements `Distribution<Self> for Standard` instead of `Rand`.
 
 ## Usage
 Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.4"
-rand_macros = "0.2"
+rand = "0.5"
+rand_derive = "0.5"
 ```
 
 and this to your crate root:
@@ -21,7 +23,7 @@ and this to your crate root:
 ```rust
 extern crate rand;
 #[macro_use]
-extern crate rand_macros;
+extern crate rand_derive;
 ```
 
 ## Examples
