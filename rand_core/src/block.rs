@@ -285,6 +285,10 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
         Self::new(R::from_seed(seed))
     }
 
+    fn seed_from_u64(seed: u64) -> Self {
+        Self::new(R::seed_from_u64(seed))
+    }
+
     fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
         Ok(Self::new(R::from_rng(rng)?))
     }
@@ -490,6 +494,10 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng64<R> {
 
     fn from_seed(seed: Self::Seed) -> Self {
         Self::new(R::from_seed(seed))
+    }
+
+    fn seed_from_u64(seed: u64) -> Self {
+        Self::new(R::seed_from_u64(seed))
     }
 
     fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {

@@ -957,21 +957,7 @@ mod test {
     }
 
     pub fn rng(seed: u64) -> TestRng<StdRng> {
-        // TODO: use from_hashable
-        let mut state = seed;
-        let mut seed = <StdRng as SeedableRng>::Seed::default();
-        for x in seed.iter_mut() {
-            // PCG algorithm
-            const MUL: u64 = 6364136223846793005;
-            const INC: u64 = 11634580027462260723;
-            let oldstate = state;
-            state = oldstate.wrapping_mul(MUL).wrapping_add(INC);
-
-            let xorshifted = (((oldstate >> 18) ^ oldstate) >> 27) as u32;
-            let rot = (oldstate >> 59) as u32;
-            *x = xorshifted.rotate_right(rot) as u8;
-        }
-        TestRng { inner: StdRng::from_seed(seed) }
+        TestRng { inner: StdRng::seed_from_u64(seed) }
     }
 
     #[test]
@@ -1116,7 +1102,8 @@ mod test {
                 sum += 1;
             }
         }
-        let avg = (sum as f64) / (N as f64);
-        assert!((avg - (NUM as f64)/(DENOM as f64)).abs() < 1e-3);
+        // Have Binomial(N, NUM/DENOM) distribution
+        let expected = (NUM * N) / DENOM;   // exact integer
+        assert!(((sum - expected) as i32).abs() < 500);
     }
 }

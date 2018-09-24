@@ -51,6 +51,7 @@
 
 use core::default::Default;
 use core::convert::AsMut;
+use core::ptr::copy_nonoverlapping;
 
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
@@ -296,7 +297,46 @@ pub trait SeedableRng: Sized {
     /// for example `0xBAD5EEDu32` or `0x0DDB1A5E5BAD5EEDu64` ("odd biases? bad
     /// seed"). This is assuming only a small number of values must be rejected.
     fn from_seed(seed: Self::Seed) -> Self;
-
+    
+    /// Create a new PRNG using a `u64` seed.
+    /// 
+    /// This is a convenience-wrapper around `from_seed` to allow construction
+    /// of any `SeedableRng` from a simple `u64` value. It is designed such that
+    /// low Hamming Weight numbers like 0 and 1 can be used and should still
+    /// result in good, independent seeds to the PRNG which is returned.
+    /// 
+    /// This **is not suitable for cryptography**, as should be clear given that
+    /// the input size is only 64 bits.
+    /// 
+    /// Implementations for PRNGs *may* provide their own implementations of
+    /// this function, but the default implementation should be good enough for
+    /// all purposes. *Changing* the implementation of this function should be
+    /// considered a value-breaking change.
+    fn seed_from_u64(mut state: u64) -> Self {
+        // We use PCG32 to generate a u32 sequence, and copy to the seed
+        const MUL: u64 = 6364136223846793005;
+        const INC: u64 = 11634580027462260723;
+        
+        let mut seed = Self::Seed::default();
+        for chunk in seed.as_mut().chunks_mut(4) {
+            // We advance the state first (to get away from the input value,
+            // in case it has low Hamming Weight).
+            state = state.wrapping_mul(MUL).wrapping_add(INC);
+            
+            // Use PCG output function with to_le to generate x:
+            let xorshifted = (((state >> 18) ^ state) >> 27) as u32;
+            let rot = (state >> 59) as u32;
+            let x = xorshifted.rotate_right(rot).to_le();
+            
+            unsafe {
+                let p = &x as *const u32 as *const u8;
+                copy_nonoverlapping(p, chunk.as_mut_ptr(), chunk.len());
+            }
+        }
+        
+        Self::from_seed(seed)
+    }
+    
     /// Create a new PRNG seeded from another `Rng`.
     ///
     /// This is the recommended way to initialize PRNGs with fresh entropy. The
@@ -401,3 +441,46 @@ impl<'a, R: CryptoRng + ?Sized> CryptoRng for &'a mut R {}
 // Implement `CryptoRng` for boxed references to an `CryptoRng`.
 #[cfg(feature="alloc")]
 impl<R: CryptoRng + ?Sized> CryptoRng for Box<R> {}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    
+    #[test]
+    fn test_seed_from_u64() {
+        struct SeedableNum(u64);
+        impl SeedableRng for SeedableNum {
+            type Seed = [u8; 8];
+            fn from_seed(seed: Self::Seed) -> Self {
+                let mut x = [0u64; 1];
+                le::read_u64_into(&seed, &mut x);
+                SeedableNum(x[0])
+            }
+        }
+        
+        const N: usize = 8;
+        const SEEDS: [u64; N] = [0u64, 1, 2, 3, 4, 8, 16, -1i64 as u64];
+        let mut results = [0u64; N];
+        for (i, seed) in SEEDS.iter().enumerate() {
+            let SeedableNum(x) = SeedableNum::seed_from_u64(*seed);
+            results[i] = x;
+        }
+        
+        for (i1, r1) in results.iter().enumerate() {
+            let weight = r1.count_ones();
+            // This is the binomial distribution B(64, 0.5), so chance of
+            // weight < 20 is binocdf(19, 64, 0.5) = 7.8e-4, and same for
+            // weight > 44.
+            assert!(weight >= 20 && weight <= 44);
+            
+            for (i2, r2) in results.iter().enumerate() {
+                if i1 == i2 { continue; }
+                let diff_weight = (r1 ^ r2).count_ones();
+                assert!(diff_weight >= 20);
+            }
+        }
+        
+        // value-breakage test:
+        assert_eq!(results[0], 5029875928683246316);
+    }
+}

@@ -116,7 +116,7 @@ impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<
 }
 
 #[bench]
-fn seq_iter_unhinted_choose_from_100(b: &mut Bencher) {
+fn seq_iter_unhinted_choose_from_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x : &[usize] = &[1; 1000];
     b.iter(|| {
@@ -125,9 +125,9 @@ fn seq_iter_unhinted_choose_from_100(b: &mut Bencher) {
 }
 
 #[bench]
-fn seq_iter_window_hinted_choose_from_100(b: &mut Bencher) {
+fn seq_iter_window_hinted_choose_from_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 100];
+    let x : &[usize] = &[1; 1000];
     b.iter(|| {
         WindowHintedIterator { iter: x.iter(), window_size: 7 }.choose(&mut rng)
     })

@@ -317,8 +317,6 @@ fn sample_rejection<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
 #[cfg(test)]
 mod test {
     use super::*;
-    use {Rng, SeedableRng};
-    use prng::XorShiftRng;
     
     #[test]
     fn test_sample_boundaries() {
@@ -346,40 +344,34 @@ mod test {
     
     #[test]
     fn test_sample_alg() {
-        let xor_rng = XorShiftRng::from_seed;
+        let seed_rng = ::test::rng;
 
-        let mut r = ::test::rng(403);
-        let mut seed = [0u8; 16];
-        
         // We can't test which algorithm is used directly, but Floyd's alg
         // should produce different results from the others. (Also, `inplace`
         // and `cached` currently use different sizes thus produce different results.)
         
         // A small length and relatively large amount should use inplace
-        r.fill(&mut seed);
         let (length, amount): (usize, usize) = (100, 50);
-        let v1 = sample(&mut xor_rng(seed), length, amount);
-        let v2 = sample_inplace(&mut xor_rng(seed), length as u32, amount as u32);
+        let v1 = sample(&mut seed_rng(420), length, amount);
+        let v2 = sample_inplace(&mut seed_rng(420), length as u32, amount as u32);
         assert!(v1.iter().all(|e| e < length));
         assert_eq!(v1, v2);
         
         // Test Floyd's alg does produce different results
-        let v3 = sample_floyd(&mut xor_rng(seed), length as u32, amount as u32);
+        let v3 = sample_floyd(&mut seed_rng(420), length as u32, amount as u32);
         assert!(v1 != v3);
         
         // A large length and small amount should use Floyd
-        r.fill(&mut seed);
         let (length, amount): (usize, usize) = (1<<20, 50);
-        let v1 = sample(&mut xor_rng(seed), length, amount);
-        let v2 = sample_floyd(&mut xor_rng(seed), length as u32, amount as u32);
+        let v1 = sample(&mut seed_rng(421), length, amount);
+        let v2 = sample_floyd(&mut seed_rng(421), length as u32, amount as u32);
         assert!(v1.iter().all(|e| e < length));
         assert_eq!(v1, v2);
         
         // A large length and larger amount should use cache
-        r.fill(&mut seed);
         let (length, amount): (usize, usize) = (1<<20, 600);
-        let v1 = sample(&mut xor_rng(seed), length, amount);
-        let v2 = sample_rejection(&mut xor_rng(seed), length, amount);
+        let v1 = sample(&mut seed_rng(422), length, amount);
+        let v2 = sample_rejection(&mut seed_rng(422), length, amount);
         assert!(v1.iter().all(|e| e < length));
         assert_eq!(v1, v2);
     }

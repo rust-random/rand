@@ -191,17 +191,7 @@ pub trait IteratorRandom: Iterator + Sized {
         let mut result = None;
 
         if upper == Some(lower) {
-            // Remove this once we can specialize on ExactSizeIterator
             return if lower == 0 { None } else { self.nth(rng.gen_range(0, lower)) };
-        } else if lower <= 1 {
-            result = self.next();
-            if result.is_none() {
-                return result;
-            }
-            consumed = 1;
-            let hint = self.size_hint();
-            lower = hint.0;
-            upper = hint.1;
         }
 
         // Continue until the iterator is exhausted
@@ -616,8 +606,10 @@ mod test {
                 chosen[picked] += 1;
             }
             for count in chosen.iter() {
-                let err = *count - 1000 / 9;
-                assert!(-25 <= err && err <= 25);
+                // Samples should follow Binomial(1000, 1/9)
+                // Octave: binopdf(x, 1000, 1/9) gives the prob of *count == x
+                // Note: have seen 153, which is unlikely but not impossible.
+                assert!(72 < *count && *count < 154, "count not close to 1000/9: {}", count);
             }
         }
 
