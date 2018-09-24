@@ -1,6 +1,5 @@
-// Copyright 2017-2018 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// https://rust-lang.org/COPYRIGHT.
+// Copyright 2018 Developers of the Rand project.
+// Copyright 2017-2018 The Rust Project Developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -35,7 +34,7 @@
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://docs.rs/rand_core/0.2.1")]
+       html_root_url = "https://docs.rs/rand_core/0.3.0")]
 
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]

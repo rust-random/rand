@@ -1,10 +1,11 @@
 # rand_core
 
-[![Build Status](https://travis-ci.org/rust-lang-nursery/rand.svg)](https://travis-ci.org/rust-lang-nursery/rand)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-lang-nursery/rand?svg=true)](https://ci.appveyor.com/project/alexcrichton/rand)
+[![Build Status](https://travis-ci.org/rust-random/rand.svg)](https://travis-ci.org/rust-random/rand)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/dhardy/rand)
 [![Latest version](https://img.shields.io/crates/v/rand_core.svg)](https://crates.io/crates/rand_core)
 [![Documentation](https://docs.rs/rand_core/badge.svg)](https://docs.rs/rand_core)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-lang-nursery/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![License](https://img.shields.io/crates/l/rand_core.svg)](https://github.com/rust-random/rand/tree/master/rand_core#license)
 
 Core traits and error types of the [rand] library, plus tools for implementing
 RNGs.
@@ -20,7 +21,7 @@ point, list permutations and secure initialisation of RNGs). Most users should
 prefer to use the main [rand] crate.
 
 Documentation:
-[master branch](https://rust-lang-nursery.github.io/rand/rand_core/index.html),
+[master branch](https://rust-random.github.io/rand/rand_core/index.html),
 [by release](https://docs.rs/rand_core)
 
 [Changelog](CHANGELOG.md)
@@ -59,4 +60,5 @@ implementations that use the `BlockRng` or `BlockRng64` wrappers.
 `rand_core` is distributed under the terms of both the MIT license and the
 Apache License (Version 2.0).
 
-See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
+See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT), and
+[COPYRIGHT](COPYRIGHT) for details.
