@@ -16,7 +16,7 @@ build = "build.rs"
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
-appveyor = { repository = "dhardy/rand" }
+appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
 rand_core = { path = "../rand_core", version = ">=0.2, <0.4", default-features=false }
