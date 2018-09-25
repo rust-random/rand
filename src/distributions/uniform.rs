@@ -107,7 +107,7 @@
 //! [`UniformInt`]: struct.UniformInt.html
 //! [`UniformFloat`]: struct.UniformFloat.html
 //! [`UniformDuration`]: struct.UniformDuration.html
-//! [`Borrow::borrow`]: trait.SampleBorrow.html
+//! [`SampleBorrow::borrow`]: trait.SampleBorrow.html#method.borrow
 
 #[cfg(feature = "std")]
 use std::time::Duration;
