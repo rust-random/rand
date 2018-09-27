@@ -161,7 +161,7 @@
 //! [`mock::StepRng`]: mock/struct.StepRng.html
 //! [`adapter::ReadRng`]: adapter/struct.ReadRng.html
 //! [`adapter::ReseedingRng`]: adapter/struct.ReseedingRng.html
-//! [`ChaChaRng`]: ../prng/chacha/struct.ChaChaRng.html
+//! [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
 
 pub mod adapter;
 

@@ -9,7 +9,7 @@
 //! The standard RNG
 
 use {RngCore, CryptoRng, Error, SeedableRng};
-use prng::Hc128Rng;
+use rand_hc128::Hc128Rng;
 
 /// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
 /// on the current platform, to be statistically strong and unpredictable
@@ -23,8 +23,8 @@ use prng::Hc128Rng;
 /// produce different output depending on the architecture. If you require
 /// reproducible output, use a named RNG, for example [`ChaChaRng`].
 ///
-/// [HC-128]: ../prng/hc128/struct.Hc128Rng.html
-/// [`ChaChaRng`]: ../prng/chacha/struct.ChaChaRng.html
+/// [HC-128]: ../../rand_hc128/struct.Hc128Rng.html
+/// [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
 #[derive(Clone, Debug)]
 pub struct StdRng(Hc128Rng);
 

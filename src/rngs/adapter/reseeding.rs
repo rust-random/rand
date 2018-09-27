@@ -57,9 +57,12 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// # Example
 ///
 /// ```
+/// # extern crate rand;
+/// # extern crate rand_chacha;
+/// # fn main() {
 /// use rand::prelude::*;
-/// use rand::prng::chacha::ChaChaCore; // Internal part of ChaChaRng that
-///                                     // implements BlockRngCore
+/// use rand_chacha::ChaChaCore; // Internal part of ChaChaRng that
+///                              // implements BlockRngCore
 /// use rand::rngs::OsRng;
 /// use rand::rngs::adapter::ReseedingRng;
 ///
@@ -73,10 +76,11 @@ use rand_core::block::{BlockRngCore, BlockRng};
 ///
 /// let mut cloned_rng = reseeding_rng.clone();
 /// assert!(reseeding_rng.gen::<u64>() != cloned_rng.gen::<u64>());
+/// # }
 /// ```
 ///
-/// [`ChaChaCore`]: ../../prng/chacha/struct.ChaChaCore.html
-/// [`Hc128Core`]: ../../prng/hc128/struct.Hc128Core.html
+/// [`ChaChaCore`]: ../../../rand_chacha/struct.ChaChaCore.html
+/// [`Hc128Core`]: ../../../rand_hc128/struct.Hc128Core.html
 /// [`BlockRngCore`]: ../../../rand_core/block/trait.BlockRngCore.html
 /// [`ReseedingRng::new`]: struct.ReseedingRng.html#method.new
 /// [`reseed()`]: struct.ReseedingRng.html#method.reseed
@@ -329,7 +333,7 @@ mod fork {
 #[cfg(test)]
 mod test {
     use {Rng, SeedableRng};
-    use prng::chacha::ChaChaCore;
+    use rand_chacha::ChaChaCore;
     use rngs::mock::StepRng;
     use super::ReseedingRng;
 

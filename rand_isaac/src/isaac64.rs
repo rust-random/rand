@@ -76,7 +76,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 ///       http://burtleburtle.net/bob/rand/isaac.html)
 ///
 /// [`IsaacRng`]: ../isaac/struct.IsaacRng.html
-/// [`Hc128Rng`]: ../../rand/prng/hc128/struct.Hc128Rng.html
+/// [`Hc128Rng`]: ../../rand_hc128/struct.Hc128Rng.html
 /// [`BlockRng64`]: ../../rand_core/block/struct.BlockRng64.html
 /// [`RngCore`]: ../../rand_core/trait.RngCore.html
 #[derive(Clone, Debug)]

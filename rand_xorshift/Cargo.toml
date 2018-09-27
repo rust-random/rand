@@ -15,7 +15,7 @@ categories = ["algorithms", "no-std"]
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
-appveyor = { repository = "dhardy/rand" }
+appveyor = { repository = "rust-random/rand" }
 
 [features]
 serde1 = ["serde", "serde_derive"]

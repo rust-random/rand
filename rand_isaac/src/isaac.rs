@@ -86,7 +86,7 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// [^3]: Jean-Philippe Aumasson, [*On the pseudo-random generator ISAAC*](
 ///       https://eprint.iacr.org/2006/438)
 ///
-/// [`Hc128Rng`]: ../../rand/prng//hc128/struct.Hc128Rng.html
+/// [`Hc128Rng`]: ../../rand_hc128/struct.Hc128Rng.html
 /// [`BlockRng`]: ../../rand_core/block/struct.BlockRng.html
 /// [`RngCore`]: ../../rand_core/trait.RngCore.html
 #[derive(Clone, Debug)]

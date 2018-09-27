@@ -298,8 +298,8 @@
 //! [basic PRNGs]: #basic-pseudo-random-number-generators-prngs
 //! [CSPRNGs]: #cryptographically-secure-pseudo-random-number-generators-csprngs
 //! [`XorShiftRng`]: ../../rand_xorshift/struct.XorShiftRng.html
-//! [`ChaChaRng`]: chacha/struct.ChaChaRng.html
-//! [`Hc128Rng`]: hc128/struct.Hc128Rng.html
+//! [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
+//! [`Hc128Rng`]: ../../rand_hc128/struct.Hc128Rng.html
 //! [`IsaacRng`]: ../../rand_isaac/isaac/struct.IsaacRng.html
 //! [`Isaac64Rng`]: ../../rand_isaac/isaac64/struct.Isaac64Rng.html
 //! [`ThreadRng`]: ../rngs/struct.ThreadRng.html
@@ -313,13 +313,6 @@
 //! [RustCrypto libraries]: https://github.com/RustCrypto
 //! [next-bit test]: https://en.wikipedia.org/wiki/Next-bit_test
 
-
-pub mod chacha;
-pub mod hc128;
-
-pub use self::chacha::ChaChaRng;
-pub use self::hc128::Hc128Rng;
-
 // Deprecations (to be removed in 0.7)
 #[doc(hidden)] #[allow(deprecated)]
 pub use deprecated::XorShiftRng;
@@ -331,3 +324,13 @@ pub use deprecated::XorShiftRng;
     #[allow(deprecated)] pub use deprecated::Isaac64Rng;
 }
 #[doc(hidden)] #[allow(deprecated)] pub use deprecated::{IsaacRng, Isaac64Rng};
+#[doc(hidden)] pub mod chacha {
+    // Note: we miss `ChaChaCore` here but probably unimportant.
+    #[allow(deprecated)] pub use deprecated::ChaChaRng;
+}
+#[doc(hidden)] #[allow(deprecated)] pub use deprecated::ChaChaRng;
+#[doc(hidden)] pub mod hc128 {
+    // Note: we miss `Hc128Core` here but probably unimportant.
+    #[allow(deprecated)] pub use deprecated::Hc128Rng;
+}
+#[doc(hidden)] #[allow(deprecated)] pub use deprecated::Hc128Rng;

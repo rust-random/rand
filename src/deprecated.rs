@@ -10,10 +10,12 @@
 
 #![allow(deprecated)]
 
-use {prng, rngs};
+use rngs;
 use {RngCore, CryptoRng, SeedableRng, Error};
 use rand_core::block::BlockRngCore;
 use rand_isaac;
+use rand_chacha;
+use rand_hc128;
 
 #[cfg(feature="std")]
 use std::io::Read;
@@ -111,8 +113,8 @@ impl Isaac64Rng {
 
 
 #[derive(Clone, Debug)]
-#[deprecated(since="0.6.0", note="import with rand::prng::ChaChaRng instead")]
-pub struct ChaChaRng(prng::ChaChaRng);
+#[deprecated(since="0.6.0", note="import from rand_chacha crate instead")]
+pub struct ChaChaRng(rand_chacha::ChaChaRng);
 
 impl RngCore for ChaChaRng {
     #[inline(always)]
@@ -137,14 +139,14 @@ impl RngCore for ChaChaRng {
 }
 
 impl SeedableRng for ChaChaRng {
-    type Seed = <prng::ChaChaRng as SeedableRng>::Seed;
+    type Seed = <rand_chacha::ChaChaRng as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        ChaChaRng(prng::ChaChaRng::from_seed(seed))
+        ChaChaRng(rand_chacha::ChaChaRng::from_seed(seed))
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        prng::ChaChaRng::from_rng(rng).map(ChaChaRng)
+        rand_chacha::ChaChaRng::from_rng(rng).map(ChaChaRng)
     }
 }
 
@@ -165,6 +167,47 @@ impl ChaChaRng {
 }
 
 impl CryptoRng for ChaChaRng {}
+
+
+#[derive(Clone, Debug)]
+#[deprecated(since="0.6.0", note="import from rand_hc128 crate instead")]
+pub struct Hc128Rng(rand_hc128::Hc128Rng);
+
+impl RngCore for Hc128Rng {
+    #[inline(always)]
+    fn next_u32(&mut self) -> u32 {
+        self.0.next_u32()
+    }
+
+    #[inline(always)]
+    fn next_u64(&mut self) -> u64 {
+        self.0.next_u64()
+    }
+
+    #[inline(always)]
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.0.fill_bytes(dest);
+    }
+
+    #[inline(always)]
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+        self.0.try_fill_bytes(dest)
+    }
+}
+
+impl SeedableRng for Hc128Rng {
+    type Seed = <rand_hc128::Hc128Rng as SeedableRng>::Seed;
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        Hc128Rng(rand_hc128::Hc128Rng::from_seed(seed))
+    }
+
+    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
+        rand_hc128::Hc128Rng::from_rng(rng).map(Hc128Rng)
+    }
+}
+
+impl CryptoRng for Hc128Rng {}
 
 
 #[derive(Clone, Debug)]

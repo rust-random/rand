@@ -64,8 +64,8 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 /// [^5]: Internet Engineering Task Force (February 2015),
 ///       ["Prohibiting RC4 Cipher Suites"](https://tools.ietf.org/html/rfc7465).
 ///
-/// [`BlockRng`]: ../../../rand_core/block/struct.BlockRng.html
-/// [`RngCore`]: ../../trait.RngCore.html
+/// [`BlockRng`]: ../rand_core/block/struct.BlockRng.html
+/// [`RngCore`]: ../rand_core/trait.RngCore.html
 #[derive(Clone, Debug)]
 pub struct Hc128Rng(BlockRng<Hc128Core>);
 
@@ -334,7 +334,7 @@ impl CryptoRng for Hc128Core {}
 
 #[cfg(test)]
 mod test {
-    use {RngCore, SeedableRng};
+    use ::rand_core::{RngCore, SeedableRng};
     use super::Hc128Rng;
 
     #[test]
