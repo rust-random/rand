@@ -1,10 +1,10 @@
 [package]
 name = "rand_core"
-version = "0.2.1" # NB: When modifying, also modify html_root_url in lib.rs
+version = "0.2.2" # NB: When modifying, also modify html_root_url in lib.rs
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/rust-lang-nursery/rand"
+repository = "https://github.com/rust-random/rand"
 documentation = "https://docs.rs/rand_core"
 homepage = "https://crates.io/crates/rand_core"
 description = """
@@ -14,15 +14,15 @@ keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 
 [badges]
-travis-ci = { repository = "rust-lang-nursery/rand" }
-appveyor = { repository = "alexcrichton/rand" }
+travis-ci = { repository = "rust-random/rand" }
+appveyor = { repository = "rust-random/rand" }
 
 [features]
-default = ["std"]
-std = ["alloc"]    # use std library; should be default but for above bug
-alloc = []  # enables Vec and Box support without std
-serde1 = ["serde", "serde_derive"] # enables serde for BlockRng wrapper
+std = ["rand_core/std"]    # use std library; should be default but for above bug
+alloc = ["rand_core/alloc"]  # enables Vec and Box support without std
+serde1 = ["rand_core/serde", "rand_core/serde_derive"] # enables serde for BlockRng wrapper
 
 [dependencies]
+rand_core = "0.3"
 serde = { version = "1", optional = true }
 serde_derive = { version = "^1.0.38", optional = true }
