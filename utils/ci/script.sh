@@ -13,12 +13,12 @@ main() {
 
     if [ ! -z $NIGHTLY ]; then  # have nightly Rust
         cross test --tests --no-default-features --features alloc --target $TARGET
-        cross test --package rand_core --no-default-features --features alloc --target $TARGET
+        cross test --package rand_core:0.2.2 --no-default-features --features alloc --target $TARGET --tests
         cross test --features serde1,log,nightly,alloc --target $TARGET
         cross test --all --benches --target $TARGET
     else    # have stable Rust
         cross test --tests --no-default-features --target $TARGET
-        cross test --package rand_core --no-default-features --target $TARGET
+        cross test --package rand_core:0.2.2 --no-default-features --target $TARGET --tests
         cross test --features serde1,log --target $TARGET
     fi
 }
