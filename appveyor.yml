@@ -32,8 +32,8 @@ install:
 build: false
 
 test_script:
-  - cargo test --all # cannot use --all and --features together
+  - cargo test --all --tests # cannot use --all and --features together
   - cargo test --all --benches
   - cargo test --features serde1,log,nightly
   - cargo test --tests --no-default-features --features=alloc,serde1
-  - cargo test --package rand_core --no-default-features --features=alloc,serde1
+  - cargo test --package rand_core:0.2.2 --no-default-features --features=alloc,serde1 --tests

@@ -15,9 +15,9 @@ use super::Rng;
 // This crate is only enabled when either std or alloc is available.
 // BTreeMap is not as fast in tests, but better than nothing.
 #[cfg(feature="std")] use std::collections::HashMap;
-#[cfg(not(feature="std"))] use alloc::btree_map::BTreeMap;
+#[cfg(not(feature="std"))] use alloc::collections::btree_map::BTreeMap;
 
-#[cfg(not(feature="std"))] use alloc::Vec;
+#[cfg(not(feature="std"))] use alloc::vec::Vec;
 
 /// Randomly sample `amount` elements from a finite iterator.
 ///
@@ -227,7 +227,7 @@ mod test {
     use super::*;
     use {XorShiftRng, Rng, SeedableRng};
     #[cfg(not(feature="std"))]
-    use alloc::Vec;
+    use alloc::vec::Vec;
 
     #[test]
     fn test_sample_iter() {

@@ -9,6 +9,8 @@
 Core traits and error types of the [rand] library, plus tools for implementing
 RNGs.
 
+This version of `rand_core` is a compatibility shim around version 0.3.
+
 This crate is intended for use when implementing the core trait, `RngCore`; it
 defines the core traits to be implemented as well as several small functions to
 aid in their implementation and types required for error handling.
