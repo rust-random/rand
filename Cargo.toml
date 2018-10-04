@@ -32,6 +32,7 @@ members = ["rand_core", "rand_isaac", "rand_chacha", "rand_hc128", "rand_pcg", "
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.3", default-features = false }
+rand_pcg = { path = "rand_pcg", version = "0.1" }
 # only for deprecations and benches:
 rand_isaac = { path = "rand_isaac", version = "0.1" }
 rand_chacha = { path = "rand_chacha", version = "0.1" }

@@ -9,7 +9,11 @@
 //! A small fast RNG
 
 use {RngCore, SeedableRng, Error};
-use ::rand_xorshift::XorShiftRng;
+
+#[cfg(all(rust_1_26, target_pointer_width = "64"))]
+type Rng = ::rand_pcg::Pcg64Mcg;
+#[cfg(not(all(rust_1_26, target_pointer_width = "64")))]
+type Rng = ::rand_pcg::Pcg32;
 
 /// An RNG recommended when small state, cheap initialization and good
 /// performance are required. The PRNG algorithm in `SmallRng` is chosen to be
@@ -20,9 +24,12 @@ use ::rand_xorshift::XorShiftRng;
 /// future library versions may use a different internal generator with
 /// different output. Further, this generator may not be portable and can
 /// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG, for example [`XorShiftRng`].
+/// reproducible output, use a named RNG. Refer to the documentation on the
+/// [`prng` module](../../prng.index.html) or the
+/// [small-rngs repo](https://github.com/rust-random/small-rngs).
 ///
-/// The current algorithm used on all platforms is [Xorshift].
+/// The current algorithm is [`Pcg64Mcg`] on 64-bit platforms with Rust version
+/// 1.26 and later, or [`Pcg32`] otherwise.
 ///
 /// # Examples
 ///
@@ -61,10 +68,10 @@ use ::rand_xorshift::XorShiftRng;
 /// [`FromEntropy`]: ../trait.FromEntropy.html
 /// [`StdRng`]: struct.StdRng.html
 /// [`thread_rng`]: ../fn.thread_rng.html
-/// [Xorshift]: ../../rand_xorshift/struct.XorShiftRng.html
-/// [`XorShiftRng`]: ../../rand_xorshift/struct.XorShiftRng.html
+/// [`Pcg64Mcg`]: https://docs.rs/rand_pcg/0.1.0/rand_pcg/type.Pcg64Mcg.html
+/// [`Pcg32`]: https://docs.rs/rand_pcg/0.1.0/rand_pcg/type.Pcg32.html
 #[derive(Clone, Debug)]
-pub struct SmallRng(XorShiftRng);
+pub struct SmallRng(Rng);
 
 impl RngCore for SmallRng {
     #[inline(always)]
@@ -87,13 +94,13 @@ impl RngCore for SmallRng {
 }
 
 impl SeedableRng for SmallRng {
-    type Seed = <XorShiftRng as SeedableRng>::Seed;
+    type Seed = <Rng as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        SmallRng(XorShiftRng::from_seed(seed))
+        SmallRng(Rng::from_seed(seed))
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        XorShiftRng::from_rng(rng).map(SmallRng)
+        Rng::from_rng(rng).map(SmallRng)
     }
 }
