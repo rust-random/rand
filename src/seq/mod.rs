@@ -512,7 +512,7 @@ pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) ->
 mod test {
     use super::*;
     #[cfg(feature = "alloc")] use {Rng, SeedableRng};
-    #[cfg(feature = "alloc")] use ::rand_xorshift::XorShiftRng;
+    #[cfg(feature = "alloc")] use rngs::SmallRng;
     #[cfg(all(feature="alloc", not(feature="std")))]
     use alloc::vec::Vec;
 
@@ -753,7 +753,7 @@ mod test {
     #[cfg(feature = "alloc")]
     #[allow(deprecated)]
     fn test_sample_slice() {
-        let xor_rng = XorShiftRng::from_seed;
+        let seeded_rng = SmallRng::from_seed;
 
         let mut r = ::test::rng(403);
 
@@ -764,16 +764,16 @@ mod test {
             r.fill(&mut seed);
 
             // assert the basics work
-            let regular = index::sample(&mut xor_rng(seed), length, amount);
+            let regular = index::sample(&mut seeded_rng(seed), length, amount);
             assert_eq!(regular.len(), amount);
             assert!(regular.iter().all(|e| e < length));
 
             // also test that sampling the slice works
             let vec: Vec<u32> = (0..(length as u32)).collect();
-            let result = sample_slice(&mut xor_rng(seed), &vec, amount);
+            let result = sample_slice(&mut seeded_rng(seed), &vec, amount);
             assert_eq!(result, regular.iter().map(|i| i as u32).collect::<Vec<_>>());
 
-            let result = sample_slice_ref(&mut xor_rng(seed), &vec, amount);
+            let result = sample_slice_ref(&mut seeded_rng(seed), &vec, amount);
             assert!(result.iter().zip(regular.iter()).all(|(i,j)| **i == j as u32));
         }
     }
