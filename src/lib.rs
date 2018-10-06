@@ -18,10 +18,10 @@
 //! a random value is to use [`random()`].
 //!
 //! ```
-//! let x: u8 = rand::random();
+//! let x: u8 = rand::random(); // generates an integer within u8 bounds
 //! println!("{}", x);
 //!
-//! let y = rand::random::<f64>();
+//! let y = rand::random::<f64>(); // generates a float between 0 and 1
 //! println!("{}", y);
 //!
 //! if rand::random() { // generates a boolean
