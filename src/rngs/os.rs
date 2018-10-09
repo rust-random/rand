@@ -426,16 +426,13 @@ mod imp {
     const NR_GETRANDOM: libc::c_long = 0;
 
     fn getrandom(buf: &mut [u8], blocking: bool) -> libc::c_long {
-        extern "C" {
-            fn syscall(number: libc::c_long, ...) -> libc::c_long;
-        }
         const GRND_NONBLOCK: libc::c_uint = 0x0001;
 
         if NR_GETRANDOM == 0 { return -1 };
 
         unsafe {
-            syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(),
-                    if blocking { 0 } else { GRND_NONBLOCK })
+            libc::syscall(NR_GETRANDOM, buf.as_mut_ptr(), buf.len(),
+                          if blocking { 0 } else { GRND_NONBLOCK })
         }
     }
 
