@@ -86,6 +86,7 @@
 //! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
 //!   - [`Bernoulli`] distribution, similar to [`Rng::gen_bool`].
+//!   - [`Geometric`] distribution
 //! - Related to positive real-valued quantities that grow exponentially
 //!   (e.g. prices, incomes, populations):
 //!   - [`LogNormal`] distribution
@@ -204,6 +205,7 @@ pub use self::bernoulli::Bernoulli;
 #[cfg(feature="std")] pub use self::dirichlet::Dirichlet;
 #[cfg(feature="std")] pub use self::triangular::Triangular;
 #[cfg(feature="std")] pub use self::weibull::Weibull;
+#[cfg(feature="std")] pub use self::geometric::Geometric;
 
 pub mod uniform;
 mod bernoulli;
@@ -220,6 +222,7 @@ mod bernoulli;
 #[cfg(feature="std")] mod dirichlet;
 #[cfg(feature="std")] mod triangular;
 #[cfg(feature="std")] mod weibull;
+#[cfg(feature="std")] mod geometric;
 
 mod float;
 mod integer;
