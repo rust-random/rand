@@ -55,8 +55,6 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// The three Emscripten targets `asmjs-unknown-emscripten`,
 /// `wasm32-unknown-emscripten` and `wasm32-experimental-emscripten` use
 /// Emscripten's emulation of `/dev/random` on web browsers and Node.js.
-/// Unfortunately it falls back to the insecure `Math.random()` if a browser
-/// doesn't support [`Crypto.getRandomValues`][12].
 ///
 /// The bare Wasm target `wasm32-unknown-unknown` tries to call the javascript
 /// methods directly, using either `stdweb` in combination with `cargo-web` or
