@@ -43,3 +43,10 @@ test_script:
   - cargo test --package rand_xorshift --features=serde1
   - cargo test --package rand_chacha
   - cargo test --package rand_hc128
+  - cargo test --manifest-path rand_core/Cargo.toml
+  - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
+  - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
+  - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
+  - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+  - cargo test --manifest-path rand_chacha/Cargo.toml
+  - cargo test --manifest-path rand_hc128/Cargo.toml

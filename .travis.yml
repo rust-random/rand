@@ -51,13 +51,8 @@ sudo: false
 # - run benchmarks as tests:
 #   `cargo test --benches --features=nightly`
 # Tests on subcrates:
-#   `cargo test --package rand_core`
-#   `cargo test --package rand_core --features=alloc` (requires nightly)
-#   `cargo test --package rand_core --no-default-features`
-#   `cargo test --package rand_isaac --features=serde1`
-#   `cargo test --package rand_xorshift --features=serde1`
-#   `cargo test --package rand_chacha`
-#   `cargo test --package rand_hc128`
+# - select crates via --manifest-path (more reliable than --package)
+# - test appropriate feature matrix
 #
 # TODO: SIMD support on stable releases
 # NOTE: SIMD support is unreliable on nightly; we track the latest release
@@ -65,17 +60,6 @@ matrix:
   include:
     - rust: 1.22.0
       env: DESCRIPTION="pinned stable Rust release"
-      install:
-      script:
-        - cargo test --lib --no-default-features
-        - cargo test --features=serde1,log
-        - cargo test --examples
-        - cargo test --package rand_core
-        - cargo test --package rand_core --no-default-features
-        - cargo test --package rand_isaac --features=serde1
-        # - cargo test --package rand_xorshift --features=serde1
-        - cargo test --package rand_chacha
-        - cargo test --package rand_hc128
 
     - rust: stable
       env: DESCRIPTION="stable Rust release, macOS, iOS (cross-compile only)"
@@ -83,32 +67,22 @@ matrix:
       install:
         - rustup target add aarch64-apple-ios
       script:
+        # Differs from standard script: includes aarch64-apple-ios cross-build
         - cargo test --lib --no-default-features
         # TODO: add simd_support feature:
         - cargo test --features=serde1,log
         - cargo test --examples
-        - cargo test --package rand_core
-        - cargo test --package rand_core --no-default-features
-        - cargo test --package rand_isaac --features=serde1
-        - cargo test --package rand_xorshift --features=serde1
-        - cargo test --package rand_chacha
-        - cargo test --package rand_hc128
+        - cargo test --manifest-path rand_core/Cargo.toml
+        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+        - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_chacha/Cargo.toml
+        - cargo test --manifest-path rand_hc128/Cargo.toml
         - cargo build --target=aarch64-apple-ios
 
     - rust: beta
       env: DESCRIPTION="beta Rust release"
-      install:
-      script:
-        - cargo test --lib --no-default-features
-        # TODO: add simd_support feature:
-        - cargo test --features=serde1,log
-        - cargo test --examples
-        - cargo test --package rand_core
-        - cargo test --package rand_core --no-default-features
-        - cargo test --package rand_isaac --features=serde1
-        - cargo test --package rand_xorshift --features=serde1
-        - cargo test --package rand_chacha
-        - cargo test --package rand_hc128
 
     - rust: nightly
       env: DESCRIPTION="nightly features, benchmarks, documentation"
@@ -118,16 +92,18 @@ matrix:
       before_script:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
+        # Differs from standard script: alloc feature, all features, doc build
         - cargo test --lib --no-default-features --features=alloc
         - cargo test --all-features
         - cargo test --benches --features=nightly
         - cargo test --examples
-        - cargo test --package rand_core
-        - cargo test --package rand_core --no-default-features --features=alloc
-        - cargo test --package rand_isaac --features=serde1
-        # - cargo test --package rand_xorshift --features=serde1
-        - cargo test --package rand_chacha
-        - cargo test --package rand_hc128
+        - cargo test --manifest-path rand_core/Cargo.toml
+        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
+        - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_chacha/Cargo.toml
+        - cargo test --manifest-path rand_hc128/Cargo.toml
         # remove cached documentation, otherwise files from previous PRs can get included
         - rm -rf target/doc
         - cargo doc --no-deps --all --all-features
@@ -179,22 +155,38 @@ matrix:
       dist: trusty
       services: docker
       env: DESCRIPTION="Linux (MIPS, big-endian)" TARGET=mips-unknown-linux-gnu
+      install:
+        - sh utils/ci/install.sh
+        - source ~/.cargo/env || true
+      script:
+        - bash utils/ci/script.sh
     - rust: stable
       sudo: required
       dist: trusty
       services: docker
       env: DESCRIPTION="Android (ARMv7)" TARGET=armv7-linux-androideabi
+      install:
+        - sh utils/ci/install.sh
+        - source ~/.cargo/env || true
+      script:
+        - bash utils/ci/script.sh
 
 before_install:
   - set -e
   - rustup self update
 
-# Used by all Trust targets; others must override:
-install:
-  - sh utils/ci/install.sh
-  - source ~/.cargo/env || true
 script:
-  - bash utils/ci/script.sh
+  - cargo test --lib --no-default-features
+  # TODO: add simd_support feature:
+  - cargo test --features=serde1,log
+  - cargo test --examples
+  - cargo test --manifest-path rand_core/Cargo.toml
+  - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+  - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
+  - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
+  - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+  - cargo test --manifest-path rand_chacha/Cargo.toml
+  - cargo test --manifest-path rand_hc128/Cargo.toml
 
 after_script: set +e
 
