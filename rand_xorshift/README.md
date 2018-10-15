@@ -19,7 +19,7 @@ requirements, use a more secure one such as `StdRng` or `OsRng`.
 
 Documentation:
 [master branch](https://rust-random.github.io/rand/rand_xorshift/index.html),
-[by release](https://docs.rs/rand_isaac)
+[by release](https://docs.rs/rand_xorshift)
 
 [Changelog](CHANGELOG.md)
 
