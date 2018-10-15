@@ -1,0 +1,35 @@
+[package]
+name = "rand_pcg"
+version = "0.1.1" # NB: When modifying, also modify html_root_url in lib.rs
+authors = ["The Rand Project Developers"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/rust-random/rand"
+documentation = "https://docs.rs/rand_pcg"
+homepage = "https://crates.io/crates/rand_pcg"
+description = """
+Selected PCG random number generators
+"""
+keywords = ["random", "rng", "pcg"]
+categories = ["algorithms", "no-std"]
+build = "build.rs"
+
+[badges]
+travis-ci = { repository = "rust-random/rand" }
+appveyor = { repository = "rust-random/rand" }
+
+[features]
+serde1 = ["serde", "serde_derive"]
+
+[dependencies]
+rand_core = { version = "0.3", default-features=false }
+serde = { version = "1", optional = true }
+serde_derive = { version = "^1.0.38", optional = true }
+
+[dev-dependencies]
+# This is for testing serde, unfortunately we can't specify feature-gated dev
+# deps yet, see: https://github.com/rust-lang/cargo/issues/1596
+bincode = { version = "1" }
+
+[build-dependencies]
+rustc_version = "0.2"
