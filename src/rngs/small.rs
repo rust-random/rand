@@ -25,8 +25,7 @@ type Rng = ::rand_pcg::Pcg32;
 /// different output. Further, this generator may not be portable and can
 /// produce different output depending on the architecture. If you require
 /// reproducible output, use a named RNG. Refer to the documentation on the
-/// [`prng` module](../../prng.index.html) or the
-/// [small-rngs repo](https://github.com/rust-random/small-rngs).
+/// [`prng` module](../prng/index.html).
 ///
 /// The current algorithm is [`Pcg64Mcg`] on 64-bit platforms with Rust version
 /// 1.26 and later, or [`Pcg32`] otherwise.
