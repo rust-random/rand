@@ -22,14 +22,16 @@ appveyor = { repository = "rust-random/rand" }
 serde1 = ["serde", "serde_derive"]
 
 [dependencies]
-rand_core = { version = "0.3", default-features=false }
+rand_core = { path = "../rand_core", version = "0.3", default-features=false }
 serde = { version = "1", optional = true }
 serde_derive = { version = "^1.0.38", optional = true }
 
 [dev-dependencies]
 # This is for testing serde, unfortunately we can't specify feature-gated dev
 # deps yet, see: https://github.com/rust-lang/cargo/issues/1596
-bincode = { version = "1" }
+# TODO: we shouldn't have to depend on i128 directly; it breaks tests on old
+# compilers. `bincode` should automatically support this.
+bincode = { version = "1", features = ["i128"] }
 
 [build-dependencies]
 rustc_version = "0.2"

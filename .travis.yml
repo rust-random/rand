@@ -60,6 +60,19 @@ matrix:
   include:
     - rust: 1.22.0
       env: DESCRIPTION="pinned stable Rust release"
+      script:
+        # Differs from standard script: rand_pcg features
+        - cargo test --lib --no-default-features
+        # TODO: add simd_support feature:
+        - cargo test --features=serde1,log
+        - cargo test --examples
+        - cargo test --manifest-path rand_core/Cargo.toml
+        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+        - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
+        # TODO: cannot test rand_pcg due to explicit dependency on i128
+        - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_chacha/Cargo.toml
+        - cargo test --manifest-path rand_hc128/Cargo.toml
 
     - rust: stable
       env: DESCRIPTION="stable Rust release, macOS, iOS (cross-compile only)"
