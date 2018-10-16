@@ -53,11 +53,10 @@
 // 5. proven cryptographic quality (e.g. ChaCha20)
 // 4. potentially cryptographic, but low margin or lack of theory (e.g. ChaCha8, ISAAC)
 // 3. good performance on TestU01 and PractRand, good theory
-//    (e.g. PCG, truncated Xorshift*)
 // 2. imperfect performance on tests or other limiting properties, or
-//    insufficient theory, but not terrible (e.g. SFC, Xoshiro, Xoroshiro128+)
+//    insufficient theory, but not terrible
 // 1. clear deficiencies in test results, cycle length, theory, or other
-//    properties (e.g. Xorshift)
+//    properties
 //
 // Performance stars [not rendered in documentation]:
 // Meant to give an indication of relative performance. Roughly follows a log
