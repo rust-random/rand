@@ -48,9 +48,6 @@
 //!
 //! - [`SmallRng`] is a PRNG chosen for low memory usage, high performance and
 //!   good statistical quality.
-//!   The current algorithm (plain Xorshift) unfortunately performs
-//!   poorly in statistical quality test suites (TestU01 and PractRand) and will
-//!   be replaced in the next major release.
 //! - [`StdRng`] is a CSPRNG chosen for good performance and trust of security
 //!   (based on reviews, maturity and usage). The current algorithm is HC-128,
 //!   which is one of the recommendations by ECRYPT's eSTREAM project.

@@ -45,18 +45,18 @@
 //!
 //! | name | full name | performance | memory | quality | period | features |
 //! |------|-----------|-------------|--------|---------|--------|----------|
-//! | [`XorShiftRng`] | Xorshift 32/128 | ★★★☆☆ | 16 bytes | ★☆☆☆☆ | `u32` * 2<sup>128</sup> - 1 | — |
+//! | [`Pcg32`] | PCG XSH RR 64/32 (LCG) | ★★★☆☆ | 16 bytes | ★★★☆☆ | `u32` * 2<sup>64</sup> | — |
+//! | [`Pcg64Mcg`] | PCG XSL 128/64 (MCG) | ★★★★☆ | 16 bytes | ★★★☆☆ | `u64` * 2<sup>126</sup> | — |
+//! | [`XorShiftRng`] | Xorshift 32/128 | ★★★★☆ | 16 bytes | ★☆☆☆☆ | `u32` * 2<sup>128</sup> - 1 | — |
 //!
 // Quality stars [not rendered in documentation]:
-// 5. reserved for crypto-level (e.g. ChaCha8, ISAAC)
-// 4. good performance on TestU01 and PractRand, good theory
-//    (e.g. PCG, truncated Xorshift*)
-// 3. good performance on TestU01 and PractRand, but "falling through the
-//    cracks" or insufficient theory (e.g. SFC, Xoshiro)
-// 2. imperfect performance on tests or other limiting properties, but not
-//    terrible (e.g. Xoroshiro128+)
+// 5. proven cryptographic quality (e.g. ChaCha20)
+// 4. potentially cryptographic, but low margin or lack of theory (e.g. ChaCha8, ISAAC)
+// 3. good performance on TestU01 and PractRand, good theory
+// 2. imperfect performance on tests or other limiting properties, or
+//    insufficient theory, but not terrible
 // 1. clear deficiencies in test results, cycle length, theory, or other
-//    properties (e.g. Xorshift)
+//    properties
 //
 // Performance stars [not rendered in documentation]:
 // Meant to give an indication of relative performance. Roughly follows a log
@@ -297,6 +297,8 @@
 //! [`rngs` module]: ../rngs/index.html
 //! [basic PRNGs]: #basic-pseudo-random-number-generators-prngs
 //! [CSPRNGs]: #cryptographically-secure-pseudo-random-number-generators-csprngs
+//! [`Pcg32`]: ../../rand_pcg/type.Pcg32.html
+//! [`Pcg64Mcg`]: ../../rand_pcg/type.Pcg64Mcg.html
 //! [`XorShiftRng`]: ../../rand_xorshift/struct.XorShiftRng.html
 //! [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
 //! [`Hc128Rng`]: ../../rand_hc128/struct.Hc128Rng.html
