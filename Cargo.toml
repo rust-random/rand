@@ -13,6 +13,7 @@ Random number generators and other randomness functionality.
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 build = "build.rs"
+exclude = ["/utils/*", "/.travis.yml", "/appveyor.yml"]
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
