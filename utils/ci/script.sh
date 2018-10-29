@@ -13,7 +13,7 @@ main() {
     cross test --target $TARGET --manifest-path rand_pcg/Cargo.toml --features=serde1
     cross test --target $TARGET --manifest-path rand_xorshift/Cargo.toml --features=serde1
     cross test --target $TARGET --manifest-path rand_chacha/Cargo.toml
-    cross test --target $TARGET --manifest-path rand_hc128/Cargo.toml
+    cross test --target $TARGET --manifest-path rand_hc/Cargo.toml
 }
 
 # we don't run the "test phase" when doing deploys

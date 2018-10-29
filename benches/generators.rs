@@ -12,7 +12,7 @@ extern crate test;
 extern crate rand;
 extern crate rand_isaac;
 extern crate rand_chacha;
-extern crate rand_hc128;
+extern crate rand_hc;
 extern crate rand_pcg;
 extern crate rand_xorshift;
 
@@ -27,7 +27,7 @@ use rand::rngs::adapter::ReseedingRng;
 use rand::rngs::{OsRng, JitterRng, EntropyRng};
 use rand_isaac::{IsaacRng, Isaac64Rng};
 use rand_chacha::ChaChaRng;
-use rand_hc128::{Hc128Rng, Hc128Core};
+use rand_hc::{Hc128Rng, Hc128Core};
 use rand_pcg::{Lcg64Xsh32, Mcg128Xsl64};
 use rand_xorshift::XorShiftRng;
 

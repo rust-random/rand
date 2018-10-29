@@ -10,7 +10,7 @@
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://docs.rs/rand_hc128/0.1.0")]
+       html_root_url = "https://docs.rs/rand_hc/0.1.0")]
 
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]

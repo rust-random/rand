@@ -301,7 +301,7 @@
 //! [`Pcg64Mcg`]: ../../rand_pcg/type.Pcg64Mcg.html
 //! [`XorShiftRng`]: ../../rand_xorshift/struct.XorShiftRng.html
 //! [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
-//! [`Hc128Rng`]: ../../rand_hc128/struct.Hc128Rng.html
+//! [`Hc128Rng`]: ../../rand_hc/struct.Hc128Rng.html
 //! [`IsaacRng`]: ../../rand_isaac/isaac/struct.IsaacRng.html
 //! [`Isaac64Rng`]: ../../rand_isaac/isaac64/struct.Isaac64Rng.html
 //! [`ThreadRng`]: ../rngs/struct.ThreadRng.html
