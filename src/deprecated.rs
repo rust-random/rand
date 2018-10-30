@@ -15,7 +15,7 @@ use {RngCore, CryptoRng, SeedableRng, Error};
 use rand_core::block::BlockRngCore;
 use rand_isaac;
 use rand_chacha;
-use rand_hc128;
+use rand_hc;
 
 #[cfg(feature="std")]
 use std::io::Read;
@@ -170,8 +170,8 @@ impl CryptoRng for ChaChaRng {}
 
 
 #[derive(Clone, Debug)]
-#[deprecated(since="0.6.0", note="import from rand_hc128 crate instead")]
-pub struct Hc128Rng(rand_hc128::Hc128Rng);
+#[deprecated(since="0.6.0", note="import from rand_hc crate instead")]
+pub struct Hc128Rng(rand_hc::Hc128Rng);
 
 impl RngCore for Hc128Rng {
     #[inline(always)]
@@ -196,14 +196,14 @@ impl RngCore for Hc128Rng {
 }
 
 impl SeedableRng for Hc128Rng {
-    type Seed = <rand_hc128::Hc128Rng as SeedableRng>::Seed;
+    type Seed = <rand_hc::Hc128Rng as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        Hc128Rng(rand_hc128::Hc128Rng::from_seed(seed))
+        Hc128Rng(rand_hc::Hc128Rng::from_seed(seed))
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        rand_hc128::Hc128Rng::from_rng(rng).map(Hc128Rng)
+        rand_hc::Hc128Rng::from_rng(rng).map(Hc128Rng)
     }
 }
 

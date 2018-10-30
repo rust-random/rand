@@ -13,7 +13,7 @@ use std::cell::UnsafeCell;
 use {RngCore, CryptoRng, SeedableRng, Error};
 use rngs::adapter::ReseedingRng;
 use rngs::EntropyRng;
-use rand_hc128::Hc128Core;
+use rand_hc::Hc128Core;
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
 //
@@ -68,7 +68,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32*1024*1024; // 32 MiB
 /// [`ReseedingRng`]: adapter/struct.ReseedingRng.html
 /// [`StdRng`]: struct.StdRng.html
 /// [`EntropyRng`]: struct.EntropyRng.html
-/// [HC-128]: ../../rand_hc128/struct.Hc128Rng.html
+/// [HC-128]: ../../rand_hc/struct.Hc128Rng.html
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
     // use of raw pointer implies type is neither Send nor Sync

@@ -80,7 +80,7 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// ```
 ///
 /// [`ChaChaCore`]: ../../../rand_chacha/struct.ChaChaCore.html
-/// [`Hc128Core`]: ../../../rand_hc128/struct.Hc128Core.html
+/// [`Hc128Core`]: ../../../rand_hc/struct.Hc128Core.html
 /// [`BlockRngCore`]: ../../../rand_core/block/trait.BlockRngCore.html
 /// [`ReseedingRng::new`]: struct.ReseedingRng.html#method.new
 /// [`reseed()`]: struct.ReseedingRng.html#method.reseed

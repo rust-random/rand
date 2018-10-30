@@ -72,7 +72,7 @@ matrix:
         # TODO: cannot test rand_pcg due to explicit dependency on i128
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_chacha/Cargo.toml
-        - cargo test --manifest-path rand_hc128/Cargo.toml
+        - cargo test --manifest-path rand_hc/Cargo.toml
 
     - rust: stable
       env: DESCRIPTION="stable Rust release, macOS, iOS (cross-compile only)"
@@ -91,7 +91,7 @@ matrix:
         - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_chacha/Cargo.toml
-        - cargo test --manifest-path rand_hc128/Cargo.toml
+        - cargo test --manifest-path rand_hc/Cargo.toml
         - cargo build --target=aarch64-apple-ios
 
     - rust: beta
@@ -116,7 +116,7 @@ matrix:
         - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_chacha/Cargo.toml
-        - cargo test --manifest-path rand_hc128/Cargo.toml
+        - cargo test --manifest-path rand_hc/Cargo.toml
         # remove cached documentation, otherwise files from previous PRs can get included
         - rm -rf target/doc
         - cargo doc --no-deps --all --all-features
@@ -199,7 +199,7 @@ script:
   - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_chacha/Cargo.toml
-  - cargo test --manifest-path rand_hc128/Cargo.toml
+  - cargo test --manifest-path rand_hc/Cargo.toml
 
 after_script: set +e
 

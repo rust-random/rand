@@ -29,7 +29,7 @@ simd_support = ["packed_simd"] # enables SIMD support
 serde1 = ["rand_core/serde1", "rand_isaac/serde1", "rand_xorshift/serde1"] # enables serialization for PRNGs
 
 [workspace]
-members = ["rand_core", "rand_isaac", "rand_chacha", "rand_hc128", "rand_pcg", "rand_xorshift"]
+members = ["rand_core", "rand_isaac", "rand_chacha", "rand_hc", "rand_pcg", "rand_xorshift"]
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.3", default-features = false }
@@ -37,7 +37,7 @@ rand_pcg = { path = "rand_pcg", version = "0.1" }
 # only for deprecations and benches:
 rand_isaac = { path = "rand_isaac", version = "0.1" }
 rand_chacha = { path = "rand_chacha", version = "0.1" }
-rand_hc128 = { path = "rand_hc128", version = "0.1" }
+rand_hc = { path = "rand_hc", version = "0.1" }
 rand_xorshift = { path = "rand_xorshift", version = "0.1" }
 log = { version = "0.4", optional = true }
 
