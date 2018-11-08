@@ -13,13 +13,14 @@ Rand provides utilities to generate random numbers, to convert them to useful
 types and distributions, and some randomness-related algorithms.
 
 The core random number generation traits of Rand live in the [rand_core](
-https://crates.io/crates/rand_core) crate; this crate is most useful when
-implementing RNGs.
+https://crates.io/crates/rand_core) crate but are also exposed here; RNG
+implementations should prefer to use `rand_core` while most other users should
+depend on `rand`.
 
 Documentation:
--   [API reference for latest release](https://docs.rs/rand/0.5)
--   [API reference for master branch](https://rust-random.github.io/rand/rand/index.html)
--   [Additional documentation (subdir)](doc/README.md)
+-   [The Rust Rand Book](https://rust-random.github.io/book/)
+-   [API reference for the latest release](https://docs.rs/rand/)
+-   [API reference for the master branch](https://rust-random.github.io/rand/)
 
 
 ## Usage
@@ -28,78 +29,34 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.5"
+rand = "0.6"
 ```
 
-and this to your crate root:
-
-```rust
-extern crate rand;
-
-use rand::prelude::*;
-
-fn main() {
-  // basic usage with random():
-  let x: u8 = random();
-  println!("{}", x);
-
-  let y = random::<f64>();
-  println!("{}", y);
-
-  if random() { // generates a boolean
-      println!("Heads!");
-  }
-
-  // normal usage needs both an RNG and a function to generate the appropriate
-  // type, range, distribution, etc.
-  let mut rng = thread_rng();
-  if rng.gen() { // random bool
-      let x: f64 = rng.gen(); // random number in range [0, 1)
-      println!("x is: {}", x);
-      let ch = rng.gen::<char>(); // Sometimes you need type annotation
-      println!("char is: {}", ch);
-      println!("Number from 0 to 9: {}", rng.gen_range(0, 10));
-  }
-}
-```
-
-## Functionality
-
-The Rand crate provides:
-
-- A convenient to use default RNG, `thread_rng`: an automatically seeded,
-  crypto-grade generator stored in thread-local memory.
-- Pseudo-random number generators: `StdRng`, `SmallRng`, `prng` module.
-- Functionality for seeding PRNGs: the `FromEntropy` trait, and as sources of
-  external randomness `EntropyRng`, `OsRng` and `JitterRng`.
-- Most content from [`rand_core`](https://crates.io/crates/rand_core)
-  (re-exported): base random number generator traits and error-reporting types.
-- 'Distributions' producing many different types of random values:
-  - A `Standard` distribution for integers, floats, and derived types including
-    tuples, arrays and `Option`
-  - Unbiased sampling from specified `Uniform` ranges.
-  - Sampling from exponential/normal/gamma distributions.
-  - Sampling from binomial/poisson distributions.
-  - `gen_bool` aka Bernoulli distribution.
-- `seq`-uence related functionality:
-  - Sampling a subset of elements.
-  - Randomly shuffling a list.
+To get started using Rand, see [The Book](https://rust-random.github.io/book/).
 
 
 ## Versions
 
-Version 0.5 is the latest version and contains many breaking changes.
-See [the Upgrade Guide](UPDATING.md) for guidance on updating from previous
-versions.
+The Rand lib is not yet stable, however we are careful to limit breaking changes
+and warn via deprecation wherever possible. Patch versions never introduce
+breaking changes. The following minor versions are supported:
 
-Version 0.4 was released in December 2017. It contains almost no breaking
-changes since the 0.3 series.
+-   Version 0.6 was released in November 2018, redesigning the `seq` module,
+    moving most PRNGs to external crates, and many small changes.
+-   Version 0.5 was released in May 2018, as a major reorganisation
+    (introducing `RngCore` and `rand_core`, and deprecating `Rand` and the
+    previous distribution traits).
+-   Version 0.4 was released in December 2017, but contained almost no breaking
+    changes from the 0.3 series.
 
-For more details, see the [changelog](CHANGELOG.md).
+A detailed [changelog](CHANGELOG.md) is available.
+
+When upgrading to the next minor series (especially 0.4 → 0.5), we recommend
+reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
 
 ### Rust version requirements
 
-The 0.5 release of Rand requires **Rustc version 1.22 or greater**.
+The since version 0.5, Rand requires **Rustc version 1.22 or greater**.
 Rand 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
 greater. Subsets of the Rand code may work with older Rust versions, but this
 is not supported.
@@ -108,6 +65,11 @@ Travis CI always has a build with a pinned version of Rustc matching the oldest
 supported Rust release. The current policy is that this can be updated in any
 Rand release if required, but the change must be noted in the changelog.
 
+To avoid bumping the required version unnecessarily, we use a `build.rs` script
+to auto-detect the compiler version and enable certain features or change code
+paths automatically. Since this makes it easy to unintentionally make use of
+features requiring a more recent Rust version, we recommend testing with a
+pinned version of Rustc if you require compatibility with a specific version.
 
 ## Crate Features
 
@@ -137,9 +99,10 @@ functionality depending on `std`:
 - Since no external entropy is available, it is not possible to create
   generators with fresh seeds using the `FromEntropy` trait (user must provide
   a seed).
-- Exponential, normal and gamma type distributions are unavailable since `exp`
+- Several non-linear distributions distributions are unavailable since `exp`
   and `log` functions are not provided in `core`.
-- The `seq`-uence module is unavailable, as it requires `Vec`.
+- Large parts of the `seq`-uence module are unavailable, unless the `alloc`
+  feature is used (several APIs and many implementations require `Vec`).
 
 
 # License

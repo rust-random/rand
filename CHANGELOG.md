@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
-You may also find the [Update Guide](UPDATING.md) useful.
+You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 
 ## [0.6.0] - Unreleased
@@ -14,6 +14,8 @@ You may also find the [Update Guide](UPDATING.md) useful.
 ### Project organisation
 - Rand has moved from [rust-lang-nursery](https://github.com/rust-lang-nursery/rand)
   to [rust-random](https://github.com/rust-random/rand)! (#578)
+- Created [The Rust Random Book](https://rust-random.github.io/book/)
+  ([source](https://github.com/rust-random/book))
 - Update copyright and licence notices (#591, #611)
 - Migrate policy documentation from the wiki (#544)
 
