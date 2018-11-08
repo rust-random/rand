@@ -63,6 +63,8 @@ impl Distribution<f64> for Exp1 {
 ///
 /// This distribution has density function: `f(x) = lambda * exp(-lambda * x)`
 /// for `x > 0`.
+/// 
+/// Note that [`Exp1`](struct.Exp1.html) is an optimised implementation for `lambda = 1`.
 ///
 /// # Example
 ///
