@@ -56,7 +56,7 @@ reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
 
 ### Rust version requirements
 
-The since version 0.5, Rand requires **Rustc version 1.22 or greater**.
+Since version 0.5, Rand requires **Rustc version 1.22 or greater**.
 Rand 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
 greater. Subsets of the Rand code may work with older Rust versions, but this
 is not supported.

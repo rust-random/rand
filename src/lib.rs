@@ -31,7 +31,7 @@
 //! let mut rng = rand::thread_rng();
 //! let y: f64 = rng.gen(); // generates a float between 0 and 1
 //!
-//! let nums: Vec<i32> = (1..100).collect();
+//! let mut nums: Vec<i32> = (1..100).collect();
 //! nums.shuffle(&mut rng);
 //! ```
 //!
