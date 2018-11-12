@@ -9,7 +9,7 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 
-## [0.6.0] - Unreleased
+## [0.6.0] - 2018-11-14
 
 ### Project organisation
 - Rand has moved from [rust-lang-nursery](https://github.com/rust-lang-nursery/rand)

@@ -102,6 +102,7 @@ pub use rand_core::{ErrorKind, Error};
 // Public modules
 pub mod distributions;
 pub mod prelude;
+#[deprecated(since="0.6.0")]
 pub mod prng;
 pub mod rngs;
 pub mod seq;
