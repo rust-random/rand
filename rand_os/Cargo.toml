@@ -1,0 +1,32 @@
+[package]
+name = "rand_os"
+version = "0.1.0" # NB: When modifying, also modify html_root_url in lib.rs
+authors = ["The Rand Project Developers"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/rust-random/rand"
+documentation = "https://docs.rs/rand_ps"
+homepage = "https://crates.io/crates/rand_os"
+description = "OS backed Random Number Generator"
+keywords = ["random", "rng", "os"]
+
+[badges]
+travis-ci = { repository = "rust-random/rand" }
+appveyor = { repository = "rust-random/rand" }
+
+[dependencies]
+rand_core = { path = "../rand_core", version = "0.3", default-features=false }
+log = { version = "0.4", optional = true }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+cloudabi = "0.0.3"
+
+[target.'cfg(target_os = "fuchsia")'.dependencies]
+fuchsia-zircon = "0.3.2"
+
+[target.wasm32-unknown-unknown.dependencies]
+stdweb = { version = "0.4", optional = true }
+wasm-bindgen = { version = "0.2.12", optional = true }

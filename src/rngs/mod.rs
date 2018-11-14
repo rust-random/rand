@@ -178,40 +178,5 @@ pub use self::small::SmallRng;
 pub use self::std::StdRng;
 #[cfg(feature="std")] pub use self::thread::ThreadRng;
 
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
-mod os;
-
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
-pub use self::os::OsRng;
+#[cfg(all(feature="std", feature="rand_os"))]
+pub use rand_os::OsRng;

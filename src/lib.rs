@@ -13,7 +13,7 @@
 //! useful types and distributions, and some randomness-related algorithms.
 //!
 //! # Quick Start
-//! 
+//!
 //! To get you started quickly, the easiest and highest-level way to get
 //! a random value is to use [`random()`]; alternatively you can use
 //! [`thread_rng()`]. The [`Rng`] trait provides a useful API on all RNGs, while
@@ -22,7 +22,7 @@
 //!
 //! ```
 //! use rand::prelude::*;
-//! 
+//!
 //! if rand::random() { // generates a boolean
 //!     // Try printing a random unicode code point (probably a bad idea)!
 //!     println!("char: {}", rand::random::<char>());
@@ -36,7 +36,7 @@
 //! ```
 //!
 //! # The Book
-//! 
+//!
 //! For the user guide and futher documentation, please read
 //! [The Rust Rand Book](https://rust-random.github.io/book).
 //!
@@ -69,8 +69,8 @@
 #[macro_use]
 extern crate stdweb;
 
-#[cfg(all(target_arch = "wasm32", feature = "wasm-bindgen"))]
-extern crate wasm_bindgen;
+#[cfg(feature = "rand_os")]
+extern crate rand_os;
 
 extern crate rand_core;
 extern crate rand_isaac;    // only for deprecations

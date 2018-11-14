@@ -20,20 +20,21 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [features]
-default = ["std" ] # without "std" rand uses libcore
+default = ["std", "rand_os"] # without "std" rand uses libcore
 nightly = ["simd_support"] # enables all features requiring nightly rust
-std = ["rand_core/std", "alloc", "libc", "winapi", "cloudabi", "fuchsia-zircon"]
+std = ["rand_core/std", "alloc"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 i128_support = [] # enables i128 and u128 support
 simd_support = ["packed_simd"] # enables SIMD support
 serde1 = ["rand_core/serde1", "rand_isaac/serde1", "rand_xorshift/serde1"] # enables serialization for PRNGs
 
 [workspace]
-members = ["rand_core", "rand_isaac", "rand_chacha", "rand_hc", "rand_pcg", "rand_xorshift"]
+members = ["rand_core", "rand_os", "rand_isaac", "rand_chacha", "rand_hc", "rand_pcg", "rand_xorshift"]
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.3", default-features = false }
 rand_pcg = { path = "rand_pcg", version = "0.1" }
+rand_os = { path = "rand_os", version = "0.1", optional = true  }
 # only for deprecations and benches:
 rand_isaac = { path = "rand_isaac", version = "0.1" }
 rand_chacha = { path = "rand_chacha", version = "0.1" }
@@ -49,21 +50,7 @@ optional = true
 features = ["into_bits"]
 
 [target.'cfg(unix)'.dependencies]
-libc = { version = "0.2", optional = true }
-
-[target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"], optional = true }
-
-[target.'cfg(target_os = "cloudabi")'.dependencies]
-cloudabi = { version = "0.0.3", optional = true }
-
-[target.'cfg(target_os = "fuchsia")'.dependencies]
-fuchsia-zircon = { version = "0.3.2", optional = true }
-
-[target.wasm32-unknown-unknown.dependencies]
-# use with `--target wasm32-unknown-unknown --features=stdweb`
-stdweb = { version = "0.4", optional = true }
-wasm-bindgen = { version = "0.2.12", optional = true }
+libc = "0.2"
 
 [dev-dependencies]
 # This has a histogram implementation used for testing uniformity.
