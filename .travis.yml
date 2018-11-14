@@ -71,6 +71,7 @@ matrix:
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         # TODO: cannot test rand_pcg due to explicit dependency on i128
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_xoshiro/Cargo.toml
         - cargo test --manifest-path rand_chacha/Cargo.toml
         - cargo test --manifest-path rand_hc/Cargo.toml
 
@@ -90,6 +91,7 @@ matrix:
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_xoshiro/Cargo.toml
         - cargo test --manifest-path rand_chacha/Cargo.toml
         - cargo test --manifest-path rand_hc/Cargo.toml
         - cargo build --target=aarch64-apple-ios
@@ -115,6 +117,7 @@ matrix:
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_xoshiro/Cargo.toml
         - cargo test --manifest-path rand_chacha/Cargo.toml
         - cargo test --manifest-path rand_hc/Cargo.toml
         # remove cached documentation, otherwise files from previous PRs can get included
@@ -198,6 +201,7 @@ script:
   - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+  - cargo test --manifest-path rand_xoshiro/Cargo.toml
   - cargo test --manifest-path rand_chacha/Cargo.toml
   - cargo test --manifest-path rand_hc/Cargo.toml
 
