@@ -14,3 +14,6 @@ categories = ["algorithms"]
 [dependencies]
 byteorder = "1"
 rand_core = { path = "../rand_core", version = "0.3", default-features=false }
+
+[dev-dependencies]
+rand = { path = "..", default-features=false }  # needed for doctests
