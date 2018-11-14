@@ -15,6 +15,7 @@ extern crate rand_chacha;
 extern crate rand_hc;
 extern crate rand_pcg;
 extern crate rand_xorshift;
+extern crate rand_xoshiro;
 
 const RAND_BENCH_N: u64 = 1000;
 const BYTES_LEN: usize = 1024;
@@ -30,6 +31,7 @@ use rand_chacha::ChaChaRng;
 use rand_hc::{Hc128Rng, Hc128Core};
 use rand_pcg::{Lcg64Xsh32, Mcg128Xsl64};
 use rand_xorshift::XorShiftRng;
+use rand_xoshiro::Xoshiro256StarStar;
 
 macro_rules! gen_bytes {
     ($fnn:ident, $gen:expr) => {
@@ -49,6 +51,7 @@ macro_rules! gen_bytes {
 }
 
 gen_bytes!(gen_bytes_xorshift, XorShiftRng::from_entropy());
+gen_bytes!(gen_bytes_xoshiro256, Xoshiro256StarStar::from_entropy());
 gen_bytes!(gen_bytes_lcg64_xsh32, Lcg64Xsh32::from_entropy());
 gen_bytes!(gen_bytes_mcg128_xsh64, Mcg128Xsl64::from_entropy());
 gen_bytes!(gen_bytes_chacha20, ChaChaRng::from_entropy());
@@ -77,6 +80,7 @@ macro_rules! gen_uint {
 }
 
 gen_uint!(gen_u32_xorshift, u32, XorShiftRng::from_entropy());
+gen_uint!(gen_u32_xoshiro256, u32, Xoshiro256StarStar::from_entropy());
 gen_uint!(gen_u32_lcg64_xsh32, u32, Lcg64Xsh32::from_entropy());
 gen_uint!(gen_u32_mcg128_xsh64, u32, Mcg128Xsl64::from_entropy());
 gen_uint!(gen_u32_chacha20, u32, ChaChaRng::from_entropy());
@@ -88,6 +92,7 @@ gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng::new().unwrap());
 
 gen_uint!(gen_u64_xorshift, u64, XorShiftRng::from_entropy());
+gen_uint!(gen_u64_xoshiro256, u64, Xoshiro256StarStar::from_entropy());
 gen_uint!(gen_u64_lcg64_xsh32, u64, Lcg64Xsh32::from_entropy());
 gen_uint!(gen_u64_mcg128_xsh64, u64, Mcg128Xsl64::from_entropy());
 gen_uint!(gen_u64_chacha20, u64, ChaChaRng::from_entropy());
@@ -123,6 +128,7 @@ macro_rules! init_gen {
 }
 
 init_gen!(init_xorshift, XorShiftRng);
+init_gen!(init_xoshiro256, Xoshiro256StarStar);
 init_gen!(init_lcg64_xsh32, Lcg64Xsh32);
 init_gen!(init_mcg128_xsh64, Mcg128Xsl64);
 init_gen!(init_hc128, Hc128Rng);

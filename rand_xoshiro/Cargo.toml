@@ -11,14 +11,6 @@ description = "Xoshiro, xoroshiro and splitmix64 random number generators"
 keywords = ["random", "rng"]
 categories = ["algorithms"]
 
-[[bench]]
-harness = false
-name = "bench"
-
 [dependencies]
 byteorder = "1"
-rand_core = "0.2"
-
-[dev-dependencies]
-bencher = "0.1.5"
-rand = "0.5"
+rand_core = { path = "../rand_core", version = "0.3", default-features=false }
