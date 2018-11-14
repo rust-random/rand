@@ -74,8 +74,11 @@ impl Distribution<f64> for StandardNormal {
 
 /// The normal distribution `N(mean, std_dev**2)`.
 ///
-/// This uses the ZIGNOR variant of the Ziggurat method, see `StandardNormal`
+/// This uses the ZIGNOR variant of the Ziggurat method, see [`StandardNormal`]
 /// for more details.
+/// 
+/// Note that [`StandardNormal`] is an optimised implementation for mean 0, and
+/// standard deviation 1.
 ///
 /// # Example
 ///
@@ -87,6 +90,8 @@ impl Distribution<f64> for StandardNormal {
 /// let v = normal.sample(&mut rand::thread_rng());
 /// println!("{} is from a N(2, 9) distribution", v)
 /// ```
+///
+/// [`StandardNormal`]: struct.StandardNormal.html
 #[derive(Clone, Copy, Debug)]
 pub struct Normal {
     mean: f64,
