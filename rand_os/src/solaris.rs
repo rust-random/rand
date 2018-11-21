@@ -19,6 +19,7 @@ use std::io::Read;
 use std::fs::{File, OpenOptions};
 use std::os::unix::fs::OpenOptionsExt;
 use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
+use std::cmp;
 
 #[derive(Clone, Debug)]
 pub struct OsRng {
@@ -62,7 +63,7 @@ impl OsRngImpl for OsRng {
         }
         if self.initialized { return Ok(0); }
 
-        let chunk_len = ::core::cmp::min(1024, dest.len());
+        let chunk_len = cmp::min(1024, dest.len());
         let dest = &mut dest[..chunk_len];
 
         match self.method {
