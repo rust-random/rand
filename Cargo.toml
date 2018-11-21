@@ -50,7 +50,7 @@ optional = true
 features = ["into_bits"]
 
 [target.'cfg(unix)'.dependencies]
-libc = "0.2"
+libc = "0.2
 
 [dev-dependencies]
 # This has a histogram implementation used for testing uniformity.
