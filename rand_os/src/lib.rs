@@ -271,60 +271,50 @@ trait OsRngImpl where Self: Sized {
           target_os = "haiku", target_os = "emscripten"))]
 mod random_device;
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
-mod linux_android;
-#[cfg(any(target_os = "linux", target_os = "android"))]
-use linux_android as imp;
+macro_rules! mod_use {
+    ($cond:meta, $module:ident) => {
+        #[$cond]
+        mod $module;
+        #[$cond]
+        use $module as imp;
+    }
+}
 
-#[cfg(target_os = "netbsd")] mod netbsd;
-#[cfg(target_os = "netbsd")] use netbsd as imp;
+mod_use!(cfg(target_os = "linux"), linux_android);
+mod_use!(cfg(target_os = "android"), linux_android);
+mod_use!(cfg(target_os = "netbsd"), netbsd);
+mod_use!(cfg(target_os = "freebsd"), freebsd);
+mod_use!(cfg(target_os = "solaris"), solaris);
+mod_use!(cfg(target_os = "cloudabi"), cloudabi);
+mod_use!(cfg(target_os = "redox"), redox);
+mod_use!(cfg(target_os = "fuchsia"), fuchsia);
+mod_use!(cfg(target_os = "windows"), windows);
+mod_use!(cfg(target_os = "macos"), macos);
+mod_use!(cfg(target_os = "ios"), macos);
+mod_use!(cfg(target_os = "openbsd"), openbsd_bitrig);
+mod_use!(cfg(target_os = "bitrig"), openbsd_bitrig);
+mod_use!(cfg(target_os = "dragonfly"), dragonfly_haiku_emscripten);
+mod_use!(cfg(target_os = "haiku"), dragonfly_haiku_emscripten);
+mod_use!(cfg(target_os = "emscripten"), dragonfly_haiku_emscripten);
 
-#[cfg(any(target_os = "dragonfly", target_os = "haiku", target_os = "emscripten"))]
-mod dragonfly_haiku_emscripten;
-#[cfg(any(target_os = "dragonfly", target_os = "haiku", target_os = "emscripten"))]
-use dragonfly_haiku_emscripten as imp;
+mod_use!(
+    cfg(all(
+        target_arch = "wasm32",
+        not(target_os = "emscripten"),
+        feature = "wasm-bindgen"
+    )),
+    wasm32_bindgen
+);
 
-#[cfg(target_os = "solaris")] mod solaris;
-#[cfg(target_os = "solaris")] use solaris as imp;
-
-#[cfg(target_os = "cloudabi")] mod cloudabi;
-#[cfg(target_os = "cloudabi")] use cloudabi as imp;
-
-#[cfg(any(target_os = "macos", target_os = "ios"))] mod macos;
-#[cfg(any(target_os = "macos", target_os = "ios"))] use macos as imp;
-
-#[cfg(target_os = "freebsd")] mod freebsd;
-#[cfg(target_os = "freebsd")] use freebsd as imp;
-
-#[cfg(any(target_os = "openbsd", target_os = "bitrig"))]
-mod openbsd_bitrig;
-#[cfg(any(target_os = "openbsd", target_os = "bitrig"))]
-use openbsd_bitrig as imp;
-
-#[cfg(target_os = "redox")] mod redox;
-#[cfg(target_os = "redox")] use redox as imp;
-
-#[cfg(target_os = "fuchsia")] mod fuchsia;
-#[cfg(target_os = "fuchsia")] use fuchsia as imp;
-
-#[cfg(windows)] mod windows;
-#[cfg(windows)] use windows as imp;
-
-#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
-          feature = "wasm-bindgen"))]
-mod wasm32_bindgen;
-#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
-          feature = "wasm-bindgen"))]
-use wasm32_bindgen as imp;
-
-#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
-          not(feature = "wasm-bindgen"),
-          feature = "stdweb"))]
-mod wasm32_stdweb;
-#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
-          not(feature = "wasm-bindgen"),
-          feature = "stdweb"))]
-use wasm32_stdweb as imp;
+mod_use!(
+    cfg(all(
+        target_arch = "wasm32",
+        not(target_os = "emscripten"),
+        not(feature = "wasm-bindgen"),
+        feature = "stdweb",
+    )),
+    wasm32_stdweb
+);
 
 #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
           not(feature = "wasm-bindgen"),
