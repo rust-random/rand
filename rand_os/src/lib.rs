@@ -280,22 +280,22 @@ macro_rules! mod_use {
     }
 }
 
-mod_use!(cfg(target_os = "linux"), linux_android);
 mod_use!(cfg(target_os = "android"), linux_android);
-mod_use!(cfg(target_os = "netbsd"), netbsd);
-mod_use!(cfg(target_os = "freebsd"), freebsd);
-mod_use!(cfg(target_os = "solaris"), solaris);
-mod_use!(cfg(target_os = "cloudabi"), cloudabi);
-mod_use!(cfg(target_os = "redox"), redox);
-mod_use!(cfg(target_os = "fuchsia"), fuchsia);
-mod_use!(cfg(target_os = "windows"), windows);
-mod_use!(cfg(target_os = "macos"), macos);
-mod_use!(cfg(target_os = "ios"), macos);
-mod_use!(cfg(target_os = "openbsd"), openbsd_bitrig);
 mod_use!(cfg(target_os = "bitrig"), openbsd_bitrig);
+mod_use!(cfg(target_os = "cloudabi"), cloudabi);
 mod_use!(cfg(target_os = "dragonfly"), dragonfly_haiku_emscripten);
-mod_use!(cfg(target_os = "haiku"), dragonfly_haiku_emscripten);
 mod_use!(cfg(target_os = "emscripten"), dragonfly_haiku_emscripten);
+mod_use!(cfg(target_os = "freebsd"), freebsd);
+mod_use!(cfg(target_os = "fuchsia"), fuchsia);
+mod_use!(cfg(target_os = "haiku"), dragonfly_haiku_emscripten);
+mod_use!(cfg(target_os = "ios"), macos);
+mod_use!(cfg(target_os = "linux"), linux_android);
+mod_use!(cfg(target_os = "macos"), macos);
+mod_use!(cfg(target_os = "netbsd"), netbsd);
+mod_use!(cfg(target_os = "openbsd"), openbsd_bitrig);
+mod_use!(cfg(target_os = "redox"), redox);
+mod_use!(cfg(target_os = "solaris"), solaris);
+mod_use!(cfg(windows), windows);
 
 mod_use!(
     cfg(all(
@@ -316,25 +316,31 @@ mod_use!(
     wasm32_stdweb
 );
 
-#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
-          not(feature = "wasm-bindgen"),
-          not(feature = "stdweb")))]
+#[cfg(all(
+    target_arch = "wasm32",
+    not(target_os = "emscripten"),
+    not(feature = "wasm-bindgen"),
+    not(feature = "stdweb"),
+))]
 compile_error!("enable either wasm_bindgen or stdweb feature");
 
 #[cfg(not(any(
-    target_os = "linux", target_os = "android",
-    target_os = "netbsd",
-    target_os = "dragonfly",
-    target_os = "haiku",
-    target_os = "emscripten",
-    target_os = "solaris",
+    target_os = "android",
+    target_os = "bitrig",
     target_os = "cloudabi",
-    target_os = "macos", target_os = "ios",
+    target_os = "dragonfly",
+    target_os = "emscripten",
     target_os = "freebsd",
-    target_os = "openbsd", target_os = "bitrig",
-    target_os = "redox",
     target_os = "fuchsia",
-    target_arch = "wasm32",
+    target_os = "haiku",
+    target_os = "ios",
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "netbsd",
+    target_os = "openbsd",
+    target_os = "redox",
+    target_os = "solaris",
     windows,
+    target_arch = "wasm32",
 )))]
 compile_error!("OS RNG support is not available for this platform");
