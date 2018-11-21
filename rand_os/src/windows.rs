@@ -5,9 +5,9 @@ use super::OsRngImpl;
 
 use std::io;
 
-use winapi::shared::minwindef::ULONG;
-use winapi::um::ntsecapi::RtlGenRandom;
-use winapi::um::winnt::PVOID;
+use self::winapi::shared::minwindef::ULONG;
+use self::winapi::um::ntsecapi::RtlGenRandom;
+use self::winapi::um::winnt::PVOID;
 
 #[derive(Clone, Debug)]
 pub struct OsRng;
