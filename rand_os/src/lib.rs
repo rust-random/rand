@@ -13,13 +13,25 @@
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://docs.rs/rand_os/0.1.0")]
-
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
+// for stdweb
+#![recursion_limit="128"]
+
 pub extern crate rand_core;
 #[cfg(feature = "log")]
 #[macro_use] extern crate log;
+
+// We have to do it here because we load macros
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
+          feature = "wasm-bindgen"))]
+extern crate wasm_bindgen;
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
+          not(feature = "wasm-bindgen"),
+          feature = "stdweb"))]
+#[macro_use] extern crate stdweb;
+
 
 #[cfg(not(feature = "log"))]
 #[macro_use]
@@ -73,8 +85,9 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// Emscripten's emulation of `/dev/random` on web browsers and Node.js.
 ///
 /// The bare Wasm target `wasm32-unknown-unknown` tries to call the javascript
-/// methods directly, using either `stdweb` in combination with `cargo-web` or
-/// `wasm-bindgen` depending on what features are activated for this crate.
+/// methods directly, using either `stdweb` or `wasm-bindgen` depending on what
+/// features are activated for this crate. Note that if both features are
+/// enabled `wasm-bindgen` will be used.
 ///
 /// ## Early boot
 ///
@@ -297,25 +310,26 @@ use openbsd_bitrig as imp;
 #[cfg(windows)] mod windows;
 #[cfg(windows)] use windows as imp;
 
-#[cfg(all(target_arch = "wasm32",
-          not(target_os = "emscripten"),
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
+          feature = "wasm-bindgen"))]
+mod wasm32_bindgen;
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
+          feature = "wasm-bindgen"))]
+use wasm32_bindgen as imp;
+
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
+          not(feature = "wasm-bindgen"),
           feature = "stdweb"))]
 mod wasm32_stdweb;
-#[cfg(all(target_arch = "wasm32",
-          not(target_os = "emscripten"),
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
+          not(feature = "wasm-bindgen"),
           feature = "stdweb"))]
 use wasm32_stdweb as imp;
 
-#[cfg(all(target_arch = "wasm32",
-          not(target_os = "emscripten"),
-          not(feature = "stdweb"),
-          feature = "wasm-bindgen"))]
-mod wasm32_bindgen;
-#[cfg(all(target_arch = "wasm32",
-          not(target_os = "emscripten"),
-          not(feature = "stdweb"),
-          feature = "wasm-bindgen"))]
-use wasm32_bindgen as imp;
+#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten"),
+          not(feature = "wasm-bindgen"),
+          not(feature = "stdweb")))]
+compile_error!("enable either wasm_bindgen or stdweb feature");
 
 #[cfg(not(any(
     target_os = "linux", target_os = "android",
@@ -330,8 +344,7 @@ use wasm32_bindgen as imp;
     target_os = "openbsd", target_os = "bitrig",
     target_os = "redox",
     target_os = "fuchsia",
+    target_arch = "wasm32",
     windows,
-    all(target_arch = "wasm32", feature = "stdweb"),
-    all(target_arch = "wasm32", feature = "wasm-bindgen"),
 )))]
-compile_error!("OS RNG support is not added for this platform");
+compile_error!("OS RNG support is not available for this platform");

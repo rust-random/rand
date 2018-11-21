@@ -1,9 +1,7 @@
-#[macro_use] extern crate stdweb;
-
 use std::mem;
-use self::stdweb::unstable::TryInto;
-use self::stdweb::web::error::Error as WebError;
-use {Error, ErrorKind};
+use stdweb::unstable::TryInto;
+use stdweb::web::error::Error as WebError;
+use rand_core::{Error, ErrorKind};
 use super::OsRngImpl;
 
 #[derive(Clone, Debug)]
