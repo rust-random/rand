@@ -2,10 +2,11 @@
 
 [![Build Status](https://travis-ci.org/rust-random/rand.svg?branch=master)](https://travis-ci.org/rust-random/rand)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/rust-random/rand)
-[![Latest version](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
-[![Documentation](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-random/rand#rust-version-requirements)
-[![License](https://img.shields.io/crates/l/rand.svg)](https://github.com/rust-random/rand#license)
+[![Crate](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
+[![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
+[![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand)
+[![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 A Rust library for random number generation.
 
@@ -18,9 +19,9 @@ implementations should prefer to use `rand_core` while most other users should
 depend on `rand`.
 
 Documentation:
--   [The Rust Rand Book](https://rust-random.github.io/book/)
--   [API reference for the latest release](https://docs.rs/rand/)
--   [API reference for the master branch](https://rust-random.github.io/rand/)
+-   [The Rust Rand Book](https://rust-random.github.io/book)
+-   [API reference (master)](https://rust-random.github.io/rand)
+-   [API reference (docs.rs)](https://docs.rs/rand)
 
 
 ## Usage
@@ -32,7 +33,7 @@ Add this to your `Cargo.toml`:
 rand = "0.6"
 ```
 
-To get started using Rand, see [The Book](https://rust-random.github.io/book/).
+To get started using Rand, see [The Book](https://rust-random.github.io/book).
 
 
 ## Versions
