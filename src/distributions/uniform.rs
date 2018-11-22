@@ -111,6 +111,8 @@
 
 #[cfg(feature = "std")]
 use std::time::Duration;
+#[cfg(all(not(feature = "std"), rust_1_25))]
+use core::time::Duration;
 
 use Rng;
 use distributions::Distribution;
@@ -833,14 +835,14 @@ uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 ///
 /// [`UniformSampler`]: trait.UniformSampler.html
 /// [`Uniform`]: struct.Uniform.html
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", rust_1_25))]
 #[derive(Clone, Copy, Debug)]
 pub struct UniformDuration {
     mode: UniformDurationMode,
     offset: u32,
 }
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", rust_1_25))]
 #[derive(Debug, Copy, Clone)]
 enum UniformDurationMode {
     Small {
@@ -857,12 +859,12 @@ enum UniformDurationMode {
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", rust_1_25))]
 impl SampleUniform for Duration {
     type Sampler = UniformDuration;
 }
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", rust_1_25))]
 impl UniformSampler for UniformDuration {
     type X = Duration;
 
@@ -1206,9 +1208,12 @@ mod tests {
 
 
     #[test]
-    #[cfg(feature = "std")]
+    #[cfg(any(feature = "std", rust_1_25))]
     fn test_durations() {
+        #[cfg(feature = "std")]
         use std::time::Duration;
+        #[cfg(all(not(feature = "std"), rust_1_25))]
+        use core::time::Duration;
 
         let mut rng = ::test::rng(253);
 
