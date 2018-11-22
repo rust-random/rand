@@ -259,7 +259,7 @@ pub trait Rng: RngCore {
         Standard.sample(self)
     }
 
-    /// Generate a random value in the range [`low`, `high`), i.e. inclusive of
+    /// Generate a random value in the range [`low`, `high`], i.e. inclusive of
     /// `low` and exclusive of `high`.
     ///
     /// This function is optimised for the case that only a single sample is
