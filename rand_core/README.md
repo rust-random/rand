@@ -3,9 +3,10 @@
 [![Build Status](https://travis-ci.org/rust-random/rand.svg)](https://travis-ci.org/rust-random/rand)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/rust-random/rand)
 [![Latest version](https://img.shields.io/crates/v/rand_core.svg)](https://crates.io/crates/rand_core)
-[![Documentation](https://docs.rs/rand_core/badge.svg)](https://docs.rs/rand_core)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-random/rand#rust-version-requirements)
-[![License](https://img.shields.io/crates/l/rand_core.svg)](https://github.com/rust-random/rand/tree/master/rand_core#license)
+[![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
+[![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand_core)
+[![API](https://docs.rs/rand_core/badge.svg)](https://docs.rs/rand_core)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 Core traits and error types of the [rand] library, plus tools for implementing
 RNGs.
@@ -20,11 +21,11 @@ applications (including sampling from restricted ranges, conversion to floating
 point, list permutations and secure initialisation of RNGs). Most users should
 prefer to use the main [rand] crate.
 
-Documentation:
-[master branch](https://rust-random.github.io/rand/rand_core/index.html),
-[by release](https://docs.rs/rand_core)
+Links:
 
-[Changelog](CHANGELOG.md)
+-   [API documentation (master)](https://rust-random.github.io/rand/rand_core)
+-   [API documentation (docs.rs)](https://docs.rs/rand_core)
+-   [Changelog](CHANGELOG.md)
 
 [rand]: https://crates.io/crates/rand
 

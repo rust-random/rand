@@ -1,11 +1,11 @@
 [package]
 name = "rand"
-version = "0.6.0" # NB: When modifying, also modify html_root_url in lib.rs
+version = "0.6.1"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-random/rand"
-documentation = "https://docs.rs/rand"
+documentation = "https://rust-random.github.io/rand"
 homepage = "https://crates.io/crates/rand"
 description = """
 Random number generators and other randomness functionality.

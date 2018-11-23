@@ -3,9 +3,10 @@
 [![Build Status](https://travis-ci.org/rust-random/rand.svg)](https://travis-ci.org/rust-random/rand)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/rust-random/rand)
 [![Latest version](https://img.shields.io/crates/v/rand_xorshift.svg)](https://crates.io/crates/rand_xorshift)
-[![Documentation](https://docs.rs/rand_xorshift/badge.svg)](https://docs.rs/rand_xorshift)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-yellow.svg)](https://github.com/rust-random/rand#rust-version-requirements)
-[![License](https://img.shields.io/crates/l/rand_xorshift.svg)](https://github.com/rust-random/rand/tree/master/rand_xorshift#license)
+[![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
+[![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand_xorshift)
+[![API](https://docs.rs/rand_xorshift/badge.svg)](https://docs.rs/rand_xorshift)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 Implements the Xorshift random number generator.
 
@@ -17,11 +18,11 @@ requirements, use a more secure one such as `StdRng` or `OsRng`.
       ["Xorshift RNGs"](https://www.jstatsoft.org/v08/i14/paper).
       *Journal of Statistical Software*. Vol. 8 (Issue 14).
 
-Documentation:
-[master branch](https://rust-random.github.io/rand/rand_xorshift/index.html),
-[by release](https://docs.rs/rand_xorshift)
+Links:
 
-[Changelog](CHANGELOG.md)
+-   [API documentation (master)](https://rust-random.github.io/rand/rand_xorshift)
+-   [API documentation (docs.rs)](https://docs.rs/rand_xorshift)
+-   [Changelog](CHANGELOG.md)
 
 [rand]: https://crates.io/crates/rand
 

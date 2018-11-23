@@ -67,8 +67,8 @@ type Rng = ::rand_pcg::Pcg32;
 /// [`FromEntropy`]: ../trait.FromEntropy.html
 /// [`StdRng`]: struct.StdRng.html
 /// [`thread_rng`]: ../fn.thread_rng.html
-/// [`Pcg64Mcg`]: https://docs.rs/rand_pcg/0.1.0/rand_pcg/type.Pcg64Mcg.html
-/// [`Pcg32`]: https://docs.rs/rand_pcg/0.1.0/rand_pcg/type.Pcg32.html
+/// [`Pcg64Mcg`]: ../../rand_pcg/type.Pcg64Mcg.html
+/// [`Pcg32`]: ../../rand_pcg/type.Pcg32.html
 #[derive(Clone, Debug)]
 pub struct SmallRng(Rng);
 
