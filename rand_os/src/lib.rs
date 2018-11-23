@@ -117,10 +117,10 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 /// able to report the cause. Depending on the error the other [`RngCore`]
 /// methods will retry several times, and panic in case the error remains.
 ///
-/// [`EntropyRng`]: struct.EntropyRng.html
-/// [`RngCore`]: ../trait.RngCore.html
-/// [`try_fill_bytes`]: ../trait.RngCore.html#method.tymethod.try_fill_bytes
-/// [`ErrorKind::NotReady`]: ../enum.ErrorKind.html#variant.NotReady
+/// [`EntropyRng`]: ../rand/rngs/struct.EntropyRng.html
+/// [`RngCore`]: ../rand_core/trait.RngCore.html
+/// [`try_fill_bytes`]: ../rand_core/trait.RngCore.html#method.tymethod.try_fill_bytes
+/// [`ErrorKind::NotReady`]: ../rand_core/enum.ErrorKind.html#variant.NotReady
 ///
 /// [1]: http://man7.org/linux/man-pages/man2/getrandom.2.html
 /// [2]: http://man7.org/linux/man-pages/man4/urandom.4.html
