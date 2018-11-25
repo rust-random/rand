@@ -1,6 +1,6 @@
 [package]
 name = "rand_isaac"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -21,7 +21,7 @@ appveyor = { repository = "rust-random/rand" }
 serde1 = ["serde", "serde_derive", "rand_core/serde1"]
 
 [dependencies]
-rand_core = { path = "../rand_core", version = ">=0.2, <0.4", default-features=false }
+rand_core = { path = "../rand_core", version = "0.3", default-features=false }
 serde = { version = "1", optional = true }
 serde_derive = { version = "^1.0.38", optional = true }
 
