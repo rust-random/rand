@@ -99,6 +99,12 @@ pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.get()) }
 }
 
+impl Default for ThreadRng {
+    fn default() -> ThreadRng {
+        ::prelude::thread_rng()
+    }
+}
+
 impl RngCore for ThreadRng {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
