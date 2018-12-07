@@ -129,6 +129,7 @@ matrix:
       install:
         - rustup target add wasm32-unknown-unknown
         - rustup target add wasm32-unknown-emscripten
+        - nvm install 9
         # cargo-web takes ±10 min. to install, and cargo and cargo-update offer
         # no reliable update-or-install command. We ignore updating for now
         # (just drop the Travis' caches when necessary)
