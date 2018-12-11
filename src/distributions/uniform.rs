@@ -452,8 +452,9 @@ macro_rules! uniform_int_impl {
                         let ints_to_reject = (unsigned_max - range + 1) % range;
                         unsigned_max - ints_to_reject
                     } else {
-                        // conservative but fast approximation
-                       range << range.leading_zeros()
+                        // conservative but fast approximation. `- 1` is necessary to allow the
+                        // same comparison without bias.
+                        (range << range.leading_zeros()).wrapping_sub(1)
                     };
 
                 loop {
