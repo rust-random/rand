@@ -22,4 +22,4 @@ appveyor = { repository = "rust-random/rand" }
 rand_core = { path = "../rand_core", version = ">=0.2, <0.4", default-features=false }
 
 [build-dependencies]
-rustc_version = "0.2"
+autocfg = "0.1"

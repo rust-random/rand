@@ -1,14 +1,10 @@
-extern crate rustc_version;
-use rustc_version::{version, Version};
+extern crate autocfg;
 
 fn main() {
-    if version().unwrap() >= Version::parse("1.25.0").unwrap() {
-        println!("cargo:rustc-cfg=rust_1_25");
-    }
-    if version().unwrap() >= Version::parse("1.26.0").unwrap() {
-        println!("cargo:rustc-cfg=rust_1_26");
-    }
-    if version().unwrap() >= Version::parse("1.27.0").unwrap() {
-        println!("cargo:rustc-cfg=rust_1_27");
-    }
+    println!("cargo:rerun-if-changed=build.rs");
+
+    let ac = autocfg::new();
+    ac.emit_rustc_version(1, 25);
+    ac.emit_rustc_version(1, 26);
+    ac.emit_rustc_version(1, 27);
 }

@@ -1,4 +1,4 @@
-#![cfg(rust_1_26)]
+#![cfg(rustc_1_26)]
 extern crate rand_pcg;
 extern crate rand_core;
 #[cfg(all(feature="serde1", test))] extern crate bincode;
