@@ -101,6 +101,26 @@ macro_rules! distr {
     }
 }
 
+macro_rules! distr_arr {
+    ($fnn:ident, $ty:ty, $distr:expr) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = SmallRng::from_entropy();
+            let distr = $distr;
+
+            b.iter(|| {
+                let mut accum = 0u32;
+                for _ in 0..::RAND_BENCH_N {
+                    let x: $ty = distr.sample(&mut rng);
+                    accum = accum.wrapping_add(x[0] as u32);
+                }
+                accum
+            });
+            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+        }
+    }
+}
+
 // uniform
 distr_int!(distr_uniform_i8, i8, Uniform::new(20i8, 100));
 distr_int!(distr_uniform_i16, i16, Uniform::new(-500i16, 2000));
@@ -158,6 +178,8 @@ distr_float!(distr_cauchy, f64, Cauchy::new(4.2, 6.9));
 distr_int!(distr_binomial, u64, Binomial::new(20, 0.7));
 distr_int!(distr_poisson, u64, Poisson::new(4.0));
 distr!(distr_bernoulli, bool, Bernoulli::new(0.18));
+distr_arr!(distr_circle, [f64; 2], UnitCircle::new());
+distr_arr!(distr_sphere_surface, [f64; 3], UnitSphereSurface::new());
 
 // Weighted
 distr_int!(distr_weighted_i8, usize, WeightedIndex::new(&[1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
