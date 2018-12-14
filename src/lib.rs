@@ -549,13 +549,13 @@ macro_rules! impl_as_byte_slice {
 impl_as_byte_slice!(u16);
 impl_as_byte_slice!(u32);
 impl_as_byte_slice!(u64);
-#[cfg(rust_1_26)] impl_as_byte_slice!(u128);
+#[cfg(rustc_1_26)] impl_as_byte_slice!(u128);
 impl_as_byte_slice!(usize);
 impl_as_byte_slice!(i8);
 impl_as_byte_slice!(i16);
 impl_as_byte_slice!(i32);
 impl_as_byte_slice!(i64);
-#[cfg(rust_1_26)] impl_as_byte_slice!(i128);
+#[cfg(rustc_1_26)] impl_as_byte_slice!(i128);
 impl_as_byte_slice!(isize);
 
 macro_rules! impl_as_byte_slice_arrays {

@@ -42,7 +42,7 @@ extern crate rand_core;
 #[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
 
 mod pcg64;
-#[cfg(rust_1_26)] mod pcg128;
+#[cfg(rustc_1_26)] mod pcg128;
 
 pub use self::pcg64::{Pcg32, Lcg64Xsh32};
-#[cfg(rust_1_26)] pub use self::pcg128::{Pcg64Mcg, Mcg128Xsl64};
+#[cfg(rustc_1_26)] pub use self::pcg128::{Pcg64Mcg, Mcg128Xsl64};

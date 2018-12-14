@@ -10,9 +10,9 @@
 
 use {RngCore, SeedableRng, Error};
 
-#[cfg(all(rust_1_26, target_pointer_width = "64"))]
+#[cfg(all(rustc_1_26, target_pointer_width = "64"))]
 type Rng = ::rand_pcg::Pcg64Mcg;
-#[cfg(not(all(rust_1_26, target_pointer_width = "64")))]
+#[cfg(not(all(rustc_1_26, target_pointer_width = "64")))]
 type Rng = ::rand_pcg::Pcg32;
 
 /// An RNG recommended when small state, cheap initialization and good

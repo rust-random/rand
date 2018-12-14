@@ -34,4 +34,4 @@ serde_derive = { version = "^1.0.38", optional = true }
 bincode = { version = "1", features = ["i128"] }
 
 [build-dependencies]
-rustc_version = "0.2"
+autocfg = "0.1"

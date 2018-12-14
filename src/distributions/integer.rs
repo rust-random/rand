@@ -45,7 +45,7 @@ impl Distribution<u64> for Standard {
     }
 }
 
-#[cfg(rust_1_26)]
+#[cfg(rustc_1_26)]
 impl Distribution<u128> for Standard {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u128 {
@@ -85,7 +85,7 @@ impl_int_from_uint! { i8, u8 }
 impl_int_from_uint! { i16, u16 }
 impl_int_from_uint! { i32, u32 }
 impl_int_from_uint! { i64, u64 }
-#[cfg(rust_1_26)] impl_int_from_uint! { i128, u128 }
+#[cfg(rustc_1_26)] impl_int_from_uint! { i128, u128 }
 impl_int_from_uint! { isize, usize }
 
 #[cfg(feature="simd_support")]
@@ -147,7 +147,7 @@ mod tests {
         rng.sample::<i16, _>(Standard);
         rng.sample::<i32, _>(Standard);
         rng.sample::<i64, _>(Standard);
-        #[cfg(rust_1_26)]
+        #[cfg(rustc_1_26)]
         rng.sample::<i128, _>(Standard);
         
         rng.sample::<usize, _>(Standard);
@@ -155,7 +155,7 @@ mod tests {
         rng.sample::<u16, _>(Standard);
         rng.sample::<u32, _>(Standard);
         rng.sample::<u64, _>(Standard);
-        #[cfg(rust_1_26)]
+        #[cfg(rustc_1_26)]
         rng.sample::<u128, _>(Standard);
     }
 }

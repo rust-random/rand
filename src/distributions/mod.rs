@@ -182,7 +182,7 @@
 //! [`Weibull`]: struct.Weibull.html
 //! [`WeightedIndex`]: struct.WeightedIndex.html
 
-#[cfg(any(rust_1_26, features="nightly"))]
+#[cfg(any(rustc_1_26, features="nightly"))]
 use core::iter;
 use Rng;
 
@@ -316,7 +316,7 @@ impl<'a, D, R, T> Iterator for DistIter<'a, D, R, T>
     }
 }
 
-#[cfg(rust_1_26)]
+#[cfg(rustc_1_26)]
 impl<'a, D, R, T> iter::FusedIterator for DistIter<'a, D, R, T>
     where D: Distribution<T>, R: Rng + 'a {}
 
@@ -328,7 +328,7 @@ impl<'a, D, R, T> iter::TrustedLen for DistIter<'a, D, R, T>
 /// A generic random value distribution, implemented for many primitive types.
 /// Usually generates values with a numerically uniform distribution, and with a
 /// range appropriate to the type.
-/// 
+///
 /// ## Built-in Implementations
 ///
 /// Assuming the provided `Rng` is well-behaved, these implementations
