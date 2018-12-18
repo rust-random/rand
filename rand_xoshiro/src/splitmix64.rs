@@ -18,15 +18,6 @@ pub struct SplitMix64 {
     x: u64,
 }
 
-impl SplitMix64 {
-    /// Seed a `SplitMix64` from a `u64`.
-    pub fn from_seed_u64(seed: u64) -> SplitMix64 {
-        let mut x = [0; 8];
-        LittleEndian::write_u64(&mut x, seed);
-        SplitMix64::from_seed(x)
-    }
-}
-
 const PHI: u64 = 0x9e3779b97f4a7c15;
 
 impl RngCore for SplitMix64 {
@@ -75,6 +66,13 @@ impl SeedableRng for SplitMix64 {
             x: state[0],
         }
     }
+
+    /// Seed a `SplitMix64` from a `u64`.
+    fn seed_from_u64(seed: u64) -> SplitMix64 {
+        let mut x = [0; 8];
+        LittleEndian::write_u64(&mut x, seed);
+        SplitMix64::from_seed(x)
+    }
 }
 
 #[cfg(test)]
@@ -83,7 +81,7 @@ mod tests {
 
     #[test]
     fn reference() {
-        let mut rng = SplitMix64::from_seed_u64(1477776061723855037);
+        let mut rng = SplitMix64::seed_from_u64(1477776061723855037);
         // These values were produced with the reference implementation:
         // http://xoshiro.di.unimi.it/splitmix64.c
         let expected = vec![
@@ -112,7 +110,7 @@ mod tests {
 
     #[test]
     fn next_u32() {
-        let mut rng = SplitMix64::from_seed_u64(10);
+        let mut rng = SplitMix64::seed_from_u64(10);
         // These values were produced with the reference implementation:
         // http://dsiutils.di.unimi.it/dsiutils-2.5.1-src.tar.gz
         let expected = vec![

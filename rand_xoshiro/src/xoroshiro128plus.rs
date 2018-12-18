@@ -20,11 +20,6 @@ pub struct Xoroshiro128Plus {
 }
 
 impl Xoroshiro128Plus {
-    /// Seed a `Xoroshiro128Plus` from a `u64` using `SplitMix64`.
-    pub fn from_seed_u64(seed: u64) -> Xoroshiro128Plus {
-        from_splitmix!(seed)
-    }
-
     /// Jump forward, equivalently to 2^64 calls to `next_u64()`.
     ///
     /// This can be used to generate 2^64 non-overlapping subsequences for
@@ -37,7 +32,7 @@ impl Xoroshiro128Plus {
     /// use rand::SeedableRng;
     /// use rand_xoshiro::Xoroshiro128Plus;
     ///
-    /// let rng1 = Xoroshiro128Plus::from_seed_u64(0);
+    /// let rng1 = Xoroshiro128Plus::seed_from_u64(0);
     /// let mut rng2 = rng1.clone();
     /// rng2.jump();
     /// let mut rng3 = rng2.clone();
@@ -99,6 +94,11 @@ impl SeedableRng for Xoroshiro128Plus {
             s0: s[0],
             s1: s[1],
         }
+    }
+
+    /// Seed a `Xoroshiro128Plus` from a `u64` using `SplitMix64`.
+    fn seed_from_u64(seed: u64) -> Xoroshiro128Plus {
+        from_splitmix!(seed)
     }
 }
 

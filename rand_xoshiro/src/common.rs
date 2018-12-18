@@ -1,7 +1,7 @@
 /// Initialize a RNG from a `u64` seed using `SplitMix64`.
 macro_rules! from_splitmix {
     ($seed:expr) => { {
-        let mut rng = ::SplitMix64::from_seed_u64($seed);
+        let mut rng = ::SplitMix64::seed_from_u64($seed);
         Self::from_rng(&mut rng).unwrap()
     } }
 }
@@ -195,7 +195,7 @@ macro_rules! impl_xoshiro_large {
 macro_rules! deal_with_zero_seed {
     ($seed:expr, $Self:ident) => {
         if $seed.iter().all(|&x| x == 0) {
-            return $Self::from_seed_u64(0);
+            return $Self::seed_from_u64(0);
         }
     }
 }

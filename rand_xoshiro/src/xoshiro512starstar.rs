@@ -18,11 +18,6 @@ pub struct Xoshiro512StarStar {
 }
 
 impl Xoshiro512StarStar {
-    /// Seed a `Xoshiro512StarStar` from a `u64` using `SplitMix64`.
-    pub fn from_seed_u64(seed: u64) -> Xoshiro512StarStar {
-        from_splitmix!(seed)
-    }
-
     /// Jump forward, equivalently to 2^256 calls to `next_u64()`.
     ///
     /// This can be used to generate 2^256 non-overlapping subsequences for
@@ -35,7 +30,7 @@ impl Xoshiro512StarStar {
     /// use rand::SeedableRng;
     /// use rand_xoshiro::Xoshiro512StarStar;
     ///
-    /// let rng1 = Xoshiro512StarStar::from_seed_u64(0);
+    /// let rng1 = Xoshiro512StarStar::seed_from_u64(0);
     /// let mut rng2 = rng1.clone();
     /// rng2.jump();
     /// let mut rng3 = rng2.clone();
@@ -63,6 +58,11 @@ impl SeedableRng for Xoshiro512StarStar {
         let mut state = [0; 8];
         read_u64_into(&seed.0, &mut state);
         Xoshiro512StarStar { s: state }
+    }
+
+    /// Seed a `Xoshiro512StarStar` from a `u64` using `SplitMix64`.
+    fn seed_from_u64(seed: u64) -> Xoshiro512StarStar {
+        from_splitmix!(seed)
     }
 }
 

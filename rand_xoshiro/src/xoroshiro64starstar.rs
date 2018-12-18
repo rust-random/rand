@@ -19,15 +19,6 @@ pub struct Xoroshiro64StarStar {
     s1: u32,
 }
 
-impl Xoroshiro64StarStar {
-    /// Seed a `Xoroshiro64StarStar` from a `u64`.
-    pub fn from_seed_u64(seed: u64) -> Xoroshiro64StarStar {
-        let mut s = [0; 8];
-        LittleEndian::write_u64(&mut s, seed);
-        Xoroshiro64StarStar::from_seed(s)
-    }
-}
-
 impl RngCore for Xoroshiro64StarStar {
     #[inline]
     fn next_u32(&mut self) -> u32 {
@@ -67,6 +58,13 @@ impl SeedableRng for Xoroshiro64StarStar {
             s0: s[0],
             s1: s[1],
         }
+    }
+
+    /// Seed a `Xoroshiro64StarStar` from a `u64`.
+    fn seed_from_u64(seed: u64) -> Xoroshiro64StarStar {
+        let mut s = [0; 8];
+        LittleEndian::write_u64(&mut s, seed);
+        Xoroshiro64StarStar::from_seed(s)
     }
 }
 
