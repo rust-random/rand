@@ -84,7 +84,7 @@ mod tests {
         let mut rng = SplitMix64::seed_from_u64(1477776061723855037);
         // These values were produced with the reference implementation:
         // http://xoshiro.di.unimi.it/splitmix64.c
-        let expected = vec![
+        let expected : [u64 ; 20]= [
             1985237415132408290, 2979275885539914483, 13511426838097143398,
             8488337342461049707, 15141737807933549159, 17093170987380407015,
             16389528042912955399, 13177319091862933652, 10841969400225389492,
@@ -113,7 +113,7 @@ mod tests {
         let mut rng = SplitMix64::seed_from_u64(10);
         // These values were produced with the reference implementation:
         // http://dsiutils.di.unimi.it/dsiutils-2.5.1-src.tar.gz
-        let expected = vec![
+        let expected : [u32 ; 100]= [
             3930361779, 4016923089, 4113052479, 925926767, 1755287528,
             802865554, 954171070, 3724185978, 173676273, 1414488795, 12664133,
             1784889697, 1303817078, 261610523, 941280008, 2571813643,
