@@ -84,7 +84,7 @@ mod tests {
         let mut rng = SplitMix64::seed_from_u64(1477776061723855037);
         // These values were produced with the reference implementation:
         // http://xoshiro.di.unimi.it/splitmix64.c
-        let expected : [u64 ; 20]= [
+        let expected : [u64 ; 50]= [
             1985237415132408290, 2979275885539914483, 13511426838097143398,
             8488337342461049707, 15141737807933549159, 17093170987380407015,
             16389528042912955399, 13177319091862933652, 10841969400225389492,
@@ -103,7 +103,7 @@ mod tests {
             9420238805069527062, 10338115333623340156, 13514802760105037173,
             14635952304031724449, 15419692541594102413,
         ];
-        for &e in &expected {
+        for &e in expected.iter() {
             assert_eq!(rng.next_u64(), e);
         }
     }
@@ -135,7 +135,7 @@ mod tests {
             1039141475, 3984640460, 4142959054, 2252788890, 2459379590,
             991872507,
         ];
-        for &e in &expected {
+        for &e in expected.iter() {
             assert_eq!(rng.next_u32(), e);
         }
     }
