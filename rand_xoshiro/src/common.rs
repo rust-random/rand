@@ -207,6 +207,7 @@ macro_rules! deal_with_zero_seed {
 #[derive(Clone)]
 pub struct Seed512(pub [u8; 64]);
 
+use core;
 impl Seed512 {
     /// Return an iterator over the seed.
     pub fn iter(&self) -> core::slice::Iter<u8> {
