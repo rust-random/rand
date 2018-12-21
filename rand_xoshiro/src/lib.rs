@@ -66,7 +66,7 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
-
+#![no_std]
 extern crate byteorder;
 extern crate rand_core;
 

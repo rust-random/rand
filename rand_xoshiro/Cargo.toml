@@ -12,7 +12,7 @@ keywords = ["random", "rng"]
 categories = ["algorithms"]
 
 [dependencies]
-byteorder = "1"
+byteorder = { version = "1", default-features=false }
 rand_core = { path = "../rand_core", version = "0.3", default-features=false }
 
 [dev-dependencies]
