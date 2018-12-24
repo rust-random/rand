@@ -75,3 +75,6 @@ autocfg = "0.1"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[patch.crates-io]
+rand_core = { path = "rand_core", version = "0.3", default-features = false }

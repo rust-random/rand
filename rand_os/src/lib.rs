@@ -142,6 +142,8 @@ extern crate wasm_bindgen;
           feature = "stdweb"))]
 #[macro_use] extern crate stdweb;
 
+#[cfg(target_env = "sgx")]
+extern crate rdrand;
 
 #[cfg(not(feature = "log"))]
 #[macro_use]
@@ -310,6 +312,7 @@ mod_use!(cfg(target_os = "openbsd"), openbsd_bitrig);
 mod_use!(cfg(target_os = "redox"), redox);
 mod_use!(cfg(target_os = "solaris"), solaris);
 mod_use!(cfg(windows), windows);
+mod_use!(cfg(target_env = "sgx"), sgx);
 
 mod_use!(
     cfg(all(
@@ -356,5 +359,6 @@ compile_error!("enable either wasm_bindgen or stdweb feature");
     target_os = "solaris",
     windows,
     target_arch = "wasm32",
+    target_env = "sgx"
 )))]
 compile_error!("OS RNG support is not available for this platform");
