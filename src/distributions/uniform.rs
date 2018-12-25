@@ -473,7 +473,7 @@ uniform_int_impl! { i8, i8, u8, i32, u32 }
 uniform_int_impl! { i16, i16, u16, i32, u32 }
 uniform_int_impl! { i32, i32, u32, i32, u32 }
 uniform_int_impl! { i64, i64, u64, i64, u64 }
-#[cfg(rustc_1_26)]
+#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
 uniform_int_impl! { i128, i128, u128, u128, u128 }
 uniform_int_impl! { isize, isize, usize, isize, usize }
 uniform_int_impl! { u8, i8, u8, i32, u32 }
@@ -481,7 +481,7 @@ uniform_int_impl! { u16, i16, u16, i32, u32 }
 uniform_int_impl! { u32, i32, u32, i32, u32 }
 uniform_int_impl! { u64, i64, u64, i64, u64 }
 uniform_int_impl! { usize, isize, usize, isize, usize }
-#[cfg(rustc_1_26)]
+#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
 uniform_int_impl! { u128, u128, u128, i128, u128 }
 
 #[cfg(all(feature = "simd_support", feature = "nightly"))]
@@ -990,7 +990,7 @@ mod tests {
     fn test_integers() {
         use core::{i8, i16, i32, i64, isize};
         use core::{u8, u16, u32, u64, usize};
-        #[cfg(rustc_1_26)]
+        #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
         use core::{i128, u128};
 
         let mut rng = ::test::rng(251);
@@ -1054,7 +1054,7 @@ mod tests {
         }
         t!(i8, i16, i32, i64, isize,
            u8, u16, u32, u64, usize);
-        #[cfg(rustc_1_26)]
+        #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
         t!(i128, u128);
 
         #[cfg(all(feature = "simd_support", feature = "nightly"))]

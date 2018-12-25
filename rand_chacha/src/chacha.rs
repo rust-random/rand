@@ -114,7 +114,7 @@ impl ChaChaRng {
     /// byte-offset.
     ///
     /// Note: this function is currently only available with Rust 1.26 or later.
-    #[cfg(rustc_1_26)]
+    #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
     pub fn get_word_pos(&self) -> u128 {
         let mut c = (self.0.core.state[13] as u64) << 32
                   | (self.0.core.state[12] as u64);
@@ -135,7 +135,7 @@ impl ChaChaRng {
     /// 60 bits.
     ///
     /// Note: this function is currently only available with Rust 1.26 or later.
-    #[cfg(rustc_1_26)]
+    #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
     pub fn set_word_pos(&mut self, word_offset: u128) {
         let index = (word_offset as usize) & 0xF;
         let counter = (word_offset >> 4) as u64;
@@ -330,7 +330,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(rustc_1_26)]
+    #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
     fn test_chacha_true_values_c() {
         // Test vector 4 from
         // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
