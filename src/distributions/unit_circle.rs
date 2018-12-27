@@ -29,27 +29,26 @@ use distributions::{Distribution, Uniform};
 ///       NBS Appl. Math. Ser., No. 12. Washington, DC: U.S. Government Printing
 ///       Office, pp. 36-38.
 #[derive(Clone, Copy, Debug)]
-pub struct UnitCircle {
-    uniform: Uniform<f64>,
-}
+pub struct UnitCircle;
 
 impl UnitCircle {
     /// Construct a new `UnitCircle` distribution.
     #[inline]
     pub fn new() -> UnitCircle {
-        UnitCircle { uniform: Uniform::new(-1., 1.) }
+        UnitCircle
     }
 }
 
 impl Distribution<[f64; 2]> for UnitCircle {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [f64; 2] {
+        let uniform = Uniform::new(-1., 1.);
         let mut x1;
         let mut x2;
         let mut sum;
         loop {
-            x1 = self.uniform.sample(rng);
-            x2 = self.uniform.sample(rng);
+            x1 = uniform.sample(rng);
+            x2 = uniform.sample(rng);
             sum = x1*x1 + x2*x2;
             if sum < 1. {
                 break;

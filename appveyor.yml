@@ -41,6 +41,7 @@ test_script:
   - cargo test --package rand_core --no-default-features --features=alloc
   - cargo test --package rand_isaac --features=serde1
   - cargo test --package rand_xorshift --features=serde1
+  - cargo test --package rand_xoshiro
   - cargo test --package rand_chacha
   - cargo test --package rand_hc
   - cargo test --manifest-path rand_core/Cargo.toml
@@ -48,6 +49,7 @@ test_script:
   - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+  - cargo test --manifest-path rand_xoshiro/Cargo.toml
   - cargo test --manifest-path rand_chacha/Cargo.toml
   - cargo test --manifest-path rand_hc/Cargo.toml
   - cargo test --manifest-path rand_os/Cargo.toml

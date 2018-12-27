@@ -1,11 +1,11 @@
 [package]
 name = "rand_pcg"
-version = "0.1.1" # NB: When modifying, also modify html_root_url in lib.rs
+version = "0.1.1"
 authors = ["The Rand Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-random/rand"
-documentation = "https://docs.rs/rand_pcg"
+documentation = "https://rust-random.github.io/rand/rand_pcg"
 homepage = "https://crates.io/crates/rand_pcg"
 description = """
 Selected PCG random number generators
@@ -34,4 +34,4 @@ serde_derive = { version = "^1.0.38", optional = true }
 bincode = { version = "1", features = ["i128"] }
 
 [build-dependencies]
-rustc_version = "0.2"
+autocfg = "0.1"

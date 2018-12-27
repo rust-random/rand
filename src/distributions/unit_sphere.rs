@@ -28,23 +28,22 @@ use distributions::{Distribution, Uniform};
 ///       Sphere.*](https://doi.org/10.1214/aoms/1177692644)
 ///       Ann. Math. Statist. 43, no. 2, 645--646.
 #[derive(Clone, Copy, Debug)]
-pub struct UnitSphereSurface {
-    uniform: Uniform<f64>,
-}
+pub struct UnitSphereSurface;
 
 impl UnitSphereSurface {
     /// Construct a new `UnitSphereSurface` distribution.
     #[inline]
     pub fn new() -> UnitSphereSurface {
-        UnitSphereSurface { uniform: Uniform::new(-1., 1.) }
+        UnitSphereSurface
     }
 }
 
 impl Distribution<[f64; 3]> for UnitSphereSurface {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [f64; 3] {
+        let uniform = Uniform::new(-1., 1.);
         loop {
-            let (x1, x2) = (self.uniform.sample(rng), self.uniform.sample(rng));
+            let (x1, x2) = (uniform.sample(rng), uniform.sample(rng));
             let sum = x1*x1 + x2*x2;
             if sum >= 1. {
                 continue;
