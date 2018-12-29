@@ -40,7 +40,7 @@ impl OsRngImpl for OsRng {
 
             if ty == 1 { Ok(OsRng(OsRngMethod::Browser)) }
             else if ty == 2 { Ok(OsRng(OsRngMethod::Node)) }
-            else { unreachable!() }
+            else { panic!("unexpected ty value: {:?}", ty) }
         } else {
             let err: WebError = js!{ return @{ result }.error }.try_into().unwrap();
             Err(Error::with_cause(ErrorKind::Unavailable, "WASM Error", err))
