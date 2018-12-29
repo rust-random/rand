@@ -13,6 +13,10 @@ operating system.
 This crate depends on [rand_core](https://crates.io/crates/rand_core) and is
 part of the [Rand project](https://github.com/rust-random/rand).
 
+This crate aims to support all of Rust's `std` platforms with a system-provided
+entropy source. Unlike other Rand crates, this crate does not support `no_std`
+(handling this gracefully is a current discussion topic).
+
 Documentation:
 [master branch](https://rust-random.github.io/rand/rand_os/index.html),
 [by release](https://docs.rs/rand_os)

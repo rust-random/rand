@@ -29,7 +29,16 @@ simd_support = ["packed_simd"] # enables SIMD support
 serde1 = ["rand_core/serde1", "rand_isaac/serde1", "rand_xorshift/serde1"] # enables serialization for PRNGs
 
 [workspace]
-members = ["rand_core", "rand_os", "rand_isaac", "rand_chacha", "rand_hc", "rand_pcg", "rand_xorshift"]
+members = [
+    "rand_core",
+    "rand_os",
+    "rand_isaac",
+    "rand_chacha",
+    "rand_hc",
+    "rand_pcg",
+    "rand_xorshift",
+    "rand_xoshiro",
+]
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.3", default-features = false }
@@ -51,7 +60,7 @@ optional = true
 features = ["into_bits"]
 
 [target.'cfg(unix)'.dependencies]
-libc = "0.2"
+libc = { version = "0.2", default-features = false }
 
 # TODO: check if all features are required
 [target.'cfg(windows)'.dependencies]

@@ -61,7 +61,7 @@
 //! `wasm32-unknown-emscripten` and `wasm32-experimental-emscripten` use
 //! Emscripten's emulation of `/dev/random` on web browsers and Node.js.
 //!
-//! The bare Wasm target `wasm32-unknown-unknown` tries to call the javascript
+//! The bare WASM target `wasm32-unknown-unknown` tries to call the javascript
 //! methods directly, using either `stdweb` or `wasm-bindgen` depending on what
 //! features are activated for this crate. Note that if both features are
 //! enabled `wasm-bindgen` will be used.
@@ -87,12 +87,17 @@
 //! `/dev/random` until we know the OS RNG is initialized (and store this in a
 //! global static).
 //!
-//! # Panics
+//! # Panics and error handling
 //!
-//! `OsRng` is extremely unlikely to fail if `OsRng::new()`, and one read from
-//! it, where succesfull. But in case it does fail, only [`try_fill_bytes`] is
-//! able to report the cause. Depending on the error the other [`RngCore`]
-//! methods will retry several times, and panic in case the error remains.
+//! We cannot guarantee that `OsRng` will fail, but if it does, it will likely
+//! be either when `OsRng::new()` is first called or when data is first read.
+//! If you wish to catch errors early, then test reading of at least one byte
+//! from `OsRng` via [`try_fill_bytes`]. If this succeeds, it is extremely
+//! unlikely that any further errors will occur.
+//! 
+//! Only [`try_fill_bytes`] is able to report the cause of an error; the other
+//! [`RngCore`] methods may (depending on the error kind) retry several times,
+//! but must eventually panic if the error persists.
 //!
 //! [`EntropyRng`]: ../rand/rngs/struct.EntropyRng.html
 //! [`RngCore`]: ../rand_core/trait.RngCore.html
