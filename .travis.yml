@@ -146,7 +146,7 @@ matrix:
         #- cargo web test --target wasm32-unknown-emscripten
         #- cargo web test --nodejs --target wasm32-unknown-emscripten
         #- cargo build --target wasm32-unknown-unknown # without any features
-        - cargo web test --nodejs --target wasm32-unknown-unknown --features=rand_os/stdweb
+        - cargo web test --target wasm32-unknown-unknown --features=rand_os/stdweb
         - cargo build --target wasm32-unknown-unknown --features=rand_os/wasm-bindgen
 
     - rust: nightly
