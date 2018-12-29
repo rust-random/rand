@@ -178,5 +178,5 @@ pub use self::small::SmallRng;
 pub use self::std::StdRng;
 #[cfg(feature="std")] pub use self::thread::ThreadRng;
 
-#[cfg(all(feature="std", feature="rand_os"))]
+#[cfg(feature="std")]
 pub use rand_os::OsRng;
