@@ -141,8 +141,10 @@ matrix:
       addons:
         chrome: stable
       script:
-        # testing wasm32-unknown-emscripten fails because of rust-lang/rust#49877
-        - cargo build --target wasm32-unknown-emscripten
+        # Testing wasm32-unknown-emscripten fails because of rust-lang/rust#49877
+        # However, we can still build and link all tests to make sure that works.
+        # This is actually useful as it finds stuff such as rust-random/rand#669
+        - EMCC_CFLAGS="-s ERROR_ON_UNDEFINED_SYMBOLS=0" cargo web test --target wasm32-unknown-emscripten --no-run
         #- cargo web test --target wasm32-unknown-emscripten
         #- cargo web test --nodejs --target wasm32-unknown-emscripten
         #- cargo build --target wasm32-unknown-unknown # without any features

@@ -151,12 +151,12 @@ impl SeedableRng for ChaChaRng {
 }
 
 impl ChaChaRng {
-    #[cfg(rustc_1_26)]
+    #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
     pub fn get_word_pos(&self) -> u128 {
         self.0.get_word_pos()
     }
 
-    #[cfg(rustc_1_26)]
+    #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
     pub fn set_word_pos(&mut self, word_offset: u128) {
         self.0.set_word_pos(word_offset)
     }

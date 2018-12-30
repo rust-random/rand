@@ -9,6 +9,9 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 
+## [0.6.2] - Unreleased
+- Disable `i128` and `u128` if the `target_os` is `emscripten`.
+
 ## [0.6.1] - 2018-11-22
 - Support sampling `Duration` also for `no_std` (only since Rust 1.25) (#649)
 - Disable default features of `libc` (#647)
