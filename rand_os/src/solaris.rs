@@ -1,3 +1,13 @@
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Implementation for the Solaris family
+//!
 //! Read from `/dev/random`, with chunks of limited size (1040 bytes).
 //! `/dev/random` uses the Hash_DRBG with SHA512 algorithm from NIST SP 800-90A.
 //! `/dev/urandom` uses the FIPS 186-2 algorithm, which is considered less
