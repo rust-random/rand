@@ -20,7 +20,7 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [features]
-default = ["std", "rand_os"] # without "std" rand uses libcore
+default = ["std", "rand_os", "stdweb"] # without "std" rand uses libcore
 nightly = ["simd_support"] # enables all features requiring nightly rust
 std = ["rand_core/std", "alloc", "rand_os"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
