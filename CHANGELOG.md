@@ -9,6 +9,11 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 
+## [0.6.3] - 2019-01-04
+### Fixes
+- Make the `std` feature require the optional `rand_os` dependency (#675)
+- Re-export the optional WASM dependencies of `rand_os` from `rand` to avoid breakage (#674)
+
 ## [0.6.2] - 2019-01-04
 ### Additions
 - Add `Default` for `ThreadRng` (#657)
