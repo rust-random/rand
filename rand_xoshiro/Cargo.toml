@@ -16,4 +16,4 @@ byteorder = { version = "1", default-features=false }
 rand_core = { path = "../rand_core", version = "0.3", default-features=false }
 
 [dev-dependencies]
-rand = { path = "..", default-features=false }  # needed for doctests
+rand = { path = "..", version = "0.6", default-features=false }  # needed for doctests
