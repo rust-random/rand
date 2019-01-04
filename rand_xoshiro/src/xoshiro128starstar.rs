@@ -1,3 +1,11 @@
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
 use rand_core::impls::{next_u64_via_u32, fill_bytes_via_next};
 use rand_core::le::read_u32_into;
 use rand_core::{SeedableRng, RngCore, Error};
