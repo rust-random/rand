@@ -18,7 +18,7 @@
 
 #![no_std]
 
-extern crate rand_core;
+pub extern crate rand_core;
 
 mod hc128;
 
