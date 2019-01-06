@@ -250,6 +250,12 @@
 #[cfg(feature="std")] extern crate std as core;
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 
+#[cfg(target_env = "sgx")]
+extern crate rdrand;
+
+#[cfg(target_env = "sgx")]
+extern crate rand_core;
+
 use core::marker;
 use core::mem;
 #[cfg(feature="std")] use std::cell::RefCell;

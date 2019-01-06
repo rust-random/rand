@@ -11,7 +11,11 @@
 //! Interfaces to the operating system provided random number
 //! generators.
 
-use std::{io, mem, fmt};
+use std::{io, fmt};
+
+#[cfg(not(target_env = "sgx"))]
+use std::mem;
+
 use Rng;
 
 /// A random number generator that retrieves randomness straight from
@@ -53,12 +57,14 @@ impl fmt::Debug for OsRng {
     }
 }
 
+#[cfg(not(target_env = "sgx"))]
 fn next_u32(fill_buf: &mut FnMut(&mut [u8])) -> u32 {
     let mut buf: [u8; 4] = [0; 4];
     fill_buf(&mut buf);
     unsafe { mem::transmute::<[u8; 4], u32>(buf) }
 }
 
+#[cfg(not(target_env = "sgx"))]
 fn next_u64(fill_buf: &mut FnMut(&mut [u8])) -> u64 {
     let mut buf: [u8; 8] = [0; 8];
     fill_buf(&mut buf);
@@ -558,6 +564,47 @@ mod imp {
     impl Rng for OsRng {
         fn next_u32(&mut self) -> u32 {
             panic!("Not supported")
+        }
+    }
+}
+
+#[cfg(target_env = "sgx")]
+mod imp {
+    use rdrand::RdRand;
+    use std::io;
+    use rand_core::RngCore;
+
+    pub struct OsRng{
+        gen: RdRand
+    }
+
+    impl OsRng {
+        pub fn new() -> io::Result<OsRng> {
+            match RdRand::new() {
+                Ok(rng) => Ok(OsRng { gen: rng }),
+                Err(_) => Err(io::Error::new(io::ErrorKind::Other, "Not supported"))
+            }
+        }
+
+        pub(crate) fn next_u32(&mut self) -> u32 {
+            match self.gen.try_next_u32() {
+                Some(n) => n,
+                None => panic!("Non-recoverable hardware failure has occured")
+            }
+        }
+
+        pub(crate) fn next_u64(&mut self) -> u64 {
+            match self.gen.try_next_u64() {
+                Some(n) => n,
+                None => panic!("Non-recoverable hardware failure has occured")
+            }
+        }
+
+        pub(crate) fn fill_bytes(&mut self, v: &mut [u8]) {
+            match self.gen.try_fill_bytes(v) {
+                Ok(_) => {},
+                Err(_) => panic!("Non-recoverable hardware failure has occured")
+            }
         }
     }
 }
