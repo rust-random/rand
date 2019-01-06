@@ -76,7 +76,7 @@
 #![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 #![no_std]
 extern crate byteorder;
-extern crate rand_core;
+pub extern crate rand_core;
 
 #[macro_use]
 mod common;

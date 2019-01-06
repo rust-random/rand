@@ -18,7 +18,7 @@
 
 #![cfg_attr(not(all(feature="serde1", test)), no_std)]
 
-extern crate rand_core;
+pub extern crate rand_core;
 
 #[cfg(feature="serde1")] extern crate serde;
 #[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
