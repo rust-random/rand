@@ -191,7 +191,7 @@ impl EntropySource for NoSource {
 }
 
 
-#[cfg(all(feature="std",
+#[cfg(all(feature="rand_os",
           any(target_os = "linux", target_os = "android",
               target_os = "netbsd",
               target_os = "dragonfly",
@@ -211,7 +211,7 @@ impl EntropySource for NoSource {
 #[derive(Clone, Debug)]
 pub struct Os(rngs::OsRng);
 
-#[cfg(all(feature="std",
+#[cfg(all(feature="rand_os",
           any(target_os = "linux", target_os = "android",
               target_os = "netbsd",
               target_os = "dragonfly",
@@ -240,7 +240,7 @@ impl EntropySource for Os {
     }
 }
 
-#[cfg(not(all(feature="std",
+#[cfg(not(all(feature="rand_os",
               any(target_os = "linux", target_os = "android",
                   target_os = "netbsd",
                   target_os = "dragonfly",
