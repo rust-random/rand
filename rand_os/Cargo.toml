@@ -23,7 +23,7 @@ libc = "0.2"
 
 # TODO: check if all features are required
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"] }
+winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "winnt"] }
 
 [target.'cfg(target_os = "cloudabi")'.dependencies]
 cloudabi = "0.0.3"
