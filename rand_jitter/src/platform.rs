@@ -1,3 +1,12 @@
+// Copyright 2018 Developers of the Rand project.
+// Copyright 2013-2015 The Rust Project Developers.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
 #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "windows")))]
 pub fn get_nstime() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
