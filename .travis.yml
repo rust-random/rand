@@ -137,6 +137,7 @@ matrix:
         - rustup target add wasm32-unknown-emscripten
         - nvm install 9
         - ./utils/ci/install_cargo_web.sh
+        - cargo web prepare-emscripten
         - cargo web -V
       addons:
         chrome: stable
@@ -211,7 +212,11 @@ script:
 
 after_script: set +e
 
-cache: cargo
+cache:
+  cargo: true
+  directories:
+    - .local/share/cargo-web
+
 before_cache:
   # Travis can't cache files that are not readable by "others"
   - chmod -R a+r $HOME/.cargo
