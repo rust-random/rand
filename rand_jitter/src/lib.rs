@@ -30,7 +30,8 @@
 //!
 //! Note: There is no accurate timer available on WASM platforms, to help
 //! prevent fingerprinting or timing side-channel attacks. Therefore
-//! [`JitterRng::new()`] always returns an error.
+//! [`JitterRng::new()`] is not available on WASM. It is also unavailable
+//! with disabled `std` feature.
 //!
 //! [`JitterRng::new()`]: struct.JitterRng.html#method.new
 //! [`new_with_timer`]: struct.JitterRng.html#method.new_with_timer
@@ -40,8 +41,10 @@
 // without optimizations. This implementation goes through lengths to make the
 // compiler not optimize out code which does influence timing jitter, but is
 // technically dead code.
-
+#![no_std]
 pub extern crate rand_core;
+#[cfg(feature = "std")]
+extern crate std;
 #[cfg(feature = "log")]
 #[macro_use] extern crate log;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
@@ -52,13 +55,15 @@ extern crate winapi;
 
 #[cfg(not(feature = "log"))]
 #[macro_use] mod dummy_log;
+#[cfg(feature = "std")]
 mod platform;
 mod error;
 
 use rand_core::{RngCore, CryptoRng, Error, impls};
 pub use error::TimerError;
 
-use std::{fmt, mem, ptr};
+use core::{fmt, mem, ptr};
+#[cfg(feature = "std")]
 use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 
 const MEMORY_BLOCKS: usize = 64;
@@ -150,6 +155,7 @@ impl Clone for JitterRng {
 }
 
 // Initialise to zero; must be positive
+#[cfg(all(feature = "std", not(target_arch = "wasm32")))]
 static JITTER_ROUNDS: AtomicUsize = ATOMIC_USIZE_INIT;
 
 impl JitterRng {
@@ -160,6 +166,7 @@ impl JitterRng {
     /// During initialization CPU execution timing jitter is measured a few
     /// hundred times. If this does not pass basic quality tests, an error is
     /// returned. The test result is cached to make subsequent calls faster.
+    #[cfg(all(feature = "std", not(target_arch = "wasm32")))]
     pub fn new() -> Result<JitterRng, TimerError> {
         if cfg!(target_arch = "wasm32") {
             return Err(TimerError::NoTimer);

@@ -170,7 +170,7 @@ mod std;
 #[cfg(feature="std")] pub(crate) mod thread;
 
 
-#[cfg(feature="rand_jitter")] pub use rand_jitter::{JitterRng, TimerError};
+pub use rand_jitter::{JitterRng, TimerError};
 #[cfg(feature="std")] pub use self::entropy::EntropyRng;
 
 pub use self::small::SmallRng;

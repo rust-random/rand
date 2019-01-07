@@ -69,7 +69,6 @@
 #[macro_use]
 extern crate stdweb;
 
-#[cfg(feature = "rand_jitter")]
 extern crate rand_jitter;
 #[cfg(feature = "rand_os")]
 extern crate rand_os;

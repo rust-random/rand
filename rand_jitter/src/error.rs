@@ -1,5 +1,5 @@
 use rand_core::{Error, ErrorKind};
-use std::fmt;
+use core::fmt;
 
 /// An error that can occur when [`JitterRng::test_timer`] fails.
 ///
@@ -39,6 +39,7 @@ impl fmt::Display for TimerError {
     }
 }
 
+#[cfg(feature = "std")]
 impl ::std::error::Error for TimerError {
     fn description(&self) -> &str {
         self.description()
