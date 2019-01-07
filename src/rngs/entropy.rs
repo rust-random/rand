@@ -39,7 +39,7 @@ use rngs;
 /// methods will panic in case of an error.
 ///
 /// [`OsRng`]: struct.OsRng.html
-/// [`JitterRng`]: jitter/struct.JitterRng.html
+/// [`JitterRng`]: struct.JitterRng.html
 /// [`thread_rng`]: ../fn.thread_rng.html
 /// [`RngCore`]: ../trait.RngCore.html
 /// [`try_fill_bytes`]: ../trait.RngCore.html#method.tymethod.try_fill_bytes
