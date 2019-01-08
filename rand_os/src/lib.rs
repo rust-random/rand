@@ -330,13 +330,33 @@ mod_use!(
     wasm32_stdweb
 );
 
+/// Per #678 we use run-time failure where WASM bindings are missing
 #[cfg(all(
     target_arch = "wasm32",
     not(target_os = "emscripten"),
     not(feature = "wasm-bindgen"),
     not(feature = "stdweb"),
 ))]
-compile_error!("enable either wasm_bindgen or stdweb feature");
+mod imp {
+    use rand_core::{Error, ErrorKind};
+    use super::OsRngImpl;
+    
+    #[derive(Clone, Debug)]
+    pub struct OsRng;
+
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
+            Err(Error::new(ErrorKind::Unavailable,
+                "OsRng: support for wasm32 requires emscripten, stdweb or wasm-bindgen"))
+        }
+
+        fn fill_chunk(&mut self, _dest: &mut [u8]) -> Result<(), Error> {
+            unimplemented!()
+        }
+
+        fn method_str(&self) -> &'static str { unimplemented!() }
+    }
+}
 
 #[cfg(not(any(
     target_os = "android",
