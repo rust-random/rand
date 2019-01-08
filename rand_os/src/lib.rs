@@ -126,8 +126,8 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
-// for stdweb
-#![recursion_limit="128"]
+
+#![cfg_attr(feature = "stdweb", recursion_limit="128")]
 
 pub extern crate rand_core;
 #[cfg(feature = "log")]
@@ -142,6 +142,8 @@ extern crate wasm_bindgen;
           feature = "stdweb"))]
 #[macro_use] extern crate stdweb;
 
+#[cfg(target_env = "sgx")]
+extern crate rdrand;
 
 #[cfg(not(feature = "log"))]
 #[macro_use]
@@ -310,6 +312,7 @@ mod_use!(cfg(target_os = "openbsd"), openbsd_bitrig);
 mod_use!(cfg(target_os = "redox"), redox);
 mod_use!(cfg(target_os = "solaris"), solaris);
 mod_use!(cfg(windows), windows);
+mod_use!(cfg(target_env = "sgx"), sgx);
 
 mod_use!(
     cfg(all(
@@ -330,13 +333,33 @@ mod_use!(
     wasm32_stdweb
 );
 
+/// Per #678 we use run-time failure where WASM bindings are missing
 #[cfg(all(
     target_arch = "wasm32",
     not(target_os = "emscripten"),
     not(feature = "wasm-bindgen"),
     not(feature = "stdweb"),
 ))]
-compile_error!("enable either wasm_bindgen or stdweb feature");
+mod imp {
+    use rand_core::{Error, ErrorKind};
+    use super::OsRngImpl;
+    
+    #[derive(Clone, Debug)]
+    pub struct OsRng;
+
+    impl OsRngImpl for OsRng {
+        fn new() -> Result<OsRng, Error> {
+            Err(Error::new(ErrorKind::Unavailable,
+                "OsRng: support for wasm32 requires emscripten, stdweb or wasm-bindgen"))
+        }
+
+        fn fill_chunk(&mut self, _dest: &mut [u8]) -> Result<(), Error> {
+            unimplemented!()
+        }
+
+        fn method_str(&self) -> &'static str { unimplemented!() }
+    }
+}
 
 #[cfg(not(any(
     target_os = "android",
@@ -356,5 +379,61 @@ compile_error!("enable either wasm_bindgen or stdweb feature");
     target_os = "solaris",
     windows,
     target_arch = "wasm32",
+    target_env = "sgx"
 )))]
 compile_error!("OS RNG support is not available for this platform");
+
+// Due to rustwasm/wasm-bindgen#201 this can't be defined in the inner os
+// modules, so hack around it for now and place it at the root.
+#[cfg(all(feature = "wasm-bindgen", target_arch = "wasm32"))]
+#[doc(hidden)]
+#[allow(missing_debug_implementations)]
+pub mod __wbg_shims {
+
+    // `extern { type Foo; }` isn't supported on 1.22 syntactically, so use a
+    // macro to work around that.
+    macro_rules! rust_122_compat {
+        ($($t:tt)*) => ($($t)*)
+    }
+
+    rust_122_compat! {
+        extern crate wasm_bindgen;
+
+        pub use wasm_bindgen::prelude::*;
+
+        #[wasm_bindgen]
+        extern "C" {
+            pub type Function;
+            #[wasm_bindgen(constructor)]
+            pub fn new(s: &str) -> Function;
+            #[wasm_bindgen(method)]
+            pub fn call(this: &Function, self_: &JsValue) -> JsValue;
+
+            pub type This;
+            #[wasm_bindgen(method, getter, structural, js_name = self)]
+            pub fn self_(me: &This) -> JsValue;
+            #[wasm_bindgen(method, getter, structural)]
+            pub fn crypto(me: &This) -> JsValue;
+
+            #[derive(Clone, Debug)]
+            pub type BrowserCrypto;
+
+            // TODO: these `structural` annotations here ideally wouldn't be here to
+            // avoid a JS shim, but for now with feature detection they're
+            // unavoidable.
+            #[wasm_bindgen(method, js_name = getRandomValues, structural, getter)]
+            pub fn get_random_values_fn(me: &BrowserCrypto) -> JsValue;
+            #[wasm_bindgen(method, js_name = getRandomValues, structural)]
+            pub fn get_random_values(me: &BrowserCrypto, buf: &mut [u8]);
+
+            #[wasm_bindgen(js_name = require)]
+            pub fn node_require(s: &str) -> NodeCrypto;
+
+            #[derive(Clone, Debug)]
+            pub type NodeCrypto;
+
+            #[wasm_bindgen(method, js_name = randomFillSync, structural)]
+            pub fn random_fill_sync(me: &NodeCrypto, buf: &mut [u8]);
+        }
+    }
+}

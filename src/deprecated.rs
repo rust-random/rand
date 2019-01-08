@@ -291,45 +291,12 @@ impl SeedableRng for StdRng {
 impl CryptoRng for StdRng {}
 
 
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
+#[cfg(feature="rand_os")]
 #[derive(Clone, Debug)]
 #[deprecated(since="0.6.0", note="import with rand::rngs::OsRng instead")]
 pub struct OsRng(rngs::OsRng);
 
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
-#[cfg(feature="std")]
+#[cfg(feature="rand_os")]
 impl RngCore for OsRng {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -352,48 +319,14 @@ impl RngCore for OsRng {
     }
 }
 
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
-#[cfg(feature="std")]
+#[cfg(feature="rand_os")]
 impl OsRng {
     pub fn new() -> Result<Self, Error> {
         rngs::OsRng::new().map(OsRng)
     }
 }
 
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
-#[cfg(feature="std")]
+#[cfg(feature="rand_os")]
 impl CryptoRng for OsRng {}
 
 

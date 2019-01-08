@@ -140,6 +140,7 @@ matrix:
         - rustup target add wasm32-unknown-emscripten
         - nvm install 9
         - ./utils/ci/install_cargo_web.sh
+        - cargo web prepare-emscripten
         - cargo web -V
       addons:
         chrome: stable
@@ -151,8 +152,8 @@ matrix:
         #- cargo web test --target wasm32-unknown-emscripten
         #- cargo web test --nodejs --target wasm32-unknown-emscripten
         #- cargo build --target wasm32-unknown-unknown # without any features
-        - cargo build --target wasm32-unknown-unknown --features=rand_os/wasm-bindgen
-        - cd rand_os && cargo web test --target wasm32-unknown-unknown --features=stdweb
+        - cargo build --target wasm32-unknown-unknown --features=wasm-bindgen
+        - cargo web test --target wasm32-unknown-unknown --features=stdweb
 
     - rust: nightly
       env: DESCRIPTION="cross-platform builder (doesn't run tests)"
@@ -215,7 +216,11 @@ script:
 
 after_script: set +e
 
-cache: cargo
+cache:
+  cargo: true
+  directories:
+    - .local/share/cargo-web
+
 before_cache:
   # Travis can't cache files that are not readable by "others"
   - chmod -R a+r $HOME/.cargo

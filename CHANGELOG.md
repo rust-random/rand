@@ -9,6 +9,11 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 
+## [0.6.4] - 2019-01-08
+### Fixes
+- Move wasm-bindgen shims to correct crate (#686)
+- Make `wasm32-unknown-unknown` compile but fail at run-time if missing bindingsg (#686)
+
 ## [0.6.3] - 2019-01-04
 ### Fixes
 - Make the `std` feature require the optional `rand_os` dependency (#675)

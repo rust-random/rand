@@ -191,43 +191,11 @@ impl EntropySource for NoSource {
 }
 
 
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
+#[cfg(feature="rand_os")]
 #[derive(Clone, Debug)]
 pub struct Os(rngs::OsRng);
 
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
+#[cfg(feature="rand_os")]
 impl EntropySource for Os {
     fn new_and_fill(dest: &mut [u8]) -> Result<Self, Error> {
         let mut rng = rngs::OsRng::new()?;
@@ -240,23 +208,7 @@ impl EntropySource for Os {
     }
 }
 
-#[cfg(not(all(feature="std",
-              any(target_os = "linux", target_os = "android",
-                  target_os = "netbsd",
-                  target_os = "dragonfly",
-                  target_os = "haiku",
-                  target_os = "emscripten",
-                  target_os = "solaris",
-                  target_os = "cloudabi",
-                  target_os = "macos", target_os = "ios",
-                  target_os = "freebsd",
-                  target_os = "openbsd", target_os = "bitrig",
-                  target_os = "redox",
-                  target_os = "fuchsia",
-                  windows,
-                  all(target_arch = "wasm32", feature = "stdweb"),
-                  all(target_arch = "wasm32", feature = "wasm-bindgen"),
-))))]
+#[cfg(not(feature="std"))]
 type Os = NoSource;
 
 
