@@ -119,23 +119,7 @@ pub mod seq;
 #[cfg(feature="std")] #[doc(hidden)] pub use deprecated::EntropyRng;
 
 #[allow(deprecated)]
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
+#[cfg(feature="rand_os")]
 #[doc(hidden)]
 pub use deprecated::OsRng;
 
@@ -152,23 +136,7 @@ pub mod jitter {
     pub use rngs::TimerError;
 }
 #[allow(deprecated)]
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
+#[cfg(feature="rand_os")]
 #[doc(hidden)]
 pub mod os {
     pub use deprecated::OsRng;
