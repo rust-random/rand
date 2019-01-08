@@ -81,7 +81,7 @@ validate the estimation.
    restart.py -v -u 4 jitter_rng_var.bin 4 <min-entropy>
    ```
 3. Estimate the expected amount of entropy that is available to the entropy
-   collector if both noice sources only run their minimal number of times.
+   collector if both noise sources only run their minimal number of times.
    This measures the absolute worst-case, and gives a lower bound for the
    available entropy.
    ```sh
