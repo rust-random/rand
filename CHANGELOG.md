@@ -10,9 +10,6 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 
 ## [0.6.4] - 2019-01-08
-### Additions
-- Add support for x86_64-fortanix-unknown-sgx target (#670)
-
 ### Fixes
 - Move wasm-bindgen shims to correct crate (#686)
 - Make `wasm32-unknown-unknown` compile but fail at run-time if missing bindingsg (#686)
