@@ -58,16 +58,11 @@
 #![cfg_attr(not(feature="std"), no_std)]
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
-#![cfg_attr(feature = "stdweb", recursion_limit="128")]
 
 #[cfg(feature = "std")] extern crate core;
 #[cfg(all(feature = "alloc", not(feature="std")))] #[macro_use] extern crate alloc;
 
 #[cfg(feature="simd_support")] extern crate packed_simd;
-
-#[cfg(all(target_arch="wasm32", not(target_os="emscripten"), feature="stdweb"))]
-#[macro_use]
-extern crate stdweb;
 
 #[cfg(feature = "rand_os")]
 extern crate rand_os;

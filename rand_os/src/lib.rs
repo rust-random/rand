@@ -126,8 +126,8 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
-// for stdweb
-#![recursion_limit="128"]
+
+#![cfg_attr(feature = "stdweb", recursion_limit="128")]
 
 pub extern crate rand_core;
 #[cfg(feature = "log")]
