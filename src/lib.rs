@@ -58,16 +58,11 @@
 #![cfg_attr(not(feature="std"), no_std)]
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
-#![cfg_attr(feature = "stdweb", recursion_limit="128")]
 
 #[cfg(feature = "std")] extern crate core;
 #[cfg(all(feature = "alloc", not(feature="std")))] #[macro_use] extern crate alloc;
 
 #[cfg(feature="simd_support")] extern crate packed_simd;
-
-#[cfg(all(target_arch="wasm32", not(target_os="emscripten"), feature="stdweb"))]
-#[macro_use]
-extern crate stdweb;
 
 #[cfg(feature = "rand_os")]
 extern crate rand_os;
@@ -119,23 +114,7 @@ pub mod seq;
 #[cfg(feature="std")] #[doc(hidden)] pub use deprecated::EntropyRng;
 
 #[allow(deprecated)]
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
+#[cfg(feature="rand_os")]
 #[doc(hidden)]
 pub use deprecated::OsRng;
 
@@ -152,23 +131,7 @@ pub mod jitter {
     pub use rngs::TimerError;
 }
 #[allow(deprecated)]
-#[cfg(all(feature="std",
-          any(target_os = "linux", target_os = "android",
-              target_os = "netbsd",
-              target_os = "dragonfly",
-              target_os = "haiku",
-              target_os = "emscripten",
-              target_os = "solaris",
-              target_os = "cloudabi",
-              target_os = "macos", target_os = "ios",
-              target_os = "freebsd",
-              target_os = "openbsd", target_os = "bitrig",
-              target_os = "redox",
-              target_os = "fuchsia",
-              windows,
-              all(target_arch = "wasm32", feature = "stdweb"),
-              all(target_arch = "wasm32", feature = "wasm-bindgen"),
-)))]
+#[cfg(feature="rand_os")]
 #[doc(hidden)]
 pub mod os {
     pub use deprecated::OsRng;
@@ -710,61 +673,6 @@ impl<R: SeedableRng> FromEntropy for R {
 #[inline]
 pub fn random<T>() -> T where Standard: Distribution<T> {
     thread_rng().gen()
-}
-
-// Due to rustwasm/wasm-bindgen#201 this can't be defined in the inner os
-// modules, so hack around it for now and place it at the root.
-#[cfg(all(feature = "wasm-bindgen", target_arch = "wasm32"))]
-#[doc(hidden)]
-#[allow(missing_debug_implementations)]
-pub mod __wbg_shims {
-
-    // `extern { type Foo; }` isn't supported on 1.22 syntactically, so use a
-    // macro to work around that.
-    macro_rules! rust_122_compat {
-        ($($t:tt)*) => ($($t)*)
-    }
-
-    rust_122_compat! {
-        extern crate wasm_bindgen;
-
-        pub use wasm_bindgen::prelude::*;
-
-        #[wasm_bindgen]
-        extern "C" {
-            pub type Function;
-            #[wasm_bindgen(constructor)]
-            pub fn new(s: &str) -> Function;
-            #[wasm_bindgen(method)]
-            pub fn call(this: &Function, self_: &JsValue) -> JsValue;
-
-            pub type This;
-            #[wasm_bindgen(method, getter, structural, js_name = self)]
-            pub fn self_(me: &This) -> JsValue;
-            #[wasm_bindgen(method, getter, structural)]
-            pub fn crypto(me: &This) -> JsValue;
-
-            #[derive(Clone, Debug)]
-            pub type BrowserCrypto;
-
-            // TODO: these `structural` annotations here ideally wouldn't be here to
-            // avoid a JS shim, but for now with feature detection they're
-            // unavoidable.
-            #[wasm_bindgen(method, js_name = getRandomValues, structural, getter)]
-            pub fn get_random_values_fn(me: &BrowserCrypto) -> JsValue;
-            #[wasm_bindgen(method, js_name = getRandomValues, structural)]
-            pub fn get_random_values(me: &BrowserCrypto, buf: &mut [u8]);
-
-            #[wasm_bindgen(js_name = require)]
-            pub fn node_require(s: &str) -> NodeCrypto;
-
-            #[derive(Clone, Debug)]
-            pub type NodeCrypto;
-
-            #[wasm_bindgen(method, js_name = randomFillSync, structural)]
-            pub fn random_fill_sync(me: &NodeCrypto, buf: &mut [u8]);
-        }
-    }
 }
 
 #[cfg(test)]

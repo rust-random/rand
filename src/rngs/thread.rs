@@ -132,7 +132,6 @@ impl CryptoRng for ThreadRng {}
 #[cfg(test)]
 mod test {
     #[test]
-    #[cfg(not(feature="stdweb"))]
     fn test_thread_rng() {
         use Rng;
         let mut r = ::thread_rng();

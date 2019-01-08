@@ -1,6 +1,6 @@
 [package]
 name = "rand_os"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["The Rand Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -21,9 +21,8 @@ log = { version = "0.4", optional = true }
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 
-# TODO: check if all features are required
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"] }
+winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "winnt"] }
 
 [target.'cfg(target_os = "cloudabi")'.dependencies]
 cloudabi = "0.0.3"

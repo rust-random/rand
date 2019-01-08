@@ -149,8 +149,8 @@ matrix:
         #- cargo web test --target wasm32-unknown-emscripten
         #- cargo web test --nodejs --target wasm32-unknown-emscripten
         #- cargo build --target wasm32-unknown-unknown # without any features
-        - cargo build --target wasm32-unknown-unknown --features=rand_os/wasm-bindgen
-        - cd rand_os && cargo web test --target wasm32-unknown-unknown --features=stdweb
+        - cargo build --target wasm32-unknown-unknown --features=wasm-bindgen
+        - cargo web test --target wasm32-unknown-unknown --features=stdweb
 
     - rust: nightly
       env: DESCRIPTION="cross-platform builder (doesn't run tests)"
