@@ -358,3 +358,58 @@ compile_error!("enable either wasm_bindgen or stdweb feature");
     target_arch = "wasm32",
 )))]
 compile_error!("OS RNG support is not available for this platform");
+
+// Due to rustwasm/wasm-bindgen#201 this can't be defined in the inner os
+// modules, so hack around it for now and place it at the root.
+#[cfg(all(feature = "wasm-bindgen", target_arch = "wasm32"))]
+#[doc(hidden)]
+#[allow(missing_debug_implementations)]
+pub mod __wbg_shims {
+
+    // `extern { type Foo; }` isn't supported on 1.22 syntactically, so use a
+    // macro to work around that.
+    macro_rules! rust_122_compat {
+        ($($t:tt)*) => ($($t)*)
+    }
+
+    rust_122_compat! {
+        extern crate wasm_bindgen;
+
+        pub use wasm_bindgen::prelude::*;
+
+        #[wasm_bindgen]
+        extern "C" {
+            pub type Function;
+            #[wasm_bindgen(constructor)]
+            pub fn new(s: &str) -> Function;
+            #[wasm_bindgen(method)]
+            pub fn call(this: &Function, self_: &JsValue) -> JsValue;
+
+            pub type This;
+            #[wasm_bindgen(method, getter, structural, js_name = self)]
+            pub fn self_(me: &This) -> JsValue;
+            #[wasm_bindgen(method, getter, structural)]
+            pub fn crypto(me: &This) -> JsValue;
+
+            #[derive(Clone, Debug)]
+            pub type BrowserCrypto;
+
+            // TODO: these `structural` annotations here ideally wouldn't be here to
+            // avoid a JS shim, but for now with feature detection they're
+            // unavoidable.
+            #[wasm_bindgen(method, js_name = getRandomValues, structural, getter)]
+            pub fn get_random_values_fn(me: &BrowserCrypto) -> JsValue;
+            #[wasm_bindgen(method, js_name = getRandomValues, structural)]
+            pub fn get_random_values(me: &BrowserCrypto, buf: &mut [u8]);
+
+            #[wasm_bindgen(js_name = require)]
+            pub fn node_require(s: &str) -> NodeCrypto;
+
+            #[derive(Clone, Debug)]
+            pub type NodeCrypto;
+
+            #[wasm_bindgen(method, js_name = randomFillSync, structural)]
+            pub fn random_fill_sync(me: &NodeCrypto, buf: &mut [u8]);
+        }
+    }
+}
