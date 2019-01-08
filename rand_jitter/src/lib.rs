@@ -1,11 +1,16 @@
 // Copyright 2018 Developers of the Rand project.
-// Copyright 2013-2015 The Rust Project Developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+//
+// Based on jitterentropy-library, http://www.chronox.de/jent.html.
+// Copyright Stephan Mueller <smueller@chronox.de>, 2014 - 2017.
+//
+// With permission from Stephan Mueller to relicense the Rust translation under
+// the MIT license.
 
 //! Non-physical true random number generator based on timing jitter.
 //!
