@@ -10,7 +10,7 @@
 //! Random number generation traits
 //! 
 //! This crate is mainly of interest to crates publishing implementations of
-//! [`RngCore`]. Other users are encouraged to use the [rand] crate instead
+//! [`RngCore`]. Other users are encouraged to use the [`rand`] crate instead
 //! which re-exports the main traits and error types.
 //!
 //! [`RngCore`] is the core trait implemented by algorithmic pseudo-random number
@@ -25,12 +25,7 @@
 //! The [`impls`] and [`le`] sub-modules include a few small functions to assist
 //! implementation of [`RngCore`].
 //! 
-//! [rand]: https://crates.io/crates/rand
-//! [`RngCore`]: trait.RngCore.html
-//! [`SeedableRng`]: trait.SeedableRng.html
-//! [`Error`]: struct.Error.html
-//! [`impls`]: impls/index.html
-//! [`le`]: le/index.html
+//! [`rand`]: https://docs.rs/rand
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
@@ -68,8 +63,8 @@ pub mod le;
 /// 
 /// This trait encapsulates the low-level functionality common to all
 /// generators, and is the "back end", to be implemented by generators.
-/// End users should normally use [`Rng`] from the [rand] crate, which is
-/// automatically implemented for every type implementing `RngCore`.
+/// End users should normally use `Rng` trait from the [`rand`] crate,
+/// which is automatically implemented for every type implementing `RngCore`.
 /// 
 /// Three different methods for generating random data are provided since the
 /// optimal implementation of each is dependent on the type of generator. There
@@ -89,7 +84,7 @@ pub mod le;
 /// 
 /// Typically implementators will implement only one of the methods available
 /// in this trait directly, then use the helper functions from the
-/// [`rand_core::impls`] module to implement the other methods.
+/// [`impls`] module to implement the other methods.
 /// 
 /// It is recommended that implementations also implement:
 /// 
@@ -135,40 +130,37 @@ pub mod le;
 /// }
 /// ```
 /// 
-/// [rand]: https://crates.io/crates/rand
-/// [`Rng`]: ../rand/trait.Rng.html
-/// [`SeedableRng`]: trait.SeedableRng.html
-/// [`rand_core::impls`]: ../rand_core/impls/index.html
-/// [`try_fill_bytes`]: trait.RngCore.html#tymethod.try_fill_bytes
-/// [`fill_bytes`]: trait.RngCore.html#tymethod.fill_bytes
-/// [`next_u32`]: trait.RngCore.html#tymethod.next_u32
-/// [`next_u64`]: trait.RngCore.html#tymethod.next_u64
-/// [`CryptoRng`]: trait.CryptoRng.html
+/// [`rand`]: https://docs.rs/rand
+/// [`try_fill_bytes`]: RngCore::try_fill_bytes
+/// [`fill_bytes`]: RngCore::fill_bytes
+/// [`next_u32`]: RngCore::next_u32
+/// [`next_u64`]: RngCore::next_u64
 pub trait RngCore {
     /// Return the next random `u32`.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// using `self.next_u64() as u32` or
-    /// [via `fill_bytes`](../rand_core/impls/fn.next_u32_via_fill.html).
+    /// using `self.next_u64() as u32` or via
+    /// [`fill_bytes`][impls::next_u32_via_fill].
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random `u64`.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// [via `next_u32`](../rand_core/impls/fn.next_u64_via_u32.html) or
-    /// [via `fill_bytes`](../rand_core/impls/fn.next_u64_via_fill.html).
+    /// via [`next_u32`][impls::next_u64_via_u32] or via 
+    /// [`fill_bytes`][impls::next_u64_via_fill].
     fn next_u64(&mut self) -> u64;
 
     /// Fill `dest` with random data.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// [via `next_u*`](../rand_core/impls/fn.fill_bytes_via_next.html) or
-    /// via `try_fill_bytes`; if this generator can fail the implementation
-    /// must choose how best to handle errors here (e.g. panic with a
-    /// descriptive message or log a warning and retry a few times).
+    /// via [`next_u*`][impls::fill_bytes_via_next] or
+    /// via [`try_fill_bytes`][RngCore::try_fill_bytes]; if this generator can
+    /// fail the implementation must choose how best to handle errors here
+    /// (e.g. panic with a descriptive message or log a warning and retry a few
+    /// times).
     /// 
     /// This method should guarantee that `dest` is entirely filled
     /// with new data, and may panic if this is impossible
@@ -188,7 +180,7 @@ pub trait RngCore {
     /// `fill_bytes` may be implemented with
     /// `self.try_fill_bytes(dest).unwrap()` or more specific error handling.
     /// 
-    /// [`fill_bytes`]: trait.RngCore.html#method.fill_bytes
+    /// [`fill_bytes`]: RngCore::fill_bytes
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
 
@@ -213,8 +205,7 @@ pub trait RngCore {
 /// Note also that use of a `CryptoRng` does not protect against other
 /// weaknesses such as seeding from a weak entropy source or leaking state.
 /// 
-/// [`RngCore`]: trait.RngCore.html
-/// [`BlockRngCore`]: ../rand_core/block/trait.BlockRngCore.html
+/// [`BlockRngCore`]: block::BlockRngCore
 pub trait CryptoRng {}
 
 /// A random number generator that can be explicitly seeded.
@@ -222,11 +213,11 @@ pub trait CryptoRng {}
 /// This trait encapsulates the low-level functionality common to all
 /// pseudo-random number generators (PRNGs, or algorithmic generators).
 /// 
-/// The [`rand::FromEntropy`] trait is automatically implemented for every type
-/// implementing `SeedableRng`, providing a convenient `from_entropy()`
-/// constructor.
+/// The `FromEntropy` trait from [`rand`] crate is automatically
+/// implemented for every type implementing `SeedableRng`, providing
+/// a convenient `from_entropy()` constructor.
 /// 
-/// [`rand::FromEntropy`]: ../rand/trait.FromEntropy.html
+/// [`rand`]: https://docs.rs/rand
 pub trait SeedableRng: Sized {
     /// Seed type, which is restricted to types mutably-dereferencable as `u8`
     /// arrays (we recommend `[u8; N]` for some `N`).
@@ -340,8 +331,8 @@ pub trait SeedableRng: Sized {
     /// Create a new PRNG seeded from another `Rng`.
     ///
     /// This is the recommended way to initialize PRNGs with fresh entropy. The
-    /// [`FromEntropy`] trait provides a convenient `from_entropy` method
-    /// based on `from_rng`.
+    /// `FromEntropy` trait from [`rand`] crate provides a convenient
+    /// `from_entropy` method based on `from_rng`.
     /// 
     /// Usage of this method is not recommended when reproducibility is required
     /// since implementing PRNGs are not required to fix Endianness and are
@@ -354,9 +345,9 @@ pub trait SeedableRng: Sized {
     /// results if their seed numbers are small or if there is a simple pattern
     /// between them.
     ///
-    /// Prefer to seed from a strong external entropy source like [`OsRng`] or
-    /// from a cryptographic PRNG; if creating a new generator for cryptographic
-    /// uses you *must* seed from a strong source.
+    /// Prefer to seed from a strong external entropy source like `OsRng` from
+    /// [`rand_os`] crate or from a cryptographic PRNG; if creating a new
+    /// generator for cryptographic uses you *must* seed from a strong source.
     ///
     /// Seeding a small PRNG from another small PRNG is possible, but
     /// something to be careful with. An extreme example of how this can go
@@ -367,8 +358,8 @@ pub trait SeedableRng: Sized {
     /// PRNG implementations are allowed to assume that a good RNG is provided
     /// for seeding, and that it is cryptographically secure when appropriate.
     /// 
-    /// [`FromEntropy`]: ../rand/trait.FromEntropy.html
-    /// [`OsRng`]: ../rand/rngs/struct.OsRng.html
+    /// [`rand`]: https://docs.rs/rand
+    /// [`rand_os`]: https://docs.rs/rand_os
     fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;

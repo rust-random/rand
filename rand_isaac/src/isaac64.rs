@@ -40,8 +40,8 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// In spite of being designed with cryptographic security in mind, ISAAC hasn't
 /// been stringently cryptanalyzed and thus cryptographers do not not
 /// consensually trust it to be secure. When looking for a secure RNG, prefer
-/// [`Hc128Rng`] instead, which, like ISAAC, is an array-based RNG and one of
-/// the stream-ciphers selected the by eSTREAM contest.
+/// `Hc128Rng` from [`rand_hc`] crate instead, which, like ISAAC, is an
+/// array-based RNG and one of the stream-ciphers selected the by eSTREAM 
 ///
 /// ## Overview of the ISAAC-64 algorithm:
 /// (in pseudo-code)
@@ -75,10 +75,9 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// [^1]: Bob Jenkins, [*ISAAC and RC4*](
 ///       http://burtleburtle.net/bob/rand/isaac.html)
 ///
-/// [`IsaacRng`]: ../isaac/struct.IsaacRng.html
-/// [`Hc128Rng`]: ../../rand_hc/struct.Hc128Rng.html
-/// [`BlockRng64`]: ../../rand_core/block/struct.BlockRng64.html
-/// [`RngCore`]: ../../rand_core/trait.RngCore.html
+/// [`IsaacRng`]: crate::isaac::IsaacRng
+/// [`rand_hc`]: https://docs.rs/rand_hc
+/// [`BlockRng64`]: rand_core::block::BlockRng64
 #[derive(Clone, Debug)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct Isaac64Rng(BlockRng64<Isaac64Core>);
@@ -155,7 +154,7 @@ impl BlockRngCore for Isaac64Core {
     type Results = IsaacArray<Self::Item>;
 
     /// Refills the output buffer, `results`. See also the pseudocode desciption
-    /// of the algorithm in the [`Isaac64Rng`] documentation.
+    /// of the algorithm in the `Isaac64Rng` documentation.
     ///
     /// Optimisations used (similar to the reference implementation):
     /// 
@@ -173,8 +172,6 @@ impl BlockRngCore for Isaac64Core {
     ///   from `results` in reverse. We read them in the normal direction, to
     ///   make `fill_bytes` a memcopy. To maintain compatibility we fill in
     ///   reverse.
-    /// 
-    /// [`Isaac64Rng`]: struct.Isaac64Rng.html
     fn generate(&mut self, results: &mut IsaacArray<Self::Item>) {
         self.c += w(1);
         // abbreviations

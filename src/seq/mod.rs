@@ -98,7 +98,7 @@ pub trait SliceRandom {
     /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
     /// println!("{:?}", choices.choose_weighted(&mut rng, |item| item.1).unwrap().0);
     /// ```
-    /// [`choose`]: trait.SliceRandom.html#method.choose
+    /// [`choose`]: SliceRandom::choose
     #[cfg(feature = "alloc")]
     fn choose_weighted<R, F, B, X>(&self, rng: &mut R, weight: F) -> Result<&Self::Item, WeightedError>
         where R: Rng + ?Sized,
@@ -117,8 +117,8 @@ pub trait SliceRandom {
     ///
     /// See also [`choose_weighted`].
     ///
-    /// [`choose_mut`]: trait.SliceRandom.html#method.choose_mut
-    /// [`choose_weighted`]: trait.SliceRandom.html#method.choose_weighted
+    /// [`choose_mut`]: SliceRandom::choose_mut
+    /// [`choose_weighted`]: SliceRandom::choose_weighted
     #[cfg(feature = "alloc")]
     fn choose_weighted_mut<R, F, B, X>(&mut self, rng: &mut R, weight: F) -> Result<&mut Self::Item, WeightedError>
         where R: Rng + ?Sized,
@@ -181,8 +181,8 @@ pub trait IteratorRandom: Iterator + Sized {
     /// This likely consumes multiple random numbers, but the exact number
     /// is unspecified.
     ///
-    /// [`choose`]: trait.SliceRandom.html#method.choose
-    /// [`choose_mut`]: trait.SliceRandom.html#method.choose_mut
+    /// [`choose`]: SliceRandom::method.choose
+    /// [`choose_mut`]: SliceRandom::choose_mut
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
         where R: Rng + ?Sized
     {
@@ -406,8 +406,7 @@ impl<T> SliceRandom for [T] {
 impl<I> IteratorRandom for I where I: Iterator + Sized {}
 
 
-/// Iterator over multiple choices, as returned by [`SliceRandom::choose_multiple](
-/// trait.SliceRandom.html#method.choose_multiple).
+/// Iterator over multiple choices, as returned by [`SliceRandom::choose_multiple]
 #[cfg(feature = "alloc")]
 #[derive(Debug)]
 pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
@@ -443,8 +442,6 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 /// Randomly sample `amount` elements from a finite iterator.
 ///
 /// Deprecated: use [`IteratorRandom::choose_multiple`] instead.
-/// 
-/// [`IteratorRandom::choose_multiple`]: trait.IteratorRandom.html#method.choose_multiple
 #[cfg(feature = "alloc")]
 #[deprecated(since="0.6.0", note="use IteratorRandom::choose_multiple instead")]
 pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<Vec<T>, Vec<T>>
@@ -470,8 +467,6 @@ pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<V
 /// Panics if `amount > slice.len()`
 ///
 /// Deprecated: use [`SliceRandom::choose_multiple`] instead.
-/// 
-/// [`SliceRandom::choose_multiple`]: trait.SliceRandom.html#method.choose_multiple
 #[cfg(feature = "alloc")]
 #[deprecated(since="0.6.0", note="use SliceRandom::choose_multiple instead")]
 pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
@@ -494,8 +489,6 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 /// Panics if `amount > slice.len()`
 ///
 /// Deprecated: use [`SliceRandom::choose_multiple`] instead.
-/// 
-/// [`SliceRandom::choose_multiple`]: trait.SliceRandom.html#method.choose_multiple
 #[cfg(feature = "alloc")]
 #[deprecated(since="0.6.0", note="use SliceRandom::choose_multiple instead")]
 pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>

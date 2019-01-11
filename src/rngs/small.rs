@@ -25,10 +25,10 @@ type Rng = ::rand_pcg::Pcg32;
 /// different output. Further, this generator may not be portable and can
 /// produce different output depending on the architecture. If you require
 /// reproducible output, use a named RNG. Refer to the documentation on the
-/// [`prng` module](../prng/index.html).
+/// [`prng`][crate::prng] module.
 ///
-/// The current algorithm is [`Pcg64Mcg`] on 64-bit platforms with Rust version
-/// 1.26 and later, or [`Pcg32`] otherwise.
+/// The current algorithm is [`Pcg64Mcg`][rand_pcg::Pcg64Mcg] on 64-bit platforms with Rust version
+/// 1.26 and later, or [`Pcg32`][rand_pcg::Pcg32] otherwise.
 ///
 /// # Examples
 ///
@@ -64,11 +64,9 @@ type Rng = ::rand_pcg::Pcg32;
 ///     .collect();
 /// ```
 ///
-/// [`FromEntropy`]: ../trait.FromEntropy.html
-/// [`StdRng`]: struct.StdRng.html
-/// [`thread_rng`]: ../fn.thread_rng.html
-/// [`Pcg64Mcg`]: ../../rand_pcg/type.Pcg64Mcg.html
-/// [`Pcg32`]: ../../rand_pcg/type.Pcg32.html
+/// [`FromEntropy`]: crate::FromEntropy
+/// [`StdRng`]: crate::rngs::StdRng
+/// [`thread_rng`]: crate::thread_rng
 #[derive(Clone, Debug)]
 pub struct SmallRng(Rng);
 

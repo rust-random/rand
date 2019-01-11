@@ -9,7 +9,7 @@
 
 //! Interface to the random number generator of the operating system.
 //!
-//! `OsRng` is the preferred external source of entropy for most applications.
+//! [`OsRng`] is the preferred external source of entropy for most applications.
 //! Commonly it is used to initialize a user-space RNG, which can then be used
 //! to generate random values with much less overhead than `OsRng`.
 //!
@@ -17,7 +17,7 @@
 //! not entirely theoretical, for `OsRng` to fail. In such cases [`EntropyRng`]
 //! falls back on a good alternative entropy source.
 //!
-//! `OsRng::new()` is guaranteed to be very cheap (after the first successful
+//! [`OsRng::new()`] is guaranteed to be very cheap (after the first successful
 //! call), and will never consume more than one file handle per process.
 //!
 //! # Usage example
@@ -100,9 +100,8 @@
 //! but must eventually panic if the error persists.
 //!
 //! [`EntropyRng`]: ../rand/rngs/struct.EntropyRng.html
-//! [`RngCore`]: ../rand_core/trait.RngCore.html
-//! [`try_fill_bytes`]: ../rand_core/trait.RngCore.html#method.tymethod.try_fill_bytes
-//! [`ErrorKind::NotReady`]: ../rand_core/enum.ErrorKind.html#variant.NotReady
+//! [`try_fill_bytes`]: RngCore::try_fill_bytes
+//! [`ErrorKind::NotReady`]: rand_core::ErrorKind
 //!
 //! [1]: http://man7.org/linux/man-pages/man2/getrandom.2.html
 //! [2]: http://man7.org/linux/man-pages/man4/urandom.4.html
