@@ -139,6 +139,7 @@ matrix:
         - ./utils/ci/install_cargo_web.sh
         - cargo web prepare-emscripten
         - cargo web -V
+        - cargo install wasm-pack
       addons:
         chrome: stable
       script:
@@ -151,6 +152,8 @@ matrix:
         #- cargo build --target wasm32-unknown-unknown # without any features
         - cargo build --target wasm32-unknown-unknown --features=wasm-bindgen
         - cargo web test --target wasm32-unknown-unknown --features=stdweb
+        - cargo build --manifest-path tests/wasm_bindgen --target wasm32-unknown-unknown
+        - wasm-pack test --node tests/wasm_bindgen
 
     - rust: nightly
       env: DESCRIPTION="cross-platform builder (doesn't run tests)"
