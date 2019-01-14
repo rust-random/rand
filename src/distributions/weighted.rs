@@ -40,7 +40,7 @@ use core::fmt;
 /// `N` is the number of weights.
 ///
 /// Sampling from `WeightedIndex` will result in a single call to
-/// `Uniform<X>::sample` (method of [`Distribution`] trait), which typically
+/// `Uniform<X>::sample` (method of the [`Distribution`] trait), which typically
 /// will request a single value from the underlying [`RngCore`], though the
 /// exact number depends on the implementaiton of `Uniform<X>::sample`.
 ///

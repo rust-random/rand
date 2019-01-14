@@ -20,33 +20,33 @@
 //! reseeding with very low overhead.
 //!
 //! # Example
-//! 
+//!
 //! ```norun
 //! use rand_core::block::{BlockRngCore, BlockRng};
-//! 
+//!
 //! struct MyRngCore;
-//! 
+//!
 //! impl BlockRngCore for MyRngCore {
 //!     type Results = [u32; 16];
-//!     
+//!
 //!     fn generate(&mut self, results: &mut Self::Results) {
 //!         unimplemented!()
 //!     }
 //! }
-//! 
+//!
 //! impl SeedableRng for MyRngCore {
 //!     type Seed = unimplemented!();
 //!     fn from_seed(seed: Self::Seed) -> Self {
 //!         unimplemented!()
 //!     }
 //! }
-//! 
+//!
 //! // optionally, also implement CryptoRng for MyRngCore
-//! 
+//!
 //! // Final RNG.
 //! type MyRng = BlockRng<u32, MyRngCore>;
 //! ```
-//! 
+//!
 //! [`BlockRngCore`]: crate::block::BlockRngCore
 //! [`fill_bytes`]: RngCore::fill_bytes
 
@@ -58,12 +58,12 @@ use impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 /// A trait for RNGs which do not generate random numbers individually, but in
 /// blocks (typically `[u32; N]`). This technique is commonly used by
 /// cryptographic RNGs to improve performance.
-/// 
+///
 /// See the [module][crate::block] documentation for details.
 pub trait BlockRngCore {
     /// Results element type, e.g. `u32`.
     type Item;
-    
+
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u32; 16]`.
     type Results: AsRef<[Self::Item]> + AsMut<[Self::Item]> + Default;
@@ -141,7 +141,7 @@ impl<R: BlockRngCore> BlockRng<R> {
     }
 
     /// Get the index into the result buffer.
-    /// 
+    ///
     /// If this is equal to or larger than the size of the result buffer then
     /// the buffer is "empty" and `generate()` must be called to produce new
     /// results.

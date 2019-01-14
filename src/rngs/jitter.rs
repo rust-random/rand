@@ -599,7 +599,7 @@ impl JitterRng {
         self.stir_pool();
         self.data
     }
-    
+
     /// Basic quality tests on the timer, by measuring CPU timing jitter a few
     /// hundred times.
     ///
@@ -755,7 +755,7 @@ impl JitterRng {
     /// of entropy one round of the entropy collector can collect in the worst
     /// case.
     ///
-    /// See this crate README on how to use `timer_stats` to test the quality
+    /// See this crate's README on how to use `timer_stats` to test the quality
     /// of `JitterRng`.
     pub fn timer_stats(&mut self, var_rounds: bool) -> i64 {
         let mut mem = [0; MEMORY_SIZE];

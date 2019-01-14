@@ -40,8 +40,8 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// In spite of being designed with cryptographic security in mind, ISAAC hasn't
 /// been stringently cryptanalyzed and thus cryptographers do not not
 /// consensually trust it to be secure. When looking for a secure RNG, prefer
-/// `Hc128Rng` from [`rand_hc`] crate instead, which, like ISAAC, is an
-/// array-based RNG and one of the stream-ciphers selected the by eSTREAM 
+/// `Hc128Rng` from the [`rand_hc`] crate instead, which, like ISAAC, is an
+/// array-based RNG and one of the stream-ciphers selected the by eSTREAM
 ///
 /// ## Overview of the ISAAC-64 algorithm:
 /// (in pseudo-code)
@@ -157,7 +157,7 @@ impl BlockRngCore for Isaac64Core {
     /// of the algorithm in the `Isaac64Rng` documentation.
     ///
     /// Optimisations used (similar to the reference implementation):
-    /// 
+    ///
     /// - The loop is unrolled 4 times, once for every constant of mix().
     /// - The contents of the main loop are moved to a function `rngstep`, to
     ///   reduce code duplication.
@@ -294,7 +294,7 @@ impl SeedableRng for Isaac64Core {
         }
         Self::init(seed_extended, 2)
     }
-    
+
     fn seed_from_u64(seed: u64) -> Self {
         let mut key = [w(0); RAND_SIZE];
         key[0] = w(seed);
