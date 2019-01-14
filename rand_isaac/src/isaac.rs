@@ -34,8 +34,8 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 /// In spite of being designed with cryptographic security in mind, ISAAC hasn't
 /// been stringently cryptanalyzed and thus cryptographers do not not
 /// consensually trust it to be secure. When looking for a secure RNG, prefer
-/// `Hc128Rng` from [`rand_hc`] crate instead, which, like ISAAC, is an
-/// array-based RNG and one of the stream-ciphers selected the by eSTREAM 
+/// `Hc128Rng` from the [`rand_hc`] crate instead, which, like ISAAC, is an
+/// array-based RNG and one of the stream-ciphers selected the by eSTREAM
 ///
 /// In 2006 an improvement to ISAAC was suggested by Jean-Philippe Aumasson,
 /// named ISAAC+[^3]. But because the specification is not complete, because
@@ -117,7 +117,7 @@ impl SeedableRng for IsaacRng {
     fn from_seed(seed: Self::Seed) -> Self {
         IsaacRng(BlockRng::<IsaacCore>::from_seed(seed))
     }
-    
+
     /// Create an ISAAC random number generator using an `u64` as seed.
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.
@@ -166,7 +166,7 @@ impl BlockRngCore for IsaacCore {
     /// of the algorithm in the `IsaacRng` documentation.
     ///
     /// Optimisations used (similar to the reference implementation):
-    /// 
+    ///
     /// - The loop is unrolled 4 times, once for every constant of mix().
     /// - The contents of the main loop are moved to a function `rngstep`, to
     ///   reduce code duplication.
@@ -320,7 +320,7 @@ impl SeedableRng for IsaacCore {
         }
         Self::init(seed_extended, 2)
     }
-    
+
     /// Create an ISAAC random number generator using an `u64` as seed.
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.
