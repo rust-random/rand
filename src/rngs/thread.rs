@@ -64,11 +64,9 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32*1024*1024; // 32 MiB
 /// Cloning this handle just produces a new reference to the same thread-local
 /// generator.
 /// 
-/// [`thread_rng`]: ../fn.thread_rng.html
-/// [`ReseedingRng`]: adapter/struct.ReseedingRng.html
-/// [`StdRng`]: struct.StdRng.html
-/// [`EntropyRng`]: struct.EntropyRng.html
-/// [HC-128]: ../../rand_hc/struct.Hc128Rng.html
+/// [`ReseedingRng`]: crate::rngs::adapter::ReseedingRng
+/// [`StdRng`]: crate::rngs::StdRng
+/// [HC-128]: rand_hc::Hc128Rng
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
     // use of raw pointer implies type is neither Send nor Sync
@@ -94,8 +92,6 @@ thread_local!(
 /// `ThreadRng::default()` equivelent.
 ///
 /// For more information see [`ThreadRng`].
-///
-/// [`ThreadRng`]: rngs/struct.ThreadRng.html
 pub fn thread_rng() -> ThreadRng {
     ThreadRng { rng: THREAD_RNG_KEY.with(|t| t.get()) }
 }

@@ -17,7 +17,7 @@
 //! To get you started quickly, the easiest and highest-level way to get
 //! a random value is to use [`random()`]; alternatively you can use
 //! [`thread_rng()`]. The [`Rng`] trait provides a useful API on all RNGs, while
-//! the [`distributions` module] and [`seq` module] provide further
+//! the [`distributions`] and [`seq`] modules provide further
 //! functionality on top of RNGs.
 //!
 //! ```
@@ -39,12 +39,6 @@
 //!
 //! For the user guide and futher documentation, please read
 //! [The Rust Rand Book](https://rust-random.github.io/book).
-//!
-//! [`distributions` module]: distributions/index.html
-//! [`random()`]: fn.random.html
-//! [`Rng`]: trait.Rng.html
-//! [`seq` module]: seq/index.html
-//! [`thread_rng()`]: fn.thread_rng.html
 
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
@@ -200,12 +194,10 @@ use distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
 ///
 /// # let v = foo(&mut thread_rng());
 /// ```
-///
-/// [`RngCore`]: trait.RngCore.html
 pub trait Rng: RngCore {
     /// Return a random value supporting the [`Standard`] distribution.
     ///
-    /// [`Standard`]: distributions/struct.Standard.html
+    /// [`Standard`]: distributions::Standard
     ///
     /// # Example
     ///
@@ -245,7 +237,7 @@ pub trait Rng: RngCore {
     /// println!("{}", m);
     /// ```
     ///
-    /// [`Uniform`]: distributions/uniform/struct.Uniform.html
+    /// [`Uniform`]: distributions::uniform::Uniform
     fn gen_range<T: SampleUniform, B1, B2>(&mut self, low: B1, high: B2) -> T
         where B1: SampleBorrow<T> + Sized,
               B2: SampleBorrow<T> + Sized {
@@ -323,9 +315,8 @@ pub trait Rng: RngCore {
     /// thread_rng().fill(&mut arr[..]);
     /// ```
     ///
-    /// [`fill_bytes`]: trait.RngCore.html#method.fill_bytes
-    /// [`try_fill`]: trait.Rng.html#method.try_fill
-    /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
+    /// [`fill_bytes`]: RngCore::fill_bytes
+    /// [`try_fill`]: Rng::try_fill
     fn fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) {
         self.fill_bytes(dest.as_byte_slice_mut());
         dest.to_le();
@@ -358,10 +349,8 @@ pub trait Rng: RngCore {
     /// # try_inner().unwrap()
     /// ```
     ///
-    /// [`ErrorKind`]: enum.ErrorKind.html
-    /// [`try_fill_bytes`]: trait.RngCore.html#method.try_fill_bytes
-    /// [`fill`]: trait.Rng.html#method.fill
-    /// [`AsByteSliceMut`]: trait.AsByteSliceMut.html
+    /// [`try_fill_bytes`]: RngCore::try_fill_bytes
+    /// [`fill`]: Rng::fill
     fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
         self.try_fill_bytes(dest.as_byte_slice_mut())?;
         dest.to_le();
@@ -386,7 +375,7 @@ pub trait Rng: RngCore {
     ///
     /// If `p < 0` or `p > 1`.
     ///
-    /// [`Bernoulli`]: distributions/bernoulli/struct.Bernoulli.html
+    /// [`Bernoulli`]: distributions::bernoulli::Bernoulli
     #[inline]
     fn gen_bool(&mut self, p: f64) -> bool {
         let d = distributions::Bernoulli::new(p);
@@ -415,7 +404,7 @@ pub trait Rng: RngCore {
     /// println!("{}", rng.gen_ratio(2, 3));
     /// ```
     ///
-    /// [`Bernoulli`]: distributions/bernoulli/struct.Bernoulli.html
+    /// [`Bernoulli`]: distributions::bernoulli::Bernoulli
     #[inline]
     fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
         let d = distributions::Bernoulli::from_ratio(numerator, denominator);
@@ -424,9 +413,7 @@ pub trait Rng: RngCore {
 
     /// Return a random element from `values`.
     ///
-    /// Deprecated: use [`SliceRandom::choose`] instead.
-    ///
-    /// [`SliceRandom::choose`]: seq/trait.SliceRandom.html#method.choose
+    /// Deprecated: use [`seq::SliceRandom::choose`] instead.
     #[deprecated(since="0.6.0", note="use SliceRandom::choose instead")]
     fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
         use seq::SliceRandom;
@@ -435,9 +422,7 @@ pub trait Rng: RngCore {
 
     /// Return a mutable pointer to a random element from `values`.
     ///
-    /// Deprecated: use [`SliceRandom::choose_mut`] instead.
-    ///
-    /// [`SliceRandom::choose_mut`]: seq/trait.SliceRandom.html#method.choose_mut
+    /// Deprecated: use [`seq::SliceRandom::choose_mut`] instead.
     #[deprecated(since="0.6.0", note="use SliceRandom::choose_mut instead")]
     fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> {
         use seq::SliceRandom;
@@ -446,9 +431,7 @@ pub trait Rng: RngCore {
 
     /// Shuffle a mutable slice in place.
     ///
-    /// Deprecated: use [`SliceRandom::shuffle`] instead.
-    ///
-    /// [`SliceRandom::shuffle`]: seq/trait.SliceRandom.html#method.shuffle
+    /// Deprecated: use [`seq::SliceRandom::shuffle`] instead.
     #[deprecated(since="0.6.0", note="use SliceRandom::shuffle instead")]
     fn shuffle<T>(&mut self, values: &mut [T]) {
         use seq::SliceRandom;
@@ -460,10 +443,7 @@ impl<R: RngCore + ?Sized> Rng for R {}
 
 /// Trait for casting types to byte slices
 ///
-/// This is used by the [`fill`] and [`try_fill`] methods.
-///
-/// [`fill`]: trait.Rng.html#method.fill
-/// [`try_fill`]: trait.Rng.html#method.try_fill
+/// This is used by the [`Rng::fill`] and [`Rng::try_fill`] methods.
 pub trait AsByteSliceMut {
     /// Return a mutable reference to self as a byte slice
     fn as_byte_slice_mut(&mut self) -> &mut [u8];
@@ -580,9 +560,7 @@ impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
-/// [`EntropyRng`]: rngs/struct.EntropyRng.html
-/// [`SeedableRng`]: trait.SeedableRng.html
-/// [`SeedableRng::from_seed`]: trait.SeedableRng.html#tymethod.from_seed
+/// [`EntropyRng`]: rngs::EntropyRng
 #[cfg(feature="std")]
 pub trait FromEntropy: SeedableRng {
     /// Creates a new instance, automatically seeded with fresh entropy.
@@ -667,8 +645,7 @@ impl<R: SeedableRng> FromEntropy for R {
 /// }
 /// ```
 ///
-/// [`thread_rng`]: fn.thread_rng.html
-/// [`Standard`]: distributions/struct.Standard.html
+/// [`Standard`]: distributions::Standard
 #[cfg(feature="std")]
 #[inline]
 pub fn random<T>() -> T where Standard: Distribution<T> {
