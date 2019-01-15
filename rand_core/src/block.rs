@@ -16,40 +16,39 @@
 //! implementations only need to concern themselves with generation of the
 //! block, not the various [`RngCore`] methods (especially [`fill_bytes`], where
 //! the optimal implementations are not trivial), and this allows
-//! [`ReseedingRng`] perform periodic reseeding with very low overhead.
+//! `ReseedingRng` (see [`rand`](https://docs.rs/rand) crate) perform periodic
+//! reseeding with very low overhead.
 //!
 //! # Example
-//! 
+//!
 //! ```norun
 //! use rand_core::block::{BlockRngCore, BlockRng};
-//! 
+//!
 //! struct MyRngCore;
-//! 
+//!
 //! impl BlockRngCore for MyRngCore {
 //!     type Results = [u32; 16];
-//!     
+//!
 //!     fn generate(&mut self, results: &mut Self::Results) {
 //!         unimplemented!()
 //!     }
 //! }
-//! 
+//!
 //! impl SeedableRng for MyRngCore {
 //!     type Seed = unimplemented!();
 //!     fn from_seed(seed: Self::Seed) -> Self {
 //!         unimplemented!()
 //!     }
 //! }
-//! 
+//!
 //! // optionally, also implement CryptoRng for MyRngCore
-//! 
+//!
 //! // Final RNG.
 //! type MyRng = BlockRng<u32, MyRngCore>;
 //! ```
-//! 
-//! [`BlockRngCore`]: trait.BlockRngCore.html
-//! [`RngCore`]: ../trait.RngCore.html
-//! [`fill_bytes`]: ../trait.RngCore.html#tymethod.fill_bytes
-//! [`ReseedingRng`]: ../../rand/rngs/adapter/struct.ReseedingRng.html
+//!
+//! [`BlockRngCore`]: crate::block::BlockRngCore
+//! [`fill_bytes`]: RngCore::fill_bytes
 
 use core::convert::AsRef;
 use core::fmt;
@@ -59,12 +58,12 @@ use impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 /// A trait for RNGs which do not generate random numbers individually, but in
 /// blocks (typically `[u32; N]`). This technique is commonly used by
 /// cryptographic RNGs to improve performance.
-/// 
-/// See the [module documentation](index.html) for details.
+///
+/// See the [module][crate::block] documentation for details.
 pub trait BlockRngCore {
     /// Results element type, e.g. `u32`.
     type Item;
-    
+
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u32; 16]`.
     type Results: AsRef<[Self::Item]> + AsMut<[Self::Item]> + Default;
@@ -105,15 +104,10 @@ pub trait BlockRngCore {
 ///
 /// For easy initialization `BlockRng` also implements [`SeedableRng`].
 ///
-/// [`BlockRngCore`]: BlockRngCore.t.html
-/// [`BlockRngCore::generate`]: trait.BlockRngCore.html#tymethod.generate
-/// [`BlockRng64`]: struct.BlockRng64.html
-/// [`RngCore`]: ../RngCore.t.html
-/// [`next_u32`]: ../trait.RngCore.html#tymethod.next_u32
-/// [`next_u64`]: ../trait.RngCore.html#tymethod.next_u64
-/// [`fill_bytes`]: ../trait.RngCore.html#tymethod.fill_bytes
-/// [`try_fill_bytes`]: ../trait.RngCore.html#tymethod.try_fill_bytes
-/// [`SeedableRng`]: ../SeedableRng.t.html
+/// [`next_u32`]: RngCore::next_u32
+/// [`next_u64`]: RngCore::next_u64
+/// [`fill_bytes`]: RngCore::fill_bytes
+/// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng<R: BlockRngCore + ?Sized> {
@@ -147,7 +141,7 @@ impl<R: BlockRngCore> BlockRng<R> {
     }
 
     /// Get the index into the result buffer.
-    /// 
+    ///
     /// If this is equal to or larger than the size of the result buffer then
     /// the buffer is "empty" and `generate()` must be called to produce new
     /// results.
@@ -314,13 +308,10 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
 /// values. If the requested length is not a multiple of 8, some bytes will be
 /// discarded.
 ///
-/// [`BlockRngCore`]: BlockRngCore.t.html
-/// [`RngCore`]: ../RngCore.t.html
-/// [`next_u32`]: ../trait.RngCore.html#tymethod.next_u32
-/// [`next_u64`]: ../trait.RngCore.html#tymethod.next_u64
-/// [`fill_bytes`]: ../trait.RngCore.html#tymethod.fill_bytes
-/// [`try_fill_bytes`]: ../trait.RngCore.html#tymethod.try_fill_bytes
-/// [`BlockRng`]: struct.BlockRng.html
+/// [`next_u32`]: RngCore::next_u32
+/// [`next_u64`]: RngCore::next_u64
+/// [`fill_bytes`]: RngCore::fill_bytes
+/// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng64<R: BlockRngCore + ?Sized> {

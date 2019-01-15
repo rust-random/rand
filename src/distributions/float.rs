@@ -36,9 +36,9 @@ use packed_simd::*;
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
-/// [`Standard`]: struct.Standard.html
-/// [`Open01`]: struct.Open01.html
-/// [`Uniform`]: uniform/struct.Uniform.html
+/// [`Standard`]: crate::distributions::Standard
+/// [`Open01`]: crate::distributions::Open01
+/// [`Uniform`]: crate::distributions::uniform::Uniform
 #[derive(Clone, Copy, Debug)]
 pub struct OpenClosed01;
 
@@ -62,9 +62,9 @@ pub struct OpenClosed01;
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
-/// [`Standard`]: struct.Standard.html
-/// [`OpenClosed01`]: struct.OpenClosed01.html
-/// [`Uniform`]: uniform/struct.Uniform.html
+/// [`Standard`]: crate::distributions::Standard
+/// [`OpenClosed01`]: crate::distributions::OpenClosed01
+/// [`Uniform`]: crate::distributions::uniform::Uniform
 #[derive(Clone, Copy, Debug)]
 pub struct Open01;
 

@@ -235,8 +235,8 @@ impl JitterRng {
     /// # let _ = try_inner();
     /// ```
     ///
-    /// [`test_timer`]: struct.JitterRng.html#method.test_timer
-    /// [`set_rounds`]: struct.JitterRng.html#method.set_rounds
+    /// [`test_timer`]: JitterRng::test_timer
+    /// [`set_rounds`]: JitterRng::set_rounds
     pub fn new_with_timer(timer: fn() -> u64) -> JitterRng {
         JitterRng {
             data: 0,
@@ -256,7 +256,7 @@ impl JitterRng {
     /// rounds required for full strength (platform dependent), so one may use
     /// `rng.set_rounds(rng.test_timer()?);` or cache the value.
     ///
-    /// [`new_with_timer`]: struct.JitterRng.html#method.new_with_timer
+    /// [`new_with_timer`]: JitterRng::new_with_timer
     pub fn set_rounds(&mut self, rounds: u8) {
         assert!(rounds > 0);
         self.rounds = rounds;
@@ -493,15 +493,13 @@ impl JitterRng {
         self.stir_pool();
         self.data
     }
-    
+
     /// Basic quality tests on the timer, by measuring CPU timing jitter a few
     /// hundred times.
     ///
     /// If succesful, this will return the estimated number of rounds necessary
     /// to collect 64 bits of entropy. Otherwise a [`TimerError`] with the cause
     /// of the failure will be returned.
-    ///
-    /// [`TimerError`]: enum.TimerError.html
     pub fn test_timer(&mut self) -> Result<u8, TimerError> {
         debug!("JitterRng: testing timer ...");
         // We could add a check for system capabilities such as `clock_getres`
@@ -651,8 +649,8 @@ impl JitterRng {
     /// of entropy one round of the entropy collector can collect in the worst
     /// case.
     ///
-    /// See [Quality testing](struct.JitterRng.html#quality-testing) on how to
-    /// use `timer_stats` to test the quality of `JitterRng`.
+    /// See this crate's README on how to use `timer_stats` to test the quality
+    /// of `JitterRng`.
     pub fn timer_stats(&mut self, var_rounds: bool) -> i64 {
         let mut mem = [0; MEMORY_SIZE];
 

@@ -15,7 +15,7 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 
 
 /// An RNG that reads random bytes straight from any type supporting
-/// `std::io::Read`, for example files.
+/// [`std::io::Read`], for example files.
 ///
 /// This will work best with an infinite reader, but that is not required.
 ///
@@ -24,10 +24,10 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 ///
 /// # Panics
 ///
-/// `ReadRng` uses `std::io::read_exact`, which retries on interrupts. All other
-/// errors from the underlying reader, including when it does not have enough
-/// data, will only be reported through [`try_fill_bytes`]. The other
-/// [`RngCore`] methods will panic in case of an error.
+/// `ReadRng` uses [`std::io::Read::read_exact`], which retries on interrupts.
+/// All other errors from the underlying reader, including when it does not
+/// have enough data, will only be reported through [`try_fill_bytes`].
+/// The other [`RngCore`] methods will panic in case of an error.
 ///
 /// # Example
 ///
@@ -40,9 +40,8 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 /// println!("{:x}", rng.gen::<u32>());
 /// ```
 ///
-/// [`OsRng`]: ../struct.OsRng.html
-/// [`RngCore`]: ../../trait.RngCore.html
-/// [`try_fill_bytes`]: ../../trait.RngCore.html#method.tymethod.try_fill_bytes
+/// [`OsRng`]: rand_os::OsRng
+/// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Debug)]
 pub struct ReadRng<R> {
     reader: R

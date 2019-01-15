@@ -53,7 +53,7 @@
 //!   which is one of the recommendations by ECRYPT's eSTREAM project.
 //!
 //! The above PRNGs do not cover all use-cases; more algorithms can be found in
-//! the [`prng` module], as well as in several other crates. For example, you
+//! the [`prng`][crate::prng] module, as well as in several other crates. For example, you
 //! may wish a CSPRNG with significantly lower memory usage than [`StdRng`]
 //! while being less concerned about performance, in which case [`ChaChaRng`]
 //! is a good choice.
@@ -83,19 +83,19 @@
 //!   to reproduce the output sequence by using a fixed seed. (Don't use
 //!   [`StdRng`] or [`SmallRng`] in this case since different algorithms may be
 //!   used by future versions of Rand; use an algorithm from the
-//!   [`prng` module].)
+//!   [`prng`] module.)
 //!
 //! ## Conclusion
 //!
 //! - [`thread_rng`] is what you often want to use.
 //! - If you want more control, flexibility, or better performance, use
-//!   [`StdRng`], [`SmallRng`] or an algorithm from the [`prng` module].
+//!   [`StdRng`], [`SmallRng`] or an algorithm from the [`prng`] module.
 //! - Use [`FromEntropy::from_entropy`] to seed new PRNGs.
 //! - If you need reproducibility, use [`SeedableRng::from_seed`] combined with
 //!   a named PRNG.
 //!
 //! More information and notes on cryptographic security can be found
-//! in the [`prng` module].
+//! in the [`prng`] module.
 //!
 //! ## Examples
 //!
@@ -135,30 +135,16 @@
 //! [`CryptoRng`] is a marker trait cryptographically secure PRNGs can
 //! implement.
 //!
-//!
-// This module:
-//! [`ThreadRng`]: struct.ThreadRng.html
-//! [`StdRng`]: struct.StdRng.html
-//! [`SmallRng`]: struct.SmallRng.html
-//! [`EntropyRng`]: struct.EntropyRng.html
-//! [`OsRng`]: struct.OsRng.html
-//! [`JitterRng`]: struct.JitterRng.html
-// Other traits and functions:
-//! [`rand_core`]: https://crates.io/crates/rand_core
-//! [`prng` module]: ../prng/index.html
-//! [`CryptoRng`]: ../trait.CryptoRng.html
-//! [`FromEntropy`]: ../trait.FromEntropy.html
-//! [`FromEntropy::from_entropy`]: ../trait.FromEntropy.html#tymethod.from_entropy
-//! [`RngCore`]: ../trait.RngCore.html
-//! [`Rng`]: ../trait.Rng.html
-//! [`SeedableRng`]: ../trait.SeedableRng.html
-//! [`SeedableRng::from_rng`]: ../trait.SeedableRng.html#tymethod.from_rng
-//! [`SeedableRng::from_seed`]: ../trait.SeedableRng.html#tymethod.from_seed
-//! [`thread_rng`]: ../fn.thread_rng.html
-//! [`mock::StepRng`]: mock/struct.StepRng.html
-//! [`adapter::ReadRng`]: adapter/struct.ReadRng.html
-//! [`adapter::ReseedingRng`]: adapter/struct.ReseedingRng.html
-//! [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
+//! [`OsRng`]: rand_os::OsRng
+//! [`SmallRng`]: rngs::SmallRng
+//! [`StdRng`]: rngs::StdRng
+//! [`ThreadRng`]: rngs::ThreadRng
+//! [`EntropyRng`]: rngs::EntropyRng
+//! [`JitterRng`]: rngs::JitterRng
+//! [`mock::StepRng`]: rngs::mock::StepRng
+//! [`adapter::ReadRng`]: rngs::adapter::ReadRng
+//! [`adapter::ReseedingRng`]: rngs::adapter::ReseedingRng
+//! [`ChaChaRng`]: rand_chacha::ChaChaRng
 
 pub mod adapter;
 

@@ -38,11 +38,10 @@ use rngs;
 /// report the error, and only the one from `OsRng`. The other [`RngCore`]
 /// methods will panic in case of an error.
 ///
-/// [`OsRng`]: struct.OsRng.html
-/// [`JitterRng`]: struct.JitterRng.html
-/// [`thread_rng`]: ../fn.thread_rng.html
-/// [`RngCore`]: ../trait.RngCore.html
-/// [`try_fill_bytes`]: ../trait.RngCore.html#method.tymethod.try_fill_bytes
+/// [`OsRng`]: rand_os::OsRng
+/// [`thread_rng`]: crate::thread_rng
+/// [`JitterRng`]: crate::rngs::JitterRng
+/// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Debug)]
 pub struct EntropyRng {
     source: Source,

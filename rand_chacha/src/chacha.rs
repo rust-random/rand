@@ -62,10 +62,8 @@ const STATE_WORDS: usize = 16;
 /// [^2]: [eSTREAM: the ECRYPT Stream Cipher Project](
 ///       http://www.ecrypt.eu.org/stream/)
 ///
-/// [`set_word_pos`]: #method.set_word_pos
-/// [`set_stream`]: #method.set_stream
-/// [`BlockRng`]: ../rand_core/block/struct.BlockRng.html
-/// [`RngCore`]: ../rand_core/trait.RngCore.html
+/// [`set_word_pos`]: ChaChaRng::set_word_pos
+/// [`set_stream`]: ChaChaRng::set_stream
 #[derive(Clone, Debug)]
 pub struct ChaChaRng(BlockRng<ChaChaCore>);
 
