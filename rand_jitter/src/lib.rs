@@ -29,7 +29,7 @@
 //!
 //! `JitterRng` can be used without the standard library, but not conveniently,
 //! you must provide a high-precision timer and carefully have to follow the
-//! instructions of [`new_with_timer`].
+//! instructions of [`JitterRng::new_with_timer`].
 //!
 //! This implementation is based on [Jitterentropy] version 2.1.0.
 //!
@@ -38,8 +38,6 @@
 //! [`JitterRng::new()`] is not available on WASM. It is also unavailable
 //! with disabled `std` feature.
 //!
-//! [`JitterRng::new()`]: struct.JitterRng.html#method.new
-//! [`new_with_timer`]: struct.JitterRng.html#method.new_with_timer
 //! [Jitterentropy]: http://www.chronox.de/jent.html
 
 // Note: the C implementation of `Jitterentropy` relies on being compiled

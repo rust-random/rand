@@ -12,7 +12,7 @@ use core::fmt;
 
 /// An error that can occur when [`JitterRng::test_timer`] fails.
 ///
-/// [`JitterRng::test_timer`]: struct.JitterRng.html#method.test_timer
+/// [`JitterRng::test_timer`]: crate::JitterRng::test_timer
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TimerError {
     /// No timer available.
