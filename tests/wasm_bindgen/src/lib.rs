@@ -9,8 +9,8 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen]
-pub fn generate_from_seed(seed: u64) -> u64 {
-    StdRng::seed_from_u64(seed).gen()
+pub fn generate_from_seed(seed: u32) -> u32 {
+    StdRng::seed_from_u64(seed as u64).gen()
 }
 
 pub mod tests {
