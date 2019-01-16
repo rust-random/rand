@@ -140,7 +140,7 @@ matrix:
         - cargo web prepare-emscripten
         - cargo web -V
         - cargo list | grep install-update || cargo install -f cargo-update
-        - cargo install-update -i cargo-update wasm-pack
+        - cargo install-update -i cargo-update wasm-bindgen
       addons:
         chrome: stable
       script:
@@ -154,7 +154,8 @@ matrix:
         - cargo build --target wasm32-unknown-unknown --features=wasm-bindgen
         - cargo web test --target wasm32-unknown-unknown --features=stdweb
         - cargo build --manifest-path tests/wasm_bindgen/Cargo.toml --target wasm32-unknown-unknown
-        - wasm-pack test --node tests/wasm_bindgen
+        - wasm-bindgen --nodejs target/wasm32-unknown-unknown/debug/rand_wasm_bindgen_test.wasm --out-dir tests/wasm_bindgen/js
+        - node tests/wasm_bindgen/js/index.js
 
     - rust: nightly
       env: DESCRIPTION="cross-platform builder (doesn't run tests)"
