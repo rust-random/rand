@@ -139,7 +139,8 @@ matrix:
         - ./utils/ci/install_cargo_web.sh
         - cargo web prepare-emscripten
         - cargo web -V
-        - cargo install wasm-pack
+        - cargo list | grep install-update || cargo install -f cargo-update
+        - cargo install-update -i cargo-update wasm-pack
       addons:
         chrome: stable
       script:
