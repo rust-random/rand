@@ -13,3 +13,6 @@ crate-type = ["cdylib"]
 rand = { path = "../..", features = ["wasm-bindgen"] }
 wasm-bindgen = "0.2"
 wasm-bindgen-test = "0.2"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.2"
