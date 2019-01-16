@@ -3,7 +3,7 @@ extern crate wasm_bindgen;
 
 use rand::rngs::{OsRng, StdRng};
 use rand::FromEntropy;
-use rand::{Rng, RngCore, SeedableRng};
+use rand::{Rng, SeedableRng};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
