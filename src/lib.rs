@@ -58,6 +58,7 @@
 
 #[cfg(feature="simd_support")] extern crate packed_simd;
 
+extern crate rand_jitter;
 #[cfg(feature = "rand_os")]
 extern crate rand_os;
 

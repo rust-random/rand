@@ -149,7 +149,6 @@
 pub mod adapter;
 
 #[cfg(feature="std")] mod entropy;
-mod jitter;
 pub mod mock;   // Public so we don't export `StepRng` directly, making it a bit
                 // more clear it is intended for testing.
 mod small;
@@ -157,7 +156,7 @@ mod std;
 #[cfg(feature="std")] pub(crate) mod thread;
 
 
-pub use self::jitter::{JitterRng, TimerError};
+pub use rand_jitter::{JitterRng, TimerError};
 #[cfg(feature="std")] pub use self::entropy::EntropyRng;
 
 pub use self::small::SmallRng;

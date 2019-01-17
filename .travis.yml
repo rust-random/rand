@@ -74,6 +74,7 @@ matrix:
         - cargo test --manifest-path rand_xoshiro/Cargo.toml
         - cargo test --manifest-path rand_chacha/Cargo.toml
         - cargo test --manifest-path rand_hc/Cargo.toml
+        - cargo test --manifest-path rand_jitter/Cargo.toml
         - cargo test --manifest-path rand_os/Cargo.toml
 
     - rust: stable
@@ -95,6 +96,7 @@ matrix:
         - cargo test --manifest-path rand_xoshiro/Cargo.toml
         - cargo test --manifest-path rand_chacha/Cargo.toml
         - cargo test --manifest-path rand_hc/Cargo.toml
+        - cargo test --manifest-path rand_jitter/Cargo.toml
         - cargo test --manifest-path rand_os/Cargo.toml
         - cargo build --target=aarch64-apple-ios
 
@@ -122,6 +124,7 @@ matrix:
         - cargo test --manifest-path rand_xoshiro/Cargo.toml
         - cargo test --manifest-path rand_chacha/Cargo.toml
         - cargo test --manifest-path rand_hc/Cargo.toml
+        - cargo test --manifest-path rand_jitter/Cargo.toml
         - cargo test --manifest-path rand_os/Cargo.toml
         # remove cached documentation, otherwise files from previous PRs can get included
         - rm -rf target/doc
@@ -208,6 +211,7 @@ script:
   - cargo test --manifest-path rand_xoshiro/Cargo.toml
   - cargo test --manifest-path rand_chacha/Cargo.toml
   - cargo test --manifest-path rand_hc/Cargo.toml
+  - cargo test --manifest-path rand_jitter/Cargo.toml
   - cargo test --manifest-path rand_os/Cargo.toml
 
 after_script: set +e
