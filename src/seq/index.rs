@@ -39,7 +39,7 @@ impl IndexVec {
 
     /// Return the value at the given `index`.
     ///
-    /// (Note: we cannot implement `std::ops::Index` because of lifetime
+    /// (Note: we cannot implement [`std::ops::Index`] because of lifetime
     /// restrictions.)
     pub fn index(&self, index: usize) -> usize {
         match self {

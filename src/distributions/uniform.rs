@@ -15,13 +15,13 @@
 //! [`Uniform`].
 //!
 //! This distribution is provided with support for several primitive types
-//! (all integer and floating-point types) as well as `std::time::Duration`,
+//! (all integer and floating-point types) as well as [`std::time::Duration`],
 //! and supports extension to user-defined types via a type-specific *back-end*
 //! implementation.
 //!
 //! The types [`UniformInt`], [`UniformFloat`] and [`UniformDuration`] are the
 //! back-ends supporting sampling from primitive integer and floating-point
-//! ranges as well as from `std::time::Duration`; these types do not normally
+//! ranges as well as from [`std::time::Duration`]; these types do not normally
 //! need to be used directly (unless implementing a derived back-end).
 //!
 //! # Example usage
@@ -100,14 +100,12 @@
 //! let x = uniform.sample(&mut thread_rng());
 //! ```
 //!
-//! [`Uniform`]: struct.Uniform.html
-//! [`Rng::gen_range`]: ../../trait.Rng.html#method.gen_range
-//! [`SampleUniform`]: trait.SampleUniform.html
-//! [`UniformSampler`]: trait.UniformSampler.html
-//! [`UniformInt`]: struct.UniformInt.html
-//! [`UniformFloat`]: struct.UniformFloat.html
-//! [`UniformDuration`]: struct.UniformDuration.html
-//! [`SampleBorrow::borrow`]: trait.SampleBorrow.html#method.borrow
+//! [`SampleUniform`]: crate::distributions::uniform::SampleUniform
+//! [`UniformSampler`]: crate::distributions::uniform::UniformSampler
+//! [`UniformInt`]: crate::distributions::uniform::UniformInt
+//! [`UniformFloat`]: crate::distributions::uniform::UniformFloat
+//! [`UniformDuration`]: crate::distributions::uniform::UniformDuration
+//! [`SampleBorrow::borrow`]: crate::distributions::uniform::SampleBorrow::borrow
 
 #[cfg(feature = "std")]
 use std::time::Duration;
@@ -165,10 +163,8 @@ use packed_simd::*;
 /// }
 /// ```
 ///
-/// [`Uniform::new`]: struct.Uniform.html#method.new
-/// [`Uniform::new_inclusive`]: struct.Uniform.html#method.new_inclusive
-/// [`new`]: struct.Uniform.html#method.new
-/// [`new_inclusive`]: struct.Uniform.html#method.new_inclusive
+/// [`new`]: Uniform::new
+/// [`new_inclusive`]: Uniform::new_inclusive
 #[derive(Clone, Copy, Debug)]
 pub struct Uniform<X: SampleUniform> {
     inner: X::Sampler,
@@ -206,9 +202,7 @@ impl<X: SampleUniform> Distribution<X> for Uniform<X> {
 /// See the [module documentation] on how to implement [`Uniform`] range
 /// sampling for a custom type.
 ///
-/// [`UniformSampler`]: trait.UniformSampler.html
-/// [module documentation]: index.html
-/// [`Uniform`]: struct.Uniform.html
+/// [module documentation]: crate::distributions::uniform
 pub trait SampleUniform: Sized {
     /// The `UniformSampler` implementation supporting type `X`.
     type Sampler: UniformSampler<X = Self>;
@@ -222,9 +216,8 @@ pub trait SampleUniform: Sized {
 /// Implementation of [`sample_single`] is optional, and is only useful when
 /// the implementation can be faster than `Self::new(low, high).sample(rng)`.
 ///
-/// [module documentation]: index.html
-/// [`Uniform`]: struct.Uniform.html
-/// [`sample_single`]: trait.UniformSampler.html#method.sample_single
+/// [module documentation]: crate::distributions::uniform
+/// [`sample_single`]: UniformSampler::sample_single
 pub trait UniformSampler: Sized {
     /// The type sampled by this implementation.
     type X;
@@ -288,11 +281,11 @@ impl<X: SampleUniform> From<::core::ops::RangeInclusive<X>> for Uniform<X> {
 /// only for SampleUniform and references to SampleUniform in
 /// order to resolve ambiguity issues.
 ///
-/// [`Borrow`]: https://doc.rust-lang.org/std/borrow/trait.Borrow.html
+/// [`Borrow`]: std::borrow::Borrow
 pub trait SampleBorrow<Borrowed> {
     /// Immutably borrows from an owned value. See [`Borrow::borrow`]
     ///
-    /// [`Borrow::borrow`]: https://doc.rust-lang.org/std/borrow/trait.Borrow.html#tymethod.borrow
+    /// [`Borrow::borrow`]: std::borrow::Borrow::borrow
     fn borrow(&self) -> &Borrowed;
 }
 impl<Borrowed> SampleBorrow<Borrowed> for Borrowed where Borrowed: SampleUniform {
@@ -345,9 +338,6 @@ impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed where Borrowed: Sampl
 /// An alternative to using a modulus is widening multiply: After a widening
 /// multiply by `range`, the result is in the high word. Then comparing the low
 /// word against `zone` makes sure our distribution is uniform.
-///
-/// [`UniformSampler`]: trait.UniformSampler.html
-/// [`Uniform`]: struct.Uniform.html
 #[derive(Clone, Copy, Debug)]
 pub struct UniformInt<X> {
     low: X,
@@ -646,11 +636,9 @@ uniform_simd_int_impl! {
 /// multiply and addition. Values produced this way have what equals 22 bits of
 /// random digits for an `f32`, and 52 for an `f64`.
 ///
-/// [`UniformSampler`]: trait.UniformSampler.html
-/// [`new`]: trait.UniformSampler.html#tymethod.new
-/// [`new_inclusive`]: trait.UniformSampler.html#tymethod.new_inclusive
-/// [`Uniform`]: struct.Uniform.html
-/// [`Standard`]: ../struct.Standard.html
+/// [`new`]: UniformSampler::new
+/// [`new_inclusive`]: UniformSampler::new_inclusive
+/// [`Standard`]: crate::distributions::Standard
 #[derive(Clone, Copy, Debug)]
 pub struct UniformFloat<X> {
     low: X,
@@ -833,9 +821,6 @@ uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 ///
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
-///
-/// [`UniformSampler`]: trait.UniformSampler.html
-/// [`Uniform`]: struct.Uniform.html
 #[cfg(any(feature = "std", rustc_1_25))]
 #[derive(Clone, Copy, Debug)]
 pub struct UniformDuration {

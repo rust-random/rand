@@ -79,11 +79,11 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// # }
 /// ```
 ///
-/// [`ChaChaCore`]: ../../../rand_chacha/struct.ChaChaCore.html
-/// [`Hc128Core`]: ../../../rand_hc/struct.Hc128Core.html
-/// [`BlockRngCore`]: ../../../rand_core/block/trait.BlockRngCore.html
-/// [`ReseedingRng::new`]: struct.ReseedingRng.html#method.new
-/// [`reseed()`]: struct.ReseedingRng.html#method.reseed
+/// [`ChaChaCore`]: rand_chacha::ChaChaCore
+/// [`Hc128Core`]: rand_hc::Hc128Core
+/// [`BlockRngCore`]: rand_core::block::BlockRngCore
+/// [`ReseedingRng::new`]: ReseedingRng::new
+/// [`reseed()`]: ReseedingRng::reseed
 #[derive(Debug)]
 pub struct ReseedingRng<R, Rsdr>(BlockRng<ReseedingCore<R, Rsdr>>)
 where R: BlockRngCore + SeedableRng,

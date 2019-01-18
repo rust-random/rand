@@ -23,8 +23,8 @@ use rand_hc::Hc128Rng;
 /// produce different output depending on the architecture. If you require
 /// reproducible output, use a named RNG, for example [`ChaChaRng`].
 ///
-/// [HC-128]: ../../rand_hc/struct.Hc128Rng.html
-/// [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
+/// [HC-128]: rand_hc::Hc128Rng
+/// [`ChaChaRng`]: rand_chacha::ChaChaRng
 #[derive(Clone, Debug)]
 pub struct StdRng(Hc128Rng);
 

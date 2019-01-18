@@ -40,9 +40,9 @@ use core::fmt;
 /// `N` is the number of weights.
 ///
 /// Sampling from `WeightedIndex` will result in a single call to
-/// [`Uniform<X>::sample`], which typically will request a single value from
-/// the underlying [`RngCore`], though the exact number depends on the
-/// implementaiton of [`Uniform<X>::sample`].
+/// `Uniform<X>::sample` (method of the [`Distribution`] trait), which typically
+/// will request a single value from the underlying [`RngCore`], though the
+/// exact number depends on the implementaiton of `Uniform<X>::sample`.
 ///
 /// # Example
 ///
@@ -67,9 +67,8 @@ use core::fmt;
 /// }
 /// ```
 ///
-/// [`Uniform<X>`]: struct.Uniform.html
-/// [`Uniform<X>::sample`]: struct.Uniform.html#method.sample
-/// [`RngCore`]: ../trait.RngCore.html
+/// [`Uniform<X>`]: crate::distributions::uniform::Uniform
+/// [`RngCore`]: rand_core::RngCore
 #[derive(Debug, Clone)]
 pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
     cumulative_weights: Vec<X>,
@@ -84,8 +83,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// Returns an error if the iterator is empty, if any weight is `< 0`, or
     /// if its total value is 0.
     ///
-    /// [`Distribution`]: trait.Distribution.html
-    /// [`Uniform<X>`]: struct.Uniform.html
+    /// [`Uniform<X>`]: crate::distributions::uniform::Uniform
     pub fn new<I>(weights: I) -> Result<WeightedIndex<X>, WeightedError>
         where I: IntoIterator,
               I::Item: SampleBorrow<X>,

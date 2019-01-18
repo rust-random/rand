@@ -20,9 +20,9 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [features]
-default = ["std", "rand_os"] # without "std" rand uses libcore
+default = ["std"] # without "std" rand uses libcore
 nightly = ["simd_support"] # enables all features requiring nightly rust
-std = ["rand_core/std", "alloc", "rand_os"]
+std = ["rand_core/std", "alloc", "rand_os", "rand_jitter/std"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 i128_support = [] # enables i128 and u128 support
 simd_support = ["packed_simd"] # enables SIMD support
@@ -34,6 +34,7 @@ stdweb = ["rand_os/stdweb"]
 [workspace]
 members = [
     "rand_core",
+    "rand_jitter",
     "rand_os",
     "rand_isaac",
     "rand_chacha",
@@ -47,6 +48,7 @@ members = [
 [dependencies]
 rand_core = { path = "rand_core", version = "0.3", default-features = false }
 rand_pcg = { path = "rand_pcg", version = "0.1" }
+rand_jitter = { path = "rand_jitter", version = "0.1", default-features = false }
 rand_os = { path = "rand_os", version = "0.1", optional = true  }
 # only for deprecations and benches:
 rand_isaac = { path = "rand_isaac", version = "0.1" }

@@ -56,7 +56,7 @@
 //!
 //! User types `T` may also implement `Distribution<T>` for [`Uniform`],
 //! although this is less straightforward than for [`Standard`] (see the
-//! documentation in the [`uniform` module]. Doing so enables generation of
+//! documentation in the [`uniform`] module. Doing so enables generation of
 //! values of type `T` with  [`Rng::gen_range`].
 //!
 //!
@@ -65,8 +65,8 @@
 //! There are surprisingly many ways to uniformly generate random floats. A
 //! range between 0 and 1 is standard, but the exact bounds (open vs closed)
 //! and accuracy differ. In addition to the [`Standard`] distribution Rand offers
-//! [`Open01`] and [`OpenClosed01`]. See [Floating point implementation] for
-//! more details.
+//! [`Open01`] and [`OpenClosed01`]. See "Floating point implementation" section of
+//! [`Standard`] documentation for more details.
 //!
 //! [`Alphanumeric`] is a simple distribution to sample random letters and
 //! numbers of the `char` type; in contrast [`Standard`] may sample any valid
@@ -140,47 +140,38 @@
 //!
 //!
 //! [probability distribution]: https://en.wikipedia.org/wiki/Probability_distribution
-//! [`Distribution`]: trait.Distribution.html
-//! [`gen_range`]: ../trait.Rng.html#method.gen_range
-//! [`gen`]: ../trait.Rng.html#method.gen
-//! [`sample`]: ../trait.Rng.html#method.sample
-//! [`new_inclusive`]: struct.Uniform.html#method.new_inclusive
-//! [`random()`]: ../fn.random.html
-//! [`Rng::gen_bool`]: ../trait.Rng.html#method.gen_bool
-//! [`Rng::gen_range`]: ../trait.Rng.html#method.gen_range
-//! [`Rng::gen()`]: ../trait.Rng.html#method.gen
-//! [`Rng`]: ../trait.Rng.html
-//! [`uniform` module]: uniform/index.html
-//! [Floating point implementation]: struct.Standard.html#floating-point-implementation
-// distributions
-//! [`Alphanumeric`]: struct.Alphanumeric.html
-//! [`Bernoulli`]: struct.Bernoulli.html
-//! [`Beta`]: struct.Beta.html
-//! [`Binomial`]: struct.Binomial.html
-//! [`Cauchy`]: struct.Cauchy.html
-//! [`ChiSquared`]: struct.ChiSquared.html
-//! [`Dirichlet`]: struct.Dirichlet.html
-//! [`Exp`]: struct.Exp.html
-//! [`Exp1`]: struct.Exp1.html
-//! [`FisherF`]: struct.FisherF.html
-//! [`Gamma`]: struct.Gamma.html
-//! [`LogNormal`]: struct.LogNormal.html
-//! [`Normal`]: struct.Normal.html
-//! [`Open01`]: struct.Open01.html
-//! [`OpenClosed01`]: struct.OpenClosed01.html
-//! [`Pareto`]: struct.Pareto.html
-//! [`Poisson`]: struct.Poisson.html
-//! [`Standard`]: struct.Standard.html
-//! [`StandardNormal`]: struct.StandardNormal.html
-//! [`StudentT`]: struct.StudentT.html
-//! [`Triangular`]: struct.Triangular.html
-//! [`Uniform`]: struct.Uniform.html
-//! [`Uniform::new`]: struct.Uniform.html#method.new
-//! [`Uniform::new_inclusive`]: struct.Uniform.html#method.new_inclusive
-//! [`UnitSphereSurface`]: struct.UnitSphereSurface.html
-//! [`UnitCircle`]: struct.UnitCircle.html
-//! [`Weibull`]: struct.Weibull.html
-//! [`WeightedIndex`]: struct.WeightedIndex.html
+//! [`gen_range`]: Rng::gen_range
+//! [`gen`]: Rng::gen
+//! [`sample`]: Rng::sample
+//! [`new_inclusive`]: Uniform::new_inclusive
+//! [`Alphanumeric`]: distributions::Alphanumeric
+//! [`Bernoulli`]: distributions::Bernoulli
+//! [`Beta`]: distributions::Beta
+//! [`Binomial`]: distributions::Binomial
+//! [`Cauchy`]: distributions::Cauchy
+//! [`ChiSquared`]: distributions::ChiSquared
+//! [`Dirichlet`]: distributions::Dirichlet
+//! [`Exp`]: distributions::Exp
+//! [`Exp1`]: distributions::Exp1
+//! [`FisherF`]: distributions::FisherF
+//! [`Gamma`]: distributions::Gamma
+//! [`LogNormal`]: distributions::LogNormal
+//! [`Normal`]: distributions::Normal
+//! [`Open01`]: distributions::Open01
+//! [`OpenClosed01`]: distributions::OpenClosed01
+//! [`Pareto`]: distributions::Pareto
+//! [`Poisson`]: distributions::Poisson
+//! [`Standard`]: distributions::Standard
+//! [`StandardNormal`]: distributions::StandardNormal
+//! [`StudentT`]: distributions::StudentT
+//! [`Triangular`]: distributions::Triangular
+//! [`Uniform`]: distributions::Uniform
+//! [`Uniform::new`]: distributions::Uniform::new
+//! [`Uniform::new_inclusive`]: distributions::Uniform::new_inclusive
+//! [`UnitSphereSurface`]: distributions::UnitSphereSurface
+//! [`UnitCircle`]: distributions::UnitCircle
+//! [`Weibull`]: distributions::Weibull
+//! [`WeightedIndex`]: distributions::WeightedIndex
 
 #[cfg(any(rustc_1_26, features="nightly"))]
 use core::iter;
@@ -238,8 +229,7 @@ mod utils;
 /// advantage of not needing to consider thread safety, and for most
 /// distributions efficient state-less sampling algorithms are available.
 ///
-/// [`Rng`]: ../trait.Rng.html
-/// [`sample_iter`]: trait.Distribution.html#method.sample_iter
+/// [`sample_iter`]: Distribution::method.sample_iter
 pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the source of randomness.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T;
@@ -292,8 +282,7 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 /// This `struct` is created by the [`sample_iter`] method on [`Distribution`].
 /// See its documentation for more.
 ///
-/// [`Distribution`]: trait.Distribution.html
-/// [`sample_iter`]: trait.Distribution.html#method.sample_iter
+/// [`sample_iter`]: Distribution::sample_iter
 #[derive(Debug)]
 pub struct DistIter<'a, D: 'a, R: 'a, T> {
     distr: &'a D,
@@ -379,9 +368,7 @@ impl<'a, D, R, T> iter::TrustedLen for DistIter<'a, D, R, T>
 /// faster on some architectures (on modern Intel CPUs all methods have
 /// approximately equal performance).
 ///
-/// [`Open01`]: struct.Open01.html
-/// [`OpenClosed01`]: struct.OpenClosed01.html
-/// [`Uniform`]: uniform/struct.Uniform.html
+/// [`Uniform`]: uniform::Uniform
 #[derive(Clone, Copy, Debug)]
 pub struct Standard;
 
@@ -401,7 +388,7 @@ pub struct Weighted<T> {
 ///
 /// Deprecated: use [`WeightedIndex`] instead.
 ///
-/// [`WeightedIndex`]: struct.WeightedIndex.html
+/// [`WeightedIndex`]: WeightedIndex
 #[deprecated(since="0.6.0", note="use WeightedIndex instead")]
 #[allow(deprecated)]
 #[derive(Debug)]

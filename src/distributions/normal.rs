@@ -91,7 +91,7 @@ impl Distribution<f64> for StandardNormal {
 /// println!("{} is from a N(2, 9) distribution", v)
 /// ```
 ///
-/// [`StandardNormal`]: struct.StandardNormal.html
+/// [`StandardNormal`]: crate::distributions::StandardNormal
 #[derive(Clone, Copy, Debug)]
 pub struct Normal {
     mean: f64,
