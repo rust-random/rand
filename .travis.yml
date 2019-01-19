@@ -143,8 +143,7 @@ matrix:
         - cargo web prepare-emscripten
         - cargo web -V
         - cargo list | grep install-update || cargo install -f cargo-update
-        - cargo install-update -i cargo-update wasm-bindgen-cli
-        - cargo install-update -i cargo-update wasm-pack
+        - cargo install-update -i cargo-update wasm-bindgen-cli wasm-pack
       addons:
         chrome: stable
       script:
