@@ -42,6 +42,7 @@ members = [
     "rand_pcg",
     "rand_xorshift",
     "rand_xoshiro",
+    "tests/wasm_bindgen",
 ]
 
 [dependencies]

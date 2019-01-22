@@ -1,0 +1,15 @@
+[package]
+name = "rand_wasm_bindgen_test"
+description = "Minimal crate to test that rand can be build for web assembly target"
+version = "0.1.0"
+authors = ["The Rand Project Developers"]
+publish = false
+license = "MIT/Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+rand = { path = "../..", features = ["wasm-bindgen"] }
+wasm-bindgen = "0.2"
+wasm-bindgen-test = "0.2"
