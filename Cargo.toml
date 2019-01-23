@@ -46,9 +46,9 @@ members = [
 ]
 
 [dependencies]
-rand_core = { path = "rand_core", version = "0.3", default-features = false }
+rand_core = { path = "rand_core", version = "0.4" }
 rand_pcg = { path = "rand_pcg", version = "0.1" }
-rand_jitter = { path = "rand_jitter", version = "0.1", default-features = false }
+rand_jitter = { path = "rand_jitter", version = "0.1" }
 rand_os = { path = "rand_os", version = "0.1", optional = true  }
 # only for deprecations and benches:
 rand_isaac = { path = "rand_isaac", version = "0.1" }
@@ -84,4 +84,4 @@ autocfg = "0.1"
 all-features = true
 
 [patch.crates-io]
-rand_core = { path = "rand_core", version = "0.3", default-features = false }
+rand_core = { path = "rand_core", version = "0.4" }

@@ -2,8 +2,10 @@ extern crate rand_jitter;
 extern crate rand_core;
 
 use rand_jitter::JitterRng;
+#[cfg(feature = "std")]
 use rand_core::RngCore;
 
+#[cfg(feature = "std")]
 #[test]
 fn test_jitter_init() {
     // Because this is a debug build, measurements here are not representive

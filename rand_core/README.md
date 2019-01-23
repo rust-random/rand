@@ -44,13 +44,14 @@ The traits and error types are also available via `rand`.
 
 `rand_core` supports `no_std` and `alloc`-only configurations, as well as full
 `std` functionality. The differences between `no_std` and full `std` are small,
-comprising `RngCore` support for `Box<R>` types where `R: RngCore`, as well as
+comprising `RngCore` support for `Box<R>` types where `R: RngCore`,
+`std::io::Read` support for types supporting `RngCore`, and
 extensions to the `Error` type's functionality.
 
-Due to [rust-lang/cargo#1596](https://github.com/rust-lang/cargo/issues/1596),
-`rand_core` is built without `std` support by default. Since features are
-unioned across the whole dependency tree, any crate using `rand` with its
-default features will also enable `std` support in `rand_core`.
+The `std` feature is *not enabled by default*. This is primarily to avoid build
+problems where one crate implicitly requires `rand_core` with `std` support and
+another crate requires `rand` *without* `std` support. However, the `rand` crate
+continues to enable `std` support by default, both for itself and `rand_core`.
 
 The `serde1` feature can be used to derive `Serialize` and `Deserialize` for RNG
 implementations that use the `BlockRng` or `BlockRng64` wrappers.
