@@ -28,7 +28,7 @@ winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "winnt"] }
 cloudabi = "0.0.3"
 
 [target.'cfg(target_os = "fuchsia")'.dependencies]
-fuchsia-zircon = "0.3.2"
+fuchsia-cprng = "0.1.0"
 
 [target.wasm32-unknown-unknown.dependencies]
 wasm-bindgen = { version = "0.2.12", optional = true }
