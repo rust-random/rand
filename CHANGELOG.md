@@ -9,6 +9,11 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Update Guide](UPDATING.md) useful.
 
 
+## [0.5.6] - 2019-01-25
+### Platforms
+- Fuchsia: Replaced fuchsia-zircon with fuchsia-cprng
+
+
 ## [0.5.5] - 2018-08-07
 ### Documentation
 - Fix links in documentation (#582)

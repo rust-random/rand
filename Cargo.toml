@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.5.5" # NB: When modifying, also modify html_root_url in lib.rs
+version = "0.5.6" # NB: When modifying, also modify html_root_url in lib.rs
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -20,7 +20,7 @@ appveyor = { repository = "alexcrichton/rand" }
 [features]
 default = ["std" ] # without "std" rand uses libcore
 nightly = ["i128_support"] # enables all features requiring nightly rust
-std = ["rand_core/std", "alloc", "libc", "winapi", "cloudabi", "fuchsia-zircon"]
+std = ["rand_core/std", "alloc", "libc", "winapi", "cloudabi", "fuchsia-cprng"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 i128_support = [] # enables i128 and u128 support
 serde1 = ["serde", "serde_derive", "rand_core/serde1"] # enables serialization for PRNGs
@@ -44,7 +44,7 @@ winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "
 cloudabi = { version = "0.0.3", optional = true }
 
 [target.'cfg(target_os = "fuchsia")'.dependencies]
-fuchsia-zircon = { version = "0.3.2", optional = true }
+fuchsia-cprng = { version = "0.1.0", optional = true }
 
 [target.wasm32-unknown-unknown.dependencies]
 # use with `--target wasm32-unknown-unknown --features=stdweb`
