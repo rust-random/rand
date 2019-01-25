@@ -1,3 +1,15 @@
+// Copyright 2018 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+// Crate to test WASM with the `wasm-bindgen` lib.
+
+#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png")]
+
 extern crate rand;
 extern crate wasm_bindgen;
 extern crate wasm_bindgen_test;
