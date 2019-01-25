@@ -22,6 +22,12 @@ Links:
 -   [API documentation (docs.rs)](https://docs.rs/rand_jitter)
 -   [Changelog](CHANGELOG.md)
 
+## Features
+
+This crate has optional `std` support which is *disabled by default*;
+this feature is required to provide the `JitterRng::new` function;
+without `std` support a timer must be supplied via `JitterRng::new_with_timer`.
+
 ## Quality testing
 
 `JitterRng::new()` has build-in, but limited, quality testing, however
