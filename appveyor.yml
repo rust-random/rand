@@ -37,15 +37,8 @@ test_script:
   - cargo test --features=serde1,log
   - cargo test --benches --features=nightly
   - cargo test --examples
-  - cargo test --package rand_core
-  - cargo test --package rand_core --no-default-features --features=alloc
-  - cargo test --package rand_isaac --features=serde1
-  - cargo test --package rand_xorshift --features=serde1
-  - cargo test --package rand_xoshiro
-  - cargo test --package rand_chacha
-  - cargo test --package rand_hc
-  - cargo test --manifest-path rand_core/Cargo.toml
-  - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
+  - cargo test --manifest-path rand_core/Cargo.toml --tests
+  - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc --tests
   - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
