@@ -24,11 +24,13 @@ type Rng = ::rand_pcg::Pcg32;
 /// future library versions may use a different internal generator with
 /// different output. Further, this generator may not be portable and can
 /// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG. Refer to the documentation on the
-/// [`prng`][crate::prng] module.
+/// reproducible output, use a named RNG.
+/// Refer to [The Book](https://rust-random.github.io/book/guide-rngs.html).
+/// 
 ///
 /// The current algorithm is [`Pcg64Mcg`][rand_pcg::Pcg64Mcg] on 64-bit platforms with Rust version
-/// 1.26 and later, or [`Pcg32`][rand_pcg::Pcg32] otherwise.
+/// 1.26 and later, or [`Pcg32`][rand_pcg::Pcg32] otherwise. Both are found in
+/// the [rand_pcg] crate.
 ///
 /// # Examples
 ///
@@ -67,6 +69,7 @@ type Rng = ::rand_pcg::Pcg32;
 /// [`FromEntropy`]: crate::FromEntropy
 /// [`StdRng`]: crate::rngs::StdRng
 /// [`thread_rng`]: crate::thread_rng
+/// [rand_pcg]: https://crates.io/crates/rand_pcg
 #[derive(Clone, Debug)]
 pub struct SmallRng(Rng);
 
