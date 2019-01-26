@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.4.5"
+version = "0.4.6"
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -32,7 +32,7 @@ winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "
 members = ["rand-derive"]
 
 [target.'cfg(target_os = "fuchsia")'.dependencies]
-fuchsia-zircon = "0.3.2"
+fuchsia-cprng = "0.1.0"
 
 [target.'cfg(target_env = "sgx")'.dependencies]
 rdrand = "0.4.0"
