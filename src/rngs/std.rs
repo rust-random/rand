@@ -15,16 +15,20 @@ use rand_hc::Hc128Rng;
 /// on the current platform, to be statistically strong and unpredictable
 /// (meaning a cryptographically secure PRNG).
 ///
-/// The current algorithm used on all platforms is [HC-128].
+/// The current algorithm used on all platforms is [HC-128], found in the
+/// [rand_hc] crate.
 ///
 /// Reproducibility of output from this generator is however not required, thus
 /// future library versions may use a different internal generator with
 /// different output. Further, this generator may not be portable and can
 /// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG, for example [`ChaChaRng`].
+/// reproducible output, use a named RNG, for example [`ChaChaRng`] from the
+/// [rand_chacha] crate.
 ///
 /// [HC-128]: rand_hc::Hc128Rng
 /// [`ChaChaRng`]: rand_chacha::ChaChaRng
+/// [rand_hc]: https://crates.io/crates/rand_hc
+/// [rand_chacha]: https://crates.io/crates/rand_chacha
 #[derive(Clone, Debug)]
 pub struct StdRng(Hc128Rng);
 

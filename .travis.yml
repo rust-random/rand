@@ -199,6 +199,8 @@ matrix:
         - source ~/.cargo/env || true
       script:
         - bash utils/ci/script.sh
+  allow_failures:
+  - env: TARGET=armv7-linux-androideabi
 
 before_install:
   - set -e
