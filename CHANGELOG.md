@@ -9,6 +9,10 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 
+## [0.6.5] - Unreleased
+### Platforms
+- Fuchsia: Replaced fuchsia-zircon with fuchsia-cprng
+
 ## [0.6.4] - 2019-01-08
 ### Fixes
 - Move wasm-bindgen shims to correct crate (#686)
