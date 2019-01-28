@@ -9,9 +9,18 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 
-## [0.6.5] - Unreleased
+## [0.6.5] - 2019-01-28
+### Crates
+- Update `rand_core` to 0.4 (#703)
+- Move `JitterRng` to its own crate (#685)
+- Add a warm-bindgen test crate (#696)
+
 ### Platforms
 - Fuchsia: Replaced fuchsia-zircon with fuchsia-cprng
+
+### Doc
+- Use RFC 1946 for doc links (#691)
+- Fix some doc links and notes (#711)
 
 ## [0.6.4] - 2019-01-08
 ### Fixes
