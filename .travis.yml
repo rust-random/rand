@@ -60,6 +60,9 @@ matrix:
   include:
     - rust: 1.22.0
       env: DESCRIPTION="pinned stable Rust release"
+      os:
+        - linux
+        - osx
       script:
         # Differs from standard script: rand_pcg features
         - cargo test --lib --no-default-features
@@ -76,6 +79,9 @@ matrix:
         - cargo test --manifest-path rand_hc/Cargo.toml
         - cargo test --manifest-path rand_jitter/Cargo.toml
         - cargo test --manifest-path rand_os/Cargo.toml
+
+    - rust: stable
+      env: DESCRIPTION="stable Rust release, linux"
 
     - rust: stable
       env: DESCRIPTION="stable Rust release, macOS, iOS (cross-compile only)"
@@ -104,6 +110,9 @@ matrix:
       env: DESCRIPTION="beta Rust release"
 
     - rust: nightly
+      os:
+        - linux
+        - osx
       env: DESCRIPTION="nightly features, benchmarks, documentation"
       install:
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
