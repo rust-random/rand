@@ -21,6 +21,8 @@ pub fn get_nstime() -> u64 {
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 pub fn get_nstime() -> u64 {
+    use libc;
+    
     // On Mac OS and iOS std::time::SystemTime only has 1000ns resolution.
     // We use `mach_absolute_time` instead. This provides a CPU dependent
     // unit, to get real nanoseconds the result should by multiplied by
