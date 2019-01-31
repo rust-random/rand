@@ -34,6 +34,8 @@ pub fn get_nstime() -> u64 {
 
 #[cfg(target_os = "windows")]
 pub fn get_nstime() -> u64 {
+    use winapi;
+
     unsafe {
         let mut t = super::mem::zeroed();
         winapi::um::profileapi::QueryPerformanceCounter(&mut t);
