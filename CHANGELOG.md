@@ -9,6 +9,10 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 
+## Unreleased
+- Enable fork protection of ReseedingRng without `std`
+- Remove dependency on `winapi`
+
 ## [0.6.5] - 2019-01-28
 ### Crates
 - Update `rand_core` to 0.4 (#703)
