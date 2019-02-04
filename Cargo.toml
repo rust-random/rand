@@ -65,11 +65,8 @@ optional = true
 features = ["into_bits"]
 
 [target.'cfg(unix)'.dependencies]
+# Used for fork protection (reseeding.rs)
 libc = { version = "0.2", default-features = false }
-
-# TODO: check if all features are required
-[target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "profileapi", "winnt"] }
 
 [dev-dependencies]
 # This has a histogram implementation used for testing uniformity.
