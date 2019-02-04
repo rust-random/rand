@@ -282,12 +282,12 @@ where R: BlockRngCore + SeedableRng + CryptoRng,
       Rsdr: RngCore + CryptoRng {}
 
 
-#[cfg(all(feature="std", unix, not(target_os="emscripten")))]
+#[cfg(all(unix, not(target_os="emscripten")))]
 mod fork {
     extern crate libc;
 
-    use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
-    use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT};
+    use core::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+    use core::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT};
 
     // Fork protection
     //
@@ -323,7 +323,7 @@ mod fork {
     }
 }
 
-#[cfg(not(all(feature="std", unix, not(target_os="emscripten"))))]
+#[cfg(not(all(unix, not(target_os="emscripten"))))]
 mod fork {
     pub fn get_fork_counter() -> usize { 0 }
     pub fn register_fork_handler() {}
