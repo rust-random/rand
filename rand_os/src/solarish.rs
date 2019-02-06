@@ -28,8 +28,9 @@ use std::io;
 use std::io::Read;
 use std::fs::{File, OpenOptions};
 use std::os::unix::fs::OpenOptionsExt;
-use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
+use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering, AtomicUsize};
 use std::cmp;
+use std::mem;
 
 #[derive(Clone, Debug)]
 pub struct OsRng {
@@ -97,9 +98,10 @@ impl OsRngImpl for OsRng {
     }
 
     fn max_chunk_size(&self) -> usize {
-        // The documentation says 1024 is the maximum for getrandom, but
-        // 1040 for /dev/random.
-        1024
+        // This is the largest size that's guaranteed to not block across
+        // all the Solarish platforms, though some may allow for larger
+        // sizes.
+        256
     }
 
     fn method_str(&self) -> &'static str {
@@ -110,18 +112,50 @@ impl OsRngImpl for OsRng {
     }
 }
 
-fn getrandom(buf: &mut [u8], blocking: bool) -> libc::c_long {
-    extern "C" {
-        fn syscall(number: libc::c_long, ...) -> libc::c_long;
-    }
+#[cfg(target_os = "illumos")]
+type GetRandomFn = unsafe extern fn(*mut u8, libc::size_t, libc::c_uint)
+    -> libc::ssize_t;
+#[cfg(target_os = "solaris")]
+type GetRandomFn = unsafe extern fn(*mut u8, libc::size_t, libc::c_uint)
+    -> libc::c_int;
 
-    const SYS_GETRANDOM: libc::c_long = 143;
+// Use dlsym to determine if getrandom(2) is present in libc.  On Solarish
+// systems, the syscall interface is not stable and can change between
+// updates.  Even worse, issuing unsupported syscalls will cause the system
+// to generate a SIGSYS signal (usually terminating the program).
+// Instead the stable APIs are exposed via libc.  Cache the result of the
+// lookup for future calls.  This is loosely modeled after the
+// libstd::sys::unix::weak macro which unfortunately is not exported.
+fn fetch() -> Option<&'static GetRandomFn> {
+    static FPTR: AtomicUsize = AtomicUsize::new(1);
+
+    unsafe {
+       if FPTR.load(Ordering::SeqCst) == 1 {
+            let name = "getrandom\0";
+            let addr = libc::dlsym(libc::RTLD_DEFAULT,
+                                   name.as_ptr() as *const _) as usize;
+            FPTR.store(addr, Ordering::SeqCst);
+       }
+
+       if FPTR.load(Ordering::SeqCst) == 0 {
+           return None;
+       } else {
+           mem::transmute::<&AtomicUsize, Option<&GetRandomFn>>(&FPTR)
+       }
+   }
+}
+
+fn getrandom(buf: &mut [u8], blocking: bool) -> libc::ssize_t {
     const GRND_NONBLOCK: libc::c_uint = 0x0001;
     const GRND_RANDOM: libc::c_uint = 0x0002;
 
-    unsafe {
-        syscall(SYS_GETRANDOM, buf.as_mut_ptr(), buf.len(),
-                if blocking { 0 } else { GRND_NONBLOCK } | GRND_RANDOM)
+    if let Some(rand) = fetch() {
+        unsafe {
+            rand(buf.as_mut_ptr(), buf.len(),
+                 if blocking { 0 } else { GRND_NONBLOCK } | GRND_RANDOM) as libc::ssize_t
+        }
+    } else {
+        -1
     }
 }
 
@@ -143,7 +177,7 @@ fn getrandom_try_fill(dest: &mut [u8], blocking: bool) -> Result<(), Error> {
                 err,
             ));
         }
-    } else if result != dest.len() as i64 {
+    } else if result != dest.len() as libc::ssize_t {
         return Err(Error::new(ErrorKind::Unavailable,
                               "unexpected getrandom error"));
     }
@@ -151,25 +185,10 @@ fn getrandom_try_fill(dest: &mut [u8], blocking: bool) -> Result<(), Error> {
 }
 
 fn is_getrandom_available() -> bool {
-    use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
-    use std::sync::{Once, ONCE_INIT};
-
-    static CHECKER: Once = ONCE_INIT;
-    static AVAILABLE: AtomicBool = ATOMIC_BOOL_INIT;
-
-    CHECKER.call_once(|| {
-        debug!("OsRng: testing getrandom");
-        let mut buf: [u8; 0] = [];
-        let result = getrandom(&mut buf, false);
-        let available = if result == -1 {
-            let err = io::Error::last_os_error().raw_os_error();
-            err != Some(libc::ENOSYS)
-        } else {
-            true
-        };
-        AVAILABLE.store(available, Ordering::Relaxed);
-        info!("OsRng: using {}", if available { "getrandom" } else { "/dev/random" });
-    });
-
-    AVAILABLE.load(Ordering::Relaxed)
+    let available = match fetch() {
+        Some(_) => true,
+        None => false,
+    };
+    info!("OsRng: using {}", if available { "getrandom" } else { "/dev/random" });
+    available
 }
