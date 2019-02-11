@@ -140,7 +140,7 @@ matrix:
         - cargo doc --no-deps --all --all-features
         - cargo deadlinks --dir target/doc
       after_success:
-        - travis-cargo --only nightly doc-upload
+        - test "$TRAVIS_OS_NAME" = "linux" && travis-cargo --only nightly doc-upload
 
     - rust: nightly
       env: DESCRIPTION="WASM via emscripten, stdweb and wasm-bindgen"
