@@ -211,7 +211,8 @@ pub trait Rng: RngCore {
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
     #[inline]
-    fn gen<T>(&mut self) -> T where Standard: Distribution<T> {
+    fn gen<T>(&mut self) -> T
+    where Standard: Distribution<T> {
         Standard.sample(self)
     }
 
@@ -240,8 +241,10 @@ pub trait Rng: RngCore {
     ///
     /// [`Uniform`]: distributions::uniform::Uniform
     fn gen_range<T: SampleUniform, B1, B2>(&mut self, low: B1, high: B2) -> T
-        where B1: SampleBorrow<T> + Sized,
-              B2: SampleBorrow<T> + Sized {
+    where
+        B1: SampleBorrow<T> + Sized,
+        B2: SampleBorrow<T> + Sized,
+    {
         T::Sampler::sample_single(low, high, self)
     }
 
@@ -290,9 +293,10 @@ pub trait Rng: RngCore {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    fn sample_iter<'a, T, D: Distribution<T>>(&'a mut self, distr: &'a D)
-        -> distributions::DistIter<'a, D, Self, T> where Self: Sized
-    {
+    fn sample_iter<'a, T, D: Distribution<T>>(
+        &'a mut self, distr: &'a D,
+    ) -> distributions::DistIter<'a, D, Self, T>
+    where Self: Sized {
         distr.sample_iter(self)
     }
 
@@ -649,7 +653,8 @@ impl<R: SeedableRng> FromEntropy for R {
 /// [`Standard`]: distributions::Standard
 #[cfg(feature="std")]
 #[inline]
-pub fn random<T>() -> T where Standard: Distribution<T> {
+pub fn random<T>() -> T
+where Standard: Distribution<T> {
     thread_rng().gen()
 }
 
