@@ -59,10 +59,28 @@ sudo: false
 matrix:
   include:
     - rust: 1.22.0
-      env: DESCRIPTION="pinned stable Rust release"
-      os:
-        - linux
-        - osx
+      env: DESCRIPTION="Linux, 1.22.0"
+      os: linux
+      script:
+        # Differs from standard script: rand_pcg features
+        - cargo test --lib --no-default-features
+        # TODO: add simd_support feature:
+        - cargo test --features=serde1,log
+        - cargo test --examples
+        - cargo test --manifest-path rand_core/Cargo.toml
+        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+        - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
+        # TODO: cannot test rand_pcg due to explicit dependency on i128
+        - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_xoshiro/Cargo.toml
+        - cargo test --manifest-path rand_chacha/Cargo.toml
+        - cargo test --manifest-path rand_hc/Cargo.toml
+        - cargo test --manifest-path rand_jitter/Cargo.toml
+        - cargo test --manifest-path rand_os/Cargo.toml
+
+    - rust: 1.22.0
+      env: DESCRIPTION="OSX, 1.22.0"
+      os: osx
       script:
         # Differs from standard script: rand_pcg features
         - cargo test --lib --no-default-features
@@ -81,10 +99,10 @@ matrix:
         - cargo test --manifest-path rand_os/Cargo.toml
 
     - rust: stable
-      env: DESCRIPTION="stable Rust release, linux"
+      env: DESCRIPTION="Linux, stable"
 
     - rust: stable
-      env: DESCRIPTION="stable Rust release, macOS, iOS (cross-compile only)"
+      env: DESCRIPTION="OSX+iOS, stable"
       os: osx
       install:
         - rustup target add aarch64-apple-ios
@@ -107,13 +125,11 @@ matrix:
         - cargo build --target=aarch64-apple-ios
 
     - rust: beta
-      env: DESCRIPTION="beta Rust release"
+      env: DESCRIPTION="Linux, beta"
 
     - rust: nightly
-      os:
-        - linux
-        - osx
-      env: DESCRIPTION="nightly features, benchmarks, documentation"
+      os: linux
+      env: DESCRIPTION="Linux, nightly, docs"
       install:
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
         - cargo deadlinks -V
@@ -140,7 +156,34 @@ matrix:
         - cargo doc --no-deps --all --all-features
         - cargo deadlinks --dir target/doc
       after_success:
-        - test "$TRAVIS_OS_NAME" = "linux" && travis-cargo --only nightly doc-upload
+        - travis-cargo --only nightly doc-upload
+
+    - rust: nightly
+      os: osx
+      env: DESCRIPTION="OSX, nightly, docs"
+      install:
+        - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
+        - cargo deadlinks -V
+      script:
+        # Differs from standard script: alloc feature, all features, doc build
+        - cargo test --lib --no-default-features --features=alloc
+        - cargo test --all-features
+        - cargo test --benches --features=nightly
+        - cargo test --examples
+        - cargo test --manifest-path rand_core/Cargo.toml
+        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
+        - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
+        - cargo test --manifest-path rand_xoshiro/Cargo.toml
+        - cargo test --manifest-path rand_chacha/Cargo.toml
+        - cargo test --manifest-path rand_hc/Cargo.toml
+        - cargo test --manifest-path rand_jitter/Cargo.toml
+        - cargo test --manifest-path rand_os/Cargo.toml
+        # remove cached documentation, otherwise files from previous PRs can get included
+        - rm -rf target/doc
+        - cargo doc --no-deps --all --all-features
+        - cargo deadlinks --dir target/doc
 
     - rust: nightly
       env: DESCRIPTION="WASM via emscripten, stdweb and wasm-bindgen"
@@ -208,8 +251,6 @@ matrix:
         - source ~/.cargo/env || true
       script:
         - bash utils/ci/script.sh
-  allow_failures:
-  - env: TARGET=armv7-linux-androideabi
 
 before_install:
   - set -e
