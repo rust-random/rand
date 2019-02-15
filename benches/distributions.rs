@@ -14,6 +14,8 @@ extern crate rand;
 const RAND_BENCH_N: u64 = 1000;
 
 use std::mem::size_of;
+#[cfg(rustc_1_28)]
+use std::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU128};
 use test::Bencher;
 use std::time::Duration;
 
@@ -33,6 +35,26 @@ macro_rules! distr_int {
                 for _ in 0..::RAND_BENCH_N {
                     let x: $ty = distr.sample(&mut rng);
                     accum = accum.wrapping_add(x);
+                }
+                accum
+            });
+            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+        }
+    }
+}
+
+macro_rules! distr_nz_int {
+    ($fnn:ident, $tynz:ty, $ty:ty, $distr:expr) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = SmallRng::from_entropy();
+            let distr = $distr;
+
+            b.iter(|| {
+                let mut accum = 0 as $ty;
+                for _ in 0..::RAND_BENCH_N {
+                    let x: $tynz = distr.sample(&mut rng);
+                    accum = accum.wrapping_add(x.get());
                 }
                 accum
             });
@@ -156,6 +178,11 @@ distr_int!(distr_standard_i16, i16, Standard);
 distr_int!(distr_standard_i32, i32, Standard);
 distr_int!(distr_standard_i64, i64, Standard);
 distr_int!(distr_standard_i128, i128, Standard);
+#[cfg(rustc_1_28)] distr_nz_int!(distr_standard_nz8, NonZeroU8, u8, Standard);
+#[cfg(rustc_1_28)] distr_nz_int!(distr_standard_nz16, NonZeroU16, u16, Standard);
+#[cfg(rustc_1_28)] distr_nz_int!(distr_standard_nz32, NonZeroU32, u32, Standard);
+#[cfg(rustc_1_28)] distr_nz_int!(distr_standard_nz64, NonZeroU64, u64, Standard);
+#[cfg(rustc_1_28)] distr_nz_int!(distr_standard_nz128, NonZeroU128, u128, Standard);
 
 distr!(distr_standard_bool, bool, Standard);
 distr!(distr_standard_alphanumeric, char, Alphanumeric);
