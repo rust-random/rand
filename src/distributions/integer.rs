@@ -10,6 +10,8 @@
 
 use {Rng};
 use distributions::{Distribution, Standard};
+#[cfg(rustc_1_28)]
+use core::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU128, NonZeroUsize};
 #[cfg(feature="simd_support")]
 use packed_simd::*;
 #[cfg(all(target_arch = "x86", feature="nightly"))]
@@ -87,6 +89,27 @@ impl_int_from_uint! { i32, u32 }
 impl_int_from_uint! { i64, u64 }
 #[cfg(all(rustc_1_26, not(target_os = "emscripten")))] impl_int_from_uint! { i128, u128 }
 impl_int_from_uint! { isize, usize }
+
+macro_rules! impl_nzint {
+    ($ty:ty, $new:path) => {
+        impl Distribution<$ty> for Standard {
+            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                loop {
+                    if let Some(nz) = $new(rng.gen()) {
+                        break nz;
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(rustc_1_28)] impl_nzint!(NonZeroU8, NonZeroU8::new);
+#[cfg(rustc_1_28)] impl_nzint!(NonZeroU16, NonZeroU16::new);
+#[cfg(rustc_1_28)] impl_nzint!(NonZeroU32, NonZeroU32::new);
+#[cfg(rustc_1_28)] impl_nzint!(NonZeroU64, NonZeroU64::new);
+#[cfg(all(rustc_1_28, not(target_os = "emscripten")))] impl_nzint!(NonZeroU128, NonZeroU128::new);
+#[cfg(rustc_1_28)] impl_nzint!(NonZeroUsize, NonZeroUsize::new);
 
 #[cfg(feature="simd_support")]
 macro_rules! simd_impl {
