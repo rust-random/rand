@@ -173,14 +173,13 @@ impl ExactSizeIterator for IndexVecIntoIter {}
 /// Note that performance is significantly better over `u32` indices than over
 /// `u64` indices. Because of this we hide the underlying type behind an
 /// abstraction, `IndexVec`.
-/// 
+///
 /// If an allocation-free `no_std` function is required, it is suggested
 /// to adapt the internal `sample_floyd` implementation.
 ///
 /// Panics if `amount > length`.
 pub fn sample<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
-    where R: Rng + ?Sized,
-{
+where R: Rng + ?Sized {
     if amount > length {
         panic!("`amount` of samples must be less than or equal to `length`");
     }
@@ -227,8 +226,7 @@ pub fn sample<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
 ///
 /// This implementation uses `O(amount)` memory and `O(amount^2)` time.
 fn sample_floyd<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
-    where R: Rng + ?Sized,
-{
+where R: Rng + ?Sized {
     // For small amount we use Floyd's fully-shuffled variant. For larger
     // amounts this is slow due to Vec::insert performance, so we shuffle
     // afterwards. Benchmarks show little overhead from extra logic.
@@ -274,8 +272,7 @@ fn sample_floyd<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
 ///
 /// Set-up is `O(length)` time and memory and shuffling is `O(amount)` time.
 fn sample_inplace<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
-    where R: Rng + ?Sized,
-{
+where R: Rng + ?Sized {
     debug_assert!(amount <= length);
     let mut indices: Vec<u32> = Vec::with_capacity(length as usize);
     indices.extend(0..length);
@@ -290,13 +287,12 @@ fn sample_inplace<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
 
 /// Randomly sample exactly `amount` indices from `0..length`, using rejection
 /// sampling.
-/// 
+///
 /// Since `amount <<< length` there is a low chance of a random sample in
 /// `0..length` being a duplicate. We test for duplicates and resample where
 /// necessary. The algorithm is `O(amount)` time and memory.
 fn sample_rejection<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
-    where R: Rng + ?Sized,
-{
+where R: Rng + ?Sized {
     debug_assert!(amount < length);
     #[cfg(feature="std")] let mut cache = HashSet::with_capacity(amount);
     #[cfg(not(feature="std"))] let mut cache = BTreeSet::new();

@@ -12,10 +12,10 @@
 extern crate average;
 extern crate rand;
 
-use std as core;
-use rand::FromEntropy;
-use rand::distributions::Distribution;
 use average::Histogram;
+use rand::distributions::Distribution;
+use rand::FromEntropy;
+use std as core;
 
 const N_BINS: usize = 100;
 const N_SAMPLES: u32 = 1_000_000;
@@ -50,7 +50,7 @@ fn unit_sphere() {
 
 #[test]
 fn unit_circle() {
-    use ::std::f64::consts::PI;
+    use std::f64::consts::PI;
     let mut h = Histogram100::with_const_width(-PI, PI);
     let dist = rand::distributions::UnitCircle::new();
     let mut rng = rand::rngs::SmallRng::from_entropy();
