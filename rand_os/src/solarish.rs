@@ -126,23 +126,21 @@ type GetRandomFn = unsafe extern fn(*mut u8, libc::size_t, libc::c_uint)
 // Instead the stable APIs are exposed via libc.  Cache the result of the
 // lookup for future calls.  This is loosely modeled after the
 // libstd::sys::unix::weak macro which unfortunately is not exported.
-fn fetch() -> Option<&'static GetRandomFn> {
+fn fetch() -> Option<GetRandomFn> {
     static FPTR: AtomicUsize = AtomicUsize::new(1);
 
-    unsafe {
-       if FPTR.load(Ordering::SeqCst) == 1 {
-            let name = "getrandom\0";
-            let addr = libc::dlsym(libc::RTLD_DEFAULT,
-                                   name.as_ptr() as *const _) as usize;
-            FPTR.store(addr, Ordering::SeqCst);
-       }
+    if FPTR.load(Ordering::SeqCst) == 1 {
+        let name = "getrandom\0";
+        let addr = unsafe {
+            libc::dlsym(libc::RTLD_DEFAULT, name.as_ptr() as *const _) as usize
+        };
+        FPTR.store(addr, Ordering::SeqCst);
+    }
 
-       if FPTR.load(Ordering::SeqCst) == 0 {
-           return None;
-       } else {
-           mem::transmute::<&AtomicUsize, Option<&GetRandomFn>>(&FPTR)
-       }
-   }
+    let ptr = FPTR.load(Ordering::SeqCst);
+    unsafe {
+        mem::transmute::<usize, Option<GetRandomFn>>(ptr)
+    }
 }
 
 fn getrandom(buf: &mut [u8], blocking: bool) -> libc::ssize_t {
@@ -150,9 +148,9 @@ fn getrandom(buf: &mut [u8], blocking: bool) -> libc::ssize_t {
     const GRND_RANDOM: libc::c_uint = 0x0002;
 
     if let Some(rand) = fetch() {
+        let flag = if blocking { 0 } else { GRND_NONBLOCK } | GRND_RANDOM;
         unsafe {
-            rand(buf.as_mut_ptr(), buf.len(),
-                 if blocking { 0 } else { GRND_NONBLOCK } | GRND_RANDOM) as libc::ssize_t
+            rand(buf.as_mut_ptr(), buf.len(), flag) as libc::ssize_t
         }
     } else {
         -1
