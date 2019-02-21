@@ -233,7 +233,7 @@ impl Distribution<u64> for Binomial {
                 if alpha > x_m * (f1 / x1).ln()
                     + (n - (m as f64) + 0.5) * (z / w).ln()
                     + ((y - m) as f64) * (w * p / (x1 * q)).ln()
-                    + stirling(f1) + stirling(z) + stirling(x1) + stirling(w)
+                    + stirling(f1) + stirling(z) - stirling(x1) - stirling(w)
                 {
                     continue;
                 }
