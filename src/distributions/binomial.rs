@@ -65,6 +65,7 @@ impl Distribution<u64> for Binomial {
         };
 
         let result;
+        let q = 1. - p;
 
         // For small n * min(p, 1 - p), the BINV algorithm based on the inverse
         // transformation of the binomial distribution is efficient. Otherwise,
@@ -81,7 +82,6 @@ impl Distribution<u64> for Binomial {
         if (self.n as f64) * p < BINV_THRESHOLD &&
            self.n <= (::std::i32::MAX as u64) {
             // Use the BINV algorithm.
-            let q = 1. - p;
             let s = p / q;
             let a = ((self.n + 1) as f64) * s;
             let mut r = q.powi(self.n as i32);
@@ -102,12 +102,10 @@ impl Distribution<u64> for Binomial {
 
             // Step 0: Calculate constants as functions of `n` and `p`.
             let n = self.n as f64;
-            let r = p;
-            let q = 1. - r;
-            let f_m = n*r + r;
+            let f_m = n*p + p;
             let m = f_m as i64;
             // radius of triangle region, since height=1 also area of region
-            let p1 = (2.195 * (n*r*q).sqrt() - 4.6 * q).floor() + 0.5;
+            let p1 = (2.195 * (n*p*q).sqrt() - 4.6 * q).floor() + 0.5;
             // tip of triangle
             let x_m = (m as f64) + 0.5;
             // left edge of triangle
@@ -122,7 +120,7 @@ impl Distribution<u64> for Binomial {
                 a * (1. + 0.5 * a)
             }
 
-            let lambda_l = lambda((f_m - x_l) / (f_m - x_l * r));
+            let lambda_l = lambda((f_m - x_l) / (f_m - x_l * p));
             let lambda_r = lambda((x_r - f_m) / (x_r * q));
             // p1 + area of left tail
             let p3 = p2 + c / lambda_l;
@@ -132,7 +130,7 @@ impl Distribution<u64> for Binomial {
             // return value
             let mut y: i64;
 
-            'outer: loop {
+            loop {
                 // Step 1: Generate `u` for selecting the region. If region 1 is
                 // selected, generate a triangularly distributed variate.
                 let u = rng.gen_range(0., p4);
@@ -142,51 +140,42 @@ impl Distribution<u64> for Binomial {
                     break;
                 }
 
-                loop {
-                    // Step 2: Region 2, parallelograms. Check if region 2 is used. If
-                    // so, generate `y`.
-                    if !(u > p2) {
-                        let x = x_l + (u - p1) / c;
-                        v = v * c + 1.0 - (x - x_m).abs() / p1;
-                        if v > 1. {
-                            continue 'outer;
-                        } else {
-                            y = x as i64;
-                            break;
-                        }
+                if !(u > p2) {
+                    // Step 2: Region 2, parallelograms. Check if region 2 is
+                    // used. If so, generate `y`.
+                    let x = x_l + (u - p1) / c;
+                    v = v * c + 1.0 - (x - x_m).abs() / p1;
+                    if v > 1. {
+                        continue;
+                    } else {
+                        y = x as i64;
                     }
-
+                } else if !(u > p3) {
                     // Step 3: Region 3, left exponential tail.
-                    if !(u > p3) {
-                        y = (x_l + v.ln() / lambda_l) as i64;
-                        if y < 0 {
-                            continue 'outer;
-                        } else {
-                            v *= (u - p2) * lambda_l;
-                            break;
-                        }
+                    y = (x_l + v.ln() / lambda_l) as i64;
+                    if y < 0 {
+                        continue;
+                    } else {
+                        v *= (u - p2) * lambda_l;
                     }
-
+                } else {
                     // Step 4: Region 4, right exponential tail.
                     y = (x_r - v.ln() / lambda_r) as i64;
                     if y > 0 && (y as u64) > self.n {
-                        continue 'outer;
+                        continue;
                     } else {
                         v *= (u - p3) * lambda_r;
                     }
-
-                    break;
                 }
-
 
                 // Step 5: Acceptance/rejection comparison.
 
                 // Step 5.0: Test for appropriate method of evaluating f(y).
                 let k = (y - m).abs();
-                if !(k > SQUEEZE_THRESHOLD && (k as f64) < 0.5 * n*r*q - 1.) {
+                if !(k > SQUEEZE_THRESHOLD && (k as f64) < 0.5 * n*p*q - 1.) {
                     // Step 5.1: Evaluate f(y) via the recursive relationship. Start the
                     // search from the mode.
-                    let s = r / q;
+                    let s = p / q;
                     let a = s * (n + 1.);
                     let mut f = 1.0;
                     if m < y {
@@ -218,8 +207,8 @@ impl Distribution<u64> for Binomial {
                 // Step 5.2: Squeezing. Check the value of ln(v) againts upper and
                 // lower bound of ln(f(y)).
                 let k = k as f64;
-                let rho = (k / (n*r*q)) * ((k * (k / 3. + 0.625) + 1./6.) / (n*r*q) + 0.5);
-                let t = -0.5 * k*k / (n*r*q);
+                let rho = (k / (n*p*q)) * ((k * (k / 3. + 0.625) + 1./6.) / (n*p*q) + 0.5);
+                let t = -0.5 * k*k / (n*p*q);
                 let alpha = v.ln();
                 if alpha < t - rho {
                     break;
@@ -241,7 +230,7 @@ impl Distribution<u64> for Binomial {
 
                 if alpha > x_m * (f1 / x1).ln()
                     + (n - (m as f64) + 0.5) * (z / w).ln()
-                    + ((y - m) as f64) * (w * r / (x1 * q)).ln()
+                    + ((y - m) as f64) * (w * p / (x1 * q)).ln()
                     + stirling(f1) + stirling(z) + stirling(x1) + stirling(w)
                 {
                     continue;
