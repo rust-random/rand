@@ -102,10 +102,12 @@ impl Distribution<u64> for Binomial {
 
             // Step 0: Calculate constants as functions of `n` and `p`.
             let n = self.n as f64;
-            let f_m = n*p + p;
+            let np = n * p;
+            let npq = np * q;
+            let f_m = np + p;
             let m = f_m as i64;
             // radius of triangle region, since height=1 also area of region
-            let p1 = (2.195 * (n*p*q).sqrt() - 4.6 * q).floor() + 0.5;
+            let p1 = (2.195 * npq.sqrt() - 4.6 * q).floor() + 0.5;
             // tip of triangle
             let x_m = (m as f64) + 0.5;
             // left edge of triangle
@@ -172,7 +174,7 @@ impl Distribution<u64> for Binomial {
 
                 // Step 5.0: Test for appropriate method of evaluating f(y).
                 let k = (y - m).abs();
-                if !(k > SQUEEZE_THRESHOLD && (k as f64) < 0.5 * n*p*q - 1.) {
+                if !(k > SQUEEZE_THRESHOLD && (k as f64) < 0.5 * npq - 1.) {
                     // Step 5.1: Evaluate f(y) via the recursive relationship. Start the
                     // search from the mode.
                     let s = p / q;
@@ -207,8 +209,8 @@ impl Distribution<u64> for Binomial {
                 // Step 5.2: Squeezing. Check the value of ln(v) againts upper and
                 // lower bound of ln(f(y)).
                 let k = k as f64;
-                let rho = (k / (n*p*q)) * ((k * (k / 3. + 0.625) + 1./6.) / (n*p*q) + 0.5);
-                let t = -0.5 * k*k / (n*p*q);
+                let rho = (k / npq) * ((k * (k / 3. + 0.625) + 1./6.) / npq + 0.5);
+                let t = -0.5 * k*k / npq;
                 let alpha = v.ln();
                 if alpha < t - rho {
                     break;
