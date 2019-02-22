@@ -283,7 +283,8 @@ trait OsRngImpl where Self: Sized {
 #[cfg(any(target_os = "linux", target_os = "android",
           target_os = "netbsd", target_os = "dragonfly",
           target_os = "solaris", target_os = "redox",
-          target_os = "haiku", target_os = "emscripten"))]
+          target_os = "haiku", target_os = "emscripten",
+          target_os = "illumos"))]
 mod random_device;
 
 macro_rules! mod_use {
@@ -309,7 +310,7 @@ mod_use!(cfg(target_os = "macos"), macos);
 mod_use!(cfg(target_os = "netbsd"), netbsd);
 mod_use!(cfg(target_os = "openbsd"), openbsd_bitrig);
 mod_use!(cfg(target_os = "redox"), redox);
-mod_use!(cfg(target_os = "solaris"), solaris);
+mod_use!(cfg(any(target_os = "solaris", target_os = "illumos")), solarish);
 mod_use!(cfg(windows), windows);
 mod_use!(cfg(target_env = "sgx"), sgx);
 
@@ -376,6 +377,7 @@ mod imp {
     target_os = "openbsd",
     target_os = "redox",
     target_os = "solaris",
+    target_os = "illumos",
     windows,
     target_arch = "wasm32",
     target_env = "sgx"
