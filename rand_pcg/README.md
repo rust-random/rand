@@ -29,18 +29,10 @@ Links:
 
 ## Crate Features
 
-`rand_pcg` is `no_std` compatible. It does not require any functionality
-outside of the `core` lib, thus there are no features to configure.
+`rand_pcg` is `no_std` compatible by default.
 
 The `serde1` feature includes implementations of `Serialize` and `Deserialize`
-for the included RNGs. NOTE: to use binary serialisation with any of the 64-bit
-output (128-bit internal) RNGs, you must add the following dependency, since the
-`i128` feature is not current enabled by default (this should be fixed soon):
-
-```
-bincode = { version = "1", features = ["i128"] }
-```
-
+for the included RNGs.
 
 ## License
 
