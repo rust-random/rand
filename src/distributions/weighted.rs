@@ -300,6 +300,74 @@ mod test {
         assert_eq!(WeightedIndex::new(&[-10, 20, 1, 30]).unwrap_err(), WeightedError::NegativeWeight);
         assert_eq!(WeightedIndex::new(&[-10]).unwrap_err(), WeightedError::NegativeWeight);
     }
+
+    #[test]
+    fn test_alias_method_weighted_index() {
+        const NUM_WEIGHTS: usize = 10;
+        const ZERO_WEIGHT_INDEX: usize = 3;
+        const NUM_SAMPLES: u32 = 10000;
+        let mut rng = ::test::rng(0x9c9fa0b0580a7031);
+
+        let weights = {
+            let mut weights = Vec::with_capacity(NUM_WEIGHTS);
+            for _ in 0..NUM_WEIGHTS {
+                weights.push(rng.sample::<f64, _>(::distributions::Standard));
+            }
+            weights[ZERO_WEIGHT_INDEX] = 0.0;
+            weights
+        };
+        let weight_sum = weights.iter().sum::<f64>();
+        let expected_counts = weights
+            .iter()
+            .map(|&w| w / weight_sum * NUM_SAMPLES as f64)
+            .collect::<Vec<f64>>();
+        let weight_distribution = AliasMethodWeightedIndex::new(weights).unwrap();
+
+        let mut counts = vec![0_usize; NUM_WEIGHTS];
+        for _ in 0..NUM_SAMPLES {
+            counts[rng.sample(&weight_distribution)] += 1;
+        }
+
+        assert_eq!(counts[ZERO_WEIGHT_INDEX], 0);
+        for (count, expected_count) in counts.into_iter().zip(expected_counts) {
+            let difference = (count as f64 - expected_count).abs();
+            let max_allowed_difference = NUM_SAMPLES as f64 / NUM_WEIGHTS as f64 * 0.1;
+            assert!(difference <= max_allowed_difference);
+        }
+
+        assert_eq!(
+            AliasMethodWeightedIndex::new(vec![]).unwrap_err(),
+            AliasMethodWeightedIndexError::NoItem
+        );
+        assert_eq!(
+            AliasMethodWeightedIndex::new(vec![0.0]).unwrap_err(),
+            AliasMethodWeightedIndexError::WeightSumToSmall
+        );
+        assert_eq!(
+            AliasMethodWeightedIndex::new(vec![-0.0]).unwrap_err(),
+            AliasMethodWeightedIndexError::WeightSumToSmall
+        );
+        assert_eq!(
+            AliasMethodWeightedIndex::new(vec![::core::f64::INFINITY]).unwrap_err(),
+            AliasMethodWeightedIndexError::WeightSumToBig
+        );
+        assert_eq!(
+            AliasMethodWeightedIndex::new(vec![::core::f64::MAX, ::core::f64::MAX]).unwrap_err(),
+            AliasMethodWeightedIndexError::WeightSumToBig
+        );
+        assert_eq!(
+            AliasMethodWeightedIndex::new(vec![-1.0]).unwrap_err(),
+            AliasMethodWeightedIndexError::InvalidWeight
+        );
+        assert_eq!(
+            AliasMethodWeightedIndex::new(vec![-::core::f64::INFINITY]).unwrap_err(),
+            AliasMethodWeightedIndexError::InvalidWeight
+        );
+        assert_eq!(
+            AliasMethodWeightedIndex::new(vec![::core::f64::NAN]).unwrap_err(),
+            AliasMethodWeightedIndexError::InvalidWeight
+        );
+    }
 }
 
 /// Error type returned from `WeightedIndex::new`.

@@ -187,6 +187,21 @@ distr_int!(distr_weighted_u32, usize, WeightedIndex::new(&[1u32, 2, 3, 4, 12, 0,
 distr_int!(distr_weighted_f64, usize, WeightedIndex::new(&[1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
 distr_int!(distr_weighted_large_set, usize, WeightedIndex::new((0..10000).rev().chain(1..10001)).unwrap());
 
+distr_int!(
+    distr_weighted_alias_method,
+    usize,
+    AliasMethodWeightedIndex::new(
+        vec![1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]
+    ).unwrap()
+);
+distr_int!(
+    distr_weighted_alias_method_large_set,
+    usize,
+    AliasMethodWeightedIndex::new(
+        (0..10000).rev().chain(1..10001).map(|x| x as f64).collect()
+    ).unwrap()
+);
+
 // construct and sample from a range
 macro_rules! gen_range_int {
     ($fnn:ident, $ty:ident, $low:expr, $high:expr) => {
