@@ -13,9 +13,7 @@ use ::core::cmp::PartialOrd;
 use core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
-#[cfg(not(feature = "std"))] use alloc::collections::VecDeque;
 #[cfg(not(feature="std"))] use alloc::vec::Vec;
-#[cfg(feature = "std")] use std::collections::VecDeque;
 
 /// A distribution using weighted sampling to pick a discretely selected
 /// item.
@@ -166,47 +164,96 @@ impl AliasMethodWeightedIndex {
             *odds *= weight_scale;
         }
 
-        // Split indices into indices with small weights and indices with big weights.
-        // Instead of two `Vec` with unknown capacity we use a single `VecDeque` with
-        // known capacity. Front represents smalls and back represents bigs. We also
-        // need to keep track of the size of each virtual `Vec`.
-        let mut smalls_bigs = VecDeque::with_capacity(n);
-        let mut smalls_len = 0_usize;
-        let mut bigs_len = 0_usize;
-        for (index, &odds) in no_alias_odds.iter().enumerate() {
-            if odds < 1.0 {
-                smalls_bigs.push_front(index);
-                smalls_len += 1;
-            } else {
-                smalls_bigs.push_back(index);
-                bigs_len += 1;
+        /// This struct is designed to contain three data structures at once,
+        /// sharing the same memory. More precisely it contains two
+        /// linked lists and an alias map, which will be the output of this
+        /// method. To keep the three data structures from getting in
+        /// each other's way, it must be ensured that a single index is only
+        /// ever in one of them at the same time.
+        struct Aliases {
+            aliases: Vec<usize>,
+            smalls_head: usize,
+            bigs_head: usize,
+        }
+
+        impl Aliases {
+            fn new(size: usize) -> Self {
+                Aliases {
+                    aliases: vec![0; size],
+                    smalls_head: ::core::usize::MAX,
+                    bigs_head: ::core::usize::MAX,
+                }
+            }
+
+            fn push_small(&mut self, idx: usize) {
+                self.aliases[idx] = self.smalls_head;
+                self.smalls_head = idx;
+            }
+
+            fn push_big(&mut self, idx: usize) {
+                self.aliases[idx] = self.bigs_head;
+                self.bigs_head = idx;
+            }
+
+            fn pop_small(&mut self) -> usize {
+                let popped = self.smalls_head;
+                self.smalls_head = self.aliases[popped];
+                popped
+            }
+
+            fn pop_big(&mut self) -> usize {
+                let popped = self.bigs_head;
+                self.bigs_head = self.aliases[popped];
+                popped
+            }
+
+            fn smalls_is_empty(&self) -> bool {
+                self.smalls_head == ::core::usize::MAX
+            }
+
+            fn bigs_is_empty(&self) -> bool {
+                self.bigs_head == ::core::usize::MAX
+            }
+
+            fn set_alias(&mut self, idx: usize, alias: usize) {
+                self.aliases[idx] = alias;
             }
         }
 
-        let mut aliases = vec![0; n];
-        while smalls_len > 0 && bigs_len > 0 {
-            let s = smalls_bigs.pop_front().unwrap();
-            smalls_len -= 1;
-            let b = smalls_bigs.pop_back().unwrap();
-            bigs_len -= 1;
+        let mut aliases = Aliases::new(n);
 
-            aliases[s] = b;
+        // Split indices into those with small weights and those with big weights.
+        for (index, &odds) in no_alias_odds.iter().enumerate() {
+            if odds < 1.0 {
+                aliases.push_small(index);
+            } else {
+                aliases.push_big(index);
+            }
+        }
+
+        // Build the alias map by finding an alias with big weight for each index with
+        // small weight.
+        while !aliases.smalls_is_empty() && !aliases.bigs_is_empty() {
+            let s = aliases.pop_small();
+            let b = aliases.pop_big();
+
+            aliases.set_alias(s, b);
             no_alias_odds[b] = no_alias_odds[b] - 1.0 + no_alias_odds[s];
 
             if no_alias_odds[b] < 1.0 {
-                smalls_bigs.push_front(b);
-                smalls_len += 1;
+                aliases.push_small(b);
             } else {
-                smalls_bigs.push_back(b);
-                bigs_len += 1;
+                aliases.push_big(b);
             }
         }
 
         // The remaining indices should have no alias odds of about 1. This is due to
         // numeric accuracy. Otherwise they would be exactly 1.
-        for index in smalls_bigs.into_iter() {
-            // Because p = 1 we don't need to set an alias. It will never be accessed.
-            no_alias_odds[index] = 1.0;
+        while !aliases.smalls_is_empty() {
+            no_alias_odds[aliases.pop_small()] = 1.0;
+        }
+        while !aliases.bigs_is_empty() {
+            no_alias_odds[aliases.pop_big()] = 1.0;
         }
 
         // Prepare a distribution to sample random indices. Creating it beforehand
@@ -214,7 +261,7 @@ impl AliasMethodWeightedIndex {
         let uniform_index = super::Uniform::new(0, n);
 
         Ok(Self {
-            aliases,
+            aliases: aliases.aliases,
             no_alias_odds,
             uniform_index,
         })
