@@ -132,7 +132,54 @@ impl<X> Distribution<usize> for WeightedIndex<X> where
     }
 }
 
-#[allow(missing_docs)] // todo: add docs
+/// A distribution using weighted sampling to pick a discretely selected item.
+///
+/// Sampling an [`AliasMethodWeightedIndex<W>`] distribution returns the index
+/// of a randomly selected element from the vector used to create the
+/// [`AliasMethodWeightedIndex<W>`]. The chance of a given element being picked
+/// is proportional to the value of the element. The weights can have any  type
+/// `W` for which an implementation of [`AliasMethodWeight`] exists.
+///
+/// # Performance
+///
+/// Given that `n` is the number of items in the vector used to create an
+/// [`AliasMethodWeightedIndex<W>`], [`AliasMethodWeightedIndex<W>`] will take
+/// up `O(n)` amount of memory. More specifically it takes up some constant
+/// amount of memory plus the vector used to create it and a [`Vec<usize>`] with
+/// capacity `n`.
+///
+/// Time complexity for the creation of an [`AliasMethodWeightedIndex<W>`] is
+/// `O(n)`. Sampling is `O(1)`, it makes a call to [`Uniform<usize>::sample`]
+/// and a call to [`Uniform<W>::sample`].
+///
+/// # Example
+///
+/// ```
+/// use rand::distributions::AliasMethodWeightedIndex;
+/// use rand::prelude::*;
+///
+/// let choices = vec!['a', 'b', 'c'];
+/// let weights = vec![2, 1, 1];
+/// let dist = AliasMethodWeightedIndex::new(weights).unwrap();
+/// let mut rng = thread_rng();
+/// for _ in 0..100 {
+///     // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
+///     println!("{}", choices[dist.sample(&mut rng)]);
+/// }
+///
+/// let items = [('a', 0), ('b', 3), ('c', 7)];
+/// let dist2 = AliasMethodWeightedIndex::new(items.iter().map(|item| item.1).collect()).unwrap();
+/// for _ in 0..100 {
+///     // 0% chance to print 'a', 30% chance to print 'b', 70% chance to print 'c'
+///     println!("{}", items[dist2.sample(&mut rng)].0);
+/// }
+/// ```
+///
+/// [`AliasMethodWeightedIndex<W>`]: AliasMethodWeightedIndex
+/// [`AliasMethodWeight`]: AliasMethodWeight
+/// [`Vec<usize>`]: Vec
+/// [`Uniform<usize>::sample`]: Distribution::sample
+/// [`Uniform<W>::sample`]: Distribution::sample
 pub struct AliasMethodWeightedIndex<W: AliasMethodWeight> {
     aliases: Vec<usize>,
     no_alias_odds: Vec<W>,
@@ -141,7 +188,13 @@ pub struct AliasMethodWeightedIndex<W: AliasMethodWeight> {
 }
 
 impl<W: AliasMethodWeight> AliasMethodWeightedIndex<W> {
-    #[allow(missing_docs)] // todo: add docs
+    /// Creates an new [`AliasMethodWeightedIndex`].
+    ///
+    /// Returns an error if:
+    /// - The vector is empty.
+    /// - For any weight `w`: `w < 0` or `w > max` where `max = W::MAX /
+    ///   weights.len()`.
+    /// - The sum of weights is zero.
     pub fn new(weights: Vec<W>) -> Result<Self, AliasMethodWeightedIndexError> {
         let n = weights.len();
         if n == 0 {
@@ -338,6 +391,10 @@ fn pairwise_sum<T: AliasMethodWeight>(values: &[T]) -> T {
     }
 }
 
+/// Trait that must be implemented for weights, that are used with
+/// [`AliasMethodWeightedIndex`]. Currently no guarantees on the correctness of
+/// [`AliasMethodWeightedIndex`] are given for custom implementations of this
+/// trait.
 pub trait AliasMethodWeight:
     Sized
     + Copy
@@ -353,9 +410,13 @@ pub trait AliasMethodWeight:
     + DivAssign
     + Sum
 {
+    /// Maximum number representable by `Self`.
     const MAX: Self;
+
+    /// Element of `Self` equivalent to 0.
     const ZERO: Self;
 
+    /// Converts an [`usize`] to a `Self`, rounding if necessary.
     fn try_from_usize_lossy(n: usize) -> Option<Self>;
 }
 
@@ -629,11 +690,14 @@ impl fmt::Display for WeightedError {
     }
 }
 
-#[allow(missing_docs)] // todo: add docs
+/// Error type returned from [`AliasMethodWeightedIndex::new`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AliasMethodWeightedIndexError {
+    /// The weight vector is empty.
     NoItem,
+    /// A weight is either less than zero or greater than the supported maximum.
     InvalidWeight,
+    /// All weights in the provided vector are zero.
     AllWeightsZero,
 }
 
