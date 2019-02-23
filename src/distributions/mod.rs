@@ -183,7 +183,8 @@ pub use self::float::{OpenClosed01, Open01};
 pub use self::bernoulli::Bernoulli;
 #[cfg(feature = "alloc")]
 pub use self::weighted::{
-    AliasMethodWeightedIndex, AliasMethodWeightedIndexError, WeightedError, WeightedIndex,
+    AliasMethodWeight, AliasMethodWeightedIndex, AliasMethodWeightedIndexError, WeightedError,
+    WeightedIndex,
 };
 #[cfg(feature="std")] pub use self::unit_sphere::UnitSphereSurface;
 #[cfg(feature="std")] pub use self::unit_circle::UnitCircle;
