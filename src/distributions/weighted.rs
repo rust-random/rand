@@ -137,14 +137,14 @@ impl<X> Distribution<usize> for WeightedIndex<X> where
 /// Sampling an [`AliasMethodWeightedIndex<W>`] distribution returns the index
 /// of a randomly selected element from the vector used to create the
 /// [`AliasMethodWeightedIndex<W>`]. The chance of a given element being picked
-/// is proportional to the value of the element. The weights can have any  type
+/// is proportional to the value of the element. The weights can have any type
 /// `W` for which an implementation of [`AliasMethodWeight`] exists.
 ///
 /// # Performance
 ///
 /// Given that `n` is the number of items in the vector used to create an
-/// [`AliasMethodWeightedIndex<W>`], [`AliasMethodWeightedIndex<W>`] will take
-/// up `O(n)` amount of memory. More specifically it takes up some constant
+/// [`AliasMethodWeightedIndex<W>`], [`AliasMethodWeightedIndex<W>`] will
+/// require `O(n)` amount of memory. More specifically it takes up some constant
 /// amount of memory plus the vector used to create it and a [`Vec<usize>`] with
 /// capacity `n`.
 ///
@@ -379,7 +379,7 @@ where
     }
 }
 
-/// In comparision to naive accumulation, the pairwise sum algorithm reduces
+/// In comparison to naive accumulation, the pairwise sum algorithm reduces
 /// rounding errors when there are many floating point values.
 fn pairwise_sum<T: AliasMethodWeight>(values: &[T]) -> T {
     if values.len() <= 32 {
@@ -416,7 +416,7 @@ pub trait AliasMethodWeight:
     /// Element of `Self` equivalent to 0.
     const ZERO: Self;
 
-    /// Converts an [`usize`] to a `Self`, rounding if necessary.
+    /// Converts a [`usize`] to a `Self`, rounding if necessary.
     fn try_from_usize_lossy(n: usize) -> Option<Self>;
 }
 
