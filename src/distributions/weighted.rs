@@ -212,7 +212,7 @@ impl<W: AliasMethodWeight> AliasMethodWeightedIndex<W> {
         }
 
         // The sum of weights will represent 100% of no alias odds.
-        let weight_sum = pairwise_sum(weights.as_slice());
+        let weight_sum = AliasMethodWeight::sum(weights.as_slice());
         // Prevent floating point overflow due to rounding errors.
         let weight_sum = if weight_sum > W::MAX {
             W::MAX
@@ -379,18 +379,6 @@ where
     }
 }
 
-/// In comparison to naive accumulation, the pairwise sum algorithm reduces
-/// rounding errors when there are many floating point values.
-fn pairwise_sum<T: AliasMethodWeight>(values: &[T]) -> T {
-    if values.len() <= 32 {
-        values.iter().map(|x| *x).sum()
-    } else {
-        let mid = values.len() / 2;
-        let (a, b) = values.split_at(mid);
-        pairwise_sum(a) + pairwise_sum(b)
-    }
-}
-
 /// Trait that must be implemented for weights, that are used with
 /// [`AliasMethodWeightedIndex`]. Currently no guarantees on the correctness of
 /// [`AliasMethodWeightedIndex`] are given for custom implementations of this
@@ -418,6 +406,11 @@ pub trait AliasMethodWeight:
 
     /// Converts a [`usize`] to a `Self`, rounding if necessary.
     fn try_from_usize_lossy(n: usize) -> Option<Self>;
+
+    /// Sums all values in slice `values`.
+    fn sum(values: &[Self]) -> Self {
+        values.iter().map(|x| *x).sum()
+    }
 }
 
 macro_rules! impl_alias_method_weight_for_float {
@@ -429,8 +422,24 @@ macro_rules! impl_alias_method_weight_for_float {
             fn try_from_usize_lossy(n: usize) -> Option<Self> {
                 Some(n as $T)
             }
+
+            fn sum(values: &[Self]) -> Self {
+                pairwise_sum(values)
+            }
         }
     };
+}
+
+/// In comparison to naive accumulation, the pairwise sum algorithm reduces
+/// rounding errors when there are many floating point values.
+fn pairwise_sum<T: AliasMethodWeight>(values: &[T]) -> T {
+    if values.len() <= 32 {
+        values.iter().map(|x| *x).sum()
+    } else {
+        let mid = values.len() / 2;
+        let (a, b) = values.split_at(mid);
+        pairwise_sum(a) + pairwise_sum(b)
+    }
 }
 
 macro_rules! impl_alias_method_weight_for_int {
