@@ -286,8 +286,9 @@ where R: BlockRngCore + SeedableRng + CryptoRng,
 mod fork {
     extern crate libc;
 
-    use core::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
-    use core::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT};
+    use core::sync::atomic::{AtomicUsize, AtomicBool, Ordering};
+    #[allow(deprecated)]  // Required for compatibility with Rust < 1.24.
+    use core::sync::atomic::{ATOMIC_USIZE_INIT, ATOMIC_BOOL_INIT};
 
     // Fork protection
     //
@@ -301,12 +302,14 @@ mod fork {
     // don't update `fork_counter`, so a reseed is attempted as soon as
     // possible.
 
+    #[allow(deprecated)]
     static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
 
     pub fn get_fork_counter() -> usize {
         RESEEDING_RNG_FORK_COUNTER.load(Ordering::Relaxed)
     }
 
+    #[allow(deprecated)]
     static FORK_HANDLER_REGISTERED: AtomicBool = ATOMIC_BOOL_INIT;
 
     extern fn fork_handler() {

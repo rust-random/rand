@@ -75,7 +75,10 @@ pub use error::TimerError;
 
 use core::{fmt, mem, ptr};
 #[cfg(feature = "std")]
-use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
+#[cfg(feature = "std")]
+#[allow(deprecated)]  // Required for compatibility with Rust < 1.24.
+use std::sync::atomic::ATOMIC_USIZE_INIT;
 
 const MEMORY_BLOCKS: usize = 64;
 const MEMORY_BLOCKSIZE: usize = 32;
@@ -167,6 +170,7 @@ impl Clone for JitterRng {
 
 // Initialise to zero; must be positive
 #[cfg(all(feature = "std", not(target_arch = "wasm32")))]
+#[allow(deprecated)]
 static JITTER_ROUNDS: AtomicUsize = ATOMIC_USIZE_INIT;
 
 impl JitterRng {

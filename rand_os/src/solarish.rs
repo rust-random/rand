@@ -28,7 +28,9 @@ use std::io;
 use std::io::Read;
 use std::fs::{File, OpenOptions};
 use std::os::unix::fs::OpenOptionsExt;
-use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering, AtomicUsize};
+use std::sync::atomic::{AtomicBool, Ordering, AtomicUsize};
+#[allow(deprecated)]  // Required for compatibility with Rust < 1.24.
+use std::sync::atomic::ATOMIC_BOOL_INIT;
 use std::cmp;
 use std::mem;
 
@@ -68,6 +70,7 @@ impl OsRngImpl for OsRng {
     fn test_initialized(&mut self, dest: &mut [u8], blocking: bool)
         -> Result<usize, Error>
     {
+        #[allow(deprecated)]
         static OS_RNG_INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
         if !self.initialized {
             self.initialized = OS_RNG_INITIALIZED.load(Ordering::Relaxed);

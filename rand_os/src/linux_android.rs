@@ -18,7 +18,9 @@ use std::io;
 use std::io::Read;
 use std::fs::{File, OpenOptions};
 use std::os::unix::fs::OpenOptionsExt;
-use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
+#[allow(deprecated)]  // Required for compatibility with Rust < 1.24.
+use std::sync::atomic::ATOMIC_BOOL_INIT;
 use std::sync::{Once, ONCE_INIT};
 
 #[derive(Clone, Debug)]
@@ -53,6 +55,7 @@ impl OsRngImpl for OsRng {
     fn test_initialized(&mut self, dest: &mut [u8], blocking: bool)
         -> Result<usize, Error>
     {
+        #[allow(deprecated)]
         static OS_RNG_INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
         if !self.initialized {
             self.initialized = OS_RNG_INITIALIZED.load(Ordering::Relaxed);
@@ -160,6 +163,7 @@ fn getrandom_try_fill(dest: &mut [u8], blocking: bool) -> Result<(), Error> {
 
 fn is_getrandom_available() -> bool {
     static CHECKER: Once = ONCE_INIT;
+    #[allow(deprecated)]
     static AVAILABLE: AtomicBool = ATOMIC_BOOL_INIT;
 
     if NR_GETRANDOM == 0 { return false };

@@ -14,7 +14,9 @@ use super::OsRngImpl;
 
 use std::fs::File;
 use std::io::Read;
-use std::sync::atomic::{AtomicBool, ATOMIC_BOOL_INIT, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
+#[allow(deprecated)]  // Required for compatibility with Rust < 1.24.
+use std::sync::atomic::ATOMIC_BOOL_INIT;
 
 #[derive(Clone, Debug)]
 pub struct OsRng { initialized: bool }
@@ -34,6 +36,7 @@ impl OsRngImpl for OsRng {
     fn test_initialized(&mut self, dest: &mut [u8], _blocking: bool)
         -> Result<usize, Error>
     {
+        #[allow(deprecated)]
         static OS_RNG_INITIALIZED: AtomicBool = ATOMIC_BOOL_INIT;
         if !self.initialized {
             self.initialized = OS_RNG_INITIALIZED.load(Ordering::Relaxed);
