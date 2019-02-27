@@ -238,16 +238,16 @@ pub trait IteratorRandom: Iterator + Sized {
         }
     }
 
-    /// Collects `amount` values at random from the iterator into a supplied
-    /// buffer.
+    /// Collects values at random from the iterator into a supplied buffer
+    /// until that buffer is filled.
     ///
     /// Although the elements are selected randomly, the order of elements in
     /// the buffer is neither stable nor fully random. If random ordering is
     /// desired, shuffle the result.
     ///
-    /// Returns the number of elements added to the buffer. This equals `amount`
-    /// unless the iterator contains insufficient elements, in which case this
-    /// equals the number of elements available.
+    /// Returns the number of elements added to the buffer. This equals the length
+    /// of the buffer unless the iterator contains insufficient elements, in which
+    /// case this equals the number of elements available.
     ///
     /// Complexity is `O(n)` where `n` is the length of the iterator.
     fn choose_multiple_fill<R>(mut self, rng: &mut R, buf: &mut [Self::Item]) -> usize
