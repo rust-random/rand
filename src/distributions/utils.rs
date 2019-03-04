@@ -383,6 +383,7 @@ macro_rules! simd_impl {
                 <$ty>::from_bits(<$uty>::from_bits(self) + <$uty>::from_bits(mask))
             }
             type UInt = $uty;
+            #[inline]
             fn cast_from_int(i: Self::UInt) -> Self { i.cast() }
         }
     }
