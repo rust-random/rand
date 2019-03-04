@@ -17,7 +17,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ### Crates
 - Update `rand_core` to 0.4 (#703)
 - Move `JitterRng` to its own crate (#685)
-- Add a warm-bindgen test crate (#696)
+- Add a wasm-bindgen test crate (#696)
 
 ### Platforms
 - Fuchsia: Replaced fuchsia-zircon with fuchsia-cprng
