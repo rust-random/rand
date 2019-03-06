@@ -181,11 +181,7 @@ pub use self::other::Alphanumeric;
 #[doc(inline)] pub use self::uniform::Uniform;
 pub use self::float::{OpenClosed01, Open01};
 pub use self::bernoulli::Bernoulli;
-#[cfg(feature = "alloc")]
-pub use self::weighted::{
-    AliasMethodWeight, AliasMethodWeightedIndex, AliasMethodWeightedIndexError, WeightedError,
-    WeightedIndex,
-};
+#[cfg(feature="alloc")] pub use self::weighted::{WeightedIndex, WeightedError};
 #[cfg(feature="std")] pub use self::unit_sphere::UnitSphereSurface;
 #[cfg(feature="std")] pub use self::unit_circle::UnitCircle;
 #[cfg(feature="std")] pub use self::gamma::{Gamma, ChiSquared, FisherF,
@@ -202,7 +198,7 @@ pub use self::weighted::{
 
 pub mod uniform;
 mod bernoulli;
-#[cfg(feature="alloc")] mod weighted;
+#[cfg(feature="alloc")] pub mod weighted;
 #[cfg(feature="std")] mod unit_sphere;
 #[cfg(feature="std")] mod unit_circle;
 #[cfg(feature="std")] mod gamma;
