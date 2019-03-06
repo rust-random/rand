@@ -14,11 +14,11 @@ use Rng;
 
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///
-/// Sampling an [`WeightedIndex<W>`] distribution returns the index of a
-/// randomly selected element from the vector used to create the
-/// [`WeightedIndex<W>`]. The chance of a given element being picked is
-/// proportional to the value of the element. The weights can have any type `W`
-/// for which an implementation of [`Weight`] exists.
+/// Sampling a [`WeightedIndex<W>`] distribution returns the index of a randomly
+/// selected element from the vector used to create the [`WeightedIndex<W>`].
+/// The chance of a given element being picked is proportional to the value of
+/// the element. The weights can have any type `W` for which a implementation of
+/// [`Weight`] exists.
 ///
 /// # Performance
 ///
@@ -27,7 +27,7 @@ use Rng;
 /// memory. More specifically it takes up some constant amount of memory plus
 /// the vector used to create it and a [`Vec<usize>`] with capacity `n`.
 ///
-/// Time complexity for the creation of an [`WeightedIndex<W>`] is `O(n)`.
+/// Time complexity for the creation of a [`WeightedIndex<W>`] is `O(n)`.
 /// Sampling is `O(1)`, it makes a call to [`Uniform<usize>::sample`] and a call
 /// to [`Uniform<W>::sample`].
 ///
@@ -67,7 +67,7 @@ pub struct WeightedIndex<W: Weight> {
 }
 
 impl<W: Weight> WeightedIndex<W> {
-    /// Creates an new [`WeightedIndex`].
+    /// Creates a new [`WeightedIndex`].
     ///
     /// Returns an error if:
     /// - The vector is empty.
