@@ -35,4 +35,4 @@ wasm-bindgen = { version = "0.2.12", optional = true }
 stdweb = { version = "0.4", optional = true }
 
 [target.'cfg(target_env = "sgx")'.dependencies]
-rdrand = "0.4.0"
+rdrand = "0.5.0"
