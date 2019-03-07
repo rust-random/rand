@@ -47,31 +47,6 @@ impl Binomial {
     }
 }
 
-/// Raise a `base` to the power of `exp`, using exponentiation by squaring.
-///
-/// This implementation is based on the one in the `num_traits` crate. It is
-/// slightly modified to accept `u64` exponents.
-fn pow(mut base: f64, mut exp: u64) -> f64 {
-    if exp == 0 {
-        return 1.;
-    }
-
-    while exp & 1 == 0 {
-        base *= base;
-        exp >>= 1;
-    }
-
-    let mut acc = base;
-    while exp > 1 {
-        exp >>= 1;
-        base *= base;
-        if exp & 1 == 1 {
-            acc *= base;
-        }
-    }
-    acc
-}
-
 impl Distribution<u64> for Binomial {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         // Handle these values directly.
@@ -98,11 +73,11 @@ impl Distribution<u64> for Binomial {
         // Voratas Kachitvichyanukul and Bruce W. Schmeiser. 1988. Binomial
         // random variate generation. Commun. ACM 31, 2 (February 1988),
         // 216-222. http://dx.doi.org/10.1145/42372.42381
-        if (self.n as f64) * p < 10. {
+        if (self.n as f64) * p < 10. && self.n <= (::std::i32::MAX as u64) {
             let q = 1. - p;
             let s = p / q;
             let a = ((self.n + 1) as f64) * s;
-            let mut r = pow(q, self.n);
+            let mut r = q.powi(self.n as i32);
             let mut u: f64 = rng.gen();
             let mut x = 0;
             while u > r as f64 {
