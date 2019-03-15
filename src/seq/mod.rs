@@ -138,7 +138,8 @@ pub trait SliceRandom {
 
     /// Shuffle a mutable slice in place.
     ///
-    /// Depending on the implementation, complexity is expected to be `O(1)`.
+    /// Depending on the implementation, complexity is expected to be `O(n)`,
+    /// where `n` is the length of the slice.
     ///
     /// # Example
     ///
