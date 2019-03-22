@@ -507,7 +507,7 @@ impl JitterRng {
     /// Basic quality tests on the timer, by measuring CPU timing jitter a few
     /// hundred times.
     ///
-    /// If succesful, this will return the estimated number of rounds necessary
+    /// If successful, this will return the estimated number of rounds necessary
     /// to collect 64 bits of entropy. Otherwise a [`TimerError`] with the cause
     /// of the failure will be returned.
     pub fn test_timer(&mut self) -> Result<u8, TimerError> {
