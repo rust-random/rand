@@ -50,11 +50,7 @@ rand_core = { path = "rand_core", version = "0.4" }
 rand_pcg = { path = "rand_pcg", version = "0.1" }
 rand_jitter = { path = "rand_jitter", version = "0.1" }
 rand_os = { path = "rand_os", version = "0.1", optional = true  }
-# only for deprecations and benches:
-rand_isaac = { path = "rand_isaac", version = "0.1" }
-rand_chacha = { path = "rand_chacha", version = "0.1" }
 rand_hc = { path = "rand_hc", version = "0.1" }
-rand_xorshift = { path = "rand_xorshift", version = "0.1" }
 log = { version = "0.4", optional = true }
 
 [dependencies.packed_simd]
@@ -73,6 +69,9 @@ libc = { version = "0.2", default-features = false }
 average = "0.9.2"
 # Only for benches:
 rand_xoshiro = { path = "rand_xoshiro", version = "0.1" }
+rand_isaac = { path = "rand_isaac", version = "0.1" }
+rand_chacha = { path = "rand_chacha", version = "0.1" }
+rand_xorshift = { path = "rand_xorshift", version = "0.1" }
 
 [build-dependencies]
 autocfg = "0.1"
