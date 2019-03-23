@@ -92,66 +92,8 @@ pub use rand_core::{ErrorKind, Error};
 // Public modules
 pub mod distributions;
 pub mod prelude;
-#[deprecated(since="0.6.0")]
-pub mod prng;
 pub mod rngs;
 pub mod seq;
-
-////////////////////////////////////////////////////////////////////////////////
-// Compatibility re-exports. Documentation is hidden; will be removed eventually.
-
-#[doc(hidden)] mod deprecated;
-
-#[allow(deprecated)]
-#[doc(hidden)] pub use deprecated::ReseedingRng;
-
-#[allow(deprecated)]
-#[cfg(feature="std")] #[doc(hidden)] pub use deprecated::EntropyRng;
-
-#[allow(deprecated)]
-#[cfg(feature="rand_os")]
-#[doc(hidden)]
-pub use deprecated::OsRng;
-
-#[allow(deprecated)]
-#[doc(hidden)] pub use deprecated::{ChaChaRng, IsaacRng, Isaac64Rng, XorShiftRng};
-#[allow(deprecated)]
-#[doc(hidden)] pub use deprecated::StdRng;
-
-
-#[allow(deprecated)]
-#[doc(hidden)]
-pub mod jitter {
-    pub use deprecated::JitterRng;
-    pub use rngs::TimerError;
-}
-#[allow(deprecated)]
-#[cfg(feature="rand_os")]
-#[doc(hidden)]
-pub mod os {
-    pub use deprecated::OsRng;
-}
-#[allow(deprecated)]
-#[doc(hidden)]
-pub mod chacha {
-    pub use deprecated::ChaChaRng;
-}
-#[allow(deprecated)]
-#[doc(hidden)]
-pub mod isaac {
-    pub use deprecated::{IsaacRng, Isaac64Rng};
-}
-#[allow(deprecated)]
-#[cfg(feature="std")]
-#[doc(hidden)]
-pub mod read {
-    pub use deprecated::ReadRng;
-}
-
-#[allow(deprecated)]
-#[cfg(feature="std")] #[doc(hidden)] pub use deprecated::ThreadRng;
-
-////////////////////////////////////////////////////////////////////////////////
 
 
 use core::{mem, slice};
@@ -414,33 +356,6 @@ pub trait Rng: RngCore {
     fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
         let d = distributions::Bernoulli::from_ratio(numerator, denominator);
         self.sample(d)
-    }
-
-    /// Return a random element from `values`.
-    ///
-    /// Deprecated: use [`seq::SliceRandom::choose`] instead.
-    #[deprecated(since="0.6.0", note="use SliceRandom::choose instead")]
-    fn choose<'a, T>(&mut self, values: &'a [T]) -> Option<&'a T> {
-        use seq::SliceRandom;
-        values.choose(self)
-    }
-
-    /// Return a mutable pointer to a random element from `values`.
-    ///
-    /// Deprecated: use [`seq::SliceRandom::choose_mut`] instead.
-    #[deprecated(since="0.6.0", note="use SliceRandom::choose_mut instead")]
-    fn choose_mut<'a, T>(&mut self, values: &'a mut [T]) -> Option<&'a mut T> {
-        use seq::SliceRandom;
-        values.choose_mut(self)
-    }
-
-    /// Shuffle a mutable slice in place.
-    ///
-    /// Deprecated: use [`seq::SliceRandom::shuffle`] instead.
-    #[deprecated(since="0.6.0", note="use SliceRandom::shuffle instead")]
-    fn shuffle<T>(&mut self, values: &mut [T]) {
-        use seq::SliceRandom;
-        values.shuffle(self)
     }
 }
 

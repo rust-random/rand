@@ -121,16 +121,6 @@ impl SeedableRng for Isaac64Rng {
     }
 }
 
-impl Isaac64Rng {
-    /// Create an ISAAC-64 random number generator using an `u64` as seed.
-    /// If `seed == 0` this will produce the same stream of random numbers as
-    /// the reference implementation when used unseeded.
-    #[deprecated(since="0.6.0", note="use SeedableRng::seed_from_u64 instead")]
-    pub fn new_from_u64(seed: u64) -> Self {
-        Self::seed_from_u64(seed)
-    }
-}
-
 /// The core of `Isaac64Rng`, used with `BlockRng`.
 #[derive(Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
@@ -270,14 +260,6 @@ impl Isaac64Core {
         }
 
         Self { mem, a: w(0), b: w(0), c: w(0) }
-    }
-
-    /// Create an ISAAC-64 random number generator using an `u64` as seed.
-    /// If `seed == 0` this will produce the same stream of random numbers as
-    /// the reference implementation when used unseeded.
-    #[deprecated(since="0.6.0", note="use SeedableRng::seed_from_u64 instead")]
-    pub fn new_from_u64(seed: u64) -> Self {
-        Self::seed_from_u64(seed)
     }
 }
 

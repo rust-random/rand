@@ -451,74 +451,10 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 }
 
 
-/// Randomly sample `amount` elements from a finite iterator.
-///
-/// Deprecated: use [`IteratorRandom::choose_multiple`] instead.
-#[cfg(feature = "alloc")]
-#[deprecated(since = "0.6.0", note = "use IteratorRandom::choose_multiple instead")]
-pub fn sample_iter<T, I, R>(rng: &mut R, iterable: I, amount: usize) -> Result<Vec<T>, Vec<T>>
-where
-    I: IntoIterator<Item = T>,
-    R: Rng + ?Sized,
-{
-    use seq::IteratorRandom;
-    let iter = iterable.into_iter();
-    let result = iter.choose_multiple(rng, amount);
-    if result.len() == amount {
-        Ok(result)
-    } else {
-        Err(result)
-    }
-}
-
-/// Randomly sample exactly `amount` values from `slice`.
-///
-/// The values are non-repeating and in random order.
-///
-/// This implementation uses `O(amount)` time and memory.
-///
-/// Panics if `amount > slice.len()`
-///
-/// Deprecated: use [`SliceRandom::choose_multiple`] instead.
-#[cfg(feature = "alloc")]
-#[deprecated(since = "0.6.0", note = "use SliceRandom::choose_multiple instead")]
-pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
-where
-    R: Rng + ?Sized,
-    T: Clone,
-{
-    let indices = index::sample(rng, slice.len(), amount).into_iter();
-
-    let mut out = Vec::with_capacity(amount);
-    out.extend(indices.map(|i| slice[i].clone()));
-    out
-}
-
-/// Randomly sample exactly `amount` references from `slice`.
-///
-/// The references are non-repeating and in random order.
-///
-/// This implementation uses `O(amount)` time and memory.
-///
-/// Panics if `amount > slice.len()`
-///
-/// Deprecated: use [`SliceRandom::choose_multiple`] instead.
-#[cfg(feature = "alloc")]
-#[deprecated(since = "0.6.0", note = "use SliceRandom::choose_multiple instead")]
-pub fn sample_slice_ref<'a, R, T>(rng: &mut R, slice: &'a [T], amount: usize) -> Vec<&'a T>
-where R: Rng + ?Sized {
-    let indices = index::sample(rng, slice.len(), amount).into_iter();
-
-    let mut out = Vec::with_capacity(amount);
-    out.extend(indices.map(|i| &slice[i]));
-    out
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
-    #[cfg(feature = "alloc")] use {Rng, SeedableRng};
-    #[cfg(feature = "alloc")] use rngs::SmallRng;
+    #[cfg(feature = "alloc")] use Rng;
     #[cfg(all(feature="alloc", not(feature="std")))]
     use alloc::vec::Vec;
 
@@ -715,73 +651,6 @@ mod test {
         assert!(small_sample.iter().all(|e| {
             **e >= min_val && **e <= max_val
         }));
-    }
-    
-    #[test]
-    #[cfg(feature = "alloc")]
-    #[allow(deprecated)]
-    fn test_sample_slice_boundaries() {
-        let empty: &[u8] = &[];
-
-        let mut r = ::test::rng(402);
-
-        // sample 0 items
-        assert_eq!(&sample_slice(&mut r, empty, 0)[..], [0u8; 0]);
-        assert_eq!(&sample_slice(&mut r, &[42, 2, 42], 0)[..], [0u8; 0]);
-
-        // sample 1 item
-        assert_eq!(&sample_slice(&mut r, &[42], 1)[..], [42]);
-        let v = sample_slice(&mut r, &[1, 42], 1)[0];
-        assert!(v == 1 || v == 42);
-
-        // sample "all" the items
-        let v = sample_slice(&mut r, &[42, 133], 2);
-        assert!(&v[..] == [42, 133] || v[..] == [133, 42]);
-
-        // Make sure lucky 777's aren't lucky
-        let slice = &[42, 777];
-        let mut num_42 = 0;
-        let total = 1000;
-        for _ in 0..total {
-            let v = sample_slice(&mut r, slice, 1);
-            assert_eq!(v.len(), 1);
-            let v = v[0];
-            assert!(v == 42 || v == 777);
-            if v == 42 {
-                num_42 += 1;
-            }
-        }
-        let ratio_42 = num_42 as f64 / 1000 as f64;
-        assert!(0.4 <= ratio_42 || ratio_42 <= 0.6, "{}", ratio_42);
-    }
-
-    #[test]
-    #[cfg(feature = "alloc")]
-    #[allow(deprecated)]
-    fn test_sample_slice() {
-        let seeded_rng = SmallRng::from_seed;
-
-        let mut r = ::test::rng(403);
-
-        for n in 1..20 {
-            let length = 5*n - 4;   // 1, 6, ...
-            let amount = r.gen_range(0, length);
-            let mut seed = [0u8; 16];
-            r.fill(&mut seed);
-
-            // assert the basics work
-            let regular = index::sample(&mut seeded_rng(seed), length, amount);
-            assert_eq!(regular.len(), amount);
-            assert!(regular.iter().all(|e| e < length));
-
-            // also test that sampling the slice works
-            let vec: Vec<u32> = (0..(length as u32)).collect();
-            let result = sample_slice(&mut seeded_rng(seed), &vec, amount);
-            assert_eq!(result, regular.iter().map(|i| i as u32).collect::<Vec<_>>());
-
-            let result = sample_slice_ref(&mut seeded_rng(seed), &vec, amount);
-            assert!(result.iter().zip(regular.iter()).all(|(i,j)| **i == j as u32));
-        }
     }
     
     #[test]
