@@ -79,7 +79,7 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// # }
 /// ```
 ///
-/// [`ChaChaCore`]: rand_chacha::ChaChaCore
+/// [`ChaChaCore`]: ../../../rand_chacha/struct.ChaChaCore.html
 /// [`Hc128Core`]: rand_hc::Hc128Core
 /// [`BlockRngCore`]: rand_core::block::BlockRngCore
 /// [`ReseedingRng::new`]: ReseedingRng::new
@@ -336,14 +336,14 @@ mod fork {
 #[cfg(test)]
 mod test {
     use {Rng, SeedableRng};
-    use rand_chacha::ChaChaCore;
+    use rand_hc::Hc128Core;
     use rngs::mock::StepRng;
     use super::ReseedingRng;
 
     #[test]
     fn test_reseeding() {
         let mut zero = StepRng::new(0, 0);
-        let rng = ChaChaCore::from_rng(&mut zero).unwrap();
+        let rng = Hc128Core::from_rng(&mut zero).unwrap();
         let mut reseeding = ReseedingRng::new(rng, 32*4, zero);
 
         // Currently we only support for arrays up to length 32.
@@ -361,7 +361,7 @@ mod test {
     #[test]
     fn test_clone_reseeding() {
         let mut zero = StepRng::new(0, 0);
-        let rng = ChaChaCore::from_rng(&mut zero).unwrap();
+        let rng = Hc128Core::from_rng(&mut zero).unwrap();
         let mut rng1 = ReseedingRng::new(rng, 32*4, zero);
 
         let first: u32 = rng1.gen();

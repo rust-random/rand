@@ -26,7 +26,7 @@ use rand_hc::Hc128Rng;
 /// [rand_chacha] crate.
 ///
 /// [HC-128]: rand_hc::Hc128Rng
-/// [`ChaChaRng`]: rand_chacha::ChaChaRng
+/// [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
 /// [rand_hc]: https://crates.io/crates/rand_hc
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
 #[derive(Clone, Debug)]

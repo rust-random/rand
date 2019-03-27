@@ -56,7 +56,7 @@
 //! the [`prng`][crate::prng] module, as well as in several other crates. For example, you
 //! may wish a CSPRNG with significantly lower memory usage than [`StdRng`]
 //! while being less concerned about performance, in which case [`ChaChaRng`]
-//! is a good choice.
+//! (from the `rand_chacha` crate) is a good choice.
 //!
 //! One complexity is that the internal state of a PRNG must change with every
 //! generated number. For APIs this generally means a mutable reference to the
@@ -144,7 +144,7 @@
 //! [`mock::StepRng`]: rngs::mock::StepRng
 //! [`adapter::ReadRng`]: rngs::adapter::ReadRng
 //! [`adapter::ReseedingRng`]: rngs::adapter::ReseedingRng
-//! [`ChaChaRng`]: rand_chacha::ChaChaRng
+//! [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
 
 pub mod adapter;
 
