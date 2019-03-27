@@ -34,6 +34,7 @@ stdweb = ["rand_os/stdweb"]
 [workspace]
 members = [
     "rand_core",
+    "rand_distr",
     "rand_jitter",
     "rand_os",
     "rand_isaac",

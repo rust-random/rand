@@ -213,6 +213,9 @@ mod bernoulli;
 #[cfg(feature="std")] mod weibull;
 
 mod float;
+#[doc(hidden)] pub mod hidden_export {
+    pub use super::float::IntoFloat;   // used by rand_distr
+}
 mod integer;
 mod other;
 mod utils;

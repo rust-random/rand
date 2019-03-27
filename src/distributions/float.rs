@@ -69,7 +69,8 @@ pub struct OpenClosed01;
 pub struct Open01;
 
 
-pub(crate) trait IntoFloat {
+#[doc(hidden)]
+pub trait IntoFloat {
     type F;
 
     /// Helper method to combine the fraction and a contant exponent into a

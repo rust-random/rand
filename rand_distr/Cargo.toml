@@ -1,0 +1,22 @@
+[package]
+name = "rand_distr"
+version = "0.1.0"
+authors = ["The Rand Project Developers"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/rust-random/rand"
+documentation = "https://rust-random.github.io/rand/rand_distr/"
+homepage = "https://crates.io/crates/rand_distr"
+description = """
+Sampling from random number distributions
+"""
+keywords = ["random", "rng", "distribution", "probability"]
+categories = ["algorithms"]
+edition = "2018"
+
+[badges]
+travis-ci = { repository = "rust-random/rand" }
+appveyor = { repository = "rust-random/rand" }
+
+[dependencies]
+rand = { path = "..", version = ">=0.5, <=0.7" }
