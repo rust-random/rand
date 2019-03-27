@@ -198,7 +198,7 @@ pub use self::bernoulli::Bernoulli;
 
 pub mod uniform;
 mod bernoulli;
-#[cfg(feature="alloc")] mod weighted;
+#[cfg(feature="alloc")] pub mod weighted;
 #[cfg(feature="std")] mod unit_sphere;
 #[cfg(feature="std")] mod unit_circle;
 #[cfg(feature="std")] mod gamma;

@@ -6,6 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//! This module contains different algorithms for sampling random indices with
+//! probabilities proportional to a collection of weights.
+
+pub mod alias_method;
+
 use Rng;
 use distributions::Distribution;
 use distributions::uniform::{UniformSampler, SampleUniform, SampleBorrow};
@@ -98,13 +103,13 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
 
         let zero = <X as Default>::default();
         if total_weight < zero {
-            return Err(WeightedError::NegativeWeight);
+            return Err(WeightedError::InvalidWeight);
         }
 
         let mut weights = Vec::<X>::with_capacity(iter.size_hint().0);
         for w in iter {
             if *w.borrow() < zero {
-                return Err(WeightedError::NegativeWeight);
+                return Err(WeightedError::InvalidWeight);
             }
             weights.push(total_weight.clone());
             total_weight += w.borrow();
@@ -184,31 +189,32 @@ mod test {
 
         assert_eq!(WeightedIndex::new(&[10][0..0]).unwrap_err(), WeightedError::NoItem);
         assert_eq!(WeightedIndex::new(&[0]).unwrap_err(), WeightedError::AllWeightsZero);
-        assert_eq!(WeightedIndex::new(&[10, 20, -1, 30]).unwrap_err(), WeightedError::NegativeWeight);
-        assert_eq!(WeightedIndex::new(&[-10, 20, 1, 30]).unwrap_err(), WeightedError::NegativeWeight);
-        assert_eq!(WeightedIndex::new(&[-10]).unwrap_err(), WeightedError::NegativeWeight);
+        assert_eq!(WeightedIndex::new(&[10, 20, -1, 30]).unwrap_err(), WeightedError::InvalidWeight);
+        assert_eq!(WeightedIndex::new(&[-10, 20, 1, 30]).unwrap_err(), WeightedError::InvalidWeight);
+        assert_eq!(WeightedIndex::new(&[-10]).unwrap_err(), WeightedError::InvalidWeight);
     }
 }
 
 /// Error type returned from `WeightedIndex::new`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WeightedError {
-    /// The provided iterator contained no items.
+    /// The provided weight collection contains no items.
     NoItem,
 
-    /// A weight lower than zero was used.
-    NegativeWeight,
+    /// A weight is either less than zero, greater than the supported maximum or
+    /// otherwise invalid.
+    InvalidWeight,
 
-    /// All items in the provided iterator had a weight of zero.
+    /// All items in the provided weight collection are zero.
     AllWeightsZero,
 }
 
 impl WeightedError {
     fn msg(&self) -> &str {
         match *self {
-            WeightedError::NoItem => "No items found",
-            WeightedError::NegativeWeight => "Item has negative weight",
-            WeightedError::AllWeightsZero => "All items had weight zero",
+            WeightedError::NoItem => "No weights provided.",
+            WeightedError::InvalidWeight => "A weight is invalid.",
+            WeightedError::AllWeightsZero => "All weights are zero.",
         }
     }
 }
