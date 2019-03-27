@@ -577,25 +577,8 @@ mod test {
     use super::*;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 
-    pub struct TestRng<R> { inner: R }
-
-    impl<R: RngCore> RngCore for TestRng<R> {
-        fn next_u32(&mut self) -> u32 {
-            self.inner.next_u32()
-        }
-        fn next_u64(&mut self) -> u64 {
-            self.inner.next_u64()
-        }
-        fn fill_bytes(&mut self, dest: &mut [u8]) {
-            self.inner.fill_bytes(dest)
-        }
-        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-            self.inner.try_fill_bytes(dest)
-        }
-    }
-
-    pub fn rng(seed: u64) -> TestRng<StdRng> {
-        TestRng { inner: StdRng::seed_from_u64(seed) }
+    pub fn rng(seed: u64) -> impl RngCore {
+        StdRng::seed_from_u64(seed)
     }
 
     #[test]
