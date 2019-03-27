@@ -8,6 +8,7 @@
 // except according to those terms.
 
 //! The Gamma and derived distributions.
+#![allow(deprecated)]
 
 use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
@@ -46,6 +47,7 @@ use distributions::{Distribution, Exp, Open01};
 ///       Generating Gamma Variables" *ACM Trans. Math. Softw.* 26, 3
 ///       (September 2000), 363-372.
 ///       DOI:[10.1145/358407.358414](https://doi.acm.org/10.1145/358407.358414)
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Gamma {
     repr: GammaRepr,
@@ -184,6 +186,7 @@ impl Distribution<f64> for GammaLargeShape {
 /// let v = chi.sample(&mut rand::thread_rng());
 /// println!("{} is from a χ²(11) distribution", v)
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct ChiSquared {
     repr: ChiSquaredRepr,
@@ -239,6 +242,7 @@ impl Distribution<f64> for ChiSquared {
 /// let v = f.sample(&mut rand::thread_rng());
 /// println!("{} is from an F(2, 32) distribution", v)
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct FisherF {
     numer: ChiSquared,
@@ -280,6 +284,7 @@ impl Distribution<f64> for FisherF {
 /// let v = t.sample(&mut rand::thread_rng());
 /// println!("{} is from a t(11) distribution", v)
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct StudentT {
     chi: ChiSquared,
@@ -315,6 +320,7 @@ impl Distribution<f64> for StudentT {
 /// let v = beta.sample(&mut rand::thread_rng());
 /// println!("{} is from a Beta(2, 5) distribution", v);
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Beta {
     gamma_a: Gamma,

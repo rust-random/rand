@@ -182,18 +182,32 @@ pub use self::other::Alphanumeric;
 pub use self::float::{OpenClosed01, Open01};
 pub use self::bernoulli::Bernoulli;
 #[cfg(feature="alloc")] pub use self::weighted::{WeightedIndex, WeightedError};
+
+// The following are all deprecated after being moved to rand_distr
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::unit_sphere::UnitSphereSurface;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::unit_circle::UnitCircle;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::gamma::{Gamma, ChiSquared, FisherF,
     StudentT, Beta};
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::normal::{Normal, LogNormal, StandardNormal};
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::exponential::{Exp, Exp1};
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::pareto::Pareto;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::poisson::Poisson;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::binomial::Binomial;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::cauchy::Cauchy;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::dirichlet::Dirichlet;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::triangular::Triangular;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::weibull::Weibull;
 
 pub mod uniform;
@@ -382,10 +396,10 @@ mod tests {
 
     #[test]
     fn test_distributions_iter() {
-        use distributions::Normal;
+        use distributions::Open01;
         let mut rng = ::test::rng(210);
-        let distr = Normal::new(10.0, 10.0);
-        let results: Vec<_> = distr.sample_iter(&mut rng).take(100).collect();
+        let distr = Open01;
+        let results: Vec<f32> = distr.sample_iter(&mut rng).take(100).collect();
         println!("{:?}", results);
     }
 }

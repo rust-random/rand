@@ -8,6 +8,7 @@
 // except according to those terms.
 
 //! The exponential distribution.
+#![allow(deprecated)]
 
 use {Rng};
 use distributions::{ziggurat_tables, Distribution};
@@ -36,6 +37,7 @@ use distributions::utils::ziggurat;
 /// let val: f64 = SmallRng::from_entropy().sample(Exp1);
 /// println!("{}", val);
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Exp1;
 
@@ -75,6 +77,7 @@ impl Distribution<f64> for Exp1 {
 /// let v = exp.sample(&mut rand::thread_rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Exp {
     /// `lambda` stored as `1/lambda`, since this is what we scale by.

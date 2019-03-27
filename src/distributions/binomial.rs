@@ -8,6 +8,7 @@
 // except according to those terms.
 
 //! The binomial distribution.
+#![allow(deprecated)]
 
 use Rng;
 use distributions::{Distribution, Cauchy};
@@ -27,6 +28,7 @@ use distributions::utils::log_gamma;
 /// let v = bin.sample(&mut rand::thread_rng());
 /// println!("{} is from a binomial distribution", v);
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Binomial {
     /// Number of trials.

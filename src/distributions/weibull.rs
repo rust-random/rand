@@ -7,6 +7,7 @@
 // except according to those terms.
 
 //! The Weibull distribution.
+#![allow(deprecated)]
 
 use Rng;
 use distributions::{Distribution, OpenClosed01};
@@ -21,6 +22,7 @@ use distributions::{Distribution, OpenClosed01};
 /// let val: f64 = SmallRng::from_entropy().sample(Weibull::new(1., 10.));
 /// println!("{}", val);
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Weibull {
     inv_shape: f64,

@@ -8,6 +8,7 @@
 // except according to those terms.
 
 //! The normal and derived distributions.
+#![allow(deprecated)]
 
 use Rng;
 use distributions::{ziggurat_tables, Distribution, Open01};
@@ -34,6 +35,7 @@ use distributions::utils::ziggurat;
 /// let val: f64 = SmallRng::from_entropy().sample(StandardNormal);
 /// println!("{}", val);
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct StandardNormal;
 
@@ -92,6 +94,7 @@ impl Distribution<f64> for StandardNormal {
 /// ```
 ///
 /// [`StandardNormal`]: crate::distributions::StandardNormal
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Normal {
     mean: f64,
@@ -137,6 +140,7 @@ impl Distribution<f64> for Normal {
 /// let v = log_normal.sample(&mut rand::thread_rng());
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct LogNormal {
     norm: Normal

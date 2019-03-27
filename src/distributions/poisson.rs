@@ -8,6 +8,7 @@
 // except according to those terms.
 
 //! The Poisson distribution.
+#![allow(deprecated)]
 
 use Rng;
 use distributions::{Distribution, Cauchy};
@@ -27,6 +28,7 @@ use distributions::utils::log_gamma;
 /// let v = poi.sample(&mut rand::thread_rng());
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Poisson {
     lambda: f64,

@@ -8,6 +8,7 @@
 // except according to those terms.
 
 //! The Cauchy distribution.
+#![allow(deprecated)]
 
 use Rng;
 use distributions::Distribution;
@@ -27,6 +28,7 @@ use std::f64::consts::PI;
 /// let v = cau.sample(&mut rand::thread_rng());
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Cauchy {
     median: f64,

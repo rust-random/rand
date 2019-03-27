@@ -8,6 +8,7 @@
 // except according to those terms.
 
 //! The dirichlet distribution.
+#![allow(deprecated)]
 
 use Rng;
 use distributions::Distribution;
@@ -30,6 +31,7 @@ use distributions::gamma::Gamma;
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
 
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Debug)]
 pub struct Dirichlet {
     /// Concentration parameters (alpha)

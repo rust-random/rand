@@ -5,7 +5,9 @@
 // <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
 //! The triangular distribution.
+#![allow(deprecated)]
 
 use Rng;
 use distributions::{Distribution, Standard};
@@ -21,6 +23,7 @@ use distributions::{Distribution, Standard};
 /// let v = d.sample(&mut rand::thread_rng());
 /// println!("{} is from a triangular distribution", v);
 /// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Triangular {
     min: f64,
