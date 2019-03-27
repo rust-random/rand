@@ -19,18 +19,6 @@ use distributions::gamma::Gamma;
 /// The Dirichlet distribution is a family of continuous multivariate
 /// probability distributions parameterized by a vector alpha of positive reals.
 /// It is a multivariate generalization of the beta distribution.
-///
-/// # Example
-///
-/// ```
-/// use rand::prelude::*;
-/// use rand::distributions::Dirichlet;
-///
-/// let dirichlet = Dirichlet::new(vec![1.0, 2.0, 3.0]);
-/// let samples = dirichlet.sample(&mut rand::thread_rng());
-/// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
-/// ```
-
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Debug)]
 pub struct Dirichlet {

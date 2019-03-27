@@ -13,15 +13,6 @@ use Rng;
 use distributions::{Distribution, OpenClosed01};
 
 /// Samples floating-point numbers according to the Pareto distribution
-///
-/// # Example
-/// ```
-/// use rand::prelude::*;
-/// use rand::distributions::Pareto;
-///
-/// let val: f64 = SmallRng::from_entropy().sample(Pareto::new(1., 2.));
-/// println!("{}", val);
-/// ```
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Pareto {

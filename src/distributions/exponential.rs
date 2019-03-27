@@ -28,15 +28,6 @@ use distributions::utils::ziggurat;
 ///       Generate Normal Random Samples*](
 ///       https://www.doornik.com/research/ziggurat.pdf).
 ///       Nuffield College, Oxford
-///
-/// # Example
-/// ```
-/// use rand::prelude::*;
-/// use rand::distributions::Exp1;
-///
-/// let val: f64 = SmallRng::from_entropy().sample(Exp1);
-/// println!("{}", val);
-/// ```
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Exp1;
@@ -67,16 +58,6 @@ impl Distribution<f64> for Exp1 {
 /// for `x > 0`.
 /// 
 /// Note that [`Exp1`][crate::distributions::Exp1] is an optimised implementation for `lambda = 1`.
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{Exp, Distribution};
-///
-/// let exp = Exp::new(2.0);
-/// let v = exp.sample(&mut rand::thread_rng());
-/// println!("{} is from a Exp(2) distribution", v);
-/// ```
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Exp {

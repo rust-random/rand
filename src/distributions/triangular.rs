@@ -13,16 +13,6 @@ use Rng;
 use distributions::{Distribution, Standard};
 
 /// The triangular distribution.
-///
-/// # Example
-///
-/// ```rust
-/// use rand::distributions::{Triangular, Distribution};
-///
-/// let d = Triangular::new(0., 5., 2.5);
-/// let v = d.sample(&mut rand::thread_rng());
-/// println!("{} is from a triangular distribution", v);
-/// ```
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Triangular {

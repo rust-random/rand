@@ -18,16 +18,6 @@ use std::f64::consts::PI;
 ///
 /// This distribution has a density function:
 /// `f(x) = 1 / (pi * scale * (1 + ((x - median) / scale)^2))`
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{Cauchy, Distribution};
-///
-/// let cau = Cauchy::new(2.0, 5.0);
-/// let v = cau.sample(&mut rand::thread_rng());
-/// println!("{} is from a Cauchy(2, 5) distribution", v);
-/// ```
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Cauchy {

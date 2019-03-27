@@ -18,16 +18,6 @@ use distributions::utils::log_gamma;
 ///
 /// This distribution has a density function:
 /// `f(k) = lambda^k * exp(-lambda) / k!` for `k >= 0`.
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{Poisson, Distribution};
-///
-/// let poi = Poisson::new(2.0);
-/// let v = poi.sample(&mut rand::thread_rng());
-/// println!("{} is from a Poisson(2) distribution", v);
-/// ```
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Poisson {

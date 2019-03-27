@@ -15,17 +15,6 @@ use distributions::{Distribution, Uniform};
 ///
 /// Implemented via a method by von Neumann[^1].
 ///
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{UnitCircle, Distribution};
-///
-/// let circle = UnitCircle::new();
-/// let v = circle.sample(&mut rand::thread_rng());
-/// println!("{:?} is from the unit circle.", v)
-/// ```
-///
 /// [^1]: von Neumann, J. (1951) [*Various Techniques Used in Connection with
 ///       Random Digits.*](https://mcnp.lanl.gov/pdf_files/nbs_vonneumann.pdf)
 ///       NBS Appl. Math. Ser., No. 12. Washington, DC: U.S. Government Printing

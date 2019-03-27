@@ -15,17 +15,6 @@ use distributions::{Distribution, Uniform};
 ///
 /// Implemented via a method by Marsaglia[^1].
 ///
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{UnitSphereSurface, Distribution};
-///
-/// let sphere = UnitSphereSurface::new();
-/// let v = sphere.sample(&mut rand::thread_rng());
-/// println!("{:?} is from the unit sphere surface.", v)
-/// ```
-///
 /// [^1]: Marsaglia, George (1972). [*Choosing a Point from the Surface of a
 ///       Sphere.*](https://doi.org/10.1214/aoms/1177692644)
 ///       Ann. Math. Statist. 43, no. 2, 645--646.

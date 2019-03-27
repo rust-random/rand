@@ -33,16 +33,6 @@ use distributions::{Distribution, Exp, Open01};
 /// == 1`, and using the boosting technique described in that paper for
 /// `shape < 1`.
 ///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{Distribution, Gamma};
-///
-/// let gamma = Gamma::new(2.0, 5.0);
-/// let v = gamma.sample(&mut rand::thread_rng());
-/// println!("{} is from a Gamma(2, 5) distribution", v);
-/// ```
-///
 /// [^1]: George Marsaglia and Wai Wan Tsang. 2000. "A Simple Method for
 ///       Generating Gamma Variables" *ACM Trans. Math. Softw.* 26, 3
 ///       (September 2000), 363-372.
@@ -176,16 +166,6 @@ impl Distribution<f64> for GammaLargeShape {
 /// of `k` independent standard normal random variables. For other
 /// `k`, this uses the equivalent characterisation
 /// `χ²(k) = Gamma(k/2, 2)`.
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{ChiSquared, Distribution};
-///
-/// let chi = ChiSquared::new(11.0);
-/// let v = chi.sample(&mut rand::thread_rng());
-/// println!("{} is from a χ²(11) distribution", v)
-/// ```
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct ChiSquared {
@@ -232,16 +212,6 @@ impl Distribution<f64> for ChiSquared {
 /// This distribution is equivalent to the ratio of two normalised
 /// chi-squared distributions, that is, `F(m,n) = (χ²(m)/m) /
 /// (χ²(n)/n)`.
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{FisherF, Distribution};
-///
-/// let f = FisherF::new(2.0, 32.0);
-/// let v = f.sample(&mut rand::thread_rng());
-/// println!("{} is from an F(2, 32) distribution", v)
-/// ```
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct FisherF {
@@ -274,16 +244,6 @@ impl Distribution<f64> for FisherF {
 
 /// The Student t distribution, `t(nu)`, where `nu` is the degrees of
 /// freedom.
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{StudentT, Distribution};
-///
-/// let t = StudentT::new(11.0);
-/// let v = t.sample(&mut rand::thread_rng());
-/// println!("{} is from a t(11) distribution", v)
-/// ```
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct StudentT {
@@ -310,16 +270,6 @@ impl Distribution<f64> for StudentT {
 }
 
 /// The Beta distribution with shape parameters `alpha` and `beta`.
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{Distribution, Beta};
-///
-/// let beta = Beta::new(2.0, 5.0);
-/// let v = beta.sample(&mut rand::thread_rng());
-/// println!("{} is from a Beta(2, 5) distribution", v);
-/// ```
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Beta {
