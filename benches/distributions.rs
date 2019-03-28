@@ -10,6 +10,7 @@
 
 extern crate test;
 extern crate rand;
+extern crate rand_distr;
 
 const RAND_BENCH_N: u64 = 1000;
 
@@ -21,7 +22,7 @@ use std::time::Duration;
 
 use rand::{Rng, FromEntropy};
 use rand::rngs::SmallRng;
-use rand::distributions::*;
+use rand_distr::{*, weighted::WeightedIndex};
 
 macro_rules! distr_int {
     ($fnn:ident, $ty:ty, $distr:expr) => {
