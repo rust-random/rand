@@ -5,7 +5,7 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand_jitter)
 [![API](https://docs.rs/rand_os/badge.svg)](https://docs.rs/rand_jitter)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.32+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 Non-physical true random number generator based on timing jitter.
 

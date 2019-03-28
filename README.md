@@ -6,7 +6,7 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.32+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 A Rust library for random number generation.
 
@@ -57,8 +57,9 @@ reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
 
 ### Rust version requirements
 
-Since version 0.5, Rand requires **Rustc version 1.22 or greater**.
-Rand 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
+Since version 0.7 (unreleased), Rand requires **Rustc version 1.32 or greater**.
+Rand 0.5 requires Rustc 1.22 or greater while versions
+0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
 greater. Subsets of the Rand code may work with older Rust versions, but this
 is not supported.
 

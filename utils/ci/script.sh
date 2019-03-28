@@ -3,7 +3,7 @@
 set -ex
 
 main() {
-    cross test --target $TARGET --lib --no-default-features
+    cross test --target $TARGET --tests --no-default-features
   # TODO: add simd_support feature:
     cross test --target $TARGET --features=serde1,log
     cross test --target $TARGET --examples
