@@ -9,6 +9,7 @@ main() {
     cross test --target $TARGET --examples
     cross test --target $TARGET --manifest-path rand_core/Cargo.toml
     cross test --target $TARGET --manifest-path rand_core/Cargo.toml --no-default-features
+    cross test --target $TARGET --manifest-path rand_distr/Cargo.toml
     cross test --target $TARGET --manifest-path rand_isaac/Cargo.toml --features=serde1
     cross test --target $TARGET --manifest-path rand_pcg/Cargo.toml --features=serde1
     cross test --target $TARGET --manifest-path rand_xorshift/Cargo.toml --features=serde1
