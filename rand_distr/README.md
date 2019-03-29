@@ -11,7 +11,7 @@
 Implements a full suite of random number distributions sampling routines.
 
 This crate is a super-set of the [rand::distributions] module, including support
-for sampling from Beta, Binomial, Cauchy, CircleChiSquared, Dirichlet, exponential,
+for sampling from Beta, Binomial, Cauchy, ChiSquared, Dirichlet, exponential,
 Fisher F, Gamma, Log-normal, Normal, Pareto, Poisson, StudentT, Triangular and
 Weibull distributions, as well as sampling points from the unit circle and unit
 sphere surface.

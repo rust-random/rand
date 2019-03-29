@@ -66,7 +66,7 @@ matrix:
         - cargo test --features=serde1,log
         - cargo test --examples
         - cargo test --manifest-path rand_core/Cargo.toml
-        - cargo test --manifest-path rand_core/Cargo.toml --no-default-feature
+        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
         - cargo test --manifest-path rand_distr/Cargo.toml
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         # TODO: cannot test rand_pcg due to explicit dependency on i128
