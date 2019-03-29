@@ -10,7 +10,7 @@
 //! The binomial distribution.
 
 use Rng;
-use distributions::Distribution;
+use distributions::{Distribution, Uniform};
 
 /// The binomial distribution `Binomial(n, p)`.
 ///
@@ -139,11 +139,14 @@ impl Distribution<u64> for Binomial {
             // return value
             let mut y: i64;
 
+            let gen_u = Uniform::new(0., p4);
+            let gen_v = Uniform::new(0., 1.);
+
             loop {
                 // Step 1: Generate `u` for selecting the region. If region 1 is
                 // selected, generate a triangularly distributed variate.
-                let u = rng.gen_range(0., p4);
-                let mut v = rng.gen_range(0., 1.);
+                let u = gen_u.sample(rng);
+                let mut v = gen_v.sample(rng);
                 if !(u > p1) {
                     y = f64_to_i64(x_m - p1 * v + u);
                     break;
