@@ -34,11 +34,9 @@ sudo: false
 # CRATE FEATURES, TESTS, AND SUB-CRATES
 # Goal: Run unit tests, doctests, examples, and test benchmarks for all crates,
 #       in configurations that cover all interesting combinations of features.
-# (`--lib` only runs unit tests just like `--tests`, but the latter is not
-# available in Rust 1.22.0)
 # Tests run on rand:
 # - test no_std support, but only the unit tests:
-#   `cargo test --lib --no-default-features`
+#   `cargo test --tests --no-default-features`
 # - run unit tests and doctests with all features which are available on stable:
 #   `cargo test --features=serde1,log`
 # - test examples:
@@ -47,7 +45,7 @@ sudo: false
 # - run unit tests and doctests with all features which are available on nightly:
 #   `cargo test --all-features`
 # - test no_std support, including the nightly alloc feature:
-#   cargo test --lib --no-default-features --features=alloc
+#   cargo test --tests --no-default-features --features=alloc
 # - run benchmarks as tests:
 #   `cargo test --benches --features=nightly`
 # Tests on subcrates:
@@ -58,12 +56,12 @@ sudo: false
 # NOTE: SIMD support is unreliable on nightly; we track the latest release
 matrix:
   include:
-    - rust: 1.22.0
-      env: DESCRIPTION="Linux, 1.22.0"
+    - rust: 1.32.0
+      env: DESCRIPTION="Linux, 1.32.0"
       os: linux
       script:
         # Differs from standard script: rand_pcg features
-        - cargo test --lib --no-default-features
+        - cargo test --tests --no-default-features
         # TODO: add simd_support feature:
         - cargo test --features=serde1,log
         - cargo test --examples
@@ -78,12 +76,12 @@ matrix:
         - cargo test --manifest-path rand_jitter/Cargo.toml
         - cargo test --manifest-path rand_os/Cargo.toml
 
-    - rust: 1.22.0
-      env: DESCRIPTION="OSX, 1.22.0"
+    - rust: 1.32.0
+      env: DESCRIPTION="OSX, 1.32.0"
       os: osx
       script:
         # Differs from standard script: rand_pcg features
-        - cargo test --lib --no-default-features
+        - cargo test --tests --no-default-features
         # TODO: add simd_support feature:
         - cargo test --features=serde1,log
         - cargo test --examples
@@ -108,7 +106,7 @@ matrix:
         - rustup target add aarch64-apple-ios
       script:
         # Differs from standard script: includes aarch64-apple-ios cross-build
-        - cargo test --lib --no-default-features
+        - cargo test --tests --no-default-features
         # TODO: add simd_support feature:
         - cargo test --features=serde1,log
         - cargo test --examples
@@ -137,7 +135,7 @@ matrix:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
         # Differs from standard script: alloc feature, all features, doc build
-        - cargo test --lib --no-default-features --features=alloc
+        - cargo test --tests --no-default-features --features=alloc
         - cargo test --all-features
         - cargo test --benches --features=nightly
         - cargo test --examples
@@ -166,7 +164,7 @@ matrix:
         - cargo deadlinks -V
       script:
         # Differs from standard script: alloc feature, all features, doc build
-        - cargo test --lib --no-default-features --features=alloc
+        - cargo test --tests --no-default-features --features=alloc
         - cargo test --all-features
         - cargo test --benches --features=nightly
         - cargo test --examples
@@ -257,7 +255,7 @@ before_install:
   - rustup self update
 
 script:
-  - cargo test --lib --no-default-features
+  - cargo test --tests --no-default-features
   # TODO: add simd_support feature:
   - cargo test --features=serde1,log
   - cargo test --examples

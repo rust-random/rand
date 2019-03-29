@@ -6,7 +6,7 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand_xoshiro)
 [![API](https://docs.rs/rand_xoshiro/badge.svg)](https://docs.rs/rand_xoshiro)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.22+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.32+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 Rust implementation of the [xoshiro, xoroshiro and splitmix64](http://xoshiro.di.unimi.it) random number generators.
 
