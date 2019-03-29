@@ -46,6 +46,13 @@ impl Binomial {
     }
 }
 
+/// Convert a `f64` to an `i64`, panicing on overflow.
+// In the future (Rust 1.34), this might be replaced with `TryFrom`.
+fn f64_to_i64(x: f64) -> i64 {
+    assert!(x < (::std::i64::MAX as f64));
+    x as i64
+}
+
 impl Distribution<u64> for Binomial {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         // Handle these values directly.
@@ -105,7 +112,7 @@ impl Distribution<u64> for Binomial {
             let np = n * p;
             let npq = np * q;
             let f_m = np + p;
-            let m = f_m as i64;
+            let m = f64_to_i64(f_m);
             // radius of triangle region, since height=1 also area of region
             let p1 = (2.195 * npq.sqrt() - 4.6 * q).floor() + 0.5;
             // tip of triangle
@@ -138,7 +145,7 @@ impl Distribution<u64> for Binomial {
                 let u = rng.gen_range(0., p4);
                 let mut v = rng.gen_range(0., 1.);
                 if !(u > p1) {
-                    y = (x_m - p1 * v + u) as i64;
+                    y = f64_to_i64(x_m - p1 * v + u);
                     break;
                 }
 
@@ -150,11 +157,11 @@ impl Distribution<u64> for Binomial {
                     if v > 1. {
                         continue;
                     } else {
-                        y = x as i64;
+                        y = f64_to_i64(x);
                     }
                 } else if !(u > p3) {
                     // Step 3: Region 3, left exponential tail.
-                    y = (x_l + v.ln() / lambda_l) as i64;
+                    y = f64_to_i64(x_l + v.ln() / lambda_l);
                     if y < 0 {
                         continue;
                     } else {
@@ -162,7 +169,7 @@ impl Distribution<u64> for Binomial {
                     }
                 } else {
                     // Step 4: Region 4, right exponential tail.
-                    y = (x_r - v.ln() / lambda_r) as i64;
+                    y = f64_to_i64(x_r - v.ln() / lambda_r);
                     if y > 0 && (y as u64) > self.n {
                         continue;
                     } else {
@@ -222,8 +229,8 @@ impl Distribution<u64> for Binomial {
                 // Step 5.3: Final acceptance/rejection test.
                 let x1 = (y + 1) as f64;
                 let f1 = (m + 1) as f64;
-                let z = ((n as i64) + 1 - m) as f64;
-                let w = ((n as i64) - y + 1) as f64;
+                let z = (f64_to_i64(n) + 1 - m) as f64;
+                let w = (f64_to_i64(n) - y + 1) as f64;
 
                 fn stirling(a: f64) -> f64 {
                     let a2 = a * a;
@@ -233,6 +240,11 @@ impl Distribution<u64> for Binomial {
                 if alpha > x_m * (f1 / x1).ln()
                     + (n - (m as f64) + 0.5) * (z / w).ln()
                     + ((y - m) as f64) * (w * p / (x1 * q)).ln()
+                    // We use the signs from the GSL implementation, which are
+                    // different than the ones in the reference. According to
+                    // the GSL authors, the new signs were verified to be
+                    // correct by one of the original designers of the
+                    // algorithm.
                     + stirling(f1) + stirling(z) - stirling(x1) - stirling(w)
                 {
                     continue;
