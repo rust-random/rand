@@ -69,6 +69,7 @@ pub struct OpenClosed01;
 pub struct Open01;
 
 
+// This trait is needed by both this lib and rand_distr hence is a hidden export
 #[doc(hidden)]
 pub trait IntoFloat {
     type F;
