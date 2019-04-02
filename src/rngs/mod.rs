@@ -24,8 +24,8 @@
 //!
 //! Generally the operating system will collect some entropy, remove bias, and
 //! use that to seed its own PRNG; [`OsRng`] provides an interface to this.
-//! [`JitterRng`] is an entropy collector included with Rand that measures
-//! jitter in the CPU execution time, and jitter in memory access time.
+//! Some alternatives are available although not normally required; see the
+//! [`rdrand`] and [`rand_jitter`] crates.
 //!
 //! ## Pseudo-random number generators
 //!
@@ -136,11 +136,12 @@
 //! [`SmallRng`]: rngs::SmallRng
 //! [`StdRng`]: rngs::StdRng
 //! [`ThreadRng`]: rngs::ThreadRng
-//! [`JitterRng`]: rngs::JitterRng
 //! [`mock::StepRng`]: rngs::mock::StepRng
 //! [`adapter::ReadRng`]: rngs::adapter::ReadRng
 //! [`adapter::ReseedingRng`]: rngs::adapter::ReseedingRng
 //! [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
+//! [`rdrand`]: https://crates.io/crates/rdrand
+//! [`rand_jitter`]: https://crates.io/crates/rand_jitter
 
 pub mod adapter;
 
@@ -151,8 +152,6 @@ mod small;
 mod std;
 #[cfg(feature="std")] pub(crate) mod thread;
 
-
-pub use rand_jitter::{JitterRng, TimerError};
 #[allow(deprecated)]
 #[cfg(feature="std")] pub use self::entropy::EntropyRng;
 

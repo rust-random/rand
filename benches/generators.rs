@@ -25,7 +25,7 @@ use test::{black_box, Bencher};
 
 use rand::prelude::*;
 use rand::rngs::adapter::ReseedingRng;
-use rand::rngs::{OsRng, JitterRng};
+use rand::rngs::OsRng;
 use rand_isaac::{IsaacRng, Isaac64Rng};
 use rand_chacha::ChaChaRng;
 use rand_hc::{Hc128Rng, Hc128Core};
@@ -129,17 +129,6 @@ gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
 gen_uint!(gen_u64_small, u64, SmallRng::from_entropy());
 gen_uint!(gen_u64_os, u64, OsRng::new().unwrap());
 
-// Do not test JitterRng like the others by running it RAND_BENCH_N times per,
-// measurement, because it is way too slow. Only run it once.
-#[bench]
-fn gen_u64_jitter(b: &mut Bencher) {
-    let mut rng = JitterRng::new().unwrap();
-    b.iter(|| {
-        rng.gen::<u64>()
-    });
-    b.bytes = size_of::<u64>() as u64;
-}
-
 macro_rules! init_gen {
     ($fnn:ident, $gen:ident) => {
         #[bench]
@@ -169,13 +158,6 @@ init_gen!(init_hc128, Hc128Rng);
 init_gen!(init_isaac, IsaacRng);
 init_gen!(init_isaac64, Isaac64Rng);
 init_gen!(init_chacha, ChaChaRng);
-
-#[bench]
-fn init_jitter(b: &mut Bencher) {
-    b.iter(|| {
-        JitterRng::new().unwrap()
-    });
-}
 
 
 const RESEEDING_THRESHOLD: u64 = 1024*1024*1024; // something high enough to get
