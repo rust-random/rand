@@ -25,7 +25,7 @@ use test::{black_box, Bencher};
 
 use rand::prelude::*;
 use rand::rngs::adapter::ReseedingRng;
-use rand::rngs::{OsRng, JitterRng, EntropyRng};
+use rand::rngs::{OsRng, JitterRng};
 use rand_isaac::{IsaacRng, Isaac64Rng};
 use rand_chacha::ChaChaRng;
 use rand_hc::{Hc128Rng, Hc128Core};
@@ -185,7 +185,7 @@ const RESEEDING_THRESHOLD: u64 = 1024*1024*1024; // something high enough to get
 fn reseeding_hc128_bytes(b: &mut Bencher) {
     let mut rng = ReseedingRng::new(Hc128Core::from_entropy(),
                                     RESEEDING_THRESHOLD,
-                                    EntropyRng::new());
+                                    OsRng);
     let mut buf = [0u8; BYTES_LEN];
     b.iter(|| {
         for _ in 0..RAND_BENCH_N {
@@ -202,7 +202,7 @@ macro_rules! reseeding_uint {
         fn $fnn(b: &mut Bencher) {
             let mut rng = ReseedingRng::new(Hc128Core::from_entropy(),
                                             RESEEDING_THRESHOLD,
-                                            EntropyRng::new());
+                                            OsRng);
             b.iter(|| {
                 let mut accum: $ty = 0;
                 for _ in 0..RAND_BENCH_N {

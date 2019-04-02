@@ -10,7 +10,7 @@
 //!
 //! - [`ThreadRng`], a fast, secure, auto-seeded thread-local generator
 //! - [`StdRng`] and [`SmallRng`], algorithms to cover typical usage
-//! - [`EntropyRng`], [`OsRng`] and [`JitterRng`] as entropy sources
+//! - [`OsRng`] as an entropy source
 //! - [`mock::StepRng`] as a simple counter for tests
 //! - [`adapter::ReadRng`] to read from a file/stream
 //! - [`adapter::ReseedingRng`] to reseed a PRNG on clone / process fork etc.
@@ -26,8 +26,6 @@
 //! use that to seed its own PRNG; [`OsRng`] provides an interface to this.
 //! [`JitterRng`] is an entropy collector included with Rand that measures
 //! jitter in the CPU execution time, and jitter in memory access time.
-//! [`EntropyRng`] is a wrapper that uses the best entropy source that is
-//! available.
 //!
 //! ## Pseudo-random number generators
 //!
@@ -78,7 +76,7 @@
 //! - [`FromEntropy::from_entropy`]; this is the most convenient way to seed
 //!   with fresh, secure random data.
 //! - [`SeedableRng::from_rng`]; this allows seeding from another PRNG or
-//!   from an entropy source such as [`EntropyRng`].
+//!   from an entropy source such as [`OsRng`].
 //! - [`SeedableRng::from_seed`]; this is mostly useful if you wish to be able
 //!   to reproduce the output sequence by using a fixed seed. (Don't use
 //!   [`StdRng`] or [`SmallRng`] in this case since different algorithms may be
@@ -138,7 +136,6 @@
 //! [`SmallRng`]: rngs::SmallRng
 //! [`StdRng`]: rngs::StdRng
 //! [`ThreadRng`]: rngs::ThreadRng
-//! [`EntropyRng`]: rngs::EntropyRng
 //! [`JitterRng`]: rngs::JitterRng
 //! [`mock::StepRng`]: rngs::mock::StepRng
 //! [`adapter::ReadRng`]: rngs::adapter::ReadRng
@@ -156,6 +153,7 @@ mod std;
 
 
 pub use rand_jitter::{JitterRng, TimerError};
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::entropy::EntropyRng;
 
 pub use self::small::SmallRng;

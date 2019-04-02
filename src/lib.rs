@@ -456,7 +456,7 @@ impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
 /// entropy. This trait is automatically implemented for any PRNG implementing
 /// [`SeedableRng`] and is not intended to be implemented by users.
 ///
-/// This is equivalent to using `SeedableRng::from_rng(EntropyRng::new())` then
+/// This is equivalent to using `SeedableRng::from_rng(OsRng)` then
 /// unwrapping the result.
 ///
 /// Since this is convenient and secure, it is the recommended way to create
@@ -477,7 +477,7 @@ impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
-/// [`EntropyRng`]: rngs::EntropyRng
+/// [`OsRng`]: rngs::OsRng
 #[cfg(feature="std")]
 pub trait FromEntropy: SeedableRng {
     /// Creates a new instance, automatically seeded with fresh entropy.
@@ -497,11 +497,11 @@ pub trait FromEntropy: SeedableRng {
     /// ```
     /// # use rand::Error;
     /// use rand::prelude::*;
-    /// use rand::rngs::EntropyRng;
+    /// use rand::rngs::OsRng;
     ///
     /// # fn try_inner() -> Result<(), Error> {
     /// // This uses StdRng, but is valid for any R: SeedableRng
-    /// let mut rng = StdRng::from_rng(EntropyRng::new())?;
+    /// let mut rng = StdRng::from_rng(OsRng)?;
     ///
     /// println!("random number: {}", rng.gen_range(1, 10));
     /// # Ok(())
@@ -515,7 +515,7 @@ pub trait FromEntropy: SeedableRng {
 #[cfg(feature="std")]
 impl<R: SeedableRng> FromEntropy for R {
     fn from_entropy() -> R {
-        R::from_rng(rngs::EntropyRng::new()).unwrap_or_else(|err|
+        R::from_rng(rngs::OsRng).unwrap_or_else(|err|
             panic!("FromEntropy::from_entropy() failed: {}", err))
     }
 }
