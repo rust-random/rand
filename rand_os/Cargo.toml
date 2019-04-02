@@ -1,6 +1,6 @@
 [package]
 name = "rand_os"
-version = "0.1.3"
+version = "0.2.0"
 authors = ["The Rand Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -9,30 +9,18 @@ documentation = "https://docs.rs/rand_os"
 homepage = "https://crates.io/crates/rand_os"
 description = "OS backed Random Number Generator"
 keywords = ["random", "rng", "os"]
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
+[features]
+log = ["getrandom/log"]
+# re-export optional WASM dependencies to avoid breakage:
+wasm-bindgen = ["getrandom/wasm-bindgen"]
+stdweb = ["getrandom/stdweb"]
+
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.4", features = ["std"] }
-log = { version = "0.4", optional = true }
-
-[target.'cfg(unix)'.dependencies]
-libc = "0.2"
-
-[target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["minwindef", "ntsecapi", "winnt"] }
-
-[target.'cfg(target_os = "cloudabi")'.dependencies]
-cloudabi = "0.0.3"
-
-[target.'cfg(target_os = "fuchsia")'.dependencies]
-fuchsia-cprng = "0.1.0"
-
-[target.wasm32-unknown-unknown.dependencies]
-wasm-bindgen = { version = "0.2.12", optional = true }
-stdweb = { version = "0.4", optional = true }
-
-[target.'cfg(target_env = "sgx")'.dependencies]
-rdrand = "0.5.0"
+getrandom = "0.1"

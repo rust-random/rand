@@ -50,7 +50,7 @@ members = [
 rand_core = { path = "rand_core", version = "0.4" }
 rand_pcg = { path = "rand_pcg", version = "0.1" }
 rand_jitter = { path = "rand_jitter", version = "0.1" }
-rand_os = { path = "rand_os", version = "0.1", optional = true  }
+rand_os = { path = "rand_os", version = "0.2", optional = true  }
 rand_hc = { path = "rand_hc", version = "0.1" }
 log = { version = "0.4", optional = true }
 

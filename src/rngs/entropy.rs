@@ -197,8 +197,8 @@ pub struct Os(rngs::OsRng);
 #[cfg(feature="rand_os")]
 impl EntropySource for Os {
     fn new_and_fill(dest: &mut [u8]) -> Result<Self, Error> {
-        let mut rng = rngs::OsRng::new()?;
-        rng.try_fill_bytes(dest)?;
+        let rng = rngs::OsRng;
+        rngs::OsRng.try_fill_bytes(dest)?;
         Ok(Os(rng))
     }
 
