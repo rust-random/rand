@@ -22,14 +22,14 @@ appveyor = { repository = "rust-random/rand" }
 [features]
 default = ["std"] # without "std" rand uses libcore
 nightly = ["simd_support"] # enables all features requiring nightly rust
-std = ["rand_core/std", "alloc", "rand_os", "rand_jitter/std"]
+std = ["rand_core/std", "alloc", "getrandom", "rand_jitter/std"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 i128_support = [] # enables i128 and u128 support
 simd_support = ["packed_simd"] # enables SIMD support
 serde1 = ["rand_core/serde1", "rand_isaac/serde1", "rand_xorshift/serde1"] # enables serialization for PRNGs
 # re-export optional WASM dependencies to avoid breakage:
-wasm-bindgen = ["rand_os/wasm-bindgen"]
-stdweb = ["rand_os/stdweb"]
+wasm-bindgen = ["getrandom/wasm-bindgen"]
+stdweb = ["getrandom/stdweb"]
 
 [workspace]
 members = [
@@ -50,8 +50,8 @@ members = [
 rand_core = { path = "rand_core", version = "0.4" }
 rand_pcg = { path = "rand_pcg", version = "0.1" }
 rand_jitter = { path = "rand_jitter", version = "0.1" }
-rand_os = { path = "rand_os", version = "0.2", optional = true  }
 rand_hc = { path = "rand_hc", version = "0.1" }
+getrandom = { version = "0.1", optional = true }
 log = { version = "0.4", optional = true }
 
 [dependencies.packed_simd]

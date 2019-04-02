@@ -1,10 +1,10 @@
 # rand_jitter
 [![Build Status](https://travis-ci.org/rust-random/rand.svg?branch=master)](https://travis-ci.org/rust-random/rand)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/rust-random/rand)
-[![Latest version](https://img.shields.io/crates/v/rand_os.svg)](https://crates.io/crates/rand_jitter)
+[![Latest version](https://img.shields.io/crates/v/rand_jitter.svg)](https://crates.io/crates/rand_jitter)
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand_jitter)
-[![API](https://docs.rs/rand_os/badge.svg)](https://docs.rs/rand_jitter)
+[![API](https://docs.rs/rand_jitter/badge.svg)](https://docs.rs/rand_jitter)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.32+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 Non-physical true random number generator based on timing jitter.

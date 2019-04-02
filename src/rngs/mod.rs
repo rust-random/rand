@@ -135,7 +135,6 @@
 //! [`CryptoRng`] is a marker trait cryptographically secure PRNGs can
 //! implement.
 //!
-//! [`OsRng`]: rand_os::OsRng
 //! [`SmallRng`]: rngs::SmallRng
 //! [`StdRng`]: rngs::StdRng
 //! [`ThreadRng`]: rngs::ThreadRng
@@ -163,5 +162,5 @@ pub use self::small::SmallRng;
 pub use self::std::StdRng;
 #[cfg(feature="std")] pub use self::thread::ThreadRng;
 
-#[cfg(feature="rand_os")]
-pub use rand_os::OsRng;
+#[cfg(feature="getrandom")] mod os;
+#[cfg(feature="getrandom")] pub use self::os::OsRng;

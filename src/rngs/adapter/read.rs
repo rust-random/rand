@@ -40,7 +40,7 @@ use rand_core::{RngCore, Error, ErrorKind, impls};
 /// println!("{:x}", rng.gen::<u32>());
 /// ```
 ///
-/// [`OsRng`]: rand_os::OsRng
+/// [`OsRng`]: rngs::OsRng
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Debug)]
 pub struct ReadRng<R> {

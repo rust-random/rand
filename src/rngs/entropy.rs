@@ -38,7 +38,7 @@ use rngs;
 /// report the error, and only the one from `OsRng`. The other [`RngCore`]
 /// methods will panic in case of an error.
 ///
-/// [`OsRng`]: rand_os::OsRng
+/// [`OsRng`]: rngs::OsRng
 /// [`thread_rng`]: crate::thread_rng
 /// [`JitterRng`]: crate::rngs::JitterRng
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
@@ -190,11 +190,11 @@ impl EntropySource for NoSource {
 }
 
 
-#[cfg(feature="rand_os")]
+#[cfg(feature="getrandom")]
 #[derive(Clone, Debug)]
 pub struct Os(rngs::OsRng);
 
-#[cfg(feature="rand_os")]
+#[cfg(feature="getrandom")]
 impl EntropySource for Os {
     fn new_and_fill(dest: &mut [u8]) -> Result<Self, Error> {
         let rng = rngs::OsRng;
