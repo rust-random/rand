@@ -5,15 +5,22 @@
 // <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-
 //! The triangular distribution.
-#![allow(deprecated)]
 
-use Rng;
-use distributions::{Distribution, Standard};
+use rand::Rng;
+use crate::{Distribution, Standard};
 
 /// The triangular distribution.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+///
+/// # Example
+///
+/// ```rust
+/// use rand_distr::{Triangular, Distribution};
+///
+/// let d = Triangular::new(0., 5., 2.5);
+/// let v = d.sample(&mut rand::thread_rng());
+/// println!("{} is from a triangular distribution", v);
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Triangular {
     min: f64,
@@ -54,7 +61,7 @@ impl Distribution<f64> for Triangular {
 
 #[cfg(test)]
 mod test {
-    use distributions::Distribution;
+    use crate::Distribution;
     use super::Triangular;
 
     #[test]
@@ -71,7 +78,7 @@ mod test {
     #[test]
     fn test_sample() {
         let norm = Triangular::new(0., 1., 0.5);
-        let mut rng = ::test::rng(1);
+        let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
             norm.sample(&mut rng);
         }

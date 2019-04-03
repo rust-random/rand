@@ -67,6 +67,7 @@ matrix:
         - cargo test --examples
         - cargo test --manifest-path rand_core/Cargo.toml
         - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+        - cargo test --manifest-path rand_distr/Cargo.toml
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         # TODO: cannot test rand_pcg due to explicit dependency on i128
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
@@ -87,6 +88,7 @@ matrix:
         - cargo test --examples
         - cargo test --manifest-path rand_core/Cargo.toml
         - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+        - cargo test --manifest-path rand_distr/Cargo.toml
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         # TODO: cannot test rand_pcg due to explicit dependency on i128
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
@@ -112,6 +114,7 @@ matrix:
         - cargo test --examples
         - cargo test --manifest-path rand_core/Cargo.toml
         - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+        - cargo test --manifest-path rand_distr/Cargo.toml
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
@@ -141,6 +144,7 @@ matrix:
         - cargo test --examples
         - cargo test --manifest-path rand_core/Cargo.toml
         - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
+        - cargo test --manifest-path rand_distr/Cargo.toml
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
@@ -170,6 +174,7 @@ matrix:
         - cargo test --examples
         - cargo test --manifest-path rand_core/Cargo.toml
         - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
+        - cargo test --manifest-path rand_distr/Cargo.toml
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
@@ -221,6 +226,7 @@ matrix:
         - rustup target add x86_64-unknown-netbsd
         - rustup target add x86_64-unknown-redox
       script:
+        # Test the top-level crate with all features:
         - cargo build --target=x86_64-sun-solaris --all-features
         - cargo build --target=x86_64-unknown-cloudabi --all-features
         - cargo build --target=x86_64-unknown-freebsd --all-features
@@ -261,6 +267,7 @@ script:
   - cargo test --examples
   - cargo test --manifest-path rand_core/Cargo.toml
   - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+  - cargo test --manifest-path rand_distr/Cargo.toml
   - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1

@@ -7,12 +7,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Generating random samples from probability distributions.
+//! Generating random samples from probability distributions
 //!
 //! This module is the home of the [`Distribution`] trait and several of its
 //! implementations. It is the workhorse behind some of the convenient
-//! functionality of the [`Rng`] trait, including [`gen`], [`gen_range`] and
-//! of course [`sample`].
+//! functionality of the [`Rng`] trait, e.g. [`Rng::gen`], [`Rng::gen_range`] and
+//! of course [`Rng::sample`].
 //!
 //! Abstractly, a [probability distribution] describes the probability of
 //! occurance of each value in its sample space.
@@ -40,8 +40,14 @@
 //! possible to generate type `T` with [`Rng::gen()`], and by extension also
 //! with the [`random()`] function.
 //!
+//! ## Random characters
+//! 
+//! [`Alphanumeric`] is a simple distribution to sample random letters and
+//! numbers of the `char` type; in contrast [`Standard`] may sample any valid
+//! `char`.
 //!
-//! # Distribution to sample from a `Uniform` range
+//!
+//! # Uniform numeric ranges
 //!
 //! The [`Uniform`] distribution is more flexible than [`Standard`], but also
 //! more specialised: it supports fewer target types, but allows the sample
@@ -59,8 +65,7 @@
 //! documentation in the [`uniform`] module. Doing so enables generation of
 //! values of type `T` with  [`Rng::gen_range`].
 //!
-//!
-//! # Other distributions
+//! ## Open and half-open ranges
 //!
 //! There are surprisingly many ways to uniformly generate random floats. A
 //! range between 0 and 1 is standard, but the exact bounds (open vs closed)
@@ -68,110 +73,33 @@
 //! [`Open01`] and [`OpenClosed01`]. See "Floating point implementation" section of
 //! [`Standard`] documentation for more details.
 //!
-//! [`Alphanumeric`] is a simple distribution to sample random letters and
-//! numbers of the `char` type; in contrast [`Standard`] may sample any valid
-//! `char`.
+//! # Non-uniform sampling
 //!
-//! [`WeightedIndex`] can be used to do weighted sampling from a set of items,
-//! such as from an array.
+//! Sampling a simple true/false outcome with a given probability has a name:
+//! the [`Bernoulli`] distribution (this is used by [`Rng::gen_bool`]).
 //!
-//! # Non-uniform probability distributions
+//! For weighted sampling from a sequence of discrete values, use the
+//! [`weighted`] module.
 //!
-//! Rand currently provides the following probability distributions:
-//!
-//! - Related to real-valued quantities that grow linearly
-//!   (e.g. errors, offsets):
-//!   - [`Normal`] distribution, and [`StandardNormal`] as a primitive
-//!   - [`Cauchy`] distribution
-//! - Related to Bernoulli trials (yes/no events, with a given probability):
-//!   - [`Binomial`] distribution
-//!   - [`Bernoulli`] distribution, similar to [`Rng::gen_bool`].
-//! - Related to positive real-valued quantities that grow exponentially
-//!   (e.g. prices, incomes, populations):
-//!   - [`LogNormal`] distribution
-//! - Related to the occurrence of independent events at a given rate:
-//!   - [`Pareto`] distribution
-//!   - [`Poisson`] distribution
-//!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
-//!   - [`Weibull`] distribution
-//! - Gamma and derived distributions:
-//!   - [`Gamma`] distribution
-//!   - [`ChiSquared`] distribution
-//!   - [`StudentT`] distribution
-//!   - [`FisherF`] distribution
-//! - Triangular distribution:
-//!   - [`Beta`] distribution
-//!   - [`Triangular`] distribution
-//! - Multivariate probability distributions
-//!   - [`Dirichlet`] distribution
-//!   - [`UnitSphereSurface`] distribution
-//!   - [`UnitCircle`] distribution
-//!
-//! # Examples
-//!
-//! Sampling from a distribution:
-//!
-//! ```
-//! use rand::{thread_rng, Rng};
-//! use rand::distributions::Exp;
-//!
-//! let exp = Exp::new(2.0);
-//! let v = thread_rng().sample(exp);
-//! println!("{} is from an Exp(2) distribution", v);
-//! ```
-//!
-//! Implementing the [`Standard`] distribution for a user type:
-//!
-//! ```
-//! # #![allow(dead_code)]
-//! use rand::Rng;
-//! use rand::distributions::{Distribution, Standard};
-//!
-//! struct MyF32 {
-//!     x: f32,
-//! }
-//!
-//! impl Distribution<MyF32> for Standard {
-//!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> MyF32 {
-//!         MyF32 { x: rng.gen() }
-//!     }
-//! }
-//! ```
+//! This crate no longer includes other non-uniform distributions; instead
+//! it is recommended that you use either [`rand_distr`] or [`statrs`].
 //!
 //!
 //! [probability distribution]: https://en.wikipedia.org/wiki/Probability_distribution
-//! [`gen_range`]: Rng::gen_range
-//! [`gen`]: Rng::gen
-//! [`sample`]: Rng::sample
-//! [`new_inclusive`]: Uniform::new_inclusive
+//! [`rand_distr`]: https://crates.io/crates/rand_distr
+//! [`statrs`]: https://crates.io/crates/statrs
+
 //! [`Alphanumeric`]: distributions::Alphanumeric
 //! [`Bernoulli`]: distributions::Bernoulli
-//! [`Beta`]: distributions::Beta
-//! [`Binomial`]: distributions::Binomial
-//! [`Cauchy`]: distributions::Cauchy
-//! [`ChiSquared`]: distributions::ChiSquared
-//! [`Dirichlet`]: distributions::Dirichlet
-//! [`Exp`]: distributions::Exp
-//! [`Exp1`]: distributions::Exp1
-//! [`FisherF`]: distributions::FisherF
-//! [`Gamma`]: distributions::Gamma
-//! [`LogNormal`]: distributions::LogNormal
-//! [`Normal`]: distributions::Normal
 //! [`Open01`]: distributions::Open01
 //! [`OpenClosed01`]: distributions::OpenClosed01
-//! [`Pareto`]: distributions::Pareto
-//! [`Poisson`]: distributions::Poisson
 //! [`Standard`]: distributions::Standard
-//! [`StandardNormal`]: distributions::StandardNormal
-//! [`StudentT`]: distributions::StudentT
-//! [`Triangular`]: distributions::Triangular
 //! [`Uniform`]: distributions::Uniform
 //! [`Uniform::new`]: distributions::Uniform::new
 //! [`Uniform::new_inclusive`]: distributions::Uniform::new_inclusive
-//! [`UnitSphereSurface`]: distributions::UnitSphereSurface
-//! [`UnitCircle`]: distributions::UnitCircle
-//! [`Weibull`]: distributions::Weibull
-//! [`WeightedIndex`]: distributions::WeightedIndex
+//! [`weighted`]: distributions::weighted
+//! [`rand_distr`]: https://crates.io/crates/rand_distr
+//! [`statrs`]: https://crates.io/crates/statrs
 
 #[cfg(any(rustc_1_26, features="nightly"))]
 use core::iter;
@@ -182,18 +110,32 @@ pub use self::other::Alphanumeric;
 pub use self::float::{OpenClosed01, Open01};
 pub use self::bernoulli::Bernoulli;
 #[cfg(feature="alloc")] pub use self::weighted::{WeightedIndex, WeightedError};
+
+// The following are all deprecated after being moved to rand_distr
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::unit_sphere::UnitSphereSurface;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::unit_circle::UnitCircle;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::gamma::{Gamma, ChiSquared, FisherF,
     StudentT, Beta};
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::normal::{Normal, LogNormal, StandardNormal};
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::exponential::{Exp, Exp1};
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::pareto::Pareto;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::poisson::Poisson;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::binomial::Binomial;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::cauchy::Cauchy;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::dirichlet::Dirichlet;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::triangular::Triangular;
+#[allow(deprecated)]
 #[cfg(feature="std")] pub use self::weibull::Weibull;
 
 pub mod uniform;
@@ -213,6 +155,9 @@ mod bernoulli;
 #[cfg(feature="std")] mod weibull;
 
 mod float;
+#[doc(hidden)] pub mod hidden_export {
+    pub use super::float::IntoFloat;   // used by rand_distr
+}
 mod integer;
 mod other;
 mod utils;
@@ -318,7 +263,7 @@ impl<'a, D, R, T> iter::TrustedLen for DistIter<'a, D, R, T>
 /// Usually generates values with a numerically uniform distribution, and with a
 /// range appropriate to the type.
 ///
-/// ## Built-in Implementations
+/// ## Provided implementations
 ///
 /// Assuming the provided `Rng` is well-behaved, these implementations
 /// generate values with the following ranges and distributions:
@@ -343,7 +288,27 @@ impl<'a, D, R, T> iter::TrustedLen for DistIter<'a, D, R, T>
 /// * `Option<T>` where `Standard` is implemented for `T`: Returns `None` with
 ///   probability 0.5; otherwise generates a random `x: T` and returns `Some(x)`.
 ///
-/// # Example
+/// ## Custom implementations
+///
+/// The [`Standard`] distribution may be implemented for user types as follows:
+///
+/// ```
+/// # #![allow(dead_code)]
+/// use rand::Rng;
+/// use rand::distributions::{Distribution, Standard};
+///
+/// struct MyF32 {
+///     x: f32,
+/// }
+///
+/// impl Distribution<MyF32> for Standard {
+///     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> MyF32 {
+///         MyF32 { x: rng.gen() }
+///     }
+/// }
+/// ```
+///
+/// ## Example usage
 /// ```
 /// use rand::prelude::*;
 /// use rand::distributions::Standard;
@@ -379,10 +344,10 @@ mod tests {
 
     #[test]
     fn test_distributions_iter() {
-        use distributions::Normal;
+        use distributions::Open01;
         let mut rng = ::test::rng(210);
-        let distr = Normal::new(10.0, 10.0);
-        let results: Vec<_> = distr.sample_iter(&mut rng).take(100).collect();
+        let distr = Open01;
+        let results: Vec<f32> = distr.sample_iter(&mut rng).take(100).collect();
         println!("{:?}", results);
     }
 }

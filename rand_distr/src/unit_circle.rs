@@ -6,20 +6,28 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(deprecated)]
-
-use Rng;
-use distributions::{Distribution, Uniform};
+use rand::Rng;
+use crate::{Distribution, Uniform};
 
 /// Samples uniformly from the edge of the unit circle in two dimensions.
 ///
 /// Implemented via a method by von Neumann[^1].
 ///
+///
+/// # Example
+///
+/// ```
+/// use rand_distr::{UnitCircle, Distribution};
+///
+/// let circle = UnitCircle::new();
+/// let v = circle.sample(&mut rand::thread_rng());
+/// println!("{:?} is from the unit circle.", v)
+/// ```
+///
 /// [^1]: von Neumann, J. (1951) [*Various Techniques Used in Connection with
 ///       Random Digits.*](https://mcnp.lanl.gov/pdf_files/nbs_vonneumann.pdf)
 ///       NBS Appl. Math. Ser., No. 12. Washington, DC: U.S. Government Printing
 ///       Office, pp. 36-38.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct UnitCircle;
 
@@ -53,7 +61,7 @@ impl Distribution<[f64; 2]> for UnitCircle {
 
 #[cfg(test)]
 mod tests {
-    use distributions::Distribution;
+    use crate::Distribution;
     use super::UnitCircle;
 
     /// Assert that two numbers are almost equal to each other.
@@ -74,7 +82,7 @@ mod tests {
 
     #[test]
     fn norm() {
-        let mut rng = ::test::rng(1);
+        let mut rng = crate::test::rng(1);
         let dist = UnitCircle::new();
         for _ in 0..1000 {
             let x = dist.sample(&mut rng);
@@ -84,7 +92,7 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        let mut rng = ::test::rng(2);
+        let mut rng = crate::test::rng(2);
         let dist = UnitCircle::new();
         assert_eq!(dist.sample(&mut rng), [-0.8032118336637037, 0.5956935036263119]);
         assert_eq!(dist.sample(&mut rng), [-0.4742919588505423, -0.880367615130018]);

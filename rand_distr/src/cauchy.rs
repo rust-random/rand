@@ -8,17 +8,25 @@
 // except according to those terms.
 
 //! The Cauchy distribution.
-#![allow(deprecated)]
 
-use Rng;
-use distributions::Distribution;
+use rand::Rng;
+use crate::Distribution;
 use std::f64::consts::PI;
 
 /// The Cauchy distribution `Cauchy(median, scale)`.
 ///
 /// This distribution has a density function:
 /// `f(x) = 1 / (pi * scale * (1 + ((x - median) / scale)^2))`
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+///
+/// # Example
+///
+/// ```
+/// use rand_distr::{Cauchy, Distribution};
+///
+/// let cau = Cauchy::new(2.0, 5.0);
+/// let v = cau.sample(&mut rand::thread_rng());
+/// println!("{} is from a Cauchy(2, 5) distribution", v);
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Cauchy {
     median: f64,
@@ -53,7 +61,7 @@ impl Distribution<f64> for Cauchy {
 
 #[cfg(test)]
 mod test {
-    use distributions::Distribution;
+    use crate::Distribution;
     use super::Cauchy;
 
     fn median(mut numbers: &mut [f64]) -> f64 {
@@ -69,7 +77,7 @@ mod test {
     #[test]
     fn test_cauchy_median() {
         let cauchy = Cauchy::new(10.0, 5.0);
-        let mut rng = ::test::rng(123);
+        let mut rng = crate::test::rng(123);
         let mut numbers: [f64; 1000] = [0.0; 1000];
         for i in 0..1000 {
             numbers[i] = cauchy.sample(&mut rng);
@@ -82,7 +90,7 @@ mod test {
     #[test]
     fn test_cauchy_mean() {
         let cauchy = Cauchy::new(10.0, 5.0);
-        let mut rng = ::test::rng(123);
+        let mut rng = crate::test::rng(123);
         let mut sum = 0.0;
         for _ in 0..1000 {
             sum += cauchy.sample(&mut rng);

@@ -8,6 +8,7 @@
 // except according to those terms.
 
 //! The binomial distribution.
+#![allow(deprecated)]
 
 use Rng;
 use distributions::{Distribution, Uniform};
@@ -16,16 +17,7 @@ use distributions::{Distribution, Uniform};
 ///
 /// This distribution has density function:
 /// `f(k) = n!/(k! (n-k)!) p^k (1-p)^(n-k)` for `k >= 0`.
-///
-/// # Example
-///
-/// ```
-/// use rand::distributions::{Binomial, Distribution};
-///
-/// let bin = Binomial::new(20, 0.3);
-/// let v = bin.sample(&mut rand::thread_rng());
-/// println!("{} is from a binomial distribution", v);
-/// ```
+#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Binomial {
     /// Number of trials.

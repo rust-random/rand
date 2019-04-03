@@ -73,7 +73,7 @@ use core::fmt;
 /// ```
 ///
 /// [`Uniform<X>`]: crate::distributions::uniform::Uniform
-/// [`RngCore`]: rand_core::RngCore
+/// [`RngCore`]: crate::RngCore
 #[derive(Debug, Clone)]
 pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
     cumulative_weights: Vec<X>,

@@ -8,14 +8,13 @@
 // except according to those terms.
 
 //! The Gamma and derived distributions.
-#![allow(deprecated)]
 
 use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
 
-use Rng;
-use distributions::normal::StandardNormal;
-use distributions::{Distribution, Exp, Open01};
+use rand::Rng;
+use crate::normal::StandardNormal;
+use crate::{Distribution, Exp, Open01};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -33,11 +32,20 @@ use distributions::{Distribution, Exp, Open01};
 /// == 1`, and using the boosting technique described in that paper for
 /// `shape < 1`.
 ///
+/// # Example
+///
+/// ```
+/// use rand_distr::{Distribution, Gamma};
+///
+/// let gamma = Gamma::new(2.0, 5.0);
+/// let v = gamma.sample(&mut rand::thread_rng());
+/// println!("{} is from a Gamma(2, 5) distribution", v);
+/// ```
+///
 /// [^1]: George Marsaglia and Wai Wan Tsang. 2000. "A Simple Method for
 ///       Generating Gamma Variables" *ACM Trans. Math. Softw.* 26, 3
 ///       (September 2000), 363-372.
 ///       DOI:[10.1145/358407.358414](https://doi.acm.org/10.1145/358407.358414)
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Gamma {
     repr: GammaRepr,
@@ -166,7 +174,16 @@ impl Distribution<f64> for GammaLargeShape {
 /// of `k` independent standard normal random variables. For other
 /// `k`, this uses the equivalent characterisation
 /// `χ²(k) = Gamma(k/2, 2)`.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+///
+/// # Example
+///
+/// ```
+/// use rand_distr::{ChiSquared, Distribution};
+///
+/// let chi = ChiSquared::new(11.0);
+/// let v = chi.sample(&mut rand::thread_rng());
+/// println!("{} is from a χ²(11) distribution", v)
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct ChiSquared {
     repr: ChiSquaredRepr,
@@ -212,7 +229,16 @@ impl Distribution<f64> for ChiSquared {
 /// This distribution is equivalent to the ratio of two normalised
 /// chi-squared distributions, that is, `F(m,n) = (χ²(m)/m) /
 /// (χ²(n)/n)`.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+///
+/// # Example
+///
+/// ```
+/// use rand_distr::{FisherF, Distribution};
+///
+/// let f = FisherF::new(2.0, 32.0);
+/// let v = f.sample(&mut rand::thread_rng());
+/// println!("{} is from an F(2, 32) distribution", v)
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct FisherF {
     numer: ChiSquared,
@@ -244,7 +270,16 @@ impl Distribution<f64> for FisherF {
 
 /// The Student t distribution, `t(nu)`, where `nu` is the degrees of
 /// freedom.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+///
+/// # Example
+///
+/// ```
+/// use rand_distr::{StudentT, Distribution};
+///
+/// let t = StudentT::new(11.0);
+/// let v = t.sample(&mut rand::thread_rng());
+/// println!("{} is from a t(11) distribution", v)
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct StudentT {
     chi: ChiSquared,
@@ -270,7 +305,16 @@ impl Distribution<f64> for StudentT {
 }
 
 /// The Beta distribution with shape parameters `alpha` and `beta`.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+///
+/// # Example
+///
+/// ```
+/// use rand_distr::{Distribution, Beta};
+///
+/// let beta = Beta::new(2.0, 5.0);
+/// let v = beta.sample(&mut rand::thread_rng());
+/// println!("{} is from a Beta(2, 5) distribution", v);
+/// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Beta {
     gamma_a: Gamma,
@@ -301,13 +345,13 @@ impl Distribution<f64> for Beta {
 
 #[cfg(test)]
 mod test {
-    use distributions::Distribution;
+    use crate::Distribution;
     use super::{Beta, ChiSquared, StudentT, FisherF};
 
     #[test]
     fn test_chi_squared_one() {
         let chi = ChiSquared::new(1.0);
-        let mut rng = ::test::rng(201);
+        let mut rng = crate::test::rng(201);
         for _ in 0..1000 {
             chi.sample(&mut rng);
         }
@@ -315,7 +359,7 @@ mod test {
     #[test]
     fn test_chi_squared_small() {
         let chi = ChiSquared::new(0.5);
-        let mut rng = ::test::rng(202);
+        let mut rng = crate::test::rng(202);
         for _ in 0..1000 {
             chi.sample(&mut rng);
         }
@@ -323,7 +367,7 @@ mod test {
     #[test]
     fn test_chi_squared_large() {
         let chi = ChiSquared::new(30.0);
-        let mut rng = ::test::rng(203);
+        let mut rng = crate::test::rng(203);
         for _ in 0..1000 {
             chi.sample(&mut rng);
         }
@@ -337,7 +381,7 @@ mod test {
     #[test]
     fn test_f() {
         let f = FisherF::new(2.0, 32.0);
-        let mut rng = ::test::rng(204);
+        let mut rng = crate::test::rng(204);
         for _ in 0..1000 {
             f.sample(&mut rng);
         }
@@ -346,7 +390,7 @@ mod test {
     #[test]
     fn test_t() {
         let t = StudentT::new(11.0);
-        let mut rng = ::test::rng(205);
+        let mut rng = crate::test::rng(205);
         for _ in 0..1000 {
             t.sample(&mut rng);
         }
@@ -355,7 +399,7 @@ mod test {
     #[test]
     fn test_beta() {
         let beta = Beta::new(1.0, 2.0);
-        let mut rng = ::test::rng(201);
+        let mut rng = crate::test::rng(201);
         for _ in 0..1000 {
             beta.sample(&mut rng);
         }

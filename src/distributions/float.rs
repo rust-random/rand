@@ -69,7 +69,9 @@ pub struct OpenClosed01;
 pub struct Open01;
 
 
-pub(crate) trait IntoFloat {
+// This trait is needed by both this lib and rand_distr hence is a hidden export
+#[doc(hidden)]
+pub trait IntoFloat {
     type F;
 
     /// Helper method to combine the fraction and a contant exponent into a

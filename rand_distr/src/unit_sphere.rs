@@ -6,19 +6,27 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(deprecated)]
-
-use Rng;
-use distributions::{Distribution, Uniform};
+use rand::Rng;
+use crate::{Distribution, Uniform};
 
 /// Samples uniformly from the surface of the unit sphere in three dimensions.
 ///
 /// Implemented via a method by Marsaglia[^1].
 ///
+///
+/// # Example
+///
+/// ```
+/// use rand_distr::{UnitSphereSurface, Distribution};
+///
+/// let sphere = UnitSphereSurface::new();
+/// let v = sphere.sample(&mut rand::thread_rng());
+/// println!("{:?} is from the unit sphere surface.", v)
+/// ```
+///
 /// [^1]: Marsaglia, George (1972). [*Choosing a Point from the Surface of a
 ///       Sphere.*](https://doi.org/10.1214/aoms/1177692644)
 ///       Ann. Math. Statist. 43, no. 2, 645--646.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct UnitSphereSurface;
 
@@ -48,7 +56,7 @@ impl Distribution<[f64; 3]> for UnitSphereSurface {
 
 #[cfg(test)]
 mod tests {
-    use distributions::Distribution;
+    use crate::Distribution;
     use super::UnitSphereSurface;
 
     /// Assert that two numbers are almost equal to each other.
@@ -69,7 +77,7 @@ mod tests {
 
     #[test]
     fn norm() {
-        let mut rng = ::test::rng(1);
+        let mut rng = crate::test::rng(1);
         let dist = UnitSphereSurface::new();
         for _ in 0..1000 {
             let x = dist.sample(&mut rng);
@@ -79,7 +87,7 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        let mut rng = ::test::rng(2);
+        let mut rng = crate::test::rng(2);
         let dist = UnitSphereSurface::new();
         assert_eq!(dist.sample(&mut rng),
                    [-0.24950027180862533, -0.7552572587896719, 0.6060825747478084]);

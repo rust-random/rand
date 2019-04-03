@@ -54,8 +54,8 @@ use Rng;
 /// }
 /// ```
 ///
-/// [`WeightedIndex<W>`]: WeightedIndex
-/// [`Weight`]: Weight
+/// [`WeightedIndex<W>`]: crate::distributions::weighted::alias_method::WeightedIndex
+/// [`Weight`]: crate::distributions::weighted::alias_method::Weight
 /// [`Vec<usize>`]: Vec
 /// [`Uniform<usize>::sample`]: Distribution::sample
 /// [`Uniform<W>::sample`]: Distribution::sample
@@ -282,7 +282,9 @@ pub trait Weight:
     /// Element of `Self` equivalent to 0.
     const ZERO: Self;
 
-    /// Converts a [`usize`] to a `Self`, rounding if necessary.
+    /// Produce an instance of `Self` from a `usize` value, or return `None` if
+    /// out of range. Loss of precision (where `Self` is a floating point type)
+    /// is acceptable.
     fn try_from_usize_lossy(n: usize) -> Option<Self>;
 
     /// Sums all values in slice `values`.
