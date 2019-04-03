@@ -25,7 +25,7 @@ pub struct OsRng;
 
 impl OsRng {
     /// Create a new `OsRng`.
-    #[deprecated(since="0.2.0", note="replace OsRng::new().unwrap() with just OsRng")]
+    #[deprecated(since="0.7.0", note="replace OsRng::new().unwrap() with just OsRng")]
     pub fn new() -> Result<OsRng, Error> {
         Ok(OsRng)
     }
@@ -49,10 +49,6 @@ impl RngCore for OsRng {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        // Some systems do not support reading 0 random bytes.
-        // (And why waste a system call?)
-        if dest.len() == 0 { return Ok(()); }
-        
         getrandom(dest).map_err(|e|
             Error::with_cause(ErrorKind::Unavailable, "OsRng failed", e))
     }
