@@ -9,15 +9,6 @@
 
 //! Interface to the random number generator of the operating system.
 //!
-//! # Usage example
-//! ```
-//! use rand_os::{OsRng, rand_core::RngCore};
-//!
-//! let mut key = [0u8; 16];
-//! OsRng.fill_bytes(&mut key);
-//! let random_u64 = OsRng.next_u64();
-//! ```
-//!
 //! # Blocking and error handling
 //!
 //! It is possible that when used during early boot the first call to `OsRng`
@@ -53,6 +44,15 @@ use rand_core::{CryptoRng, RngCore, Error, ErrorKind, impls};
 /// 
 /// The implementation is provided by the [getrandom] crate. Refer to
 /// [getrandom] documentation for details.
+///
+/// # Usage example
+/// ```
+/// use rand_os::{OsRng, rand_core::RngCore};
+///
+/// let mut key = [0u8; 16];
+/// OsRng.fill_bytes(&mut key);
+/// let random_u64 = OsRng.next_u64();
+/// ```
 ///
 /// [getrandom]: https://crates.io/crates/getrandom
 #[derive(Clone, Copy, Debug)]

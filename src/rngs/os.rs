@@ -19,6 +19,17 @@ use rand_core::{CryptoRng, RngCore, Error, ErrorKind, impls};
 /// The implementation is provided by the [getrandom] crate. Refer to
 /// [getrandom] documentation for details.
 ///
+/// ## Example
+///
+/// ```
+/// use rand::rngs::{StdRng, OsRng};
+/// use rand::{RngCore, SeedableRng};
+///
+/// println!("Random number, straight from the OS: {}", OsRng.next_u32());
+/// let mut rng = StdRng::from_rng(OsRng).unwrap();
+/// println!("Another random number: {}", rng.next_u32());
+/// ```
+///
 /// [getrandom]: https://crates.io/crates/getrandom
 #[derive(Clone, Copy, Debug)]
 pub struct OsRng;
