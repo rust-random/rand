@@ -31,7 +31,7 @@ use rand_core::{CryptoRng, RngCore, Error, ErrorKind, impls};
 /// ```
 ///
 /// [getrandom]: https://crates.io/crates/getrandom
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct OsRng;
 
 impl OsRng {

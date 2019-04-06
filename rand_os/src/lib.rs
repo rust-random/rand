@@ -55,7 +55,7 @@ use rand_core::{CryptoRng, RngCore, Error, ErrorKind, impls};
 /// ```
 ///
 /// [getrandom]: https://crates.io/crates/getrandom
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct OsRng;
 
 impl OsRng {
@@ -99,4 +99,10 @@ fn test_os_rng() {
     let y = OsRng.next_u64();
     assert!(x != 0);
     assert!(x != y);
+}
+
+#[test]
+fn test_construction() {
+    let mut rng = OsRng::default();
+    assert!(rng.next_u64() != 0);
 }
