@@ -26,7 +26,7 @@ pub fn generate_from_seed(seed: u32) -> i32 {
 
 #[wasm_bindgen]
 pub fn generate_from_os_rand() -> i32 {
-    OsRng::new().unwrap().gen()
+    OsRng.gen()
 }
 
 #[wasm_bindgen]

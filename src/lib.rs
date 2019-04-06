@@ -58,9 +58,8 @@
 
 #[cfg(feature="simd_support")] extern crate packed_simd;
 
-extern crate rand_jitter;
-#[cfg(feature = "rand_os")]
-extern crate rand_os;
+#[cfg(feature = "getrandom")]
+extern crate getrandom;
 
 extern crate rand_core;
 extern crate rand_hc;
@@ -456,7 +455,7 @@ impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
 /// entropy. This trait is automatically implemented for any PRNG implementing
 /// [`SeedableRng`] and is not intended to be implemented by users.
 ///
-/// This is equivalent to using `SeedableRng::from_rng(EntropyRng::new())` then
+/// This is equivalent to using `SeedableRng::from_rng(OsRng)` then
 /// unwrapping the result.
 ///
 /// Since this is convenient and secure, it is the recommended way to create
@@ -477,45 +476,26 @@ impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
 /// println!("Random die roll: {}", rng.gen_range(1, 7));
 /// ```
 ///
-/// [`EntropyRng`]: rngs::EntropyRng
+/// [`OsRng`]: rngs::OsRng
 #[cfg(feature="std")]
 pub trait FromEntropy: SeedableRng {
-    /// Creates a new instance, automatically seeded with fresh entropy.
+    /// Creates a new instance of the RNG seeded from [`OsRng`].
     ///
-    /// Normally this will use `OsRng`, but if that fails `JitterRng` will be
-    /// used instead. Both should be suitable for cryptography. It is possible
-    /// that both entropy sources will fail though unlikely; failures would
-    /// almost certainly be platform limitations or build issues, i.e. most
-    /// applications targetting PC/mobile platforms should not need to worry
-    /// about this failing.
+    /// This method is equivalent to `SeedableRng::from_rng(OsRng).unwrap()`.
     ///
     /// # Panics
     ///
-    /// If all entropy sources fail this will panic. If you need to handle
-    /// errors, use the following code, equivalent aside from error handling:
-    ///
-    /// ```
-    /// # use rand::Error;
-    /// use rand::prelude::*;
-    /// use rand::rngs::EntropyRng;
-    ///
-    /// # fn try_inner() -> Result<(), Error> {
-    /// // This uses StdRng, but is valid for any R: SeedableRng
-    /// let mut rng = StdRng::from_rng(EntropyRng::new())?;
-    ///
-    /// println!("random number: {}", rng.gen_range(1, 10));
-    /// # Ok(())
-    /// # }
-    ///
-    /// # try_inner().unwrap()
-    /// ```
+    /// If [`OsRng`] is unable to obtain secure entropy this method will panic.
+    /// It is also possible for an RNG overriding the [`SeedableRng::from_rng`]
+    /// method to cause a panic. Both causes are extremely unlikely to occur;
+    /// most users need not worry about this.
     fn from_entropy() -> Self;
 }
 
 #[cfg(feature="std")]
 impl<R: SeedableRng> FromEntropy for R {
     fn from_entropy() -> R {
-        R::from_rng(rngs::EntropyRng::new()).unwrap_or_else(|err|
+        R::from_rng(rngs::OsRng).unwrap_or_else(|err|
             panic!("FromEntropy::from_entropy() failed: {}", err))
     }
 }

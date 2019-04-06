@@ -12,7 +12,7 @@ use std::cell::UnsafeCell;
 
 use {RngCore, CryptoRng, SeedableRng, Error};
 use rngs::adapter::ReseedingRng;
-use rngs::EntropyRng;
+use rngs::OsRng;
 use rand_hc::Hc128Core;
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
@@ -48,7 +48,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32*1024*1024; // 32 MiB
 /// which is reseeded after generating 32 MiB of random data. A single instance
 /// is cached per thread and the returned `ThreadRng` is a reference to this
 /// instance — hence `ThreadRng` is neither `Send` nor `Sync` but is safe to use
-/// within a single thread. This RNG is seeded and reseeded via [`EntropyRng`]
+/// within a single thread. This RNG is seeded and reseeded via [`OsRng`]
 /// as required.
 ///
 /// Note that the reseeding is done as an extra precaution against entropy
@@ -70,17 +70,16 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 32*1024*1024; // 32 MiB
 #[derive(Clone, Debug)]
 pub struct ThreadRng {
     // use of raw pointer implies type is neither Send nor Sync
-    rng: *mut ReseedingRng<Hc128Core, EntropyRng>,
+    rng: *mut ReseedingRng<Hc128Core, OsRng>,
 }
 
 thread_local!(
-    static THREAD_RNG_KEY: UnsafeCell<ReseedingRng<Hc128Core, EntropyRng>> = {
-        let mut entropy_source = EntropyRng::new();
-        let r = Hc128Core::from_rng(&mut entropy_source).unwrap_or_else(|err|
+    static THREAD_RNG_KEY: UnsafeCell<ReseedingRng<Hc128Core, OsRng>> = {
+        let r = Hc128Core::from_rng(OsRng).unwrap_or_else(|err|
                 panic!("could not initialize thread_rng: {}", err));
         let rng = ReseedingRng::new(r,
                                     THREAD_RNG_RESEED_THRESHOLD,
-                                    entropy_source);
+                                    OsRng);
         UnsafeCell::new(rng)
     }
 );

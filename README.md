@@ -75,11 +75,11 @@ pinned version of Rustc if you require compatibility with a specific version.
 
 ## Crate Features
 
-Rand is built with the `std` and `rand_os` features enabled by default:
+Rand is built with the `std` and `getrandom` features enabled by default:
 
 -   `std` enables functionality dependent on the `std` lib and implies `alloc`
-    and `rand_os`
--   `rand_os` enables the `rand_os` crate, `rngs::OsRng` and enables its usage;
+    and `getrandom`
+-   `getrandom` is an optional crate, providing the code behind `rngs::OsRng`;
     the continued existance of this feature is not guaranteed so users are
     encouraged to specify `std` instead
 
@@ -102,9 +102,6 @@ functionality depending on `std`:
 
 - `thread_rng()`, and `random()` are not available, as they require thread-local
   storage and an entropy source.
-- `OsRng` and `EntropyRng` are unavailable.
-- `JitterRng` code is still present, but a nanosecond timer must be provided via
-  `JitterRng::new_with_timer`
 - Since no external entropy is available, it is not possible to create
   generators with fresh seeds using the `FromEntropy` trait (user must provide
   a seed).

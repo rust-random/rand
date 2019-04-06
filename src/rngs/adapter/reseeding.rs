@@ -67,10 +67,7 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// use rand::rngs::adapter::ReseedingRng;
 ///
 /// let prng = ChaChaCore::from_entropy();
-// FIXME: it is better to use EntropyRng as reseeder, but that doesn't implement
-// clone yet.
-/// let reseeder = OsRng::new().unwrap();
-/// let mut reseeding_rng = ReseedingRng::new(prng, 0, reseeder);
+/// let mut reseeding_rng = ReseedingRng::new(prng, 0, OsRng);
 ///
 /// println!("{}", reseeding_rng.gen::<u64>());
 ///
