@@ -17,7 +17,7 @@ use crate::{Distribution, Standard};
 /// ```rust
 /// use rand_distr::{Triangular, Distribution};
 ///
-/// let d = Triangular::new(0., 5., 2.5);
+/// let d = Triangular::new(0., 5., 2.5).unwrap();
 /// let v = d.sample(&mut rand::thread_rng());
 /// println!("{} is from a triangular distribution", v);
 /// ```
@@ -28,20 +28,35 @@ pub struct Triangular {
     mode: f64,
 }
 
+/// Error type returned from `Triangular::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Error {
+    /// `max < mode`.
+    MaxTooSmall,
+    /// `mode < min`.
+    ModeTooSmall,
+    /// `max == min`.
+    MaxEqualsMin,
+}
+
 impl Triangular {
     /// Construct a new `Triangular` with minimum `min`, maximum `max` and mode
     /// `mode`.
-    ///
-    /// # Panics
-    ///
-    /// If `max < mode`, `mode < max` or `max == min`.
-    ///
     #[inline]
-    pub fn new(min: f64, max: f64, mode: f64) -> Triangular {
+    pub fn new(min: f64, max: f64, mode: f64) -> Result<Triangular, Error> {
         assert!(max >= mode);
         assert!(mode >= min);
         assert!(max != min);
-        Triangular { min, max, mode }
+        if max < mode {
+            return Err(Error::MaxTooSmall);
+        }
+        if mode < min {
+            return Err(Error::ModeTooSmall);
+        }
+        if max == min {
+            return Err(Error::MaxEqualsMin);
+        }
+        Ok(Triangular { min, max, mode })
     }
 }
 
@@ -71,13 +86,13 @@ mod test {
             (0., 1., 0.9), (-4., -0.5, -2.), (-13.039, 8.41, 1.17),
         ] {
             println!("{} {} {}", min, max, mode);
-            let _ = Triangular::new(min, max, mode);
+            let _ = Triangular::new(min, max, mode).unwrap();
         }
     }
 
     #[test]
     fn test_sample() {
-        let norm = Triangular::new(0., 1., 0.5);
+        let norm = Triangular::new(0., 1., 0.5).unwrap();
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
             norm.sample(&mut rng);
