@@ -149,7 +149,7 @@ pub struct LogNormal {
 
 impl LogNormal {
     /// Construct a new `LogNormal` distribution with the given mean
-    /// and standard deviation.
+    /// and standard deviation of the logarithm of the distribution.
     #[inline]
     pub fn new(mean: f64, std_dev: f64) -> Result<LogNormal, Error> {
         if std_dev < 0.0 {
