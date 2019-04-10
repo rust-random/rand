@@ -12,7 +12,7 @@
 
 use core::mem::size_of;
 
-use rand_core::{RngCore, CryptoRng, SeedableRng, Error, ErrorKind};
+use rand_core::{RngCore, CryptoRng, SeedableRng, Error};
 use rand_core::block::{BlockRngCore, BlockRng};
 
 /// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
@@ -240,21 +240,10 @@ where R: BlockRngCore + SeedableRng,
         let num_bytes =
             results.as_ref().len() * size_of::<<R as BlockRngCore>::Item>();
 
-        let threshold = if let Err(e) = self.reseed() {
-            let delay = match e.kind {
-                ErrorKind::Transient => num_bytes as i64,
-                kind @ _ if kind.should_retry() => self.threshold >> 8,
-                _ => self.threshold,
-            };
-            warn!("Reseeding RNG delayed reseeding by {} bytes due to \
-                   error from source: {}", delay, e);
-            delay
-        } else {
-            self.fork_counter = global_fork_counter;
-            self.threshold
-        };
+        self.reseed().unwrap();
+        self.fork_counter = global_fork_counter;
 
-        self.bytes_until_reseed = threshold - num_bytes as i64;
+        self.bytes_until_reseed = self.threshold - num_bytes as i64;
         self.inner.generate(results);
     }
 }

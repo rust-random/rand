@@ -21,7 +21,9 @@ appveyor = { repository = "rust-random/rand" }
 std = ["alloc"]    # use std library; should be default but for above bug
 alloc = []  # enables Vec and Box support without std
 serde1 = ["serde", "serde_derive"] # enables serde for BlockRng wrapper
+default = ["getrandom", "std"]
 
 [dependencies]
+getrandom = { version = "0.1", optional = true }
 serde = { version = "1", optional = true }
 serde_derive = { version = "^1.0.38", optional = true }

@@ -28,20 +28,18 @@
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
-#![cfg_attr(feature = "stdweb", recursion_limit="128")]
-
 #![no_std]  // but see getrandom crate
 
 pub use rand_core;  // re-export
 
 use getrandom::getrandom;
-use rand_core::{CryptoRng, RngCore, Error, ErrorKind, impls};
+use rand_core::{CryptoRng, RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness from from the
 /// operating system.
 ///
 /// This is a zero-sized struct. It can be freely constructed with `OsRng`.
-/// 
+///
 /// The implementation is provided by the [getrandom] crate. Refer to
 /// [getrandom] documentation for details.
 ///
@@ -84,12 +82,14 @@ impl RngCore for OsRng {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        // Some systems do not support reading 0 random bytes.
-        // (And why waste a system call?)
-        if dest.len() == 0 { return Ok(()); }
-        
-        getrandom(dest).map_err(|e|
-            Error::with_cause(ErrorKind::Unavailable, "OsRng failed", e))
+        getrandom(dest).map_err(|e| {
+            #[cfg(feature="std")] {
+                rand_core::Error::from_cause(e)
+            }
+            #[cfg(not(feature="std"))] {
+                rand_core::Error::from_code(e.code())
+            }
+        })
     }
 }
 

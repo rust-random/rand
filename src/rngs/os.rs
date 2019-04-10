@@ -7,20 +7,29 @@
 // except according to those terms.
 
 //! Interface to the random number generator of the operating system.
+// Note: keep this code in sync with `rand_os` crate!
 
 use getrandom::getrandom;
-use rand_core::{CryptoRng, RngCore, Error, ErrorKind, impls};
+use rand_core::{CryptoRng, RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness from from the
 /// operating system.
 ///
 /// This is a zero-sized struct. It can be freely constructed with `OsRng`.
-/// 
+///
 /// The implementation is provided by the [getrandom] crate. Refer to
 /// [getrandom] documentation for details.
 ///
-/// ## Example
+/// # Usage example
+/// ```
+/// use rand::{Rng, rngs::OsRng};
 ///
+/// let mut key = [0u8; 16];
+/// OsRng.fill_bytes(&mut key);
+/// let random_u64 = OsRng.next_u64();
+/// ```
+///
+/// PRNG initialization:
 /// ```
 /// use rand::rngs::{StdRng, OsRng};
 /// use rand::{RngCore, SeedableRng};
@@ -60,8 +69,14 @@ impl RngCore for OsRng {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        getrandom(dest).map_err(|e|
-            Error::with_cause(ErrorKind::Unavailable, "OsRng failed", e))
+        getrandom(dest).map_err(|e| {
+            #[cfg(feature="std")] {
+                rand_core::Error::from_cause(e)
+            }
+            #[cfg(not(feature="std"))] {
+                rand_core::Error::from_code(e.code())
+            }
+        })
     }
 }
 
@@ -71,4 +86,10 @@ fn test_os_rng() {
     let y = OsRng.next_u64();
     assert!(x != 0);
     assert!(x != y);
+}
+
+#[test]
+fn test_construction() {
+    let mut rng = OsRng::default();
+    assert!(rng.next_u64() != 0);
 }

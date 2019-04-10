@@ -79,8 +79,7 @@ extern crate rand_pcg;
 
 
 // Re-exports from rand_core
-pub use rand_core::{RngCore, CryptoRng, SeedableRng};
-pub use rand_core::{ErrorKind, Error};
+pub use rand_core::{RngCore, CryptoRng, SeedableRng, Error};
 
 // Public exports
 #[cfg(feature="std")] pub use rngs::thread::thread_rng;

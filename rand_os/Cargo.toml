@@ -16,6 +16,7 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [features]
+std = ["rand_core/std", "getrandom/std"]
 log = ["getrandom/log"]
 # re-export optional WASM dependencies to avoid breakage:
 wasm-bindgen = ["getrandom/wasm-bindgen"]

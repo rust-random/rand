@@ -50,7 +50,7 @@ use core::ptr::copy_nonoverlapping;
 
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
-pub use error::{ErrorKind, Error};
+pub use error::Error;
 
 
 mod error;
