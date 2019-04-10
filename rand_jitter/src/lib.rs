@@ -217,10 +217,11 @@ impl JitterRng {
     /// # Example
     ///
     /// ```
-    /// # use rand_jitter::rand_core::{RngCore, Error};
+    /// # use rand_jitter::rand_core::RngCore;
+    /// # use rand_jitter::TimerError;
     /// use rand_jitter::JitterRng;
     ///
-    /// # fn try_inner() -> Result<(), Error> {
+    /// # fn try_inner() -> Result<(), TimerError> {
     /// fn get_nstime() -> u64 {
     ///     use std::time::{SystemTime, UNIX_EPOCH};
     ///
