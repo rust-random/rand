@@ -80,7 +80,8 @@ impl<R: Read> RngCore for ReadRng<R> {
 #[cfg(test)]
 mod test {
     use super::ReadRng;
-    use {RngCore, ErrorKind};
+    use RngCore;
+    use std::io;
 
     #[test]
     fn test_reader_rng_u64() {
@@ -123,6 +124,13 @@ mod test {
 
         let mut rng = ReadRng::new(&v[..]);
 
-        assert!(rng.try_fill_bytes(&mut w).err().unwrap().kind == ErrorKind::Unavailable);
+        let err_kind = rng.try_fill_bytes(&mut w)
+            .err()
+            .unwrap()
+            .cause()
+            .downcast_ref()
+            .map(|e: &io::Error| e.kind())
+            .unwrap();
+        assert_eq!(err_kind, io::ErrorKind::UnexpectedEof);
     }
 }
