@@ -44,9 +44,6 @@ impl Triangular {
     /// `mode`.
     #[inline]
     pub fn new(min: f64, max: f64, mode: f64) -> Result<Triangular, Error> {
-        assert!(max >= mode);
-        assert!(mode >= min);
-        assert!(max != min);
         if max < mode {
             return Err(Error::MaxTooSmall);
         }

@@ -48,6 +48,8 @@ pub enum Error {
 
 impl Dirichlet {
     /// Construct a new `Dirichlet` with the given alpha parameter `alpha`.
+    ///
+    /// Requires `alpha.len() >= 2`.
     #[inline]
     pub fn new<V: Into<Vec<f64>>>(alpha: V) -> Result<Dirichlet, Error> {
         let a = alpha.into();
@@ -55,13 +57,17 @@ impl Dirichlet {
             return Err(Error::AlphaTooShort);
         }
         for i in 0..a.len() {
-            assert!(a[i] > 0.0);
+            if !(a[i] > 0.0) {
+                return Err(Error::AlphaTooSmall);
+            }
         }
 
         Ok(Dirichlet { alpha: a })
     }
 
     /// Construct a new `Dirichlet` with the given shape parameter `alpha` and `size`.
+    ///
+    /// Requires `size >= 2`.
     #[inline]
     pub fn new_with_param(alpha: f64, size: usize) -> Result<Dirichlet, Error> {
         if alpha <= 0.0 {

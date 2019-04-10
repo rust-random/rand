@@ -58,6 +58,8 @@ pub enum Error {
     ShapeTooSmall,
     /// `scale <= 0`.
     ScaleTooSmall,
+    /// `1 / scale == 0`.
+    ScaleTooLarge,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -111,7 +113,7 @@ impl Gamma {
         }
 
         let repr = if shape == 1.0 {
-            One(Exp::new(1.0 / scale).unwrap())
+            One(Exp::new(1.0 / scale).map_err(|_| Error::ScaleTooLarge)?)
         } else if shape < 1.0 {
             Small(GammaSmallShape::new_raw(shape, scale))
         } else {
@@ -203,7 +205,7 @@ pub struct ChiSquared {
 /// Error type returned from `ChiSquared::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ChiSquaredError {
-    /// `k < 0`.
+    /// `0.5 * k <= 0`.
     DoFTooSmall,
 }
 
@@ -223,7 +225,7 @@ impl ChiSquared {
         let repr = if k == 1.0 {
             DoFExactlyOne
         } else {
-            if k <= 0.0 {
+            if 0.5 * k <= 0.0 {
                 return Err(ChiSquaredError::DoFTooSmall);
             }
             DoFAnythingElse(Gamma::new(0.5 * k, 2.0).unwrap())
@@ -318,23 +320,12 @@ pub struct StudentT {
     dof: f64
 }
 
-/// Error type returned from `StudentT::new`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum StudentTError {
-    /// `n <= 0`.
-    DoFTooSmall,
-}
-
 impl StudentT {
     /// Create a new Student t distribution with `n` degrees of
     /// freedom.
-    pub fn new(n: f64) -> Result<StudentT, StudentTError> {
-        assert!(n > 0.0, "StudentT::new called with `n <= 0`");
-        if n <= 0.0 {
-            return Err(StudentTError::DoFTooSmall);
-        }
+    pub fn new(n: f64) -> Result<StudentT, ChiSquaredError> {
         Ok(StudentT {
-            chi: ChiSquared::new(n).unwrap(),
+            chi: ChiSquared::new(n)?,
             dof: n
         })
     }
@@ -367,25 +358,20 @@ pub struct Beta {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BetaError {
     /// `alpha <= 0`.
-    ShapeTooSmall,
+    AlphaTooSmall,
     /// `beta <= 0`.
-    ScaleTooSmall,
+    BetaTooSmall,
 }
 
 impl Beta {
     /// Construct an object representing the `Beta(alpha, beta)`
     /// distribution.
     pub fn new(alpha: f64, beta: f64) -> Result<Beta, BetaError> {
-        assert!((alpha > 0.) & (beta > 0.));
-        if alpha <= 0.0 {
-            return Err(BetaError::ShapeTooSmall);
-        }
-        if beta <= 0.0 {
-            return Err(BetaError::ScaleTooSmall);
-        }
         Ok(Beta {
-            gamma_a: Gamma::new(alpha, 1.).unwrap(),
-            gamma_b: Gamma::new(beta, 1.).unwrap(),
+            gamma_a: Gamma::new(alpha, 1.)
+                         .map_err(|_| BetaError::AlphaTooSmall)?,
+            gamma_b: Gamma::new(beta, 1.)
+                         .map_err(|_| BetaError::BetaTooSmall)?,
         })
     }
 }
