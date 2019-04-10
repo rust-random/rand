@@ -38,9 +38,9 @@ pub struct Binomial {
 /// Error type returned from `Binomial::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `p` < 0.
+    /// `p < 0` or `nan`.
     ProbabilityTooSmall,
-    /// `p` > 1.
+    /// `p > 1`.
     ProbabilityTooLarge,
 }
 
@@ -48,10 +48,10 @@ impl Binomial {
     /// Construct a new `Binomial` with the given shape parameters `n` (number
     /// of trials) and `p` (probability of success).
     pub fn new(n: u64, p: f64) -> Result<Binomial, Error> {
-        if p < 0.0 {
+        if !(p >= 0.0) {
             return Err(Error::ProbabilityTooSmall);
         }
-        if p > 1.0 {
+        if !(p <= 1.0) {
             return Err(Error::ProbabilityTooLarge);
         }
         Ok(Binomial { n, p })

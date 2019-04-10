@@ -84,7 +84,7 @@ pub struct Exp {
 /// Error type returned from `Exp::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `lambda <= 0`.
+    /// `lambda <= 0` or `nan`.
     LambdaTooSmall,
 }
 
@@ -93,7 +93,7 @@ impl Exp {
     /// `lambda`.
     #[inline]
     pub fn new(lambda: f64) -> Result<Exp, Error> {
-        if lambda <= 0.0 {
+        if !(lambda > 0.0) {
             return Err(Error::LambdaTooSmall);
         }
         Ok(Exp { lambda_inverse: 1.0 / lambda })

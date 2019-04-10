@@ -30,19 +30,19 @@ pub struct Weibull {
 /// Error type returned from `Weibull::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `scale <= 0`.
+    /// `scale <= 0` or `nan`.
     ScaleTooSmall,
-    /// `shape <= 0`.
+    /// `shape <= 0` or `nan`.
     ShapeTooSmall,
 }
 
 impl Weibull {
     /// Construct a new `Weibull` distribution with given `scale` and `shape`.
     pub fn new(scale: f64, shape: f64) -> Result<Weibull, Error> {
-        if scale <= 0.0 {
+        if !(scale > 0.0) {
             return Err(Error::ScaleTooSmall);
         }
-        if shape <= 0.0 {
+        if !(shape > 0.0) {
             return Err(Error::ShapeTooSmall);
         }
         Ok(Weibull { inv_shape: 1./shape, scale })

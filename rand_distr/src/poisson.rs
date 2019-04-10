@@ -40,7 +40,7 @@ pub struct Poisson {
 /// Error type returned from `Poisson::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `lambda <= 0`.
+    /// `lambda <= 0` or `nan`.
     ShapeTooSmall,
 }
 
@@ -48,7 +48,7 @@ impl Poisson {
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
     pub fn new(lambda: f64) -> Result<Poisson, Error> {
-        if lambda <= 0.0 {
+        if !(lambda > 0.0) {
             return Err(Error::ShapeTooSmall);
         }
         let log_lambda = lambda.ln();

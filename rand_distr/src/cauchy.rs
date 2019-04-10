@@ -36,7 +36,7 @@ pub struct Cauchy {
 /// Error type returned from `Cauchy::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `scale <= 0`.
+    /// `scale <= 0` or `nan`.
     ScaleTooSmall,
 }
 
@@ -44,7 +44,7 @@ impl Cauchy {
     /// Construct a new `Cauchy` with the given shape parameters
     /// `median` the peak location and `scale` the scale factor.
     pub fn new(median: f64, scale: f64) -> Result<Cauchy, Error> {
-        if scale <= 0.0 {
+        if !(scale > 0.0) {
             return Err(Error::ScaleTooSmall);
         }
         Ok(Cauchy {

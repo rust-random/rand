@@ -54,9 +54,9 @@ pub struct Gamma {
 /// Error type returned from `Gamma::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `shape <= 0`.
+    /// `shape <= 0` or `nan`.
     ShapeTooSmall,
-    /// `scale <= 0`.
+    /// `scale <= 0` or `nan`.
     ScaleTooSmall,
     /// `1 / scale == 0`.
     ScaleTooLarge,
@@ -105,10 +105,10 @@ impl Gamma {
     /// distribution.
     #[inline]
     pub fn new(shape: f64, scale: f64) -> Result<Gamma, Error> {
-        if shape <= 0.0 {
+        if !(shape > 0.0) {
             return Err(Error::ShapeTooSmall);
         }
-        if scale <= 0.0 {
+        if !(scale > 0.0) {
             return Err(Error::ScaleTooSmall);
         }
 
@@ -205,7 +205,7 @@ pub struct ChiSquared {
 /// Error type returned from `ChiSquared::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ChiSquaredError {
-    /// `0.5 * k <= 0`.
+    /// `0.5 * k <= 0` or `nan`.
     DoFTooSmall,
 }
 
@@ -225,7 +225,7 @@ impl ChiSquared {
         let repr = if k == 1.0 {
             DoFExactlyOne
         } else {
-            if 0.5 * k <= 0.0 {
+            if !(0.5 * k > 0.0) {
                 return Err(ChiSquaredError::DoFTooSmall);
             }
             DoFAnythingElse(Gamma::new(0.5 * k, 2.0).unwrap())
@@ -273,19 +273,19 @@ pub struct FisherF {
 /// Error type returned from `FisherF::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FisherFError {
-    /// `m <= 0`.
+    /// `m <= 0` or `nan`.
     MTooSmall,
-    /// `n <= 0`.
+    /// `n <= 0` or `nan`.
     NTooSmall,
 }
 
 impl FisherF {
     /// Create a new `FisherF` distribution, with the given parameter.
     pub fn new(m: f64, n: f64) -> Result<FisherF, FisherFError> {
-        if m <= 0.0 {
+        if !(m > 0.0) {
             return Err(FisherFError::MTooSmall);
         }
-        if n <= 0.0 {
+        if !(n > 0.0) {
             return Err(FisherFError::NTooSmall);
         }
 
@@ -357,9 +357,9 @@ pub struct Beta {
 /// Error type returned from `Beta::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BetaError {
-    /// `alpha <= 0`.
+    /// `alpha <= 0` or `nan`.
     AlphaTooSmall,
-    /// `beta <= 0`.
+    /// `beta <= 0` or `nan`.
     BetaTooSmall,
 }
 

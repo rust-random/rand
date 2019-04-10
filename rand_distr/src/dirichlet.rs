@@ -40,7 +40,7 @@ pub struct Dirichlet {
 pub enum Error {
     /// `alpha.len() < 2`.
     AlphaTooShort,
-    /// `alpha <= 0.0`.
+    /// `alpha <= 0.0` or `nan`.
     AlphaTooSmall,
     /// `size < 2`.
     SizeTooSmall,
@@ -70,7 +70,7 @@ impl Dirichlet {
     /// Requires `size >= 2`.
     #[inline]
     pub fn new_with_param(alpha: f64, size: usize) -> Result<Dirichlet, Error> {
-        if alpha <= 0.0 {
+        if !(alpha > 0.0) {
             return Err(Error::AlphaTooSmall);
         }
         if size < 2 {

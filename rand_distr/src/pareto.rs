@@ -30,9 +30,9 @@ pub struct Pareto {
 /// Error type returned from `Pareto::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `scale <= 0`.
+    /// `scale <= 0` or `nan`.
     ScaleTooSmall,
-    /// `shape <= 0`.
+    /// `shape <= 0` or `nan`.
     ShapeTooSmall,
 }
 
@@ -42,10 +42,10 @@ impl Pareto {
     /// In the literature, `scale` is commonly written as x<sub>m</sub> or k and
     /// `shape` is often written as α.
     pub fn new(scale: f64, shape: f64) -> Result<Pareto, Error> {
-        if scale <= 0.0 {
+        if !(scale > 0.0) {
             return Err(Error::ScaleTooSmall);
         }
-        if shape <= 0.0 {
+        if !(shape > 0.0) {
             return Err(Error::ShapeTooSmall);
         }
         Ok(Pareto { scale, inv_neg_shape: -1.0 / shape })

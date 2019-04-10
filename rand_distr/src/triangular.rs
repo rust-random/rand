@@ -31,11 +31,11 @@ pub struct Triangular {
 /// Error type returned from `Triangular::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `max < mode`.
+    /// `max < mode` or `max` is `nan`.
     MaxTooSmall,
-    /// `mode < min`.
+    /// `mode < min` or `mode` is `nan`.
     ModeTooSmall,
-    /// `max == min`.
+    /// `max == min` or `min` is `nan`.
     MaxEqualsMin,
 }
 
@@ -44,13 +44,13 @@ impl Triangular {
     /// `mode`.
     #[inline]
     pub fn new(min: f64, max: f64, mode: f64) -> Result<Triangular, Error> {
-        if max < mode {
+        if !(max >= mode) {
             return Err(Error::MaxTooSmall);
         }
-        if mode < min {
+        if !(mode >= min) {
             return Err(Error::ModeTooSmall);
         }
-        if max == min {
+        if !(max != min) {
             return Err(Error::MaxEqualsMin);
         }
         Ok(Triangular { min, max, mode })
