@@ -22,7 +22,7 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 ///
 /// # Usage example
 /// ```
-/// use rand::{Rng, rngs::OsRng};
+/// use rand::{RngCore, rngs::OsRng};
 ///
 /// let mut key = [0u8; 16];
 /// OsRng.fill_bytes(&mut key);
