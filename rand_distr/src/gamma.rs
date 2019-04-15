@@ -202,7 +202,7 @@ pub struct ChiSquared {
     repr: ChiSquaredRepr,
 }
 
-/// Error type returned from `ChiSquared::new`.
+/// Error type returned from `ChiSquared::new` and `StudentT::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ChiSquaredError {
     /// `0.5 * k <= 0` or `nan`.
