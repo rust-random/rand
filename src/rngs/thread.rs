@@ -88,7 +88,7 @@ thread_local!(
 /// seeded by the system. Intended to be used in method chaining style,
 /// e.g. `thread_rng().gen::<i32>()`, or cached locally, e.g.
 /// `let mut rng = thread_rng();`.  Invoked by the `Default` trait, making
-/// `ThreadRng::default()` equivelent.
+/// `ThreadRng::default()` equivalent.
 ///
 /// For more information see [`ThreadRng`].
 pub fn thread_rng() -> ThreadRng {
