@@ -19,8 +19,7 @@ use crate::{Distribution, Uniform};
 /// ```
 /// use rand_distr::{UnitCircle, Distribution};
 ///
-/// let circle = UnitCircle::new();
-/// let v = circle.sample(&mut rand::thread_rng());
+/// let v = UnitCircle.sample(&mut rand::thread_rng());
 /// println!("{:?} is from the unit circle.", v)
 /// ```
 ///
@@ -30,14 +29,6 @@ use crate::{Distribution, Uniform};
 ///       Office, pp. 36-38.
 #[derive(Clone, Copy, Debug)]
 pub struct UnitCircle;
-
-impl UnitCircle {
-    /// Construct a new `UnitCircle` distribution.
-    #[inline]
-    pub fn new() -> UnitCircle {
-        UnitCircle
-    }
-}
 
 impl Distribution<[f64; 2]> for UnitCircle {
     #[inline]
@@ -83,9 +74,8 @@ mod tests {
     #[test]
     fn norm() {
         let mut rng = crate::test::rng(1);
-        let dist = UnitCircle::new();
         for _ in 0..1000 {
-            let x = dist.sample(&mut rng);
+            let x = UnitCircle.sample(&mut rng);
             assert_almost_eq!(x[0]*x[0] + x[1]*x[1], 1., 1e-15);
         }
     }
@@ -93,9 +83,8 @@ mod tests {
     #[test]
     fn value_stability() {
         let mut rng = crate::test::rng(2);
-        let dist = UnitCircle::new();
-        assert_eq!(dist.sample(&mut rng), [-0.8032118336637037, 0.5956935036263119]);
-        assert_eq!(dist.sample(&mut rng), [-0.4742919588505423, -0.880367615130018]);
-        assert_eq!(dist.sample(&mut rng), [0.9297328981467168, 0.368234623716601]);
+        assert_eq!(UnitCircle.sample(&mut rng), [-0.8032118336637037, 0.5956935036263119]);
+        assert_eq!(UnitCircle.sample(&mut rng), [-0.4742919588505423, -0.880367615130018]);
+        assert_eq!(UnitCircle.sample(&mut rng), [0.9297328981467168, 0.368234623716601]);
     }
 }

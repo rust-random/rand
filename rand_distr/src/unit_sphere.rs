@@ -19,8 +19,7 @@ use crate::{Distribution, Uniform};
 /// ```
 /// use rand_distr::{UnitSphereSurface, Distribution};
 ///
-/// let sphere = UnitSphereSurface::new();
-/// let v = sphere.sample(&mut rand::thread_rng());
+/// let v = UnitSphereSurface.sample(&mut rand::thread_rng());
 /// println!("{:?} is from the unit sphere surface.", v)
 /// ```
 ///
@@ -29,14 +28,6 @@ use crate::{Distribution, Uniform};
 ///       Ann. Math. Statist. 43, no. 2, 645--646.
 #[derive(Clone, Copy, Debug)]
 pub struct UnitSphereSurface;
-
-impl UnitSphereSurface {
-    /// Construct a new `UnitSphereSurface` distribution.
-    #[inline]
-    pub fn new() -> UnitSphereSurface {
-        UnitSphereSurface
-    }
-}
 
 impl Distribution<[f64; 3]> for UnitSphereSurface {
     #[inline]
@@ -78,9 +69,8 @@ mod tests {
     #[test]
     fn norm() {
         let mut rng = crate::test::rng(1);
-        let dist = UnitSphereSurface::new();
         for _ in 0..1000 {
-            let x = dist.sample(&mut rng);
+            let x = UnitSphereSurface.sample(&mut rng);
             assert_almost_eq!(x[0]*x[0] + x[1]*x[1] + x[2]*x[2], 1., 1e-15);
         }
     }
@@ -88,12 +78,11 @@ mod tests {
     #[test]
     fn value_stability() {
         let mut rng = crate::test::rng(2);
-        let dist = UnitSphereSurface::new();
-        assert_eq!(dist.sample(&mut rng),
+        assert_eq!(UnitSphereSurface.sample(&mut rng),
                    [-0.24950027180862533, -0.7552572587896719, 0.6060825747478084]);
-        assert_eq!(dist.sample(&mut rng),
+        assert_eq!(UnitSphereSurface.sample(&mut rng),
                    [0.47604534507233487, -0.797200864987207, -0.3712837328763685]);
-        assert_eq!(dist.sample(&mut rng),
+        assert_eq!(UnitSphereSurface.sample(&mut rng),
                    [0.9795722330927367, 0.18692349236651176, 0.07414747571708524]);
     }
 }
