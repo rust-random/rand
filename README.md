@@ -38,6 +38,15 @@ To get started using Rand, see [The Book](https://rust-random.github.io/book).
 
 ## Versions
 
+Rand libs have inter-dependencies and make use of the
+[semver trick](https://github.com/dtolnay/semver-trick/) in order to make traits
+compatible across crate versions. (This is especially important for `RngCore`
+and `SeedableRng`.) A few crate releases are thus compatibility shims,
+depending on the *next* lib version (e.g. `rand_core` versions `0.2.2` and
+`0.3.1`). This means, for example, that `rand_core_0_4_0::SeedableRng` and
+`rand_core_0_3_0::SeedableRng` are distinct, incompatible traits, which can
+cause build errors. Usually, running `cargo update` is enough to fix any issues.
+
 The Rand lib is not yet stable, however we are careful to limit breaking changes
 and warn via deprecation wherever possible. Patch versions never introduce
 breaking changes. The following minor versions are supported:

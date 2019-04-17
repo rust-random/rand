@@ -40,6 +40,17 @@ The `rand_core` crate provides:
 
 The traits and error types are also available via `rand`.
 
+## Versions
+
+Rand libs have inter-dependencies and make use of the
+[semver trick](https://github.com/dtolnay/semver-trick/) in order to make traits
+compatible across crate versions. (This is especially important for `RngCore`
+and `SeedableRng`.) A few crate releases are thus compatibility shims,
+depending on the *next* lib version (e.g. `rand_core` versions `0.2.2` and
+`0.3.1`). This means, for example, that `rand_core_0_4_0::SeedableRng` and
+`rand_core_0_3_0::SeedableRng` are distinct, incompatible traits, which can
+cause build errors. Usually, running `cargo update` is enough to fix any issues.
+
 ## Crate Features
 
 `rand_core` supports `no_std` and `alloc`-only configurations, as well as full
