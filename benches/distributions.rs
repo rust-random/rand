@@ -207,8 +207,8 @@ distr_int!(distr_binomial, u64, Binomial::new(20, 0.7));
 distr_int!(distr_binomial_small, u64, Binomial::new(1000000, 1e-30));
 distr_int!(distr_poisson, u64, Poisson::new(4.0));
 distr!(distr_bernoulli, bool, Bernoulli::new(0.18));
-distr_arr!(distr_circle, [f64; 2], UnitCircle::new());
-distr_arr!(distr_sphere_surface, [f64; 3], UnitSphereSurface::new());
+distr_arr!(distr_circle, [f64; 2], UnitCircle);
+distr_arr!(distr_sphere_surface, [f64; 3], UnitSphereSurface);
 
 // Weighted
 distr_int!(distr_weighted_i8, usize, WeightedIndex::new(&[1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
