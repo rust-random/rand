@@ -182,6 +182,12 @@ pub trait Distribution<T> {
     /// Create an iterator that generates random values of `T`, using `rng` as
     /// the source of randomness.
     ///
+    /// Note that this function takes `self` by value. This works since
+    /// `Distribution<T>` is impl'd for `&D` where `D: Distribution<T>`,
+    /// however borrowing is not automatic hence `distr.sample_iter(...)` may
+    /// need to be replaced with `(&distr).sample_iter(...)` to borrow or
+    /// `(&*distr).sample_iter(...)` to reborrow an existing reference.
+    ///
     /// # Example
     ///
     /// ```
@@ -203,8 +209,8 @@ pub trait Distribution<T> {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    fn sample_iter<'a, R>(&'a self, rng: &'a mut R) -> DistIter<'a, Self, R, T>
-        where Self: Sized, R: Rng
+    fn sample_iter<'a, R>(self, rng: &'a mut R) -> DistIter<'a, Self, R, T>
+    where R: Rng + ?Sized, Self: Sized
     {
         DistIter {
             distr: self,
@@ -229,8 +235,8 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
 ///
 /// [`sample_iter`]: Distribution::sample_iter
 #[derive(Debug)]
-pub struct DistIter<'a, D: 'a, R: 'a, T> {
-    distr: &'a D,
+pub struct DistIter<'a, D, R: 'a + ?Sized, T> {
+    distr: D,
     rng: &'a mut R,
     phantom: ::core::marker::PhantomData<T>,
 }
@@ -340,7 +346,8 @@ pub struct Standard;
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
-    use super::Distribution;
+    use ::Rng;
+    use super::{Distribution, Uniform};
 
     #[test]
     fn test_distributions_iter() {
@@ -349,5 +356,23 @@ mod tests {
         let distr = Open01;
         let results: Vec<f32> = distr.sample_iter(&mut rng).take(100).collect();
         println!("{:?}", results);
+    }
+    
+    #[test]
+    fn test_make_an_iter() {
+        fn ten_dice_rolls_other_than_five<'a, R: Rng>(rng: &'a mut R) -> impl Iterator<Item = i32> + 'a {
+            Uniform::new_inclusive(1, 6)
+                .sample_iter(rng)
+                .filter(|x| *x != 5)
+                .take(10)
+        }
+        
+        let mut rng = ::test::rng(211);
+        let mut count = 0;
+        for val in ten_dice_rolls_other_than_five(&mut rng) {
+            assert!(val >= 1 && val <= 6 && val != 5);
+            count += 1;
+        }
+        assert_eq!(count, 10);
     }
 }

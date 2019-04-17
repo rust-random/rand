@@ -215,26 +215,24 @@ pub trait Rng: RngCore {
     /// let mut rng = thread_rng();
     ///
     /// // Vec of 16 x f32:
-    /// let v: Vec<f32> = thread_rng().sample_iter(&Standard).take(16).collect();
+    /// let v: Vec<f32> = rng.sample_iter(Standard).take(16).collect();
     ///
     /// // String:
-    /// let s: String = rng.sample_iter(&Alphanumeric).take(7).collect();
+    /// let s: String = rng.sample_iter(Alphanumeric).take(7).collect();
     ///
     /// // Combined values
-    /// println!("{:?}", thread_rng().sample_iter(&Standard).take(5)
+    /// println!("{:?}", rng.sample_iter(Standard).take(5)
     ///                              .collect::<Vec<(f64, bool)>>());
     ///
     /// // Dice-rolling:
     /// let die_range = Uniform::new_inclusive(1, 6);
-    /// let mut roll_die = rng.sample_iter(&die_range);
+    /// let mut roll_die = rng.sample_iter(die_range);
     /// while roll_die.next().unwrap() != 6 {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    fn sample_iter<'a, T, D: Distribution<T>>(
-        &'a mut self, distr: &'a D,
-    ) -> distributions::DistIter<'a, D, Self, T>
-    where Self: Sized {
+    fn sample_iter<'a, T, D>(&'a mut self, distr: D) -> distributions::DistIter<'a, D, Self, T>
+    where D: Distribution<T>, Self: 'a {
         distr.sample_iter(self)
     }
 
