@@ -206,13 +206,19 @@ pub trait Rng: RngCore {
 
     /// Create an iterator that generates values using the given distribution.
     ///
+    /// Note that this function takes its arguments by value. This works since
+    /// `(&mut R): Rng where R: Rng` and
+    /// `(&D): Distribution where D: Distribution`,
+    /// however borrowing is not automatic hence `rng.sample_iter(...)` may
+    /// need to be replaced with `(&mut rng).sample_iter(...)`.
+    ///
     /// # Example
     ///
     /// ```
     /// use rand::{thread_rng, Rng};
     /// use rand::distributions::{Alphanumeric, Uniform, Standard};
     ///
-    /// let mut rng = thread_rng();
+    /// let rng = thread_rng();
     ///
     /// // Vec of 16 x f32:
     /// let v: Vec<f32> = rng.sample_iter(Standard).take(16).collect();
@@ -231,8 +237,8 @@ pub trait Rng: RngCore {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    fn sample_iter<'a, T, D>(&'a mut self, distr: D) -> distributions::DistIter<'a, D, Self, T>
-    where D: Distribution<T>, Self: 'a {
+    fn sample_iter<T, D>(self, distr: D) -> distributions::DistIter<D, Self, T>
+    where D: Distribution<T>, Self: Sized {
         distr.sample_iter(self)
     }
 
