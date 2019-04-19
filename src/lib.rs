@@ -387,8 +387,7 @@ macro_rules! impl_as_byte_slice {
                     }
                 } else {
                     unsafe {
-                        slice::from_raw_parts_mut(&mut self[0]
-                            as *mut $t
+                        slice::from_raw_parts_mut(self.as_mut_ptr()
                             as *mut u8,
                             self.len() * mem::size_of::<$t>()
                         )
