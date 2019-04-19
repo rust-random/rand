@@ -362,6 +362,7 @@ mod test {
     use super::*;
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_f32() {
         test_weighted_index(f32::into);
 
@@ -390,12 +391,14 @@ mod test {
 
     #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_u128() {
         test_weighted_index(|x: u128| x as f64);
     }
 
     #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_i128() {
         test_weighted_index(|x: i128| x as f64);
 
@@ -411,11 +414,13 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_u8() {
         test_weighted_index(u8::into);
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_i8() {
         test_weighted_index(i8::into);
 

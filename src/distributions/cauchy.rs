@@ -67,6 +67,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri doesn't support transcendental functions
     fn test_cauchy_median() {
         let cauchy = Cauchy::new(10.0, 5.0);
         let mut rng = ::test::rng(123);
@@ -80,6 +81,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri doesn't support transcendental functions
     fn test_cauchy_mean() {
         let cauchy = Cauchy::new(10.0, 5.0);
         let mut rng = ::test::rng(123);

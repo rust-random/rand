@@ -108,29 +108,35 @@ mod test {
     use distributions::Distribution;
     use super::Poisson;
 
+    #[cfg(not(miri))] // Miri is too slow
+    const N: u32 = 1000;
+    #[cfg(miri)]
+    const N: u32 = 100;
+
     #[test]
     fn test_poisson_10() {
         let poisson = Poisson::new(10.0);
         let mut rng = ::test::rng(123);
         let mut sum = 0;
-        for _ in 0..1000 {
+        for _ in 0..N {
             sum += poisson.sample(&mut rng);
         }
-        let avg = (sum as f64) / 1000.0;
+        let avg = (sum as f64) / (N as f64);
         println!("Poisson average: {}", avg);
         assert!((avg - 10.0).abs() < 0.5); // not 100% certain, but probable enough
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri doesn't support transcendental functions
     fn test_poisson_15() {
         // Take the 'high expected values' path
         let poisson = Poisson::new(15.0);
         let mut rng = ::test::rng(123);
         let mut sum = 0;
-        for _ in 0..1000 {
+        for _ in 0..N {
             sum += poisson.sample(&mut rng);
         }
-        let avg = (sum as f64) / 1000.0;
+        let avg = (sum as f64) / (N as f64);
         println!("Poisson average: {}", avg);
         assert!((avg - 15.0).abs() < 0.5); // not 100% certain, but probable enough
     }

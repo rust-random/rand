@@ -304,11 +304,16 @@ mod test {
     use distributions::Distribution;
     use super::{Beta, ChiSquared, StudentT, FisherF};
 
+    #[cfg(not(miri))] // Miri is too slow
+    const N: u32 = 1000;
+    #[cfg(miri)]
+    const N: u32 = 100;
+
     #[test]
     fn test_chi_squared_one() {
         let chi = ChiSquared::new(1.0);
         let mut rng = ::test::rng(201);
-        for _ in 0..1000 {
+        for _ in 0..N {
             chi.sample(&mut rng);
         }
     }
@@ -316,7 +321,7 @@ mod test {
     fn test_chi_squared_small() {
         let chi = ChiSquared::new(0.5);
         let mut rng = ::test::rng(202);
-        for _ in 0..1000 {
+        for _ in 0..N {
             chi.sample(&mut rng);
         }
     }
@@ -324,7 +329,7 @@ mod test {
     fn test_chi_squared_large() {
         let chi = ChiSquared::new(30.0);
         let mut rng = ::test::rng(203);
-        for _ in 0..1000 {
+        for _ in 0..N {
             chi.sample(&mut rng);
         }
     }
@@ -338,7 +343,7 @@ mod test {
     fn test_f() {
         let f = FisherF::new(2.0, 32.0);
         let mut rng = ::test::rng(204);
-        for _ in 0..1000 {
+        for _ in 0..N {
             f.sample(&mut rng);
         }
     }
@@ -347,7 +352,7 @@ mod test {
     fn test_t() {
         let t = StudentT::new(11.0);
         let mut rng = ::test::rng(205);
-        for _ in 0..1000 {
+        for _ in 0..N {
             t.sample(&mut rng);
         }
     }
@@ -356,7 +361,7 @@ mod test {
     fn test_beta() {
         let beta = Beta::new(1.0, 2.0);
         let mut rng = ::test::rng(201);
-        for _ in 0..1000 {
+        for _ in 0..N {
             beta.sample(&mut rng);
         }
     }
