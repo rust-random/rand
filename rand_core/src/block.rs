@@ -51,7 +51,7 @@
 //! [`fill_bytes`]: RngCore::fill_bytes
 
 use core::convert::AsRef;
-use core::fmt;
+use core::{fmt, ptr};
 use {RngCore, CryptoRng, SeedableRng, Error};
 use impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 
@@ -183,7 +183,8 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
         let read_u64 = |results: &[u32], index| {
             if cfg!(any(target_arch = "x86", target_arch = "x86_64")) {
                 // requires little-endian CPU supporting unaligned reads:
-                unsafe { *(&results[index] as *const u32 as *const u64) }
+                let ptr: *const u64 = results[index..index+1].as_ptr() as *const u64;
+                unsafe { ptr::read_unaligned(ptr) }
             } else {
                 let x = u64::from(results[index]);
                 let y = u64::from(results[index + 1]);
