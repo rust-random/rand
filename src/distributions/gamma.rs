@@ -304,9 +304,6 @@ mod test {
     use distributions::Distribution;
     use super::{Beta, ChiSquared, StudentT, FisherF};
 
-    #[cfg(not(miri))] // Miri is too slow
-    const N: u32 = 1000;
-    #[cfg(miri)]
     const N: u32 = 100;
 
     #[test]
