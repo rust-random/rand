@@ -25,47 +25,60 @@ use crate::gamma::Gamma;
 /// use rand::prelude::*;
 /// use rand_distr::Dirichlet;
 ///
-/// let dirichlet = Dirichlet::new(vec![1.0, 2.0, 3.0]);
+/// let dirichlet = Dirichlet::new(vec![1.0, 2.0, 3.0]).unwrap();
 /// let samples = dirichlet.sample(&mut rand::thread_rng());
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
-
 #[derive(Clone, Debug)]
 pub struct Dirichlet {
     /// Concentration parameters (alpha)
     alpha: Vec<f64>,
 }
 
+/// Error type returned from `Dirchlet::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Error {
+    /// `alpha.len() < 2`.
+    AlphaTooShort,
+    /// `alpha <= 0.0` or `nan`.
+    AlphaTooSmall,
+    /// `size < 2`.
+    SizeTooSmall,
+}
+
 impl Dirichlet {
     /// Construct a new `Dirichlet` with the given alpha parameter `alpha`.
     ///
-    /// # Panics
-    /// - if `alpha.len() < 2`
-    ///
+    /// Requires `alpha.len() >= 2`.
     #[inline]
-    pub fn new<V: Into<Vec<f64>>>(alpha: V) -> Dirichlet {
+    pub fn new<V: Into<Vec<f64>>>(alpha: V) -> Result<Dirichlet, Error> {
         let a = alpha.into();
-        assert!(a.len() > 1);
+        if a.len() < 2 {
+            return Err(Error::AlphaTooShort);
+        }
         for i in 0..a.len() {
-            assert!(a[i] > 0.0);
+            if !(a[i] > 0.0) {
+                return Err(Error::AlphaTooSmall);
+            }
         }
 
-        Dirichlet { alpha: a }
+        Ok(Dirichlet { alpha: a })
     }
 
     /// Construct a new `Dirichlet` with the given shape parameter `alpha` and `size`.
     ///
-    /// # Panics
-    /// - if `alpha <= 0.0`
-    /// - if `size < 2`
-    ///
+    /// Requires `size >= 2`.
     #[inline]
-    pub fn new_with_param(alpha: f64, size: usize) -> Dirichlet {
-        assert!(alpha > 0.0);
-        assert!(size > 1);
-        Dirichlet {
-            alpha: vec![alpha; size],
+    pub fn new_with_param(alpha: f64, size: usize) -> Result<Dirichlet, Error> {
+        if !(alpha > 0.0) {
+            return Err(Error::AlphaTooSmall);
         }
+        if size < 2 {
+            return Err(Error::SizeTooSmall);
+        }
+        Ok(Dirichlet {
+            alpha: vec![alpha; size],
+        })
     }
 }
 
@@ -76,7 +89,7 @@ impl Distribution<Vec<f64>> for Dirichlet {
         let mut sum = 0.0f64;
 
         for i in 0..n {
-            let g = Gamma::new(self.alpha[i], 1.0);
+            let g = Gamma::new(self.alpha[i], 1.0).unwrap();
             samples[i] = g.sample(rng);
             sum += samples[i];
         }
@@ -95,7 +108,7 @@ mod test {
 
     #[test]
     fn test_dirichlet() {
-        let d = Dirichlet::new(vec![1.0, 2.0, 3.0]);
+        let d = Dirichlet::new(vec![1.0, 2.0, 3.0]).unwrap();
         let mut rng = crate::test::rng(221);
         let samples = d.sample(&mut rng);
         let _: Vec<f64> = samples
@@ -111,7 +124,7 @@ mod test {
     fn test_dirichlet_with_param() {
         let alpha = 0.5f64;
         let size = 2;
-        let d = Dirichlet::new_with_param(alpha, size);
+        let d = Dirichlet::new_with_param(alpha, size).unwrap();
         let mut rng = crate::test::rng(221);
         let samples = d.sample(&mut rng);
         let _: Vec<f64> = samples
@@ -126,12 +139,12 @@ mod test {
     #[test]
     #[should_panic]
     fn test_dirichlet_invalid_length() {
-        Dirichlet::new_with_param(0.5f64, 1);
+        Dirichlet::new_with_param(0.5f64, 1).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_dirichlet_invalid_alpha() {
-        Dirichlet::new_with_param(0.0f64, 2);
+        Dirichlet::new_with_param(0.0f64, 2).unwrap();
     }
 }

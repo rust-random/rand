@@ -23,7 +23,7 @@ use crate::utils::log_gamma;
 /// ```
 /// use rand_distr::{Poisson, Distribution};
 ///
-/// let poi = Poisson::new(2.0);
+/// let poi = Poisson::new(2.0).unwrap();
 /// let v = poi.sample(&mut rand::thread_rng());
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
@@ -37,19 +37,28 @@ pub struct Poisson {
     magic_val: f64,
 }
 
+/// Error type returned from `Poisson::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Error {
+    /// `lambda <= 0` or `nan`.
+    ShapeTooSmall,
+}
+
 impl Poisson {
     /// Construct a new `Poisson` with the given shape parameter
-    /// `lambda`. Panics if `lambda <= 0`.
-    pub fn new(lambda: f64) -> Poisson {
-        assert!(lambda > 0.0, "Poisson::new called with lambda <= 0");
+    /// `lambda`.
+    pub fn new(lambda: f64) -> Result<Poisson, Error> {
+        if !(lambda > 0.0) {
+            return Err(Error::ShapeTooSmall);
+        }
         let log_lambda = lambda.ln();
-        Poisson {
+        Ok(Poisson {
             lambda,
             exp_lambda: (-lambda).exp(),
             log_lambda,
             sqrt_2lambda: (2.0 * lambda).sqrt(),
             magic_val: lambda * log_lambda - log_gamma(1.0 + lambda),
-        }
+        })
     }
 }
 
@@ -73,7 +82,7 @@ impl Distribution<u64> for Poisson {
 
             // we use the Cauchy distribution as the comparison distribution
             // f(x) ~ 1/(1+x^2)
-            let cauchy = Cauchy::new(0.0, 1.0);
+            let cauchy = Cauchy::new(0.0, 1.0).unwrap();
 
             loop {
                 let mut result;
@@ -118,7 +127,7 @@ mod test {
 
     #[test]
     fn test_poisson_10() {
-        let poisson = Poisson::new(10.0);
+        let poisson = Poisson::new(10.0).unwrap();
         let mut rng = crate::test::rng(123);
         let mut sum = 0;
         for _ in 0..1000 {
@@ -132,7 +141,7 @@ mod test {
     #[test]
     fn test_poisson_15() {
         // Take the 'high expected values' path
-        let poisson = Poisson::new(15.0);
+        let poisson = Poisson::new(15.0).unwrap();
         let mut rng = crate::test::rng(123);
         let mut sum = 0;
         for _ in 0..1000 {
@@ -146,12 +155,12 @@ mod test {
     #[test]
     #[should_panic]
     fn test_poisson_invalid_lambda_zero() {
-        Poisson::new(0.0);
+        Poisson::new(0.0).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_poisson_invalid_lambda_neg() {
-        Poisson::new(-10.0);
+        Poisson::new(-10.0).unwrap();
     }
 }

@@ -197,15 +197,15 @@ distr_float!(distr_openclosed01_f32, f32, OpenClosed01);
 distr_float!(distr_openclosed01_f64, f64, OpenClosed01);
 
 // distributions
-distr_float!(distr_exp, f64, Exp::new(1.23 * 4.56));
-distr_float!(distr_normal, f64, Normal::new(-1.23, 4.56));
-distr_float!(distr_log_normal, f64, LogNormal::new(-1.23, 4.56));
-distr_float!(distr_gamma_large_shape, f64, Gamma::new(10., 1.0));
-distr_float!(distr_gamma_small_shape, f64, Gamma::new(0.1, 1.0));
-distr_float!(distr_cauchy, f64, Cauchy::new(4.2, 6.9));
-distr_int!(distr_binomial, u64, Binomial::new(20, 0.7));
-distr_int!(distr_binomial_small, u64, Binomial::new(1000000, 1e-30));
-distr_int!(distr_poisson, u64, Poisson::new(4.0));
+distr_float!(distr_exp, f64, Exp::new(1.23 * 4.56).unwrap());
+distr_float!(distr_normal, f64, Normal::new(-1.23, 4.56).unwrap());
+distr_float!(distr_log_normal, f64, LogNormal::new(-1.23, 4.56).unwrap());
+distr_float!(distr_gamma_large_shape, f64, Gamma::new(10., 1.0).unwrap());
+distr_float!(distr_gamma_small_shape, f64, Gamma::new(0.1, 1.0).unwrap());
+distr_float!(distr_cauchy, f64, Cauchy::new(4.2, 6.9).unwrap());
+distr_int!(distr_binomial, u64, Binomial::new(20, 0.7).unwrap());
+distr_int!(distr_binomial_small, u64, Binomial::new(1000000, 1e-30).unwrap());
+distr_int!(distr_poisson, u64, Poisson::new(4.0).unwrap());
 distr!(distr_bernoulli, bool, Bernoulli::new(0.18));
 distr_arr!(distr_circle, [f64; 2], UnitCircle);
 distr_arr!(distr_sphere_surface, [f64; 3], UnitSphereSurface);
@@ -279,7 +279,7 @@ gen_range_float!(gen_range_f64, f64, 123.456f64, 7890.12);
 #[bench]
 fn dist_iter(b: &mut Bencher) {
     let mut rng = SmallRng::from_entropy();
-    let distr = Normal::new(-2.71828, 3.14159);
+    let distr = Normal::new(-2.71828, 3.14159).unwrap();
     let mut iter = distr.sample_iter(&mut rng);
 
     b.iter(|| {

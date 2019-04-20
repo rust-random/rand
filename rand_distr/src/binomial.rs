@@ -23,7 +23,7 @@ use crate::utils::log_gamma;
 /// ```
 /// use rand_distr::{Binomial, Distribution};
 ///
-/// let bin = Binomial::new(20, 0.3);
+/// let bin = Binomial::new(20, 0.3).unwrap();
 /// let v = bin.sample(&mut rand::thread_rng());
 /// println!("{} is from a binomial distribution", v);
 /// ```
@@ -35,15 +35,26 @@ pub struct Binomial {
     p: f64,
 }
 
+/// Error type returned from `Binomial::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Error {
+    /// `p < 0` or `nan`.
+    ProbabilityTooSmall,
+    /// `p > 1`.
+    ProbabilityTooLarge,
+}
+
 impl Binomial {
     /// Construct a new `Binomial` with the given shape parameters `n` (number
     /// of trials) and `p` (probability of success).
-    ///
-    /// Panics if `p < 0` or `p > 1`.
-    pub fn new(n: u64, p: f64) -> Binomial {
-        assert!(p >= 0.0, "Binomial::new called with p < 0");
-        assert!(p <= 1.0, "Binomial::new called with p > 1");
-        Binomial { n, p }
+    pub fn new(n: u64, p: f64) -> Result<Binomial, Error> {
+        if !(p >= 0.0) {
+            return Err(Error::ProbabilityTooSmall);
+        }
+        if !(p <= 1.0) {
+            return Err(Error::ProbabilityTooLarge);
+        }
+        Ok(Binomial { n, p })
     }
 }
 
@@ -101,7 +112,7 @@ impl Distribution<u64> for Binomial {
 
             // we use the Cauchy distribution as the comparison distribution
             // f(x) ~ 1/(1+x^2)
-            let cauchy = Cauchy::new(0.0, 1.0);
+            let cauchy = Cauchy::new(0.0, 1.0).unwrap();
             loop {
                 let mut comp_dev: f64;
                 loop {
@@ -148,7 +159,7 @@ mod test {
     use super::Binomial;
 
     fn test_binomial_mean_and_variance<R: Rng>(n: u64, p: f64, rng: &mut R) {
-        let binomial = Binomial::new(n, p);
+        let binomial = Binomial::new(n, p).unwrap();
 
         let expected_mean = n as f64 * p;
         let expected_variance = n as f64 * p * (1.0 - p);
@@ -178,13 +189,13 @@ mod test {
     #[test]
     fn test_binomial_end_points() {
         let mut rng = crate::test::rng(352);
-        assert_eq!(rng.sample(Binomial::new(20, 0.0)), 0);
-        assert_eq!(rng.sample(Binomial::new(20, 1.0)), 20);
+        assert_eq!(rng.sample(Binomial::new(20, 0.0).unwrap()), 0);
+        assert_eq!(rng.sample(Binomial::new(20, 1.0).unwrap()), 20);
     }
 
     #[test]
     #[should_panic]
     fn test_binomial_invalid_lambda_neg() {
-        Binomial::new(20, -10.0);
+        Binomial::new(20, -10.0).unwrap();
     }
 }

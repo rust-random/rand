@@ -63,17 +63,17 @@ pub use rand::distributions::{Distribution, DistIter, Standard,
 
 pub use self::unit_sphere::UnitSphereSurface;
 pub use self::unit_circle::UnitCircle;
-pub use self::gamma::{Gamma, ChiSquared, FisherF,
-    StudentT, Beta};
-pub use self::normal::{Normal, LogNormal, StandardNormal};
-pub use self::exponential::{Exp, Exp1};
-pub use self::pareto::Pareto;
-pub use self::poisson::Poisson;
-pub use self::binomial::Binomial;
-pub use self::cauchy::Cauchy;
-pub use self::dirichlet::Dirichlet;
-pub use self::triangular::Triangular;
-pub use self::weibull::Weibull;
+pub use self::gamma::{Gamma, Error as GammaError, ChiSquared, ChiSquaredError,
+    FisherF, FisherFError, StudentT, Beta, BetaError};
+pub use self::normal::{Normal, Error as NormalError, LogNormal, StandardNormal};
+pub use self::exponential::{Exp, Error as ExpError, Exp1};
+pub use self::pareto::{Pareto, Error as ParetoError};
+pub use self::poisson::{Poisson, Error as PoissonError};
+pub use self::binomial::{Binomial, Error as BinomialError};
+pub use self::cauchy::{Cauchy, Error as CauchyError};
+pub use self::dirichlet::{Dirichlet, Error as DirichletError};
+pub use self::triangular::{Triangular, Error as TriangularError};
+pub use self::weibull::{Weibull, Error as WeibullError};
 
 mod unit_sphere;
 mod unit_circle;

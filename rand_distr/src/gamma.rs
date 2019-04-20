@@ -37,7 +37,7 @@ use crate::{Distribution, Exp, Open01};
 /// ```
 /// use rand_distr::{Distribution, Gamma};
 ///
-/// let gamma = Gamma::new(2.0, 5.0);
+/// let gamma = Gamma::new(2.0, 5.0).unwrap();
 /// let v = gamma.sample(&mut rand::thread_rng());
 /// println!("{} is from a Gamma(2, 5) distribution", v);
 /// ```
@@ -49,6 +49,17 @@ use crate::{Distribution, Exp, Open01};
 #[derive(Clone, Copy, Debug)]
 pub struct Gamma {
     repr: GammaRepr,
+}
+
+/// Error type returned from `Gamma::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Error {
+    /// `shape <= 0` or `nan`.
+    ShapeTooSmall,
+    /// `scale <= 0` or `nan`.
+    ScaleTooSmall,
+    /// `1 / scale == 0`.
+    ScaleTooLarge,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -92,21 +103,23 @@ struct GammaLargeShape {
 impl Gamma {
     /// Construct an object representing the `Gamma(shape, scale)`
     /// distribution.
-    ///
-    /// Panics if `shape <= 0` or `scale <= 0`.
     #[inline]
-    pub fn new(shape: f64, scale: f64) -> Gamma {
-        assert!(shape > 0.0, "Gamma::new called with shape <= 0");
-        assert!(scale > 0.0, "Gamma::new called with scale <= 0");
+    pub fn new(shape: f64, scale: f64) -> Result<Gamma, Error> {
+        if !(shape > 0.0) {
+            return Err(Error::ShapeTooSmall);
+        }
+        if !(scale > 0.0) {
+            return Err(Error::ScaleTooSmall);
+        }
 
         let repr = if shape == 1.0 {
-            One(Exp::new(1.0 / scale))
+            One(Exp::new(1.0 / scale).map_err(|_| Error::ScaleTooLarge)?)
         } else if shape < 1.0 {
             Small(GammaSmallShape::new_raw(shape, scale))
         } else {
             Large(GammaLargeShape::new_raw(shape, scale))
         };
-        Gamma { repr }
+        Ok(Gamma { repr })
     }
 }
 
@@ -180,13 +193,20 @@ impl Distribution<f64> for GammaLargeShape {
 /// ```
 /// use rand_distr::{ChiSquared, Distribution};
 ///
-/// let chi = ChiSquared::new(11.0);
+/// let chi = ChiSquared::new(11.0).unwrap();
 /// let v = chi.sample(&mut rand::thread_rng());
 /// println!("{} is from a χ²(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct ChiSquared {
     repr: ChiSquaredRepr,
+}
+
+/// Error type returned from `ChiSquared::new` and `StudentT::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ChiSquaredError {
+    /// `0.5 * k <= 0` or `nan`.
+    DoFTooSmall,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -200,15 +220,17 @@ enum ChiSquaredRepr {
 
 impl ChiSquared {
     /// Create a new chi-squared distribution with degrees-of-freedom
-    /// `k`. Panics if `k < 0`.
-    pub fn new(k: f64) -> ChiSquared {
+    /// `k`.
+    pub fn new(k: f64) -> Result<ChiSquared, ChiSquaredError> {
         let repr = if k == 1.0 {
             DoFExactlyOne
         } else {
-            assert!(k > 0.0, "ChiSquared::new called with `k` < 0");
-            DoFAnythingElse(Gamma::new(0.5 * k, 2.0))
+            if !(0.5 * k > 0.0) {
+                return Err(ChiSquaredError::DoFTooSmall);
+            }
+            DoFAnythingElse(Gamma::new(0.5 * k, 2.0).unwrap())
         };
-        ChiSquared { repr }
+        Ok(ChiSquared { repr })
     }
 }
 impl Distribution<f64> for ChiSquared {
@@ -235,7 +257,7 @@ impl Distribution<f64> for ChiSquared {
 /// ```
 /// use rand_distr::{FisherF, Distribution};
 ///
-/// let f = FisherF::new(2.0, 32.0);
+/// let f = FisherF::new(2.0, 32.0).unwrap();
 /// let v = f.sample(&mut rand::thread_rng());
 /// println!("{} is from an F(2, 32) distribution", v)
 /// ```
@@ -248,18 +270,30 @@ pub struct FisherF {
     dof_ratio: f64,
 }
 
-impl FisherF {
-    /// Create a new `FisherF` distribution, with the given
-    /// parameter. Panics if either `m` or `n` are not positive.
-    pub fn new(m: f64, n: f64) -> FisherF {
-        assert!(m > 0.0, "FisherF::new called with `m < 0`");
-        assert!(n > 0.0, "FisherF::new called with `n < 0`");
+/// Error type returned from `FisherF::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FisherFError {
+    /// `m <= 0` or `nan`.
+    MTooSmall,
+    /// `n <= 0` or `nan`.
+    NTooSmall,
+}
 
-        FisherF {
-            numer: ChiSquared::new(m),
-            denom: ChiSquared::new(n),
-            dof_ratio: n / m
+impl FisherF {
+    /// Create a new `FisherF` distribution, with the given parameter.
+    pub fn new(m: f64, n: f64) -> Result<FisherF, FisherFError> {
+        if !(m > 0.0) {
+            return Err(FisherFError::MTooSmall);
         }
+        if !(n > 0.0) {
+            return Err(FisherFError::NTooSmall);
+        }
+
+        Ok(FisherF {
+            numer: ChiSquared::new(m).unwrap(),
+            denom: ChiSquared::new(n).unwrap(),
+            dof_ratio: n / m
+        })
     }
 }
 impl Distribution<f64> for FisherF {
@@ -276,7 +310,7 @@ impl Distribution<f64> for FisherF {
 /// ```
 /// use rand_distr::{StudentT, Distribution};
 ///
-/// let t = StudentT::new(11.0);
+/// let t = StudentT::new(11.0).unwrap();
 /// let v = t.sample(&mut rand::thread_rng());
 /// println!("{} is from a t(11) distribution", v)
 /// ```
@@ -288,13 +322,12 @@ pub struct StudentT {
 
 impl StudentT {
     /// Create a new Student t distribution with `n` degrees of
-    /// freedom. Panics if `n <= 0`.
-    pub fn new(n: f64) -> StudentT {
-        assert!(n > 0.0, "StudentT::new called with `n <= 0`");
-        StudentT {
-            chi: ChiSquared::new(n),
+    /// freedom.
+    pub fn new(n: f64) -> Result<StudentT, ChiSquaredError> {
+        Ok(StudentT {
+            chi: ChiSquared::new(n)?,
             dof: n
-        }
+        })
     }
 }
 impl Distribution<f64> for StudentT {
@@ -311,7 +344,7 @@ impl Distribution<f64> for StudentT {
 /// ```
 /// use rand_distr::{Distribution, Beta};
 ///
-/// let beta = Beta::new(2.0, 5.0);
+/// let beta = Beta::new(2.0, 5.0).unwrap();
 /// let v = beta.sample(&mut rand::thread_rng());
 /// println!("{} is from a Beta(2, 5) distribution", v);
 /// ```
@@ -321,17 +354,25 @@ pub struct Beta {
     gamma_b: Gamma,
 }
 
+/// Error type returned from `Beta::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BetaError {
+    /// `alpha <= 0` or `nan`.
+    AlphaTooSmall,
+    /// `beta <= 0` or `nan`.
+    BetaTooSmall,
+}
+
 impl Beta {
     /// Construct an object representing the `Beta(alpha, beta)`
     /// distribution.
-    ///
-    /// Panics if `shape <= 0` or `scale <= 0`.
-    pub fn new(alpha: f64, beta: f64) -> Beta {
-        assert!((alpha > 0.) & (beta > 0.));
-        Beta {
-            gamma_a: Gamma::new(alpha, 1.),
-            gamma_b: Gamma::new(beta, 1.),
-        }
+    pub fn new(alpha: f64, beta: f64) -> Result<Beta, BetaError> {
+        Ok(Beta {
+            gamma_a: Gamma::new(alpha, 1.)
+                         .map_err(|_| BetaError::AlphaTooSmall)?,
+            gamma_b: Gamma::new(beta, 1.)
+                         .map_err(|_| BetaError::BetaTooSmall)?,
+        })
     }
 }
 
@@ -350,7 +391,7 @@ mod test {
 
     #[test]
     fn test_chi_squared_one() {
-        let chi = ChiSquared::new(1.0);
+        let chi = ChiSquared::new(1.0).unwrap();
         let mut rng = crate::test::rng(201);
         for _ in 0..1000 {
             chi.sample(&mut rng);
@@ -358,7 +399,7 @@ mod test {
     }
     #[test]
     fn test_chi_squared_small() {
-        let chi = ChiSquared::new(0.5);
+        let chi = ChiSquared::new(0.5).unwrap();
         let mut rng = crate::test::rng(202);
         for _ in 0..1000 {
             chi.sample(&mut rng);
@@ -366,7 +407,7 @@ mod test {
     }
     #[test]
     fn test_chi_squared_large() {
-        let chi = ChiSquared::new(30.0);
+        let chi = ChiSquared::new(30.0).unwrap();
         let mut rng = crate::test::rng(203);
         for _ in 0..1000 {
             chi.sample(&mut rng);
@@ -375,12 +416,12 @@ mod test {
     #[test]
     #[should_panic]
     fn test_chi_squared_invalid_dof() {
-        ChiSquared::new(-1.0);
+        ChiSquared::new(-1.0).unwrap();
     }
 
     #[test]
     fn test_f() {
-        let f = FisherF::new(2.0, 32.0);
+        let f = FisherF::new(2.0, 32.0).unwrap();
         let mut rng = crate::test::rng(204);
         for _ in 0..1000 {
             f.sample(&mut rng);
@@ -389,7 +430,7 @@ mod test {
 
     #[test]
     fn test_t() {
-        let t = StudentT::new(11.0);
+        let t = StudentT::new(11.0).unwrap();
         let mut rng = crate::test::rng(205);
         for _ in 0..1000 {
             t.sample(&mut rng);
@@ -398,7 +439,7 @@ mod test {
 
     #[test]
     fn test_beta() {
-        let beta = Beta::new(1.0, 2.0);
+        let beta = Beta::new(1.0, 2.0).unwrap();
         let mut rng = crate::test::rng(201);
         for _ in 0..1000 {
             beta.sample(&mut rng);
@@ -408,6 +449,6 @@ mod test {
     #[test]
     #[should_panic]
     fn test_beta_invalid_dof() {
-        Beta::new(0., 0.);
+        Beta::new(0., 0.).unwrap();
     }
 }

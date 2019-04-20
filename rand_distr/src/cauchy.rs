@@ -23,7 +23,7 @@ use std::f64::consts::PI;
 /// ```
 /// use rand_distr::{Cauchy, Distribution};
 ///
-/// let cau = Cauchy::new(2.0, 5.0);
+/// let cau = Cauchy::new(2.0, 5.0).unwrap();
 /// let v = cau.sample(&mut rand::thread_rng());
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
@@ -33,16 +33,24 @@ pub struct Cauchy {
     scale: f64
 }
 
+/// Error type returned from `Cauchy::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Error {
+    /// `scale <= 0` or `nan`.
+    ScaleTooSmall,
+}
+
 impl Cauchy {
     /// Construct a new `Cauchy` with the given shape parameters
     /// `median` the peak location and `scale` the scale factor.
-    /// Panics if `scale <= 0`.
-    pub fn new(median: f64, scale: f64) -> Cauchy {
-        assert!(scale > 0.0, "Cauchy::new called with scale factor <= 0");
-        Cauchy {
+    pub fn new(median: f64, scale: f64) -> Result<Cauchy, Error> {
+        if !(scale > 0.0) {
+            return Err(Error::ScaleTooSmall);
+        }
+        Ok(Cauchy {
             median,
             scale
-        }
+        })
     }
 }
 
@@ -76,7 +84,7 @@ mod test {
 
     #[test]
     fn test_cauchy_median() {
-        let cauchy = Cauchy::new(10.0, 5.0);
+        let cauchy = Cauchy::new(10.0, 5.0).unwrap();
         let mut rng = crate::test::rng(123);
         let mut numbers: [f64; 1000] = [0.0; 1000];
         for i in 0..1000 {
@@ -89,7 +97,7 @@ mod test {
 
     #[test]
     fn test_cauchy_mean() {
-        let cauchy = Cauchy::new(10.0, 5.0);
+        let cauchy = Cauchy::new(10.0, 5.0).unwrap();
         let mut rng = crate::test::rng(123);
         let mut sum = 0.0;
         for _ in 0..1000 {
@@ -104,12 +112,12 @@ mod test {
     #[test]
     #[should_panic]
     fn test_cauchy_invalid_scale_zero() {
-        Cauchy::new(0.0, 0.0);
+        Cauchy::new(0.0, 0.0).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_cauchy_invalid_scale_neg() {
-        Cauchy::new(0.0, -10.0);
+        Cauchy::new(0.0, -10.0).unwrap();
     }
 }

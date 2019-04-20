@@ -18,7 +18,7 @@ use crate::{Distribution, OpenClosed01};
 /// use rand::prelude::*;
 /// use rand_distr::Weibull;
 ///
-/// let val: f64 = SmallRng::from_entropy().sample(Weibull::new(1., 10.));
+/// let val: f64 = SmallRng::from_entropy().sample(Weibull::new(1., 10.).unwrap());
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -27,15 +27,25 @@ pub struct Weibull {
     scale: f64,
 }
 
+/// Error type returned from `Weibull::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Error {
+    /// `scale <= 0` or `nan`.
+    ScaleTooSmall,
+    /// `shape <= 0` or `nan`.
+    ShapeTooSmall,
+}
+
 impl Weibull {
     /// Construct a new `Weibull` distribution with given `scale` and `shape`.
-    ///
-    /// # Panics
-    ///
-    /// `scale` and `shape` have to be non-zero and positive.
-    pub fn new(scale: f64, shape: f64) -> Weibull {
-        assert!((scale > 0.) & (shape > 0.));
-        Weibull { inv_shape: 1./shape, scale }
+    pub fn new(scale: f64, shape: f64) -> Result<Weibull, Error> {
+        if !(scale > 0.0) {
+            return Err(Error::ScaleTooSmall);
+        }
+        if !(shape > 0.0) {
+            return Err(Error::ShapeTooSmall);
+        }
+        Ok(Weibull { inv_shape: 1./shape, scale })
     }
 }
 
@@ -54,14 +64,14 @@ mod tests {
     #[test]
     #[should_panic]
     fn invalid() {
-        Weibull::new(0., 0.);
+        Weibull::new(0., 0.).unwrap();
     }
 
     #[test]
     fn sample() {
         let scale = 1.0;
         let shape = 2.0;
-        let d = Weibull::new(scale, shape);
+        let d = Weibull::new(scale, shape).unwrap();
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);

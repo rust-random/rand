@@ -86,7 +86,7 @@ impl Distribution<f64> for StandardNormal {
 /// use rand_distr::{Normal, Distribution};
 ///
 /// // mean 2, standard deviation 3
-/// let normal = Normal::new(2.0, 3.0);
+/// let normal = Normal::new(2.0, 3.0).unwrap();
 /// let v = normal.sample(&mut rand::thread_rng());
 /// println!("{} is from a N(2, 9) distribution", v)
 /// ```
@@ -98,20 +98,25 @@ pub struct Normal {
     std_dev: f64,
 }
 
+/// Error type returned from `Normal::new` and `LogNormal::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Error {
+    /// `std_dev < 0` or `nan`.
+    StdDevTooSmall,
+}
+
 impl Normal {
     /// Construct a new `Normal` distribution with the given mean and
     /// standard deviation.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `std_dev < 0`.
     #[inline]
-    pub fn new(mean: f64, std_dev: f64) -> Normal {
-        assert!(std_dev >= 0.0, "Normal::new called with `std_dev` < 0");
-        Normal {
+    pub fn new(mean: f64, std_dev: f64) -> Result<Normal, Error> {
+        if !(std_dev >= 0.0) {
+            return Err(Error::StdDevTooSmall);
+        }
+        Ok(Normal {
             mean,
             std_dev
-        }
+        })
     }
 }
 impl Distribution<f64> for Normal {
@@ -133,7 +138,7 @@ impl Distribution<f64> for Normal {
 /// use rand_distr::{LogNormal, Distribution};
 ///
 /// // mean 2, standard deviation 3
-/// let log_normal = LogNormal::new(2.0, 3.0);
+/// let log_normal = LogNormal::new(2.0, 3.0).unwrap();
 /// let v = log_normal.sample(&mut rand::thread_rng());
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
@@ -144,15 +149,13 @@ pub struct LogNormal {
 
 impl LogNormal {
     /// Construct a new `LogNormal` distribution with the given mean
-    /// and standard deviation.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `std_dev < 0`.
+    /// and standard deviation of the logarithm of the distribution.
     #[inline]
-    pub fn new(mean: f64, std_dev: f64) -> LogNormal {
-        assert!(std_dev >= 0.0, "LogNormal::new called with `std_dev` < 0");
-        LogNormal { norm: Normal::new(mean, std_dev) }
+    pub fn new(mean: f64, std_dev: f64) -> Result<LogNormal, Error> {
+        if !(std_dev >= 0.0) {
+            return Err(Error::StdDevTooSmall);
+        }
+        Ok(LogNormal { norm: Normal::new(mean, std_dev).unwrap() })
     }
 }
 impl Distribution<f64> for LogNormal {
@@ -168,7 +171,7 @@ mod tests {
 
     #[test]
     fn test_normal() {
-        let norm = Normal::new(10.0, 10.0);
+        let norm = Normal::new(10.0, 10.0).unwrap();
         let mut rng = crate::test::rng(210);
         for _ in 0..1000 {
             norm.sample(&mut rng);
@@ -177,13 +180,13 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_normal_invalid_sd() {
-        Normal::new(10.0, -1.0);
+        Normal::new(10.0, -1.0).unwrap();
     }
 
 
     #[test]
     fn test_log_normal() {
-        let lnorm = LogNormal::new(10.0, 10.0);
+        let lnorm = LogNormal::new(10.0, 10.0).unwrap();
         let mut rng = crate::test::rng(211);
         for _ in 0..1000 {
             lnorm.sample(&mut rng);
@@ -192,6 +195,6 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_log_normal_invalid_sd() {
-        LogNormal::new(10.0, -1.0);
+        LogNormal::new(10.0, -1.0).unwrap();
     }
 }

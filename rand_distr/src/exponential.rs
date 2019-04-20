@@ -71,7 +71,7 @@ impl Distribution<f64> for Exp1 {
 /// ```
 /// use rand_distr::{Exp, Distribution};
 ///
-/// let exp = Exp::new(2.0);
+/// let exp = Exp::new(2.0).unwrap();
 /// let v = exp.sample(&mut rand::thread_rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
@@ -81,13 +81,22 @@ pub struct Exp {
     lambda_inverse: f64
 }
 
+/// Error type returned from `Exp::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Error {
+    /// `lambda <= 0` or `nan`.
+    LambdaTooSmall,
+}
+
 impl Exp {
     /// Construct a new `Exp` with the given shape parameter
-    /// `lambda`. Panics if `lambda <= 0`.
+    /// `lambda`.
     #[inline]
-    pub fn new(lambda: f64) -> Exp {
-        assert!(lambda > 0.0, "Exp::new called with `lambda` <= 0");
-        Exp { lambda_inverse: 1.0 / lambda }
+    pub fn new(lambda: f64) -> Result<Exp, Error> {
+        if !(lambda > 0.0) {
+            return Err(Error::LambdaTooSmall);
+        }
+        Ok(Exp { lambda_inverse: 1.0 / lambda })
     }
 }
 
@@ -105,7 +114,7 @@ mod test {
 
     #[test]
     fn test_exp() {
-        let exp = Exp::new(10.0);
+        let exp = Exp::new(10.0).unwrap();
         let mut rng = crate::test::rng(221);
         for _ in 0..1000 {
             assert!(exp.sample(&mut rng) >= 0.0);
@@ -114,11 +123,11 @@ mod test {
     #[test]
     #[should_panic]
     fn test_exp_invalid_lambda_zero() {
-        Exp::new(0.0);
+        Exp::new(0.0).unwrap();
     }
     #[test]
     #[should_panic]
     fn test_exp_invalid_lambda_neg() {
-        Exp::new(-10.0);
+        Exp::new(-10.0).unwrap();
     }
 }
