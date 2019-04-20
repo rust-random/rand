@@ -72,7 +72,7 @@ pub use self::poisson::{Poisson, Error as PoissonError};
 pub use self::binomial::{Binomial, Error as BinomialError};
 pub use self::cauchy::{Cauchy, Error as CauchyError};
 pub use self::dirichlet::{Dirichlet, Error as DirichletError};
-pub use self::triangular::{Triangular, Error as TriangularError};
+pub use self::triangular::{Triangular, TriangularError};
 pub use self::weibull::{Weibull, Error as WeibullError};
 
 mod unit_sphere;
