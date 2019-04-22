@@ -16,6 +16,7 @@ const RAND_BENCH_N: u64 = 1000;
 use test::Bencher;
 
 use rand::prelude::*;
+use rand::distributions::{Distribution, Standard, Bernoulli};
 
 #[bench]
 fn misc_gen_bool_const(b: &mut Bencher) {
@@ -87,33 +88,13 @@ fn misc_bernoulli_var(b: &mut Bencher) {
         let mut accum = true;
         let mut p = 0.18;
         for _ in 0..::RAND_BENCH_N {
-            let d = rand::distributions::Bernoulli::new(p);
+            let d = Bernoulli::new(p);
             accum ^= rng.sample(d);
             p += 0.0001;
         }
         accum
     })
 }
-
-macro_rules! sample_binomial {
-    ($name:ident, $n:expr, $p:expr) => {
-        #[bench]
-        fn $name(b: &mut Bencher) {
-            let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
-            let (n, p) = ($n, $p);
-            b.iter(|| {
-                let d = rand::distributions::Binomial::new(n, p);
-                rng.sample(d)
-            })
-        }
-    }
-}
-
-sample_binomial!(misc_binomial_1, 1, 0.9);
-sample_binomial!(misc_binomial_10, 10, 0.9);
-sample_binomial!(misc_binomial_100, 100, 0.99);
-sample_binomial!(misc_binomial_1000, 1000, 0.01);
-sample_binomial!(misc_binomial_1e12, 1000_000_000_000, 0.2);
 
 #[bench]
 fn gen_1k_iter_repeat(b: &mut Bencher) {
@@ -128,7 +109,6 @@ fn gen_1k_iter_repeat(b: &mut Bencher) {
 
 #[bench]
 fn gen_1k_sample_iter(b: &mut Bencher) {
-    use rand::distributions::{Distribution, Standard};
     let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let v: Vec<u64> = Standard.sample_iter(&mut rng).take(128).collect();
