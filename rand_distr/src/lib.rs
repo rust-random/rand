@@ -68,6 +68,7 @@ pub use self::gamma::{Gamma, Error as GammaError, ChiSquared, ChiSquaredError,
 pub use self::normal::{Normal, Error as NormalError, LogNormal, StandardNormal};
 pub use self::exponential::{Exp, Error as ExpError, Exp1};
 pub use self::pareto::{Pareto, Error as ParetoError};
+pub use self::pert::{Pert, PertError};
 pub use self::poisson::{Poisson, Error as PoissonError};
 pub use self::binomial::{Binomial, Error as BinomialError};
 pub use self::cauchy::{Cauchy, Error as CauchyError};
@@ -81,6 +82,7 @@ mod gamma;
 mod normal;
 mod exponential;
 mod pareto;
+mod pert;
 mod poisson;
 mod binomial;
 mod cauchy;
