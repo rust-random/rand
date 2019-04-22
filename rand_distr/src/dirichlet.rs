@@ -69,7 +69,7 @@ impl Dirichlet {
     ///
     /// Requires `size >= 2`.
     #[inline]
-    pub fn new_with_param(alpha: f64, size: usize) -> Result<Dirichlet, Error> {
+    pub fn new_with_size(alpha: f64, size: usize) -> Result<Dirichlet, Error> {
         if !(alpha > 0.0) {
             return Err(Error::AlphaTooSmall);
         }
@@ -124,7 +124,7 @@ mod test {
     fn test_dirichlet_with_param() {
         let alpha = 0.5f64;
         let size = 2;
-        let d = Dirichlet::new_with_param(alpha, size).unwrap();
+        let d = Dirichlet::new_with_size(alpha, size).unwrap();
         let mut rng = crate::test::rng(221);
         let samples = d.sample(&mut rng);
         let _: Vec<f64> = samples
@@ -139,12 +139,12 @@ mod test {
     #[test]
     #[should_panic]
     fn test_dirichlet_invalid_length() {
-        Dirichlet::new_with_param(0.5f64, 1).unwrap();
+        Dirichlet::new_with_size(0.5f64, 1).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_dirichlet_invalid_alpha() {
-        Dirichlet::new_with_param(0.0f64, 2).unwrap();
+        Dirichlet::new_with_size(0.0f64, 2).unwrap();
     }
 }
