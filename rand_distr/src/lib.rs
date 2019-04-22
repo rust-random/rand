@@ -92,8 +92,29 @@ mod ziggurat_tables;
 
 #[cfg(test)]
 mod test {
+    // Notes on testing
+    // 
+    // Testing random number distributions correctly is hard. The following
+    // testing is desired:
+    // 
+    // - Construction: test initialisation with a few valid parameter sets.
+    // - Erroneous usage: test that incorrect usage generates an error.
+    // - Vector: test that usage with fixed inputs (including RNG) generates a
+    //   fixed output sequence on all platforms.
+    // - Correctness at fixed points (optional): using a specific mock RNG,
+    //   check that specific values are sampled (e.g. end-points and median of
+    //   distribution).
+    // - Correctness of PDF (extra): generate a histogram of samples within a
+    //   certain range, and check this approximates the PDF. These tests are
+    //   expected to be expensive, and should be behind a feature-gate.
+    //
+    // TODO: Vector and correctness tests are largely absent so far.
+    // NOTE: Some distributions have tests checking only that samples can be
+    // generated. This is redundant with vector and correctness tests.
+
     use rand::{RngCore, SeedableRng, rngs::StdRng};
 
+    /// Construct a deterministic RNG with the given seed
     pub fn rng(seed: u64) -> impl RngCore {
         StdRng::seed_from_u64(seed)
     }
