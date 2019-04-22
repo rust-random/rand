@@ -181,9 +181,9 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
     #[inline(always)]
     fn next_u64(&mut self) -> u64 {
         let read_u64 = |results: &[u32], index| {
-            if cfg!(any(target_arch = "x86", target_arch = "x86_64")) {
-                // requires little-endian CPU supporting unaligned reads:
-                let ptr: *const u64 = results[index..index+1].as_ptr() as *const u64;
+            if cfg!(any(target_endian = "little")) {
+                // requires little-endian CPU
+                let ptr: *const u64 = results[index..=index+1].as_ptr() as *const u64;
                 unsafe { ptr::read_unaligned(ptr) }
             } else {
                 let x = u64::from(results[index]);
