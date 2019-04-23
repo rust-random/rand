@@ -11,6 +11,12 @@ use rand::Rng;
 use crate::{Distribution, Standard};
 
 /// The triangular distribution.
+/// 
+/// A continuous probability distribution parameterised by a range, and a mode
+/// (most likely value) within that range.
+///
+/// The probability density function is triangular. For a similar distribution
+/// with a smooth PDF, see the [Pert] distribution.
 ///
 /// # Example
 ///
@@ -28,30 +34,24 @@ pub struct Triangular {
     mode: f64,
 }
 
-/// Error type returned from `Triangular::new`.
+/// Error type returned from [`Triangular::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Error {
-    /// `max < mode` or `max` is `nan`.
-    MaxTooSmall,
-    /// `mode < min` or `mode` is `nan`.
-    ModeTooSmall,
-    /// `max == min` or `min` is `nan`.
-    MaxEqualsMin,
+pub enum TriangularError {
+    /// `max < min` or `min` or `max` is NaN.
+    RangeTooSmall,
+    /// `mode < min` or `mode > max` or `mode` is NaN.
+    ModeRange,
 }
 
 impl Triangular {
-    /// Construct a new `Triangular` with minimum `min`, maximum `max` and mode
-    /// `mode`.
+    /// Set up the Triangular distribution with defined `min`, `max` and `mode`.
     #[inline]
-    pub fn new(min: f64, max: f64, mode: f64) -> Result<Triangular, Error> {
-        if !(max >= mode) {
-            return Err(Error::MaxTooSmall);
+    pub fn new(min: f64, max: f64, mode: f64) -> Result<Triangular, TriangularError> {
+        if !(max >= min) {
+            return Err(TriangularError::RangeTooSmall);
         }
-        if !(mode >= min) {
-            return Err(Error::ModeTooSmall);
-        }
-        if !(max != min) {
-            return Err(Error::MaxEqualsMin);
+        if !(mode >= min && max >= mode) {
+            return Err(TriangularError::ModeRange);
         }
         Ok(Triangular { min, max, mode })
     }
@@ -62,37 +62,57 @@ impl Distribution<f64> for Triangular {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         let f: f64 = rng.sample(Standard);
         let diff_mode_min = self.mode - self.min;
-        let diff_max_min = self.max - self.min;
-        if f * diff_max_min < diff_mode_min {
-            self.min + (f * diff_max_min * diff_mode_min).sqrt()
+        let range = self.max - self.min;
+        let f_range = f * range;
+        if f_range < diff_mode_min {
+            self.min + (f_range * diff_mode_min).sqrt()
         } else {
-            self.max - ((1. - f) * diff_max_min * (self.max - self.mode)).sqrt()
+            self.max - ((range - f_range) * (self.max - self.mode)).sqrt()
         }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::Distribution;
-    use super::Triangular;
+    use std::f64;
+    use rand::{Rng, rngs::mock};
+    use super::*;
 
     #[test]
-    fn test_new() {
-        for &(min, max, mode) in &[
-            (-1., 1., 0.), (1., 2., 1.), (5., 25., 25.), (1e-5, 1e5, 1e-3),
-            (0., 1., 0.9), (-4., -0.5, -2.), (-13.039, 8.41, 1.17),
+    fn test_triangular() {
+        let mut half_rng = mock::StepRng::new(0x8000_0000_0000_0000, 0);
+        assert_eq!(half_rng.gen::<f64>(), 0.5);
+        for &(min, max, mode, median) in &[
+            (-1., 1., 0., 0.),
+            (1., 2., 1., 2. - 0.5f64.sqrt()),
+            (5., 25., 25., 5. + 200f64.sqrt()),
+            (1e-5, 1e5, 1e-3, 1e5 - 4999999949.5f64.sqrt()),
+            (0., 1., 0.9, 0.45f64.sqrt()),
+            (-4., -0.5, -2., -4.0 + 3.5f64.sqrt()),
         ] {
-            println!("{} {} {}", min, max, mode);
-            let _ = Triangular::new(min, max, mode).unwrap();
+            println!("{} {} {} {}", min, max, mode, median);
+            let distr = Triangular::new(min, max, mode).unwrap();
+            // Test correct value at median:
+            assert_eq!(distr.sample(&mut half_rng), median);
+        }
+
+        for &(min, max, mode) in &[
+            (-1., 1., 2.),
+            (-1., 1., -2.),
+            (2., 1., 1.),
+        ] {
+            assert!(Triangular::new(min, max, mode).is_err());
         }
     }
-
+    
     #[test]
-    fn test_sample() {
-        let norm = Triangular::new(0., 1., 0.5).unwrap();
-        let mut rng = crate::test::rng(1);
-        for _ in 0..1000 {
-            norm.sample(&mut rng);
-        }
+    fn test_triangular_vector() {
+        let rng = crate::test::rng(860);
+        let distr = Triangular::new(2., 10., 3.).unwrap();
+        let seq = distr.sample_iter(rng).take(5).collect::<Vec<f64>>();
+        println!("seq: {:?}", seq);
+        let expected = vec![4.941640229082449, 2.421447306833011,
+                4.5964271605527385, 2.789763631136542, 4.8014432067978445];
+        assert!(seq == expected);
     }
 }
