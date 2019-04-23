@@ -339,6 +339,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_sample_alg() {
         let seed_rng = ::test::rng;
 

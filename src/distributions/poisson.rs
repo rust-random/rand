@@ -109,6 +109,7 @@ mod test {
     use super::Poisson;
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_poisson_10() {
         let poisson = Poisson::new(10.0);
         let mut rng = ::test::rng(123);
@@ -122,6 +123,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri doesn't support transcendental functions
     fn test_poisson_15() {
         // Take the 'high expected values' path
         let poisson = Poisson::new(15.0);

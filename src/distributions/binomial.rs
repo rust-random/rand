@@ -287,6 +287,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_binomial() {
         let mut rng = ::test::rng(351);
         test_binomial_mean_and_variance(150, 0.1, &mut rng);

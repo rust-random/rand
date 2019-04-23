@@ -539,6 +539,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_iterator_choose() {
         let r = &mut ::test::rng(109);
         fn test_iter<R: Rng + ?Sized, Iter: Iterator<Item=usize> + Clone>(r: &mut R, iter: Iter) {
@@ -570,6 +571,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_shuffle() {
         let mut r = ::test::rng(108);
         let empty: &mut [isize] = &mut [];
@@ -655,6 +657,7 @@ mod test {
     
     #[test]
     #[cfg(feature = "alloc")]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted() {
         let mut r = ::test::rng(406);
         const N_REPS: u32 = 3000;

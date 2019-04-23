@@ -137,6 +137,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_average() {
         const P: f64 = 0.3;
         const NUM: u32 = 3;

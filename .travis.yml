@@ -256,6 +256,12 @@ matrix:
       script:
         - bash utils/ci/script.sh
 
+    - rust: nightly
+      os: linux
+      env: DESCRIPTION="Miri, nightly"
+      script:
+        - sh utils/ci/miri.sh
+
 before_install:
   - set -e
   - rustup self update

@@ -972,6 +972,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_integers() {
         use core::{i8, i16, i32, i64, isize};
         use core::{u8, u16, u32, u64, usize};
@@ -1056,6 +1057,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_floats() {
         let mut rng = ::test::rng(252);
         let mut zero_rng = StepRng::new(0, 0);
@@ -1140,6 +1142,7 @@ mod tests {
     #[cfg(all(feature="std",
               not(target_arch = "wasm32"),
               not(target_arch = "asmjs")))]
+    #[cfg(not(miri))] // Miri does not support catching panics
     fn test_float_assertions() {
         use std::panic::catch_unwind;
         use super::SampleUniform;
@@ -1195,6 +1198,7 @@ mod tests {
 
     #[test]
     #[cfg(any(feature = "std", rustc_1_25))]
+    #[cfg(not(miri))] // Miri is too slow
     fn test_durations() {
         #[cfg(feature = "std")]
         use std::time::Duration;
