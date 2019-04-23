@@ -20,8 +20,7 @@ use std::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU128};
 use test::Bencher;
 use std::time::Duration;
 
-use rand::{Rng, FromEntropy};
-use rand::rngs::SmallRng;
+use rand::prelude::*;
 use rand_distr::{*, weighted::WeightedIndex};
 
 macro_rules! distr_int {
@@ -291,3 +290,23 @@ fn dist_iter(b: &mut Bencher) {
     });
     b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
 }
+
+macro_rules! sample_binomial {
+    ($name:ident, $n:expr, $p:expr) => {
+        #[bench]
+        fn $name(b: &mut Bencher) {
+            let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+            let (n, p) = ($n, $p);
+            b.iter(|| {
+                let d = Binomial::new(n, p).unwrap();
+                rng.sample(d)
+            })
+        }
+    }
+}
+
+sample_binomial!(misc_binomial_1, 1, 0.9);
+sample_binomial!(misc_binomial_10, 10, 0.9);
+sample_binomial!(misc_binomial_100, 100, 0.99);
+sample_binomial!(misc_binomial_1000, 1000, 0.01);
+sample_binomial!(misc_binomial_1e12, 1000_000_000_000, 0.2);
