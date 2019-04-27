@@ -20,3 +20,4 @@ appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
 rand = { path = "..", version = ">=0.5, <=0.7" }
+num-traits = "0.2"
