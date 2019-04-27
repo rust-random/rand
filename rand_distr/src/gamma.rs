@@ -162,7 +162,7 @@ impl Distribution<f64> for GammaSmallShape {
 impl Distribution<f64> for GammaLargeShape {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         loop {
-            let x = rng.sample(StandardNormal);
+            let x: f64 = rng.sample(StandardNormal);
             let v_cbrt = 1.0 + self.c * x;
             if v_cbrt <= 0.0 { // a^3 <= 0 iff a <= 0
                 continue
@@ -238,7 +238,7 @@ impl Distribution<f64> for ChiSquared {
         match self.repr {
             DoFExactlyOne => {
                 // k == 1 => N(0,1)^2
-                let norm = rng.sample(StandardNormal);
+                let norm: f64 = rng.sample(StandardNormal);
                 norm * norm
             }
             DoFAnythingElse(ref g) => g.sample(rng)
@@ -332,7 +332,7 @@ impl StudentT {
 }
 impl Distribution<f64> for StudentT {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let norm = rng.sample(StandardNormal);
+        let norm: f64 = rng.sample(StandardNormal);
         norm * (self.dof / self.chi.sample(rng)).sqrt()
     }
 }

@@ -37,6 +37,15 @@ use crate::utils::ziggurat;
 #[derive(Clone, Copy, Debug)]
 pub struct StandardNormal;
 
+impl Distribution<f32> for StandardNormal {
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
+        // TODO: use optimal 32-bit implementation
+        let x: f64 = self.sample(rng);
+        x as f32
+    }
+}
+
 impl Distribution<f64> for StandardNormal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         #[inline]
@@ -121,7 +130,7 @@ impl Normal {
 }
 impl Distribution<f64> for Normal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let n = rng.sample(StandardNormal);
+        let n: f64 = rng.sample(StandardNormal);
         self.mean + self.std_dev * n
     }
 }
