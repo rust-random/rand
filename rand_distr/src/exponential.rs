@@ -12,6 +12,7 @@
 use rand::Rng;
 use crate::{ziggurat_tables, Distribution};
 use crate::utils::ziggurat;
+use num_traits::Float;
 
 /// Samples floating-point numbers according to the exponential distribution,
 /// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
@@ -38,6 +39,15 @@ use crate::utils::ziggurat;
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Exp1;
+
+impl Distribution<f32> for Exp1 {
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
+        // TODO: use optimal 32-bit implementation
+        let x: f64 = self.sample(rng);
+        x as f32
+    }
+}
 
 // This could be done via `-rng.gen::<f64>().ln()` but that is slower.
 impl Distribution<f64> for Exp1 {
@@ -76,9 +86,9 @@ impl Distribution<f64> for Exp1 {
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Exp {
+pub struct Exp<N> {
     /// `lambda` stored as `1/lambda`, since this is what we scale by.
-    lambda_inverse: f64
+    lambda_inverse: N
 }
 
 /// Error type returned from `Exp::new`.
@@ -88,22 +98,25 @@ pub enum Error {
     LambdaTooSmall,
 }
 
-impl Exp {
+impl<N: Float> Exp<N>
+where Exp1: Distribution<N>
+{
     /// Construct a new `Exp` with the given shape parameter
     /// `lambda`.
     #[inline]
-    pub fn new(lambda: f64) -> Result<Exp, Error> {
-        if !(lambda > 0.0) {
+    pub fn new(lambda: N) -> Result<Exp<N>, Error> {
+        if !(lambda > N::zero()) {
             return Err(Error::LambdaTooSmall);
         }
-        Ok(Exp { lambda_inverse: 1.0 / lambda })
+        Ok(Exp { lambda_inverse: N::one() / lambda })
     }
 }
 
-impl Distribution<f64> for Exp {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let n: f64 = rng.sample(Exp1);
-        n * self.lambda_inverse
+impl<N: Float> Distribution<N> for Exp<N>
+where Exp1: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+        rng.sample(Exp1) * self.lambda_inverse
     }
 }
 

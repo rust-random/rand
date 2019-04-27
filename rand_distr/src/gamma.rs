@@ -65,7 +65,7 @@ pub enum Error {
 #[derive(Clone, Copy, Debug)]
 enum GammaRepr {
     Large(GammaLargeShape),
-    One(Exp),
+    One(Exp<f64>),
     Small(GammaSmallShape)
 }
 
