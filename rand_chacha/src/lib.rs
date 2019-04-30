@@ -16,10 +16,24 @@
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
+extern crate c2_chacha;
+pub extern crate generic_array;
 pub extern crate rand_core;
 
 mod chacha;
 
-pub use chacha::{ChaChaRng, ChaChaCore};
+use generic_array::typenum;
+
+pub use chacha::{ChaChaXRng, ChaChaXCore};
+/// ChaCha with 20 rounds
+pub type ChaCha20Rng = ChaChaXRng<typenum::U10>;
+/// ChaCha with 12 rounds
+pub type ChaCha12Rng = ChaChaXRng<typenum::U6>;
+/// ChaCha with 8 rounds
+pub type ChaCha8Rng = ChaChaXRng<typenum::U4>;
+/// ChaCha with 20 rounds
+pub type ChaChaRng = ChaCha20Rng;
+/// ChaCha with 20 rounds, low-level interface
+pub type ChaChaCore = ChaChaXCore<typenum::U10>;

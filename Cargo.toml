@@ -70,7 +70,7 @@ average = "0.9.2"
 # Only for benches:
 rand_xoshiro = { path = "rand_xoshiro", version = "0.1" }
 rand_isaac = { path = "rand_isaac", version = "0.1" }
-rand_chacha = { path = "rand_chacha", version = "0.1" }
+rand_chacha = { path = "rand_chacha", version = "0.2" }
 rand_xorshift = { path = "rand_xorshift", version = "0.1" }
 rand_distr = { path = "rand_distr", version = "0.1" }
 
