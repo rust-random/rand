@@ -22,11 +22,11 @@ use rand_hc::Hc128Rng;
 /// future library versions may use a different internal generator with
 /// different output. Further, this generator may not be portable and can
 /// produce different output depending on the architecture. If you require
-/// reproducible output, use a named RNG, for example [`ChaChaRng`] from the
+/// reproducible output, use a named RNG, for example [`ChaCha20Rng`] from the
 /// [rand_chacha] crate.
 ///
 /// [HC-128]: rand_hc::Hc128Rng
-/// [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
+/// [`ChaCha20Rng`]: ../../rand_chacha/struct.ChaCha20Rng.html
 /// [rand_hc]: https://crates.io/crates/rand_hc
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
 #[derive(Clone, Debug)]
