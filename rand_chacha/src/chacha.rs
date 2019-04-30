@@ -40,6 +40,17 @@ impl<Rounds: Unsigned> BlockRngCore for ChaChaXCore<Rounds> {
     }
 }
 
+impl<Rounds: Unsigned> SeedableRng for ChaChaXCore<Rounds> {
+    type Seed = [u8; 32];
+    #[inline]
+    fn from_seed(seed: Self::Seed) -> Self {
+        ChaChaXCore {
+            state: ChaCha::new(&seed, &[0u8; 8]),
+            _rounds: PhantomData,
+        }
+    }
+}
+
 /// A cryptographically secure random number generator that uses the ChaCha algorithm.
 ///
 /// ChaCha is a stream cipher designed by Daniel J. Bernstein[^1], that we use as an RNG. It is
@@ -92,10 +103,7 @@ impl<Rounds: Unsigned> SeedableRng for ChaChaXRng<Rounds> {
     type Seed = [u8; 32];
     #[inline]
     fn from_seed(seed: Self::Seed) -> Self {
-        let core = ChaChaXCore {
-            state: ChaCha::new(&seed, &[0u8; 8]),
-            _rounds: PhantomData,
-        };
+        let core = ChaChaXCore::from_seed(seed);
         Self {
             rng: BlockRng::new(core),
         }
