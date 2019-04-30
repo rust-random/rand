@@ -6,7 +6,7 @@ use core;
 use c2_chacha::guts::ChaCha;
 use self::core::fmt;
 use self::core::marker::PhantomData;
-use generic_array::typenum::{Unsigned, U64};
+use generic_array::typenum::{Unsigned, U64, U2, PartialDiv};
 use generic_array::GenericArray;
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
@@ -25,13 +25,13 @@ impl<Rounds> fmt::Debug for ChaChaXCore<Rounds> {
     }
 }
 
-impl<Rounds: Unsigned> BlockRngCore for ChaChaXCore<Rounds> {
+impl<Rounds> BlockRngCore for ChaChaXCore<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
     type Item = u32;
     type Results = GenericArray<Self::Item, U64>;
     #[inline]
     fn generate(&mut self, r: &mut Self::Results) {
         // Fill slice of words by writing to equivalent slice of bytes, then fixing endianness.
-        self.state.refill4(Rounds::U32, unsafe {
+        self.state.refill4(Rounds::Output::U32, unsafe {
             core::mem::transmute::<&mut GenericArray<u32, U64>, &mut [u8; 256]>(&mut *r)
         });
         for x in r {
@@ -40,7 +40,7 @@ impl<Rounds: Unsigned> BlockRngCore for ChaChaXCore<Rounds> {
     }
 }
 
-impl<Rounds: Unsigned> SeedableRng for ChaChaXCore<Rounds> {
+impl<Rounds> SeedableRng for ChaChaXCore<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
     type Seed = [u8; 32];
     #[inline]
     fn from_seed(seed: Self::Seed) -> Self {
@@ -95,11 +95,11 @@ impl<Rounds: Unsigned> SeedableRng for ChaChaXCore<Rounds> {
 /// [`set_word_pos`]: ChaChaXRng::set_word_pos
 /// [`set_stream`]: ChaChaXRng::set_stream
 #[derive(Clone, Debug)]
-pub struct ChaChaXRng<Rounds: Unsigned> {
+pub struct ChaChaXRng<Rounds> where ChaChaXCore<Rounds>: BlockRngCore + Clone, <ChaChaXCore<Rounds> as BlockRngCore>::Results: Clone {
     rng: BlockRng<ChaChaXCore<Rounds>>,
 }
 
-impl<Rounds: Unsigned> SeedableRng for ChaChaXRng<Rounds> {
+impl<Rounds> SeedableRng for ChaChaXRng<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
     type Seed = [u8; 32];
     #[inline]
     fn from_seed(seed: Self::Seed) -> Self {
@@ -110,7 +110,7 @@ impl<Rounds: Unsigned> SeedableRng for ChaChaXRng<Rounds> {
     }
 }
 
-impl<Rounds: Unsigned> RngCore for ChaChaXRng<Rounds> {
+impl<Rounds> RngCore for ChaChaXRng<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         self.rng.next_u32()
@@ -131,7 +131,7 @@ impl<Rounds: Unsigned> RngCore for ChaChaXRng<Rounds> {
 
 const STREAM_PARAM_NONCE: u32 = 1;
 const STREAM_PARAM_BLOCK: u32 = 0;
-impl<Rounds: Unsigned> ChaChaXRng<Rounds> {
+impl<Rounds> ChaChaXRng<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
     // The buffer is a 4-block window, i.e. it is always at a block-aligned position in the
     // stream but if the stream has been seeked it may not be self-aligned.
 
@@ -188,9 +188,9 @@ impl<Rounds: Unsigned> ChaChaXRng<Rounds> {
     }
 }
 
-impl<Rounds: Unsigned> CryptoRng for ChaChaXRng<Rounds> {}
+impl<Rounds> CryptoRng for ChaChaXRng<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {}
 
-impl<Rounds: Unsigned> From<ChaChaXCore<Rounds>> for ChaChaXRng<Rounds> {
+impl<Rounds> From<ChaChaXCore<Rounds>> for ChaChaXRng<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
     fn from(core: ChaChaXCore<Rounds>) -> Self {
         ChaChaXRng {
             rng: BlockRng::new(core),
@@ -202,7 +202,7 @@ impl<Rounds: Unsigned> From<ChaChaXCore<Rounds>> for ChaChaXRng<Rounds> {
 mod test {
     use rand_core::{RngCore, SeedableRng};
 
-    type ChaChaRng = super::ChaChaXRng<generic_array::typenum::U10>;
+    type ChaChaRng = super::ChaChaXRng<generic_array::typenum::U20>;
 
     #[test]
     fn test_chacha_construction() {

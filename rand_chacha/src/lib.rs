@@ -28,12 +28,12 @@ use generic_array::typenum;
 
 pub use chacha::{ChaChaXRng, ChaChaXCore};
 /// ChaCha with 20 rounds
-pub type ChaCha20Rng = ChaChaXRng<typenum::U10>;
+pub type ChaCha20Rng = ChaChaXRng<typenum::U20>;
 /// ChaCha with 12 rounds
-pub type ChaCha12Rng = ChaChaXRng<typenum::U6>;
+pub type ChaCha12Rng = ChaChaXRng<typenum::U12>;
 /// ChaCha with 8 rounds
-pub type ChaCha8Rng = ChaChaXRng<typenum::U4>;
+pub type ChaCha8Rng = ChaChaXRng<typenum::U8>;
 /// ChaCha with 20 rounds
 pub type ChaChaRng = ChaCha20Rng;
 /// ChaCha with 20 rounds, low-level interface
-pub type ChaChaCore = ChaChaXCore<typenum::U10>;
+pub type ChaChaCore = ChaChaXCore<typenum::U20>;
