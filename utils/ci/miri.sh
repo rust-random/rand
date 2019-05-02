@@ -1,8 +1,6 @@
 set -ex
 
-if rustup component add miri ; then
-    cargo miri setup
-
+if rustup component add miri && cargo miri setup ; then
     cargo miri test --no-default-features -- -Zmiri-seed=42 -- -Zunstable-options --exclude-should-panic
     cargo miri test --features=serde1,log -- -Zmiri-seed=42 -- -Zunstable-options --exclude-should-panic
     cargo miri test --manifest-path rand_core/Cargo.toml
