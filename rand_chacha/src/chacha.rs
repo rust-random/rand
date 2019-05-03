@@ -17,6 +17,7 @@ use c2_chacha::guts::ChaCha;
 use self::core::fmt;
 use self::core::marker::PhantomData;
 use generic_array::typenum::{Unsigned, U64, U2, PartialDiv};
+use generic_array::typenum;
 use generic_array::GenericArray;
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
@@ -208,11 +209,24 @@ impl<Rounds> From<ChaChaXCore<Rounds>> for ChaChaXRng<Rounds> where Rounds: Clon
     }
 }
 
+/// ChaCha with 20 rounds
+pub type ChaCha20Rng = ChaChaXRng<typenum::U20>;
+/// ChaCha with 12 rounds
+pub type ChaCha12Rng = ChaChaXRng<typenum::U12>;
+/// ChaCha with 8 rounds
+pub type ChaCha8Rng = ChaChaXRng<typenum::U8>;
+/// ChaCha with 20 rounds, low-level interface
+pub type ChaCha20Core = ChaChaXCore<typenum::U20>;
+/// ChaCha with 12 rounds, low-level interface
+pub type ChaCha12Core = ChaChaXCore<typenum::U12>;
+/// ChaCha with 8 rounds, low-level interface
+pub type ChaCha8Core = ChaChaXCore<typenum::U8>;
+
 #[cfg(test)]
 mod test {
     use rand_core::{RngCore, SeedableRng};
 
-    type ChaChaRng = super::ChaChaXRng<generic_array::typenum::U20>;
+    type ChaChaRng = super::ChaCha20Rng;
 
     #[test]
     fn test_chacha_construction() {
