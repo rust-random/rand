@@ -15,212 +15,234 @@ use core;
 
 use c2_chacha::guts::ChaCha;
 use self::core::fmt;
-use self::core::marker::PhantomData;
-use generic_array::typenum::{Unsigned, U64, U2, PartialDiv};
-use generic_array::typenum;
-use generic_array::GenericArray;
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
-/// The core of `ChaChaXRng`, used with `BlockRng`.
-#[derive(Clone)]
-pub struct ChaChaXCore<Rounds> {
-    state: ChaCha,
-    _rounds: PhantomData<Rounds>,
-}
-
-// Custom Debug implementation that does not expose the internal state
-impl<Rounds> fmt::Debug for ChaChaXCore<Rounds> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ChaChaXCore {{}}")
-    }
-}
-
-impl<Rounds> BlockRngCore for ChaChaXCore<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
-    type Item = u32;
-    type Results = GenericArray<Self::Item, U64>;
-    #[inline]
-    fn generate(&mut self, r: &mut Self::Results) {
-        // Fill slice of words by writing to equivalent slice of bytes, then fixing endianness.
-        self.state.refill4(Rounds::Output::U32, unsafe {
-            core::mem::transmute::<&mut GenericArray<u32, U64>, &mut [u8; 256]>(&mut *r)
-        });
-        for x in r {
-            *x = x.to_le();
-        }
-    }
-}
-
-impl<Rounds> SeedableRng for ChaChaXCore<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
-    type Seed = [u8; 32];
-    #[inline]
-    fn from_seed(seed: Self::Seed) -> Self {
-        ChaChaXCore {
-            state: ChaCha::new(&seed, &[0u8; 8]),
-            _rounds: PhantomData,
-        }
-    }
-}
-
-/// A cryptographically secure random number generator that uses the ChaCha algorithm.
-///
-/// ChaCha is a stream cipher designed by Daniel J. Bernstein[^1], that we use as an RNG. It is
-/// an improved variant of the Salsa20 cipher family, which was selected as one of the "stream
-/// ciphers suitable for widespread adoption" by eSTREAM[^2].
-///
-/// ChaCha uses add-rotate-xor (ARX) operations as its basis. These are safe against timing
-/// attacks, although that is mostly a concern for ciphers and not for RNGs. We provide a SIMD
-/// implementation to support high throughput on a variety of common hardware platforms.
-///
-/// With the ChaCha algorithm it is possible to choose the number of rounds the core algorithm
-/// should run. The number of rounds is a tradeoff between performance and security, where 8
-/// rounds is the minimum potentially secure configuration, and 20 rounds is widely used as a
-/// conservative choice. We support type-level configuration of the round count with `typenum`;
-/// note that the implementation operates in double-rounds, so the parameter must be specified
-/// as half the desired round count.
-///
-/// We use a 64-bit counter and 64-bit stream identifier as in Bernstein's implementation[^1]
-/// except that we use a stream identifier in place of a nonce. A 64-bit counter over 64-byte
-/// (16 word) blocks allows 1 ZiB of output before cycling, and the stream identifier allows
-/// 2<sup>64</sup> unique streams of output per seed. Both counter and stream are initialized
-/// to zero but may be set via [`set_word_pos`] and [`set_stream`].
-///
-/// The word layout is:
-///
-/// ```text
-/// constant  constant  constant  constant
-/// seed      seed      seed      seed
-/// seed      seed      seed      seed
-/// counter   counter   stream_id stream_id
-/// ```
-///
-/// This implementation uses an output buffer of sixteen `u32` words, and uses
-/// [`BlockRng`] to implement the [`RngCore`] methods.
-///
-/// [^1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
-///       https://cr.yp.to/chacha.html)
-///
-/// [^2]: [eSTREAM: the ECRYPT Stream Cipher Project](
-///       http://www.ecrypt.eu.org/stream/)
-///
-/// [`set_word_pos`]: ChaChaXRng::set_word_pos
-/// [`set_stream`]: ChaChaXRng::set_stream
-#[derive(Clone, Debug)]
-pub struct ChaChaXRng<Rounds> where ChaChaXCore<Rounds>: BlockRngCore + Clone, <ChaChaXCore<Rounds> as BlockRngCore>::Results: Clone {
-    rng: BlockRng<ChaChaXCore<Rounds>>,
-}
-
-impl<Rounds> SeedableRng for ChaChaXRng<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
-    type Seed = [u8; 32];
-    #[inline]
-    fn from_seed(seed: Self::Seed) -> Self {
-        let core = ChaChaXCore::from_seed(seed);
-        Self {
-            rng: BlockRng::new(core),
-        }
-    }
-}
-
-impl<Rounds> RngCore for ChaChaXRng<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        self.rng.next_u32()
-    }
-    #[inline]
-    fn next_u64(&mut self) -> u64 {
-        self.rng.next_u64()
-    }
-    #[inline]
-    fn fill_bytes(&mut self, bytes: &mut [u8]) {
-        self.rng.fill_bytes(bytes)
-    }
-    #[inline]
-    fn try_fill_bytes(&mut self, bytes: &mut [u8]) -> Result<(), Error> {
-        self.rng.try_fill_bytes(bytes)
-    }
-}
-
 const STREAM_PARAM_NONCE: u32 = 1;
 const STREAM_PARAM_BLOCK: u32 = 0;
-impl<Rounds> ChaChaXRng<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
-    // The buffer is a 4-block window, i.e. it is always at a block-aligned position in the
-    // stream but if the stream has been seeked it may not be self-aligned.
 
-    /// Get the offset from the start of the stream, in 32-bit words.
-    ///
-    /// Since the generated blocks are 16 words (2<sup>4</sup>) long and the
-    /// counter is 64-bits, the offset is a 68-bit number. Sub-word offsets are
-    /// not supported, hence the result can simply be multiplied by 4 to get a
-    /// byte-offset.
-    #[inline]
-    pub fn get_word_pos(&self) -> u128 {
-        let mut block = u128::from(self.rng.core.state.get_stream_param(STREAM_PARAM_BLOCK));
-        // counter is incremented *after* filling buffer
-        block -= 4;
-        (block << 4) + self.rng.index() as u128
+pub struct Array64<T>([T; 64]);
+impl<T> Default for Array64<T> where T: Default {
+    fn default() -> Self {
+        Self([T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default()])
     }
-
-    /// Set the offset from the start of the stream, in 32-bit words.
-    ///
-    /// As with `get_word_pos`, we use a 68-bit number. Since the generator
-    /// simply cycles at the end of its period (1 ZiB), we ignore the upper
-    /// 60 bits.
-    #[inline]
-    pub fn set_word_pos(&mut self, word_offset: u128) {
-        let block = (word_offset >> 4) as u64;
-        self.rng
-            .core
-            .state
-            .set_stream_param(STREAM_PARAM_BLOCK, block);
-        self.rng.generate_and_set((word_offset & 15) as usize);
+}
+impl<T> AsRef<[T]> for Array64<T> {
+    fn as_ref(&self) -> &[T] {
+        &self.0
     }
+}
+impl<T> AsMut<[T]> for Array64<T> {
+    fn as_mut(&mut self) -> &mut [T] {
+        &mut self.0
+    }
+}
+impl<T> Clone for Array64<T> where T: Copy + Default {
+    fn clone(&self) -> Self {
+        let mut new = Self::default();
+        new.0.copy_from_slice(&self.0);
+        new
+    }
+}
+impl<T> fmt::Debug for Array64<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Array64 {{}}")
+    }
+}
 
-    /// Set the stream number.
-    ///
-    /// This is initialized to zero; 2<sup>64</sup> unique streams of output
-    /// are available per seed/key.
-    ///
-    /// Note that in order to reproduce ChaCha output with a specific 64-bit
-    /// nonce, one can convert that nonce to a `u64` in little-endian fashion
-    /// and pass to this function. In theory a 96-bit nonce can be used by
-    /// passing the last 64-bits to this function and using the first 32-bits as
-    /// the most significant half of the 64-bit counter (which may be set
-    /// indirectly via `set_word_pos`), but this is not directly supported.
-    #[inline]
-    pub fn set_stream(&mut self, stream: u64) {
-        self.rng
-            .core
-            .state
-            .set_stream_param(STREAM_PARAM_NONCE, stream);
-        if self.rng.index() != 64 {
-            let wp = self.get_word_pos();
-            self.set_word_pos(wp);
+macro_rules! chacha_impl {
+    ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr) => {
+        #[doc=$doc]
+        #[derive(Clone)]
+        pub struct $ChaChaXCore {
+            state: ChaCha,
+        }
+
+        // Custom Debug implementation that does not expose the internal state
+        impl fmt::Debug for $ChaChaXCore {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "ChaChaXCore {{}}")
+            }
+        }
+
+        impl BlockRngCore for $ChaChaXCore {
+            type Item = u32;
+            type Results = Array64<u32>;
+            #[inline]
+            fn generate(&mut self, r: &mut Self::Results) {
+                // Fill slice of words by writing to equivalent slice of bytes, then fixing endianness.
+                self.state.refill4($rounds, unsafe {
+                    core::mem::transmute::<&mut Array64<u32>, &mut [u8; 256]>(&mut *r)
+                });
+                for x in r.as_mut() {
+                    *x = x.to_le();
+                }
+            }
+        }
+
+        impl SeedableRng for $ChaChaXCore {
+            type Seed = [u8; 32];
+            #[inline]
+            fn from_seed(seed: Self::Seed) -> Self {
+                $ChaChaXCore { state: ChaCha::new(&seed, &[0u8; 8]) }
+            }
+        }
+
+        /// A cryptographically secure random number generator that uses the ChaCha algorithm.
+        ///
+        /// ChaCha is a stream cipher designed by Daniel J. Bernstein[^1], that we use as an RNG. It is
+        /// an improved variant of the Salsa20 cipher family, which was selected as one of the "stream
+        /// ciphers suitable for widespread adoption" by eSTREAM[^2].
+        ///
+        /// ChaCha uses add-rotate-xor (ARX) operations as its basis. These are safe against timing
+        /// attacks, although that is mostly a concern for ciphers and not for RNGs. We provide a SIMD
+        /// implementation to support high throughput on a variety of common hardware platforms.
+        ///
+        /// With the ChaCha algorithm it is possible to choose the number of rounds the core algorithm
+        /// should run. The number of rounds is a tradeoff between performance and security, where 8
+        /// rounds is the minimum potentially secure configuration, and 20 rounds is widely used as a
+        /// conservative choice.
+        ///
+        /// We use a 64-bit counter and 64-bit stream identifier as in Bernstein's implementation[^1]
+        /// except that we use a stream identifier in place of a nonce. A 64-bit counter over 64-byte
+        /// (16 word) blocks allows 1 ZiB of output before cycling, and the stream identifier allows
+        /// 2<sup>64</sup> unique streams of output per seed. Both counter and stream are initialized
+        /// to zero but may be set via [`set_word_pos`] and [`set_stream`].
+        ///
+        /// The word layout is:
+        ///
+        /// ```text
+        /// constant  constant  constant  constant
+        /// seed      seed      seed      seed
+        /// seed      seed      seed      seed
+        /// counter   counter   stream_id stream_id
+        /// ```
+        ///
+        /// This implementation uses an output buffer of sixteen `u32` words, and uses
+        /// [`BlockRng`] to implement the [`RngCore`] methods.
+        ///
+        /// [^1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
+        ///       https://cr.yp.to/chacha.html)
+        ///
+        /// [^2]: [eSTREAM: the ECRYPT Stream Cipher Project](
+        ///       http://www.ecrypt.eu.org/stream/)
+        ///
+        /// [`set_word_pos`]: ChaChaXRng::set_word_pos
+        /// [`set_stream`]: ChaChaXRng::set_stream
+        #[derive(Clone, Debug)]
+        pub struct $ChaChaXRng {
+            rng: BlockRng<$ChaChaXCore>,
+        }
+
+        impl SeedableRng for $ChaChaXRng {
+            type Seed = [u8; 32];
+            #[inline]
+            fn from_seed(seed: Self::Seed) -> Self {
+                let core = $ChaChaXCore::from_seed(seed);
+                Self {
+                    rng: BlockRng::new(core),
+                }
+            }
+        }
+
+        impl RngCore for $ChaChaXRng {
+            #[inline]
+            fn next_u32(&mut self) -> u32 {
+                self.rng.next_u32()
+            }
+            #[inline]
+            fn next_u64(&mut self) -> u64 {
+                self.rng.next_u64()
+            }
+            #[inline]
+            fn fill_bytes(&mut self, bytes: &mut [u8]) {
+                self.rng.fill_bytes(bytes)
+            }
+            #[inline]
+            fn try_fill_bytes(&mut self, bytes: &mut [u8]) -> Result<(), Error> {
+                self.rng.try_fill_bytes(bytes)
+            }
+        }
+
+        impl $ChaChaXRng {
+            // The buffer is a 4-block window, i.e. it is always at a block-aligned position in the
+            // stream but if the stream has been seeked it may not be self-aligned.
+
+            /// Get the offset from the start of the stream, in 32-bit words.
+            ///
+            /// Since the generated blocks are 16 words (2<sup>4</sup>) long and the
+            /// counter is 64-bits, the offset is a 68-bit number. Sub-word offsets are
+            /// not supported, hence the result can simply be multiplied by 4 to get a
+            /// byte-offset.
+            #[inline]
+            pub fn get_word_pos(&self) -> u128 {
+                let mut block = u128::from(self.rng.core.state.get_stream_param(STREAM_PARAM_BLOCK));
+                // counter is incremented *after* filling buffer
+                block -= 4;
+                (block << 4) + self.rng.index() as u128
+            }
+
+            /// Set the offset from the start of the stream, in 32-bit words.
+            ///
+            /// As with `get_word_pos`, we use a 68-bit number. Since the generator
+            /// simply cycles at the end of its period (1 ZiB), we ignore the upper
+            /// 60 bits.
+            #[inline]
+            pub fn set_word_pos(&mut self, word_offset: u128) {
+                let block = (word_offset >> 4) as u64;
+                self.rng
+                    .core
+                    .state
+                    .set_stream_param(STREAM_PARAM_BLOCK, block);
+                self.rng.generate_and_set((word_offset & 15) as usize);
+            }
+
+            /// Set the stream number.
+            ///
+            /// This is initialized to zero; 2<sup>64</sup> unique streams of output
+            /// are available per seed/key.
+            ///
+            /// Note that in order to reproduce ChaCha output with a specific 64-bit
+            /// nonce, one can convert that nonce to a `u64` in little-endian fashion
+            /// and pass to this function. In theory a 96-bit nonce can be used by
+            /// passing the last 64-bits to this function and using the first 32-bits as
+            /// the most significant half of the 64-bit counter (which may be set
+            /// indirectly via `set_word_pos`), but this is not directly supported.
+            #[inline]
+            pub fn set_stream(&mut self, stream: u64) {
+                self.rng
+                    .core
+                    .state
+                    .set_stream_param(STREAM_PARAM_NONCE, stream);
+                if self.rng.index() != 64 {
+                    let wp = self.get_word_pos();
+                    self.set_word_pos(wp);
+                }
+            }
+        }
+
+        impl CryptoRng for $ChaChaXRng {}
+
+        impl From<$ChaChaXCore> for $ChaChaXRng {
+            fn from(core: $ChaChaXCore) -> Self {
+                $ChaChaXRng {
+                    rng: BlockRng::new(core),
+                }
+            }
         }
     }
 }
 
-impl<Rounds> CryptoRng for ChaChaXRng<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {}
-
-impl<Rounds> From<ChaChaXCore<Rounds>> for ChaChaXRng<Rounds> where Rounds: Clone + PartialDiv<U2>, Rounds::Output: Unsigned {
-    fn from(core: ChaChaXCore<Rounds>) -> Self {
-        ChaChaXRng {
-            rng: BlockRng::new(core),
-        }
-    }
-}
-
-/// ChaCha with 20 rounds
-pub type ChaCha20Rng = ChaChaXRng<typenum::U20>;
-/// ChaCha with 12 rounds
-pub type ChaCha12Rng = ChaChaXRng<typenum::U12>;
-/// ChaCha with 8 rounds
-pub type ChaCha8Rng = ChaChaXRng<typenum::U8>;
-/// ChaCha with 20 rounds, low-level interface
-pub type ChaCha20Core = ChaChaXCore<typenum::U20>;
-/// ChaCha with 12 rounds, low-level interface
-pub type ChaCha12Core = ChaChaXCore<typenum::U12>;
-/// ChaCha with 8 rounds, low-level interface
-pub type ChaCha8Core = ChaChaXCore<typenum::U8>;
+chacha_impl!(ChaCha20Core, ChaCha20Rng, 10, "ChaCha with 20 rounds");
+chacha_impl!(ChaCha12Core, ChaCha12Rng, 6, "ChaCha with 12 rounds");
+chacha_impl!(ChaCha8Core, ChaCha8Rng, 4, "ChaCha with 8 rounds");
 
 #[cfg(test)]
 mod test {

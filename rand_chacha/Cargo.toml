@@ -19,7 +19,6 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
-generic-array = "0.13"
 rand_core = { path = "../rand_core", version = "0.4" }
 c2-chacha = { version = "0.2", default-features = false }
 

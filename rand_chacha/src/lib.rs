@@ -19,7 +19,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate c2_chacha;
-pub extern crate generic_array;
 pub extern crate rand_core;
 
 mod chacha;
