@@ -20,11 +20,12 @@ appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.4" }
-c2-chacha = { version = "0.2", default-features = false }
+c2-chacha = { version = "0.2.2", default-features = false }
 
 [build-dependencies]
 autocfg = "0.1"
 
 [features]
-default = ["std"]
+default = ["std", "simd"]
 std = ["c2-chacha/std"]
+simd = ["c2-chacha/simd"]
