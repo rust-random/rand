@@ -20,17 +20,21 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [features]
+# Meta-features:
 default = ["std"] # without "std" rand uses libcore
 nightly = ["simd_support"] # enables all features requiring nightly rust
+
+# Optional dependencies:
 std = ["rand_core/std", "alloc", "getrandom"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
-i128_support = [] # enables i128 and u128 support
-simd_support = ["packed_simd"] # enables SIMD support
 serde1 = ["rand_core/serde1", "rand_isaac/serde1", "rand_xorshift/serde1"] # enables serialization for PRNGs
 # re-export optional WASM dependencies to avoid breakage:
 wasm-bindgen = ["getrandom_package/wasm-bindgen"]
 stdweb = ["getrandom_package/stdweb"]
 getrandom = ["getrandom_package", "rand_core/getrandom"]
+
+# Configuration:
+simd_support = ["packed_simd"] # enables SIMD support
 
 [workspace]
 members = [

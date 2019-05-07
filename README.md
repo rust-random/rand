@@ -84,41 +84,33 @@ pinned version of Rustc if you require compatibility with a specific version.
 
 ## Crate Features
 
-Rand is built with the `std` and `getrandom` features enabled by default:
+Rand is built with these features enabled by default:
 
--   `std` enables functionality dependent on the `std` lib and implies `alloc`
-    and `getrandom`
--   `getrandom` is an optional crate, providing the code behind `rngs::OsRng`;
-    the continued existance of this feature is not guaranteed so users are
-    encouraged to specify `std` instead
+-   `std` enables functionality dependent on the `std` lib
+-   `alloc` (implied by `std`) enables functionality requiring an allocator
+-   `getrandom` (implied by `std`) is an optional dependency providing the code
+    behind `rngs::OsRng`
 
-The following optional features are available:
+Optionally, the following dependencies can be enabled:
 
-- `alloc` can be used instead of `std` to provide `Vec` and `Box`.
-- `log` enables some logging via the `log` crate.
-- `nightly` enables all unstable features (`simd_support`).
-- `serde1` enables serialization for some types, via Serde version 1.
-- `simd_support` enables uniform sampling of SIMD types (integers and floats).
-- `stdweb` enables support for `OsRng` on `wasm32-unknown-unknown` via `stdweb`
-  combined with `cargo-web`.
-- `wasm-bindgen` enables support for `OsRng` on `wasm32-unknown-unknown` via
-  [`wasm-bindgen`]
+-   `log` enables logging via the `log` crate
+-   `serde1` enables serialization for some types, via Serde version 1
+-   `stdweb` implies `getrandom/stdweb` to enable
+    `getrandom` support on `wasm32-unknown-unknown`
+-   `wasm-bindgen` implies `getrandom/wasm-bindgen` to enable
+    `getrandom` support on `wasm32-unknown-unknown`
 
-[`wasm-bindgen`]: https://github.com/rustwasm/wasm-bindgen
+Additionally, these features configure Rand:
 
-`no_std` mode is activated by setting `default-features = false`; this removes
-functionality depending on `std`:
+-   `nightly` enables all experimental features
+-   `simd_support` (experimental) enables sampling of SIMD values
+    (uniformly random SIMD integers and floats)
 
-- `thread_rng()`, and `random()` are not available, as they require thread-local
-  storage and an entropy source.
-- Since no external entropy is available, it is not possible to create
-  generators with fresh seeds using the `FromEntropy` trait (user must provide
-  a seed).
-- Several non-linear distributions distributions are unavailable since `exp`
-  and `log` functions are not provided in `core`.
-- Large parts of the `seq`-uence module are unavailable, unless the `alloc`
-  feature is used (several APIs and many implementations require `Vec`).
-
+Rand supports limited functionality in `no_std` mode (enabled via
+`default-features = false`). In this case, `OsRng` and `from_entropy` are
+unavailable (unless `getrandom` is enabled), large parts of `seq` are
+unavailable (unless `alloc` is enabled), and `thread_rng` and `random` are
+unavailable.
 
 # License
 
