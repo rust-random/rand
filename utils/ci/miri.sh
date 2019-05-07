@@ -10,7 +10,7 @@ if rustup component add miri && cargo miri setup ; then
     cargo miri test --manifest-path rand_pcg/Cargo.toml --features=serde1
     cargo miri test --manifest-path rand_xorshift/Cargo.toml --features=serde1
     cargo miri test --manifest-path rand_xoshiro/Cargo.toml
-    cargo miri test --manifest-path rand_chacha/Cargo.toml
+    cargo miri test --manifest-path rand_chacha/Cargo.toml --no-default-features
     cargo miri test --manifest-path rand_hc/Cargo.toml
     cargo miri test --manifest-path rand_jitter/Cargo.toml
     cargo miri test --manifest-path rand_os/Cargo.toml -- -Zmiri-seed=42

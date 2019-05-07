@@ -24,7 +24,7 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// - After `clone()`, the clone will be reseeded on first use.
 /// - After a process is forked, the RNG in the child process is reseeded within
 ///   the next few generated values, depending on the block size of the
-///   underlying PRNG. For [`ChaChaCore`] and [`Hc128Core`] this is a maximum of
+///   underlying PRNG. For [`ChaCha20Rng`] and [`Hc128Core`] this is a maximum of
 ///   15 `u32` values before reseeding.
 /// - After the PRNG has generated a configurable number of random bytes.
 ///
@@ -76,7 +76,7 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// # }
 /// ```
 ///
-/// [`ChaChaCore`]: ../../../rand_chacha/struct.ChaChaCore.html
+/// [`ChaCha20Core`]: ../../../rand_chacha/struct.ChaCha20Core.html
 /// [`Hc128Core`]: rand_hc::Hc128Core
 /// [`BlockRngCore`]: rand_core::block::BlockRngCore
 /// [`ReseedingRng::new`]: ReseedingRng::new

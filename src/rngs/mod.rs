@@ -93,7 +93,7 @@
 //! [`mock::StepRng`]: rngs::mock::StepRng
 //! [`adapter::ReadRng`]: rngs::adapter::ReadRng
 //! [`adapter::ReseedingRng`]: rngs::adapter::ReseedingRng
-//! [`ChaChaRng`]: ../../rand_chacha/struct.ChaChaRng.html
+//! [`ChaCha20Rng`]: ../../rand_chacha/struct.ChaCha20Rng.html
 //! [`rdrand`]: https://crates.io/crates/rdrand
 //! [`rand_jitter`]: https://crates.io/crates/rand_jitter
 //! [`rand_chacha`]: https://crates.io/crates/rand_chacha
