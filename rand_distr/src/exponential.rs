@@ -11,8 +11,7 @@
 
 use rand::Rng;
 use crate::{ziggurat_tables, Distribution};
-use crate::utils::ziggurat;
-use num_traits::Float;
+use crate::utils::{ziggurat, Float};
 
 /// Samples floating-point numbers according to the exponential distribution,
 /// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
@@ -105,10 +104,10 @@ where Exp1: Distribution<N>
     /// `lambda`.
     #[inline]
     pub fn new(lambda: N) -> Result<Exp<N>, Error> {
-        if !(lambda > N::zero()) {
+        if !(lambda > N::from(0.0)) {
             return Err(Error::LambdaTooSmall);
         }
-        Ok(Exp { lambda_inverse: N::one() / lambda })
+        Ok(Exp { lambda_inverse: N::from(1.0) / lambda })
     }
 }
 

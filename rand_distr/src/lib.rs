@@ -75,6 +75,7 @@ pub use self::cauchy::{Cauchy, Error as CauchyError};
 pub use self::dirichlet::{Dirichlet, Error as DirichletError};
 pub use self::triangular::{Triangular, TriangularError};
 pub use self::weibull::{Weibull, Error as WeibullError};
+pub use self::utils::Float;
 
 mod unit_sphere;
 mod unit_circle;

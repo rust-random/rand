@@ -11,8 +11,7 @@
 
 use rand::Rng;
 use crate::{ziggurat_tables, Distribution, Open01};
-use crate::utils::ziggurat;
-use num_traits::Float;
+use crate::utils::{ziggurat, Float};
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
@@ -122,7 +121,7 @@ where StandardNormal: Distribution<N>
     /// standard deviation.
     #[inline]
     pub fn new(mean: N, std_dev: N) -> Result<Normal<N>, Error> {
-        if !(std_dev >= N::zero()) {
+        if !(std_dev >= N::from(0.0)) {
             return Err(Error::StdDevTooSmall);
         }
         Ok(Normal {
@@ -169,7 +168,7 @@ where StandardNormal: Distribution<N>
     /// and standard deviation of the logarithm of the distribution.
     #[inline]
     pub fn new(mean: N, std_dev: N) -> Result<LogNormal<N>, Error> {
-        if !(std_dev >= N::zero()) {
+        if !(std_dev >= N::from(0.0)) {
             return Err(Error::StdDevTooSmall);
         }
         Ok(LogNormal { norm: Normal::new(mean, std_dev).unwrap() })

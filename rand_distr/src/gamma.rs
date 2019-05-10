@@ -15,7 +15,7 @@ use self::ChiSquaredRepr::*;
 use rand::Rng;
 use crate::normal::StandardNormal;
 use crate::{Distribution, Exp1, Exp, Open01};
-use num_traits::Float;
+use crate::utils::Float;
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -108,16 +108,16 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     /// distribution.
     #[inline]
     pub fn new(shape: N, scale: N) -> Result<Gamma<N>, Error> {
-        if !(shape > N::zero()) {
+        if !(shape > N::from(0.0)) {
             return Err(Error::ShapeTooSmall);
         }
-        if !(scale > N::zero()) {
+        if !(scale > N::from(0.0)) {
             return Err(Error::ScaleTooSmall);
         }
 
-        let repr = if shape == N::one() {
-            One(Exp::new(N::one() / scale).map_err(|_| Error::ScaleTooLarge)?)
-        } else if shape < N::one() {
+        let repr = if shape == N::from(1.0) {
+            One(Exp::new(N::from(1.0) / scale).map_err(|_| Error::ScaleTooLarge)?)
+        } else if shape < N::from(1.0) {
             Small(GammaSmallShape::new_raw(shape, scale))
         } else {
             Large(GammaLargeShape::new_raw(shape, scale))
@@ -131,8 +131,8 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
 {
     fn new_raw(shape: N, scale: N) -> GammaSmallShape<N> {
         GammaSmallShape {
-            inv_shape: N::one() / shape,
-            large_shape: GammaLargeShape::new_raw(shape + N::one(), scale)
+            inv_shape: N::from(1.0) / shape,
+            large_shape: GammaLargeShape::new_raw(shape + N::from(1.0), scale)
         }
     }
 }
@@ -141,10 +141,10 @@ impl<N: Float> GammaLargeShape<N>
 where StandardNormal: Distribution<N>, Open01: Distribution<N>
 {
     fn new_raw(shape: N, scale: N) -> GammaLargeShape<N> {
-        let d = shape - N::from(1. / 3.).unwrap();
+        let d = shape - N::from(1. / 3.);
         GammaLargeShape {
             scale,
-            c: N::one() / (N::from(9.).unwrap() * d).sqrt(),
+            c: N::from(1.0) / (N::from(9.) * d).sqrt(),
             d
         }
     }
@@ -177,8 +177,8 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
         // Marsaglia & Tsang method, 2000
         loop {
             let x: N = rng.sample(StandardNormal);
-            let v_cbrt = N::one() + self.c * x;
-            if v_cbrt <= N::zero() { // a^3 <= 0 iff a <= 0
+            let v_cbrt = N::from(1.0) + self.c * x;
+            if v_cbrt <= N::from(0.0) { // a^3 <= 0 iff a <= 0
                 continue
             }
 
@@ -186,8 +186,8 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
             let u: N = rng.sample(Open01);
 
             let x_sqr = x * x;
-            if u < N::one() - N::from(0.0331).unwrap() * x_sqr * x_sqr ||
-                u.ln() < N::from(0.5).unwrap() * x_sqr + self.d * (N::one() - v + v.ln())
+            if u < N::from(1.0) - N::from(0.0331) * x_sqr * x_sqr ||
+                u.ln() < N::from(0.5) * x_sqr + self.d * (N::from(1.0) - v + v.ln())
             {
                 return self.d * v * self.scale
             }
