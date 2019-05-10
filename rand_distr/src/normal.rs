@@ -12,6 +12,7 @@
 use rand::Rng;
 use crate::{ziggurat_tables, Distribution, Open01};
 use crate::utils::ziggurat;
+use num_traits::Float;
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
@@ -36,6 +37,15 @@ use crate::utils::ziggurat;
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct StandardNormal;
+
+impl Distribution<f32> for StandardNormal {
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
+        // TODO: use optimal 32-bit implementation
+        let x: f64 = self.sample(rng);
+        x as f32
+    }
+}
 
 impl Distribution<f64> for StandardNormal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
@@ -93,9 +103,9 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// [`StandardNormal`]: crate::StandardNormal
 #[derive(Clone, Copy, Debug)]
-pub struct Normal {
-    mean: f64,
-    std_dev: f64,
+pub struct Normal<N> {
+    mean: N,
+    std_dev: N,
 }
 
 /// Error type returned from `Normal::new` and `LogNormal::new`.
@@ -105,12 +115,14 @@ pub enum Error {
     StdDevTooSmall,
 }
 
-impl Normal {
+impl<N: Float> Normal<N>
+where StandardNormal: Distribution<N>
+{
     /// Construct a new `Normal` distribution with the given mean and
     /// standard deviation.
     #[inline]
-    pub fn new(mean: f64, std_dev: f64) -> Result<Normal, Error> {
-        if !(std_dev >= 0.0) {
+    pub fn new(mean: N, std_dev: N) -> Result<Normal<N>, Error> {
+        if !(std_dev >= N::zero()) {
             return Err(Error::StdDevTooSmall);
         }
         Ok(Normal {
@@ -119,9 +131,12 @@ impl Normal {
         })
     }
 }
-impl Distribution<f64> for Normal {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let n = rng.sample(StandardNormal);
+
+impl<N: Float> Distribution<N> for Normal<N>
+where StandardNormal: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+        let n: N = rng.sample(StandardNormal);
         self.mean + self.std_dev * n
     }
 }
@@ -143,23 +158,28 @@ impl Distribution<f64> for Normal {
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct LogNormal {
-    norm: Normal
+pub struct LogNormal<N> {
+    norm: Normal<N>
 }
 
-impl LogNormal {
+impl<N: Float> LogNormal<N>
+where StandardNormal: Distribution<N>
+{
     /// Construct a new `LogNormal` distribution with the given mean
     /// and standard deviation of the logarithm of the distribution.
     #[inline]
-    pub fn new(mean: f64, std_dev: f64) -> Result<LogNormal, Error> {
-        if !(std_dev >= 0.0) {
+    pub fn new(mean: N, std_dev: N) -> Result<LogNormal<N>, Error> {
+        if !(std_dev >= N::zero()) {
             return Err(Error::StdDevTooSmall);
         }
         Ok(LogNormal { norm: Normal::new(mean, std_dev).unwrap() })
     }
 }
-impl Distribution<f64> for LogNormal {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+
+impl<N: Float> Distribution<N> for LogNormal<N>
+where StandardNormal: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         self.norm.sample(rng).exp()
     }
 }
