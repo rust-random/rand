@@ -27,8 +27,14 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     + ops::Mul<Output = Self>
     + ops::Div<Output = Self>
 {
+    /// The constant π
+    fn pi() -> Self;
     /// Support approximate representation of a f64 value
     fn from(x: f64) -> Self;
+    
+    /// Take the absolute value of self
+    fn abs(self) -> Self;
+    
     /// Take the exponential of self
     fn exp(self) -> Self;
     /// Take the natural logarithm of self
@@ -37,22 +43,37 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     fn sqrt(self) -> Self;
     /// Take self to a floating-point power
     fn powf(self, power: Self) -> Self;
+    
+    /// Take the tangent of self
+    fn tan(self) -> Self;
 }
 
 impl Float for f32 {
+    fn pi() -> Self { core::f32::consts::PI }
     fn from(x: f64) -> Self { x as f32 }
+    
+    fn abs(self) -> Self { self.abs() }
+    
     fn exp(self) -> Self { self.exp() }
     fn ln(self) -> Self { self.ln() }
     fn sqrt(self) -> Self { self.sqrt() }
     fn powf(self, power: Self) -> Self { self.powf(power) }
+    
+    fn tan(self) -> Self { self.tan() }
 }
 
 impl Float for f64 {
+    fn pi() -> Self { core::f64::consts::PI }
     fn from(x: f64) -> Self { x }
+    
+    fn abs(self) -> Self { self.abs() }
+    
     fn exp(self) -> Self { self.exp() }
     fn ln(self) -> Self { self.ln() }
     fn sqrt(self) -> Self { self.sqrt() }
     fn powf(self, power: Self) -> Self { self.powf(power) }
+    
+    fn tan(self) -> Self { self.tan() }
 }
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma
