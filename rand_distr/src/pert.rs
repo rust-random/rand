@@ -8,7 +8,8 @@
 //! The PERT distribution.
 
 use rand::Rng;
-use crate::{Distribution, Beta};
+use crate::{Distribution, Beta, StandardNormal, Exp1, Open01};
+use crate::utils::Float;
 
 /// The PERT distribution.
 ///
@@ -27,10 +28,10 @@ use crate::{Distribution, Beta};
 /// println!("{} is from a PERT distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Pert {
-    min: f64,
-    range: f64,
-    beta: Beta,
+pub struct Pert<N> {
+    min: N,
+    range: N,
+    beta: Beta<N>,
 }
 
 /// Error type returned from [`Pert`] constructors.
@@ -44,34 +45,36 @@ pub enum PertError {
     ShapeTooSmall,
 }
 
-impl Pert {
+impl<N: Float> Pert<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
     /// Set up the PERT distribution with defined `min`, `max` and `mode`.
     ///
     /// This is equivalent to calling `Pert::new_shape` with `shape == 4.0`.
     #[inline]
-    pub fn new(min: f64, max: f64, mode: f64) -> Result<Pert, PertError> {
-        Pert::new_with_shape(min, max, mode, 4.)
+    pub fn new(min: N, max: N, mode: N) -> Result<Pert<N>, PertError> {
+        Pert::new_with_shape(min, max, mode, N::from(4.))
     }
     
     /// Set up the PERT distribution with defined `min`, `max`, `mode` and
     /// `shape`.
-    pub fn new_with_shape(min: f64, max: f64, mode: f64, shape: f64) -> Result<Pert, PertError> {
+    pub fn new_with_shape(min: N, max: N, mode: N, shape: N) -> Result<Pert<N>, PertError> {
         if !(max > min) {
             return Err(PertError::RangeTooSmall);
         }
         if !(mode >= min && max >= mode) {
             return Err(PertError::ModeRange);
         }
-        if !(shape >= 0.) {
+        if !(shape >= N::from(0.)) {
             return Err(PertError::ShapeTooSmall);
         }
         
         let range = max - min;
-        let mu = (min + max + shape * mode) / (shape + 2.);
+        let mu = (min + max + shape * mode) / (shape + N::from(2.));
         let v = if mu == mode {
-            shape * 0.5 + 1.
+            shape * N::from(0.5) + N::from(1.)
         } else {
-            (mu - min) * (2. * mode - min - max)
+            (mu - min) * (N::from(2.) * mode - min - max)
                 / ((mode - mu) * (max - min))
         };
         let w = v * (max - mu) / (mu - min);
@@ -80,9 +83,11 @@ impl Pert {
     }
 }
 
-impl Distribution<f64> for Pert {
+impl<N: Float> Distribution<N> for Pert<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         self.beta.sample(rng) * self.range + self.min
     }
 }
