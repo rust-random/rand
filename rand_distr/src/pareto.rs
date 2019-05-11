@@ -10,6 +10,7 @@
 
 use rand::Rng;
 use crate::{Distribution, OpenClosed01};
+use crate::utils::Float;
 
 /// Samples floating-point numbers according to the Pareto distribution
 ///
@@ -22,9 +23,9 @@ use crate::{Distribution, OpenClosed01};
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Pareto {
-    scale: f64,
-    inv_neg_shape: f64,
+pub struct Pareto<N> {
+    scale: N,
+    inv_neg_shape: N,
 }
 
 /// Error type returned from `Pareto::new`.
@@ -36,25 +37,29 @@ pub enum Error {
     ShapeTooSmall,
 }
 
-impl Pareto {
+impl<N: Float> Pareto<N>
+where OpenClosed01: Distribution<N>
+{
     /// Construct a new Pareto distribution with given `scale` and `shape`.
     ///
     /// In the literature, `scale` is commonly written as x<sub>m</sub> or k and
     /// `shape` is often written as α.
-    pub fn new(scale: f64, shape: f64) -> Result<Pareto, Error> {
-        if !(scale > 0.0) {
+    pub fn new(scale: N, shape: N) -> Result<Pareto<N>, Error> {
+        if !(scale > N::from(0.0)) {
             return Err(Error::ScaleTooSmall);
         }
-        if !(shape > 0.0) {
+        if !(shape > N::from(0.0)) {
             return Err(Error::ShapeTooSmall);
         }
-        Ok(Pareto { scale, inv_neg_shape: -1.0 / shape })
+        Ok(Pareto { scale, inv_neg_shape: N::from(-1.0) / shape })
     }
 }
 
-impl Distribution<f64> for Pareto {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let u: f64 = rng.sample(OpenClosed01);
+impl<N: Float> Distribution<N> for Pareto<N>
+where OpenClosed01: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+        let u: N = OpenClosed01.sample(rng);
         self.scale * u.powf(self.inv_neg_shape)
     }
 }
