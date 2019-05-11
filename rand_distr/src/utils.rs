@@ -26,6 +26,7 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     + ops::Sub<Output = Self>
     + ops::Mul<Output = Self>
     + ops::Div<Output = Self>
+    + ops::AddAssign + ops::SubAssign + ops::MulAssign + ops::DivAssign
 {
     /// The constant π
     fn pi() -> Self;
