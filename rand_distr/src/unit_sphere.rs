@@ -7,7 +7,8 @@
 // except according to those terms.
 
 use rand::Rng;
-use crate::{Distribution, Uniform};
+use crate::{Distribution, Uniform, uniform::SampleUniform};
+use crate::utils::Float;
 
 /// Samples uniformly from the surface of the unit sphere in three dimensions.
 ///
@@ -29,18 +30,18 @@ use crate::{Distribution, Uniform};
 #[derive(Clone, Copy, Debug)]
 pub struct UnitSphereSurface;
 
-impl Distribution<[f64; 3]> for UnitSphereSurface {
+impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitSphereSurface {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [f64; 3] {
-        let uniform = Uniform::new(-1., 1.);
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [N; 3] {
+        let uniform = Uniform::new(N::from(-1.), N::from(1.));
         loop {
             let (x1, x2) = (uniform.sample(rng), uniform.sample(rng));
             let sum = x1*x1 + x2*x2;
-            if sum >= 1. {
+            if sum >= N::from(1.) {
                 continue;
             }
-            let factor = 2. * (1.0_f64 - sum).sqrt();
-            return [x1 * factor, x2 * factor, 1. - 2.*sum];
+            let factor = N::from(2.) * (N::from(1.0) - sum).sqrt();
+            return [x1 * factor, x2 * factor, N::from(1.) - N::from(2.)*sum];
         }
     }
 }

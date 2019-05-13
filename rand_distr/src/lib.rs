@@ -59,7 +59,7 @@
 //!   - [`UnitCircle`] distribution
 
 pub use rand::distributions::{Distribution, DistIter, Standard,
-    Alphanumeric, Uniform, OpenClosed01, Open01, Bernoulli, weighted};
+    Alphanumeric, Uniform, OpenClosed01, Open01, Bernoulli, uniform, weighted};
 
 pub use self::unit_sphere::UnitSphereSurface;
 pub use self::unit_circle::UnitCircle;

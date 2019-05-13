@@ -7,7 +7,8 @@
 // except according to those terms.
 
 use rand::Rng;
-use crate::{Distribution, Uniform};
+use crate::{Distribution, Uniform, uniform::SampleUniform};
+use crate::utils::Float;
 
 /// Samples uniformly from the edge of the unit circle in two dimensions.
 ///
@@ -30,10 +31,10 @@ use crate::{Distribution, Uniform};
 #[derive(Clone, Copy, Debug)]
 pub struct UnitCircle;
 
-impl Distribution<[f64; 2]> for UnitCircle {
+impl<N: Float + SampleUniform> Distribution<[N; 2]> for UnitCircle {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [f64; 2] {
-        let uniform = Uniform::new(-1., 1.);
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [N; 2] {
+        let uniform = Uniform::new(N::from(-1.), N::from(1.));
         let mut x1;
         let mut x2;
         let mut sum;
@@ -41,12 +42,12 @@ impl Distribution<[f64; 2]> for UnitCircle {
             x1 = uniform.sample(rng);
             x2 = uniform.sample(rng);
             sum = x1*x1 + x2*x2;
-            if sum < 1. {
+            if sum < N::from(1.) {
                 break;
             }
         }
         let diff = x1*x1 - x2*x2;
-        [diff / sum, 2.*x1*x2 / sum]
+        [diff / sum, N::from(2.)*x1*x2 / sum]
     }
 }
 
