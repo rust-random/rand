@@ -10,6 +10,7 @@
 
 use rand::Rng;
 use crate::{Distribution, OpenClosed01};
+use crate::utils::Float;
 
 /// Samples floating-point numbers according to the Weibull distribution
 ///
@@ -22,9 +23,9 @@ use crate::{Distribution, OpenClosed01};
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Weibull {
-    inv_shape: f64,
-    scale: f64,
+pub struct Weibull<N> {
+    inv_shape: N,
+    scale: N,
 }
 
 /// Error type returned from `Weibull::new`.
@@ -36,22 +37,26 @@ pub enum Error {
     ShapeTooSmall,
 }
 
-impl Weibull {
+impl<N: Float> Weibull<N>
+where OpenClosed01: Distribution<N>
+{
     /// Construct a new `Weibull` distribution with given `scale` and `shape`.
-    pub fn new(scale: f64, shape: f64) -> Result<Weibull, Error> {
-        if !(scale > 0.0) {
+    pub fn new(scale: N, shape: N) -> Result<Weibull<N>, Error> {
+        if !(scale > N::from(0.0)) {
             return Err(Error::ScaleTooSmall);
         }
-        if !(shape > 0.0) {
+        if !(shape > N::from(0.0)) {
             return Err(Error::ShapeTooSmall);
         }
-        Ok(Weibull { inv_shape: 1./shape, scale })
+        Ok(Weibull { inv_shape: N::from(1.)/shape, scale })
     }
 }
 
-impl Distribution<f64> for Weibull {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let x: f64 = rng.sample(OpenClosed01);
+impl<N: Float> Distribution<N> for Weibull<N>
+where OpenClosed01: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+        let x: N = rng.sample(OpenClosed01);
         self.scale * (-x.ln()).powf(self.inv_shape)
     }
 }

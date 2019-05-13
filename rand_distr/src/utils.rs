@@ -22,6 +22,7 @@ use core::{cmp, ops};
 /// The bounds and methods are based purely on internal
 /// requirements, and will change as needed.
 pub trait Float: Copy + Sized + cmp::PartialOrd
+    + ops::Neg<Output = Self>
     + ops::Add<Output = Self>
     + ops::Sub<Output = Self>
     + ops::Mul<Output = Self>
