@@ -102,6 +102,7 @@ Optionally, the following dependencies can be enabled:
 
 Additionally, these features configure Rand:
 
+-   `small_rng` enables inclusion of the `SmallRng` PRNG
 -   `nightly` enables all experimental features
 -   `simd_support` (experimental) enables sampling of SIMD values
     (uniformly random SIMD integers and floats)

@@ -35,6 +35,7 @@ getrandom = ["getrandom_package", "rand_core/getrandom"]
 
 # Configuration:
 simd_support = ["packed_simd"] # enables SIMD support
+small_rng = ["rand_pcg"]    # enables SmallRng
 
 [workspace]
 members = [
@@ -53,8 +54,8 @@ members = [
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.4" }
-rand_pcg = { path = "rand_pcg", version = "0.1" }
 rand_hc = { path = "rand_hc", version = "0.1" }
+rand_pcg = { path = "rand_pcg", version = "0.1", optional = true }
 # Do not depend on 'getrandom_package' directly; use the 'getrandom' feature!
 getrandom_package = { version = "0.1.1", package = "getrandom", optional = true }
 log = { version = "0.4", optional = true }
