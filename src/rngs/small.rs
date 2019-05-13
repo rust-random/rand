@@ -73,6 +73,7 @@ type Rng = ::rand_pcg::Pcg32;
 ///
 /// [`StdRng`]: crate::rngs::StdRng
 /// [`thread_rng`]: crate::thread_rng
+/// [rand_chacha]: https://crates.io/crates/rand_chacha
 /// [rand_pcg]: https://crates.io/crates/rand_pcg
 #[derive(Clone, Debug)]
 pub struct SmallRng(Rng);

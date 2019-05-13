@@ -62,7 +62,7 @@
 extern crate getrandom_package as getrandom;
 
 extern crate rand_core;
-extern crate rand_hc;
+extern crate rand_chacha;
 #[cfg(feature="small_rng")] extern crate rand_pcg;
 
 #[cfg(feature = "log")] #[macro_use] extern crate log;

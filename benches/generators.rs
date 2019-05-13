@@ -7,6 +7,7 @@
 // except according to those terms.
 
 #![feature(test)]
+#![allow(non_snake_case)]
 
 extern crate test;
 extern crate rand;
@@ -27,8 +28,8 @@ use rand::prelude::*;
 use rand::rngs::adapter::ReseedingRng;
 use rand::rngs::OsRng;
 use rand_isaac::{IsaacRng, Isaac64Rng};
-use rand_chacha::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
-use rand_hc::{Hc128Rng, Hc128Core};
+use rand_chacha::{ChaCha20Core, ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
+use rand_hc::{Hc128Rng};
 use rand_pcg::{Lcg64Xsh32, Mcg128Xsl64};
 use rand_xorshift::XorShiftRng;
 use rand_xoshiro::{Xoshiro256StarStar, Xoshiro256Plus, Xoshiro128StarStar,
@@ -165,46 +166,34 @@ init_gen!(init_isaac, IsaacRng);
 init_gen!(init_isaac64, Isaac64Rng);
 init_gen!(init_chacha, ChaCha20Rng);
 
+const RESEEDING_BYTES_LEN: usize = 1024 * 1024;
+const RESEEDING_BENCH_N: u64 = 16;
 
-const RESEEDING_THRESHOLD: u64 = 1024*1024*1024; // something high enough to get
-                                                 // deterministic measurements
-
-#[bench]
-fn reseeding_hc128_bytes(b: &mut Bencher) {
-    let mut rng = ReseedingRng::new(Hc128Core::from_entropy(),
-                                    RESEEDING_THRESHOLD,
-                                    OsRng);
-    let mut buf = [0u8; BYTES_LEN];
-    b.iter(|| {
-        for _ in 0..RAND_BENCH_N {
-            rng.fill_bytes(&mut buf);
-            black_box(buf);
-        }
-    });
-    b.bytes = BYTES_LEN as u64 * RAND_BENCH_N;
-}
-
-macro_rules! reseeding_uint {
-    ($fnn:ident, $ty:ty) => {
+macro_rules! reseeding_bytes {
+    ($fnn:ident, $thresh:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = ReseedingRng::new(Hc128Core::from_entropy(),
-                                            RESEEDING_THRESHOLD,
+            let mut rng = ReseedingRng::new(ChaCha20Core::from_entropy(),
+                                            $thresh * 1024,
                                             OsRng);
+            let mut buf = [0u8; RESEEDING_BYTES_LEN];
             b.iter(|| {
-                let mut accum: $ty = 0;
-                for _ in 0..RAND_BENCH_N {
-                    accum = accum.wrapping_add(rng.gen::<$ty>());
+                for _ in 0..RESEEDING_BENCH_N {
+                    rng.fill_bytes(&mut buf);
+                    black_box(&buf);
                 }
-                accum
             });
-            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
+            b.bytes = RESEEDING_BYTES_LEN as u64 * RESEEDING_BENCH_N;
         }
     }
 }
 
-reseeding_uint!(reseeding_hc128_u32, u32);
-reseeding_uint!(reseeding_hc128_u64, u64);
+reseeding_bytes!(reseeding_chacha20_4k, 4);
+reseeding_bytes!(reseeding_chacha20_16k, 16);
+reseeding_bytes!(reseeding_chacha20_32k, 32);
+reseeding_bytes!(reseeding_chacha20_64k, 64);
+reseeding_bytes!(reseeding_chacha20_256k, 256);
+reseeding_bytes!(reseeding_chacha20_1M, 1024);
 
 
 macro_rules! threadrng_uint {
