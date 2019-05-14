@@ -111,13 +111,13 @@ mod test {
     }
     
     #[test]
-    fn test_triangular_vector() {
+    fn value_stability() {
         let rng = crate::test::rng(860);
         let distr = Triangular::new(2., 10., 3.).unwrap();
         let seq = distr.sample_iter(rng).take(5).collect::<Vec<f64>>();
         println!("seq: {:?}", seq);
-        let expected = vec![4.941640229082449, 2.421447306833011,
-                4.5964271605527385, 2.789763631136542, 4.8014432067978445];
+        let expected = vec![5.74373257511361, 7.890059162791258,
+                4.7256280652553455, 2.9474808121184077, 3.058301946314053];
         assert!(seq == expected);
     }
 }

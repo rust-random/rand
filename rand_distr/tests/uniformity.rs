@@ -6,19 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[macro_use]
-extern crate average;
-extern crate rand;
-extern crate rand_distr;
-extern crate core;
-
 use average::Histogram;
 use rand::prelude::*;
 
 const N_BINS: usize = 100;
 const N_SAMPLES: u32 = 1_000_000;
 const TOL: f64 = 1e-3;
-define_histogram!(hist, 100);
+average::define_histogram!(hist, 100);
 use hist::Histogram as Histogram100;
 
 #[test]
@@ -27,7 +21,7 @@ fn unit_sphere() {
     let h = Histogram100::with_const_width(-1., 1.);
     let mut histograms = [h.clone(), h.clone(), h];
     let dist = rand_distr::UnitSphere;
-    let mut rng = rand::rngs::SmallRng::from_entropy();
+    let mut rng = rand_pcg::Pcg32::from_entropy();
     for _ in 0..N_SAMPLES {
         let v: [f64; 3] = dist.sample(&mut rng);
         for i in 0..N_DIM {
@@ -51,7 +45,7 @@ fn unit_circle() {
     use std::f64::consts::PI;
     let mut h = Histogram100::with_const_width(-PI, PI);
     let dist = rand_distr::UnitCircle;
-    let mut rng = rand::rngs::SmallRng::from_entropy();
+    let mut rng = rand_pcg::Pcg32::from_entropy();
     for _ in 0..N_SAMPLES {
         let v: [f64; 2] = dist.sample(&mut rng);
         h.add(v[0].atan2(v[1])).unwrap();

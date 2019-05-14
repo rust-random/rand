@@ -33,7 +33,7 @@ use crate::utils::{ziggurat, Float};
 /// use rand::prelude::*;
 /// use rand_distr::Exp1;
 ///
-/// let val: f64 = SmallRng::from_entropy().sample(Exp1);
+/// let val: f64 = thread_rng().sample(Exp1);
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]

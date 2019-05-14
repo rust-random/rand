@@ -121,10 +121,11 @@ mod test {
     // NOTE: Some distributions have tests checking only that samples can be
     // generated. This is redundant with vector and correctness tests.
 
-    use rand::{RngCore, SeedableRng, rngs::StdRng};
-
     /// Construct a deterministic RNG with the given seed
-    pub fn rng(seed: u64) -> impl RngCore {
-        StdRng::seed_from_u64(seed)
+    pub fn rng(seed: u64) -> impl rand::RngCore {
+        // For tests, we want a statistically good, fast, reproducible RNG.
+        // PCG32 will do fine, and will be easy to embed if we ever need to.
+        const INC: u64 = 11634580027462260723;
+        rand_pcg::Pcg32::new(seed, INC)
     }
 }
