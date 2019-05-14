@@ -20,7 +20,7 @@ use crate::utils::Float;
 /// ```
 /// use rand_distr::{UnitCircle, Distribution};
 ///
-/// let v = UnitCircle.sample(&mut rand::thread_rng());
+/// let v: [f64; 2] = UnitCircle.sample(&mut rand::thread_rng());
 /// println!("{:?} is from the unit circle.", v)
 /// ```
 ///
@@ -76,7 +76,7 @@ mod tests {
     fn norm() {
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
-            let x = UnitCircle.sample(&mut rng);
+            let x: [f64; 2] = UnitCircle.sample(&mut rng);
             assert_almost_eq!(x[0]*x[0] + x[1]*x[1], 1., 1e-15);
         }
     }
@@ -84,8 +84,16 @@ mod tests {
     #[test]
     fn value_stability() {
         let mut rng = crate::test::rng(2);
-        assert_eq!(UnitCircle.sample(&mut rng), [-0.8032118336637037, 0.5956935036263119]);
-        assert_eq!(UnitCircle.sample(&mut rng), [-0.4742919588505423, -0.880367615130018]);
-        assert_eq!(UnitCircle.sample(&mut rng), [0.9297328981467168, 0.368234623716601]);
+        let expected = [
+                [-0.8032118336637037, 0.5956935036263119],
+                [-0.4742919588505423, -0.880367615130018],
+                [0.9297328981467168, 0.368234623716601],
+            ];
+        let samples: [[f64; 2]; 3] = [
+                UnitCircle.sample(&mut rng),
+                UnitCircle.sample(&mut rng),
+                UnitCircle.sample(&mut rng),
+            ];
+        assert_eq!(samples, expected);
     }
 }

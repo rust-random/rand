@@ -20,7 +20,7 @@ use crate::utils::Float;
 /// ```
 /// use rand_distr::{UnitSphereSurface, Distribution};
 ///
-/// let v = UnitSphereSurface.sample(&mut rand::thread_rng());
+/// let v: [f64; 3] = UnitSphereSurface.sample(&mut rand::thread_rng());
 /// println!("{:?} is from the unit sphere surface.", v)
 /// ```
 ///
@@ -71,7 +71,7 @@ mod tests {
     fn norm() {
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
-            let x = UnitSphereSurface.sample(&mut rng);
+            let x: [f64; 3] = UnitSphereSurface.sample(&mut rng);
             assert_almost_eq!(x[0]*x[0] + x[1]*x[1] + x[2]*x[2], 1., 1e-15);
         }
     }
@@ -79,11 +79,16 @@ mod tests {
     #[test]
     fn value_stability() {
         let mut rng = crate::test::rng(2);
-        assert_eq!(UnitSphereSurface.sample(&mut rng),
-                   [-0.24950027180862533, -0.7552572587896719, 0.6060825747478084]);
-        assert_eq!(UnitSphereSurface.sample(&mut rng),
-                   [0.47604534507233487, -0.797200864987207, -0.3712837328763685]);
-        assert_eq!(UnitSphereSurface.sample(&mut rng),
-                   [0.9795722330927367, 0.18692349236651176, 0.07414747571708524]);
+        let expected = [
+                [-0.24950027180862533, -0.7552572587896719, 0.6060825747478084],
+                [0.47604534507233487, -0.797200864987207, -0.3712837328763685],
+                [0.9795722330927367, 0.18692349236651176, 0.07414747571708524],
+            ];
+        let samples: [[f64; 3]; 3] = [
+                UnitSphereSurface.sample(&mut rng),
+                UnitSphereSurface.sample(&mut rng),
+                UnitSphereSurface.sample(&mut rng),
+            ];
+        assert_eq!(samples, expected);
     }
 }
