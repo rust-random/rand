@@ -175,6 +175,47 @@ mod test {
     }
 
     #[test]
+    fn test_poisson_10_f32() {
+        let poisson = Poisson::new(10.0f32).unwrap();
+        let mut rng = crate::test::rng(123);
+        let mut sum_u64 = 0;
+        let mut sum_f32 = 0.;
+        for _ in 0..1000 {
+            let s_u64: u64 = poisson.sample(&mut rng);
+            let s_f32: f32 = poisson.sample(&mut rng);
+            sum_u64 += s_u64;
+            sum_f32 += s_f32;
+        }
+        let avg_u64 = (sum_u64 as f32) / 1000.0;
+        let avg_f32 = sum_f32 / 1000.0;
+        println!("Poisson averages: {} (u64)  {} (f32)", avg_u64, avg_f32);
+        for &avg in &[avg_u64, avg_f32] {
+            assert!((avg - 10.0).abs() < 0.5); // not 100% certain, but probable enough
+        }
+    }
+
+    #[test]
+    fn test_poisson_15_f32() {
+        // Take the 'high expected values' path
+        let poisson = Poisson::new(15.0f32).unwrap();
+        let mut rng = crate::test::rng(123);
+        let mut sum_u64 = 0;
+        let mut sum_f32 = 0.;
+        for _ in 0..1000 {
+            let s_u64: u64 = poisson.sample(&mut rng);
+            let s_f32: f32 = poisson.sample(&mut rng);
+            sum_u64 += s_u64;
+            sum_f32 += s_f32;
+        }
+        let avg_u64 = (sum_u64 as f32) / 1000.0;
+        let avg_f32 = sum_f32 / 1000.0;
+        println!("Poisson average: {} (u64)  {} (f32)", avg_u64, avg_f32);
+        for &avg in &[avg_u64, avg_f32] {
+            assert!((avg - 15.0).abs() < 0.5); // not 100% certain, but probable enough
+        }
+    }
+
+    #[test]
     #[should_panic]
     fn test_poisson_invalid_lambda_zero() {
         Poisson::new(0.0).unwrap();
