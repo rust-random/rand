@@ -52,6 +52,8 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     
     /// Take the tangent of self
     fn tan(self) -> Self;
+    /// Take the logarithm of the gamma function of self
+    fn log_gamma(self) -> Self;
 }
 
 impl Float for f32 {
@@ -84,6 +86,13 @@ impl Float for f32 {
     
     #[inline]
     fn tan(self) -> Self { self.tan() }
+    #[inline]
+    fn log_gamma(self) -> Self {
+        let result = log_gamma(self as f64);
+        assert!(result <= ::core::f32::MAX as f64);
+        assert!(result >= ::core::f32::MIN as f64);
+        result as f32
+    }
 }
 
 impl Float for f64 {
@@ -116,6 +125,8 @@ impl Float for f64 {
     
     #[inline]
     fn tan(self) -> Self { self.tan() }
+    #[inline]
+    fn log_gamma(self) -> Self { log_gamma(self) }
 }
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma
@@ -131,33 +142,33 @@ impl Float for f64 {
 /// `Ag(z)` is an infinite series with coefficients that can be calculated
 /// ahead of time - we use just the first 6 terms, which is good enough
 /// for most purposes.
-pub(crate) fn log_gamma<N: Float>(x: N) -> N {
+pub(crate) fn log_gamma(x: f64) -> f64 {
     // precalculated 6 coefficients for the first 6 terms of the series
-    let coefficients: [N; 6] = [
-        N::from(76.18009172947146),
-        N::from(-86.50532032941677),
-        N::from(24.01409824083091),
-        N::from(-1.231739572450155),
-        N::from(0.1208650973866179e-2),
-        N::from(-0.5395239384953e-5),
+    let coefficients: [f64; 6] = [
+        76.18009172947146,
+        -86.50532032941677,
+        24.01409824083091,
+        -1.231739572450155,
+        0.1208650973866179e-2,
+        -0.5395239384953e-5,
     ];
 
     // (x+0.5)*ln(x+g+0.5)-(x+g+0.5)
-    let tmp = x + N::from(5.5);
-    let log = (x + N::from(0.5)) * tmp.ln() - tmp;
+    let tmp = x + 5.5;
+    let log = (x + 0.5) * tmp.ln() - tmp;
 
     // the first few terms of the series for Ag(x)
-    let mut a = N::from(1.000000000190015);
+    let mut a = 1.000000000190015;
     let mut denom = x;
     for &coeff in &coefficients {
-        denom += N::from(1.0);
+        denom += 1.0;
         a += coeff / denom;
     }
 
     // get everything together
     // a is Ag(x)
     // 2.5066... is sqrt(2pi)
-    log + (N::from(2.5066282746310005) * a / x).ln()
+    log + (2.5066282746310005 * a / x).ln()
 }
 
 /// Sample a random number using the Ziggurat method (specifically the

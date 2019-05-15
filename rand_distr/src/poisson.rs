@@ -11,7 +11,7 @@
 
 use rand::Rng;
 use crate::{Distribution, Cauchy, Standard};
-use crate::utils::{log_gamma, Float};
+use crate::utils::Float;
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///
@@ -59,7 +59,7 @@ where Standard: Distribution<N>
             exp_lambda: (-lambda).exp(),
             log_lambda,
             sqrt_2lambda: (N::from(2.0) * lambda).sqrt(),
-            magic_val: lambda * log_lambda - log_gamma(N::from(1.0) + lambda),
+            magic_val: lambda * log_lambda - (N::from(1.0) + lambda).log_gamma(),
         })
     }
 }
@@ -109,7 +109,7 @@ where Standard: Distribution<N>
                 // since it is not exact, we multiply the ratio by 0.9 to avoid ratios greater than 1
                 // this doesn't change the resulting distribution, only increases the rate of failed drawings
                 let check = N::from(0.9) * (N::from(1.0) + comp_dev * comp_dev)
-                    * (result * self.log_lambda - log_gamma(N::from(1.0) + result) - self.magic_val).exp();
+                    * (result * self.log_lambda - (N::from(1.0) + result).log_gamma() - self.magic_val).exp();
 
                 // check with uniform random value - if below the threshold, we are within the target distribution
                 if rng.gen::<N>() <= check {
