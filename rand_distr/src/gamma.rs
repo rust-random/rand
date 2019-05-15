@@ -15,7 +15,7 @@ use self::ChiSquaredRepr::*;
 use rand::Rng;
 use crate::normal::StandardNormal;
 use crate::{Distribution, Exp1, Exp, Open01};
-use num_traits::Float;
+use crate::utils::Float;
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -108,16 +108,16 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     /// distribution.
     #[inline]
     pub fn new(shape: N, scale: N) -> Result<Gamma<N>, Error> {
-        if !(shape > N::zero()) {
+        if !(shape > N::from(0.0)) {
             return Err(Error::ShapeTooSmall);
         }
-        if !(scale > N::zero()) {
+        if !(scale > N::from(0.0)) {
             return Err(Error::ScaleTooSmall);
         }
 
-        let repr = if shape == N::one() {
-            One(Exp::new(N::one() / scale).map_err(|_| Error::ScaleTooLarge)?)
-        } else if shape < N::one() {
+        let repr = if shape == N::from(1.0) {
+            One(Exp::new(N::from(1.0) / scale).map_err(|_| Error::ScaleTooLarge)?)
+        } else if shape < N::from(1.0) {
             Small(GammaSmallShape::new_raw(shape, scale))
         } else {
             Large(GammaLargeShape::new_raw(shape, scale))
@@ -131,8 +131,8 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
 {
     fn new_raw(shape: N, scale: N) -> GammaSmallShape<N> {
         GammaSmallShape {
-            inv_shape: N::one() / shape,
-            large_shape: GammaLargeShape::new_raw(shape + N::one(), scale)
+            inv_shape: N::from(1.0) / shape,
+            large_shape: GammaLargeShape::new_raw(shape + N::from(1.0), scale)
         }
     }
 }
@@ -141,10 +141,10 @@ impl<N: Float> GammaLargeShape<N>
 where StandardNormal: Distribution<N>, Open01: Distribution<N>
 {
     fn new_raw(shape: N, scale: N) -> GammaLargeShape<N> {
-        let d = shape - N::from(1. / 3.).unwrap();
+        let d = shape - N::from(1. / 3.);
         GammaLargeShape {
             scale,
-            c: N::one() / (N::from(9.).unwrap() * d).sqrt(),
+            c: N::from(1.0) / (N::from(9.) * d).sqrt(),
             d
         }
     }
@@ -177,8 +177,8 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
         // Marsaglia & Tsang method, 2000
         loop {
             let x: N = rng.sample(StandardNormal);
-            let v_cbrt = N::one() + self.c * x;
-            if v_cbrt <= N::zero() { // a^3 <= 0 iff a <= 0
+            let v_cbrt = N::from(1.0) + self.c * x;
+            if v_cbrt <= N::from(0.0) { // a^3 <= 0 iff a <= 0
                 continue
             }
 
@@ -186,8 +186,8 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
             let u: N = rng.sample(Open01);
 
             let x_sqr = x * x;
-            if u < N::one() - N::from(0.0331).unwrap() * x_sqr * x_sqr ||
-                u.ln() < N::from(0.5).unwrap() * x_sqr + self.d * (N::one() - v + v.ln())
+            if u < N::from(1.0) - N::from(0.0331) * x_sqr * x_sqr ||
+                u.ln() < N::from(0.5) * x_sqr + self.d * (N::from(1.0) - v + v.ln())
             {
                 return self.d * v * self.scale
             }
@@ -213,8 +213,8 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
 /// println!("{} is from a χ²(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct ChiSquared {
-    repr: ChiSquaredRepr,
+pub struct ChiSquared<N> {
+    repr: ChiSquaredRepr<N>,
 }
 
 /// Error type returned from `ChiSquared::new` and `StudentT::new`.
@@ -225,35 +225,39 @@ pub enum ChiSquaredError {
 }
 
 #[derive(Clone, Copy, Debug)]
-enum ChiSquaredRepr {
+enum ChiSquaredRepr<N> {
     // k == 1, Gamma(alpha, ..) is particularly slow for alpha < 1,
     // e.g. when alpha = 1/2 as it would be for this case, so special-
     // casing and using the definition of N(0,1)^2 is faster.
     DoFExactlyOne,
-    DoFAnythingElse(Gamma<f64>),
+    DoFAnythingElse(Gamma<N>),
 }
 
-impl ChiSquared {
+impl<N: Float> ChiSquared<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
     /// Create a new chi-squared distribution with degrees-of-freedom
     /// `k`.
-    pub fn new(k: f64) -> Result<ChiSquared, ChiSquaredError> {
-        let repr = if k == 1.0 {
+    pub fn new(k: N) -> Result<ChiSquared<N>, ChiSquaredError> {
+        let repr = if k == N::from(1.0) {
             DoFExactlyOne
         } else {
-            if !(0.5 * k > 0.0) {
+            if !(N::from(0.5) * k > N::from(0.0)) {
                 return Err(ChiSquaredError::DoFTooSmall);
             }
-            DoFAnythingElse(Gamma::new(0.5 * k, 2.0).unwrap())
+            DoFAnythingElse(Gamma::new(N::from(0.5) * k, N::from(2.0)).unwrap())
         };
         Ok(ChiSquared { repr })
     }
 }
-impl Distribution<f64> for ChiSquared {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+impl<N: Float> Distribution<N> for ChiSquared<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         match self.repr {
             DoFExactlyOne => {
                 // k == 1 => N(0,1)^2
-                let norm: f64 = rng.sample(StandardNormal);
+                let norm: N = rng.sample(StandardNormal);
                 norm * norm
             }
             DoFAnythingElse(ref g) => g.sample(rng)
@@ -277,12 +281,12 @@ impl Distribution<f64> for ChiSquared {
 /// println!("{} is from an F(2, 32) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct FisherF {
-    numer: ChiSquared,
-    denom: ChiSquared,
+pub struct FisherF<N> {
+    numer: ChiSquared<N>,
+    denom: ChiSquared<N>,
     // denom_dof / numer_dof so that this can just be a straight
     // multiplication, rather than a division.
-    dof_ratio: f64,
+    dof_ratio: N,
 }
 
 /// Error type returned from `FisherF::new`.
@@ -294,13 +298,15 @@ pub enum FisherFError {
     NTooSmall,
 }
 
-impl FisherF {
+impl<N: Float> FisherF<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
     /// Create a new `FisherF` distribution, with the given parameter.
-    pub fn new(m: f64, n: f64) -> Result<FisherF, FisherFError> {
-        if !(m > 0.0) {
+    pub fn new(m: N, n: N) -> Result<FisherF<N>, FisherFError> {
+        if !(m > N::from(0.0)) {
             return Err(FisherFError::MTooSmall);
         }
-        if !(n > 0.0) {
+        if !(n > N::from(0.0)) {
             return Err(FisherFError::NTooSmall);
         }
 
@@ -311,8 +317,10 @@ impl FisherF {
         })
     }
 }
-impl Distribution<f64> for FisherF {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+impl<N: Float> Distribution<N> for FisherF<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         self.numer.sample(rng) / self.denom.sample(rng) * self.dof_ratio
     }
 }
@@ -330,24 +338,28 @@ impl Distribution<f64> for FisherF {
 /// println!("{} is from a t(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct StudentT {
-    chi: ChiSquared,
-    dof: f64
+pub struct StudentT<N> {
+    chi: ChiSquared<N>,
+    dof: N
 }
 
-impl StudentT {
+impl<N: Float> StudentT<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
     /// Create a new Student t distribution with `n` degrees of
     /// freedom.
-    pub fn new(n: f64) -> Result<StudentT, ChiSquaredError> {
+    pub fn new(n: N) -> Result<StudentT<N>, ChiSquaredError> {
         Ok(StudentT {
             chi: ChiSquared::new(n)?,
             dof: n
         })
     }
 }
-impl Distribution<f64> for StudentT {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let norm: f64 = rng.sample(StandardNormal);
+impl<N: Float> Distribution<N> for StudentT<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+        let norm: N = rng.sample(StandardNormal);
         norm * (self.dof / self.chi.sample(rng)).sqrt()
     }
 }
@@ -364,9 +376,9 @@ impl Distribution<f64> for StudentT {
 /// println!("{} is from a Beta(2, 5) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Beta {
-    gamma_a: Gamma<f64>,
-    gamma_b: Gamma<f64>,
+pub struct Beta<N> {
+    gamma_a: Gamma<N>,
+    gamma_b: Gamma<N>,
 }
 
 /// Error type returned from `Beta::new`.
@@ -378,21 +390,25 @@ pub enum BetaError {
     BetaTooSmall,
 }
 
-impl Beta {
+impl<N: Float> Beta<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
     /// Construct an object representing the `Beta(alpha, beta)`
     /// distribution.
-    pub fn new(alpha: f64, beta: f64) -> Result<Beta, BetaError> {
+    pub fn new(alpha: N, beta: N) -> Result<Beta<N>, BetaError> {
         Ok(Beta {
-            gamma_a: Gamma::new(alpha, 1.)
+            gamma_a: Gamma::new(alpha, N::from(1.))
                          .map_err(|_| BetaError::AlphaTooSmall)?,
-            gamma_b: Gamma::new(beta, 1.)
+            gamma_b: Gamma::new(beta, N::from(1.))
                          .map_err(|_| BetaError::BetaTooSmall)?,
         })
     }
 }
 
-impl Distribution<f64> for Beta {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+impl<N: Float> Distribution<N> for Beta<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         let x = self.gamma_a.sample(rng);
         let y = self.gamma_b.sample(rng);
         x / (x + y)

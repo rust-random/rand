@@ -9,6 +9,7 @@
 
 use rand::Rng;
 use crate::{Distribution, Standard};
+use crate::utils::Float;
 
 /// The triangular distribution.
 /// 
@@ -28,10 +29,10 @@ use crate::{Distribution, Standard};
 /// println!("{} is from a triangular distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Triangular {
-    min: f64,
-    max: f64,
-    mode: f64,
+pub struct Triangular<N> {
+    min: N,
+    max: N,
+    mode: N,
 }
 
 /// Error type returned from [`Triangular::new`].
@@ -43,10 +44,12 @@ pub enum TriangularError {
     ModeRange,
 }
 
-impl Triangular {
+impl<N: Float> Triangular<N>
+where Standard: Distribution<N>
+{
     /// Set up the Triangular distribution with defined `min`, `max` and `mode`.
     #[inline]
-    pub fn new(min: f64, max: f64, mode: f64) -> Result<Triangular, TriangularError> {
+    pub fn new(min: N, max: N, mode: N) -> Result<Triangular<N>, TriangularError> {
         if !(max >= min) {
             return Err(TriangularError::RangeTooSmall);
         }
@@ -57,10 +60,12 @@ impl Triangular {
     }
 }
 
-impl Distribution<f64> for Triangular {
+impl<N: Float> Distribution<N> for Triangular<N>
+where Standard: Distribution<N>
+{
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
-        let f: f64 = rng.sample(Standard);
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+        let f: N = rng.sample(Standard);
         let diff_mode_min = self.mode - self.min;
         let range = self.max - self.min;
         let f_range = f * range;

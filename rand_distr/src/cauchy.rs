@@ -10,8 +10,8 @@
 //! The Cauchy distribution.
 
 use rand::Rng;
-use crate::Distribution;
-use std::f64::consts::PI;
+use crate::{Distribution, Standard};
+use crate::utils::Float;
 
 /// The Cauchy distribution `Cauchy(median, scale)`.
 ///
@@ -28,9 +28,9 @@ use std::f64::consts::PI;
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Cauchy {
-    median: f64,
-    scale: f64
+pub struct Cauchy<N> {
+    median: N,
+    scale: N,
 }
 
 /// Error type returned from `Cauchy::new`.
@@ -40,11 +40,13 @@ pub enum Error {
     ScaleTooSmall,
 }
 
-impl Cauchy {
+impl<N: Float> Cauchy<N>
+where Standard: Distribution<N>
+{
     /// Construct a new `Cauchy` with the given shape parameters
     /// `median` the peak location and `scale` the scale factor.
-    pub fn new(median: f64, scale: f64) -> Result<Cauchy, Error> {
-        if !(scale > 0.0) {
+    pub fn new(median: N, scale: N) -> Result<Cauchy<N>, Error> {
+        if !(scale > N::from(0.0)) {
             return Err(Error::ScaleTooSmall);
         }
         Ok(Cauchy {
@@ -54,13 +56,15 @@ impl Cauchy {
     }
 }
 
-impl Distribution<f64> for Cauchy {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+impl<N: Float> Distribution<N> for Cauchy<N>
+where Standard: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         // sample from [0, 1)
-        let x = rng.gen::<f64>();
+        let x = Standard.sample(rng);
         // get standard cauchy random number
         // note that π/2 is not exactly representable, even if x=0.5 the result is finite
-        let comp_dev = (PI * x).tan();
+        let comp_dev = (N::pi() * x).tan();
         // shift and scale according to parameters
         let result = self.median + self.scale * comp_dev;
         result
@@ -99,7 +103,7 @@ mod test {
     fn test_cauchy_mean() {
         let cauchy = Cauchy::new(10.0, 5.0).unwrap();
         let mut rng = crate::test::rng(123);
-        let mut sum = 0.0;
+        let mut sum = 0.0f64;
         for _ in 0..1000 {
             sum += cauchy.sample(&mut rng);
         }

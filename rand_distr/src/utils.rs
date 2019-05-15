@@ -10,8 +10,73 @@
 
 use rand::Rng;
 use crate::ziggurat_tables;
-
 use rand::distributions::hidden_export::IntoFloat;
+use core::{cmp, ops};
+
+/// Trait for floating-point scalar types
+/// 
+/// This allows many distributions to work with `f32` or `f64` parameters and is
+/// potentially extensible. Note however that the `Exp1` and `StandardNormal`
+/// distributions are implemented exclusively for `f32` and `f64`.
+/// 
+/// The bounds and methods are based purely on internal
+/// requirements, and will change as needed.
+pub trait Float: Copy + Sized + cmp::PartialOrd
+    + ops::Neg<Output = Self>
+    + ops::Add<Output = Self>
+    + ops::Sub<Output = Self>
+    + ops::Mul<Output = Self>
+    + ops::Div<Output = Self>
+    + ops::AddAssign + ops::SubAssign + ops::MulAssign + ops::DivAssign
+{
+    /// The constant π
+    fn pi() -> Self;
+    /// Support approximate representation of a f64 value
+    fn from(x: f64) -> Self;
+    
+    /// Take the absolute value of self
+    fn abs(self) -> Self;
+    
+    /// Take the exponential of self
+    fn exp(self) -> Self;
+    /// Take the natural logarithm of self
+    fn ln(self) -> Self;
+    /// Take square root of self
+    fn sqrt(self) -> Self;
+    /// Take self to a floating-point power
+    fn powf(self, power: Self) -> Self;
+    
+    /// Take the tangent of self
+    fn tan(self) -> Self;
+}
+
+impl Float for f32 {
+    fn pi() -> Self { core::f32::consts::PI }
+    fn from(x: f64) -> Self { x as f32 }
+    
+    fn abs(self) -> Self { self.abs() }
+    
+    fn exp(self) -> Self { self.exp() }
+    fn ln(self) -> Self { self.ln() }
+    fn sqrt(self) -> Self { self.sqrt() }
+    fn powf(self, power: Self) -> Self { self.powf(power) }
+    
+    fn tan(self) -> Self { self.tan() }
+}
+
+impl Float for f64 {
+    fn pi() -> Self { core::f64::consts::PI }
+    fn from(x: f64) -> Self { x }
+    
+    fn abs(self) -> Self { self.abs() }
+    
+    fn exp(self) -> Self { self.exp() }
+    fn ln(self) -> Self { self.ln() }
+    fn sqrt(self) -> Self { self.sqrt() }
+    fn powf(self, power: Self) -> Self { self.powf(power) }
+    
+    fn tan(self) -> Self { self.tan() }
+}
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma
 /// function) using the Lanczos approximation.
@@ -26,7 +91,7 @@ use rand::distributions::hidden_export::IntoFloat;
 /// `Ag(z)` is an infinite series with coefficients that can be calculated
 /// ahead of time - we use just the first 6 terms, which is good enough
 /// for most purposes.
-pub fn log_gamma(x: f64) -> f64 {
+pub(crate) fn log_gamma(x: f64) -> f64 {
     // precalculated 6 coefficients for the first 6 terms of the series
     let coefficients: [f64; 6] = [
         76.18009172947146,
@@ -71,7 +136,7 @@ pub fn log_gamma(x: f64) -> f64 {
 // the perf improvement (25-50%) is definitely worth the extra code
 // size from force-inlining.
 #[inline(always)]
-pub fn ziggurat<R: Rng + ?Sized, P, Z>(
+pub(crate) fn ziggurat<R: Rng + ?Sized, P, Z>(
             rng: &mut R,
             symmetric: bool,
             x_tab: ziggurat_tables::ZigTable,

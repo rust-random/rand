@@ -10,8 +10,8 @@
 //! The dirichlet distribution.
 
 use rand::Rng;
-use crate::Distribution;
-use crate::gamma::Gamma;
+use crate::{Distribution, Gamma, StandardNormal, Exp1, Open01};
+use crate::utils::Float;
 
 /// The dirichelet distribution `Dirichlet(alpha)`.
 ///
@@ -30,9 +30,9 @@ use crate::gamma::Gamma;
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
 #[derive(Clone, Debug)]
-pub struct Dirichlet {
+pub struct Dirichlet<N> {
     /// Concentration parameters (alpha)
-    alpha: Vec<f64>,
+    alpha: Vec<N>,
 }
 
 /// Error type returned from `Dirchlet::new`.
@@ -46,18 +46,20 @@ pub enum Error {
     SizeTooSmall,
 }
 
-impl Dirichlet {
+impl<N: Float> Dirichlet<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
     /// Construct a new `Dirichlet` with the given alpha parameter `alpha`.
     ///
     /// Requires `alpha.len() >= 2`.
     #[inline]
-    pub fn new<V: Into<Vec<f64>>>(alpha: V) -> Result<Dirichlet, Error> {
+    pub fn new<V: Into<Vec<N>>>(alpha: V) -> Result<Dirichlet<N>, Error> {
         let a = alpha.into();
         if a.len() < 2 {
             return Err(Error::AlphaTooShort);
         }
         for i in 0..a.len() {
-            if !(a[i] > 0.0) {
+            if !(a[i] > N::from(0.0)) {
                 return Err(Error::AlphaTooSmall);
             }
         }
@@ -69,8 +71,8 @@ impl Dirichlet {
     ///
     /// Requires `size >= 2`.
     #[inline]
-    pub fn new_with_size(alpha: f64, size: usize) -> Result<Dirichlet, Error> {
-        if !(alpha > 0.0) {
+    pub fn new_with_size(alpha: N, size: usize) -> Result<Dirichlet<N>, Error> {
+        if !(alpha > N::from(0.0)) {
             return Err(Error::AlphaTooSmall);
         }
         if size < 2 {
@@ -82,18 +84,20 @@ impl Dirichlet {
     }
 }
 
-impl Distribution<Vec<f64>> for Dirichlet {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<f64> {
+impl<N: Float> Distribution<Vec<N>> for Dirichlet<N>
+where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<N> {
         let n = self.alpha.len();
-        let mut samples = vec![0.0f64; n];
-        let mut sum = 0.0f64;
+        let mut samples = vec![N::from(0.0); n];
+        let mut sum = N::from(0.0);
 
         for i in 0..n {
-            let g = Gamma::new(self.alpha[i], 1.0).unwrap();
+            let g = Gamma::new(self.alpha[i], N::from(1.0)).unwrap();
             samples[i] = g.sample(rng);
             sum += samples[i];
         }
-        let invacc = 1.0 / sum;
+        let invacc = N::from(1.0) / sum;
         for i in 0..n {
             samples[i] *= invacc;
         }
