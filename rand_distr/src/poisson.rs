@@ -10,8 +10,8 @@
 //! The Poisson distribution.
 
 use rand::Rng;
-use crate::{Distribution, Cauchy};
-use crate::utils::log_gamma;
+use crate::{Distribution, Cauchy, Standard};
+use crate::utils::{log_gamma, Float};
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///
@@ -28,13 +28,13 @@ use crate::utils::log_gamma;
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Poisson {
-    lambda: f64,
+pub struct Poisson<N> {
+    lambda: N,
     // precalculated values
-    exp_lambda: f64,
-    log_lambda: f64,
-    sqrt_2lambda: f64,
-    magic_val: f64,
+    exp_lambda: N,
+    log_lambda: N,
+    sqrt_2lambda: N,
+    magic_val: N,
 }
 
 /// Error type returned from `Poisson::new`.
@@ -44,11 +44,11 @@ pub enum Error {
     ShapeTooSmall,
 }
 
-impl Poisson {
+impl<N: Float> Poisson<N> {
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
-    pub fn new(lambda: f64) -> Result<Poisson, Error> {
-        if !(lambda > 0.0) {
+    pub fn new(lambda: N) -> Result<Poisson<N>, Error> {
+        if !(lambda > N::from(0.0)) {
             return Err(Error::ShapeTooSmall);
         }
         let log_lambda = lambda.ln();
@@ -56,31 +56,33 @@ impl Poisson {
             lambda,
             exp_lambda: (-lambda).exp(),
             log_lambda,
-            sqrt_2lambda: (2.0 * lambda).sqrt(),
-            magic_val: lambda * log_lambda - log_gamma(1.0 + lambda),
+            sqrt_2lambda: (N::from(2.0) * lambda).sqrt(),
+            magic_val: lambda * log_lambda - log_gamma(N::from(1.0) + lambda),
         })
     }
 }
 
-impl Distribution<f64> for Poisson {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+impl<N: Float> Distribution<N> for Poisson<N>
+where Standard: Distribution<N>
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         // using the algorithm from Numerical Recipes in C
 
         // for low expected values use the Knuth method
-        if self.lambda < 12.0 {
-            let mut result = 0.;
-            let mut p = 1.0;
+        if self.lambda < N::from(12.0) {
+            let mut result = N::from(0.);
+            let mut p = N::from(1.0);
             while p > self.exp_lambda {
-                p *= rng.gen::<f64>();
-                result += 1.;
+                p *= rng.gen::<N>();
+                result += N::from(1.);
             }
-            result - 1.
+            result - N::from(1.)
         }
         // high expected values - rejection method
         else {
             // we use the Cauchy distribution as the comparison distribution
             // f(x) ~ 1/(1+x^2)
-            let cauchy = Cauchy::new(0.0, 1.0).unwrap();
+            let cauchy = Cauchy::new(N::from(0.0), N::from(1.0)).unwrap();
             let mut result;
 
             loop {
@@ -92,7 +94,7 @@ impl Distribution<f64> for Poisson {
                     // shift the peak of the comparison ditribution
                     result = self.sqrt_2lambda * comp_dev + self.lambda;
                     // repeat the drawing until we are in the range of possible values
-                    if result >= 0.0 {
+                    if result >= N::from(0.0) {
                         break;
                     }
                 }
@@ -104,11 +106,11 @@ impl Distribution<f64> for Poisson {
                 // the magic value scales the distribution function to a range of approximately 0-1
                 // since it is not exact, we multiply the ratio by 0.9 to avoid ratios greater than 1
                 // this doesn't change the resulting distribution, only increases the rate of failed drawings
-                let check = 0.9 * (1.0 + comp_dev * comp_dev)
-                    * (result * self.log_lambda - log_gamma(1.0 + result) - self.magic_val).exp();
+                let check = N::from(0.9) * (N::from(1.0) + comp_dev * comp_dev)
+                    * (result * self.log_lambda - log_gamma(N::from(1.0) + result) - self.magic_val).exp();
 
                 // check with uniform random value - if below the threshold, we are within the target distribution
-                if rng.gen::<f64>() <= check {
+                if rng.gen::<N>() <= check {
                     break;
                 }
             }
@@ -117,12 +119,12 @@ impl Distribution<f64> for Poisson {
     }
 }
 
-impl Distribution<u64> for Poisson {
+impl<N: Float> Distribution<u64> for Poisson<N>
+where Standard: Distribution<N>
+{
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
-        let result: f64 = self.sample(rng);
-        assert!(result >= 0.);
-        assert!(result <= ::core::u64::MAX as f64);
-        result as u64
+        let result: N = self.sample(rng);
+        result.into_ui().unwrap()
     }
 }
 

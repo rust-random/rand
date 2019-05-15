@@ -33,9 +33,13 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     fn pi() -> Self;
     /// Support approximate representation of a f64 value
     fn from(x: f64) -> Self;
+    /// Support converting to an unsigned integer.
+    fn into_ui(self) -> Option<u64>;
     
     /// Take the absolute value of self
     fn abs(self) -> Self;
+    /// Take the largest integer less than or equal to self
+    fn floor(self) -> Self;
     
     /// Take the exponential of self
     fn exp(self) -> Self;
@@ -53,8 +57,16 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
 impl Float for f32 {
     fn pi() -> Self { core::f32::consts::PI }
     fn from(x: f64) -> Self { x as f32 }
+    fn into_ui(self) -> Option<u64> {
+        if self >= 0. && self <= ::core::u64::MAX as f32 {
+            Some(self as u64)
+        } else {
+            None
+        }
+    }
     
     fn abs(self) -> Self { self.abs() }
+    fn floor(self) -> Self { self.floor() }
     
     fn exp(self) -> Self { self.exp() }
     fn ln(self) -> Self { self.ln() }
@@ -67,8 +79,16 @@ impl Float for f32 {
 impl Float for f64 {
     fn pi() -> Self { core::f64::consts::PI }
     fn from(x: f64) -> Self { x }
+    fn into_ui(self) -> Option<u64> {
+        if self >= 0. && self <= ::core::u64::MAX as f64 {
+            Some(self as u64)
+        } else {
+            None
+        }
+    }
     
     fn abs(self) -> Self { self.abs() }
+    fn floor(self) -> Self { self.floor() }
     
     fn exp(self) -> Self { self.exp() }
     fn ln(self) -> Self { self.ln() }
@@ -91,33 +111,33 @@ impl Float for f64 {
 /// `Ag(z)` is an infinite series with coefficients that can be calculated
 /// ahead of time - we use just the first 6 terms, which is good enough
 /// for most purposes.
-pub(crate) fn log_gamma(x: f64) -> f64 {
+pub(crate) fn log_gamma<N: Float>(x: N) -> N {
     // precalculated 6 coefficients for the first 6 terms of the series
-    let coefficients: [f64; 6] = [
-        76.18009172947146,
-        -86.50532032941677,
-        24.01409824083091,
-        -1.231739572450155,
-        0.1208650973866179e-2,
-        -0.5395239384953e-5,
+    let coefficients: [N; 6] = [
+        N::from(76.18009172947146),
+        N::from(-86.50532032941677),
+        N::from(24.01409824083091),
+        N::from(-1.231739572450155),
+        N::from(0.1208650973866179e-2),
+        N::from(-0.5395239384953e-5),
     ];
 
     // (x+0.5)*ln(x+g+0.5)-(x+g+0.5)
-    let tmp = x + 5.5;
-    let log = (x + 0.5) * tmp.ln() - tmp;
+    let tmp = x + N::from(5.5);
+    let log = (x + N::from(0.5)) * tmp.ln() - tmp;
 
     // the first few terms of the series for Ag(x)
-    let mut a = 1.000000000190015;
+    let mut a = N::from(1.000000000190015);
     let mut denom = x;
-    for coeff in &coefficients {
-        denom += 1.0;
+    for &coeff in &coefficients {
+        denom += N::from(1.0);
         a += coeff / denom;
     }
 
     // get everything together
     // a is Ag(x)
     // 2.5066... is sqrt(2pi)
-    log + (2.5066282746310005 * a / x).ln()
+    log + (N::from(2.5066282746310005) * a / x).ln()
 }
 
 /// Sample a random number using the Ziggurat method (specifically the
