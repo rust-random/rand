@@ -137,14 +137,20 @@ mod test {
     fn test_poisson_10() {
         let poisson = Poisson::new(10.0).unwrap();
         let mut rng = crate::test::rng(123);
-        let mut sum = 0;
+        let mut sum_u64 = 0;
+        let mut sum_f64 = 0.;
         for _ in 0..1000 {
-            let s: u64 = poisson.sample(&mut rng);
-            sum += s;
+            let s_u64: u64 = poisson.sample(&mut rng);
+            let s_f64: f64 = poisson.sample(&mut rng);
+            sum_u64 += s_u64;
+            sum_f64 += s_f64;
         }
-        let avg = (sum as f64) / 1000.0;
-        println!("Poisson average: {}", avg);
-        assert!((avg - 10.0).abs() < 0.5); // not 100% certain, but probable enough
+        let avg_u64 = (sum_u64 as f64) / 1000.0;
+        let avg_f64 = sum_f64 / 1000.0;
+        println!("Poisson averages: {} (u64)  {} (f64)", avg_u64, avg_f64);
+        for &avg in &[avg_u64, avg_f64] {
+            assert!((avg - 10.0).abs() < 0.5); // not 100% certain, but probable enough
+        }
     }
 
     #[test]
@@ -152,14 +158,20 @@ mod test {
         // Take the 'high expected values' path
         let poisson = Poisson::new(15.0).unwrap();
         let mut rng = crate::test::rng(123);
-        let mut sum = 0;
+        let mut sum_u64 = 0;
+        let mut sum_f64 = 0.;
         for _ in 0..1000 {
-            let s: u64 = poisson.sample(&mut rng);
-            sum += s;
+            let s_u64: u64 = poisson.sample(&mut rng);
+            let s_f64: f64 = poisson.sample(&mut rng);
+            sum_u64 += s_u64;
+            sum_f64 += s_f64;
         }
-        let avg = (sum as f64) / 1000.0;
-        println!("Poisson average: {}", avg);
-        assert!((avg - 15.0).abs() < 0.5); // not 100% certain, but probable enough
+        let avg_u64 = (sum_u64 as f64) / 1000.0;
+        let avg_f64 = sum_f64 / 1000.0;
+        println!("Poisson average: {} (u64)  {} (f64)", avg_u64, avg_f64);
+        for &avg in &[avg_u64, avg_f64] {
+            assert!((avg - 15.0).abs() < 0.5); // not 100% certain, but probable enough
+        }
     }
 
     #[test]
