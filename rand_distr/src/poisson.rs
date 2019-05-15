@@ -24,7 +24,7 @@ use crate::utils::log_gamma;
 /// use rand_distr::{Poisson, Distribution};
 ///
 /// let poi = Poisson::new(2.0).unwrap();
-/// let v = poi.sample(&mut rand::thread_rng());
+/// let v: u64 = poi.sample(&mut rand::thread_rng());
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -62,30 +62,28 @@ impl Poisson {
     }
 }
 
-impl Distribution<u64> for Poisson {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
+impl Distribution<f64> for Poisson {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         // using the algorithm from Numerical Recipes in C
 
         // for low expected values use the Knuth method
         if self.lambda < 12.0 {
-            let mut result = 0;
+            let mut result = 0.;
             let mut p = 1.0;
             while p > self.exp_lambda {
                 p *= rng.gen::<f64>();
-                result += 1;
+                result += 1.;
             }
-            result - 1
+            result - 1.
         }
         // high expected values - rejection method
         else {
-            let mut int_result: u64;
-
             // we use the Cauchy distribution as the comparison distribution
             // f(x) ~ 1/(1+x^2)
             let cauchy = Cauchy::new(0.0, 1.0).unwrap();
+            let mut result;
 
             loop {
-                let mut result;
                 let mut comp_dev;
 
                 loop {
@@ -101,9 +99,6 @@ impl Distribution<u64> for Poisson {
                 // now the result is a random variable greater than 0 with Cauchy distribution
                 // the result should be an integer value
                 result = result.floor();
-                assert!(result >= 0.);
-                assert!(result <= ::core::u64::MAX as f64);
-                int_result = result as u64;
 
                 // this is the ratio of the Poisson distribution to the comparison distribution
                 // the magic value scales the distribution function to a range of approximately 0-1
@@ -117,8 +112,17 @@ impl Distribution<u64> for Poisson {
                     break;
                 }
             }
-            int_result
+            result
         }
+    }
+}
+
+impl Distribution<u64> for Poisson {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
+        let result: f64 = self.sample(rng);
+        assert!(result >= 0.);
+        assert!(result <= ::core::u64::MAX as f64);
+        result as u64
     }
 }
 
@@ -133,7 +137,8 @@ mod test {
         let mut rng = crate::test::rng(123);
         let mut sum = 0;
         for _ in 0..1000 {
-            sum += poisson.sample(&mut rng);
+            let s: u64 = poisson.sample(&mut rng);
+            sum += s;
         }
         let avg = (sum as f64) / 1000.0;
         println!("Poisson average: {}", avg);
@@ -147,7 +152,8 @@ mod test {
         let mut rng = crate::test::rng(123);
         let mut sum = 0;
         for _ in 0..1000 {
-            sum += poisson.sample(&mut rng);
+            let s: u64 = poisson.sample(&mut rng);
+            sum += s;
         }
         let avg = (sum as f64) / 1000.0;
         println!("Poisson average: {}", avg);
