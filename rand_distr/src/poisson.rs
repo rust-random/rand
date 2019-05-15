@@ -44,7 +44,9 @@ pub enum Error {
     ShapeTooSmall,
 }
 
-impl<N: Float> Poisson<N> {
+impl<N: Float> Poisson<N>
+where Standard: Distribution<N>
+{
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
     pub fn new(lambda: N) -> Result<Poisson<N>, Error> {
@@ -124,7 +126,7 @@ where Standard: Distribution<N>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         let result: N = self.sample(rng);
-        result.into_ui().unwrap()
+        result.to_u64().unwrap()
     }
 }
 

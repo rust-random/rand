@@ -34,7 +34,7 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     /// Support approximate representation of a f64 value
     fn from(x: f64) -> Self;
     /// Support converting to an unsigned integer.
-    fn into_ui(self) -> Option<u64>;
+    fn to_u64(self) -> Option<u64>;
     
     /// Take the absolute value of self
     fn abs(self) -> Self;
@@ -60,7 +60,7 @@ impl Float for f32 {
     #[inline]
     fn from(x: f64) -> Self { x as f32 }
     #[inline]
-    fn into_ui(self) -> Option<u64> {
+    fn to_u64(self) -> Option<u64> {
         if self >= 0. && self <= ::core::u64::MAX as f32 {
             Some(self as u64)
         } else {
@@ -92,7 +92,7 @@ impl Float for f64 {
     #[inline]
     fn from(x: f64) -> Self { x }
     #[inline]
-    fn into_ui(self) -> Option<u64> {
+    fn to_u64(self) -> Option<u64> {
         if self >= 0. && self <= ::core::u64::MAX as f64 {
             Some(self as u64)
         } else {
