@@ -101,6 +101,8 @@ impl Distribution<u64> for Poisson {
                 // now the result is a random variable greater than 0 with Cauchy distribution
                 // the result should be an integer value
                 result = result.floor();
+                assert!(result >= 0.);
+                assert!(result <= ::core::u64::MAX as f64);
                 int_result = result as u64;
 
                 // this is the ratio of the Poisson distribution to the comparison distribution
