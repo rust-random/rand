@@ -55,8 +55,11 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
 }
 
 impl Float for f32 {
+    #[inline]
     fn pi() -> Self { core::f32::consts::PI }
+    #[inline]
     fn from(x: f64) -> Self { x as f32 }
+    #[inline]
     fn into_ui(self) -> Option<u64> {
         if self >= 0. && self <= ::core::u64::MAX as f32 {
             Some(self as u64)
@@ -65,20 +68,30 @@ impl Float for f32 {
         }
     }
     
+    #[inline]
     fn abs(self) -> Self { self.abs() }
+    #[inline]
     fn floor(self) -> Self { self.floor() }
     
+    #[inline]
     fn exp(self) -> Self { self.exp() }
+    #[inline]
     fn ln(self) -> Self { self.ln() }
+    #[inline]
     fn sqrt(self) -> Self { self.sqrt() }
+    #[inline]
     fn powf(self, power: Self) -> Self { self.powf(power) }
     
+    #[inline]
     fn tan(self) -> Self { self.tan() }
 }
 
 impl Float for f64 {
+    #[inline]
     fn pi() -> Self { core::f64::consts::PI }
+    #[inline]
     fn from(x: f64) -> Self { x }
+    #[inline]
     fn into_ui(self) -> Option<u64> {
         if self >= 0. && self <= ::core::u64::MAX as f64 {
             Some(self as u64)
@@ -87,14 +100,21 @@ impl Float for f64 {
         }
     }
     
+    #[inline]
     fn abs(self) -> Self { self.abs() }
+    #[inline]
     fn floor(self) -> Self { self.floor() }
     
+    #[inline]
     fn exp(self) -> Self { self.exp() }
+    #[inline]
     fn ln(self) -> Self { self.ln() }
+    #[inline]
     fn sqrt(self) -> Self { self.sqrt() }
+    #[inline]
     fn powf(self, power: Self) -> Self { self.powf(power) }
     
+    #[inline]
     fn tan(self) -> Self { self.tan() }
 }
 
