@@ -27,8 +27,7 @@ pub(crate) const CODE_PREFIX: u32 = 0x517e8100;
 /// done via `Error::new` or `Error::with_cause`.
 #[derive(Debug)]
 pub struct Error {
-    /// The error message
-    pub msg: &'static str,
+    msg: &'static str,
     #[cfg(feature="std")]
     cause: Option<Box<std::error::Error + Send + Sync>>,
     #[cfg(not(feature="std"))]
@@ -63,6 +62,11 @@ impl Error {
     #[cfg(not(feature="std"))]
     pub fn with_code(msg: &'static str, code: NonZeroU32) -> Self {
         Error { msg, code }
+    }
+
+    /// Retrieve the error message.
+    pub fn msg(&self) -> &str {
+        self.msg
     }
     
     /// Take the cause, if any. This allows the embedded cause to be extracted.
