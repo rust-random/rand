@@ -65,8 +65,6 @@ features = ["into_bits"]
 libc = { version = "0.2.22", default-features = false }
 
 [dev-dependencies]
-# This has a histogram implementation used for testing uniformity.
-average = "0.9.2"
 # Only for benches:
 rand_xoshiro = { path = "rand_xoshiro", version = "0.1" }
 rand_isaac = { path = "rand_isaac", version = "0.1" }
