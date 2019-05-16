@@ -35,13 +35,13 @@
 pub use rand_core;  // re-export
 
 use getrandom::getrandom;
-use rand_core::{CryptoRng, RngCore, Error, ErrorKind, impls};
+use rand_core::{CryptoRng, RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness from from the
 /// operating system.
 ///
 /// This is a zero-sized struct. It can be freely constructed with `OsRng`.
-/// 
+///
 /// The implementation is provided by the [getrandom] crate. Refer to
 /// [getrandom] documentation for details.
 ///
@@ -88,8 +88,7 @@ impl RngCore for OsRng {
         // (And why waste a system call?)
         if dest.len() == 0 { return Ok(()); }
         
-        getrandom(dest).map_err(|e|
-            Error::with_cause(ErrorKind::Unavailable, "OsRng failed", e))
+        getrandom(dest).map_err(|e| Error::with_cause("OsRng failed", e))
     }
 }
 

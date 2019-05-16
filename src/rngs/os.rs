@@ -9,13 +9,13 @@
 //! Interface to the random number generator of the operating system.
 
 use getrandom::getrandom;
-use rand_core::{CryptoRng, RngCore, Error, ErrorKind, impls};
+use rand_core::{CryptoRng, RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness from from the
 /// operating system.
 ///
 /// This is a zero-sized struct. It can be freely constructed with `OsRng`.
-/// 
+///
 /// The implementation is provided by the [getrandom] crate. Refer to
 /// [getrandom] documentation for details.
 ///
@@ -60,8 +60,7 @@ impl RngCore for OsRng {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        getrandom(dest).map_err(|e|
-            Error::with_cause(ErrorKind::Unavailable, "OsRng failed", e))
+        getrandom(dest).map_err(|e| Error::with_cause("OsRng failed", e))
     }
 }
 

@@ -79,8 +79,7 @@ extern crate rand_pcg;
 
 
 // Re-exports from rand_core
-pub use rand_core::{RngCore, CryptoRng, SeedableRng};
-pub use rand_core::{ErrorKind, Error};
+pub use rand_core::{RngCore, CryptoRng, SeedableRng, Error};
 
 // Public exports
 #[cfg(feature="std")] pub use rngs::thread::thread_rng;
@@ -276,10 +275,8 @@ pub trait Rng: RngCore {
     /// On big-endian platforms this performs byte-swapping to ensure
     /// portability of results from reproducible generators.
     ///
-    /// This uses [`try_fill_bytes`] internally and forwards all RNG errors. In
-    /// some cases errors may be resolvable; see [`ErrorKind`] and
-    /// documentation for the RNG in use. If you do not plan to handle these
-    /// errors you may prefer to use [`fill`].
+    /// This is identical to [`fill`] except that it uses [`try_fill_bytes`]
+    /// internally and forwards RNG errors.
     ///
     /// # Example
     ///

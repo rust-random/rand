@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use rand_core::{Error, ErrorKind};
+use rand_core::Error;
 use core::fmt;
 
 /// An error that can occur when [`JitterRng::test_timer`] fails.
@@ -60,10 +60,11 @@ impl From<TimerError> for Error {
         // Timer check is already quite permissive of failures so we don't
         // expect false-positive failures, i.e. any error is irrecoverable.
         #[cfg(feature = "std")] {
-            Error::with_cause(ErrorKind::Unavailable, "timer jitter failed basic quality tests", err)
+            Error::with_cause("timer jitter failed basic quality tests", err)
         }
         #[cfg(not(feature = "std"))] {
-            Error::new(ErrorKind::Unavailable, "timer jitter failed basic quality tests")
+            let _ = err;
+            Error::new("timer jitter failed basic quality tests")
         }
     }
 }

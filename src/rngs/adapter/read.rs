@@ -11,7 +11,7 @@
 
 use std::io::Read;
 
-use rand_core::{RngCore, Error, ErrorKind, impls};
+use rand_core::{RngCore, Error, impls};
 
 
 /// An RNG that reads random bytes straight from any type supporting
@@ -73,22 +73,15 @@ impl<R: Read> RngCore for ReadRng<R> {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         if dest.len() == 0 { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-        self.reader.read_exact(dest).map_err(|err| {
-            match err.kind() {
-                ::std::io::ErrorKind::UnexpectedEof => Error::with_cause(
-                    ErrorKind::Unavailable,
-                    "not enough bytes available, reached end of source", err),
-                _ => Error::with_cause(ErrorKind::Unavailable,
-                    "error reading from Read source", err)
-            }
-        })
+        self.reader.read_exact(dest).map_err(|err|
+                Error::with_cause("error reading from Read source", err))
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::ReadRng;
-    use {RngCore, ErrorKind};
+    use RngCore;
 
     #[test]
     fn test_reader_rng_u64() {
@@ -131,6 +124,6 @@ mod test {
 
         let mut rng = ReadRng::new(&v[..]);
 
-        assert!(rng.try_fill_bytes(&mut w).err().unwrap().kind == ErrorKind::Unavailable);
+        assert!(rng.try_fill_bytes(&mut w).is_err());
     }
 }
