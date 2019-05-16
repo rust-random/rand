@@ -9,13 +9,13 @@
 //! Error types
 
 use core::fmt;
-
-#[cfg(feature="std")]
-use std::error::Error as stdError;
-#[cfg(feature="std")]
-use std::io;
+#[cfg(not(feature="std"))]
+use core::num::NonZeroU32;
 
 
+// A randomly-chosen 24-bit prefix for our codes.
+#[cfg(not(feature="std"))]
+pub(crate) const CODE_PREFIX: u32 = 0x517e8100;
 
 /// Error type of random number generators
 /// 
@@ -30,7 +30,9 @@ pub struct Error {
     /// The error message
     pub msg: &'static str,
     #[cfg(feature="std")]
-    cause: Option<Box<stdError + Send + Sync>>,
+    cause: Option<Box<std::error::Error + Send + Sync>>,
+    #[cfg(not(feature="std"))]
+    code: NonZeroU32,
 }
 
 impl Error {
@@ -40,38 +42,44 @@ impl Error {
             Error { msg, cause: None }
         }
         #[cfg(not(feature="std"))] {
-            Error {  msg }
+            Error {  msg, code: NonZeroU32::new(CODE_PREFIX).unwrap() }
         }
     }
     
     /// Create a new instance, with a message and a chained cause.
-    /// 
-    /// Note: `stdError` is an alias for `std::error::Error`.
-    /// 
-    /// If not targetting `std` (i.e. `no_std`), this function is replaced by
-    /// another with the same prototype, except that there are no bounds on the
-    /// type `E` (because both `Box` and `stdError` are unavailable), and the
-    /// `cause` is ignored.
+    ///
+    /// This function is only available with the `std` feature.
+    // NOTE: with specialisation we could support both.
     #[cfg(feature="std")]
     pub fn with_cause<E>(msg: &'static str, cause: E) -> Self
-        where E: Into<Box<stdError + Send + Sync>>
+        where E: Into<Box<std::error::Error + Send + Sync>>
     {
         Error { msg, cause: Some(cause.into()) }
     }
     
-    /// Create a new instance, with a message and a chained cause.
-    /// 
-    /// In `no_std` mode the *cause* is ignored.
+    /// Create a new instance, with a message and an error code.
+    ///
+    /// This function is only available without the `std` feature.
     #[cfg(not(feature="std"))]
-    pub fn with_cause<E>(msg: &'static str, _cause: E) -> Self {
-        Error { msg }
+    pub fn with_code(msg: &'static str, code: NonZeroU32) -> Self {
+        Error { msg, code }
     }
     
     /// Take the cause, if any. This allows the embedded cause to be extracted.
     /// This uses `Option::take`, leaving `self` with no cause.
+    ///
+    /// This function is only available with the `std` feature.
     #[cfg(feature="std")]
-    pub fn take_cause(&mut self) -> Option<Box<stdError + Send + Sync>> {
+    pub fn take_cause(&mut self) -> Option<Box<std::error::Error + Send + Sync>> {
         self.cause.take()
+    }
+    
+    /// Retrieve the error code.
+    ///
+    /// This function is only available without the `std` feature.
+    #[cfg(not(feature="std"))]
+    pub fn code(&self) -> NonZeroU32 {
+        self.code
     }
 }
 
@@ -87,20 +95,33 @@ impl fmt::Display for Error {
     }
 }
 
-#[cfg(feature="std")]
-impl stdError for Error {
-    fn description(&self) -> &str {
-        self.msg
-    }
-
-    fn cause(&self) -> Option<&stdError> {
-        self.cause.as_ref().map(|e| e.as_ref() as &stdError)
+#[cfg(feature="getrandom")]
+impl From<getrandom::Error> for Error {
+    fn from(error: getrandom::Error) -> Self {
+        let msg = "getrandom error";
+        #[cfg(feature="std")] {
+            Error { msg, cause: Some(Box::new(error)) }
+        }
+        #[cfg(not(feature="std"))] {
+            Error { msg, code: error.code() }
+        }
     }
 }
 
 #[cfg(feature="std")]
-impl From<Error> for io::Error {
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        self.msg
+    }
+
+    fn cause(&self) -> Option<&std::error::Error> {
+        self.cause.as_ref().map(|e| e.as_ref() as &std::error::Error)
+    }
+}
+
+#[cfg(feature="std")]
+impl From<Error> for std::io::Error {
     fn from(error: Error) -> Self {
-        io::Error::new(io::ErrorKind::Other, error)
+        std::io::Error::new(std::io::ErrorKind::Other, error)
     }
 }

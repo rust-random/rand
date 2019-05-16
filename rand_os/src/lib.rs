@@ -88,7 +88,8 @@ impl RngCore for OsRng {
         // (And why waste a system call?)
         if dest.len() == 0 { return Ok(()); }
         
-        getrandom(dest).map_err(|e| Error::with_cause("OsRng failed", e))
+        getrandom(dest)?;
+        Ok(())
     }
 }
 
