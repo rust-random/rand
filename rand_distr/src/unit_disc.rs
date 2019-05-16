@@ -10,7 +10,7 @@ use rand::Rng;
 use crate::{Distribution, Uniform, uniform::SampleUniform};
 use crate::utils::Float;
 
-/// Samples uniformly from the unit Disc in two dimensions.
+/// Samples uniformly from the unit disc in two dimensions.
 ///
 /// Implemented via rejection sampling.
 ///
