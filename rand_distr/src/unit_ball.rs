@@ -10,9 +10,10 @@ use rand::Rng;
 use crate::{Distribution, Uniform, uniform::SampleUniform};
 use crate::utils::Float;
 
-/// Samples uniformly from the surface of the unit sphere in three dimensions.
+/// Samples uniformly from the unit ball (surface and interior) in three
+/// dimensions.
 ///
-/// Implemented via a rejection sampling.
+/// Implemented via rejection sampling.
 ///
 ///
 /// # Example
