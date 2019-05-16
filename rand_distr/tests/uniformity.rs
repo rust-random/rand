@@ -28,7 +28,7 @@ fn unit_sphere() {
     const N_DIM: usize = 3;
     let h = Histogram100::with_const_width(-1., 1.);
     let mut histograms = [h.clone(), h.clone(), h];
-    let dist = rand::distributions::UnitSphereSurface::new();
+    let dist = rand::distributions::UnitSphere::new();
     let mut rng = rand::rngs::SmallRng::from_entropy();
     for _ in 0..N_SAMPLES {
         let v = dist.sample(&mut rng);

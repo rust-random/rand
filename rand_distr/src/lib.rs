@@ -55,7 +55,7 @@
 //!   - [`Triangular`] distribution
 //! - Multivariate probability distributions
 //!   - [`Dirichlet`] distribution
-//!   - [`UnitSphereSurface`] distribution
+//!   - [`UnitSphere`] distribution
 //!   - [`UnitBall`] distribution
 //!   - [`UnitCircle`] distribution
 //!   - [`UnitDisc`] distribution
@@ -63,7 +63,7 @@
 pub use rand::distributions::{Distribution, DistIter, Standard,
     Alphanumeric, Uniform, OpenClosed01, Open01, Bernoulli, uniform, weighted};
 
-pub use self::unit_sphere::UnitSphereSurface;
+pub use self::unit_sphere::UnitSphere;
 pub use self::unit_ball::UnitBall;
 pub use self::unit_circle::UnitCircle;
 pub use self::unit_disc::UnitDisc;
