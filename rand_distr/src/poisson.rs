@@ -67,6 +67,7 @@ where Standard: Distribution<N>
 impl<N: Float> Distribution<N> for Poisson<N>
 where Standard: Distribution<N>
 {
+    #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         // using the algorithm from Numerical Recipes in C
 
@@ -124,6 +125,7 @@ where Standard: Distribution<N>
 impl<N: Float> Distribution<u64> for Poisson<N>
 where Standard: Distribution<N>
 {
+    #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         let result: N = self.sample(rng);
         result.to_u64().unwrap()
