@@ -33,9 +33,13 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     fn pi() -> Self;
     /// Support approximate representation of a f64 value
     fn from(x: f64) -> Self;
+    /// Support converting to an unsigned integer.
+    fn to_u64(self) -> Option<u64>;
     
     /// Take the absolute value of self
     fn abs(self) -> Self;
+    /// Take the largest integer less than or equal to self
+    fn floor(self) -> Self;
     
     /// Take the exponential of self
     fn exp(self) -> Self;
@@ -48,34 +52,81 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     
     /// Take the tangent of self
     fn tan(self) -> Self;
+    /// Take the logarithm of the gamma function of self
+    fn log_gamma(self) -> Self;
 }
 
 impl Float for f32 {
+    #[inline]
     fn pi() -> Self { core::f32::consts::PI }
+    #[inline]
     fn from(x: f64) -> Self { x as f32 }
+    #[inline]
+    fn to_u64(self) -> Option<u64> {
+        if self >= 0. && self <= ::core::u64::MAX as f32 {
+            Some(self as u64)
+        } else {
+            None
+        }
+    }
     
+    #[inline]
     fn abs(self) -> Self { self.abs() }
+    #[inline]
+    fn floor(self) -> Self { self.floor() }
     
+    #[inline]
     fn exp(self) -> Self { self.exp() }
+    #[inline]
     fn ln(self) -> Self { self.ln() }
+    #[inline]
     fn sqrt(self) -> Self { self.sqrt() }
+    #[inline]
     fn powf(self, power: Self) -> Self { self.powf(power) }
     
+    #[inline]
     fn tan(self) -> Self { self.tan() }
+    #[inline]
+    fn log_gamma(self) -> Self {
+        let result = log_gamma(self as f64);
+        assert!(result <= ::core::f32::MAX as f64);
+        assert!(result >= ::core::f32::MIN as f64);
+        result as f32
+    }
 }
 
 impl Float for f64 {
+    #[inline]
     fn pi() -> Self { core::f64::consts::PI }
+    #[inline]
     fn from(x: f64) -> Self { x }
+    #[inline]
+    fn to_u64(self) -> Option<u64> {
+        if self >= 0. && self <= ::core::u64::MAX as f64 {
+            Some(self as u64)
+        } else {
+            None
+        }
+    }
     
+    #[inline]
     fn abs(self) -> Self { self.abs() }
+    #[inline]
+    fn floor(self) -> Self { self.floor() }
     
+    #[inline]
     fn exp(self) -> Self { self.exp() }
+    #[inline]
     fn ln(self) -> Self { self.ln() }
+    #[inline]
     fn sqrt(self) -> Self { self.sqrt() }
+    #[inline]
     fn powf(self, power: Self) -> Self { self.powf(power) }
     
+    #[inline]
     fn tan(self) -> Self { self.tan() }
+    #[inline]
+    fn log_gamma(self) -> Self { log_gamma(self) }
 }
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma
@@ -109,7 +160,7 @@ pub(crate) fn log_gamma(x: f64) -> f64 {
     // the first few terms of the series for Ag(x)
     let mut a = 1.000000000190015;
     let mut denom = x;
-    for coeff in &coefficients {
+    for &coeff in &coefficients {
         denom += 1.0;
         a += coeff / denom;
     }
