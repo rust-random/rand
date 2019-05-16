@@ -42,9 +42,7 @@
 //! -   `from_seed` accepts a type specific to the PRNG
 //! -   `from_rng` allows a PRNG to be seeded from any other RNG
 //! -   `seed_from_u64` allows any PRNG to be seeded from a `u64` insecurely
-//!
-//! Additionally, [`FromEntropy::from_entropy`] is a shortcut for seeding from
-//! [`OsRng`].
+//! -   `from_entropy` securely seeds a PRNG from fresh entropy
 //!
 //! Use the [`rand_core`] crate when implementing your own RNGs.
 //!

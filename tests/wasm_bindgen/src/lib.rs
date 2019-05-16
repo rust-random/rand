@@ -15,7 +15,6 @@ extern crate wasm_bindgen;
 extern crate wasm_bindgen_test;
 
 use rand::rngs::{OsRng, StdRng};
-use rand::FromEntropy;
 use rand::{Rng, SeedableRng};
 use wasm_bindgen::prelude::*;
 
