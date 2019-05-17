@@ -6,16 +6,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg(feature = "std")]
-
 #[macro_use]
 extern crate average;
 extern crate rand;
+extern crate rand_distr;
+extern crate core;
 
 use average::Histogram;
 use rand::distributions::Distribution;
 use rand::FromEntropy;
-use std as core;
 
 const N_BINS: usize = 100;
 const N_SAMPLES: u32 = 1_000_000;
@@ -28,10 +27,10 @@ fn unit_sphere() {
     const N_DIM: usize = 3;
     let h = Histogram100::with_const_width(-1., 1.);
     let mut histograms = [h.clone(), h.clone(), h];
-    let dist = rand::distributions::UnitSphereSurface::new();
+    let dist = rand_distr::UnitSphere;
     let mut rng = rand::rngs::SmallRng::from_entropy();
     for _ in 0..N_SAMPLES {
-        let v = dist.sample(&mut rng);
+        let v: [f64; 3] = dist.sample(&mut rng);
         for i in 0..N_DIM {
             histograms[i].add(v[i]).map_err(
                 |e| { println!("v: {}", v[i]); e }
@@ -52,10 +51,10 @@ fn unit_sphere() {
 fn unit_circle() {
     use std::f64::consts::PI;
     let mut h = Histogram100::with_const_width(-PI, PI);
-    let dist = rand::distributions::UnitCircle::new();
+    let dist = rand_distr::UnitCircle;
     let mut rng = rand::rngs::SmallRng::from_entropy();
     for _ in 0..N_SAMPLES {
-        let v = dist.sample(&mut rng);
+        let v: [f64; 2] = dist.sample(&mut rng);
         h.add(v[0].atan2(v[1])).unwrap();
     }
     let sum: u64 = h.bins().iter().sum();
