@@ -9,7 +9,6 @@
 //! Error types
 
 use core::fmt;
-#[cfg(not(feature="std"))]
 use core::num::NonZeroU32;
 
 
@@ -57,11 +56,13 @@ impl Error {
     }
     
     /// Create a new instance, with a message and an error code.
-    ///
-    /// This function is only available without the `std` feature.
-    #[cfg(not(feature="std"))]
     pub fn with_code(msg: &'static str, code: NonZeroU32) -> Self {
-        Error { msg, code }
+        #[cfg(feature="std")] {
+            Error { msg, cause: Some(Box::new(ErrorCode(code))) }
+        }
+        #[cfg(not(feature="std"))] {
+            Error { msg, code }
+        }
     }
 
     /// Retrieve the error message.
@@ -78,23 +79,20 @@ impl Error {
         self.cause.take()
     }
     
-    /// Retrieve the error code.
-    ///
-    /// This function is only available without the `std` feature.
+    /// Retrieve the error code, if any.
     #[cfg(not(feature="std"))]
-    pub fn code(&self) -> NonZeroU32 {
-        self.code
+    pub fn code(&self) -> Option<NonZeroU32> {
+        #[cfg(feature="std")] {
+            self.cause.as_ref().and_then(|b| b.downcast_ref::<ErrorCode>()).map(|c| c.0)
+        }
+        #[cfg(not(feature="std"))] {
+            Some(self.code)
+        }
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        #[cfg(feature="std")] {
-            if let Some(ref cause) = self.cause {
-                return write!(f, "{}; cause: {}",
-                        self.msg, cause);
-            }
-        }
         write!(f, "{}", self.msg)
     }
 }
@@ -118,7 +116,7 @@ impl std::error::Error for Error {
         self.msg
     }
 
-    fn cause(&self) -> Option<&std::error::Error> {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         self.cause.as_ref().map(|e| e.as_ref() as &std::error::Error)
     }
 }
@@ -129,3 +127,17 @@ impl From<Error> for std::io::Error {
         std::io::Error::new(std::io::ErrorKind::Other, error)
     }
 }
+
+#[cfg(feature="std")]
+#[derive(Debug, Copy, Clone)]
+struct ErrorCode(NonZeroU32);
+
+#[cfg(feature="std")]
+impl fmt::Display for ErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ErrorCode({})", self.0)
+    }
+}
+
+#[cfg(feature="std")]
+impl std::error::Error for ErrorCode {}
