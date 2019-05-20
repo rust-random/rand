@@ -25,5 +25,8 @@ libc = { version = "0.2", default_features = false }
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "0.3", features = ["profileapi"] }
 
+[dev-dependencies]
+doc-comment = "0.3"
+
 [features]
 std = ["rand_core/std"]

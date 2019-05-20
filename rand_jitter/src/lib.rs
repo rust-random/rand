@@ -63,6 +63,12 @@ extern crate libc;
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
+#[cfg(test)]
+#[macro_use]
+extern crate doc_comment;
+
+#[cfg(test)]
+doctest!("../README.md");
 
 #[cfg(not(feature = "log"))]
 #[macro_use] mod dummy_log;
