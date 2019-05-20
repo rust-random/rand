@@ -11,7 +11,8 @@
 use {Rng};
 use distributions::{Distribution, Standard};
 #[cfg(rustc_1_28)]
-use core::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU128, NonZeroUsize};
+use core::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroUsize};
+#[cfg(not(target_os = "emscripten"))] use core::num::NonZeroU128;
 #[cfg(feature="simd_support")]
 use packed_simd::*;
 #[cfg(all(target_arch = "x86", feature="nightly"))]

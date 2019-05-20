@@ -62,7 +62,8 @@
 extern crate getrandom_package as getrandom;
 
 extern crate rand_core;
-extern crate rand_chacha;
+#[cfg(not(target_os = "emscripten"))] extern crate rand_chacha;
+#[cfg(target_os = "emscripten")] extern crate rand_hc;
 #[cfg(feature="small_rng")] extern crate rand_pcg;
 
 #[cfg(feature = "log")] #[macro_use] extern crate log;

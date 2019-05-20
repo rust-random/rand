@@ -324,14 +324,14 @@ mod fork {
 #[cfg(test)]
 mod test {
     use {Rng, SeedableRng};
-    use rand_chacha::ChaCha8Core;
+    use rngs::std::Core;
     use rngs::mock::StepRng;
     use super::ReseedingRng;
 
     #[test]
     fn test_reseeding() {
         let mut zero = StepRng::new(0, 0);
-        let rng = ChaCha8Core::from_rng(&mut zero).unwrap();
+        let rng = Core::from_rng(&mut zero).unwrap();
         let thresh = 1; // reseed every time the buffer is exhausted
         let mut reseeding = ReseedingRng::new(rng, thresh, zero);
 
@@ -351,7 +351,7 @@ mod test {
     #[test]
     fn test_clone_reseeding() {
         let mut zero = StepRng::new(0, 0);
-        let rng = ChaCha8Core::from_rng(&mut zero).unwrap();
+        let rng = Core::from_rng(&mut zero).unwrap();
         let mut rng1 = ReseedingRng::new(rng, 32*4, zero);
 
         let first: u32 = rng1.gen();

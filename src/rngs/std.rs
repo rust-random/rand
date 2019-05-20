@@ -9,7 +9,11 @@
 //! The standard RNG
 
 use {RngCore, CryptoRng, Error, SeedableRng};
-use rand_chacha::ChaCha20Rng;
+
+#[cfg(target_os = "emscripten")] pub(crate) use rand_hc::Hc128Core as Core;
+#[cfg(not(target_os = "emscripten"))] pub(crate) use rand_chacha::ChaCha20Core as Core;
+#[cfg(target_os = "emscripten")] use rand_hc::Hc128Rng as Rng;
+#[cfg(not(target_os = "emscripten"))] use rand_chacha::ChaCha20Rng as Rng;
 
 /// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
 /// on the current platform, to be statistically strong and unpredictable
@@ -27,7 +31,7 @@ use rand_chacha::ChaCha20Rng;
 ///
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
 #[derive(Clone, Debug)]
-pub struct StdRng(ChaCha20Rng);
+pub struct StdRng(Rng);
 
 impl RngCore for StdRng {
     #[inline(always)]
@@ -50,14 +54,14 @@ impl RngCore for StdRng {
 }
 
 impl SeedableRng for StdRng {
-    type Seed = <ChaCha20Rng as SeedableRng>::Seed;
+    type Seed = <Rng as SeedableRng>::Seed;
 
     fn from_seed(seed: Self::Seed) -> Self {
-        StdRng(ChaCha20Rng::from_seed(seed))
+        StdRng(Rng::from_seed(seed))
     }
 
     fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        ChaCha20Rng::from_rng(rng).map(StdRng)
+        Rng::from_rng(rng).map(StdRng)
     }
 }
 

@@ -13,7 +13,7 @@ use std::cell::UnsafeCell;
 use {RngCore, CryptoRng, SeedableRng, Error};
 use rngs::adapter::ReseedingRng;
 use rngs::OsRng;
-use rand_chacha::ChaCha20Core;
+use super::std::Core;
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
 //
@@ -58,12 +58,12 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 #[derive(Copy, Clone, Debug)]
 pub struct ThreadRng {
     // use of raw pointer implies type is neither Send nor Sync
-    rng: *mut ReseedingRng<ChaCha20Core, OsRng>,
+    rng: *mut ReseedingRng<Core, OsRng>,
 }
 
 thread_local!(
-    static THREAD_RNG_KEY: UnsafeCell<ReseedingRng<ChaCha20Core, OsRng>> = {
-        let r = ChaCha20Core::from_rng(OsRng).unwrap_or_else(|err|
+    static THREAD_RNG_KEY: UnsafeCell<ReseedingRng<Core, OsRng>> = {
+        let r = Core::from_rng(OsRng).unwrap_or_else(|err|
                 panic!("could not initialize thread_rng: {}", err));
         let rng = ReseedingRng::new(r,
                                     THREAD_RNG_RESEED_THRESHOLD,
