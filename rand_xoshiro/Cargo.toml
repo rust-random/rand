@@ -1,6 +1,6 @@
 [package]
 name = "rand_xoshiro"
-version = "0.1.0" # NB: When modifying, also modify html_root_url in lib.rs
+version = "0.2.0" # NB: When modifying, also modify html_root_url in lib.rs
 authors = ["The Rand Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
