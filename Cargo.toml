@@ -67,6 +67,7 @@ features = ["into_bits"]
 libc = { version = "0.2.22", default-features = false }
 
 [dev-dependencies]
+rand_pcg = { path = "rand_pcg", version = "0.1" }
 # Only for benches:
 rand_xoshiro = { path = "rand_xoshiro", version = "0.2" }
 rand_isaac = { path = "rand_isaac", version = "0.1" }

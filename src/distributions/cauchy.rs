@@ -68,31 +68,24 @@ mod test {
 
     #[test]
     #[cfg(not(miri))] // Miri doesn't support transcendental functions
-    fn test_cauchy_median() {
+    fn test_cauchy_averages() {
+        // NOTE: given that the variance and mean are undefined,
+        // this test does not have any rigorous statistical meaning.
         let cauchy = Cauchy::new(10.0, 5.0);
-        let mut rng = ::test::rng(123);
+        let mut rng = crate::test::rng(123);
         let mut numbers: [f64; 1000] = [0.0; 1000];
+        let mut sum = 0.0;
         for i in 0..1000 {
             numbers[i] = cauchy.sample(&mut rng);
+            sum += numbers[i];
         }
         let median = median(&mut numbers);
         println!("Cauchy median: {}", median);
-        assert!((median - 10.0).abs() < 0.5); // not 100% certain, but probable enough
-    }
-
-    #[test]
-    #[cfg(not(miri))] // Miri doesn't support transcendental functions
-    fn test_cauchy_mean() {
-        let cauchy = Cauchy::new(10.0, 5.0);
-        let mut rng = ::test::rng(123);
-        let mut sum = 0.0;
-        for _ in 0..1000 {
-            sum += cauchy.sample(&mut rng);
-        }
+        assert!((median - 10.0).abs() < 0.4); // not 100% certain, but probable enough
         let mean = sum / 1000.0;
         println!("Cauchy mean: {}", mean);
         // for a Cauchy distribution the mean should not converge
-        assert!((mean - 10.0).abs() > 0.5); // not 100% certain, but probable enough
+        assert!((mean - 10.0).abs() > 0.4); // not 100% certain, but probable enough
     }
 
     #[test]
