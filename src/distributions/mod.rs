@@ -108,7 +108,7 @@ use Rng;
 pub use self::other::Alphanumeric;
 #[doc(inline)] pub use self::uniform::Uniform;
 pub use self::float::{OpenClosed01, Open01};
-pub use self::bernoulli::Bernoulli;
+pub use self::bernoulli::{Bernoulli, BernoulliError};
 #[cfg(feature="alloc")] pub use self::weighted::{WeightedIndex, WeightedError};
 
 // The following are all deprecated after being moved to rand_distr

@@ -72,7 +72,7 @@ fn misc_gen_ratio_var(b: &mut Bencher) {
 fn misc_bernoulli_const(b: &mut Bencher) {
     let mut rng = StdRng::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
-        let d = rand::distributions::Bernoulli::new(0.18);
+        let d = rand::distributions::Bernoulli::new(0.18).unwrap();
         let mut accum = true;
         for _ in 0..::RAND_BENCH_N {
             accum ^= rng.sample(d);
@@ -88,7 +88,7 @@ fn misc_bernoulli_var(b: &mut Bencher) {
         let mut accum = true;
         let mut p = 0.18;
         for _ in 0..::RAND_BENCH_N {
-            let d = Bernoulli::new(p);
+            let d = Bernoulli::new(p).unwrap();
             accum ^= rng.sample(d);
             p += 0.0001;
         }
