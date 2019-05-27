@@ -19,6 +19,7 @@ use rand_core::{SeedableRng, RngCore, Error};
 /// reference source code](http://xoshiro.di.unimi.it/xoshiro128starstar.c) by
 /// David Blackman and Sebastiano Vigna.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct Xoshiro128StarStar {
     s: [u32; 4],
 }

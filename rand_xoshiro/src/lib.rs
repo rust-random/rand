@@ -66,6 +66,8 @@
 #![no_std]
 extern crate byteorder;
 pub extern crate rand_core;
+#[cfg(feature="serde1")] extern crate serde;
+#[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
 
 #[macro_use]
 mod common;
