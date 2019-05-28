@@ -10,6 +10,7 @@
 //! A wrapper around any Read to treat it as an RNG.
 
 use std::io::Read;
+use std::fmt;
 
 use rand_core::{RngCore, Error, impls};
 
@@ -73,10 +74,26 @@ impl<R: Read> RngCore for ReadRng<R> {
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         if dest.len() == 0 { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-        self.reader.read_exact(dest).map_err(|err|
-                Error::with_cause("error reading from Read source", err))
+        self.reader.read_exact(dest).map_err(|e| Error::new(ReadError(e)))
     }
 }
+
+/// `ReadRng` error type
+#[derive(Debug)]
+pub struct ReadError(std::io::Error);
+
+impl fmt::Display for ReadError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ReadError: {}", self.0)
+    }
+}
+
+impl std::error::Error for ReadError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.0)
+    }
+}
+
 
 #[cfg(test)]
 mod test {
@@ -124,6 +141,8 @@ mod test {
 
         let mut rng = ReadRng::new(&v[..]);
 
-        assert!(rng.try_fill_bytes(&mut w).is_err());
+        let result = rng.try_fill_bytes(&mut w);
+        assert!(result.is_err());
+        println!("Error: {}", result.unwrap_err());
     }
 }

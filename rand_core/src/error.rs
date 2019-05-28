@@ -12,78 +12,58 @@ use core::fmt;
 use core::num::NonZeroU32;
 
 
-// A randomly-chosen 24-bit prefix for our codes.
-#[cfg(not(feature="std"))]
-pub(crate) const CODE_PREFIX: u32 = 0x517e8100;
-
 /// Error type of random number generators
-/// 
-/// This is a relatively simple error type, designed for compatibility with and
-/// without the Rust `std` library. It embeds a message (static
-/// string only), and an optional chained cause (`std` only). The
-/// `msg` field can be accessed directly; cause can be accessed via
-/// `std::error::Error::cause` or `Error::take_cause`. Construction can only be
-/// done via `Error::new` or `Error::with_cause`.
+///
+/// In order to be compatible with `std` and `no_std`, this type has two
+/// possible implementations: with `std` a boxed `Error` trait object is stored,
+/// while with `no_std` we merely store an error code.
 #[derive(Debug)]
 pub struct Error {
-    msg: &'static str,
     #[cfg(feature="std")]
-    cause: Option<Box<std::error::Error + Send + Sync>>,
+    inner: Box<dyn std::error::Error + Send + Sync + 'static>,
     #[cfg(not(feature="std"))]
     code: NonZeroU32,
 }
 
 impl Error {
-    /// Create a new instance, with a message.
-    pub fn new(msg: &'static str) -> Self {
-        #[cfg(feature="std")] {
-            Error { msg, cause: None }
-        }
-        #[cfg(not(feature="std"))] {
-            Error {  msg, code: NonZeroU32::new(CODE_PREFIX).unwrap() }
-        }
-    }
-    
-    /// Create a new instance, with a message and a chained cause.
-    ///
-    /// This function is only available with the `std` feature.
-    // NOTE: with specialisation we could support both.
+    /// Construct from any type supporting `std::error::Error`
+    /// 
+    /// Available only when configured with `std`.
+    /// 
+    /// See also `From<NonZeroU32>`, which is available with and without `std`.
     #[cfg(feature="std")]
-    pub fn with_cause<E>(msg: &'static str, cause: E) -> Self
-        where E: Into<Box<std::error::Error + Send + Sync>>
+    pub fn new<E>(err: E) -> Self
+    where E: Into<Box<dyn std::error::Error + Send + Sync + 'static>>
     {
-        Error { msg, cause: Some(cause.into()) }
+        Error { inner: err.into() }
     }
     
-    /// Create a new instance, with a message and an error code.
-    pub fn with_code(msg: &'static str, code: NonZeroU32) -> Self {
-        #[cfg(feature="std")] {
-            Error { msg, cause: Some(Box::new(ErrorCode(code))) }
-        }
-        #[cfg(not(feature="std"))] {
-            Error { msg, code }
-        }
-    }
-
-    /// Retrieve the error message.
-    pub fn msg(&self) -> &str {
-        self.msg
-    }
-    
-    /// Take the cause, if any. This allows the embedded cause to be extracted.
-    /// This uses `Option::take`, leaving `self` with no cause.
-    ///
-    /// This function is only available with the `std` feature.
+    /// Reference the inner error (`std` only)
+    /// 
+    /// When configured with `std`, this is a trivial operation and never
+    /// panics. Without `std`, this method is simply unavailable.
     #[cfg(feature="std")]
-    pub fn take_cause(&mut self) -> Option<Box<std::error::Error + Send + Sync>> {
-        self.cause.take()
+    pub fn inner(&self) -> &(dyn std::error::Error + Send + Sync + 'static) {
+        &*self.inner
+    }
+    
+    /// Unwrap the inner error (`std` only)
+    /// 
+    /// When configured with `std`, this is a trivial operation and never
+    /// panics. Without `std`, this method is simply unavailable.
+    #[cfg(feature="std")]
+    pub fn take_inner(self) -> Box<dyn std::error::Error + Send + Sync + 'static> {
+        self.inner
     }
     
     /// Retrieve the error code, if any.
-    #[cfg(not(feature="std"))]
+    /// 
+    /// If this `Error` was constructed via `From<NonZeroU32>`, then this method
+    /// will return this `NonZeroU32` code (for `no_std` this is always the
+    /// case). Otherwise, this method will return `None`.
     pub fn code(&self) -> Option<NonZeroU32> {
         #[cfg(feature="std")] {
-            self.cause.as_ref().and_then(|b| b.downcast_ref::<ErrorCode>()).map(|c| c.0)
+            self.inner.downcast_ref::<ErrorCode>().map(|c| c.0)
         }
         #[cfg(not(feature="std"))] {
             Some(self.code)
@@ -93,31 +73,42 @@ impl Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        #[cfg(feature="std")] {
+            write!(f, "{}", self.inner)
+        }
+        #[cfg(not(feature="std"))] {
+            write!(f, "error code {}", self.code)
+        }
+    }
+}
+
+impl From<NonZeroU32> for Error {
+    fn from(code: NonZeroU32) -> Self {
+        #[cfg(feature="std")] {
+            Error { inner: Box::new(ErrorCode(code)) }
+        }
+        #[cfg(not(feature="std"))] {
+            Error { code }
+        }
     }
 }
 
 #[cfg(feature="getrandom")]
 impl From<getrandom::Error> for Error {
     fn from(error: getrandom::Error) -> Self {
-        let msg = "getrandom error";
         #[cfg(feature="std")] {
-            Error { msg, cause: Some(Box::new(error)) }
+            Error { inner: Box::new(error) }
         }
         #[cfg(not(feature="std"))] {
-            Error { msg, code: error.code() }
+            Error { code: error.code() }
         }
     }
 }
 
 #[cfg(feature="std")]
 impl std::error::Error for Error {
-    fn description(&self) -> &str {
-        self.msg
-    }
-
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        self.cause.as_ref().map(|e| e.as_ref() as &std::error::Error)
+        self.inner.source()
     }
 }
 
@@ -135,7 +126,7 @@ struct ErrorCode(NonZeroU32);
 #[cfg(feature="std")]
 impl fmt::Display for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ErrorCode({})", self.0)
+        write!(f, "error code {}", self.0)
     }
 }
 
