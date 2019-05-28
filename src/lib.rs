@@ -59,7 +59,7 @@
 #[cfg(feature="simd_support")] extern crate packed_simd;
 
 #[cfg(feature = "getrandom")]
-extern crate getrandom;
+extern crate getrandom_package as getrandom;
 
 extern crate rand_core;
 extern crate rand_hc;
