@@ -63,6 +63,17 @@ extern crate libc;
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
+// Coming from https://crates.io/crates/doc-comment
+#[cfg(test)]
+macro_rules! doc_comment {
+    ($x:expr) => {
+        #[doc = $x]
+        extern {}
+    };
+}
+
+#[cfg(test)]
+doc_comment!(include_str!("../README.md"));
 
 #[cfg(not(feature = "log"))]
 #[macro_use] mod dummy_log;
