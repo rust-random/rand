@@ -22,6 +22,7 @@ use rand_core::{RngCore, SeedableRng, Error};
 /// from [`dsiutils`](http://dsiutils.di.unimi.it/) is used.
 #[allow(missing_copy_implementations)]
 #[derive(Debug, Clone)]
+#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct SplitMix64 {
     x: u64,
 }

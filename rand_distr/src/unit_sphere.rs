@@ -1,4 +1,4 @@
-// Copyright 2018 Developers of the Rand project.
+// Copyright 2018-2019 Developers of the Rand project.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -18,9 +18,9 @@ use crate::utils::Float;
 /// # Example
 ///
 /// ```
-/// use rand_distr::{UnitSphereSurface, Distribution};
+/// use rand_distr::{UnitSphere, Distribution};
 ///
-/// let v: [f64; 3] = UnitSphereSurface.sample(&mut rand::thread_rng());
+/// let v: [f64; 3] = UnitSphere.sample(&mut rand::thread_rng());
 /// println!("{:?} is from the unit sphere surface.", v)
 /// ```
 ///
@@ -28,9 +28,9 @@ use crate::utils::Float;
 ///       Sphere.*](https://doi.org/10.1214/aoms/1177692644)
 ///       Ann. Math. Statist. 43, no. 2, 645--646.
 #[derive(Clone, Copy, Debug)]
-pub struct UnitSphereSurface;
+pub struct UnitSphere;
 
-impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitSphereSurface {
+impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitSphere {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [N; 3] {
         let uniform = Uniform::new(N::from(-1.), N::from(1.));
@@ -49,7 +49,7 @@ impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitSphereSurface {
 #[cfg(test)]
 mod tests {
     use crate::Distribution;
-    use super::UnitSphereSurface;
+    use super::UnitSphere;
 
     /// Assert that two numbers are almost equal to each other.
     ///
@@ -71,7 +71,7 @@ mod tests {
     fn norm() {
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
-            let x: [f64; 3] = UnitSphereSurface.sample(&mut rng);
+            let x: [f64; 3] = UnitSphere.sample(&mut rng);
             assert_almost_eq!(x[0]*x[0] + x[1]*x[1] + x[2]*x[2], 1., 1e-15);
         }
     }
@@ -85,9 +85,9 @@ mod tests {
                 [0.9795722330927367, 0.18692349236651176, 0.07414747571708524],
             ];
         let samples: [[f64; 3]; 3] = [
-                UnitSphereSurface.sample(&mut rng),
-                UnitSphereSurface.sample(&mut rng),
-                UnitSphereSurface.sample(&mut rng),
+                UnitSphere.sample(&mut rng),
+                UnitSphere.sample(&mut rng),
+                UnitSphere.sample(&mut rng),
             ];
         assert_eq!(samples, expected);
     }

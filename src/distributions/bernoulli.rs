@@ -20,7 +20,7 @@ use distributions::Distribution;
 /// ```rust
 /// use rand::distributions::{Bernoulli, Distribution};
 ///
-/// let d = Bernoulli::new(0.3);
+/// let d = Bernoulli::new(0.3).unwrap();
 /// let v = d.sample(&mut rand::thread_rng());
 /// println!("{} is from a Bernoulli distribution", v);
 /// ```
@@ -61,12 +61,15 @@ const ALWAYS_TRUE: u64 = ::core::u64::MAX;
 // in `no_std` mode.
 const SCALE: f64 = 2.0 * (1u64 << 63) as f64;
 
+/// Error type returned from `Bernoulli::new`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BernoulliError {
+    /// `p < 0` or `p > 1`.
+    InvalidProbability,
+}
+
 impl Bernoulli {
     /// Construct a new `Bernoulli` with the given probability of success `p`.
-    ///
-    /// # Panics
-    ///
-    /// If `p < 0` or `p > 1`.
     ///
     /// # Precision
     ///
@@ -77,12 +80,12 @@ impl Bernoulli {
     /// a multiple of 2<sup>-64</sup>. (Note that not all multiples of
     /// 2<sup>-64</sup> in `[0, 1]` can be represented as a `f64`.)
     #[inline]
-    pub fn new(p: f64) -> Bernoulli {
+    pub fn new(p: f64) -> Result<Bernoulli, BernoulliError> {
         if p < 0.0 || p >= 1.0 {
-            if p == 1.0 { return Bernoulli { p_int: ALWAYS_TRUE } }
-            panic!("Bernoulli::new not called with 0.0 <= p <= 1.0");
+            if p == 1.0 { return Ok(Bernoulli { p_int: ALWAYS_TRUE }) }
+            return Err(BernoulliError::InvalidProbability);
         }
-        Bernoulli { p_int: (p * SCALE) as u64 }
+        Ok(Bernoulli { p_int: (p * SCALE) as u64 })
     }
 
     /// Construct a new `Bernoulli` with the probability of success of
@@ -91,19 +94,16 @@ impl Bernoulli {
     ///
     /// If `numerator == denominator` then the returned `Bernoulli` will always
     /// return `true`. If `numerator == 0` it will always return `false`.
-    ///
-    /// # Panics
-    ///
-    /// If `denominator == 0` or `numerator > denominator`.
-    ///
     #[inline]
-    pub fn from_ratio(numerator: u32, denominator: u32) -> Bernoulli {
-        assert!(numerator <= denominator);
+    pub fn from_ratio(numerator: u32, denominator: u32) -> Result<Bernoulli, BernoulliError> {
+        if !(numerator <= denominator) {
+            return Err(BernoulliError::InvalidProbability);
+        }
         if numerator == denominator {
-            return Bernoulli { p_int: ::core::u64::MAX }
+            return Ok(Bernoulli { p_int: ALWAYS_TRUE })
         }
         let p_int = ((numerator as f64 / denominator as f64) * SCALE) as u64;
-        Bernoulli { p_int }
+        Ok(Bernoulli { p_int })
     }
 }
 
@@ -126,8 +126,8 @@ mod test {
     #[test]
     fn test_trivial() {
         let mut r = ::test::rng(1);
-        let always_false = Bernoulli::new(0.0);
-        let always_true = Bernoulli::new(1.0);
+        let always_false = Bernoulli::new(0.0).unwrap();
+        let always_true = Bernoulli::new(1.0).unwrap();
         for _ in 0..5 {
             assert_eq!(r.sample::<bool, _>(&always_false), false);
             assert_eq!(r.sample::<bool, _>(&always_true), true);
@@ -142,8 +142,8 @@ mod test {
         const P: f64 = 0.3;
         const NUM: u32 = 3;
         const DENOM: u32 = 10;
-        let d1 = Bernoulli::new(P);
-        let d2 = Bernoulli::from_ratio(NUM, DENOM);
+        let d1 = Bernoulli::new(P).unwrap();
+        let d2 = Bernoulli::from_ratio(NUM, DENOM).unwrap();
         const N: u32 = 100_000;
 
         let mut sum1: u32 = 0;
