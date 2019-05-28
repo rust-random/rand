@@ -58,7 +58,7 @@
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://docs.rs/rand_xoshiro/0.1.0")]
+       html_root_url = "https://docs.rs/rand_xoshiro/0.2.0")]
 
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
@@ -66,6 +66,8 @@
 #![no_std]
 extern crate byteorder;
 pub extern crate rand_core;
+#[cfg(feature="serde1")] extern crate serde;
+#[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
 
 #[macro_use]
 mod common;

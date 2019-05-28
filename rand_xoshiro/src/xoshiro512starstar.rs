@@ -21,6 +21,7 @@ use Seed512;
 /// reference source code](http://xoshiro.di.unimi.it/xoshiro512starstar.c) by
 /// David Blackman and Sebastiano Vigna.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct Xoshiro512StarStar {
     s: [u64; 8],
 }
