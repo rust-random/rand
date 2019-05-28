@@ -19,6 +19,12 @@ Links:
 -   [API documentation (docs.rs)](https://docs.rs/rand_xoshiro)
 -   [Changelog](CHANGELOG.md)
 
+## Crate Features
+
+`rand_xoshiro` is no_std compatible by default.
+
+The `serde1` feature includes implementations of `Serialize` and `Deserialize` for the included RNGs.
+
 ## License
 
 `rand_xoshiro` is distributed under the terms of both the MIT license and the
