@@ -34,11 +34,10 @@ type Rng = ::rand_pcg::Pcg32;
 ///
 /// # Examples
 ///
-/// Initializing `SmallRng` with a random seed can be done using [`FromEntropy`]:
+/// Initializing `SmallRng` with a random seed can be done using [`SeedableRng::from_entropy`]:
 ///
 /// ```
-/// # use rand::Rng;
-/// use rand::FromEntropy;
+/// use rand::{Rng, SeedableRng};
 /// use rand::rngs::SmallRng;
 ///
 /// // Create small, cheap to initialize and fast RNG with a random seed.
@@ -66,7 +65,6 @@ type Rng = ::rand_pcg::Pcg32;
 ///     .collect();
 /// ```
 ///
-/// [`FromEntropy`]: crate::FromEntropy
 /// [`StdRng`]: crate::rngs::StdRng
 /// [`thread_rng`]: crate::thread_rng
 /// [rand_pcg]: https://crates.io/crates/rand_pcg

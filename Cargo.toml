@@ -28,8 +28,9 @@ i128_support = [] # enables i128 and u128 support
 simd_support = ["packed_simd"] # enables SIMD support
 serde1 = ["rand_core/serde1", "rand_isaac/serde1", "rand_xorshift/serde1"] # enables serialization for PRNGs
 # re-export optional WASM dependencies to avoid breakage:
-wasm-bindgen = ["getrandom/wasm-bindgen"]
-stdweb = ["getrandom/stdweb"]
+wasm-bindgen = ["getrandom_package/wasm-bindgen"]
+stdweb = ["getrandom_package/stdweb"]
+getrandom = ["getrandom_package", "rand_core/getrandom"]
 
 [workspace]
 members = [
@@ -50,7 +51,8 @@ members = [
 rand_core = { path = "rand_core", version = "0.4" }
 rand_pcg = { path = "rand_pcg", version = "0.1" }
 rand_hc = { path = "rand_hc", version = "0.1" }
-getrandom = { version = "0.1.1", optional = true }
+# Do not depend on 'getrandom_package' directly; use the 'getrandom' feature!
+getrandom_package = { version = "0.1.1", package = "getrandom", optional = true }
 log = { version = "0.4", optional = true }
 
 [dependencies.packed_simd]

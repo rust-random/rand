@@ -7,24 +7,27 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use rand_core::{Error, ErrorKind};
+use rand_core::Error;
 use core::fmt;
 
 /// An error that can occur when [`JitterRng::test_timer`] fails.
+/// 
+/// All variants have a value of 0x6e530400 = 1850934272 plus a small
+/// increment (1 through 5).
 ///
 /// [`JitterRng::test_timer`]: crate::JitterRng::test_timer
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TimerError {
     /// No timer available.
-    NoTimer,
+    NoTimer = 0x6e530401,
     /// Timer too coarse to use as an entropy source.
-    CoarseTimer,
+    CoarseTimer = 0x6e530402,
     /// Timer is not monotonically increasing.
-    NotMonotonic,
+    NotMonotonic = 0x6e530403,
     /// Variations of deltas of time too small.
-    TinyVariantions,
+    TinyVariantions = 0x6e530404,
     /// Too many stuck results (indicating no added entropy).
-    TooManyStuck,
+    TooManyStuck = 0x6e530405,
     #[doc(hidden)]
     __Nonexhaustive,
 }
@@ -60,10 +63,10 @@ impl From<TimerError> for Error {
         // Timer check is already quite permissive of failures so we don't
         // expect false-positive failures, i.e. any error is irrecoverable.
         #[cfg(feature = "std")] {
-            Error::with_cause(ErrorKind::Unavailable, "timer jitter failed basic quality tests", err)
+            Error::new(err)
         }
         #[cfg(not(feature = "std"))] {
-            Error::new(ErrorKind::Unavailable, "timer jitter failed basic quality tests")
+            Error::from(core::num::NonZeroU32::new(err as u32).unwrap())
         }
     }
 }

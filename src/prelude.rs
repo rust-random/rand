@@ -23,5 +23,5 @@
 #[doc(no_inline)] pub use rngs::{SmallRng, StdRng};
 #[doc(no_inline)] #[cfg(feature="std")] pub use rngs::ThreadRng;
 #[doc(no_inline)] pub use {Rng, RngCore, CryptoRng, SeedableRng};
-#[doc(no_inline)] #[cfg(feature="std")] pub use {FromEntropy, random, thread_rng};
+#[doc(no_inline)] #[cfg(feature="std")] pub use {random, thread_rng};
 #[doc(no_inline)] pub use seq::{SliceRandom, IteratorRandom};

@@ -7,27 +7,42 @@
 // except according to those terms.
 
 //! Interface to the random number generator of the operating system.
+// Note: keep this code in sync with the rand_os crate!
 
 use getrandom::getrandom;
-use rand_core::{CryptoRng, RngCore, Error, ErrorKind, impls};
+use rand_core::{CryptoRng, RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness from from the
 /// operating system.
 ///
 /// This is a zero-sized struct. It can be freely constructed with `OsRng`.
-/// 
+///
 /// The implementation is provided by the [getrandom] crate. Refer to
 /// [getrandom] documentation for details.
 ///
-/// ## Example
+/// # Blocking and error handling
 ///
+/// It is possible that when used during early boot the first call to `OsRng`
+/// will block until the system's RNG is initialised. It is also possible
+/// (though highly unlikely) for `OsRng` to fail on some platforms, most
+/// likely due to system mis-configuration.
+///
+/// After the first successful call, it is highly unlikely that failures or
+/// significant delays will occur (although performance should be expected to
+/// be much slower than a user-space PRNG).
+///
+/// # Usage example
 /// ```
 /// use rand::rngs::{StdRng, OsRng};
 /// use rand::{RngCore, SeedableRng};
 ///
-/// println!("Random number, straight from the OS: {}", OsRng.next_u32());
+/// let mut key = [0u8; 16];
+/// OsRng.fill_bytes(&mut key);
+/// let random_u64 = OsRng.next_u64();
+/// 
+/// // OsRng is especially useful for seeding other RNGs (see also from_entropy)
 /// let mut rng = StdRng::from_rng(OsRng).unwrap();
-/// println!("Another random number: {}", rng.next_u32());
+/// let _ = rng.next_u32();
 /// ```
 ///
 /// [getrandom]: https://crates.io/crates/getrandom
@@ -60,8 +75,8 @@ impl RngCore for OsRng {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        getrandom(dest).map_err(|e|
-            Error::with_cause(ErrorKind::Unavailable, "OsRng failed", e))
+        getrandom(dest)?;
+        Ok(())
     }
 }
 
@@ -71,4 +86,10 @@ fn test_os_rng() {
     let y = OsRng.next_u64();
     assert!(x != 0);
     assert!(x != y);
+}
+
+#[test]
+fn test_construction() {
+    let mut rng = OsRng::default();
+    assert!(rng.next_u64() != 0);
 }

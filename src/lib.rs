@@ -59,7 +59,7 @@
 #[cfg(feature="simd_support")] extern crate packed_simd;
 
 #[cfg(feature = "getrandom")]
-extern crate getrandom;
+extern crate getrandom_package as getrandom;
 
 extern crate rand_core;
 extern crate rand_hc;
@@ -79,8 +79,7 @@ extern crate rand_pcg;
 
 
 // Re-exports from rand_core
-pub use rand_core::{RngCore, CryptoRng, SeedableRng};
-pub use rand_core::{ErrorKind, Error};
+pub use rand_core::{RngCore, CryptoRng, SeedableRng, Error};
 
 // Public exports
 #[cfg(feature="std")] pub use rngs::thread::thread_rng;
@@ -276,10 +275,8 @@ pub trait Rng: RngCore {
     /// On big-endian platforms this performs byte-swapping to ensure
     /// portability of results from reproducible generators.
     ///
-    /// This uses [`try_fill_bytes`] internally and forwards all RNG errors. In
-    /// some cases errors may be resolvable; see [`ErrorKind`] and
-    /// documentation for the RNG in use. If you do not plan to handle these
-    /// errors you may prefer to use [`fill`].
+    /// This is identical to [`fill`] except that it uses [`try_fill_bytes`]
+    /// internally and forwards RNG errors.
     ///
     /// # Example
     ///
@@ -452,56 +449,6 @@ macro_rules! impl_as_byte_slice_arrays {
 }
 impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
 impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
-
-
-/// A convenience extension to [`SeedableRng`] allowing construction from fresh
-/// entropy. This trait is automatically implemented for any PRNG implementing
-/// [`SeedableRng`] and is not intended to be implemented by users.
-///
-/// This is equivalent to using `SeedableRng::from_rng(OsRng)` then
-/// unwrapping the result.
-///
-/// Since this is convenient and secure, it is the recommended way to create
-/// PRNGs, though two alternatives may be considered:
-///
-/// *   Deterministic creation using [`SeedableRng::from_seed`] with a fixed seed
-/// *   Seeding from `thread_rng`: `SeedableRng::from_rng(thread_rng())?`;
-///     this will usually be faster and should also be secure, but requires
-///     trusting one extra component.
-///
-/// ## Example
-///
-/// ```
-/// use rand::{Rng, FromEntropy};
-/// use rand::rngs::StdRng;
-///
-/// let mut rng = StdRng::from_entropy();
-/// println!("Random die roll: {}", rng.gen_range(1, 7));
-/// ```
-///
-/// [`OsRng`]: rngs::OsRng
-#[cfg(feature="std")]
-pub trait FromEntropy: SeedableRng {
-    /// Creates a new instance of the RNG seeded from [`OsRng`].
-    ///
-    /// This method is equivalent to `SeedableRng::from_rng(OsRng).unwrap()`.
-    ///
-    /// # Panics
-    ///
-    /// If [`OsRng`] is unable to obtain secure entropy this method will panic.
-    /// It is also possible for an RNG overriding the [`SeedableRng::from_rng`]
-    /// method to cause a panic. Both causes are extremely unlikely to occur;
-    /// most users need not worry about this.
-    fn from_entropy() -> Self;
-}
-
-#[cfg(feature="std")]
-impl<R: SeedableRng> FromEntropy for R {
-    fn from_entropy() -> R {
-        R::from_rng(rngs::OsRng).unwrap_or_else(|err|
-            panic!("FromEntropy::from_entropy() failed: {}", err))
-    }
-}
 
 
 /// Generates a random value using the thread-local random number generator.

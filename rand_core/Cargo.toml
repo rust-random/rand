@@ -18,10 +18,11 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [features]
-std = ["alloc"]    # use std library; should be default but for above bug
+std = ["alloc", "getrandom", "getrandom/std"]    # use std library; should be default but for above bug
 alloc = []  # enables Vec and Box support without std
 serde1 = ["serde", "serde_derive"] # enables serde for BlockRng wrapper
 
 [dependencies]
 serde = { version = "1", optional = true }
 serde_derive = { version = "^1.0.38", optional = true }
+getrandom = { version = "0.1", optional = true }

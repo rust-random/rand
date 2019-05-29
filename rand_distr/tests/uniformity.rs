@@ -13,8 +13,7 @@ extern crate rand_distr;
 extern crate core;
 
 use average::Histogram;
-use rand::distributions::Distribution;
-use rand::FromEntropy;
+use rand::prelude::*;
 
 const N_BINS: usize = 100;
 const N_SAMPLES: u32 = 1_000_000;

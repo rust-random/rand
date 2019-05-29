@@ -8,19 +8,8 @@
 // except according to those terms.
 
 //! Interface to the random number generator of the operating system.
-//!
-//! # Blocking and error handling
-//!
-//! It is possible that when used during early boot the first call to `OsRng`
-//! will block until the system's RNG is initialised. It is also possible
-//! (though highly unlikely) for `OsRng` to fail on some platforms, most
-//! likely due to system mis-configuration.
-//!
-//! After the first successful call, it is highly unlikely that failures or
-//! significant delays will occur (although performance should be expected to
-//! be much slower than a user-space PRNG).
-//!
-//! [getrandom]: https://crates.io/crates/getrandom
+// Note: keep this code in sync with the rand::rngs::os module!
+
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://rust-random.github.io/rand/")]
@@ -28,26 +17,36 @@
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
-#![cfg_attr(feature = "stdweb", recursion_limit="128")]
-
 #![no_std]  // but see getrandom crate
 
 pub use rand_core;  // re-export
 
 use getrandom::getrandom;
-use rand_core::{CryptoRng, RngCore, Error, ErrorKind, impls};
+use rand_core::{CryptoRng, RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness from from the
 /// operating system.
 ///
 /// This is a zero-sized struct. It can be freely constructed with `OsRng`.
-/// 
+///
 /// The implementation is provided by the [getrandom] crate. Refer to
 /// [getrandom] documentation for details.
 ///
+/// # Blocking and error handling
+///
+/// It is possible that when used during early boot the first call to `OsRng`
+/// will block until the system's RNG is initialised. It is also possible
+/// (though highly unlikely) for `OsRng` to fail on some platforms, most
+/// likely due to system mis-configuration.
+///
+/// After the first successful call, it is highly unlikely that failures or
+/// significant delays will occur (although performance should be expected to
+/// be much slower than a user-space PRNG).
+///
 /// # Usage example
 /// ```
-/// use rand_os::{OsRng, rand_core::RngCore};
+/// use rand_os::rand_core::RngCore;
+/// use rand_os::OsRng;
 ///
 /// let mut key = [0u8; 16];
 /// OsRng.fill_bytes(&mut key);
@@ -84,12 +83,8 @@ impl RngCore for OsRng {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        // Some systems do not support reading 0 random bytes.
-        // (And why waste a system call?)
-        if dest.len() == 0 { return Ok(()); }
-        
-        getrandom(dest).map_err(|e|
-            Error::with_cause(ErrorKind::Unavailable, "OsRng failed", e))
+        getrandom(dest)?;
+        Ok(())
     }
 }
 
