@@ -649,7 +649,7 @@ mod test {
     fn test_rng_trait_object() {
         use distributions::{Distribution, Standard};
         let mut rng = rng(109);
-        let mut r = &mut rng as &mut RngCore;
+        let mut r = &mut rng as &mut dyn RngCore;
         r.next_u32();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0, 1), 0);
@@ -661,7 +661,7 @@ mod test {
     fn test_rng_boxed_trait() {
         use distributions::{Distribution, Standard};
         let rng = rng(110);
-        let mut r = Box::new(rng) as Box<RngCore>;
+        let mut r = Box::new(rng) as Box<dyn RngCore>;
         r.next_u32();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0, 1), 0);

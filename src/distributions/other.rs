@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn test_misc() {
-        let rng: &mut RngCore = &mut ::test::rng(820);
+        let rng: &mut dyn RngCore = &mut ::test::rng(820);
         
         rng.sample::<char, _>(Standard);
         rng.sample::<bool, _>(Standard);

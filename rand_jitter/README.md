@@ -56,7 +56,7 @@ fn get_nstime() -> u64 {
     dur.as_secs() << 30 | dur.subsec_nanos() as u64
 }
 
-fn main() -> Result<(), Box<Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let mut rng = JitterRng::new_with_timer(get_nstime);
 
     // 1_000_000 results are required for the
