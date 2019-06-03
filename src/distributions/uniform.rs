@@ -337,7 +337,7 @@ impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed where Borrowed: Sampl
 pub struct UniformInt<X> {
     low: X,
     range: X,
-    ints_to_reject: X,
+    z: X,   // either ints_to_reject or zone depending on implementation
 }
 
 macro_rules! uniform_int_impl {
@@ -391,7 +391,7 @@ macro_rules! uniform_int_impl {
                     low: low,
                     // These are really $unsigned values, but store as $ty:
                     range: range as $ty,
-                    ints_to_reject: ints_to_reject as $unsigned as $ty
+                    z: ints_to_reject as $unsigned as $ty
                 }
             }
 
@@ -399,7 +399,7 @@ macro_rules! uniform_int_impl {
                 let range = self.range as $unsigned as $u_large;
                 if range > 0 {
                     let unsigned_max = ::core::$u_large::MAX;
-                    let zone = unsigned_max - (self.ints_to_reject as $unsigned as $u_large);
+                    let zone = unsigned_max - (self.z as $unsigned as $u_large);
                     loop {
                         let v: $u_large = rng.gen();
                         let (hi, lo) = v.wmul(range);
@@ -524,13 +524,13 @@ macro_rules! uniform_simd_int_impl {
                     low: low,
                     // These are really $unsigned values, but store as $ty:
                     range: range.cast(),
-                    zone: zone.cast(),
+                    z: zone.cast(),
                 }
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range: $unsigned = self.range.cast();
-                let zone: $unsigned = self.zone.cast();
+                let zone: $unsigned = self.z.cast();
 
                 // This might seem very slow, generating a whole new
                 // SIMD vector for every sample rejection. For most uses
