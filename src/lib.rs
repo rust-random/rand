@@ -92,6 +92,7 @@ pub mod seq;
 
 
 use core::{mem, slice};
+use core::num::Wrapping;
 use distributions::{Distribution, Standard};
 use distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
 
@@ -135,8 +136,6 @@ use distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
 pub trait Rng: RngCore {
     /// Return a random value supporting the [`Standard`] distribution.
     ///
-    /// [`Standard`]: distributions::Standard
-    ///
     /// # Example
     ///
     /// ```
@@ -147,6 +146,28 @@ pub trait Rng: RngCore {
     /// println!("{}", x);
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
+    ///
+    /// # Arrays and tuples
+    ///
+    /// The `rng.gen()` method is able to generate arrays (up to 32 elements)
+    /// and tuples (up to 12 elements), so long as all element types can be
+    /// generated.
+    ///
+    /// For arrays of integers, especially for those with small element types
+    /// (< 64 bit), it will likely be faster to instead use [`Rng::fill`].
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// let tuple: (u8, i32, char) = rng.gen(); // arbitrary tuple support
+    ///
+    /// let arr1: [f32; 32] = rng.gen();        // array construction
+    /// let mut arr2 = [0u8; 128];
+    /// rng.fill(&mut arr2);                    // array fill
+    /// ```
+    ///
+    /// [`Standard`]: distributions::Standard
     #[inline]
     fn gen<T>(&mut self) -> T
     where Standard: Distribution<T> {
@@ -378,6 +399,7 @@ impl AsByteSliceMut for [u8] {
 }
 
 macro_rules! impl_as_byte_slice {
+    () => {};
     ($t:ty) => {
         impl AsByteSliceMut for [$t] {
             fn as_byte_slice_mut(&mut self) -> &mut [u8] {
@@ -402,26 +424,47 @@ macro_rules! impl_as_byte_slice {
                 }
             }
         }
+        
+        impl AsByteSliceMut for [Wrapping<$t>] {
+            fn as_byte_slice_mut(&mut self) -> &mut [u8] {
+                if self.len() == 0 {
+                    unsafe {
+                        // must not use null pointer
+                        slice::from_raw_parts_mut(0x1 as *mut u8, 0)
+                    }
+                } else {
+                    unsafe {
+                        slice::from_raw_parts_mut(self.as_mut_ptr()
+                            as *mut u8,
+                            self.len() * mem::size_of::<$t>()
+                        )
+                    }
+                }
+            }
+
+            fn to_le(&mut self) {
+                for x in self {
+                    *x = Wrapping(x.0.to_le());
+                }
+            }
+        }
+    };
+    ($t:ty, $($tt:ty,)*) => {
+        impl_as_byte_slice!($t);
+        // TODO: this could replace above impl once Rust #32463 is fixed
+        // impl_as_byte_slice!(Wrapping<$t>);
+        impl_as_byte_slice!($($tt,)*);
     }
 }
 
-impl_as_byte_slice!(u16);
-impl_as_byte_slice!(u32);
-impl_as_byte_slice!(u64);
+impl_as_byte_slice!(u16, u32, u64, usize,);
 #[cfg(all(rustc_1_26, not(target_os = "emscripten")))] impl_as_byte_slice!(u128);
-impl_as_byte_slice!(usize);
-impl_as_byte_slice!(i8);
-impl_as_byte_slice!(i16);
-impl_as_byte_slice!(i32);
-impl_as_byte_slice!(i64);
+impl_as_byte_slice!(i8, i16, i32, i64, isize,);
 #[cfg(all(rustc_1_26, not(target_os = "emscripten")))] impl_as_byte_slice!(i128);
-impl_as_byte_slice!(isize);
 
 macro_rules! impl_as_byte_slice_arrays {
     ($n:expr,) => {};
-    ($n:expr, $N:ident, $($NN:ident,)*) => {
-        impl_as_byte_slice_arrays!($n - 1, $($NN,)*);
-
+    ($n:expr, $N:ident) => {
         impl<T> AsByteSliceMut for [T; $n] where [T]: AsByteSliceMut {
             fn as_byte_slice_mut(&mut self) -> &mut [u8] {
                 self[..].as_byte_slice_mut()
@@ -432,24 +475,18 @@ macro_rules! impl_as_byte_slice_arrays {
             }
         }
     };
+    ($n:expr, $N:ident, $($NN:ident,)*) => {
+        impl_as_byte_slice_arrays!($n, $N);
+        impl_as_byte_slice_arrays!($n - 1, $($NN,)*);
+    };
     (!div $n:expr,) => {};
     (!div $n:expr, $N:ident, $($NN:ident,)*) => {
+        impl_as_byte_slice_arrays!($n, $N);
         impl_as_byte_slice_arrays!(!div $n / 2, $($NN,)*);
-
-        impl<T> AsByteSliceMut for [T; $n] where [T]: AsByteSliceMut {
-            fn as_byte_slice_mut(&mut self) -> &mut [u8] {
-                self[..].as_byte_slice_mut()
-            }
-
-            fn to_le(&mut self) {
-                self[..].to_le()
-            }
-        }
     };
 }
 impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
 impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
-
 
 /// Generates a random value using the thread-local random number generator.
 ///
@@ -548,6 +585,12 @@ mod test {
         rng.fill(&mut array[..]);
         assert_eq!(array, [x as u32, (x >> 32) as u32]);
         assert_eq!(rng.next_u32(), x as u32);
+        
+        // Check equivalence using wrapped arrays
+        let mut warray = [Wrapping(0u32); 2];
+        rng.fill(&mut warray[..]);
+        assert_eq!(array[0], warray[0].0);
+        assert_eq!(array[1], warray[1].0);
     }
 
     #[test]
