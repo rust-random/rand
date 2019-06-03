@@ -9,6 +9,10 @@
 
 Non-physical true random number generator based on timing jitter.
 
+Note that this RNG is not suited for use cases where cryptographic security is
+required (also see [this
+discussion](https://github.com/rust-random/rand/issues/699)).
+
 This crate depends on [rand_core](https://crates.io/crates/rand_core) and is
 part of the [Rand project](https://github.com/rust-random/rand).
 
