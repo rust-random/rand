@@ -324,7 +324,7 @@ impl<D, R, T> iter::TrustedLen for DistIter<D, R, T>
 /// use rand::prelude::*;
 /// use rand::distributions::Standard;
 ///
-/// let val: f32 = SmallRng::from_entropy().sample(Standard);
+/// let val: f32 = StdRng::from_entropy().sample(Standard);
 /// println!("f32 from [0, 1): {}", val);
 /// ```
 ///

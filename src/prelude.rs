@@ -14,13 +14,14 @@
 //!
 //! ```
 //! use rand::prelude::*;
-//! # let _ = StdRng::from_entropy();
-//! # let mut r = SmallRng::from_rng(thread_rng()).unwrap();
+//! # let mut r = StdRng::from_rng(thread_rng()).unwrap();
 //! # let _: f32 = r.gen();
 //! ```
 
 #[doc(no_inline)] pub use distributions::Distribution;
-#[doc(no_inline)] pub use rngs::{SmallRng, StdRng};
+#[doc(no_inline)] pub use rngs::StdRng;
+#[cfg(feature="small_rng")]
+#[doc(no_inline)] pub use rngs::SmallRng;
 #[doc(no_inline)] #[cfg(feature="std")] pub use rngs::ThreadRng;
 #[doc(no_inline)] pub use {Rng, RngCore, CryptoRng, SeedableRng};
 #[doc(no_inline)] #[cfg(feature="std")] pub use {random, thread_rng};

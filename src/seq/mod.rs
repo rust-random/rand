@@ -476,13 +476,14 @@ mod test {
         let mut r = ::test::rng(107);
         let chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n'];
         let mut chosen = [0i32; 14];
+        // The below all use a binomial distribution with n=1000, p=1/14.
+        // binocdf(40, 1000, 1/14) ~= 2e-5; 1-binocdf(106, ..) ~= 2e-5
         for _ in 0..1000 {
             let picked = *chars.choose(&mut r).unwrap();
             chosen[(picked as usize) - ('a' as usize)] += 1;
         }
         for count in chosen.iter() {
-            let err = *count - (1000 / (chars.len() as i32));
-            assert!(-20 <= err && err <= 20);
+            assert!(40 < *count && *count < 106);
         }
 
         chosen.iter_mut().for_each(|x| *x = 0);
@@ -490,8 +491,7 @@ mod test {
             *chosen.choose_mut(&mut r).unwrap() += 1;
         }
         for count in chosen.iter() {
-            let err = *count - (1000 / (chosen.len() as i32));
-            assert!(-20 <= err && err <= 20);
+            assert!(40 < *count && *count < 106);
         }
 
         let mut v: [isize; 0] = [];
@@ -626,8 +626,10 @@ mod test {
             counts[permutation] += 1;
         }
         for count in counts.iter() {
-            let err = *count - 10000i32 / 24;
-            assert!(-50 <= err && err <= 50);
+            // Binomial(10000, 1/24) with average 416.667
+            // Octave: binocdf(n, 10000, 1/24)
+            // 99.9% chance samples lie within this range:
+            assert!(352 <= *count && *count <= 483, "count: {}", count);
         }
     }
     

@@ -19,7 +19,7 @@ use crate::utils::Float;
 /// use rand::prelude::*;
 /// use rand_distr::Weibull;
 ///
-/// let val: f64 = SmallRng::from_entropy().sample(Weibull::new(1., 10.).unwrap());
+/// let val: f64 = thread_rng().sample(Weibull::new(1., 10.).unwrap());
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]

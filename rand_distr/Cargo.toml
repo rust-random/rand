@@ -21,6 +21,8 @@ appveyor = { repository = "rust-random/rand" }
 [dependencies]
 rand = { path = "..", version = ">=0.5, <=0.7" }
 
+
 [dev-dependencies]
+rand_pcg = { version = "0.1", path = "../rand_pcg" }
 # Histogram implementation for testing uniformity
 average = "0.9.2"

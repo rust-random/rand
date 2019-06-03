@@ -19,7 +19,7 @@ use crate::utils::Float;
 /// use rand::prelude::*;
 /// use rand_distr::Pareto;
 ///
-/// let val: f64 = SmallRng::from_entropy().sample(Pareto::new(1., 2.).unwrap());
+/// let val: f64 = thread_rng().sample(Pareto::new(1., 2.).unwrap());
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]

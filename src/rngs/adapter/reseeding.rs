@@ -24,7 +24,7 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// - After `clone()`, the clone will be reseeded on first use.
 /// - After a process is forked, the RNG in the child process is reseeded within
 ///   the next few generated values, depending on the block size of the
-///   underlying PRNG. For [`ChaCha20Rng`] and [`Hc128Core`] this is a maximum of
+///   underlying PRNG. For ChaCha and Hc128 this is a maximum of
 ///   15 `u32` values before reseeding.
 /// - After the PRNG has generated a configurable number of random bytes.
 ///
@@ -61,12 +61,12 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// # extern crate rand_chacha;
 /// # fn main() {
 /// use rand::prelude::*;
-/// use rand_chacha::ChaChaCore; // Internal part of ChaChaRng that
+/// use rand_chacha::ChaCha20Core; // Internal part of ChaChaRng that
 ///                              // implements BlockRngCore
 /// use rand::rngs::OsRng;
 /// use rand::rngs::adapter::ReseedingRng;
 ///
-/// let prng = ChaChaCore::from_entropy();
+/// let prng = ChaCha20Core::from_entropy();
 /// let mut reseeding_rng = ReseedingRng::new(prng, 0, OsRng);
 ///
 /// println!("{}", reseeding_rng.gen::<u64>());
@@ -77,7 +77,6 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// ```
 ///
 /// [`ChaCha20Core`]: ../../../rand_chacha/struct.ChaCha20Core.html
-/// [`Hc128Core`]: rand_hc::Hc128Core
 /// [`BlockRngCore`]: rand_core::block::BlockRngCore
 /// [`ReseedingRng::new`]: ReseedingRng::new
 /// [`reseed()`]: ReseedingRng::reseed
@@ -325,24 +324,26 @@ mod fork {
 #[cfg(test)]
 mod test {
     use {Rng, SeedableRng};
-    use rand_hc::Hc128Core;
+    use rngs::std::Core;
     use rngs::mock::StepRng;
     use super::ReseedingRng;
 
     #[test]
     fn test_reseeding() {
         let mut zero = StepRng::new(0, 0);
-        let rng = Hc128Core::from_rng(&mut zero).unwrap();
-        let mut reseeding = ReseedingRng::new(rng, 32*4, zero);
+        let rng = Core::from_rng(&mut zero).unwrap();
+        let thresh = 1; // reseed every time the buffer is exhausted
+        let mut reseeding = ReseedingRng::new(rng, thresh, zero);
 
-        // Currently we only support for arrays up to length 32.
-        // TODO: cannot generate seq via Rng::gen because it uses different alg
-        let mut buf = [0u32; 32]; // Needs to be a multiple of the RNGs result
-                                  // size to test exactly.
-        reseeding.fill(&mut buf);
+        // RNG buffer size is [u32; 64]
+        // Debug is only implemented up to length 32 so use two arrays
+        let mut buf = ([0u32; 32], [0u32; 32]);
+        reseeding.fill(&mut buf.0);
+        reseeding.fill(&mut buf.1);
         let seq = buf;
         for _ in 0..10 {
-            reseeding.fill(&mut buf);
+            reseeding.fill(&mut buf.0);
+            reseeding.fill(&mut buf.1);
             assert_eq!(buf, seq);
         }
     }
@@ -350,7 +351,7 @@ mod test {
     #[test]
     fn test_clone_reseeding() {
         let mut zero = StepRng::new(0, 0);
-        let rng = Hc128Core::from_rng(&mut zero).unwrap();
+        let rng = Core::from_rng(&mut zero).unwrap();
         let mut rng1 = ReseedingRng::new(rng, 32*4, zero);
 
         let first: u32 = rng1.gen();

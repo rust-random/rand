@@ -14,23 +14,29 @@ keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 build = "build.rs"
 exclude = ["/utils/*", "/.travis.yml", "/appveyor.yml", ".gitignore"]
+autobenches = true
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [features]
+# Meta-features:
 default = ["std"] # without "std" rand uses libcore
 nightly = ["simd_support"] # enables all features requiring nightly rust
+
+# Optional dependencies:
 std = ["rand_core/std", "alloc", "getrandom"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
-i128_support = [] # enables i128 and u128 support
-simd_support = ["packed_simd"] # enables SIMD support
 serde1 = ["rand_core/serde1", "rand_isaac/serde1", "rand_xorshift/serde1"] # enables serialization for PRNGs
 # re-export optional WASM dependencies to avoid breakage:
 wasm-bindgen = ["getrandom_package/wasm-bindgen"]
 stdweb = ["getrandom_package/stdweb"]
 getrandom = ["getrandom_package", "rand_core/getrandom"]
+
+# Configuration:
+simd_support = ["packed_simd"] # enables SIMD support
+small_rng = ["rand_pcg"]    # enables SmallRng
 
 [workspace]
 members = [
@@ -49,8 +55,7 @@ members = [
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.4" }
-rand_pcg = { path = "rand_pcg", version = "0.1" }
-rand_hc = { path = "rand_hc", version = "0.1" }
+rand_pcg = { path = "rand_pcg", version = "0.1", optional = true }
 # Do not depend on 'getrandom_package' directly; use the 'getrandom' feature!
 getrandom_package = { version = "0.1.1", package = "getrandom", optional = true }
 log = { version = "0.4", optional = true }
@@ -66,16 +71,44 @@ features = ["into_bits"]
 # Used for fork protection (reseeding.rs)
 libc = { version = "0.2.22", default-features = false }
 
+# Emscripten does not support 128-bit integers, which are used by ChaCha code.
+# We work around this by using a different RNG.
+[target.'cfg(not(target_os = "emscripten"))'.dependencies]
+rand_chacha = { path = "rand_chacha", version = "0.2" }
+[target.'cfg(target_os = "emscripten")'.dependencies]
+rand_hc = { path = "rand_hc", version = "0.1" }
+
 [dev-dependencies]
+rand_pcg = { path = "rand_pcg", version = "0.1" }
 # Only for benches:
+rand_hc = { path = "rand_hc", version = "0.1" }
 rand_xoshiro = { path = "rand_xoshiro", version = "0.2" }
 rand_isaac = { path = "rand_isaac", version = "0.1" }
-rand_chacha = { path = "rand_chacha", version = "0.2" }
 rand_xorshift = { path = "rand_xorshift", version = "0.1" }
 rand_distr = { path = "rand_distr", version = "0.1" }
 
 [build-dependencies]
 autocfg = "0.1"
+
+[[bench]]
+name = "distributions"
+path = "benches/distributions.rs"
+required-features = ["small_rng"]
+
+[[bench]]
+name = "generators"
+path = "benches/generators.rs"
+required-features = ["small_rng"]
+
+[[bench]]
+name = "misc"
+path = "benches/misc.rs"
+required-features = ["small_rng"]
+
+[[bench]]
+name = "seq"
+path = "benches/seq.rs"
+required-features = ["small_rng"]
 
 [package.metadata.docs.rs]
 all-features = true

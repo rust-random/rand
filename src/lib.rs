@@ -62,8 +62,9 @@
 extern crate getrandom_package as getrandom;
 
 extern crate rand_core;
-extern crate rand_hc;
-extern crate rand_pcg;
+#[cfg(not(target_os = "emscripten"))] extern crate rand_chacha;
+#[cfg(target_os = "emscripten")] extern crate rand_hc;
+#[cfg(feature="small_rng")] extern crate rand_pcg;
 
 #[cfg(feature = "log")] #[macro_use] extern crate log;
 #[allow(unused)]
@@ -540,12 +541,15 @@ where Standard: Distribution<T> {
 #[cfg(test)]
 mod test {
     use rngs::mock::StepRng;
-    use rngs::StdRng;
     use super::*;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 
+    /// Construct a deterministic RNG with the given seed
     pub fn rng(seed: u64) -> impl RngCore {
-        StdRng::seed_from_u64(seed)
+        // For tests, we want a statistically good, fast, reproducible RNG.
+        // PCG32 will do fine, and will be easy to embed if we ever need to.
+        const INC: u64 = 11634580027462260723;
+        rand_pcg::Pcg32::new(seed, INC)
     }
 
     #[test]
