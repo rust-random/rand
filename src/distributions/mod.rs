@@ -289,13 +289,15 @@ impl<D, R, T> iter::TrustedLen for DistIter<D, R, T>
 /// * Wrapping integers (`Wrapping<T>`), besides the type identical to their
 ///   normal integer variants.
 ///
-/// The following aggregate types also implement the distribution `Standard` as
-/// long as their component types implement it:
+/// The `Standard` distribution also supports generation of the following
+/// compound types where all component types are supported:
 ///
-/// * Tuples and arrays: Each element of the tuple or array is generated
-///   independently, using the `Standard` distribution recursively.
-/// * `Option<T>` where `Standard` is implemented for `T`: Returns `None` with
-///   probability 0.5; otherwise generates a random `x: T` and returns `Some(x)`.
+/// *   Tuples (up to 12 elements): each element is generated sequentially.
+/// *   Arrays (up to 32 elements): each element is generated sequentially;
+///     see also [`Rng::fill`] which supports arbitrary array length for integer
+///     types and tends to be faster for `u32` and smaller types.
+/// *   `Option<T>` first generates a `bool`, and if true generates and returns
+///     `Some(value)` where `value: T`, otherwise returning `None`.
 ///
 /// ## Custom implementations
 ///

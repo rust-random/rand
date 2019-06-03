@@ -135,8 +135,6 @@ use distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
 pub trait Rng: RngCore {
     /// Return a random value supporting the [`Standard`] distribution.
     ///
-    /// [`Standard`]: distributions::Standard
-    ///
     /// # Example
     ///
     /// ```
@@ -147,6 +145,28 @@ pub trait Rng: RngCore {
     /// println!("{}", x);
     /// println!("{:?}", rng.gen::<(f64, bool)>());
     /// ```
+    ///
+    /// # Arrays and tuples
+    ///
+    /// The `rng.gen()` method is able to generate arrays (up to 32 elements)
+    /// and tuples (up to 12 elements), so long as all element types can be
+    /// generated.
+    ///
+    /// For arrays of integers, especially for those with small element types
+    /// (< 64 bit), it will likely be faster to instead use [`Rng::fill`].
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    /// let tuple: (u8, i32, char) = rng.gen(); // arbitrary tuple support
+    ///
+    /// let arr1: [f32; 32] = rng.gen();        // array construction
+    /// let mut arr2 = [0u8; 128];
+    /// rng.fill(&mut arr2);                    // array fill
+    /// ```
+    ///
+    /// [`Standard`]: distributions::Standard
     #[inline]
     fn gen<T>(&mut self) -> T
     where Standard: Distribution<T> {
