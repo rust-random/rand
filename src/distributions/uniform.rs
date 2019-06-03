@@ -246,14 +246,11 @@ pub trait UniformSampler: Sized {
     /// Sample a single value uniformly from a range with inclusive lower bound
     /// and exclusive upper bound `[low, high)`.
     ///
-    /// Usually users should not call this directly but instead use
-    /// `Uniform::sample_single`, which asserts that `low < high` before calling
-    /// this.
-    ///
-    /// Via this method, implementations can provide a method optimized for
-    /// sampling only a single value from the specified range. The default
-    /// implementation simply calls `UniformSampler::new` then `sample` on the
-    /// result.
+    /// By default this is implemented using
+    /// `UniformSampler::new(low, high).sample(rng)`. However, for some types
+    /// more optimal implementations for single usage may be provided via this
+    /// method (which is the case for integers and floats).
+    /// Results may not be identical.
     fn sample_single<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R)
         -> Self::X
         where B1: SampleBorrow<Self::X> + Sized,
@@ -309,31 +306,29 @@ impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed where Borrowed: Sampl
 ///
 /// # Implementation notes
 ///
+/// For simplicity, we use the same generic struct `UniformInt<X>` for all
+/// integer types `X`. This gives us only one field type, `X`; to store unsigned
+/// values of this size, we take use the fact that these conversions are no-ops.
+///
 /// For a closed range, the number of possible numbers we should generate is
-/// `range = (high - low + 1)`. It is not possible to end up with a uniform
-/// distribution if we map *all* the random integers that can be generated to
-/// this range. We have to map integers from a `zone` that is a multiple of the
-/// range. The rest of the integers, that cause a bias, are rejected.
+/// `range = (high - low + 1)`. To avoid bias, we must ensure that the size of
+/// our sample space, `zone`, is a multiple of `range`; other values must be
+/// rejected (by replacing with a new random sample).
 ///
-/// The problem with `range` is that to cover the full range of the type, it has
-/// to store `unsigned_max + 1`, which can't be represented. But if the range
-/// covers the full range of the type, no modulus is needed. A range of size 0
-/// can't exist, so we use that to represent this special case. Wrapping
-/// arithmetic even makes representing `unsigned_max + 1` as 0 simple.
+/// As a special case, we use `range = 0` to represent the full range of the
+/// result type (i.e. for `new_inclusive($ty::MIN, $ty::MAX)`).
 ///
-/// We don't calculate `zone` directly, but first calculate the number of
-/// integers to reject. To handle `unsigned_max + 1` not fitting in the type,
-/// we use:
-/// `ints_to_reject = (unsigned_max + 1) % range;`
-/// `ints_to_reject = (unsigned_max - range + 1) % range;`
+/// The optimum `zone` is the largest product of `range` which fits in our
+/// (unsigned) target type. We calculate this by calculating how many numbers we
+/// must reject: `reject = (MAX + 1) % range = (MAX - range + 1) % range`. Any (large)
+/// product of `range` will suffice, thus in `sample_single` we multiply by a
+/// power of 2 via bit-shifting (faster but may cause more rejections).
 ///
-/// The smallest integer PRNGs generate is `u32`. That is why for small integer
-/// sizes (`i8`/`u8` and `i16`/`u16`) there is an optimization: don't pick the
-/// largest zone that can fit in the small type, but pick the largest zone that
-/// can fit in an `u32`. `ints_to_reject` is always less than half the size of
-/// the small integer. This means the first bit of `zone` is always 1, and so
-/// are all the other preceding bits of a larger integer. The easiest way to
-/// grow the `zone` for the larger type is to simply sign extend it.
+/// The smallest integer PRNGs generate is `u32`. For 8- and 16-bit outputs we
+/// use `u32` for our `zone` and samples (because it's not slower and because
+/// it reduces the chance of having to reject a sample). In this case we cannot
+/// store `zone` in the target type since it is too large, however we know
+/// `ints_to_reject < range <= $unsigned::MAX`.
 ///
 /// An alternative to using a modulus is widening multiply: After a widening
 /// multiply by `range`, the result is in the high word. Then comparing the low
@@ -342,12 +337,11 @@ impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed where Borrowed: Sampl
 pub struct UniformInt<X> {
     low: X,
     range: X,
-    zone: X,
+    z: X,   // either ints_to_reject or zone depending on implementation
 }
 
 macro_rules! uniform_int_impl {
-    ($ty:ty, $signed:ty, $unsigned:ident,
-     $i_large:ident, $u_large:ident) => {
+    ($ty:ty, $unsigned:ident, $u_large:ident) => {
         impl SampleUniform for $ty {
             type Sampler = UniformInt<$ty>;
         }
@@ -382,34 +376,30 @@ macro_rules! uniform_int_impl {
                 let high = *high_b.borrow();
                 assert!(low <= high,
                         "Uniform::new_inclusive called with `low > high`");
-                let unsigned_max = ::core::$unsigned::MAX;
+                let unsigned_max = ::core::$u_large::MAX;
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
                 let ints_to_reject =
                     if range > 0 {
+                        let range = range as $u_large;
                         (unsigned_max - range + 1) % range
                     } else {
                         0
                     };
-                let zone = unsigned_max - ints_to_reject;
 
                 UniformInt {
                     low: low,
                     // These are really $unsigned values, but store as $ty:
                     range: range as $ty,
-                    zone: zone as $ty
+                    z: ints_to_reject as $unsigned as $ty
                 }
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range = self.range as $unsigned as $u_large;
                 if range > 0 {
-                    // Grow `zone` to fit a type of at least 32 bits, by
-                    // sign-extending it (the first bit is always 1, so are all
-                    // the preceding bits of the larger type).
-                    // For types that already have the right size, all the
-                    // casting is a no-op.
-                    let zone = self.zone as $signed as $i_large as $u_large;
+                    let unsigned_max = ::core::$u_large::MAX;
+                    let zone = unsigned_max - (self.z as $unsigned as $u_large);
                     loop {
                         let v: $u_large = rng.gen();
                         let (hi, lo) = v.wmul(range);
@@ -431,7 +421,7 @@ macro_rules! uniform_int_impl {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
                 assert!(low < high,
-                        "Uniform::sample_single called with low >= high");
+                        "UniformSampler::sample_single: low >= high");
                 let range = high.wrapping_sub(low) as $unsigned as $u_large;
                 let zone =
                     if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
@@ -459,20 +449,20 @@ macro_rules! uniform_int_impl {
     }
 }
 
-uniform_int_impl! { i8, i8, u8, i32, u32 }
-uniform_int_impl! { i16, i16, u16, i32, u32 }
-uniform_int_impl! { i32, i32, u32, i32, u32 }
-uniform_int_impl! { i64, i64, u64, i64, u64 }
+uniform_int_impl! { i8, u8, u32 }
+uniform_int_impl! { i16, u16, u32 }
+uniform_int_impl! { i32, u32, u32 }
+uniform_int_impl! { i64, u64, u64 }
 #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
-uniform_int_impl! { i128, i128, u128, u128, u128 }
-uniform_int_impl! { isize, isize, usize, isize, usize }
-uniform_int_impl! { u8, i8, u8, i32, u32 }
-uniform_int_impl! { u16, i16, u16, i32, u32 }
-uniform_int_impl! { u32, i32, u32, i32, u32 }
-uniform_int_impl! { u64, i64, u64, i64, u64 }
-uniform_int_impl! { usize, isize, usize, isize, usize }
+uniform_int_impl! { i128, u128, u128 }
+uniform_int_impl! { isize, usize, usize }
+uniform_int_impl! { u8, u8, u32 }
+uniform_int_impl! { u16, u16, u32 }
+uniform_int_impl! { u32, u32, u32 }
+uniform_int_impl! { u64, u64, u64 }
+uniform_int_impl! { usize, usize, usize }
 #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
-uniform_int_impl! { u128, u128, u128, i128, u128 }
+uniform_int_impl! { u128, u128, u128 }
 
 #[cfg(all(feature = "simd_support", feature = "nightly"))]
 macro_rules! uniform_simd_int_impl {
@@ -534,13 +524,13 @@ macro_rules! uniform_simd_int_impl {
                     low: low,
                     // These are really $unsigned values, but store as $ty:
                     range: range.cast(),
-                    zone: zone.cast(),
+                    z: zone.cast(),
                 }
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range: $unsigned = self.range.cast();
-                let zone: $unsigned = self.zone.cast();
+                let zone: $unsigned = self.z.cast();
 
                 // This might seem very slow, generating a whole new
                 // SIMD vector for every sample rejection. For most uses
@@ -736,7 +726,7 @@ macro_rules! uniform_float_impl {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
                 assert!(low.all_lt(high),
-                        "Uniform::sample_single called with low >= high");
+                        "UniformSampler::sample_single: low >= high");
                 let mut scale = high - low;
 
                 loop {
@@ -787,7 +777,7 @@ macro_rules! uniform_float_impl {
                     let mask = !scale.finite_mask();
                     if mask.any() {
                         assert!(low.all_finite() && high.all_finite(),
-                                "Uniform::sample_single called with non-finite boundaries");
+                                "Uniform::sample_single: low and high must be finite");
                         scale = scale.decrease_masked(mask);
                     }
                 }

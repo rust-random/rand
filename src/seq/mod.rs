@@ -200,13 +200,13 @@ pub trait IteratorRandom: Iterator + Sized {
         let mut result = None;
 
         if upper == Some(lower) {
-            return if lower == 0 { None } else { self.nth(rng.gen_range(0, lower)) };
+            return if lower == 0 { None } else { self.nth(gen_index(rng, lower)) };
         }
 
         // Continue until the iterator is exhausted
         loop {
             if lower > 1 {
-                let ix = rng.gen_range(0, lower + consumed);
+                let ix = gen_index(rng, lower + consumed);
                 let skip;
                 if ix < lower {
                     result = self.nth(ix);
@@ -267,7 +267,7 @@ pub trait IteratorRandom: Iterator + Sized {
 
         // Continue, since the iterator was not exhausted
         for (i, elem) in self.enumerate() {
-            let k = rng.gen_range(0, i + 1 + amount);
+            let k = gen_index(rng, i + 1 + amount);
             if let Some(slot) = buf.get_mut(k) {
                 *slot = elem;
             }
@@ -300,7 +300,7 @@ pub trait IteratorRandom: Iterator + Sized {
         // If the iterator stops once, then so do we.
         if reservoir.len() == amount {
             for (i, elem) in self.enumerate() {
-                let k = rng.gen_range(0, i + 1 + amount);
+                let k = gen_index(rng, i + 1 + amount);
                 if let Some(slot) = reservoir.get_mut(k) {
                     *slot = elem;
                 }
@@ -323,7 +323,7 @@ impl<T> SliceRandom for [T] {
         if self.is_empty() {
             None
         } else {
-            Some(&self[rng.gen_range(0, self.len())])
+            Some(&self[gen_index(rng, self.len())])
         }
     }
 
@@ -333,7 +333,7 @@ impl<T> SliceRandom for [T] {
             None
         } else {
             let len = self.len();
-            Some(&mut self[rng.gen_range(0, len)])
+            Some(&mut self[gen_index(rng, len)])
         }
     }
 
@@ -390,7 +390,7 @@ impl<T> SliceRandom for [T] {
     where R: Rng + ?Sized {
         for i in (1..self.len()).rev() {
             // invariant: elements with index > i have been locked in place.
-            self.swap(i, rng.gen_range(0, i + 1));
+            self.swap(i, gen_index(rng, i + 1));
         }
     }
 
@@ -408,7 +408,7 @@ impl<T> SliceRandom for [T] {
 
         for i in (end..len).rev() {
             // invariant: elements with index > i have been locked in place.
-            self.swap(i, rng.gen_range(0, i + 1));
+            self.swap(i, gen_index(rng, i + 1));
         }
         let r = self.split_at_mut(end);
         (r.1, r.0)
@@ -447,6 +447,19 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 {
     fn len(&self) -> usize {
         self.indices.len()
+    }
+}
+
+
+// Sample a number uniformly between 0 and `ubound`. Uses 32-bit sampling where
+// possible, primarily in order to produce the same output on 32-bit and 64-bit
+// platforms.
+#[inline]
+fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
+    if ubound <= (core::u32::MAX as usize) {
+        rng.gen_range(0, ubound as u32) as usize
+    } else {
+        rng.gen_range(0, ubound)
     }
 }
 

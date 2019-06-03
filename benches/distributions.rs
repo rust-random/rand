@@ -149,6 +149,11 @@ distr_int!(distr_uniform_i16, i16, Uniform::new(-500i16, 2000));
 distr_int!(distr_uniform_i32, i32, Uniform::new(-200_000_000i32, 800_000_000));
 distr_int!(distr_uniform_i64, i64, Uniform::new(3i64, 123_456_789_123));
 distr_int!(distr_uniform_i128, i128, Uniform::new(-123_456_789_123i128, 123_456_789_123_456_789));
+distr_int!(distr_uniform_usize16, usize, Uniform::new(0usize, 0xb9d7));
+distr_int!(distr_uniform_usize32, usize, Uniform::new(0usize, 0x548c0f43));
+#[cfg(target_pointer_width = "64")]
+distr_int!(distr_uniform_usize64, usize, Uniform::new(0usize, 0x3a42714f2bf927a8));
+distr_int!(distr_uniform_isize, isize, Uniform::new(-1060478432isize, 1858574057));
 
 distr_float!(distr_uniform_f32, f32, Uniform::new(2.26f32, 2.319));
 distr_float!(distr_uniform_f64, f64, Uniform::new(2.26f64, 2.319));

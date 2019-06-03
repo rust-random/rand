@@ -208,6 +208,9 @@ pub enum WeightedError {
 
     /// All items in the provided weight collection are zero.
     AllWeightsZero,
+    
+    /// Too many weights are provided (length greater than `u32::MAX`)
+    TooMany,
 }
 
 impl WeightedError {
@@ -216,6 +219,7 @@ impl WeightedError {
             WeightedError::NoItem => "No weights provided.",
             WeightedError::InvalidWeight => "A weight is invalid.",
             WeightedError::AllWeightsZero => "All weights are zero.",
+            WeightedError::TooMany => "Too many weights (hit u32::MAX)",
         }
     }
 }
