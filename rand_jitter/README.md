@@ -24,7 +24,7 @@ Links:
 
 -   [API documentation (master)](https://rust-random.github.io/rand/rand_jitter)
 -   [API documentation (docs.rs)](https://docs.rs/rand_jitter)
--   [Changelog](CHANGELOG.md)
+-   [Changelog](https://github.com/rust-random/rand/blob/master/rand_jitter/CHANGELOG.md)
 
 ## Features
 
