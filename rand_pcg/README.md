@@ -24,7 +24,7 @@ Links:
 
 -   [API documentation (master)](https://rust-random.github.io/rand/rand_pcg)
 -   [API documentation (docs.rs)](https://docs.rs/rand_pcg)
--   [Changelog](CHANGELOG.md)
+-   [Changelog](https://github.com/rust-random/rand/blob/master/rand_pcg/CHANGELOG.md)
 
 
 ## Crate Features
