@@ -22,7 +22,7 @@ Links:
 
 -   [API documentation (master)](https://rust-random.github.io/rand/rand_isaac)
 -   [API documentation (docs.rs)](https://docs.rs/rand_isaac)
--   [Changelog](CHANGELOG.md)
+-   [Changelog](https://github.com/rust-random/rand/blob/master/rand_isaac/CHANGELOG.md)
 
 [rand]: https://crates.io/crates/rand
 [^1]: Bob Jenkins, [*ISAAC: A fast cryptographic random number generator*](http://burtleburtle.net/bob/rand/isaacafa.html)
