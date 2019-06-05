@@ -21,7 +21,6 @@ serde = { version = "1", optional=true }
 serde_derive = { version = "^1.0.38", optional=true }
 
 [dev-dependencies]
-rand = { path = "..", version = "0.6", default-features=false }  # needed for doctests
 # This is for testing serde, unfortunately we can't specify feature-gated dev
 # deps yet, see: https://github.com/rust-lang/cargo/issues/1596
 bincode = { version = "1" }

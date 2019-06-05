@@ -32,10 +32,9 @@ impl Xoshiro128Plus {
     /// parallel computations.
     ///
     /// ```
-    /// # extern crate rand;
     /// # extern crate rand_xoshiro;
     /// # fn main() {
-    /// use rand::SeedableRng;
+    /// use rand_xoshiro::rand_core::SeedableRng;
     /// use rand_xoshiro::Xoroshiro128StarStar;
     ///
     /// let rng1 = Xoroshiro128StarStar::seed_from_u64(0);
