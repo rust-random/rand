@@ -16,11 +16,14 @@ as an RNG. It is an improved variant of the Salsa20 cipher family, which was
 selected as one of the "stream ciphers suitable for widespread adoption" by
 eSTREAM[^2].
 
+The RNGs provided by this crate are implemented via the fast stream ciphers of
+the [`c2-chacha`](https://crates.io/crates/c2-chacha) crate.
+
 Links:
 
 -   [API documentation (master)](https://rust-random.github.io/rand/rand_chacha)
 -   [API documentation (docs.rs)](https://docs.rs/rand_chacha)
--   [Changelog](CHANGELOG.md)
+-   [Changelog](https://github.com/rust-random/rand/blob/master/rand_chacha/CHANGELOG.md)
 
 [rand]: https://crates.io/crates/rand
 [^1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
