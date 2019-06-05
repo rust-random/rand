@@ -25,7 +25,7 @@ Links:
 
 -   [API documentation (master)](https://rust-random.github.io/rand/rand_core)
 -   [API documentation (docs.rs)](https://docs.rs/rand_core)
--   [Changelog](CHANGELOG.md)
+-   [Changelog](https://github.com/rust-random/rand/blob/master/rand_core/CHANGELOG.md)
 
 [rand]: https://crates.io/crates/rand
 
@@ -41,6 +41,11 @@ The `rand_core` crate provides:
 The traits and error types are also available via `rand`.
 
 ## Versions
+
+The current version is:
+```
+rand_core = "0.5.0"
+```
 
 Rand libs have inter-dependencies and make use of the
 [semver trick](https://github.com/dtolnay/semver-trick/) in order to make traits

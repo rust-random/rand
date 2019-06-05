@@ -22,5 +22,5 @@ wasm-bindgen = ["getrandom/wasm-bindgen"]
 stdweb = ["getrandom/stdweb"]
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.4", features = ["std"] }
+rand_core = { path = "../rand_core", version = "0.5", features = ["std"] }
 getrandom = "0.1.1"
