@@ -1,6 +1,6 @@
 [package]
 name = "rand_distr"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["The Rand Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -20,7 +20,6 @@ appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
 rand = { path = "..", version = ">=0.5, <=0.7" }
-
 
 [dev-dependencies]
 rand_pcg = { version = "0.1", path = "../rand_pcg" }
