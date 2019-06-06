@@ -131,6 +131,7 @@ impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng<R> {
 impl<R: BlockRngCore> BlockRng<R> {
     /// Create a new `BlockRng` from an existing RNG implementing
     /// `BlockRngCore`. Results will be generated on first use.
+    #[inline]
     pub fn new(core: R) -> BlockRng<R>{
         let results_empty = R::Results::default();
         BlockRng {
@@ -145,18 +146,21 @@ impl<R: BlockRngCore> BlockRng<R> {
     /// If this is equal to or larger than the size of the result buffer then
     /// the buffer is "empty" and `generate()` must be called to produce new
     /// results.
+    #[inline(always)]
     pub fn index(&self) -> usize {
         self.index
     }
 
     /// Reset the number of available results.
     /// This will force a new set of results to be generated on next use.
+    #[inline]
     pub fn reset(&mut self) {
         self.index = self.results.as_ref().len();
     }
 
     /// Generate a new set of results immediately, setting the index to the
     /// given value.
+    #[inline]
     pub fn generate_and_set(&mut self, index: usize) {
         assert!(index < self.results.as_ref().len());
         self.core.generate(&mut self.results);
@@ -167,7 +171,7 @@ impl<R: BlockRngCore> BlockRng<R> {
 impl<R: BlockRngCore<Item=u32>> RngCore for BlockRng<R>
 where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
 {
-    #[inline(always)]
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         if self.index >= self.results.as_ref().len() {
             self.generate_and_set(0);
@@ -178,7 +182,7 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
         value
     }
 
-    #[inline(always)]
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         let read_u64 = |results: &[u32], index| {
             if cfg!(any(target_endian = "little")) {
@@ -210,6 +214,7 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
         }
     }
 
+    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         let mut read_len = 0;
         while read_len < dest.len() {
@@ -225,23 +230,26 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
         }
     }
 
+    #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.fill_bytes(dest);
-        Ok(())
+        Ok(self.fill_bytes(dest))
     }
 }
 
 impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
     type Seed = R::Seed;
 
+    #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
         Self::new(R::from_seed(seed))
     }
 
+    #[inline(always)]
     fn seed_from_u64(seed: u64) -> Self {
         Self::new(R::seed_from_u64(seed))
     }
 
+    #[inline(always)]
     fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
         Ok(Self::new(R::from_rng(rng)?))
     }
@@ -296,6 +304,7 @@ impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng64<R> {
 impl<R: BlockRngCore> BlockRng64<R> {
     /// Create a new `BlockRng` from an existing RNG implementing
     /// `BlockRngCore`. Results will be generated on first use.
+    #[inline]
     pub fn new(core: R) -> BlockRng64<R>{
         let results_empty = R::Results::default();
         BlockRng64 {
@@ -311,12 +320,14 @@ impl<R: BlockRngCore> BlockRng64<R> {
     /// If this is equal to or larger than the size of the result buffer then
     /// the buffer is "empty" and `generate()` must be called to produce new
     /// results.
+    #[inline(always)]
     pub fn index(&self) -> usize {
         self.index
     }
 
     /// Reset the number of available results.
     /// This will force a new set of results to be generated on next use.
+    #[inline]
     pub fn reset(&mut self) {
         self.index = self.results.as_ref().len();
         self.half_used = false;
@@ -324,6 +335,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
 
     /// Generate a new set of results immediately, setting the index to the
     /// given value.
+    #[inline]
     pub fn generate_and_set(&mut self, index: usize) {
         assert!(index < self.results.as_ref().len());
         self.core.generate(&mut self.results);
@@ -335,7 +347,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
 impl<R: BlockRngCore<Item=u64>> RngCore for BlockRng64<R>
 where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 {
-    #[inline(always)]
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         let mut index = self.index * 2 - self.half_used as usize;
         if index >= self.results.as_ref().len() * 2 {
@@ -361,7 +373,7 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         if self.index >= self.results.as_ref().len() {
             self.core.generate(&mut self.results);
@@ -374,6 +386,7 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
         value
     }
 
+    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         let mut read_len = 0;
         self.half_used = false;
@@ -392,6 +405,7 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
         }
     }
 
+    #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         Ok(self.fill_bytes(dest))
     }
@@ -400,14 +414,17 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng64<R> {
     type Seed = R::Seed;
 
+    #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
         Self::new(R::from_seed(seed))
     }
 
+    #[inline(always)]
     fn seed_from_u64(seed: u64) -> Self {
         Self::new(R::seed_from_u64(seed))
     }
 
+    #[inline(always)]
     fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
         Ok(Self::new(R::from_rng(rng)?))
     }
