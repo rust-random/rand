@@ -22,7 +22,7 @@ Links:
 
 -   [API documentation (master)](https://rust-random.github.io/rand/rand_xorshift)
 -   [API documentation (docs.rs)](https://docs.rs/rand_xorshift)
--   [Changelog](CHANGELOG.md)
+-   [Changelog](https://github.com/rust-random/rand/blob/master/rand_xorshift/CHANGELOG.md)
 
 [rand]: https://crates.io/crates/rand
 

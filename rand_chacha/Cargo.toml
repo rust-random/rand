@@ -1,6 +1,6 @@
 [package]
 name = "rand_chacha"
-version = "0.2.1"
+version = "0.2.0"
 authors = ["The Rand Project Developers", "The Rust Project Developers", "The CryptoCorrosion Contributors"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -19,7 +19,7 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.4" }
+rand_core = { path = "../rand_core", version = "0.5" }
 c2-chacha = { version = "0.2.2", default-features = false }
 
 [build-dependencies]

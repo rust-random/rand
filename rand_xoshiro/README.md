@@ -17,7 +17,7 @@ Links:
 
 -   [API documentation (master)](https://rust-random.github.io/rand/rand_xoshiro)
 -   [API documentation (docs.rs)](https://docs.rs/rand_xoshiro)
--   [Changelog](CHANGELOG.md)
+-   [Changelog](https://github.com/rust-random/rand/blob/master/rand_xoshiro/CHANGELOG.md)
 
 ## Crate Features
 

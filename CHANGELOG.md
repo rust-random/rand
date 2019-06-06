@@ -9,7 +9,8 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 
-## Unreleased
+## [0.7.0 Pre-release] - 2019-06-06
+Many changes (TODO)
 - Enable fork protection of ReseedingRng without `std`
 - Remove dependency on `winapi`
 

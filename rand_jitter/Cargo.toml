@@ -1,6 +1,6 @@
 [package]
 name = "rand_jitter"
-version = "0.1.4"
+version = "0.2.0"
 authors = ["The Rand Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -14,7 +14,7 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.4" }
+rand_core = { path = "../rand_core", version = "0.5" }
 log = { version = "0.4", optional = true }
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]

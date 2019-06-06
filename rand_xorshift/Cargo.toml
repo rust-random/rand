@@ -1,6 +1,6 @@
 [package]
 name = "rand_xorshift"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -21,7 +21,7 @@ appveyor = { repository = "rust-random/rand" }
 serde1 = ["serde", "serde_derive"]
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.4" }
+rand_core = { path = "../rand_core", version = "0.5" }
 serde = { version = "1", optional = true }
 serde_derive = { version = "^1.0.38", optional = true }
 

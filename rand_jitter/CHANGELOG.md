@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2019-06-06
+- Bump `rand_core` version
+- Support new `Error` type in `rand_core` 0.5
+- Remove CryptoRng trait bound (#699, #814)
+- Enable doc-testing of README
+
 ## [0.1.4] - 2019-05-02
 - Change error conversion code to partially fix #738
 
