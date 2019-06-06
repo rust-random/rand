@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.0] - 2019-06-06
 - Enable testing with Miri and fix incorrect pointer usages (#779, #780, #781, #783, #784)
 - Rewrite `Error` type and adjust API (#800)
+- Adjust usage of `#[inline]` for `BlockRng` and `BlockRng64`
 
 ## [0.4.0] - 2019-01-24
 - Disable the `std` feature by default (#702)

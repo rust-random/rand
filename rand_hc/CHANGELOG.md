@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.1] - 2019-06-06
 - Bump `rand_core` version
+- Adjust usage of `#[inline]`
 
 ## [0.1.0] - 2018-10-17
 - Pulled out of the Rand crate
