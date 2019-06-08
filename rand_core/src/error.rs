@@ -15,6 +15,8 @@ use std::error::Error as stdError;
 #[cfg(feature="std")]
 use std::io;
 
+use core5::Error as Error5;
+
 /// Error kind which can be matched over.
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum ErrorKind {
@@ -172,6 +174,36 @@ impl From<Error> for io::Error {
             ErrorKind::Transient => io::Error::new(Other, error),
             ErrorKind::NotReady => io::Error::new(WouldBlock, error),
             ErrorKind::__Nonexhaustive => unreachable!(),
+        }
+    }
+}
+
+impl From<Error5> for Error {
+    fn from(_error: Error5) -> Self {
+        #[cfg(feature="std")] {
+            Error::with_cause(
+                ErrorKind::Unavailable,
+                "(from rand_core5::Error)",
+                _error.take_inner()
+            )
+        }
+        #[cfg(not(feature="std"))] {
+            Error::new(
+                ErrorKind::Unavailable,
+                "(from rand_core5::Error)"
+            )
+        }
+    }
+}
+
+impl From<Error> for Error5 {
+    fn from(_error: Error) -> Self {
+        #[cfg(feature="std")] {
+            Error5::new(Box::new(_error))
+        }
+        #[cfg(not(feature="std"))] {
+            use core::num::NonZeroU32;
+            Error5::from(NonZeroU32::new(1897042795).unwrap())
         }
     }
 }

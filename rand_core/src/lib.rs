@@ -42,6 +42,7 @@
 #[cfg(all(feature = "alloc", not(feature="std")))] extern crate alloc;
 #[cfg(feature="serde1")] extern crate serde;
 #[cfg(feature="serde1")] #[macro_use] extern crate serde_derive;
+extern crate rand_core as core5;
 
 
 use core::default::Default;
@@ -51,12 +52,10 @@ use core::ptr::copy_nonoverlapping;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
 pub use error::{ErrorKind, Error};
-
+pub use core5::{block, le, CryptoRng};
 
 mod error;
-pub mod block;
 pub mod impls;
-pub mod le;
 
 
 /// The core of a random number generator.
@@ -183,30 +182,6 @@ pub trait RngCore {
     /// [`fill_bytes`]: RngCore::fill_bytes
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
-
-/// A marker trait used to indicate that an [`RngCore`] or [`BlockRngCore`]
-/// implementation is supposed to be cryptographically secure.
-///
-/// *Cryptographically secure generators*, also known as *CSPRNGs*, should
-/// satisfy an additional properties over other generators: given the first
-/// *k* bits of an algorithm's output
-/// sequence, it should not be possible using polynomial-time algorithms to
-/// predict the next bit with probability significantly greater than 50%.
-///
-/// Some generators may satisfy an additional property, however this is not
-/// required by this trait: if the CSPRNG's state is revealed, it should not be
-/// computationally-feasible to reconstruct output prior to this. Some other
-/// generators allow backwards-computation and are consided *reversible*.
-///
-/// Note that this trait is provided for guidance only and cannot guarantee
-/// suitability for cryptographic applications. In general it should only be
-/// implemented for well-reviewed code implementing well-regarded algorithms.
-///
-/// Note also that use of a `CryptoRng` does not protect against other
-/// weaknesses such as seeding from a weak entropy source or leaking state.
-///
-/// [`BlockRngCore`]: block::BlockRngCore
-pub trait CryptoRng {}
 
 /// A random number generator that can be explicitly seeded.
 ///
@@ -426,12 +401,70 @@ impl std::io::Read for RngCore {
     }
 }
 
-// Implement `CryptoRng` for references to an `CryptoRng`.
-impl<'a, R: CryptoRng + ?Sized> CryptoRng for &'a mut R {}
-
-// Implement `CryptoRng` for boxed references to an `CryptoRng`.
-#[cfg(feature="alloc")]
-impl<R: CryptoRng + ?Sized> CryptoRng for Box<R> {}
+mod compat {
+    use super::*;
+    
+    /// A wrapper type which allows any type implementing `RngCore` from version
+    /// 0.4.0 to support `RngCore` from version 0.5.0.
+    pub struct FutureRngCore<R: RngCore>(pub R);
+    impl<R: RngCore> core5::RngCore for FutureRngCore<R> {
+        #[inline(always)]
+        fn next_u32(&mut self) -> u32 {
+            self.next_u32()
+        }
+        #[inline(always)]
+        fn next_u64(&mut self) -> u64 {
+            self.next_u64()
+        }
+        #[inline(always)]
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            self.fill_bytes(dest)
+        }
+        #[inline(always)]
+        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            self.try_fill_bytes(dest)
+                .map_err(|e| Error::from(e))
+        }
+    }
+    
+    impl<T: core5::RngCore> RngCore for T {
+        #[inline(always)]
+        fn next_u32(&mut self) -> u32 {
+            core5::RngCore::next_u32(self)
+        }
+        #[inline(always)]
+        fn next_u64(&mut self) -> u64 {
+            core5::RngCore::next_u64(self)
+        }
+        #[inline(always)]
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            core5::RngCore::fill_bytes(self, dest)
+        }
+        #[inline(always)]
+        fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+            core5::RngCore::try_fill_bytes(self, dest)
+                .map_err(|e| Error::from(e))
+        }
+    }
+    
+    impl<T: core5::SeedableRng> SeedableRng for T {
+        type Seed = <Self as core5::SeedableRng>::Seed;
+        #[inline(always)]
+        fn from_seed(seed: Self::Seed) -> Self {
+            core5::SeedableRng::from_seed(seed)
+        }
+        #[inline(always)]
+        fn seed_from_u64(mut state: u64) -> Self {
+            core5::SeedableRng::seed_from_u64(state)
+        }
+        #[inline(always)]
+        fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
+            let rng = FutureRngCore(rng);
+            core5::SeedableRng::from_rng(rng)
+                .map_err(|e| Error::from(e))
+        }
+    }
+}
 
 #[cfg(test)]
 mod test {

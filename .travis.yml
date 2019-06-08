@@ -66,8 +66,8 @@ matrix:
         # TODO: add simd_support feature:
         - cargo test --features=serde1,log
         - cargo test --examples
-        - cargo test --manifest-path rand_core/Cargo.toml
-        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+        - cargo test --manifest-path rand_core/Cargo.toml --tests
+        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --tests
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         # TODO: cannot test rand_pcg due to explicit dependency on i128
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
@@ -88,8 +88,8 @@ matrix:
         # TODO: add simd_support feature:
         - cargo test --features=serde1,log
         - cargo test --examples
-        - cargo test --manifest-path rand_core/Cargo.toml
-        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+        - cargo test --manifest-path rand_core/Cargo.toml --tests
+        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --tests
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
@@ -116,8 +116,8 @@ matrix:
         - cargo test --all-features
         - cargo test --benches --features=nightly
         - cargo test --examples
-        - cargo test --manifest-path rand_core/Cargo.toml
-        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
+        - cargo test --manifest-path rand_core/Cargo.toml --tests
+        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc --tests
         - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
         - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
@@ -209,8 +209,8 @@ script:
   # TODO: add simd_support feature:
   - cargo test --features=serde1,log
   - cargo test --examples
-  - cargo test --manifest-path rand_core/Cargo.toml
-  - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+  - cargo test --manifest-path rand_core/Cargo.toml --tests
+  - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --tests
   - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
