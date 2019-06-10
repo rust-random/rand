@@ -259,6 +259,23 @@ pub trait UniformSampler: Sized {
         let uniform: Self = UniformSampler::new(low, high);
         uniform.sample(rng)
     }
+
+    /// Sample a single value uniformly from a range with inclusive lower bound
+    /// and inclusive upper bound `[low, high]`.
+    ///
+    /// By default this is implemented using
+    /// `UniformSampler::new_inclusive(low, high).sample(rng)`. However, for
+    /// some types more optimal implementations for single usage may be provided
+    /// via this method.
+    /// Results may not be identical.
+    fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R)
+        -> Self::X
+        where B1: SampleBorrow<Self::X> + Sized,
+              B2: SampleBorrow<Self::X> + Sized
+    {
+        let uniform: Self = UniformSampler::new_inclusive(low, high);
+        uniform.sample(rng)
+    }
 }
 
 impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
