@@ -268,6 +268,23 @@ pub trait UniformSampler: Sized {
         let uniform: Self = UniformSampler::new(low, high);
         uniform.sample(rng)
     }
+
+    /// Sample a single value uniformly from a range with inclusive lower bound
+    /// and inclusive upper bound `[low, high]`.
+    ///
+    /// By default this is implemented using
+    /// `UniformSampler::new_inclusive(low, high).sample(rng)`. However, for
+    /// some types more optimal implementations for single usage may be provided
+    /// via this method.
+    /// Results may not be identical.
+    fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R)
+        -> Self::X
+        where B1: SampleBorrow<Self::X> + Sized,
+              B2: SampleBorrow<Self::X> + Sized
+    {
+        let uniform: Self = UniformSampler::new_inclusive(low, high);
+        uniform.sample(rng)
+    }
 }
 
 impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
@@ -415,6 +432,7 @@ macro_rules! uniform_int_impl {
                 }
             }
 
+            #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range = self.range as $unsigned as $u_large;
                 if range > 0 {
@@ -433,6 +451,7 @@ macro_rules! uniform_int_impl {
                 }
             }
 
+            #[inline]
             fn sample_single<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R) -> Self::X
             where
                 B1: SampleBorrow<Self::X> + Sized,
@@ -441,7 +460,19 @@ macro_rules! uniform_int_impl {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
                 assert!(low < high, "UniformSampler::sample_single: low >= high");
-                let range = high.wrapping_sub(low) as $unsigned as $u_large;
+                Self::sample_single_inclusive(low, high - 1, rng)
+            }
+
+            #[inline]
+            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R) -> Self::X
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                assert!(low <= high, "UniformSampler::sample_single_inclusive: low > high");
+                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_large;
                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
                     // Using a modulus is faster than the approximation for
                     // i8 and i16. I suppose we trade the cost of one
