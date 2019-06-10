@@ -111,6 +111,7 @@
 use std::time::Duration;
 #[cfg(not(feature = "std"))]
 use core::time::Duration;
+use core::ops::{Range, RangeInclusive};
 
 use crate::Rng;
 use crate::distributions::Distribution;
@@ -146,6 +147,9 @@ use packed_simd::*;
 /// Implementations must sample in `[low, high)` range for
 /// `Uniform::new(low, high)`, i.e., excluding `high`. In particular care must
 /// be taken to ensure that rounding never results values `< low` or `>= high`.
+///
+/// Range expressions like `0..10` can be used as a `Uniform` distribution,
+/// but are less efficient if multiple samples are taken.
 ///
 /// # Example
 ///
@@ -278,15 +282,27 @@ pub trait UniformSampler: Sized {
     }
 }
 
-impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
+impl<X: SampleUniform> From<Range<X>> for Uniform<X> {
     fn from(r: ::core::ops::Range<X>) -> Uniform<X> {
         Uniform::new(r.start, r.end)
     }
 }
 
-impl<X: SampleUniform> From<::core::ops::RangeInclusive<X>> for Uniform<X> {
+impl<X: SampleUniform> From<RangeInclusive<X>> for Uniform<X> {
     fn from(r: ::core::ops::RangeInclusive<X>) -> Uniform<X> {
         Uniform::new_inclusive(r.start(), r.end())
+    }
+}
+
+impl<T: SampleUniform> Distribution<T> for Range<T> {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
+        T::Sampler::sample_single(&self.start, &self.end, rng)
+    }
+}
+
+impl<T: SampleUniform> Distribution<T> for RangeInclusive<T> {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
+        T::Sampler::sample_single_inclusive(self.start(), self.end(), rng)
     }
 }
 
@@ -1272,6 +1288,17 @@ mod tests {
         let r = Uniform::from(2.0f64..7.0);
         assert_eq!(r.inner.low, 2.0);
         assert_eq!(r.inner.scale, 5.0);
+    }
+
+    #[test]
+    fn test_std_range_distribution() {
+        let mut rng = crate::test::rng(474);
+        for _ in 0..100 {
+            let x = rng.sample(0..10);
+            assert!(x >= 0 && x < 10);
+            let x = rng.sample(0..=10);
+            assert!(x >= 0 && x <= 10);
+        }
     }
 
     #[test]

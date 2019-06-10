@@ -227,9 +227,10 @@ pub trait Rng: RngCore {
     /// use rand::distributions::Uniform;
     ///
     /// let mut rng = thread_rng();
-    /// let x = rng.sample(Uniform::new(10u32, 15));
+    /// let x = rng.sample(10u32..15);
     /// // Type annotation requires two types, the type and distribution; the
-    /// // distribution can be inferred.
+    /// // distribution can be inferred. `Uniform` is more efficient than the
+    /// // above range syntax if multiple samples are taken.
     /// let y = rng.sample::<u16, _>(Uniform::new(10, 15));
     /// ```
     fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
