@@ -9,14 +9,10 @@
 #![feature(test)]
 
 extern crate test;
-extern crate rand;
-extern crate rand_distr;
-extern crate rand_pcg;
 
 const RAND_BENCH_N: u64 = 1000;
 
 use std::mem::size_of;
-#[cfg(rustc_1_28)]
 use std::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU128};
 use test::Bencher;
 use std::time::Duration;
@@ -36,13 +32,13 @@ macro_rules! distr_int {
 
             b.iter(|| {
                 let mut accum = 0 as $ty;
-                for _ in 0..::RAND_BENCH_N {
+                for _ in 0..RAND_BENCH_N {
                     let x: $ty = distr.sample(&mut rng);
                     accum = accum.wrapping_add(x);
                 }
                 accum
             });
-            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
     }
 }
@@ -56,13 +52,13 @@ macro_rules! distr_nz_int {
 
             b.iter(|| {
                 let mut accum = 0 as $ty;
-                for _ in 0..::RAND_BENCH_N {
+                for _ in 0..RAND_BENCH_N {
                     let x: $tynz = distr.sample(&mut rng);
                     accum = accum.wrapping_add(x.get());
                 }
                 accum
             });
-            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
     }
 }
@@ -76,13 +72,13 @@ macro_rules! distr_float {
 
             b.iter(|| {
                 let mut accum = 0.0;
-                for _ in 0..::RAND_BENCH_N {
+                for _ in 0..RAND_BENCH_N {
                     let x: $ty = distr.sample(&mut rng);
                     accum += x;
                 }
                 accum
             });
-            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
     }
 }
@@ -96,13 +92,13 @@ macro_rules! distr_duration {
 
             b.iter(|| {
                 let mut accum = Duration::new(0, 0);
-                for _ in 0..::RAND_BENCH_N {
+                for _ in 0..RAND_BENCH_N {
                     let x: Duration = distr.sample(&mut rng);
                     accum = accum.checked_add(x).unwrap_or(Duration::new(u64::max_value(), 999_999_999));
                 }
                 accum
             });
-            b.bytes = size_of::<Duration>() as u64 * ::RAND_BENCH_N;
+            b.bytes = size_of::<Duration>() as u64 * RAND_BENCH_N;
         }
     }
 }
@@ -116,13 +112,13 @@ macro_rules! distr {
 
             b.iter(|| {
                 let mut accum = 0u32;
-                for _ in 0..::RAND_BENCH_N {
+                for _ in 0..RAND_BENCH_N {
                     let x: $ty = distr.sample(&mut rng);
                     accum = accum.wrapping_add(x as u32);
                 }
                 accum
             });
-            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
     }
 }
@@ -136,13 +132,13 @@ macro_rules! distr_arr {
 
             b.iter(|| {
                 let mut accum = 0u32;
-                for _ in 0..::RAND_BENCH_N {
+                for _ in 0..RAND_BENCH_N {
                     let x: $ty = distr.sample(&mut rng);
                     accum = accum.wrapping_add(x[0] as u32);
                 }
                 accum
             });
-            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
     }
 }
@@ -187,11 +183,11 @@ distr_int!(distr_standard_i16, i16, Standard);
 distr_int!(distr_standard_i32, i32, Standard);
 distr_int!(distr_standard_i64, i64, Standard);
 distr_int!(distr_standard_i128, i128, Standard);
-#[cfg(rustc_1_28)] distr_nz_int!(distr_standard_nz8, NonZeroU8, u8, Standard);
-#[cfg(rustc_1_28)] distr_nz_int!(distr_standard_nz16, NonZeroU16, u16, Standard);
-#[cfg(rustc_1_28)] distr_nz_int!(distr_standard_nz32, NonZeroU32, u32, Standard);
-#[cfg(rustc_1_28)] distr_nz_int!(distr_standard_nz64, NonZeroU64, u64, Standard);
-#[cfg(rustc_1_28)] distr_nz_int!(distr_standard_nz128, NonZeroU128, u128, Standard);
+distr_nz_int!(distr_standard_nz8, NonZeroU8, u8, Standard);
+distr_nz_int!(distr_standard_nz16, NonZeroU16, u16, Standard);
+distr_nz_int!(distr_standard_nz32, NonZeroU32, u32, Standard);
+distr_nz_int!(distr_standard_nz64, NonZeroU64, u64, Standard);
+distr_nz_int!(distr_standard_nz128, NonZeroU128, u128, Standard);
 
 distr!(distr_standard_bool, bool, Standard);
 distr!(distr_standard_alphanumeric, char, Alphanumeric);
@@ -240,14 +236,14 @@ macro_rules! gen_range_int {
             b.iter(|| {
                 let mut high = $high;
                 let mut accum: $ty = 0;
-                for _ in 0..::RAND_BENCH_N {
+                for _ in 0..RAND_BENCH_N {
                     accum = accum.wrapping_add(rng.gen_range($low, high));
                     // force recalculation of range each time
                     high = high.wrapping_add(1) & std::$ty::MAX;
                 }
                 accum
             });
-            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
     }
 }
@@ -269,7 +265,7 @@ macro_rules! gen_range_float {
                 let mut high = $high;
                 let mut low = $low;
                 let mut accum: $ty = 0.0;
-                for _ in 0..::RAND_BENCH_N {
+                for _ in 0..RAND_BENCH_N {
                     accum += rng.gen_range(low, high);
                     // force recalculation of range each time
                     low += 0.9;
@@ -277,7 +273,7 @@ macro_rules! gen_range_float {
                 }
                 accum
             });
-            b.bytes = size_of::<$ty>() as u64 * ::RAND_BENCH_N;
+            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
     }
 }
@@ -293,12 +289,12 @@ fn dist_iter(b: &mut Bencher) {
 
     b.iter(|| {
         let mut accum = 0.0;
-        for _ in 0..::RAND_BENCH_N {
+        for _ in 0..RAND_BENCH_N {
             accum += iter.next().unwrap();
         }
         accum
     });
-    b.bytes = size_of::<f64>() as u64 * ::RAND_BENCH_N;
+    b.bytes = size_of::<f64>() as u64 * RAND_BENCH_N;
 }
 
 macro_rules! sample_binomial {
