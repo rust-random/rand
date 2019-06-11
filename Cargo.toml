@@ -55,7 +55,7 @@ members = [
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.5" }
-rand_pcg = { path = "rand_pcg", version = "0.1", optional = true }
+rand_pcg = { path = "rand_pcg", version = "0.2", optional = true }
 # Do not depend on 'getrandom_package' directly; use the 'getrandom' feature!
 getrandom_package = { version = "0.1.1", package = "getrandom", optional = true }
 log = { version = "0.4", optional = true }
@@ -79,7 +79,7 @@ rand_chacha = { path = "rand_chacha", version = "0.2" }
 rand_hc = { path = "rand_hc", version = "0.2" }
 
 [dev-dependencies]
-rand_pcg = { path = "rand_pcg", version = "0.1" }
+rand_pcg = { path = "rand_pcg", version = "0.2" }
 # Only for benches:
 rand_hc = { path = "rand_hc", version = "0.2" }
 rand_xoshiro = { path = "rand_xoshiro", version = "0.3" }
