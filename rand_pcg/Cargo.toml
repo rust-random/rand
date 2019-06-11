@@ -12,19 +12,18 @@ Selected PCG random number generators
 """
 keywords = ["random", "rng", "pcg"]
 categories = ["algorithms", "no-std"]
-build = "build.rs"
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [features]
-serde1 = ["serde", "serde_derive"]
+serde1 = ["serde"]
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.5" }
-serde = { version = "1", optional = true }
-serde_derive = { version = "^1.0.38", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 # This is for testing serde, unfortunately we can't specify feature-gated dev

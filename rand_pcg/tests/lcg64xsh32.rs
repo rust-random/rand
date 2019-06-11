@@ -1,7 +1,3 @@
-extern crate rand_pcg;
-extern crate rand_core;
-#[cfg(all(feature="serde1", test))] extern crate bincode;
-
 use rand_core::{RngCore, SeedableRng};
 use rand_pcg::{Lcg64Xsh32, Pcg32};
 
@@ -35,7 +31,7 @@ fn test_lcg64xsh32_true_values() {
     assert_eq!(results, expected);
 }
 
-#[cfg(feature="serde1")]
+#[cfg(feature="serde")]
 #[test]
 fn test_lcg64xsh32_serde() {
     use bincode;
