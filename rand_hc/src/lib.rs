@@ -18,8 +18,6 @@
 
 #![no_std]
 
-pub extern crate rand_core;
-
 mod hc128;
 
 pub use hc128::{Hc128Rng, Hc128Core};
