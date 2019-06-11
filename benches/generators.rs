@@ -72,6 +72,7 @@ gen_bytes!(gen_bytes_hc128, Hc128Rng::from_entropy());
 gen_bytes!(gen_bytes_isaac, IsaacRng::from_entropy());
 gen_bytes!(gen_bytes_isaac64, Isaac64Rng::from_entropy());
 gen_bytes!(gen_bytes_std, StdRng::from_entropy());
+#[cfg(feature="small_rng")]
 gen_bytes!(gen_bytes_small, SmallRng::from_entropy());
 gen_bytes!(gen_bytes_os, OsRng);
 
@@ -111,6 +112,7 @@ gen_uint!(gen_u32_hc128, u32, Hc128Rng::from_entropy());
 gen_uint!(gen_u32_isaac, u32, IsaacRng::from_entropy());
 gen_uint!(gen_u32_isaac64, u32, Isaac64Rng::from_entropy());
 gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
+#[cfg(feature="small_rng")]
 gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng);
 
@@ -133,6 +135,7 @@ gen_uint!(gen_u64_hc128, u64, Hc128Rng::from_entropy());
 gen_uint!(gen_u64_isaac, u64, IsaacRng::from_entropy());
 gen_uint!(gen_u64_isaac64, u64, Isaac64Rng::from_entropy());
 gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
+#[cfg(feature="small_rng")]
 gen_uint!(gen_u64_small, u64, SmallRng::from_entropy());
 gen_uint!(gen_u64_os, u64, OsRng);
 

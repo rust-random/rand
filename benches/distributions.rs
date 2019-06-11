@@ -11,6 +11,7 @@
 extern crate test;
 extern crate rand;
 extern crate rand_distr;
+extern crate rand_pcg;
 
 const RAND_BENCH_N: u64 = 1000;
 
@@ -23,11 +24,14 @@ use std::time::Duration;
 use rand::prelude::*;
 use rand_distr::{*, weighted::WeightedIndex};
 
+// At this time, distributions are optimised for 64-bit platforms.
+use rand_pcg::Pcg64Mcg;
+
 macro_rules! distr_int {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = SmallRng::from_entropy();
+            let mut rng = Pcg64Mcg::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -47,7 +51,7 @@ macro_rules! distr_nz_int {
     ($fnn:ident, $tynz:ty, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = SmallRng::from_entropy();
+            let mut rng = Pcg64Mcg::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -67,7 +71,7 @@ macro_rules! distr_float {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = SmallRng::from_entropy();
+            let mut rng = Pcg64Mcg::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -87,7 +91,7 @@ macro_rules! distr_duration {
     ($fnn:ident, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = SmallRng::from_entropy();
+            let mut rng = Pcg64Mcg::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -107,7 +111,7 @@ macro_rules! distr {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = SmallRng::from_entropy();
+            let mut rng = Pcg64Mcg::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -127,7 +131,7 @@ macro_rules! distr_arr {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = SmallRng::from_entropy();
+            let mut rng = Pcg64Mcg::from_entropy();
             let distr = $distr;
 
             b.iter(|| {
@@ -231,7 +235,7 @@ macro_rules! gen_range_int {
     ($fnn:ident, $ty:ident, $low:expr, $high:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = SmallRng::from_entropy();
+            let mut rng = Pcg64Mcg::from_entropy();
 
             b.iter(|| {
                 let mut high = $high;
@@ -259,7 +263,7 @@ macro_rules! gen_range_float {
     ($fnn:ident, $ty:ident, $low:expr, $high:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = SmallRng::from_entropy();
+            let mut rng = Pcg64Mcg::from_entropy();
 
             b.iter(|| {
                 let mut high = $high;
@@ -283,7 +287,7 @@ gen_range_float!(gen_range_f64, f64, 123.456f64, 7890.12);
 
 #[bench]
 fn dist_iter(b: &mut Bencher) {
-    let mut rng = SmallRng::from_entropy();
+    let mut rng = Pcg64Mcg::from_entropy();
     let distr = Normal::new(-2.71828, 3.14159).unwrap();
     let mut iter = distr.sample_iter(&mut rng);
 
@@ -301,7 +305,7 @@ macro_rules! sample_binomial {
     ($name:ident, $n:expr, $p:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
-            let mut rng = SmallRng::from_rng(&mut thread_rng()).unwrap();
+            let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
             let (n, p) = ($n, $p);
             b.iter(|| {
                 let d = Binomial::new(n, p).unwrap();

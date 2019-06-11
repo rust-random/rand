@@ -11,12 +11,17 @@
 
 extern crate test;
 extern crate rand;
+extern crate rand_pcg;
 
 use test::Bencher;
 
 use rand::prelude::*;
 use rand::seq::*;
 use std::mem::size_of;
+
+// We force use of 32-bit RNG since seq code is optimised for use with 32-bit
+// generators on all platforms.
+use rand_pcg::Pcg32 as SmallRng;
 
 const RAND_BENCH_N: u64 = 1000;
 
