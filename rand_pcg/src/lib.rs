@@ -17,7 +17,9 @@
 //! -   `Pcg32` aka `Lcg64Xsh32`, officially known as `pcg32`, a general
 //!     purpose RNG. This is a good choice on both 32-bit and 64-bit CPUs
 //!     (for 32-bit output).
-//! -   `Pcg64Mcg` aka `Mcg128Xsl64`, officially known as `mcg_xsl_rr_128_64`,
+//! -   `Pcg64` aka `Lcg128Xsl64`, officially known as `pcg64`, a general
+//!     purpose RNG. This is a good choice on 64-bit CPUs.
+//! -   `Pcg64Mcg` aka `Mcg128Xsl64`, officially known as `pcg64_fast`,
 //!     a general purpose RNG using 128-bit multiplications. This has poor
 //!     performance on 32-bit CPUs but is a good choice on 64-bit CPUs for
 //!     both 32-bit and 64-bit output.
@@ -39,4 +41,7 @@ mod pcg64;
 #[cfg(not(target_os = "emscripten"))] mod pcg128;
 
 pub use self::pcg64::{Pcg32, Lcg64Xsh32};
-#[cfg(not(target_os = "emscripten"))] pub use self::pcg128::{Pcg64Mcg, Mcg128Xsl64};
+#[cfg(not(target_os = "emscripten"))] pub use self::pcg128::{
+        Pcg64, Lcg128Xsl64,
+        Pcg64Mcg, Mcg128Xsl64,
+};
