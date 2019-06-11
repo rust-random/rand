@@ -9,7 +9,7 @@
 /// Initialize a RNG from a `u64` seed using `SplitMix64`.
 macro_rules! from_splitmix {
     ($seed:expr) => { {
-        let mut rng = ::SplitMix64::seed_from_u64($seed);
+        let mut rng = crate::SplitMix64::seed_from_u64($seed);
         Self::from_rng(&mut rng).unwrap()
     } }
 }

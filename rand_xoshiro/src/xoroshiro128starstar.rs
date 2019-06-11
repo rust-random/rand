@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[cfg(feature="serde")] use serde::{Serialize, Deserialize};
 use rand_core;
 use rand_core::le::read_u64_into;
 use rand_core::impls::fill_bytes_via_next;
@@ -21,7 +22,7 @@ use rand_core::{RngCore, SeedableRng};
 /// David Blackman and Sebastiano Vigna.
 #[allow(missing_copy_implementations)]
 #[derive(Debug, Clone)]
-#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 pub struct Xoroshiro128StarStar {
     s0: u64,
     s1: u64,
