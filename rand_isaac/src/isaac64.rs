@@ -11,9 +11,10 @@
 
 use core::{fmt, slice};
 use core::num::Wrapping as w;
+#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 use rand_core::{RngCore, SeedableRng, Error, le};
 use rand_core::block::{BlockRngCore, BlockRng64};
-use isaac_array::IsaacArray;
+use crate::isaac_array::IsaacArray;
 
 #[allow(non_camel_case_types)]
 type w64 = w<u64>;
