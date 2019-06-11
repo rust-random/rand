@@ -1,6 +1,6 @@
 [package]
 name = "rand_xorshift"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -12,18 +12,18 @@ Xorshift random number generator
 """
 keywords = ["random", "rng", "xorshift"]
 categories = ["algorithms", "no-std"]
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [features]
-serde1 = ["serde", "serde_derive"]
+serde1 = ["serde"]
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.5" }
-serde = { version = "1", optional = true }
-serde_derive = { version = "^1.0.38", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 # This is for testing serde, unfortunately we can't specify feature-gated dev
