@@ -57,9 +57,6 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// # Example
 ///
 /// ```
-/// # extern crate rand;
-/// # extern crate rand_chacha;
-/// # fn main() {
 /// use rand::prelude::*;
 /// use rand_chacha::ChaCha20Core; // Internal part of ChaChaRng that
 ///                              // implements BlockRngCore
@@ -73,7 +70,6 @@ use rand_core::block::{BlockRngCore, BlockRng};
 ///
 /// let mut cloned_rng = reseeding_rng.clone();
 /// assert!(reseeding_rng.gen::<u64>() != cloned_rng.gen::<u64>());
-/// # }
 /// ```
 ///
 /// [`ChaCha20Core`]: ../../../rand_chacha/struct.ChaCha20Core.html
@@ -272,8 +268,6 @@ where R: BlockRngCore + SeedableRng + CryptoRng,
 
 #[cfg(all(unix, not(target_os="emscripten")))]
 mod fork {
-    extern crate libc;
-
     use core::sync::atomic::{AtomicUsize, AtomicBool, Ordering};
     #[allow(deprecated)]  // Required for compatibility with Rust < 1.24.
     use core::sync::atomic::{ATOMIC_USIZE_INIT, ATOMIC_BOOL_INIT};
@@ -323,9 +317,9 @@ mod fork {
 
 #[cfg(test)]
 mod test {
-    use {Rng, SeedableRng};
-    use rngs::std::Core;
-    use rngs::mock::StepRng;
+    use crate::{Rng, SeedableRng};
+    use crate::rngs::std::Core;
+    use crate::rngs::mock::StepRng;
     use super::ReseedingRng;
 
     #[test]

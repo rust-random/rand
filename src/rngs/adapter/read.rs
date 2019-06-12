@@ -98,7 +98,7 @@ impl std::error::Error for ReadError {
 #[cfg(test)]
 mod test {
     use super::ReadRng;
-    use RngCore;
+    use crate::RngCore;
 
     #[test]
     fn test_reader_rng_u64() {

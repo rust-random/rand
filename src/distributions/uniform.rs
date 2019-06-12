@@ -112,10 +112,10 @@ use std::time::Duration;
 #[cfg(all(not(feature = "std"), rustc_1_25))]
 use core::time::Duration;
 
-use Rng;
-use distributions::Distribution;
-use distributions::float::IntoFloat;
-use distributions::utils::{WideningMultiply, FloatSIMDUtils, FloatAsSIMD, BoolAsSIMD};
+use crate::Rng;
+use crate::distributions::Distribution;
+use crate::distributions::float::IntoFloat;
+use crate::distributions::utils::{WideningMultiply, FloatSIMDUtils, FloatAsSIMD, BoolAsSIMD};
 
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
@@ -934,10 +934,10 @@ impl UniformSampler for UniformDuration {
 
 #[cfg(test)]
 mod tests {
-    use Rng;
-    use rngs::mock::StepRng;
-    use distributions::uniform::Uniform;
-    use distributions::utils::FloatAsSIMD;
+    use crate::Rng;
+    use crate::rngs::mock::StepRng;
+    use crate::distributions::uniform::Uniform;
+    use crate::distributions::utils::FloatAsSIMD;
     #[cfg(feature="simd_support")] use packed_simd::*;
 
     #[should_panic]
@@ -948,7 +948,7 @@ mod tests {
 
     #[test]
     fn test_uniform_good_limits_equal_int() {
-        let mut rng = ::test::rng(804);
+        let mut rng = crate::test::rng(804);
         let dist = Uniform::new_inclusive(10, 10);
         for _ in 0..20 {
             assert_eq!(rng.sample(dist), 10);
@@ -969,7 +969,7 @@ mod tests {
         #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
         use core::{i128, u128};
 
-        let mut rng = ::test::rng(251);
+        let mut rng = crate::test::rng(251);
         macro_rules! t {
             ($ty:ident, $v:expr, $le:expr, $lt:expr) => {{
                 for &(low, high) in $v.iter() {
@@ -1049,7 +1049,7 @@ mod tests {
     #[test]
     #[cfg(not(miri))] // Miri is too slow
     fn test_floats() {
-        let mut rng = ::test::rng(252);
+        let mut rng = crate::test::rng(252);
         let mut zero_rng = StepRng::new(0, 0);
         let mut max_rng = StepRng::new(0xffff_ffff_ffff_ffff, 0);
         macro_rules! t {
@@ -1137,7 +1137,7 @@ mod tests {
         use std::panic::catch_unwind;
         use super::SampleUniform;
         fn range<T: SampleUniform>(low: T, high: T) {
-            let mut rng = ::test::rng(253);
+            let mut rng = crate::test::rng(253);
             rng.gen_range(low, high);
         }
 
@@ -1195,7 +1195,7 @@ mod tests {
         #[cfg(all(not(feature = "std"), rustc_1_25))]
         use core::time::Duration;
 
-        let mut rng = ::test::rng(253);
+        let mut rng = crate::test::rng(253);
 
         let v = &[(Duration::new(10, 50000), Duration::new(100, 1234)),
                   (Duration::new(0, 100), Duration::new(1, 50)),
@@ -1211,7 +1211,7 @@ mod tests {
 
     #[test]
     fn test_custom_uniform() {
-        use distributions::uniform::{UniformSampler, UniformFloat, SampleUniform, SampleBorrow};
+        use crate::distributions::uniform::{UniformSampler, UniformFloat, SampleUniform, SampleBorrow};
         #[derive(Clone, Copy, PartialEq, PartialOrd)]
         struct MyF32 {
             x: f32,
@@ -1246,7 +1246,7 @@ mod tests {
 
         let (low, high) = (MyF32{ x: 17.0f32 }, MyF32{ x: 22.0f32 });
         let uniform = Uniform::new(low, high);
-        let mut rng = ::test::rng(804);
+        let mut rng = crate::test::rng(804);
         for _ in 0..100 {
             let x: MyF32 = rng.sample(uniform);
             assert!(low <= x && x < high);

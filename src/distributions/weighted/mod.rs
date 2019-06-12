@@ -11,9 +11,9 @@
 
 pub mod alias_method;
 
-use Rng;
-use distributions::Distribution;
-use distributions::uniform::{UniformSampler, SampleUniform, SampleBorrow};
+use crate::Rng;
+use crate::distributions::Distribution;
+use crate::distributions::uniform::{UniformSampler, SampleUniform, SampleBorrow};
 use ::core::cmp::PartialOrd;
 use core::fmt;
 
@@ -142,7 +142,7 @@ mod test {
     #[test]
     #[cfg(not(miri))] // Miri is too slow
     fn test_weightedindex() {
-        let mut r = ::test::rng(700);
+        let mut r = crate::test::rng(700);
         const N_REPS: u32 = 5000;
         let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
         let total_weight = weights.iter().sum::<u32>() as f32;

@@ -8,10 +8,6 @@
 
 #![feature(test)]
 
-extern crate test;
-extern crate rand;
-extern crate rand_pcg;
-
 const RAND_BENCH_N: u64 = 1000;
 
 use test::Bencher;
@@ -25,7 +21,7 @@ fn misc_gen_bool_const(b: &mut Bencher) {
     let mut rng = Pcg32::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut accum = true;
-        for _ in 0..::RAND_BENCH_N {
+        for _ in 0..crate::RAND_BENCH_N {
             accum ^= rng.gen_bool(0.18);
         }
         accum
@@ -38,7 +34,7 @@ fn misc_gen_bool_var(b: &mut Bencher) {
     b.iter(|| {
         let mut accum = true;
         let mut p = 0.18;
-        for _ in 0..::RAND_BENCH_N {
+        for _ in 0..crate::RAND_BENCH_N {
             accum ^= rng.gen_bool(p);
             p += 0.0001;
         }
@@ -51,7 +47,7 @@ fn misc_gen_ratio_const(b: &mut Bencher) {
     let mut rng = Pcg32::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut accum = true;
-        for _ in 0..::RAND_BENCH_N {
+        for _ in 0..crate::RAND_BENCH_N {
             accum ^= rng.gen_ratio(2, 3);
         }
         accum
@@ -63,7 +59,7 @@ fn misc_gen_ratio_var(b: &mut Bencher) {
     let mut rng = Pcg32::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut accum = true;
-        for i in 2..(::RAND_BENCH_N as u32 + 2) {
+        for i in 2..(crate::RAND_BENCH_N as u32 + 2) {
             accum ^= rng.gen_ratio(i, i + 1);
         }
         accum
@@ -76,7 +72,7 @@ fn misc_bernoulli_const(b: &mut Bencher) {
     b.iter(|| {
         let d = rand::distributions::Bernoulli::new(0.18).unwrap();
         let mut accum = true;
-        for _ in 0..::RAND_BENCH_N {
+        for _ in 0..crate::RAND_BENCH_N {
             accum ^= rng.sample(d);
         }
         accum
@@ -89,7 +85,7 @@ fn misc_bernoulli_var(b: &mut Bencher) {
     b.iter(|| {
         let mut accum = true;
         let mut p = 0.18;
-        for _ in 0..::RAND_BENCH_N {
+        for _ in 0..crate::RAND_BENCH_N {
             let d = Bernoulli::new(p).unwrap();
             accum ^= rng.sample(d);
             p += 0.0001;

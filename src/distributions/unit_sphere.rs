@@ -8,8 +8,8 @@
 
 #![allow(deprecated)]
 
-use Rng;
-use distributions::{Distribution, Uniform};
+use crate::Rng;
+use crate::distributions::{Distribution, Uniform};
 
 /// Samples uniformly from the surface of the unit sphere in three dimensions.
 ///
@@ -48,7 +48,7 @@ impl Distribution<[f64; 3]> for UnitSphereSurface {
 
 #[cfg(test)]
 mod tests {
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
     use super::UnitSphereSurface;
 
     /// Assert that two numbers are almost equal to each other.
@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn norm() {
-        let mut rng = ::test::rng(1);
+        let mut rng = crate::test::rng(1);
         let dist = UnitSphereSurface::new();
         for _ in 0..1000 {
             let x = dist.sample(&mut rng);

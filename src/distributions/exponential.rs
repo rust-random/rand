@@ -10,9 +10,9 @@
 //! The exponential distribution.
 #![allow(deprecated)]
 
-use {Rng};
-use distributions::{ziggurat_tables, Distribution};
-use distributions::utils::ziggurat;
+use crate::{Rng};
+use crate::distributions::{ziggurat_tables, Distribution};
+use crate::distributions::utils::ziggurat;
 
 /// Samples floating-point numbers according to the exponential distribution,
 /// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
@@ -84,13 +84,13 @@ impl Distribution<f64> for Exp {
 
 #[cfg(test)]
 mod test {
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
     use super::Exp;
 
     #[test]
     fn test_exp() {
         let exp = Exp::new(10.0);
-        let mut rng = ::test::rng(221);
+        let mut rng = crate::test::rng(221);
         for _ in 0..1000 {
             assert!(exp.sample(&mut rng) >= 0.0);
         }

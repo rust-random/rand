@@ -9,15 +9,6 @@
 #![feature(test)]
 #![allow(non_snake_case)]
 
-extern crate test;
-extern crate rand;
-extern crate rand_isaac;
-extern crate rand_chacha;
-extern crate rand_hc;
-extern crate rand_pcg;
-extern crate rand_xorshift;
-extern crate rand_xoshiro;
-
 const RAND_BENCH_N: u64 = 1000;
 const BYTES_LEN: usize = 1024;
 

@@ -11,9 +11,9 @@
 #[cfg(feature="simd_support")]
 use packed_simd::*;
 #[cfg(feature="std")]
-use distributions::ziggurat_tables;
+use crate::distributions::ziggurat_tables;
 #[cfg(feature="std")]
-use Rng;
+use crate::Rng;
 
 
 pub trait WideningMultiply<RHS = Self> {
@@ -465,7 +465,7 @@ pub fn ziggurat<R: Rng + ?Sized, P, Z>(
             mut pdf: P,
             mut zero_case: Z)
             -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
-    use distributions::float::IntoFloat;
+    use crate::distributions::float::IntoFloat;
     loop {
         // As an optimisation we re-implement the conversion to a f64.
         // From the remaining 12 most significant bits we use 8 to construct `i`.

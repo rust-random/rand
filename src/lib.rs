@@ -53,20 +53,9 @@
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
 
-#[cfg(feature = "std")] extern crate core;
-#[cfg(all(feature = "alloc", not(feature="std")))] #[macro_use] extern crate alloc;
-
-#[cfg(feature="simd_support")] extern crate packed_simd;
-
 #[cfg(feature = "getrandom")]
-extern crate getrandom_package as getrandom;
+use getrandom_package as getrandom;
 
-extern crate rand_core;
-#[cfg(not(target_os = "emscripten"))] extern crate rand_chacha;
-#[cfg(target_os = "emscripten")] extern crate rand_hc;
-#[cfg(feature="small_rng")] extern crate rand_pcg;
-
-#[cfg(feature = "log")] #[macro_use] extern crate log;
 #[allow(unused)]
 #[cfg(not(feature = "log"))] macro_rules! trace { ($($x:tt)*) => () }
 #[allow(unused)]
@@ -83,7 +72,7 @@ extern crate rand_core;
 pub use rand_core::{RngCore, CryptoRng, SeedableRng, Error};
 
 // Public exports
-#[cfg(feature="std")] pub use rngs::thread::thread_rng;
+#[cfg(feature="std")] pub use crate::rngs::thread::thread_rng;
 
 // Public modules
 pub mod distributions;
@@ -94,8 +83,8 @@ pub mod seq;
 
 use core::{mem, slice};
 use core::num::Wrapping;
-use distributions::{Distribution, Standard};
-use distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
+use crate::distributions::{Distribution, Standard};
+use crate::distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
 
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
@@ -540,7 +529,7 @@ where Standard: Distribution<T> {
 
 #[cfg(test)]
 mod test {
-    use rngs::mock::StepRng;
+    use crate::rngs::mock::StepRng;
     use super::*;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
 
@@ -651,7 +640,7 @@ mod test {
 
     #[test]
     fn test_rng_trait_object() {
-        use distributions::{Distribution, Standard};
+        use crate::distributions::{Distribution, Standard};
         let mut rng = rng(109);
         let mut r = &mut rng as &mut dyn RngCore;
         r.next_u32();
@@ -663,7 +652,7 @@ mod test {
     #[test]
     #[cfg(feature="alloc")]
     fn test_rng_boxed_trait() {
-        use distributions::{Distribution, Standard};
+        use crate::distributions::{Distribution, Standard};
         let rng = rng(110);
         let mut r = Box::new(rng) as Box<dyn RngCore>;
         r.next_u32();

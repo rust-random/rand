@@ -18,9 +18,7 @@ where_single_line = true
 # struct_field_align_threshold = 20
 
 # Compatibility:
-use_try_shorthand = true        # stable since Rustc 1.13.0
-use_field_init_shorthand = true     # stable since Rustc 1.17.0
-edition = "2015"        # we require compatibility back to 1.22.0
+edition = "2018"        # we require compatibility back to 1.32.0
 
 # Misc:
 blank_lines_upper_bound = 2

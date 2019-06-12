@@ -16,8 +16,8 @@
 #[cfg(feature="std")] use std::collections::{HashSet};
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::collections::BTreeSet;
 
-#[cfg(feature="alloc")] use distributions::{Distribution, Uniform, uniform::SampleUniform};
-use Rng;
+#[cfg(feature="alloc")] use crate::distributions::{Distribution, Uniform, uniform::SampleUniform};
+use crate::Rng;
 
 /// A vector of indices.
 ///
@@ -330,7 +330,7 @@ mod test {
 
     #[test]
     fn test_sample_boundaries() {
-        let mut r = ::test::rng(404);
+        let mut r = crate::test::rng(404);
 
         assert_eq!(sample_inplace(&mut r, 0, 0).len(), 0);
         assert_eq!(sample_inplace(&mut r, 1, 0).len(), 0);
@@ -355,7 +355,7 @@ mod test {
     #[test]
     #[cfg(not(miri))] // Miri is too slow
     fn test_sample_alg() {
-        let seed_rng = ::test::rng;
+        let seed_rng = crate::test::rng;
 
         // We can't test which algorithm is used directly, but Floyd's alg
         // should produce different results from the others. (Also, `inplace`

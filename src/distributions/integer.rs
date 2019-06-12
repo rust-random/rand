@@ -8,8 +8,8 @@
 
 //! The implementations of the `Standard` distribution for integer types.
 
-use {Rng};
-use distributions::{Distribution, Standard};
+use crate::{Rng};
+use crate::distributions::{Distribution, Standard};
 #[cfg(rustc_1_28)]
 use core::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroUsize};
 #[cfg(not(target_os = "emscripten"))] use core::num::NonZeroU128;
@@ -159,12 +159,12 @@ simd_impl!((__m64, u8x8), (__m128i, u8x16), (__m256i, u8x32),);
 
 #[cfg(test)]
 mod tests {
-    use Rng;
-    use distributions::{Standard};
+    use crate::Rng;
+    use crate::distributions::{Standard};
     
     #[test]
     fn test_integers() {
-        let mut rng = ::test::rng(806);
+        let mut rng = crate::test::rng(806);
         
         rng.sample::<isize, _>(Standard);
         rng.sample::<i8, _>(Standard);

@@ -28,9 +28,6 @@
 
 #![cfg(feature = "std")]
 
-
-extern crate rand;
-
 use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
 

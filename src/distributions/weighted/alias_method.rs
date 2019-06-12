@@ -7,10 +7,10 @@ use alloc::vec::Vec;
 use core::fmt;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
-use distributions::uniform::SampleUniform;
-use distributions::Distribution;
-use distributions::Uniform;
-use Rng;
+use crate::distributions::uniform::SampleUniform;
+use crate::distributions::Distribution;
+use crate::distributions::Uniform;
+use crate::Rng;
 
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///
@@ -448,11 +448,11 @@ mod test {
         const NUM_WEIGHTS: u32 = 10;
         const ZERO_WEIGHT_INDEX: u32 = 3;
         const NUM_SAMPLES: u32 = 15000;
-        let mut rng = ::test::rng(0x9c9fa0b0580a7031);
+        let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
 
         let weights = {
             let mut weights = Vec::with_capacity(NUM_WEIGHTS as usize);
-            let random_weight_distribution = ::distributions::Uniform::new_inclusive(
+            let random_weight_distribution = crate::distributions::Uniform::new_inclusive(
                 W::ZERO,
                 W::MAX / W::try_from_u32_lossy(NUM_WEIGHTS).unwrap(),
             );

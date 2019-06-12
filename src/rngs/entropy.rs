@@ -12,7 +12,7 @@
 
 use rand_core::{RngCore, CryptoRng, Error};
 #[allow(unused)]
-use rngs::OsRng;
+use crate::rngs::OsRng;
 
 /// An interface returning random data from external source(s), provided
 /// specifically for securely seeding algorithmic generators (PRNGs).
