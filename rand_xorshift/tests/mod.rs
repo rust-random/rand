@@ -1,7 +1,3 @@
-extern crate rand_core;
-extern crate rand_xorshift;
-#[cfg(all(feature="serde1", test))] extern crate bincode;
-
 use rand_core::{RngCore, SeedableRng};
 use rand_xorshift::XorShiftRng;
 

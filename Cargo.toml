@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.7.0-pre.0"
+version = "0.7.0-pre.1"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -55,7 +55,7 @@ members = [
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.5" }
-rand_pcg = { path = "rand_pcg", version = "0.1", optional = true }
+rand_pcg = { path = "rand_pcg", version = "0.2", optional = true }
 # Do not depend on 'getrandom_package' directly; use the 'getrandom' feature!
 getrandom_package = { version = "0.1.1", package = "getrandom", optional = true }
 log = { version = "0.4", optional = true }
@@ -76,42 +76,18 @@ libc = { version = "0.2.22", default-features = false }
 [target.'cfg(not(target_os = "emscripten"))'.dependencies]
 rand_chacha = { path = "rand_chacha", version = "0.2" }
 [target.'cfg(target_os = "emscripten")'.dependencies]
-rand_hc = { path = "rand_hc", version = "0.1" }
+rand_hc = { path = "rand_hc", version = "0.2" }
 
 [dev-dependencies]
-rand_pcg = { path = "rand_pcg", version = "0.1" }
+rand_pcg = { path = "rand_pcg", version = "0.2" }
 # Only for benches:
-rand_hc = { path = "rand_hc", version = "0.1" }
-rand_xoshiro = { path = "rand_xoshiro", version = "0.2" }
-rand_isaac = { path = "rand_isaac", version = "0.1" }
-rand_xorshift = { path = "rand_xorshift", version = "0.1" }
-rand_distr = { path = "rand_distr", version = "0.2" }
+rand_hc = { path = "rand_hc", version = "0.2" }
+rand_xoshiro = { path = "rand_xoshiro", version = "0.3" }
+rand_isaac = { path = "rand_isaac", version = "0.2" }
+rand_xorshift = { path = "rand_xorshift", version = "0.2" }
 
 [build-dependencies]
 autocfg = "0.1"
 
-[[bench]]
-name = "distributions"
-path = "benches/distributions.rs"
-required-features = ["small_rng"]
-
-[[bench]]
-name = "generators"
-path = "benches/generators.rs"
-required-features = ["small_rng"]
-
-[[bench]]
-name = "misc"
-path = "benches/misc.rs"
-required-features = ["small_rng"]
-
-[[bench]]
-name = "seq"
-path = "benches/seq.rs"
-required-features = ["small_rng"]
-
 [package.metadata.docs.rs]
 all-features = true
-
-[patch.crates-io]
-rand_core = { path = "rand_core", version = "0.5" }

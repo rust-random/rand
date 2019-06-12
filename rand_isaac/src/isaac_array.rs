@@ -13,7 +13,7 @@
 // implement `AsRef`, `Default`, `Serialize`, `Deserialize`, or any other
 // traits for that matter.
 
-#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
+#[cfg(feature="serde")] use serde::{Serialize, Deserialize};
 
 const RAND_SIZE_LEN: usize = 8;
 const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
@@ -21,10 +21,10 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 
 #[derive(Copy, Clone)]
 #[allow(missing_debug_implementations)]
-#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
 pub struct IsaacArray<T> {
-    #[cfg_attr(feature="serde1",serde(with="isaac_array_serde"))]
-    #[cfg_attr(feature="serde1", serde(bound(
+    #[cfg_attr(feature="serde",serde(with="isaac_array_serde"))]
+    #[cfg_attr(feature="serde", serde(bound(
         serialize = "T: Serialize",
         deserialize = "T: Deserialize<'de> + Copy + Default")))]
     inner: [T; RAND_SIZE]
@@ -66,7 +66,7 @@ impl<T> ::core::default::Default for IsaacArray<T> where T: Copy + Default {
 }
 
 
-#[cfg(feature="serde1")]
+#[cfg(feature="serde")]
 pub(super) mod isaac_array_serde {
     const RAND_SIZE_LEN: usize = 8;
     const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;

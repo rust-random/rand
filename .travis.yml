@@ -268,7 +268,7 @@ before_install:
 
 script:
   - cargo test --tests --no-default-features
-  - cargo test --no-default-features --features getrandom
+  - cargo test --tests --no-default-features --features getrandom
   # TODO: add simd_support feature:
   - cargo test --features=serde1,log
   - cargo test --examples

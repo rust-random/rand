@@ -30,7 +30,7 @@ use rand::rngs::OsRng;
 use rand_isaac::{IsaacRng, Isaac64Rng};
 use rand_chacha::{ChaCha20Core, ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
 use rand_hc::{Hc128Rng};
-use rand_pcg::{Lcg64Xsh32, Mcg128Xsl64};
+use rand_pcg::{Pcg32, Pcg64, Pcg64Mcg};
 use rand_xorshift::XorShiftRng;
 use rand_xoshiro::{Xoshiro256StarStar, Xoshiro256Plus, Xoshiro128StarStar,
     Xoshiro128Plus, Xoroshiro128StarStar, Xoroshiro128Plus, SplitMix64,
@@ -63,8 +63,9 @@ gen_bytes!(gen_bytes_xoroshiro128plus, Xoroshiro128Plus::from_entropy());
 gen_bytes!(gen_bytes_xoroshiro64starstar, Xoroshiro64StarStar::from_entropy());
 gen_bytes!(gen_bytes_xoroshiro64star, Xoroshiro64Star::from_entropy());
 gen_bytes!(gen_bytes_splitmix64, SplitMix64::from_entropy());
-gen_bytes!(gen_bytes_lcg64_xsh32, Lcg64Xsh32::from_entropy());
-gen_bytes!(gen_bytes_mcg128_xsh64, Mcg128Xsl64::from_entropy());
+gen_bytes!(gen_bytes_pcg32, Pcg32::from_entropy());
+gen_bytes!(gen_bytes_pcg64, Pcg64::from_entropy());
+gen_bytes!(gen_bytes_pcg64mcg, Pcg64Mcg::from_entropy());
 gen_bytes!(gen_bytes_chacha8, ChaCha8Rng::from_entropy());
 gen_bytes!(gen_bytes_chacha12, ChaCha12Rng::from_entropy());
 gen_bytes!(gen_bytes_chacha20, ChaCha20Rng::from_entropy());
@@ -72,6 +73,7 @@ gen_bytes!(gen_bytes_hc128, Hc128Rng::from_entropy());
 gen_bytes!(gen_bytes_isaac, IsaacRng::from_entropy());
 gen_bytes!(gen_bytes_isaac64, Isaac64Rng::from_entropy());
 gen_bytes!(gen_bytes_std, StdRng::from_entropy());
+#[cfg(feature="small_rng")]
 gen_bytes!(gen_bytes_small, SmallRng::from_entropy());
 gen_bytes!(gen_bytes_os, OsRng);
 
@@ -102,8 +104,9 @@ gen_uint!(gen_u32_xoroshiro128plus, u32, Xoroshiro128Plus::from_entropy());
 gen_uint!(gen_u32_xoroshiro64starstar, u32, Xoroshiro64StarStar::from_entropy());
 gen_uint!(gen_u32_xoroshiro64star, u32, Xoroshiro64Star::from_entropy());
 gen_uint!(gen_u32_splitmix64, u32, SplitMix64::from_entropy());
-gen_uint!(gen_u32_lcg64_xsh32, u32, Lcg64Xsh32::from_entropy());
-gen_uint!(gen_u32_mcg128_xsh64, u32, Mcg128Xsl64::from_entropy());
+gen_uint!(gen_u32_pcg32, u32, Pcg32::from_entropy());
+gen_uint!(gen_u32_pcg64, u32, Pcg64::from_entropy());
+gen_uint!(gen_u32_pcg64mcg, u32, Pcg64Mcg::from_entropy());
 gen_uint!(gen_u32_chacha8, u32, ChaCha8Rng::from_entropy());
 gen_uint!(gen_u32_chacha12, u32, ChaCha12Rng::from_entropy());
 gen_uint!(gen_u32_chacha20, u32, ChaCha20Rng::from_entropy());
@@ -111,6 +114,7 @@ gen_uint!(gen_u32_hc128, u32, Hc128Rng::from_entropy());
 gen_uint!(gen_u32_isaac, u32, IsaacRng::from_entropy());
 gen_uint!(gen_u32_isaac64, u32, Isaac64Rng::from_entropy());
 gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
+#[cfg(feature="small_rng")]
 gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng);
 
@@ -124,8 +128,9 @@ gen_uint!(gen_u64_xoroshiro128plus, u64, Xoroshiro128Plus::from_entropy());
 gen_uint!(gen_u64_xoroshiro64starstar, u64, Xoroshiro64StarStar::from_entropy());
 gen_uint!(gen_u64_xoroshiro64star, u64, Xoroshiro64Star::from_entropy());
 gen_uint!(gen_u64_splitmix64, u64, SplitMix64::from_entropy());
-gen_uint!(gen_u64_lcg64_xsh32, u64, Lcg64Xsh32::from_entropy());
-gen_uint!(gen_u64_mcg128_xsh64, u64, Mcg128Xsl64::from_entropy());
+gen_uint!(gen_u64_pcg32, u64, Pcg32::from_entropy());
+gen_uint!(gen_u64_pcg64, u64, Pcg64::from_entropy());
+gen_uint!(gen_u64_pcg64mcg, u64, Pcg64Mcg::from_entropy());
 gen_uint!(gen_u64_chacha8, u64, ChaCha8Rng::from_entropy());
 gen_uint!(gen_u64_chacha12, u64, ChaCha12Rng::from_entropy());
 gen_uint!(gen_u64_chacha20, u64, ChaCha20Rng::from_entropy());
@@ -133,6 +138,7 @@ gen_uint!(gen_u64_hc128, u64, Hc128Rng::from_entropy());
 gen_uint!(gen_u64_isaac, u64, IsaacRng::from_entropy());
 gen_uint!(gen_u64_isaac64, u64, Isaac64Rng::from_entropy());
 gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
+#[cfg(feature="small_rng")]
 gen_uint!(gen_u64_small, u64, SmallRng::from_entropy());
 gen_uint!(gen_u64_os, u64, OsRng);
 
@@ -159,8 +165,9 @@ init_gen!(init_xoroshiro128plus, Xoroshiro128Plus);
 init_gen!(init_xoroshiro64starstar, Xoroshiro64StarStar);
 init_gen!(init_xoroshiro64star, Xoroshiro64Star);
 init_gen!(init_splitmix64, SplitMix64);
-init_gen!(init_lcg64_xsh32, Lcg64Xsh32);
-init_gen!(init_mcg128_xsh64, Mcg128Xsl64);
+init_gen!(init_pcg32, Pcg32);
+init_gen!(init_pcg64, Pcg64);
+init_gen!(init_pcg64mcg, Pcg64Mcg);
 init_gen!(init_hc128, Hc128Rng);
 init_gen!(init_isaac, IsaacRng);
 init_gen!(init_isaac64, Isaac64Rng);

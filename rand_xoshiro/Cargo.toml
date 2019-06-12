@@ -1,6 +1,6 @@
 [package]
 name = "rand_xoshiro"
-version = "0.2.1" # NB: When modifying, also modify html_root_url in lib.rs
+version = "0.3.0" # NB: When modifying, also modify html_root_url in lib.rs
 authors = ["The Rand Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -10,15 +10,15 @@ homepage = "https://crates.io/crates/rand_xoshiro"
 description = "Xoshiro, xoroshiro and splitmix64 random number generators"
 keywords = ["random", "rng"]
 categories = ["algorithms"]
+edition = "2018"
 
 [features]
-serde1 = ["serde", "serde_derive"]
+serde1 = ["serde"]
 
 [dependencies]
 byteorder = { version = "1", default-features=false }
 rand_core = { path = "../rand_core", version = "0.5" }
-serde = { version = "1", optional=true }
-serde_derive = { version = "^1.0.38", optional=true }
+serde = { version = "1", features = ["derive"], optional=true }
 
 [dev-dependencies]
 # This is for testing serde, unfortunately we can't specify feature-gated dev
