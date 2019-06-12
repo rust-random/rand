@@ -52,6 +52,7 @@
 
 use core::convert::AsRef;
 use core::{fmt, ptr};
+#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 use crate::{RngCore, CryptoRng, SeedableRng, Error};
 use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 
