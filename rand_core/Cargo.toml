@@ -12,6 +12,7 @@ Core random number generator traits and tools for implementation.
 """
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
