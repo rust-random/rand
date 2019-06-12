@@ -109,7 +109,7 @@
 
 #[cfg(feature = "std")]
 use std::time::Duration;
-#[cfg(all(not(feature = "std"), rustc_1_25))]
+#[cfg(not(feature = "std"))]
 use core::time::Duration;
 
 use crate::Rng;
@@ -267,7 +267,6 @@ impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
     }
 }
 
-#[cfg(rustc_1_27)]
 impl<X: SampleUniform> From<::core::ops::RangeInclusive<X>> for Uniform<X> {
     fn from(r: ::core::ops::RangeInclusive<X>) -> Uniform<X> {
         Uniform::new_inclusive(r.start(), r.end())
@@ -453,7 +452,7 @@ uniform_int_impl! { i8, u8, u32 }
 uniform_int_impl! { i16, u16, u32 }
 uniform_int_impl! { i32, u32, u32 }
 uniform_int_impl! { i64, u64, u64 }
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+#[cfg(not(target_os = "emscripten"))]
 uniform_int_impl! { i128, u128, u128 }
 uniform_int_impl! { isize, usize, usize }
 uniform_int_impl! { u8, u8, u32 }
@@ -461,7 +460,7 @@ uniform_int_impl! { u16, u16, u32 }
 uniform_int_impl! { u32, u32, u32 }
 uniform_int_impl! { u64, u64, u64 }
 uniform_int_impl! { usize, usize, usize }
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+#[cfg(not(target_os = "emscripten"))]
 uniform_int_impl! { u128, u128, u128 }
 
 #[cfg(all(feature = "simd_support", feature = "nightly"))]
@@ -811,14 +810,12 @@ uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 ///
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
-#[cfg(any(feature = "std", rustc_1_25))]
 #[derive(Clone, Copy, Debug)]
 pub struct UniformDuration {
     mode: UniformDurationMode,
     offset: u32,
 }
 
-#[cfg(any(feature = "std", rustc_1_25))]
 #[derive(Debug, Copy, Clone)]
 enum UniformDurationMode {
     Small {
@@ -835,12 +832,10 @@ enum UniformDurationMode {
     }
 }
 
-#[cfg(any(feature = "std", rustc_1_25))]
 impl SampleUniform for Duration {
     type Sampler = UniformDuration;
 }
 
-#[cfg(any(feature = "std", rustc_1_25))]
 impl UniformSampler for UniformDuration {
     type X = Duration;
 
@@ -966,7 +961,7 @@ mod tests {
     fn test_integers() {
         use core::{i8, i16, i32, i64, isize};
         use core::{u8, u16, u32, u64, usize};
-        #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+        #[cfg(not(target_os = "emscripten"))]
         use core::{i128, u128};
 
         let mut rng = crate::test::rng(251);
@@ -1030,7 +1025,7 @@ mod tests {
         }
         t!(i8, i16, i32, i64, isize,
            u8, u16, u32, u64, usize);
-        #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+        #[cfg(not(target_os = "emscripten"))]
         t!(i128, u128);
 
         #[cfg(all(feature = "simd_support", feature = "nightly"))]
@@ -1187,12 +1182,11 @@ mod tests {
 
 
     #[test]
-    #[cfg(any(feature = "std", rustc_1_25))]
     #[cfg(not(miri))] // Miri is too slow
     fn test_durations() {
         #[cfg(feature = "std")]
         use std::time::Duration;
-        #[cfg(all(not(feature = "std"), rustc_1_25))]
+        #[cfg(not(feature = "std"))]
         use core::time::Duration;
 
         let mut rng = crate::test::rng(253);
@@ -1263,7 +1257,6 @@ mod tests {
         assert_eq!(r.inner.scale, 5.0);
     }
 
-    #[cfg(rustc_1_27)]
     #[test]
     fn test_uniform_from_std_range_inclusive() {
         let r = Uniform::from(2u32..=6);

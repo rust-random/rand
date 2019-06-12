@@ -101,7 +101,6 @@
 //! [`rand_distr`]: https://crates.io/crates/rand_distr
 //! [`statrs`]: https://crates.io/crates/statrs
 
-#[cfg(any(rustc_1_26, features="nightly"))]
 use core::iter;
 use crate::Rng;
 
@@ -259,7 +258,6 @@ impl<D, R, T> Iterator for DistIter<D, R, T>
     }
 }
 
-#[cfg(rustc_1_26)]
 impl<D, R, T> iter::FusedIterator for DistIter<D, R, T>
     where D: Distribution<T>, R: Rng {}
 

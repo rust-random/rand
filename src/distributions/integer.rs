@@ -10,7 +10,6 @@
 
 use crate::{Rng};
 use crate::distributions::{Distribution, Standard};
-#[cfg(rustc_1_28)]
 use core::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroUsize};
 #[cfg(not(target_os = "emscripten"))] use core::num::NonZeroU128;
 #[cfg(feature="simd_support")]
@@ -48,7 +47,7 @@ impl Distribution<u64> for Standard {
     }
 }
 
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+#[cfg(not(target_os = "emscripten"))]
 impl Distribution<u128> for Standard {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u128 {
@@ -88,7 +87,7 @@ impl_int_from_uint! { i8, u8 }
 impl_int_from_uint! { i16, u16 }
 impl_int_from_uint! { i32, u32 }
 impl_int_from_uint! { i64, u64 }
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))] impl_int_from_uint! { i128, u128 }
+#[cfg(not(target_os = "emscripten"))] impl_int_from_uint! { i128, u128 }
 impl_int_from_uint! { isize, usize }
 
 macro_rules! impl_nzint {
@@ -105,12 +104,12 @@ macro_rules! impl_nzint {
     }
 }
 
-#[cfg(rustc_1_28)] impl_nzint!(NonZeroU8, NonZeroU8::new);
-#[cfg(rustc_1_28)] impl_nzint!(NonZeroU16, NonZeroU16::new);
-#[cfg(rustc_1_28)] impl_nzint!(NonZeroU32, NonZeroU32::new);
-#[cfg(rustc_1_28)] impl_nzint!(NonZeroU64, NonZeroU64::new);
-#[cfg(all(rustc_1_28, not(target_os = "emscripten")))] impl_nzint!(NonZeroU128, NonZeroU128::new);
-#[cfg(rustc_1_28)] impl_nzint!(NonZeroUsize, NonZeroUsize::new);
+impl_nzint!(NonZeroU8, NonZeroU8::new);
+impl_nzint!(NonZeroU16, NonZeroU16::new);
+impl_nzint!(NonZeroU32, NonZeroU32::new);
+impl_nzint!(NonZeroU64, NonZeroU64::new);
+#[cfg(not(target_os = "emscripten"))] impl_nzint!(NonZeroU128, NonZeroU128::new);
+impl_nzint!(NonZeroUsize, NonZeroUsize::new);
 
 #[cfg(feature="simd_support")]
 macro_rules! simd_impl {
@@ -171,7 +170,7 @@ mod tests {
         rng.sample::<i16, _>(Standard);
         rng.sample::<i32, _>(Standard);
         rng.sample::<i64, _>(Standard);
-        #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+        #[cfg(not(target_os = "emscripten"))]
         rng.sample::<i128, _>(Standard);
         
         rng.sample::<usize, _>(Standard);
@@ -179,7 +178,7 @@ mod tests {
         rng.sample::<u16, _>(Standard);
         rng.sample::<u32, _>(Standard);
         rng.sample::<u64, _>(Standard);
-        #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+        #[cfg(not(target_os = "emscripten"))]
         rng.sample::<u128, _>(Standard);
     }
 }

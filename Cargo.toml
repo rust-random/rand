@@ -13,7 +13,6 @@ Random number generators and other randomness functionality.
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 exclude = ["/utils/*", "/.travis.yml", "/appveyor.yml", ".gitignore"]
-build = "build.rs"
 autobenches = true
 edition = "2018"
 
@@ -86,9 +85,6 @@ rand_hc = { path = "rand_hc", version = "0.2" }
 rand_xoshiro = { path = "rand_xoshiro", version = "0.3" }
 rand_isaac = { path = "rand_isaac", version = "0.2" }
 rand_xorshift = { path = "rand_xorshift", version = "0.2" }
-
-[build-dependencies]
-autocfg = "0.1"
 
 [package.metadata.docs.rs]
 all-features = true

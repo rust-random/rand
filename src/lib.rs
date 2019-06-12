@@ -448,9 +448,9 @@ macro_rules! impl_as_byte_slice {
 }
 
 impl_as_byte_slice!(u16, u32, u64, usize,);
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))] impl_as_byte_slice!(u128);
+#[cfg(not(target_os = "emscripten"))] impl_as_byte_slice!(u128);
 impl_as_byte_slice!(i8, i16, i32, i64, isize,);
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))] impl_as_byte_slice!(i128);
+#[cfg(not(target_os = "emscripten"))] impl_as_byte_slice!(i128);
 
 macro_rules! impl_as_byte_slice_arrays {
     ($n:expr,) => {};
