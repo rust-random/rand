@@ -1,4 +1,5 @@
 #![feature(test)]
+#![cfg(std)]
 extern crate test;
 extern crate rand_jitter;
 
