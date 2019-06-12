@@ -13,6 +13,7 @@ ChaCha random number generator
 keywords = ["random", "rng", "chacha"]
 categories = ["algorithms", "no-std"]
 build = "build.rs"
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
