@@ -54,15 +54,7 @@
 // compiler not optimize out code which does influence timing jitter, but is
 // technically dead code.
 #![no_std]
-pub extern crate rand_core;
-#[cfg(feature = "std")]
-extern crate std;
-#[cfg(feature = "log")]
-#[macro_use] extern crate log;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-extern crate libc;
-#[cfg(target_os = "windows")]
-extern crate winapi;
+pub use rand_core;
 
 // Coming from https://crates.io/crates/doc-comment
 #[cfg(test)]
@@ -83,7 +75,7 @@ mod platform;
 mod error;
 
 use rand_core::{RngCore, Error, impls};
-pub use error::TimerError;
+pub use crate::error::TimerError;
 
 use core::{fmt, mem, ptr};
 #[cfg(feature = "std")]

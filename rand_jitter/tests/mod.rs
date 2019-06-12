@@ -1,6 +1,3 @@
-extern crate rand_jitter;
-extern crate rand_core;
-
 use rand_jitter::JitterRng;
 #[cfg(feature = "std")]
 use rand_core::RngCore;
