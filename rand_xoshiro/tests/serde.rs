@@ -1,9 +1,5 @@
 #![cfg(feature="serde1")]
 
-extern crate rand_xoshiro;
-extern crate rand_core;
-#[cfg(all(feature="serde1", test))] extern crate bincode;
-
 use rand_core::{RngCore, SeedableRng};
 use rand_xoshiro::{SplitMix64, Xoroshiro64StarStar, Xoroshiro64Star,
     Xoroshiro128Plus, Xoroshiro128StarStar, Xoshiro128StarStar, Xoshiro128Plus,

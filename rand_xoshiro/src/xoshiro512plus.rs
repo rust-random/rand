@@ -35,8 +35,6 @@ impl Xoshiro512Plus {
     /// parallel computations.
     ///
     /// ```
-    /// # extern crate rand_xoshiro;
-    /// # fn main() {
     /// use rand_xoshiro::rand_core::SeedableRng;
     /// use rand_xoshiro::Xoshiro512Plus;
     ///
@@ -45,7 +43,6 @@ impl Xoshiro512Plus {
     /// rng2.jump();
     /// let mut rng3 = rng2.clone();
     /// rng3.jump();
-    /// # }
     /// ```
     pub fn jump(&mut self) {
         impl_jump!(u64, self, [
