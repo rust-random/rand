@@ -30,6 +30,3 @@ serde = { version = "1", features = ["derive"], optional = true }
 # deps yet, see: https://github.com/rust-lang/cargo/issues/1596
 # We require at least 1.1.2 for i128 auto-detection
 bincode = { version = "1.1.2" }
-
-[build-dependencies]
-autocfg = "0.1"
