@@ -43,6 +43,7 @@ use core::default::Default;
 use core::convert::AsMut;
 use core::ptr::copy_nonoverlapping;
 
+#[cfg(all(feature="alloc", not(feature="std")))] extern crate alloc;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
 pub use error::Error;

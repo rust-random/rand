@@ -3,7 +3,9 @@
 
 use super::WeightedError;
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+use crate::alloc::vec::Vec;
+#[cfg(not(feature = "std"))]
+use crate::alloc::vec;
 use core::fmt;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};

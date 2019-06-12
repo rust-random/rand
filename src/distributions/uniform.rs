@@ -119,7 +119,7 @@ use crate::distributions::utils::{WideningMultiply, FloatSIMDUtils, FloatAsSIMD,
 
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
-use distributions::utils::Float;
+use crate::distributions::utils::Float;
 
 
 #[cfg(feature="simd_support")]

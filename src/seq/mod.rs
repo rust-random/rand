@@ -15,7 +15,7 @@
 
 #[cfg(feature="alloc")] use core::ops::Index;
 
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec::Vec;
+#[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::vec::Vec;
 
 use crate::Rng;
 #[cfg(feature="alloc")] use crate::distributions::WeightedError;

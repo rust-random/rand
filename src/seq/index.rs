@@ -11,10 +11,10 @@
 #[cfg(feature="alloc")] use core::slice;
 
 #[cfg(feature="std")] use std::vec;
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec::{self, Vec};
+#[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::vec::{self, Vec};
 // BTreeMap is not as fast in tests, but better than nothing.
 #[cfg(feature="std")] use std::collections::{HashSet};
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::collections::BTreeSet;
+#[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::collections::BTreeSet;
 
 #[cfg(feature="alloc")] use crate::distributions::{Distribution, Uniform, uniform::SampleUniform};
 use crate::Rng;
@@ -326,6 +326,7 @@ where R: Rng + ?Sized, IndexVec: From<Vec<X>> {
 
 #[cfg(test)]
 mod test {
+    use crate::alloc::vec;
     use super::*;
 
     #[test]
