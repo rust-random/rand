@@ -16,7 +16,7 @@ const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 use core::fmt;
 use core::mem::transmute;
 use rand_core::{RngCore, SeedableRng, Error, le};
-#[cfg(feature="serde")] use serde::{Serialize, Deserialize};
+#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 
 /// A PCG random number generator (XSL RR 128/64 (LCG) variant).
 ///
@@ -31,7 +31,7 @@ use rand_core::{RngCore, SeedableRng, Error, le};
 /// comprising 128 bits of state and 128 bits stream selector. These are both
 /// set by `SeedableRng`, using a 256-bit seed.
 #[derive(Clone)]
-#[cfg_attr(feature="serde", derive(Serialize,Deserialize))]
+#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
 pub struct Lcg128Xsl64 {
     state: u128,
     increment: u128,
@@ -130,7 +130,7 @@ impl RngCore for Lcg128Xsl64 {
 /// output function), this RNG is faster, also has a long cycle, and still has
 /// good performance on statistical tests.
 #[derive(Clone)]
-#[cfg_attr(feature="serde", derive(Serialize,Deserialize))]
+#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
 pub struct Mcg128Xsl64 {
     state: u128,
 }

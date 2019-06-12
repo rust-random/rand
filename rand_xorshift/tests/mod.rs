@@ -65,7 +65,7 @@ fn test_xorshift_clone() {
     }
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature="serde1")]
 #[test]
 fn test_xorshift_serde() {
     use bincode;

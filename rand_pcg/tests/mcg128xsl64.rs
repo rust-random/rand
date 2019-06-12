@@ -31,7 +31,7 @@ fn test_mcg128xsl64_true_values() {
     assert_eq!(results, expected);
 }
 
-#[cfg(feature="serde")]
+#[cfg(feature="serde1")]
 #[test]
 fn test_mcg128xsl64_serde() {
     use bincode;

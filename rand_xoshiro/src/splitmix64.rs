@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg(feature="serde")] use serde::{Serialize, Deserialize};
+#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 use byteorder::{ByteOrder, LittleEndian};
 use rand_core::le::read_u64_into;
 use rand_core::impls::fill_bytes_via_next;
@@ -23,7 +23,7 @@ use rand_core::{RngCore, SeedableRng, Error};
 /// from [`dsiutils`](http://dsiutils.di.unimi.it/) is used.
 #[allow(missing_copy_implementations)]
 #[derive(Debug, Clone)]
-#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
 pub struct SplitMix64 {
     x: u64,
 }
