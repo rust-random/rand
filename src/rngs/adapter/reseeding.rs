@@ -76,7 +76,6 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// # }
 /// ```
 ///
-/// [`ChaCha20Core`]: ../../../rand_chacha/struct.ChaCha20Core.html
 /// [`BlockRngCore`]: rand_core::block::BlockRngCore
 /// [`ReseedingRng::new`]: ReseedingRng::new
 /// [`reseed()`]: ReseedingRng::reseed
