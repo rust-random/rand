@@ -79,7 +79,7 @@ thread_local!(
 /// For more information see [`ThreadRng`].
 pub fn thread_rng() -> ThreadRng {
     let raw = THREAD_RNG_KEY.with(|t| t.get());
-    let nn = unsafe { NonNull::new_unchecked(raw) };
+    let nn = NonNull::new(raw).unwrap();
     ThreadRng { rng: nn }
 }
 
