@@ -9,6 +9,8 @@
 #![feature(test)]
 #![allow(non_snake_case)]
 
+extern crate test;
+
 const RAND_BENCH_N: u64 = 1000;
 const BYTES_LEN: usize = 1024;
 

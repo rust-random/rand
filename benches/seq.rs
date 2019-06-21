@@ -9,6 +9,8 @@
 #![feature(test)]
 #![allow(non_snake_case)]
 
+extern crate test;
+
 use test::Bencher;
 
 use rand::prelude::*;

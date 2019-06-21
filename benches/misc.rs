@@ -8,6 +8,8 @@
 
 #![feature(test)]
 
+extern crate test;
+
 const RAND_BENCH_N: u64 = 1000;
 
 use test::Bencher;
