@@ -60,16 +60,35 @@ extern crate alloc;
 use getrandom_package as getrandom;
 
 #[allow(unused)]
-#[cfg(not(feature = "log"))] macro_rules! trace { ($($x:tt)*) => () }
+macro_rules! trace { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        log::trace!($($x)*)
+    }
+) }
 #[allow(unused)]
-#[cfg(not(feature = "log"))] macro_rules! debug { ($($x:tt)*) => () }
+macro_rules! debug { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        log::debug!($($x)*)
+    }
+) }
 #[allow(unused)]
-#[cfg(not(feature = "log"))] macro_rules! info { ($($x:tt)*) => () }
+macro_rules! info { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        log::info!($($x)*)
+    }
+) }
 #[allow(unused)]
-#[cfg(not(feature = "log"))] macro_rules! warn { ($($x:tt)*) => () }
+macro_rules! warn { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        log::warn!($($x)*)
+    }
+) }
 #[allow(unused)]
-#[cfg(not(feature = "log"))] macro_rules! error { ($($x:tt)*) => () }
-
+macro_rules! error { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        log::error!($($x)*)
+    }
+) }
 
 // Re-exports from rand_core
 pub use rand_core::{RngCore, CryptoRng, SeedableRng, Error};
