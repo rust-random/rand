@@ -326,7 +326,8 @@ where R: Rng + ?Sized, IndexVec: From<Vec<X>> {
 
 #[cfg(test)]
 mod test {
-    use alloc::vec;
+    #[cfg(feature="std")] use std::vec;
+    #[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::vec;
     use super::*;
 
     #[test]
