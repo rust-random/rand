@@ -53,7 +53,7 @@
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
 
-#![cfg(all(feature="alloc", not(feature="std")))]
+#[cfg(all(feature="alloc"))]
 extern crate alloc;
 
 #[cfg(feature = "getrandom")]
