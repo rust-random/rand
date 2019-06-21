@@ -54,6 +54,9 @@
 // compiler not optimize out code which does influence timing jitter, but is
 // technically dead code.
 #![no_std]
+#[cfg(feature = "std")]
+extern crate std;
+
 pub use rand_core;
 
 // Coming from https://crates.io/crates/doc-comment
