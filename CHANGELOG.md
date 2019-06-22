@@ -9,10 +9,45 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 
-## [0.7.0 Pre-release] - 2019-06-06
-Many changes (TODO)
-- Enable fork protection of ReseedingRng without `std`
-- Remove dependency on `winapi`
+## [0.7.0] - 2019-??-??
+
+### Fixes
+- Fix incorrect pointer usages revealed by Miri testing (#780, #781)
+- Fix (tiny!) bias in `Uniform` for 8- and 16-bit ints (#809)
+
+### Crate
+- Bumped MSRV (min supported Rust version) to 1.32.0
+- Updated to Rust Edition 2018  (#823, #824)
+- Removed dependence on `rand_xorshift`, `rand_isaac`, `rand_jitter` crates (#759, #765)
+- Remove dependency on `winapi` (#724)
+- Removed code already deprecated in version 0.6 (#757)
+- Many documentation changes
+
+### rand_core
+- Updated to `rand_core` 0.5.0
+- `Error` type redesigned with new API (#800)
+- Move `from_entropy` method to `SeedableRng` and remove `FromEntropy` (#800)
+- `SeedableRng::from_rng` is now expected to be value-stable (#815)
+
+### Standard RNGs
+- OS interface moved from `rand_os` to new `getrandom` crate (#765, [getrandom](https://github.com/rust-random/getrandom))
+- Use ChaCha for `StdRng` and `ThreadRng` (#792)
+- Feature-gate `SmallRng` (#792)
+- `ThreadRng` now supports `Copy` (#758)
+- Deprecated `EntropyRng` (#765)
+- Enable fork protection of ReseedingRng without `std` (#724)
+
+### Distributions
+- Many distributions have been moved to `rand_distr` (#761)
+- `Bernoulli::new` constructor now returns a `Result` (#803)
+- `Distribution::sample_iter` adjusted for more flexibility (#758)
+- Added `distributions::weighted::alias_method::WeightedIndex` for `O(1)` sampling (#692)
+- Support sampling `NonZeroU*` types with the `Standard` distribution (#728)
+- Optimised `Binomial` distribution sampling (#735, #740, #752)
+- Optimised SIMD float sampling (#739)
+
+### Sequences
+- Make results portable across 32- and 64-bit by using `u32` samples for `usize` where possible (#809)
 
 ## [0.6.5] - 2019-01-28
 ### Crates
