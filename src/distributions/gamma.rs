@@ -13,9 +13,9 @@
 use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
 
-use Rng;
-use distributions::normal::StandardNormal;
-use distributions::{Distribution, Exp, Open01};
+use crate::Rng;
+use crate::distributions::normal::StandardNormal;
+use crate::distributions::{Distribution, Exp, Open01};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -301,7 +301,7 @@ impl Distribution<f64> for Beta {
 
 #[cfg(test)]
 mod test {
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
     use super::{Beta, ChiSquared, StudentT, FisherF};
 
     const N: u32 = 100;
@@ -309,7 +309,7 @@ mod test {
     #[test]
     fn test_chi_squared_one() {
         let chi = ChiSquared::new(1.0);
-        let mut rng = ::test::rng(201);
+        let mut rng = crate::test::rng(201);
         for _ in 0..N {
             chi.sample(&mut rng);
         }
@@ -317,7 +317,7 @@ mod test {
     #[test]
     fn test_chi_squared_small() {
         let chi = ChiSquared::new(0.5);
-        let mut rng = ::test::rng(202);
+        let mut rng = crate::test::rng(202);
         for _ in 0..N {
             chi.sample(&mut rng);
         }
@@ -325,7 +325,7 @@ mod test {
     #[test]
     fn test_chi_squared_large() {
         let chi = ChiSquared::new(30.0);
-        let mut rng = ::test::rng(203);
+        let mut rng = crate::test::rng(203);
         for _ in 0..N {
             chi.sample(&mut rng);
         }
@@ -339,7 +339,7 @@ mod test {
     #[test]
     fn test_f() {
         let f = FisherF::new(2.0, 32.0);
-        let mut rng = ::test::rng(204);
+        let mut rng = crate::test::rng(204);
         for _ in 0..N {
             f.sample(&mut rng);
         }
@@ -348,7 +348,7 @@ mod test {
     #[test]
     fn test_t() {
         let t = StudentT::new(11.0);
-        let mut rng = ::test::rng(205);
+        let mut rng = crate::test::rng(205);
         for _ in 0..N {
             t.sample(&mut rng);
         }
@@ -357,7 +357,7 @@ mod test {
     #[test]
     fn test_beta() {
         let beta = Beta::new(1.0, 2.0);
-        let mut rng = ::test::rng(201);
+        let mut rng = crate::test::rng(201);
         for _ in 0..N {
             beta.sample(&mut rng);
         }

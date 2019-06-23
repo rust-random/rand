@@ -3,14 +3,16 @@
 
 use super::WeightedError;
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+use crate::alloc::vec::Vec;
+#[cfg(not(feature = "std"))]
+use crate::alloc::vec;
 use core::fmt;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
-use distributions::uniform::SampleUniform;
-use distributions::Distribution;
-use distributions::Uniform;
-use Rng;
+use crate::distributions::uniform::SampleUniform;
+use crate::distributions::Distribution;
+use crate::distributions::Uniform;
+use crate::Rng;
 
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///
@@ -349,14 +351,14 @@ macro_rules! impl_weight_for_int {
 impl_weight_for_float!(f64);
 impl_weight_for_float!(f32);
 impl_weight_for_int!(usize);
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+#[cfg(not(target_os = "emscripten"))]
 impl_weight_for_int!(u128);
 impl_weight_for_int!(u64);
 impl_weight_for_int!(u32);
 impl_weight_for_int!(u16);
 impl_weight_for_int!(u8);
 impl_weight_for_int!(isize);
-#[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+#[cfg(not(target_os = "emscripten"))]
 impl_weight_for_int!(i128);
 impl_weight_for_int!(i64);
 impl_weight_for_int!(i32);
@@ -395,7 +397,7 @@ mod test {
         );
     }
 
-    #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+    #[cfg(not(target_os = "emscripten"))]
     #[test]
     #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_u128() {
@@ -448,11 +450,11 @@ mod test {
         const NUM_WEIGHTS: u32 = 10;
         const ZERO_WEIGHT_INDEX: u32 = 3;
         const NUM_SAMPLES: u32 = 15000;
-        let mut rng = ::test::rng(0x9c9fa0b0580a7031);
+        let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
 
         let weights = {
             let mut weights = Vec::with_capacity(NUM_WEIGHTS as usize);
-            let random_weight_distribution = ::distributions::Uniform::new_inclusive(
+            let random_weight_distribution = crate::distributions::Uniform::new_inclusive(
                 W::ZERO,
                 W::MAX / W::try_from_u32_lossy(NUM_WEIGHTS).unwrap(),
             );

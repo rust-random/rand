@@ -10,10 +10,6 @@
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png")]
 
-extern crate rand;
-extern crate wasm_bindgen;
-extern crate wasm_bindgen_test;
-
 use rand::rngs::{OsRng, StdRng};
 use rand::{Rng, SeedableRng};
 use wasm_bindgen::prelude::*;

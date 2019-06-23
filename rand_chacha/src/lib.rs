@@ -18,12 +18,11 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-extern crate c2_chacha;
-pub extern crate rand_core;
+pub use rand_core;
 
 mod chacha;
 
-pub use chacha::{ChaCha12Core, ChaCha12Rng, ChaCha20Core, ChaCha20Rng, ChaCha8Core, ChaCha8Rng};
+pub use crate::chacha::{ChaCha12Core, ChaCha12Rng, ChaCha20Core, ChaCha20Rng, ChaCha8Core, ChaCha8Rng};
 
 /// ChaCha with 20 rounds
 pub type ChaChaRng = ChaCha20Rng;

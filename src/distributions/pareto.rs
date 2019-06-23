@@ -9,8 +9,8 @@
 //! The Pareto distribution.
 #![allow(deprecated)]
 
-use Rng;
-use distributions::{Distribution, OpenClosed01};
+use crate::Rng;
+use crate::distributions::{Distribution, OpenClosed01};
 
 /// Samples floating-point numbers according to the Pareto distribution
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
@@ -44,7 +44,7 @@ impl Distribution<f64> for Pareto {
 
 #[cfg(test)]
 mod tests {
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
     use super::Pareto;
 
     #[test]
@@ -58,7 +58,7 @@ mod tests {
         let scale = 1.0;
         let shape = 2.0;
         let d = Pareto::new(scale, shape);
-        let mut rng = ::test::rng(1);
+        let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);
             assert!(r >= scale);

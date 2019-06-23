@@ -11,9 +11,9 @@
 use std::cell::UnsafeCell;
 use std::ptr::NonNull;
 
-use {RngCore, CryptoRng, SeedableRng, Error};
-use rngs::adapter::ReseedingRng;
-use rngs::OsRng;
+use crate::{RngCore, CryptoRng, SeedableRng, Error};
+use crate::rngs::adapter::ReseedingRng;
+use crate::rngs::OsRng;
 use super::std::Core;
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
@@ -85,7 +85,7 @@ pub fn thread_rng() -> ThreadRng {
 
 impl Default for ThreadRng {
     fn default() -> ThreadRng {
-        ::prelude::thread_rng()
+        crate::prelude::thread_rng()
     }
 }
 
@@ -116,8 +116,8 @@ impl CryptoRng for ThreadRng {}
 mod test {
     #[test]
     fn test_thread_rng() {
-        use Rng;
-        let mut r = ::thread_rng();
+        use crate::Rng;
+        let mut r = crate::thread_rng();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0, 1), 0);
     }

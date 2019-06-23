@@ -22,7 +22,7 @@ use core::ptr::copy_nonoverlapping;
 use core::slice;
 use core::cmp::min;
 use core::mem::size_of;
-use RngCore;
+use crate::RngCore;
 
 
 /// Implement `next_u64` via `next_u32`, little-endian order.

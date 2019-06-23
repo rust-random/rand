@@ -11,8 +11,8 @@
 use core::char;
 use core::num::Wrapping;
 
-use {Rng};
-use distributions::{Distribution, Standard, Uniform};
+use crate::{Rng};
+use crate::distributions::{Distribution, Standard, Uniform};
 
 // ----- Sampling distributions -----
 
@@ -176,13 +176,13 @@ impl<T> Distribution<Wrapping<T>> for Standard where Standard: Distribution<T> {
 
 #[cfg(test)]
 mod tests {
-    use {Rng, RngCore, Standard};
-    use distributions::Alphanumeric;
+    use crate::{Rng, RngCore, Standard};
+    use crate::distributions::Alphanumeric;
     #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::string::String;
 
     #[test]
     fn test_misc() {
-        let rng: &mut dyn RngCore = &mut ::test::rng(820);
+        let rng: &mut dyn RngCore = &mut crate::test::rng(820);
         
         rng.sample::<char, _>(Standard);
         rng.sample::<bool, _>(Standard);
@@ -192,7 +192,7 @@ mod tests {
     #[test]
     fn test_chars() {
         use core::iter;
-        let mut rng = ::test::rng(805);
+        let mut rng = crate::test::rng(805);
 
         // Test by generating a relatively large number of chars, so we also
         // take the rejection sampling path.
@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn test_alphanumeric() {
-        let mut rng = ::test::rng(806);
+        let mut rng = crate::test::rng(806);
 
         // Test by generating a relatively large number of chars, so we also
         // take the rejection sampling path.

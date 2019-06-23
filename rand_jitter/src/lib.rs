@@ -54,15 +54,10 @@
 // compiler not optimize out code which does influence timing jitter, but is
 // technically dead code.
 #![no_std]
-pub extern crate rand_core;
 #[cfg(feature = "std")]
 extern crate std;
-#[cfg(feature = "log")]
-#[macro_use] extern crate log;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-extern crate libc;
-#[cfg(target_os = "windows")]
-extern crate winapi;
+
+pub use rand_core;
 
 // Coming from https://crates.io/crates/doc-comment
 #[cfg(test)]
@@ -76,21 +71,47 @@ macro_rules! doc_comment {
 #[cfg(test)]
 doc_comment!(include_str!("../README.md"));
 
-#[cfg(not(feature = "log"))]
-#[macro_use] mod dummy_log;
+#[allow(unused)]
+macro_rules! trace { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        log::trace!($($x)*)
+    }
+) }
+#[allow(unused)]
+macro_rules! debug { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        log::debug!($($x)*)
+    }
+) }
+#[allow(unused)]
+macro_rules! info { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        log::info!($($x)*)
+    }
+) }
+#[allow(unused)]
+macro_rules! warn { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        log::warn!($($x)*)
+    }
+) }
+#[allow(unused)]
+macro_rules! error { ($($x:tt)*) => (
+    #[cfg(feature = "log")] {
+        log::error!($($x)*)
+    }
+) }
+
 #[cfg(feature = "std")]
 mod platform;
 mod error;
 
 use rand_core::{RngCore, Error, impls};
-pub use error::TimerError;
+pub use crate::error::TimerError;
 
 use core::{fmt, mem, ptr};
 #[cfg(feature = "std")]
 use std::sync::atomic::{AtomicUsize, Ordering};
-#[cfg(feature = "std")]
-#[allow(deprecated)]  // Required for compatibility with Rust < 1.24.
-use std::sync::atomic::ATOMIC_USIZE_INIT;
 
 const MEMORY_BLOCKS: usize = 64;
 const MEMORY_BLOCKSIZE: usize = 32;
@@ -185,8 +206,7 @@ impl Clone for JitterRng {
 
 // Initialise to zero; must be positive
 #[cfg(all(feature = "std", not(target_arch = "wasm32")))]
-#[allow(deprecated)]
-static JITTER_ROUNDS: AtomicUsize = ATOMIC_USIZE_INIT;
+static JITTER_ROUNDS: AtomicUsize = AtomicUsize::new(0);
 
 impl JitterRng {
     /// Create a new `JitterRng`. Makes use of `std::time` for a timer, or a

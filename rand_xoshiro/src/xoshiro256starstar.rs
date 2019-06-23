@@ -32,8 +32,6 @@ impl Xoshiro256StarStar {
     /// parallel computations.
     ///
     /// ```
-    /// # extern crate rand_xoshiro;
-    /// # fn main() {
     /// use rand_xoshiro::rand_core::SeedableRng;
     /// use rand_xoshiro::Xoshiro256StarStar;
     ///
@@ -42,7 +40,6 @@ impl Xoshiro256StarStar {
     /// rng2.jump();
     /// let mut rng3 = rng2.clone();
     /// rng3.jump();
-    /// # }
     /// ```
     pub fn jump(&mut self) {
         impl_jump!(u64, self, [

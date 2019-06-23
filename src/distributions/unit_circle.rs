@@ -8,8 +8,8 @@
 
 #![allow(deprecated)]
 
-use Rng;
-use distributions::{Distribution, Uniform};
+use crate::Rng;
+use crate::distributions::{Distribution, Uniform};
 
 /// Samples uniformly from the edge of the unit circle in two dimensions.
 ///
@@ -53,7 +53,7 @@ impl Distribution<[f64; 2]> for UnitCircle {
 
 #[cfg(test)]
 mod tests {
-    use distributions::Distribution;
+    use crate::distributions::Distribution;
     use super::UnitCircle;
 
     /// Assert that two numbers are almost equal to each other.
@@ -74,7 +74,7 @@ mod tests {
 
     #[test]
     fn norm() {
-        let mut rng = ::test::rng(1);
+        let mut rng = crate::test::rng(1);
         let dist = UnitCircle::new();
         for _ in 0..1000 {
             let x = dist.sample(&mut rng);

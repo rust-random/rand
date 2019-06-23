@@ -101,9 +101,8 @@
 //! [`rand_distr`]: https://crates.io/crates/rand_distr
 //! [`statrs`]: https://crates.io/crates/statrs
 
-#[cfg(any(rustc_1_26, features="nightly"))]
 use core::iter;
-use Rng;
+use crate::Rng;
 
 pub use self::other::Alphanumeric;
 #[doc(inline)] pub use self::uniform::Uniform;
@@ -259,7 +258,6 @@ impl<D, R, T> Iterator for DistIter<D, R, T>
     }
 }
 
-#[cfg(rustc_1_26)]
 impl<D, R, T> iter::FusedIterator for DistIter<D, R, T>
     where D: Distribution<T>, R: Rng {}
 
@@ -351,13 +349,13 @@ pub struct Standard;
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
-    use ::Rng;
+    use crate::Rng;
     use super::{Distribution, Uniform};
 
     #[test]
     fn test_distributions_iter() {
-        use distributions::Open01;
-        let mut rng = ::test::rng(210);
+        use crate::distributions::Open01;
+        let mut rng = crate::test::rng(210);
         let distr = Open01;
         let results: Vec<f32> = distr.sample_iter(&mut rng).take(100).collect();
         println!("{:?}", results);
@@ -372,7 +370,7 @@ mod tests {
                 .take(10)
         }
         
-        let mut rng = ::test::rng(211);
+        let mut rng = crate::test::rng(211);
         let mut count = 0;
         for val in ten_dice_rolls_other_than_five(&mut rng) {
             assert!(val >= 1 && val <= 6 && val != 5);

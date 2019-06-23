@@ -10,8 +10,6 @@
 #![allow(non_snake_case)]
 
 extern crate test;
-extern crate rand;
-extern crate rand_pcg;
 
 use test::Bencher;
 
@@ -49,7 +47,7 @@ fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
         }
         s
     });
-    b.bytes = size_of::<usize>() as u64 * ::RAND_BENCH_N;
+    b.bytes = size_of::<usize>() as u64 * crate::RAND_BENCH_N;
 }
 
 macro_rules! seq_slice_choose_multiple {
@@ -91,7 +89,7 @@ fn seq_iter_choose_from_1000(b: &mut Bencher) {
         }
         s
     });
-    b.bytes = size_of::<usize>() as u64 * ::RAND_BENCH_N;
+    b.bytes = size_of::<usize>() as u64 * crate::RAND_BENCH_N;
 }
 
 #[derive(Clone)]

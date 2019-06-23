@@ -8,6 +8,7 @@ repository = "https://github.com/rust-random/rand"
 documentation = "https://docs.rs/rand_jitter"
 description = "Random number generator based on timing jitter"
 keywords = ["random", "rng", "os"]
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }

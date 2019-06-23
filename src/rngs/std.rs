@@ -8,7 +8,7 @@
 
 //! The standard RNG
 
-use {RngCore, CryptoRng, Error, SeedableRng};
+use crate::{RngCore, CryptoRng, Error, SeedableRng};
 
 #[cfg(target_os = "emscripten")] pub(crate) use rand_hc::Hc128Core as Core;
 #[cfg(not(target_os = "emscripten"))] pub(crate) use rand_chacha::ChaCha20Core as Core;
@@ -74,8 +74,8 @@ impl CryptoRng for StdRng {}
 
 #[cfg(test)]
 mod test {
-    use {RngCore, SeedableRng};
-    use rngs::StdRng;
+    use crate::{RngCore, SeedableRng};
+    use crate::rngs::StdRng;
 
     #[test]
     fn test_stdrng_construction() {

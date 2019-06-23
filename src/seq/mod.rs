@@ -15,11 +15,11 @@
 
 #[cfg(feature="alloc")] use core::ops::Index;
 
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::vec::Vec;
+#[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::vec::Vec;
 
-use Rng;
-#[cfg(feature="alloc")] use distributions::WeightedError;
-#[cfg(feature="alloc")] use distributions::uniform::{SampleUniform, SampleBorrow};
+use crate::Rng;
+#[cfg(feature="alloc")] use crate::distributions::WeightedError;
+#[cfg(feature="alloc")] use crate::distributions::uniform::{SampleUniform, SampleBorrow};
 
 /// Extension trait on slices, providing random mutation and sampling methods.
 /// 
@@ -362,7 +362,7 @@ impl<T> SliceRandom for [T] {
             + Clone
             + Default,
     {
-        use distributions::{Distribution, WeightedIndex};
+        use crate::distributions::{Distribution, WeightedIndex};
         let distr = WeightedIndex::new(self.iter().map(weight))?;
         Ok(&self[distr.sample(rng)])
     }
@@ -381,7 +381,7 @@ impl<T> SliceRandom for [T] {
             + Clone
             + Default,
     {
-        use distributions::{Distribution, WeightedIndex};
+        use crate::distributions::{Distribution, WeightedIndex};
         let distr = WeightedIndex::new(self.iter().map(weight))?;
         Ok(&mut self[distr.sample(rng)])
     }
@@ -467,13 +467,13 @@ fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
 #[cfg(test)]
 mod test {
     use super::*;
-    #[cfg(feature = "alloc")] use Rng;
+    #[cfg(feature = "alloc")] use crate::Rng;
     #[cfg(all(feature="alloc", not(feature="std")))]
     use alloc::vec::Vec;
 
     #[test]
     fn test_slice_choose() {
-        let mut r = ::test::rng(107);
+        let mut r = crate::test::rng(107);
         let chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n'];
         let mut chosen = [0i32; 14];
         // The below all use a binomial distribution with n=1000, p=1/14.
@@ -554,7 +554,7 @@ mod test {
     #[test]
     #[cfg(not(miri))] // Miri is too slow
     fn test_iterator_choose() {
-        let r = &mut ::test::rng(109);
+        let r = &mut crate::test::rng(109);
         fn test_iter<R: Rng + ?Sized, Iter: Iterator<Item=usize> + Clone>(r: &mut R, iter: Iter) {
             let mut chosen = [0i32; 9];
             for _ in 0..1000 {
@@ -586,7 +586,7 @@ mod test {
     #[test]
     #[cfg(not(miri))] // Miri is too slow
     fn test_shuffle() {
-        let mut r = ::test::rng(108);
+        let mut r = crate::test::rng(108);
         let empty: &mut [isize] = &mut [];
         empty.shuffle(&mut r);
         let mut one = [1];
@@ -635,7 +635,7 @@ mod test {
     
     #[test]
     fn test_partial_shuffle() {
-        let mut r = ::test::rng(118);
+        let mut r = crate::test::rng(118);
         
         let mut empty: [u32; 0] = [];
         let res = empty.partial_shuffle(&mut r, 10);
@@ -655,7 +655,7 @@ mod test {
         let min_val = 1;
         let max_val = 100;
 
-        let mut r = ::test::rng(401);
+        let mut r = crate::test::rng(401);
         let vals = (min_val..max_val).collect::<Vec<i32>>();
         let small_sample = vals.iter().choose_multiple(&mut r, 5);
         let large_sample = vals.iter().choose_multiple(&mut r, vals.len() + 5);
@@ -674,7 +674,7 @@ mod test {
     #[cfg(feature = "alloc")]
     #[cfg(not(miri))] // Miri is too slow
     fn test_weighted() {
-        let mut r = ::test::rng(406);
+        let mut r = crate::test::rng(406);
         const N_REPS: u32 = 3000;
         let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
         let total_weight = weights.iter().sum::<u32>() as f32;

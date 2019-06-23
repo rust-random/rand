@@ -1,6 +1,5 @@
 #![feature(test)]
-extern crate test;
-extern crate rand_jitter;
+#![cfg(std)]
 
 use test::Bencher;
 use rand_jitter::rand_core::RngCore;

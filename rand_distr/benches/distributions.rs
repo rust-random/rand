@@ -8,8 +8,6 @@
 
 #![feature(test)]
 
-extern crate test;
-
 const RAND_BENCH_N: u64 = 1000;
 
 use std::mem::size_of;

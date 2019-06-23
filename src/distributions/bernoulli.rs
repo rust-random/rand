@@ -8,8 +8,8 @@
 
 //! The Bernoulli distribution.
 
-use Rng;
-use distributions::Distribution;
+use crate::Rng;
+use crate::distributions::Distribution;
 
 /// The Bernoulli distribution.
 ///
@@ -119,13 +119,13 @@ impl Distribution<bool> for Bernoulli {
 
 #[cfg(test)]
 mod test {
-    use Rng;
-    use distributions::Distribution;
+    use crate::Rng;
+    use crate::distributions::Distribution;
     use super::Bernoulli;
 
     #[test]
     fn test_trivial() {
-        let mut r = ::test::rng(1);
+        let mut r = crate::test::rng(1);
         let always_false = Bernoulli::new(0.0).unwrap();
         let always_true = Bernoulli::new(1.0).unwrap();
         for _ in 0..5 {
@@ -148,7 +148,7 @@ mod test {
 
         let mut sum1: u32 = 0;
         let mut sum2: u32 = 0;
-        let mut rng = ::test::rng(2);
+        let mut rng = crate::test::rng(2);
         for _ in 0..N {
             if d1.sample(&mut rng) {
                 sum1 += 1;

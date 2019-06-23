@@ -9,7 +9,7 @@
 //! Interface to the random number generator of the operating system.
 // Note: keep this code in sync with the rand_os crate!
 
-use getrandom::getrandom;
+use crate::getrandom::getrandom;
 use rand_core::{CryptoRng, RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness from from the

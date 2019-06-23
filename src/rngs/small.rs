@@ -8,12 +8,12 @@
 
 //! A small fast RNG
 
-use {RngCore, SeedableRng, Error};
+use rand_core::{RngCore, SeedableRng, Error};
 
-#[cfg(all(all(rustc_1_26, not(target_os = "emscripten")), target_pointer_width = "64"))]
-type Rng = ::rand_pcg::Pcg64Mcg;
-#[cfg(not(all(all(rustc_1_26, not(target_os = "emscripten")), target_pointer_width = "64")))]
-type Rng = ::rand_pcg::Pcg32;
+#[cfg(all(not(target_os = "emscripten"), target_pointer_width = "64"))]
+type Rng = rand_pcg::Pcg64Mcg;
+#[cfg(not(all(not(target_os = "emscripten"), target_pointer_width = "64")))]
+type Rng = rand_pcg::Pcg32;
 
 /// A small-state, fast non-crypto PRNG
 ///
