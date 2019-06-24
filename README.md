@@ -94,7 +94,6 @@ Rand is built with these features enabled by default:
 Optionally, the following dependencies can be enabled:
 
 -   `log` enables logging via the `log` crate
--   `serde1` enables serialization for some types, via Serde version 1
 -   `stdweb` implies `getrandom/stdweb` to enable
     `getrandom` support on `wasm32-unknown-unknown`
 -   `wasm-bindgen` implies `getrandom/wasm-bindgen` to enable
