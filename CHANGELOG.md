@@ -20,6 +20,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Updated to Rust Edition 2018  (#823, #824)
 - Removed dependence on `rand_xorshift`, `rand_isaac`, `rand_jitter` crates (#759, #765)
 - Remove dependency on `winapi` (#724)
+- Removed all `build.rs` files (#824)
 - Removed code already deprecated in version 0.6 (#757)
 - Many documentation changes
 
