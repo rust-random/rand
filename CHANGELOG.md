@@ -22,6 +22,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Remove dependency on `winapi` (#724)
 - Removed all `build.rs` files (#824)
 - Removed code already deprecated in version 0.6 (#757)
+- Removed the serde1 feature (It's still available for backwards compatibility, but it does not do anything. #830)
 - Many documentation changes
 
 ### rand_core
