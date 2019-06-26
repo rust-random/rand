@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Index sampling
+//! Low-level API for sampling indices
 
 #[cfg(feature="alloc")] use core::slice;
 

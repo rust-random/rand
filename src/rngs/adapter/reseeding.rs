@@ -72,7 +72,6 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// assert!(reseeding_rng.gen::<u64>() != cloned_rng.gen::<u64>());
 /// ```
 ///
-/// [`ChaCha20Core`]: ../../../rand_chacha/struct.ChaCha20Core.html
 /// [`BlockRngCore`]: rand_core::block::BlockRngCore
 /// [`ReseedingRng::new`]: ReseedingRng::new
 /// [`reseed()`]: ReseedingRng::reseed

@@ -18,6 +18,8 @@ use crate::rngs::OsRng;
 /// specifically for securely seeding algorithmic generators (PRNGs).
 ///
 /// This is deprecated. It is suggested you use [`rngs::OsRng`] instead.
+/// 
+/// [`rngs::OsRng`]: crate::rngs::OsRng
 #[derive(Debug)]
 #[deprecated(since="0.7.0", note="use rngs::OsRng instead")]
 pub struct EntropyRng {
