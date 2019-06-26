@@ -13,9 +13,9 @@ use crate::utils::Float;
 
 /// The PERT distribution.
 ///
-/// Similar to the [Triangular] distribution, the PERT distribution is
+/// Similar to the [`Triangular`] distribution, the PERT distribution is
 /// parameterised by a range and a mode within that range. Unlike the
-/// [Triangular] distribution, the probability density function of the PERT
+/// [`Triangular`] distribution, the probability density function of the PERT
 /// distribution is smooth, with a configurable weighting around the mode.
 ///
 /// # Example
@@ -27,6 +27,8 @@ use crate::utils::Float;
 /// let v = d.sample(&mut rand::thread_rng());
 /// println!("{} is from a PERT distribution", v);
 /// ```
+/// 
+/// [`Triangular`]: crate::Triangular
 #[derive(Clone, Copy, Debug)]
 pub struct Pert<N> {
     min: N,

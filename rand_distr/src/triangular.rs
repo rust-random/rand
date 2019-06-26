@@ -17,7 +17,7 @@ use crate::utils::Float;
 /// (most likely value) within that range.
 ///
 /// The probability density function is triangular. For a similar distribution
-/// with a smooth PDF, see the [Pert] distribution.
+/// with a smooth PDF, see the [`Pert`] distribution.
 ///
 /// # Example
 ///
@@ -28,6 +28,8 @@ use crate::utils::Float;
 /// let v = d.sample(&mut rand::thread_rng());
 /// println!("{} is from a triangular distribution", v);
 /// ```
+///
+/// [`Pert`]: crate::Pert
 #[derive(Clone, Copy, Debug)]
 pub struct Triangular<N> {
     min: N,
