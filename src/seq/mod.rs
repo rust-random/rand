@@ -51,7 +51,7 @@ use Rng;
 ///     println!("{}", str);
 /// }
 /// ```
-/// Output:
+/// Example output (non-deterministic):
 /// ```none
 /// l,nmroHado !le
 /// ```
@@ -85,7 +85,7 @@ pub trait SliceRandom {
     fn choose_mut<R>(&mut self, rng: &mut R) -> Option<&mut Self::Item>
     where R: Rng + ?Sized;
 
-    /// Chooses `amount` elements from the slice at random, without repeatition,
+    /// Chooses `amount` elements from the slice at random, without repetition,
     /// and in random order. The returned iterator is appropriate both for
     /// collection into a `Vec` and filling an existing buffer (see example).
     ///
@@ -234,7 +234,7 @@ pub trait SliceRandom {
 ///     println!("I am {}!", faces.chars().choose(&mut rng).unwrap());
 /// }
 /// ```
-/// Output:
+/// Example output (non-deterministic):
 /// ```none
 /// I am 😀!
 /// ```
