@@ -58,8 +58,8 @@
 //!     is local, it is typically much faster than [`OsRng`]. It should be
 //!     secure, though the paranoid may prefer [`OsRng`].
 //! -   [`StdRng`] is a CSPRNG chosen for good performance and trust of security
-//!     (based on reviews, maturity and usage). The current algorithm is HC-128,
-//!     which is one of the recommendations by ECRYPT's eSTREAM project.
+//!     (based on reviews, maturity and usage). The current algorithm is ChaCha20,
+//!     which is well established and rigorously analysed.
 //!     [`StdRng`] provides the algorithm used by [`ThreadRng`] but without
 //!     periodic reseeding.
 //! -   [`SmallRng`] is an **insecure** PRNG designed to be fast, simple, require
