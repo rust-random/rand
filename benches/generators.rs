@@ -19,7 +19,7 @@ use test::{black_box, Bencher};
 
 use rand::prelude::*;
 use rand::rngs::adapter::ReseedingRng;
-use rand::rngs::OsRng;
+use rand::rngs::{OsRng, mock::StepRng};
 use rand_isaac::{IsaacRng, Isaac64Rng};
 use rand_chacha::{ChaCha20Core, ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
 use rand_hc::{Hc128Rng};
@@ -46,6 +46,7 @@ macro_rules! gen_bytes {
     }
 }
 
+gen_bytes!(gen_bytes_step, StepRng::new(0, 1));
 gen_bytes!(gen_bytes_xorshift, XorShiftRng::from_entropy());
 gen_bytes!(gen_bytes_xoshiro256starstar, Xoshiro256StarStar::from_entropy());
 gen_bytes!(gen_bytes_xoshiro256plus, Xoshiro256Plus::from_entropy());
@@ -87,6 +88,7 @@ macro_rules! gen_uint {
     }
 }
 
+gen_uint!(gen_u32_step, u32, StepRng::new(0, 1));
 gen_uint!(gen_u32_xorshift, u32, XorShiftRng::from_entropy());
 gen_uint!(gen_u32_xoshiro256starstar, u32, Xoshiro256StarStar::from_entropy());
 gen_uint!(gen_u32_xoshiro256plus, u32, Xoshiro256Plus::from_entropy());
@@ -111,6 +113,7 @@ gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
 gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng);
 
+gen_uint!(gen_u64_step, u64, StepRng::new(0, 1));
 gen_uint!(gen_u64_xorshift, u64, XorShiftRng::from_entropy());
 gen_uint!(gen_u64_xoshiro256starstar, u64, Xoshiro256StarStar::from_entropy());
 gen_uint!(gen_u64_xoshiro256plus, u64, Xoshiro256Plus::from_entropy());
