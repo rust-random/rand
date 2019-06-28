@@ -79,12 +79,6 @@ Travis CI always has a build with a pinned version of Rustc matching the oldest
 supported Rust release. The current policy is that this can be updated in any
 Rand release if required, but the change must be noted in the changelog.
 
-To avoid bumping the required version unnecessarily, we use a `build.rs` script
-to auto-detect the compiler version and enable certain features or change code
-paths automatically. Since this makes it easy to unintentionally make use of
-features requiring a more recent Rust version, we recommend testing with a
-pinned version of Rustc if you require compatibility with a specific version.
-
 ## Crate Features
 
 Rand is built with these features enabled by default:
