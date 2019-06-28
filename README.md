@@ -30,7 +30,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.6"
+rand = "0.7"
 ```
 
 To get started using Rand, see [The Book](https://rust-random.github.io/book).
@@ -51,6 +51,9 @@ The Rand lib is not yet stable, however we are careful to limit breaking changes
 and warn via deprecation wherever possible. Patch versions never introduce
 breaking changes. The following minor versions are supported:
 
+-   Version 0.7 was released in June 2019, moving most non-uniform distributions
+    to an external crate, moving `from_entropy` to `SeedableRng`, and many small
+    changes and fixes.
 -   Version 0.6 was released in November 2018, redesigning the `seq` module,
     moving most PRNGs to external crates, and many small changes.
 -   Version 0.5 was released in May 2018, as a major reorganisation
@@ -66,7 +69,7 @@ reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
 
 ### Rust version requirements
 
-Since version 0.7 (unreleased), Rand requires **Rustc version 1.32 or greater**.
+Since version 0.7, Rand requires **Rustc version 1.32 or greater**.
 Rand 0.5 requires Rustc 1.22 or greater while versions
 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
 greater. Subsets of the Rand code may work with older Rust versions, but this
