@@ -111,7 +111,7 @@
 use std::time::Duration;
 #[cfg(not(feature = "std"))]
 use core::time::Duration;
-use core::ops::{Range, RangeInclusive};
+use core::ops::{Range, RangeInclusive, RangeTo, RangeToInclusive};
 
 use crate::Rng;
 use crate::distributions::Distribution;
@@ -305,6 +305,28 @@ impl<T: SampleUniform> Distribution<T> for RangeInclusive<T> {
         T::Sampler::sample_single_inclusive(self.start(), self.end(), rng)
     }
 }
+
+macro_rules! impl_distrib_range_to {
+    ($($ty:ty),*) => {
+        $(
+            impl Distribution<$ty> for RangeTo<$ty> {
+                fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                    <$ty as SampleUniform>::Sampler::sample_single(0, self.end, rng)
+                }
+            }
+            impl Distribution<$ty> for RangeToInclusive<$ty> {
+                fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                    <$ty as SampleUniform>::Sampler::sample_single_inclusive(0, self.end, rng)
+                }
+            }
+        )*
+    }
+}
+
+impl_distrib_range_to!(usize, u8, u16, u32, u64);
+#[cfg(not(target_os = "emscripten"))]
+impl_distrib_range_to!(u128);
+
 
 /// Helper trait similar to [`Borrow`] but implemented
 /// only for SampleUniform and references to SampleUniform in
@@ -1294,10 +1316,14 @@ mod tests {
     fn test_std_range_distribution() {
         let mut rng = crate::test::rng(474);
         for _ in 0..100 {
-            let x = rng.sample(0..10);
-            assert!(x >= 0 && x < 10);
-            let x = rng.sample(0..=10);
-            assert!(x >= 0 && x <= 10);
+            let x = rng.sample(-5..5);
+            assert!(x >= -5 && x < 5);
+            let x = rng.sample(-5..=5);
+            assert!(x >= -5 && x <= 5);
+            let x = rng.sample(..10u8);
+            assert!(x < 10);
+            let x = rng.sample(..=10u8);
+            assert!(x <= 10);
         }
     }
 
