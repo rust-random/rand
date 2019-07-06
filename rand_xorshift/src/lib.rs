@@ -18,7 +18,7 @@
 #![no_std]
 
 use core::num::Wrapping as w;
-use core::{fmt, slice};
+use core::fmt;
 use rand_core::{RngCore, SeedableRng, Error, impls, le};
 #[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 
