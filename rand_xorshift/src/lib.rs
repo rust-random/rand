@@ -98,26 +98,19 @@ impl SeedableRng for XorShiftRng {
     }
 
     fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
-        let mut seed_u32 = [0u32; 4];
+        let mut b = [0u8; 16];
         loop {
-            unsafe {
-                let ptr = seed_u32.as_mut_ptr() as *mut u8;
-
-                let slice = slice::from_raw_parts_mut(ptr, 4 * 4);
-                rng.try_fill_bytes(slice)?;
+            rng.try_fill_bytes(&mut b[..])?;
+            if !b.iter().all(|&x| x == 0) {
+                break;
             }
-            for v in seed_u32.iter_mut() {
-                // enforce LE for consistency across platforms
-                *v = v.to_le();
-            }
-            if !seed_u32.iter().all(|&x| x == 0) { break; }
         }
 
         Ok(XorShiftRng {
-            x: w(seed_u32[0]),
-            y: w(seed_u32[1]),
-            z: w(seed_u32[2]),
-            w: w(seed_u32[3]),
+            x: w(u32::from_le_bytes([b[0], b[1], b[2], b[3]])),
+            y: w(u32::from_le_bytes([b[4], b[5], b[6], b[7]])),
+            z: w(u32::from_le_bytes([b[8], b[9], b[10], b[11]])),
+            w: w(u32::from_le_bytes([b[12], b[13], b[14], b[15]])),
         })
     }
 }
