@@ -14,7 +14,6 @@
 const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
 use core::fmt;
-use core::mem::transmute;
 use rand_core::{RngCore, SeedableRng, Error, le};
 #[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 
@@ -215,16 +214,12 @@ fn fill_bytes_impl<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     while left.len() >= 8 {
         let (l, r) = {left}.split_at_mut(8);
         left = r;
-        let chunk: [u8; 8] = unsafe {
-            transmute(rng.next_u64().to_le())
-        };
+        let chunk: [u8; 8] = rng.next_u64().to_le_bytes();
         l.copy_from_slice(&chunk);
     }
     let n = left.len();
     if n > 0 {
-        let chunk: [u8; 8] = unsafe {
-            transmute(rng.next_u64().to_le())
-        };
+        let chunk: [u8; 8] = rng.next_u64().to_le_bytes();
         left.copy_from_slice(&chunk[..n]);
     }
 }
