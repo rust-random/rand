@@ -234,7 +234,8 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
 
     #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        self.fill_bytes(dest);
+        Ok(())
     }
 }
 
@@ -409,7 +410,8 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 
     #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        self.fill_bytes(dest);
+        Ok(())
     }
 }
 
