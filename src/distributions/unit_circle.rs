@@ -7,6 +7,7 @@
 // except according to those terms.
 
 #![allow(deprecated)]
+#![allow(clippy::all)]
 
 use crate::Rng;
 use crate::distributions::{Distribution, Uniform};
