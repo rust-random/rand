@@ -96,13 +96,13 @@ impl Bernoulli {
     /// return `true`. If `numerator == 0` it will always return `false`.
     #[inline]
     pub fn from_ratio(numerator: u32, denominator: u32) -> Result<Bernoulli, BernoulliError> {
-        if !(numerator <= denominator) {
+        if numerator > denominator {
             return Err(BernoulliError::InvalidProbability);
         }
         if numerator == denominator {
             return Ok(Bernoulli { p_int: ALWAYS_TRUE })
         }
-        let p_int = ((numerator as f64 / denominator as f64) * SCALE) as u64;
+        let p_int = ((f64::from(numerator) / f64::from(denominator)) * SCALE) as u64;
         Ok(Bernoulli { p_int })
     }
 }
