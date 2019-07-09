@@ -37,6 +37,14 @@ impl IndexVec {
         }
     }
 
+    /// Returns `true` if the length is 0.
+    pub fn is_empty(&self) -> bool {
+        match *self {
+            IndexVec::U32(ref v) => v.is_empty(),
+            IndexVec::USize(ref v) => v.is_empty(),
+        }
+    }
+
     /// Return the value at the given `index`.
     ///
     /// (Note: we cannot implement [`std::ops::Index`] because of lifetime
