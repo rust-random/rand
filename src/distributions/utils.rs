@@ -308,13 +308,13 @@ macro_rules! scalar_float_impl {
 
             #[inline]
             fn to_bits(self) -> Self::Bits {
-                unsafe { ::core::mem::transmute(self) }
+                self.to_bits()
             }
 
             #[inline]
             fn from_bits(v: Self::Bits) -> Self {
                 // It turns out the safety issues with sNaN were overblown! Hooray!
-                unsafe { ::core::mem::transmute(v) }
+                Self::from_bits(v)
             }
         }
 
