@@ -380,7 +380,7 @@ macro_rules! uniform_int_impl {
                 let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
                 let ints_to_reject =
                     if range > 0 {
-                        let range = range as $u_large;
+                        let range = $u_large::from(range);
                         (unsigned_max - range + 1) % range
                     } else {
                         0
@@ -865,8 +865,8 @@ impl UniformSampler for UniformDuration {
         let mut high_n = high.subsec_nanos();
 
         if high_n < low_n {
-            high_s = high_s - 1;
-            high_n = high_n + 1_000_000_000;
+            high_s -= 1;
+            high_n += 1_000_000_000;
         }
 
         let mode = if low_s == high_s {
@@ -877,10 +877,10 @@ impl UniformSampler for UniformDuration {
         } else {
             let max = high_s
                 .checked_mul(1_000_000_000)
-                .and_then(|n| n.checked_add(high_n as u64));
+                .and_then(|n| n.checked_add(u64::from(high_n)));
 
             if let Some(higher_bound) = max {
-                let lower_bound = low_s * 1_000_000_000 + low_n as u64;
+                let lower_bound = low_s * 1_000_000_000 + u64::from(low_n);
                 UniformDurationMode::Medium {
                     nanos: Uniform::new_inclusive(lower_bound, higher_bound),
                 }
