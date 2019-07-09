@@ -86,8 +86,8 @@ impl SeedableRng for Lcg128Xsl64 {
     fn from_seed(seed: Self::Seed) -> Self {
         let mut seed_u64 = [0u64; 4];
         le::read_u64_into(&seed, &mut seed_u64);
-        let state = (seed_u64[0] as u128) | ((seed_u64[1] as u128) << 64);
-        let incr = (seed_u64[2] as u128) | ((seed_u64[3] as u128) << 64);
+        let state = u128::from(seed_u64[0]) | (u128::from(seed_u64[1]) << 64);
+        let incr = u128::from(seed_u64[2]) | (u128::from(seed_u64[3]) << 64);
 
         // The increment must be odd, hence we discard one bit:
         Lcg128Xsl64::from_state_incr(state, incr | 1)
@@ -113,7 +113,8 @@ impl RngCore for Lcg128Xsl64 {
 
     #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        self.fill_bytes(dest);
+        Ok(())
     }
 }
 
@@ -166,8 +167,8 @@ impl SeedableRng for Mcg128Xsl64 {
         // Read as if a little-endian u128 value:
         let mut seed_u64 = [0u64; 2];
         le::read_u64_into(&seed, &mut seed_u64);
-        let state = (seed_u64[0] as u128) |
-                    (seed_u64[1] as u128) << 64;
+        let state = u128::from(seed_u64[0])  |
+                    u128::from(seed_u64[1]) << 64;
         Mcg128Xsl64::new(state)
     }
 }
@@ -191,7 +192,8 @@ impl RngCore for Mcg128Xsl64 {
 
     #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        self.fill_bytes(dest);
+        Ok(())
     }
 }
 
