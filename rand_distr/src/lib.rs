@@ -13,6 +13,8 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
+#![allow(clippy::excessive_precision, clippy::float_cmp)]
+
 //! Generating random samples from probability distributions.
 //!
 //! ## Re-exports
