@@ -62,7 +62,7 @@
 
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
-#![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
+#![allow(clippy::unreadable_literal)]
 #![no_std]
 
 #[macro_use]
