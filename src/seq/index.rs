@@ -247,11 +247,9 @@ where R: Rng + ?Sized {
                 indices.insert(pos, j);
                 continue;
             }
-        } else {
-            if indices.contains(&t) {
-                indices.push(j);
-                continue;
-            }
+        } else if indices.contains(&t) {
+            indices.push(j);
+            continue;
         }
         indices.push(t);
     }
