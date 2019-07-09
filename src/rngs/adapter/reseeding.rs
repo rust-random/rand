@@ -225,6 +225,7 @@ where R: BlockRngCore + SeedableRng,
                            results: &mut <Self as BlockRngCore>::Results,
                            global_fork_counter: usize)
     {
+        #![allow(clippy::if_same_then_else)]  // false positive
         if self.is_forked(global_fork_counter) {
             info!("Fork detected, reseeding RNG");
         } else {
@@ -300,7 +301,7 @@ mod fork {
     }
 
     pub fn register_fork_handler() {
-        if FORK_HANDLER_REGISTERED.load(Ordering::Relaxed) == false {
+        if !FORK_HANDLER_REGISTERED.load(Ordering::Relaxed) {
             unsafe { libc::pthread_atfork(None, None, Some(fork_handler)) };
             FORK_HANDLER_REGISTERED.store(true, Ordering::Relaxed);
         }

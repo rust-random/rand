@@ -58,6 +58,7 @@ impl RngCore for StepRng {
 
     #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        self.fill_bytes(dest);
+        Ok(())
     }
 }

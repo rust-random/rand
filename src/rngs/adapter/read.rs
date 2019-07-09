@@ -72,7 +72,7 @@ impl<R: Read> RngCore for ReadRng<R> {
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        if dest.len() == 0 { return Ok(()); }
+        if dest.is_empty() { return Ok(()); }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
         self.reader.read_exact(dest).map_err(|e| Error::new(ReadError(e)))
     }
