@@ -53,7 +53,7 @@
 #![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
 
-#![allow(clippy::excessive_precision, clippy::unreadable_literal)]
+#![allow(clippy::excessive_precision, clippy::unreadable_literal, clippy::float_cmp)]
 
 #[cfg(all(feature="alloc", not(feature="std")))]
 extern crate alloc;
