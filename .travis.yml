@@ -255,6 +255,13 @@ matrix:
         - source ~/.cargo/env || true
       script:
         - bash utils/ci/script.sh
+    - rust: nightly
+      env: DESCRIPTION="no_std platform test"
+      install:
+        - rustup target add thumbv6m-none-eabi
+      script:
+        # Test the top-level crate with all features:
+        - cargo build --target=thumbv6m-none-eabi --no-default-features
 
     - rust: nightly
       os: linux
