@@ -27,7 +27,7 @@ nightly = ["simd_support"] # enables all features requiring nightly rust
 serde1 = [] # does nothing, deprecated
 
 # Optional dependencies:
-std = ["rand_core/std", "alloc", "getrandom"]
+std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 # re-export optional WASM dependencies to avoid breakage:
 wasm-bindgen = ["getrandom_package/wasm-bindgen"]
@@ -74,7 +74,7 @@ libc = { version = "0.2.22", default-features = false }
 # Emscripten does not support 128-bit integers, which are used by ChaCha code.
 # We work around this by using a different RNG.
 [target.'cfg(not(target_os = "emscripten"))'.dependencies]
-rand_chacha = { path = "rand_chacha", version = "0.2" }
+rand_chacha = { path = "rand_chacha", version = "0.2", default-features = false }
 [target.'cfg(target_os = "emscripten")'.dependencies]
 rand_hc = { path = "rand_hc", version = "0.2" }
 
