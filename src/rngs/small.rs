@@ -34,8 +34,8 @@ type Rng = rand_pcg::Pcg32;
 /// The PRNG algorithm in `SmallRng` is chosen to be
 /// efficient on the current platform, without consideration for cryptography
 /// or security. The size of its state is much smaller than [`StdRng`].
-/// The current algorithm is [`Pcg64Mcg`][rand_pcg::Pcg64Mcg] on 64-bit
-/// platforms and [`Pcg32`][rand_pcg::Pcg32] on 32-bit platforms. Both are
+/// The current algorithm is [`Pcg64Mcg`](rand_pcg::Pcg64Mcg) on 64-bit
+/// platforms and [`Pcg32`](rand_pcg::Pcg32) on 32-bit platforms. Both are
 /// implemented by the [rand_pcg] crate.
 ///
 /// # Examples
