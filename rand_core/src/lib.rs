@@ -141,23 +141,23 @@ pub trait RngCore {
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
     /// using `self.next_u64() as u32` or via
-    /// [`fill_bytes`][impls::next_u32_via_fill].
+    /// [`fill_bytes`](impls::next_u32_via_fill).
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random `u64`.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// via [`next_u32`][impls::next_u64_via_u32] or via
-    /// [`fill_bytes`][impls::next_u64_via_fill].
+    /// via [`next_u32`](impls::next_u64_via_u32) or via
+    /// [`fill_bytes`](impls::next_u64_via_fill).
     fn next_u64(&mut self) -> u64;
 
     /// Fill `dest` with random data.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// via [`next_u*`][impls::fill_bytes_via_next] or
-    /// via [`try_fill_bytes`][RngCore::try_fill_bytes]; if this generator can
+    /// via [`next_u*`](impls::fill_bytes_via_next) or
+    /// via [`try_fill_bytes`](RngCore::try_fill_bytes); if this generator can
     /// fail the implementation must choose how best to handle errors here
     /// (e.g. panic with a descriptive message or log a warning and retry a few
     /// times).
