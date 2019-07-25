@@ -9,6 +9,7 @@
 
 //! The dirichlet distribution.
 #![allow(deprecated)]
+#![allow(clippy::all)]
 
 use crate::Rng;
 use crate::distributions::Distribution;

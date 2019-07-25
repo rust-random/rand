@@ -11,7 +11,6 @@
 #![allow(deprecated)]   // whole module is deprecated
 
 use rand_core::{RngCore, CryptoRng, Error};
-#[allow(unused)]
 use crate::rngs::OsRng;
 
 /// An interface returning random data from external source(s), provided

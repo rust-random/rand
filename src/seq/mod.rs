@@ -265,13 +265,12 @@ pub trait IteratorRandom: Iterator + Sized {
         loop {
             if lower > 1 {
                 let ix = gen_index(rng, lower + consumed);
-                let skip;
-                if ix < lower {
+                let skip = if ix < lower {
                     result = self.nth(ix);
-                    skip = lower - (ix + 1);
+                    lower - (ix + 1)
                 } else {
-                    skip = lower;
-                }
+                    lower
+                };
                 if upper == Some(lower) {
                     return result;
                 }

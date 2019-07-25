@@ -65,6 +65,7 @@ fn f64_to_i64(x: f64) -> i64 {
 }
 
 impl Distribution<u64> for Binomial {
+    #[allow(clippy::many_single_char_names)]  // Same names as in the reference.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         // Handle these values directly.
         if self.p == 0.0 {

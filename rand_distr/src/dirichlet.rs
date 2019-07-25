@@ -58,8 +58,8 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
         if a.len() < 2 {
             return Err(Error::AlphaTooShort);
         }
-        for i in 0..a.len() {
-            if !(a[i] > N::from(0.0)) {
+        for &ai in &a {
+            if !(ai > N::from(0.0)) {
                 return Err(Error::AlphaTooSmall);
             }
         }
@@ -92,14 +92,14 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
         let mut samples = vec![N::from(0.0); n];
         let mut sum = N::from(0.0);
 
-        for i in 0..n {
-            let g = Gamma::new(self.alpha[i], N::from(1.0)).unwrap();
-            samples[i] = g.sample(rng);
-            sum += samples[i];
+        for (s, &a) in samples.iter_mut().zip(self.alpha.iter()) {
+            let g = Gamma::new(a, N::from(1.0)).unwrap();
+            *s = g.sample(rng);
+            sum += *s;
         }
         let invacc = N::from(1.0) / sum;
-        for i in 0..n {
-            samples[i] *= invacc;
+        for s in samples.iter_mut() {
+            *s *= invacc;
         }
         samples
     }

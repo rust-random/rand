@@ -14,7 +14,6 @@
 const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
 use core::fmt;
-use core::mem::transmute;
 use rand_core::{RngCore, SeedableRng, Error, le};
 #[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 
@@ -86,8 +85,8 @@ impl SeedableRng for Lcg128Xsl64 {
     fn from_seed(seed: Self::Seed) -> Self {
         let mut seed_u64 = [0u64; 4];
         le::read_u64_into(&seed, &mut seed_u64);
-        let state = (seed_u64[0] as u128) | ((seed_u64[1] as u128) << 64);
-        let incr = (seed_u64[2] as u128) | ((seed_u64[3] as u128) << 64);
+        let state = u128::from(seed_u64[0]) | (u128::from(seed_u64[1]) << 64);
+        let incr = u128::from(seed_u64[2]) | (u128::from(seed_u64[3]) << 64);
 
         // The increment must be odd, hence we discard one bit:
         Lcg128Xsl64::from_state_incr(state, incr | 1)
@@ -113,7 +112,8 @@ impl RngCore for Lcg128Xsl64 {
 
     #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        self.fill_bytes(dest);
+        Ok(())
     }
 }
 
@@ -166,8 +166,8 @@ impl SeedableRng for Mcg128Xsl64 {
         // Read as if a little-endian u128 value:
         let mut seed_u64 = [0u64; 2];
         le::read_u64_into(&seed, &mut seed_u64);
-        let state = (seed_u64[0] as u128) |
-                    (seed_u64[1] as u128) << 64;
+        let state = u128::from(seed_u64[0])  |
+                    u128::from(seed_u64[1]) << 64;
         Mcg128Xsl64::new(state)
     }
 }
@@ -191,7 +191,8 @@ impl RngCore for Mcg128Xsl64 {
 
     #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        self.fill_bytes(dest);
+        Ok(())
     }
 }
 
@@ -213,16 +214,12 @@ fn fill_bytes_impl<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     while left.len() >= 8 {
         let (l, r) = {left}.split_at_mut(8);
         left = r;
-        let chunk: [u8; 8] = unsafe {
-            transmute(rng.next_u64().to_le())
-        };
+        let chunk: [u8; 8] = rng.next_u64().to_le_bytes();
         l.copy_from_slice(&chunk);
     }
     let n = left.len();
     if n > 0 {
-        let chunk: [u8; 8] = unsafe {
-            transmute(rng.next_u64().to_le())
-        };
+        let chunk: [u8; 8] = rng.next_u64().to_le_bytes();
         left.copy_from_slice(&chunk[..n]);
     }
 }

@@ -213,7 +213,7 @@ pub trait Distribution<T> {
     {
         DistIter {
             distr: self,
-            rng: rng,
+            rng,
             phantom: ::core::marker::PhantomData,
         }
     }

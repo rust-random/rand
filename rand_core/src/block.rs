@@ -188,6 +188,7 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
         let read_u64 = |results: &[u32], index| {
             if cfg!(any(target_endian = "little")) {
                 // requires little-endian CPU
+                #[allow(clippy::cast_ptr_alignment)]  // false positive
                 let ptr: *const u64 = results[index..=index+1].as_ptr() as *const u64;
                 unsafe { ptr::read_unaligned(ptr) }
             } else {
@@ -233,7 +234,8 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
 
     #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        self.fill_bytes(dest);
+        Ok(())
     }
 }
 
@@ -408,7 +410,8 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 
     #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        Ok(self.fill_bytes(dest))
+        self.fill_bytes(dest);
+        Ok(())
     }
 }
 

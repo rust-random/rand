@@ -88,9 +88,9 @@ impl Float for f32 {
     fn tan(self) -> Self { self.tan() }
     #[inline]
     fn log_gamma(self) -> Self {
-        let result = log_gamma(self as f64);
-        assert!(result <= ::core::f32::MAX as f64);
-        assert!(result >= ::core::f32::MIN as f64);
+        let result = log_gamma(self.into());
+        assert!(result <= ::core::f32::MAX.into());
+        assert!(result >= ::core::f32::MIN.into());
         result as f32
     }
 }

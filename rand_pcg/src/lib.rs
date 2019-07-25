@@ -35,6 +35,8 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
+#![allow(clippy::unreadable_literal)]
+
 #![no_std]
 
 mod pcg64;

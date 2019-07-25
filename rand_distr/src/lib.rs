@@ -13,6 +13,9 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
+#![allow(clippy::excessive_precision, clippy::float_cmp, clippy::unreadable_literal)]
+#![allow(clippy::neg_cmp_op_on_partial_ord)]  // suggested fix too verbose
+
 //! Generating random samples from probability distributions.
 //!
 //! ## Re-exports

@@ -9,6 +9,7 @@
 
 //! The binomial distribution.
 #![allow(deprecated)]
+#![allow(clippy::all)]
 
 use crate::Rng;
 use crate::distributions::{Distribution, Uniform};

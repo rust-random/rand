@@ -66,8 +66,7 @@ where Standard: Distribution<N>
         // note that π/2 is not exactly representable, even if x=0.5 the result is finite
         let comp_dev = (N::pi() * x).tan();
         // shift and scale according to parameters
-        let result = self.median + self.scale * comp_dev;
-        result
+        self.median + self.scale * comp_dev
     }
 }
 

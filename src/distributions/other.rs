@@ -11,7 +11,7 @@
 use core::char;
 use core::num::Wrapping;
 
-use crate::{Rng};
+use crate::Rng;
 use crate::distributions::{Distribution, Standard, Uniform};
 
 // ----- Sampling distributions -----
@@ -116,6 +116,7 @@ macro_rules! tuple_impl {
 }
 
 impl Distribution<()> for Standard {
+    #[allow(clippy::unused_unit)]
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, _: &mut R) -> () { () }
 }
