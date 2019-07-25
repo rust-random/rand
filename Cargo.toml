@@ -74,7 +74,7 @@ libc = { version = "0.2.22", default-features = false }
 # Emscripten does not support 128-bit integers, which are used by ChaCha code.
 # We work around this by using a different RNG.
 [target.'cfg(not(target_os = "emscripten"))'.dependencies]
-rand_chacha = { path = "rand_chacha", version = "0.2" }
+rand_chacha = { path = "rand_chacha", version = "0.2.1" }
 [target.'cfg(target_os = "emscripten")'.dependencies]
 rand_hc = { path = "rand_hc", version = "0.2" }
 

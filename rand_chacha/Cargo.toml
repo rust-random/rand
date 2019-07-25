@@ -1,6 +1,6 @@
 [package]
 name = "rand_chacha"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["The Rand Project Developers", "The Rust Project Developers", "The CryptoCorrosion Contributors"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -20,9 +20,9 @@ appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.5" }
-c2-chacha = { version = "0.2.2", default-features = false }
+c2-chacha = { version = "0.2.2", default-features = false, features = ["simd"] }
 
 [features]
 default = ["std", "simd"]
 std = ["c2-chacha/std"]
-simd = ["c2-chacha/simd"]
+simd = [] # deprecated
