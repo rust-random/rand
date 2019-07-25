@@ -30,6 +30,7 @@ pub enum IndexVec {
 
 impl IndexVec {
     /// Returns the number of indices
+    #[inline]
     pub fn len(&self) -> usize {
         match *self {
             IndexVec::U32(ref v) => v.len(),
@@ -38,6 +39,7 @@ impl IndexVec {
     }
 
     /// Returns `true` if the length is 0.
+    #[inline]
     pub fn is_empty(&self) -> bool {
         match *self {
             IndexVec::U32(ref v) => v.is_empty(),
@@ -49,6 +51,7 @@ impl IndexVec {
     ///
     /// (Note: we cannot implement [`std::ops::Index`] because of lifetime
     /// restrictions.)
+    #[inline]
     pub fn index(&self, index: usize) -> usize {
         match *self {
             IndexVec::U32(ref v) => v[index] as usize,
@@ -57,6 +60,7 @@ impl IndexVec {
     }
 
     /// Return result as a `Vec<usize>`. Conversion may or may not be trivial.
+    #[inline]
     pub fn into_vec(self) -> Vec<usize> {
         match self {
             IndexVec::U32(v) => v.into_iter().map(|i| i as usize).collect(),
@@ -65,6 +69,7 @@ impl IndexVec {
     }
 
     /// Iterate over the indices as a sequence of `usize` values
+    #[inline]
     pub fn iter(&self) -> IndexVecIter<'_> {
         match *self {
             IndexVec::U32(ref v) => IndexVecIter::U32(v.iter()),
@@ -73,6 +78,7 @@ impl IndexVec {
     }
 
     /// Convert into an iterator over the indices as a sequence of `usize` values
+    #[inline]
     pub fn into_iter(self) -> IndexVecIntoIter {
         match self {
             IndexVec::U32(v) => IndexVecIntoIter::U32(v.into_iter()),
@@ -96,12 +102,14 @@ impl PartialEq for IndexVec {
 }
 
 impl From<Vec<u32>> for IndexVec {
+    #[inline]
     fn from(v: Vec<u32>) -> Self {
         IndexVec::U32(v)
     }
 }
 
 impl From<Vec<usize>> for IndexVec {
+    #[inline]
     fn from(v: Vec<usize>) -> Self {
         IndexVec::USize(v)
     }
@@ -116,6 +124,7 @@ pub enum IndexVecIter<'a> {
 
 impl<'a> Iterator for IndexVecIter<'a> {
     type Item = usize;
+    #[inline]
     fn next(&mut self) -> Option<usize> {
         use self::IndexVecIter::*;
         match *self {
@@ -124,6 +133,7 @@ impl<'a> Iterator for IndexVecIter<'a> {
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         match *self {
             IndexVecIter::U32(ref v) => v.size_hint(),
@@ -144,6 +154,7 @@ pub enum IndexVecIntoIter {
 impl Iterator for IndexVecIntoIter {
     type Item = usize;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         use self::IndexVecIntoIter::*;
         match *self {
@@ -152,6 +163,7 @@ impl Iterator for IndexVecIntoIter {
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         use self::IndexVecIntoIter::*;
         match *self {
