@@ -35,8 +35,9 @@ Links:
 
 ## Crate Features
 
-`rand_chacha` is `no_std` compatible. It does not require any functionality
-outside of the `core` lib, thus there are no features to configure.
+`rand_chacha` is `no_std` compatible when disabling default features; the `std`
+feature can be explicitly required to re-enable `std` support. Using `std`
+allows detection of CPU features and thus better optimisation.
 
 
 # License

@@ -57,7 +57,7 @@ impl Distribution<f64> for Exp1 {
 /// This distribution has density function: `f(x) = lambda * exp(-lambda * x)`
 /// for `x > 0`.
 /// 
-/// Note that [`Exp1`][crate::distributions::Exp1] is an optimised implementation for `lambda = 1`.
+/// Note that [`Exp1`](crate::distributions::Exp1) is an optimised implementation for `lambda = 1`.
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Exp {
