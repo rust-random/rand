@@ -34,7 +34,7 @@ build: false
 test_script:
   - cargo test --lib --no-default-features --features alloc
   # TODO: use --all-features once simd_support is sufficiently stable:
-  - cargo test --features=serde1,log
+  - cargo test --features=log
   - cargo test --benches --features=nightly
   - cargo test --examples
   - cargo test --manifest-path rand_core/Cargo.toml

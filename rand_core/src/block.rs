@@ -51,7 +51,7 @@
 //! [`fill_bytes`]: RngCore::fill_bytes
 
 use core::convert::AsRef;
-use core::fmt;
+use core::{fmt, ptr};
 use {RngCore, CryptoRng, SeedableRng, Error};
 use impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 
@@ -131,6 +131,7 @@ impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng<R> {
 impl<R: BlockRngCore> BlockRng<R> {
     /// Create a new `BlockRng` from an existing RNG implementing
     /// `BlockRngCore`. Results will be generated on first use.
+    #[inline]
     pub fn new(core: R) -> BlockRng<R>{
         let results_empty = R::Results::default();
         BlockRng {
@@ -145,18 +146,21 @@ impl<R: BlockRngCore> BlockRng<R> {
     /// If this is equal to or larger than the size of the result buffer then
     /// the buffer is "empty" and `generate()` must be called to produce new
     /// results.
+    #[inline(always)]
     pub fn index(&self) -> usize {
         self.index
     }
 
     /// Reset the number of available results.
     /// This will force a new set of results to be generated on next use.
+    #[inline]
     pub fn reset(&mut self) {
         self.index = self.results.as_ref().len();
     }
 
     /// Generate a new set of results immediately, setting the index to the
     /// given value.
+    #[inline]
     pub fn generate_and_set(&mut self, index: usize) {
         assert!(index < self.results.as_ref().len());
         self.core.generate(&mut self.results);
@@ -167,7 +171,7 @@ impl<R: BlockRngCore> BlockRng<R> {
 impl<R: BlockRngCore<Item=u32>> RngCore for BlockRng<R>
 where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
 {
-    #[inline(always)]
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         if self.index >= self.results.as_ref().len() {
             self.generate_and_set(0);
@@ -178,12 +182,13 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
         value
     }
 
-    #[inline(always)]
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         let read_u64 = |results: &[u32], index| {
-            if cfg!(any(target_arch = "x86", target_arch = "x86_64")) {
-                // requires little-endian CPU supporting unaligned reads:
-                unsafe { *(&results[index] as *const u32 as *const u64) }
+            if cfg!(any(target_endian = "little")) {
+                // requires little-endian CPU
+                let ptr: *const u64 = results[index..index+2].as_ptr() as *const u64;
+                unsafe { ptr::read_unaligned(ptr) }
             } else {
                 let x = u64::from(results[index]);
                 let y = u64::from(results[index + 1]);
@@ -209,48 +214,7 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
         }
     }
 
-    // As an optimization we try to write directly into the output buffer.
-    // This is only enabled for little-endian platforms where unaligned writes
-    // are known to be safe and fast.
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        let mut filled = 0;
-
-        // Continue filling from the current set of results
-        if self.index < self.results.as_ref().len() {
-            let (consumed_u32, filled_u8) =
-                fill_via_u32_chunks(&self.results.as_ref()[self.index..],
-                                    dest);
-
-            self.index += consumed_u32;
-            filled += filled_u8;
-        }
-
-        let len_remainder =
-            (dest.len() - filled) % (self.results.as_ref().len() * 4);
-        let end_direct = dest.len() - len_remainder;
-
-        while filled < end_direct {
-            let dest_u32: &mut R::Results = unsafe {
-                &mut *(dest[filled..].as_mut_ptr() as
-                *mut <R as BlockRngCore>::Results)
-            };
-            self.core.generate(dest_u32);
-            filled += self.results.as_ref().len() * 4;
-            self.index = self.results.as_ref().len();
-        }
-
-        if len_remainder > 0 {
-            self.core.generate(&mut self.results);
-            let (consumed_u32, _) =
-                fill_via_u32_chunks(self.results.as_ref(),
-                                    &mut dest[filled..]);
-
-            self.index = consumed_u32;
-        }
-    }
-
-    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         let mut read_len = 0;
         while read_len < dest.len() {
@@ -266,23 +230,26 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
         }
     }
 
+    #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.fill_bytes(dest);
-        Ok(())
+        Ok(self.fill_bytes(dest))
     }
 }
 
 impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
     type Seed = R::Seed;
 
+    #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
         Self::new(R::from_seed(seed))
     }
 
+    #[inline(always)]
     fn seed_from_u64(seed: u64) -> Self {
         Self::new(R::seed_from_u64(seed))
     }
 
+    #[inline(always)]
     fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
         Ok(Self::new(R::from_rng(rng)?))
     }
@@ -337,6 +304,7 @@ impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng64<R> {
 impl<R: BlockRngCore> BlockRng64<R> {
     /// Create a new `BlockRng` from an existing RNG implementing
     /// `BlockRngCore`. Results will be generated on first use.
+    #[inline]
     pub fn new(core: R) -> BlockRng64<R>{
         let results_empty = R::Results::default();
         BlockRng64 {
@@ -352,12 +320,14 @@ impl<R: BlockRngCore> BlockRng64<R> {
     /// If this is equal to or larger than the size of the result buffer then
     /// the buffer is "empty" and `generate()` must be called to produce new
     /// results.
+    #[inline(always)]
     pub fn index(&self) -> usize {
         self.index
     }
 
     /// Reset the number of available results.
     /// This will force a new set of results to be generated on next use.
+    #[inline]
     pub fn reset(&mut self) {
         self.index = self.results.as_ref().len();
         self.half_used = false;
@@ -365,6 +335,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
 
     /// Generate a new set of results immediately, setting the index to the
     /// given value.
+    #[inline]
     pub fn generate_and_set(&mut self, index: usize) {
         assert!(index < self.results.as_ref().len());
         self.core.generate(&mut self.results);
@@ -376,7 +347,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
 impl<R: BlockRngCore<Item=u64>> RngCore for BlockRng64<R>
 where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 {
-    #[inline(always)]
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         let mut index = self.index * 2 - self.half_used as usize;
         if index >= self.results.as_ref().len() * 2 {
@@ -402,7 +373,7 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         if self.index >= self.results.as_ref().len() {
             self.core.generate(&mut self.results);
@@ -415,48 +386,7 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
         value
     }
 
-    // As an optimization we try to write directly into the output buffer.
-    // This is only enabled for little-endian platforms where unaligned writes
-    // are known to be safe and fast.
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        let mut filled = 0;
-        self.half_used = false;
-
-        // Continue filling from the current set of results
-        if self.index < self.results.as_ref().len() {
-            let (consumed_u64, filled_u8) =
-                fill_via_u64_chunks(&self.results.as_ref()[self.index..],
-                                    dest);
-
-            self.index += consumed_u64;
-            filled += filled_u8;
-        }
-
-        let len_remainder =
-            (dest.len() - filled) % (self.results.as_ref().len() * 8);
-        let end_direct = dest.len() - len_remainder;
-
-        while filled < end_direct {
-            let dest_u64: &mut R::Results = unsafe {
-                ::core::mem::transmute(dest[filled..].as_mut_ptr())
-            };
-            self.core.generate(dest_u64);
-            filled += self.results.as_ref().len() * 8;
-            self.index = self.results.as_ref().len();
-        }
-
-        if len_remainder > 0 {
-            self.core.generate(&mut self.results);
-            let (consumed_u64, _) =
-                fill_via_u64_chunks(&mut self.results.as_ref(),
-                                    &mut dest[filled..]);
-
-            self.index = consumed_u64;
-        }
-    }
-
-    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         let mut read_len = 0;
         self.half_used = false;
@@ -475,6 +405,7 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
         }
     }
 
+    #[inline(always)]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         Ok(self.fill_bytes(dest))
     }
@@ -483,14 +414,17 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng64<R> {
     type Seed = R::Seed;
 
+    #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
         Self::new(R::from_seed(seed))
     }
 
+    #[inline(always)]
     fn seed_from_u64(seed: u64) -> Self {
         Self::new(R::seed_from_u64(seed))
     }
 
+    #[inline(always)]
     fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
         Ok(Self::new(R::from_rng(rng)?))
     }

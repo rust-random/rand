@@ -92,20 +92,22 @@ const RAND_SIZE: usize = 1 << RAND_SIZE_LEN;
 pub struct IsaacRng(BlockRng<IsaacCore>);
 
 impl RngCore for IsaacRng {
-    #[inline(always)]
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }
 
-    #[inline(always)]
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         self.0.next_u64()
     }
 
+    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.0.fill_bytes(dest)
     }
 
+    #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
         self.0.try_fill_bytes(dest)
     }
@@ -114,6 +116,7 @@ impl RngCore for IsaacRng {
 impl SeedableRng for IsaacRng {
     type Seed = <IsaacCore as SeedableRng>::Seed;
 
+    #[inline]
     fn from_seed(seed: Self::Seed) -> Self {
         IsaacRng(BlockRng::<IsaacCore>::from_seed(seed))
     }
@@ -121,10 +124,12 @@ impl SeedableRng for IsaacRng {
     /// Create an ISAAC random number generator using an `u64` as seed.
     /// If `seed == 0` this will produce the same stream of random numbers as
     /// the reference implementation when used unseeded.
+    #[inline]
     fn seed_from_u64(seed: u64) -> Self {
         IsaacRng(BlockRng::<IsaacCore>::seed_from_u64(seed))
     }
 
+    #[inline]
     fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
         BlockRng::<IsaacCore>::from_rng(rng).map(|rng| IsaacRng(rng))
     }

@@ -40,7 +40,7 @@ sudo: false
 # - test no_std support, but only the unit tests:
 #   `cargo test --lib --no-default-features`
 # - run unit tests and doctests with all features which are available on stable:
-#   `cargo test --features=serde1,log`
+#   `cargo test --features=log`
 # - test examples:
 #   `cargo test --examples`
 # Additional tests on nightly:
@@ -64,7 +64,7 @@ matrix:
         # Differs from standard script: rand_pcg features
         - cargo test --lib --no-default-features
         # TODO: add simd_support feature:
-        - cargo test --features=serde1,log
+        - cargo test --features=log
         - cargo test --examples
         - cargo test --manifest-path rand_core/Cargo.toml
         - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
@@ -86,7 +86,7 @@ matrix:
         # Differs from standard script: includes aarch64-apple-ios cross-build
         - cargo test --lib --no-default-features
         # TODO: add simd_support feature:
-        - cargo test --features=serde1,log
+        - cargo test --features=log
         - cargo test --examples
         - cargo test --manifest-path rand_core/Cargo.toml
         - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
@@ -113,7 +113,8 @@ matrix:
       script:
         # Differs from standard script: alloc feature, all features, doc build
         - cargo test --lib --no-default-features --features=alloc
-        - cargo test --all-features
+        # Excludes serde1:
+        - cargo test --features=nightly,simd_support,log
         - cargo test --benches --features=nightly
         - cargo test --examples
         - cargo test --manifest-path rand_core/Cargo.toml
@@ -207,7 +208,7 @@ before_install:
 script:
   - cargo test --lib --no-default-features
   # TODO: add simd_support feature:
-  - cargo test --features=serde1,log
+  - cargo test --features=log
   - cargo test --examples
   - cargo test --manifest-path rand_core/Cargo.toml
   - cargo test --manifest-path rand_core/Cargo.toml --no-default-features

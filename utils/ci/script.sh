@@ -5,7 +5,7 @@ set -ex
 main() {
     cross test --target $TARGET --lib --no-default-features
   # TODO: add simd_support feature:
-    cross test --target $TARGET --features=serde1,log
+    cross test --target $TARGET --features=log
     cross test --target $TARGET --examples
     cross test --target $TARGET --manifest-path rand_core/Cargo.toml
     cross test --target $TARGET --manifest-path rand_core/Cargo.toml --no-default-features
