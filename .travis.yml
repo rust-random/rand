@@ -37,6 +37,8 @@ sudo: false
 # Tests run on rand:
 # - test no_std support, but only the unit tests:
 #   `cargo test --tests --no-default-features`
+# - test no_std support, including the alloc feature:
+#   cargo test --tests --no-default-features --features=alloc
 # - run unit tests and doctests with all features which are available on stable:
 #   `cargo test --features=serde1,log`
 # - test examples:
@@ -44,8 +46,6 @@ sudo: false
 # Additional tests on nightly:
 # - run unit tests and doctests with all features which are available on nightly:
 #   `cargo test --all-features`
-# - test no_std support, including the nightly alloc feature:
-#   cargo test --tests --no-default-features --features=alloc
 # - run benchmarks as tests:
 #   `cargo test --benches --features=nightly`
 # Tests on subcrates:
@@ -137,7 +137,7 @@ matrix:
       before_script:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
-        # Differs from standard script: alloc feature, all features, doc build
+        # Differs from standard script: all features, doc build
         - cargo test --tests --no-default-features --features=alloc
         - cargo test --all-features
         - cargo test --benches --features=nightly
@@ -167,7 +167,7 @@ matrix:
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
         - cargo deadlinks -V
       script:
-        # Differs from standard script: alloc feature, all features, doc build
+        # Differs from standard script: all features, doc build
         - cargo test --tests --no-default-features --features=alloc
         - cargo test --all-features
         - cargo test --benches --features=nightly
@@ -276,11 +276,13 @@ before_install:
 script:
   - cargo test --tests --no-default-features
   - cargo test --tests --no-default-features --features getrandom
+  - cargo test --tests --no-default-features --features=alloc
   # TODO: add simd_support feature:
   - cargo test --features=serde1,log
   - cargo test --examples
   - cargo test --manifest-path rand_core/Cargo.toml
   - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+  - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
   - cargo test --manifest-path rand_distr/Cargo.toml
   - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
