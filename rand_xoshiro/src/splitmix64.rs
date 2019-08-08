@@ -7,7 +7,6 @@
 // except according to those terms.
 
 #[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
-use byteorder::{ByteOrder, LittleEndian};
 use rand_core::le::read_u64_into;
 use rand_core::impls::fill_bytes_via_next;
 use rand_core::{RngCore, SeedableRng, Error};
@@ -79,9 +78,7 @@ impl SeedableRng for SplitMix64 {
 
     /// Seed a `SplitMix64` from a `u64`.
     fn seed_from_u64(seed: u64) -> SplitMix64 {
-        let mut x = [0; 8];
-        LittleEndian::write_u64(&mut x, seed);
-        SplitMix64::from_seed(x)
+        SplitMix64::from_seed(seed.to_le_bytes())
     }
 }
 
