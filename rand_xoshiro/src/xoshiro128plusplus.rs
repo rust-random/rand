@@ -44,6 +44,15 @@ impl Xoshiro128PlusPlus {
     pub fn jump(&mut self) {
         impl_jump!(u32, self, [0x8764000b, 0xf542d2d3, 0x6fa035c3, 0x77f2db5b]);
     }
+
+    /// Jump forward, equivalently to 2^96 calls to `next_u32()`.
+    ///
+    /// This can be used to generate 2^32 starting points, from each of which
+    /// `jump()` will generate 2^32 non-overlapping subsequences for parallel
+    /// distributed computations.
+    pub fn long_jump(&mut self) {
+        impl_jump!(u32, self, [0xb523952e, 0x0b6f099f, 0xccf5a0ef, 0x1c580662]);
+    }
 }
 
 impl SeedableRng for Xoshiro128PlusPlus {
