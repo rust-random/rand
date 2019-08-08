@@ -28,6 +28,20 @@ macro_rules! starstar_u32 {
     }
 }
 
+/// Apply the ++ scrambler used by some RNGs from the xoshiro family.
+macro_rules! plusplus_u64 {
+    ($x:expr, $y:expr, $rot:expr) => {
+        $x.wrapping_add($y).rotate_left($rot).wrapping_add($x)
+    }
+}
+
+/// Apply the ++ scrambler used by some RNGs from the xoshiro family.
+macro_rules! plusplus_u32 {
+    ($x:expr, $y:expr) => {
+        $x.wrapping_add($y).rotate_left(7).wrapping_add($x)
+    }
+}
+
 /// Implement a jump function for an RNG from the xoshiro family.
 macro_rules! impl_jump {
     (u32, $self:expr, [$j0:expr, $j1:expr]) => {
@@ -144,6 +158,15 @@ macro_rules! impl_xoroshiro_u64 {
         $self.s1 ^= $self.s0;
         $self.s0 = $self.s0.rotate_left(24) ^ $self.s1 ^ ($self.s1 << 16);
         $self.s1 = $self.s1.rotate_left(37);
+    }
+}
+
+/// Implement the xoroshiro iteration for the ++ scrambler.
+macro_rules! impl_xoroshiro_u64_plusplus {
+    ($self:expr) => {
+        $self.s1 ^= $self.s0;
+        $self.s0 = $self.s0.rotate_left(49) ^ $self.s1 ^ ($self.s1 << 21);
+        $self.s1 = $self.s1.rotate_left(28);
     }
 }
 
