@@ -1,6 +1,6 @@
 [package]
 name = "rand_os"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["The Rand Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -22,5 +22,5 @@ wasm-bindgen = ["getrandom/wasm-bindgen"]
 stdweb = ["getrandom/stdweb"]
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.5", features = ["std"] }
+rand_core = { path = "../rand_core", version = "0.5", features = ["getrandom"] }
 getrandom = "0.1.1"
