@@ -61,7 +61,11 @@
 //!   lowest bits (which are discarded when generating floats), making it fail
 //!   linearity tests. This is unlikely to have any impact in practise.
 //!
+//! The `*PlusPlus` generators perform similarily to the `*StarStar` generators.
+//! See the [xoshiro paper], where the differences are discussed in detail.
+//!
 //! [xoshiro]: http://xoshiro.di.unimi.it/
+//! [xoshiro paper]: http://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf
 //! [low linear complexity]: http://xoshiro.di.unimi.it/lowcomp.php
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
