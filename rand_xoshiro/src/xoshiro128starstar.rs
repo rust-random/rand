@@ -77,7 +77,7 @@ impl SeedableRng for Xoshiro128StarStar {
 impl RngCore for Xoshiro128StarStar {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        let result_starstar = starstar_u64!(self.s[0]);
+        let result_starstar = starstar_u64!(self.s[1]);
         impl_xoshiro_u32!(self);
         result_starstar
     }
@@ -107,11 +107,11 @@ mod tests {
     fn reference() {
         let mut rng = Xoshiro128StarStar::from_seed(
             [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0]);
-        // These values were produced with the reference implementation:
+        // These values were produced with the reference implementation (v1.1):
         // http://xoshiro.di.unimi.it/xoshiro128starstar.c
         let expected = [
-            5760, 40320, 70819200, 3297914139, 2480851620, 1792823698,
-            4118739149, 1251203317, 1581886583, 1721184582,
+            11520, 0, 5927040, 70819200, 2031721883, 1637235492, 1287239034,
+            3734860849, 3729100597, 4258142804,
         ];
         for &e in &expected {
             assert_eq!(rng.next_u32(), e);
