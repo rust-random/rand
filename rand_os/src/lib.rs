@@ -47,6 +47,7 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 ///
 /// # Usage example
 /// ```
+/// #![allow(deprecated)]
 /// use rand_os::rand_core::RngCore;
 /// use rand_os::OsRng;
 ///
