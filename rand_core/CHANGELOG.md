@@ -4,9 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.1] - 2019-09-02
+## [0.5.1] - 2019-08-28
 ### Added
 - `OsRng` added to `rand_core` (#863)
+- `Error::INTERNAL_START` and `Error::CUSTOM_START` constants (#864)
+- `Error::raw_os_error` method (#864)
+- `Debug` and `Display` formatting for `getrandom` error codes without `std` (#864)
+### Changed
+- Added `#[inline]` to `Error` conversion methods (#864)
 
 ## [0.5.0] - 2019-06-06
 ### Changed
