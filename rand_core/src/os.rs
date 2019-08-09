@@ -9,8 +9,8 @@
 //! Interface to the random number generator of the operating system.
 // Note: keep this code in sync with the rand_os crate!
 
-use crate::getrandom::getrandom;
-use rand_core::{CryptoRng, RngCore, Error, impls};
+use getrandom::getrandom;
+use crate::{CryptoRng, RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness from from the
 /// operating system.
@@ -19,6 +19,9 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 ///
 /// The implementation is provided by the [getrandom] crate. Refer to
 /// [getrandom] documentation for details.
+///
+/// This struct is only available when specifying the crate feature `getrandom`
+/// or `std`. When using the `rand` lib, it is also available as `rand::rngs::OsRng`.
 ///
 /// # Blocking and error handling
 ///
@@ -33,29 +36,16 @@ use rand_core::{CryptoRng, RngCore, Error, impls};
 ///
 /// # Usage example
 /// ```
-/// use rand::rngs::{StdRng, OsRng};
-/// use rand::{RngCore, SeedableRng};
+/// use rand_core::{RngCore, OsRng};
 ///
 /// let mut key = [0u8; 16];
 /// OsRng.fill_bytes(&mut key);
 /// let random_u64 = OsRng.next_u64();
-/// 
-/// // OsRng is especially useful for seeding other RNGs (see also from_entropy)
-/// let mut rng = StdRng::from_rng(OsRng).unwrap();
-/// let _ = rng.next_u32();
 /// ```
 ///
 /// [getrandom]: https://crates.io/crates/getrandom
 #[derive(Clone, Copy, Debug, Default)]
 pub struct OsRng;
-
-impl OsRng {
-    /// Create a new `OsRng`.
-    #[deprecated(since="0.7.0", note="replace OsRng::new().unwrap() with just OsRng")]
-    pub fn new() -> Result<OsRng, Error> {
-        Ok(OsRng)
-    }
-}
 
 impl CryptoRng for OsRng {}
 

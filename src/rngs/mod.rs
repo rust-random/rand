@@ -116,5 +116,4 @@ pub use self::small::SmallRng;
 pub use self::std::StdRng;
 #[cfg(feature="std")] pub use self::thread::ThreadRng;
 
-#[cfg(feature="getrandom")] mod os;
-#[cfg(feature="getrandom")] pub use self::os::OsRng;
+#[cfg(feature="getrandom")] pub use rand_core::OsRng;

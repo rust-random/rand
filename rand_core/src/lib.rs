@@ -49,12 +49,14 @@ use core::ptr::copy_nonoverlapping;
 #[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
 
 pub use error::Error;
+#[cfg(feature="getrandom")] pub use os::OsRng;
 
 
 mod error;
 pub mod block;
 pub mod impls;
 pub mod le;
+#[cfg(feature="getrandom")] mod os;
 
 
 /// The core of a random number generator.

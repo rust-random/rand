@@ -19,6 +19,8 @@
 
 #![no_std]  // but see getrandom crate
 
+#![deprecated(since="0.2.2", note="OsRng is now provided by rand_core and rand")]
+
 pub use rand_core;  // re-export
 
 use getrandom::getrandom;

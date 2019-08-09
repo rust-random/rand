@@ -11,6 +11,8 @@
 A random number generator that retrieves randomness straight from the
 operating system.
 
+**This crate is deprecated:** `OsRng` is available in `rand_core` since version 0.5.1.
+
 This crate provides `OsRng` as a shim around
 [getrandom](https://crates.io/crates/getrandom)
 implementing `RngCore` from [rand_core](https://crates.io/crates/rand_core).
