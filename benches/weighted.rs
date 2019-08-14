@@ -1,0 +1,38 @@
+// Copyright 2019 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+#![feature(test)]
+
+extern crate test;
+
+const RAND_BENCH_N: u64 = 1000;
+
+use test::Bencher;
+use rand::Rng;
+use rand::distributions::WeightedIndex;
+
+#[bench]
+fn weighted_index_creation(b: &mut Bencher) {
+    let mut rng = rand::thread_rng();
+    b.iter(|| {
+        let weights = [1u32, 2, 4, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 7];
+        let distr = WeightedIndex::new(weights.to_vec()).unwrap();
+        rng.sample(distr)
+    })
+}
+
+#[bench]
+fn weighted_index_modification(b: &mut Bencher) {
+    let mut rng = rand::thread_rng();
+    let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
+    let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
+    b.iter(|| {
+        distr.update_weights(&[(2, &4), (5, &1)]).unwrap();
+        rng.sample(&distr)
+    })
+}
