@@ -134,7 +134,8 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// Update a subset of weights, without changing the number of weights.
     ///
     /// Using this method instead of `new` might be more efficient if only a small number of
-    /// weights is modified. For weights that are `Copy`, no allocations are performed.
+    /// weights is modified. No allocations are performed, unless the weight type `X` uses
+    /// allocation internally.
     ///
     /// In case of error, `self` is not modified.
     pub fn update_weights(&mut self, new_weights: &[(usize, &X)]) -> Result<(), WeightedError>
