@@ -133,6 +133,8 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
 
     /// Update a subset of weights, without changing the number of weights.
     ///
+    /// `new_weights` must be sorted by the index.
+    ///
     /// Using this method instead of `new` might be more efficient if only a small number of
     /// weights is modified. No allocations are performed, unless the weight type `X` uses
     /// allocation internally.
@@ -143,43 +145,121 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
                  for<'a> ::core::ops::SubAssign<&'a X> +
                  Clone +
                  Default {
+        if new_weights.is_empty() {
+            return Ok(());
+        }
+
         let zero = <X as Default>::default();
 
         let mut total_weight = self.total_weight.clone();
 
+        // Check for errors first, so we don't modify `self` in case something
+        // goes wrong.
+        let mut prev_i = None;
         for &(i, w) in new_weights {
+            if let Some(old_i) = prev_i {
+                if old_i >= i {
+                    return Err(WeightedError::InvalidWeight);
+                }
+            }
             if *w < zero {
                 return Err(WeightedError::InvalidWeight);
             }
-            if i >= self.cumulative_weights.len() {
+            if i >= self.cumulative_weights.len() + 1 {
                 return Err(WeightedError::TooMany);
             }
 
-            // Unfortunately, we will have to calculate the non-cumulative weight a second time, to
-            // avoid producing an invalid state of `self`.
-            let mut old_w = self.cumulative_weights[i].clone();
+            // Unfortunately, we will have to calculate the non-cumulative
+            // weight a second time, to avoid producing an invalid state of
+            // `self`.
+            let mut old_w = if i < self.cumulative_weights.len() {
+                self.cumulative_weights[i].clone()
+            } else {
+                self.total_weight.clone()
+            };
             if i > 0 {
                 old_w -= &self.cumulative_weights[i - 1];
             }
 
             total_weight -= &old_w;
             total_weight += w;
+            prev_i = Some(i);
         }
         if total_weight == zero {
             return Err(WeightedError::AllWeightsZero);
         }
 
-        for &(i, w) in new_weights {
-            let mut old_w = self.cumulative_weights[i].clone();
-            if i > 0 {
-                old_w -= &self.cumulative_weights[i - 1];
-            }
+        // Update the weights. Because we checked all the preconditions in the
+        // previous loop, this should never panic.
+        let mut iter = new_weights.iter();
+        let &(first_new_index, first_new_weight) = iter.next().unwrap();
 
-            for j in i..self.cumulative_weights.len() {
-                self.cumulative_weights[j] -= &old_w;
-                self.cumulative_weights[j] += w;
+        // `X` might be an unsigned type, so we have to be careful to avoid
+        // negative numbers. This is done by tracking the sign of `change` using
+        // `pos_sign`.
+        let mut change: X = first_new_weight.clone();
+        let mut pos_sign = true;
+        if first_new_index > 0 {
+            change += &self.cumulative_weights[first_new_index - 1];
+        }
+
+        let add = |x: &mut X, pos_sign: &mut bool, y: &X| {
+            if !*pos_sign {
+                if *x < *y {
+                    let tmp = x.clone();
+                    *x = y.clone();
+                    *x -= &tmp;
+                    *pos_sign = !*pos_sign;
+                } else {
+                    *x -= y;
+                }
+            } else {
+                *x += y;
+            }
+        };
+
+        let sub = |x: &mut X, pos_sign: &mut bool, y: &X| {
+            if *pos_sign {
+                if *x < *y {
+                    let tmp = x.clone();
+                    *x = y.clone();
+                    *x -= &tmp;
+                    *pos_sign = !*pos_sign;
+                } else {
+                    *x -= y;
+                }
+            } else {
+                *x += y;
+            }
+        };
+
+        {
+            let first_new_cweight = if first_new_index < self.cumulative_weights.len() {
+                &self.cumulative_weights[first_new_index]
+            } else {
+                &self.total_weight
+            };
+            sub(&mut change, &mut pos_sign, first_new_cweight);
+        }
+        let mut next_new_weight = iter.next();
+        for i in first_new_index..self.cumulative_weights.len() {
+            if let Some(&(j, w)) = next_new_weight {
+                // j > first_new_index >= 0
+                if i >= j {
+                    change = w.clone();
+                    pos_sign = true;
+                    add(&mut change, &mut pos_sign, &self.cumulative_weights[j - 1]);
+                    sub(&mut change, &mut pos_sign, &self.cumulative_weights[j]);
+                    next_new_weight = iter.next();
+                }
+            }
+            if pos_sign {
+                self.cumulative_weights[i] += &change;
+            } else {
+                self.cumulative_weights[i] -= &change;
             }
         }
+
         self.total_weight = total_weight;
         self.weight_distribution = X::Sampler::new(zero, self.total_weight.clone());
 
@@ -260,18 +340,27 @@ mod test {
 
     #[test]
     fn test_update_weights() {
-        let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
-        let total_weight = weights.iter().sum::<u32>();
-        let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
-        assert_eq!(distr.total_weight, total_weight);
+        let data = [
+            (&[1u32, 2, 3, 4][..],
+             &[(1, &100), (2, &4)][..],  // positive change
+             &[1, 100, 4, 4][..]),
+            (&[1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
+             &[(2, &1), (5, &1), (13, &100)][..],  // negative change and last element
+             &[1u32, 2, 1, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 100][..]),
+        ];
 
-        distr.update_weights(&[(2, &4), (5, &1)]).unwrap();
-        let expected_weights = [1u32, 2, 4, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 7];
-        let expected_total_weight = expected_weights.iter().sum::<u32>();
-        let expected_distr = WeightedIndex::new(expected_weights.to_vec()).unwrap();
-        assert_eq!(distr.total_weight, expected_total_weight);
-        assert_eq!(distr.total_weight, expected_distr.total_weight);
-        assert_eq!(distr.cumulative_weights, expected_distr.cumulative_weights);
+        for (weights, update, expected_weights) in data.into_iter() {
+            let total_weight = weights.iter().sum::<u32>();
+            let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
+            assert_eq!(distr.total_weight, total_weight);
+
+            distr.update_weights(update).unwrap();
+            let expected_total_weight = expected_weights.iter().sum::<u32>();
+            let expected_distr = WeightedIndex::new(expected_weights.to_vec()).unwrap();
+            assert_eq!(distr.total_weight, expected_total_weight);
+            assert_eq!(distr.total_weight, expected_distr.total_weight);
+            assert_eq!(distr.cumulative_weights, expected_distr.cumulative_weights);
+        }
     }
 }
 
