@@ -10,8 +10,6 @@
 
 extern crate test;
 
-const RAND_BENCH_N: u64 = 1000;
-
 use test::Bencher;
 use rand::Rng;
 use rand::distributions::WeightedIndex;
@@ -19,8 +17,8 @@ use rand::distributions::WeightedIndex;
 #[bench]
 fn weighted_index_creation(b: &mut Bencher) {
     let mut rng = rand::thread_rng();
+    let weights = [1u32, 2, 4, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 7];
     b.iter(|| {
-        let weights = [1u32, 2, 4, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 7];
         let distr = WeightedIndex::new(weights.to_vec()).unwrap();
         rng.sample(distr)
     })
