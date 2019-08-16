@@ -192,72 +192,30 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         // Update the weights. Because we checked all the preconditions in the
         // previous loop, this should never panic.
         let mut iter = new_weights.iter();
-        let &(first_new_index, first_new_weight) = iter.next().unwrap();
 
-        // `X` might be an unsigned type, so we have to be careful to avoid
-        // negative numbers. This is done by tracking the sign of `change` using
-        // `pos_sign`.
-        let mut change: X = first_new_weight.clone();
-        let mut pos_sign = true;
-        if first_new_index > 0 {
-            change += &self.cumulative_weights[first_new_index - 1];
-        }
-
-        let add = |x: &mut X, pos_sign: &mut bool, y: &X| {
-            if !*pos_sign {
-                if *x < *y {
-                    let mut tmp = y.clone();
-                    tmp -= x;
-                    std::mem::swap(x, &mut tmp);
-                    *pos_sign = !*pos_sign;
-                } else {
-                    *x -= y;
-                }
-            } else {
-                *x += y;
-            }
-        };
-
-        let sub = |x: &mut X, pos_sign: &mut bool, y: &X| {
-            if *pos_sign {
-                if *x < *y {
-                    let mut tmp = y.clone();
-                    tmp -= x;
-                    std::mem::swap(x, &mut tmp);
-                    *pos_sign = !*pos_sign;
-                } else {
-                    *x -= y;
-                }
-            } else {
-                *x += y;
-            }
-        };
-
-        {
-            let first_new_cweight = if first_new_index < self.cumulative_weights.len() {
-                &self.cumulative_weights[first_new_index]
-            } else {
-                &self.total_weight
-            };
-            sub(&mut change, &mut pos_sign, first_new_cweight);
-        }
+        let mut prev_weight = zero.clone();
         let mut next_new_weight = iter.next();
+        let &(first_new_index, _) = next_new_weight.unwrap();
+        let mut cumulative_weight = if first_new_index > 0 {
+            self.cumulative_weights[first_new_index - 1].clone()
+        } else {
+            zero.clone() 
+        };
         for i in first_new_index..self.cumulative_weights.len() {
-            if let Some(&(j, w)) = next_new_weight {
-                // j > first_new_index >= 0
-                if i >= j {
-                    change = w.clone();
-                    pos_sign = true;
-                    add(&mut change, &mut pos_sign, &self.cumulative_weights[j - 1]);
-                    sub(&mut change, &mut pos_sign, &self.cumulative_weights[j]);
+            //if next_new_weight.is_some() && i == next_new_weight.unwrap().0 {
+            match next_new_weight {
+                Some(&(j, w)) if i == j => {
+                    cumulative_weight += w;
                     next_new_weight = iter.next();
+                },
+                _ => {
+                    let mut tmp = self.cumulative_weights[i].clone();
+                    tmp -= &prev_weight;  // We know this is positive.
+                    cumulative_weight += &tmp;
                 }
             }
-            if pos_sign {
-                self.cumulative_weights[i] += &change;
-            } else {
-                self.cumulative_weights[i] -= &change;
-            }
+            prev_weight = cumulative_weight.clone();
+            std::mem::swap(&mut prev_weight, &mut self.cumulative_weights[i]);
         }
 
         self.total_weight = total_weight;
@@ -341,9 +299,9 @@ mod test {
     #[test]
     fn test_update_weights() {
         let data = [
-            (&[1u32, 2, 3, 4][..],
+            (&[10u32, 2, 3, 4][..],
              &[(1, &100), (2, &4)][..],  // positive change
-             &[1, 100, 4, 4][..]),
+             &[10, 100, 4, 4][..]),
             (&[1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
              &[(2, &1), (5, &1), (13, &100)][..],  // negative change and last element
              &[1u32, 2, 1, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 100][..]),
