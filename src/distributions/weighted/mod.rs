@@ -211,7 +211,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
                 }
             }
             prev_weight = cumulative_weight.clone();
-            std::mem::swap(&mut prev_weight, &mut self.cumulative_weights[i]);
+            core::mem::swap(&mut prev_weight, &mut self.cumulative_weights[i]);
         }
 
         self.total_weight = total_weight;
