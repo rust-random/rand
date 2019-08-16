@@ -206,9 +206,9 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         let add = |x: &mut X, pos_sign: &mut bool, y: &X| {
             if !*pos_sign {
                 if *x < *y {
-                    let tmp = x.clone();
-                    *x = y.clone();
-                    *x -= &tmp;
+                    let mut tmp = y.clone();
+                    tmp -= x;
+                    std::mem::swap(x, &mut tmp);
                     *pos_sign = !*pos_sign;
                 } else {
                     *x -= y;
@@ -221,9 +221,9 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         let sub = |x: &mut X, pos_sign: &mut bool, y: &X| {
             if *pos_sign {
                 if *x < *y {
-                    let tmp = x.clone();
-                    *x = y.clone();
-                    *x -= &tmp;
+                    let mut tmp = y.clone();
+                    tmp -= x;
+                    std::mem::swap(x, &mut tmp);
                     *pos_sign = !*pos_sign;
                 } else {
                     *x -= y;
