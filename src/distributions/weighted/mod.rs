@@ -169,9 +169,6 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
                 return Err(WeightedError::TooMany);
             }
 
-            // Unfortunately, we will have to calculate the non-cumulative
-            // weight a second time, to avoid producing an invalid state of
-            // `self`.
             let mut old_w = if i < self.cumulative_weights.len() {
                 self.cumulative_weights[i].clone()
             } else {
@@ -202,7 +199,6 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
             zero.clone() 
         };
         for i in first_new_index..self.cumulative_weights.len() {
-            //if next_new_weight.is_some() && i == next_new_weight.unwrap().0 {
             match next_new_weight {
                 Some(&(j, w)) if i == j => {
                     cumulative_weight += w;
