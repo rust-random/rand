@@ -20,9 +20,9 @@ appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.5" }
-c2-chacha = { version = "0.2.2", default-features = false, features = ["simd"] }
+c2-chacha = { version = "0.2.2", default-features = false }
 
 [features]
 default = ["std", "simd"]
 std = ["c2-chacha/std"]
-simd = [] # deprecated
+simd = ["c2-chacha/simd"]
