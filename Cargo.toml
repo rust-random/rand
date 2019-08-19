@@ -27,7 +27,7 @@ nightly = ["simd_support"] # enables all features requiring nightly rust
 serde1 = [] # does nothing, deprecated
 
 # Optional dependencies:
-std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom"]
+std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom", "getrandom_package/std"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 # re-export optional WASM dependencies to avoid breakage:
 wasm-bindgen = ["getrandom_package/wasm-bindgen"]
@@ -57,7 +57,7 @@ members = [
 rand_core = { path = "rand_core", version = "0.5" }
 rand_pcg = { path = "rand_pcg", version = "0.2", optional = true }
 # Do not depend on 'getrandom_package' directly; use the 'getrandom' feature!
-getrandom_package = { version = "0.1.1", package = "getrandom", optional = true }
+getrandom_package = { version = "0.1", package = "getrandom", default-features = false, optional = true }
 log = { version = "0.4", optional = true }
 
 [dependencies.packed_simd]

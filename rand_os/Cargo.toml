@@ -23,4 +23,4 @@ stdweb = ["getrandom/stdweb"]
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.5", features = ["getrandom"] }
-getrandom = "0.1.1"
+getrandom = { version = "0.1", default-features = false }
