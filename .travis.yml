@@ -54,6 +54,8 @@ sudo: false
 #
 # TODO: SIMD support on stable releases
 # NOTE: SIMD support is unreliable on nightly; we track the latest release
+# NOTE: Test for alloc feature in no_std is not included here because it depends
+#       on the alloc crate stabilized in Rust 1.36.
 matrix:
   include:
     - rust: 1.32.0

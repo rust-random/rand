@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+- `alloc` feature in `no_std` is available since Rust 1.36 (#856)
+
 ## [0.5.1] - 2019-09-02
 ### Added
 - `OsRng` added to `rand_core` (#863)
