@@ -167,7 +167,11 @@ impl std::error::Error for Error {
 impl From<Error> for std::io::Error {
     #[inline]
     fn from(error: Error) -> Self {
-        std::io::Error::new(std::io::ErrorKind::Other, error)
+        if let Some(code) = error.raw_os_error() {
+            std::io::Error::from_raw_os_error(code)
+        } else {
+            std::io::Error::new(std::io::ErrorKind::Other, error)
+        }
     }
 }
 
