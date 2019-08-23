@@ -84,7 +84,7 @@ Rand release if required, but the change must be noted in the changelog.
 Rand is built with these features enabled by default:
 
 -   `std` enables functionality dependent on the `std` lib
--   `alloc` (implied by `std`) enables functionality requiring an allocator
+-   `alloc` (implied by `std`) enables functionality requiring an allocator (when using this feature in `no_std`, Rand requires Rustc version 1.36 or greater)
 -   `getrandom` (implied by `std`) is an optional dependency providing the code
     behind `rngs::OsRng`
 

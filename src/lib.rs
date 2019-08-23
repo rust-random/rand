@@ -50,7 +50,6 @@
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 
 #![cfg_attr(not(feature="std"), no_std)]
-#![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 #![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
 
 #![allow(clippy::excessive_precision, clippy::unreadable_literal, clippy::float_cmp)]
@@ -438,7 +437,7 @@ macro_rules! impl_as_byte_slice {
                 }
             }
         }
-        
+
         impl AsByteSliceMut for [Wrapping<$t>] {
             fn as_byte_slice_mut(&mut self) -> &mut [u8] {
                 if self.len() == 0 {
@@ -602,7 +601,7 @@ mod test {
         rng.fill(&mut array[..]);
         assert_eq!(array, [x as u32, (x >> 32) as u32]);
         assert_eq!(rng.next_u32(), x as u32);
-        
+
         // Check equivalence using wrapped arrays
         let mut warray = [Wrapping(0u32); 2];
         rng.fill(&mut warray[..]);
