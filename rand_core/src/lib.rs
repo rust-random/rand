@@ -38,7 +38,6 @@
 #![allow(clippy::unreadable_literal)]
 
 #![cfg_attr(not(feature="std"), no_std)]
-#![cfg_attr(all(feature="alloc", not(feature="std")), feature(alloc))]
 
 
 use core::default::Default;

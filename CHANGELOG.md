@@ -11,6 +11,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ## [Unreleased]
 - Fix `no_std` behaviour, appropriately enable c2-chacha's `std` feature (#844)
 - Add a `no_std` target to CI to continously evaluate `no_std` status (#844)
+- `alloc` feature in `no_std` is available since Rust 1.36 (#856)
 
 ## [0.7.0] - 2019-06-28
 
