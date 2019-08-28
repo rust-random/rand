@@ -1,65 +1,14 @@
 language: rust
 sudo: false
 
-# We support too many combinations of Rust releases, crate features, operating
-# systems, and architectures to even remotely test all combinations.
-# Yet it turns out we can test most of these independent of each other, because
-# they serve different goals or test different pieces of code.
-#
-# RUST RELEASES
-# Goal: make sure we don't use language features unavailable on a certain
-#       version, and build without warnings.
-# We have different builders use 4 Rust releases, a pinned stable release,
-# the latest stable, beta and nightly.
-#
-# ARCHITECTURES
-# Goal: test against issues caused by differences in endianness, pointer sizes,
-#       etc.
-# We run tests on 4 different architectures.
-# - x64_84, default on Travis (Linux) and AppVeyor (Windows)
-# - i686, second AppVeyor (Windows) configuration
-# - MIPS, big-endian Linux emulated with QEMU (thanks to Trust)
-# - ARMv7, Android emulated with QEMU (thanks to Trust)
-#
-# OPERATING SYSTEMS
-# Goal: test on many operating systems, to verify the OsRng code, which is
-#       mostly architecture-independent.
-# We run tests on Linux, OS X, Windows, Android (emulated), and Node.js (using
-# cargo-web).
-# One builder cross-compiles for many of the remaining OSes, which ensures we
-# keep building, but doesn't run tests.
-# OSes supported by Rand but which we can't cross-compile because there
-# is no pre-built standard library available: Dragonfly BSD, Haiku, OpenBSD.
-#
-# CRATE FEATURES, TESTS, AND SUB-CRATES
-# Goal: Run unit tests, doctests, examples, and test benchmarks for all crates,
-#       in configurations that cover all interesting combinations of features.
-# Tests run on rand:
-# - test no_std support, but only the unit tests:
-#   `cargo test --tests --no-default-features`
-# - test no_std support, including the alloc feature:
-#   cargo test --tests --no-default-features --features=alloc
-# - run unit tests and doctests with all features which are available on stable:
-#   `cargo test --features=serde1,log`
-# - test examples:
-#   `cargo test --examples`
-# Additional tests on nightly:
-# - run unit tests and doctests with all features which are available on nightly:
-#   `cargo test --all-features`
-# - run benchmarks as tests:
-#   `cargo test --benches --features=nightly`
-# Tests on subcrates:
-# - select crates via --manifest-path (more reliable than --package)
-# - test appropriate feature matrix
+# Since most OS-specific code has moved to the getrandom crate, we require
+# few target-specific tests here.
+
 matrix:
   include:
     - rust: 1.32.0
       env: DESCRIPTION="Linux, 1.32.0", ALLOC=0
       os: linux
-
-    - rust: 1.32.0
-      env: DESCRIPTION="OSX, 1.32.0", ALLOC=0
-      os: osx
 
     - rust: stable
       env: DESCRIPTION="Linux, stable"
@@ -93,66 +42,7 @@ matrix:
       after_success:
         - travis-cargo --only nightly doc-upload
 
-    - rust: nightly
-      os: osx
-      env: DESCRIPTION="OSX, nightly, docs", NIGHTLY=1
-      install:
-        - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
-        - cargo deadlinks -V
-      script:
-        - bash utils/ci/script.sh
-        # remove cached documentation, otherwise files from previous PRs can get included
-        - rm -rf target/doc
-        - cargo doc --no-deps --all --all-features
-        - cargo deadlinks --dir target/doc
-
-    - rust: nightly
-      env: DESCRIPTION="WASM via emscripten, stdweb and wasm-bindgen"
-      install:
-        - rustup target add wasm32-unknown-unknown
-        - rustup target add wasm32-unknown-emscripten
-        - nvm install 9
-        - ./utils/ci/install_cargo_web.sh
-        - cargo web prepare-emscripten
-        - cargo web -V
-        - cargo list | grep install-update || cargo install -f cargo-update
-        - cargo install-update -i cargo-update wasm-bindgen-cli wasm-pack
-      addons:
-        chrome: stable
-      script:
-        # Testing wasm32-unknown-emscripten fails because of rust-lang/rust#49877
-        # However, we can still build and link all tests to make sure that works.
-        # This is actually useful as it finds stuff such as rust-random/rand#669
-        - EMCC_CFLAGS="-s ERROR_ON_UNDEFINED_SYMBOLS=0" cargo web test --target wasm32-unknown-emscripten --no-run
-        #- cargo web test --target wasm32-unknown-emscripten
-        #- cargo web test --nodejs --target wasm32-unknown-emscripten
-        #- cargo build --target wasm32-unknown-unknown # without any features
-        - cargo build --target wasm32-unknown-unknown --features=wasm-bindgen
-        - cargo web test --target wasm32-unknown-unknown --features=stdweb
-        - cargo build --manifest-path tests/wasm_bindgen/Cargo.toml --target wasm32-unknown-unknown
-        - wasm-bindgen --nodejs target/wasm32-unknown-unknown/debug/rand_wasm_bindgen_test.wasm --out-dir tests/wasm_bindgen/js
-        - node tests/wasm_bindgen/js/index.js
-        - wasm-pack test --node tests/wasm_bindgen
-
-    - rust: nightly
-      env: DESCRIPTION="cross-platform builder (doesn't run tests)"
-      install:
-        - rustup target add x86_64-sun-solaris
-        - rustup target add x86_64-unknown-cloudabi
-        - rustup target add x86_64-unknown-freebsd
-        #- rustup target add x86_64-unknown-fuchsia
-        - rustup target add x86_64-unknown-netbsd
-        - rustup target add x86_64-unknown-redox
-      script:
-        # Test the top-level crate with all features:
-        - cargo build --target=x86_64-sun-solaris --all-features
-        - cargo build --target=x86_64-unknown-cloudabi --all-features
-        - cargo build --target=x86_64-unknown-freebsd --all-features
-        #- cargo build --target=x86_64-unknown-fuchsia --all-features
-        - cargo build --target=x86_64-unknown-netbsd --all-features
-        - cargo build --target=x86_64-unknown-redox --all-features
-
-    # Trust cross-built/emulated targets. We must repeat all non-default values.
+    # This target catches endianness issues
     - rust: stable
       sudo: required
       dist: trusty
@@ -162,15 +52,7 @@ matrix:
         - sh utils/ci/install.sh
         - source ~/.cargo/env || true
 
-    - rust: stable
-      sudo: required
-      dist: trusty
-      services: docker
-      env: DESCRIPTION="Android (ARMv7)" TARGET=armv7-linux-androideabi
-      install:
-        - sh utils/ci/install.sh
-        - source ~/.cargo/env || true
-
+    # This target checks we really can build no_std binaries
     - rust: nightly
       env: DESCRIPTION="no_std platform test"
       install:
@@ -194,14 +76,15 @@ script:
 
 after_script: set +e
 
-cache:
-  cargo: true
-  directories:
-    - .local/share/cargo-web
+# Cache: this seems to do more harm than good
+#cache:
+  #cargo: true
+  #directories:
+    #- .local/share/cargo-web
 
-before_cache:
-  # Travis can't cache files that are not readable by "others"
-  - chmod -R a+r $HOME/.cargo
+#before_cache:
+  ## Travis can't cache files that are not readable by "others"
+  #- chmod -R a+r $HOME/.cargo
 
 env:
   global:
