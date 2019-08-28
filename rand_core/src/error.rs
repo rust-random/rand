@@ -17,7 +17,6 @@ use core::num::NonZeroU32;
 /// In order to be compatible with `std` and `no_std`, this type has two
 /// possible implementations: with `std` a boxed `Error` trait object is stored,
 /// while with `no_std` we merely store an error code.
-#[derive(Debug)]
 pub struct Error {
     #[cfg(feature="std")]
     inner: Box<dyn std::error::Error + Send + Sync + 'static>,
@@ -32,6 +31,7 @@ impl Error {
     /// 
     /// See also `From<NonZeroU32>`, which is available with and without `std`.
     #[cfg(feature="std")]
+    #[inline]
     pub fn new<E>(err: E) -> Self
     where E: Into<Box<dyn std::error::Error + Send + Sync + 'static>>
     {
@@ -43,6 +43,7 @@ impl Error {
     /// When configured with `std`, this is a trivial operation and never
     /// panics. Without `std`, this method is simply unavailable.
     #[cfg(feature="std")]
+    #[inline]
     pub fn inner(&self) -> &(dyn std::error::Error + Send + Sync + 'static) {
         &*self.inner
     }
@@ -52,15 +53,45 @@ impl Error {
     /// When configured with `std`, this is a trivial operation and never
     /// panics. Without `std`, this method is simply unavailable.
     #[cfg(feature="std")]
+    #[inline]
     pub fn take_inner(self) -> Box<dyn std::error::Error + Send + Sync + 'static> {
         self.inner
     }
     
+    /// Codes below this point represent OS Errors (i.e. positive i32 values).
+    /// Codes at or above this point, but below [`Error::CUSTOM_START`] are
+    /// reserved for use by the `rand` and `getrandom` crates.
+    pub const INTERNAL_START: u32 = 1 << 31;
+
+    /// Codes at or above this point can be used by users to define their own
+    /// custom errors.
+    pub const CUSTOM_START: u32 = (1 << 31) + (1 << 30);
+
+    /// Extract the raw OS error code (if this error came from the OS)
+    ///
+    /// This method is identical to `std::io::Error::raw_os_error()`, except
+    /// that it works in `no_std` contexts. If this method returns `None`, the
+    /// error value can still be formatted via the `Diplay` implementation.
+    #[inline]
+    pub fn raw_os_error(&self) -> Option<i32> {
+        #[cfg(feature="std")] {
+            if let Some(e) = self.inner.downcast_ref::<std::io::Error>() {
+                return e.raw_os_error();
+            }
+        }
+        match self.code() {
+            Some(code) if u32::from(code) < Self::INTERNAL_START =>
+                Some(u32::from(code) as i32),
+            _ => None,
+        }
+    }
+
     /// Retrieve the error code, if any.
     /// 
     /// If this `Error` was constructed via `From<NonZeroU32>`, then this method
     /// will return this `NonZeroU32` code (for `no_std` this is always the
     /// case). Otherwise, this method will return `None`.
+    #[inline]
     pub fn code(&self) -> Option<NonZeroU32> {
         #[cfg(feature="std")] {
             self.inner.downcast_ref::<ErrorCode>().map(|c| c.0)
@@ -71,18 +102,36 @@ impl Error {
     }
 }
 
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        #[cfg(feature="std")] {
+            write!(f, "Error {{ inner: {:?} }}", self.inner)
+        }
+        #[cfg(all(feature="getrandom", not(feature="std")))] {
+            getrandom::Error::from(self.code).fmt(f)
+        }
+        #[cfg(not(feature="getrandom"))] {
+            write!(f, "Error {{ code: {} }}", self.code)
+        }
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         #[cfg(feature="std")] {
             write!(f, "{}", self.inner)
         }
-        #[cfg(not(feature="std"))] {
+        #[cfg(all(feature="getrandom", not(feature="std")))] {
+            getrandom::Error::from(self.code).fmt(f)
+        }
+        #[cfg(not(feature="getrandom"))] {
             write!(f, "error code {}", self.code)
         }
     }
 }
 
 impl From<NonZeroU32> for Error {
+    #[inline]
     fn from(code: NonZeroU32) -> Self {
         #[cfg(feature="std")] {
             Error { inner: Box::new(ErrorCode(code)) }
@@ -95,6 +144,7 @@ impl From<NonZeroU32> for Error {
 
 #[cfg(feature="getrandom")]
 impl From<getrandom::Error> for Error {
+    #[inline]
     fn from(error: getrandom::Error) -> Self {
         #[cfg(feature="std")] {
             Error { inner: Box::new(error) }
@@ -107,6 +157,7 @@ impl From<getrandom::Error> for Error {
 
 #[cfg(feature="std")]
 impl std::error::Error for Error {
+    #[inline]
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         self.inner.source()
     }
@@ -114,8 +165,13 @@ impl std::error::Error for Error {
 
 #[cfg(feature="std")]
 impl From<Error> for std::io::Error {
+    #[inline]
     fn from(error: Error) -> Self {
-        std::io::Error::new(std::io::ErrorKind::Other, error)
+        if let Some(code) = error.raw_os_error() {
+            std::io::Error::from_raw_os_error(code)
+        } else {
+            std::io::Error::new(std::io::ErrorKind::Other, error)
+        }
     }
 }
 

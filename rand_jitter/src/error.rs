@@ -10,24 +10,28 @@
 use rand_core::Error;
 use core::fmt;
 
+/// Base code for all `JitterRng` errors
+const ERROR_BASE: u32 = 0xAE53_0400;
+
 /// An error that can occur when [`JitterRng::test_timer`] fails.
 /// 
-/// All variants have a value of 0x6e530400 = 1850934272 plus a small
+/// All variants have a value of 0xAE530400 = 2924676096 plus a small
 /// increment (1 through 5).
 ///
 /// [`JitterRng::test_timer`]: crate::JitterRng::test_timer
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[repr(u32)]
 pub enum TimerError {
     /// No timer available.
-    NoTimer = 0x6e530401,
+    NoTimer = ERROR_BASE + 1,
     /// Timer too coarse to use as an entropy source.
-    CoarseTimer = 0x6e530402,
+    CoarseTimer = ERROR_BASE + 2,
     /// Timer is not monotonically increasing.
-    NotMonotonic = 0x6e530403,
+    NotMonotonic = ERROR_BASE + 3,
     /// Variations of deltas of time too small.
-    TinyVariantions = 0x6e530404,
+    TinyVariantions = ERROR_BASE + 4,
     /// Too many stuck results (indicating no added entropy).
-    TooManyStuck = 0x6e530405,
+    TooManyStuck = ERROR_BASE + 5,
     #[doc(hidden)]
     __Nonexhaustive,
 }
