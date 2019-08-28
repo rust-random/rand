@@ -57,9 +57,6 @@
 #[cfg(all(feature="alloc", not(feature="std")))]
 extern crate alloc;
 
-#[cfg(feature = "getrandom")]
-use getrandom_package as getrandom;
-
 #[allow(unused)]
 macro_rules! trace { ($($x:tt)*) => (
     #[cfg(feature = "log")] {
