@@ -7,7 +7,7 @@ sudo: false
 matrix:
   include:
     - rust: 1.32.0
-      env: DESCRIPTION="Linux, 1.32.0", ALLOC=0
+      env: DESCRIPTION="Linux, 1.32.0" ALLOC=0
       os: linux
 
     - rust: stable
@@ -27,7 +27,7 @@ matrix:
 
     - rust: nightly
       os: linux
-      env: DESCRIPTION="Linux, nightly, docs", NIGHTLY=1
+      env: DESCRIPTION="Linux, nightly, docs"  NIGHTLY=1
       install:
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
         - cargo deadlinks -V
