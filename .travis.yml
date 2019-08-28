@@ -51,54 +51,15 @@ sudo: false
 # Tests on subcrates:
 # - select crates via --manifest-path (more reliable than --package)
 # - test appropriate feature matrix
-#
-# TODO: SIMD support on stable releases
-# NOTE: SIMD support is unreliable on nightly; we track the latest release
-# NOTE: Test for alloc feature in no_std is not included here because it depends
-#       on the alloc crate stabilized in Rust 1.36.
 matrix:
   include:
     - rust: 1.32.0
-      env: DESCRIPTION="Linux, 1.32.0"
+      env: DESCRIPTION="Linux, 1.32.0", ALLOC=0
       os: linux
-      script:
-        # Differs from standard script: rand_pcg features
-        - cargo test --tests --no-default-features
-        # TODO: add simd_support feature:
-        - cargo test --features=serde1,log
-        - cargo test --examples
-        - cargo test --manifest-path rand_core/Cargo.toml
-        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
-        - cargo test --manifest-path rand_distr/Cargo.toml
-        - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
-        # TODO: cannot test rand_pcg due to explicit dependency on i128
-        - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_xoshiro/Cargo.toml
-        - cargo test --manifest-path rand_chacha/Cargo.toml
-        - cargo test --manifest-path rand_hc/Cargo.toml
-        - cargo test --manifest-path rand_jitter/Cargo.toml
-        - cargo test --manifest-path rand_os/Cargo.toml
 
     - rust: 1.32.0
-      env: DESCRIPTION="OSX, 1.32.0"
+      env: DESCRIPTION="OSX, 1.32.0", ALLOC=0
       os: osx
-      script:
-        # Differs from standard script: rand_pcg features
-        - cargo test --tests --no-default-features
-        # TODO: add simd_support feature:
-        - cargo test --features=serde1,log
-        - cargo test --examples
-        - cargo test --manifest-path rand_core/Cargo.toml
-        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
-        - cargo test --manifest-path rand_distr/Cargo.toml
-        - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
-        # TODO: cannot test rand_pcg due to explicit dependency on i128
-        - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_xoshiro/Cargo.toml
-        - cargo test --manifest-path rand_chacha/Cargo.toml
-        - cargo test --manifest-path rand_hc/Cargo.toml
-        - cargo test --manifest-path rand_jitter/Cargo.toml
-        - cargo test --manifest-path rand_os/Cargo.toml
 
     - rust: stable
       env: DESCRIPTION="Linux, stable"
@@ -109,22 +70,7 @@ matrix:
       install:
         - rustup target add aarch64-apple-ios
       script:
-        # Differs from standard script: includes aarch64-apple-ios cross-build
-        - cargo test --tests --no-default-features
-        # TODO: add simd_support feature:
-        - cargo test --features=serde1,log
-        - cargo test --examples
-        - cargo test --manifest-path rand_core/Cargo.toml
-        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
-        - cargo test --manifest-path rand_distr/Cargo.toml
-        - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_xoshiro/Cargo.toml
-        - cargo test --manifest-path rand_chacha/Cargo.toml
-        - cargo test --manifest-path rand_hc/Cargo.toml
-        - cargo test --manifest-path rand_jitter/Cargo.toml
-        - cargo test --manifest-path rand_os/Cargo.toml
+        - bash utils/ci/script.sh
         - cargo build --target=aarch64-apple-ios
 
     - rust: beta
@@ -132,29 +78,14 @@ matrix:
 
     - rust: nightly
       os: linux
-      env: DESCRIPTION="Linux, nightly, docs"
+      env: DESCRIPTION="Linux, nightly, docs", NIGHTLY=1
       install:
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
         - cargo deadlinks -V
       before_script:
         - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
       script:
-        # Differs from standard script: all features, doc build
-        - cargo test --tests --no-default-features --features=alloc
-        - cargo test --all-features
-        - cargo test --benches --features=nightly
-        - cargo test --examples
-        - cargo test --manifest-path rand_core/Cargo.toml
-        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
-        - cargo test --manifest-path rand_distr/Cargo.toml
-        - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_xoshiro/Cargo.toml
-        - cargo test --manifest-path rand_chacha/Cargo.toml
-        - cargo test --manifest-path rand_hc/Cargo.toml
-        - cargo test --manifest-path rand_jitter/Cargo.toml
-        - cargo test --manifest-path rand_os/Cargo.toml
+        - bash utils/ci/script.sh
         # remove cached documentation, otherwise files from previous PRs can get included
         - rm -rf target/doc
         - cargo doc --no-deps --all --all-features
@@ -164,27 +95,12 @@ matrix:
 
     - rust: nightly
       os: osx
-      env: DESCRIPTION="OSX, nightly, docs"
+      env: DESCRIPTION="OSX, nightly, docs", NIGHTLY=1
       install:
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
         - cargo deadlinks -V
       script:
-        # Differs from standard script: all features, doc build
-        - cargo test --tests --no-default-features --features=alloc
-        - cargo test --all-features
-        - cargo test --benches --features=nightly
-        - cargo test --examples
-        - cargo test --manifest-path rand_core/Cargo.toml
-        - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
-        - cargo test --manifest-path rand_distr/Cargo.toml
-        - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
-        - cargo test --manifest-path rand_xoshiro/Cargo.toml
-        - cargo test --manifest-path rand_chacha/Cargo.toml
-        - cargo test --manifest-path rand_hc/Cargo.toml
-        - cargo test --manifest-path rand_jitter/Cargo.toml
-        - cargo test --manifest-path rand_os/Cargo.toml
+        - bash utils/ci/script.sh
         # remove cached documentation, otherwise files from previous PRs can get included
         - rm -rf target/doc
         - cargo doc --no-deps --all --all-features
@@ -245,8 +161,7 @@ matrix:
       install:
         - sh utils/ci/install.sh
         - source ~/.cargo/env || true
-      script:
-        - bash utils/ci/script.sh
+
     - rust: stable
       sudo: required
       dist: trusty
@@ -255,8 +170,7 @@ matrix:
       install:
         - sh utils/ci/install.sh
         - source ~/.cargo/env || true
-      script:
-        - bash utils/ci/script.sh
+
     - rust: nightly
       env: DESCRIPTION="no_std platform test"
       install:
@@ -276,24 +190,7 @@ before_install:
   - rustup self update
 
 script:
-  - cargo test --tests --no-default-features
-  - cargo test --tests --no-default-features --features getrandom
-  - cargo test --tests --no-default-features --features=alloc
-  # TODO: add simd_support feature:
-  - cargo test --features=serde1,log
-  - cargo test --examples
-  - cargo test --manifest-path rand_core/Cargo.toml
-  - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
-  - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
-  - cargo test --manifest-path rand_distr/Cargo.toml
-  - cargo test --manifest-path rand_isaac/Cargo.toml --features=serde1
-  - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
-  - cargo test --manifest-path rand_xorshift/Cargo.toml --features=serde1
-  - cargo test --manifest-path rand_xoshiro/Cargo.toml
-  - cargo test --manifest-path rand_chacha/Cargo.toml
-  - cargo test --manifest-path rand_hc/Cargo.toml
-  - cargo test --manifest-path rand_jitter/Cargo.toml
-  - cargo test --manifest-path rand_os/Cargo.toml
+  - bash utils/ci/script.sh
 
 after_script: set +e
 
