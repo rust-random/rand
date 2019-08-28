@@ -10,8 +10,11 @@
 
 use crate::{RngCore, CryptoRng, Error, SeedableRng};
 
-#[cfg(target_os = "emscripten")] pub(crate) use rand_hc::Hc128Core as Core;
-#[cfg(not(target_os = "emscripten"))] pub(crate) use rand_chacha::ChaCha20Core as Core;
+#[cfg(all(any(test, feature = "std"), target_os = "emscripten"))]
+pub(crate) use rand_hc::Hc128Core as Core;
+#[cfg(all(any(test, feature = "std"), not(target_os = "emscripten")))]
+pub(crate) use rand_chacha::ChaCha20Core as Core;
+
 #[cfg(target_os = "emscripten")] use rand_hc::Hc128Rng as Rng;
 #[cfg(not(target_os = "emscripten"))] use rand_chacha::ChaCha20Rng as Rng;
 

@@ -57,6 +57,8 @@ members = [
 rand_core = { path = "rand_core", version = "0.5" }
 rand_pcg = { path = "rand_pcg", version = "0.2", optional = true }
 # Do not depend on 'getrandom_package' directly; use the 'getrandom' feature!
+# This is a dependency because: we forward wasm feature flags
+# This is renamed because: we need getrandom to depend on rand_core/getrandom
 getrandom_package = { version = "0.1.1", package = "getrandom", optional = true }
 log = { version = "0.4", optional = true }
 
