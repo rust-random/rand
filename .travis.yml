@@ -66,6 +66,13 @@ matrix:
       env: DESCRIPTION="Miri, nightly"
       script:
         - sh utils/ci/miri.sh
+    
+    - rust: nightly
+      os: linux
+      env: DESCRIPTION="Minimal dep versions"
+      script:
+        - cargo generate-lockfile -Z minimal-versions
+        - bash utils/ci/script.sh
 
 before_install:
   - set -e
