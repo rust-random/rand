@@ -69,7 +69,9 @@ pub mod le;
 /// optimal implementation of each is dependent on the type of generator. There
 /// is no required relationship between the output of each; e.g. many
 /// implementations of [`fill_bytes`] consume a whole number of `u32` or `u64`
-/// values and drop any remaining unused bytes.
+/// values and drop any remaining unused bytes. The same can happen with the
+/// [`next_u32`] and [`next_u64`] methods, implementations may discard some
+/// random bits for efficiency.
 ///
 /// The [`try_fill_bytes`] method is a variant of [`fill_bytes`] allowing error
 /// handling; it is not deemed sufficiently useful to add equivalents for
