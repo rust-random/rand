@@ -23,9 +23,11 @@ serde1 = ["serde", "rand_core/serde1"]
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.5" }
-serde = { version = "1", features = ["derive"], optional = true }
+serde = { version = "1.0.63", features = ["derive"], optional = true }
+# Not a direct dependency but required to boost the minimum version:
+serde_derive = { version = "1.0.63", optional = true }
 
 [dev-dependencies]
 # This is for testing serde, unfortunately we can't specify feature-gated dev
 # deps yet, see: https://github.com/rust-lang/cargo/issues/1596
-bincode = "1"
+bincode = "1.1.4"
