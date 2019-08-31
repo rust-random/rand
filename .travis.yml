@@ -7,14 +7,15 @@ sudo: false
 matrix:
   include:
     - rust: 1.32.0
-      env: DESCRIPTION="Linux, 1.32.0" ALLOC=0
+      name: "Linux, 1.32.0"
+      env: ALLOC=0
       os: linux
 
     - rust: stable
-      env: DESCRIPTION="Linux, stable"
+      name: "Linux, stable"
 
     - rust: stable
-      env: DESCRIPTION="OSX+iOS, stable"
+      name: "OSX+iOS, stable"
       os: osx
       install:
         - rustup target add aarch64-apple-ios
@@ -23,11 +24,12 @@ matrix:
         - cargo build --target=aarch64-apple-ios
 
     - rust: beta
-      env: DESCRIPTION="Linux, beta"
+      name: "Linux, beta"
 
     - rust: nightly
       os: linux
-      env: DESCRIPTION="Linux, nightly, docs"  NIGHTLY=1
+      name: "Linux, nightly, docs"
+      env: NIGHTLY=1
       install:
         - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
         - cargo deadlinks -V
@@ -47,14 +49,15 @@ matrix:
       sudo: required
       dist: trusty
       services: docker
-      env: DESCRIPTION="Linux (MIPS, big-endian)" TARGET=mips-unknown-linux-gnu
+      name: "Linux (MIPS, big-endian)"
+      env: TARGET=mips-unknown-linux-gnu
       install:
         - sh utils/ci/install.sh
         - source ~/.cargo/env || true
 
     # This target checks we really can build no_std binaries
     - rust: nightly
-      env: DESCRIPTION="no_std platform test"
+      name: "no_std platform test"
       install:
         - rustup target add thumbv6m-none-eabi
       script:
@@ -63,13 +66,13 @@ matrix:
 
     - rust: nightly
       os: linux
-      env: DESCRIPTION="Miri, nightly"
+      name: "Miri, nightly"
       script:
         - sh utils/ci/miri.sh
     
     - rust: nightly
       os: linux
-      env: DESCRIPTION="Minimal dep versions"
+      name: "Minimal dep versions"
       script:
         - cargo generate-lockfile -Z minimal-versions
         - bash utils/ci/script.sh

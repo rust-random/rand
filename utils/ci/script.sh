@@ -25,33 +25,33 @@ fi
 main() {
   if [ "0$NIGHTLY" -ge 1 ]; then
     $CARGO test $TARGET --all-features
-    $CARGO test  $TARGET --benches --features=nightly
+    $CARGO test $TARGET --benches --features=nightly
   else
     # all stable features:
-    $CARGO test  $TARGET --features=serde1,log,small_rng
+    $CARGO test $TARGET --features=serde1,log,small_rng
   fi
 
   if [ "$ALLOC" -ge 1 ]; then
-    $CARGO test  $TARGET --tests --no-default-features --features=alloc,getrandom,small_rng
-    $CARGO test  $TARGET --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
+    $CARGO test $TARGET --tests --no-default-features --features=alloc,getrandom,small_rng
+    $CARGO test $TARGET --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
   fi
   
-  $CARGO test  $TARGET --tests --no-default-features
-  $CARGO test  $TARGET --examples
+  $CARGO test $TARGET --tests --no-default-features
+  $CARGO test $TARGET --examples
   
-  $CARGO test  $TARGET --manifest-path rand_core/Cargo.toml
-  $CARGO test  $TARGET --manifest-path rand_core/Cargo.toml --no-default-features
-  $CARGO test  $TARGET --manifest-path rand_core/Cargo.toml --no-default-features --features=getrandom
+  $CARGO test $TARGET --manifest-path rand_core/Cargo.toml
+  $CARGO test $TARGET --manifest-path rand_core/Cargo.toml --no-default-features
+  $CARGO test $TARGET --manifest-path rand_core/Cargo.toml --no-default-features --features=getrandom
   
-  $CARGO test  $TARGET --manifest-path rand_distr/Cargo.toml
-  $CARGO test  $TARGET --manifest-path rand_isaac/Cargo.toml --features=serde1
-  $CARGO test  $TARGET --manifest-path rand_pcg/Cargo.toml --features=serde1
-  $CARGO test  $TARGET --manifest-path rand_xorshift/Cargo.toml --features=serde1
-  $CARGO test  $TARGET --manifest-path rand_xoshiro/Cargo.toml
-  $CARGO test  $TARGET --manifest-path rand_chacha/Cargo.toml
-  $CARGO test  $TARGET --manifest-path rand_hc/Cargo.toml
-  $CARGO test  $TARGET --manifest-path rand_jitter/Cargo.toml
-  $CARGO test  $TARGET --manifest-path rand_os/Cargo.toml
+  $CARGO test $TARGET --manifest-path rand_distr/Cargo.toml
+  $CARGO test $TARGET --manifest-path rand_isaac/Cargo.toml --features=serde1
+  $CARGO test $TARGET --manifest-path rand_pcg/Cargo.toml --features=serde1
+  $CARGO test $TARGET --manifest-path rand_xorshift/Cargo.toml --features=serde1
+  $CARGO test $TARGET --manifest-path rand_xoshiro/Cargo.toml
+  $CARGO test $TARGET --manifest-path rand_chacha/Cargo.toml
+  $CARGO test $TARGET --manifest-path rand_hc/Cargo.toml
+  $CARGO test $TARGET --manifest-path rand_jitter/Cargo.toml
+  $CARGO test $TARGET --manifest-path rand_os/Cargo.toml
 }
 
 # we don't run the "test phase" when doing deploys
