@@ -24,6 +24,4 @@ rand = { path = "..", version = "0.7" }
 [dev-dependencies]
 rand_pcg = { version = "0.2", path = "../rand_pcg" }
 # Histogram implementation for testing uniformity
-average = "0.10.0"
-# Not a direct dependency but required to boost the minimum version:
-conv = "0.3.2"
+average = "0.10.3"
