@@ -13,21 +13,21 @@ use rand_core::{SeedableRng, RngCore, Error};
 
 use crate::Seed512;
 
-/// A xoshiro512** random number generator.
+/// A xoshiro512++ random number generator.
 ///
-/// The xoshiro512** algorithm is not suitable for cryptographic purposes, but
+/// The xoshiro512++ algorithm is not suitable for cryptographic purposes, but
 /// is very fast and has excellent statistical properties.
 ///
-/// The algorithm used here is translated from [the `xoshiro512starstar.c`
-/// reference source code](http://xoshiro.di.unimi.it/xoshiro512starstar.c) by
+/// The algorithm used here is translated from [the `xoshiro512plusplus.c`
+/// reference source code](http://xoshiro.di.unimi.it/xoshiro512plusplus.c) by
 /// David Blackman and Sebastiano Vigna.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
-pub struct Xoshiro512StarStar {
+pub struct Xoshiro512PlusPlus {
     s: [u64; 8],
 }
 
-impl Xoshiro512StarStar {
+impl Xoshiro512PlusPlus {
     /// Jump forward, equivalently to 2^256 calls to `next_u64()`.
     ///
     /// This can be used to generate 2^256 non-overlapping subsequences for
@@ -35,9 +35,9 @@ impl Xoshiro512StarStar {
     ///
     /// ```
     /// use rand_xoshiro::rand_core::SeedableRng;
-    /// use rand_xoshiro::Xoshiro512StarStar;
+    /// use rand_xoshiro::Xoshiro512PlusPlus;
     ///
-    /// let rng1 = Xoshiro512StarStar::seed_from_u64(0);
+    /// let rng1 = Xoshiro512PlusPlus::seed_from_u64(0);
     /// let mut rng2 = rng1.clone();
     /// rng2.jump();
     /// let mut rng3 = rng2.clone();
@@ -66,26 +66,26 @@ impl Xoshiro512StarStar {
 }
 
 
-impl SeedableRng for Xoshiro512StarStar {
+impl SeedableRng for Xoshiro512PlusPlus {
     type Seed = Seed512;
 
-    /// Create a new `Xoshiro512StarStar`.  If `seed` is entirely 0, it will be
+    /// Create a new `Xoshiro512PlusPlus`.  If `seed` is entirely 0, it will be
     /// mapped to a different seed.
     #[inline]
-    fn from_seed(seed: Seed512) -> Xoshiro512StarStar {
+    fn from_seed(seed: Seed512) -> Xoshiro512PlusPlus {
         deal_with_zero_seed!(seed, Self);
         let mut state = [0; 8];
         read_u64_into(&seed.0, &mut state);
-        Xoshiro512StarStar { s: state }
+        Xoshiro512PlusPlus { s: state }
     }
 
-    /// Seed a `Xoshiro512StarStar` from a `u64` using `SplitMix64`.
-    fn seed_from_u64(seed: u64) -> Xoshiro512StarStar {
+    /// Seed a `Xoshiro512PlusPlus` from a `u64` using `SplitMix64`.
+    fn seed_from_u64(seed: u64) -> Xoshiro512PlusPlus {
         from_splitmix!(seed)
     }
 }
 
-impl RngCore for Xoshiro512StarStar {
+impl RngCore for Xoshiro512PlusPlus {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         self.next_u64() as u32
@@ -93,9 +93,9 @@ impl RngCore for Xoshiro512StarStar {
 
     #[inline]
     fn next_u64(&mut self) -> u64 {
-        let result_starstar = starstar_u64!(self.s[1]);
+        let result_plusplus = plusplus_u64!(self.s[2], self.s[0], 17);
         impl_xoshiro_large!(self);
-        result_starstar
+        result_plusplus
     }
 
     #[inline]
@@ -116,17 +116,17 @@ mod tests {
 
     #[test]
     fn reference() {
-        let mut rng = Xoshiro512StarStar::from_seed(Seed512(
+        let mut rng = Xoshiro512PlusPlus::from_seed(Seed512(
             [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0,
              3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0,
              5, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0,
              7, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0]));
         // These values were produced with the reference implementation:
-        // http://xoshiro.di.unimi.it/xoshiro512starstar.c
+        // http://xoshiro.di.unimi.it/xoshiro512plusplus.c
         let expected = [
-            11520, 0, 23040, 23667840, 144955163520, 303992986974289920,
-            25332796375735680, 296904390158016, 13911081092387501979,
-            15304787717237593024,
+            524291, 1048578, 539099140, 3299073855497, 6917532603230064654,
+            7494048333530275843, 14418333309547923463, 10960079161595355914,
+            18279570946505382726, 10209173166699159237,
         ];
         for &e in &expected {
             assert_eq!(rng.next_u64(), e);

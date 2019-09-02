@@ -11,21 +11,21 @@ use rand_core::impls::{next_u64_via_u32, fill_bytes_via_next};
 use rand_core::le::read_u32_into;
 use rand_core::{SeedableRng, RngCore, Error};
 
-/// A xoshiro128** random number generator.
+/// A xoshiro128++ random number generator.
 ///
-/// The xoshiro128** algorithm is not suitable for cryptographic purposes, but
+/// The xoshiro128++ algorithm is not suitable for cryptographic purposes, but
 /// is very fast and has excellent statistical properties.
 ///
-/// The algorithm used here is translated from [the `xoshiro128starstar.c`
-/// reference source code](http://xoshiro.di.unimi.it/xoshiro128starstar.c) by
+/// The algorithm used here is translated from [the `xoshiro128plusplus.c`
+/// reference source code](http://xoshiro.di.unimi.it/xoshiro128plusplus.c) by
 /// David Blackman and Sebastiano Vigna.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
-pub struct Xoshiro128StarStar {
+pub struct Xoshiro128PlusPlus {
     s: [u32; 4],
 }
 
-impl Xoshiro128StarStar {
+impl Xoshiro128PlusPlus {
     /// Jump forward, equivalently to 2^64 calls to `next_u32()`.
     ///
     /// This can be used to generate 2^64 non-overlapping subsequences for
@@ -33,9 +33,9 @@ impl Xoshiro128StarStar {
     ///
     /// ```
     /// use rand_xoshiro::rand_core::SeedableRng;
-    /// use rand_xoshiro::Xoroshiro128StarStar;
+    /// use rand_xoshiro::Xoroshiro128PlusPlus;
     ///
-    /// let rng1 = Xoroshiro128StarStar::seed_from_u64(0);
+    /// let rng1 = Xoroshiro128PlusPlus::seed_from_u64(0);
     /// let mut rng2 = rng1.clone();
     /// rng2.jump();
     /// let mut rng3 = rng2.clone();
@@ -55,29 +55,29 @@ impl Xoshiro128StarStar {
     }
 }
 
-impl SeedableRng for Xoshiro128StarStar {
+impl SeedableRng for Xoshiro128PlusPlus {
     type Seed = [u8; 16];
 
-    /// Create a new `Xoshiro128StarStar`.  If `seed` is entirely 0, it will be
+    /// Create a new `Xoshiro128PlusPlus`.  If `seed` is entirely 0, it will be
     /// mapped to a different seed.
     #[inline]
-    fn from_seed(seed: [u8; 16]) -> Xoshiro128StarStar {
+    fn from_seed(seed: [u8; 16]) -> Xoshiro128PlusPlus {
         deal_with_zero_seed!(seed, Self);
         let mut state = [0; 4];
         read_u32_into(&seed, &mut state);
-        Xoshiro128StarStar { s: state }
+        Xoshiro128PlusPlus { s: state }
     }
 
-    /// Seed a `Xoshiro128StarStar` from a `u64` using `SplitMix64`.
-    fn seed_from_u64(seed: u64) -> Xoshiro128StarStar {
+    /// Seed a `Xoshiro128PlusPlus` from a `u64` using `SplitMix64`.
+    fn seed_from_u64(seed: u64) -> Xoshiro128PlusPlus {
         from_splitmix!(seed)
     }
 }
 
-impl RngCore for Xoshiro128StarStar {
+impl RngCore for Xoshiro128PlusPlus {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        let result_starstar = starstar_u64!(self.s[1]);
+        let result_starstar = plusplus_u32!(self.s[0], self.s[3]);
         impl_xoshiro_u32!(self);
         result_starstar
     }
@@ -105,13 +105,13 @@ mod tests {
 
     #[test]
     fn reference() {
-        let mut rng = Xoshiro128StarStar::from_seed(
+        let mut rng = Xoshiro128PlusPlus::from_seed(
             [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0]);
-        // These values were produced with the reference implementation (v1.1):
-        // http://xoshiro.di.unimi.it/xoshiro128starstar.c
+        // These values were produced with the reference implementation:
+        // http://xoshiro.di.unimi.it/xoshiro128plusplus.c
         let expected = [
-            11520, 0, 5927040, 70819200, 2031721883, 1637235492, 1287239034,
-            3734860849, 3729100597, 4258142804,
+            641, 1573767, 3222811527, 3517856514, 836907274, 4247214768,
+            3867114732, 1355841295, 495546011, 621204420,
         ];
         for &e in &expected {
             assert_eq!(rng.next_u32(), e);
