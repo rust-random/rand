@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2019-09-03
+- Add xoshiro128++, 256++ and 512++ variants
+- Add xoroshiro128++ variant
+- Add `long_jump` method to RNGs missing it
+- Update xoshiro128** to version 1.1, breaking value stability
+
 ## [0.3.1] - 2019-08-06
 - Drop `byteorder`-dependency in favor of `stdlib`-implementation.
 
