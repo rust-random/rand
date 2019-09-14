@@ -30,6 +30,8 @@ serde1 = [] # does nothing, deprecated
 std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 # re-export optional WASM dependencies to avoid breakage:
+# Warning: wasm-bindgen and stdweb features will be removed in rand 0.8;
+# recommended to activate via the getrandom crate instead.
 wasm-bindgen = ["getrandom_package/wasm-bindgen"]
 stdweb = ["getrandom_package/stdweb"]
 getrandom = ["getrandom_package", "rand_core/getrandom"]
