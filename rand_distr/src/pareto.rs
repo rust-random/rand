@@ -66,8 +66,7 @@ where OpenClosed01: Distribution<N>
 
 #[cfg(test)]
 mod tests {
-    use crate::Distribution;
-    use super::Pareto;
+    use super::*;
 
     #[test]
     #[should_panic]
@@ -85,5 +84,25 @@ mod tests {
             let r = d.sample(&mut rng);
             assert!(r >= scale);
         }
+    }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
+        (distr: D, zero: N, expected: &[N])
+        {
+            let mut rng = crate::test::rng(213);
+            let mut buf = [zero; 4];
+            for x in &mut buf {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(buf, expected);
+        }
+        
+        test_samples(Pareto::new(1.0, 1.0).unwrap(), 0f32,
+                &[1.0423688, 2.1235929, 4.132709, 1.4679428]);
+        test_samples(Pareto::new(2.0, 0.5).unwrap(), 0f64, &[
+                9.019295276219136, 4.3097126018270595,
+                6.837815045397157, 105.8826669383772]);
     }
 }

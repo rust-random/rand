@@ -107,8 +107,7 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 
 #[cfg(test)]
 mod test {
-    use super::Dirichlet;
-    use crate::Distribution;
+    use super::*;
 
     #[test]
     fn test_dirichlet() {
@@ -150,5 +149,15 @@ mod test {
     #[should_panic]
     fn test_dirichlet_invalid_alpha() {
         Dirichlet::new_with_size(0.0f64, 2).unwrap();
+    }
+    
+    #[test]
+    fn value_stability() {
+        let mut rng = crate::test::rng(223);
+        assert_eq!(rng.sample(Dirichlet::new(vec![1.0, 2.0, 3.0]).unwrap()),
+                vec![0.12941567177708177, 0.4702121891675036, 0.4003721390554146]);
+        assert_eq!(rng.sample(Dirichlet::new_with_size(8.0, 5).unwrap()),
+                vec![0.17684200044809556, 0.29915953935953055,
+                    0.1832858056608014, 0.1425623503573967, 0.19815030417417595]);
     }
 }

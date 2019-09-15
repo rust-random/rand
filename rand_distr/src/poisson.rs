@@ -134,8 +134,7 @@ where Standard: Distribution<N>
 
 #[cfg(test)]
 mod test {
-    use crate::Distribution;
-    use super::Poisson;
+    use super::*;
 
     #[test]
     fn test_poisson_10() {
@@ -229,5 +228,24 @@ mod test {
     #[should_panic]
     fn test_poisson_invalid_lambda_neg() {
         Poisson::new(-10.0).unwrap();
+    }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
+        (distr: D, zero: N, expected: &[N])
+        {
+            let mut rng = crate::test::rng(223);
+            let mut buf = [zero; 4];
+            for x in &mut buf {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(buf, expected);
+        }
+        
+        // Special cases: < 12, >= 12
+        test_samples(Poisson::new(7.0).unwrap(), 0f32, &[5.0, 11.0, 6.0, 5.0]);
+        test_samples(Poisson::new(7.0).unwrap(), 0f64, &[9.0, 5.0, 7.0, 6.0]);
+        test_samples(Poisson::new(27.0).unwrap(), 0f32, &[28.0, 32.0, 36.0, 36.0]);
     }
 }

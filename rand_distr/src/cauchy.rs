@@ -72,8 +72,7 @@ where Standard: Distribution<N>
 
 #[cfg(test)]
 mod test {
-    use crate::Distribution;
-    use super::Cauchy;
+    use super::*;
 
     fn median(mut numbers: &mut [f64]) -> f64 {
         sort(&mut numbers);
@@ -116,5 +115,23 @@ mod test {
     #[should_panic]
     fn test_cauchy_invalid_scale_neg() {
         Cauchy::new(0.0, -10.0).unwrap();
+    }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<N: Float + core::fmt::Debug>(m: N, s: N, expected: &[N])
+        where Standard: Distribution<N> {
+            let distr = Cauchy::new(m, s).unwrap();
+            let mut rng = crate::test::rng(353);
+            let mut buf = [m; 4];
+            for x in &mut buf {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(buf, expected);
+        }
+        
+        test_samples(100f64, 10.0, &[77.93369152808678, 90.1606912098641,
+                125.31516221323625, 86.10217834773925]);
+        test_samples(20f32, 10.0, &[27.175842, -2.0663052, 11.013268, 10.160688]);
     }
 }
