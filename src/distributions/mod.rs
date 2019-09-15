@@ -173,6 +173,12 @@ mod utils;
 /// advantage of not needing to consider thread safety, and for most
 /// distributions efficient state-less sampling algorithms are available.
 ///
+/// Implementations are typically expected to be portable with reproducible
+/// results when used with a PRNG with fixed seed; see the
+/// [portability chapter](https://rust-random.github.io/book/portability.html)
+/// of The Rust Rand Book. In some cases this does not apply, e.g. the `usize`
+/// type requires different sampling on 32-bit and 64-bit machines.
+///
 /// [`sample_iter`]: Distribution::method.sample_iter
 pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the source of randomness.
