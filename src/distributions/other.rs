@@ -179,6 +179,7 @@ impl<T> Distribution<Wrapping<T>> for Standard where Standard: Distribution<T> {
 mod tests {
     use super::*;
     use crate::RngCore;
+    #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::string::String;
 
     #[test]
     fn test_misc() {
@@ -232,7 +233,7 @@ mod tests {
         test_samples(&Standard, 'a', &['\u{8cdac}', '\u{a346a}', '\u{80120}', '\u{ed692}', '\u{35888}']);
         test_samples(&Alphanumeric, 'a', &['h', 'm', 'e', '3', 'M']);
         test_samples(&Standard, false, &[true, true, false, true, false]);
-        test_samples(&Standard, Option::<bool>::None,
+        test_samples(&Standard, None as Option<bool>,
                 &[Some(true), None, Some(false), None, Some(false)]);
         test_samples(&Standard, Wrapping(0i32), &[Wrapping(-2074640887),
                 Wrapping(-1719949321), Wrapping(2018088303),
