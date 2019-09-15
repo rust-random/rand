@@ -245,6 +245,17 @@ pub trait UniformSampler: Sized {
     /// more optimal implementations for single usage may be provided via this
     /// method (which is the case for integers and floats).
     /// Results may not be identical.
+    ///
+    /// Note that to use this method in a generic context, the type needs to be
+    /// retrieved via `SampleUniform::Sampler` as follows:
+    /// ```
+    /// use rand::{thread_rng, distributions::uniform::{SampleUniform, UniformSampler}};
+    /// # #[allow(unused)]
+    /// fn sample_from_range<T: SampleUniform>(lb: T, ub: T) -> T {
+    ///     let mut rng = thread_rng();
+    ///     <T as SampleUniform>::Sampler::sample_single(lb, ub, &mut rng)
+    /// }
+    /// ```
     fn sample_single<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R)
         -> Self::X
         where B1: SampleBorrow<Self::X> + Sized,
