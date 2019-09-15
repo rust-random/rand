@@ -66,9 +66,7 @@
 //! struct MyF32(f32);
 //!
 //! #[derive(Clone, Copy, Debug)]
-//! struct UniformMyF32 {
-//!     inner: UniformFloat<f32>,
-//! }
+//! struct UniformMyF32(UniformFloat<f32>);
 //!
 //! impl UniformSampler for UniformMyF32 {
 //!     type X = MyF32;
@@ -76,9 +74,7 @@
 //!         where B1: SampleBorrow<Self::X> + Sized,
 //!               B2: SampleBorrow<Self::X> + Sized
 //!     {
-//!         UniformMyF32 {
-//!             inner: UniformFloat::<f32>::new(low.borrow().0, high.borrow().0),
-//!         }
+//!         UniformMyF32(UniformFloat::<f32>::new(low.borrow().0, high.borrow().0))
 //!     }
 //!     fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
 //!         where B1: SampleBorrow<Self::X> + Sized,
@@ -87,7 +83,7 @@
 //!         UniformSampler::new(low, high)
 //!     }
 //!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-//!         MyF32(self.inner.sample(rng))
+//!         MyF32(self.0.sample(rng))
 //!     }
 //! }
 //!
@@ -166,9 +162,7 @@ use packed_simd::*;
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
 #[derive(Clone, Copy, Debug)]
-pub struct Uniform<X: SampleUniform> {
-    inner: X::Sampler,
-}
+pub struct Uniform<X: SampleUniform>(X::Sampler);
 
 impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance which samples uniformly from the half
@@ -177,7 +171,7 @@ impl<X: SampleUniform> Uniform<X> {
         where B1: SampleBorrow<X> + Sized,
               B2: SampleBorrow<X> + Sized
     {
-        Uniform { inner: X::Sampler::new(low, high) }
+        Uniform(X::Sampler::new(low, high))
     }
 
     /// Create a new `Uniform` instance which samples uniformly from the closed
@@ -186,13 +180,13 @@ impl<X: SampleUniform> Uniform<X> {
         where B1: SampleBorrow<X> + Sized,
               B2: SampleBorrow<X> + Sized
     {
-        Uniform { inner: X::Sampler::new_inclusive(low, high) }
+        Uniform(X::Sampler::new_inclusive(low, high))
     }
 }
 
 impl<X: SampleUniform> Distribution<X> for Uniform<X> {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> X {
-        self.inner.sample(rng)
+        self.0.sample(rng)
     }
 }
 
@@ -1211,18 +1205,14 @@ mod tests {
             x: f32,
         }
         #[derive(Clone, Copy, Debug)]
-        struct UniformMyF32 {
-            inner: UniformFloat<f32>,
-        }
+        struct UniformMyF32(UniformFloat<f32>);
         impl UniformSampler for UniformMyF32 {
             type X = MyF32;
             fn new<B1, B2>(low: B1, high: B2) -> Self
                 where B1: SampleBorrow<Self::X> + Sized,
                       B2: SampleBorrow<Self::X> + Sized
             {
-                UniformMyF32 {
-                    inner: UniformFloat::<f32>::new(low.borrow().x, high.borrow().x),
-                }
+                UniformMyF32(UniformFloat::<f32>::new(low.borrow().x, high.borrow().x))
             }
             fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
                 where B1: SampleBorrow<Self::X> + Sized,
@@ -1231,7 +1221,7 @@ mod tests {
                 UniformSampler::new(low, high)
             }
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                MyF32 { x: self.inner.sample(rng) }
+                MyF32 { x: self.0.sample(rng) }
             }
         }
         impl SampleUniform for MyF32 {
@@ -1250,21 +1240,21 @@ mod tests {
     #[test]
     fn test_uniform_from_std_range() {
         let r = Uniform::from(2u32..7);
-        assert_eq!(r.inner.low, 2);
-        assert_eq!(r.inner.range, 5);
+        assert_eq!(r.0.low, 2);
+        assert_eq!(r.0.range, 5);
         let r = Uniform::from(2.0f64..7.0);
-        assert_eq!(r.inner.low, 2.0);
-        assert_eq!(r.inner.scale, 5.0);
+        assert_eq!(r.0.low, 2.0);
+        assert_eq!(r.0.scale, 5.0);
     }
 
     #[test]
     fn test_uniform_from_std_range_inclusive() {
         let r = Uniform::from(2u32..=6);
-        assert_eq!(r.inner.low, 2);
-        assert_eq!(r.inner.range, 5);
+        assert_eq!(r.0.low, 2);
+        assert_eq!(r.0.range, 5);
         let r = Uniform::from(2.0f64..=7.0);
-        assert_eq!(r.inner.low, 2.0);
-        assert!(r.inner.scale > 5.0);
-        assert!(r.inner.scale < 5.0 + 1e-14);
+        assert_eq!(r.0.low, 2.0);
+        assert!(r.0.scale > 5.0);
+        assert!(r.0.scale < 5.0 + 1e-14);
     }
 }
