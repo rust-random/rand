@@ -934,11 +934,8 @@ impl UniformSampler for UniformDuration {
 
 #[cfg(test)]
 mod tests {
-    use crate::Rng;
+    use super::*;
     use crate::rngs::mock::StepRng;
-    use crate::distributions::uniform::Uniform;
-    use crate::distributions::utils::FloatAsSIMD;
-    #[cfg(feature="simd_support")] use packed_simd::*;
 
     #[should_panic]
     #[test]
@@ -1267,5 +1264,43 @@ mod tests {
         assert_eq!(r.0.low, 2.0);
         assert!(r.0.scale > 5.0);
         assert!(r.0.scale < 5.0 + 1e-14);
+    }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<T: SampleUniform + Copy + core::fmt::Debug + PartialEq>(
+            lb: T, ub: T, expected_single: &[T], expected_multiple: &[T]
+        )
+        where Uniform<T>: Distribution<T>
+        {
+            let mut rng = crate::test::rng(897);
+            let mut buf = [lb; 3];
+            
+            for x in &mut buf {
+                *x = T::Sampler::sample_single(lb, ub, &mut rng);
+            }
+            assert_eq!(&buf, expected_single);
+            
+            let distr = Uniform::new(lb, ub);
+            for x in &mut buf {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(&buf, expected_multiple);
+        }
+        
+        // We test on a sub-set of types; possibly we should do more.
+        // TODO: SIMD types
+        
+        test_samples(11u8, 219, &[17, 66, 214], &[181, 93, 165]);
+        test_samples(11u32, 219, &[17, 66, 214], &[181, 93, 165]);
+        
+        test_samples(0f32, 1e-2f32, &[0.0003070104, 0.0026630748, 0.00979833],
+                &[0.008194133, 0.00398172, 0.007428536]);
+        test_samples(-1e10f64, 1e10f64, 
+                &[-4673848682.871551, 6388267422.932352, 4857075081.198343],
+                &[1173375212.1808167, 1917642852.109581, 2365076174.3153973]);
+        
+        test_samples(Duration::new(2, 0), Duration::new(4, 0),
+                &[Duration::new(2,532615131), Duration::new(3,638826742), Duration::new(3,485707508)], &[Duration::new(3,117337521), Duration::new(3,191764285), Duration::new(3,236507617)]);
     }
 }
