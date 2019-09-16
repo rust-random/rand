@@ -316,6 +316,35 @@ mod test {
             assert_eq!(distr.cumulative_weights, expected_distr.cumulative_weights);
         }
     }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<X: SampleUniform + PartialOrd, I>
+        (
+            weights: I,
+            buf: &mut [usize],
+            expected: &[usize]
+        )
+        where I: IntoIterator,
+              I::Item: SampleBorrow<X>,
+              X: for<'a> ::core::ops::AddAssign<&'a X> +
+                 Clone +
+                 Default
+        {
+            assert_eq!(buf.len(), expected.len());
+            let distr = WeightedIndex::new(weights).unwrap();
+            let mut rng = crate::test::rng(701);
+            for r in buf.iter_mut() {
+                *r = rng.sample(&distr);
+            }
+            assert_eq!(buf, expected);
+        }
+        
+        let mut buf = [0; 10];
+        test_samples(&[1i32,1,1,1,1,1,1,1,1], &mut buf, &[0, 6, 2, 6, 3, 4, 7, 8, 2, 5]);
+        test_samples(&[0.7f32, 0.1, 0.1, 0.1], &mut buf, &[0, 0, 0, 1, 0, 0, 2, 3, 0, 0]);
+        test_samples(&[1.0f64, 0.999, 0.998, 0.997], &mut buf, &[2, 2, 1, 3, 2, 1, 3, 3, 2, 1]);
+    }
 }
 
 /// Error type returned from `WeightedIndex::new`.

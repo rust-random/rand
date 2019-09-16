@@ -417,8 +417,7 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 
 #[cfg(test)]
 mod test {
-    use crate::Distribution;
-    use super::{Beta, ChiSquared, StudentT, FisherF};
+    use super::*;
 
     #[test]
     fn test_chi_squared_one() {
@@ -481,5 +480,61 @@ mod test {
     #[should_panic]
     fn test_beta_invalid_dof() {
         Beta::new(0., 0.).unwrap();
+    }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
+        (distr: D, zero: N, expected: &[N])
+        {
+            let mut rng = crate::test::rng(223);
+            let mut buf = [zero; 4];
+            for x in &mut buf {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(buf, expected);
+        }
+        
+        // Gamma has 3 cases: shape == 1, shape < 1, shape > 1
+        test_samples(Gamma::new(1.0, 5.0).unwrap(), 0f32,
+                &[5.398085, 9.162783, 0.2300583, 1.7235851]);
+        test_samples(Gamma::new(0.8, 5.0).unwrap(), 0f32,
+                &[0.5051203, 0.9048302, 3.095812, 1.8566116]);
+        test_samples(Gamma::new(1.1, 5.0).unwrap(), 0f64, &[
+                7.783878094584059, 1.4939528171618057,
+                8.638017638857592, 3.0949337228829004]);
+        
+        // ChiSquared has 2 cases: k == 1, k != 1
+        test_samples(ChiSquared::new(1.0).unwrap(), 0f64, &[
+                0.4893526200348249, 1.635249736808788,
+                0.5013580219361969, 0.1457735613733489]);
+        test_samples(ChiSquared::new(0.1).unwrap(), 0f64, &[
+                0.014824404726978617, 0.021602123937134326,
+                0.0000003431429746851693, 0.00000002291755769542258]);
+        test_samples(ChiSquared::new(10.0).unwrap(), 0f32, 
+                &[12.693656, 6.812016, 11.082001, 12.436167]);
+        
+        // FisherF has same special cases as ChiSquared on each param
+        test_samples(FisherF::new(1.0, 13.5).unwrap(), 0f32,
+                &[0.32283646, 0.048049655, 0.0788893, 1.817178]);
+        test_samples(FisherF::new(1.0, 1.0).unwrap(), 0f32,
+                &[0.29925257, 3.4392934, 9.567652, 0.020074]);
+        test_samples(FisherF::new(0.7, 13.5).unwrap(), 0f64, &[
+                3.3196593155045124, 0.3409169916262829,
+                0.03377989856426519, 0.00004041672861036937]);
+        
+        // StudentT has same special cases as ChiSquared
+        test_samples(StudentT::new(1.0).unwrap(), 0f32,
+                &[0.54703987, -1.8545331, 3.093162, -0.14168274]);
+        test_samples(StudentT::new(1.1).unwrap(), 0f64, &[
+                0.7729195887949754, 1.2606210611616204,
+                -1.7553606501113175, -2.377641221169782]);
+        
+        // Beta has same special cases as Gamma on each param
+        test_samples(Beta::new(1.0, 0.8).unwrap(), 0f32,
+                &[0.6444564, 0.357635, 0.4110078, 0.7347192]);
+        test_samples(Beta::new(0.7, 1.2).unwrap(), 0f64, &[
+                0.6433129944095513, 0.5373371199711573,
+                0.10313293199269491, 0.002472280249144378]);
     }
 }

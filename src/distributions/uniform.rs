@@ -66,9 +66,7 @@
 //! struct MyF32(f32);
 //!
 //! #[derive(Clone, Copy, Debug)]
-//! struct UniformMyF32 {
-//!     inner: UniformFloat<f32>,
-//! }
+//! struct UniformMyF32(UniformFloat<f32>);
 //!
 //! impl UniformSampler for UniformMyF32 {
 //!     type X = MyF32;
@@ -76,9 +74,7 @@
 //!         where B1: SampleBorrow<Self::X> + Sized,
 //!               B2: SampleBorrow<Self::X> + Sized
 //!     {
-//!         UniformMyF32 {
-//!             inner: UniformFloat::<f32>::new(low.borrow().0, high.borrow().0),
-//!         }
+//!         UniformMyF32(UniformFloat::<f32>::new(low.borrow().0, high.borrow().0))
 //!     }
 //!     fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
 //!         where B1: SampleBorrow<Self::X> + Sized,
@@ -87,7 +83,7 @@
 //!         UniformSampler::new(low, high)
 //!     }
 //!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-//!         MyF32(self.inner.sample(rng))
+//!         MyF32(self.0.sample(rng))
 //!     }
 //! }
 //!
@@ -166,9 +162,7 @@ use packed_simd::*;
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
 #[derive(Clone, Copy, Debug)]
-pub struct Uniform<X: SampleUniform> {
-    inner: X::Sampler,
-}
+pub struct Uniform<X: SampleUniform>(X::Sampler);
 
 impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance which samples uniformly from the half
@@ -177,7 +171,7 @@ impl<X: SampleUniform> Uniform<X> {
         where B1: SampleBorrow<X> + Sized,
               B2: SampleBorrow<X> + Sized
     {
-        Uniform { inner: X::Sampler::new(low, high) }
+        Uniform(X::Sampler::new(low, high))
     }
 
     /// Create a new `Uniform` instance which samples uniformly from the closed
@@ -186,13 +180,13 @@ impl<X: SampleUniform> Uniform<X> {
         where B1: SampleBorrow<X> + Sized,
               B2: SampleBorrow<X> + Sized
     {
-        Uniform { inner: X::Sampler::new_inclusive(low, high) }
+        Uniform(X::Sampler::new_inclusive(low, high))
     }
 }
 
 impl<X: SampleUniform> Distribution<X> for Uniform<X> {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> X {
-        self.inner.sample(rng)
+        self.0.sample(rng)
     }
 }
 
@@ -251,6 +245,17 @@ pub trait UniformSampler: Sized {
     /// more optimal implementations for single usage may be provided via this
     /// method (which is the case for integers and floats).
     /// Results may not be identical.
+    ///
+    /// Note that to use this method in a generic context, the type needs to be
+    /// retrieved via `SampleUniform::Sampler` as follows:
+    /// ```
+    /// use rand::{thread_rng, distributions::uniform::{SampleUniform, UniformSampler}};
+    /// # #[allow(unused)]
+    /// fn sample_from_range<T: SampleUniform>(lb: T, ub: T) -> T {
+    ///     let mut rng = thread_rng();
+    ///     <T as SampleUniform>::Sampler::sample_single(lb, ub, &mut rng)
+    /// }
+    /// ```
     fn sample_single<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R)
         -> Self::X
         where B1: SampleBorrow<Self::X> + Sized,
@@ -929,11 +934,8 @@ impl UniformSampler for UniformDuration {
 
 #[cfg(test)]
 mod tests {
-    use crate::Rng;
+    use super::*;
     use crate::rngs::mock::StepRng;
-    use crate::distributions::uniform::Uniform;
-    use crate::distributions::utils::FloatAsSIMD;
-    #[cfg(feature="simd_support")] use packed_simd::*;
 
     #[should_panic]
     #[test]
@@ -1211,18 +1213,14 @@ mod tests {
             x: f32,
         }
         #[derive(Clone, Copy, Debug)]
-        struct UniformMyF32 {
-            inner: UniformFloat<f32>,
-        }
+        struct UniformMyF32(UniformFloat<f32>);
         impl UniformSampler for UniformMyF32 {
             type X = MyF32;
             fn new<B1, B2>(low: B1, high: B2) -> Self
                 where B1: SampleBorrow<Self::X> + Sized,
                       B2: SampleBorrow<Self::X> + Sized
             {
-                UniformMyF32 {
-                    inner: UniformFloat::<f32>::new(low.borrow().x, high.borrow().x),
-                }
+                UniformMyF32(UniformFloat::<f32>::new(low.borrow().x, high.borrow().x))
             }
             fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
                 where B1: SampleBorrow<Self::X> + Sized,
@@ -1231,7 +1229,7 @@ mod tests {
                 UniformSampler::new(low, high)
             }
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                MyF32 { x: self.inner.sample(rng) }
+                MyF32 { x: self.0.sample(rng) }
             }
         }
         impl SampleUniform for MyF32 {
@@ -1250,21 +1248,59 @@ mod tests {
     #[test]
     fn test_uniform_from_std_range() {
         let r = Uniform::from(2u32..7);
-        assert_eq!(r.inner.low, 2);
-        assert_eq!(r.inner.range, 5);
+        assert_eq!(r.0.low, 2);
+        assert_eq!(r.0.range, 5);
         let r = Uniform::from(2.0f64..7.0);
-        assert_eq!(r.inner.low, 2.0);
-        assert_eq!(r.inner.scale, 5.0);
+        assert_eq!(r.0.low, 2.0);
+        assert_eq!(r.0.scale, 5.0);
     }
 
     #[test]
     fn test_uniform_from_std_range_inclusive() {
         let r = Uniform::from(2u32..=6);
-        assert_eq!(r.inner.low, 2);
-        assert_eq!(r.inner.range, 5);
+        assert_eq!(r.0.low, 2);
+        assert_eq!(r.0.range, 5);
         let r = Uniform::from(2.0f64..=7.0);
-        assert_eq!(r.inner.low, 2.0);
-        assert!(r.inner.scale > 5.0);
-        assert!(r.inner.scale < 5.0 + 1e-14);
+        assert_eq!(r.0.low, 2.0);
+        assert!(r.0.scale > 5.0);
+        assert!(r.0.scale < 5.0 + 1e-14);
+    }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<T: SampleUniform + Copy + core::fmt::Debug + PartialEq>(
+            lb: T, ub: T, expected_single: &[T], expected_multiple: &[T]
+        )
+        where Uniform<T>: Distribution<T>
+        {
+            let mut rng = crate::test::rng(897);
+            let mut buf = [lb; 3];
+            
+            for x in &mut buf {
+                *x = T::Sampler::sample_single(lb, ub, &mut rng);
+            }
+            assert_eq!(&buf, expected_single);
+            
+            let distr = Uniform::new(lb, ub);
+            for x in &mut buf {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(&buf, expected_multiple);
+        }
+        
+        // We test on a sub-set of types; possibly we should do more.
+        // TODO: SIMD types
+        
+        test_samples(11u8, 219, &[17, 66, 214], &[181, 93, 165]);
+        test_samples(11u32, 219, &[17, 66, 214], &[181, 93, 165]);
+        
+        test_samples(0f32, 1e-2f32, &[0.0003070104, 0.0026630748, 0.00979833],
+                &[0.008194133, 0.00398172, 0.007428536]);
+        test_samples(-1e10f64, 1e10f64, 
+                &[-4673848682.871551, 6388267422.932352, 4857075081.198343],
+                &[1173375212.1808167, 1917642852.109581, 2365076174.3153973]);
+        
+        test_samples(Duration::new(2, 0), Duration::new(4, 0),
+                &[Duration::new(2,532615131), Duration::new(3,638826742), Duration::new(3,485707508)], &[Duration::new(3,117337521), Duration::new(3,191764285), Duration::new(3,236507617)]);
     }
 }

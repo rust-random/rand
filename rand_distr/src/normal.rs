@@ -185,8 +185,7 @@ where StandardNormal: Distribution<N>
 
 #[cfg(test)]
 mod tests {
-    use crate::Distribution;
-    use super::{Normal, LogNormal};
+    use super::*;
 
     #[test]
     fn test_normal() {
@@ -215,5 +214,37 @@ mod tests {
     #[should_panic]
     fn test_log_normal_invalid_sd() {
         LogNormal::new(10.0, -1.0).unwrap();
+    }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
+        (distr: D, zero: N, expected: &[N])
+        {
+            let mut rng = crate::test::rng(213);
+            let mut buf = [zero; 4];
+            for x in &mut buf {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(buf, expected);
+        }
+        
+        test_samples(StandardNormal, 0f32,
+                &[-0.11844189, 0.781378, 0.06563994, -1.1932899]);
+        test_samples(StandardNormal, 0f64, &[
+                -0.11844188827977231, 0.7813779637772346,
+                0.06563993969580051, -1.1932899004186373]);
+        
+        test_samples(Normal::new(0.0, 1.0).unwrap(), 0f32,
+                &[-0.11844189, 0.781378, 0.06563994, -1.1932899]);
+        test_samples(Normal::new(2.0, 0.5).unwrap(), 0f64, &[
+                1.940779055860114, 2.3906889818886174,
+                2.0328199698479, 1.4033550497906813]);
+        
+        test_samples(LogNormal::new(0.0, 1.0).unwrap(), 0f32,
+                &[0.88830346, 2.1844804, 1.0678421, 0.30322206]);
+        test_samples(LogNormal::new(2.0, 0.5).unwrap(), 0f64, &[
+                6.964174338639032, 10.921015733601452,
+                7.6355881556915906, 4.068828213584092]);
     }
 }

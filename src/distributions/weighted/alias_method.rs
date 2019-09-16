@@ -496,4 +496,22 @@ mod test {
             WeightedError::InvalidWeight
         );
     }
+    
+    #[test]
+    fn value_stability() {
+        fn test_samples<W: Weight>(weights: Vec<W>, buf: &mut [usize], expected: &[usize]) {
+            assert_eq!(buf.len(), expected.len());
+            let distr = WeightedIndex::new(weights).unwrap();
+            let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
+            for r in buf.iter_mut() {
+                *r = rng.sample(&distr);
+            }
+            assert_eq!(buf, expected);
+        }
+        
+        let mut buf = [0; 10];
+        test_samples(vec![1i32,1,1,1,1,1,1,1,1], &mut buf, &[6, 5, 7, 5, 8, 7, 6, 2, 3, 7]);
+        test_samples(vec![0.7f32, 0.1, 0.1, 0.1], &mut buf, &[2, 0, 0, 0, 0, 0, 0, 0, 1, 3]);
+        test_samples(vec![1.0f64, 0.999, 0.998, 0.997], &mut buf, &[2, 1, 2, 3, 2, 1, 3, 2, 1, 1]);
+    }
 }

@@ -163,4 +163,15 @@ mod test {
         let avg2 = (sum2 as f64) / (N as f64);
         assert!((avg2 - (NUM as f64)/(DENOM as f64)).abs() < 5e-3);
     }
+    
+    #[test]
+    fn value_stability() {
+        let mut rng = crate::test::rng(3);
+        let distr = Bernoulli::new(0.4532).unwrap();
+        let mut buf = [false; 10];
+        for x in &mut buf {
+            *x = rng.sample(&distr);
+        }
+        assert_eq!(buf, [true, false, false, true, false, false, true, true, true, true]);
+    }
 }

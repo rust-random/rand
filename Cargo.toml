@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -30,6 +30,8 @@ serde1 = [] # does nothing, deprecated
 std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
 # re-export optional WASM dependencies to avoid breakage:
+# Warning: wasm-bindgen and stdweb features will be removed in rand 0.8;
+# recommended to activate via the getrandom crate instead.
 wasm-bindgen = ["getrandom_package/wasm-bindgen"]
 stdweb = ["getrandom_package/stdweb"]
 getrandom = ["getrandom_package", "rand_core/getrandom"]
@@ -54,7 +56,7 @@ members = [
 ]
 
 [dependencies]
-rand_core = { path = "rand_core", version = "0.5" }
+rand_core = { path = "rand_core", version = "0.5.1" }
 rand_pcg = { path = "rand_pcg", version = "0.2", optional = true }
 # Do not depend on 'getrandom_package' directly; use the 'getrandom' feature!
 # This is a dependency because: we forward wasm feature flags
