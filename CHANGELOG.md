@@ -8,6 +8,13 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.7.2] - 2019-09-16
+### Fixes
+- Fix dependency on `rand_core` 0.5.1 (#890)
+
+### Additions
+- Unit tests for value stability of distributions added (#888)
+
 ## [0.7.1] - 2019-09-13
 ### Fixes
 - Fix `no_std` behaviour, appropriately enable c2-chacha's `std` feature (#844)
