@@ -65,6 +65,12 @@ matrix:
         - cargo build --target=thumbv6m-none-eabi --no-default-features
 
     - rust: nightly
+      name: "Linux, nightly (32-bit test)"
+      env: TARGET=i686-unknown-linux-musl
+      install:
+        - rustup target add $TARGET
+
+    - rust: nightly
       os: linux
       name: "Miri, nightly"
       script:
