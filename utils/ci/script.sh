@@ -7,6 +7,9 @@ set -ex
 # TARGET enables cross-building
 if [ -z $TARGET ]; then
     CARGO=cargo
+elif [ "$TARGET" = "i686-unknown-linux-musl" ]; then
+    CARGO=cargo
+    TARGET="--target $TARGET"
 else
     CARGO=cross
     TARGET="--target $TARGET"
