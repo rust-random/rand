@@ -18,6 +18,9 @@ use crate::utils::Float;
 /// This distribution has a density function:
 /// `f(x) = 1 / (pi * scale * (1 + ((x - median) / scale)^2))`
 ///
+/// Note that at least for `f32`, results are not fully portable due to minor
+/// differences in the target system's *tan* implementation, `tanf`.
+///
 /// # Example
 ///
 /// ```
@@ -130,11 +133,10 @@ mod test {
             assert_eq!(buf, expected);
         }
         
-        // Warning: in a few cases, results vary slightly between different
-        // platforms, presumably due to differences in precision of system impls
-        // of the tan function. We work around this by avoiding these values.
         test_samples(100f64, 10.0, &[77.93369152808678, 90.1606912098641,
                 125.31516221323625, 86.10217834773925]);
-        test_samples(10f32, 7.0, &[15.023088, -5.446413, 3.7092876, 3.112482]);
+        // Unfortunately this test is not fully portable due to reliance on the
+        // system's implementation of tanf (see doc on Cauchy struct).
+        // test_samples(10f32, 7.0, &[15.023088, -5.446413, 3.7092876, 3.112482]);
     }
 }
