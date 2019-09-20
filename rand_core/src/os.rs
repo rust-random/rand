@@ -7,7 +7,6 @@
 // except according to those terms.
 
 //! Interface to the random number generator of the operating system.
-// Note: keep this code in sync with the rand_os crate!
 
 use getrandom::getrandom;
 use crate::{CryptoRng, RngCore, Error, impls};
