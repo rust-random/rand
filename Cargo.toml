@@ -44,14 +44,9 @@ small_rng = ["rand_pcg"]    # enables SmallRng
 members = [
     "rand_core",
     "rand_distr",
-    "rand_jitter",
-    "rand_os",
-    "rand_isaac",
     "rand_chacha",
     "rand_hc",
     "rand_pcg",
-    "rand_xorshift",
-    "rand_xoshiro",
     "tests/wasm_bindgen",
 ]
 
@@ -86,9 +81,6 @@ rand_hc = { path = "rand_hc", version = "0.2" }
 rand_pcg = { path = "rand_pcg", version = "0.2" }
 # Only for benches:
 rand_hc = { path = "rand_hc", version = "0.2" }
-rand_xoshiro = { path = "rand_xoshiro", version = "0.4" }
-rand_isaac = { path = "rand_isaac", version = "0.2" }
-rand_xorshift = { path = "rand_xorshift", version = "0.2" }
 
 [package.metadata.docs.rs]
 all-features = true
