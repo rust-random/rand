@@ -122,21 +122,28 @@ mod test {
     
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug>(m: N, s: N, expected: &[N])
+        fn gen_samples<N: Float + core::fmt::Debug>(m: N, s: N, buf: &mut [N])
         where Standard: Distribution<N> {
             let distr = Cauchy::new(m, s).unwrap();
             let mut rng = crate::test::rng(353);
-            let mut buf = [m; 4];
-            for x in &mut buf {
+            for x in buf {
                 *x = rng.sample(&distr);
             }
-            assert_eq!(buf, expected);
         }
         
-        test_samples(100f64, 10.0, &[77.93369152808678, 90.1606912098641,
+        let mut buf = [0.0; 4];
+        gen_samples(100f64, 10.0, &mut buf);
+        assert_eq!(&buf, &[77.93369152808678, 90.1606912098641,
                 125.31516221323625, 86.10217834773925]);
+        
         // Unfortunately this test is not fully portable due to reliance on the
         // system's implementation of tanf (see doc on Cauchy struct).
-        // test_samples(10f32, 7.0, &[15.023088, -5.446413, 3.7092876, 3.112482]);
+        let mut buf = [0.0; 4];
+        gen_samples(10f32, 7.0, &mut buf);
+        let expected = [15.023088, -5.446413, 3.7092876, 3.112482];
+        for (a,b) in buf.iter().zip(expected.iter()) {
+            let (a,b) = (*a, *b);
+            assert!((a - b).abs() < 1e-6, "expected: {} = {}", a, b);
+        }
     }
 }
