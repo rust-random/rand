@@ -17,10 +17,8 @@ additional constraints that:
 
 are expected to provide the following:
 
--   Given all prior output from the RNG, for each bit of non-error output from
-    an `RngCore` method, there exists no known computationally-feasible
-    algorithm to predict the bit with probability significantly greater than 50%
--   There are strong expectations that no such algorithm exists
+-   An attacker can gain no advantage over chance (50% for each bit) in
+    predicting the RNG output, even with full knowledge of all prior outputs.
 
 For some RNGs, notably `OsRng`, `ThreadRng` and those wrapped by `ReseedingRng`,
 we provide limited mitigations against side-channel attacks:
@@ -44,13 +42,13 @@ provided that only the latest patch version is used, and with potential
 exceptions for theoretical issues without a known exploit:
 
 | Crate | Versions | Exceptions |
-| ------- | ------------------ |
+| ----- | -------- | ---------- |
 | `rand` | 0.7 |  |
 | `rand` | 0.5, 0.6 | Jitter |
 | `rand` | 0.4 | Jitter, ISAAC |
 | `rand_core` | 0.2 - 0.5 | |
 | `rand_chacha` | 0.1 - 0.2 | |
-| `rand_hc` | 0.1 - 0.2 |
+| `rand_hc` | 0.1 - 0.2 | |
 
 Explanation of exceptions:
 

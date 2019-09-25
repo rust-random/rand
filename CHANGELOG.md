@@ -17,8 +17,9 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ## [0.7.1] - 2019-09-13
 ### Yanked
-This release was yanked since it depends on `rand_core::OsRng` added in 0.5.1,
-yet only specifies a dependency on version 0.5.0 (#890).
+This release was yanked since it depends on `rand_core::OsRng` added in 0.5.1
+but specifies a dependency on version 0.5.0 (#890), causing a broken builds
+when updating from `rand 0.7.0` without also updating `rand_core`.
 
 ### Fixes
 - Fix `no_std` behaviour, appropriately enable c2-chacha's `std` feature (#844)
