@@ -16,6 +16,11 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Unit tests for value stability of distributions added (#888)
 
 ## [0.7.1] - 2019-09-13
+### Yanked
+This release was yanked since it depends on `rand_core::OsRng` added in 0.5.1
+but specifies a dependency on version 0.5.0 (#890), causing a broken builds
+when updating from `rand 0.7.0` without also updating `rand_core`.
+
 ### Fixes
 - Fix `no_std` behaviour, appropriately enable c2-chacha's `std` feature (#844)
 - `alloc` feature in `no_std` is available since Rust 1.36 (#856)
