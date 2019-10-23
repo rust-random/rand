@@ -321,7 +321,7 @@ macro_rules! scalar_float_impl {
                 <$ty>::from_bits(self.to_bits() - 1)
             }
             type UInt = $uty;
-            #[inline(always)]
+            #[inline]
             fn cast_from_int(i: Self::UInt) -> Self { i as $ty }
         }
 
