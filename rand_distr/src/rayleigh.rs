@@ -69,7 +69,6 @@ mod tests {
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);
-            println!("{:?}", &r);
             assert!(r >= 0.);
         }
     }
