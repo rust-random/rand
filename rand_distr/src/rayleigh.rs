@@ -10,21 +10,32 @@
 use rand::Rng;
 use crate::{Distribution, OpenClosed01};
 use crate::utils::Float;
-
+/// Samples floating-point numbers according to the Rayleigh distribution
+///
+/// # Example
+/// ```
+/// use rand::prelude::*;
+/// use rand_distr::Rayleigh;
+///
+/// let val: f64 = thread_rng().sample(Rayleigh::new(1.).unwrap());
+/// println!("{}", val);
+/// ```
 #[derive(Clone, Copy, Debug)]
-struct Rayleigh<N> {
+pub struct Rayleigh<N> {
 	sigma: N
 }
-
+/// Error type returned from `Rayleigh::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `sigma < 0` or `nan`.
-    SigmaTooSmall
+    SigmaTooSmall,
 }
 
-impl<N:Float> Rayleigh<N>{
+impl<N:Float> Rayleigh<N> 
+where OpenClosed01: Distribution<N> {
+	/// Construct a new `Rayleigh` distribution with given `sigma`.
 	pub fn new(sigma:N) -> Result<Rayleigh<N>,Error>{
-		if !(sigma <= N::from(0.0)) {
+		if !(sigma > N::from(0.0)) {
             return Err(Error::SigmaTooSmall);
         }
         Ok(Rayleigh{sigma:sigma})
@@ -36,8 +47,8 @@ where OpenClosed01: Distribution<N>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         let x: N = rng.sample(OpenClosed01);
-        let exp_power = -self.x.powi(2)/(2*self.sigma.powi(2));
-        x*exp_power.exp()/self.sigma.powi(2)
+        let exp_power = -x.powf(N::from(2.0))/(N::from(2.0)*self.sigma.powf(N::from(2.0)));
+        (x*exp_power.exp())/self.sigma.powf(N::from(2.0))
     }
 }
 
@@ -47,12 +58,12 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn invalid() {
-        Rayleigh::new(0., 0.).unwrap();
+    fn test_invalid() {
+        Rayleigh::new(0.).unwrap();
     }
 
     #[test]
-    fn sample() {
+    fn test_sample() {
         let sigma = 1.0;
         let d = Rayleigh::new(sigma).unwrap();
         let mut rng = crate::test::rng(1);
@@ -61,3 +72,4 @@ mod tests {
             assert!(r >= 0.);
         }
     }
+}
