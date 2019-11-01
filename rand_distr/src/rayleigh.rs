@@ -34,7 +34,7 @@ pub enum Error {
 impl<N:Float> Rayleigh<N> 
 where OpenClosed01: Distribution<N> {
 	/// Construct a new `Rayleigh` distribution with given `sigma`.
-	pub fn new(sigma:N) -> Result<Rayleigh<N>,Error>{
+	pub fn new(sigma: N) -> Result<Rayleigh<N>, Error>{
 		if !(sigma > N::from(0.0)) {
             return Err(Error::SigmaTooSmall);
         }
@@ -69,6 +69,7 @@ mod tests {
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);
+            println!("{:?}", &r);
             assert!(r >= 0.);
         }
     }
