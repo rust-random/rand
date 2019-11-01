@@ -47,8 +47,9 @@ where OpenClosed01: Distribution<N>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         let x: N = rng.sample(OpenClosed01);
-        let exp_power = -x.powf(N::from(2.0))/(N::from(2.0)*self.sigma.powf(N::from(2.0)));
-        (x*exp_power.exp())/self.sigma.powf(N::from(2.0))
+        let sigma_square = self.sigma.powf(N::from(2.0));
+        let exp_power = -x.powf(N::from(2.0))/(N::from(2.0)*sigma_square);
+        (x*exp_power.exp())/sigma_square
     }
 }
 
