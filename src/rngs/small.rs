@@ -56,7 +56,6 @@ type Rng = rand_pcg::Pcg32;
 /// efficient:
 ///
 /// ```
-/// use std::iter;
 /// use rand::{SeedableRng, thread_rng};
 /// use rand::rngs::SmallRng;
 ///
@@ -65,9 +64,8 @@ type Rng = rand_pcg::Pcg32;
 /// let mut thread_rng = thread_rng();
 /// // Create small, cheap to initialize and fast RNGs with random seeds.
 /// // One can generally assume this won't fail.
-/// let rngs: Vec<SmallRng> = iter::repeat(())
-///     .map(|()| SmallRng::from_rng(&mut thread_rng).unwrap())
-///     .take(10)
+/// let rngs: Vec<SmallRng> = (0..10)
+///     .map(|_| SmallRng::from_rng(&mut thread_rng).unwrap())
 ///     .collect();
 /// ```
 ///
