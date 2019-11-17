@@ -627,7 +627,7 @@ uniform_simd_int_impl! {
 ///
 /// The floats are first converted to a value in the `[1, 2)` interval using a
 /// transmute-based method, and then mapped to the expected range with a
-/// multiply and addition. Values produced this way have what equals 22 bits of
+/// multiply and addition. Values produced this way have what equals 23 bits of
 /// random digits for an `f32`, and 52 for an `f64`.
 ///
 /// [`new`]: UniformSampler::new
