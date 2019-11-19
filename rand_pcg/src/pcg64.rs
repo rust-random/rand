@@ -36,7 +36,7 @@ pub struct Lcg64Xsh32 {
     increment: u64,
 }
 
-/// `Lcg64Xsh32` is also officially known as `pcg32`.
+/// [`Lcg64Xsh32`] is also officially known as `pcg32`.
 pub type Pcg32 = Lcg64Xsh32;
 
 impl Lcg64Xsh32 {

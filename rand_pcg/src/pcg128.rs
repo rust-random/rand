@@ -10,7 +10,7 @@
 
 //! PCG random number generators
 
-// This is the default multiplier used by PCG for 64-bit state.
+// This is the default multiplier used by PCG for 128-bit state.
 const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
 use core::fmt;
@@ -36,7 +36,7 @@ pub struct Lcg128Xsl64 {
     increment: u128,
 }
 
-/// `Lcg128Xsl64` is also officially known as `pcg64`.
+/// [`Lcg128Xsl64`] is also officially known as `pcg64`.
 pub type Pcg64 = Lcg128Xsl64;
 
 impl Lcg128Xsl64 {
@@ -135,7 +135,7 @@ pub struct Mcg128Xsl64 {
     state: u128,
 }
 
-/// A friendly name for `Mcg128Xsl64` (also known as `pcg64_fast`).
+/// A friendly name for [`Mcg128Xsl64`] (also known as `pcg64_fast`).
 pub type Pcg64Mcg = Mcg128Xsl64;
 
 impl Mcg128Xsl64 {
