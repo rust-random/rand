@@ -19,7 +19,7 @@ use packed_simd::*;
 /// interval `(0, 1]`, i.e. including 1 but not 0.
 ///
 /// All values that can be generated are of the form `n * ε/2`. For `f32`
-/// the 23 most significant random bits of a `u32` are used and for `f64` the
+/// the 24 most significant random bits of a `u32` are used and for `f64` the
 /// 53 most significant bits of a `u64` are used. The conversion uses the
 /// multiplicative method.
 ///
@@ -46,7 +46,7 @@ pub struct OpenClosed01;
 /// interval `(0, 1)`, i.e. not including either endpoint.
 ///
 /// All values that can be generated are of the form `n * ε + ε/2`. For `f32`
-/// the 22 most significant random bits of an `u32` are used, for `f64` 52 from
+/// the 23 most significant random bits of an `u32` are used, for `f64` 52 from
 /// an `u64`. The conversion uses a transmute-based method.
 ///
 /// See also: [`Standard`] which samples from `[0, 1)`, [`OpenClosed01`]

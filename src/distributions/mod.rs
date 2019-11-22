@@ -337,7 +337,7 @@ impl<D, R, T> iter::TrustedLen for DistIter<D, R, T>
 /// the half-open interval `[0, 1)`, i.e. including 0 but not 1.
 ///
 /// All values that can be generated are of the form `n * ε/2`. For `f32`
-/// the 23 most significant random bits of a `u32` are used and for `f64` the
+/// the 24 most significant random bits of a `u32` are used and for `f64` the
 /// 53 most significant bits of a `u64` are used. The conversion uses the
 /// multiplicative method: `(rng.gen::<$uty>() >> N) as $ty * (ε/2)`.
 ///
