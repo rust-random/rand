@@ -8,7 +8,7 @@
 
 // Crate to test WASM with the `wasm-bindgen` lib.
 
-#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png")]
+#![doc(hidden)]
 
 use rand::rngs::{OsRng, StdRng};
 use rand::{Rng, SeedableRng};
