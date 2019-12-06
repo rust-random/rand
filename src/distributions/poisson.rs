@@ -123,7 +123,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(miri))] // Miri doesn't support transcendental functions
     fn test_poisson_15() {
         // Take the 'high expected values' path
         let poisson = Poisson::new(15.0);

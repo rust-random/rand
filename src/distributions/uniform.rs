@@ -1129,7 +1129,6 @@ mod tests {
     #[cfg(all(feature="std",
               not(target_arch = "wasm32"),
               not(target_arch = "asmjs")))]
-    #[cfg(not(miri))] // Miri does not support catching panics
     fn test_float_assertions() {
         use std::panic::catch_unwind;
         use super::SampleUniform;

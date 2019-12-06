@@ -68,7 +68,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(miri))] // Miri doesn't support transcendental functions
     fn test_cauchy_averages() {
         // NOTE: given that the variance and mean are undefined,
         // this test does not have any rigorous statistical meaning.
