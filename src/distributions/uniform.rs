@@ -959,7 +959,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_integers() {
         use core::{i8, i16, i32, i64, isize};
         use core::{u8, u16, u32, u64, usize};
@@ -1044,7 +1044,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_floats() {
         let mut rng = crate::test::rng(252);
         let mut zero_rng = StepRng::new(0, 0);
@@ -1183,7 +1183,7 @@ mod tests {
 
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_durations() {
         #[cfg(feature = "std")]
         use std::time::Duration;

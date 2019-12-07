@@ -237,7 +237,7 @@ mod test {
     use super::*;
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_weightedindex() {
         let mut r = crate::test::rng(700);
         const N_REPS: u32 = 5000;

@@ -697,7 +697,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_gen_ratio_average() {
         const NUM: u32 = 3;
         const DENOM: u32 = 10;
