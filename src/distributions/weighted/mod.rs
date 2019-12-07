@@ -303,7 +303,7 @@ mod test {
              &[1u32, 2, 1, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 100][..]),
         ];
 
-        for (weights, update, expected_weights) in data.into_iter() {
+        for (weights, update, expected_weights) in data.iter() {
             let total_weight = weights.iter().sum::<u32>();
             let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
             assert_eq!(distr.total_weight, total_weight);
