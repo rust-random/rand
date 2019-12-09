@@ -109,7 +109,7 @@ mod test {
     use super::Poisson;
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_poisson_10() {
         let poisson = Poisson::new(10.0);
         let mut rng = crate::test::rng(123);
