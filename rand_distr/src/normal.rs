@@ -12,6 +12,7 @@
 use rand::Rng;
 use crate::{ziggurat_tables, Distribution, Open01};
 use crate::utils::{ziggurat, Float};
+use std::{error, fmt};
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
@@ -113,6 +114,16 @@ pub enum Error {
     /// `std_dev < 0` or `nan`.
     StdDevTooSmall,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Error::StdDevTooSmall => "std_dev < 0 or is NaN in normal distribution",
+        })
+    }
+}
+
+impl error::Error for Error {}
 
 impl<N: Float> Normal<N>
 where StandardNormal: Distribution<N>

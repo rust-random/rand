@@ -12,6 +12,7 @@
 use rand::Rng;
 use crate::{ziggurat_tables, Distribution};
 use crate::utils::{ziggurat, Float};
+use std::{error, fmt};
 
 /// Samples floating-point numbers according to the exponential distribution,
 /// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
@@ -96,6 +97,16 @@ pub enum Error {
     /// `lambda <= 0` or `nan`.
     LambdaTooSmall,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Error::LambdaTooSmall => "lambda is not positive in exponential distribution",
+        })
+    }
+}
+
+impl error::Error for Error {}
 
 impl<N: Float> Exp<N>
 where Exp1: Distribution<N>

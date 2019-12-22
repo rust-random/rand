@@ -11,6 +11,7 @@
 
 use rand::Rng;
 use crate::{Distribution, Uniform};
+use std::{error, fmt};
 
 /// The binomial distribution `Binomial(n, p)`.
 ///
@@ -42,6 +43,17 @@ pub enum Error {
     /// `p > 1`.
     ProbabilityTooLarge,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Error::ProbabilityTooSmall => "p < 0 or is NaN in binomial distribution",
+            Error::ProbabilityTooLarge => "p > 1 in binomial distribution",
+        })
+    }
+}
+
+impl error::Error for Error {}
 
 impl Binomial {
     /// Construct a new `Binomial` with the given shape parameters `n` (number

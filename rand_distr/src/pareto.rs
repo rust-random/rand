@@ -11,6 +11,7 @@
 use rand::Rng;
 use crate::{Distribution, OpenClosed01};
 use crate::utils::Float;
+use std::{error, fmt};
 
 /// Samples floating-point numbers according to the Pareto distribution
 ///
@@ -36,6 +37,17 @@ pub enum Error {
     /// `shape <= 0` or `nan`.
     ShapeTooSmall,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Error::ScaleTooSmall => "scale is not positive in Pareto distribution",
+            Error::ShapeTooSmall => "shape is not positive in Pareto distribution",
+        })
+    }
+}
+
+impl error::Error for Error {}
 
 impl<N: Float> Pareto<N>
 where OpenClosed01: Distribution<N>

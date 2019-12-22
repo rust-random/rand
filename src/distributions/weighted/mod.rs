@@ -380,9 +380,6 @@ impl ::std::error::Error for WeightedError {
     fn description(&self) -> &str {
         self.msg()
     }
-    fn cause(&self) -> Option<&dyn (::std::error::Error)> {
-        None
-    }
 }
 
 impl fmt::Display for WeightedError {

@@ -12,8 +12,9 @@
 use rand::Rng;
 use crate::{Distribution, Gamma, StandardNormal, Exp1, Open01};
 use crate::utils::Float;
+use std::{error, fmt};
 
-/// The dirichelet distribution `Dirichlet(alpha)`.
+/// The Dirichlet distribution `Dirichlet(alpha)`.
 ///
 /// The Dirichlet distribution is a family of continuous multivariate
 /// probability distributions parameterized by a vector alpha of positive reals.
@@ -45,6 +46,19 @@ pub enum Error {
     /// `size < 2`.
     SizeTooSmall,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Error::AlphaTooShort | Error::SizeTooSmall => {
+                "less than 2 dimensions in Dirichlet distribution"
+            }
+            Error::AlphaTooSmall => "alpha is not positive in Dirichlet distribution",
+        })
+    }
+}
+
+impl error::Error for Error {}
 
 impl<N: Float> Dirichlet<N>
 where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>

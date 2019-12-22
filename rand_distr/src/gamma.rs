@@ -16,6 +16,7 @@ use rand::Rng;
 use crate::normal::StandardNormal;
 use crate::{Distribution, Exp1, Exp, Open01};
 use crate::utils::Float;
+use std::{error, fmt};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -62,6 +63,18 @@ pub enum Error {
     /// `1 / scale == 0`.
     ScaleTooLarge,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Error::ShapeTooSmall => "shape is not positive in gamma distribution",
+            Error::ScaleTooSmall => "scale is not positive in gamma distribution",
+            Error::ScaleTooLarge => "scale is infinity in gamma distribution",
+        })
+    }
+}
+
+impl error::Error for Error {}
 
 #[derive(Clone, Copy, Debug)]
 enum GammaRepr<N> {
@@ -224,6 +237,18 @@ pub enum ChiSquaredError {
     DoFTooSmall,
 }
 
+impl fmt::Display for ChiSquaredError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            ChiSquaredError::DoFTooSmall => {
+                "degrees-of-freedom k is not positive in chi-squared distribution"
+            }
+        })
+    }
+}
+
+impl error::Error for ChiSquaredError {}
+
 #[derive(Clone, Copy, Debug)]
 enum ChiSquaredRepr<N> {
     // k == 1, Gamma(alpha, ..) is particularly slow for alpha < 1,
@@ -297,6 +322,17 @@ pub enum FisherFError {
     /// `n <= 0` or `nan`.
     NTooSmall,
 }
+
+impl fmt::Display for FisherFError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            FisherFError::MTooSmall => "m is not positive in Fisher F distribution",
+            FisherFError::NTooSmall => "n is not positive in Fisher F distribution",
+        })
+    }
+}
+
+impl error::Error for FisherFError {}
 
 impl<N: Float> FisherF<N>
 where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
@@ -389,6 +425,17 @@ pub enum BetaError {
     /// `beta <= 0` or `nan`.
     BetaTooSmall,
 }
+
+impl fmt::Display for BetaError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            BetaError::AlphaTooSmall => "alpha is not positive in beta distribution",
+            BetaError::BetaTooSmall => "beta is not positive in beta distribution",
+        })
+    }
+}
+
+impl error::Error for BetaError {}
 
 impl<N: Float> Beta<N>
 where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
