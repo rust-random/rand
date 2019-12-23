@@ -8,6 +8,10 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## Unreleased
+### Additions
+- Implement `std::error::Error` for `BernoulliError` (#919)
+
 ## [0.7.2] - 2019-09-16
 ### Fixes
 - Fix dependency on `rand_core` 0.5.1 (#890)

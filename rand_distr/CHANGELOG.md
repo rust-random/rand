@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+- All error types now implement `std::error::Error` (#919)
+- Re-exported `rand::distributions::BernoulliError` (#919)
+
 ## [0.2.2] - 2019-09-10
 - Fix version requirement on rand lib (#847)
 - Clippy fixes & suppression (#840)
