@@ -364,29 +364,16 @@ pub enum WeightedError {
     TooMany,
 }
 
-impl WeightedError {
-    fn msg(&self) -> &str {
-        match *self {
-            WeightedError::NoItem => "No weights provided.",
-            WeightedError::InvalidWeight => "A weight is invalid.",
-            WeightedError::AllWeightsZero => "All weights are zero.",
-            WeightedError::TooMany => "Too many weights (hit u32::MAX)",
-        }
-    }
-}
-
 #[cfg(feature="std")]
-impl ::std::error::Error for WeightedError {
-    fn description(&self) -> &str {
-        self.msg()
-    }
-    fn cause(&self) -> Option<&dyn (::std::error::Error)> {
-        None
-    }
-}
+impl ::std::error::Error for WeightedError {}
 
 impl fmt::Display for WeightedError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.msg())
+        match *self {
+            WeightedError::NoItem => write!(f, "No weights provided."),
+            WeightedError::InvalidWeight => write!(f, "A weight is invalid."),
+            WeightedError::AllWeightsZero => write!(f, "All weights are zero."),
+            WeightedError::TooMany => write!(f, "Too many weights (hit u32::MAX)"),
+        }
     }
 }
