@@ -10,6 +10,7 @@
 use rand::Rng;
 use crate::{Distribution, Beta, StandardNormal, Exp1, Open01};
 use crate::utils::Float;
+use std::{error, fmt};
 
 /// The PERT distribution.
 ///
@@ -46,6 +47,18 @@ pub enum PertError {
     /// `shape < 0` or `shape` is NaN
     ShapeTooSmall,
 }
+
+impl fmt::Display for PertError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            PertError::RangeTooSmall => "requirement min < max is not met in PERT distribution",
+            PertError::ModeRange => "mode is outside [min, max] in PERT distribution",
+            PertError::ShapeTooSmall => "shape < 0 or is NaN in PERT distribution",
+        })
+    }
+}
+
+impl error::Error for PertError {}
 
 impl<N: Float> Pert<N>
 where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>

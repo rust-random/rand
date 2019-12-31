@@ -10,6 +10,7 @@
 
 use crate::Rng;
 use crate::distributions::Distribution;
+use core::{fmt, u64};
 
 /// The Bernoulli distribution.
 ///
@@ -55,7 +56,7 @@ pub struct Bernoulli {
 // the RNG, and pay the performance price for all uses that *are* reasonable.
 // Luckily, if `new()` and `sample` are close, the compiler can optimize out the
 // extra check.
-const ALWAYS_TRUE: u64 = ::core::u64::MAX;
+const ALWAYS_TRUE: u64 = u64::MAX;
 
 // This is just `2.0.powi(64)`, but written this way because it is not available
 // in `no_std` mode.
@@ -67,6 +68,17 @@ pub enum BernoulliError {
     /// `p < 0` or `p > 1`.
     InvalidProbability,
 }
+
+impl fmt::Display for BernoulliError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            BernoulliError::InvalidProbability => "p is outside [0, 1] in Bernoulli distribution",
+        })
+    }
+}
+
+#[cfg(feature = "std")]
+impl ::std::error::Error for BernoulliError {}
 
 impl Bernoulli {
     /// Construct a new `Bernoulli` with the given probability of success `p`.

@@ -12,6 +12,7 @@
 use rand::Rng;
 use crate::{Distribution, Standard};
 use crate::utils::Float;
+use std::{error, fmt};
 
 /// The Cauchy distribution `Cauchy(median, scale)`.
 ///
@@ -42,6 +43,16 @@ pub enum Error {
     /// `scale <= 0` or `nan`.
     ScaleTooSmall,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Error::ScaleTooSmall => "scale is not positive in Cauchy distribution",
+        })
+    }
+}
+
+impl error::Error for Error {}
 
 impl<N: Float> Cauchy<N>
 where Standard: Distribution<N>

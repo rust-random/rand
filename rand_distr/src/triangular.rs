@@ -10,6 +10,7 @@
 use rand::Rng;
 use crate::{Distribution, Standard};
 use crate::utils::Float;
+use std::{error, fmt};
 
 /// The triangular distribution.
 /// 
@@ -45,6 +46,19 @@ pub enum TriangularError {
     /// `mode < min` or `mode > max` or `mode` is NaN.
     ModeRange,
 }
+
+impl fmt::Display for TriangularError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            TriangularError::RangeTooSmall => {
+                "requirement min <= max is not met in triangular distribution"
+            }
+            TriangularError::ModeRange => "mode is outside [min, max] in triangular distribution",
+        })
+    }
+}
+
+impl error::Error for TriangularError {}
 
 impl<N: Float> Triangular<N>
 where Standard: Distribution<N>

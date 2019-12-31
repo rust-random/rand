@@ -64,7 +64,8 @@
 //!   - [`UnitDisc`] distribution
 
 pub use rand::distributions::{Distribution, DistIter, Standard,
-    Alphanumeric, Uniform, OpenClosed01, Open01, Bernoulli, uniform, weighted};
+    Alphanumeric, Uniform, OpenClosed01, Open01, Bernoulli, BernoulliError,
+    uniform, weighted};
 
 pub use self::unit_sphere::UnitSphere;
 pub use self::unit_ball::UnitBall;

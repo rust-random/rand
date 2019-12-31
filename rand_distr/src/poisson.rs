@@ -12,6 +12,7 @@
 use rand::Rng;
 use crate::{Distribution, Cauchy, Standard};
 use crate::utils::Float;
+use std::{error, fmt};
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///
@@ -43,6 +44,16 @@ pub enum Error {
     /// `lambda <= 0` or `nan`.
     ShapeTooSmall,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Error::ShapeTooSmall => "lambda is not positive in Poisson distribution",
+        })
+    }
+}
+
+impl error::Error for Error {}
 
 impl<N: Float> Poisson<N>
 where Standard: Distribution<N>
