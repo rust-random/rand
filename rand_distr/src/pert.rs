@@ -51,8 +51,8 @@ pub enum PertError {
 impl fmt::Display for PertError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            PertError::RangeTooSmall => "min..=max is not proper range in PERT distribution",
-            PertError::ModeRange => "mode is outside min..=max in PERT distribution",
+            PertError::RangeTooSmall => "requirement min < max is not met in PERT distribution",
+            PertError::ModeRange => "mode is outside [min, max] in PERT distribution",
             PertError::ShapeTooSmall => "shape < 0 or is NaN in PERT distribution",
         })
     }

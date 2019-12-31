@@ -72,7 +72,7 @@ pub enum BernoulliError {
 impl fmt::Display for BernoulliError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            BernoulliError::InvalidProbability => "p is outside 0..=1 in Bernoulli distribution",
+            BernoulliError::InvalidProbability => "p is outside [0, 1] in Bernoulli distribution",
         })
     }
 }

@@ -51,9 +51,9 @@ impl fmt::Display for TriangularError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             TriangularError::RangeTooSmall => {
-                "min..=max is not proper range in triangular distribution"
+                "requirement min <= max is not met in triangular distribution"
             }
-            TriangularError::ModeRange => "mode is outside min..=max in triangular distribution",
+            TriangularError::ModeRange => "mode is outside [min, max] in triangular distribution",
         })
     }
 }
