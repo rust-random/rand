@@ -110,7 +110,7 @@ pub trait BlockRngCore {
 /// [`fill_bytes`]: RngCore::fill_bytes
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Clone)]
-#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng<R: BlockRngCore + ?Sized> {
     results: R::Results,
     index: usize,
@@ -188,7 +188,7 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
         let read_u64 = |results: &[u32], index| {
             if cfg!(any(target_endian = "little")) {
                 // requires little-endian CPU
-                #[allow(clippy::cast_ptr_alignment)]  // false positive
+                #[allow(clippy::cast_ptr_alignment)] // false positive
                 let ptr: *const u64 = results[index..=index+1].as_ptr() as *const u64;
                 unsafe { ptr::read_unaligned(ptr) }
             } else {
@@ -283,7 +283,7 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
 /// [`fill_bytes`]: RngCore::fill_bytes
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Clone)]
-#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng64<R: BlockRngCore + ?Sized> {
     results: R::Results,
     index: usize,

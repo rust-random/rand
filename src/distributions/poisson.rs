@@ -18,7 +18,7 @@ use crate::Rng;
 ///
 /// This distribution has a density function:
 /// `f(k) = lambda^k * exp(-lambda) / k!` for `k >= 0`.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Poisson {
     lambda: f64,

@@ -26,7 +26,7 @@ use crate::Rng;
 ///       Generate Normal Random Samples*](
 ///       https://www.doornik.com/research/ziggurat.pdf).
 ///       Nuffield College, Oxford
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct StandardNormal;
 
@@ -74,7 +74,7 @@ impl Distribution<f64> for StandardNormal {
 /// standard deviation 1.
 ///
 /// [`StandardNormal`]: crate::distributions::StandardNormal
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Normal {
     mean: f64,
@@ -109,7 +109,7 @@ impl Distribution<f64> for Normal {
 ///
 /// If `X` is log-normal distributed, then `ln(X)` is `N(mean, std_dev**2)`
 /// distributed.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct LogNormal {
     norm: Normal

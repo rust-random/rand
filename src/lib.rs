@@ -469,9 +469,11 @@ macro_rules! impl_as_byte_slice {
 }
 
 impl_as_byte_slice!(u16, u32, u64, usize,);
-#[cfg(not(target_os = "emscripten"))] impl_as_byte_slice!(u128);
+#[cfg(not(target_os = "emscripten"))]
+impl_as_byte_slice!(u128);
 impl_as_byte_slice!(i8, i16, i32, i64, isize,);
-#[cfg(not(target_os = "emscripten"))] impl_as_byte_slice!(i128);
+#[cfg(not(target_os = "emscripten"))]
+impl_as_byte_slice!(i128);
 
 macro_rules! impl_as_byte_slice_arrays {
     ($n:expr,) => {};
@@ -541,7 +543,7 @@ impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
 /// ```
 ///
 /// [`Standard`]: distributions::Standard
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 #[inline]
 pub fn random<T>() -> T
 where Standard: Distribution<T> {
@@ -671,7 +673,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature="alloc")]
+    #[cfg(feature = "alloc")]
     fn test_rng_boxed_trait() {
         use crate::distributions::{Distribution, Standard};
         let rng = rng(110);
@@ -683,7 +685,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature="std")]
+    #[cfg(feature = "std")]
     fn test_random() {
         // not sure how to test this aside from just getting some values
         let _n : usize = random();

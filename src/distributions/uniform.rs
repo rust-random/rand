@@ -790,20 +790,20 @@ macro_rules! uniform_float_impl {
 uniform_float_impl! { f32, u32, f32, u32, 32 - 23 }
 uniform_float_impl! { f64, u64, f64, u64, 64 - 52 }
 
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 uniform_float_impl! { f32x2, u32x2, f32, u32, 32 - 23 }
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 uniform_float_impl! { f32x4, u32x4, f32, u32, 32 - 23 }
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 uniform_float_impl! { f32x8, u32x8, f32, u32, 32 - 23 }
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 uniform_float_impl! { f32x16, u32x16, f32, u32, 32 - 23 }
 
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 uniform_float_impl! { f64x2, u64x2, f64, u64, 64 - 52 }
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 uniform_float_impl! { f64x4, u64x4, f64, u64, 64 - 52 }
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 
 
@@ -1109,7 +1109,7 @@ mod tests {
 
         t!(f32, f32, 32 - 23);
         t!(f64, f64, 64 - 52);
-        #[cfg(feature="simd_support")]
+        #[cfg(feature = "simd_support")]
         {
             t!(f32x2, f32, 32 - 23);
             t!(f32x4, f32, 32 - 23);
@@ -1122,9 +1122,11 @@ mod tests {
     }
 
     #[test]
-    #[cfg(all(feature="std",
-              not(target_arch = "wasm32"),
-              not(target_arch = "asmjs")))]
+    #[cfg(all(
+        feature = "std",
+        not(target_arch = "wasm32"),
+        not(target_arch = "asmjs")
+    ))]
     fn test_float_assertions() {
         use super::SampleUniform;
         use std::panic::catch_unwind;
@@ -1165,7 +1167,7 @@ mod tests {
 
         t!(f32, f32);
         t!(f64, f64);
-        #[cfg(feature="simd_support")]
+        #[cfg(feature = "simd_support")]
         {
             t!(f32x2, f32);
             t!(f32x4, f32);

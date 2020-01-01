@@ -27,8 +27,10 @@ use crate::Rng;
 /// Multiple internal representations are possible.
 #[derive(Clone, Debug)]
 pub enum IndexVec {
-    #[doc(hidden)] U32(Vec<u32>),
-    #[doc(hidden)] USize(Vec<usize>),
+    #[doc(hidden)]
+    U32(Vec<u32>),
+    #[doc(hidden)]
+    USize(Vec<usize>),
 }
 
 impl IndexVec {
@@ -121,8 +123,10 @@ impl From<Vec<usize>> for IndexVec {
 /// Return type of `IndexVec::iter`.
 #[derive(Debug)]
 pub enum IndexVecIter<'a> {
-    #[doc(hidden)] U32(slice::Iter<'a, u32>),
-    #[doc(hidden)] USize(slice::Iter<'a, usize>),
+    #[doc(hidden)]
+    U32(slice::Iter<'a, u32>),
+    #[doc(hidden)]
+    USize(slice::Iter<'a, usize>),
 }
 
 impl<'a> Iterator for IndexVecIter<'a> {
@@ -150,8 +154,10 @@ impl<'a> ExactSizeIterator for IndexVecIter<'a> {}
 /// Return type of `IndexVec::into_iter`.
 #[derive(Clone, Debug)]
 pub enum IndexVecIntoIter {
-    #[doc(hidden)] U32(vec::IntoIter<u32>),
-    #[doc(hidden)] USize(vec::IntoIter<usize>),
+    #[doc(hidden)]
+    U32(vec::IntoIter<u32>),
+    #[doc(hidden)]
+    USize(vec::IntoIter<usize>),
 }
 
 impl Iterator for IndexVecIntoIter {
@@ -329,8 +335,10 @@ impl UInt for usize {
 fn sample_rejection<X: UInt, R>(rng: &mut R, length: X, amount: X) -> IndexVec
 where R: Rng + ?Sized, IndexVec: From<Vec<X>> {
     debug_assert!(amount < length);
-    #[cfg(feature="std")] let mut cache = HashSet::with_capacity(amount.as_usize());
-    #[cfg(not(feature="std"))] let mut cache = BTreeSet::new();
+    #[cfg(feature = "std")]
+    let mut cache = HashSet::with_capacity(amount.as_usize());
+    #[cfg(not(feature = "std"))]
+    let mut cache = BTreeSet::new();
     let distr = Uniform::new(X::zero(), length);
     let mut indices = Vec::with_capacity(amount.as_usize());
     for _ in 0..amount.as_usize() {

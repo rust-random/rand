@@ -364,7 +364,7 @@ pub enum WeightedError {
     TooMany,
 }
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 impl ::std::error::Error for WeightedError {}
 
 impl fmt::Display for WeightedError {

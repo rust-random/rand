@@ -37,7 +37,7 @@ use crate::Rng;
 ///       Generating Gamma Variables" *ACM Trans. Math. Softw.* 26, 3
 ///       (September 2000), 363-372.
 ///       DOI:[10.1145/358407.358414](https://doi.acm.org/10.1145/358407.358414)
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Gamma {
     repr: GammaRepr,
@@ -166,7 +166,7 @@ impl Distribution<f64> for GammaLargeShape {
 /// of `k` independent standard normal random variables. For other
 /// `k`, this uses the equivalent characterisation
 /// `χ²(k) = Gamma(k/2, 2)`.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct ChiSquared {
     repr: ChiSquaredRepr,
@@ -212,7 +212,7 @@ impl Distribution<f64> for ChiSquared {
 /// This distribution is equivalent to the ratio of two normalised
 /// chi-squared distributions, that is, `F(m,n) = (χ²(m)/m) /
 /// (χ²(n)/n)`.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct FisherF {
     numer: ChiSquared,
@@ -244,7 +244,7 @@ impl Distribution<f64> for FisherF {
 
 /// The Student t distribution, `t(nu)`, where `nu` is the degrees of
 /// freedom.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct StudentT {
     chi: ChiSquared,
@@ -270,7 +270,7 @@ impl Distribution<f64> for StudentT {
 }
 
 /// The Beta distribution with shape parameters `alpha` and `beta`.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Beta {
     gamma_a: Gamma,

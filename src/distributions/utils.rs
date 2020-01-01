@@ -328,7 +328,7 @@ scalar_float_impl!(f32, u32);
 scalar_float_impl!(f64, u64);
 
 
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 macro_rules! simd_impl {
     ($ty:ident, $f_scalar:ident, $mty:ident, $uty:ident) => {
         impl FloatSIMDUtils for $ty {
@@ -389,7 +389,7 @@ macro_rules! simd_impl {
 /// `Ag(z)` is an infinite series with coefficients that can be calculated
 /// ahead of time - we use just the first 6 terms, which is good enough
 /// for most purposes.
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 pub fn log_gamma(x: f64) -> f64 {
     // precalculated 6 coefficients for the first 6 terms of the series
     let coefficients: [f64; 6] = [
@@ -434,7 +434,7 @@ pub fn log_gamma(x: f64) -> f64 {
 
 // the perf improvement (25-50%) is definitely worth the extra code
 // size from force-inlining.
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 #[inline(always)]
 pub fn ziggurat<R: Rng + ?Sized, P, Z>(
             rng: &mut R,

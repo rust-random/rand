@@ -225,7 +225,7 @@ where R: BlockRngCore + SeedableRng,
                            results: &mut <Self as BlockRngCore>::Results,
                            global_fork_counter: usize)
     {
-        #![allow(clippy::if_same_then_else)]  // false positive
+        #![allow(clippy::if_same_then_else)] // false positive
         if self.is_forked(global_fork_counter) {
             info!("Fork detected, reseeding RNG");
         } else {
@@ -266,7 +266,7 @@ where R: BlockRngCore + SeedableRng + CryptoRng,
       Rsdr: RngCore + CryptoRng {}
 
 
-#[cfg(all(unix, not(target_os="emscripten")))]
+#[cfg(all(unix, not(target_os = "emscripten")))]
 mod fork {
     use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
     #[allow(deprecated)] // Required for compatibility with Rust < 1.24.
@@ -308,7 +308,7 @@ mod fork {
     }
 }
 
-#[cfg(not(all(unix, not(target_os="emscripten"))))]
+#[cfg(not(all(unix, not(target_os = "emscripten"))))]
 mod fork {
     pub fn get_fork_counter() -> usize { 0 }
     pub fn register_fork_handler() {}

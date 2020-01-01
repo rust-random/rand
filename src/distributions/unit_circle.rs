@@ -20,7 +20,7 @@ use crate::Rng;
 ///       Random Digits.*](https://mcnp.lanl.gov/pdf_files/nbs_vonneumann.pdf)
 ///       NBS Appl. Math. Ser., No. 12. Washington, DC: U.S. Government Printing
 ///       Office, pp. 36-38.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct UnitCircle;
 

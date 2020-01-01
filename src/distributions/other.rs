@@ -184,12 +184,12 @@ mod tests {
     #[test]
     fn test_misc() {
         let rng: &mut dyn RngCore = &mut crate::test::rng(820);
-        
+
         rng.sample::<char, _>(Standard);
         rng.sample::<bool, _>(Standard);
     }
-    
-    #[cfg(feature="alloc")]
+
+    #[cfg(feature = "alloc")]
     #[test]
     fn test_chars() {
         use core::iter;

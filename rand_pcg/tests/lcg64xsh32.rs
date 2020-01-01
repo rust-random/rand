@@ -31,7 +31,7 @@ fn test_lcg64xsh32_true_values() {
     assert_eq!(results, expected);
 }
 
-#[cfg(feature="serde1")]
+#[cfg(feature = "serde1")]
 #[test]
 fn test_lcg64xsh32_serde() {
     use bincode;

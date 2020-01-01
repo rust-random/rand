@@ -272,7 +272,7 @@ impl Hc128Core {
     // Initialize an HC-128 random number generator. The seed has to be
     // 256 bits in length (`[u32; 8]`), matching the 128 bit `key` followed by
     // 128 bit `iv` when HC-128 where to be used as a stream cipher.
-    #[inline(always)]   // single use: SeedableRng::from_seed
+    #[inline(always)] // single use: SeedableRng::from_seed
     fn init(seed: [u32; SEED_WORDS]) -> Self {
         #[inline]
         fn f1(x: u32) -> u32 {

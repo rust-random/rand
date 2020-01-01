@@ -86,9 +86,9 @@ mod test {
         let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
 
-        #[cfg(any(feature="stdrng_strong", not(feature="stdrng_fast")))]
+        #[cfg(any(feature = "stdrng_strong", not(feature = "stdrng_fast")))]
         let target = [3950704604716924505, 5573172343717151650];
-        #[cfg(all(not(feature="stdrng_strong"), feature="stdrng_fast"))]
+        #[cfg(all(not(feature = "stdrng_strong"), feature = "stdrng_fast"))]
         let target = [10719222850664546238, 14064965282130556830];
         
         let mut rng0 = StdRng::from_seed(seed);

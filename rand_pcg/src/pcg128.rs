@@ -30,7 +30,7 @@ use rand_core::{le, Error, RngCore, SeedableRng};
 /// comprising 128 bits of state and 128 bits stream selector. These are both
 /// set by `SeedableRng`, using a 256-bit seed.
 #[derive(Clone)]
-#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Lcg128Xsl64 {
     state: u128,
     increment: u128,
@@ -130,7 +130,7 @@ impl RngCore for Lcg128Xsl64 {
 /// output function), this RNG is faster, also has a long cycle, and still has
 /// good performance on statistical tests.
 #[derive(Clone)]
-#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Mcg128Xsl64 {
     state: u128,
 }

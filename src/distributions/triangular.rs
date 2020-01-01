@@ -13,7 +13,7 @@ use crate::distributions::{Distribution, Standard};
 use crate::Rng;
 
 /// The triangular distribution.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Triangular {
     min: f64,

@@ -28,7 +28,7 @@ use crate::Rng;
 ///       Generate Normal Random Samples*](
 ///       https://www.doornik.com/research/ziggurat.pdf).
 ///       Nuffield College, Oxford
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Exp1;
 
@@ -58,7 +58,7 @@ impl Distribution<f64> for Exp1 {
 /// for `x > 0`.
 /// 
 /// Note that [`Exp1`](crate::distributions::Exp1) is an optimised implementation for `lambda = 1`.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Exp {
     /// `lambda` stored as `1/lambda`, since this is what we scale by.

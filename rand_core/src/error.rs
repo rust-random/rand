@@ -18,9 +18,9 @@ use core::num::NonZeroU32;
 /// possible implementations: with `std` a boxed `Error` trait object is stored,
 /// while with `no_std` we merely store an error code.
 pub struct Error {
-    #[cfg(feature="std")]
+    #[cfg(feature = "std")]
     inner: Box<dyn std::error::Error + Send + Sync + 'static>,
-    #[cfg(not(feature="std"))]
+    #[cfg(not(feature = "std"))]
     code: NonZeroU32,
 }
 
@@ -30,7 +30,7 @@ impl Error {
     /// Available only when configured with `std`.
     /// 
     /// See also `From<NonZeroU32>`, which is available with and without `std`.
-    #[cfg(feature="std")]
+    #[cfg(feature = "std")]
     #[inline]
     pub fn new<E>(err: E) -> Self
     where E: Into<Box<dyn std::error::Error + Send + Sync + 'static>>
@@ -42,7 +42,7 @@ impl Error {
     /// 
     /// When configured with `std`, this is a trivial operation and never
     /// panics. Without `std`, this method is simply unavailable.
-    #[cfg(feature="std")]
+    #[cfg(feature = "std")]
     #[inline]
     pub fn inner(&self) -> &(dyn std::error::Error + Send + Sync + 'static) {
         &*self.inner
@@ -52,7 +52,7 @@ impl Error {
     /// 
     /// When configured with `std`, this is a trivial operation and never
     /// panics. Without `std`, this method is simply unavailable.
-    #[cfg(feature="std")]
+    #[cfg(feature = "std")]
     #[inline]
     pub fn take_inner(self) -> Box<dyn std::error::Error + Send + Sync + 'static> {
         self.inner
@@ -74,7 +74,8 @@ impl Error {
     /// error value can still be formatted via the `Diplay` implementation.
     #[inline]
     pub fn raw_os_error(&self) -> Option<i32> {
-        #[cfg(feature="std")] {
+        #[cfg(feature = "std")]
+        {
             if let Some(e) = self.inner.downcast_ref::<std::io::Error>() {
                 return e.raw_os_error();
             }
@@ -93,10 +94,12 @@ impl Error {
     /// case). Otherwise, this method will return `None`.
     #[inline]
     pub fn code(&self) -> Option<NonZeroU32> {
-        #[cfg(feature="std")] {
+        #[cfg(feature = "std")]
+        {
             self.inner.downcast_ref::<ErrorCode>().map(|c| c.0)
         }
-        #[cfg(not(feature="std"))] {
+        #[cfg(not(feature = "std"))]
+        {
             Some(self.code)
         }
     }
@@ -104,13 +107,16 @@ impl Error {
 
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        #[cfg(feature="std")] {
+        #[cfg(feature = "std")]
+        {
             write!(f, "Error {{ inner: {:?} }}", self.inner)
         }
-        #[cfg(all(feature="getrandom", not(feature="std")))] {
+        #[cfg(all(feature = "getrandom", not(feature = "std")))]
+        {
             getrandom::Error::from(self.code).fmt(f)
         }
-        #[cfg(not(feature="getrandom"))] {
+        #[cfg(not(feature = "getrandom"))]
+        {
             write!(f, "Error {{ code: {} }}", self.code)
         }
     }
@@ -118,13 +124,16 @@ impl fmt::Debug for Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        #[cfg(feature="std")] {
+        #[cfg(feature = "std")]
+        {
             write!(f, "{}", self.inner)
         }
-        #[cfg(all(feature="getrandom", not(feature="std")))] {
+        #[cfg(all(feature = "getrandom", not(feature = "std")))]
+        {
             getrandom::Error::from(self.code).fmt(f)
         }
-        #[cfg(not(feature="getrandom"))] {
+        #[cfg(not(feature = "getrandom"))]
+        {
             write!(f, "error code {}", self.code)
         }
     }
@@ -133,29 +142,33 @@ impl fmt::Display for Error {
 impl From<NonZeroU32> for Error {
     #[inline]
     fn from(code: NonZeroU32) -> Self {
-        #[cfg(feature="std")] {
+        #[cfg(feature = "std")]
+        {
             Error { inner: Box::new(ErrorCode(code)) }
         }
-        #[cfg(not(feature="std"))] {
+        #[cfg(not(feature = "std"))]
+        {
             Error { code }
         }
     }
 }
 
-#[cfg(feature="getrandom")]
+#[cfg(feature = "getrandom")]
 impl From<getrandom::Error> for Error {
     #[inline]
     fn from(error: getrandom::Error) -> Self {
-        #[cfg(feature="std")] {
+        #[cfg(feature = "std")]
+        {
             Error { inner: Box::new(error) }
         }
-        #[cfg(not(feature="std"))] {
+        #[cfg(not(feature = "std"))]
+        {
             Error { code: error.code() }
         }
     }
 }
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 impl std::error::Error for Error {
     #[inline]
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
@@ -163,7 +176,7 @@ impl std::error::Error for Error {
     }
 }
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 impl From<Error> for std::io::Error {
     #[inline]
     fn from(error: Error) -> Self {
@@ -175,16 +188,16 @@ impl From<Error> for std::io::Error {
     }
 }
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 #[derive(Debug, Copy, Clone)]
 struct ErrorCode(NonZeroU32);
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 impl fmt::Display for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "error code {}", self.0)
     }
 }
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 impl std::error::Error for ErrorCode {}

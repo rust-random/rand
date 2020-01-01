@@ -20,7 +20,7 @@ use rand_core::{CryptoRng, Error, RngCore};
 /// 
 /// [`rngs::OsRng`]: crate::rngs::OsRng
 #[derive(Debug)]
-#[deprecated(since="0.7.0", note="use rngs::OsRng instead")]
+#[deprecated(since = "0.7.0", note = "use rngs::OsRng instead")]
 pub struct EntropyRng {
     source: OsRng,
 }

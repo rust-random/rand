@@ -50,7 +50,7 @@ gen_bytes!(gen_bytes_chacha12, ChaCha12Rng::from_entropy());
 gen_bytes!(gen_bytes_chacha20, ChaCha20Rng::from_entropy());
 gen_bytes!(gen_bytes_hc128, Hc128Rng::from_entropy());
 gen_bytes!(gen_bytes_std, StdRng::from_entropy());
-#[cfg(feature="small_rng")]
+#[cfg(feature = "small_rng")]
 gen_bytes!(gen_bytes_small, SmallRng::from_entropy());
 gen_bytes!(gen_bytes_os, OsRng);
 
@@ -80,7 +80,7 @@ gen_uint!(gen_u32_chacha12, u32, ChaCha12Rng::from_entropy());
 gen_uint!(gen_u32_chacha20, u32, ChaCha20Rng::from_entropy());
 gen_uint!(gen_u32_hc128, u32, Hc128Rng::from_entropy());
 gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
-#[cfg(feature="small_rng")]
+#[cfg(feature = "small_rng")]
 gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng);
 
@@ -93,7 +93,7 @@ gen_uint!(gen_u64_chacha12, u64, ChaCha12Rng::from_entropy());
 gen_uint!(gen_u64_chacha20, u64, ChaCha20Rng::from_entropy());
 gen_uint!(gen_u64_hc128, u64, Hc128Rng::from_entropy());
 gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
-#[cfg(feature="small_rng")]
+#[cfg(feature = "small_rng")]
 gen_uint!(gen_u64_small, u64, SmallRng::from_entropy());
 gen_uint!(gen_u64_os, u64, OsRng);
 

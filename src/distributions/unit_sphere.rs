@@ -19,7 +19,7 @@ use crate::Rng;
 /// [^1]: Marsaglia, George (1972). [*Choosing a Point from the Surface of a
 ///       Sphere.*](https://doi.org/10.1214/aoms/1177692644)
 ///       Ann. Math. Statist. 43, no. 2, 645--646.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct UnitSphereSurface;
 

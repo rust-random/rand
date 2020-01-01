@@ -78,14 +78,15 @@ macro_rules! impl_int_from_uint {
                 rng.gen::<$uty>() as $ty
             }
         }
-    }
+    };
 }
 
 impl_int_from_uint! { i8, u8 }
 impl_int_from_uint! { i16, u16 }
 impl_int_from_uint! { i32, u32 }
 impl_int_from_uint! { i64, u64 }
-#[cfg(not(target_os = "emscripten"))] impl_int_from_uint! { i128, u128 }
+#[cfg(not(target_os = "emscripten"))]
+impl_int_from_uint! { i128, u128 }
 impl_int_from_uint! { isize, usize }
 
 macro_rules! impl_nzint {
@@ -106,10 +107,11 @@ impl_nzint!(NonZeroU8, NonZeroU8::new);
 impl_nzint!(NonZeroU16, NonZeroU16::new);
 impl_nzint!(NonZeroU32, NonZeroU32::new);
 impl_nzint!(NonZeroU64, NonZeroU64::new);
-#[cfg(not(target_os = "emscripten"))] impl_nzint!(NonZeroU128, NonZeroU128::new);
+#[cfg(not(target_os = "emscripten"))]
+impl_nzint!(NonZeroU128, NonZeroU128::new);
 impl_nzint!(NonZeroUsize, NonZeroUsize::new);
 
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 macro_rules! simd_impl {
     ($(($intrinsic:ident, $vec:ty),)+) => {$(
         impl Distribution<$intrinsic> for Standard {
@@ -139,19 +141,23 @@ macro_rules! simd_impl {
     };
 }
 
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 simd_impl!(16, u8x2, i8x2,);
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 simd_impl!(32, u8x4, i8x4, u16x2, i16x2,);
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 simd_impl!(64, u8x8, i8x8, u16x4, i16x4, u32x2, i32x2,);
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 simd_impl!(128, u8x16, i8x16, u16x8, i16x8, u32x4, i32x4, u64x2, i64x2,);
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 simd_impl!(256, u8x32, i8x32, u16x16, i16x16, u32x8, i32x8, u64x4, i64x4,);
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 simd_impl!(512, u8x64, i8x64, u16x32, i16x32, u32x16, i32x16, u64x8, i64x8,);
-#[cfg(all(feature="simd_support", feature="nightly", any(target_arch="x86", target_arch="x86_64")))]
+#[cfg(all(
+    feature = "simd_support",
+    feature = "nightly",
+    any(target_arch = "x86", target_arch = "x86_64")
+))]
 simd_impl!((__m64, u8x8), (__m128i, u8x16), (__m256i, u8x32),);
 
 #[cfg(test)]
@@ -210,8 +216,9 @@ mod tests {
         
         test_samples(0i8, &[9, -9, 111]);
         // Skip further i* types: they are simple reinterpretation of u* samples
-        
-        #[cfg(feature="simd_support")] {
+
+        #[cfg(feature = "simd_support")]
+        {
             // We only test a sub-set of types here and make assumptions about the rest.
             
             test_samples(u8x2::default(), &[u8x2::new(9, 126),

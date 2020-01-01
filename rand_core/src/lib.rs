@@ -368,7 +368,7 @@ pub trait SeedableRng: Sized {
     /// If [`getrandom`] is unable to provide secure entropy this method will panic.
     ///
     /// [`getrandom`]: https://docs.rs/getrandom
-    #[cfg(feature="getrandom")]
+    #[cfg(feature = "getrandom")]
     fn from_entropy() -> Self {
         let mut seed = Self::Seed::default();
         if let Err(err) = getrandom::getrandom(seed.as_mut()) {
@@ -406,7 +406,7 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
 // Implement `RngCore` for boxed references to an `RngCore`.
 // Force inlining all functions, so that it is up to the `RngCore`
 // implementation and the optimizer to decide on inlining.
-#[cfg(feature="alloc")]
+#[cfg(feature = "alloc")]
 impl<R: RngCore + ?Sized> RngCore for Box<R> {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -429,7 +429,7 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
     }
 }
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 impl std::io::Read for dyn RngCore {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         self.try_fill_bytes(buf)?;
@@ -441,7 +441,7 @@ impl std::io::Read for dyn RngCore {
 impl<'a, R: CryptoRng + ?Sized> CryptoRng for &'a mut R {}
 
 // Implement `CryptoRng` for boxed references to an `CryptoRng`.
-#[cfg(feature="alloc")]
+#[cfg(feature = "alloc")]
 impl<R: CryptoRng + ?Sized> CryptoRng for Box<R> {}
 
 #[cfg(test)]

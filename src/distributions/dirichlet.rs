@@ -20,7 +20,7 @@ use crate::Rng;
 /// The Dirichlet distribution is a family of continuous multivariate
 /// probability distributions parameterized by a vector alpha of positive reals.
 /// It is a multivariate generalization of the beta distribution.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Debug)]
 pub struct Dirichlet {
     /// Concentration parameters (alpha)

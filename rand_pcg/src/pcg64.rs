@@ -30,7 +30,7 @@ const MULTIPLIER: u64 = 6364136223846793005;
 /// comprising 64 bits of state and 64 bits stream selector. These are both set
 /// by `SeedableRng`, using a 128-bit seed.
 #[derive(Clone)]
-#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Lcg64Xsh32 {
     state: u64,
     increment: u64,
