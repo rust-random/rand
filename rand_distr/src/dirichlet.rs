@@ -61,7 +61,10 @@ impl fmt::Display for Error {
 impl error::Error for Error {}
 
 impl<N: Float> Dirichlet<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Construct a new `Dirichlet` with the given alpha parameter `alpha`.
     ///
@@ -99,7 +102,10 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 }
 
 impl<N: Float> Distribution<Vec<N>> for Dirichlet<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<N> {
         let n = self.alpha.len();

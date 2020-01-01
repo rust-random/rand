@@ -61,7 +61,10 @@ impl fmt::Display for PertError {
 impl error::Error for PertError {}
 
 impl<N: Float> Pert<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Set up the PERT distribution with defined `min`, `max` and `mode`.
     ///
@@ -99,7 +102,10 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 }
 
 impl<N: Float> Distribution<N> for Pert<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {

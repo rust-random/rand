@@ -115,7 +115,10 @@ struct GammaLargeShape<N> {
 }
 
 impl<N: Float> Gamma<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Construct an object representing the `Gamma(shape, scale)`
     /// distribution.
@@ -140,7 +143,9 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 }
 
 impl<N: Float> GammaSmallShape<N>
-where StandardNormal: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn new_raw(shape: N, scale: N) -> GammaSmallShape<N> {
         GammaSmallShape {
@@ -151,7 +156,9 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
 }
 
 impl<N: Float> GammaLargeShape<N>
-where StandardNormal: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn new_raw(shape: N, scale: N) -> GammaLargeShape<N> {
         let d = shape - N::from(1. / 3.);
@@ -164,7 +171,10 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
 }
 
 impl<N: Float> Distribution<N> for Gamma<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         match self.repr {
@@ -175,7 +185,9 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     }
 }
 impl<N: Float> Distribution<N> for GammaSmallShape<N>
-where StandardNormal: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         let u: N = rng.sample(Open01);
@@ -184,7 +196,9 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
     }
 }
 impl<N: Float> Distribution<N> for GammaLargeShape<N>
-where StandardNormal: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         // Marsaglia & Tsang method, 2000
@@ -259,7 +273,10 @@ enum ChiSquaredRepr<N> {
 }
 
 impl<N: Float> ChiSquared<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Create a new chi-squared distribution with degrees-of-freedom
     /// `k`.
@@ -276,7 +293,10 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     }
 }
 impl<N: Float> Distribution<N> for ChiSquared<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         match self.repr {
@@ -335,7 +355,10 @@ impl fmt::Display for FisherFError {
 impl error::Error for FisherFError {}
 
 impl<N: Float> FisherF<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Create a new `FisherF` distribution, with the given parameter.
     pub fn new(m: N, n: N) -> Result<FisherF<N>, FisherFError> {
@@ -354,7 +377,10 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     }
 }
 impl<N: Float> Distribution<N> for FisherF<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         self.numer.sample(rng) / self.denom.sample(rng) * self.dof_ratio
@@ -380,7 +406,10 @@ pub struct StudentT<N> {
 }
 
 impl<N: Float> StudentT<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Create a new Student t distribution with `n` degrees of
     /// freedom.
@@ -392,7 +421,10 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     }
 }
 impl<N: Float> Distribution<N> for StudentT<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         let norm: N = rng.sample(StandardNormal);
@@ -438,7 +470,10 @@ impl fmt::Display for BetaError {
 impl error::Error for BetaError {}
 
 impl<N: Float> Beta<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Construct an object representing the `Beta(alpha, beta)`
     /// distribution.
@@ -453,7 +488,10 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 }
 
 impl<N: Float> Distribution<N> for Beta<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         let x = self.gamma_a.sample(rng);

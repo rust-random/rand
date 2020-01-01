@@ -21,13 +21,19 @@ use rand::Rng;
 ///
 /// The bounds and methods are based purely on internal
 /// requirements, and will change as needed.
-pub trait Float: Copy + Sized + cmp::PartialOrd
+pub trait Float:
+    Copy
+    + Sized
+    + cmp::PartialOrd
     + ops::Neg<Output = Self>
     + ops::Add<Output = Self>
     + ops::Sub<Output = Self>
     + ops::Mul<Output = Self>
     + ops::Div<Output = Self>
-    + ops::AddAssign + ops::SubAssign + ops::MulAssign + ops::DivAssign
+    + ops::AddAssign
+    + ops::SubAssign
+    + ops::MulAssign
+    + ops::DivAssign
 {
     /// The constant π
     fn pi() -> Self;

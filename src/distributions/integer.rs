@@ -187,11 +187,8 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        fn test_samples<T: Copy + core::fmt::Debug + PartialEq>(
-            zero: T, expected: &[T]
-        )
-        where Standard: Distribution<T>
-        {
+        fn test_samples<T: Copy + core::fmt::Debug + PartialEq>(zero: T, expected: &[T])
+        where Standard: Distribution<T> {
             let mut rng = crate::test::rng(807);
             let mut buf = [zero; 3];
             for x in &mut buf {

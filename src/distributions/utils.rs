@@ -243,14 +243,14 @@ pub(crate) trait FloatSIMDUtils {
 
 /// Implement functions available in std builds but missing from core primitives
 #[cfg(not(std))]
-pub(crate) trait Float : Sized {
+pub(crate) trait Float: Sized {
     fn is_nan(self) -> bool;
     fn is_infinite(self) -> bool;
     fn is_finite(self) -> bool;
 }
 
 /// Implement functions on f32/f64 to give them APIs similar to SIMD types
-pub(crate) trait FloatAsSIMD : Sized {
+pub(crate) trait FloatAsSIMD: Sized {
     #[inline(always)]
     fn lanes() -> usize { 1 }
     #[inline(always)]
@@ -261,7 +261,7 @@ pub(crate) trait FloatAsSIMD : Sized {
     fn replace(self, index: usize, new_value: Self) -> Self { debug_assert_eq!(index, 0); new_value }
 }
 
-pub(crate) trait BoolAsSIMD : Sized {
+pub(crate) trait BoolAsSIMD: Sized {
     fn any(self) -> bool;
     fn all(self) -> bool;
     fn none(self) -> bool;

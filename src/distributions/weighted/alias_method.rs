@@ -251,8 +251,7 @@ where
 }
 
 impl<W: Weight> Clone for WeightedIndex<W>
-where
-    Uniform<W>: Clone,
+where Uniform<W>: Clone
 {
     fn clone(&self) -> Self {
         Self {
@@ -442,9 +441,7 @@ mod test {
     }
 
     fn test_weighted_index<W: Weight, F: Fn(W) -> f64>(w_to_f64: F)
-    where
-        WeightedIndex<W>: fmt::Debug,
-    {
+    where WeightedIndex<W>: fmt::Debug {
         const NUM_WEIGHTS: u32 = 10;
         const ZERO_WEIGHT_INDEX: u32 = 3;
         const NUM_SAMPLES: u32 = 15000;

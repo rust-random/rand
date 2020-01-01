@@ -33,8 +33,7 @@ impl Error {
     #[cfg(feature = "std")]
     #[inline]
     pub fn new<E>(err: E) -> Self
-    where E: Into<Box<dyn std::error::Error + Send + Sync + 'static>>
-    {
+    where E: Into<Box<dyn std::error::Error + Send + Sync + 'static>> {
         Error { inner: err.into() }
     }
 

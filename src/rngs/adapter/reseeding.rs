@@ -77,12 +77,14 @@ use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 /// [`reseed()`]: ReseedingRng::reseed
 #[derive(Debug)]
 pub struct ReseedingRng<R, Rsdr>(BlockRng<ReseedingCore<R, Rsdr>>)
-where R: BlockRngCore + SeedableRng,
-      Rsdr: RngCore;
+where
+    R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore;
 
 impl<R, Rsdr> ReseedingRng<R, Rsdr>
-where R: BlockRngCore + SeedableRng,
-      Rsdr: RngCore
+where
+    R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore,
 {
     /// Create a new `ReseedingRng` from an existing PRNG, combined with a RNG
     /// to use as reseeder.
@@ -103,8 +105,9 @@ where R: BlockRngCore + SeedableRng,
 // TODO: this should be implemented for any type where the inner type
 // implements RngCore, but we can't specify that because ReseedingCore is private
 impl<R, Rsdr: RngCore> RngCore for ReseedingRng<R, Rsdr>
-where R: BlockRngCore<Item = u32> + SeedableRng,
-    <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
+where
+    R: BlockRngCore<Item = u32> + SeedableRng,
+    <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>,
 {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -126,8 +129,9 @@ where R: BlockRngCore<Item = u32> + SeedableRng,
 }
 
 impl<R, Rsdr> Clone for ReseedingRng<R, Rsdr>
-where R: BlockRngCore + SeedableRng + Clone,
-      Rsdr: RngCore + Clone
+where
+    R: BlockRngCore + SeedableRng + Clone,
+    Rsdr: RngCore + Clone,
 {
     fn clone(&self) -> ReseedingRng<R, Rsdr> {
         // Recreating `BlockRng` seems easier than cloning it and resetting
@@ -137,8 +141,11 @@ where R: BlockRngCore + SeedableRng + Clone,
 }
 
 impl<R, Rsdr> CryptoRng for ReseedingRng<R, Rsdr>
-where R: BlockRngCore + SeedableRng + CryptoRng,
-      Rsdr: RngCore + CryptoRng {}
+where
+    R: BlockRngCore + SeedableRng + CryptoRng,
+    Rsdr: RngCore + CryptoRng,
+{
+}
 
 #[derive(Debug)]
 struct ReseedingCore<R, Rsdr> {
@@ -150,8 +157,9 @@ struct ReseedingCore<R, Rsdr> {
 }
 
 impl<R, Rsdr> BlockRngCore for ReseedingCore<R, Rsdr>
-where R: BlockRngCore + SeedableRng,
-      Rsdr: RngCore
+where
+    R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore,
 {
     type Item = <R as BlockRngCore>::Item;
     type Results = <R as BlockRngCore>::Results;
@@ -172,8 +180,9 @@ where R: BlockRngCore + SeedableRng,
 }
 
 impl<R, Rsdr> ReseedingCore<R, Rsdr>
-where R: BlockRngCore + SeedableRng,
-      Rsdr: RngCore
+where
+    R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore,
 {
     /// Create a new `ReseedingCore`.
     fn new(rng: R, threshold: u64, reseeder: Rsdr) -> Self {
@@ -247,8 +256,9 @@ where R: BlockRngCore + SeedableRng,
 }
 
 impl<R, Rsdr> Clone for ReseedingCore<R, Rsdr>
-where R: BlockRngCore + SeedableRng + Clone,
-      Rsdr: RngCore + Clone
+where
+    R: BlockRngCore + SeedableRng + Clone,
+    Rsdr: RngCore + Clone,
 {
     fn clone(&self) -> ReseedingCore<R, Rsdr> {
         ReseedingCore {
@@ -262,8 +272,11 @@ where R: BlockRngCore + SeedableRng + Clone,
 }
 
 impl<R, Rsdr> CryptoRng for ReseedingCore<R, Rsdr>
-where R: BlockRngCore + SeedableRng + CryptoRng,
-      Rsdr: RngCore + CryptoRng {}
+where
+    R: BlockRngCore + SeedableRng + CryptoRng,
+    Rsdr: RngCore + CryptoRng,
+{
+}
 
 
 #[cfg(all(unix, not(target_os = "emscripten")))]

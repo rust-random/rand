@@ -165,8 +165,9 @@ impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance which samples uniformly from the half
     /// open range `[low, high)` (excluding `high`). Panics if `low >= high`.
     pub fn new<B1, B2>(low: B1, high: B2) -> Uniform<X>
-        where B1: SampleBorrow<X> + Sized,
-              B2: SampleBorrow<X> + Sized
+    where
+        B1: SampleBorrow<X> + Sized,
+        B2: SampleBorrow<X> + Sized,
     {
         Uniform(X::Sampler::new(low, high))
     }
@@ -174,8 +175,9 @@ impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance which samples uniformly from the closed
     /// range `[low, high]` (inclusive). Panics if `low > high`.
     pub fn new_inclusive<B1, B2>(low: B1, high: B2) -> Uniform<X>
-        where B1: SampleBorrow<X> + Sized,
-              B2: SampleBorrow<X> + Sized
+    where
+        B1: SampleBorrow<X> + Sized,
+        B2: SampleBorrow<X> + Sized,
     {
         Uniform(X::Sampler::new_inclusive(low, high))
     }
@@ -219,8 +221,9 @@ pub trait UniformSampler: Sized {
     /// Usually users should not call this directly but instead use
     /// `Uniform::new`, which asserts that `low < high` before calling this.
     fn new<B1, B2>(low: B1, high: B2) -> Self
-        where B1: SampleBorrow<Self::X> + Sized,
-              B2: SampleBorrow<Self::X> + Sized;
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized;
 
     /// Construct self, with inclusive bounds `[low, high]`.
     ///
@@ -228,8 +231,9 @@ pub trait UniformSampler: Sized {
     /// `Uniform::new_inclusive`, which asserts that `low <= high` before
     /// calling this.
     fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
-        where B1: SampleBorrow<Self::X> + Sized,
-              B2: SampleBorrow<Self::X> + Sized;
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized;
 
     /// Sample a value.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X;
@@ -253,10 +257,10 @@ pub trait UniformSampler: Sized {
     ///     <T as SampleUniform>::Sampler::sample_single(lb, ub, &mut rng)
     /// }
     /// ```
-    fn sample_single<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R)
-        -> Self::X
-        where B1: SampleBorrow<Self::X> + Sized,
-              B2: SampleBorrow<Self::X> + Sized
+    fn sample_single<R: Rng + ?Sized, B1, B2>(low: B1, high: B2, rng: &mut R) -> Self::X
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
     {
         let uniform: Self = UniformSampler::new(low, high);
         uniform.sample(rng)
@@ -286,11 +290,15 @@ pub trait SampleBorrow<Borrowed> {
     /// [`Borrow::borrow`]: std::borrow::Borrow::borrow
     fn borrow(&self) -> &Borrowed;
 }
-impl<Borrowed> SampleBorrow<Borrowed> for Borrowed where Borrowed: SampleUniform {
+impl<Borrowed> SampleBorrow<Borrowed> for Borrowed
+where Borrowed: SampleUniform
+{
     #[inline(always)]
     fn borrow(&self) -> &Borrowed { self }
 }
-impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed where Borrowed: SampleUniform {
+impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed
+where Borrowed: SampleUniform
+{
     #[inline(always)]
    fn borrow(&self) -> &Borrowed { *self }
 }
@@ -358,8 +366,9 @@ macro_rules! uniform_int_impl {
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new<B1, B2>(low_b: B1, high_b: B2) -> Self
-                where B1: SampleBorrow<Self::X> + Sized,
-                      B2: SampleBorrow<Self::X> + Sized
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -370,8 +379,9 @@ macro_rules! uniform_int_impl {
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
             fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Self
-                where B1: SampleBorrow<Self::X> + Sized,
-                      B2: SampleBorrow<Self::X> + Sized
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -414,10 +424,10 @@ macro_rules! uniform_int_impl {
                 }
             }
 
-            fn sample_single<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R)
-                -> Self::X
-                where B1: SampleBorrow<Self::X> + Sized,
-                      B2: SampleBorrow<Self::X> + Sized
+            fn sample_single<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R) -> Self::X
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -646,8 +656,9 @@ macro_rules! uniform_float_impl {
             type X = $ty;
 
             fn new<B1, B2>(low_b: B1, high_b: B2) -> Self
-                where B1: SampleBorrow<Self::X> + Sized,
-                      B2: SampleBorrow<Self::X> + Sized
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -674,8 +685,9 @@ macro_rules! uniform_float_impl {
             }
 
             fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Self
-                where B1: SampleBorrow<Self::X> + Sized,
-                      B2: SampleBorrow<Self::X> + Sized
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -719,10 +731,10 @@ macro_rules! uniform_float_impl {
             }
 
             #[inline]
-            fn sample_single<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R)
-                -> Self::X
-                where B1: SampleBorrow<Self::X> + Sized,
-                      B2: SampleBorrow<Self::X> + Sized
+            fn sample_single<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R) -> Self::X
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -842,8 +854,9 @@ impl UniformSampler for UniformDuration {
 
     #[inline]
     fn new<B1, B2>(low_b: B1, high_b: B2) -> Self
-        where B1: SampleBorrow<Self::X> + Sized,
-              B2: SampleBorrow<Self::X> + Sized
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
     {
         let low = *low_b.borrow();
         let high = *high_b.borrow();
@@ -853,8 +866,9 @@ impl UniformSampler for UniformDuration {
 
     #[inline]
     fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Self
-        where B1: SampleBorrow<Self::X> + Sized,
-              B2: SampleBorrow<Self::X> + Sized
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
     {
         let low = *low_b.borrow();
         let high = *high_b.borrow();
@@ -1214,15 +1228,17 @@ mod tests {
             type X = MyF32;
 
             fn new<B1, B2>(low: B1, high: B2) -> Self
-                where B1: SampleBorrow<Self::X> + Sized,
-                      B2: SampleBorrow<Self::X> + Sized
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
             {
                 UniformMyF32(UniformFloat::<f32>::new(low.borrow().x, high.borrow().x))
             }
 
             fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
-                where B1: SampleBorrow<Self::X> + Sized,
-                      B2: SampleBorrow<Self::X> + Sized
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
             {
                 UniformSampler::new(low, high)
             }
@@ -1268,10 +1284,8 @@ mod tests {
     #[test]
     fn value_stability() {
         fn test_samples<T: SampleUniform + Copy + core::fmt::Debug + PartialEq>(
-            lb: T, ub: T, expected_single: &[T], expected_multiple: &[T]
-        )
-        where Uniform<T>: Distribution<T>
-        {
+            lb: T, ub: T, expected_single: &[T], expected_multiple: &[T],
+        ) where Uniform<T>: Distribution<T> {
             let mut rng = crate::test::rng(897);
             let mut buf = [lb; 3];
 

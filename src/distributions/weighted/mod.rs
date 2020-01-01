@@ -98,11 +98,11 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     ///
     /// [`Uniform<X>`]: crate::distributions::uniform::Uniform
     pub fn new<I>(weights: I) -> Result<WeightedIndex<X>, WeightedError>
-        where I: IntoIterator,
-              I::Item: SampleBorrow<X>,
-              X: for<'a> ::core::ops::AddAssign<&'a X> +
-                 Clone +
-                 Default {
+    where
+        I: IntoIterator,
+        I::Item: SampleBorrow<X>,
+        X: for<'a> ::core::ops::AddAssign<&'a X> + Clone + Default,
+    {
         let mut iter = weights.into_iter();
         let mut total_weight: X = iter.next()
                                       .ok_or(WeightedError::NoItem)?
@@ -141,10 +141,10 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     ///
     /// In case of error, `self` is not modified.
     pub fn update_weights(&mut self, new_weights: &[(usize, &X)]) -> Result<(), WeightedError>
-        where X: for<'a> ::core::ops::AddAssign<&'a X> +
-                 for<'a> ::core::ops::SubAssign<&'a X> +
-                 Clone +
-                 Default {
+    where X: for<'a> ::core::ops::AddAssign<&'a X>
+            + for<'a> ::core::ops::SubAssign<&'a X>
+            + Clone
+            + Default {
         if new_weights.is_empty() {
             return Ok(());
         }
@@ -221,8 +221,9 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     }
 }
 
-impl<X> Distribution<usize> for WeightedIndex<X> where
-    X: SampleUniform + PartialOrd {
+impl<X> Distribution<usize> for WeightedIndex<X>
+where X: SampleUniform + PartialOrd
+{
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
         use ::core::cmp::Ordering;
         let chosen_weight = self.weight_distribution.sample(rng);
@@ -319,17 +320,12 @@ mod test {
 
     #[test]
     fn value_stability() {
-        fn test_samples<X: SampleUniform + PartialOrd, I>
-        (
-            weights: I,
-            buf: &mut [usize],
-            expected: &[usize]
-        )
-        where I: IntoIterator,
-              I::Item: SampleBorrow<X>,
-              X: for<'a> ::core::ops::AddAssign<&'a X> +
-                 Clone +
-                 Default
+        fn test_samples<X: SampleUniform + PartialOrd, I>(
+            weights: I, buf: &mut [usize], expected: &[usize],
+        ) where
+            I: IntoIterator,
+            I::Item: SampleBorrow<X>,
+            X: for<'a> ::core::ops::AddAssign<&'a X> + Clone + Default,
         {
             assert_eq!(buf.len(), expected.len());
             let distr = WeightedIndex::new(weights).unwrap();

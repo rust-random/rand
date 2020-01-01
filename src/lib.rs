@@ -269,7 +269,10 @@ pub trait Rng: RngCore {
     /// }
     /// ```
     fn sample_iter<T, D>(self, distr: D) -> distributions::DistIter<D, Self, T>
-    where D: Distribution<T>, Self: Sized {
+    where
+        D: Distribution<T>,
+        Self: Sized,
+    {
         distr.sample_iter(self)
     }
 

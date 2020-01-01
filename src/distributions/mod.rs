@@ -220,7 +220,9 @@ pub trait Distribution<T> {
     /// }
     /// ```
     fn sample_iter<R>(self, rng: R) -> DistIter<Self, R, T>
-    where R: Rng, Self: Sized
+    where
+        R: Rng,
+        Self: Sized,
     {
         DistIter {
             distr: self,
@@ -252,7 +254,9 @@ pub struct DistIter<D, R, T> {
 }
 
 impl<D, R, T> Iterator for DistIter<D, R, T>
-    where D: Distribution<T>, R: Rng
+where
+    D: Distribution<T>,
+    R: Rng,
 {
     type Item = T;
 
@@ -270,11 +274,19 @@ impl<D, R, T> Iterator for DistIter<D, R, T>
 }
 
 impl<D, R, T> iter::FusedIterator for DistIter<D, R, T>
-    where D: Distribution<T>, R: Rng {}
+where
+    D: Distribution<T>,
+    R: Rng,
+{
+}
 
 #[cfg(features = "nightly")]
 impl<D, R, T> iter::TrustedLen for DistIter<D, R, T>
-    where D: Distribution<T>, R: Rng {}
+where
+    D: Distribution<T>,
+    R: Rng,
+{
+}
 
 
 /// A generic random value distribution, implemented for many primitive types.

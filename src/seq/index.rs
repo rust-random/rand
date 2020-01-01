@@ -334,7 +334,10 @@ impl UInt for usize {
 /// This function  is generic over X primarily so that results are value-stable
 /// over 32-bit and 64-bit platforms.
 fn sample_rejection<X: UInt, R>(rng: &mut R, length: X, amount: X) -> IndexVec
-where R: Rng + ?Sized, IndexVec: From<Vec<X>> {
+where
+    R: Rng + ?Sized,
+    IndexVec: From<Vec<X>>,
+{
     debug_assert!(amount < length);
     #[cfg(feature = "std")]
     let mut cache = HashSet::with_capacity(amount.as_usize());

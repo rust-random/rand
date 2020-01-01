@@ -155,7 +155,9 @@ macro_rules! array_impl {
 
 array_impl! {32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
 
-impl<T> Distribution<Option<T>> for Standard where Standard: Distribution<T> {
+impl<T> Distribution<Option<T>> for Standard
+where Standard: Distribution<T>
+{
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Option<T> {
         // UFCS is needed here: https://github.com/rust-lang/rust/issues/24066
@@ -167,7 +169,9 @@ impl<T> Distribution<Option<T>> for Standard where Standard: Distribution<T> {
     }
 }
 
-impl<T> Distribution<Wrapping<T>> for Standard where Standard: Distribution<T> {
+impl<T> Distribution<Wrapping<T>> for Standard
+where Standard: Distribution<T>
+{
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Wrapping<T> {
         Wrapping(rng.gen())
