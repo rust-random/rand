@@ -10,9 +10,9 @@
 //! The exponential distribution.
 #![allow(deprecated)]
 
-use crate::{Rng};
-use crate::distributions::{ziggurat_tables, Distribution};
 use crate::distributions::utils::ziggurat;
+use crate::distributions::{ziggurat_tables, Distribution};
+use crate::Rng;
 
 /// Samples floating-point numbers according to the exponential distribution,
 /// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or

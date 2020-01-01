@@ -6,15 +6,19 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
-       html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://rust-random.github.io/rand/")]
-
+#![doc(
+    html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
+    html_favicon_url = "https://www.rust-lang.org/favicon.ico",
+    html_root_url = "https://rust-random.github.io/rand/"
+)]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
-
-#![allow(clippy::excessive_precision, clippy::float_cmp, clippy::unreadable_literal)]
-#![allow(clippy::neg_cmp_op_on_partial_ord)]  // suggested fix too verbose
+#![allow(
+    clippy::excessive_precision,
+    clippy::float_cmp,
+    clippy::unreadable_literal
+)]
+#![allow(clippy::neg_cmp_op_on_partial_ord)] // suggested fix too verbose
 
 //! Generating random samples from probability distributions.
 //!

@@ -9,9 +9,9 @@
 
 //! The exponential distribution.
 
-use rand::Rng;
-use crate::{ziggurat_tables, Distribution};
 use crate::utils::{ziggurat, Float};
+use crate::{ziggurat_tables, Distribution};
+use rand::Rng;
 use std::{error, fmt};
 
 /// Samples floating-point numbers according to the exponential distribution,

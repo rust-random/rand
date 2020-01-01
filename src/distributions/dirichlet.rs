@@ -11,9 +11,9 @@
 #![allow(deprecated)]
 #![allow(clippy::all)]
 
-use crate::Rng;
-use crate::distributions::Distribution;
 use crate::distributions::gamma::Gamma;
+use crate::distributions::Distribution;
+use crate::Rng;
 
 /// The dirichelet distribution `Dirichlet(alpha)`.
 ///

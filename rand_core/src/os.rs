@@ -8,8 +8,8 @@
 
 //! Interface to the random number generator of the operating system.
 
+use crate::{impls, CryptoRng, Error, RngCore};
 use getrandom::getrandom;
-use crate::{CryptoRng, RngCore, Error, impls};
 
 /// A random number generator that retrieves randomness from from the
 /// operating system.

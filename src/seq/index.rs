@@ -8,15 +8,18 @@
 
 //! Low-level API for sampling indices
 
-#[cfg(feature="alloc")] use core::slice;
+#[cfg(feature = "alloc")] use core::slice;
 
-#[cfg(feature="std")] use std::vec;
-#[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::vec::{self, Vec};
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use crate::alloc::vec::{self, Vec};
+#[cfg(feature = "std")] use std::vec;
 // BTreeMap is not as fast in tests, but better than nothing.
-#[cfg(feature="std")] use std::collections::{HashSet};
-#[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::collections::BTreeSet;
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use crate::alloc::collections::BTreeSet;
+#[cfg(feature = "std")] use std::collections::HashSet;
 
-#[cfg(feature="alloc")] use crate::distributions::{Distribution, Uniform, uniform::SampleUniform};
+#[cfg(feature = "alloc")]
+use crate::distributions::{uniform::SampleUniform, Distribution, Uniform};
 use crate::Rng;
 
 /// A vector of indices.

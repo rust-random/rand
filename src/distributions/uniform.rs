@@ -103,23 +103,20 @@
 //! [`UniformDuration`]: crate::distributions::uniform::UniformDuration
 //! [`SampleBorrow::borrow`]: crate::distributions::uniform::SampleBorrow::borrow
 
-#[cfg(feature = "std")]
-use std::time::Duration;
-#[cfg(not(feature = "std"))]
-use core::time::Duration;
+#[cfg(not(feature = "std"))] use core::time::Duration;
+#[cfg(feature = "std")] use std::time::Duration;
 
-use crate::Rng;
-use crate::distributions::Distribution;
 use crate::distributions::float::IntoFloat;
-use crate::distributions::utils::{WideningMultiply, FloatSIMDUtils, FloatAsSIMD, BoolAsSIMD};
+use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, WideningMultiply};
+use crate::distributions::Distribution;
+use crate::Rng;
 
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
 use crate::distributions::utils::Float;
 
 
-#[cfg(feature="simd_support")]
-use packed_simd::*;
+#[cfg(feature = "simd_support")] use packed_simd::*;
 
 /// Sample values uniformly between two bounds.
 ///

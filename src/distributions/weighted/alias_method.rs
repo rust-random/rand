@@ -2,17 +2,15 @@
 //! indices with probabilities proportional to a collection of weights.
 
 use super::WeightedError;
-#[cfg(not(feature = "std"))]
-use crate::alloc::vec::Vec;
-#[cfg(not(feature = "std"))]
-use crate::alloc::vec;
-use core::fmt;
-use core::iter::Sum;
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+#[cfg(not(feature = "std"))] use crate::alloc::vec;
+#[cfg(not(feature = "std"))] use crate::alloc::vec::Vec;
 use crate::distributions::uniform::SampleUniform;
 use crate::distributions::Distribution;
 use crate::distributions::Uniform;
 use crate::Rng;
+use core::fmt;
+use core::iter::Sum;
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///

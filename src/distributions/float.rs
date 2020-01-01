@@ -8,12 +8,11 @@
 
 //! Basic floating-point number distributions
 
-use core::mem;
-use crate::Rng;
-use crate::distributions::{Distribution, Standard};
 use crate::distributions::utils::FloatSIMDUtils;
-#[cfg(feature="simd_support")]
-use packed_simd::*;
+use crate::distributions::{Distribution, Standard};
+use crate::Rng;
+use core::mem;
+#[cfg(feature = "simd_support")] use packed_simd::*;
 
 /// A distribution to sample floating point numbers uniformly in the half-open
 /// interval `(0, 1]`, i.e. including 1 but not 0.

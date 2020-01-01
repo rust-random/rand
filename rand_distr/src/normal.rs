@@ -9,9 +9,9 @@
 
 //! The normal and derived distributions.
 
-use rand::Rng;
-use crate::{ziggurat_tables, Distribution, Open01};
 use crate::utils::{ziggurat, Float};
+use crate::{ziggurat_tables, Distribution, Open01};
+use rand::Rng;
 use std::{error, fmt};
 
 /// Samples floating-point numbers according to the normal distribution

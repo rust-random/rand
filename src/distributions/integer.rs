@@ -8,16 +8,16 @@
 
 //! The implementations of the `Standard` distribution for integer types.
 
-use crate::{Rng};
 use crate::distributions::{Distribution, Standard};
-use core::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroUsize};
-#[cfg(not(target_os = "emscripten"))] use core::num::NonZeroU128;
-#[cfg(feature="simd_support")]
-use packed_simd::*;
-#[cfg(all(target_arch = "x86", feature="nightly"))]
+use crate::Rng;
+#[cfg(all(target_arch = "x86", feature = "nightly"))]
 use core::arch::x86::*;
-#[cfg(all(target_arch = "x86_64", feature="nightly"))]
+#[cfg(all(target_arch = "x86_64", feature = "nightly"))]
 use core::arch::x86_64::*;
+#[cfg(not(target_os = "emscripten"))]
+use core::num::NonZeroU128;
+use core::num::{NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize};
+#[cfg(feature = "simd_support")] use packed_simd::*;
 
 impl Distribution<u8> for Standard {
     #[inline]

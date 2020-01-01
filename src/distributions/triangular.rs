@@ -9,8 +9,8 @@
 //! The triangular distribution.
 #![allow(deprecated)]
 
-use crate::Rng;
 use crate::distributions::{Distribution, Standard};
+use crate::Rng;
 
 /// The triangular distribution.
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]

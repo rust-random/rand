@@ -8,12 +8,10 @@
 
 //! Math helper functions
 
-#[cfg(feature="simd_support")]
-use packed_simd::*;
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 use crate::distributions::ziggurat_tables;
-#[cfg(feature="std")]
-use crate::Rng;
+#[cfg(feature = "std")] use crate::Rng;
+#[cfg(feature = "simd_support")] use packed_simd::*;
 
 
 pub trait WideningMultiply<RHS = Self> {

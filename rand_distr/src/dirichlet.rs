@@ -9,9 +9,9 @@
 
 //! The dirichlet distribution.
 
-use rand::Rng;
-use crate::{Distribution, Gamma, StandardNormal, Exp1, Open01};
 use crate::utils::Float;
+use crate::{Distribution, Exp1, Gamma, Open01, StandardNormal};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The Dirichlet distribution `Dirichlet(alpha)`.

@@ -10,9 +10,9 @@
 //! The normal and derived distributions.
 #![allow(deprecated)]
 
-use crate::Rng;
-use crate::distributions::{ziggurat_tables, Distribution, Open01};
 use crate::distributions::utils::ziggurat;
+use crate::distributions::{ziggurat_tables, Distribution, Open01};
+use crate::Rng;
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to

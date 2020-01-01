@@ -25,15 +25,18 @@
 //! small performance boost in some cases).
 
 
-#[cfg(feature="alloc")] pub mod index;
+#[cfg(feature = "alloc")] pub mod index;
 
-#[cfg(feature="alloc")] use core::ops::Index;
+#[cfg(feature = "alloc")] use core::ops::Index;
 
-#[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::vec::Vec;
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use crate::alloc::vec::Vec;
 
+#[cfg(feature = "alloc")]
+use crate::distributions::uniform::{SampleBorrow, SampleUniform};
+#[cfg(feature = "alloc")]
+use crate::distributions::WeightedError;
 use crate::Rng;
-#[cfg(feature="alloc")] use crate::distributions::WeightedError;
-#[cfg(feature="alloc")] use crate::distributions::uniform::{SampleUniform, SampleBorrow};
 
 /// Extension trait on slices, providing random mutation and sampling methods.
 /// 

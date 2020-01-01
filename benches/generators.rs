@@ -19,9 +19,9 @@ use test::{black_box, Bencher};
 
 use rand::prelude::*;
 use rand::rngs::adapter::ReseedingRng;
-use rand::rngs::{OsRng, mock::StepRng};
-use rand_chacha::{ChaCha20Core, ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
-use rand_hc::{Hc128Rng};
+use rand::rngs::{mock::StepRng, OsRng};
+use rand_chacha::{ChaCha12Rng, ChaCha20Core, ChaCha20Rng, ChaCha8Rng};
+use rand_hc::Hc128Rng;
 use rand_pcg::{Pcg32, Pcg64, Pcg64Mcg};
 
 macro_rules! gen_bytes {

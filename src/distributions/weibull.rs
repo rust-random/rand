@@ -9,8 +9,8 @@
 //! The Weibull distribution.
 #![allow(deprecated)]
 
-use crate::Rng;
 use crate::distributions::{Distribution, OpenClosed01};
+use crate::Rng;
 
 /// Samples floating-point numbers according to the Weibull distribution
 #[deprecated(since="0.7.0", note="moved to rand_distr crate")]

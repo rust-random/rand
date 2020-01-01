@@ -10,12 +10,12 @@
 //! The Gamma and derived distributions.
 #![allow(deprecated)]
 
-use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
+use self::GammaRepr::*;
 
-use crate::Rng;
 use crate::distributions::normal::StandardNormal;
 use crate::distributions::{Distribution, Exp, Open01};
+use crate::Rng;
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///

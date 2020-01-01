@@ -12,8 +12,8 @@
 
 use core::mem::size_of;
 
-use rand_core::{RngCore, CryptoRng, SeedableRng, Error};
-use rand_core::block::{BlockRngCore, BlockRng};
+use rand_core::block::{BlockRng, BlockRngCore};
+use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
 /// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
 /// ability to reseed it.

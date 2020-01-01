@@ -8,15 +8,17 @@
 
 //! The standard RNG
 
-use crate::{RngCore, CryptoRng, Error, SeedableRng};
+use crate::{CryptoRng, Error, RngCore, SeedableRng};
 
-#[cfg(all(any(test, feature = "std"), target_os = "emscripten"))]
-pub(crate) use rand_hc::Hc128Core as Core;
 #[cfg(all(any(test, feature = "std"), not(target_os = "emscripten")))]
 pub(crate) use rand_chacha::ChaCha20Core as Core;
+#[cfg(all(any(test, feature = "std"), target_os = "emscripten"))]
+pub(crate) use rand_hc::Hc128Core as Core;
 
-#[cfg(target_os = "emscripten")] use rand_hc::Hc128Rng as Rng;
-#[cfg(not(target_os = "emscripten"))] use rand_chacha::ChaCha20Rng as Rng;
+#[cfg(not(target_os = "emscripten"))]
+use rand_chacha::ChaCha20Rng as Rng;
+#[cfg(target_os = "emscripten")]
+use rand_hc::Hc128Rng as Rng;
 
 /// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
 /// on the current platform, to be statistically strong and unpredictable
@@ -76,8 +78,8 @@ impl CryptoRng for StdRng {}
 
 #[cfg(test)]
 mod test {
-    use crate::{RngCore, SeedableRng};
     use crate::rngs::StdRng;
+    use crate::{RngCore, SeedableRng};
 
     #[test]
     fn test_stdrng_construction() {

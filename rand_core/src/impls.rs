@@ -17,11 +17,11 @@
 //! to/from byte sequences, and since its purpose is reproducibility,
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
 
-use core::ptr::copy_nonoverlapping;
-use core::slice;
+use crate::RngCore;
 use core::cmp::min;
 use core::mem::size_of;
-use crate::RngCore;
+use core::ptr::copy_nonoverlapping;
+use core::slice;
 
 
 /// Implement `next_u64` via `next_u32`, little-endian order.

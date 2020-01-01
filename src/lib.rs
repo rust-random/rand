@@ -40,21 +40,23 @@
 //! For the user guide and futher documentation, please read
 //! [The Rust Rand Book](https://rust-random.github.io/book).
 
-
-#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
-       html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://rust-random.github.io/rand/")]
-
+#![doc(
+    html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
+    html_favicon_url = "https://www.rust-lang.org/favicon.ico",
+    html_root_url = "https://rust-random.github.io/rand/"
+)]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(all(feature = "simd_support", feature = "nightly"), feature(stdsimd))]
+#![allow(
+    clippy::excessive_precision,
+    clippy::unreadable_literal,
+    clippy::float_cmp
+)]
 
-#![cfg_attr(not(feature="std"), no_std)]
-#![cfg_attr(all(feature="simd_support", feature="nightly"), feature(stdsimd))]
-
-#![allow(clippy::excessive_precision, clippy::unreadable_literal, clippy::float_cmp)]
-
-#[cfg(all(feature="alloc", not(feature="std")))]
+#[cfg(all(feature = "alloc", not(feature = "std")))]
 extern crate alloc;
 
 #[allow(unused)]
@@ -89,10 +91,11 @@ macro_rules! error { ($($x:tt)*) => (
 ) }
 
 // Re-exports from rand_core
-pub use rand_core::{RngCore, CryptoRng, SeedableRng, Error};
+pub use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
 // Public exports
-#[cfg(feature="std")] pub use crate::rngs::thread::thread_rng;
+#[cfg(feature = "std")]
+pub use crate::rngs::thread::thread_rng;
 
 // Public modules
 pub mod distributions;
@@ -101,10 +104,10 @@ pub mod rngs;
 pub mod seq;
 
 
-use core::{mem, slice};
-use core::num::Wrapping;
+use crate::distributions::uniform::{SampleBorrow, SampleUniform, UniformSampler};
 use crate::distributions::{Distribution, Standard};
-use crate::distributions::uniform::{SampleUniform, UniformSampler, SampleBorrow};
+use core::num::Wrapping;
+use core::{mem, slice};
 
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.

@@ -9,9 +9,9 @@
 
 //! The Cauchy distribution.
 
-use rand::Rng;
-use crate::{Distribution, Standard};
 use crate::utils::Float;
+use crate::{Distribution, Standard};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The Cauchy distribution `Cauchy(median, scale)`.

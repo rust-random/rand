@@ -8,9 +8,9 @@
 
 //! The Weibull distribution.
 
-use rand::Rng;
-use crate::{Distribution, OpenClosed01};
 use crate::utils::Float;
+use crate::{Distribution, OpenClosed01};
+use rand::Rng;
 use std::{error, fmt};
 
 /// Samples floating-point numbers according to the Weibull distribution

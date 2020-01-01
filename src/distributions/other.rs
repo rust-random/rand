@@ -11,8 +11,8 @@
 use core::char;
 use core::num::Wrapping;
 
-use crate::Rng;
 use crate::distributions::{Distribution, Standard, Uniform};
+use crate::Rng;
 
 // ----- Sampling distributions -----
 

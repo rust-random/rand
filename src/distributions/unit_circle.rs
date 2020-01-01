@@ -9,8 +9,8 @@
 #![allow(deprecated)]
 #![allow(clippy::all)]
 
-use crate::Rng;
 use crate::distributions::{Distribution, Uniform};
+use crate::Rng;
 
 /// Samples uniformly from the edge of the unit circle in two dimensions.
 ///

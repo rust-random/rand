@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use rand::Rng;
-use crate::{Distribution, Uniform, uniform::SampleUniform};
 use crate::utils::Float;
+use crate::{uniform::SampleUniform, Distribution, Uniform};
+use rand::Rng;
 
 /// Samples uniformly from the edge of the unit circle in two dimensions.
 ///
@@ -53,8 +53,8 @@ impl<N: Float + SampleUniform> Distribution<[N; 2]> for UnitCircle {
 
 #[cfg(test)]
 mod tests {
-    use crate::Distribution;
     use super::UnitCircle;
+    use crate::Distribution;
 
     /// Assert that two numbers are almost equal to each other.
     ///

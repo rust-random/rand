@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use rand::Rng;
-use crate::{Distribution, Uniform, uniform::SampleUniform};
 use crate::utils::Float;
+use crate::{uniform::SampleUniform, Distribution, Uniform};
+use rand::Rng;
 
 /// Samples uniformly from the unit disc in two dimensions.
 ///

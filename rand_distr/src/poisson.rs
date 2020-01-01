@@ -9,9 +9,9 @@
 
 //! The Poisson distribution.
 
-use rand::Rng;
-use crate::{Distribution, Cauchy, Standard};
 use crate::utils::Float;
+use crate::{Cauchy, Distribution, Standard};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The Poisson distribution `Poisson(lambda)`.

@@ -8,8 +8,8 @@
 
 //! The Bernoulli distribution.
 
-use crate::Rng;
 use crate::distributions::Distribution;
+use crate::Rng;
 use core::{fmt, u64};
 
 /// The Bernoulli distribution.

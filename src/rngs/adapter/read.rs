@@ -9,10 +9,10 @@
 
 //! A wrapper around any Read to treat it as an RNG.
 
-use std::io::Read;
 use std::fmt;
+use std::io::Read;
 
-use rand_core::{RngCore, Error, impls};
+use rand_core::{impls, Error, RngCore};
 
 
 /// An RNG that reads random bytes straight from any type supporting

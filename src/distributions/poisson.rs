@@ -10,9 +10,9 @@
 //! The Poisson distribution.
 #![allow(deprecated)]
 
-use crate::Rng;
-use crate::distributions::{Distribution, Cauchy};
 use crate::distributions::utils::log_gamma;
+use crate::distributions::{Cauchy, Distribution};
+use crate::Rng;
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///

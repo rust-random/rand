@@ -11,8 +11,8 @@
 #![allow(deprecated)]
 #![allow(clippy::all)]
 
-use crate::Rng;
 use crate::distributions::Distribution;
+use crate::Rng;
 use std::f64::consts::PI;
 
 /// The Cauchy distribution `Cauchy(median, scale)`.

@@ -8,7 +8,7 @@
 
 //! Mock random number generator
 
-use rand_core::{RngCore, Error, impls};
+use rand_core::{impls, Error, RngCore};
 
 /// A simple implementation of `RngCore` for testing purposes.
 /// 

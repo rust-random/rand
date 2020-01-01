@@ -11,8 +11,8 @@
 #![allow(deprecated)]
 #![allow(clippy::all)]
 
-use crate::Rng;
 use crate::distributions::{Distribution, Uniform};
+use crate::Rng;
 
 /// The binomial distribution `Binomial(n, p)`.
 ///

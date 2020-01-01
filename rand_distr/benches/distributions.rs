@@ -13,12 +13,12 @@ extern crate test;
 const RAND_BENCH_N: u64 = 1000;
 
 use std::mem::size_of;
-use std::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU128};
-use test::Bencher;
+use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
 use std::time::Duration;
+use test::Bencher;
 
 use rand::prelude::*;
-use rand_distr::{*, weighted::WeightedIndex};
+use rand_distr::{weighted::WeightedIndex, *};
 
 // At this time, distributions are optimised for 64-bit platforms.
 use rand_pcg::Pcg64Mcg;

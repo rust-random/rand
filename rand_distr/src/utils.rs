@@ -8,10 +8,10 @@
 
 //! Math helper functions
 
-use rand::Rng;
 use crate::ziggurat_tables;
-use rand::distributions::hidden_export::IntoFloat;
 use core::{cmp, ops};
+use rand::distributions::hidden_export::IntoFloat;
+use rand::Rng;
 
 /// Trait for floating-point scalar types
 /// 

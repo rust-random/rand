@@ -9,8 +9,8 @@
 //! The HC-128 random number generator.
 
 use core::fmt;
-use rand_core::{CryptoRng, RngCore, SeedableRng, Error, le};
-use rand_core::block::{BlockRngCore, BlockRng};
+use rand_core::block::{BlockRng, BlockRngCore};
+use rand_core::{le, CryptoRng, Error, RngCore, SeedableRng};
 
 const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 

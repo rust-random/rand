@@ -8,10 +8,10 @@
 
 //! Entropy generator, or wrapper around external generators
 
-#![allow(deprecated)]   // whole module is deprecated
+#![allow(deprecated)] // whole module is deprecated
 
-use rand_core::{RngCore, CryptoRng, Error};
 use crate::rngs::OsRng;
+use rand_core::{CryptoRng, Error, RngCore};
 
 /// An interface returning random data from external source(s), provided
 /// specifically for securely seeding algorithmic generators (PRNGs).

@@ -7,9 +7,9 @@
 // except according to those terms.
 //! The PERT distribution.
 
-use rand::Rng;
-use crate::{Distribution, Beta, StandardNormal, Exp1, Open01};
 use crate::utils::Float;
+use crate::{Beta, Distribution, Exp1, Open01, StandardNormal};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The PERT distribution.

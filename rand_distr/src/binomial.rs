@@ -9,8 +9,8 @@
 
 //! The binomial distribution.
 
-use rand::Rng;
 use crate::{Distribution, Uniform};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The binomial distribution `Binomial(n, p)`.

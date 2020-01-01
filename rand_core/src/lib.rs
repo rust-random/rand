@@ -27,35 +27,36 @@
 //!
 //! [`rand`]: https://docs.rs/rand
 
-#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
-       html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://rust-random.github.io/rand/")]
-
+#![doc(
+    html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
+    html_favicon_url = "https://www.rust-lang.org/favicon.ico",
+    html_root_url = "https://rust-random.github.io/rand/"
+)]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
-
 #![allow(clippy::unreadable_literal)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
-#![cfg_attr(not(feature="std"), no_std)]
 
-
-use core::default::Default;
 use core::convert::AsMut;
+use core::default::Default;
 use core::ptr::copy_nonoverlapping;
 
-#[cfg(all(feature="alloc", not(feature="std")))] extern crate alloc;
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+extern crate alloc;
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use alloc::boxed::Box;
 
 pub use error::Error;
-#[cfg(feature="getrandom")] pub use os::OsRng;
+#[cfg(feature = "getrandom")] pub use os::OsRng;
 
 
-mod error;
 pub mod block;
+mod error;
 pub mod impls;
 pub mod le;
-#[cfg(feature="getrandom")] mod os;
+#[cfg(feature = "getrandom")] mod os;
 
 
 /// The core of a random number generator.

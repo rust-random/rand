@@ -7,9 +7,9 @@
 // except according to those terms.
 //! The triangular distribution.
 
-use rand::Rng;
-use crate::{Distribution, Standard};
 use crate::utils::Float;
+use crate::{Distribution, Standard};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The triangular distribution.
@@ -95,9 +95,9 @@ where Standard: Distribution<N>
 
 #[cfg(test)]
 mod test {
-    use std::f64;
-    use rand::{Rng, rngs::mock};
     use super::*;
+    use rand::{rngs::mock, Rng};
+    use std::f64;
 
     #[test]
     fn test_triangular() {
