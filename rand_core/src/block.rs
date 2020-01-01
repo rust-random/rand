@@ -259,7 +259,6 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
 }
 
 
-
 /// A wrapper type implementing [`RngCore`] for some type implementing
 /// [`BlockRngCore`] with `u64` array buffer; i.e. this can be used to implement
 /// a full RNG from just a `generate` function.

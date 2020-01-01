@@ -338,7 +338,7 @@ impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed where Borrowed: Sampl
 pub struct UniformInt<X> {
     low: X,
     range: X,
-    z: X,   // either ints_to_reject or zone depending on implementation
+    z: X, // either ints_to_reject or zone depending on implementation
 }
 
 macro_rules! uniform_int_impl {
@@ -392,7 +392,7 @@ macro_rules! uniform_int_impl {
                     low: low,
                     // These are really $unsigned values, but store as $ty:
                     range: range as $ty,
-                    z: ints_to_reject as $unsigned as $ty
+                    z: ints_to_reject as $unsigned as $ty,
                 }
             }
 
@@ -447,7 +447,7 @@ macro_rules! uniform_int_impl {
                 }
             }
         }
-    }
+    };
 }
 
 uniform_int_impl! { i8, u8, u32 }
@@ -784,7 +784,7 @@ macro_rules! uniform_float_impl {
                 }
             }
         }
-    }
+    };
 }
 
 uniform_float_impl! { f32, u32, f32, u32, 32 - 23 }
@@ -805,7 +805,6 @@ uniform_float_impl! { f64x2, u64x2, f64, u64, 64 - 52 }
 uniform_float_impl! { f64x4, u64x4, f64, u64, 64 - 52 }
 #[cfg(feature = "simd_support")]
 uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
-
 
 
 /// The back-end implementing [`UniformSampler`] for `Duration`.
@@ -831,7 +830,7 @@ enum UniformDurationMode {
         max_secs: u64,
         max_nanos: u32,
         secs: Uniform<u64>,
-    }
+    },
 }
 
 impl SampleUniform for Duration {
@@ -1162,7 +1161,7 @@ mod tests {
                         assert!(catch_unwind(|| Uniform::new(low, low)).is_err());
                     }
                 }
-            }}
+            }};
         }
 
         t!(f32, f32);
@@ -1213,18 +1212,21 @@ mod tests {
         struct UniformMyF32(UniformFloat<f32>);
         impl UniformSampler for UniformMyF32 {
             type X = MyF32;
+
             fn new<B1, B2>(low: B1, high: B2) -> Self
                 where B1: SampleBorrow<Self::X> + Sized,
                       B2: SampleBorrow<Self::X> + Sized
             {
                 UniformMyF32(UniformFloat::<f32>::new(low.borrow().x, high.borrow().x))
             }
+
             fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
                 where B1: SampleBorrow<Self::X> + Sized,
                       B2: SampleBorrow<Self::X> + Sized
             {
                 UniformSampler::new(low, high)
             }
+
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 MyF32 { x: self.0.sample(rng) }
             }
@@ -1262,7 +1264,7 @@ mod tests {
         assert!(r.0.scale > 5.0);
         assert!(r.0.scale < 5.0 + 1e-14);
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<T: SampleUniform + Copy + core::fmt::Debug + PartialEq>(
@@ -1272,22 +1274,22 @@ mod tests {
         {
             let mut rng = crate::test::rng(897);
             let mut buf = [lb; 3];
-            
+
             for x in &mut buf {
                 *x = T::Sampler::sample_single(lb, ub, &mut rng);
             }
             assert_eq!(&buf, expected_single);
-            
+
             let distr = Uniform::new(lb, ub);
             for x in &mut buf {
                 *x = rng.sample(&distr);
             }
             assert_eq!(&buf, expected_multiple);
         }
-        
+
         // We test on a sub-set of types; possibly we should do more.
         // TODO: SIMD types
-        
+
         test_samples(11u8, 219, &[17, 66, 214], &[181, 93, 165]);
         test_samples(11u32, 219, &[17, 66, 214], &[181, 93, 165]);
         

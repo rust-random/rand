@@ -90,7 +90,7 @@ mod test {
         let target = [3950704604716924505, 5573172343717151650];
         #[cfg(all(not(feature = "stdrng_strong"), feature = "stdrng_fast"))]
         let target = [10719222850664546238, 14064965282130556830];
-        
+
         let mut rng0 = StdRng::from_seed(seed);
         let x0 = rng0.next_u64();
 

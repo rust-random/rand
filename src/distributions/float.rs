@@ -202,7 +202,7 @@ mod tests {
                 let mut max = StepRng::new(!0, 0);
                 assert_eq!(max.sample::<$ty, _>(Open01), 1.0 - $EPSILON / 2.0);
             }
-        }
+        };
     }
     test_f32! { f32_edge_cases, f32, 0.0, EPSILON32 }
     #[cfg(feature = "simd_support")]
@@ -243,7 +243,7 @@ mod tests {
                 let mut max = StepRng::new(!0, 0);
                 assert_eq!(max.sample::<$ty, _>(Open01), 1.0 - $EPSILON / 2.0);
             }
-        }
+        };
     }
     test_f64! { f64_edge_cases, f64, 0.0, EPSILON64 }
     #[cfg(feature = "simd_support")]
@@ -252,11 +252,11 @@ mod tests {
     test_f64! { f64x4_edge_cases, f64x4, f64x4::splat(0.0), f64x4::splat(EPSILON64) }
     #[cfg(feature = "simd_support")]
     test_f64! { f64x8_edge_cases, f64x8, f64x8::splat(0.0), f64x8::splat(EPSILON64) }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<T: Copy + core::fmt::Debug + PartialEq, D: Distribution<T>>(
-            distr: &D, zero: T, expected: &[T]
+            distr: &D, zero: T, expected: &[T],
         ) {
             let mut rng = crate::test::rng(0x6f44f5646c2a7334);
             let mut buf = [zero; 3];
@@ -265,7 +265,7 @@ mod tests {
             }
             assert_eq!(&buf, expected);
         }
-        
+
         test_samples(&Standard, 0f32, &[0.0035963655, 0.7346052, 0.09778172]);
         test_samples(&Standard, 0f64, &[0.7346051961657583,
                 0.20298547462974248, 0.8166436635290655]);
@@ -283,7 +283,7 @@ mod tests {
             // We only test a sub-set of types here. Values are identical to
             // non-SIMD types; we assume this pattern continues across all
             // SIMD types.
-            
+
             test_samples(&Standard, f32x2::new(0.0, 0.0), &[
                     f32x2::new(0.0035963655, 0.7346052),
                     f32x2::new(0.09778172, 0.20298547),

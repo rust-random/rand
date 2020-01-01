@@ -23,7 +23,7 @@ use std::f64::consts::PI;
 #[derive(Clone, Copy, Debug)]
 pub struct Cauchy {
     median: f64,
-    scale: f64
+    scale: f64,
 }
 
 impl Cauchy {

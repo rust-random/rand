@@ -17,7 +17,7 @@ use rand_core::{CryptoRng, Error, RngCore};
 /// specifically for securely seeding algorithmic generators (PRNGs).
 ///
 /// This is deprecated. It is suggested you use [`rngs::OsRng`] instead.
-/// 
+///
 /// [`rngs::OsRng`]: crate::rngs::OsRng
 #[derive(Debug)]
 #[deprecated(since = "0.7.0", note = "use rngs::OsRng instead")]
@@ -71,6 +71,6 @@ mod test {
     fn test_entropy() {
         let mut rng = EntropyRng::new();
         let n = (rng.next_u32() ^ rng.next_u32()).count_ones();
-        assert!(n >= 2);    // p(failure) approx 1e-7
+        assert!(n >= 2); // p(failure) approx 1e-7
     }
 }

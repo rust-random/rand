@@ -86,7 +86,7 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// This uses the ZIGNOR variant of the Ziggurat method, see [`StandardNormal`]
 /// for more details.
-/// 
+///
 /// Note that [`StandardNormal`] is an optimised implementation for mean 0, and
 /// standard deviation 1.
 ///
@@ -169,7 +169,7 @@ where StandardNormal: Distribution<N>
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct LogNormal<N> {
-    norm: Normal<N>
+    norm: Normal<N>,
 }
 
 impl<N: Float> LogNormal<N>
@@ -226,7 +226,7 @@ mod tests {
     fn test_log_normal_invalid_sd() {
         LogNormal::new(10.0, -1.0).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>

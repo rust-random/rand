@@ -114,7 +114,7 @@ impl Bernoulli {
             return Err(BernoulliError::InvalidProbability);
         }
         if numerator == denominator {
-            return Ok(Bernoulli { p_int: ALWAYS_TRUE })
+            return Ok(Bernoulli { p_int: ALWAYS_TRUE });
         }
         let p_int = ((f64::from(numerator) / f64::from(denominator)) * SCALE) as u64;
         Ok(Bernoulli { p_int })
@@ -177,7 +177,7 @@ mod test {
         let avg2 = (sum2 as f64) / (N as f64);
         assert!((avg2 - (NUM as f64)/(DENOM as f64)).abs() < 5e-3);
     }
-    
+
     #[test]
     fn value_stability() {
         let mut rng = crate::test::rng(3);

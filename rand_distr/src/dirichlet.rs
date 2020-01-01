@@ -164,7 +164,7 @@ mod test {
     fn test_dirichlet_invalid_alpha() {
         Dirichlet::new_with_size(0.0f64, 2).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
         let mut rng = crate::test::rng(223);

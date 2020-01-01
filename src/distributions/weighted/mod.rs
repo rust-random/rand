@@ -7,9 +7,9 @@
 // except according to those terms.
 
 //! Weighted index sampling
-//! 
+//!
 //! This module provides two implementations for sampling indices:
-//! 
+//!
 //! *   [`WeightedIndex`] allows `O(log N)` sampling
 //! *   [`alias_method::WeightedIndex`] allows `O(1)` sampling, but with
 //!      much greater set-up cost
@@ -196,14 +196,14 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         let mut cumulative_weight = if first_new_index > 0 {
             self.cumulative_weights[first_new_index - 1].clone()
         } else {
-            zero.clone() 
+            zero.clone()
         };
         for i in first_new_index..self.cumulative_weights.len() {
             match next_new_weight {
                 Some(&(j, w)) if i == j => {
                     cumulative_weight += w;
                     next_new_weight = iter.next();
-                },
+                }
                 _ => {
                     let mut tmp = self.cumulative_weights[i].clone();
                     tmp -= &prev_weight;  // We know this is positive.
@@ -316,7 +316,7 @@ mod test {
             assert_eq!(distr.cumulative_weights, expected_distr.cumulative_weights);
         }
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<X: SampleUniform + PartialOrd, I>
@@ -339,7 +339,7 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-        
+
         let mut buf = [0; 10];
         test_samples(&[1i32,1,1,1,1,1,1,1,1], &mut buf, &[0, 6, 2, 6, 3, 4, 7, 8, 2, 5]);
         test_samples(&[0.7f32, 0.1, 0.1, 0.1], &mut buf, &[0, 0, 0, 1, 0, 0, 2, 3, 0, 0]);
@@ -359,7 +359,7 @@ pub enum WeightedError {
 
     /// All items in the provided weight collection are zero.
     AllWeightsZero,
-    
+
     /// Too many weights are provided (length greater than `u32::MAX`)
     TooMany,
 }

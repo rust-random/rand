@@ -11,15 +11,15 @@
 use rand_core::{impls, Error, RngCore};
 
 /// A simple implementation of `RngCore` for testing purposes.
-/// 
+///
 /// This generates an arithmetic sequence (i.e. adds a constant each step)
 /// over a `u64` number, using wrapping arithmetic. If the increment is 0
 /// the generator yields a constant.
-/// 
+///
 /// ```
 /// use rand::Rng;
 /// use rand::rngs::mock::StepRng;
-/// 
+///
 /// let mut my_rng = StepRng::new(2, 1);
 /// let sample: [u64; 3] = my_rng.gen();
 /// assert_eq!(sample, [2, 3, 4]);

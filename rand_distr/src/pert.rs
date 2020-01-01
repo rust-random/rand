@@ -28,7 +28,7 @@ use std::{error, fmt};
 /// let v = d.sample(&mut rand::thread_rng());
 /// println!("{} is from a PERT distribution", v);
 /// ```
-/// 
+///
 /// [`Triangular`]: crate::Triangular
 #[derive(Clone, Copy, Debug)]
 pub struct Pert<N> {
@@ -70,7 +70,7 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     pub fn new(min: N, max: N, mode: N) -> Result<Pert<N>, PertError> {
         Pert::new_with_shape(min, max, mode, N::from(4.))
     }
-    
+
     /// Set up the PERT distribution with defined `min`, `max`, `mode` and
     /// `shape`.
     pub fn new_with_shape(min: N, max: N, mode: N, shape: N) -> Result<Pert<N>, PertError> {
@@ -83,7 +83,7 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
         if !(shape >= N::from(0.)) {
             return Err(PertError::ShapeTooSmall);
         }
-        
+
         let range = max - min;
         let mu = (min + max + shape * mode) / (shape + N::from(2.));
         let v = if mu == mode {

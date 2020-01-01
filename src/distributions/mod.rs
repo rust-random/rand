@@ -41,7 +41,7 @@
 //! with the [`random`] function.
 //!
 //! ## Random characters
-//! 
+//!
 //! [`Alphanumeric`] is a simple distribution to sample random letters and
 //! numbers of the `char` type; in contrast [`Standard`] may sample any valid
 //! `char`.
@@ -371,7 +371,7 @@ mod tests {
         let results: Vec<f32> = distr.sample_iter(&mut rng).take(100).collect();
         println!("{:?}", results);
     }
-    
+
     #[test]
     fn test_make_an_iter() {
         fn ten_dice_rolls_other_than_five<'a, R: Rng>(rng: &'a mut R) -> impl Iterator<Item = i32> + 'a {
@@ -380,7 +380,7 @@ mod tests {
                 .filter(|x| *x != 5)
                 .take(10)
         }
-        
+
         let mut rng = crate::test::rng(211);
         let mut count = 0;
         for val in ten_dice_rolls_other_than_five(&mut rng) {

@@ -240,7 +240,7 @@ mod test {
     fn test_poisson_invalid_lambda_neg() {
         Poisson::new(-10.0).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
@@ -253,7 +253,7 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-        
+
         // Special cases: < 12, >= 12
         test_samples(Poisson::new(7.0).unwrap(), 0f32, &[5.0, 11.0, 6.0, 5.0]);
         test_samples(Poisson::new(7.0).unwrap(), 0f64, &[9.0, 5.0, 7.0, 6.0]);

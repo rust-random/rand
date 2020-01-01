@@ -69,7 +69,7 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// This uses the ZIGNOR variant of the Ziggurat method, see [`StandardNormal`]
 /// for more details.
-/// 
+///
 /// Note that [`StandardNormal`] is an optimised implementation for mean 0, and
 /// standard deviation 1.
 ///
@@ -112,7 +112,7 @@ impl Distribution<f64> for Normal {
 #[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct LogNormal {
-    norm: Normal
+    norm: Normal,
 }
 
 impl LogNormal {

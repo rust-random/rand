@@ -138,7 +138,7 @@ macro_rules! wmul_impl_usize {
                 (high as usize, low as usize)
             }
         }
-    }
+    };
 }
 #[cfg(target_pointer_width = "32")]
 wmul_impl_usize! { u32 }
@@ -321,7 +321,7 @@ macro_rules! scalar_float_impl {
         }
 
         impl FloatAsSIMD for $ty {}
-    }
+    };
 }
 
 scalar_float_impl!(f32, u32);
@@ -365,7 +365,7 @@ macro_rules! simd_impl {
             #[inline]
             fn cast_from_int(i: Self::UInt) -> Self { i.cast() }
         }
-    }
+    };
 }
 
 #[cfg(feature="simd_support")] simd_impl! { f32x2, f32, m32x2, u32x2 }

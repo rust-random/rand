@@ -97,7 +97,7 @@ mod tests {
             assert!(r >= scale);
         }
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>

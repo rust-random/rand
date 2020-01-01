@@ -14,11 +14,11 @@ use rand::distributions::hidden_export::IntoFloat;
 use rand::Rng;
 
 /// Trait for floating-point scalar types
-/// 
+///
 /// This allows many distributions to work with `f32` or `f64` parameters and is
 /// potentially extensible. Note however that the `Exp1` and `StandardNormal`
 /// distributions are implemented exclusively for `f32` and `f64`.
-/// 
+///
 /// The bounds and methods are based purely on internal
 /// requirements, and will change as needed.
 pub trait Float: Copy + Sized + cmp::PartialOrd
@@ -35,12 +35,12 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     fn from(x: f64) -> Self;
     /// Support converting to an unsigned integer.
     fn to_u64(self) -> Option<u64>;
-    
+
     /// Take the absolute value of self
     fn abs(self) -> Self;
     /// Take the largest integer less than or equal to self
     fn floor(self) -> Self;
-    
+
     /// Take the exponential of self
     fn exp(self) -> Self;
     /// Take the natural logarithm of self
@@ -49,7 +49,7 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     fn sqrt(self) -> Self;
     /// Take self to a floating-point power
     fn powf(self, power: Self) -> Self;
-    
+
     /// Take the tangent of self
     fn tan(self) -> Self;
     /// Take the logarithm of the gamma function of self
@@ -69,7 +69,7 @@ impl Float for f32 {
             None
         }
     }
-    
+
     #[inline]
     fn abs(self) -> Self { self.abs() }
     #[inline]
@@ -108,7 +108,7 @@ impl Float for f64 {
             None
         }
     }
-    
+
     #[inline]
     fn abs(self) -> Self { self.abs() }
     #[inline]

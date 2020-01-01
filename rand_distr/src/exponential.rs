@@ -73,7 +73,7 @@ impl Distribution<f64> for Exp1 {
 ///
 /// This distribution has density function: `f(x) = lambda * exp(-lambda * x)`
 /// for `x > 0`.
-/// 
+///
 /// Note that [`Exp1`](crate::Exp1) is an optimised implementation for `lambda = 1`.
 ///
 /// # Example
@@ -88,7 +88,7 @@ impl Distribution<f64> for Exp1 {
 #[derive(Clone, Copy, Debug)]
 pub struct Exp<N> {
     /// `lambda` stored as `1/lambda`, since this is what we scale by.
-    lambda_inverse: N
+    lambda_inverse: N,
 }
 
 /// Error type returned from `Exp::new`.
@@ -152,7 +152,7 @@ mod test {
     fn test_exp_invalid_lambda_neg() {
         Exp::new(-10.0).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
@@ -165,7 +165,7 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-        
+
         test_samples(Exp1, 0f32, &[1.079617, 1.8325565, 0.04601166, 0.34471703]);
         test_samples(Exp1, 0f64, &[1.0796170642388276, 1.8325565304274,
                 0.04601166186842716, 0.3447170217100157]);

@@ -587,7 +587,7 @@ mod test {
 
     #[test]
     fn test_fill() {
-        let x = 9041086907909331047;    // a random u64
+        let x = 9041086907909331047; // a random u64
         let mut rng = StepRng::new(x, 0);
 
         // Convert to byte sequence and back to u64; byte-swap twice if BE.
@@ -714,7 +714,7 @@ mod test {
             }
         }
         // Have Binomial(N, NUM/DENOM) distribution
-        let expected = (NUM * N) / DENOM;   // exact integer
+        let expected = (NUM * N) / DENOM; // exact integer
         assert!(((sum - expected) as i32).abs() < 500);
     }
 }

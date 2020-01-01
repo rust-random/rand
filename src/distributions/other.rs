@@ -18,14 +18,14 @@ use crate::Rng;
 
 /// Sample a `char`, uniformly distributed over ASCII letters and numbers:
 /// a-z, A-Z and 0-9.
-/// 
+///
 /// # Example
 ///
 /// ```
 /// use std::iter;
 /// use rand::{Rng, thread_rng};
 /// use rand::distributions::Alphanumeric;
-/// 
+///
 /// let mut rng = thread_rng();
 /// let chars: String = iter::repeat(())
 ///         .map(|()| rng.sample(Alphanumeric))
@@ -74,7 +74,7 @@ impl Distribution<char> for Alphanumeric {
         loop {
             let var = rng.next_u32() >> (32 - 6);
             if var < RANGE {
-                return GEN_ASCII_STR_CHARSET[var as usize] as char
+                return GEN_ASCII_STR_CHARSET[var as usize] as char;
             }
         }
     }
@@ -120,18 +120,18 @@ impl Distribution<()> for Standard {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, _: &mut R) -> () { () }
 }
-tuple_impl!{A}
-tuple_impl!{A, B}
-tuple_impl!{A, B, C}
-tuple_impl!{A, B, C, D}
-tuple_impl!{A, B, C, D, E}
-tuple_impl!{A, B, C, D, E, F}
-tuple_impl!{A, B, C, D, E, F, G}
-tuple_impl!{A, B, C, D, E, F, G, H}
-tuple_impl!{A, B, C, D, E, F, G, H, I}
-tuple_impl!{A, B, C, D, E, F, G, H, I, J}
-tuple_impl!{A, B, C, D, E, F, G, H, I, J, K}
-tuple_impl!{A, B, C, D, E, F, G, H, I, J, K, L}
+tuple_impl! {A}
+tuple_impl! {A, B}
+tuple_impl! {A, B, C}
+tuple_impl! {A, B, C, D}
+tuple_impl! {A, B, C, D, E}
+tuple_impl! {A, B, C, D, E, F}
+tuple_impl! {A, B, C, D, E, F, G}
+tuple_impl! {A, B, C, D, E, F, G, H}
+tuple_impl! {A, B, C, D, E, F, G, H, I}
+tuple_impl! {A, B, C, D, E, F, G, H, I, J}
+tuple_impl! {A, B, C, D, E, F, G, H, I, J, K}
+tuple_impl! {A, B, C, D, E, F, G, H, I, J, K, L}
 
 macro_rules! array_impl {
     // recursive, given at least one type parameter:
@@ -153,7 +153,7 @@ macro_rules! array_impl {
     };
 }
 
-array_impl!{32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
+array_impl! {32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
 
 impl<T> Distribution<Option<T>> for Standard where Standard: Distribution<T> {
     #[inline]
@@ -217,7 +217,7 @@ mod tests {
         }
         assert!(incorrect == false);
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<T: Copy + core::fmt::Debug + PartialEq, D: Distribution<T>>(

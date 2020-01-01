@@ -338,7 +338,7 @@ mod test {
     fn test_binomial_invalid_lambda_neg() {
         Binomial::new(20, -10.0).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples(n: u64, p: f64, expected: &[u64]) {
@@ -350,7 +350,7 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-        
+
         // We have multiple code paths: np < 10, p > 0.5
         test_samples(2, 0.7, &[1, 1, 2, 1]);
         test_samples(20, 0.3, &[7, 7, 5, 7]);

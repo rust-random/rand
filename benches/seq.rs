@@ -67,7 +67,7 @@ macro_rules! seq_slice_choose_multiple {
                 result[$amount-1]
             })
         }
-    }
+    };
 }
 
 seq_slice_choose_multiple!(seq_slice_choose_multiple_1_of_1000, 1, 1000);
@@ -98,6 +98,7 @@ struct UnhintedIterator<I: Iterator + Clone> {
 }
 impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
     type Item = I::Item;
+
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
@@ -110,9 +111,11 @@ struct WindowHintedIterator<I: ExactSizeIterator + Iterator + Clone> {
 }
 impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<I> {
     type Item = I::Item;
+
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (std::cmp::min(self.iter.len(), self.window_size), None)
     }
@@ -164,7 +167,7 @@ macro_rules! sample_indices {
                 index::$fn(&mut rng, $length, $amount)
             })
         }
-    }
+    };
 }
 
 sample_indices!(misc_sample_indices_1_of_1k, sample, 1, 1000);

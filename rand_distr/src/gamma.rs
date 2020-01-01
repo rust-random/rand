@@ -80,7 +80,7 @@ impl error::Error for Error {}
 enum GammaRepr<N> {
     Large(GammaLargeShape<N>),
     One(Exp<N>),
-    Small(GammaSmallShape<N>)
+    Small(GammaSmallShape<N>),
 }
 
 // These two helpers could be made public, but saving the
@@ -100,7 +100,7 @@ enum GammaRepr<N> {
 #[derive(Clone, Copy, Debug)]
 struct GammaSmallShape<N> {
     inv_shape: N,
-    large_shape: GammaLargeShape<N>
+    large_shape: GammaLargeShape<N>,
 }
 
 /// Gamma distribution where the shape parameter is larger than 1.
@@ -111,7 +111,7 @@ struct GammaSmallShape<N> {
 struct GammaLargeShape<N> {
     scale: N,
     c: N,
-    d: N
+    d: N,
 }
 
 impl<N: Float> Gamma<N>
@@ -145,7 +145,7 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
     fn new_raw(shape: N, scale: N) -> GammaSmallShape<N> {
         GammaSmallShape {
             inv_shape: N::from(1.0) / shape,
-            large_shape: GammaLargeShape::new_raw(shape + N::from(1.0), scale)
+            large_shape: GammaLargeShape::new_raw(shape + N::from(1.0), scale),
         }
     }
 }
@@ -158,7 +158,7 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
         GammaLargeShape {
             scale,
             c: N::from(1.0) / (N::from(9.) * d).sqrt(),
-            d
+            d,
         }
     }
 }
@@ -202,7 +202,7 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
             if u < N::from(1.0) - N::from(0.0331) * x_sqr * x_sqr ||
                 u.ln() < N::from(0.5) * x_sqr + self.d * (N::from(1.0) - v + v.ln())
             {
-                return self.d * v * self.scale
+                return self.d * v * self.scale;
             }
         }
     }
@@ -285,7 +285,7 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
                 let norm: N = rng.sample(StandardNormal);
                 norm * norm
             }
-            DoFAnythingElse(ref g) => g.sample(rng)
+            DoFAnythingElse(ref g) => g.sample(rng),
         }
     }
 }
@@ -349,7 +349,7 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
         Ok(FisherF {
             numer: ChiSquared::new(m).unwrap(),
             denom: ChiSquared::new(n).unwrap(),
-            dof_ratio: n / m
+            dof_ratio: n / m,
         })
     }
 }
@@ -376,7 +376,7 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 #[derive(Clone, Copy, Debug)]
 pub struct StudentT<N> {
     chi: ChiSquared<N>,
-    dof: N
+    dof: N,
 }
 
 impl<N: Float> StudentT<N>
@@ -387,7 +387,7 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     pub fn new(n: N) -> Result<StudentT<N>, ChiSquaredError> {
         Ok(StudentT {
             chi: ChiSquared::new(n)?,
-            dof: n
+            dof: n,
         })
     }
 }
@@ -528,7 +528,7 @@ mod test {
     fn test_beta_invalid_dof() {
         Beta::new(0., 0.).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
@@ -541,7 +541,7 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-        
+
         // Gamma has 3 cases: shape == 1, shape < 1, shape > 1
         test_samples(Gamma::new(1.0, 5.0).unwrap(), 0f32,
                 &[5.398085, 9.162783, 0.2300583, 1.7235851]);

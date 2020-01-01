@@ -45,7 +45,7 @@ use rand_core::{impls, Error, RngCore};
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Debug)]
 pub struct ReadRng<R> {
-    reader: R
+    reader: R,
 }
 
 impl<R: Read> ReadRng<R> {

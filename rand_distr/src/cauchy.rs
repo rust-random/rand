@@ -130,7 +130,7 @@ mod test {
     fn test_cauchy_invalid_scale_neg() {
         Cauchy::new(0.0, -10.0).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
         fn gen_samples<N: Float + core::fmt::Debug>(m: N, s: N, buf: &mut [N])
@@ -141,7 +141,7 @@ mod test {
                 *x = rng.sample(&distr);
             }
         }
-        
+
         let mut buf = [0.0; 4];
         gen_samples(100f64, 10.0, &mut buf);
         assert_eq!(&buf, &[77.93369152808678, 90.1606912098641,

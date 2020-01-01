@@ -38,7 +38,7 @@ macro_rules! gen_bytes {
             });
             b.bytes = BYTES_LEN as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 gen_bytes!(gen_bytes_step, StepRng::new(0, 1));
@@ -68,7 +68,7 @@ macro_rules! gen_uint {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 gen_uint!(gen_u32_step, u32, StepRng::new(0, 1));
@@ -107,7 +107,7 @@ macro_rules! init_gen {
                 r2
             });
         }
-    }
+    };
 }
 
 init_gen!(init_pcg32, Pcg32);
@@ -135,7 +135,7 @@ macro_rules! reseeding_bytes {
             });
             b.bytes = RESEEDING_BYTES_LEN as u64 * RESEEDING_BENCH_N;
         }
-    }
+    };
 }
 
 reseeding_bytes!(reseeding_chacha20_4k, 4);
@@ -160,7 +160,7 @@ macro_rules! threadrng_uint {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 threadrng_uint!(thread_rng_u32, u32);

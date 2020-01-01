@@ -453,6 +453,7 @@ mod test {
         struct SeedableNum(u64);
         impl SeedableRng for SeedableNum {
             type Seed = [u8; 8];
+
             fn from_seed(seed: Self::Seed) -> Self {
                 let mut x = [0u64; 1];
                 le::read_u64_into(&seed, &mut x);

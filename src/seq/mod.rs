@@ -7,19 +7,19 @@
 // except according to those terms.
 
 //! Sequence-related functionality
-//! 
+//!
 //! This module provides:
-//! 
+//!
 //! *   [`SliceRandom`] slice sampling and mutation
 //! *   [`IteratorRandom`] iterator sampling
 //! *   [`index::sample`] low-level API to choose multiple indices from
 //!     `0..length`
-//! 
+//!
 //! Also see:
-//! 
+//!
 //! *   [`crate::distributions::weighted`] module which provides
 //!     implementations of weighted index sampling.
-//! 
+//!
 //! In order to make results reproducible across 32-64 bit architectures, all
 //! `usize` indices are sampled as a `u32` where possible (also providing a
 //! small performance boost in some cases).
@@ -37,13 +37,13 @@ use crate::distributions::uniform::{SampleBorrow, SampleUniform};
 use crate::Rng;
 
 /// Extension trait on slices, providing random mutation and sampling methods.
-/// 
+///
 /// This trait is implemented on all `[T]` slice types, providing several
 /// methods for choosing and shuffling elements. You must `use` this trait:
-/// 
+///
 /// ```
 /// use rand::seq::SliceRandom;
-/// 
+///
 /// fn main() {
 ///     let mut rng = rand::thread_rng();
 ///     let mut bytes = "Hello, random!".to_string().into_bytes();
@@ -62,7 +62,7 @@ pub trait SliceRandom {
 
     /// Returns a reference to one random element of the slice, or `None` if the
     /// slice is empty.
-    /// 
+    ///
     /// For slices, complexity is `O(1)`.
     ///
     /// # Example
@@ -116,7 +116,7 @@ pub trait SliceRandom {
 
     /// Similar to [`choose`], but where the likelihood of each outcome may be
     /// specified.
-    /// 
+    ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
@@ -153,7 +153,7 @@ pub trait SliceRandom {
 
     /// Similar to [`choose_mut`], but where the likelihood of each outcome may
     /// be specified.
-    /// 
+    ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
@@ -221,13 +221,13 @@ pub trait SliceRandom {
 }
 
 /// Extension trait on iterators, providing random sampling methods.
-/// 
+///
 /// This trait is implemented on all sized iterators, providing methods for
 /// choosing one or more elements. You must `use` this trait:
-/// 
+///
 /// ```
 /// use rand::seq::IteratorRandom;
-/// 
+///
 /// fn main() {
 ///     let mut rng = rand::thread_rng();
 ///     
@@ -241,7 +241,7 @@ pub trait SliceRandom {
 /// ```
 pub trait IteratorRandom: Iterator + Sized {
     /// Choose one element at random from the iterator.
-    /// 
+    ///
     /// Returns `None` if and only if the iterator is empty.
     ///
     /// This method uses [`Iterator::size_hint`] for optimisation. With an
@@ -249,7 +249,7 @@ pub trait IteratorRandom: Iterator + Sized {
     /// this method can offer `O(1)` performance. Where no size hint is
     /// available, complexity is `O(n)` where `n` is the iterator length.
     /// Partial hints (where `lower > 0`) also improve performance.
-    /// 
+    ///
     /// For slices, prefer [`SliceRandom::choose`] which guarantees `O(1)`
     /// performance.
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
@@ -479,7 +479,7 @@ impl<I> IteratorRandom for I where I: Iterator + Sized {}
 
 
 /// An iterator over multiple slice elements.
-/// 
+///
 /// This struct is created by
 /// [`SliceRandom::choose_multiple`](trait.SliceRandom.html#tymethod.choose_multiple).
 #[cfg(feature = "alloc")]
@@ -567,6 +567,7 @@ mod test {
     }
     impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
         type Item = I::Item;
+
         fn next(&mut self) -> Option<Self::Item> {
             self.iter.next()
         }
@@ -581,6 +582,7 @@ mod test {
     }
     impl<I: ExactSizeIterator + Iterator + Clone> Iterator for ChunkHintedIterator<I> {
         type Item = I::Item;
+
         fn next(&mut self) -> Option<Self::Item> {
             if self.chunk_remaining == 0 {
                 self.chunk_remaining = ::core::cmp::min(self.chunk_size,
@@ -590,6 +592,7 @@ mod test {
 
             self.iter.next()
         }
+
         fn size_hint(&self) -> (usize, Option<usize>) {
             (self.chunk_remaining,
              if self.hint_total_size { Some(self.iter.len()) } else { None })
@@ -604,9 +607,11 @@ mod test {
     }
     impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<I> {
         type Item = I::Item;
+
         fn next(&mut self) -> Option<Self::Item> {
             self.iter.next()
         }
+
         fn size_hint(&self) -> (usize, Option<usize>) {
             (::core::cmp::min(self.iter.len(), self.window_size),
              if self.hint_total_size { Some(self.iter.len()) } else { None })
@@ -694,15 +699,15 @@ mod test {
             assert!(352 <= *count && *count <= 483, "count: {}", count);
         }
     }
-    
+
     #[test]
     fn test_partial_shuffle() {
         let mut r = crate::test::rng(118);
-        
+
         let mut empty: [u32; 0] = [];
         let res = empty.partial_shuffle(&mut r, 10);
         assert_eq!((res.0.len(), res.1.len()), (0, 0));
-        
+
         let mut v = [1, 2, 3, 4, 5];
         let res = v.partial_shuffle(&mut r, 2);
         assert_eq!((res.0.len(), res.1.len()), (2, 3));
@@ -731,7 +736,7 @@ mod test {
             **e >= min_val && **e <= max_val
         }));
     }
-    
+
     #[test]
     #[cfg(feature = "alloc")]
     #[cfg_attr(miri, ignore)] // Miri is too slow

@@ -13,7 +13,7 @@ use rand::Rng;
 use std::{error, fmt};
 
 /// The triangular distribution.
-/// 
+///
 /// A continuous probability distribution parameterised by a range, and a mode
 /// (most likely value) within that range.
 ///
@@ -125,7 +125,7 @@ mod test {
             assert!(Triangular::new(min, max, mode).is_err());
         }
     }
-    
+
     #[test]
     fn value_stability() {
         let rng = crate::test::rng(860);

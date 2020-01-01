@@ -28,7 +28,6 @@ impl Triangular {
     /// # Panics
     ///
     /// If `max < mode`, `mode < max` or `max == min`.
-    ///
     #[inline]
     pub fn new(min: f64, max: f64, mode: f64) -> Triangular {
         assert!(max >= mode);

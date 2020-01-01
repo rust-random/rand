@@ -100,7 +100,7 @@ macro_rules! impl_nzint {
                 }
             }
         }
-    }
+    };
 }
 
 impl_nzint!(NonZeroU8, NonZeroU8::new);
@@ -163,11 +163,11 @@ simd_impl!((__m64, u8x8), (__m128i, u8x16), (__m256i, u8x32),);
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_integers() {
         let mut rng = crate::test::rng(806);
-        
+
         rng.sample::<isize, _>(Standard);
         rng.sample::<i8, _>(Standard);
         rng.sample::<i16, _>(Standard);
@@ -175,7 +175,7 @@ mod tests {
         rng.sample::<i64, _>(Standard);
         #[cfg(not(target_os = "emscripten"))]
         rng.sample::<i128, _>(Standard);
-        
+
         rng.sample::<usize, _>(Standard);
         rng.sample::<u8, _>(Standard);
         rng.sample::<u16, _>(Standard);
@@ -184,7 +184,7 @@ mod tests {
         #[cfg(not(target_os = "emscripten"))]
         rng.sample::<u128, _>(Standard);
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<T: Copy + core::fmt::Debug + PartialEq>(
@@ -199,7 +199,7 @@ mod tests {
             }
             assert_eq!(&buf, expected);
         }
-        
+
         test_samples(0u8, &[9, 247, 111]);
         test_samples(0u16, &[32265, 42999, 38255]);
         test_samples(0u32, &[2220326409, 2575017975, 2018088303]);

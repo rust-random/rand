@@ -29,7 +29,7 @@
 //! [`Distribution`] trait and implementations.
 //!
 //! The following are re-exported:
-//! 
+//!
 //! - The [`Distribution`] trait and [`DistIter`] helper type
 //! - The [`Standard`], [`Alphanumeric`], [`Uniform`], [`OpenClosed01`], [`Open01`] and [`Bernoulli`] distributions
 //! - The [`weighted`] sub-module
@@ -113,10 +113,10 @@ mod ziggurat_tables;
 #[cfg(test)]
 mod test {
     // Notes on testing
-    // 
+    //
     // Testing random number distributions correctly is hard. The following
     // testing is desired:
-    // 
+    //
     // - Construction: test initialisation with a few valid parameter sets.
     // - Erroneous usage: test that incorrect usage generates an error.
     // - Vector: test that usage with fixed inputs (including RNG) generates a

@@ -32,7 +32,6 @@ impl Dirichlet {
     ///
     /// # Panics
     /// - if `alpha.len() < 2`
-    ///
     #[inline]
     pub fn new<V: Into<Vec<f64>>>(alpha: V) -> Dirichlet {
         let a = alpha.into();
@@ -49,7 +48,6 @@ impl Dirichlet {
     /// # Panics
     /// - if `alpha <= 0.0`
     /// - if `size < 2`
-    ///
     #[inline]
     pub fn new_with_param(alpha: f64, size: usize) -> Dirichlet {
         assert!(alpha > 0.0);

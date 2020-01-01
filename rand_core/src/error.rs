@@ -26,9 +26,9 @@ pub struct Error {
 
 impl Error {
     /// Construct from any type supporting `std::error::Error`
-    /// 
+    ///
     /// Available only when configured with `std`.
-    /// 
+    ///
     /// See also `From<NonZeroU32>`, which is available with and without `std`.
     #[cfg(feature = "std")]
     #[inline]
@@ -37,9 +37,9 @@ impl Error {
     {
         Error { inner: err.into() }
     }
-    
+
     /// Reference the inner error (`std` only)
-    /// 
+    ///
     /// When configured with `std`, this is a trivial operation and never
     /// panics. Without `std`, this method is simply unavailable.
     #[cfg(feature = "std")]
@@ -47,9 +47,9 @@ impl Error {
     pub fn inner(&self) -> &(dyn std::error::Error + Send + Sync + 'static) {
         &*self.inner
     }
-    
+
     /// Unwrap the inner error (`std` only)
-    /// 
+    ///
     /// When configured with `std`, this is a trivial operation and never
     /// panics. Without `std`, this method is simply unavailable.
     #[cfg(feature = "std")]
@@ -88,7 +88,7 @@ impl Error {
     }
 
     /// Retrieve the error code, if any.
-    /// 
+    ///
     /// If this `Error` was constructed via `From<NonZeroU32>`, then this method
     /// will return this `NonZeroU32` code (for `no_std` this is always the
     /// case). Otherwise, this method will return `None`.

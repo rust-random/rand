@@ -131,6 +131,7 @@ pub enum IndexVecIter<'a> {
 
 impl<'a> Iterator for IndexVecIter<'a> {
     type Item = usize;
+
     #[inline]
     fn next(&mut self) -> Option<usize> {
         use self::IndexVecIter::*;
@@ -329,7 +330,7 @@ impl UInt for usize {
 /// Since `amount <<< length` there is a low chance of a random sample in
 /// `0..length` being a duplicate. We test for duplicates and resample where
 /// necessary. The algorithm is `O(amount)` time and memory.
-/// 
+///
 /// This function  is generic over X primarily so that results are value-stable
 /// over 32-bit and 64-bit platforms.
 fn sample_rejection<X: UInt, R>(rng: &mut R, length: X, amount: X) -> IndexVec
