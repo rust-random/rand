@@ -54,8 +54,8 @@ impl Distribution<f64> for Cauchy {
 
 #[cfg(test)]
 mod test {
-    use crate::distributions::Distribution;
     use super::Cauchy;
+    use crate::distributions::Distribution;
 
     fn median(mut numbers: &mut [f64]) -> f64 {
         sort(&mut numbers);

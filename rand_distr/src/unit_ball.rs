@@ -48,8 +48,8 @@ impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitBall {
 
 #[cfg(test)]
 mod tests {
-    use crate::Distribution;
     use super::UnitBall;
+    use crate::Distribution;
 
     #[test]
     fn value_stability() {

@@ -12,8 +12,7 @@
 
 use core::fmt;
 use rand_core::{impls, le, Error, RngCore, SeedableRng};
-#[cfg(feature = "serde1")]
-use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
 
 // This is the default multiplier used by PCG for 64-bit state.
 const MULTIPLIER: u64 = 6364136223846793005;

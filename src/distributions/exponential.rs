@@ -84,8 +84,8 @@ impl Distribution<f64> for Exp {
 
 #[cfg(test)]
 mod test {
-    use crate::distributions::Distribution;
     use super::Exp;
+    use crate::distributions::Distribution;
 
     #[test]
     fn test_exp() {

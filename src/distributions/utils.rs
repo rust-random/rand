@@ -8,8 +8,7 @@
 
 //! Math helper functions
 
-#[cfg(feature = "std")]
-use crate::distributions::ziggurat_tables;
+#[cfg(feature = "std")] use crate::distributions::ziggurat_tables;
 #[cfg(feature = "std")] use crate::Rng;
 #[cfg(feature = "simd_support")] use packed_simd::*;
 
@@ -148,11 +147,9 @@ wmul_impl_usize! { u64 }
 
 #[cfg(all(feature = "simd_support", feature = "nightly"))]
 mod simd_wmul {
-    #[cfg(target_arch = "x86")]
-    use core::arch::x86::*;
-    #[cfg(target_arch = "x86_64")]
-    use core::arch::x86_64::*;
     use super::*;
+    #[cfg(target_arch = "x86")] use core::arch::x86::*;
+    #[cfg(target_arch = "x86_64")] use core::arch::x86_64::*;
 
     wmul_impl! {
         (u8x2, u16x2),

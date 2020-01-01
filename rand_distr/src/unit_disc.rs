@@ -45,8 +45,8 @@ impl<N: Float + SampleUniform> Distribution<[N; 2]> for UnitDisc {
 
 #[cfg(test)]
 mod tests {
-    use crate::Distribution;
     use super::UnitDisc;
+    use crate::Distribution;
 
     #[test]
     fn value_stability() {

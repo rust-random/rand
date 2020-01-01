@@ -958,10 +958,9 @@ mod tests {
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_integers() {
-        use core::{i8, i16, i32, i64, isize};
-        use core::{u8, u16, u32, u64, usize};
-        #[cfg(not(target_os = "emscripten"))]
-        use core::{i128, u128};
+        #[cfg(not(target_os = "emscripten"))] use core::{i128, u128};
+        use core::{i16, i32, i64, i8, isize};
+        use core::{u16, u32, u64, u8, usize};
 
         let mut rng = crate::test::rng(251);
         macro_rules! t {
@@ -1127,8 +1126,8 @@ mod tests {
               not(target_arch = "wasm32"),
               not(target_arch = "asmjs")))]
     fn test_float_assertions() {
-        use std::panic::catch_unwind;
         use super::SampleUniform;
+        use std::panic::catch_unwind;
         fn range<T: SampleUniform>(low: T, high: T) {
             let mut rng = crate::test::rng(253);
             rng.gen_range(low, high);
@@ -1182,10 +1181,8 @@ mod tests {
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_durations() {
-        #[cfg(feature = "std")]
-        use std::time::Duration;
-        #[cfg(not(feature = "std"))]
-        use core::time::Duration;
+        #[cfg(not(feature = "std"))] use core::time::Duration;
+        #[cfg(feature = "std")] use std::time::Duration;
 
         let mut rng = crate::test::rng(253);
 
@@ -1203,7 +1200,9 @@ mod tests {
 
     #[test]
     fn test_custom_uniform() {
-        use crate::distributions::uniform::{UniformSampler, UniformFloat, SampleUniform, SampleBorrow};
+        use crate::distributions::uniform::{
+            SampleBorrow, SampleUniform, UniformFloat, UniformSampler,
+        };
         #[derive(Clone, Copy, PartialEq, PartialOrd)]
         struct MyF32 {
             x: f32,

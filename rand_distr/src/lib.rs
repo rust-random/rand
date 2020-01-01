@@ -67,44 +67,47 @@
 //!   - [`UnitCircle`] distribution
 //!   - [`UnitDisc`] distribution
 
-pub use rand::distributions::{Distribution, DistIter, Standard,
-    Alphanumeric, Uniform, OpenClosed01, Open01, Bernoulli, BernoulliError,
-    uniform, weighted};
+pub use rand::distributions::{
+    uniform, weighted, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01,
+    OpenClosed01, Standard, Uniform,
+};
 
-pub use self::unit_sphere::UnitSphere;
-pub use self::unit_ball::UnitBall;
-pub use self::unit_circle::UnitCircle;
-pub use self::unit_disc::UnitDisc;
-pub use self::gamma::{Gamma, Error as GammaError, ChiSquared, ChiSquaredError,
-    FisherF, FisherFError, StudentT, Beta, BetaError};
-pub use self::normal::{Normal, Error as NormalError, LogNormal, StandardNormal};
-pub use self::exponential::{Exp, Error as ExpError, Exp1};
-pub use self::pareto::{Pareto, Error as ParetoError};
-pub use self::pert::{Pert, PertError};
-pub use self::poisson::{Poisson, Error as PoissonError};
 pub use self::binomial::{Binomial, Error as BinomialError};
 pub use self::cauchy::{Cauchy, Error as CauchyError};
 pub use self::dirichlet::{Dirichlet, Error as DirichletError};
+pub use self::exponential::{Error as ExpError, Exp, Exp1};
+pub use self::gamma::{
+    Beta, BetaError, ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError,
+    Gamma, StudentT,
+};
+pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal};
+pub use self::pareto::{Error as ParetoError, Pareto};
+pub use self::pert::{Pert, PertError};
+pub use self::poisson::{Error as PoissonError, Poisson};
 pub use self::triangular::{Triangular, TriangularError};
-pub use self::weibull::{Weibull, Error as WeibullError};
+pub use self::unit_ball::UnitBall;
+pub use self::unit_circle::UnitCircle;
+pub use self::unit_disc::UnitDisc;
+pub use self::unit_sphere::UnitSphere;
 pub use self::utils::Float;
+pub use self::weibull::{Error as WeibullError, Weibull};
 
-mod unit_sphere;
-mod unit_ball;
-mod unit_circle;
-mod unit_disc;
-mod gamma;
-mod normal;
-mod exponential;
-mod pareto;
-mod pert;
-mod poisson;
 mod binomial;
 mod cauchy;
 mod dirichlet;
+mod exponential;
+mod gamma;
+mod normal;
+mod pareto;
+mod pert;
+mod poisson;
 mod triangular;
-mod weibull;
+mod unit_ball;
+mod unit_circle;
+mod unit_disc;
+mod unit_sphere;
 mod utils;
+mod weibull;
 mod ziggurat_tables;
 
 #[cfg(test)]

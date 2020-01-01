@@ -49,8 +49,8 @@ impl Distribution<[f64; 3]> for UnitSphereSurface {
 
 #[cfg(test)]
 mod tests {
-    use crate::distributions::Distribution;
     use super::UnitSphereSurface;
+    use crate::distributions::Distribution;
 
     /// Assert that two numbers are almost equal to each other.
     ///

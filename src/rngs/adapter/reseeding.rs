@@ -268,9 +268,9 @@ where R: BlockRngCore + SeedableRng + CryptoRng,
 
 #[cfg(all(unix, not(target_os="emscripten")))]
 mod fork {
-    use core::sync::atomic::{AtomicUsize, AtomicBool, Ordering};
-    #[allow(deprecated)]  // Required for compatibility with Rust < 1.24.
-    use core::sync::atomic::{ATOMIC_USIZE_INIT, ATOMIC_BOOL_INIT};
+    use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+    #[allow(deprecated)] // Required for compatibility with Rust < 1.24.
+    use core::sync::atomic::{ATOMIC_BOOL_INIT, ATOMIC_USIZE_INIT};
 
     // Fork protection
     //
@@ -317,10 +317,10 @@ mod fork {
 
 #[cfg(test)]
 mod test {
-    use crate::{Rng, SeedableRng};
-    use crate::rngs::std::Core;
-    use crate::rngs::mock::StepRng;
     use super::ReseedingRng;
+    use crate::rngs::mock::StepRng;
+    use crate::rngs::std::Core;
+    use crate::{Rng, SeedableRng};
 
     #[test]
     fn test_reseeding() {

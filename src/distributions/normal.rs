@@ -136,8 +136,8 @@ impl Distribution<f64> for LogNormal {
 
 #[cfg(test)]
 mod tests {
+    use super::{LogNormal, Normal};
     use crate::distributions::Distribution;
-    use super::{Normal, LogNormal};
 
     #[test]
     fn test_normal() {

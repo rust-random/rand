@@ -109,8 +109,8 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 
 #[cfg(test)]
 mod test {
-    use std::f64;
     use super::*;
+    use std::f64;
 
     #[test]
     fn test_pert() {

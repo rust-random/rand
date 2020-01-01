@@ -133,9 +133,9 @@ impl Distribution<bool> for Bernoulli {
 
 #[cfg(test)]
 mod test {
-    use crate::Rng;
-    use crate::distributions::Distribution;
     use super::Bernoulli;
+    use crate::distributions::Distribution;
+    use crate::Rng;
 
     #[test]
     fn test_trivial() {

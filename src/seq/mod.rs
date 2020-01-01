@@ -29,13 +29,11 @@
 
 #[cfg(feature = "alloc")] use core::ops::Index;
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
-use crate::alloc::vec::Vec;
+#[cfg(all(feature = "alloc", not(feature = "std")))] use crate::alloc::vec::Vec;
 
 #[cfg(feature = "alloc")]
 use crate::distributions::uniform::{SampleBorrow, SampleUniform};
-#[cfg(feature = "alloc")]
-use crate::distributions::WeightedError;
+#[cfg(feature = "alloc")] use crate::distributions::WeightedError;
 use crate::Rng;
 
 /// Extension trait on slices, providing random mutation and sampling methods.
@@ -533,8 +531,7 @@ fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
 mod test {
     use super::*;
     #[cfg(feature = "alloc")] use crate::Rng;
-    #[cfg(all(feature="alloc", not(feature="std")))]
-    use alloc::vec::Vec;
+    #[cfg(all(feature = "alloc", not(feature = "std")))] use alloc::vec::Vec;
 
     #[test]
     fn test_slice_choose() {

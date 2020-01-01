@@ -35,7 +35,7 @@ fn test_mcg128xsl64_true_values() {
 #[test]
 fn test_mcg128xsl64_serde() {
     use bincode;
-    use std::io::{BufWriter, BufReader};
+    use std::io::{BufReader, BufWriter};
 
     let mut rng = Mcg128Xsl64::seed_from_u64(0);
 

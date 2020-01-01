@@ -336,8 +336,8 @@ impl CryptoRng for Hc128Core {}
 
 #[cfg(test)]
 mod test {
-    use ::rand_core::{RngCore, SeedableRng};
     use super::Hc128Rng;
+    use ::rand_core::{RngCore, SeedableRng};
 
     #[test]
     // Test vector 1 from the paper "The Stream Cipher HC-128"

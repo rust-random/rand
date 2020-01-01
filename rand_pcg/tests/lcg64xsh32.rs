@@ -35,7 +35,7 @@ fn test_lcg64xsh32_true_values() {
 #[test]
 fn test_lcg64xsh32_serde() {
     use bincode;
-    use std::io::{BufWriter, BufReader};
+    use std::io::{BufReader, BufWriter};
 
     let mut rng = Lcg64Xsh32::seed_from_u64(0);
 

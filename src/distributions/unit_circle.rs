@@ -54,8 +54,8 @@ impl Distribution<[f64; 2]> for UnitCircle {
 
 #[cfg(test)]
 mod tests {
-    use crate::distributions::Distribution;
     use super::UnitCircle;
+    use crate::distributions::Distribution;
 
     /// Assert that two numbers are almost equal to each other.
     ///

@@ -44,8 +44,8 @@ impl Distribution<f64> for Pareto {
 
 #[cfg(test)]
 mod tests {
-    use crate::distributions::Distribution;
     use super::Pareto;
+    use crate::distributions::Distribution;
 
     #[test]
     #[should_panic]

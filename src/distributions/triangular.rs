@@ -54,8 +54,8 @@ impl Distribution<f64> for Triangular {
 
 #[cfg(test)]
 mod test {
-    use crate::distributions::Distribution;
     use super::Triangular;
+    use crate::distributions::Distribution;
 
     #[test]
     fn test_new() {

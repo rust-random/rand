@@ -56,8 +56,7 @@
     clippy::float_cmp
 )]
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
-extern crate alloc;
+#[cfg(all(feature = "alloc", not(feature = "std")))] extern crate alloc;
 
 #[allow(unused)]
 macro_rules! trace { ($($x:tt)*) => (
@@ -94,8 +93,7 @@ macro_rules! error { ($($x:tt)*) => (
 pub use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
 // Public exports
-#[cfg(feature = "std")]
-pub use crate::rngs::thread::thread_rng;
+#[cfg(feature = "std")] pub use crate::rngs::thread::thread_rng;
 
 // Public modules
 pub mod distributions;
@@ -552,9 +550,9 @@ where Standard: Distribution<T> {
 
 #[cfg(test)]
 mod test {
-    use crate::rngs::mock::StepRng;
     use super::*;
-    #[cfg(all(not(feature="std"), feature="alloc"))] use alloc::boxed::Box;
+    use crate::rngs::mock::StepRng;
+    #[cfg(all(not(feature = "std"), feature = "alloc"))] use alloc::boxed::Box;
 
     /// Construct a deterministic RNG with the given seed
     pub fn rng(seed: u64) -> impl RngCore {

@@ -347,9 +347,9 @@ where R: Rng + ?Sized, IndexVec: From<Vec<X>> {
 
 #[cfg(test)]
 mod test {
-    #[cfg(feature="std")] use std::vec;
-    #[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::vec;
     use super::*;
+    #[cfg(all(feature = "alloc", not(feature = "std")))] use crate::alloc::vec;
+    #[cfg(feature = "std")] use std::vec;
 
     #[test]
     fn test_sample_boundaries() {

@@ -301,8 +301,8 @@ impl Distribution<f64> for Beta {
 
 #[cfg(test)]
 mod test {
+    use super::{Beta, ChiSquared, FisherF, StudentT};
     use crate::distributions::Distribution;
-    use super::{Beta, ChiSquared, StudentT, FisherF};
 
     const N: u32 = 100;
 

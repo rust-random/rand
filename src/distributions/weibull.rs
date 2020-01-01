@@ -41,8 +41,8 @@ impl Distribution<f64> for Weibull {
 
 #[cfg(test)]
 mod tests {
-    use crate::distributions::Distribution;
     use super::Weibull;
+    use crate::distributions::Distribution;
 
     #[test]
     #[should_panic]

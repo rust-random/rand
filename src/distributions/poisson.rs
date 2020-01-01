@@ -105,8 +105,8 @@ impl Distribution<u64> for Poisson {
 
 #[cfg(test)]
 mod test {
-    use crate::distributions::Distribution;
     use super::Poisson;
+    use crate::distributions::Distribution;
 
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow

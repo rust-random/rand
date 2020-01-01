@@ -18,14 +18,14 @@
 
 pub mod alias_method;
 
-use crate::Rng;
+use crate::distributions::uniform::{SampleBorrow, SampleUniform, UniformSampler};
 use crate::distributions::Distribution;
-use crate::distributions::uniform::{UniformSampler, SampleUniform, SampleBorrow};
+use crate::Rng;
 use core::cmp::PartialOrd;
 use core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
-#[cfg(not(feature="std"))] use crate::alloc::vec::Vec;
+#[cfg(not(feature = "std"))] use crate::alloc::vec::Vec;
 
 /// A distribution using weighted sampling to pick a discretely selected
 /// item.

@@ -263,9 +263,9 @@ impl Distribution<u64> for Binomial {
 
 #[cfg(test)]
 mod test {
-    use crate::Rng;
-    use crate::distributions::Distribution;
     use super::Binomial;
+    use crate::distributions::Distribution;
+    use crate::Rng;
 
     fn test_binomial_mean_and_variance<R: Rng>(n: u64, p: f64, rng: &mut R) {
         let binomial = Binomial::new(n, p);
