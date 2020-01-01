@@ -22,7 +22,7 @@ where_single_line = true
 edition = "2018"        # we require compatibility back to 1.32.0
 
 # Misc:
-inline_attribute_width = 60
+inline_attribute_width = 80
 blank_lines_upper_bound = 2
 reorder_impl_items = true
 # report_todo = "Unnumbered"
