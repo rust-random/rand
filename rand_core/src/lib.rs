@@ -141,24 +141,22 @@ pub trait RngCore {
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// using `self.next_u64() as u32` or via
-    /// [`fill_bytes`](impls::next_u32_via_fill).
+    /// using `self.next_u64() as u32` or via [`impls::next_u32_via_fill`].
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random `u64`.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// via [`next_u32`](impls::next_u64_via_u32) or via
-    /// [`fill_bytes`](impls::next_u64_via_fill).
+    /// via [`impls::next_u64_via_u32`] or via [`impls::next_u64_via_fill`].
     fn next_u64(&mut self) -> u64;
 
     /// Fill `dest` with random data.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// via [`next_u*`](impls::fill_bytes_via_next) or
-    /// via [`try_fill_bytes`](RngCore::try_fill_bytes); if this generator can
+    /// via [`impls::fill_bytes_via_next`] or
+    /// via [`RngCore::try_fill_bytes`]; if this generator can
     /// fail the implementation must choose how best to handle errors here
     /// (e.g. panic with a descriptive message or log a warning and retry a few
     /// times).
@@ -176,12 +174,10 @@ pub trait RngCore {
     /// by external (true) RNGs (e.g. `OsRng`) which can fail. It may be used
     /// directly to generate keys and to seed (infallible) PRNGs.
     ///
-    /// Other than error handling, this method is identical to [`fill_bytes`];
+    /// Other than error handling, this method is identical to [`RngCore::fill_bytes`];
     /// thus this may be implemented using `Ok(self.fill_bytes(dest))` or
     /// `fill_bytes` may be implemented with
     /// `self.try_fill_bytes(dest).unwrap()` or more specific error handling.
-    ///
-    /// [`fill_bytes`]: RngCore::fill_bytes
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 }
 
