@@ -84,13 +84,11 @@
 //! Some suggestions are: [`rand_chacha`], [`rand_pcg`], [`rand_xoshiro`].
 //! A full list can be found by searching for crates with the [`rng` tag].
 //!
-//! [`SmallRng`]: rngs::SmallRng
-//! [`StdRng`]: rngs::StdRng
-//! [`OsRng`]: rngs::OsRng
-//! [`ThreadRng`]: rngs::ThreadRng
-//! [`mock::StepRng`]: rngs::mock::StepRng
-//! [`adapter::ReadRng`]: rngs::adapter::ReadRng
-//! [`adapter::ReseedingRng`]: rngs::adapter::ReseedingRng
+//! [`Rng`]: crate::Rng
+//! [`RngCore`]: crate::RngCore
+//! [`CryptoRng`]: crate::CryptoRng
+//! [`SeedableRng`]: crate::SeedableRng
+//! [`thread_rng`]: crate::thread_rng
 //! [`rdrand`]: https://crates.io/crates/rdrand
 //! [`rand_jitter`]: https://crates.io/crates/rand_jitter
 //! [`rand_chacha`]: https://crates.io/crates/rand_chacha
