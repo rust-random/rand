@@ -246,13 +246,17 @@ pub(crate) fn log_gamma(x: f64) -> f64 {
 // size from force-inlining.
 #[inline(always)]
 pub(crate) fn ziggurat<R: Rng + ?Sized, P, Z>(
-            rng: &mut R,
-            symmetric: bool,
-            x_tab: ziggurat_tables::ZigTable,
-            f_tab: ziggurat_tables::ZigTable,
-            mut pdf: P,
-            mut zero_case: Z)
-            -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
+    rng: &mut R,
+    symmetric: bool,
+    x_tab: ziggurat_tables::ZigTable,
+    f_tab: ziggurat_tables::ZigTable,
+    mut pdf: P,
+    mut zero_case: Z
+) -> f64
+where
+    P: FnMut(f64) -> f64,
+    Z: FnMut(&mut R, f64) -> f64,
+{
     loop {
         // As an optimisation we re-implement the conversion to a f64.
         // From the remaining 12 most significant bits we use 8 to construct `i`.

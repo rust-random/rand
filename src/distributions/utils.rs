@@ -497,13 +497,17 @@ pub fn log_gamma(x: f64) -> f64 {
 #[cfg(feature = "std")]
 #[inline(always)]
 pub fn ziggurat<R: Rng + ?Sized, P, Z>(
-            rng: &mut R,
-            symmetric: bool,
-            x_tab: ziggurat_tables::ZigTable,
-            f_tab: ziggurat_tables::ZigTable,
-            mut pdf: P,
-            mut zero_case: Z)
-            -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
+    rng: &mut R,
+    symmetric: bool,
+    x_tab: ziggurat_tables::ZigTable,
+    f_tab: ziggurat_tables::ZigTable,
+    mut pdf: P,
+    mut zero_case: Z
+) -> f64
+where
+    P: FnMut(f64) -> f64,
+    Z: FnMut(&mut R, f64) -> f64,
+{
     use crate::distributions::float::IntoFloat;
     loop {
         // As an optimisation we re-implement the conversion to a f64.
