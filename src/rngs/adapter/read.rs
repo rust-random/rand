@@ -109,6 +109,7 @@ mod test {
     #[test]
     fn test_reader_rng_u64() {
         // transmute from the target to avoid endianness concerns.
+        #[rustfmt::skip]
         let v = vec![0u8, 0, 0, 0, 0, 0, 0, 1,
                      0  , 0, 0, 0, 0, 0, 0, 2,
                      0,   0, 0, 0, 0, 0, 0, 3];

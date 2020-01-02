@@ -23,8 +23,8 @@ pub struct Array64<T>([T; 64]);
 impl<T> Default for Array64<T>
 where T: Default
 {
+    #[rustfmt::skip]
     fn default() -> Self {
-        #[rustfmt::skip]
         Self([
             T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
             T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),

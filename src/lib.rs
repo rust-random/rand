@@ -501,6 +501,7 @@ macro_rules! impl_as_byte_slice_arrays {
         impl_as_byte_slice_arrays!(!div $n / 2, $($NN,)*);
     };
 }
+#[rustfmt::skip]
 impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
 impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
 

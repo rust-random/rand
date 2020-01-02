@@ -8,6 +8,9 @@
 
 #![feature(test)]
 
+// Rustfmt slits many macro invocations to shorten lines; in this case longer-lines are more readable
+#![rustfmt::skip]
+
 extern crate test;
 
 const RAND_BENCH_N: u64 = 1000;

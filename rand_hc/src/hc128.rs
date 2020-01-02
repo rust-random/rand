@@ -348,6 +348,7 @@ mod test {
     #[test]
     // Test vector 1 from the paper "The Stream Cipher HC-128"
     fn test_hc128_true_values_a() {
+        #[rustfmt::skip]
         let seed = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
@@ -356,6 +357,7 @@ mod test {
         for i in results.iter_mut() {
             *i = rng.next_u32();
         }
+        #[rustfmt::skip]
         let expected = [0x73150082, 0x3bfd03a0, 0xfb2fd77f, 0xaa63af0e,
                         0xde122fc6, 0xa7dc29b6, 0x62a68527, 0x8b75ec68,
                         0x9036db1e, 0x81896005, 0x00ade078, 0x491fbf9a,
@@ -366,6 +368,7 @@ mod test {
     #[test]
     // Test vector 2 from the paper "The Stream Cipher HC-128"
     fn test_hc128_true_values_b() {
+        #[rustfmt::skip]
         let seed = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
@@ -374,6 +377,7 @@ mod test {
         for i in results.iter_mut() {
             *i = rng.next_u32();
         }
+        #[rustfmt::skip]
         let expected = [0xc01893d5, 0xb7dbe958, 0x8f65ec98, 0x64176604,
                         0x36fc6724, 0xc82c6eec, 0x1b1c38a7, 0xc9b42a95,
                         0x323ef123, 0x0a6a908b, 0xce757b68, 0x9f14f7bb,
@@ -384,6 +388,7 @@ mod test {
     #[test]
     // Test vector 3 from the paper "The Stream Cipher HC-128"
     fn test_hc128_true_values_c() {
+        #[rustfmt::skip]
         let seed = [0x55,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
@@ -392,6 +397,7 @@ mod test {
         for i in results.iter_mut() {
             *i = rng.next_u32();
         }
+        #[rustfmt::skip]
         let expected = [0x518251a4, 0x04b4930a, 0xb02af931, 0x0639f032,
                         0xbcb4a47a, 0x5722480b, 0x2bf99f72, 0xcdc0e566,
                         0x310f0c56, 0xd3cc83e8, 0x663db8ef, 0x62dfe07f,
@@ -401,6 +407,7 @@ mod test {
 
     #[test]
     fn test_hc128_true_values_u64() {
+        #[rustfmt::skip]
         let seed = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
@@ -409,6 +416,7 @@ mod test {
         for i in results.iter_mut() {
             *i = rng.next_u64();
         }
+        #[rustfmt::skip]
         let expected = [0x3bfd03a073150082, 0xaa63af0efb2fd77f,
                         0xa7dc29b6de122fc6, 0x8b75ec6862a68527,
                         0x818960059036db1e, 0x491fbf9a00ade078,
@@ -425,6 +433,7 @@ mod test {
         for i in results.iter_mut() {
             *i = rng.next_u64();
         }
+        #[rustfmt::skip]
         let expected = [0xd8c4d6ca84d0fc10, 0xf16a5d91dc66e8e7,
                         0xd800de5bc37a8653, 0x7bae1f88c0dfbb4c,
                         0x3bfe1f374e6d4d14, 0x424b55676be3fa06,
@@ -434,9 +443,11 @@ mod test {
 
     #[test]
     fn test_hc128_true_values_bytes() {
+        #[rustfmt::skip]
         let seed = [0x55,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
+        #[rustfmt::skip]
         let expected = [0x31, 0xf9, 0x2a, 0xb0, 0x32, 0xf0, 0x39, 0x06,
                  0x7a, 0xa4, 0xb4, 0xbc, 0x0b, 0x48, 0x22, 0x57,
                  0x72, 0x9f, 0xf9, 0x2b, 0x66, 0xe5, 0xc0, 0xcd,
@@ -471,6 +482,7 @@ mod test {
 
     #[test]
     fn test_hc128_clone() {
+        #[rustfmt::skip]
         let seed = [0x55,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng1 = Hc128Rng::from_seed(seed);
