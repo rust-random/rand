@@ -65,8 +65,12 @@ impl<R: Read> RngCore for ReadRng<R> {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.try_fill_bytes(dest).unwrap_or_else(|err|
-                panic!("reading random bytes from Read implementation failed; error: {}", err));
+        self.try_fill_bytes(dest).unwrap_or_else(|err| {
+            panic!(
+                "reading random bytes from Read implementation failed; error: {}",
+                err
+            )
+        });
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
