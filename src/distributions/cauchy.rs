@@ -32,10 +32,7 @@ impl Cauchy {
     /// Panics if `scale <= 0`.
     pub fn new(median: f64, scale: f64) -> Cauchy {
         assert!(scale > 0.0, "Cauchy::new called with scale factor <= 0");
-        Cauchy {
-            median,
-            scale
-        }
+        Cauchy { median, scale }
     }
 }
 

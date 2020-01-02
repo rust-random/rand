@@ -94,10 +94,14 @@ impl Bernoulli {
     #[inline]
     pub fn new(p: f64) -> Result<Bernoulli, BernoulliError> {
         if !(p >= 0.0 && p < 1.0) {
-            if p == 1.0 { return Ok(Bernoulli { p_int: ALWAYS_TRUE }) }
+            if p == 1.0 {
+                return Ok(Bernoulli { p_int: ALWAYS_TRUE });
+            }
             return Err(BernoulliError::InvalidProbability);
         }
-        Ok(Bernoulli { p_int: (p * SCALE) as u64 })
+        Ok(Bernoulli {
+            p_int: (p * SCALE) as u64,
+        })
     }
 
     /// Construct a new `Bernoulli` with the probability of success of
@@ -125,7 +129,9 @@ impl Distribution<bool> for Bernoulli {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
         // Make sure to always return true for p = 1.0.
-        if self.p_int == ALWAYS_TRUE { return true; }
+        if self.p_int == ALWAYS_TRUE {
+            return true;
+        }
         let v: u64 = rng.gen();
         v < self.p_int
     }

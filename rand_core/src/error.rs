@@ -143,7 +143,9 @@ impl From<NonZeroU32> for Error {
     fn from(code: NonZeroU32) -> Self {
         #[cfg(feature = "std")]
         {
-            Error { inner: Box::new(ErrorCode(code)) }
+            Error {
+                inner: Box::new(ErrorCode(code)),
+            }
         }
         #[cfg(not(feature = "std"))]
         {
@@ -158,7 +160,9 @@ impl From<getrandom::Error> for Error {
     fn from(error: getrandom::Error) -> Self {
         #[cfg(feature = "std")]
         {
-            Error { inner: Box::new(error) }
+            Error {
+                inner: Box::new(error),
+            }
         }
         #[cfg(not(feature = "std"))]
         {

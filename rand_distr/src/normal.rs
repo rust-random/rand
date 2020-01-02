@@ -72,7 +72,11 @@ impl Distribution<f64> for StandardNormal {
                 y = y_.ln();
             }
 
-            if u < 0.0 { x - ziggurat_tables::ZIG_NORM_R } else { ziggurat_tables::ZIG_NORM_R - x }
+            if u < 0.0 {
+                x - ziggurat_tables::ZIG_NORM_R
+            } else {
+                ziggurat_tables::ZIG_NORM_R - x
+            }
         }
 
         ziggurat(rng, true, // this is symmetric
@@ -135,10 +139,7 @@ where StandardNormal: Distribution<N>
         if !(std_dev >= N::from(0.0)) {
             return Err(Error::StdDevTooSmall);
         }
-        Ok(Normal {
-            mean,
-            std_dev
-        })
+        Ok(Normal { mean, std_dev })
     }
 }
 
@@ -182,7 +183,9 @@ where StandardNormal: Distribution<N>
         if !(std_dev >= N::from(0.0)) {
             return Err(Error::StdDevTooSmall);
         }
-        Ok(LogNormal { norm: Normal::new(mean, std_dev).unwrap() })
+        Ok(LogNormal {
+            norm: Normal::new(mean, std_dev).unwrap(),
+        })
     }
 }
 

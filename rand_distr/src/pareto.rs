@@ -63,7 +63,10 @@ where OpenClosed01: Distribution<N>
         if !(shape > N::from(0.0)) {
             return Err(Error::ShapeTooSmall);
         }
-        Ok(Pareto { scale, inv_neg_shape: N::from(-1.0) / shape })
+        Ok(Pareto {
+            scale,
+            inv_neg_shape: N::from(-1.0) / shape,
+        })
     }
 }
 

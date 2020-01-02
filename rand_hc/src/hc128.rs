@@ -313,7 +313,9 @@ impl Hc128Core {
         let mut core = Self { t, counter1024: 0 };
 
         // run the cipher 1024 steps
-        for _ in 0..64 { core.sixteen_steps() };
+        for _ in 0..64 {
+            core.sixteen_steps()
+        }
         core.counter1024 = 0;
         core
     }
@@ -347,7 +349,9 @@ mod test {
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u32; 16];
-        for i in results.iter_mut() { *i = rng.next_u32(); }
+        for i in results.iter_mut() {
+            *i = rng.next_u32();
+        }
         let expected = [0x73150082, 0x3bfd03a0, 0xfb2fd77f, 0xaa63af0e,
                         0xde122fc6, 0xa7dc29b6, 0x62a68527, 0x8b75ec68,
                         0x9036db1e, 0x81896005, 0x00ade078, 0x491fbf9a,
@@ -363,7 +367,9 @@ mod test {
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u32; 16];
-        for i in results.iter_mut() { *i = rng.next_u32(); }
+        for i in results.iter_mut() {
+            *i = rng.next_u32();
+        }
         let expected = [0xc01893d5, 0xb7dbe958, 0x8f65ec98, 0x64176604,
                         0x36fc6724, 0xc82c6eec, 0x1b1c38a7, 0xc9b42a95,
                         0x323ef123, 0x0a6a908b, 0xce757b68, 0x9f14f7bb,
@@ -379,7 +385,9 @@ mod test {
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u32; 16];
-        for i in results.iter_mut() { *i = rng.next_u32(); }
+        for i in results.iter_mut() {
+            *i = rng.next_u32();
+        }
         let expected = [0x518251a4, 0x04b4930a, 0xb02af931, 0x0639f032,
                         0xbcb4a47a, 0x5722480b, 0x2bf99f72, 0xcdc0e566,
                         0x310f0c56, 0xd3cc83e8, 0x663db8ef, 0x62dfe07f,
@@ -394,7 +402,9 @@ mod test {
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u64; 8];
-        for i in results.iter_mut() { *i = rng.next_u64(); }
+        for i in results.iter_mut() {
+            *i = rng.next_u64();
+        }
         let expected = [0x3bfd03a073150082, 0xaa63af0efb2fd77f,
                         0xa7dc29b6de122fc6, 0x8b75ec6862a68527,
                         0x818960059036db1e, 0x491fbf9a00ade078,
@@ -404,9 +414,13 @@ mod test {
         // The RNG operates in a P block of 512 results and next a Q block.
         // After skipping 2*800 u32 results we end up somewhere in the Q block
         // of the second round
-        for _ in 0..800 { rng.next_u64(); }
+        for _ in 0..800 {
+            rng.next_u64();
+        }
 
-        for i in results.iter_mut() { *i = rng.next_u64(); }
+        for i in results.iter_mut() {
+            *i = rng.next_u64();
+        }
         let expected = [0xd8c4d6ca84d0fc10, 0xf16a5d91dc66e8e7,
                         0xd800de5bc37a8653, 0x7bae1f88c0dfbb4c,
                         0x3bfe1f374e6d4d14, 0x424b55676be3fa06,

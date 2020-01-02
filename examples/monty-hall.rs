@@ -52,7 +52,10 @@ fn simulate<R: Rng>(random_door: &Uniform<u32>, rng: &mut R) -> SimulationResult
         choice = switch_door(choice, open);
     }
 
-    SimulationResult { win: choice == car, switch }
+    SimulationResult {
+        win: choice == car,
+        switch,
+    }
 }
 
 // Returns the door the game host opens given our choice and knowledge of

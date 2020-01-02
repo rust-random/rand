@@ -31,7 +31,10 @@ impl Pareto {
     /// `scale` and `shape` have to be non-zero and positive.
     pub fn new(scale: f64, shape: f64) -> Pareto {
         assert!((scale > 0.) & (shape > 0.));
-        Pareto { scale, inv_neg_shape: -1.0 / shape }
+        Pareto {
+            scale,
+            inv_neg_shape: -1.0 / shape,
+        }
     }
 }
 

@@ -97,7 +97,7 @@ where
         };
         let w = v * (max - mu) / (mu - min);
         let beta = Beta::new(v, w).map_err(|_| PertError::RangeTooSmall)?;
-        Ok(Pert{ min, range, beta })
+        Ok(Pert { min, range, beta })
     }
 }
 

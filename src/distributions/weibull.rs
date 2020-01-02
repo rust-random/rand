@@ -28,7 +28,10 @@ impl Weibull {
     /// `scale` and `shape` have to be non-zero and positive.
     pub fn new(scale: f64, shape: f64) -> Weibull {
         assert!((scale > 0.) & (shape > 0.));
-        Weibull { inv_shape: 1./shape, scale }
+        Weibull {
+            inv_shape: 1. / shape,
+            scale,
+        }
     }
 }
 

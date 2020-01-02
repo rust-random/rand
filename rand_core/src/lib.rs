@@ -477,7 +477,9 @@ mod test {
             assert!(weight >= 20 && weight <= 44);
 
             for (i2, r2) in results.iter().enumerate() {
-                if i1 == i2 { continue; }
+                if i1 == i2 {
+                    continue;
+                }
                 let diff_weight = (r1 ^ r2).count_ones();
                 assert!(diff_weight >= 20);
             }

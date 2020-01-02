@@ -55,7 +55,11 @@ impl Distribution<f64> for StandardNormal {
                 y = y_.ln();
             }
 
-            if u < 0.0 { x - ziggurat_tables::ZIG_NORM_R } else { ziggurat_tables::ZIG_NORM_R - x }
+            if u < 0.0 {
+                x - ziggurat_tables::ZIG_NORM_R
+            } else {
+                ziggurat_tables::ZIG_NORM_R - x
+            }
         }
 
         ziggurat(rng, true, // this is symmetric
@@ -91,10 +95,7 @@ impl Normal {
     #[inline]
     pub fn new(mean: f64, std_dev: f64) -> Normal {
         assert!(std_dev >= 0.0, "Normal::new called with `std_dev` < 0");
-        Normal {
-            mean,
-            std_dev
-        }
+        Normal { mean, std_dev }
     }
 }
 impl Distribution<f64> for Normal {
@@ -125,7 +126,9 @@ impl LogNormal {
     #[inline]
     pub fn new(mean: f64, std_dev: f64) -> LogNormal {
         assert!(std_dev >= 0.0, "LogNormal::new called with `std_dev` < 0");
-        LogNormal { norm: Normal::new(mean, std_dev) }
+        LogNormal {
+            norm: Normal::new(mean, std_dev),
+        }
     }
 }
 impl Distribution<f64> for LogNormal {

@@ -63,10 +63,7 @@ where Standard: Distribution<N>
         if !(scale > N::from(0.0)) {
             return Err(Error::ScaleTooSmall);
         }
-        Ok(Cauchy {
-            median,
-            scale
-        })
+        Ok(Cauchy { median, scale })
     }
 }
 

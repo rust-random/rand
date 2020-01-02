@@ -926,7 +926,11 @@ impl UniformSampler for UniformDuration {
                 let nanos = nanos.sample(rng);
                 Duration::new(nanos / 1_000_000_000, (nanos % 1_000_000_000) as u32)
             }
-            UniformDurationMode::Large { max_secs, max_nanos, secs } => {
+            UniformDurationMode::Large {
+                max_secs,
+                max_nanos,
+                secs,
+            } => {
                 // constant folding means this is at least as fast as `gen_range`
                 let nano_range = Uniform::new(0, 1_000_000_000);
                 loop {
@@ -1244,7 +1248,9 @@ mod tests {
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                MyF32 { x: self.0.sample(rng) }
+                MyF32 {
+                    x: self.0.sample(rng),
+                }
             }
         }
         impl SampleUniform for MyF32 {

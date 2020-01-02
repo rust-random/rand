@@ -128,7 +128,11 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         }
         let distr = X::Sampler::new(zero, total_weight.clone());
 
-        Ok(WeightedIndex { cumulative_weights: weights, total_weight, weight_distribution: distr })
+        Ok(WeightedIndex {
+            cumulative_weights: weights,
+            total_weight,
+            weight_distribution: distr,
+        })
     }
 
     /// Update a subset of weights, without changing the number of weights.

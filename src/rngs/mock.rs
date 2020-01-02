@@ -34,7 +34,10 @@ impl StepRng {
     /// Create a `StepRng`, yielding an arithmetic sequence starting with
     /// `initial` and incremented by `increment` each time.
     pub fn new(initial: u64, increment: u64) -> Self {
-        StepRng { v: initial, a: increment }
+        StepRng {
+            v: initial,
+            a: increment,
+        }
     }
 }
 

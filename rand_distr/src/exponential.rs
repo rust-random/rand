@@ -118,7 +118,9 @@ where Exp1: Distribution<N>
         if !(lambda > N::from(0.0)) {
             return Err(Error::LambdaTooSmall);
         }
-        Ok(Exp { lambda_inverse: N::from(1.0) / lambda })
+        Ok(Exp {
+            lambda_inverse: N::from(1.0) / lambda,
+        })
     }
 }
 

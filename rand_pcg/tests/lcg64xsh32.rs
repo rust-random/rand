@@ -25,7 +25,9 @@ fn test_lcg64xsh32_true_values() {
     let mut rng = Lcg64Xsh32::new(42, 54);
 
     let mut results = [0u32; 6];
-    for i in results.iter_mut() { *i = rng.next_u32(); }
+    for i in results.iter_mut() {
+        *i = rng.next_u32();
+    }
     let expected: [u32; 6] = [0xa15c02b7, 0x7b47f409, 0xba1d3330,
         0x83d2f293, 0xbfa4784b, 0xcbed606e];
     assert_eq!(results, expected);

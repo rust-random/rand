@@ -641,10 +641,28 @@ mod test {
         #[cfg(feature = "alloc")]
         test_iter(r, (0..9).collect::<Vec<_>>().into_iter());
         test_iter(r, UnhintedIterator { iter: 0..9 });
-        test_iter(r, ChunkHintedIterator { iter: 0..9, chunk_size: 4, chunk_remaining: 4, hint_total_size: false });
-        test_iter(r, ChunkHintedIterator { iter: 0..9, chunk_size: 4, chunk_remaining: 4, hint_total_size: true });
-        test_iter(r, WindowHintedIterator { iter: 0..9, window_size: 2, hint_total_size: false });
-        test_iter(r, WindowHintedIterator { iter: 0..9, window_size: 2, hint_total_size: true });
+        test_iter(r, ChunkHintedIterator {
+            iter: 0..9,
+            chunk_size: 4,
+            chunk_remaining: 4,
+            hint_total_size: false,
+        });
+        test_iter(r, ChunkHintedIterator {
+            iter: 0..9,
+            chunk_size: 4,
+            chunk_remaining: 4,
+            hint_total_size: true,
+        });
+        test_iter(r, WindowHintedIterator {
+            iter: 0..9,
+            window_size: 2,
+            hint_total_size: false,
+        });
+        test_iter(r, WindowHintedIterator {
+            iter: 0..9,
+            window_size: 2,
+            hint_total_size: true,
+        });
 
         assert_eq!((0..0).choose(r), None);
         assert_eq!(UnhintedIterator{ iter: 0..0 }.choose(r), None);

@@ -60,7 +60,10 @@ where OpenClosed01: Distribution<N>
         if !(shape > N::from(0.0)) {
             return Err(Error::ShapeTooSmall);
         }
-        Ok(Weibull { inv_shape: N::from(1.)/shape, scale })
+        Ok(Weibull {
+            inv_shape: N::from(1.) / shape,
+            scale,
+        })
     }
 }
 

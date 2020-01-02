@@ -25,7 +25,9 @@ fn test_mcg128xsl64_true_values() {
     let mut rng = Mcg128Xsl64::new(42);
 
     let mut results = [0u64; 6];
-    for i in results.iter_mut() { *i = rng.next_u64(); }
+    for i in results.iter_mut() {
+        *i = rng.next_u64();
+    }
     let expected: [u64; 6] = [0x63b4a3a813ce700a, 0x382954200617ab24,
         0xa7fd85ae3fe950ce, 0xd715286aa2887737, 0x60c92fee2e59f32c, 0x84c4e96beff30017];
     assert_eq!(results, expected);
