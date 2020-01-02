@@ -133,7 +133,7 @@ impl<R: BlockRngCore> BlockRng<R> {
     /// Create a new `BlockRng` from an existing RNG implementing
     /// `BlockRngCore`. Results will be generated on first use.
     #[inline]
-    pub fn new(core: R) -> BlockRng<R>{
+    pub fn new(core: R) -> BlockRng<R> {
         let results_empty = R::Results::default();
         BlockRng {
             core,
@@ -307,7 +307,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
     /// Create a new `BlockRng` from an existing RNG implementing
     /// `BlockRngCore`. Results will be generated on first use.
     #[inline]
-    pub fn new(core: R) -> BlockRng64<R>{
+    pub fn new(core: R) -> BlockRng64<R> {
         let results_empty = R::Results::default();
         BlockRng64 {
             core,

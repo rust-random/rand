@@ -64,9 +64,15 @@ pub trait Float:
 
 impl Float for f32 {
     #[inline]
-    fn pi() -> Self { core::f32::consts::PI }
+    fn pi() -> Self {
+        core::f32::consts::PI
+    }
+
     #[inline]
-    fn from(x: f64) -> Self { x as f32 }
+    fn from(x: f64) -> Self {
+        x as f32
+    }
+
     #[inline]
     fn to_u64(self) -> Option<u64> {
         if self >= 0. && self <= ::core::u64::MAX as f32 {
@@ -77,21 +83,40 @@ impl Float for f32 {
     }
 
     #[inline]
-    fn abs(self) -> Self { self.abs() }
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
     #[inline]
-    fn floor(self) -> Self { self.floor() }
-    
+    fn floor(self) -> Self {
+        self.floor()
+    }
+
     #[inline]
-    fn exp(self) -> Self { self.exp() }
+    fn exp(self) -> Self {
+        self.exp()
+    }
+
     #[inline]
-    fn ln(self) -> Self { self.ln() }
+    fn ln(self) -> Self {
+        self.ln()
+    }
+
     #[inline]
-    fn sqrt(self) -> Self { self.sqrt() }
+    fn sqrt(self) -> Self {
+        self.sqrt()
+    }
+
     #[inline]
-    fn powf(self, power: Self) -> Self { self.powf(power) }
-    
+    fn powf(self, power: Self) -> Self {
+        self.powf(power)
+    }
+
     #[inline]
-    fn tan(self) -> Self { self.tan() }
+    fn tan(self) -> Self {
+        self.tan()
+    }
+
     #[inline]
     fn log_gamma(self) -> Self {
         let result = log_gamma(self.into());
@@ -103,9 +128,15 @@ impl Float for f32 {
 
 impl Float for f64 {
     #[inline]
-    fn pi() -> Self { core::f64::consts::PI }
+    fn pi() -> Self {
+        core::f64::consts::PI
+    }
+
     #[inline]
-    fn from(x: f64) -> Self { x }
+    fn from(x: f64) -> Self {
+        x
+    }
+
     #[inline]
     fn to_u64(self) -> Option<u64> {
         if self >= 0. && self <= ::core::u64::MAX as f64 {
@@ -116,23 +147,44 @@ impl Float for f64 {
     }
 
     #[inline]
-    fn abs(self) -> Self { self.abs() }
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
     #[inline]
-    fn floor(self) -> Self { self.floor() }
-    
+    fn floor(self) -> Self {
+        self.floor()
+    }
+
     #[inline]
-    fn exp(self) -> Self { self.exp() }
+    fn exp(self) -> Self {
+        self.exp()
+    }
+
     #[inline]
-    fn ln(self) -> Self { self.ln() }
+    fn ln(self) -> Self {
+        self.ln()
+    }
+
     #[inline]
-    fn sqrt(self) -> Self { self.sqrt() }
+    fn sqrt(self) -> Self {
+        self.sqrt()
+    }
+
     #[inline]
-    fn powf(self, power: Self) -> Self { self.powf(power) }
-    
+    fn powf(self, power: Self) -> Self {
+        self.powf(power)
+    }
+
     #[inline]
-    fn tan(self) -> Self { self.tan() }
+    fn tan(self) -> Self {
+        self.tan()
+    }
+
     #[inline]
-    fn log_gamma(self) -> Self { log_gamma(self) }
+    fn log_gamma(self) -> Self {
+        log_gamma(self)
+    }
 }
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma

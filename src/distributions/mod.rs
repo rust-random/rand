@@ -386,7 +386,9 @@ mod tests {
 
     #[test]
     fn test_make_an_iter() {
-        fn ten_dice_rolls_other_than_five<'a, R: Rng>(rng: &'a mut R) -> impl Iterator<Item = i32> + 'a {
+        fn ten_dice_rolls_other_than_five<'a, R: Rng>(
+            rng: &'a mut R,
+        ) -> impl Iterator<Item = i32> + 'a {
             Uniform::new_inclusive(1, 6)
                 .sample_iter(rng)
                 .filter(|x| *x != 5)

@@ -233,10 +233,9 @@ where
     }
 
     #[inline(never)]
-    fn reseed_and_generate(&mut self,
-                           results: &mut <Self as BlockRngCore>::Results,
-                           global_fork_counter: usize)
-    {
+    fn reseed_and_generate(
+        &mut self, results: &mut <Self as BlockRngCore>::Results, global_fork_counter: usize,
+    ) {
         #![allow(clippy::if_same_then_else)] // false positive
         if self.is_forked(global_fork_counter) {
             info!("Fork detected, reseeding RNG");
@@ -326,7 +325,9 @@ mod fork {
 
 #[cfg(not(all(unix, not(target_os = "emscripten"))))]
 mod fork {
-    pub fn get_fork_counter() -> usize { 0 }
+    pub fn get_fork_counter() -> usize {
+        0
+    }
     pub fn register_fork_handler() {}
 }
 

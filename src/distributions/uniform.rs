@@ -294,13 +294,17 @@ impl<Borrowed> SampleBorrow<Borrowed> for Borrowed
 where Borrowed: SampleUniform
 {
     #[inline(always)]
-    fn borrow(&self) -> &Borrowed { self }
+    fn borrow(&self) -> &Borrowed {
+        self
+    }
 }
 impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed
 where Borrowed: SampleUniform
 {
     #[inline(always)]
-   fn borrow(&self) -> &Borrowed { *self }
+    fn borrow(&self) -> &Borrowed {
+        *self
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

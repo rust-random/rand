@@ -118,7 +118,9 @@ macro_rules! tuple_impl {
 impl Distribution<()> for Standard {
     #[allow(clippy::unused_unit)]
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, _: &mut R) -> () { () }
+    fn sample<R: Rng + ?Sized>(&self, _: &mut R) -> () {
+        ()
+    }
 }
 tuple_impl! {A}
 tuple_impl! {A, B}
@@ -227,7 +229,8 @@ mod tests {
     #[test]
     fn value_stability() {
         fn test_samples<T: Copy + core::fmt::Debug + PartialEq, D: Distribution<T>>(
-            distr: &D, zero: T, expected: &[T]) {
+            distr: &D, zero: T, expected: &[T],
+        ) {
             let mut rng = crate::test::rng(807);
             let mut buf = [zero; 5];
             for x in &mut buf {

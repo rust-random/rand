@@ -640,7 +640,7 @@ mod test {
     #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_iterator_choose() {
         let r = &mut crate::test::rng(109);
-        fn test_iter<R: Rng + ?Sized, Iter: Iterator<Item=usize> + Clone>(r: &mut R, iter: Iter) {
+        fn test_iter<R: Rng + ?Sized, Iter: Iterator<Item = usize> + Clone>(r: &mut R, iter: Iter) {
             let mut chosen = [0i32; 9];
             for _ in 0..1000 {
                 let picked = iter.clone().choose(r).unwrap();

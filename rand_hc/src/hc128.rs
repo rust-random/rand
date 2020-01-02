@@ -173,9 +173,7 @@ impl BlockRngCore for Hc128Core {
 impl Hc128Core {
     // One step of HC-128, update P and generate 32 bits keystream
     #[inline(always)]
-    fn step_p(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize)
-         -> u32
-    {
+    fn step_p(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize) -> u32 {
         let (p, q) = self.t.split_at_mut(512);
         // FIXME: it would be great if we the bounds checks here could be
         // optimized out, and we would not need unsafe.
@@ -202,9 +200,7 @@ impl Hc128Core {
     // Similar to `step_p`, but `p` and `q` are swapped, and the rotates are to
     // the left instead of to the right.
     #[inline(always)]
-    fn step_q(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize)
-         -> u32
-    {
+    fn step_q(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize) -> u32 {
         let (p, q) = self.t.split_at_mut(512);
         unsafe {
             let temp0 = q.get_unchecked(i511).rotate_left(23);

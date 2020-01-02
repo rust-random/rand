@@ -316,12 +316,26 @@ trait UInt: Copy + PartialOrd + Ord + PartialEq + Eq + SampleUniform + core::has
     fn as_usize(self) -> usize;
 }
 impl UInt for u32 {
-    #[inline] fn zero() -> Self { 0 }
-    #[inline] fn as_usize(self) -> usize { self as usize }
+    #[inline]
+    fn zero() -> Self {
+        0
+    }
+
+    #[inline]
+    fn as_usize(self) -> usize {
+        self as usize
+    }
 }
 impl UInt for usize {
-    #[inline] fn zero() -> Self { 0 }
-    #[inline] fn as_usize(self) -> usize { self }
+    #[inline]
+    fn zero() -> Self {
+        0
+    }
+
+    #[inline]
+    fn as_usize(self) -> usize {
+        self
+    }
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using rejection

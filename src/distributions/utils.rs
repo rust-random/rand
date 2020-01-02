@@ -252,13 +252,23 @@ pub(crate) trait Float: Sized {
 /// Implement functions on f32/f64 to give them APIs similar to SIMD types
 pub(crate) trait FloatAsSIMD: Sized {
     #[inline(always)]
-    fn lanes() -> usize { 1 }
+    fn lanes() -> usize {
+        1
+    }
     #[inline(always)]
-    fn splat(scalar: Self) -> Self { scalar }
+    fn splat(scalar: Self) -> Self {
+        scalar
+    }
     #[inline(always)]
-    fn extract(self, index: usize) -> Self { debug_assert_eq!(index, 0); self }
+    fn extract(self, index: usize) -> Self {
+        debug_assert_eq!(index, 0);
+        self
+    }
     #[inline(always)]
-    fn replace(self, index: usize, new_value: Self) -> Self { debug_assert_eq!(index, 0); new_value }
+    fn replace(self, index: usize, new_value: Self) -> Self {
+        debug_assert_eq!(index, 0);
+        new_value
+    }
 }
 
 pub(crate) trait BoolAsSIMD: Sized {
@@ -269,11 +279,19 @@ pub(crate) trait BoolAsSIMD: Sized {
 
 impl BoolAsSIMD for bool {
     #[inline(always)]
-    fn any(self) -> bool { self }
+    fn any(self) -> bool {
+        self
+    }
+
     #[inline(always)]
-    fn all(self) -> bool { self }
+    fn all(self) -> bool {
+        self
+    }
+
     #[inline(always)]
-    fn none(self) -> bool { !self }
+    fn none(self) -> bool {
+        !self
+    }
 }
 
 macro_rules! scalar_float_impl {
@@ -299,17 +317,35 @@ macro_rules! scalar_float_impl {
         impl FloatSIMDUtils for $ty {
             type Mask = bool;
             #[inline(always)]
-            fn all_lt(self, other: Self) -> bool { self < other }
+            fn all_lt(self, other: Self) -> bool {
+                self < other
+            }
+
             #[inline(always)]
-            fn all_le(self, other: Self) -> bool { self <= other }
+            fn all_le(self, other: Self) -> bool {
+                self <= other
+            }
+
             #[inline(always)]
-            fn all_finite(self) -> bool { self.is_finite() }
+            fn all_finite(self) -> bool {
+                self.is_finite()
+            }
+
             #[inline(always)]
-            fn finite_mask(self) -> Self::Mask { self.is_finite() }
+            fn finite_mask(self) -> Self::Mask {
+                self.is_finite()
+            }
+
             #[inline(always)]
-            fn gt_mask(self, other: Self) -> Self::Mask { self > other }
+            fn gt_mask(self, other: Self) -> Self::Mask {
+                self > other
+            }
+
             #[inline(always)]
-            fn ge_mask(self, other: Self) -> Self::Mask { self >= other }
+            fn ge_mask(self, other: Self) -> Self::Mask {
+                self >= other
+            }
+
             #[inline(always)]
             fn decrease_masked(self, mask: Self::Mask) -> Self {
                 debug_assert!(mask, "At least one lane must be set");
@@ -317,7 +353,9 @@ macro_rules! scalar_float_impl {
             }
             type UInt = $uty;
             #[inline]
-            fn cast_from_int(i: Self::UInt) -> Self { i as $ty }
+            fn cast_from_int(i: Self::UInt) -> Self {
+                i as $ty
+            }
         }
 
         impl FloatAsSIMD for $ty {}
@@ -334,11 +372,20 @@ macro_rules! simd_impl {
         impl FloatSIMDUtils for $ty {
             type Mask = $mty;
             #[inline(always)]
-            fn all_lt(self, other: Self) -> bool { self.lt(other).all() }
+            fn all_lt(self, other: Self) -> bool {
+                self.lt(other).all()
+            }
+
             #[inline(always)]
-            fn all_le(self, other: Self) -> bool { self.le(other).all() }
+            fn all_le(self, other: Self) -> bool {
+                self.le(other).all()
+            }
+
             #[inline(always)]
-            fn all_finite(self) -> bool { self.finite_mask().all() }
+            fn all_finite(self) -> bool {
+                self.finite_mask().all()
+            }
+
             #[inline(always)]
             fn finite_mask(self) -> Self::Mask {
                 // This can possibly be done faster by checking bit patterns
@@ -346,10 +393,17 @@ macro_rules! simd_impl {
                 let pos_inf = $ty::splat(::core::$f_scalar::INFINITY);
                 self.gt(neg_inf) & self.lt(pos_inf)
             }
+
             #[inline(always)]
-            fn gt_mask(self, other: Self) -> Self::Mask { self.gt(other) }
+            fn gt_mask(self, other: Self) -> Self::Mask {
+                self.gt(other)
+            }
+
             #[inline(always)]
-            fn ge_mask(self, other: Self) -> Self::Mask { self.ge(other) }
+            fn ge_mask(self, other: Self) -> Self::Mask {
+                self.ge(other)
+            }
+
             #[inline(always)]
             fn decrease_masked(self, mask: Self::Mask) -> Self {
                 // Casting a mask into ints will produce all bits set for
@@ -363,7 +417,9 @@ macro_rules! simd_impl {
             }
             type UInt = $uty;
             #[inline]
-            fn cast_from_int(i: Self::UInt) -> Self { i.cast() }
+            fn cast_from_int(i: Self::UInt) -> Self {
+                i.cast()
+            }
         }
     };
 }

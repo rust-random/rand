@@ -103,9 +103,9 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
-        (distr: D, zero: N, expected: &[N])
-        {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
+            distr: D, zero: N, expected: &[N],
+        ) {
             let mut rng = crate::test::rng(213);
             let mut buf = [zero; 4];
             for x in &mut buf {
