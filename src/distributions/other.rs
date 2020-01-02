@@ -202,7 +202,9 @@ mod tests {
         // Test by generating a relatively large number of chars, so we also
         // take the rejection sampling path.
         let word: String = iter::repeat(())
-                .map(|()| rng.gen::<char>()).take(1000).collect();
+            .map(|()| rng.gen::<char>())
+            .take(1000)
+            .collect();
         assert!(word.len() != 0);
     }
 

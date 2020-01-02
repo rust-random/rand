@@ -104,10 +104,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         X: for<'a> ::core::ops::AddAssign<&'a X> + Clone + Default,
     {
         let mut iter = weights.into_iter();
-        let mut total_weight: X = iter.next()
-                                      .ok_or(WeightedError::NoItem)?
-                                      .borrow()
-                                      .clone();
+        let mut total_weight: X = iter.next().ok_or(WeightedError::NoItem)?.borrow().clone();
 
         let zero = <X as Default>::default();
         if total_weight < zero {
@@ -232,8 +229,15 @@ where X: SampleUniform + PartialOrd
         use ::core::cmp::Ordering;
         let chosen_weight = self.weight_distribution.sample(rng);
         // Find the first item which has a weight *higher* than the chosen weight.
-        self.cumulative_weights.binary_search_by(
-            |w| if *w <= chosen_weight { Ordering::Less } else { Ordering::Greater }).unwrap_err()
+        self.cumulative_weights
+            .binary_search_by(|w| {
+                if *w <= chosen_weight {
+                    Ordering::Less
+                } else {
+                    Ordering::Greater
+                }
+            })
+            .unwrap_err()
     }
 }
 

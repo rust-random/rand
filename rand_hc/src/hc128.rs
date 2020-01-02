@@ -184,9 +184,10 @@ impl Hc128Core {
             let temp0 = p.get_unchecked(i511).rotate_right(23);
             let temp1 = p.get_unchecked(i3).rotate_right(10);
             let temp2 = p.get_unchecked(i10).rotate_right(8);
-            *p.get_unchecked_mut(i) = p.get_unchecked(i)
-                                       .wrapping_add(temp2)
-                                       .wrapping_add(temp0 ^ temp1);
+            *p.get_unchecked_mut(i) = p
+                .get_unchecked(i)
+                .wrapping_add(temp2)
+                .wrapping_add(temp0 ^ temp1);
             let temp3 = {
                 // The h1 function in HC-128
                 let a = *p.get_unchecked(i12) as u8;
@@ -209,9 +210,10 @@ impl Hc128Core {
             let temp0 = q.get_unchecked(i511).rotate_left(23);
             let temp1 = q.get_unchecked(i3).rotate_left(10);
             let temp2 = q.get_unchecked(i10).rotate_left(8);
-            *q.get_unchecked_mut(i) = q.get_unchecked(i)
-                                       .wrapping_add(temp2)
-                                       .wrapping_add(temp0 ^ temp1);
+            *q.get_unchecked_mut(i) = q
+                .get_unchecked(i)
+                .wrapping_add(temp2)
+                .wrapping_add(temp0 ^ temp1);
             let temp3 = {
                 // The h2 function in HC-128
                 let a = *q.get_unchecked(i12) as u8;
@@ -295,9 +297,12 @@ impl Hc128Core {
 
         // Generate the 256 intermediate values W[16] ... W[256+16-1], and
         // copy the last 16 generated values to the start op P.
-        for i in 16..256+16 {
-            t[i] = f2(t[i-2]).wrapping_add(t[i-7]).wrapping_add(f1(t[i-15]))
-                   .wrapping_add(t[i-16]).wrapping_add(i as u32);
+        for i in 16..256 + 16 {
+            t[i] = f2(t[i - 2])
+                .wrapping_add(t[i - 7])
+                .wrapping_add(f1(t[i - 15]))
+                .wrapping_add(t[i - 16])
+                .wrapping_add(i as u32);
         }
         {
             let (p1, p2) = t.split_at_mut(256);
@@ -306,8 +311,11 @@ impl Hc128Core {
 
         // Generate both the P and Q tables
         for i in 16..1024 {
-            t[i] = f2(t[i-2]).wrapping_add(t[i-7]).wrapping_add(f1(t[i-15]))
-                   .wrapping_add(t[i-16]).wrapping_add(256 + i as u32);
+            t[i] = f2(t[i - 2])
+                .wrapping_add(t[i - 7])
+                .wrapping_add(f1(t[i - 15]))
+                .wrapping_add(t[i - 16])
+                .wrapping_add(256 + i as u32);
         }
 
         let mut core = Self { t, counter1024: 0 };

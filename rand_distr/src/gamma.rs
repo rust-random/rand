@@ -479,10 +479,8 @@ where
     /// distribution.
     pub fn new(alpha: N, beta: N) -> Result<Beta<N>, BetaError> {
         Ok(Beta {
-            gamma_a: Gamma::new(alpha, N::from(1.))
-                         .map_err(|_| BetaError::AlphaTooSmall)?,
-            gamma_b: Gamma::new(beta, N::from(1.))
-                         .map_err(|_| BetaError::BetaTooSmall)?,
+            gamma_a: Gamma::new(alpha, N::from(1.)).map_err(|_| BetaError::AlphaTooSmall)?,
+            gamma_b: Gamma::new(beta, N::from(1.)).map_err(|_| BetaError::BetaTooSmall)?,
         })
     }
 }

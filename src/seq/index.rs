@@ -378,12 +378,10 @@ mod test {
         assert_eq!(sample_floyd(&mut r, 1, 1).into_vec(), vec![0]);
 
         // These algorithms should be fast with big numbers. Test average.
-        let sum: usize = sample_rejection(&mut r, 1 << 25, 10u32)
-                .into_iter().sum();
+        let sum: usize = sample_rejection(&mut r, 1 << 25, 10u32).into_iter().sum();
         assert!(1 << 25 < sum && sum < (1 << 25) * 25);
 
-        let sum: usize = sample_floyd(&mut r, 1 << 25, 10)
-                .into_iter().sum();
+        let sum: usize = sample_floyd(&mut r, 1 << 25, 10).into_iter().sum();
         assert!(1 << 25 < sum && sum < (1 << 25) * 25);
     }
 

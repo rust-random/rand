@@ -666,8 +666,9 @@ macro_rules! uniform_float_impl {
                         "Uniform::new called with `low >= high`");
                 assert!(low.all_finite() && high.all_finite(),
                         "Uniform::new called with non-finite boundaries");
-                let max_rand = <$ty>::splat((::core::$u_scalar::MAX >> $bits_to_discard)
-                                            .into_float_with_exponent(0) - 1.0);
+                let max_rand = <$ty>::splat(
+                    (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
+                );
 
                 let mut scale = high - low;
 
@@ -695,8 +696,9 @@ macro_rules! uniform_float_impl {
                         "Uniform::new_inclusive called with `low > high`");
                 assert!(low.all_finite() && high.all_finite(),
                         "Uniform::new_inclusive called with non-finite boundaries");
-                let max_rand = <$ty>::splat((::core::$u_scalar::MAX >> $bits_to_discard)
-                                            .into_float_with_exponent(0) - 1.0);
+                let max_rand = <$ty>::splat(
+                    (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
+                );
 
                 let mut scale = (high - low) / max_rand;
 
@@ -715,8 +717,7 @@ macro_rules! uniform_float_impl {
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 // Generate a value in the range [1, 2)
-                let value1_2 = (rng.gen::<$uty>() >> $bits_to_discard)
-                               .into_float_with_exponent(0);
+                let value1_2 = (rng.gen::<$uty>() >> $bits_to_discard).into_float_with_exponent(0);
 
                 // Get a value in the range [0, 1) in order to avoid
                 // overflowing into infinity when multiplying with scale
@@ -744,8 +745,8 @@ macro_rules! uniform_float_impl {
 
                 loop {
                     // Generate a value in the range [1, 2)
-                    let value1_2 = (rng.gen::<$uty>() >> $bits_to_discard)
-                                   .into_float_with_exponent(0);
+                    let value1_2 =
+                        (rng.gen::<$uty>() >> $bits_to_discard).into_float_with_exponent(0);
 
                     // Get a value in the range [0, 1) in order to avoid
                     // overflowing into infinity when multiplying with scale

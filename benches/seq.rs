@@ -60,8 +60,7 @@ macro_rules! seq_slice_choose_multiple {
             b.iter(|| {
                 // Collect full result to prevent unwanted shortcuts getting
                 // first element (in case sample_indices returns an iterator).
-                for (slot, sample) in result.iter_mut().zip(
-                    x.choose_multiple(&mut rng, $amount)) {
+                for (slot, sample) in result.iter_mut().zip(x.choose_multiple(&mut rng, $amount)) {
                     *slot = *sample;
                 }
                 result[$amount-1]

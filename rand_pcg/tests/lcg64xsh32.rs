@@ -47,8 +47,8 @@ fn test_lcg64xsh32_serde() {
 
     let buf = buf.into_inner().unwrap();
     let mut read = BufReader::new(&buf[..]);
-    let mut deserialized: Lcg64Xsh32 = bincode::deserialize_from(&mut read)
-        .expect("Could not deserialize");
+    let mut deserialized: Lcg64Xsh32 =
+        bincode::deserialize_from(&mut read).expect("Could not deserialize");
 
     for _ in 0..16 {
         assert_eq!(rng.next_u64(), deserialized.next_u64());

@@ -94,7 +94,9 @@ macro_rules! distr_duration {
                 let mut accum = Duration::new(0, 0);
                 for _ in 0..RAND_BENCH_N {
                     let x: Duration = distr.sample(&mut rng);
-                    accum = accum.checked_add(x).unwrap_or(Duration::new(u64::max_value(), 999_999_999));
+                    accum = accum
+                        .checked_add(x)
+                        .unwrap_or(Duration::new(u64::max_value(), 999_999_999));
                 }
                 accum
             });

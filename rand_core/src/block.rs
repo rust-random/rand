@@ -122,10 +122,10 @@ pub struct BlockRng<R: BlockRngCore + ?Sized> {
 impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng<R> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("BlockRng")
-           .field("core", &self.core)
-           .field("result_len", &self.results.as_ref().len())
-           .field("index", &self.index)
-           .finish()
+            .field("core", &self.core)
+            .field("result_len", &self.results.as_ref().len())
+            .field("index", &self.index)
+            .finish()
     }
 }
 
@@ -295,11 +295,11 @@ pub struct BlockRng64<R: BlockRngCore + ?Sized> {
 impl<R: BlockRngCore + fmt::Debug> fmt::Debug for BlockRng64<R> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("BlockRng64")
-           .field("core", &self.core)
-           .field("result_len", &self.results.as_ref().len())
-           .field("index", &self.index)
-           .field("half_used", &self.half_used)
-           .finish()
+            .field("core", &self.core)
+            .field("result_len", &self.results.as_ref().len())
+            .field("index", &self.index)
+            .field("half_used", &self.half_used)
+            .finish()
     }
 }
 

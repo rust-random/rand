@@ -25,9 +25,13 @@ fn unit_sphere() {
     for _ in 0..N_SAMPLES {
         let v: [f64; 3] = dist.sample(&mut rng);
         for i in 0..N_DIM {
-            histograms[i].add(v[i]).map_err(
-                |e| { println!("v: {}", v[i]); e }
-            ).unwrap();
+            histograms[i]
+                .add(v[i])
+                .map_err(|e| {
+                    println!("v: {}", v[i]);
+                    e
+                })
+                .unwrap();
         }
     }
     for h in &histograms {
