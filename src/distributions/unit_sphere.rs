@@ -37,12 +37,12 @@ impl Distribution<[f64; 3]> for UnitSphereSurface {
         let uniform = Uniform::new(-1., 1.);
         loop {
             let (x1, x2) = (uniform.sample(rng), uniform.sample(rng));
-            let sum = x1*x1 + x2*x2;
+            let sum = x1 * x1 + x2 * x2;
             if sum >= 1. {
                 continue;
             }
             let factor = 2. * (1.0_f64 - sum).sqrt();
-            return [x1 * factor, x2 * factor, 1. - 2.*sum];
+            return [x1 * factor, x2 * factor, 1. - 2. * sum];
         }
     }
 }
@@ -75,7 +75,7 @@ mod tests {
         let dist = UnitSphereSurface::new();
         for _ in 0..1000 {
             let x = dist.sample(&mut rng);
-            assert_almost_eq!(x[0]*x[0] + x[1]*x[1] + x[2]*x[2], 1., 1e-15);
+            assert_almost_eq!(x[0] * x[0] + x[1] * x[1] + x[2] * x[2], 1., 1e-15);
         }
     }
 

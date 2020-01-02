@@ -326,7 +326,7 @@ impl Hc128Core {
 }
 
 impl SeedableRng for Hc128Core {
-    type Seed = [u8; SEED_WORDS*4];
+    type Seed = [u8; SEED_WORDS * 4];
 
     /// Create an HC-128 random number generator with a seed. The seed has to be
     /// 256 bits in length, matching the 128 bit `key` followed by 128 bit `iv`
@@ -457,7 +457,7 @@ mod test {
         // Pick a somewhat large buffer so we can test filling with the
         // remainder from `state.results`, directly filling the buffer, and
         // filling the remainder of the buffer.
-        let mut buffer = [0u8; 16*4*2];
+        let mut buffer = [0u8; 16 * 4 * 2];
         // Consume a value so that we have a remainder.
         assert!(rng.next_u64() == 0x04b4930a518251a4);
         rng.fill_bytes(&mut buffer);

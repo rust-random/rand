@@ -226,7 +226,7 @@ where R: Rng + ?Sized {
     // We do some calculations with f32. Accuracy is not very important.
 
     if amount < 163 {
-        const C: [[f32; 2]; 2] = [[1.6, 8.0/45.0], [10.0, 70.0/9.0]];
+        const C: [[f32; 2]; 2] = [[1.6, 8.0 / 45.0], [10.0, 70.0 / 9.0]];
         let j = if length < 500_000 { 0 } else { 1 };
         let amount_fp = amount as f32;
         let m4 = C[0][j] * amount_fp;
@@ -237,7 +237,7 @@ where R: Rng + ?Sized {
             sample_floyd(rng, length, amount)
         }
     } else {
-        const C: [f32; 2] = [270.0, 330.0/9.0];
+        const C: [f32; 2] = [270.0, 330.0 / 9.0];
         let j = if length < 500_000 { 0 } else { 1 };
         if (length as f32) < C[j] * (amount as f32) {
             sample_inplace(rng, length, amount)
@@ -262,7 +262,7 @@ where R: Rng + ?Sized {
 
     debug_assert!(amount <= length);
     let mut indices = Vec::with_capacity(amount as usize);
-    for j in length - amount .. length {
+    for j in length - amount..length {
         let t = rng.gen_range(0, j + 1);
         if floyd_shuffle {
             if let Some(pos) = indices.iter().position(|&x| x == t) {
@@ -420,14 +420,14 @@ mod test {
         assert!(v1 != v3);
 
         // A large length and small amount should use Floyd
-        let (length, amount): (usize, usize) = (1<<20, 50);
+        let (length, amount): (usize, usize) = (1 << 20, 50);
         let v1 = sample(&mut seed_rng(421), length, amount);
         let v2 = sample_floyd(&mut seed_rng(421), length as u32, amount as u32);
         assert!(v1.iter().all(|e| e < length));
         assert_eq!(v1, v2);
 
         // A large length and larger amount should use cache
-        let (length, amount): (usize, usize) = (1<<20, 600);
+        let (length, amount): (usize, usize) = (1 << 20, 600);
         let v1 = sample(&mut seed_rng(422), length, amount);
         let v2 = sample_rejection(&mut seed_rng(422), length as u32, amount as u32);
         assert!(v1.iter().all(|e| e < length));

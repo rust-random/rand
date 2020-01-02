@@ -208,8 +208,8 @@ impl Distribution<u64> for Binomial {
                 // Step 5.2: Squeezing. Check the value of ln(v) againts upper and
                 // lower bound of ln(f(y)).
                 let k = k as f64;
-                let rho = (k / npq) * ((k * (k / 3. + 0.625) + 1./6.) / npq + 0.5);
-                let t = -0.5 * k*k / npq;
+                let rho = (k / npq) * ((k * (k / 3. + 0.625) + 1. / 6.) / npq + 0.5);
+                let t = -0.5 * k * k / npq;
                 let alpha = v.ln();
                 if alpha < t - rho {
                     break;

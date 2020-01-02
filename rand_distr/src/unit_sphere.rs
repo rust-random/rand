@@ -36,12 +36,12 @@ impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitSphere {
         let uniform = Uniform::new(N::from(-1.), N::from(1.));
         loop {
             let (x1, x2) = (uniform.sample(rng), uniform.sample(rng));
-            let sum = x1*x1 + x2*x2;
+            let sum = x1 * x1 + x2 * x2;
             if sum >= N::from(1.) {
                 continue;
             }
             let factor = N::from(2.) * (N::from(1.0) - sum).sqrt();
-            return [x1 * factor, x2 * factor, N::from(1.) - N::from(2.)*sum];
+            return [x1 * factor, x2 * factor, N::from(1.) - N::from(2.) * sum];
         }
     }
 }
@@ -73,7 +73,7 @@ mod tests {
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
             let x: [f64; 3] = UnitSphere.sample(&mut rng);
-            assert_almost_eq!(x[0]*x[0] + x[1]*x[1] + x[2]*x[2], 1., 1e-15);
+            assert_almost_eq!(x[0] * x[0] + x[1] * x[1] + x[2] * x[2], 1., 1e-15);
         }
     }
 

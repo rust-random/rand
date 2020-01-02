@@ -103,7 +103,7 @@ impl RngCore for Lcg64Xsh32 {
         // Constants are for 64-bit state, 32-bit output
         const ROTATE: u32 = 59; // 64 - 5
         const XSHIFT: u32 = 18; // (5 + 32) / 2
-        const SPARE: u32 = 27;  // 64 - 32 - 5
+        const SPARE: u32 = 27; // 64 - 32 - 5
 
         let rot = (state >> ROTATE) as u32;
         let xsh = (((state >> XSHIFT) ^ state) >> SPARE) as u32;

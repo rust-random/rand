@@ -26,7 +26,7 @@ const RAND_BENCH_N: u64 = 1000;
 #[bench]
 fn seq_shuffle_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &mut [usize] = &mut [1; 100];
+    let x: &mut [usize] = &mut [1; 100];
     b.iter(|| {
         x.shuffle(&mut rng);
         x[0]
@@ -36,7 +36,7 @@ fn seq_shuffle_100(b: &mut Bencher) {
 #[bench]
 fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &mut [usize] = &mut [1; 1000];
+    let x: &mut [usize] = &mut [1; 1000];
     for i in 0..1000 {
         x[i] = i;
     }
@@ -55,7 +55,7 @@ macro_rules! seq_slice_choose_multiple {
         #[bench]
         fn $name(b: &mut Bencher) {
             let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-            let x : &[i32] = &[$amount; $length];
+            let x: &[i32] = &[$amount; $length];
             let mut result = [0i32; $amount];
             b.iter(|| {
                 // Collect full result to prevent unwanted shortcuts getting
@@ -63,7 +63,7 @@ macro_rules! seq_slice_choose_multiple {
                 for (slot, sample) in result.iter_mut().zip(x.choose_multiple(&mut rng, $amount)) {
                     *slot = *sample;
                 }
-                result[$amount-1]
+                result[$amount - 1]
             })
         }
     };
@@ -77,7 +77,7 @@ seq_slice_choose_multiple!(seq_slice_choose_multiple_90_of_100, 90, 100);
 #[bench]
 fn seq_iter_choose_from_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &mut [usize] = &mut [1; 1000];
+    let x: &mut [usize] = &mut [1; 1000];
     for i in 0..1000 {
         x[i] = i;
     }
@@ -123,7 +123,7 @@ impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<
 #[bench]
 fn seq_iter_unhinted_choose_from_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 1000];
+    let x: &[usize] = &[1; 1000];
     b.iter(|| {
         UnhintedIterator { iter: x.iter() }
             .choose(&mut rng)
@@ -134,7 +134,7 @@ fn seq_iter_unhinted_choose_from_1000(b: &mut Bencher) {
 #[bench]
 fn seq_iter_window_hinted_choose_from_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 1000];
+    let x: &[usize] = &[1; 1000];
     b.iter(|| {
         WindowHintedIterator {
             iter: x.iter(),
@@ -147,14 +147,14 @@ fn seq_iter_window_hinted_choose_from_1000(b: &mut Bencher) {
 #[bench]
 fn seq_iter_choose_multiple_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 100];
+    let x: &[usize] = &[1; 100];
     b.iter(|| x.iter().cloned().choose_multiple(&mut rng, 10))
 }
 
 #[bench]
 fn seq_iter_choose_multiple_fill_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 100];
+    let x: &[usize] = &[1; 100];
     let mut buf = [0; 10];
     b.iter(|| x.iter().cloned().choose_multiple_fill(&mut rng, &mut buf))
 }

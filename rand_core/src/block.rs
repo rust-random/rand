@@ -169,7 +169,7 @@ impl<R: BlockRngCore> BlockRng<R> {
     }
 }
 
-impl<R: BlockRngCore<Item=u32>> RngCore for BlockRng<R>
+impl<R: BlockRngCore<Item = u32>> RngCore for BlockRng<R>
 where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
 {
     #[inline]
@@ -201,7 +201,7 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
         let len = self.results.as_ref().len();
 
         let index = self.index;
-        if index < len-1 {
+        if index < len - 1 {
             self.index += 2;
             // Read an u64 from the current index
             read_u64(self.results.as_ref(), index)
@@ -209,7 +209,7 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
             self.generate_and_set(2);
             read_u64(self.results.as_ref(), 0)
         } else {
-            let x = u64::from(self.results.as_ref()[len-1]);
+            let x = u64::from(self.results.as_ref()[len - 1]);
             self.generate_and_set(1);
             let y = u64::from(self.results.as_ref()[0]);
             (y << 32) | x
@@ -345,7 +345,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
     }
 }
 
-impl<R: BlockRngCore<Item=u64>> RngCore for BlockRng64<R>
+impl<R: BlockRngCore<Item = u64>> RngCore for BlockRng64<R>
 where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 {
     #[inline]

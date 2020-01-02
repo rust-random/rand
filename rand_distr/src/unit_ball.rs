@@ -38,7 +38,7 @@ impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitBall {
             x1 = uniform.sample(rng);
             x2 = uniform.sample(rng);
             x3 = uniform.sample(rng);
-            if x1*x1 + x2*x2 + x3*x3 <= N::from(1.) {
+            if x1 * x1 + x2 * x2 + x3 * x3 <= N::from(1.) {
                 break;
             }
         }

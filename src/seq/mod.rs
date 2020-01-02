@@ -687,7 +687,7 @@ mod test {
         });
 
         assert_eq!((0..0).choose(r), None);
-        assert_eq!(UnhintedIterator{ iter: 0..0 }.choose(r), None);
+        assert_eq!(UnhintedIterator { iter: 0..0 }.choose(r), None);
     }
 
     #[test]

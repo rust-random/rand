@@ -38,7 +38,7 @@ fn main() {
     for _ in 0..total {
         let a = range.sample(&mut rng);
         let b = range.sample(&mut rng);
-        if a*a + b*b <= 1.0 {
+        if a * a + b * b <= 1.0 {
             in_circle += 1;
         }
     }

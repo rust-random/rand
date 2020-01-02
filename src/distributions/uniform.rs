@@ -1293,7 +1293,7 @@ mod tests {
             type Sampler = UniformMyF32;
         }
 
-        let (low, high) = (MyF32{ x: 17.0f32 }, MyF32{ x: 22.0f32 });
+        let (low, high) = (MyF32 { x: 17.0f32 }, MyF32 { x: 22.0f32 });
         let uniform = Uniform::new(low, high);
         let mut rng = crate::test::rng(804);
         for _ in 0..100 {

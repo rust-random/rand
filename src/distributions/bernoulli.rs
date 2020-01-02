@@ -181,7 +181,7 @@ mod test {
         assert!((avg1 - P).abs() < 5e-3);
 
         let avg2 = (sum2 as f64) / (N as f64);
-        assert!((avg2 - (NUM as f64)/(DENOM as f64)).abs() < 5e-3);
+        assert!((avg2 - (NUM as f64) / (DENOM as f64)).abs() < 5e-3);
     }
 
     #[test]

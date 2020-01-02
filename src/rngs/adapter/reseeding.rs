@@ -363,7 +363,7 @@ mod test {
     fn test_clone_reseeding() {
         let mut zero = StepRng::new(0, 0);
         let rng = Core::from_rng(&mut zero).unwrap();
-        let mut rng1 = ReseedingRng::new(rng, 32*4, zero);
+        let mut rng1 = ReseedingRng::new(rng, 32 * 4, zero);
 
         let first: u32 = rng1.gen();
         for _ in 0..10 {

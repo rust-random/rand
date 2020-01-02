@@ -207,7 +207,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
                 }
                 _ => {
                     let mut tmp = self.cumulative_weights[i].clone();
-                    tmp -= &prev_weight;  // We know this is positive.
+                    tmp -= &prev_weight; // We know this is positive.
                     cumulative_weight += &tmp;
                 }
             }

@@ -51,7 +51,7 @@ impl Distribution<f64> for StandardNormal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         #[inline]
         fn pdf(x: f64) -> f64 {
-            (-x*x/2.0).exp()
+            (-x * x / 2.0).exp()
         }
         #[inline]
         fn zero_case<R: Rng + ?Sized>(rng: &mut R, u: f64) -> f64 {

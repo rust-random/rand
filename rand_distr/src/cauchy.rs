@@ -153,8 +153,8 @@ mod test {
         let mut buf = [0.0; 4];
         gen_samples(10f32, 7.0, &mut buf);
         let expected = [15.023088, -5.446413, 3.7092876, 3.112482];
-        for (a,b) in buf.iter().zip(expected.iter()) {
-            let (a,b) = (*a, *b);
+        for (a, b) in buf.iter().zip(expected.iter()) {
+            let (a, b) = (*a, *b);
             assert!((a - b).abs() < 1e-6, "expected: {} = {}", a, b);
         }
     }

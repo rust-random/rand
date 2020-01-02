@@ -523,7 +523,7 @@ pub fn ziggurat<R: Rng + ?Sized, P, Z>(
         };
         let x = u * x_tab[i];
 
-        let test_x = if symmetric { x.abs() } else {x};
+        let test_x = if symmetric { x.abs() } else { x };
 
         // algebraically equivalent to |u| < x_tab[i+1]/x_tab[i] (or u < x_tab[i+1]/x_tab[i])
         if test_x < x_tab[i + 1] {

@@ -41,13 +41,13 @@ impl<N: Float + SampleUniform> Distribution<[N; 2]> for UnitCircle {
         loop {
             x1 = uniform.sample(rng);
             x2 = uniform.sample(rng);
-            sum = x1*x1 + x2*x2;
+            sum = x1 * x1 + x2 * x2;
             if sum < N::from(1.) {
                 break;
             }
         }
-        let diff = x1*x1 - x2*x2;
-        [diff / sum, N::from(2.)*x1*x2 / sum]
+        let diff = x1 * x1 - x2 * x2;
+        [diff / sum, N::from(2.) * x1 * x2 / sum]
     }
 }
 
@@ -78,7 +78,7 @@ mod tests {
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
             let x: [f64; 2] = UnitCircle.sample(&mut rng);
-            assert_almost_eq!(x[0]*x[0] + x[1]*x[1], 1., 1e-15);
+            assert_almost_eq!(x[0] * x[0] + x[1] * x[1], 1., 1e-15);
         }
     }
 

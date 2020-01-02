@@ -35,7 +35,7 @@ impl<N: Float + SampleUniform> Distribution<[N; 2]> for UnitDisc {
         loop {
             x1 = uniform.sample(rng);
             x2 = uniform.sample(rng);
-            if x1*x1 + x2*x2 <= N::from(1.) {
+            if x1 * x1 + x2 * x2 <= N::from(1.) {
                 break;
             }
         }

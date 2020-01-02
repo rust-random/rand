@@ -137,11 +137,11 @@ mod test {
             assert!(Pert::new(min, max, mode).is_err());
         }
     }
-    
+
     #[test]
     fn value_stability() {
         let rng = crate::test::rng(860);
-        let distr = Pert::new(2., 10., 3.).unwrap();    // mean = 4, var = 12/7
+        let distr = Pert::new(2., 10., 3.).unwrap(); // mean = 4, var = 12/7
         let seq = distr.sample_iter(rng).take(5).collect::<Vec<f64>>();
         println!("seq: {:?}", seq);
         let expected = vec![

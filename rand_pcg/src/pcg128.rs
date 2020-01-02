@@ -201,8 +201,8 @@ impl RngCore for Mcg128Xsl64 {
 fn output_xsl_rr(state: u128) -> u64 {
     // Output function XSL RR ("xorshift low (bits), random rotation")
     // Constants are for 128-bit state, 64-bit output
-    const XSHIFT: u32 = 64;     // (128 - 64 + 64) / 2
-    const ROTATE: u32 = 122;    // 128 - 6
+    const XSHIFT: u32 = 64; // (128 - 64 + 64) / 2
+    const ROTATE: u32 = 122; // 128 - 6
 
     let rot = (state >> ROTATE) as u32;
     let xsl = ((state >> XSHIFT) as u64) ^ (state as u64);
@@ -213,7 +213,7 @@ fn output_xsl_rr(state: u128) -> u64 {
 fn fill_bytes_impl<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     let mut left = dest;
     while left.len() >= 8 {
-        let (l, r) = {left}.split_at_mut(8);
+        let (l, r) = { left }.split_at_mut(8);
         left = r;
         let chunk: [u8; 8] = rng.next_u64().to_le_bytes();
         l.copy_from_slice(&chunk);
