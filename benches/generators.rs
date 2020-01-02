@@ -123,9 +123,7 @@ macro_rules! reseeding_bytes {
     ($fnn:ident, $thresh:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = ReseedingRng::new(ChaCha20Core::from_entropy(),
-                                            $thresh * 1024,
-                                            OsRng);
+            let mut rng = ReseedingRng::new(ChaCha20Core::from_entropy(), $thresh * 1024, OsRng);
             let mut buf = [0u8; RESEEDING_BYTES_LEN];
             b.iter(|| {
                 for _ in 0..RESEEDING_BENCH_N {

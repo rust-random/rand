@@ -62,10 +62,14 @@ impl Distribution<f64> for Exp1 {
             ziggurat_tables::ZIG_EXP_R - rng.gen::<f64>().ln()
         }
 
-        ziggurat(rng, false,
-                 &ziggurat_tables::ZIG_EXP_X,
-                 &ziggurat_tables::ZIG_EXP_F,
-                 pdf, zero_case)
+        ziggurat(
+            rng,
+            false,
+            &ziggurat_tables::ZIG_EXP_X,
+            &ziggurat_tables::ZIG_EXP_F,
+            pdf,
+            zero_case,
+        )
     }
 }
 

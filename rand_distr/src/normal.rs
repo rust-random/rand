@@ -79,10 +79,14 @@ impl Distribution<f64> for StandardNormal {
             }
         }
 
-        ziggurat(rng, true, // this is symmetric
-                 &ziggurat_tables::ZIG_NORM_X,
-                 &ziggurat_tables::ZIG_NORM_F,
-                 pdf, zero_case)
+        ziggurat(
+            rng,
+            true, // this is symmetric
+            &ziggurat_tables::ZIG_NORM_X,
+            &ziggurat_tables::ZIG_NORM_F,
+            pdf,
+            zero_case,
+        )
     }
 }
 

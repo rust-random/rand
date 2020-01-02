@@ -224,8 +224,7 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
                 self.generate_and_set(0);
             }
             let (consumed_u32, filled_u8) =
-                fill_via_u32_chunks(&self.results.as_ref()[self.index..],
-                                    &mut dest[read_len..]);
+                fill_via_u32_chunks(&self.results.as_ref()[self.index..], &mut dest[read_len..]);
 
             self.index += consumed_u32;
             read_len += filled_u8;
@@ -398,9 +397,10 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
                 self.index = 0;
             }
 
-            let (consumed_u64, filled_u8) =
-                fill_via_u64_chunks(&self.results.as_ref()[self.index as usize..],
-                                    &mut dest[read_len..]);
+            let (consumed_u64, filled_u8) = fill_via_u64_chunks(
+                &self.results.as_ref()[self.index as usize..],
+                &mut dest[read_len..],
+            );
 
             self.index += consumed_u64;
             read_len += filled_u8;
