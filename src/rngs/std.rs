@@ -22,8 +22,7 @@ pub(crate) use rand_chacha::ChaCha20Core as Core;
 /// on the current platform, to be statistically strong and unpredictable
 /// (meaning a cryptographically secure PRNG).
 ///
-/// The current algorithm used is the ChaCha block cipher with either 20 or 12
-/// rounds (see the `stdrng_*` feature flags, documented in the README).
+/// The current algorithm used is the ChaCha block cipher with 20 rounds.
 /// This may change as new evidence of cipher security and performance
 /// becomes available.
 ///

@@ -10,15 +10,15 @@
 //! 
 //! This module provides:
 //! 
-//! *   [`seq::SliceRandom`] slice sampling and mutation
-//! *   [`seq::IteratorRandom`] iterator sampling
-//! *   [`seq::index::sample`] low-level API to choose multiple indices from
+//! *   [`SliceRandom`] slice sampling and mutation
+//! *   [`IteratorRandom`] iterator sampling
+//! *   [`index::sample`] low-level API to choose multiple indices from
 //!     `0..length`
 //! 
 //! Also see:
 //! 
-//! *   [`distributions::weighted`] module which provides implementations of
-//!     weighted index sampling.
+//! *   [`crate::distributions::weighted`] module which provides
+//!     implementations of weighted index sampling.
 //! 
 //! In order to make results reproducible across 32-64 bit architectures, all
 //! `usize` indices are sampled as a `u32` where possible (also providing a

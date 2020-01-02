@@ -93,7 +93,7 @@ impl Bernoulli {
     /// 2<sup>-64</sup> in `[0, 1]` can be represented as a `f64`.)
     #[inline]
     pub fn new(p: f64) -> Result<Bernoulli, BernoulliError> {
-        if p < 0.0 || p >= 1.0 {
+        if !(p >= 0.0 && p < 1.0) {
             if p == 1.0 { return Ok(Bernoulli { p_int: ALWAYS_TRUE }) }
             return Err(BernoulliError::InvalidProbability);
         }
@@ -104,11 +104,13 @@ impl Bernoulli {
     /// `numerator`-in-`denominator`. I.e. `new_ratio(2, 3)` will return
     /// a `Bernoulli` with a 2-in-3 chance, or about 67%, of returning `true`.
     ///
-    /// If `numerator == denominator` then the returned `Bernoulli` will always
     /// return `true`. If `numerator == 0` it will always return `false`.
+    /// For `numerator > denominator` and `denominator == 0`, this returns an
+    /// error. Otherwise, for `numerator == denominator`, samples are always
+    /// true; for `numerator == 0` samples are always false.
     #[inline]
     pub fn from_ratio(numerator: u32, denominator: u32) -> Result<Bernoulli, BernoulliError> {
-        if numerator > denominator {
+        if numerator > denominator || denominator == 0 {
             return Err(BernoulliError::InvalidProbability);
         }
         if numerator == denominator {

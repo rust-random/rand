@@ -31,14 +31,14 @@
 //! # The `Standard` distribution
 //!
 //! The [`Standard`] distribution is important to mention. This is the
-//! distribution used by [`Rng::gen()`] and represents the "default" way to
+//! distribution used by [`Rng::gen`] and represents the "default" way to
 //! produce a random value for many different types, including most primitive
 //! types, tuples, arrays, and a few derived types. See the documentation of
 //! [`Standard`] for more details.
 //!
 //! Implementing `Distribution<T>` for [`Standard`] for user types `T` makes it
-//! possible to generate type `T` with [`Rng::gen()`], and by extension also
-//! with the [`random()`] function.
+//! possible to generate type `T` with [`Rng::gen`], and by extension also
+//! with the [`random`] function.
 //!
 //! ## Random characters
 //! 
@@ -89,15 +89,7 @@
 //! [`rand_distr`]: https://crates.io/crates/rand_distr
 //! [`statrs`]: https://crates.io/crates/statrs
 
-//! [`Alphanumeric`]: distributions::Alphanumeric
-//! [`Bernoulli`]: distributions::Bernoulli
-//! [`Open01`]: distributions::Open01
-//! [`OpenClosed01`]: distributions::OpenClosed01
-//! [`Standard`]: distributions::Standard
-//! [`Uniform`]: distributions::Uniform
-//! [`Uniform::new`]: distributions::Uniform::new
-//! [`Uniform::new_inclusive`]: distributions::Uniform::new_inclusive
-//! [`weighted`]: distributions::weighted
+//! [`random`]: crate::random
 //! [`rand_distr`]: https://crates.io/crates/rand_distr
 //! [`statrs`]: https://crates.io/crates/statrs
 
