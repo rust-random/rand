@@ -275,14 +275,22 @@ mod test {
         }
 
         let mean = results.iter().sum::<f64>() / results.len() as f64;
-        assert!((mean as f64 - expected_mean).abs() < expected_mean / 50.0,
-                "mean: {}, expected_mean: {}", mean, expected_mean);
+        assert!(
+            (mean as f64 - expected_mean).abs() < expected_mean / 50.0,
+            "mean: {}, expected_mean: {}",
+            mean,
+            expected_mean
+        );
 
         let variance =
             results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>()
             / results.len() as f64;
-        assert!((variance - expected_variance).abs() < expected_variance / 10.0,
-                "variance: {}, expected_variance: {}", variance, expected_variance);
+        assert!(
+            (variance - expected_variance).abs() < expected_variance / 10.0,
+            "variance: {}, expected_variance: {}",
+            variance,
+            expected_variance
+        );
     }
 
     #[test]

@@ -57,7 +57,7 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
 }
 
 macro_rules! impl_uint_from_fill {
-    ($rng:expr, $ty:ty, $N:expr) => ({
+    ($rng:expr, $ty:ty, $N:expr) => {{
         debug_assert!($N == size_of::<$ty>());
 
         let mut int: $ty = 0;
@@ -67,14 +67,14 @@ macro_rules! impl_uint_from_fill {
             $rng.fill_bytes(slice);
         }
         int
-    });
+    }};
 }
 
 macro_rules! fill_via_chunks {
-    ($src:expr, $dst:expr, $ty:ty, $size:expr) => ({
+    ($src:expr, $dst:expr, $ty:ty, $size:expr) => {{
         let chunk_size_u8 = min($src.len() * $size, $dst.len());
         let chunk_size = (chunk_size_u8 + $size - 1) / $size;
-        if cfg!(target_endian="little") {
+        if cfg!(target_endian = "little") {
             unsafe {
                 copy_nonoverlapping(
                     $src.as_ptr() as *const u8,
@@ -94,7 +94,7 @@ macro_rules! fill_via_chunks {
         }
 
         (chunk_size, chunk_size_u8)
-    });
+    }};
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block

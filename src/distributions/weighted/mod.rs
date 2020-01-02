@@ -291,14 +291,34 @@ mod test {
         for _ in 0..5 {
             assert_eq!(WeightedIndex::new(&[0, 1]).unwrap().sample(&mut r), 1);
             assert_eq!(WeightedIndex::new(&[1, 0]).unwrap().sample(&mut r), 0);
-            assert_eq!(WeightedIndex::new(&[0, 0, 0, 0, 10, 0]).unwrap().sample(&mut r), 4);
+            assert_eq!(
+                WeightedIndex::new(&[0, 0, 0, 0, 10, 0])
+                    .unwrap()
+                    .sample(&mut r),
+                4
+            );
         }
 
-        assert_eq!(WeightedIndex::new(&[10][0..0]).unwrap_err(), WeightedError::NoItem);
-        assert_eq!(WeightedIndex::new(&[0]).unwrap_err(), WeightedError::AllWeightsZero);
-        assert_eq!(WeightedIndex::new(&[10, 20, -1, 30]).unwrap_err(), WeightedError::InvalidWeight);
-        assert_eq!(WeightedIndex::new(&[-10, 20, 1, 30]).unwrap_err(), WeightedError::InvalidWeight);
-        assert_eq!(WeightedIndex::new(&[-10]).unwrap_err(), WeightedError::InvalidWeight);
+        assert_eq!(
+            WeightedIndex::new(&[10][0..0]).unwrap_err(),
+            WeightedError::NoItem
+        );
+        assert_eq!(
+            WeightedIndex::new(&[0]).unwrap_err(),
+            WeightedError::AllWeightsZero
+        );
+        assert_eq!(
+            WeightedIndex::new(&[10, 20, -1, 30]).unwrap_err(),
+            WeightedError::InvalidWeight
+        );
+        assert_eq!(
+            WeightedIndex::new(&[-10, 20, 1, 30]).unwrap_err(),
+            WeightedError::InvalidWeight
+        );
+        assert_eq!(
+            WeightedIndex::new(&[-10]).unwrap_err(),
+            WeightedError::InvalidWeight
+        );
     }
 
     #[test]

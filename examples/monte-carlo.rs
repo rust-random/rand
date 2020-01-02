@@ -44,5 +44,8 @@ fn main() {
     }
 
     // prints something close to 3.14159...
-    println!("π is approximately {}", 4. * (in_circle as f64) / (total as f64));
+    println!(
+        "π is approximately {}",
+        4. * (in_circle as f64) / (total as f64)
+    );
 }

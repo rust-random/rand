@@ -650,7 +650,11 @@ mod test {
                 // Samples should follow Binomial(1000, 1/9)
                 // Octave: binopdf(x, 1000, 1/9) gives the prob of *count == x
                 // Note: have seen 153, which is unlikely but not impossible.
-                assert!(72 < *count && *count < 154, "count not close to 1000/9: {}", count);
+                assert!(
+                    72 < *count && *count < 154,
+                    "count not close to 1000/9: {}",
+                    count
+                );
             }
         }
 
@@ -823,10 +827,25 @@ mod test {
 
         // Check error cases
         let empty_slice = &mut [10][0..0];
-        assert_eq!(empty_slice.choose_weighted(&mut r, |_| 1), Err(WeightedError::NoItem));
-        assert_eq!(empty_slice.choose_weighted_mut(&mut r, |_| 1), Err(WeightedError::NoItem));
-        assert_eq!(['x'].choose_weighted_mut(&mut r, |_| 0), Err(WeightedError::AllWeightsZero));
-        assert_eq!([0, -1].choose_weighted_mut(&mut r, |x| *x), Err(WeightedError::InvalidWeight));
-        assert_eq!([-1, 0].choose_weighted_mut(&mut r, |x| *x), Err(WeightedError::InvalidWeight));
+        assert_eq!(
+            empty_slice.choose_weighted(&mut r, |_| 1),
+            Err(WeightedError::NoItem)
+        );
+        assert_eq!(
+            empty_slice.choose_weighted_mut(&mut r, |_| 1),
+            Err(WeightedError::NoItem)
+        );
+        assert_eq!(
+            ['x'].choose_weighted_mut(&mut r, |_| 0),
+            Err(WeightedError::AllWeightsZero)
+        );
+        assert_eq!(
+            [0, -1].choose_weighted_mut(&mut r, |x| *x),
+            Err(WeightedError::InvalidWeight)
+        );
+        assert_eq!(
+            [-1, 0].choose_weighted_mut(&mut r, |x| *x),
+            Err(WeightedError::InvalidWeight)
+        );
     }
 }

@@ -187,8 +187,7 @@ mod tests {
 
                 // OpenClosed01
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01),
-                           0.0 + $EPSILON / 2.0);
+                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01), 0.0 + $EPSILON / 2.0);
                 let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
                 assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
                 let mut max = StepRng::new(!0, 0);
@@ -228,8 +227,7 @@ mod tests {
 
                 // OpenClosed01
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01),
-                           0.0 + $EPSILON / 2.0);
+                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01), 0.0 + $EPSILON / 2.0);
                 let mut one = StepRng::new(1 << 11, 0);
                 assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
                 let mut max = StepRng::new(!0, 0);

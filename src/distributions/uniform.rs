@@ -389,8 +389,10 @@ macro_rules! uniform_int_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low <= high,
-                        "Uniform::new_inclusive called with `low > high`");
+                assert!(
+                    low <= high,
+                    "Uniform::new_inclusive called with `low > high`"
+                );
                 let unsigned_max = ::core::$u_large::MAX;
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
@@ -434,8 +436,7 @@ macro_rules! uniform_int_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low < high,
-                        "UniformSampler::sample_single: low >= high");
+                assert!(low < high, "UniformSampler::sample_single: low >= high");
                 let range = high.wrapping_sub(low) as $unsigned as $u_large;
                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
                     // Using a modulus is faster than the approximation for
@@ -664,10 +665,11 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.all_lt(high),
-                        "Uniform::new called with `low >= high`");
-                assert!(low.all_finite() && high.all_finite(),
-                        "Uniform::new called with non-finite boundaries");
+                assert!(low.all_lt(high), "Uniform::new called with `low >= high`");
+                assert!(
+                    low.all_finite() && high.all_finite(),
+                    "Uniform::new called with non-finite boundaries"
+                );
                 let max_rand = <$ty>::splat(
                     (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
                 );
@@ -694,10 +696,14 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.all_le(high),
-                        "Uniform::new_inclusive called with `low > high`");
-                assert!(low.all_finite() && high.all_finite(),
-                        "Uniform::new_inclusive called with non-finite boundaries");
+                assert!(
+                    low.all_le(high),
+                    "Uniform::new_inclusive called with `low > high`"
+                );
+                assert!(
+                    low.all_finite() && high.all_finite(),
+                    "Uniform::new_inclusive called with non-finite boundaries"
+                );
                 let max_rand = <$ty>::splat(
                     (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
                 );
@@ -741,8 +747,10 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.all_lt(high),
-                        "UniformSampler::sample_single: low >= high");
+                assert!(
+                    low.all_lt(high),
+                    "UniformSampler::sample_single: low >= high"
+                );
                 let mut scale = high - low;
 
                 loop {
@@ -792,8 +800,10 @@ macro_rules! uniform_float_impl {
                     // rare, so handle it here after the common case.
                     let mask = !scale.finite_mask();
                     if mask.any() {
-                        assert!(low.all_finite() && high.all_finite(),
-                                "Uniform::sample_single: low and high must be finite");
+                        assert!(
+                            low.all_finite() && high.all_finite(),
+                            "Uniform::sample_single: low and high must be finite"
+                        );
                         scale = scale.decrease_masked(mask);
                     }
                 }
@@ -875,7 +885,10 @@ impl UniformSampler for UniformDuration {
     {
         let low = *low_b.borrow();
         let high = *high_b.borrow();
-        assert!(low <= high, "Uniform::new_inclusive called with `low > high`");
+        assert!(
+            low <= high,
+            "Uniform::new_inclusive called with `low > high`"
+        );
 
         let low_s = low.as_secs();
         let low_n = low.subsec_nanos();
@@ -1041,8 +1054,7 @@ mod tests {
                 );)*
             }};
         }
-        t!(i8, i16, i32, i64, isize,
-           u8, u16, u32, u64, usize);
+        t!(i8, i16, i32, i64, isize, u8, u16, u32, u64, usize);
         #[cfg(not(target_os = "emscripten"))]
         t!(i128, u128);
 
@@ -1098,7 +1110,10 @@ mod tests {
                             assert!(low_scalar <= v && v < high_scalar);
                         }
 
-                        assert_eq!(rng.sample(Uniform::new_inclusive(low, low)).extract(lane), low_scalar);
+                        assert_eq!(
+                            rng.sample(Uniform::new_inclusive(low, low)).extract(lane),
+                            low_scalar
+                        );
 
                         assert_eq!(zero_rng.sample(my_uniform).extract(lane), low_scalar);
                         assert_eq!(zero_rng.sample(my_incl_uniform).extract(lane), low_scalar);
@@ -1113,18 +1128,28 @@ mod tests {
                             let mut lowering_max_rng =
                                 StepRng::new(0xffff_ffff_ffff_ffff,
                                              (-1i64 << $bits_shifted) as u64);
-                            assert!(lowering_max_rng.gen_range(low, high).extract(lane) < high_scalar);
+                            assert!(
+                                lowering_max_rng.gen_range(low, high).extract(lane) < high_scalar
+                            );
                         }
                     }
                 }
 
-                assert_eq!(rng.sample(Uniform::new_inclusive(::core::$f_scalar::MAX,
-                                                             ::core::$f_scalar::MAX)),
-                           ::core::$f_scalar::MAX);
-                assert_eq!(rng.sample(Uniform::new_inclusive(-::core::$f_scalar::MAX,
-                                                             -::core::$f_scalar::MAX)),
-                           -::core::$f_scalar::MAX);
-            }}
+                assert_eq!(
+                    rng.sample(Uniform::new_inclusive(
+                        ::core::$f_scalar::MAX,
+                        ::core::$f_scalar::MAX
+                    )),
+                    ::core::$f_scalar::MAX
+                );
+                assert_eq!(
+                    rng.sample(Uniform::new_inclusive(
+                        -::core::$f_scalar::MAX,
+                        -::core::$f_scalar::MAX
+                    )),
+                    -::core::$f_scalar::MAX
+                );
+            }};
         }
 
         t!(f32, f32, 32 - 23);
