@@ -205,8 +205,9 @@ where
         loop {
             let x: N = rng.sample(StandardNormal);
             let v_cbrt = N::from(1.0) + self.c * x;
-            if v_cbrt <= N::from(0.0) { // a^3 <= 0 iff a <= 0
-                continue
+            if v_cbrt <= N::from(0.0) {
+                // a^3 <= 0 iff a <= 0
+                continue;
             }
 
             let v = v_cbrt * v_cbrt * v_cbrt;

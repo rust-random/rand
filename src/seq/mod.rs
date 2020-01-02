@@ -259,7 +259,11 @@ pub trait IteratorRandom: Iterator + Sized {
         let mut result = None;
 
         if upper == Some(lower) {
-            return if lower == 0 { None } else { self.nth(gen_index(rng, lower)) };
+            return if lower == 0 {
+                None
+            } else {
+                self.nth(gen_index(rng, lower))
+            };
         }
 
         // Continue until the iterator is exhausted
@@ -594,8 +598,14 @@ mod test {
         }
 
         fn size_hint(&self) -> (usize, Option<usize>) {
-            (self.chunk_remaining,
-             if self.hint_total_size { Some(self.iter.len()) } else { None })
+            (
+                self.chunk_remaining,
+                if self.hint_total_size {
+                    Some(self.iter.len())
+                } else {
+                    None
+                },
+            )
         }
     }
 
@@ -613,8 +623,14 @@ mod test {
         }
 
         fn size_hint(&self) -> (usize, Option<usize>) {
-            (::core::cmp::min(self.iter.len(), self.window_size),
-             if self.hint_total_size { Some(self.iter.len()) } else { None })
+            (
+                ::core::cmp::min(self.iter.len(), self.window_size),
+                if self.hint_total_size {
+                    Some(self.iter.len())
+                } else {
+                    None
+                },
+            )
         }
     }
 

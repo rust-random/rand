@@ -390,13 +390,12 @@ macro_rules! uniform_int_impl {
                 let unsigned_max = ::core::$u_large::MAX;
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
-                let ints_to_reject =
-                    if range > 0 {
-                        let range = $u_large::from(range);
-                        (unsigned_max - range + 1) % range
-                    } else {
-                        0
-                    };
+                let ints_to_reject = if range > 0 {
+                    let range = $u_large::from(range);
+                    (unsigned_max - range + 1) % range
+                } else {
+                    0
+                };
 
                 UniformInt {
                     low: low,
@@ -434,19 +433,18 @@ macro_rules! uniform_int_impl {
                 assert!(low < high,
                         "UniformSampler::sample_single: low >= high");
                 let range = high.wrapping_sub(low) as $unsigned as $u_large;
-                let zone =
-                    if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
-                        // Using a modulus is faster than the approximation for
-                        // i8 and i16. I suppose we trade the cost of one
-                        // modulus for near-perfect branch prediction.
-                        let unsigned_max: $u_large = ::core::$u_large::MAX;
-                        let ints_to_reject = (unsigned_max - range + 1) % range;
-                        unsigned_max - ints_to_reject
-                    } else {
-                        // conservative but fast approximation. `- 1` is necessary to allow the
-                        // same comparison without bias.
-                        (range << range.leading_zeros()).wrapping_sub(1)
-                    };
+                let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+                    // Using a modulus is faster than the approximation for
+                    // i8 and i16. I suppose we trade the cost of one
+                    // modulus for near-perfect branch prediction.
+                    let unsigned_max: $u_large = ::core::$u_large::MAX;
+                    let ints_to_reject = (unsigned_max - range + 1) % range;
+                    unsigned_max - ints_to_reject
+                } else {
+                    // conservative but fast approximation. `- 1` is necessary to allow the
+                    // same comparison without bias.
+                    (range << range.leading_zeros()).wrapping_sub(1)
+                };
 
                 loop {
                     let v: $u_large = rng.gen();

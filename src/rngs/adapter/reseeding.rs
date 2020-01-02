@@ -193,10 +193,13 @@ where
         // current hardware, we just clamp to that value.
         // Also we set a threshold of 0, which indicates no limit, to that
         // value.
-        let threshold =
-            if threshold == 0 { MAX }
-            else if threshold <= MAX as u64 { threshold as i64 }
-            else { MAX };
+        let threshold = if threshold == 0 {
+            MAX
+        } else if threshold <= MAX as u64 {
+            threshold as i64
+        } else {
+            MAX
+        };
 
         ReseedingCore {
             inner: rng,
@@ -362,7 +365,9 @@ mod test {
         let mut rng1 = ReseedingRng::new(rng, 32*4, zero);
 
         let first: u32 = rng1.gen();
-        for _ in 0..10 { let _ = rng1.gen::<u32>(); }
+        for _ in 0..10 {
+            let _ = rng1.gen::<u32>();
+        }
 
         let mut rng2 = rng1.clone();
         assert_eq!(first, rng2.gen::<u32>());

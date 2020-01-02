@@ -143,8 +143,9 @@ impl Distribution<f64> for GammaLargeShape {
         loop {
             let x = rng.sample(StandardNormal);
             let v_cbrt = 1.0 + self.c * x;
-            if v_cbrt <= 0.0 { // a^3 <= 0 iff a <= 0
-                continue
+            if v_cbrt <= 0.0 {
+                // a^3 <= 0 iff a <= 0
+                continue;
             }
 
             let v = v_cbrt * v_cbrt * v_cbrt;

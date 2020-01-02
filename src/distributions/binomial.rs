@@ -58,11 +58,7 @@ impl Distribution<u64> for Binomial {
         // The binomial distribution is symmetrical with respect to p -> 1-p,
         // k -> n-k switch p so that it is less than 0.5 - this allows for lower
         // expected values we will just invert the result at the end
-        let p = if self.p <= 0.5 {
-            self.p
-        } else {
-            1.0 - self.p
-        };
+        let p = if self.p <= 0.5 { self.p } else { 1.0 - self.p };
 
         let result;
         let q = 1. - p;
@@ -274,7 +270,9 @@ mod test {
         let expected_variance = n as f64 * p * (1.0 - p);
 
         let mut results = [0.0; 1000];
-        for i in results.iter_mut() { *i = binomial.sample(rng) as f64; }
+        for i in results.iter_mut() {
+            *i = binomial.sample(rng) as f64;
+        }
 
         let mean = results.iter().sum::<f64>() / results.len() as f64;
         assert!((mean as f64 - expected_mean).abs() < expected_mean / 50.0,
