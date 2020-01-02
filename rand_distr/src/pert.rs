@@ -92,8 +92,7 @@ where
         let v = if mu == mode {
             shape * N::from(0.5) + N::from(1.)
         } else {
-            (mu - min) * (N::from(2.) * mode - min - max)
-                / ((mode - mu) * (max - min))
+            (mu - min) * (N::from(2.) * mode - min - max) / ((mode - mu) * (max - min))
         };
         let w = v * (max - mu) / (mu - min);
         let beta = Beta::new(v, w).map_err(|_| PertError::RangeTooSmall)?;

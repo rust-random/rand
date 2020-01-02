@@ -190,9 +190,8 @@ impl<W: Weight> WeightedIndex<W> {
             let b = aliases.pop_big();
 
             aliases.set_alias(s, b);
-            no_alias_odds[b as usize] = no_alias_odds[b as usize]
-                    - weight_sum
-                    + no_alias_odds[s as usize];
+            no_alias_odds[b as usize] =
+                no_alias_odds[b as usize] - weight_sum + no_alias_odds[s as usize];
 
             if no_alias_odds[b as usize] < weight_sum {
                 aliases.push_small(b);

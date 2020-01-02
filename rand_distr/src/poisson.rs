@@ -120,8 +120,12 @@ where Standard: Distribution<N>
                 // the magic value scales the distribution function to a range of approximately 0-1
                 // since it is not exact, we multiply the ratio by 0.9 to avoid ratios greater than 1
                 // this doesn't change the resulting distribution, only increases the rate of failed drawings
-                let check = N::from(0.9) * (N::from(1.0) + comp_dev * comp_dev)
-                    * (result * self.log_lambda - (N::from(1.0) + result).log_gamma() - self.magic_val).exp();
+                let check = N::from(0.9)
+                    * (N::from(1.0) + comp_dev * comp_dev)
+                    * (result * self.log_lambda
+                        - (N::from(1.0) + result).log_gamma()
+                        - self.magic_val)
+                        .exp();
 
                 // check with uniform random value - if below the threshold, we are within the target distribution
                 if rng.gen::<N>() <= check {

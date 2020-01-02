@@ -690,15 +690,15 @@ mod test {
     #[cfg(feature = "std")]
     fn test_random() {
         // not sure how to test this aside from just getting some values
-        let _n : usize = random();
-        let _f : f32 = random();
-        let _o : Option<Option<i8>> = random();
-        let _many : ((),
-                     (usize,
-                      isize,
-                      Option<(u32, (bool,))>),
-                     (u8, i8, u16, i16, u32, i32, u64, i64),
-                     (f32, (f64, (f64,)))) = random();
+        let _n: usize = random();
+        let _f: f32 = random();
+        let _o: Option<Option<i8>> = random();
+        let _many: (
+            (),
+            (usize, isize, Option<(u32, (bool,))>),
+            (u8, i8, u16, i16, u32, i32, u64, i64),
+            (f32, (f64, (f64,))),
+        ) = random();
     }
 
     #[test]

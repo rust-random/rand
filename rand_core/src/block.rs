@@ -364,8 +364,7 @@ where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 
         // Index as if this is a u32 slice.
         unsafe {
-            let results =
-                &*(self.results.as_ref() as *const [u64] as *const [u32]);
+            let results = &*(self.results.as_ref() as *const [u64] as *const [u32]);
             if cfg!(target_endian = "little") {
                 *results.get_unchecked(index)
             } else {

@@ -270,8 +270,7 @@ pub(crate) fn ziggurat<R: Rng + ?Sized, P, Z>(
             (bits >> 12).into_float_with_exponent(1) - 3.0
         } else {
             // Convert to a value in the range [1,2) and substract to get (0,1)
-            (bits >> 12).into_float_with_exponent(0)
-            - (1.0 - std::f64::EPSILON / 2.0)
+            (bits >> 12).into_float_with_exponent(0) - (1.0 - std::f64::EPSILON / 2.0)
         };
         let x = u * x_tab[i];
 

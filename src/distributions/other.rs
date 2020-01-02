@@ -63,8 +63,7 @@ impl Distribution<char> for Standard {
 impl Distribution<char> for Alphanumeric {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> char {
         const RANGE: u32 = 26 + 26 + 10;
-        const GEN_ASCII_STR_CHARSET: &[u8] =
-            b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+        const GEN_ASCII_STR_CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                 abcdefghijklmnopqrstuvwxyz\
                 0123456789";
         // We can pick from 62 characters. This is so close to a power of 2, 64,

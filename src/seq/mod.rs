@@ -591,8 +591,7 @@ mod test {
 
         fn next(&mut self) -> Option<Self::Item> {
             if self.chunk_remaining == 0 {
-                self.chunk_remaining = ::core::cmp::min(self.chunk_size,
-                                                        self.iter.len());
+                self.chunk_remaining = ::core::cmp::min(self.chunk_size, self.iter.len());
             }
             self.chunk_remaining = self.chunk_remaining.saturating_sub(1);
 

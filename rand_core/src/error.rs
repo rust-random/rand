@@ -80,8 +80,7 @@ impl Error {
             }
         }
         match self.code() {
-            Some(code) if u32::from(code) < Self::INTERNAL_START =>
-                Some(u32::from(code) as i32),
+            Some(code) if u32::from(code) < Self::INTERNAL_START => Some(u32::from(code) as i32),
             _ => None,
         }
     }

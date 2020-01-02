@@ -243,8 +243,7 @@ where
             trace!("Reseeding RNG (periodic reseed)");
         }
 
-        let num_bytes =
-            results.as_ref().len() * size_of::<<R as BlockRngCore>::Item>();
+        let num_bytes = results.as_ref().len() * size_of::<<R as BlockRngCore>::Item>();
 
         if let Err(e) = self.reseed() {
             warn!("Reseeding RNG failed: {}", e);

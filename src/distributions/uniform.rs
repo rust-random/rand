@@ -1125,9 +1125,10 @@ mod tests {
                         // since for those rounding might result in selecting high for a very
                         // long time.
                         if (high_scalar - low_scalar) > 0.0001 {
-                            let mut lowering_max_rng =
-                                StepRng::new(0xffff_ffff_ffff_ffff,
-                                             (-1i64 << $bits_shifted) as u64);
+                            let mut lowering_max_rng = StepRng::new(
+                                0xffff_ffff_ffff_ffff,
+                                (-1i64 << $bits_shifted) as u64,
+                            );
                             assert!(
                                 lowering_max_rng.gen_range(low, high).extract(lane) < high_scalar
                             );

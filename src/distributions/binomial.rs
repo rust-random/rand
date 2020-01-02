@@ -283,8 +283,7 @@ mod test {
         );
 
         let variance =
-            results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>()
-            / results.len() as f64;
+            results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;
         assert!(
             (variance - expected_variance).abs() < expected_variance / 10.0,
             "variance: {}, expected_variance: {}",
