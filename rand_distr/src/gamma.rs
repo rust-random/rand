@@ -214,8 +214,8 @@ where
             let u: N = rng.sample(Open01);
 
             let x_sqr = x * x;
-            if u < N::from(1.0) - N::from(0.0331) * x_sqr * x_sqr ||
-                u.ln() < N::from(0.5) * x_sqr + self.d * (N::from(1.0) - v + v.ln())
+            if u < N::from(1.0) - N::from(0.0331) * x_sqr * x_sqr
+                || u.ln() < N::from(0.5) * x_sqr + self.d * (N::from(1.0) - v + v.ln())
             {
                 return self.d * v * self.scale;
             }

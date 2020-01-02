@@ -152,9 +152,10 @@ impl Distribution<f64> for GammaLargeShape {
             let u: f64 = rng.sample(Open01);
 
             let x_sqr = x * x;
-            if u < 1.0 - 0.0331 * x_sqr * x_sqr ||
-                u.ln() < 0.5 * x_sqr + self.d * (1.0 - v + v.ln()) {
-                return self.d * v * self.scale
+            if u < 1.0 - 0.0331 * x_sqr * x_sqr
+                || u.ln() < 0.5 * x_sqr + self.d * (1.0 - v + v.ln())
+            {
+                return self.d * v * self.scale;
             }
         }
     }

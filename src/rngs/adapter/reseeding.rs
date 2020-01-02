@@ -166,8 +166,7 @@ where
 
     fn generate(&mut self, results: &mut Self::Results) {
         let global_fork_counter = fork::get_fork_counter();
-        if self.bytes_until_reseed <= 0 ||
-           self.is_forked(global_fork_counter) {
+        if self.bytes_until_reseed <= 0 || self.is_forked(global_fork_counter) {
             // We get better performance by not calling only `reseed` here
             // and continuing with the rest of the function, but by directly
             // returning from a non-inlined function.
