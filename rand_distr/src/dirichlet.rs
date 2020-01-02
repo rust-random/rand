@@ -174,10 +174,16 @@ mod test {
     #[test]
     fn value_stability() {
         let mut rng = crate::test::rng(223);
-        assert_eq!(rng.sample(Dirichlet::new(vec![1.0, 2.0, 3.0]).unwrap()),
-                vec![0.12941567177708177, 0.4702121891675036, 0.4003721390554146]);
-        assert_eq!(rng.sample(Dirichlet::new_with_size(8.0, 5).unwrap()),
-                vec![0.17684200044809556, 0.29915953935953055,
-                    0.1832858056608014, 0.1425623503573967, 0.19815030417417595]);
+        assert_eq!(
+            rng.sample(Dirichlet::new(vec![1.0, 2.0, 3.0]).unwrap()),
+            vec![0.12941567177708177, 0.4702121891675036, 0.4003721390554146]
+        );
+        assert_eq!(rng.sample(Dirichlet::new_with_size(8.0, 5).unwrap()), vec![
+            0.17684200044809556,
+            0.29915953935953055,
+            0.1832858056608014,
+            0.1425623503573967,
+            0.19815030417417595
+        ]);
     }
 }

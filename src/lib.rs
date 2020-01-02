@@ -572,8 +572,7 @@ mod test {
         let mut r = StepRng::new(0x11_22_33_44_55_66_77_88, 0);
 
         // check every remainder mod 8, both in small and big vectors.
-        let lengths = [0, 1, 2, 3, 4, 5, 6, 7,
-                       80, 81, 82, 83, 84, 85, 86, 87];
+        let lengths = [0, 1, 2, 3, 4, 5, 6, 7, 80, 81, 82, 83, 84, 85, 86, 87];
         for &n in lengths.iter() {
             let mut buffer = [0u8; 87];
             let v = &mut buffer[0..n];

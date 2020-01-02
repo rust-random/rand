@@ -4,7 +4,7 @@ use rand_pcg::{Lcg64Xsh32, Pcg32};
 #[test]
 fn test_lcg64xsh32_construction() {
     // Test that various construction techniques produce a working RNG.
-    let seed = [1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16];
+    let seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
     let mut rng1 = Lcg64Xsh32::from_seed(seed);
     assert_eq!(rng1.next_u64(), 1204678643940597513);
 
@@ -28,8 +28,9 @@ fn test_lcg64xsh32_true_values() {
     for i in results.iter_mut() {
         *i = rng.next_u32();
     }
-    let expected: [u32; 6] = [0xa15c02b7, 0x7b47f409, 0xba1d3330,
-        0x83d2f293, 0xbfa4784b, 0xcbed606e];
+    let expected: [u32; 6] = [
+        0xa15c02b7, 0x7b47f409, 0xba1d3330, 0x83d2f293, 0xbfa4784b, 0xcbed606e,
+    ];
     assert_eq!(results, expected);
 }
 

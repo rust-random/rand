@@ -87,10 +87,10 @@ mod tests {
                 [0.2735582468624679, 0.9435374242279655, -0.1868234852870203],
             ];
         let samples = [
-                UnitSphereSurface.sample(&mut rng),
-                UnitSphereSurface.sample(&mut rng),
-                UnitSphereSurface.sample(&mut rng),
-            ];
+            UnitSphereSurface.sample(&mut rng),
+            UnitSphereSurface.sample(&mut rng),
+            UnitSphereSurface.sample(&mut rng),
+        ];
         assert_eq!(samples, expected);
     }
 }

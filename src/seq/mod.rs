@@ -540,7 +540,9 @@ mod test {
     #[test]
     fn test_slice_choose() {
         let mut r = crate::test::rng(107);
-        let chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n'];
+        let chars = [
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+        ];
         let mut chosen = [0i32; 14];
         // The below all use a binomial distribution with n=1000, p=1/14.
         // binocdf(40, 1000, 1/14) ~= 2e-5; 1-binocdf(106, ..) ~= 2e-5

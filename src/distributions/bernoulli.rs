@@ -192,6 +192,8 @@ mod test {
         for x in &mut buf {
             *x = rng.sample(&distr);
         }
-        assert_eq!(buf, [true, false, false, true, false, false, true, true, true, true]);
+        assert_eq!(buf, [
+            true, false, false, true, false, false, true, true, true, true
+        ]);
     }
 }

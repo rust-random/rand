@@ -85,15 +85,15 @@ mod tests {
     fn value_stability() {
         let mut rng = crate::test::rng(2);
         let expected = [
-                [-0.9965658683520504, -0.08280380447614634],
-                [-0.9790853270389644, -0.20345004884984505],
-                [-0.8449189758898707, 0.5348943112253227],
-            ];
+            [-0.9965658683520504, -0.08280380447614634],
+            [-0.9790853270389644, -0.20345004884984505],
+            [-0.8449189758898707, 0.5348943112253227],
+        ];
         let samples: [[f64; 2]; 3] = [
-                UnitCircle.sample(&mut rng),
-                UnitCircle.sample(&mut rng),
-                UnitCircle.sample(&mut rng),
-            ];
+            UnitCircle.sample(&mut rng),
+            UnitCircle.sample(&mut rng),
+            UnitCircle.sample(&mut rng),
+        ];
         assert_eq!(samples, expected);
     }
 }

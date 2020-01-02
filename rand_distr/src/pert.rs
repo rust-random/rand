@@ -144,8 +144,13 @@ mod test {
         let distr = Pert::new(2., 10., 3.).unwrap();    // mean = 4, var = 12/7
         let seq = distr.sample_iter(rng).take(5).collect::<Vec<f64>>();
         println!("seq: {:?}", seq);
-        let expected = vec![4.631484136029422, 3.307201472321789,
-                3.29995019556348, 3.66835483991721, 3.514246139933899];
+        let expected = vec![
+            4.631484136029422,
+            3.307201472321789,
+            3.29995019556348,
+            3.66835483991721,
+            3.514246139933899,
+        ];
         assert!(seq == expected);
     }
 }

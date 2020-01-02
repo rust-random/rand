@@ -60,10 +60,10 @@ mod tests {
                 [0.11060237642041049, -0.16065642822852677, -0.8444043930440075]
             ];
         let samples: [[f64; 3]; 3] = [
-                UnitBall.sample(&mut rng),
-                UnitBall.sample(&mut rng),
-                UnitBall.sample(&mut rng),
-            ];
+            UnitBall.sample(&mut rng),
+            UnitBall.sample(&mut rng),
+            UnitBall.sample(&mut rng),
+        ];
         assert_eq!(samples, expected);
     }
 }

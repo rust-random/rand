@@ -29,8 +29,14 @@ fn test_lcg128xsl64_true_values() {
     for i in results.iter_mut() {
         *i = rng.next_u64();
     }
-    let expected: [u64; 6] = [0x86b1da1d72062b68, 0x1304aa46c9853d39,
-        0xa3670e9e0dd50358, 0xf9090e529a7dae00, 0xc85b9fd837996f2c, 0x606121f8e3919196];
+    let expected: [u64; 6] = [
+        0x86b1da1d72062b68,
+        0x1304aa46c9853d39,
+        0xa3670e9e0dd50358,
+        0xf9090e529a7dae00,
+        0xc85b9fd837996f2c,
+        0x606121f8e3919196,
+    ];
     assert_eq!(results, expected);
 }
 

@@ -235,25 +235,55 @@ mod tests {
             }
             assert_eq!(&buf, expected);
         }
-        
-        test_samples(&Standard, 'a', &['\u{8cdac}', '\u{a346a}', '\u{80120}', '\u{ed692}', '\u{35888}']);
+
+        test_samples(&Standard, 'a', &[
+            '\u{8cdac}',
+            '\u{a346a}',
+            '\u{80120}',
+            '\u{ed692}',
+            '\u{35888}',
+        ]);
         test_samples(&Alphanumeric, 'a', &['h', 'm', 'e', '3', 'M']);
         test_samples(&Standard, false, &[true, true, false, true, false]);
-        test_samples(&Standard, None as Option<bool>,
-                &[Some(true), None, Some(false), None, Some(false)]);
-        test_samples(&Standard, Wrapping(0i32), &[Wrapping(-2074640887),
-                Wrapping(-1719949321), Wrapping(2018088303),
-                Wrapping(-547181756), Wrapping(838957336)]);
-        
+        test_samples(&Standard, None as Option<bool>, &[
+            Some(true),
+            None,
+            Some(false),
+            None,
+            Some(false),
+        ]);
+        test_samples(&Standard, Wrapping(0i32), &[
+            Wrapping(-2074640887),
+            Wrapping(-1719949321),
+            Wrapping(2018088303),
+            Wrapping(-547181756),
+            Wrapping(838957336),
+        ]);
+
         // We test only sub-sets of tuple and array impls
         test_samples(&Standard, (), &[(), (), (), (), ()]);
-        test_samples(&Standard, (false,), &[(true,), (true,), (false,), (true,), (false,)]);
-        test_samples(&Standard, (false,false), &[(true,true), (false,true),
-                (false,false), (true,false), (false,false)]);
-        
+        test_samples(&Standard, (false,), &[
+            (true,),
+            (true,),
+            (false,),
+            (true,),
+            (false,),
+        ]);
+        test_samples(&Standard, (false, false), &[
+            (true, true),
+            (false, true),
+            (false, false),
+            (true, false),
+            (false, false),
+        ]);
+
         test_samples(&Standard, [0u8; 0], &[[], [], [], [], []]);
-        test_samples(&Standard, [0u8; 3], &[[9, 247, 111],
-                [68, 24, 13], [174, 19, 194],
-                [172, 69, 213], [149, 207, 29]]);
+        test_samples(&Standard, [0u8; 3], &[
+            [9, 247, 111],
+            [68, 24, 13],
+            [174, 19, 194],
+            [172, 69, 213],
+            [149, 207, 29],
+        ]);
     }
 }

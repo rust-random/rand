@@ -141,9 +141,13 @@ mod test {
 
         let mut buf = [0.0; 4];
         gen_samples(100f64, 10.0, &mut buf);
-        assert_eq!(&buf, &[77.93369152808678, 90.1606912098641,
-                125.31516221323625, 86.10217834773925]);
-        
+        assert_eq!(&buf, &[
+            77.93369152808678,
+            90.1606912098641,
+            125.31516221323625,
+            86.10217834773925
+        ]);
+
         // Unfortunately this test is not fully portable due to reliance on the
         // system's implementation of tanf (see doc on Cauchy struct).
         let mut buf = [0.0; 4];

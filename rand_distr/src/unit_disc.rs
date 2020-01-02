@@ -52,15 +52,15 @@ mod tests {
     fn value_stability() {
         let mut rng = crate::test::rng(2);
         let expected = [
-                [0.018035709265959987, -0.4348771383120438],
-                [-0.07982762085055706, 0.7765329819820659],
-                [0.21450745997299503, 0.7398636984333291]
-            ];
+            [0.018035709265959987, -0.4348771383120438],
+            [-0.07982762085055706, 0.7765329819820659],
+            [0.21450745997299503, 0.7398636984333291],
+        ];
         let samples: [[f64; 2]; 3] = [
-                UnitDisc.sample(&mut rng),
-                UnitDisc.sample(&mut rng),
-                UnitDisc.sample(&mut rng),
-            ];
+            UnitDisc.sample(&mut rng),
+            UnitDisc.sample(&mut rng),
+            UnitDisc.sample(&mut rng),
+        ];
         assert_eq!(samples, expected);
     }
 }

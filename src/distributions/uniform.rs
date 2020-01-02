@@ -1063,22 +1063,22 @@ mod tests {
         let mut max_rng = StepRng::new(0xffff_ffff_ffff_ffff, 0);
         macro_rules! t {
             ($ty:ty, $f_scalar:ident, $bits_shifted:expr) => {{
-                let v: &[($f_scalar, $f_scalar)]=
-                    &[(0.0, 100.0),
-                      (-1e35, -1e25),
-                      (1e-35, 1e-25),
-                      (-1e35, 1e35),
-                      (<$f_scalar>::from_bits(0), <$f_scalar>::from_bits(3)),
-                      (-<$f_scalar>::from_bits(10), -<$f_scalar>::from_bits(1)),
-                      (-<$f_scalar>::from_bits(5), 0.0),
-                      (-<$f_scalar>::from_bits(7), -0.0),
-                      (10.0, ::core::$f_scalar::MAX),
-                      (-100.0, ::core::$f_scalar::MAX),
-                      (-::core::$f_scalar::MAX / 5.0, ::core::$f_scalar::MAX),
-                      (-::core::$f_scalar::MAX, ::core::$f_scalar::MAX / 5.0),
-                      (-::core::$f_scalar::MAX * 0.8, ::core::$f_scalar::MAX * 0.7),
-                      (-::core::$f_scalar::MAX, ::core::$f_scalar::MAX),
-                     ];
+                let v: &[($f_scalar, $f_scalar)] = &[
+                    (0.0, 100.0),
+                    (-1e35, -1e25),
+                    (1e-35, 1e-25),
+                    (-1e35, 1e35),
+                    (<$f_scalar>::from_bits(0), <$f_scalar>::from_bits(3)),
+                    (-<$f_scalar>::from_bits(10), -<$f_scalar>::from_bits(1)),
+                    (-<$f_scalar>::from_bits(5), 0.0),
+                    (-<$f_scalar>::from_bits(7), -0.0),
+                    (10.0, ::core::$f_scalar::MAX),
+                    (-100.0, ::core::$f_scalar::MAX),
+                    (-::core::$f_scalar::MAX / 5.0, ::core::$f_scalar::MAX),
+                    (-::core::$f_scalar::MAX, ::core::$f_scalar::MAX / 5.0),
+                    (-::core::$f_scalar::MAX * 0.8, ::core::$f_scalar::MAX * 0.7),
+                    (-::core::$f_scalar::MAX, ::core::$f_scalar::MAX),
+                ];
                 for &(low_scalar, high_scalar) in v.iter() {
                     for lane in 0..<$ty>::lanes() {
                         let low = <$ty>::splat(0.0 as $f_scalar).replace(lane, low_scalar);
@@ -1153,20 +1153,23 @@ mod tests {
 
         macro_rules! t {
             ($ty:ident, $f_scalar:ident) => {{
-                let v: &[($f_scalar, $f_scalar)] =
-                    &[(::std::$f_scalar::NAN, 0.0),
-                      (1.0, ::std::$f_scalar::NAN),
-                      (::std::$f_scalar::NAN, ::std::$f_scalar::NAN),
-                      (1.0, 0.5),
-                      (::std::$f_scalar::MAX, -::std::$f_scalar::MAX),
-                      (::std::$f_scalar::INFINITY, ::std::$f_scalar::INFINITY),
-                      (::std::$f_scalar::NEG_INFINITY, ::std::$f_scalar::NEG_INFINITY),
-                      (::std::$f_scalar::NEG_INFINITY, 5.0),
-                      (5.0, ::std::$f_scalar::INFINITY),
-                      (::std::$f_scalar::NAN, ::std::$f_scalar::INFINITY),
-                      (::std::$f_scalar::NEG_INFINITY, ::std::$f_scalar::NAN),
-                      (::std::$f_scalar::NEG_INFINITY, ::std::$f_scalar::INFINITY),
-                     ];
+                let v: &[($f_scalar, $f_scalar)] = &[
+                    (::std::$f_scalar::NAN, 0.0),
+                    (1.0, ::std::$f_scalar::NAN),
+                    (::std::$f_scalar::NAN, ::std::$f_scalar::NAN),
+                    (1.0, 0.5),
+                    (::std::$f_scalar::MAX, -::std::$f_scalar::MAX),
+                    (::std::$f_scalar::INFINITY, ::std::$f_scalar::INFINITY),
+                    (
+                        ::std::$f_scalar::NEG_INFINITY,
+                        ::std::$f_scalar::NEG_INFINITY,
+                    ),
+                    (::std::$f_scalar::NEG_INFINITY, 5.0),
+                    (5.0, ::std::$f_scalar::INFINITY),
+                    (::std::$f_scalar::NAN, ::std::$f_scalar::INFINITY),
+                    (::std::$f_scalar::NEG_INFINITY, ::std::$f_scalar::NAN),
+                    (::std::$f_scalar::NEG_INFINITY, ::std::$f_scalar::INFINITY),
+                ];
                 for &(low_scalar, high_scalar) in v.iter() {
                     for lane in 0..<$ty>::lanes() {
                         let low = <$ty>::splat(0.0 as $f_scalar).replace(lane, low_scalar);
@@ -1204,9 +1207,14 @@ mod tests {
 
         let mut rng = crate::test::rng(253);
 
-        let v = &[(Duration::new(10, 50000), Duration::new(100, 1234)),
-                  (Duration::new(0, 100), Duration::new(1, 50)),
-                  (Duration::new(0, 0), Duration::new(u64::max_value(), 999_999_999))];
+        let v = &[
+            (Duration::new(10, 50000), Duration::new(100, 1234)),
+            (Duration::new(0, 100), Duration::new(1, 50)),
+            (
+                Duration::new(0, 0),
+                Duration::new(u64::max_value(), 999_999_999),
+            ),
+        ];
         for &(low, high) in v.iter() {
             let my_uniform = Uniform::new(low, high);
             for _ in 0..1000 {
@@ -1311,14 +1319,32 @@ mod tests {
 
         test_samples(11u8, 219, &[17, 66, 214], &[181, 93, 165]);
         test_samples(11u32, 219, &[17, 66, 214], &[181, 93, 165]);
-        
-        test_samples(0f32, 1e-2f32, &[0.0003070104, 0.0026630748, 0.00979833],
-                &[0.008194133, 0.00398172, 0.007428536]);
-        test_samples(-1e10f64, 1e10f64, 
-                &[-4673848682.871551, 6388267422.932352, 4857075081.198343],
-                &[1173375212.1808167, 1917642852.109581, 2365076174.3153973]);
-        
-        test_samples(Duration::new(2, 0), Duration::new(4, 0),
-                &[Duration::new(2,532615131), Duration::new(3,638826742), Duration::new(3,485707508)], &[Duration::new(3,117337521), Duration::new(3,191764285), Duration::new(3,236507617)]);
+
+        test_samples(0f32, 1e-2f32, &[0.0003070104, 0.0026630748, 0.00979833], &[
+            0.008194133,
+            0.00398172,
+            0.007428536,
+        ]);
+        test_samples(
+            -1e10f64,
+            1e10f64,
+            &[-4673848682.871551, 6388267422.932352, 4857075081.198343],
+            &[1173375212.1808167, 1917642852.109581, 2365076174.3153973],
+        );
+
+        test_samples(
+            Duration::new(2, 0),
+            Duration::new(4, 0),
+            &[
+                Duration::new(2, 532615131),
+                Duration::new(3, 638826742),
+                Duration::new(3, 485707508),
+            ],
+            &[
+                Duration::new(3, 117337521),
+                Duration::new(3, 191764285),
+                Duration::new(3, 236507617),
+            ],
+        );
     }
 }
