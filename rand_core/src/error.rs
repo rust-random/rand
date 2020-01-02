@@ -25,6 +25,14 @@ pub struct Error {
 }
 
 impl Error {
+    /// Codes at or above this point can be used by users to define their own
+    /// custom errors.
+    pub const CUSTOM_START: u32 = (1 << 31) + (1 << 30);
+    /// Codes below this point represent OS Errors (i.e. positive i32 values).
+    /// Codes at or above this point, but below [`Error::CUSTOM_START`] are
+    /// reserved for use by the `rand` and `getrandom` crates.
+    pub const INTERNAL_START: u32 = 1 << 31;
+
     /// Construct from any type supporting `std::error::Error`
     ///
     /// Available only when configured with `std`.
@@ -56,15 +64,6 @@ impl Error {
     pub fn take_inner(self) -> Box<dyn std::error::Error + Send + Sync + 'static> {
         self.inner
     }
-    
-    /// Codes below this point represent OS Errors (i.e. positive i32 values).
-    /// Codes at or above this point, but below [`Error::CUSTOM_START`] are
-    /// reserved for use by the `rand` and `getrandom` crates.
-    pub const INTERNAL_START: u32 = 1 << 31;
-
-    /// Codes at or above this point can be used by users to define their own
-    /// custom errors.
-    pub const CUSTOM_START: u32 = (1 << 31) + (1 << 30);
 
     /// Extract the raw OS error code (if this error came from the OS)
     ///

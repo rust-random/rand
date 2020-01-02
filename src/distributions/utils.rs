@@ -316,6 +316,8 @@ macro_rules! scalar_float_impl {
 
         impl FloatSIMDUtils for $ty {
             type Mask = bool;
+            type UInt = $uty;
+
             #[inline(always)]
             fn all_lt(self, other: Self) -> bool {
                 self < other
@@ -351,7 +353,7 @@ macro_rules! scalar_float_impl {
                 debug_assert!(mask, "At least one lane must be set");
                 <$ty>::from_bits(self.to_bits() - 1)
             }
-            type UInt = $uty;
+
             #[inline]
             fn cast_from_int(i: Self::UInt) -> Self {
                 i as $ty
@@ -371,6 +373,8 @@ macro_rules! simd_impl {
     ($ty:ident, $f_scalar:ident, $mty:ident, $uty:ident) => {
         impl FloatSIMDUtils for $ty {
             type Mask = $mty;
+            type UInt = $uty;
+
             #[inline(always)]
             fn all_lt(self, other: Self) -> bool {
                 self.lt(other).all()
@@ -415,7 +419,7 @@ macro_rules! simd_impl {
                 debug_assert!(mask.any(), "At least one lane must be set");
                 <$ty>::from_bits(<$uty>::from_bits(self) + <$uty>::from_bits(mask))
             }
-            type UInt = $uty;
+
             #[inline]
             fn cast_from_int(i: Self::UInt) -> Self {
                 i.cast()
