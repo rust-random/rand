@@ -24,14 +24,17 @@ impl<T> Default for Array64<T>
 where T: Default
 {
     fn default() -> Self {
-        Self([T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default()])
+        #[rustfmt::skip]
+        Self([
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+        ])
     }
 }
 impl<T> AsRef<[T]> for Array64<T> {
