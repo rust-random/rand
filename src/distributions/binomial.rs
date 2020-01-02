@@ -228,15 +228,19 @@ impl Distribution<u64> for Binomial {
                     (13860. - (462. - (132. - (99. - 140. / a2) / a2) / a2) / a2) / a / 166320.
                 }
 
-                if alpha > x_m * (f1 / x1).ln()
-                    + (n - (m as f64) + 0.5) * (z / w).ln()
-                    + ((y - m) as f64) * (w * p / (x1 * q)).ln()
-                    // We use the signs from the GSL implementation, which are
-                    // different than the ones in the reference. According to
-                    // the GSL authors, the new signs were verified to be
-                    // correct by one of the original designers of the
-                    // algorithm.
-                    + stirling(f1) + stirling(z) - stirling(x1) - stirling(w)
+                if alpha
+                        > x_m * (f1 / x1).ln()
+                        + (n - (m as f64) + 0.5) * (z / w).ln()
+                        + ((y - m) as f64) * (w * p / (x1 * q)).ln()
+                        // We use the signs from the GSL implementation, which are
+                        // different than the ones in the reference. According to
+                        // the GSL authors, the new signs were verified to be
+                        // correct by one of the original designers of the
+                        // algorithm.
+                        + stirling(f1)
+                        + stirling(z)
+                        - stirling(x1)
+                        - stirling(w)
                 {
                     continue;
                 }
