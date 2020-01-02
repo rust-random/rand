@@ -307,7 +307,7 @@ mod fork {
     #[allow(deprecated)]
     static FORK_HANDLER_REGISTERED: AtomicBool = ATOMIC_BOOL_INIT;
 
-    extern fn fork_handler() {
+    extern "C" fn fork_handler() {
         // Note: fetch_add is defined to wrap on overflow
         // (which is what we want).
         RESEEDING_RNG_FORK_COUNTER.fetch_add(1, Ordering::Relaxed);
