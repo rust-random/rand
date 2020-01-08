@@ -279,7 +279,7 @@ where
 }
 
 
-#[cfg(all(unix, not(target_os = "emscripten")))]
+#[cfg(all(unix, feature = "std", not(target_os = "emscripten")))]
 mod fork {
     use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
     #[allow(deprecated)] // Required for compatibility with Rust < 1.24.
@@ -321,7 +321,7 @@ mod fork {
     }
 }
 
-#[cfg(not(all(unix, not(target_os = "emscripten"))))]
+#[cfg(not(all(unix, feature = "std", not(target_os = "emscripten"))))]
 mod fork {
     pub fn get_fork_counter() -> usize {
         0
