@@ -282,8 +282,6 @@ where
 #[cfg(all(unix, feature = "std", not(target_os = "emscripten")))]
 mod fork {
     use core::sync::atomic::{AtomicUsize, Ordering};
-    #[allow(deprecated)] // Required for compatibility with Rust < 1.24.
-    use core::sync::atomic::{ATOMIC_USIZE_INIT};
     use std::sync::Once;
 
     // Fork protection
@@ -298,8 +296,7 @@ mod fork {
     // don't update `fork_counter`, so a reseed is attempted as soon as
     // possible.
 
-    #[allow(deprecated)]
-    static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
+    static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
     pub fn get_fork_counter() -> usize {
         RESEEDING_RNG_FORK_COUNTER.load(Ordering::Relaxed)
