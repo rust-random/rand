@@ -98,20 +98,19 @@
 
 pub mod adapter;
 
-#[cfg(feature="std")] mod entropy;
-pub mod mock;   // Public so we don't export `StepRng` directly, making it a bit
-                // more clear it is intended for testing.
-#[cfg(feature="small_rng")]
-mod small;
+#[cfg(feature = "std")] mod entropy;
+pub mod mock; // Public so we don't export `StepRng` directly, making it a bit
+              // more clear it is intended for testing.
+#[cfg(feature = "small_rng")] mod small;
 mod std;
-#[cfg(feature="std")] pub(crate) mod thread;
+#[cfg(feature = "std")] pub(crate) mod thread;
 
 #[allow(deprecated)]
-#[cfg(feature="std")] pub use self::entropy::EntropyRng;
+#[cfg(feature = "std")]
+pub use self::entropy::EntropyRng;
 
-#[cfg(feature="small_rng")]
-pub use self::small::SmallRng;
+#[cfg(feature = "small_rng")] pub use self::small::SmallRng;
 pub use self::std::StdRng;
-#[cfg(feature="std")] pub use self::thread::ThreadRng;
+#[cfg(feature = "std")] pub use self::thread::ThreadRng;
 
-#[cfg(feature="getrandom")] pub use rand_core::OsRng;
+#[cfg(feature = "getrandom")] pub use rand_core::OsRng;

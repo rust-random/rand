@@ -9,8 +9,8 @@
 //! The HC-128 random number generator.
 
 use core::fmt;
-use rand_core::{CryptoRng, RngCore, SeedableRng, Error, le};
-use rand_core::block::{BlockRngCore, BlockRng};
+use rand_core::block::{BlockRng, BlockRngCore};
+use rand_core::{le, CryptoRng, Error, RngCore, SeedableRng};
 
 const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 
@@ -173,9 +173,7 @@ impl BlockRngCore for Hc128Core {
 impl Hc128Core {
     // One step of HC-128, update P and generate 32 bits keystream
     #[inline(always)]
-    fn step_p(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize)
-         -> u32
-    {
+    fn step_p(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize) -> u32 {
         let (p, q) = self.t.split_at_mut(512);
         // FIXME: it would be great if we the bounds checks here could be
         // optimized out, and we would not need unsafe.
@@ -184,9 +182,10 @@ impl Hc128Core {
             let temp0 = p.get_unchecked(i511).rotate_right(23);
             let temp1 = p.get_unchecked(i3).rotate_right(10);
             let temp2 = p.get_unchecked(i10).rotate_right(8);
-            *p.get_unchecked_mut(i) = p.get_unchecked(i)
-                                       .wrapping_add(temp2)
-                                       .wrapping_add(temp0 ^ temp1);
+            *p.get_unchecked_mut(i) = p
+                .get_unchecked(i)
+                .wrapping_add(temp2)
+                .wrapping_add(temp0 ^ temp1);
             let temp3 = {
                 // The h1 function in HC-128
                 let a = *p.get_unchecked(i12) as u8;
@@ -201,17 +200,16 @@ impl Hc128Core {
     // Similar to `step_p`, but `p` and `q` are swapped, and the rotates are to
     // the left instead of to the right.
     #[inline(always)]
-    fn step_q(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize)
-         -> u32
-    {
+    fn step_q(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize) -> u32 {
         let (p, q) = self.t.split_at_mut(512);
         unsafe {
             let temp0 = q.get_unchecked(i511).rotate_left(23);
             let temp1 = q.get_unchecked(i3).rotate_left(10);
             let temp2 = q.get_unchecked(i10).rotate_left(8);
-            *q.get_unchecked_mut(i) = q.get_unchecked(i)
-                                       .wrapping_add(temp2)
-                                       .wrapping_add(temp0 ^ temp1);
+            *q.get_unchecked_mut(i) = q
+                .get_unchecked(i)
+                .wrapping_add(temp2)
+                .wrapping_add(temp0 ^ temp1);
             let temp3 = {
                 // The h2 function in HC-128
                 let a = *q.get_unchecked(i12) as u8;
@@ -272,7 +270,7 @@ impl Hc128Core {
     // Initialize an HC-128 random number generator. The seed has to be
     // 256 bits in length (`[u32; 8]`), matching the 128 bit `key` followed by
     // 128 bit `iv` when HC-128 where to be used as a stream cipher.
-    #[inline(always)]   // single use: SeedableRng::from_seed
+    #[inline(always)] // single use: SeedableRng::from_seed
     fn init(seed: [u32; SEED_WORDS]) -> Self {
         #[inline]
         fn f1(x: u32) -> u32 {
@@ -295,9 +293,12 @@ impl Hc128Core {
 
         // Generate the 256 intermediate values W[16] ... W[256+16-1], and
         // copy the last 16 generated values to the start op P.
-        for i in 16..256+16 {
-            t[i] = f2(t[i-2]).wrapping_add(t[i-7]).wrapping_add(f1(t[i-15]))
-                   .wrapping_add(t[i-16]).wrapping_add(i as u32);
+        for i in 16..256 + 16 {
+            t[i] = f2(t[i - 2])
+                .wrapping_add(t[i - 7])
+                .wrapping_add(f1(t[i - 15]))
+                .wrapping_add(t[i - 16])
+                .wrapping_add(i as u32);
         }
         {
             let (p1, p2) = t.split_at_mut(256);
@@ -306,21 +307,26 @@ impl Hc128Core {
 
         // Generate both the P and Q tables
         for i in 16..1024 {
-            t[i] = f2(t[i-2]).wrapping_add(t[i-7]).wrapping_add(f1(t[i-15]))
-                   .wrapping_add(t[i-16]).wrapping_add(256 + i as u32);
+            t[i] = f2(t[i - 2])
+                .wrapping_add(t[i - 7])
+                .wrapping_add(f1(t[i - 15]))
+                .wrapping_add(t[i - 16])
+                .wrapping_add(256 + i as u32);
         }
 
         let mut core = Self { t, counter1024: 0 };
 
         // run the cipher 1024 steps
-        for _ in 0..64 { core.sixteen_steps() };
+        for _ in 0..64 {
+            core.sixteen_steps()
+        }
         core.counter1024 = 0;
         core
     }
 }
 
 impl SeedableRng for Hc128Core {
-    type Seed = [u8; SEED_WORDS*4];
+    type Seed = [u8; SEED_WORDS * 4];
 
     /// Create an HC-128 random number generator with a seed. The seed has to be
     /// 256 bits in length, matching the 128 bit `key` followed by 128 bit `iv`
@@ -336,18 +342,22 @@ impl CryptoRng for Hc128Core {}
 
 #[cfg(test)]
 mod test {
-    use ::rand_core::{RngCore, SeedableRng};
     use super::Hc128Rng;
+    use ::rand_core::{RngCore, SeedableRng};
 
     #[test]
     // Test vector 1 from the paper "The Stream Cipher HC-128"
     fn test_hc128_true_values_a() {
+        #[rustfmt::skip]
         let seed = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u32; 16];
-        for i in results.iter_mut() { *i = rng.next_u32(); }
+        for i in results.iter_mut() {
+            *i = rng.next_u32();
+        }
+        #[rustfmt::skip]
         let expected = [0x73150082, 0x3bfd03a0, 0xfb2fd77f, 0xaa63af0e,
                         0xde122fc6, 0xa7dc29b6, 0x62a68527, 0x8b75ec68,
                         0x9036db1e, 0x81896005, 0x00ade078, 0x491fbf9a,
@@ -358,12 +368,16 @@ mod test {
     #[test]
     // Test vector 2 from the paper "The Stream Cipher HC-128"
     fn test_hc128_true_values_b() {
+        #[rustfmt::skip]
         let seed = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u32; 16];
-        for i in results.iter_mut() { *i = rng.next_u32(); }
+        for i in results.iter_mut() {
+            *i = rng.next_u32();
+        }
+        #[rustfmt::skip]
         let expected = [0xc01893d5, 0xb7dbe958, 0x8f65ec98, 0x64176604,
                         0x36fc6724, 0xc82c6eec, 0x1b1c38a7, 0xc9b42a95,
                         0x323ef123, 0x0a6a908b, 0xce757b68, 0x9f14f7bb,
@@ -374,12 +388,16 @@ mod test {
     #[test]
     // Test vector 3 from the paper "The Stream Cipher HC-128"
     fn test_hc128_true_values_c() {
+        #[rustfmt::skip]
         let seed = [0x55,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u32; 16];
-        for i in results.iter_mut() { *i = rng.next_u32(); }
+        for i in results.iter_mut() {
+            *i = rng.next_u32();
+        }
+        #[rustfmt::skip]
         let expected = [0x518251a4, 0x04b4930a, 0xb02af931, 0x0639f032,
                         0xbcb4a47a, 0x5722480b, 0x2bf99f72, 0xcdc0e566,
                         0x310f0c56, 0xd3cc83e8, 0x663db8ef, 0x62dfe07f,
@@ -389,12 +407,16 @@ mod test {
 
     #[test]
     fn test_hc128_true_values_u64() {
+        #[rustfmt::skip]
         let seed = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
 
         let mut results = [0u64; 8];
-        for i in results.iter_mut() { *i = rng.next_u64(); }
+        for i in results.iter_mut() {
+            *i = rng.next_u64();
+        }
+        #[rustfmt::skip]
         let expected = [0x3bfd03a073150082, 0xaa63af0efb2fd77f,
                         0xa7dc29b6de122fc6, 0x8b75ec6862a68527,
                         0x818960059036db1e, 0x491fbf9a00ade078,
@@ -404,9 +426,14 @@ mod test {
         // The RNG operates in a P block of 512 results and next a Q block.
         // After skipping 2*800 u32 results we end up somewhere in the Q block
         // of the second round
-        for _ in 0..800 { rng.next_u64(); }
+        for _ in 0..800 {
+            rng.next_u64();
+        }
 
-        for i in results.iter_mut() { *i = rng.next_u64(); }
+        for i in results.iter_mut() {
+            *i = rng.next_u64();
+        }
+        #[rustfmt::skip]
         let expected = [0xd8c4d6ca84d0fc10, 0xf16a5d91dc66e8e7,
                         0xd800de5bc37a8653, 0x7bae1f88c0dfbb4c,
                         0x3bfe1f374e6d4d14, 0x424b55676be3fa06,
@@ -416,9 +443,11 @@ mod test {
 
     #[test]
     fn test_hc128_true_values_bytes() {
+        #[rustfmt::skip]
         let seed = [0x55,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng = Hc128Rng::from_seed(seed);
+        #[rustfmt::skip]
         let expected = [0x31, 0xf9, 0x2a, 0xb0, 0x32, 0xf0, 0x39, 0x06,
                  0x7a, 0xa4, 0xb4, 0xbc, 0x0b, 0x48, 0x22, 0x57,
                  0x72, 0x9f, 0xf9, 0x2b, 0x66, 0xe5, 0xc0, 0xcd,
@@ -439,7 +468,7 @@ mod test {
         // Pick a somewhat large buffer so we can test filling with the
         // remainder from `state.results`, directly filling the buffer, and
         // filling the remainder of the buffer.
-        let mut buffer = [0u8; 16*4*2];
+        let mut buffer = [0u8; 16 * 4 * 2];
         // Consume a value so that we have a remainder.
         assert!(rng.next_u64() == 0x04b4930a518251a4);
         rng.fill_bytes(&mut buffer);
@@ -453,6 +482,7 @@ mod test {
 
     #[test]
     fn test_hc128_clone() {
+        #[rustfmt::skip]
         let seed = [0x55,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, // key
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]; // iv
         let mut rng1 = Hc128Rng::from_seed(seed);

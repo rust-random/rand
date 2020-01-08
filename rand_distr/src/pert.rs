@@ -7,9 +7,9 @@
 // except according to those terms.
 //! The PERT distribution.
 
-use rand::Rng;
-use crate::{Distribution, Beta, StandardNormal, Exp1, Open01};
 use crate::utils::Float;
+use crate::{Beta, Distribution, Exp1, Open01, StandardNormal};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The PERT distribution.
@@ -28,7 +28,7 @@ use std::{error, fmt};
 /// let v = d.sample(&mut rand::thread_rng());
 /// println!("{} is from a PERT distribution", v);
 /// ```
-/// 
+///
 /// [`Triangular`]: crate::Triangular
 #[derive(Clone, Copy, Debug)]
 pub struct Pert<N> {
@@ -61,7 +61,10 @@ impl fmt::Display for PertError {
 impl error::Error for PertError {}
 
 impl<N: Float> Pert<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Set up the PERT distribution with defined `min`, `max` and `mode`.
     ///
@@ -70,7 +73,7 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     pub fn new(min: N, max: N, mode: N) -> Result<Pert<N>, PertError> {
         Pert::new_with_shape(min, max, mode, N::from(4.))
     }
-    
+
     /// Set up the PERT distribution with defined `min`, `max`, `mode` and
     /// `shape`.
     pub fn new_with_shape(min: N, max: N, mode: N, shape: N) -> Result<Pert<N>, PertError> {
@@ -83,23 +86,25 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
         if !(shape >= N::from(0.)) {
             return Err(PertError::ShapeTooSmall);
         }
-        
+
         let range = max - min;
         let mu = (min + max + shape * mode) / (shape + N::from(2.));
         let v = if mu == mode {
             shape * N::from(0.5) + N::from(1.)
         } else {
-            (mu - min) * (N::from(2.) * mode - min - max)
-                / ((mode - mu) * (max - min))
+            (mu - min) * (N::from(2.) * mode - min - max) / ((mode - mu) * (max - min))
         };
         let w = v * (max - mu) / (mu - min);
         let beta = Beta::new(v, w).map_err(|_| PertError::RangeTooSmall)?;
-        Ok(Pert{ min, range, beta })
+        Ok(Pert { min, range, beta })
     }
 }
 
 impl<N: Float> Distribution<N> for Pert<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
@@ -109,8 +114,8 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 
 #[cfg(test)]
 mod test {
-    use std::f64;
     use super::*;
+    use std::f64;
 
     #[test]
     fn test_pert() {
@@ -131,15 +136,20 @@ mod test {
             assert!(Pert::new(min, max, mode).is_err());
         }
     }
-    
+
     #[test]
     fn value_stability() {
         let rng = crate::test::rng(860);
-        let distr = Pert::new(2., 10., 3.).unwrap();    // mean = 4, var = 12/7
+        let distr = Pert::new(2., 10., 3.).unwrap(); // mean = 4, var = 12/7
         let seq = distr.sample_iter(rng).take(5).collect::<Vec<f64>>();
         println!("seq: {:?}", seq);
-        let expected = vec![4.631484136029422, 3.307201472321789,
-                3.29995019556348, 3.66835483991721, 3.514246139933899];
+        let expected = vec![
+            4.631484136029422,
+            3.307201472321789,
+            3.29995019556348,
+            3.66835483991721,
+            3.514246139933899,
+        ];
         assert!(seq == expected);
     }
 }

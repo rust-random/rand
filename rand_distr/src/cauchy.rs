@@ -9,9 +9,9 @@
 
 //! The Cauchy distribution.
 
-use rand::Rng;
-use crate::{Distribution, Standard};
 use crate::utils::Float;
+use crate::{Distribution, Standard};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The Cauchy distribution `Cauchy(median, scale)`.
@@ -63,10 +63,7 @@ where Standard: Distribution<N>
         if !(scale > N::from(0.0)) {
             return Err(Error::ScaleTooSmall);
         }
-        Ok(Cauchy {
-            median,
-            scale
-        })
+        Ok(Cauchy { median, scale })
     }
 }
 
@@ -130,7 +127,7 @@ mod test {
     fn test_cauchy_invalid_scale_neg() {
         Cauchy::new(0.0, -10.0).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
         fn gen_samples<N: Float + core::fmt::Debug>(m: N, s: N, buf: &mut [N])
@@ -141,19 +138,23 @@ mod test {
                 *x = rng.sample(&distr);
             }
         }
-        
+
         let mut buf = [0.0; 4];
         gen_samples(100f64, 10.0, &mut buf);
-        assert_eq!(&buf, &[77.93369152808678, 90.1606912098641,
-                125.31516221323625, 86.10217834773925]);
-        
+        assert_eq!(&buf, &[
+            77.93369152808678,
+            90.1606912098641,
+            125.31516221323625,
+            86.10217834773925
+        ]);
+
         // Unfortunately this test is not fully portable due to reliance on the
         // system's implementation of tanf (see doc on Cauchy struct).
         let mut buf = [0.0; 4];
         gen_samples(10f32, 7.0, &mut buf);
         let expected = [15.023088, -5.446413, 3.7092876, 3.112482];
-        for (a,b) in buf.iter().zip(expected.iter()) {
-            let (a,b) = (*a, *b);
+        for (a, b) in buf.iter().zip(expected.iter()) {
+            let (a, b) = (*a, *b);
             assert!((a - b).abs() < 1e-6, "expected: {} = {}", a, b);
         }
     }

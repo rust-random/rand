@@ -9,9 +9,9 @@
 
 //! The Poisson distribution.
 
-use rand::Rng;
-use crate::{Distribution, Cauchy, Standard};
 use crate::utils::Float;
+use crate::{Cauchy, Distribution, Standard};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The Poisson distribution `Poisson(lambda)`.
@@ -120,8 +120,12 @@ where Standard: Distribution<N>
                 // the magic value scales the distribution function to a range of approximately 0-1
                 // since it is not exact, we multiply the ratio by 0.9 to avoid ratios greater than 1
                 // this doesn't change the resulting distribution, only increases the rate of failed drawings
-                let check = N::from(0.9) * (N::from(1.0) + comp_dev * comp_dev)
-                    * (result * self.log_lambda - (N::from(1.0) + result).log_gamma() - self.magic_val).exp();
+                let check = N::from(0.9)
+                    * (N::from(1.0) + comp_dev * comp_dev)
+                    * (result * self.log_lambda
+                        - (N::from(1.0) + result).log_gamma()
+                        - self.magic_val)
+                        .exp();
 
                 // check with uniform random value - if below the threshold, we are within the target distribution
                 if rng.gen::<N>() <= check {
@@ -240,12 +244,12 @@ mod test {
     fn test_poisson_invalid_lambda_neg() {
         Poisson::new(-10.0).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
-        (distr: D, zero: N, expected: &[N])
-        {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
+            distr: D, zero: N, expected: &[N],
+        ) {
             let mut rng = crate::test::rng(223);
             let mut buf = [zero; 4];
             for x in &mut buf {
@@ -253,7 +257,7 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-        
+
         // Special cases: < 12, >= 12
         test_samples(Poisson::new(7.0).unwrap(), 0f32, &[5.0, 11.0, 6.0, 5.0]);
         test_samples(Poisson::new(7.0).unwrap(), 0f64, &[9.0, 5.0, 7.0, 6.0]);

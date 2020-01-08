@@ -28,22 +28,19 @@
 //! value-stable (i.e. any change affecting the output given a fixed seed would
 //! be considered a breaking change to the crate).
 
-#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
-       html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://rust-random.github.io/rand/")]
-
+#![doc(
+    html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
+    html_favicon_url = "https://www.rust-lang.org/favicon.ico",
+    html_root_url = "https://rust-random.github.io/rand/"
+)]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
-
 #![allow(clippy::unreadable_literal)]
-
 #![no_std]
 
-mod pcg64;
 #[cfg(not(target_os = "emscripten"))] mod pcg128;
+mod pcg64;
 
-pub use self::pcg64::{Pcg32, Lcg64Xsh32};
-#[cfg(not(target_os = "emscripten"))] pub use self::pcg128::{
-        Pcg64, Lcg128Xsl64,
-        Pcg64Mcg, Mcg128Xsl64,
-};
+#[cfg(not(target_os = "emscripten"))]
+pub use self::pcg128::{Lcg128Xsl64, Mcg128Xsl64, Pcg64, Pcg64Mcg};
+pub use self::pcg64::{Lcg64Xsh32, Pcg32};

@@ -9,13 +9,13 @@
 
 //! The Gamma and derived distributions.
 
-use self::GammaRepr::*;
 use self::ChiSquaredRepr::*;
+use self::GammaRepr::*;
 
-use rand::Rng;
 use crate::normal::StandardNormal;
-use crate::{Distribution, Exp1, Exp, Open01};
 use crate::utils::Float;
+use crate::{Distribution, Exp, Exp1, Open01};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
@@ -80,7 +80,7 @@ impl error::Error for Error {}
 enum GammaRepr<N> {
     Large(GammaLargeShape<N>),
     One(Exp<N>),
-    Small(GammaSmallShape<N>)
+    Small(GammaSmallShape<N>),
 }
 
 // These two helpers could be made public, but saving the
@@ -100,7 +100,7 @@ enum GammaRepr<N> {
 #[derive(Clone, Copy, Debug)]
 struct GammaSmallShape<N> {
     inv_shape: N,
-    large_shape: GammaLargeShape<N>
+    large_shape: GammaLargeShape<N>,
 }
 
 /// Gamma distribution where the shape parameter is larger than 1.
@@ -111,11 +111,14 @@ struct GammaSmallShape<N> {
 struct GammaLargeShape<N> {
     scale: N,
     c: N,
-    d: N
+    d: N,
 }
 
 impl<N: Float> Gamma<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Construct an object representing the `Gamma(shape, scale)`
     /// distribution.
@@ -140,31 +143,38 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 }
 
 impl<N: Float> GammaSmallShape<N>
-where StandardNormal: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn new_raw(shape: N, scale: N) -> GammaSmallShape<N> {
         GammaSmallShape {
             inv_shape: N::from(1.0) / shape,
-            large_shape: GammaLargeShape::new_raw(shape + N::from(1.0), scale)
+            large_shape: GammaLargeShape::new_raw(shape + N::from(1.0), scale),
         }
     }
 }
 
 impl<N: Float> GammaLargeShape<N>
-where StandardNormal: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn new_raw(shape: N, scale: N) -> GammaLargeShape<N> {
         let d = shape - N::from(1. / 3.);
         GammaLargeShape {
             scale,
             c: N::from(1.0) / (N::from(9.) * d).sqrt(),
-            d
+            d,
         }
     }
 }
 
 impl<N: Float> Distribution<N> for Gamma<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         match self.repr {
@@ -175,7 +185,9 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     }
 }
 impl<N: Float> Distribution<N> for GammaSmallShape<N>
-where StandardNormal: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         let u: N = rng.sample(Open01);
@@ -184,25 +196,28 @@ where StandardNormal: Distribution<N>, Open01: Distribution<N>
     }
 }
 impl<N: Float> Distribution<N> for GammaLargeShape<N>
-where StandardNormal: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         // Marsaglia & Tsang method, 2000
         loop {
             let x: N = rng.sample(StandardNormal);
             let v_cbrt = N::from(1.0) + self.c * x;
-            if v_cbrt <= N::from(0.0) { // a^3 <= 0 iff a <= 0
-                continue
+            if v_cbrt <= N::from(0.0) {
+                // a^3 <= 0 iff a <= 0
+                continue;
             }
 
             let v = v_cbrt * v_cbrt * v_cbrt;
             let u: N = rng.sample(Open01);
 
             let x_sqr = x * x;
-            if u < N::from(1.0) - N::from(0.0331) * x_sqr * x_sqr ||
-                u.ln() < N::from(0.5) * x_sqr + self.d * (N::from(1.0) - v + v.ln())
+            if u < N::from(1.0) - N::from(0.0331) * x_sqr * x_sqr
+                || u.ln() < N::from(0.5) * x_sqr + self.d * (N::from(1.0) - v + v.ln())
             {
-                return self.d * v * self.scale
+                return self.d * v * self.scale;
             }
         }
     }
@@ -259,7 +274,10 @@ enum ChiSquaredRepr<N> {
 }
 
 impl<N: Float> ChiSquared<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Create a new chi-squared distribution with degrees-of-freedom
     /// `k`.
@@ -276,7 +294,10 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
     }
 }
 impl<N: Float> Distribution<N> for ChiSquared<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         match self.repr {
@@ -285,7 +306,7 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
                 let norm: N = rng.sample(StandardNormal);
                 norm * norm
             }
-            DoFAnythingElse(ref g) => g.sample(rng)
+            DoFAnythingElse(ref g) => g.sample(rng),
         }
     }
 }
@@ -335,7 +356,10 @@ impl fmt::Display for FisherFError {
 impl error::Error for FisherFError {}
 
 impl<N: Float> FisherF<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Create a new `FisherF` distribution, with the given parameter.
     pub fn new(m: N, n: N) -> Result<FisherF<N>, FisherFError> {
@@ -349,12 +373,15 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
         Ok(FisherF {
             numer: ChiSquared::new(m).unwrap(),
             denom: ChiSquared::new(n).unwrap(),
-            dof_ratio: n / m
+            dof_ratio: n / m,
         })
     }
 }
 impl<N: Float> Distribution<N> for FisherF<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         self.numer.sample(rng) / self.denom.sample(rng) * self.dof_ratio
@@ -376,23 +403,29 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 #[derive(Clone, Copy, Debug)]
 pub struct StudentT<N> {
     chi: ChiSquared<N>,
-    dof: N
+    dof: N,
 }
 
 impl<N: Float> StudentT<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Create a new Student t distribution with `n` degrees of
     /// freedom.
     pub fn new(n: N) -> Result<StudentT<N>, ChiSquaredError> {
         Ok(StudentT {
             chi: ChiSquared::new(n)?,
-            dof: n
+            dof: n,
         })
     }
 }
 impl<N: Float> Distribution<N> for StudentT<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         let norm: N = rng.sample(StandardNormal);
@@ -438,22 +471,26 @@ impl fmt::Display for BetaError {
 impl error::Error for BetaError {}
 
 impl<N: Float> Beta<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Construct an object representing the `Beta(alpha, beta)`
     /// distribution.
     pub fn new(alpha: N, beta: N) -> Result<Beta<N>, BetaError> {
         Ok(Beta {
-            gamma_a: Gamma::new(alpha, N::from(1.))
-                         .map_err(|_| BetaError::AlphaTooSmall)?,
-            gamma_b: Gamma::new(beta, N::from(1.))
-                         .map_err(|_| BetaError::BetaTooSmall)?,
+            gamma_a: Gamma::new(alpha, N::from(1.)).map_err(|_| BetaError::AlphaTooSmall)?,
+            gamma_b: Gamma::new(beta, N::from(1.)).map_err(|_| BetaError::BetaTooSmall)?,
         })
     }
 }
 
 impl<N: Float> Distribution<N> for Beta<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
         let x = self.gamma_a.sample(rng);
@@ -528,12 +565,12 @@ mod test {
     fn test_beta_invalid_dof() {
         Beta::new(0., 0.).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
-        (distr: D, zero: N, expected: &[N])
-        {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
+            distr: D, zero: N, expected: &[N],
+        ) {
             let mut rng = crate::test::rng(223);
             let mut buf = [zero; 4];
             for x in &mut buf {
@@ -541,47 +578,78 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-        
+
         // Gamma has 3 cases: shape == 1, shape < 1, shape > 1
-        test_samples(Gamma::new(1.0, 5.0).unwrap(), 0f32,
-                &[5.398085, 9.162783, 0.2300583, 1.7235851]);
-        test_samples(Gamma::new(0.8, 5.0).unwrap(), 0f32,
-                &[0.5051203, 0.9048302, 3.095812, 1.8566116]);
+        test_samples(Gamma::new(1.0, 5.0).unwrap(), 0f32, &[
+            5.398085, 9.162783, 0.2300583, 1.7235851,
+        ]);
+        test_samples(Gamma::new(0.8, 5.0).unwrap(), 0f32, &[
+            0.5051203, 0.9048302, 3.095812, 1.8566116,
+        ]);
         test_samples(Gamma::new(1.1, 5.0).unwrap(), 0f64, &[
-                7.783878094584059, 1.4939528171618057,
-                8.638017638857592, 3.0949337228829004]);
-        
+            7.783878094584059,
+            1.4939528171618057,
+            8.638017638857592,
+            3.0949337228829004,
+        ]);
+
         // ChiSquared has 2 cases: k == 1, k != 1
         test_samples(ChiSquared::new(1.0).unwrap(), 0f64, &[
-                0.4893526200348249, 1.635249736808788,
-                0.5013580219361969, 0.1457735613733489]);
+            0.4893526200348249,
+            1.635249736808788,
+            0.5013580219361969,
+            0.1457735613733489,
+        ]);
         test_samples(ChiSquared::new(0.1).unwrap(), 0f64, &[
-                0.014824404726978617, 0.021602123937134326,
-                0.0000003431429746851693, 0.00000002291755769542258]);
-        test_samples(ChiSquared::new(10.0).unwrap(), 0f32, 
-                &[12.693656, 6.812016, 11.082001, 12.436167]);
-        
+            0.014824404726978617,
+            0.021602123937134326,
+            0.0000003431429746851693,
+            0.00000002291755769542258,
+        ]);
+        test_samples(ChiSquared::new(10.0).unwrap(), 0f32, &[
+            12.693656, 6.812016, 11.082001, 12.436167,
+        ]);
+
         // FisherF has same special cases as ChiSquared on each param
-        test_samples(FisherF::new(1.0, 13.5).unwrap(), 0f32,
-                &[0.32283646, 0.048049655, 0.0788893, 1.817178]);
-        test_samples(FisherF::new(1.0, 1.0).unwrap(), 0f32,
-                &[0.29925257, 3.4392934, 9.567652, 0.020074]);
+        test_samples(FisherF::new(1.0, 13.5).unwrap(), 0f32, &[
+            0.32283646,
+            0.048049655,
+            0.0788893,
+            1.817178,
+        ]);
+        test_samples(FisherF::new(1.0, 1.0).unwrap(), 0f32, &[
+            0.29925257, 3.4392934, 9.567652, 0.020074,
+        ]);
         test_samples(FisherF::new(0.7, 13.5).unwrap(), 0f64, &[
-                3.3196593155045124, 0.3409169916262829,
-                0.03377989856426519, 0.00004041672861036937]);
-        
+            3.3196593155045124,
+            0.3409169916262829,
+            0.03377989856426519,
+            0.00004041672861036937,
+        ]);
+
         // StudentT has same special cases as ChiSquared
-        test_samples(StudentT::new(1.0).unwrap(), 0f32,
-                &[0.54703987, -1.8545331, 3.093162, -0.14168274]);
+        test_samples(StudentT::new(1.0).unwrap(), 0f32, &[
+            0.54703987,
+            -1.8545331,
+            3.093162,
+            -0.14168274,
+        ]);
         test_samples(StudentT::new(1.1).unwrap(), 0f64, &[
-                0.7729195887949754, 1.2606210611616204,
-                -1.7553606501113175, -2.377641221169782]);
-        
+            0.7729195887949754,
+            1.2606210611616204,
+            -1.7553606501113175,
+            -2.377641221169782,
+        ]);
+
         // Beta has same special cases as Gamma on each param
-        test_samples(Beta::new(1.0, 0.8).unwrap(), 0f32,
-                &[0.6444564, 0.357635, 0.4110078, 0.7347192]);
+        test_samples(Beta::new(1.0, 0.8).unwrap(), 0f32, &[
+            0.6444564, 0.357635, 0.4110078, 0.7347192,
+        ]);
         test_samples(Beta::new(0.7, 1.2).unwrap(), 0f64, &[
-                0.6433129944095513, 0.5373371199711573,
-                0.10313293199269491, 0.002472280249144378]);
+            0.6433129944095513,
+            0.5373371199711573,
+            0.10313293199269491,
+            0.002472280249144378,
+        ]);
     }
 }

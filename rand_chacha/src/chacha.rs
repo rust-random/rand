@@ -8,13 +8,11 @@
 
 //! The ChaCha random number generator.
 
-#[cfg(feature = "std")]
-use std as core;
-#[cfg(not(feature = "std"))]
-use core;
+#[cfg(not(feature = "std"))] use core;
+#[cfg(feature = "std")] use std as core;
 
-use c2_chacha::guts::ChaCha;
 use self::core::fmt;
+use c2_chacha::guts::ChaCha;
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
@@ -22,16 +20,21 @@ const STREAM_PARAM_NONCE: u32 = 1;
 const STREAM_PARAM_BLOCK: u32 = 0;
 
 pub struct Array64<T>([T; 64]);
-impl<T> Default for Array64<T> where T: Default {
+impl<T> Default for Array64<T>
+where T: Default
+{
+    #[rustfmt::skip]
     fn default() -> Self {
-        Self([T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-              T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default()])
+        Self([
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
+        ])
     }
 }
 impl<T> AsRef<[T]> for Array64<T> {
@@ -44,7 +47,9 @@ impl<T> AsMut<[T]> for Array64<T> {
         &mut self.0
     }
 }
-impl<T> Clone for Array64<T> where T: Copy + Default {
+impl<T> Clone for Array64<T>
+where T: Copy + Default
+{
     fn clone(&self) -> Self {
         let mut new = Self::default();
         new.0.copy_from_slice(&self.0);

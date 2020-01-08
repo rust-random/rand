@@ -27,35 +27,34 @@
 //!
 //! [`rand`]: https://docs.rs/rand
 
-#![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
-       html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-       html_root_url = "https://rust-random.github.io/rand/")]
-
+#![doc(
+    html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
+    html_favicon_url = "https://www.rust-lang.org/favicon.ico",
+    html_root_url = "https://rust-random.github.io/rand/"
+)]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
-
 #![allow(clippy::unreadable_literal)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
-#![cfg_attr(not(feature="std"), no_std)]
 
-
-use core::default::Default;
 use core::convert::AsMut;
+use core::default::Default;
 use core::ptr::copy_nonoverlapping;
 
-#[cfg(all(feature="alloc", not(feature="std")))] extern crate alloc;
-#[cfg(all(feature="alloc", not(feature="std")))] use alloc::boxed::Box;
+#[cfg(all(feature = "alloc", not(feature = "std")))] extern crate alloc;
+#[cfg(all(feature = "alloc", not(feature = "std")))] use alloc::boxed::Box;
 
 pub use error::Error;
-#[cfg(feature="getrandom")] pub use os::OsRng;
+#[cfg(feature = "getrandom")] pub use os::OsRng;
 
 
-mod error;
 pub mod block;
+mod error;
 pub mod impls;
 pub mod le;
-#[cfg(feature="getrandom")] mod os;
+#[cfg(feature = "getrandom")] mod os;
 
 
 /// The core of a random number generator.
@@ -369,7 +368,7 @@ pub trait SeedableRng: Sized {
     /// If [`getrandom`] is unable to provide secure entropy this method will panic.
     ///
     /// [`getrandom`]: https://docs.rs/getrandom
-    #[cfg(feature="getrandom")]
+    #[cfg(feature = "getrandom")]
     fn from_entropy() -> Self {
         let mut seed = Self::Seed::default();
         if let Err(err) = getrandom::getrandom(seed.as_mut()) {
@@ -407,7 +406,7 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
 // Implement `RngCore` for boxed references to an `RngCore`.
 // Force inlining all functions, so that it is up to the `RngCore`
 // implementation and the optimizer to decide on inlining.
-#[cfg(feature="alloc")]
+#[cfg(feature = "alloc")]
 impl<R: RngCore + ?Sized> RngCore for Box<R> {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -430,7 +429,7 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
     }
 }
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 impl std::io::Read for dyn RngCore {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         self.try_fill_bytes(buf)?;
@@ -442,7 +441,7 @@ impl std::io::Read for dyn RngCore {
 impl<'a, R: CryptoRng + ?Sized> CryptoRng for &'a mut R {}
 
 // Implement `CryptoRng` for boxed references to an `CryptoRng`.
-#[cfg(feature="alloc")]
+#[cfg(feature = "alloc")]
 impl<R: CryptoRng + ?Sized> CryptoRng for Box<R> {}
 
 #[cfg(test)]
@@ -454,6 +453,7 @@ mod test {
         struct SeedableNum(u64);
         impl SeedableRng for SeedableNum {
             type Seed = [u8; 8];
+
             fn from_seed(seed: Self::Seed) -> Self {
                 let mut x = [0u64; 1];
                 le::read_u64_into(&seed, &mut x);
@@ -477,7 +477,9 @@ mod test {
             assert!(weight >= 20 && weight <= 44);
 
             for (i2, r2) in results.iter().enumerate() {
-                if i1 == i2 { continue; }
+                if i1 == i2 {
+                    continue;
+                }
                 let diff_weight = (r1 ^ r2).count_ones();
                 assert!(diff_weight >= 20);
             }

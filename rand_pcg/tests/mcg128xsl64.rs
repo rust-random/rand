@@ -4,7 +4,7 @@ use rand_pcg::{Mcg128Xsl64, Pcg64Mcg};
 #[test]
 fn test_mcg128xsl64_construction() {
     // Test that various construction techniques produce a working RNG.
-    let seed = [1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16];
+    let seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
     let mut rng1 = Mcg128Xsl64::from_seed(seed);
     assert_eq!(rng1.next_u64(), 7071994460355047496);
 
@@ -25,17 +25,25 @@ fn test_mcg128xsl64_true_values() {
     let mut rng = Mcg128Xsl64::new(42);
 
     let mut results = [0u64; 6];
-    for i in results.iter_mut() { *i = rng.next_u64(); }
-    let expected: [u64; 6] = [0x63b4a3a813ce700a, 0x382954200617ab24,
-        0xa7fd85ae3fe950ce, 0xd715286aa2887737, 0x60c92fee2e59f32c, 0x84c4e96beff30017];
+    for i in results.iter_mut() {
+        *i = rng.next_u64();
+    }
+    let expected: [u64; 6] = [
+        0x63b4a3a813ce700a,
+        0x382954200617ab24,
+        0xa7fd85ae3fe950ce,
+        0xd715286aa2887737,
+        0x60c92fee2e59f32c,
+        0x84c4e96beff30017,
+    ];
     assert_eq!(results, expected);
 }
 
-#[cfg(feature="serde1")]
+#[cfg(feature = "serde1")]
 #[test]
 fn test_mcg128xsl64_serde() {
     use bincode;
-    use std::io::{BufWriter, BufReader};
+    use std::io::{BufReader, BufWriter};
 
     let mut rng = Mcg128Xsl64::seed_from_u64(0);
 
@@ -45,8 +53,8 @@ fn test_mcg128xsl64_serde() {
 
     let buf = buf.into_inner().unwrap();
     let mut read = BufReader::new(&buf[..]);
-    let mut deserialized: Mcg128Xsl64 = bincode::deserialize_from(&mut read)
-        .expect("Could not deserialize");
+    let mut deserialized: Mcg128Xsl64 =
+        bincode::deserialize_from(&mut read).expect("Could not deserialize");
 
     for _ in 0..16 {
         assert_eq!(rng.next_u64(), deserialized.next_u64());

@@ -9,8 +9,8 @@
 
 //! The binomial distribution.
 
-use rand::Rng;
 use crate::{Distribution, Uniform};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The binomial distribution `Binomial(n, p)`.
@@ -77,7 +77,7 @@ fn f64_to_i64(x: f64) -> i64 {
 }
 
 impl Distribution<u64> for Binomial {
-    #[allow(clippy::many_single_char_names)]  // Same names as in the reference.
+    #[allow(clippy::many_single_char_names)] // Same names as in the reference.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         // Handle these values directly.
         if self.p == 0.0 {
@@ -89,11 +89,7 @@ impl Distribution<u64> for Binomial {
         // The binomial distribution is symmetrical with respect to p -> 1-p,
         // k -> n-k switch p so that it is less than 0.5 - this allows for lower
         // expected values we will just invert the result at the end
-        let p = if self.p <= 0.5 {
-            self.p
-        } else {
-            1.0 - self.p
-        };
+        let p = if self.p <= 0.5 { self.p } else { 1.0 - self.p };
 
         let result;
         let q = 1. - p;
@@ -110,8 +106,7 @@ impl Distribution<u64> for Binomial {
         // Ranlib uses 30, and GSL uses 14.
         const BINV_THRESHOLD: f64 = 10.;
 
-        if (self.n as f64) * p < BINV_THRESHOLD &&
-           self.n <= (::std::i32::MAX as u64) {
+        if (self.n as f64) * p < BINV_THRESHOLD && self.n <= (::std::i32::MAX as u64) {
             // Use the BINV algorithm.
             let s = p / q;
             let a = ((self.n + 1) as f64) * s;
@@ -243,8 +238,8 @@ impl Distribution<u64> for Binomial {
                 // Step 5.2: Squeezing. Check the value of ln(v) againts upper and
                 // lower bound of ln(f(y)).
                 let k = k as f64;
-                let rho = (k / npq) * ((k * (k / 3. + 0.625) + 1./6.) / npq + 0.5);
-                let t = -0.5 * k*k / npq;
+                let rho = (k / npq) * ((k * (k / 3. + 0.625) + 1. / 6.) / npq + 0.5);
+                let t = -0.5 * k * k / npq;
                 let alpha = v.ln();
                 if alpha < t - rho {
                     break;
@@ -264,15 +259,19 @@ impl Distribution<u64> for Binomial {
                     (13860. - (462. - (132. - (99. - 140. / a2) / a2) / a2) / a2) / a / 166320.
                 }
 
-                if alpha > x_m * (f1 / x1).ln()
-                    + (n - (m as f64) + 0.5) * (z / w).ln()
-                    + ((y - m) as f64) * (w * p / (x1 * q)).ln()
-                    // We use the signs from the GSL implementation, which are
-                    // different than the ones in the reference. According to
-                    // the GSL authors, the new signs were verified to be
-                    // correct by one of the original designers of the
-                    // algorithm.
-                    + stirling(f1) + stirling(z) - stirling(x1) - stirling(w)
+                if alpha
+                    > x_m * (f1 / x1).ln()
+                        + (n - (m as f64) + 0.5) * (z / w).ln()
+                        + ((y - m) as f64) * (w * p / (x1 * q)).ln()
+                        // We use the signs from the GSL implementation, which are
+                        // different than the ones in the reference. According to
+                        // the GSL authors, the new signs were verified to be
+                        // correct by one of the original designers of the
+                        // algorithm.
+                        + stirling(f1)
+                        + stirling(z)
+                        - stirling(x1)
+                        - stirling(w)
                 {
                     continue;
                 }
@@ -294,9 +293,9 @@ impl Distribution<u64> for Binomial {
 
 #[cfg(test)]
 mod test {
-    use rand::Rng;
-    use crate::Distribution;
     use super::Binomial;
+    use crate::Distribution;
+    use rand::Rng;
 
     fn test_binomial_mean_and_variance<R: Rng>(n: u64, p: f64, rng: &mut R) {
         let binomial = Binomial::new(n, p).unwrap();
@@ -305,14 +304,15 @@ mod test {
         let expected_variance = n as f64 * p * (1.0 - p);
 
         let mut results = [0.0; 1000];
-        for i in results.iter_mut() { *i = binomial.sample(rng) as f64; }
+        for i in results.iter_mut() {
+            *i = binomial.sample(rng) as f64;
+        }
 
         let mean = results.iter().sum::<f64>() / results.len() as f64;
         assert!((mean as f64 - expected_mean).abs() < expected_mean / 50.0);
 
         let variance =
-            results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>()
-            / results.len() as f64;
+            results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;
         assert!((variance - expected_variance).abs() < expected_variance / 10.0);
     }
 
@@ -338,7 +338,7 @@ mod test {
     fn test_binomial_invalid_lambda_neg() {
         Binomial::new(20, -10.0).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples(n: u64, p: f64, expected: &[u64]) {
@@ -350,7 +350,7 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-        
+
         // We have multiple code paths: np < 10, p > 0.5
         test_samples(2, 0.7, &[1, 1, 2, 1]);
         test_samples(20, 0.3, &[7, 7, 5, 7]);

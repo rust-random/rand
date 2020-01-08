@@ -9,9 +9,9 @@
 
 //! The normal and derived distributions.
 
-use rand::Rng;
-use crate::{ziggurat_tables, Distribution, Open01};
 use crate::utils::{ziggurat, Float};
+use crate::{ziggurat_tables, Distribution, Open01};
+use rand::Rng;
 use std::{error, fmt};
 
 /// Samples floating-point numbers according to the normal distribution
@@ -51,7 +51,7 @@ impl Distribution<f64> for StandardNormal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         #[inline]
         fn pdf(x: f64) -> f64 {
-            (-x*x/2.0).exp()
+            (-x * x / 2.0).exp()
         }
         #[inline]
         fn zero_case<R: Rng + ?Sized>(rng: &mut R, u: f64) -> f64 {
@@ -72,13 +72,21 @@ impl Distribution<f64> for StandardNormal {
                 y = y_.ln();
             }
 
-            if u < 0.0 { x - ziggurat_tables::ZIG_NORM_R } else { ziggurat_tables::ZIG_NORM_R - x }
+            if u < 0.0 {
+                x - ziggurat_tables::ZIG_NORM_R
+            } else {
+                ziggurat_tables::ZIG_NORM_R - x
+            }
         }
 
-        ziggurat(rng, true, // this is symmetric
-                 &ziggurat_tables::ZIG_NORM_X,
-                 &ziggurat_tables::ZIG_NORM_F,
-                 pdf, zero_case)
+        ziggurat(
+            rng,
+            true, // this is symmetric
+            &ziggurat_tables::ZIG_NORM_X,
+            &ziggurat_tables::ZIG_NORM_F,
+            pdf,
+            zero_case,
+        )
     }
 }
 
@@ -86,7 +94,7 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// This uses the ZIGNOR variant of the Ziggurat method, see [`StandardNormal`]
 /// for more details.
-/// 
+///
 /// Note that [`StandardNormal`] is an optimised implementation for mean 0, and
 /// standard deviation 1.
 ///
@@ -135,10 +143,7 @@ where StandardNormal: Distribution<N>
         if !(std_dev >= N::from(0.0)) {
             return Err(Error::StdDevTooSmall);
         }
-        Ok(Normal {
-            mean,
-            std_dev
-        })
+        Ok(Normal { mean, std_dev })
     }
 }
 
@@ -169,7 +174,7 @@ where StandardNormal: Distribution<N>
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct LogNormal<N> {
-    norm: Normal<N>
+    norm: Normal<N>,
 }
 
 impl<N: Float> LogNormal<N>
@@ -182,7 +187,9 @@ where StandardNormal: Distribution<N>
         if !(std_dev >= N::from(0.0)) {
             return Err(Error::StdDevTooSmall);
         }
-        Ok(LogNormal { norm: Normal::new(mean, std_dev).unwrap() })
+        Ok(LogNormal {
+            norm: Normal::new(mean, std_dev).unwrap(),
+        })
     }
 }
 
@@ -226,12 +233,12 @@ mod tests {
     fn test_log_normal_invalid_sd() {
         LogNormal::new(10.0, -1.0).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
-        (distr: D, zero: N, expected: &[N])
-        {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
+            distr: D, zero: N, expected: &[N],
+        ) {
             let mut rng = crate::test::rng(213);
             let mut buf = [zero; 4];
             for x in &mut buf {
@@ -239,23 +246,41 @@ mod tests {
             }
             assert_eq!(buf, expected);
         }
-        
-        test_samples(StandardNormal, 0f32,
-                &[-0.11844189, 0.781378, 0.06563994, -1.1932899]);
+
+        test_samples(StandardNormal, 0f32, &[
+            -0.11844189,
+            0.781378,
+            0.06563994,
+            -1.1932899,
+        ]);
         test_samples(StandardNormal, 0f64, &[
-                -0.11844188827977231, 0.7813779637772346,
-                0.06563993969580051, -1.1932899004186373]);
-        
-        test_samples(Normal::new(0.0, 1.0).unwrap(), 0f32,
-                &[-0.11844189, 0.781378, 0.06563994, -1.1932899]);
+            -0.11844188827977231,
+            0.7813779637772346,
+            0.06563993969580051,
+            -1.1932899004186373,
+        ]);
+
+        test_samples(Normal::new(0.0, 1.0).unwrap(), 0f32, &[
+            -0.11844189,
+            0.781378,
+            0.06563994,
+            -1.1932899,
+        ]);
         test_samples(Normal::new(2.0, 0.5).unwrap(), 0f64, &[
-                1.940779055860114, 2.3906889818886174,
-                2.0328199698479, 1.4033550497906813]);
-        
-        test_samples(LogNormal::new(0.0, 1.0).unwrap(), 0f32,
-                &[0.88830346, 2.1844804, 1.0678421, 0.30322206]);
+            1.940779055860114,
+            2.3906889818886174,
+            2.0328199698479,
+            1.4033550497906813,
+        ]);
+
+        test_samples(LogNormal::new(0.0, 1.0).unwrap(), 0f32, &[
+            0.88830346, 2.1844804, 1.0678421, 0.30322206,
+        ]);
         test_samples(LogNormal::new(2.0, 0.5).unwrap(), 0f64, &[
-                6.964174338639032, 10.921015733601452,
-                7.6355881556915906, 4.068828213584092]);
+            6.964174338639032,
+            10.921015733601452,
+            7.6355881556915906,
+            4.068828213584092,
+        ]);
     }
 }

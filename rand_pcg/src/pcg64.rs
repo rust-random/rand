@@ -11,8 +11,8 @@
 //! PCG random number generators
 
 use core::fmt;
-use rand_core::{RngCore, SeedableRng, Error, le, impls};
-#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
+use rand_core::{impls, le, Error, RngCore, SeedableRng};
+#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
 
 // This is the default multiplier used by PCG for 64-bit state.
 const MULTIPLIER: u64 = 6364136223846793005;
@@ -30,7 +30,7 @@ const MULTIPLIER: u64 = 6364136223846793005;
 /// comprising 64 bits of state and 64 bits stream selector. These are both set
 /// by `SeedableRng`, using a 128-bit seed.
 #[derive(Clone)]
-#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Lcg64Xsh32 {
     state: u64,
     increment: u64,
@@ -65,7 +65,8 @@ impl Lcg64Xsh32 {
     #[inline]
     fn step(&mut self) {
         // prepare the LCG for the next round
-        self.state = self.state
+        self.state = self
+            .state
             .wrapping_mul(MULTIPLIER)
             .wrapping_add(self.increment);
     }
@@ -102,7 +103,7 @@ impl RngCore for Lcg64Xsh32 {
         // Constants are for 64-bit state, 32-bit output
         const ROTATE: u32 = 59; // 64 - 5
         const XSHIFT: u32 = 18; // (5 + 32) / 2
-        const SPARE: u32 = 27;  // 64 - 32 - 5
+        const SPARE: u32 = 27; // 64 - 32 - 5
 
         let rot = (state >> ROTATE) as u32;
         let xsh = (((state >> XSHIFT) ^ state) >> SPARE) as u32;

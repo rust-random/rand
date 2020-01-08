@@ -8,17 +8,20 @@
 
 #![feature(test)]
 
+// Rustfmt slits many macro invocations to shorten lines; in this case longer-lines are more readable
+#![rustfmt::skip]
+
 extern crate test;
 
 const RAND_BENCH_N: u64 = 1000;
 
 use std::mem::size_of;
-use std::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU128};
-use test::Bencher;
+use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
 use std::time::Duration;
+use test::Bencher;
 
 use rand::prelude::*;
-use rand_distr::{*, weighted::WeightedIndex};
+use rand_distr::{weighted::WeightedIndex, *};
 
 // At this time, distributions are optimised for 64-bit platforms.
 use rand_pcg::Pcg64Mcg;
@@ -40,7 +43,7 @@ macro_rules! distr_int {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 macro_rules! distr_nz_int {
@@ -60,7 +63,7 @@ macro_rules! distr_nz_int {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 macro_rules! distr_float {
@@ -80,7 +83,7 @@ macro_rules! distr_float {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 macro_rules! distr_duration {
@@ -94,13 +97,15 @@ macro_rules! distr_duration {
                 let mut accum = Duration::new(0, 0);
                 for _ in 0..RAND_BENCH_N {
                     let x: Duration = distr.sample(&mut rng);
-                    accum = accum.checked_add(x).unwrap_or(Duration::new(u64::max_value(), 999_999_999));
+                    accum = accum
+                        .checked_add(x)
+                        .unwrap_or(Duration::new(u64::max_value(), 999_999_999));
                 }
                 accum
             });
             b.bytes = size_of::<Duration>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 macro_rules! distr {
@@ -120,7 +125,7 @@ macro_rules! distr {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 macro_rules! distr_arr {
@@ -140,7 +145,7 @@ macro_rules! distr_arr {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 // uniform
@@ -245,7 +250,7 @@ macro_rules! gen_range_int {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 gen_range_int!(gen_range_i8, i8, -20i8, 100);
@@ -275,7 +280,7 @@ macro_rules! gen_range_float {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 gen_range_float!(gen_range_f32, f32, -20000.0f32, 100000.0);
@@ -308,7 +313,7 @@ macro_rules! sample_binomial {
                 rng.sample(d)
             })
         }
-    }
+    };
 }
 
 sample_binomial!(misc_binomial_1, 1, 0.9);

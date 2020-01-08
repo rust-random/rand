@@ -8,9 +8,9 @@
 
 //! The Weibull distribution.
 
-use rand::Rng;
-use crate::{Distribution, OpenClosed01};
 use crate::utils::Float;
+use crate::{Distribution, OpenClosed01};
+use rand::Rng;
 use std::{error, fmt};
 
 /// Samples floating-point numbers according to the Weibull distribution
@@ -60,7 +60,10 @@ where OpenClosed01: Distribution<N>
         if !(shape > N::from(0.0)) {
             return Err(Error::ShapeTooSmall);
         }
-        Ok(Weibull { inv_shape: N::from(1.)/shape, scale })
+        Ok(Weibull {
+            inv_shape: N::from(1.) / shape,
+            scale,
+        })
     }
 }
 
@@ -94,12 +97,12 @@ mod tests {
             assert!(r >= 0.);
         }
     }
-    
+
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
-        (distr: D, zero: N, expected: &[N])
-        {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
+            distr: D, zero: N, expected: &[N],
+        ) {
             let mut rng = crate::test::rng(213);
             let mut buf = [zero; 4];
             for x in &mut buf {
@@ -107,11 +110,18 @@ mod tests {
             }
             assert_eq!(buf, expected);
         }
-        
-        test_samples(Weibull::new(1.0, 1.0).unwrap(), 0f32,
-                &[0.041495778, 0.7531094, 1.4189332, 0.38386202]);
+
+        test_samples(Weibull::new(1.0, 1.0).unwrap(), 0f32, &[
+            0.041495778,
+            0.7531094,
+            1.4189332,
+            0.38386202,
+        ]);
         test_samples(Weibull::new(2.0, 0.5).unwrap(), 0f64, &[
-                1.1343478702739669, 0.29470010050655226,
-                0.7556151370284702, 7.877212340241561]);
+            1.1343478702739669,
+            0.29470010050655226,
+            0.7556151370284702,
+            7.877212340241561,
+        ]);
     }
 }

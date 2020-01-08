@@ -8,26 +8,32 @@
 
 //! Math helper functions
 
-use rand::Rng;
 use crate::ziggurat_tables;
-use rand::distributions::hidden_export::IntoFloat;
 use core::{cmp, ops};
+use rand::distributions::hidden_export::IntoFloat;
+use rand::Rng;
 
 /// Trait for floating-point scalar types
-/// 
+///
 /// This allows many distributions to work with `f32` or `f64` parameters and is
 /// potentially extensible. Note however that the `Exp1` and `StandardNormal`
 /// distributions are implemented exclusively for `f32` and `f64`.
-/// 
+///
 /// The bounds and methods are based purely on internal
 /// requirements, and will change as needed.
-pub trait Float: Copy + Sized + cmp::PartialOrd
+pub trait Float:
+    Copy
+    + Sized
+    + cmp::PartialOrd
     + ops::Neg<Output = Self>
     + ops::Add<Output = Self>
     + ops::Sub<Output = Self>
     + ops::Mul<Output = Self>
     + ops::Div<Output = Self>
-    + ops::AddAssign + ops::SubAssign + ops::MulAssign + ops::DivAssign
+    + ops::AddAssign
+    + ops::SubAssign
+    + ops::MulAssign
+    + ops::DivAssign
 {
     /// The constant π
     fn pi() -> Self;
@@ -35,12 +41,12 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     fn from(x: f64) -> Self;
     /// Support converting to an unsigned integer.
     fn to_u64(self) -> Option<u64>;
-    
+
     /// Take the absolute value of self
     fn abs(self) -> Self;
     /// Take the largest integer less than or equal to self
     fn floor(self) -> Self;
-    
+
     /// Take the exponential of self
     fn exp(self) -> Self;
     /// Take the natural logarithm of self
@@ -49,7 +55,7 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
     fn sqrt(self) -> Self;
     /// Take self to a floating-point power
     fn powf(self, power: Self) -> Self;
-    
+
     /// Take the tangent of self
     fn tan(self) -> Self;
     /// Take the logarithm of the gamma function of self
@@ -58,9 +64,15 @@ pub trait Float: Copy + Sized + cmp::PartialOrd
 
 impl Float for f32 {
     #[inline]
-    fn pi() -> Self { core::f32::consts::PI }
+    fn pi() -> Self {
+        core::f32::consts::PI
+    }
+
     #[inline]
-    fn from(x: f64) -> Self { x as f32 }
+    fn from(x: f64) -> Self {
+        x as f32
+    }
+
     #[inline]
     fn to_u64(self) -> Option<u64> {
         if self >= 0. && self <= ::core::u64::MAX as f32 {
@@ -69,23 +81,42 @@ impl Float for f32 {
             None
         }
     }
-    
+
     #[inline]
-    fn abs(self) -> Self { self.abs() }
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
     #[inline]
-    fn floor(self) -> Self { self.floor() }
-    
+    fn floor(self) -> Self {
+        self.floor()
+    }
+
     #[inline]
-    fn exp(self) -> Self { self.exp() }
+    fn exp(self) -> Self {
+        self.exp()
+    }
+
     #[inline]
-    fn ln(self) -> Self { self.ln() }
+    fn ln(self) -> Self {
+        self.ln()
+    }
+
     #[inline]
-    fn sqrt(self) -> Self { self.sqrt() }
+    fn sqrt(self) -> Self {
+        self.sqrt()
+    }
+
     #[inline]
-    fn powf(self, power: Self) -> Self { self.powf(power) }
-    
+    fn powf(self, power: Self) -> Self {
+        self.powf(power)
+    }
+
     #[inline]
-    fn tan(self) -> Self { self.tan() }
+    fn tan(self) -> Self {
+        self.tan()
+    }
+
     #[inline]
     fn log_gamma(self) -> Self {
         let result = log_gamma(self.into());
@@ -97,9 +128,15 @@ impl Float for f32 {
 
 impl Float for f64 {
     #[inline]
-    fn pi() -> Self { core::f64::consts::PI }
+    fn pi() -> Self {
+        core::f64::consts::PI
+    }
+
     #[inline]
-    fn from(x: f64) -> Self { x }
+    fn from(x: f64) -> Self {
+        x
+    }
+
     #[inline]
     fn to_u64(self) -> Option<u64> {
         if self >= 0. && self <= ::core::u64::MAX as f64 {
@@ -108,25 +145,46 @@ impl Float for f64 {
             None
         }
     }
-    
+
     #[inline]
-    fn abs(self) -> Self { self.abs() }
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
     #[inline]
-    fn floor(self) -> Self { self.floor() }
-    
+    fn floor(self) -> Self {
+        self.floor()
+    }
+
     #[inline]
-    fn exp(self) -> Self { self.exp() }
+    fn exp(self) -> Self {
+        self.exp()
+    }
+
     #[inline]
-    fn ln(self) -> Self { self.ln() }
+    fn ln(self) -> Self {
+        self.ln()
+    }
+
     #[inline]
-    fn sqrt(self) -> Self { self.sqrt() }
+    fn sqrt(self) -> Self {
+        self.sqrt()
+    }
+
     #[inline]
-    fn powf(self, power: Self) -> Self { self.powf(power) }
-    
+    fn powf(self, power: Self) -> Self {
+        self.powf(power)
+    }
+
     #[inline]
-    fn tan(self) -> Self { self.tan() }
+    fn tan(self) -> Self {
+        self.tan()
+    }
+
     #[inline]
-    fn log_gamma(self) -> Self { log_gamma(self) }
+    fn log_gamma(self) -> Self {
+        log_gamma(self)
+    }
 }
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma
@@ -188,13 +246,17 @@ pub(crate) fn log_gamma(x: f64) -> f64 {
 // size from force-inlining.
 #[inline(always)]
 pub(crate) fn ziggurat<R: Rng + ?Sized, P, Z>(
-            rng: &mut R,
-            symmetric: bool,
-            x_tab: ziggurat_tables::ZigTable,
-            f_tab: ziggurat_tables::ZigTable,
-            mut pdf: P,
-            mut zero_case: Z)
-            -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
+    rng: &mut R,
+    symmetric: bool,
+    x_tab: ziggurat_tables::ZigTable,
+    f_tab: ziggurat_tables::ZigTable,
+    mut pdf: P,
+    mut zero_case: Z
+) -> f64
+where
+    P: FnMut(f64) -> f64,
+    Z: FnMut(&mut R, f64) -> f64,
+{
     loop {
         // As an optimisation we re-implement the conversion to a f64.
         // From the remaining 12 most significant bits we use 8 to construct `i`.
@@ -212,12 +274,11 @@ pub(crate) fn ziggurat<R: Rng + ?Sized, P, Z>(
             (bits >> 12).into_float_with_exponent(1) - 3.0
         } else {
             // Convert to a value in the range [1,2) and substract to get (0,1)
-            (bits >> 12).into_float_with_exponent(0)
-            - (1.0 - std::f64::EPSILON / 2.0)
+            (bits >> 12).into_float_with_exponent(0) - (1.0 - std::f64::EPSILON / 2.0)
         };
         let x = u * x_tab[i];
 
-        let test_x = if symmetric { x.abs() } else {x};
+        let test_x = if symmetric { x.abs() } else { x };
 
         // algebraically equivalent to |u| < x_tab[i+1]/x_tab[i] (or u < x_tab[i+1]/x_tab[i])
         if test_x < x_tab[i + 1] {

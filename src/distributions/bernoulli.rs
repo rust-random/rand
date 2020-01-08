@@ -8,8 +8,8 @@
 
 //! The Bernoulli distribution.
 
-use crate::Rng;
 use crate::distributions::Distribution;
+use crate::Rng;
 use core::{fmt, u64};
 
 /// The Bernoulli distribution.
@@ -94,10 +94,14 @@ impl Bernoulli {
     #[inline]
     pub fn new(p: f64) -> Result<Bernoulli, BernoulliError> {
         if !(p >= 0.0 && p < 1.0) {
-            if p == 1.0 { return Ok(Bernoulli { p_int: ALWAYS_TRUE }) }
+            if p == 1.0 {
+                return Ok(Bernoulli { p_int: ALWAYS_TRUE });
+            }
             return Err(BernoulliError::InvalidProbability);
         }
-        Ok(Bernoulli { p_int: (p * SCALE) as u64 })
+        Ok(Bernoulli {
+            p_int: (p * SCALE) as u64,
+        })
     }
 
     /// Construct a new `Bernoulli` with the probability of success of
@@ -114,7 +118,7 @@ impl Bernoulli {
             return Err(BernoulliError::InvalidProbability);
         }
         if numerator == denominator {
-            return Ok(Bernoulli { p_int: ALWAYS_TRUE })
+            return Ok(Bernoulli { p_int: ALWAYS_TRUE });
         }
         let p_int = ((f64::from(numerator) / f64::from(denominator)) * SCALE) as u64;
         Ok(Bernoulli { p_int })
@@ -125,7 +129,9 @@ impl Distribution<bool> for Bernoulli {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
         // Make sure to always return true for p = 1.0.
-        if self.p_int == ALWAYS_TRUE { return true; }
+        if self.p_int == ALWAYS_TRUE {
+            return true;
+        }
         let v: u64 = rng.gen();
         v < self.p_int
     }
@@ -133,9 +139,9 @@ impl Distribution<bool> for Bernoulli {
 
 #[cfg(test)]
 mod test {
-    use crate::Rng;
-    use crate::distributions::Distribution;
     use super::Bernoulli;
+    use crate::distributions::Distribution;
+    use crate::Rng;
 
     #[test]
     fn test_trivial() {
@@ -175,9 +181,9 @@ mod test {
         assert!((avg1 - P).abs() < 5e-3);
 
         let avg2 = (sum2 as f64) / (N as f64);
-        assert!((avg2 - (NUM as f64)/(DENOM as f64)).abs() < 5e-3);
+        assert!((avg2 - (NUM as f64) / (DENOM as f64)).abs() < 5e-3);
     }
-    
+
     #[test]
     fn value_stability() {
         let mut rng = crate::test::rng(3);
@@ -186,6 +192,8 @@ mod test {
         for x in &mut buf {
             *x = rng.sample(&distr);
         }
-        assert_eq!(buf, [true, false, false, true, false, false, true, true, true, true]);
+        assert_eq!(buf, [
+            true, false, false, true, false, false, true, true, true, true
+        ]);
     }
 }

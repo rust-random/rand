@@ -9,9 +9,9 @@
 
 //! The exponential distribution.
 
-use rand::Rng;
-use crate::{ziggurat_tables, Distribution};
 use crate::utils::{ziggurat, Float};
+use crate::{ziggurat_tables, Distribution};
+use rand::Rng;
 use std::{error, fmt};
 
 /// Samples floating-point numbers according to the exponential distribution,
@@ -62,10 +62,14 @@ impl Distribution<f64> for Exp1 {
             ziggurat_tables::ZIG_EXP_R - rng.gen::<f64>().ln()
         }
 
-        ziggurat(rng, false,
-                 &ziggurat_tables::ZIG_EXP_X,
-                 &ziggurat_tables::ZIG_EXP_F,
-                 pdf, zero_case)
+        ziggurat(
+            rng,
+            false,
+            &ziggurat_tables::ZIG_EXP_X,
+            &ziggurat_tables::ZIG_EXP_F,
+            pdf,
+            zero_case,
+        )
     }
 }
 
@@ -73,7 +77,7 @@ impl Distribution<f64> for Exp1 {
 ///
 /// This distribution has density function: `f(x) = lambda * exp(-lambda * x)`
 /// for `x > 0`.
-/// 
+///
 /// Note that [`Exp1`](crate::Exp1) is an optimised implementation for `lambda = 1`.
 ///
 /// # Example
@@ -88,7 +92,7 @@ impl Distribution<f64> for Exp1 {
 #[derive(Clone, Copy, Debug)]
 pub struct Exp<N> {
     /// `lambda` stored as `1/lambda`, since this is what we scale by.
-    lambda_inverse: N
+    lambda_inverse: N,
 }
 
 /// Error type returned from `Exp::new`.
@@ -118,7 +122,9 @@ where Exp1: Distribution<N>
         if !(lambda > N::from(0.0)) {
             return Err(Error::LambdaTooSmall);
         }
-        Ok(Exp { lambda_inverse: N::from(1.0) / lambda })
+        Ok(Exp {
+            lambda_inverse: N::from(1.0) / lambda,
+        })
     }
 }
 
@@ -152,12 +158,12 @@ mod test {
     fn test_exp_invalid_lambda_neg() {
         Exp::new(-10.0).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>
-        (distr: D, zero: N, expected: &[N])
-        {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
+            distr: D, zero: N, expected: &[N],
+        ) {
             let mut rng = crate::test::rng(223);
             let mut buf = [zero; 4];
             for x in &mut buf {
@@ -165,15 +171,23 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-        
+
         test_samples(Exp1, 0f32, &[1.079617, 1.8325565, 0.04601166, 0.34471703]);
-        test_samples(Exp1, 0f64, &[1.0796170642388276, 1.8325565304274,
-                0.04601166186842716, 0.3447170217100157]);
-        
-        test_samples(Exp::new(2.0).unwrap(), 0f32,
-                &[0.5398085, 0.91627824, 0.02300583, 0.17235851]);
+        test_samples(Exp1, 0f64, &[
+            1.0796170642388276,
+            1.8325565304274,
+            0.04601166186842716,
+            0.3447170217100157,
+        ]);
+
+        test_samples(Exp::new(2.0).unwrap(), 0f32, &[
+            0.5398085, 0.91627824, 0.02300583, 0.17235851,
+        ]);
         test_samples(Exp::new(1.0).unwrap(), 0f64, &[
-                1.0796170642388276, 1.8325565304274,
-                0.04601166186842716, 0.3447170217100157]);
+            1.0796170642388276,
+            1.8325565304274,
+            0.04601166186842716,
+            0.3447170217100157,
+        ]);
     }
 }

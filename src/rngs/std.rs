@@ -8,15 +8,15 @@
 
 //! The standard RNG
 
-use crate::{RngCore, CryptoRng, Error, SeedableRng};
+use crate::{CryptoRng, Error, RngCore, SeedableRng};
 
-#[cfg(all(any(test, feature = "std"), target_os = "emscripten"))]
-pub(crate) use rand_hc::Hc128Core as Core;
 #[cfg(all(any(test, feature = "std"), not(target_os = "emscripten")))]
 pub(crate) use rand_chacha::ChaCha20Core as Core;
+#[cfg(all(any(test, feature = "std"), target_os = "emscripten"))]
+pub(crate) use rand_hc::Hc128Core as Core;
 
-#[cfg(target_os = "emscripten")] use rand_hc::Hc128Rng as Rng;
 #[cfg(not(target_os = "emscripten"))] use rand_chacha::ChaCha20Rng as Rng;
+#[cfg(target_os = "emscripten")] use rand_hc::Hc128Rng as Rng;
 
 /// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
 /// on the current platform, to be statistically strong and unpredictable
@@ -76,21 +76,22 @@ impl CryptoRng for StdRng {}
 
 #[cfg(test)]
 mod test {
-    use crate::{RngCore, SeedableRng};
     use crate::rngs::StdRng;
+    use crate::{RngCore, SeedableRng};
 
     #[test]
     fn test_stdrng_construction() {
         // Test value-stability of StdRng. This is expected to break any time
         // the algorithm is changed.
+        #[rustfmt::skip]
         let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
 
-        #[cfg(any(feature="stdrng_strong", not(feature="stdrng_fast")))]
+        #[cfg(any(feature = "stdrng_strong", not(feature = "stdrng_fast")))]
         let target = [3950704604716924505, 5573172343717151650];
-        #[cfg(all(not(feature="stdrng_strong"), feature="stdrng_fast"))]
+        #[cfg(all(not(feature = "stdrng_strong"), feature = "stdrng_fast"))]
         let target = [10719222850664546238, 14064965282130556830];
-        
+
         let mut rng0 = StdRng::from_seed(seed);
         let x0 = rng0.next_u64();
 

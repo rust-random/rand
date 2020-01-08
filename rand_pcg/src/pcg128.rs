@@ -14,8 +14,8 @@
 const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
 use core::fmt;
-use rand_core::{RngCore, SeedableRng, Error, le};
-#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
+use rand_core::{le, Error, RngCore, SeedableRng};
+#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
 
 /// A PCG random number generator (XSL RR 128/64 (LCG) variant).
 ///
@@ -30,7 +30,7 @@ use rand_core::{RngCore, SeedableRng, Error, le};
 /// comprising 128 bits of state and 128 bits stream selector. These are both
 /// set by `SeedableRng`, using a 256-bit seed.
 #[derive(Clone)]
-#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Lcg128Xsl64 {
     state: u128,
     increment: u128,
@@ -64,7 +64,8 @@ impl Lcg128Xsl64 {
     #[inline]
     fn step(&mut self) {
         // prepare the LCG for the next round
-        self.state = self.state
+        self.state = self
+            .state
             .wrapping_mul(MULTIPLIER)
             .wrapping_add(self.increment);
     }
@@ -130,7 +131,7 @@ impl RngCore for Lcg128Xsl64 {
 /// output function), this RNG is faster, also has a long cycle, and still has
 /// good performance on statistical tests.
 #[derive(Clone)]
-#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Mcg128Xsl64 {
     state: u128,
 }
@@ -200,8 +201,8 @@ impl RngCore for Mcg128Xsl64 {
 fn output_xsl_rr(state: u128) -> u64 {
     // Output function XSL RR ("xorshift low (bits), random rotation")
     // Constants are for 128-bit state, 64-bit output
-    const XSHIFT: u32 = 64;     // (128 - 64 + 64) / 2
-    const ROTATE: u32 = 122;    // 128 - 6
+    const XSHIFT: u32 = 64; // (128 - 64 + 64) / 2
+    const ROTATE: u32 = 122; // 128 - 6
 
     let rot = (state >> ROTATE) as u32;
     let xsl = ((state >> XSHIFT) as u64) ^ (state as u64);
@@ -212,7 +213,7 @@ fn output_xsl_rr(state: u128) -> u64 {
 fn fill_bytes_impl<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     let mut left = dest;
     while left.len() >= 8 {
-        let (l, r) = {left}.split_at_mut(8);
+        let (l, r) = { left }.split_at_mut(8);
         left = r;
         let chunk: [u8; 8] = rng.next_u64().to_le_bytes();
         l.copy_from_slice(&chunk);

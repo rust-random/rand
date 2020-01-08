@@ -9,9 +9,9 @@
 
 //! The dirichlet distribution.
 
-use rand::Rng;
-use crate::{Distribution, Gamma, StandardNormal, Exp1, Open01};
 use crate::utils::Float;
+use crate::{Distribution, Exp1, Gamma, Open01, StandardNormal};
+use rand::Rng;
 use std::{error, fmt};
 
 /// The Dirichlet distribution `Dirichlet(alpha)`.
@@ -61,7 +61,10 @@ impl fmt::Display for Error {
 impl error::Error for Error {}
 
 impl<N: Float> Dirichlet<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     /// Construct a new `Dirichlet` with the given alpha parameter `alpha`.
     ///
@@ -99,7 +102,10 @@ where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distributi
 }
 
 impl<N: Float> Distribution<Vec<N>> for Dirichlet<N>
-where StandardNormal: Distribution<N>, Exp1: Distribution<N>, Open01: Distribution<N>
+where
+    StandardNormal: Distribution<N>,
+    Exp1: Distribution<N>,
+    Open01: Distribution<N>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<N> {
         let n = self.alpha.len();
@@ -164,14 +170,20 @@ mod test {
     fn test_dirichlet_invalid_alpha() {
         Dirichlet::new_with_size(0.0f64, 2).unwrap();
     }
-    
+
     #[test]
     fn value_stability() {
         let mut rng = crate::test::rng(223);
-        assert_eq!(rng.sample(Dirichlet::new(vec![1.0, 2.0, 3.0]).unwrap()),
-                vec![0.12941567177708177, 0.4702121891675036, 0.4003721390554146]);
-        assert_eq!(rng.sample(Dirichlet::new_with_size(8.0, 5).unwrap()),
-                vec![0.17684200044809556, 0.29915953935953055,
-                    0.1832858056608014, 0.1425623503573967, 0.19815030417417595]);
+        assert_eq!(
+            rng.sample(Dirichlet::new(vec![1.0, 2.0, 3.0]).unwrap()),
+            vec![0.12941567177708177, 0.4702121891675036, 0.4003721390554146]
+        );
+        assert_eq!(rng.sample(Dirichlet::new_with_size(8.0, 5).unwrap()), vec![
+            0.17684200044809556,
+            0.29915953935953055,
+            0.1832858056608014,
+            0.1425623503573967,
+            0.19815030417417595
+        ]);
     }
 }

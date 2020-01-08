@@ -8,12 +8,11 @@
 
 //! Basic floating-point number distributions
 
-use core::mem;
-use crate::Rng;
-use crate::distributions::{Distribution, Standard};
 use crate::distributions::utils::FloatSIMDUtils;
-#[cfg(feature="simd_support")]
-use packed_simd::*;
+use crate::distributions::{Distribution, Standard};
+use crate::Rng;
+use core::mem;
+#[cfg(feature = "simd_support")] use packed_simd::*;
 
 /// A distribution to sample floating point numbers uniformly in the half-open
 /// interval `(0, 1]`, i.e. including 1 but not 0.
@@ -149,20 +148,20 @@ macro_rules! float_impls {
 float_impls! { f32, u32, f32, u32, 23, 127 }
 float_impls! { f64, u64, f64, u64, 52, 1023 }
 
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 float_impls! { f32x2, u32x2, f32, u32, 23, 127 }
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 float_impls! { f32x4, u32x4, f32, u32, 23, 127 }
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 float_impls! { f32x8, u32x8, f32, u32, 23, 127 }
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 float_impls! { f32x16, u32x16, f32, u32, 23, 127 }
 
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 float_impls! { f64x2, u64x2, f64, u64, 52, 1023 }
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 float_impls! { f64x4, u64x4, f64, u64, 52, 1023 }
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 float_impls! { f64x8, u64x8, f64, u64, 52, 1023 }
 
 
@@ -188,8 +187,7 @@ mod tests {
 
                 // OpenClosed01
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01),
-                           0.0 + $EPSILON / 2.0);
+                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01), 0.0 + $EPSILON / 2.0);
                 let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
                 assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
                 let mut max = StepRng::new(!0, 0);
@@ -203,16 +201,16 @@ mod tests {
                 let mut max = StepRng::new(!0, 0);
                 assert_eq!(max.sample::<$ty, _>(Open01), 1.0 - $EPSILON / 2.0);
             }
-        }
+        };
     }
     test_f32! { f32_edge_cases, f32, 0.0, EPSILON32 }
-    #[cfg(feature="simd_support")]
+    #[cfg(feature = "simd_support")]
     test_f32! { f32x2_edge_cases, f32x2, f32x2::splat(0.0), f32x2::splat(EPSILON32) }
-    #[cfg(feature="simd_support")]
+    #[cfg(feature = "simd_support")]
     test_f32! { f32x4_edge_cases, f32x4, f32x4::splat(0.0), f32x4::splat(EPSILON32) }
-    #[cfg(feature="simd_support")]
+    #[cfg(feature = "simd_support")]
     test_f32! { f32x8_edge_cases, f32x8, f32x8::splat(0.0), f32x8::splat(EPSILON32) }
-    #[cfg(feature="simd_support")]
+    #[cfg(feature = "simd_support")]
     test_f32! { f32x16_edge_cases, f32x16, f32x16::splat(0.0), f32x16::splat(EPSILON32) }
 
     macro_rules! test_f64 {
@@ -229,8 +227,7 @@ mod tests {
 
                 // OpenClosed01
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01),
-                           0.0 + $EPSILON / 2.0);
+                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01), 0.0 + $EPSILON / 2.0);
                 let mut one = StepRng::new(1 << 11, 0);
                 assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
                 let mut max = StepRng::new(!0, 0);
@@ -244,20 +241,20 @@ mod tests {
                 let mut max = StepRng::new(!0, 0);
                 assert_eq!(max.sample::<$ty, _>(Open01), 1.0 - $EPSILON / 2.0);
             }
-        }
+        };
     }
     test_f64! { f64_edge_cases, f64, 0.0, EPSILON64 }
-    #[cfg(feature="simd_support")]
+    #[cfg(feature = "simd_support")]
     test_f64! { f64x2_edge_cases, f64x2, f64x2::splat(0.0), f64x2::splat(EPSILON64) }
-    #[cfg(feature="simd_support")]
+    #[cfg(feature = "simd_support")]
     test_f64! { f64x4_edge_cases, f64x4, f64x4::splat(0.0), f64x4::splat(EPSILON64) }
-    #[cfg(feature="simd_support")]
+    #[cfg(feature = "simd_support")]
     test_f64! { f64x8_edge_cases, f64x8, f64x8::splat(0.0), f64x8::splat(EPSILON64) }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<T: Copy + core::fmt::Debug + PartialEq, D: Distribution<T>>(
-            distr: &D, zero: T, expected: &[T]
+            distr: &D, zero: T, expected: &[T],
         ) {
             let mut rng = crate::test::rng(0x6f44f5646c2a7334);
             let mut buf = [zero; 3];
@@ -266,33 +263,45 @@ mod tests {
             }
             assert_eq!(&buf, expected);
         }
-        
+
         test_samples(&Standard, 0f32, &[0.0035963655, 0.7346052, 0.09778172]);
-        test_samples(&Standard, 0f64, &[0.7346051961657583,
-                0.20298547462974248, 0.8166436635290655]);
-        
+        test_samples(&Standard, 0f64, &[
+            0.7346051961657583,
+            0.20298547462974248,
+            0.8166436635290655,
+        ]);
+
         test_samples(&OpenClosed01, 0f32, &[0.003596425, 0.73460525, 0.09778178]);
-        test_samples(&OpenClosed01, 0f64, &[0.7346051961657584,
-                0.2029854746297426, 0.8166436635290656]);
-        
+        test_samples(&OpenClosed01, 0f64, &[
+            0.7346051961657584,
+            0.2029854746297426,
+            0.8166436635290656,
+        ]);
+
         test_samples(&Open01, 0f32, &[0.0035963655, 0.73460525, 0.09778172]);
-        test_samples(&Open01, 0f64, &[0.7346051961657584,
-                0.20298547462974248, 0.8166436635290656]);
-        
-        #[cfg(feature="simd_support")] {
+        test_samples(&Open01, 0f64, &[
+            0.7346051961657584,
+            0.20298547462974248,
+            0.8166436635290656,
+        ]);
+
+        #[cfg(feature = "simd_support")]
+        {
             // We only test a sub-set of types here. Values are identical to
             // non-SIMD types; we assume this pattern continues across all
             // SIMD types.
-            
+
             test_samples(&Standard, f32x2::new(0.0, 0.0), &[
-                    f32x2::new(0.0035963655, 0.7346052),
-                    f32x2::new(0.09778172, 0.20298547),
-                    f32x2::new(0.34296435, 0.81664366)]);
-            
+                f32x2::new(0.0035963655, 0.7346052),
+                f32x2::new(0.09778172, 0.20298547),
+                f32x2::new(0.34296435, 0.81664366),
+            ]);
+
             test_samples(&Standard, f64x2::new(0.0, 0.0), &[
-                    f64x2::new(0.7346051961657583, 0.20298547462974248),
-                    f64x2::new(0.8166436635290655, 0.7423708925400552),
-                    f64x2::new(0.16387782224016323, 0.9087068770169618)]);
+                f64x2::new(0.7346051961657583, 0.20298547462974248),
+                f64x2::new(0.8166436635290655, 0.7423708925400552),
+                f64x2::new(0.16387782224016323, 0.9087068770169618),
+            ]);
         }
     }
 }

@@ -19,9 +19,9 @@ use test::{black_box, Bencher};
 
 use rand::prelude::*;
 use rand::rngs::adapter::ReseedingRng;
-use rand::rngs::{OsRng, mock::StepRng};
-use rand_chacha::{ChaCha20Core, ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
-use rand_hc::{Hc128Rng};
+use rand::rngs::{mock::StepRng, OsRng};
+use rand_chacha::{ChaCha12Rng, ChaCha20Core, ChaCha20Rng, ChaCha8Rng};
+use rand_hc::Hc128Rng;
 use rand_pcg::{Pcg32, Pcg64, Pcg64Mcg};
 
 macro_rules! gen_bytes {
@@ -38,7 +38,7 @@ macro_rules! gen_bytes {
             });
             b.bytes = BYTES_LEN as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 gen_bytes!(gen_bytes_step, StepRng::new(0, 1));
@@ -50,7 +50,7 @@ gen_bytes!(gen_bytes_chacha12, ChaCha12Rng::from_entropy());
 gen_bytes!(gen_bytes_chacha20, ChaCha20Rng::from_entropy());
 gen_bytes!(gen_bytes_hc128, Hc128Rng::from_entropy());
 gen_bytes!(gen_bytes_std, StdRng::from_entropy());
-#[cfg(feature="small_rng")]
+#[cfg(feature = "small_rng")]
 gen_bytes!(gen_bytes_small, SmallRng::from_entropy());
 gen_bytes!(gen_bytes_os, OsRng);
 
@@ -68,7 +68,7 @@ macro_rules! gen_uint {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 gen_uint!(gen_u32_step, u32, StepRng::new(0, 1));
@@ -80,7 +80,7 @@ gen_uint!(gen_u32_chacha12, u32, ChaCha12Rng::from_entropy());
 gen_uint!(gen_u32_chacha20, u32, ChaCha20Rng::from_entropy());
 gen_uint!(gen_u32_hc128, u32, Hc128Rng::from_entropy());
 gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
-#[cfg(feature="small_rng")]
+#[cfg(feature = "small_rng")]
 gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng);
 
@@ -93,7 +93,7 @@ gen_uint!(gen_u64_chacha12, u64, ChaCha12Rng::from_entropy());
 gen_uint!(gen_u64_chacha20, u64, ChaCha20Rng::from_entropy());
 gen_uint!(gen_u64_hc128, u64, Hc128Rng::from_entropy());
 gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
-#[cfg(feature="small_rng")]
+#[cfg(feature = "small_rng")]
 gen_uint!(gen_u64_small, u64, SmallRng::from_entropy());
 gen_uint!(gen_u64_os, u64, OsRng);
 
@@ -107,7 +107,7 @@ macro_rules! init_gen {
                 r2
             });
         }
-    }
+    };
 }
 
 init_gen!(init_pcg32, Pcg32);
@@ -123,9 +123,7 @@ macro_rules! reseeding_bytes {
     ($fnn:ident, $thresh:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = ReseedingRng::new(ChaCha20Core::from_entropy(),
-                                            $thresh * 1024,
-                                            OsRng);
+            let mut rng = ReseedingRng::new(ChaCha20Core::from_entropy(), $thresh * 1024, OsRng);
             let mut buf = [0u8; RESEEDING_BYTES_LEN];
             b.iter(|| {
                 for _ in 0..RESEEDING_BENCH_N {
@@ -135,7 +133,7 @@ macro_rules! reseeding_bytes {
             });
             b.bytes = RESEEDING_BYTES_LEN as u64 * RESEEDING_BENCH_N;
         }
-    }
+    };
 }
 
 reseeding_bytes!(reseeding_chacha20_4k, 4);
@@ -160,7 +158,7 @@ macro_rules! threadrng_uint {
             });
             b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
         }
-    }
+    };
 }
 
 threadrng_uint!(thread_rng_u32, u32);
