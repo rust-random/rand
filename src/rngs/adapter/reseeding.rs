@@ -279,11 +279,10 @@ where
 }
 
 
-#[cfg(all(unix, not(target_os = "emscripten")))]
+#[cfg(all(unix, feature = "std", not(target_os = "emscripten")))]
 mod fork {
-    use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-    #[allow(deprecated)] // Required for compatibility with Rust < 1.24.
-    use core::sync::atomic::{ATOMIC_BOOL_INIT, ATOMIC_USIZE_INIT};
+    use core::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Once;
 
     // Fork protection
     //
@@ -297,15 +296,11 @@ mod fork {
     // don't update `fork_counter`, so a reseed is attempted as soon as
     // possible.
 
-    #[allow(deprecated)]
-    static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
+    static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
     pub fn get_fork_counter() -> usize {
         RESEEDING_RNG_FORK_COUNTER.load(Ordering::Relaxed)
     }
-
-    #[allow(deprecated)]
-    static FORK_HANDLER_REGISTERED: AtomicBool = ATOMIC_BOOL_INIT;
 
     extern "C" fn fork_handler() {
         // Note: fetch_add is defined to wrap on overflow
@@ -314,14 +309,14 @@ mod fork {
     }
 
     pub fn register_fork_handler() {
-        if !FORK_HANDLER_REGISTERED.load(Ordering::Relaxed) {
-            unsafe { libc::pthread_atfork(None, None, Some(fork_handler)) };
-            FORK_HANDLER_REGISTERED.store(true, Ordering::Relaxed);
-        }
+        static REGISTER: Once = Once::new();
+        REGISTER.call_once(|| unsafe {
+            libc::pthread_atfork(None, None, Some(fork_handler));
+        });
     }
 }
 
-#[cfg(not(all(unix, not(target_os = "emscripten"))))]
+#[cfg(not(all(unix, feature = "std", not(target_os = "emscripten"))))]
 mod fork {
     pub fn get_fork_counter() -> usize {
         0
