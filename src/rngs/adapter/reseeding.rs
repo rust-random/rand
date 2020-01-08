@@ -281,9 +281,10 @@ where
 
 #[cfg(all(unix, feature = "std", not(target_os = "emscripten")))]
 mod fork {
-    use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+    use core::sync::atomic::{AtomicUsize, Ordering};
     #[allow(deprecated)] // Required for compatibility with Rust < 1.24.
-    use core::sync::atomic::{ATOMIC_BOOL_INIT, ATOMIC_USIZE_INIT};
+    use core::sync::atomic::{ATOMIC_USIZE_INIT};
+    use std::sync::Once;
 
     // Fork protection
     //
@@ -304,9 +305,6 @@ mod fork {
         RESEEDING_RNG_FORK_COUNTER.load(Ordering::Relaxed)
     }
 
-    #[allow(deprecated)]
-    static FORK_HANDLER_REGISTERED: AtomicBool = ATOMIC_BOOL_INIT;
-
     extern "C" fn fork_handler() {
         // Note: fetch_add is defined to wrap on overflow
         // (which is what we want).
@@ -314,10 +312,10 @@ mod fork {
     }
 
     pub fn register_fork_handler() {
-        if !FORK_HANDLER_REGISTERED.load(Ordering::Relaxed) {
-            unsafe { libc::pthread_atfork(None, None, Some(fork_handler)) };
-            FORK_HANDLER_REGISTERED.store(true, Ordering::Relaxed);
-        }
+        static REGISTER: Once = Once::new();
+        REGISTER.call_once(|| unsafe {
+            libc::pthread_atfork(None, None, Some(fork_handler));
+        });
     }
 }
 

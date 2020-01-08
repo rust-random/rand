@@ -12,6 +12,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ### Fixes
 - The `Bernoulli` distribution constructors now reports an error on NaN and on
   `denominator == 0`. (#925)
+- Use `std::sync::Once` to register fork handler, avoiding possible atomicity violation (#928)
 
 ### Changes
 - Unix: make libc dependency optional; only use fork protection with std feature (#928)
