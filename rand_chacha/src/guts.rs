@@ -11,8 +11,7 @@
 
 use ppv_lite86::{dispatch, dispatch_light128};
 
-#[cfg(feature = "rustcrypto_api")]
-pub use stream_cipher::generic_array;
+#[cfg(feature = "rustcrypto_api")] pub use stream_cipher::generic_array;
 
 pub use ppv_lite86::Machine;
 use ppv_lite86::{vec128_storage, ArithOps, BitOps32, LaneWords4, MultiLane, StoreBytes, Vec4};
@@ -98,10 +97,7 @@ impl ChaCha {
 
 #[inline(always)]
 fn refill_wide_impl<Mach: Machine>(
-    m: Mach,
-    state: &mut ChaCha,
-    drounds: u32,
-    out: &mut [u8; BUFSZ],
+    m: Mach, state: &mut ChaCha, drounds: u32, out: &mut [u8; BUFSZ],
 ) {
     let k = m.vec([0x6170_7865, 0x3320_646e, 0x7962_2d32, 0x6b20_6574]);
     let mut pos = state.pos64(m);
