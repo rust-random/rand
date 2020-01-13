@@ -79,58 +79,10 @@ impl ChaCha {
         ((d.extract(1) as u64) << 32) | d.extract(0) as u64
     }
 
-    /// Set 64-bit block count, affecting next refill.
-    #[inline(always)]
-    pub(crate) fn seek64<M: Machine>(&mut self, m: M, blockct: u64) {
-        let d: M::u32x4 = m.unpack(self.d);
-        self.d = d
-            .insert((blockct >> 32) as u32, 1)
-            .insert(blockct as u32, 0)
-            .into();
-    }
-
-    /// Set 32-bit block count, affecting next refill.
-    #[inline(always)]
-    pub(crate) fn seek32<M: Machine>(&mut self, m: M, blockct: u32) {
-        let d: M::u32x4 = m.unpack(self.d);
-        self.d = d.insert(blockct, 0).into();
-    }
-
-    /// Produce output from the current state.
-    #[inline(always)]
-    fn output_narrow<M: Machine>(&mut self, m: M, x: State<M::u32x4>, out: &mut [u8; BLOCK]) {
-        let k = m.vec([0x6170_7865, 0x3320_646e, 0x7962_2d32, 0x6b20_6574]);
-        (x.a + k).write_le(&mut out[0..16]);
-        (x.b + m.unpack(self.b)).write_le(&mut out[16..32]);
-        (x.c + m.unpack(self.c)).write_le(&mut out[32..48]);
-        (x.d + m.unpack(self.d)).write_le(&mut out[48..64]);
-    }
-
-    /// Add one to the block counter (no overflow check).
-    #[inline(always)]
-    fn inc_block_ct<M: Machine>(&mut self, m: M) {
-        let mut pos = self.pos64(m);
-        let d0: M::u32x4 = m.unpack(self.d);
-        pos += 1;
-        let d1 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-        self.d = d1.into();
-    }
-
     /// Produce 4 blocks of output, advancing the state
     #[inline(always)]
     pub fn refill4(&mut self, drounds: u32, out: &mut [u8; BUFSZ]) {
         refill_wide(self, drounds, out)
-    }
-
-    /// Produce a block of output, advancing the state
-    #[inline(always)]
-    pub fn refill(&mut self, drounds: u32, out: &mut [u8; BLOCK]) {
-        refill_narrow(self, drounds, out)
-    }
-
-    #[inline(always)]
-    pub(crate) fn refill_rounds(&mut self, drounds: u32) -> State<vec128_storage> {
-        refill_narrow_rounds(self, drounds)
     }
 
     #[inline(always)]
@@ -209,23 +161,8 @@ dispatch!(m, Mach, {
     }
 });
 
-/// Refill the buffer from a single-block round, updating the block count.
-dispatch_light128!(m, Mach, {
-    fn refill_narrow(state: &mut ChaCha, drounds: u32, out: &mut [u8; BLOCK]) {
-        let x = refill_narrow_rounds(state, drounds);
-        let x = State {
-            a: m.unpack(x.a),
-            b: m.unpack(x.b),
-            c: m.unpack(x.c),
-            d: m.unpack(x.d),
-        };
-        state.output_narrow(m, x, out);
-        state.inc_block_ct(m);
-    }
-});
-
-/// Single-block, rounds-only; shared by try_apply_keystream for tails shorter than BUFSZ
-/// and XChaCha's setup step.
+// Single-block, rounds-only; shared by try_apply_keystream for tails shorter than BUFSZ
+// and XChaCha's setup step.
 dispatch!(m, Mach, {
     fn refill_narrow_rounds(state: &mut ChaCha, drounds: u32) -> State<vec128_storage> {
         let k: Mach::u32x4 = m.vec([0x6170_7865, 0x3320_646e, 0x7962_2d32, 0x6b20_6574]);
