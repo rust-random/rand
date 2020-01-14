@@ -567,6 +567,40 @@ mod test {
         assert_eq!(v.choose_mut(&mut r), None);
     }
 
+    #[test]
+    fn value_stability_slice() {
+        let mut r = crate::test::rng(413);
+        let chars = [
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+        ];
+        let mut nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+        assert_eq!(chars.choose(&mut r), Some(&'l'));
+        assert_eq!(nums.choose_mut(&mut r), Some(&mut 10));
+
+        #[cfg(feature = "alloc")]
+        assert_eq!(
+            &chars
+                .choose_multiple(&mut r, 8)
+                .cloned()
+                .collect::<Vec<char>>(),
+            &['d', 'm', 'b', 'n', 'c', 'k', 'h', 'e']
+        );
+
+        #[cfg(feature = "alloc")]
+        assert_eq!(chars.choose_weighted(&mut r, |_| 1), Ok(&'f'));
+        #[cfg(feature = "alloc")]
+        assert_eq!(nums.choose_weighted_mut(&mut r, |_| 1), Ok(&mut 5));
+
+        let mut r = crate::test::rng(414);
+        nums.shuffle(&mut r);
+        assert_eq!(nums, [9, 5, 3, 10, 7, 12, 8, 11, 6, 4, 0, 2, 1]);
+        nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        let res = nums.partial_shuffle(&mut r, 6);
+        assert_eq!(res.0, &mut [7, 4, 8, 6, 9, 3]);
+        assert_eq!(res.1, &mut [0, 1, 2, 12, 11, 5, 10]);
+    }
+
     #[derive(Clone)]
     struct UnhintedIterator<I: Iterator + Clone> {
         iter: I,
