@@ -893,4 +893,30 @@ mod test {
             Some(90)
         );
     }
+
+    #[test]
+    fn value_stability_choose_multiple() {
+        fn do_test<I: Iterator<Item = u32>>(iter: I, v: &[u32]) {
+            let mut rng = crate::test::rng(412);
+            let mut buf = [0u32; 8];
+            assert_eq!(iter.choose_multiple_fill(&mut rng, &mut buf), v.len());
+            assert_eq!(&buf[0..v.len()], v);
+        }
+
+        do_test(0..4, &[0, 1, 2, 3]);
+        do_test(0..8, &[0, 1, 2, 3, 4, 5, 6, 7]);
+        do_test(0..100, &[58, 78, 80, 92, 43, 8, 96, 7]);
+
+        #[cfg(feature = "alloc")]
+        {
+            fn do_test<I: Iterator<Item = u32>>(iter: I, v: &[u32]) {
+                let mut rng = crate::test::rng(412);
+                assert_eq!(iter.choose_multiple(&mut rng, v.len()), v);
+            }
+
+            do_test(0..4, &[0, 1, 2, 3]);
+            do_test(0..8, &[0, 1, 2, 3, 4, 5, 6, 7]);
+            do_test(0..100, &[58, 78, 80, 92, 43, 8, 96, 7]);
+        }
+    }
 }
