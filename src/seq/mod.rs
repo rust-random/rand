@@ -847,4 +847,50 @@ mod test {
             Err(WeightedError::InvalidWeight)
         );
     }
+
+    #[test]
+    fn value_stability_choose() {
+        fn choose<I: Iterator<Item = u32>>(iter: I) -> Option<u32> {
+            let mut rng = crate::test::rng(411);
+            iter.choose(&mut rng)
+        }
+
+        assert_eq!(choose([].iter().cloned()), None);
+        assert_eq!(choose(0..100), Some(33));
+        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(76));
+        assert_eq!(
+            choose(ChunkHintedIterator {
+                iter: 0..100,
+                chunk_size: 32,
+                chunk_remaining: 32,
+                hint_total_size: false,
+            }),
+            Some(39)
+        );
+        assert_eq!(
+            choose(ChunkHintedIterator {
+                iter: 0..100,
+                chunk_size: 32,
+                chunk_remaining: 32,
+                hint_total_size: true,
+            }),
+            Some(39)
+        );
+        assert_eq!(
+            choose(WindowHintedIterator {
+                iter: 0..100,
+                window_size: 32,
+                hint_total_size: false,
+            }),
+            Some(90)
+        );
+        assert_eq!(
+            choose(WindowHintedIterator {
+                iter: 0..100,
+                window_size: 32,
+                hint_total_size: true,
+            }),
+            Some(90)
+        );
+    }
 }
