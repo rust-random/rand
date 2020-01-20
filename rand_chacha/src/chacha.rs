@@ -12,7 +12,7 @@
 #[cfg(feature = "std")] use std as core;
 
 use self::core::fmt;
-use c2_chacha::guts::ChaCha;
+use crate::guts::ChaCha;
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
