@@ -19,7 +19,7 @@ use serde::{Serialize, Deserialize};
 
 // ----- Sampling distributions -----
 
-/// Sample a `char`, uniformly distributed over ASCII letters and numbers:
+/// Sample a `char` or `u8`, uniformly distributed over ASCII letters and numbers:
 /// a-z, A-Z and 0-9.
 ///
 /// # Example
@@ -83,6 +83,13 @@ impl Distribution<char> for Standard {
 
 impl Distribution<char> for Alphanumeric {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> char {
+        let byte: u8 = self.sample(rng);
+        byte as char
+    }
+}
+
+impl Distribution<u8> for Alphanumeric {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u8 {
         const RANGE: u32 = 26 + 26 + 10;
         const GEN_ASCII_STR_CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                 abcdefghijklmnopqrstuvwxyz\
@@ -94,7 +101,7 @@ impl Distribution<char> for Alphanumeric {
         loop {
             let var = rng.next_u32() >> (32 - 6);
             if var < RANGE {
-                return GEN_ASCII_STR_CHARSET[var as usize] as char;
+                return GEN_ASCII_STR_CHARSET[var as usize];
             }
         }
     }
