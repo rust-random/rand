@@ -11,7 +11,7 @@
 use crate::{impls, CryptoRng, Error, RngCore};
 use getrandom::getrandom;
 
-/// A random number generator that retrieves randomness from from the
+/// A random number generator that retrieves randomness from the
 /// operating system.
 ///
 /// This is a zero-sized struct. It can be freely constructed with `OsRng`.
