@@ -37,7 +37,7 @@
 //!
 //! # The Book
 //!
-//! For the user guide and futher documentation, please read
+//! For the user guide and further documentation, please read
 //! [The Rust Rand Book](https://rust-random.github.io/book).
 
 #![doc(

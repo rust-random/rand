@@ -40,7 +40,7 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 - Fix or squelch issues from Clippy lints (#840)
 
 ### Additions
-- Add a `no_std` target to CI to continously evaluate `no_std` status (#844)
+- Add a `no_std` target to CI to continuously evaluate `no_std` status (#844)
 - `WeightedIndex`: allow adjusting a sub-set of weights (#866)
 
 ## [0.7.0] - 2019-06-28
@@ -400,7 +400,7 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 
 ## [0.3.14] - 2016-02-13
 ### Fixed
-- Inline definitions from winapi/advapi32, wich decreases build times
+- Inline definitions from winapi/advapi32, which decreases build times
 
 
 ## [0.3.13] - 2016-01-09

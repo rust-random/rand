@@ -32,7 +32,7 @@ we provide limited mitigations against side-channel attacks:
 
 Additionally, derivations from such an RNG (including the `Rng` trait,
 implementations of the `Distribution` trait, and `seq` algorithms) should not
-introduce signficant bias other than that expected from the operation in
+introduce significant bias other than that expected from the operation in
 question (e.g. bias from a weighted distribution).
 
 ## Supported Versions

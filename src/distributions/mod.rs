@@ -15,7 +15,7 @@
 //! of course [`Rng::sample`].
 //!
 //! Abstractly, a [probability distribution] describes the probability of
-//! occurance of each value in its sample space.
+//! occurrence of each value in its sample space.
 //!
 //! More concretely, an implementation of `Distribution<T>` for type `X` is an
 //! algorithm for choosing values from the sample space (a subset of `T`)
