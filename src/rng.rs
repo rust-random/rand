@@ -184,16 +184,12 @@ pub trait Rng: RngCore {
         distr.sample_iter(self)
     }
 
-    /// Fill `dest` entirely with random bytes (uniform value distribution),
-    /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
-    /// and arrays over primitive integer types (`i8`, `i16`, `u32`, etc.).
+    /// Fill any type implementing [`Fill`] with random data
     ///
-    /// On big-endian platforms this performs byte-swapping to ensure
-    /// portability of results from reproducible generators.
+    /// The distribution is expected to be uniform with portable results, but
+    /// this cannot be guaranteed for third-party implementations.
     ///
-    /// This uses [`fill_bytes`] internally which may handle some RNG errors
-    /// implicitly (e.g. waiting if the OS generator is not ready), but panics
-    /// on other errors. See also [`try_fill`] which returns errors.
+    /// This is identical to [`try_fill`] except that it panics on error.
     ///
     /// # Example
     ///
@@ -206,20 +202,16 @@ pub trait Rng: RngCore {
     ///
     /// [`fill_bytes`]: RngCore::fill_bytes
     /// [`try_fill`]: Rng::try_fill
-    fn fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) {
-        self.fill_bytes(dest.as_byte_slice_mut());
-        dest.to_le();
+    fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
+        dest.try_fill(self).unwrap_or_else(|_| panic!("Rng::fill failed"))
     }
 
-    /// Fill `dest` entirely with random bytes (uniform value distribution),
-    /// where `dest` is any type supporting [`AsByteSliceMut`], namely slices
-    /// and arrays over primitive integer types (`i8`, `i16`, `u32`, etc.).
+    /// Fill any type implementing [`Fill`] with random data
     ///
-    /// On big-endian platforms this performs byte-swapping to ensure
-    /// portability of results from reproducible generators.
+    /// The distribution is expected to be uniform with portable results, but
+    /// this cannot be guaranteed for third-party implementations.
     ///
-    /// This is identical to [`fill`] except that it uses [`try_fill_bytes`]
-    /// internally and forwards RNG errors.
+    /// This is identical to [`fill`] except that it forwards errors.
     ///
     /// # Example
     ///
@@ -238,10 +230,8 @@ pub trait Rng: RngCore {
     ///
     /// [`try_fill_bytes`]: RngCore::try_fill_bytes
     /// [`fill`]: Rng::fill
-    fn try_fill<T: AsByteSliceMut + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
-        self.try_fill_bytes(dest.as_byte_slice_mut())?;
-        dest.to_le();
-        Ok(())
+    fn try_fill<T: Fill + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
+        dest.try_fill(self)
     }
 
     /// Return a bool with a probability `p` of being true.
@@ -301,117 +291,98 @@ pub trait Rng: RngCore {
 
 impl<R: RngCore + ?Sized> Rng for R {}
 
-/// Trait for casting types to byte slices
+/// Types which may be filled with random data
 ///
-/// This is used by the [`Rng::fill`] and [`Rng::try_fill`] methods.
-pub trait AsByteSliceMut {
-    /// Return a mutable reference to self as a byte slice
-    fn as_byte_slice_mut(&mut self) -> &mut [u8];
-
-    /// Call `to_le` on each element (i.e. byte-swap on Big Endian platforms).
-    fn to_le(&mut self);
+/// This trait allows arrays to be efficiently filled with random data.
+///
+/// Implementations are expected to be portable across machines unless
+/// clearly documented otherwise (see the
+/// [Chapter on Portability](https://rust-random.github.io/book/portability.html)).
+pub trait Fill {
+    /// Fill self with random data
+    fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error>;
 }
 
-impl AsByteSliceMut for [u8] {
-    fn as_byte_slice_mut(&mut self) -> &mut [u8] {
-        self
+impl Fill for [u8] {
+    fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
+        rng.try_fill_bytes(self)
     }
-
-    fn to_le(&mut self) {}
 }
 
-macro_rules! impl_as_byte_slice {
+macro_rules! impl_fill {
     () => {};
     ($t:ty) => {
-        impl AsByteSliceMut for [$t] {
-            fn as_byte_slice_mut(&mut self) -> &mut [u8] {
-                if self.len() == 0 {
-                    unsafe {
-                        // must not use null pointer
-                        slice::from_raw_parts_mut(0x1 as *mut u8, 0)
-                    }
-                } else {
-                    unsafe {
+        impl Fill for [$t] {
+            fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
+                if self.len() > 0 {
+                    rng.try_fill_bytes(unsafe {
                         slice::from_raw_parts_mut(self.as_mut_ptr()
                             as *mut u8,
                             self.len() * mem::size_of::<$t>()
                         )
+                    })?;
+                    for x in self {
+                        *x = x.to_le();
                     }
                 }
-            }
-
-            fn to_le(&mut self) {
-                for x in self {
-                    *x = x.to_le();
-                }
+                Ok(())
             }
         }
 
-        impl AsByteSliceMut for [Wrapping<$t>] {
-            fn as_byte_slice_mut(&mut self) -> &mut [u8] {
-                if self.len() == 0 {
-                    unsafe {
-                        // must not use null pointer
-                        slice::from_raw_parts_mut(0x1 as *mut u8, 0)
-                    }
-                } else {
-                    unsafe {
+        impl Fill for [Wrapping<$t>] {
+            fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
+                if self.len() > 0 {
+                    rng.try_fill_bytes(unsafe {
                         slice::from_raw_parts_mut(self.as_mut_ptr()
                             as *mut u8,
                             self.len() * mem::size_of::<$t>()
                         )
+                    })?;
+                    for x in self {
+                    *x = Wrapping(x.0.to_le());
                     }
                 }
-            }
-
-            fn to_le(&mut self) {
-                for x in self {
-                    *x = Wrapping(x.0.to_le());
-                }
+                Ok(())
             }
         }
     };
     ($t:ty, $($tt:ty,)*) => {
-        impl_as_byte_slice!($t);
+        impl_fill!($t);
         // TODO: this could replace above impl once Rust #32463 is fixed
-        // impl_as_byte_slice!(Wrapping<$t>);
-        impl_as_byte_slice!($($tt,)*);
+        // impl_fill!(Wrapping<$t>);
+        impl_fill!($($tt,)*);
     }
 }
 
-impl_as_byte_slice!(u16, u32, u64, usize,);
+impl_fill!(u16, u32, u64, usize,);
 #[cfg(not(target_os = "emscripten"))]
-impl_as_byte_slice!(u128);
-impl_as_byte_slice!(i8, i16, i32, i64, isize,);
+impl_fill!(u128);
+impl_fill!(i8, i16, i32, i64, isize,);
 #[cfg(not(target_os = "emscripten"))]
-impl_as_byte_slice!(i128);
+impl_fill!(i128);
 
-macro_rules! impl_as_byte_slice_arrays {
+macro_rules! impl_fill_arrays {
     ($n:expr,) => {};
     ($n:expr, $N:ident) => {
-        impl<T> AsByteSliceMut for [T; $n] where [T]: AsByteSliceMut {
-            fn as_byte_slice_mut(&mut self) -> &mut [u8] {
-                self[..].as_byte_slice_mut()
-            }
-
-            fn to_le(&mut self) {
-                self[..].to_le()
+        impl<T> Fill for [T; $n] where [T]: Fill {
+            fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
+                self[..].try_fill(rng)
             }
         }
     };
     ($n:expr, $N:ident, $($NN:ident,)*) => {
-        impl_as_byte_slice_arrays!($n, $N);
-        impl_as_byte_slice_arrays!($n - 1, $($NN,)*);
+        impl_fill_arrays!($n, $N);
+        impl_fill_arrays!($n - 1, $($NN,)*);
     };
     (!div $n:expr,) => {};
     (!div $n:expr, $N:ident, $($NN:ident,)*) => {
-        impl_as_byte_slice_arrays!($n, $N);
-        impl_as_byte_slice_arrays!(!div $n / 2, $($NN,)*);
+        impl_fill_arrays!($n, $N);
+        impl_fill_arrays!(!div $n / 2, $($NN,)*);
     };
 }
 #[rustfmt::skip]
-impl_as_byte_slice_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
-impl_as_byte_slice_arrays!(!div 4096, N,N,N,N,N,N,N,);
+impl_fill_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
+impl_fill_arrays!(!div 4096, N,N,N,N,N,N,N,);
 
 #[cfg(test)]
 mod test {

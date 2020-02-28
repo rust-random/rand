@@ -101,7 +101,7 @@ pub mod seq;
 
 // Public exports
 #[cfg(feature = "std")] pub use crate::rngs::thread::thread_rng;
-pub use rng::{AsByteSliceMut, Rng};
+pub use rng::{Fill, Rng};
 
 #[cfg(feature = "std")] use crate::distributions::{Distribution, Standard};
 
