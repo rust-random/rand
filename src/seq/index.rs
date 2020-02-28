@@ -435,4 +435,38 @@ mod test {
         assert!(v1.iter().all(|e| e < length));
         assert_eq!(v1, v2);
     }
+
+    #[test]
+    fn value_stability_sample() {
+        let do_test = |length, amount, values: &[u32]| {
+            let mut buf = [0u32; 8];
+            let mut rng = crate::test::rng(410);
+
+            let res = sample(&mut rng, length, amount);
+            let len = res.len().min(buf.len());
+            for (x, y) in res.into_iter().zip(buf.iter_mut()) {
+                *y = x as u32;
+            }
+            assert_eq!(
+                &buf[0..len],
+                values,
+                "failed sampling {}, {}",
+                length,
+                amount
+            );
+        };
+
+        do_test(10, 6, &[8, 0, 3, 5, 9, 6]); // floyd
+        do_test(25, 10, &[18, 15, 14, 9, 0, 13, 5, 24]); // floyd
+        do_test(300, 8, &[30, 283, 150, 1, 73, 13, 285, 35]); // floyd
+        do_test(300, 80, &[31, 289, 248, 154, 5, 78, 19, 286]); // inplace
+        do_test(300, 180, &[31, 289, 248, 154, 5, 78, 19, 286]); // inplace
+
+        do_test(1000_000, 8, &[
+            103717, 963485, 826422, 509101, 736394, 807035, 5327, 632573,
+        ]); // floyd
+        do_test(1000_000, 180, &[
+            103718, 963490, 826426, 509103, 736396, 807036, 5327, 632573,
+        ]); // rejection
+    }
 }
