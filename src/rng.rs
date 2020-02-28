@@ -303,6 +303,26 @@ pub trait Fill {
     fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error>;
 }
 
+macro_rules! impl_fill_each {
+    () => {};
+    ($t:ty) => {
+        impl Fill for [$t] {
+            fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
+                for elt in self.iter_mut() {
+                    *elt = rng.gen();
+                }
+                Ok(())
+            }
+        }
+    };
+    ($t:ty, $($tt:ty,)*) => {
+        impl_fill_each!($t);
+        impl_fill_each!($($tt,)*);
+    };
+}
+
+impl_fill_each!(bool, char, f32, f64,);
+
 impl Fill for [u8] {
     fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
         rng.try_fill_bytes(self)
@@ -435,6 +455,12 @@ mod test {
         rng.fill(&mut warray[..]);
         assert_eq!(array[0], warray[0].0);
         assert_eq!(array[1], warray[1].0);
+
+        // Check equivalence for generated floats
+        let mut array = [0f32; 2];
+        rng.fill(&mut array);
+        let gen: [f32; 2] = rng.gen();
+        assert_eq!(array, gen);
     }
 
     #[test]
