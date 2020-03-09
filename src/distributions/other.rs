@@ -33,6 +33,37 @@ use crate::Rng;
 ///         .collect();
 /// println!("Random chars: {}", chars);
 /// ```
+///
+/// # Passwords
+///
+/// We caution that strings produced by sampling `Alphanumeric` tend not
+/// to be particularly memorable when used as passwords by humans.  
+/// Instead, we suggest that human memorable passwords be created by
+/// drawing words independently and uniformly at random from a large wordlist. 
+///
+/// Each random word contributes `log2(wordlist_length)` bits of entropy.
+///
+/// Among the widely reviewed wordlists, there are [Diceware](https://en.wikipedia.org/wiki/Diceware)
+/// wordlists for many major langauges, including some from security
+/// organizations like the E.F.F., and many of which further facilitate
+/// memorability by avoiding homophones and words with tricky spelling.
+///
+/// There exists [several crates](https://crates.io/search?q=diceware) for
+/// this but `rand::seq::SliceRandom::choose` works too:
+/// ```
+/// # use rand::Rng;
+/// #[allow(dead_code)]
+/// pub fn make_password<R: Rng>(wordlist: &[impl ::core::borrow::Borrow<str>], entropy: u32, rng: &mut R) -> String {
+///     use rand::seq::SliceRandom;
+///     use core::convert::TryInto;
+///     let entropy: f64 = entropy.into();
+///     let l: u32 = wordlist.len().try_into().unwrap();
+///     assert!( l > 0 );
+///     let l: f64 = l.into();
+///     let l = (entropy / l.log2()).ceil() as usize;
+///     (0..l).map(|_| wordlist.choose(rng).unwrap().borrow() ).collect::<String>()
+/// }
+/// ```
 #[derive(Debug)]
 pub struct Alphanumeric;
 
