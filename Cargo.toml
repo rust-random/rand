@@ -22,18 +22,28 @@ appveyor = { repository = "rust-random/rand" }
 
 [features]
 # Meta-features:
-default = ["std"] # without "std" rand uses libcore
+default = ["std", "std_rng"]
 nightly = ["simd_support"] # enables all features requiring nightly rust
 serde1 = [] # does nothing, deprecated
 
-# Optional dependencies:
+# Option: without "std" rand uses libcore; this option enables functionality
+# expected to be available on a standard platform.
 std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom", "libc"]
-alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
+
+# Option: "alloc" enables support for Vec and Box when not using "std"
+alloc = ["rand_core/alloc"]
+
+# Option: use getrandom package for seeding
 getrandom = ["rand_core/getrandom"]
 
-# Configuration:
-simd_support = ["packed_simd"] # enables SIMD support
-small_rng = ["rand_pcg"]    # enables SmallRng
+# Option: experimental SIMD support
+simd_support = ["packed_simd"]
+
+# Option: enable StdRng (enabled by default)
+std_rng = ["rand_chacha", "rand_hc"]
+
+# Option: enable SmallRng
+small_rng = ["rand_pcg"]
 
 [workspace]
 members = [
@@ -63,9 +73,9 @@ libc = { version = "0.2.22", optional = true, default-features = false }
 # Emscripten does not support 128-bit integers, which are used by ChaCha code.
 # We work around this by using a different RNG.
 [target.'cfg(not(target_os = "emscripten"))'.dependencies]
-rand_chacha = { path = "rand_chacha", version = "0.2.1", default-features = false }
+rand_chacha = { path = "rand_chacha", version = "0.2.1", default-features = false, optional = true }
 [target.'cfg(target_os = "emscripten")'.dependencies]
-rand_hc = { path = "rand_hc", version = "0.2" }
+rand_hc = { path = "rand_hc", version = "0.2", optional = true }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "0.2" }

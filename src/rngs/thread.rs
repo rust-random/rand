@@ -8,8 +8,8 @@
 
 //! Thread-local random number generator
 
-use std::cell::UnsafeCell;
-use std::ptr::NonNull;
+use core::cell::UnsafeCell;
+use core::ptr::NonNull;
 
 use super::std::Core;
 use crate::rngs::adapter::ReseedingRng;
