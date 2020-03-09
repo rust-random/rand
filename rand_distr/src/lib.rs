@@ -68,8 +68,8 @@
 //!   - [`UnitDisc`] distribution
 
 pub use rand::distributions::{
-    uniform, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01,
-    OpenClosed01, Standard, Uniform,
+    uniform, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01, OpenClosed01,
+    Standard, Uniform,
 };
 
 pub use self::binomial::{Binomial, Error as BinomialError};
@@ -91,10 +91,9 @@ pub use self::unit_disc::UnitDisc;
 pub use self::unit_sphere::UnitSphere;
 pub use self::utils::Float;
 pub use self::weibull::{Error as WeibullError, Weibull};
-#[cfg(feature = "alloc")]
 pub use self::weighted::{WeightedError, WeightedIndex};
 
-#[cfg(feature = "alloc")] pub mod weighted;
+pub mod weighted;
 
 mod binomial;
 mod cauchy;

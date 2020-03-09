@@ -18,4 +18,4 @@
 
 pub mod alias_method;
 
-pub use pub use rand::distributions::weighted::{WeightedIndex, WeightedError};
+pub use rand::distributions::weighted::{WeightedError, WeightedIndex};

@@ -8,13 +8,15 @@
 
 //! Weighted index sampling
 //!
-//! This module provides two implementations for sampling indices:
+//! The [`WeightedIndex`] distribution allows `O(log N)` sampling from a
+//! sequence of weights. As the name implies, the result is the index in that
+//! sequence, which may be used to look up an associated value.
 //!
-//! *   [`WeightedIndex`] allows `O(log N)` sampling
-//! *   [`alias_method::WeightedIndex`] allows `O(1)` sampling, but with
-//!      much greater set-up cost
-//!      
-//! [`alias_method::WeightedIndex`]: alias_method/struct.WeightedIndex.html
+//! Note also that the `rand_distr` crate provides
+//! `rand_distr::alias_method::WeightedIndex`, which allows `O(1)` sampling;
+//! this distribution however has a much greater set-up cost, thus is only
+//! recommended where *many* samples are required.
+// TODO: link alias_method impl when published in rand_distr
 
 #[allow(missing_docs)]
 #[deprecated(since = "0.8.0", note = "moved to rand_distr crate")]

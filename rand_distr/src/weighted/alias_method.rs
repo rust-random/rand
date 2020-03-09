@@ -10,15 +10,11 @@
 //! indices with probabilities proportional to a collection of weights.
 
 use super::WeightedError;
-#[cfg(not(feature = "std"))] use crate::alloc::vec;
-#[cfg(not(feature = "std"))] use crate::alloc::vec::Vec;
-use crate::distributions::uniform::SampleUniform;
-use crate::distributions::Distribution;
-use crate::distributions::Uniform;
-use crate::Rng;
+use crate::{uniform::SampleUniform, Distribution, Uniform};
 use core::fmt;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use rand::Rng;
 
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///
@@ -42,7 +38,7 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 /// # Example
 ///
 /// ```
-/// use rand::distributions::weighted::alias_method::WeightedIndex;
+/// use rand_distr::weighted::alias_method::WeightedIndex;
 /// use rand::prelude::*;
 ///
 /// let choices = vec!['a', 'b', 'c'];
@@ -408,7 +404,7 @@ mod test {
         test_weighted_index(|x: u128| x as f64);
     }
 
-    #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
+    #[cfg(not(target_os = "emscripten"))]
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_weighted_index_i128() {
@@ -456,7 +452,7 @@ mod test {
 
         let weights = {
             let mut weights = Vec::with_capacity(NUM_WEIGHTS as usize);
-            let random_weight_distribution = crate::distributions::Uniform::new_inclusive(
+            let random_weight_distribution = Uniform::new_inclusive(
                 W::ZERO,
                 W::MAX / W::try_from_u32_lossy(NUM_WEIGHTS).unwrap(),
             );
