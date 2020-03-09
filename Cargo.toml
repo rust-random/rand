@@ -29,12 +29,7 @@ serde1 = [] # does nothing, deprecated
 # Optional dependencies:
 std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom", "libc"]
 alloc = ["rand_core/alloc"]  # enables Vec and Box support (without std)
-# re-export optional WASM dependencies to avoid breakage:
-# Warning: wasm-bindgen and stdweb features will be removed in rand 0.8;
-# recommended to activate via the getrandom crate instead.
-wasm-bindgen = ["getrandom_package/wasm-bindgen"]
-stdweb = ["getrandom_package/stdweb"]
-getrandom = ["getrandom_package", "rand_core/getrandom"]
+getrandom = ["rand_core/getrandom"]
 
 # Configuration:
 simd_support = ["packed_simd"] # enables SIMD support
@@ -52,10 +47,6 @@ members = [
 [dependencies]
 rand_core = { path = "rand_core", version = "0.5.1" }
 rand_pcg = { path = "rand_pcg", version = "0.2", optional = true }
-# Do not depend on 'getrandom_package' directly; use the 'getrandom' feature!
-# This is a dependency because: we forward wasm feature flags
-# This is renamed because: we need getrandom to depend on rand_core/getrandom
-getrandom_package = { version = "0.1.1", package = "getrandom", optional = true }
 log = { version = "0.4.4", optional = true }
 
 [dependencies.packed_simd]
