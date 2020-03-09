@@ -47,7 +47,6 @@ members = [
     "rand_chacha",
     "rand_hc",
     "rand_pcg",
-    "tests/wasm_bindgen",
 ]
 
 [dependencies]
