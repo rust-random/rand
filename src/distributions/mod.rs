@@ -103,58 +103,8 @@ pub use self::other::Alphanumeric;
 #[cfg(feature = "alloc")]
 pub use self::weighted::{WeightedError, WeightedIndex};
 
-// The following are all deprecated after being moved to rand_distr
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::binomial::Binomial;
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::cauchy::Cauchy;
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::dirichlet::Dirichlet;
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::exponential::{Exp, Exp1};
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::gamma::{Beta, ChiSquared, FisherF, Gamma, StudentT};
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::normal::{LogNormal, Normal, StandardNormal};
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::pareto::Pareto;
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::poisson::Poisson;
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::triangular::Triangular;
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::unit_circle::UnitCircle;
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::unit_sphere::UnitSphereSurface;
-#[allow(deprecated)]
-#[cfg(feature = "std")]
-pub use self::weibull::Weibull;
-
 mod bernoulli;
-#[cfg(feature = "std")] mod binomial;
-#[cfg(feature = "std")] mod cauchy;
-#[cfg(feature = "std")] mod dirichlet;
-#[cfg(feature = "std")] mod exponential;
-#[cfg(feature = "std")] mod gamma;
-#[cfg(feature = "std")] mod normal;
-#[cfg(feature = "std")] mod pareto;
-#[cfg(feature = "std")] mod poisson;
-#[cfg(feature = "std")] mod triangular;
 pub mod uniform;
-#[cfg(feature = "std")] mod unit_circle;
-#[cfg(feature = "std")] mod unit_sphere;
-#[cfg(feature = "std")] mod weibull;
 #[cfg(feature = "alloc")] pub mod weighted;
 
 mod float;
@@ -165,7 +115,6 @@ pub mod hidden_export {
 mod integer;
 mod other;
 mod utils;
-#[cfg(feature = "std")] mod ziggurat_tables;
 
 /// Types (distributions) that can be used to create a random instance of `T`.
 ///
