@@ -100,6 +100,8 @@ macro_rules! chacha_impl {
             }
         }
 
+        impl CryptoRng for $ChaChaXCore {}
+
         /// A cryptographically secure random number generator that uses the ChaCha algorithm.
         ///
         /// ChaCha is a stream cipher designed by Daniel J. Bernstein[^1], that we use as an RNG. It is
