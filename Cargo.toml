@@ -26,8 +26,8 @@ default = ["std", "std_rng"]
 nightly = ["simd_support"] # enables all features requiring nightly rust
 serde1 = [] # does nothing, deprecated
 
-# Option: without "std" rand uses libcore; this option enables functionality
-# expected to be available on a standard platform.
+# Option (enabled by default): without "std" rand uses libcore; this option
+# enables functionality expected to be available on a standard platform.
 std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom", "libc"]
 
 # Option: "alloc" enables support for Vec and Box when not using "std"
@@ -36,10 +36,10 @@ alloc = ["rand_core/alloc"]
 # Option: use getrandom package for seeding
 getrandom = ["rand_core/getrandom"]
 
-# Option: experimental SIMD support
+# Option (requires nightly): experimental SIMD support
 simd_support = ["packed_simd"]
 
-# Option: enable StdRng (enabled by default)
+# Option (enabled by default): enable StdRng
 std_rng = ["rand_chacha", "rand_hc"]
 
 # Option: enable SmallRng
