@@ -325,6 +325,7 @@ mod fork {
 }
 
 
+#[cfg(feature = "std_rng")]
 #[cfg(test)]
 mod test {
     use super::ReseedingRng;

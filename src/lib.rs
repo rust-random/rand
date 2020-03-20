@@ -100,10 +100,12 @@ pub mod rngs;
 pub mod seq;
 
 // Public exports
-#[cfg(feature = "std")] pub use crate::rngs::thread::thread_rng;
+#[cfg(all(feature = "std", feature = "std_rng"))]
+pub use crate::rngs::thread::thread_rng;
 pub use rng::{Fill, Rng};
 
-#[cfg(feature = "std")] use crate::distributions::{Distribution, Standard};
+#[cfg(all(feature = "std", feature = "std_rng"))]
+use crate::distributions::{Distribution, Standard};
 
 /// Generates a random value using the thread-local random number generator.
 ///
@@ -147,7 +149,7 @@ pub use rng::{Fill, Rng};
 /// ```
 ///
 /// [`Standard`]: distributions::Standard
-#[cfg(feature = "std")]
+#[cfg(all(feature = "std", feature = "std_rng"))]
 #[inline]
 pub fn random<T>() -> T
 where Standard: Distribution<T> {
@@ -167,7 +169,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "std")]
+    #[cfg(all(feature = "std", feature = "std_rng"))]
     fn test_random() {
         // not sure how to test this aside from just getting some values
         let _n: usize = random();
