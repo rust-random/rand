@@ -66,6 +66,8 @@
 //!   - [`UnitBall`] distribution
 //!   - [`UnitCircle`] distribution
 //!   - [`UnitDisc`] distribution
+//! - Misc. distributions
+//!   - [`InverseGaussian`] distribution
 
 pub use rand::distributions::{
     uniform, weighted, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01,
@@ -80,6 +82,7 @@ pub use self::gamma::{
     Beta, BetaError, ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError,
     Gamma, StudentT,
 };
+pub use self::inverse_gaussian::{InverseGaussian, Error as InverseGaussianError};
 pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal};
 pub use self::pareto::{Error as ParetoError, Pareto};
 pub use self::pert::{Pert, PertError};
@@ -97,6 +100,7 @@ mod cauchy;
 mod dirichlet;
 mod exponential;
 mod gamma;
+mod inverse_gaussian;
 mod normal;
 mod pareto;
 mod pert;
