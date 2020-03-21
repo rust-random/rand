@@ -7,7 +7,7 @@ pub enum Error {
     /// `alpha <= 0` or `nan`.
     AlphaNegativeOrNull,
     /// `|beta| >= alpha` or `nan`.
-    AbsoluteBetaLessThanAlpha,
+    AbsoluteBetaNotLessThanAlpha,
 }
 
 /// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution)
