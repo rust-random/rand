@@ -32,7 +32,7 @@ where StandardNormal: Distribution<N>
             return Err(Error::AbsoluteBetaLessThanAlpha);
         }
 
-        let gamma = (alpha.powf(N::from(2.)) - beta.powf(N::from(2.))).sqrt();
+        let gamma = (alpha * alpha - beta * beta).sqrt();
 
         let mu = N::from(1.) / gamma;
 
