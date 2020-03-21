@@ -82,4 +82,28 @@ mod tests {
         assert!(InverseGaussian::new(1.0, -1.0).is_err());
         assert!(InverseGaussian::new(1.0, 1.0).is_ok());
     }
+
+    #[test]
+    fn value_stability() {
+        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
+            distr: D, zero: N, expected: &[N],
+        ) {
+            let mut rng = crate::test::rng(213);
+            let mut buf = [zero; 4];
+            for x in &mut buf {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(buf, expected);
+        }
+
+        test_samples(InverseGaussian::new(1.0, 3.0).unwrap(), 0f32, &[
+            0.9339157, 1.108113, 0.50864697, 0.39849377,
+        ]);
+        test_samples(InverseGaussian::new(1.0, 3.0).unwrap(), 0f64, &[
+            1.0707604954722476,
+            0.9628140605340697,
+            0.4069687656468226,
+            0.660283852985818,
+        ]);
+    }
 }
