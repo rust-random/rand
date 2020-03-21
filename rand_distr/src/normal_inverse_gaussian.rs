@@ -29,7 +29,7 @@ where StandardNormal: Distribution<N>
         }
 
         if !(beta.abs() < alpha) {
-            return Err(Error::AbsoluteBetaLessThanAlpha);
+            return Err(Error::AbsoluteBetaNotLessThanAlpha);
         }
 
         let gamma = (alpha * alpha - beta * beta).sqrt();
