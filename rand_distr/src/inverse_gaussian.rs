@@ -1,5 +1,5 @@
 use crate::{Distribution, Float, Standard, StandardNormal};
-use rand::prelude::*;
+use rand::Rng;
 
 /// Error type returned from `InverseGaussian::new`
 #[derive(Debug, PartialEq)]
