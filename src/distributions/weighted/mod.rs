@@ -183,7 +183,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
             total_weight += w;
             prev_i = Some(i);
         }
-        if total_weight == zero {
+        if total_weight <= zero {
             return Err(WeightedError::AllWeightsZero);
         }
 
