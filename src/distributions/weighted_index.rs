@@ -7,16 +7,6 @@
 // except according to those terms.
 
 //! Weighted index sampling
-//!
-//! This module provides two implementations for sampling indices:
-//!
-//! *   [`WeightedIndex`] allows `O(log N)` sampling
-//! *   [`alias_method::WeightedIndex`] allows `O(1)` sampling, but with
-//!      much greater set-up cost
-//!      
-//! [`alias_method::WeightedIndex`]: alias_method/struct.WeightedIndex.html
-
-pub mod alias_method;
 
 use crate::distributions::uniform::{SampleBorrow, SampleUniform, UniformSampler};
 use crate::distributions::Distribution;
@@ -27,8 +17,7 @@ use core::fmt;
 // Note that this whole module is only imported if feature="alloc" is enabled.
 #[cfg(not(feature = "std"))] use crate::alloc::vec::Vec;
 
-/// A distribution using weighted sampling to pick a discretely selected
-/// item.
+/// A distribution using weighted sampling of discrete items
 ///
 /// Sampling a `WeightedIndex` distribution returns the index of a randomly
 /// selected element from the iterator used when the `WeightedIndex` was
@@ -37,6 +26,11 @@ use core::fmt;
 /// implementation of [`Uniform<X>`] exists.
 ///
 /// # Performance
+///
+/// Time complexity of sampling from `WeightedIndex` is `O(log N)` where
+/// `N` is the number of weights. As an alternative,
+/// [`rand_distr::weighted::alias_method`](https://docs.rs/rand_distr/*/rand_distr/weighted/alias_method/index.html)
+/// supports `O(1)` sampling, but with much higher initialisation cost.
 ///
 /// A `WeightedIndex<X>` contains a `Vec<X>` and a [`Uniform<X>`] and so its
 /// size is the sum of the size of those objects, possibly plus some alignment.
@@ -47,9 +41,6 @@ use core::fmt;
 /// might be allocated but not used. Since the `WeightedIndex` object also
 /// contains, this might cause additional allocations, though for primitive
 /// types, ['Uniform<X>`] doesn't allocate any memory.
-///
-/// Time complexity of sampling from `WeightedIndex` is `O(log N)` where
-/// `N` is the number of weights.
 ///
 /// Sampling from `WeightedIndex` will result in a single call to
 /// `Uniform<X>::sample` (method of the [`Distribution`] trait), which typically

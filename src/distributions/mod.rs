@@ -100,12 +100,16 @@ pub use self::bernoulli::{Bernoulli, BernoulliError};
 pub use self::float::{Open01, OpenClosed01};
 pub use self::other::Alphanumeric;
 #[doc(inline)] pub use self::uniform::Uniform;
+
 #[cfg(feature = "alloc")]
-pub use self::weighted::{WeightedError, WeightedIndex};
+pub use self::weighted_index::{WeightedError, WeightedIndex};
 
 mod bernoulli;
 pub mod uniform;
+
+#[deprecated(since = "0.8.0", note = "use rand::distributions::{WeightedIndex, WeightedError} instead")]
 #[cfg(feature = "alloc")] pub mod weighted;
+#[cfg(feature = "alloc")] mod weighted_index;
 
 mod float;
 #[doc(hidden)]
