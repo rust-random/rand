@@ -147,9 +147,26 @@ where Standard: Distribution<N>
     }
 }
 
+impl<N: Float> Distribution<usize> for Poisson<N>
+    where Standard: Distribution<N>
+{
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
+        let result: u64 = self.sample(rng);
+        result as usize
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn poisson_usize() {
+        let poisson = Poisson::new(10.0).unwrap();
+        let mut rng = crate::test::rng(123);
+        let s_usize: usize = poisson.sample(&mut rng);
+    }
 
     #[test]
     fn test_poisson_10() {
