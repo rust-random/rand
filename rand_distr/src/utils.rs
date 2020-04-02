@@ -42,6 +42,9 @@ pub trait Float:
     /// Support converting to an unsigned integer.
     fn to_u64(self) -> Option<u64>;
 
+    /// Support converting to an unsigned integer.
+    fn to_usize(self) -> Option<usize>;
+
     /// Take the absolute value of self
     fn abs(self) -> Self;
     /// Take the largest integer less than or equal to self
@@ -77,6 +80,15 @@ impl Float for f32 {
     fn to_u64(self) -> Option<u64> {
         if self >= 0. && self <= ::core::u64::MAX as f32 {
             Some(self as u64)
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn to_usize(self) -> Option<usize> {
+        if self >= 0. && self <= ::core::usize::MAX as f32 {
+            Some(self as usize)
         } else {
             None
         }
@@ -141,6 +153,14 @@ impl Float for f64 {
     fn to_u64(self) -> Option<u64> {
         if self >= 0. && self <= ::core::u64::MAX as f64 {
             Some(self as u64)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn to_usize(self) -> Option<usize> {
+        if self >= 0. && self <= ::core::usize::MAX as f64 {
+            Some(self as usize)
         } else {
             None
         }

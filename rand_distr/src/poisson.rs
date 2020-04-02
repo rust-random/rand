@@ -138,7 +138,7 @@ where Standard: Distribution<N>
 }
 
 impl<N: Float> Distribution<u64> for Poisson<N>
-where Standard: Distribution<N>
+    where Standard: Distribution<N>
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
@@ -152,8 +152,8 @@ impl<N: Float> Distribution<usize> for Poisson<N>
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        let result: u64 = self.sample(rng);
-        result as usize
+        let result: N = self.sample(rng);
+        result.to_usize().unwrap()
     }
 }
 
