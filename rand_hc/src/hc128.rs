@@ -128,6 +128,12 @@ impl BlockRngCore for Hc128Core {
         let cc = self.counter1024 % 512;
         let dd = (cc + 16) % 512;
         let ee = cc.wrapping_sub(16) % 512;
+        // These asserts let the compiler optimize out the bounds checks.
+        // Some of them may be superflous, and that's fine:
+        // they'll be optimized out if that's the case.
+        assert!(ee + 15 < 512);
+        assert!(cc + 15 < 512);
+        assert!(dd < 512);
 
         if self.counter1024 & 512 == 0 {
             // P block
@@ -175,25 +181,19 @@ impl Hc128Core {
     #[inline(always)]
     fn step_p(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize) -> u32 {
         let (p, q) = self.t.split_at_mut(512);
-        // FIXME: it would be great if we the bounds checks here could be
-        // optimized out, and we would not need unsafe.
-        // This improves performance by about 7%.
-        unsafe {
-            let temp0 = p.get_unchecked(i511).rotate_right(23);
-            let temp1 = p.get_unchecked(i3).rotate_right(10);
-            let temp2 = p.get_unchecked(i10).rotate_right(8);
-            *p.get_unchecked_mut(i) = p
-                .get_unchecked(i)
-                .wrapping_add(temp2)
-                .wrapping_add(temp0 ^ temp1);
-            let temp3 = {
-                // The h1 function in HC-128
-                let a = *p.get_unchecked(i12) as u8;
-                let c = (p.get_unchecked(i12) >> 16) as u8;
-                q[a as usize].wrapping_add(q[256 + c as usize])
-            };
-            temp3 ^ p.get_unchecked(i)
-        }
+        let temp0 = p[i511].rotate_right(23);
+        let temp1 = p[i3].rotate_right(10);
+        let temp2 = p[i10].rotate_right(8);
+        p[i] = p[i]
+            .wrapping_add(temp2)
+            .wrapping_add(temp0 ^ temp1);
+        let temp3 = {
+            // The h1 function in HC-128
+            let a = p[i12] as u8;
+            let c = (p[i12] >> 16) as u8;
+            q[a as usize].wrapping_add(q[256 + c as usize])
+        };
+        temp3 ^ p[i]
     }
 
     // One step of HC-128, update Q and generate 32 bits keystream
@@ -202,22 +202,20 @@ impl Hc128Core {
     #[inline(always)]
     fn step_q(&mut self, i: usize, i511: usize, i3: usize, i10: usize, i12: usize) -> u32 {
         let (p, q) = self.t.split_at_mut(512);
-        unsafe {
-            let temp0 = q.get_unchecked(i511).rotate_left(23);
-            let temp1 = q.get_unchecked(i3).rotate_left(10);
-            let temp2 = q.get_unchecked(i10).rotate_left(8);
-            *q.get_unchecked_mut(i) = q
-                .get_unchecked(i)
-                .wrapping_add(temp2)
-                .wrapping_add(temp0 ^ temp1);
-            let temp3 = {
-                // The h2 function in HC-128
-                let a = *q.get_unchecked(i12) as u8;
-                let c = (q.get_unchecked(i12) >> 16) as u8;
-                p[a as usize].wrapping_add(p[256 + c as usize])
-            };
-            temp3 ^ q.get_unchecked(i)
-        }
+        let temp0 = q[i511].rotate_left(23);
+        let temp1 = q[i3].rotate_left(10);
+        let temp2 = q[i10].rotate_left(8);
+        q[i] = q
+            [i]
+            .wrapping_add(temp2)
+            .wrapping_add(temp0 ^ temp1);
+        let temp3 = {
+            // The h2 function in HC-128
+            let a = q[i12] as u8;
+            let c = (q[i12] >> 16) as u8;
+            p[a as usize].wrapping_add(p[256 + c as usize])
+        };
+        temp3 ^ q[i]
     }
 
     fn sixteen_steps(&mut self) {
@@ -226,6 +224,12 @@ impl Hc128Core {
         let cc = self.counter1024 % 512;
         let dd = (cc + 16) % 512;
         let ee = cc.wrapping_sub(16) % 512;
+        // These asserts let the compiler optimize out the bounds checks.
+        // Some of them may be superflous, and that's fine:
+        // they'll be optimized out if that's the case.
+        assert!(ee + 15 < 512);
+        assert!(cc + 15 < 512);
+        assert!(dd < 512);
 
         if self.counter1024 < 512 {
             // P block
