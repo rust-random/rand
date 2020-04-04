@@ -187,10 +187,11 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
     fn next_u64(&mut self) -> u64 {
         let read_u64 = |results: &[u32], index| {
             if cfg!(any(target_endian = "little")) {
-                // requires little-endian CPU
-                #[allow(clippy::cast_ptr_alignment)] // false positive
-                let ptr: *const u64 = results[index..=index+1].as_ptr() as *const u64;
-                unsafe { ptr::read_unaligned(ptr) }
+                // This may seem slow, but the compiler is smart
+                // and optimizes this into a single load
+                let x = u64::from(results[index]);
+                let y = u64::from(results[index + 1]);
+                (x << 32) | y
             } else {
                 let x = u64::from(results[index]);
                 let y = u64::from(results[index + 1]);
