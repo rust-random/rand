@@ -314,11 +314,7 @@ pub trait SeedableRng: Sized {
             let xorshifted = (((state >> 18) ^ state) >> 27) as u32;
             let rot = (state >> 59) as u32;
             let x = xorshifted.rotate_right(rot).to_le();
-
-            unsafe {
-                let p = &x as *const u32 as *const u8;
-                copy_nonoverlapping(p, chunk.as_mut_ptr(), chunk.len());
-            }
+            chunk.copy_from_slice(&x.to_ne_bytes());
         }
 
         Self::from_seed(seed)
