@@ -41,7 +41,6 @@
 
 use core::convert::AsMut;
 use core::default::Default;
-use core::ptr::copy_nonoverlapping;
 
 #[cfg(all(feature = "alloc", not(feature = "std")))] extern crate alloc;
 #[cfg(all(feature = "alloc", not(feature = "std")))] use alloc::boxed::Box;
@@ -313,8 +312,8 @@ pub trait SeedableRng: Sized {
             // Use PCG output function with to_le to generate x:
             let xorshifted = (((state >> 18) ^ state) >> 27) as u32;
             let rot = (state >> 59) as u32;
-            let x = xorshifted.rotate_right(rot).to_le();
-            chunk.copy_from_slice(&x.to_ne_bytes());
+            let x = xorshifted.rotate_right(rot);
+            chunk.copy_from_slice(&x.to_le_bytes());
         }
 
         Self::from_seed(seed)
