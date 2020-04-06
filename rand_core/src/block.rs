@@ -53,7 +53,7 @@
 use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 use crate::{CryptoRng, Error, RngCore, SeedableRng};
 use core::convert::AsRef;
-use core::{fmt, ptr};
+use core::fmt;
 #[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
 
 /// A trait for RNGs which do not generate random numbers individually, but in
@@ -186,16 +186,8 @@ where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
     #[inline]
     fn next_u64(&mut self) -> u64 {
         let read_u64 = |results: &[u32], index| {
-            if cfg!(any(target_endian = "little")) {
-                // requires little-endian CPU
-                #[allow(clippy::cast_ptr_alignment)] // false positive
-                let ptr: *const u64 = results[index..=index+1].as_ptr() as *const u64;
-                unsafe { ptr::read_unaligned(ptr) }
-            } else {
-                let x = u64::from(results[index]);
-                let y = u64::from(results[index + 1]);
-                (y << 32) | x
-            }
+            let data = &results[index..=index + 1];
+            u64::from(data[1]) << 32 | u64::from(data[0])
         };
 
         let len = self.results.as_ref().len();
