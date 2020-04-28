@@ -8,6 +8,11 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.7.4] - 2020-04-28
+### Security fix
+- Prevent potential use-after-free when using `thread_rng` from a thread-local
+  destructor on some platforms (OSX; #968)
+
 ## [0.7.3] - 2020-01-10
 ### Fixes
 - The `Bernoulli` distribution constructors now reports an error on NaN and on
