@@ -9,7 +9,7 @@
 //! Thread-local random number generator
 
 use std::cell::UnsafeCell;
-use std::ptr::NonNull;
+use std::marker::PhantomData;
 
 use super::std::Core;
 use crate::rngs::adapter::ReseedingRng;
@@ -55,8 +55,8 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// [`StdRng`]: crate::rngs::StdRng
 #[derive(Copy, Clone, Debug)]
 pub struct ThreadRng {
-    // inner raw pointer implies type is neither Send nor Sync
-    rng: NonNull<ReseedingRng<Core, OsRng>>,
+    // type if neither Send nor Sync
+    _phantom: PhantomData<*const ()>,
 }
 
 thread_local!(
@@ -78,34 +78,41 @@ thread_local!(
 ///
 /// For more information see [`ThreadRng`].
 pub fn thread_rng() -> ThreadRng {
-    let raw = THREAD_RNG_KEY.with(|t| t.get());
-    let nn = NonNull::new(raw).unwrap();
-    ThreadRng { rng: nn }
+    let _phantom = Default::default();
+    ThreadRng { _phantom }
 }
 
 impl Default for ThreadRng {
     fn default() -> ThreadRng {
-        crate::prelude::thread_rng()
+        thread_rng()
+    }
+}
+
+impl ThreadRng {
+    #[inline(always)]
+    fn rng(&mut self) -> &mut ReseedingRng<Core, OsRng> {
+        let ptr = THREAD_RNG_KEY.with(|rng| rng.get());
+        unsafe { &mut *ptr }
     }
 }
 
 impl RngCore for ThreadRng {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
-        unsafe { self.rng.as_mut().next_u32() }
+        self.rng().next_u32()
     }
 
     #[inline(always)]
     fn next_u64(&mut self) -> u64 {
-        unsafe { self.rng.as_mut().next_u64() }
+        self.rng().next_u64()
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        unsafe { self.rng.as_mut().fill_bytes(dest) }
+        self.rng().fill_bytes(dest)
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        unsafe { self.rng.as_mut().try_fill_bytes(dest) }
+        self.rng().try_fill_bytes(dest)
     }
 }
 
