@@ -103,10 +103,8 @@
 //! [`UniformDuration`]: crate::distributions::uniform::UniformDuration
 //! [`SampleBorrow::borrow`]: crate::distributions::uniform::SampleBorrow::borrow
 
-#[cfg(not(feature = "std"))]
-use core::time::Duration;
-#[cfg(feature = "std")]
-use std::time::Duration;
+#[cfg(not(feature = "std"))] use core::time::Duration;
+#[cfg(feature = "std")] use std::time::Duration;
 
 use crate::distributions::float::IntoFloat;
 use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, WideningMultiply};
@@ -117,11 +115,8 @@ use crate::Rng;
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
 use crate::distributions::utils::Float;
 
-#[cfg(feature = "simd_support")]
-use packed_simd::*;
 
-#[cfg(feature = "serde1")]
-use serde::{Deserialize, Serialize};
+#[cfg(feature = "simd_support")] use packed_simd::*;
 
 /// Sample values uniformly between two bounds.
 ///
@@ -296,8 +291,7 @@ pub trait SampleBorrow<Borrowed> {
     fn borrow(&self) -> &Borrowed;
 }
 impl<Borrowed> SampleBorrow<Borrowed> for Borrowed
-where
-    Borrowed: SampleUniform,
+where Borrowed: SampleUniform
 {
     #[inline(always)]
     fn borrow(&self) -> &Borrowed {
@@ -305,8 +299,7 @@ where
     }
 }
 impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed
-where
-    Borrowed: SampleUniform,
+where Borrowed: SampleUniform
 {
     #[inline(always)]
     fn borrow(&self) -> &Borrowed {
@@ -317,6 +310,7 @@ where
 ////////////////////////////////////////////////////////////////////////////////
 
 // What follows are all back-ends.
+
 
 /// The back-end implementing [`UniformSampler`] for integer types.
 ///
@@ -353,7 +347,6 @@ where
 /// multiply by `range`, the result is in the high word. Then comparing the low
 /// word against `zone` makes sure our distribution is uniform.
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformInt<X> {
     low: X,
     range: X,
@@ -630,6 +623,7 @@ uniform_simd_int_impl! {
     u8
 }
 
+
 /// The back-end implementing [`UniformSampler`] for floating-point types.
 ///
 /// Unless you are implementing [`UniformSampler`] for your own type, this type
@@ -837,6 +831,7 @@ uniform_float_impl! { f64x4, u64x4, f64, u64, 64 - 52 }
 #[cfg(feature = "simd_support")]
 uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 
+
 /// The back-end implementing [`UniformSampler`] for `Duration`.
 ///
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
@@ -996,8 +991,7 @@ mod tests {
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_integers() {
-        #[cfg(not(target_os = "emscripten"))]
-        use core::{i128, u128};
+        #[cfg(not(target_os = "emscripten"))] use core::{i128, u128};
         use core::{i16, i32, i64, i8, isize};
         use core::{u16, u32, u64, u8, usize};
 
@@ -1234,13 +1228,12 @@ mod tests {
         }
     }
 
+
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_durations() {
-        #[cfg(not(feature = "std"))]
-        use core::time::Duration;
-        #[cfg(feature = "std")]
-        use std::time::Duration;
+        #[cfg(not(feature = "std"))] use core::time::Duration;
+        #[cfg(feature = "std")] use std::time::Duration;
 
         let mut rng = crate::test::rng(253);
 
@@ -1335,9 +1328,7 @@ mod tests {
     fn value_stability() {
         fn test_samples<T: SampleUniform + Copy + core::fmt::Debug + PartialEq>(
             lb: T, ub: T, expected_single: &[T], expected_multiple: &[T],
-        ) where
-            Uniform<T>: Distribution<T>,
-        {
+        ) where Uniform<T>: Distribution<T> {
             let mut rng = crate::test::rng(897);
             let mut buf = [lb; 3];
 
@@ -1359,12 +1350,11 @@ mod tests {
         test_samples(11u8, 219, &[17, 66, 214], &[181, 93, 165]);
         test_samples(11u32, 219, &[17, 66, 214], &[181, 93, 165]);
 
-        test_samples(
-            0f32,
-            1e-2f32,
-            &[0.0003070104, 0.0026630748, 0.00979833],
-            &[0.008194133, 0.00398172, 0.007428536],
-        );
+        test_samples(0f32, 1e-2f32, &[0.0003070104, 0.0026630748, 0.00979833], &[
+            0.008194133,
+            0.00398172,
+            0.007428536,
+        ]);
         test_samples(
             -1e10f64,
             1e10f64,
