@@ -8,9 +8,9 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [0.7.4] - 2020-05-02
+## [Unreleased]
 ### Additions
-- Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex`.
+- Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
 
 ## [0.7.3] - 2020-01-10
 ### Fixes
