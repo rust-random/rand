@@ -115,8 +115,10 @@ use crate::Rng;
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
 use crate::distributions::utils::Float;
 
-
 #[cfg(feature = "simd_support")] use packed_simd::*;
+
+#[cfg(feature = "serde1")]
+use serde::{Serialize, Deserialize};
 
 /// Sample values uniformly between two bounds.
 ///
@@ -347,6 +349,7 @@ where Borrowed: SampleUniform
 /// multiply by `range`, the result is in the high word. Then comparing the low
 /// word against `zone` makes sure our distribution is uniform.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformInt<X> {
     low: X,
     range: X,
