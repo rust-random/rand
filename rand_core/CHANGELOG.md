@@ -5,8 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Derive PartialEq+Eq for BlockRng and BlockRng64
-- Add PartialEq+Eq constraint to BlockRngCore::Results
+- Derive PartialEq+Eq for BlockRng and BlockRng64 (#975)
+- Add PartialEq+Eq constraint to BlockRngCore::Results (#975)
 
 ## [0.5.1] - 2019-08-28
 - `OsRng` added to `rand_core` (#863)

@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Derive PartialEq+Eq for ChaChaXRng and ChaChaXCore
+- Derive PartialEq+Eq for ChaChaXRng and ChaChaXCore (#975)
 
 ## [0.2.2] - 2020-03-09
 - Integrate `c2-chacha`, reducing dependency count (#931)

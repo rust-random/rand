@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Derive PartialEq+Eq for Hc128Rng and Hc128Core
+- Derive PartialEq+Eq for Hc128Rng and Hc128Core (#975)
 
 ## [0.2.0] - 2019-06-12
 - Bump minor crate version since rand_core bump is a breaking change
