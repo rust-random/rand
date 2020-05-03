@@ -58,7 +58,7 @@ members = [
 rand_core = { path = "rand_core", version = "0.5.1" }
 rand_pcg = { path = "rand_pcg", version = "0.2", optional = true }
 log = { version = "0.4.4", optional = true }
-serde = { version = "1", features = ["derive"], optional = true }
+serde = { version = "1.0.105", features = ["derive"], optional = true }
 
 [dependencies.packed_simd]
 # NOTE: so far no version works reliably due to dependence on unstable features
