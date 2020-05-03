@@ -31,9 +31,9 @@ pub struct ChaCha {
 // Custom PartialEq implementation as `vec128_storage` doesn't implement it.
 impl ::core::cmp::PartialEq for ChaCha {
     fn eq(&self, other: &ChaCha) -> bool {
-        Into::<[u128; 1]>::into(self.b) == Into::<[u128; 1]>::into(other.b)
-            && Into::<[u128; 1]>::into(self.c) == Into::<[u128; 1]>::into(other.c)
-            && Into::<[u128; 1]>::into(self.d) == Into::<[u128; 1]>::into(other.d)
+        Into::<[u32; 4]>::into(self.b) == Into::<[u32; 4]>::into(other.b)
+            && Into::<[u32; 4]>::into(self.c) == Into::<[u32; 4]>::into(other.c)
+            && Into::<[u32; 4]>::into(self.d) == Into::<[u32; 4]>::into(other.d)
     }
 }
 
