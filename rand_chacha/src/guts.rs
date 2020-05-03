@@ -32,12 +32,12 @@ pub struct ChaCha {
 impl ::core::cmp::PartialEq for ChaCha {
     fn eq(&self, other: &ChaCha) -> bool {
         unsafe {
-            std::mem::transmute::<vec128_storage, [u32; 4]>(self.b)
-                == std::mem::transmute::<vec128_storage, [u32; 4]>(other.b)
-                && std::mem::transmute::<vec128_storage, [u32; 4]>(self.c)
-                    == std::mem::transmute::<vec128_storage, [u32; 4]>(other.c)
-                && std::mem::transmute::<vec128_storage, [u32; 4]>(self.d)
-                    == std::mem::transmute::<vec128_storage, [u32; 4]>(other.d)
+            ::core::mem::transmute::<vec128_storage, [u32; 4]>(self.b)
+                == ::core::mem::transmute::<vec128_storage, [u32; 4]>(other.b)
+                && ::core::mem::transmute::<vec128_storage, [u32; 4]>(self.c)
+                    == ::core::mem::transmute::<vec128_storage, [u32; 4]>(other.c)
+                && ::core::mem::transmute::<vec128_storage, [u32; 4]>(self.d)
+                    == ::core::mem::transmute::<vec128_storage, [u32; 4]>(other.d)
         }
     }
 }
