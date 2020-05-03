@@ -19,4 +19,4 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.5" }
+rand_core = { path = "../rand_core", version = "0.5.2" }

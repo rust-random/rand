@@ -19,7 +19,7 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.5" }
+rand_core = { path = "../rand_core", version = "0.5.2" }
 ppv-lite86 = { version = "0.2.6", default-features = false, features = ["simd"] }
 
 [features]
