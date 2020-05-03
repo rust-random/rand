@@ -67,7 +67,7 @@ pub trait BlockRngCore {
 
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u32; 16]`.
-    type Results: AsRef<[Self::Item]> + AsMut<[Self::Item]> + Default;
+    type Results: AsRef<[Self::Item]> + AsMut<[Self::Item]> + Default + PartialEq + Eq;
 
     /// Generate a new block of results.
     fn generate(&mut self, results: &mut Self::Results);
@@ -109,7 +109,7 @@ pub trait BlockRngCore {
 /// [`next_u64`]: RngCore::next_u64
 /// [`fill_bytes`]: RngCore::fill_bytes
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng<R: BlockRngCore + ?Sized> {
     results: R::Results,
@@ -272,7 +272,7 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
 /// [`next_u64`]: RngCore::next_u64
 /// [`fill_bytes`]: RngCore::fill_bytes
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng64<R: BlockRngCore + ?Sized> {
     results: R::Results,

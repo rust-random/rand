@@ -73,7 +73,7 @@ type Rng = rand_pcg::Pcg32;
 /// [`thread_rng`]: crate::thread_rng
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
 /// [rand_pcg]: https://crates.io/crates/rand_pcg
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
 
 impl RngCore for SmallRng {

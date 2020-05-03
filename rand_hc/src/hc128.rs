@@ -63,7 +63,7 @@ const SEED_WORDS: usize = 8; // 128 bit key followed by 128 bit iv
 ///
 /// [^5]: Internet Engineering Task Force (February 2015),
 ///       ["Prohibiting RC4 Cipher Suites"](https://tools.ietf.org/html/rfc7465).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Hc128Rng(BlockRng<Hc128Core>);
 
 impl RngCore for Hc128Rng {
@@ -116,6 +116,18 @@ impl fmt::Debug for Hc128Core {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Hc128Core {{}}")
     }
+}
+
+// Custom PartialEq implementation as it can't currently be derived from an array of size 1024
+impl ::core::cmp::PartialEq for Hc128Core {
+    fn eq(&self, other: &Hc128Core) -> bool {
+        &self.t[..] == &other.t[..]
+            && self.counter1024 == other.counter1024
+    }
+}
+
+// Custom Eq implementation as it can't currently be derived from an array of size 1024
+impl ::core::cmp::Eq for Hc128Core {
 }
 
 impl BlockRngCore for Hc128Core {

@@ -29,7 +29,7 @@ const MULTIPLIER: u64 = 6364136223846793005;
 /// Despite the name, this implementation uses 16 bytes (128 bit) space
 /// comprising 64 bits of state and 64 bits stream selector. These are both set
 /// by `SeedableRng`, using a 128-bit seed.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Lcg64Xsh32 {
     state: u64,

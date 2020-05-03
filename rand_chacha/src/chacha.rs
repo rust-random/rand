@@ -61,11 +61,21 @@ impl<T> fmt::Debug for Array64<T> {
         write!(f, "Array64 {{}}")
     }
 }
+impl<T> ::core::cmp::PartialEq for Array64<T>
+where T: ::core::cmp::PartialEq {
+    fn eq(&self, other: &Array64<T>) -> bool {
+        &self.0[..] == &other.0[..]
+    }
+}
+impl<T> ::core::cmp::Eq for Array64<T>
+where T: ::core::cmp::Eq {
+}
+
 
 macro_rules! chacha_impl {
     ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr) => {
         #[doc=$doc]
-        #[derive(Clone)]
+        #[derive(Clone, PartialEq, Eq)]
         pub struct $ChaChaXCore {
             state: ChaCha,
         }
@@ -140,7 +150,7 @@ macro_rules! chacha_impl {
         ///
         /// [^2]: [eSTREAM: the ECRYPT Stream Cipher Project](
         ///       http://www.ecrypt.eu.org/stream/)
-        #[derive(Clone, Debug)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
         pub struct $ChaChaXRng {
             rng: BlockRng<$ChaChaXCore>,
         }

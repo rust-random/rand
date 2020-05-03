@@ -28,6 +28,19 @@ pub struct ChaCha {
     pub(crate) d: vec128_storage,
 }
 
+// Custom PartialEq implementation as `vec128_storage` doesn't implement it.
+impl ::core::cmp::PartialEq for ChaCha {
+    fn eq(&self, other: &ChaCha) -> bool {
+        Into::<[u128; 1]>::into(self.b) == Into::<[u128; 1]>::into(other.b)
+            && Into::<[u128; 1]>::into(self.c) == Into::<[u128; 1]>::into(other.c)
+            && Into::<[u128; 1]>::into(self.d) == Into::<[u128; 1]>::into(other.d)
+    }
+}
+
+// Custom Eq implementation as `vec128_storage` doesn't implement it.
+impl ::core::cmp::Eq for ChaCha {
+}
+
 #[derive(Clone)]
 pub struct State<V> {
     pub(crate) a: V,
