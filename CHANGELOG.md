@@ -9,7 +9,7 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 ## [Unreleased]
-- Derive PartialEq+Eq for StdRng and SmallRng
+- Derive PartialEq+Eq for StdRng, SmallRng, ThreadRng, and StepRng
 
 ## [0.7.3] - 2020-01-10
 ### Fixes

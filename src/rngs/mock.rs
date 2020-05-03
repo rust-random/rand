@@ -24,7 +24,7 @@ use rand_core::{impls, Error, RngCore};
 /// let sample: [u64; 3] = my_rng.gen();
 /// assert_eq!(sample, [2, 3, 4]);
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StepRng {
     v: u64,
     a: u64,
