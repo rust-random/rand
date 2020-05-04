@@ -648,6 +648,7 @@ uniform_simd_int_impl! {
 /// [`new_inclusive`]: UniformSampler::new_inclusive
 /// [`Standard`]: crate::distributions::Standard
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformFloat<X> {
     low: X,
     scale: X,
@@ -841,12 +842,14 @@ uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformDuration {
     mode: UniformDurationMode,
     offset: u32,
 }
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum UniformDurationMode {
     Small {
         secs: u64,
@@ -970,9 +973,20 @@ impl UniformSampler for UniformDuration {
 mod tests {
     use super::*;
     use crate::rngs::mock::StepRng;
-
+    
     #[test]
-    #[cfg(feature="serde1")]
+    #[cfg(feature = "serde1")]
+    fn test_serialization_uniform_duration() {
+        let distr = UniformDuration::new(-25, 50);
+        let de_distr: UniformDuration = bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
+        assert_eq!(
+            distr.offset, de_distr.offset
+        );
+        //FIXME: check if distr.mode are the same
+    }
+    
+    #[test]
+    #[cfg(feature = "serde1")]
     fn test_uniform_serialization() {
         let unit_box = Uniform::new(-1, 1);
         let de_unit_box: Uniform<i32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
