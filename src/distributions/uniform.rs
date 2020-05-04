@@ -973,25 +973,26 @@ impl UniformSampler for UniformDuration {
 mod tests {
     use super::*;
     use crate::rngs::mock::StepRng;
+
+    //FIXME: instantiate a UniformDuration
+    // #[test]
+    // #[cfg(feature = "serde1")]
+    // fn test_serialization_uniform_duration() {
+    //     let distr = UniformDuration::new(-25, 50);
+    //     let de_distr: UniformDuration = bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
+    //     assert_eq!(
+    //         distr.offset, de_distr.offset
+    //     );
+    //     //FIXME: check if distr.mode are the same
+    // }
     
-    #[test]
-    #[cfg(feature = "serde1")]
-    fn test_serialization_uniform_duration() {
-        let distr = UniformDuration::new(-25, 50);
-        let de_distr: UniformDuration = bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
-        assert_eq!(
-            distr.offset, de_distr.offset
-        );
-        //FIXME: check if distr.mode are the same
-    }
-    
-    #[test]
-    #[cfg(feature = "serde1")]
-    fn test_uniform_serialization() {
-        let unit_box = Uniform::new(-1, 1);
-        let de_unit_box: Uniform<i32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
-        //FIXME: assertion needed to check
-    }
+    // #[test]
+    // #[cfg(feature = "serde1")]
+    // fn test_uniform_serialization() {
+    //     let unit_box = Uniform::new(-1, 1);
+    //     let de_unit_box: Uniform<i32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
+    //     //FIXME: assertion needed to check
+    // }
 
     #[should_panic]
     #[test]

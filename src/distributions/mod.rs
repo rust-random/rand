@@ -111,6 +111,9 @@ pub mod uniform;
 #[cfg(feature = "alloc")] pub mod weighted;
 #[cfg(feature = "alloc")] mod weighted_index;
 
+#[cfg(feature = "serde1")]
+use serde::{Serialize, Deserialize};
+
 mod float;
 #[doc(hidden)]
 pub mod hidden_export {
@@ -320,6 +323,7 @@ where
 ///
 /// [`Uniform`]: uniform::Uniform
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Standard;
 
 
