@@ -147,7 +147,7 @@ where
 {
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 struct ReseedingCore<R, Rsdr> {
     inner: R,
     reseeder: Rsdr,

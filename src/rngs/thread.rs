@@ -53,7 +53,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 ///
 /// [`ReseedingRng`]: crate::rngs::adapter::ReseedingRng
 /// [`StdRng`]: crate::rngs::StdRng
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug)]
 pub struct ThreadRng {
     // inner raw pointer implies type is neither Send nor Sync
     rng: NonNull<ReseedingRng<Core, OsRng>>,
