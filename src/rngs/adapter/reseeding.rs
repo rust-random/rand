@@ -75,7 +75,7 @@ use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 /// [`BlockRngCore`]: rand_core::block::BlockRngCore
 /// [`ReseedingRng::new`]: ReseedingRng::new
 /// [`reseed()`]: ReseedingRng::reseed
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct ReseedingRng<R, Rsdr>(BlockRng<ReseedingCore<R, Rsdr>>)
 where
     R: BlockRngCore + SeedableRng,
