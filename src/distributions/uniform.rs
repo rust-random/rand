@@ -161,6 +161,7 @@ use serde::{Serialize, Deserialize};
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Uniform<X: SampleUniform>(X::Sampler);
 
 impl<X: SampleUniform> Uniform<X> {
@@ -969,6 +970,14 @@ impl UniformSampler for UniformDuration {
 mod tests {
     use super::*;
     use crate::rngs::mock::StepRng;
+
+    #[test]
+    #[cfg(feature="serde1")]
+    fn test_uniform_serialization() {
+        let unit_box = Uniform::new(-1, 1);
+        let de_unit_box: Uniform<i32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
+        //FIXME: assertion needed to check
+    }
 
     #[should_panic]
     #[test]
