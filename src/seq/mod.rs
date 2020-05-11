@@ -508,7 +508,8 @@ impl<T> SliceRandom for [T] {
                 self.len(),
                 |idx| weight(&self[idx]).into(),
                 amount,
-            )?,
+            )?
+            .into_iter(),
         })
     }
 
