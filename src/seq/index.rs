@@ -270,14 +270,14 @@ where R: Rng + ?Sized {
 /// sometimes be useful to have the indices themselves so this is provided as
 /// an alternative.
 ///
-/// This implementation uses `O(length)` space and `O(length)` time if the
-/// "partition_at_index" feature is enabled, or `O(length)` space and
-/// `O(length * log amount)` time otherwise.
+/// This implementation uses `O(length + amount)` space and `O(length)` time
+/// if the "partition_at_index" feature is enabled, or `O(length)` space and
+/// `O(length + amount * log length)` time otherwise.
 ///
 /// Panics if `amount > length`.
 pub fn sample_weighted<R, F, X>(
     rng: &mut R, length: usize, weight: F, amount: usize,
-) -> Result<IndexVecIntoIter, WeightedError>
+) -> Result<IndexVec, WeightedError>
 where
     R: Rng + ?Sized,
     F: Fn(usize) -> X,
@@ -316,7 +316,7 @@ where
     #[cfg(feature = "partition_at_index")]
     {
         if length == 0 {
-            return Ok(IndexVecIntoIter::USize(Vec::new().into_iter()));
+            return Ok(IndexVec::USize(Vec::new()));
         }
 
         let mut candidates = Vec::with_capacity(length);
@@ -341,7 +341,7 @@ where
         for element in greater {
             result.push(element.index);
         }
-        Ok(IndexVecIntoIter::USize(result.into_iter()))
+        Ok(IndexVec::USize(result))
     }
 
     #[cfg(not(feature = "partition_at_index"))]
@@ -368,7 +368,7 @@ where
         while result.len() < amount {
             result.push(candidates.pop().unwrap().index);
         }
-        Ok(IndexVecIntoIter::USize(result.into_iter()))
+        Ok(IndexVec::USize(result))
     }
 }
 
