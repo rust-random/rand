@@ -295,14 +295,14 @@ where
         key: f64,
     }
     impl PartialOrd for Element {
-        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
             self.key
                 .partial_cmp(&other.key)
-                .or(Some(std::cmp::Ordering::Less))
+                .or(Some(core::cmp::Ordering::Less))
         }
     }
     impl Ord for Element {
-        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        fn cmp(&self, other: &Self) -> core::cmp::Ordering {
             self.partial_cmp(other).unwrap() // partial_cmp will always produce a value
         }
     }
@@ -346,6 +346,9 @@ where
 
     #[cfg(not(feature = "partition_at_index"))]
     {
+        #[cfg(all(feature = "alloc", not(feature = "std")))]
+        use crate::alloc::collections::BinaryHeap;
+        #[cfg(feature = "std")]
         use std::collections::BinaryHeap;
 
         // Partially sort the array such that the `amount` elements with the largest
