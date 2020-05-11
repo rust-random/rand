@@ -41,8 +41,13 @@ matrix:
         - rm -rf target/doc
         - cargo doc --no-deps --all --all-features
         - cargo deadlinks --dir target/doc
-      after_success:
-        - travis-cargo --only nightly doc-upload
+      deploy:
+        local_dir: target/doc
+        provider: pages
+        skip_cleanup: true
+        github_token: $GITHUB_TOKEN
+        on:
+          branch: master
 
     # This target catches endianness issues
     - rust: stable
