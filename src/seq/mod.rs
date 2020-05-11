@@ -1017,6 +1017,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_multiple_weighted_edge_cases() {
         use super::*;
 
@@ -1090,6 +1091,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_multiple_weighted_distributions() {
         use super::*;
 
