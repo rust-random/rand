@@ -1062,14 +1062,14 @@ mod test {
         assert_eq!(result.len(), 0);
 
         // Case 5: NaN weights
-        let choices = [('a', std::f64::NAN), ('b', 1.0), ('c', 1.0)];
+        let choices = [('a', core::f64::NAN), ('b', 1.0), ('c', 1.0)];
         assert!(matches!(
             choices.choose_multiple_weighted(&mut rng, 2, |item| item.1),
             Err(WeightedError::InvalidWeight)
         ));
 
         // Case 6: +infinity weights
-        let choices = [('a', std::f64::INFINITY), ('b', 1.0), ('c', 1.0)];
+        let choices = [('a', core::f64::INFINITY), ('b', 1.0), ('c', 1.0)];
         for _ in 0..100 {
             let result = choices
                 .choose_multiple_weighted(&mut rng, 2, |item| item.1)
@@ -1080,7 +1080,7 @@ mod test {
         }
 
         // Case 7: -infinity weights
-        let choices = [('a', std::f64::NEG_INFINITY), ('b', 1.0), ('c', 1.0)];
+        let choices = [('a', core::f64::NEG_INFINITY), ('b', 1.0), ('c', 1.0)];
         assert!(matches!(
             choices.choose_multiple_weighted(&mut rng, 2, |item| item.1),
             Err(WeightedError::InvalidWeight)
