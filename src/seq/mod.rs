@@ -1048,10 +1048,12 @@ mod test {
 
         // Case 3: Negative weights
         let choices = [('a', -1), ('b', 1), ('c', 1)];
-        assert!(matches!(
-            choices.choose_multiple_weighted(&mut rng, 2, |item| item.1),
-            Err(WeightedError::InvalidWeight)
-        ));
+        assert_eq!(
+            choices
+                .choose_multiple_weighted(&mut rng, 2, |item| item.1)
+                .unwrap_err(),
+            WeightedError::InvalidWeight
+        );
 
         // Case 4: Empty list
         let choices = [];
@@ -1063,10 +1065,12 @@ mod test {
 
         // Case 5: NaN weights
         let choices = [('a', core::f64::NAN), ('b', 1.0), ('c', 1.0)];
-        assert!(matches!(
-            choices.choose_multiple_weighted(&mut rng, 2, |item| item.1),
-            Err(WeightedError::InvalidWeight)
-        ));
+        assert_eq!(
+            choices
+                .choose_multiple_weighted(&mut rng, 2, |item| item.1)
+                .unwrap_err(),
+            WeightedError::InvalidWeight
+        );
 
         // Case 6: +infinity weights
         let choices = [('a', core::f64::INFINITY), ('b', 1.0), ('c', 1.0)];
@@ -1081,10 +1085,12 @@ mod test {
 
         // Case 7: -infinity weights
         let choices = [('a', core::f64::NEG_INFINITY), ('b', 1.0), ('c', 1.0)];
-        assert!(matches!(
-            choices.choose_multiple_weighted(&mut rng, 2, |item| item.1),
-            Err(WeightedError::InvalidWeight)
-        ));
+        assert_eq!(
+            choices
+                .choose_multiple_weighted(&mut rng, 2, |item| item.1)
+                .unwrap_err(),
+            WeightedError::InvalidWeight
+        );
 
         // Case 8: -0 weights
         let choices = [('a', -0.0), ('b', 1.0), ('c', 1.0)];
