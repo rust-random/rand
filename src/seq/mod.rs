@@ -181,6 +181,46 @@ pub trait SliceRandom {
             + Clone
             + Default;
 
+    /// Similar to [`choose_multiple`], but where the likelihood of each element's
+    /// inclusion in the output may be specified. The elements are returned in an
+    /// arbitrary, unspecified order.
+    ///
+    /// The specified function `weight` maps each item `x` to a relative
+    /// likelihood `weight(x)`. The probability of each item being selected is
+    /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
+    ///
+    /// If all of the weights are equal, even if they are all zero, each element has
+    /// an equal likelihood of being selected.
+    ///
+    /// The complexity of this method depends on the feature `partition_at_index`.
+    /// If the feature is enabled, then for slices of length `n`, the complexity
+    /// is `O(n)` space and `O(n)` time. Otherwise, the complexity is `O(n)` space and
+    /// `O(n * log amount)` time.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::prelude::*;
+    ///
+    /// let choices = [('a', 2), ('b', 1), ('c', 1)];
+    /// let mut rng = thread_rng();
+    /// // First Draw * Second Draw = total odds
+    /// // -----------------------
+    /// // (50% * 50%) + (25% * 67%) = 41.7% chance that the output is `['a', 'b']` in some order.
+    /// // (50% * 50%) + (25% * 67%) = 41.7% chance that the output is `['a', 'c']` in some order.
+    /// // (25% * 33%) + (25% * 33%) = 16.6% chance that the output is `['b', 'c']` in some order.
+    /// println!("{:?}", choices.choose_multiple_weighted(&mut rng, 2, |item| item.1).unwrap().collect::<Vec<_>>());
+    /// ```
+    /// [`choose_multiple`]: SliceRandom::choose_multiple
+    #[cfg(feature = "alloc")]
+    fn choose_multiple_weighted<R, F, X>(
+        &self, rng: &mut R, amount: usize, weight: F,
+    ) -> Result<SliceChooseIter<Self, Self::Item>, WeightedError>
+    where
+        R: Rng + ?Sized,
+        F: Fn(&Self::Item) -> X,
+        X: Into<f64>;
+
     /// Shuffle a mutable slice in place.
     ///
     /// For slices of length `n`, complexity is `O(n)`.
@@ -450,6 +490,28 @@ impl<T> SliceRandom for [T] {
         use crate::distributions::{Distribution, WeightedIndex};
         let distr = WeightedIndex::new(self.iter().map(weight))?;
         Ok(&mut self[distr.sample(rng)])
+    }
+
+    #[cfg(feature = "alloc")]
+    fn choose_multiple_weighted<R, F, X>(
+        &self, rng: &mut R, amount: usize, weight: F,
+    ) -> Result<SliceChooseIter<Self, Self::Item>, WeightedError>
+    where
+        R: Rng + ?Sized,
+        F: Fn(&Self::Item) -> X,
+        X: Into<f64>,
+    {
+        let amount = ::core::cmp::min(amount, self.len());
+        Ok(SliceChooseIter {
+            slice: self,
+            _phantom: Default::default(),
+            indices: index::sample_weighted(
+                rng,
+                self.len(),
+                |idx| weight(&self[idx]).into(),
+                amount,
+            )?,
+        })
     }
 
     fn shuffle<R>(&mut self, rng: &mut R)
@@ -955,5 +1017,123 @@ mod test {
             do_test(0..8, &[0, 1, 2, 3, 4, 5, 6, 7]);
             do_test(0..100, &[58, 78, 80, 92, 43, 8, 96, 7]);
         }
+    }
+
+    #[test]
+    fn test_multiple_weighted_edge_cases() {
+        use super::*;
+
+        let mut rng = crate::test::rng(413);
+
+        // Case 1: One of the weights is 0
+        let choices = [('a', 2), ('b', 1), ('c', 0)];
+        for _ in 0..100 {
+            let result = choices
+                .choose_multiple_weighted(&mut rng, 2, |item| item.1)
+                .unwrap()
+                .collect::<Vec<_>>();
+
+            assert_eq!(result.len(), 2);
+            assert!(!result.iter().any(|val| val.0 == 'c'));
+        }
+
+        // Case 2: All of the weights are 0
+        let choices = [('a', 0), ('b', 0), ('c', 0)];
+        let result = choices
+            .choose_multiple_weighted(&mut rng, 2, |item| item.1)
+            .unwrap()
+            .collect::<Vec<_>>();
+        assert_eq!(result.len(), 2);
+
+        // Case 3: Negative weights
+        let choices = [('a', -1), ('b', 1), ('c', 1)];
+        assert!(matches!(
+            choices.choose_multiple_weighted(&mut rng, 2, |item| item.1),
+            Err(WeightedError::InvalidWeight)
+        ));
+
+        // Case 4: Empty list
+        let choices = [];
+        let result = choices
+            .choose_multiple_weighted(&mut rng, 0, |_: &()| 0)
+            .unwrap()
+            .collect::<Vec<_>>();
+        assert_eq!(result.len(), 0);
+
+        // Case 5: NaN weights
+        let choices = [('a', std::f64::NAN), ('b', 1.0), ('c', 1.0)];
+        assert!(matches!(
+            choices.choose_multiple_weighted(&mut rng, 2, |item| item.1),
+            Err(WeightedError::InvalidWeight)
+        ));
+
+        // Case 6: +infinity weights
+        let choices = [('a', std::f64::INFINITY), ('b', 1.0), ('c', 1.0)];
+        for _ in 0..100 {
+            let result = choices
+                .choose_multiple_weighted(&mut rng, 2, |item| item.1)
+                .unwrap()
+                .collect::<Vec<_>>();
+            assert_eq!(result.len(), 2);
+            assert!(result.iter().any(|val| val.0 == 'a'));
+        }
+
+        // Case 7: -infinity weights
+        let choices = [('a', std::f64::NEG_INFINITY), ('b', 1.0), ('c', 1.0)];
+        assert!(matches!(
+            choices.choose_multiple_weighted(&mut rng, 2, |item| item.1),
+            Err(WeightedError::InvalidWeight)
+        ));
+
+        // Case 8: -0 weights
+        let choices = [('a', -0.0), ('b', 1.0), ('c', 1.0)];
+        assert!(choices
+            .choose_multiple_weighted(&mut rng, 2, |item| item.1)
+            .is_ok());
+    }
+
+    #[test]
+    fn test_multiple_weighted_distributions() {
+        use super::*;
+
+        // The theoretical probabilities of the different outcomes are:
+        // AB: 0.5  * 0.5  = 0.250
+        // AC: 0.5  * 0.5  = 0.250
+        // BA: 0.25 * 0.67 = 0.167
+        // BC: 0.25 * 0.33 = 0.082
+        // CA: 0.25 * 0.67 = 0.167
+        // CB: 0.25 * 0.33 = 0.082
+        let choices = [('a', 2), ('b', 1), ('c', 1)];
+        let mut rng = crate::test::rng(414);
+
+        let mut results = [0i32; 3];
+        let expected_results = [4167, 4167, 1666];
+        for _ in 0..10000 {
+            let result = choices
+                .choose_multiple_weighted(&mut rng, 2, |item| item.1)
+                .unwrap()
+                .collect::<Vec<_>>();
+
+            assert_eq!(result.len(), 2);
+
+            match (result[0].0, result[1].0) {
+                ('a', 'b') | ('b', 'a') => {
+                    results[0] += 1;
+                }
+                ('a', 'c') | ('c', 'a') => {
+                    results[1] += 1;
+                }
+                ('b', 'c') | ('c', 'b') => {
+                    results[2] += 1;
+                }
+                (_, _) => panic!("unexpected result"),
+            }
+        }
+
+        let mut diffs = results
+            .iter()
+            .zip(&expected_results)
+            .map(|(a, b)| (a - b).abs());
+        assert!(!diffs.any(|deviation| deviation > 100));
     }
 }
