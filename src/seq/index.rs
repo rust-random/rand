@@ -8,18 +8,21 @@
 
 //! Low-level API for sampling indices
 
-#[cfg(feature = "alloc")] use core::slice;
+#[cfg(feature = "alloc")]
+use core::slice;
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use crate::alloc::vec::{self, Vec};
-#[cfg(feature = "std")] use std::vec;
+#[cfg(feature = "std")]
+use std::vec;
 // BTreeMap is not as fast in tests, but better than nothing.
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use crate::alloc::collections::BTreeSet;
-#[cfg(feature = "std")] use std::collections::HashSet;
+#[cfg(feature = "std")]
+use std::collections::HashSet;
 
 #[cfg(feature = "alloc")]
-use crate::distributions::{uniform::SampleUniform, Distribution, Uniform};
+use crate::distributions::{uniform::SampleUniform, Distribution, Uniform, WeightedError};
 use crate::Rng;
 
 /// A vector of indices.
@@ -246,6 +249,114 @@ where R: Rng + ?Sized {
         } else {
             sample_rejection(rng, length, amount)
         }
+    }
+}
+
+/// Randomly sample exactly `amount` distinct indices from `0..length`, and
+/// return them in an arbitrary order (there is no guarantee of shuffling or
+/// ordering). The weights are to be provided by the input function `weights`,
+/// which will be called once for each index.
+///
+/// This method is used internally by the slice sampling methods, but it can
+/// sometimes be useful to have the indices themselves so this is provided as
+/// an alternative.
+///
+/// This implementation uses `O(length)` space and `O(length)` time if the
+/// "partition_at_index" feature is enabled, or `O(length)` space and
+/// `O(length * log amount)` time otherwise.
+///
+/// Panics if `amount > length`.
+pub fn sample_weighted<R, F, X>(
+    rng: &mut R, length: usize, weight: F, amount: usize,
+) -> Result<IndexVecIntoIter, WeightedError>
+where
+    R: Rng + ?Sized,
+    F: Fn(usize) -> X,
+    X: Into<f64>,
+{
+    if amount > length {
+        panic!("`amount` of samples must be less than or equal to `length`");
+    }
+
+    // This implementation uses the algorithm described by Efraimidis and Spirakis
+    // in this paper: https://doi.org/10.1016/j.ipl.2005.11.003
+
+    struct Element {
+        index: usize,
+        key: f64,
+    }
+    impl PartialOrd for Element {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            self.key
+                .partial_cmp(&other.key)
+                .or(Some(std::cmp::Ordering::Less))
+        }
+    }
+    impl Ord for Element {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            self.partial_cmp(other).unwrap() // partial_cmp will always produce a value
+        }
+    }
+    impl PartialEq for Element {
+        fn eq(&self, other: &Self) -> bool {
+            self.key == other.key
+        }
+    }
+    impl Eq for Element {}
+
+    #[cfg(feature = "partition_at_index")]
+    {
+        if length == 0 {
+            return Ok(IndexVecIntoIter::USize(Vec::new().into_iter()));
+        }
+
+        let mut candidates = Vec::with_capacity(length);
+        for index in 0..length {
+            let weight = weight(index).into();
+            if weight < 0.0 || weight.is_nan() {
+                return Err(WeightedError::InvalidWeight);
+            }
+
+            let key = rng.gen::<f64>().powf(1.0 / weight);
+            candidates.push(Element { index, key })
+        }
+
+        // Partially sort the array to find the `amount` elements with the greatest
+        // keys. Do this by using `partition_at_index` to put the elements with
+        // the *smallest* keys at the beginning of the list in `O(n)` time, which
+        // provides equivalent information about the elements with the *greatest* keys.
+        let (_, mid, greater) = candidates.partition_at_index(length - amount);
+
+        let mut result = Vec::with_capacity(amount);
+        result.push(mid.index);
+        for element in greater {
+            result.push(element.index);
+        }
+        Ok(IndexVecIntoIter::USize(result.into_iter()))
+    }
+
+    #[cfg(not(feature = "partition_at_index"))]
+    {
+        use std::collections::BinaryHeap;
+
+        // Partially sort the array such that the `amount` elements with the largest
+        // keys are first using a binary max heap.
+        let mut candidates = BinaryHeap::with_capacity(length);
+        for index in 0..length {
+            let weight = weight(index).into();
+            if weight < 0.0 || weight.is_nan() {
+                return Err(WeightedError::InvalidWeight);
+            }
+
+            let key = rng.gen::<f64>().powf(1.0 / weight);
+            candidates.push(Element { index, key });
+        }
+
+        let mut result = Vec::with_capacity(amount);
+        while result.len() < amount {
+            result.push(candidates.pop().unwrap().index);
+        }
+        Ok(IndexVecIntoIter::USize(result.into_iter()))
     }
 }
 

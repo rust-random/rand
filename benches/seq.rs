@@ -177,3 +177,24 @@ sample_indices!(misc_sample_indices_100_of_1G, sample, 100, 1000_000_000);
 sample_indices!(misc_sample_indices_200_of_1G, sample, 200, 1000_000_000);
 sample_indices!(misc_sample_indices_400_of_1G, sample, 400, 1000_000_000);
 sample_indices!(misc_sample_indices_600_of_1G, sample, 600, 1000_000_000);
+
+macro_rules! sample_indices_rand_weights {
+    ($name:ident, $amount:expr, $length:expr) => {
+        #[bench]
+        fn $name(b: &mut Bencher) {
+            let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+            b.iter(|| {
+                index::sample_weighted(&mut rng, $length, |idx| (1 + (idx % 100)) as u32, $amount)
+            })
+        }
+    };
+}
+
+sample_indices_rand_weights!(misc_sample_weighted_indices_1_of_1k, 1, 1000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_10_of_1k, 10, 1000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_100_of_1k, 100, 1000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_100_of_1M, 100, 1000_000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_200_of_1M, 200, 1000_000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_400_of_1M, 400, 1000_000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_600_of_1M, 600, 1000_000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_1k_of_1M, 1000, 1000_000);
