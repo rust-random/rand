@@ -974,25 +974,55 @@ mod tests {
     use super::*;
     use crate::rngs::mock::StepRng;
 
-    //FIXME: instantiate a UniformDuration
-    // #[test]
-    // #[cfg(feature = "serde1")]
-    // fn test_serialization_uniform_duration() {
-    //     let distr = UniformDuration::new(-25, 50);
-    //     let de_distr: UniformDuration = bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
-    //     assert_eq!(
-    //         distr.offset, de_distr.offset
-    //     );
-    //     //FIXME: check if distr.mode are the same
-    // }
+    #[test]
+    #[cfg(feature = "serde1")]
+    fn test_serialization_uniform_duration() {
+        let distr = UniformDuration::new(std::time::Duration::from_secs(10), std::time::Duration::from_secs(60));
+        let de_distr: UniformDuration = bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
+        assert_eq!(
+            distr.offset, de_distr.offset
+        );
+        match (distr.mode, de_distr.mode) {
+            (UniformDurationMode::Small {secs: a_secs, nanos: a_nanos}, UniformDurationMode::Small {secs, nanos}) => {
+                assert_eq!(a_secs, secs);
+
+                assert_eq!(a_nanos.0.low, nanos.0.low);
+                assert_eq!(a_nanos.0.range, nanos.0.range);
+                assert_eq!(a_nanos.0.z, nanos.0.z);
+            }
+            (UniformDurationMode::Medium {nanos: a_nanos} , UniformDurationMode::Medium {nanos}) => {
+                assert_eq!(a_nanos.0.low, nanos.0.low);
+                assert_eq!(a_nanos.0.range, nanos.0.range);
+                assert_eq!(a_nanos.0.z, nanos.0.z);
+            }
+            (UniformDurationMode::Large {max_secs:a_max_secs, max_nanos:a_max_nanos, secs:a_secs}, UniformDurationMode::Large {max_secs, max_nanos, secs} ) => {
+                assert_eq!(a_max_secs, max_secs);
+                assert_eq!(a_max_nanos, max_nanos);
+
+                assert_eq!(a_secs.0.low, secs.0.low);
+                assert_eq!(a_secs.0.range, secs.0.range);
+                assert_eq!(a_secs.0.z, secs.0.z);
+            }
+            _ => panic!("`UniformDurationMode` was not serialized/deserialized correctly")
+        }
+    }
     
-    // #[test]
-    // #[cfg(feature = "serde1")]
-    // fn test_uniform_serialization() {
-    //     let unit_box = Uniform::new(-1, 1);
-    //     let de_unit_box: Uniform<i32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
-    //     //FIXME: assertion needed to check
-    // }
+    #[test]
+    #[cfg(feature = "serde1")]
+    fn test_uniform_serialization() {
+        let unit_box: Uniform<i32>  = Uniform::new(-1, 1);
+        let de_unit_box: Uniform<i32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
+
+        assert_eq!(unit_box.0.low, de_unit_box.0.low);
+        assert_eq!(unit_box.0.range, de_unit_box.0.range);
+        assert_eq!(unit_box.0.z, de_unit_box.0.z);
+
+        let unit_box: Uniform<f32> = Uniform::new(-1., 1.);
+        let de_unit_box: Uniform<f32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
+
+        assert_eq!(unit_box.0.low, de_unit_box.0.low);
+        assert_eq!(unit_box.0.scale, de_unit_box.0.scale);
+    }
 
     #[should_panic]
     #[test]
