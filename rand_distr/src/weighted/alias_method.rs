@@ -58,8 +58,7 @@ use rand::Rng;
 /// }
 /// ```
 ///
-/// [`WeightedIndex<W>`]: #
-/// [`Weight`]: Weight
+/// [`WeightedIndex<W>`]: WeightedIndex
 /// [`Vec<u32>`]: Vec
 /// [`Uniform<u32>::sample`]: Distribution::sample
 /// [`Uniform<W>::sample`]: Distribution::sample
