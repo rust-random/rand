@@ -388,10 +388,10 @@ mod test {
         let de_some_index_vec: IndexVec = bincode::deserialize(&bincode::serialize(&some_index_vec).unwrap()).unwrap();
         match (some_index_vec, de_some_index_vec) {
             (IndexVec::U32(a), IndexVec::U32(b)) => {
-                assert_eq!(a,b);
+                assert_eq!(a, b);
             },
             (IndexVec::USize(a), IndexVec::USize(b)) => {
-                assert_eq!(a,b);
+                assert_eq!(a, b);
             },
             _ => {panic!("failed to seralize/deserialize `IndexVec`")}
         }
