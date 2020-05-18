@@ -115,8 +115,10 @@ use crate::Rng;
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
 use crate::distributions::utils::Float;
 
-
 #[cfg(feature = "simd_support")] use packed_simd::*;
+
+#[cfg(feature = "serde1")]
+use serde::{Serialize, Deserialize};
 
 /// Sample values uniformly between two bounds.
 ///
@@ -159,6 +161,7 @@ use crate::distributions::utils::Float;
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Uniform<X: SampleUniform>(X::Sampler);
 
 impl<X: SampleUniform> Uniform<X> {
@@ -347,6 +350,7 @@ where Borrowed: SampleUniform
 /// multiply by `range`, the result is in the high word. Then comparing the low
 /// word against `zone` makes sure our distribution is uniform.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformInt<X> {
     low: X,
     range: X,
@@ -644,6 +648,7 @@ uniform_simd_int_impl! {
 /// [`new_inclusive`]: UniformSampler::new_inclusive
 /// [`Standard`]: crate::distributions::Standard
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformFloat<X> {
     low: X,
     scale: X,
@@ -837,12 +842,14 @@ uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformDuration {
     mode: UniformDurationMode,
     offset: u32,
 }
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum UniformDurationMode {
     Small {
         secs: u64,
@@ -966,6 +973,56 @@ impl UniformSampler for UniformDuration {
 mod tests {
     use super::*;
     use crate::rngs::mock::StepRng;
+
+    #[test]
+    #[cfg(feature = "serde1")]
+    fn test_serialization_uniform_duration() {
+        let distr = UniformDuration::new(std::time::Duration::from_secs(10), std::time::Duration::from_secs(60));
+        let de_distr: UniformDuration = bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
+        assert_eq!(
+            distr.offset, de_distr.offset
+        );
+        match (distr.mode, de_distr.mode) {
+            (UniformDurationMode::Small {secs: a_secs, nanos: a_nanos}, UniformDurationMode::Small {secs, nanos}) => {
+                assert_eq!(a_secs, secs);
+
+                assert_eq!(a_nanos.0.low, nanos.0.low);
+                assert_eq!(a_nanos.0.range, nanos.0.range);
+                assert_eq!(a_nanos.0.z, nanos.0.z);
+            }
+            (UniformDurationMode::Medium {nanos: a_nanos} , UniformDurationMode::Medium {nanos}) => {
+                assert_eq!(a_nanos.0.low, nanos.0.low);
+                assert_eq!(a_nanos.0.range, nanos.0.range);
+                assert_eq!(a_nanos.0.z, nanos.0.z);
+            }
+            (UniformDurationMode::Large {max_secs:a_max_secs, max_nanos:a_max_nanos, secs:a_secs}, UniformDurationMode::Large {max_secs, max_nanos, secs} ) => {
+                assert_eq!(a_max_secs, max_secs);
+                assert_eq!(a_max_nanos, max_nanos);
+
+                assert_eq!(a_secs.0.low, secs.0.low);
+                assert_eq!(a_secs.0.range, secs.0.range);
+                assert_eq!(a_secs.0.z, secs.0.z);
+            }
+            _ => panic!("`UniformDurationMode` was not serialized/deserialized correctly")
+        }
+    }
+    
+    #[test]
+    #[cfg(feature = "serde1")]
+    fn test_uniform_serialization() {
+        let unit_box: Uniform<i32>  = Uniform::new(-1, 1);
+        let de_unit_box: Uniform<i32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
+
+        assert_eq!(unit_box.0.low, de_unit_box.0.low);
+        assert_eq!(unit_box.0.range, de_unit_box.0.range);
+        assert_eq!(unit_box.0.z, de_unit_box.0.z);
+
+        let unit_box: Uniform<f32> = Uniform::new(-1., 1.);
+        let de_unit_box: Uniform<f32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
+
+        assert_eq!(unit_box.0.low, de_unit_box.0.low);
+        assert_eq!(unit_box.0.scale, de_unit_box.0.scale);
+    }
 
     #[should_panic]
     #[test]

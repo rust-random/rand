@@ -14,6 +14,9 @@ use core::num::Wrapping;
 use crate::distributions::{Distribution, Standard, Uniform};
 use crate::Rng;
 
+#[cfg(feature = "serde1")]
+use serde::{Serialize, Deserialize};
+
 // ----- Sampling distributions -----
 
 /// Sample a `char`, uniformly distributed over ASCII letters and numbers:
@@ -34,6 +37,7 @@ use crate::Rng;
 /// println!("Random chars: {}", chars);
 /// ```
 #[derive(Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Alphanumeric;
 
 

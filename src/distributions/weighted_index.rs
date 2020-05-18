@@ -17,6 +17,9 @@ use core::fmt;
 // Note that this whole module is only imported if feature="alloc" is enabled.
 #[cfg(not(feature = "std"))] use crate::alloc::vec::Vec;
 
+#[cfg(feature = "serde1")]
+use serde::{Serialize, Deserialize};
+
 /// A distribution using weighted sampling of discrete items
 ///
 /// Sampling a `WeightedIndex` distribution returns the index of a randomly
@@ -73,6 +76,7 @@ use core::fmt;
 /// [`Uniform<X>`]: crate::distributions::uniform::Uniform
 /// [`RngCore`]: crate::RngCore
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
     cumulative_weights: Vec<X>,
     total_weight: X,
@@ -235,6 +239,23 @@ where X: SampleUniform + PartialOrd
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[cfg(feature = "serde1")]
+    #[test]
+    fn test_weightedindex_serde1() {
+        let weighted_index = WeightedIndex::new(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).unwrap();
+
+        let ser_weighted_index = bincode::serialize(&weighted_index).unwrap();
+        let de_weighted_index: WeightedIndex<i32> =
+            bincode::deserialize(&ser_weighted_index).unwrap();
+
+        assert_eq!(
+            de_weighted_index.cumulative_weights,
+            weighted_index.cumulative_weights
+        );
+        assert_eq!(de_weighted_index.total_weight, weighted_index.total_weight);
+    }
+
 
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow

@@ -8,6 +8,10 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [Unreleased]
+### Additions
+- Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
+
 ## [0.7.3] - 2020-01-10
 ### Fixes
 - The `Bernoulli` distribution constructors now reports an error on NaN and on

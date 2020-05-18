@@ -22,10 +22,14 @@ use crate::alloc::collections::BTreeSet;
 use crate::distributions::{uniform::SampleUniform, Distribution, Uniform};
 use crate::Rng;
 
+#[cfg(feature = "serde1")]
+use serde::{Serialize, Deserialize};
+
 /// A vector of indices.
 ///
 /// Multiple internal representations are possible.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub enum IndexVec {
     #[doc(hidden)]
     U32(Vec<u32>),
@@ -376,6 +380,23 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    #[cfg(feature = "serde1")]
+    fn test_serialization_index_vec() {
+        let some_index_vec = IndexVec::from(vec![254_usize, 234, 2, 1]);
+        let de_some_index_vec: IndexVec = bincode::deserialize(&bincode::serialize(&some_index_vec).unwrap()).unwrap();
+        match (some_index_vec, de_some_index_vec) {
+            (IndexVec::U32(a), IndexVec::U32(b)) => {
+                assert_eq!(a, b);
+            },
+            (IndexVec::USize(a), IndexVec::USize(b)) => {
+                assert_eq!(a, b);
+            },
+            _ => {panic!("failed to seralize/deserialize `IndexVec`")}
+        }
+    }
+
     #[cfg(all(feature = "alloc", not(feature = "std")))] use crate::alloc::vec;
     #[cfg(feature = "std")] use std::vec;
 
