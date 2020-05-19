@@ -70,7 +70,7 @@ impl<T> fmt::Debug for Array64<T> {
 macro_rules! chacha_impl {
     ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr) => {
         #[doc=$doc]
-        #[derive(Clone)]
+        #[derive(Clone, PartialEq, Eq)]
         pub struct $ChaChaXCore {
             state: ChaCha,
         }
@@ -255,6 +255,14 @@ macro_rules! chacha_impl {
                 }
             }
         }
+
+        impl PartialEq<$ChaChaXRng> for $ChaChaXRng {
+            fn eq(&self, rhs: &$ChaChaXRng) -> bool {
+                self.rng.core.state.stream64_eq(&rhs.rng.core.state)
+                    && self.get_word_pos() == rhs.get_word_pos()
+            }
+        }
+        impl Eq for $ChaChaXRng {}
     }
 }
 

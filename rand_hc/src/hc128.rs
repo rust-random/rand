@@ -104,6 +104,13 @@ impl SeedableRng for Hc128Rng {
 
 impl CryptoRng for Hc128Rng {}
 
+impl PartialEq for Hc128Rng {
+    fn eq(&self, rhs: &Self) -> bool {
+        self.0.core == rhs.0.core && self.0.index() == rhs.0.index()
+    }
+}
+impl Eq for Hc128Rng {}
+
 /// The core of `Hc128Rng`, used with `BlockRng`.
 #[derive(Clone)]
 pub struct Hc128Core {
@@ -343,6 +350,14 @@ impl SeedableRng for Hc128Core {
 }
 
 impl CryptoRng for Hc128Core {}
+
+// Custom PartialEq implementation as it can't currently be derived from an array of size 1024
+impl PartialEq for Hc128Core {
+    fn eq(&self, rhs: &Self) -> bool {
+        &self.t[..] == &rhs.t[..] && self.counter1024 == rhs.counter1024
+    }
+}
+impl Eq for Hc128Core {}
 
 #[cfg(test)]
 mod test {

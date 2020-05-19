@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+- Derive PartialEq+Eq for Lcg64Xsh32, Lcg128Xsl64, and Mcg128Xsl64 (#975)
+
 ## [0.2.1] - 2019-10-22
 - Bump `bincode` version to 1.1.4 to fix minimal-dependency builds
 - Removed unused `autocfg` build dependency.

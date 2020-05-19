@@ -29,7 +29,7 @@ use rand_core::{le, Error, RngCore, SeedableRng};
 /// Despite the name, this implementation uses 32 bytes (256 bit) space
 /// comprising 128 bits of state and 128 bits stream selector. These are both
 /// set by `SeedableRng`, using a 256-bit seed.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Lcg128Xsl64 {
     state: u128,
@@ -130,7 +130,7 @@ impl RngCore for Lcg128Xsl64 {
 /// Note that compared to the standard `pcg64` (128-bit LCG with PCG-XSL-RR
 /// output function), this RNG is faster, also has a long cycle, and still has
 /// good performance on statistical tests.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Mcg128Xsl64 {
     state: u128,
