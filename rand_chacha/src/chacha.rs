@@ -19,6 +19,11 @@ use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 const STREAM_PARAM_NONCE: u32 = 1;
 const STREAM_PARAM_BLOCK: u32 = 0;
 
+// NB. this must remain consistent with some currently hard-coded numbers in this module
+const BUF_BLOCKS: u8 = 4;
+// number of 32-bit words per ChaCha block (fixed by algorithm definition)
+const BLOCK_WORDS: u8 = 16;
+
 pub struct Array64<T>([T; 64]);
 impl<T> Default for Array64<T>
 where T: Default
@@ -187,10 +192,19 @@ macro_rules! chacha_impl {
             /// byte-offset.
             #[inline]
             pub fn get_word_pos(&self) -> u128 {
-                let mut block = u128::from(self.rng.core.state.get_stream_param(STREAM_PARAM_BLOCK));
-                // counter is incremented *after* filling buffer
-                block -= 4;
-                (block << 4) + self.rng.index() as u128
+                let buf_start_block = {
+                    let buf_end_block = self.rng.core.state.get_stream_param(STREAM_PARAM_BLOCK);
+                    u64::wrapping_sub(buf_end_block, BUF_BLOCKS.into())
+                };
+                let (buf_offset_blocks, block_offset_words) = {
+                    let buf_offset_words = self.rng.index() as u64;
+                    let blocks_part = buf_offset_words / u64::from(BLOCK_WORDS);
+                    let words_part = buf_offset_words % u64::from(BLOCK_WORDS);
+                    (blocks_part, words_part)
+                };
+                let pos_block = u64::wrapping_add(buf_start_block, buf_offset_blocks);
+                let pos_block_words = u128::from(pos_block) * u128::from(BLOCK_WORDS);
+                pos_block_words + u128::from(block_offset_words)
             }
 
             /// Set the offset from the start of the stream, in 32-bit words.
@@ -200,12 +214,12 @@ macro_rules! chacha_impl {
             /// 60 bits.
             #[inline]
             pub fn set_word_pos(&mut self, word_offset: u128) {
-                let block = (word_offset >> 4) as u64;
+                let block = (word_offset / u128::from(BLOCK_WORDS)) as u64;
                 self.rng
                     .core
                     .state
                     .set_stream_param(STREAM_PARAM_BLOCK, block);
-                self.rng.generate_and_set((word_offset & 15) as usize);
+                self.rng.generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
             }
 
             /// Set the stream number.
@@ -455,5 +469,33 @@ mod test {
         for _ in 7..16 {
             assert_eq!(rng.next_u32(), clone.next_u32());
         }
+    }
+
+    #[test]
+    fn test_chacha_word_pos_wrap_exact() {
+        use super::{BUF_BLOCKS, BLOCK_WORDS};
+        let mut rng = ChaChaRng::from_seed(Default::default());
+        // refilling the buffer in set_word_pos will wrap the block counter to 0
+        let last_block = (1 << 68) - u128::from(BUF_BLOCKS * BLOCK_WORDS);
+        rng.set_word_pos(last_block);
+        assert_eq!(rng.get_word_pos(), last_block);
+    }
+
+    #[test]
+    fn test_chacha_word_pos_wrap_excess() {
+        use super::BLOCK_WORDS;
+        let mut rng = ChaChaRng::from_seed(Default::default());
+        // refilling the buffer in set_word_pos will wrap the block counter past 0
+        let last_block = (1 << 68) - u128::from(BLOCK_WORDS);
+        rng.set_word_pos(last_block);
+        assert_eq!(rng.get_word_pos(), last_block);
+    }
+
+    #[test]
+    fn test_chacha_word_pos_zero() {
+        let mut rng = ChaChaRng::from_seed(Default::default());
+        assert_eq!(rng.get_word_pos(), 0);
+        rng.set_word_pos(0);
+        assert_eq!(rng.get_word_pos(), 0);
     }
 }

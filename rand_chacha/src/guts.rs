@@ -100,11 +100,11 @@ fn refill_wide_impl<Mach: Machine>(
     let k = m.vec([0x6170_7865, 0x3320_646e, 0x7962_2d32, 0x6b20_6574]);
     let mut pos = state.pos64(m);
     let d0: Mach::u32x4 = m.unpack(state.d);
-    pos += 1;
+    pos = pos.wrapping_add(1);
     let d1 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-    pos += 1;
+    pos = pos.wrapping_add(1);
     let d2 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-    pos += 1;
+    pos = pos.wrapping_add(1);
     let d3 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
 
     let b = m.unpack(state.b);
@@ -121,13 +121,13 @@ fn refill_wide_impl<Mach: Machine>(
     }
     let mut pos = state.pos64(m);
     let d0: Mach::u32x4 = m.unpack(state.d);
-    pos += 1;
+    pos = pos.wrapping_add(1);
     let d1 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-    pos += 1;
+    pos = pos.wrapping_add(1);
     let d2 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-    pos += 1;
+    pos = pos.wrapping_add(1);
     let d3 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-    pos += 1;
+    pos = pos.wrapping_add(1);
     let d4 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
 
     let (a, b, c, d) = (
