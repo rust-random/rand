@@ -12,9 +12,9 @@ Random number generators and other randomness functionality.
 """
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
-exclude = ["/utils/*", "/.travis.yml", "/appveyor.yml", ".gitignore"]
 autobenches = true
 edition = "2018"
+include = ["src/**/*", "LICENSE-*", "README.md", "CHANGELOG.md"]
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
