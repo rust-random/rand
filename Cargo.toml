@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.7.3"
+version = "0.7.4"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -56,7 +56,7 @@ members = [
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.5.1" }
-rand_pcg = { path = "rand_pcg", version = "0.2", optional = true }
+rand_pcg = { path = "rand_pcg", version = "0.2.1", optional = true }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 
@@ -74,9 +74,9 @@ libc = { version = "0.2.22", optional = true, default-features = false }
 # Emscripten does not support 128-bit integers, which are used by ChaCha code.
 # We work around this by using a different RNG.
 [target.'cfg(not(target_os = "emscripten"))'.dependencies]
-rand_chacha = { path = "rand_chacha", version = "0.2.1", default-features = false, optional = true }
+rand_chacha = { path = "rand_chacha", version = "0.2.3", default-features = false, optional = true }
 [target.'cfg(target_os = "emscripten")'.dependencies]
-rand_hc = { path = "rand_hc", version = "0.2", optional = true }
+rand_hc = { path = "rand_hc", version = "0.2.1", optional = true }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "0.2" }

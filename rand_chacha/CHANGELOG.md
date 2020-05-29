@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- impl PartialEq+Eq for ChaChaXRng and ChaChaXCore (#975)
 - Fix panic on block counter wrap that was occurring in debug builds
 
 ## [0.2.2] - 2020-03-09

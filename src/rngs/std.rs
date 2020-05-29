@@ -32,7 +32,7 @@ pub(crate) use rand_hc::Hc128Core as Core;
 /// the [rand_chacha] crate directly.
 ///
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StdRng(Rng);
 
 impl RngCore for StdRng {

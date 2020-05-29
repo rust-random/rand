@@ -10,6 +10,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ## [Unreleased]
 ### Additions
+- impl PartialEq+Eq for StdRng, SmallRng, and StepRng (#975)
 - Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
 
 ## [0.7.3] - 2020-01-10

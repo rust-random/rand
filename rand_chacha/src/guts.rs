@@ -21,7 +21,7 @@ const BUFBLOCKS: u64 = 1 << LOG2_BUFBLOCKS;
 pub(crate) const BUFSZ64: u64 = BLOCK64 * BUFBLOCKS;
 pub(crate) const BUFSZ: usize = BUFSZ64 as usize;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct ChaCha {
     pub(crate) b: vec128_storage,
     pub(crate) c: vec128_storage,
@@ -90,6 +90,14 @@ impl ChaCha {
     #[inline(always)]
     pub fn get_stream_param(&self, param: u32) -> u64 {
         get_stream_param(self, param)
+    }
+
+    /// Return whether rhs is equal in all parameters except current 64-bit position.
+    #[inline]
+    pub fn stream64_eq(&self, rhs: &Self) -> bool {
+        let self_d: [u32; 4] = self.d.into();
+        let rhs_d: [u32; 4] = rhs.d.into();
+        self.b == rhs.b && self.c == rhs.c && self_d[3] == rhs_d[3] && self_d[2] == rhs_d[2]
     }
 }
 
