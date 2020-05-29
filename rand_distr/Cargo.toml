@@ -13,6 +13,7 @@ Sampling from random number distributions
 keywords = ["random", "rng", "distribution", "probability"]
 categories = ["algorithms"]
 edition = "2018"
+include = ["src/**/*", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
