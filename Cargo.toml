@@ -14,7 +14,7 @@ keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 autobenches = true
 edition = "2018"
-include = ["src/**/*", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
+include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
 [badges]
 travis-ci = { repository = "rust-random/rand" }
