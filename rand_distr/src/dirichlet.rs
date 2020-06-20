@@ -8,11 +8,12 @@
 // except according to those terms.
 
 //! The dirichlet distribution.
-
-use crate::utils::Float;
+#![cfg(feature = "alloc")]
+use num_traits::Float;
 use crate::{Distribution, Exp1, Gamma, Open01, StandardNormal};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
+use alloc::{vec, vec::Vec};
 
 /// The Dirichlet distribution `Dirichlet(alpha)`.
 ///
@@ -58,7 +59,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
 impl<N: Float> Dirichlet<N>
 where
@@ -76,7 +78,7 @@ where
             return Err(Error::AlphaTooShort);
         }
         for &ai in &a {
-            if !(ai > N::from(0.0)) {
+            if !(ai > N::zero()) {
                 return Err(Error::AlphaTooSmall);
             }
         }
@@ -89,7 +91,7 @@ where
     /// Requires `size >= 2`.
     #[inline]
     pub fn new_with_size(alpha: N, size: usize) -> Result<Dirichlet<N>, Error> {
-        if !(alpha > N::from(0.0)) {
+        if !(alpha > N::zero()) {
             return Err(Error::AlphaTooSmall);
         }
         if size < 2 {
@@ -109,17 +111,17 @@ where
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<N> {
         let n = self.alpha.len();
-        let mut samples = vec![N::from(0.0); n];
-        let mut sum = N::from(0.0);
+        let mut samples = vec![N::zero(); n];
+        let mut sum = N::zero();
 
         for (s, &a) in samples.iter_mut().zip(self.alpha.iter()) {
-            let g = Gamma::new(a, N::from(1.0)).unwrap();
+            let g = Gamma::new(a, N::one()).unwrap();
             *s = g.sample(rng);
-            sum += *s;
+            sum =  sum + (*s);
         }
-        let invacc = N::from(1.0) / sum;
+        let invacc = N::one() / sum;
         for s in samples.iter_mut() {
-            *s *= invacc;
+            *s = (*s)*invacc;
         }
         samples
     }

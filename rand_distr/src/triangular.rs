@@ -7,10 +7,10 @@
 // except according to those terms.
 //! The triangular distribution.
 
-use crate::utils::Float;
+use num_traits::Float;
 use crate::{Distribution, Standard};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// The triangular distribution.
 ///
@@ -58,7 +58,8 @@ impl fmt::Display for TriangularError {
     }
 }
 
-impl error::Error for TriangularError {}
+#[cfg(feature = "std")]
+impl std::error::Error for TriangularError {}
 
 impl<N: Float> Triangular<N>
 where Standard: Distribution<N>
@@ -97,7 +98,6 @@ where Standard: Distribution<N>
 mod test {
     use super::*;
     use rand::{rngs::mock, Rng};
-    use std::f64;
 
     #[test]
     fn test_triangular() {
@@ -111,7 +111,8 @@ mod test {
             (0., 1., 0.9, 0.45f64.sqrt()),
             (-4., -0.5, -2., -4.0 + 3.5f64.sqrt()),
         ] {
-            println!("{} {} {} {}", min, max, mode, median);
+            #[cfg(feature = "std")]
+            std::println!("{} {} {} {}", min, max, mode, median);
             let distr = Triangular::new(min, max, mode).unwrap();
             // Test correct value at median:
             assert_eq!(distr.sample(&mut half_rng), median);
@@ -130,15 +131,12 @@ mod test {
     fn value_stability() {
         let rng = crate::test::rng(860);
         let distr = Triangular::new(2., 10., 3.).unwrap();
-        let seq = distr.sample_iter(rng).take(5).collect::<Vec<f64>>();
-        println!("seq: {:?}", seq);
-        let expected = vec![
-            5.74373257511361,
-            7.890059162791258,
-            4.7256280652553455,
-            2.9474808121184077,
-            3.058301946314053,
-        ];
-        assert!(seq == expected);
+        let mut seq = distr.sample_iter(rng);
+
+        assert_eq!(seq.next(), Some(5.74373257511361f64));
+        assert_eq!(seq.next(), Some(7.890059162791258f64));
+        assert_eq!(seq.next(), Some(4.7256280652553455f64));
+        assert_eq!(seq.next(), Some(2.9474808121184077f64));
+        assert_eq!(seq.next(), Some(3.058301946314053f64));
     }
 }

@@ -8,10 +8,10 @@
 
 //! The Weibull distribution.
 
-use crate::utils::Float;
+use num_traits::Float;
 use crate::{Distribution, OpenClosed01};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// Samples floating-point numbers according to the Weibull distribution
 ///
@@ -47,21 +47,22 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
 impl<N: Float> Weibull<N>
 where OpenClosed01: Distribution<N>
 {
     /// Construct a new `Weibull` distribution with given `scale` and `shape`.
     pub fn new(scale: N, shape: N) -> Result<Weibull<N>, Error> {
-        if !(scale > N::from(0.0)) {
+        if !(scale > N::zero()) {
             return Err(Error::ScaleTooSmall);
         }
-        if !(shape > N::from(0.0)) {
+        if !(shape > N::zero()) {
             return Err(Error::ShapeTooSmall);
         }
         Ok(Weibull {
-            inv_shape: N::from(1.) / shape,
+            inv_shape: N::from(1.).unwrap() / shape,
             scale,
         })
     }

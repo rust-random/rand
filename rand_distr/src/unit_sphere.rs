@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::utils::Float;
+use num_traits::Float;
 use crate::{uniform::SampleUniform, Distribution, Uniform};
 use rand::Rng;
 
@@ -33,15 +33,15 @@ pub struct UnitSphere;
 impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitSphere {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [N; 3] {
-        let uniform = Uniform::new(N::from(-1.), N::from(1.));
+        let uniform = Uniform::new(N::from(-1.).unwrap(), N::from(1.).unwrap());
         loop {
             let (x1, x2) = (uniform.sample(rng), uniform.sample(rng));
             let sum = x1 * x1 + x2 * x2;
-            if sum >= N::from(1.) {
+            if sum >= N::from(1.).unwrap() {
                 continue;
             }
-            let factor = N::from(2.) * (N::from(1.0) - sum).sqrt();
-            return [x1 * factor, x2 * factor, N::from(1.) - N::from(2.) * sum];
+            let factor = N::from(2.).unwrap() * (N::one() - sum).sqrt();
+            return [x1 * factor, x2 * factor, N::from(1.).unwrap() - N::from(2.).unwrap() * sum];
         }
     }
 }
@@ -59,11 +59,11 @@ mod tests {
         ($a:expr, $b:expr, $prec:expr) => {
             let diff = ($a - $b).abs();
             if diff > $prec {
-                panic!(format!(
+                panic!(
                     "assertion failed: `abs(left - right) = {:.1e} < {:e}`, \
                      (left: `{}`, right: `{}`)",
                     diff, $prec, $a, $b
-                ));
+                );
             }
         };
     }

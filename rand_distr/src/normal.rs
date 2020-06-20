@@ -9,10 +9,11 @@
 
 //! The normal and derived distributions.
 
-use crate::utils::{ziggurat, Float};
+use crate::utils::ziggurat;
+use num_traits::Float;
 use crate::{ziggurat_tables, Distribution, Open01};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
@@ -131,7 +132,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
 impl<N: Float> Normal<N>
 where StandardNormal: Distribution<N>
@@ -140,7 +142,7 @@ where StandardNormal: Distribution<N>
     /// standard deviation.
     #[inline]
     pub fn new(mean: N, std_dev: N) -> Result<Normal<N>, Error> {
-        if !(std_dev >= N::from(0.0)) {
+        if !(std_dev >= N::zero()) {
             return Err(Error::StdDevTooSmall);
         }
         Ok(Normal { mean, std_dev })
@@ -184,7 +186,7 @@ where StandardNormal: Distribution<N>
     /// and standard deviation of the logarithm of the distribution.
     #[inline]
     pub fn new(mean: N, std_dev: N) -> Result<LogNormal<N>, Error> {
-        if !(std_dev >= N::from(0.0)) {
+        if !(std_dev >= N::zero()) {
             return Err(Error::StdDevTooSmall);
         }
         Ok(LogNormal {

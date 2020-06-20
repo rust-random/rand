@@ -13,10 +13,10 @@ use self::ChiSquaredRepr::*;
 use self::GammaRepr::*;
 
 use crate::normal::StandardNormal;
-use crate::utils::Float;
+use num_traits::Float;
 use crate::{Distribution, Exp, Exp1, Open01};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -74,7 +74,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
 #[derive(Clone, Copy, Debug)]
 enum GammaRepr<N> {
@@ -124,16 +125,16 @@ where
     /// distribution.
     #[inline]
     pub fn new(shape: N, scale: N) -> Result<Gamma<N>, Error> {
-        if !(shape > N::from(0.0)) {
+        if !(shape > N::zero()) {
             return Err(Error::ShapeTooSmall);
         }
-        if !(scale > N::from(0.0)) {
+        if !(scale > N::zero()) {
             return Err(Error::ScaleTooSmall);
         }
 
-        let repr = if shape == N::from(1.0) {
-            One(Exp::new(N::from(1.0) / scale).map_err(|_| Error::ScaleTooLarge)?)
-        } else if shape < N::from(1.0) {
+        let repr = if shape == N::one() {
+            One(Exp::new(N::one() / scale).map_err(|_| Error::ScaleTooLarge)?)
+        } else if shape < N::one() {
             Small(GammaSmallShape::new_raw(shape, scale))
         } else {
             Large(GammaLargeShape::new_raw(shape, scale))
@@ -149,8 +150,8 @@ where
 {
     fn new_raw(shape: N, scale: N) -> GammaSmallShape<N> {
         GammaSmallShape {
-            inv_shape: N::from(1.0) / shape,
-            large_shape: GammaLargeShape::new_raw(shape + N::from(1.0), scale),
+            inv_shape: N::one() / shape,
+            large_shape: GammaLargeShape::new_raw(shape + N::one(), scale),
         }
     }
 }
@@ -161,10 +162,10 @@ where
     Open01: Distribution<N>,
 {
     fn new_raw(shape: N, scale: N) -> GammaLargeShape<N> {
-        let d = shape - N::from(1. / 3.);
+        let d = shape - N::from(1. / 3.).unwrap();
         GammaLargeShape {
             scale,
-            c: N::from(1.0) / (N::from(9.) * d).sqrt(),
+            c: N::one() / (N::from(9.).unwrap() * d).sqrt(),
             d,
         }
     }
@@ -204,8 +205,8 @@ where
         // Marsaglia & Tsang method, 2000
         loop {
             let x: N = rng.sample(StandardNormal);
-            let v_cbrt = N::from(1.0) + self.c * x;
-            if v_cbrt <= N::from(0.0) {
+            let v_cbrt = N::one() + self.c * x;
+            if v_cbrt <= N::zero() {
                 // a^3 <= 0 iff a <= 0
                 continue;
             }
@@ -214,8 +215,8 @@ where
             let u: N = rng.sample(Open01);
 
             let x_sqr = x * x;
-            if u < N::from(1.0) - N::from(0.0331) * x_sqr * x_sqr
-                || u.ln() < N::from(0.5) * x_sqr + self.d * (N::from(1.0) - v + v.ln())
+            if u < N::one() - N::from(0.0331).unwrap() * x_sqr * x_sqr
+                || u.ln() < N::from(0.5).unwrap() * x_sqr + self.d * (N::one() - v + v.ln())
             {
                 return self.d * v * self.scale;
             }
@@ -262,7 +263,8 @@ impl fmt::Display for ChiSquaredError {
     }
 }
 
-impl error::Error for ChiSquaredError {}
+#[cfg(feature = "std")]
+impl std::error::Error for ChiSquaredError {}
 
 #[derive(Clone, Copy, Debug)]
 enum ChiSquaredRepr<N> {
@@ -282,13 +284,13 @@ where
     /// Create a new chi-squared distribution with degrees-of-freedom
     /// `k`.
     pub fn new(k: N) -> Result<ChiSquared<N>, ChiSquaredError> {
-        let repr = if k == N::from(1.0) {
+        let repr = if k == N::one() {
             DoFExactlyOne
         } else {
-            if !(N::from(0.5) * k > N::from(0.0)) {
+            if !(N::from(0.5).unwrap() * k > N::zero()) {
                 return Err(ChiSquaredError::DoFTooSmall);
             }
-            DoFAnythingElse(Gamma::new(N::from(0.5) * k, N::from(2.0)).unwrap())
+            DoFAnythingElse(Gamma::new(N::from(0.5).unwrap() * k, N::from(2.0).unwrap()).unwrap())
         };
         Ok(ChiSquared { repr })
     }
@@ -353,7 +355,8 @@ impl fmt::Display for FisherFError {
     }
 }
 
-impl error::Error for FisherFError {}
+#[cfg(feature = "std")]
+impl std::error::Error for FisherFError {}
 
 impl<N: Float> FisherF<N>
 where
@@ -363,10 +366,11 @@ where
 {
     /// Create a new `FisherF` distribution, with the given parameter.
     pub fn new(m: N, n: N) -> Result<FisherF<N>, FisherFError> {
-        if !(m > N::from(0.0)) {
+        let zero = N::zero();
+        if !(m > zero) {
             return Err(FisherFError::MTooSmall);
         }
-        if !(n > N::from(0.0)) {
+        if !(n > zero) {
             return Err(FisherFError::NTooSmall);
         }
 
@@ -468,7 +472,8 @@ impl fmt::Display for BetaError {
     }
 }
 
-impl error::Error for BetaError {}
+#[cfg(feature = "std")]
+impl std::error::Error for BetaError {}
 
 impl<N: Float> Beta<N>
 where
@@ -480,8 +485,8 @@ where
     /// distribution.
     pub fn new(alpha: N, beta: N) -> Result<Beta<N>, BetaError> {
         Ok(Beta {
-            gamma_a: Gamma::new(alpha, N::from(1.)).map_err(|_| BetaError::AlphaTooSmall)?,
-            gamma_b: Gamma::new(beta, N::from(1.)).map_err(|_| BetaError::BetaTooSmall)?,
+            gamma_a: Gamma::new(alpha, N::one()).map_err(|_| BetaError::AlphaTooSmall)?,
+            gamma_b: Gamma::new(beta, N::one()).map_err(|_| BetaError::BetaTooSmall)?,
         })
     }
 }

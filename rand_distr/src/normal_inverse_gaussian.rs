@@ -1,4 +1,5 @@
-use crate::{Distribution, Float, InverseGaussian, Standard, StandardNormal};
+use crate::{Distribution, InverseGaussian, Standard, StandardNormal};
+use num_traits::Float;
 use rand::Rng;
 
 /// Error type returned from `NormalInverseGaussian::new`
@@ -24,7 +25,7 @@ where StandardNormal: Distribution<N>
     /// Construct a new `NormalInverseGaussian` distribution with the given alpha (tail heaviness) and
     /// beta (asymmetry) parameters.
     pub fn new(alpha: N, beta: N) -> Result<NormalInverseGaussian<N>, Error> {
-        if !(alpha > N::from(0.0)) {
+        if !(alpha > N::zero()) {
             return Err(Error::AlphaNegativeOrNull);
         }
 
@@ -34,9 +35,9 @@ where StandardNormal: Distribution<N>
 
         let gamma = (alpha * alpha - beta * beta).sqrt();
 
-        let mu = N::from(1.) / gamma;
+        let mu = N::one() / gamma;
 
-        let inverse_gaussian = InverseGaussian::new(mu, N::from(1.)).unwrap();
+        let inverse_gaussian = InverseGaussian::new(mu, N::one()).unwrap();
 
         Ok(Self {
             alpha,

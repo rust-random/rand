@@ -11,7 +11,7 @@
 
 use crate::{Distribution, Uniform};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// The binomial distribution `Binomial(n, p)`.
 ///
@@ -53,7 +53,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
 impl Binomial {
     /// Construct a new `Binomial` with the given shape parameters `n` (number
@@ -72,7 +73,7 @@ impl Binomial {
 /// Convert a `f64` to an `i64`, panicing on overflow.
 // In the future (Rust 1.34), this might be replaced with `TryFrom`.
 fn f64_to_i64(x: f64) -> i64 {
-    assert!(x < (::std::i64::MAX as f64));
+    assert!(x < (core::i64::MAX as f64));
     x as i64
 }
 
@@ -106,7 +107,7 @@ impl Distribution<u64> for Binomial {
         // Ranlib uses 30, and GSL uses 14.
         const BINV_THRESHOLD: f64 = 10.;
 
-        if (self.n as f64) * p < BINV_THRESHOLD && self.n <= (::std::i32::MAX as u64) {
+        if (self.n as f64) * p < BINV_THRESHOLD && self.n <= (core::i32::MAX as u64) {
             // Use the BINV algorithm.
             let s = p / q;
             let a = ((self.n + 1) as f64) * s;

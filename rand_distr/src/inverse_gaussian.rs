@@ -1,4 +1,5 @@
-use crate::{Distribution, Float, Standard, StandardNormal};
+use crate::{Distribution, Standard, StandardNormal};
+use num_traits::Float;
 use rand::Rng;
 
 /// Error type returned from `InverseGaussian::new`
@@ -23,11 +24,12 @@ where StandardNormal: Distribution<N>
     /// Construct a new `InverseGaussian` distribution with the given mean and
     /// shape.
     pub fn new(mean: N, shape: N) -> Result<InverseGaussian<N>, Error> {
-        if !(mean > N::from(0.0)) {
+        let zero = N::zero();
+        if !(mean > zero) {
             return Err(Error::MeanNegativeOrNull);
         }
 
-        if !(shape > N::from(0.0)) {
+        if !(shape > zero) {
             return Err(Error::ShapeNegativeOrNull);
         }
 
@@ -48,9 +50,9 @@ where
         let v: N = rng.sample(StandardNormal);
         let y = mu * v * v;
 
-        let mu_2l = mu / (N::from(2.) * l);
+        let mu_2l = mu / (N::from(2.).unwrap() * l);
 
-        let x = mu + mu_2l * (y - (N::from(4.) * l * y + y * y).sqrt());
+        let x = mu + mu_2l * (y - (N::from(4.).unwrap() * l * y + y * y).sqrt());
 
         let u: N = rng.gen();
 

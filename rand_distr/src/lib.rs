@@ -19,6 +19,7 @@
     clippy::unreadable_literal
 )]
 #![allow(clippy::neg_cmp_op_on_partial_ord)] // suggested fix too verbose
+#![no_std]
 
 //! Generating random samples from probability distributions.
 //!
@@ -70,13 +71,21 @@
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
 
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
+#[cfg(feature = "std")]
+extern crate std;
+
 pub use rand::distributions::{
     uniform, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01, OpenClosed01,
     Standard, Uniform,
 };
 
+#[cfg(feature = "std")]
 pub use self::binomial::{Binomial, Error as BinomialError};
 pub use self::cauchy::{Cauchy, Error as CauchyError};
+#[cfg(feature = "alloc")]
 pub use self::dirichlet::{Dirichlet, Error as DirichletError};
 pub use self::exponential::{Error as ExpError, Exp, Exp1};
 pub use self::gamma::{
@@ -94,12 +103,16 @@ pub use self::unit_ball::UnitBall;
 pub use self::unit_circle::UnitCircle;
 pub use self::unit_disc::UnitDisc;
 pub use self::unit_sphere::UnitSphere;
-pub use self::utils::Float;
 pub use self::weibull::{Error as WeibullError, Weibull};
+#[cfg(feature = "alloc")]
 pub use self::weighted::{WeightedError, WeightedIndex};
 
+pub use num_traits;
+
+#[cfg(feature = "alloc")]
 pub mod weighted;
 
+#[cfg(feature = "std")]
 mod binomial;
 mod cauchy;
 mod dirichlet;

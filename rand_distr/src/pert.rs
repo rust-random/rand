@@ -7,10 +7,10 @@
 // except according to those terms.
 //! The PERT distribution.
 
-use crate::utils::Float;
+use num_traits::Float;
 use crate::{Beta, Distribution, Exp1, Open01, StandardNormal};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// The PERT distribution.
 ///
@@ -58,7 +58,8 @@ impl fmt::Display for PertError {
     }
 }
 
-impl error::Error for PertError {}
+#[cfg(feature = "std")]
+impl std::error::Error for PertError {}
 
 impl<N: Float> Pert<N>
 where
@@ -71,7 +72,7 @@ where
     /// This is equivalent to calling `Pert::new_shape` with `shape == 4.0`.
     #[inline]
     pub fn new(min: N, max: N, mode: N) -> Result<Pert<N>, PertError> {
-        Pert::new_with_shape(min, max, mode, N::from(4.))
+        Pert::new_with_shape(min, max, mode, N::from(4.).unwrap())
     }
 
     /// Set up the PERT distribution with defined `min`, `max`, `mode` and
@@ -83,16 +84,16 @@ where
         if !(mode >= min && max >= mode) {
             return Err(PertError::ModeRange);
         }
-        if !(shape >= N::from(0.)) {
+        if !(shape >= N::from(0.).unwrap()) {
             return Err(PertError::ShapeTooSmall);
         }
 
         let range = max - min;
-        let mu = (min + max + shape * mode) / (shape + N::from(2.));
+        let mu = (min + max + shape * mode) / (shape + N::from(2.).unwrap());
         let v = if mu == mode {
-            shape * N::from(0.5) + N::from(1.)
+            shape * N::from(0.5).unwrap() + N::from(1.).unwrap()
         } else {
-            (mu - min) * (N::from(2.) * mode - min - max) / ((mode - mu) * (max - min))
+            (mu - min) * (N::from(2.).unwrap() * mode - min - max) / ((mode - mu) * (max - min))
         };
         let w = v * (max - mu) / (mu - min);
         let beta = Beta::new(v, w).map_err(|_| PertError::RangeTooSmall)?;
@@ -115,7 +116,6 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::f64;
 
     #[test]
     fn test_pert() {
@@ -141,15 +141,11 @@ mod test {
     fn value_stability() {
         let rng = crate::test::rng(860);
         let distr = Pert::new(2., 10., 3.).unwrap(); // mean = 4, var = 12/7
-        let seq = distr.sample_iter(rng).take(5).collect::<Vec<f64>>();
-        println!("seq: {:?}", seq);
-        let expected = vec![
-            4.631484136029422,
-            3.307201472321789,
-            3.29995019556348,
-            3.66835483991721,
-            3.514246139933899,
-        ];
-        assert!(seq == expected);
+        let mut seq = distr.sample_iter(rng);
+        assert_eq!(seq.next(), Some(4.631484136029422f64));
+        assert_eq!(seq.next(), Some(3.307201472321789f64));
+        assert_eq!(seq.next(), Some(3.29995019556348f64));
+        assert_eq!(seq.next(), Some(3.66835483991721f64));
+        assert_eq!(seq.next(), Some(3.514246139933899f64));
     }
 }

@@ -9,10 +9,10 @@
 
 //! The Cauchy distribution.
 
-use crate::utils::Float;
+use num_traits::{Float, FloatConst};
 use crate::{Distribution, Standard};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// The Cauchy distribution `Cauchy(median, scale)`.
 ///
@@ -52,22 +52,23 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
-impl<N: Float> Cauchy<N>
+impl<N: Float + FloatConst> Cauchy<N>
 where Standard: Distribution<N>
 {
     /// Construct a new `Cauchy` with the given shape parameters
     /// `median` the peak location and `scale` the scale factor.
     pub fn new(median: N, scale: N) -> Result<Cauchy<N>, Error> {
-        if !(scale > N::from(0.0)) {
+        if !(scale > N::zero()) {
             return Err(Error::ScaleTooSmall);
         }
         Ok(Cauchy { median, scale })
     }
 }
 
-impl<N: Float> Distribution<N> for Cauchy<N>
+impl<N: Float + FloatConst> Distribution<N> for Cauchy<N>
 where Standard: Distribution<N>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
@@ -75,7 +76,7 @@ where Standard: Distribution<N>
         let x = Standard.sample(rng);
         // get standard cauchy random number
         // note that π/2 is not exactly representable, even if x=0.5 the result is finite
-        let comp_dev = (N::pi() * x).tan();
+        let comp_dev = (N::PI() * x).tan();
         // shift and scale according to parameters
         self.median + self.scale * comp_dev
     }
@@ -108,10 +109,12 @@ mod test {
             sum += numbers[i];
         }
         let median = median(&mut numbers);
-        println!("Cauchy median: {}", median);
+        #[cfg(feature = "std")]
+        std::println!("Cauchy median: {}", median);
         assert!((median - 10.0).abs() < 0.4); // not 100% certain, but probable enough
         let mean = sum / 1000.0;
-        println!("Cauchy mean: {}", mean);
+        #[cfg(feature = "std")]
+        std::println!("Cauchy mean: {}", mean);
         // for a Cauchy distribution the mean should not converge
         assert!((mean - 10.0).abs() > 0.4); // not 100% certain, but probable enough
     }
@@ -130,7 +133,7 @@ mod test {
 
     #[test]
     fn value_stability() {
-        fn gen_samples<N: Float + core::fmt::Debug>(m: N, s: N, buf: &mut [N])
+        fn gen_samples<N: Float + FloatConst + core::fmt::Debug>(m: N, s: N, buf: &mut [N])
         where Standard: Distribution<N> {
             let distr = Cauchy::new(m, s).unwrap();
             let mut rng = crate::test::rng(353);

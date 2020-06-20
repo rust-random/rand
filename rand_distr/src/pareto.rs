@@ -8,10 +8,10 @@
 
 //! The Pareto distribution.
 
-use crate::utils::Float;
+use num_traits::Float;
 use crate::{Distribution, OpenClosed01};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// Samples floating-point numbers according to the Pareto distribution
 ///
@@ -47,7 +47,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
 impl<N: Float> Pareto<N>
 where OpenClosed01: Distribution<N>
@@ -57,15 +58,17 @@ where OpenClosed01: Distribution<N>
     /// In the literature, `scale` is commonly written as x<sub>m</sub> or k and
     /// `shape` is often written as α.
     pub fn new(scale: N, shape: N) -> Result<Pareto<N>, Error> {
-        if !(scale > N::from(0.0)) {
+        let zero = N::zero();
+
+        if !(scale > zero) {
             return Err(Error::ScaleTooSmall);
         }
-        if !(shape > N::from(0.0)) {
+        if !(shape > zero) {
             return Err(Error::ShapeTooSmall);
         }
         Ok(Pareto {
             scale,
-            inv_neg_shape: N::from(-1.0) / shape,
+            inv_neg_shape: N::from(-1.0).unwrap() / shape,
         })
     }
 }

@@ -9,10 +9,11 @@
 
 //! The exponential distribution.
 
-use crate::utils::{ziggurat, Float};
+use crate::utils::ziggurat;
+use num_traits::Float;
 use crate::{ziggurat_tables, Distribution};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// Samples floating-point numbers according to the exponential distribution,
 /// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
@@ -110,7 +111,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
 impl<N: Float> Exp<N>
 where Exp1: Distribution<N>
@@ -119,11 +121,11 @@ where Exp1: Distribution<N>
     /// `lambda`.
     #[inline]
     pub fn new(lambda: N) -> Result<Exp<N>, Error> {
-        if !(lambda > N::from(0.0)) {
+        if !(lambda > N::zero()) {
             return Err(Error::LambdaTooSmall);
         }
         Ok(Exp {
-            lambda_inverse: N::from(1.0) / lambda,
+            lambda_inverse: N::one() / lambda,
         })
     }
 }

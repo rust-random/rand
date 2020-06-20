@@ -15,6 +15,7 @@ use core::fmt;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use rand::Rng;
+use alloc::{vec, vec::Vec};
 
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///
