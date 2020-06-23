@@ -24,9 +24,9 @@ use core::fmt;
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Weibull<N> {
-    inv_shape: N,
-    scale: N,
+pub struct Weibull<F: Float> {
+    inv_shape: F,
+    scale: F,
 }
 
 /// Error type returned from `Weibull::new`.
@@ -50,29 +50,29 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<N: Float> Weibull<N>
-where OpenClosed01: Distribution<N>
+impl<F: Float> Weibull<F>
+where OpenClosed01: Distribution<F>
 {
     /// Construct a new `Weibull` distribution with given `scale` and `shape`.
-    pub fn new(scale: N, shape: N) -> Result<Weibull<N>, Error> {
-        if !(scale > N::zero()) {
+    pub fn new(scale: F, shape: F) -> Result<Weibull<F>, Error> {
+        if !(scale > F::zero()) {
             return Err(Error::ScaleTooSmall);
         }
-        if !(shape > N::zero()) {
+        if !(shape > F::zero()) {
             return Err(Error::ShapeTooSmall);
         }
         Ok(Weibull {
-            inv_shape: N::from(1.).unwrap() / shape,
+            inv_shape: F::from(1.).unwrap() / shape,
             scale,
         })
     }
 }
 
-impl<N: Float> Distribution<N> for Weibull<N>
-where OpenClosed01: Distribution<N>
+impl<F: Float> Distribution<F> for Weibull<F>
+where OpenClosed01: Distribution<F>
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
-        let x: N = rng.sample(OpenClosed01);
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
+        let x: F = rng.sample(OpenClosed01);
         self.scale * (-x.ln()).powf(self.inv_shape)
     }
 }
@@ -101,8 +101,8 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
-            distr: D, zero: N, expected: &[N],
+        fn test_samples<F: Float + core::fmt::Debug, D: Distribution<F>>(
+            distr: D, zero: F, expected: &[F],
         ) {
             let mut rng = crate::test::rng(213);
             let mut buf = [zero; 4];

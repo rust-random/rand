@@ -32,9 +32,9 @@ use alloc::{vec, vec::Vec};
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
 #[derive(Clone, Debug)]
-pub struct Dirichlet<N> {
+pub struct Dirichlet<F: Float> {
     /// Concentration parameters (alpha)
-    alpha: Vec<N>,
+    alpha: Vec<F>,
 }
 
 /// Error type returned from `Dirchlet::new`.
@@ -62,23 +62,23 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<N: Float> Dirichlet<N>
+impl<F: Float> Dirichlet<F>
 where
-    StandardNormal: Distribution<N>,
-    Exp1: Distribution<N>,
-    Open01: Distribution<N>,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
 {
     /// Construct a new `Dirichlet` with the given alpha parameter `alpha`.
     ///
     /// Requires `alpha.len() >= 2`.
     #[inline]
-    pub fn new<V: Into<Vec<N>>>(alpha: V) -> Result<Dirichlet<N>, Error> {
+    pub fn new<V: Into<Vec<F>>>(alpha: V) -> Result<Dirichlet<F>, Error> {
         let a = alpha.into();
         if a.len() < 2 {
             return Err(Error::AlphaTooShort);
         }
         for &ai in &a {
-            if !(ai > N::zero()) {
+            if !(ai > F::zero()) {
                 return Err(Error::AlphaTooSmall);
             }
         }
@@ -90,8 +90,8 @@ where
     ///
     /// Requires `size >= 2`.
     #[inline]
-    pub fn new_with_size(alpha: N, size: usize) -> Result<Dirichlet<N>, Error> {
-        if !(alpha > N::zero()) {
+    pub fn new_with_size(alpha: F, size: usize) -> Result<Dirichlet<F>, Error> {
+        if !(alpha > F::zero()) {
             return Err(Error::AlphaTooSmall);
         }
         if size < 2 {
@@ -103,23 +103,23 @@ where
     }
 }
 
-impl<N: Float> Distribution<Vec<N>> for Dirichlet<N>
+impl<F: Float> Distribution<Vec<F>> for Dirichlet<F>
 where
-    StandardNormal: Distribution<N>,
-    Exp1: Distribution<N>,
-    Open01: Distribution<N>,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<N> {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<F> {
         let n = self.alpha.len();
-        let mut samples = vec![N::zero(); n];
-        let mut sum = N::zero();
+        let mut samples = vec![F::zero(); n];
+        let mut sum = F::zero();
 
         for (s, &a) in samples.iter_mut().zip(self.alpha.iter()) {
-            let g = Gamma::new(a, N::one()).unwrap();
+            let g = Gamma::new(a, F::one()).unwrap();
             *s = g.sample(rng);
             sum =  sum + (*s);
         }
-        let invacc = N::one() / sum;
+        let invacc = F::one() / sum;
         for s in samples.iter_mut() {
             *s = (*s)*invacc;
         }

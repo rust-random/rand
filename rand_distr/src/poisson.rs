@@ -29,13 +29,13 @@ use core::fmt;
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Poisson<N> {
-    lambda: N,
+pub struct Poisson<F: Float + FloatConst> {
+    lambda: F,
     // precalculated values
-    exp_lambda: N,
-    log_lambda: N,
-    sqrt_2lambda: N,
-    magic_val: N,
+    exp_lambda: F,
+    log_lambda: F,
+    sqrt_2lambda: F,
+    magic_val: F,
 }
 
 /// Error type returned from `Poisson::new`.
@@ -56,13 +56,13 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<N: Float + FloatConst> Poisson<N>
-where Standard: Distribution<N>
+impl<F: Float + FloatConst> Poisson<F>
+where Standard: Distribution<F>
 {
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
-    pub fn new(lambda: N) -> Result<Poisson<N>, Error> {
-        if !(lambda > N::zero()) {
+    pub fn new(lambda: F) -> Result<Poisson<F>, Error> {
+        if !(lambda > F::zero()) {
             return Err(Error::ShapeTooSmall);
         }
         let log_lambda = lambda.ln();
@@ -70,34 +70,34 @@ where Standard: Distribution<N>
             lambda,
             exp_lambda: (-lambda).exp(),
             log_lambda,
-            sqrt_2lambda: (N::from(2.0).unwrap() * lambda).sqrt(),
-            magic_val: lambda * log_lambda - crate::utils::log_gamma(N::one() + lambda),
+            sqrt_2lambda: (F::from(2.0).unwrap() * lambda).sqrt(),
+            magic_val: lambda * log_lambda - crate::utils::log_gamma(F::one() + lambda),
         })
     }
 }
 
-impl<N: Float + FloatConst> Distribution<N> for Poisson<N>
-where Standard: Distribution<N>
+impl<F: Float + FloatConst> Distribution<F> for Poisson<F>
+where Standard: Distribution<F>
 {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         // using the algorithm from Numerical Recipes in C
 
         // for low expected values use the Knuth method
-        if self.lambda < N::from(12.0).unwrap() {
-            let mut result = N::zero();
-            let mut p = N::one();
+        if self.lambda < F::from(12.0).unwrap() {
+            let mut result = F::zero();
+            let mut p = F::one();
             while p > self.exp_lambda {
-                p = p*rng.gen::<N>();
-                result = result + N::one();
+                p = p*rng.gen::<F>();
+                result = result + F::one();
             }
-            result - N::one()
+            result - F::one()
         }
         // high expected values - rejection method
         else {
             // we use the Cauchy distribution as the comparison distribution
             // f(x) ~ 1/(1+x^2)
-            let cauchy = Cauchy::new(N::zero(), N::one()).unwrap();
+            let cauchy = Cauchy::new(F::zero(), F::one()).unwrap();
             let mut result;
 
             loop {
@@ -109,7 +109,7 @@ where Standard: Distribution<N>
                     // shift the peak of the comparison ditribution
                     result = self.sqrt_2lambda * comp_dev + self.lambda;
                     // repeat the drawing until we are in the range of possible values
-                    if result >= N::zero() {
+                    if result >= F::zero() {
                         break;
                     }
                 }
@@ -121,15 +121,15 @@ where Standard: Distribution<N>
                 // the magic value scales the distribution function to a range of approximately 0-1
                 // since it is not exact, we multiply the ratio by 0.9 to avoid ratios greater than 1
                 // this doesn't change the resulting distribution, only increases the rate of failed drawings
-                let check = N::from(0.9).unwrap()
-                    * (N::one() + comp_dev * comp_dev)
+                let check = F::from(0.9).unwrap()
+                    * (F::one() + comp_dev * comp_dev)
                     * (result * self.log_lambda
-                        - crate::utils::log_gamma(N::one() + result)
+                        - crate::utils::log_gamma(F::one() + result)
                         - self.magic_val)
                         .exp();
 
                 // check with uniform random value - if below the threshold, we are within the target distribution
-                if rng.gen::<N>() <= check {
+                if rng.gen::<F>() <= check {
                     break;
                 }
             }
@@ -138,8 +138,8 @@ where Standard: Distribution<N>
     }
 }
 
-// impl<N: Float + FloatConst> Distribution<u64> for Poisson<N>
-// where Standard: Distribution<N>
+// impl<F: Float + FloatConst> Distribution<u64> for Poisson<F>
+// where Standard: Distribution<F>
 // {
 //     #[inline]
 //     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
@@ -252,8 +252,8 @@ mod test {
 
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + FloatConst + core::fmt::Debug, D: Distribution<N>>(
-            distr: D, zero: N, expected: &[N],
+        fn test_samples<F: Float + FloatConst + core::fmt::Debug, D: Distribution<F>>(
+            distr: D, zero: F, expected: &[F],
         ) {
             let mut rng = crate::test::rng(223);
             let mut buf = [zero; 4];

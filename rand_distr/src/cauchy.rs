@@ -32,9 +32,9 @@ use core::fmt;
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Cauchy<N> {
-    median: N,
-    scale: N,
+pub struct Cauchy<F: Float + FloatConst> {
+    median: F,
+    scale: F,
 }
 
 /// Error type returned from `Cauchy::new`.
@@ -55,28 +55,28 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<N: Float + FloatConst> Cauchy<N>
-where Standard: Distribution<N>
+impl<F: Float + FloatConst> Cauchy<F>
+where Standard: Distribution<F>
 {
     /// Construct a new `Cauchy` with the given shape parameters
     /// `median` the peak location and `scale` the scale factor.
-    pub fn new(median: N, scale: N) -> Result<Cauchy<N>, Error> {
-        if !(scale > N::zero()) {
+    pub fn new(median: F, scale: F) -> Result<Cauchy<F>, Error> {
+        if !(scale > F::zero()) {
             return Err(Error::ScaleTooSmall);
         }
         Ok(Cauchy { median, scale })
     }
 }
 
-impl<N: Float + FloatConst> Distribution<N> for Cauchy<N>
-where Standard: Distribution<N>
+impl<F: Float + FloatConst> Distribution<F> for Cauchy<F>
+where Standard: Distribution<F>
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         // sample from [0, 1)
         let x = Standard.sample(rng);
         // get standard cauchy random number
         // note that π/2 is not exactly representable, even if x=0.5 the result is finite
-        let comp_dev = (N::PI() * x).tan();
+        let comp_dev = (F::PI() * x).tan();
         // shift and scale according to parameters
         self.median + self.scale * comp_dev
     }
@@ -133,8 +133,8 @@ mod test {
 
     #[test]
     fn value_stability() {
-        fn gen_samples<N: Float + FloatConst + core::fmt::Debug>(m: N, s: N, buf: &mut [N])
-        where Standard: Distribution<N> {
+        fn gen_samples<F: Float + FloatConst + core::fmt::Debug>(m: F, s: F, buf: &mut [F])
+        where Standard: Distribution<F> {
             let distr = Cauchy::new(m, s).unwrap();
             let mut rng = crate::test::rng(353);
             for x in buf {

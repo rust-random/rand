@@ -32,10 +32,10 @@ use core::fmt;
 ///
 /// [`Pert`]: crate::Pert
 #[derive(Clone, Copy, Debug)]
-pub struct Triangular<N> {
-    min: N,
-    max: N,
-    mode: N,
+pub struct Triangular<F: Float> {
+    min: F,
+    max: F,
+    mode: F,
 }
 
 /// Error type returned from [`Triangular::new`].
@@ -61,12 +61,12 @@ impl fmt::Display for TriangularError {
 #[cfg(feature = "std")]
 impl std::error::Error for TriangularError {}
 
-impl<N: Float> Triangular<N>
-where Standard: Distribution<N>
+impl<F: Float> Triangular<F>
+where Standard: Distribution<F>
 {
     /// Set up the Triangular distribution with defined `min`, `max` and `mode`.
     #[inline]
-    pub fn new(min: N, max: N, mode: N) -> Result<Triangular<N>, TriangularError> {
+    pub fn new(min: F, max: F, mode: F) -> Result<Triangular<F>, TriangularError> {
         if !(max >= min) {
             return Err(TriangularError::RangeTooSmall);
         }
@@ -77,12 +77,12 @@ where Standard: Distribution<N>
     }
 }
 
-impl<N: Float> Distribution<N> for Triangular<N>
-where Standard: Distribution<N>
+impl<F: Float> Distribution<F> for Triangular<F>
+where Standard: Distribution<F>
 {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
-        let f: N = rng.sample(Standard);
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
+        let f: F = rng.sample(Standard);
         let diff_mode_min = self.mode - self.min;
         let range = self.max - self.min;
         let f_range = f * range;

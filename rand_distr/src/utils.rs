@@ -25,33 +25,33 @@ use rand::Rng;
 /// `Ag(z)` is an infinite series with coefficients that can be calculated
 /// ahead of time - we use just the first 6 terms, which is good enough
 /// for most purposes.
-pub(crate) fn log_gamma<N: num_traits::Float>(x: N) -> N {
+pub(crate) fn log_gamma<F: num_traits::Float>(x: F) -> F {
     // precalculated 6 coefficients for the first 6 terms of the series
-    let coefficients: [N; 6] = [
-        N::from(76.18009172947146).unwrap(),
-        N::from(-86.50532032941677).unwrap(),
-        N::from(24.01409824083091).unwrap(),
-        N::from(-1.231739572450155).unwrap(),
-        N::from(0.1208650973866179e-2).unwrap(),
-        N::from(-0.5395239384953e-5).unwrap(),
+    let coefficients: [F; 6] = [
+        F::from(76.18009172947146).unwrap(),
+        F::from(-86.50532032941677).unwrap(),
+        F::from(24.01409824083091).unwrap(),
+        F::from(-1.231739572450155).unwrap(),
+        F::from(0.1208650973866179e-2).unwrap(),
+        F::from(-0.5395239384953e-5).unwrap(),
     ];
 
     // (x+0.5)*ln(x+g+0.5)-(x+g+0.5)
-    let tmp = x + N::from(5.5).unwrap();
-    let log = (x + N::from(0.5).unwrap()) * tmp.ln() - tmp;
+    let tmp = x + F::from(5.5).unwrap();
+    let log = (x + F::from(0.5).unwrap()) * tmp.ln() - tmp;
 
     // the first few terms of the series for Ag(x)
-    let mut a = N::from(1.000000000190015).unwrap();
+    let mut a = F::from(1.000000000190015).unwrap();
     let mut denom = x;
     for &coeff in &coefficients {
-        denom = denom + N::one();
+        denom = denom + F::one();
         a = a + (coeff / denom);
     }
 
     // get everything together
     // a is Ag(x)
     // 2.5066... is sqrt(2pi)
-    log + (N::from(2.5066282746310005).unwrap() * a / x).ln()
+    log + (F::from(2.5066282746310005).unwrap() * a / x).ln()
 }
 
 /// Sample a random number using the Ziggurat method (specifically the

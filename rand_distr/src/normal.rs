@@ -112,9 +112,9 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// [`StandardNormal`]: crate::StandardNormal
 #[derive(Clone, Copy, Debug)]
-pub struct Normal<N> {
-    mean: N,
-    std_dev: N,
+pub struct Normal<F: Float> {
+    mean: F,
+    std_dev: F,
 }
 
 /// Error type returned from `Normal::new` and `LogNormal::new`.
@@ -135,25 +135,25 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<N: Float> Normal<N>
-where StandardNormal: Distribution<N>
+impl<F: Float> Normal<F>
+where StandardNormal: Distribution<F>
 {
     /// Construct a new `Normal` distribution with the given mean and
     /// standard deviation.
     #[inline]
-    pub fn new(mean: N, std_dev: N) -> Result<Normal<N>, Error> {
-        if !(std_dev >= N::zero()) {
+    pub fn new(mean: F, std_dev: F) -> Result<Normal<F>, Error> {
+        if !(std_dev >= F::zero()) {
             return Err(Error::StdDevTooSmall);
         }
         Ok(Normal { mean, std_dev })
     }
 }
 
-impl<N: Float> Distribution<N> for Normal<N>
-where StandardNormal: Distribution<N>
+impl<F: Float> Distribution<F> for Normal<F>
+where StandardNormal: Distribution<F>
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
-        let n: N = rng.sample(StandardNormal);
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
+        let n: F = rng.sample(StandardNormal);
         self.mean + self.std_dev * n
     }
 }
@@ -175,18 +175,18 @@ where StandardNormal: Distribution<N>
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct LogNormal<N> {
-    norm: Normal<N>,
+pub struct LogNormal<F: Float> {
+    norm: Normal<F>,
 }
 
-impl<N: Float> LogNormal<N>
-where StandardNormal: Distribution<N>
+impl<F: Float> LogNormal<F>
+where StandardNormal: Distribution<F>
 {
     /// Construct a new `LogNormal` distribution with the given mean
     /// and standard deviation of the logarithm of the distribution.
     #[inline]
-    pub fn new(mean: N, std_dev: N) -> Result<LogNormal<N>, Error> {
-        if !(std_dev >= N::zero()) {
+    pub fn new(mean: F, std_dev: F) -> Result<LogNormal<F>, Error> {
+        if !(std_dev >= F::zero()) {
             return Err(Error::StdDevTooSmall);
         }
         Ok(LogNormal {
@@ -195,10 +195,10 @@ where StandardNormal: Distribution<N>
     }
 }
 
-impl<N: Float> Distribution<N> for LogNormal<N>
-where StandardNormal: Distribution<N>
+impl<F: Float> Distribution<F> for LogNormal<F>
+where StandardNormal: Distribution<F>
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         self.norm.sample(rng).exp()
     }
 }
@@ -238,8 +238,8 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
-            distr: D, zero: N, expected: &[N],
+        fn test_samples<F: Float + core::fmt::Debug, D: Distribution<F>>(
+            distr: D, zero: F, expected: &[F],
         ) {
             let mut rng = crate::test::rng(213);
             let mut buf = [zero; 4];

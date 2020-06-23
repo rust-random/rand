@@ -13,19 +13,19 @@ pub enum Error {
 
 /// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution)
 #[derive(Debug)]
-pub struct NormalInverseGaussian<N> {
-    alpha: N,
-    beta: N,
-    inverse_gaussian: InverseGaussian<N>,
+pub struct NormalInverseGaussian<F: Float> {
+    alpha: F,
+    beta: F,
+    inverse_gaussian: InverseGaussian<F>,
 }
 
-impl<N: Float> NormalInverseGaussian<N>
-where StandardNormal: Distribution<N>
+impl<F: Float> NormalInverseGaussian<F>
+where StandardNormal: Distribution<F>
 {
     /// Construct a new `NormalInverseGaussian` distribution with the given alpha (tail heaviness) and
     /// beta (asymmetry) parameters.
-    pub fn new(alpha: N, beta: N) -> Result<NormalInverseGaussian<N>, Error> {
-        if !(alpha > N::zero()) {
+    pub fn new(alpha: F, beta: F) -> Result<NormalInverseGaussian<F>, Error> {
+        if !(alpha > F::zero()) {
             return Err(Error::AlphaNegativeOrNull);
         }
 
@@ -35,9 +35,9 @@ where StandardNormal: Distribution<N>
 
         let gamma = (alpha * alpha - beta * beta).sqrt();
 
-        let mu = N::one() / gamma;
+        let mu = F::one() / gamma;
 
-        let inverse_gaussian = InverseGaussian::new(mu, N::one()).unwrap();
+        let inverse_gaussian = InverseGaussian::new(mu, F::one()).unwrap();
 
         Ok(Self {
             alpha,
@@ -47,12 +47,12 @@ where StandardNormal: Distribution<N>
     }
 }
 
-impl<N: Float> Distribution<N> for NormalInverseGaussian<N>
+impl<F: Float> Distribution<F> for NormalInverseGaussian<F>
 where
-    StandardNormal: Distribution<N>,
-    Standard: Distribution<N>,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
 {
-    fn sample<R>(&self, rng: &mut R) -> N
+    fn sample<R>(&self, rng: &mut R) -> F
     where R: Rng + ?Sized {
         let inv_gauss = rng.sample(&self.inverse_gaussian);
 
@@ -84,8 +84,8 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
-            distr: D, zero: N, expected: &[N],
+        fn test_samples<F: Float + core::fmt::Debug, D: Distribution<F>>(
+            distr: D, zero: F, expected: &[F],
         ) {
             let mut rng = crate::test::rng(213);
             let mut buf = [zero; 4];

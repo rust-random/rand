@@ -27,10 +27,10 @@ use rand::Rng;
 #[derive(Clone, Copy, Debug)]
 pub struct UnitBall;
 
-impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitBall {
+impl<F: Float + SampleUniform> Distribution<[F; 3]> for UnitBall {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [N; 3] {
-        let uniform = Uniform::new(N::from(-1.).unwrap(), N::from(1.).unwrap());
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [F; 3] {
+        let uniform = Uniform::new(F::from(-1.).unwrap(), F::from(1.).unwrap());
         let mut x1;
         let mut x2;
         let mut x3;
@@ -38,7 +38,7 @@ impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitBall {
             x1 = uniform.sample(rng);
             x2 = uniform.sample(rng);
             x3 = uniform.sample(rng);
-            if x1 * x1 + x2 * x2 + x3 * x3 <= N::from(1.).unwrap() {
+            if x1 * x1 + x2 * x2 + x3 * x3 <= F::from(1.).unwrap() {
                 break;
             }
         }

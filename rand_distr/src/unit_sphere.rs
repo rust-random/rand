@@ -30,18 +30,18 @@ use rand::Rng;
 #[derive(Clone, Copy, Debug)]
 pub struct UnitSphere;
 
-impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitSphere {
+impl<F: Float + SampleUniform> Distribution<[F; 3]> for UnitSphere {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [N; 3] {
-        let uniform = Uniform::new(N::from(-1.).unwrap(), N::from(1.).unwrap());
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [F; 3] {
+        let uniform = Uniform::new(F::from(-1.).unwrap(), F::from(1.).unwrap());
         loop {
             let (x1, x2) = (uniform.sample(rng), uniform.sample(rng));
             let sum = x1 * x1 + x2 * x2;
-            if sum >= N::from(1.).unwrap() {
+            if sum >= F::from(1.).unwrap() {
                 continue;
             }
-            let factor = N::from(2.).unwrap() * (N::one() - sum).sqrt();
-            return [x1 * factor, x2 * factor, N::from(1.).unwrap() - N::from(2.).unwrap() * sum];
+            let factor = F::from(2.).unwrap() * (F::one() - sum).sqrt();
+            return [x1 * factor, x2 * factor, F::from(1.).unwrap() - F::from(2.).unwrap() * sum];
         }
     }
 }

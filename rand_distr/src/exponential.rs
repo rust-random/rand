@@ -91,9 +91,9 @@ impl Distribution<f64> for Exp1 {
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Exp<N> {
+pub struct Exp<F: Float> {
     /// `lambda` stored as `1/lambda`, since this is what we scale by.
-    lambda_inverse: N,
+    lambda_inverse: F,
 }
 
 /// Error type returned from `Exp::new`.
@@ -114,26 +114,26 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<N: Float> Exp<N>
-where Exp1: Distribution<N>
+impl<F: Float> Exp<F>
+where Exp1: Distribution<F>
 {
     /// Construct a new `Exp` with the given shape parameter
     /// `lambda`.
     #[inline]
-    pub fn new(lambda: N) -> Result<Exp<N>, Error> {
-        if !(lambda > N::zero()) {
+    pub fn new(lambda: F) -> Result<Exp<F>, Error> {
+        if !(lambda > F::zero()) {
             return Err(Error::LambdaTooSmall);
         }
         Ok(Exp {
-            lambda_inverse: N::one() / lambda,
+            lambda_inverse: F::one() / lambda,
         })
     }
 }
 
-impl<N: Float> Distribution<N> for Exp<N>
-where Exp1: Distribution<N>
+impl<F: Float> Distribution<F> for Exp<F>
+where Exp1: Distribution<F>
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         rng.sample(Exp1) * self.lambda_inverse
     }
 }
@@ -163,8 +163,8 @@ mod test {
 
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
-            distr: D, zero: N, expected: &[N],
+        fn test_samples<F: Float + core::fmt::Debug, D: Distribution<F>>(
+            distr: D, zero: F, expected: &[F],
         ) {
             let mut rng = crate::test::rng(223);
             let mut buf = [zero; 4];

@@ -31,10 +31,10 @@ use core::fmt;
 ///
 /// [`Triangular`]: crate::Triangular
 #[derive(Clone, Copy, Debug)]
-pub struct Pert<N> {
-    min: N,
-    range: N,
-    beta: Beta<N>,
+pub struct Pert<F: Float> {
+    min: F,
+    range: F,
+    beta: Beta<F>,
 }
 
 /// Error type returned from [`Pert`] constructors.
@@ -61,39 +61,39 @@ impl fmt::Display for PertError {
 #[cfg(feature = "std")]
 impl std::error::Error for PertError {}
 
-impl<N: Float> Pert<N>
+impl<F: Float> Pert<F>
 where
-    StandardNormal: Distribution<N>,
-    Exp1: Distribution<N>,
-    Open01: Distribution<N>,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
 {
     /// Set up the PERT distribution with defined `min`, `max` and `mode`.
     ///
     /// This is equivalent to calling `Pert::new_shape` with `shape == 4.0`.
     #[inline]
-    pub fn new(min: N, max: N, mode: N) -> Result<Pert<N>, PertError> {
-        Pert::new_with_shape(min, max, mode, N::from(4.).unwrap())
+    pub fn new(min: F, max: F, mode: F) -> Result<Pert<F>, PertError> {
+        Pert::new_with_shape(min, max, mode, F::from(4.).unwrap())
     }
 
     /// Set up the PERT distribution with defined `min`, `max`, `mode` and
     /// `shape`.
-    pub fn new_with_shape(min: N, max: N, mode: N, shape: N) -> Result<Pert<N>, PertError> {
+    pub fn new_with_shape(min: F, max: F, mode: F, shape: F) -> Result<Pert<F>, PertError> {
         if !(max > min) {
             return Err(PertError::RangeTooSmall);
         }
         if !(mode >= min && max >= mode) {
             return Err(PertError::ModeRange);
         }
-        if !(shape >= N::from(0.).unwrap()) {
+        if !(shape >= F::from(0.).unwrap()) {
             return Err(PertError::ShapeTooSmall);
         }
 
         let range = max - min;
-        let mu = (min + max + shape * mode) / (shape + N::from(2.).unwrap());
+        let mu = (min + max + shape * mode) / (shape + F::from(2.).unwrap());
         let v = if mu == mode {
-            shape * N::from(0.5).unwrap() + N::from(1.).unwrap()
+            shape * F::from(0.5).unwrap() + F::from(1.).unwrap()
         } else {
-            (mu - min) * (N::from(2.).unwrap() * mode - min - max) / ((mode - mu) * (max - min))
+            (mu - min) * (F::from(2.).unwrap() * mode - min - max) / ((mode - mu) * (max - min))
         };
         let w = v * (max - mu) / (mu - min);
         let beta = Beta::new(v, w).map_err(|_| PertError::RangeTooSmall)?;
@@ -101,14 +101,14 @@ where
     }
 }
 
-impl<N: Float> Distribution<N> for Pert<N>
+impl<F: Float> Distribution<F> for Pert<F>
 where
-    StandardNormal: Distribution<N>,
-    Exp1: Distribution<N>,
-    Open01: Distribution<N>,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
 {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         self.beta.sample(rng) * self.range + self.min
     }
 }
