@@ -138,104 +138,29 @@ where Standard: Distribution<F>
     }
 }
 
-// impl<F: Float + FloatConst> Distribution<u64> for Poisson<F>
-// where Standard: Distribution<F>
-// {
-//     #[inline]
-//     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
-//         let result: N = self.sample(rng);
-//         result.to_u64().unwrap()
-//     }
-// }
-
 #[cfg(test)]
 mod test {
     use super::*;
 
-    #[test]
-    fn test_poisson_10() {
-        let poisson = Poisson::new(10.0).unwrap();
+    fn test_poisson_avg_gen<F: Float + FloatConst>(lambda: F, tol: F)
+        where Standard: Distribution<F>
+    {
+        let poisson = Poisson::new(lambda).unwrap();
         let mut rng = crate::test::rng(123);
-        let mut sum_u64 = 0;
-        let mut sum_f64 = 0.;
+        let mut sum = F::zero();
         for _ in 0..1000 {
-            let s_u64 = poisson.sample(&mut rng) as u64;
-            let s_f64: f64 = poisson.sample(&mut rng);
-            sum_u64 += s_u64;
-            sum_f64 += s_f64;
+            sum = sum + poisson.sample(&mut rng);
         }
-        let avg_u64 = (sum_u64 as f64) / 1000.0;
-        let avg_f64 = sum_f64 / 1000.0;
-        #[cfg(feature = "std")]
-        std::println!("Poisson averages: {} (u64)  {} (f64)", avg_u64, avg_f64);
-        for &avg in &[avg_u64, avg_f64] {
-            assert!((avg - 10.0).abs() < 0.5); // not 100% certain, but probable enough
-        }
+        let avg = sum / F::from(1000.0).unwrap();
+        assert!((avg - lambda).abs() < tol);
     }
 
     #[test]
-    fn test_poisson_15() {
-        // Take the 'high expected values' path
-        let poisson = Poisson::new(15.0).unwrap();
-        let mut rng = crate::test::rng(123);
-        let mut sum_u64 = 0;
-        let mut sum_f64 = 0.;
-        for _ in 0..1000 {
-            let s_u64 = poisson.sample(&mut rng) as u64;
-            let s_f64: f64 = poisson.sample(&mut rng);
-            sum_u64 += s_u64;
-            sum_f64 += s_f64;
-        }
-        let avg_u64 = (sum_u64 as f64) / 1000.0;
-        let avg_f64 = sum_f64 / 1000.0;
-        #[cfg(feature = "std")]
-        std::println!("Poisson average: {} (u64)  {} (f64)", avg_u64, avg_f64);
-        for &avg in &[avg_u64, avg_f64] {
-            assert!((avg - 15.0).abs() < 0.5); // not 100% certain, but probable enough
-        }
-    }
-
-    #[test]
-    fn test_poisson_10_f32() {
-        let poisson = Poisson::new(10.0f32).unwrap();
-        let mut rng = crate::test::rng(123);
-        let mut sum_u64 = 0;
-        let mut sum_f32 = 0.;
-        for _ in 0..1000 {
-            let s_u64 = poisson.sample(&mut rng) as u64;
-            let s_f32: f32 = poisson.sample(&mut rng);
-            sum_u64 += s_u64;
-            sum_f32 += s_f32;
-        }
-        let avg_u64 = (sum_u64 as f32) / 1000.0;
-        let avg_f32 = sum_f32 / 1000.0;
-        #[cfg(feature = "std")]
-        std::println!("Poisson averages: {} (u64)  {} (f32)", avg_u64, avg_f32);
-        for &avg in &[avg_u64, avg_f32] {
-            assert!((avg - 10.0).abs() < 0.5); // not 100% certain, but probable enough
-        }
-    }
-
-    #[test]
-    fn test_poisson_15_f32() {
-        // Take the 'high expected values' path
-        let poisson = Poisson::new(15.0f32).unwrap();
-        let mut rng = crate::test::rng(123);
-        let mut sum_u64 = 0;
-        let mut sum_f32 = 0.;
-        for _ in 0..1000 {
-            let s_u64 = poisson.sample(&mut rng) as u64;
-            let s_f32: f32 = poisson.sample(&mut rng);
-            sum_u64 += s_u64;
-            sum_f32 += s_f32;
-        }
-        let avg_u64 = (sum_u64 as f32) / 1000.0;
-        let avg_f32 = sum_f32 / 1000.0;
-        #[cfg(feature = "std")]
-        std::println!("Poisson average: {} (u64)  {} (f32)", avg_u64, avg_f32);
-        for &avg in &[avg_u64, avg_f32] {
-            assert!((avg - 15.0).abs() < 0.5); // not 100% certain, but probable enough
-        }
+    fn test_poisson_avg() {
+        test_poisson_avg_gen::<f64>(10.0, 0.5);
+        test_poisson_avg_gen::<f64>(15.0, 0.5);
+        test_poisson_avg_gen::<f32>(10.0, 0.5);
+        test_poisson_avg_gen::<f32>(15.0, 0.5);
     }
 
     #[test]
