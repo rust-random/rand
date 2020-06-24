@@ -128,17 +128,4 @@ mod test {
             assert!(Triangular::new(min, max, mode).is_err());
         }
     }
-
-    #[test]
-    fn value_stability() {
-        let rng = crate::test::rng(860);
-        let distr = Triangular::new(2., 10., 3.).unwrap();
-        let mut seq = distr.sample_iter(rng);
-
-        assert_eq!(seq.next(), Some(5.74373257511361f64));
-        assert_eq!(seq.next(), Some(7.890059162791258f64));
-        assert_eq!(seq.next(), Some(4.7256280652553455f64));
-        assert_eq!(seq.next(), Some(2.9474808121184077f64));
-        assert_eq!(seq.next(), Some(3.058301946314053f64));
-    }
 }

@@ -45,25 +45,3 @@ impl<F: Float + SampleUniform> Distribution<[F; 3]> for UnitBall {
         [x1, x2, x3]
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::UnitBall;
-    use crate::Distribution;
-
-    #[test]
-    fn value_stability() {
-        let mut rng = crate::test::rng(2);
-        let expected = [
-            [0.018035709265959987, -0.4348771383120438, -0.07982762085055706],
-            [0.10588569388223945, -0.4734350111375454, -0.7392104908825501],
-            [0.11060237642041049, -0.16065642822852677, -0.8444043930440075]
-        ];
-        let samples: [[f64; 3]; 3] = [
-            UnitBall.sample(&mut rng),
-            UnitBall.sample(&mut rng),
-            UnitBall.sample(&mut rng),
-        ];
-        assert_eq!(samples, expected);
-    }
-}

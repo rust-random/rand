@@ -76,20 +76,4 @@ mod tests {
             assert_almost_eq!(x[0] * x[0] + x[1] * x[1] + x[2] * x[2], 1., 1e-15);
         }
     }
-
-    #[test]
-    fn value_stability() {
-        let mut rng = crate::test::rng(2);
-        let expected = [
-            [0.03247542860231647, -0.7830477442152738, 0.6211131755296027],
-            [-0.09978440840914075, 0.9706650829833128, -0.21875184231323952],
-            [0.2735582468624679, 0.9435374242279655, -0.1868234852870203],
-        ];
-        let samples: [[f64; 3]; 3] = [
-            UnitSphere.sample(&mut rng),
-            UnitSphere.sample(&mut rng),
-            UnitSphere.sample(&mut rng),
-        ];
-        assert_eq!(samples, expected);
-    }
 }

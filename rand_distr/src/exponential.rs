@@ -162,36 +162,4 @@ mod test {
     fn test_exp_invalid_lambda_neg() {
         Exp::new(-10.0).unwrap();
     }
-
-    #[test]
-    fn value_stability() {
-        fn test_samples<F: Float + core::fmt::Debug, D: Distribution<F>>(
-            distr: D, zero: F, expected: &[F],
-        ) {
-            let mut rng = crate::test::rng(223);
-            let mut buf = [zero; 4];
-            for x in &mut buf {
-                *x = rng.sample(&distr);
-            }
-            assert_eq!(buf, expected);
-        }
-
-        test_samples(Exp1, 0f32, &[1.079617, 1.8325565, 0.04601166, 0.34471703]);
-        test_samples(Exp1, 0f64, &[
-            1.0796170642388276,
-            1.8325565304274,
-            0.04601166186842716,
-            0.3447170217100157,
-        ]);
-
-        test_samples(Exp::new(2.0).unwrap(), 0f32, &[
-            0.5398085, 0.91627824, 0.02300583, 0.17235851,
-        ]);
-        test_samples(Exp::new(1.0).unwrap(), 0f64, &[
-            1.0796170642388276,
-            1.8325565304274,
-            0.04601166186842716,
-            0.3447170217100157,
-        ]);
-    }
 }

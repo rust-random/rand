@@ -144,16 +144,4 @@ mod test {
             assert!(Pert::new(min, max, mode).is_err());
         }
     }
-
-    #[test]
-    fn value_stability() {
-        let rng = crate::test::rng(860);
-        let distr = Pert::new(2., 10., 3.).unwrap(); // mean = 4, var = 12/7
-        let mut seq = distr.sample_iter(rng);
-        assert_eq!(seq.next(), Some(4.631484136029422f64));
-        assert_eq!(seq.next(), Some(3.307201472321789f64));
-        assert_eq!(seq.next(), Some(3.29995019556348f64));
-        assert_eq!(seq.next(), Some(3.66835483991721f64));
-        assert_eq!(seq.next(), Some(3.514246139933899f64));
-    }
 }
