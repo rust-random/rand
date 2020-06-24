@@ -24,7 +24,9 @@ use core::fmt;
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Weibull<F: Float> {
+pub struct Weibull<F>
+where F: Float, OpenClosed01: Distribution<F>
+{
     inv_shape: F,
     scale: F,
 }
@@ -50,8 +52,8 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<F: Float> Weibull<F>
-where OpenClosed01: Distribution<F>
+impl<F> Weibull<F>
+where F: Float, OpenClosed01: Distribution<F>
 {
     /// Construct a new `Weibull` distribution with given `scale` and `shape`.
     pub fn new(scale: F, shape: F) -> Result<Weibull<F>, Error> {
@@ -68,8 +70,8 @@ where OpenClosed01: Distribution<F>
     }
 }
 
-impl<F: Float> Distribution<F> for Weibull<F>
-where OpenClosed01: Distribution<F>
+impl<F> Distribution<F> for Weibull<F>
+where F: Float, OpenClosed01: Distribution<F>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         let x: F = rng.sample(OpenClosed01);

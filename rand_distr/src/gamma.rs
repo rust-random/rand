@@ -49,7 +49,13 @@ use core::fmt;
 ///       (September 2000), 363-372.
 ///       DOI:[10.1145/358407.358414](https://doi.acm.org/10.1145/358407.358414)
 #[derive(Clone, Copy, Debug)]
-pub struct Gamma<F: Float> {
+pub struct Gamma<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
     repr: GammaRepr<F>,
 }
 
@@ -78,7 +84,13 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 #[derive(Clone, Copy, Debug)]
-enum GammaRepr<F: Float> {
+enum GammaRepr<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
     Large(GammaLargeShape<F>),
     One(Exp<F>),
     Small(GammaSmallShape<F>),
@@ -99,7 +111,12 @@ enum GammaRepr<F: Float> {
 /// See `Gamma` for sampling from a Gamma distribution with general
 /// shape parameters.
 #[derive(Clone, Copy, Debug)]
-struct GammaSmallShape<F: Float> {
+struct GammaSmallShape<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Open01: Distribution<F>,
+{
     inv_shape: F,
     large_shape: GammaLargeShape<F>,
 }
@@ -109,14 +126,20 @@ struct GammaSmallShape<F: Float> {
 /// See `Gamma` for sampling from a Gamma distribution with general
 /// shape parameters.
 #[derive(Clone, Copy, Debug)]
-struct GammaLargeShape<F: Float> {
+struct GammaLargeShape<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Open01: Distribution<F>,
+{
     scale: F,
     c: F,
     d: F,
 }
 
-impl<F: Float> Gamma<F>
+impl<F> Gamma<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -143,8 +166,9 @@ where
     }
 }
 
-impl<F: Float> GammaSmallShape<F>
+impl<F> GammaSmallShape<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Open01: Distribution<F>,
 {
@@ -156,8 +180,9 @@ where
     }
 }
 
-impl<F: Float> GammaLargeShape<F>
+impl<F> GammaLargeShape<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Open01: Distribution<F>,
 {
@@ -171,8 +196,9 @@ where
     }
 }
 
-impl<F: Float> Distribution<F> for Gamma<F>
+impl<F> Distribution<F> for Gamma<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -185,8 +211,9 @@ where
         }
     }
 }
-impl<F: Float> Distribution<F> for GammaSmallShape<F>
+impl<F> Distribution<F> for GammaSmallShape<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Open01: Distribution<F>,
 {
@@ -196,8 +223,9 @@ where
         self.large_shape.sample(rng) * u.powf(self.inv_shape)
     }
 }
-impl<F: Float> Distribution<F> for GammaLargeShape<F>
+impl<F> Distribution<F> for GammaLargeShape<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Open01: Distribution<F>,
 {
@@ -242,7 +270,13 @@ where
 /// println!("{} is from a χ²(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct ChiSquared<F: Float> {
+pub struct ChiSquared<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
     repr: ChiSquaredRepr<F>,
 }
 
@@ -267,7 +301,13 @@ impl fmt::Display for ChiSquaredError {
 impl std::error::Error for ChiSquaredError {}
 
 #[derive(Clone, Copy, Debug)]
-enum ChiSquaredRepr<F: Float> {
+enum ChiSquaredRepr<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
     // k == 1, Gamma(alpha, ..) is particularly slow for alpha < 1,
     // e.g. when alpha = 1/2 as it would be for this case, so special-
     // casing and using the definition of N(0,1)^2 is faster.
@@ -275,8 +315,9 @@ enum ChiSquaredRepr<F: Float> {
     DoFAnythingElse(Gamma<F>),
 }
 
-impl<F: Float> ChiSquared<F>
+impl<F> ChiSquared<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -295,8 +336,9 @@ where
         Ok(ChiSquared { repr })
     }
 }
-impl<F: Float> Distribution<F> for ChiSquared<F>
+impl<F> Distribution<F> for ChiSquared<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -329,7 +371,13 @@ where
 /// println!("{} is from an F(2, 32) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct FisherF<F: Float> {
+pub struct FisherF<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
     numer: ChiSquared<F>,
     denom: ChiSquared<F>,
     // denom_dof / numer_dof so that this can just be a straight
@@ -358,8 +406,9 @@ impl fmt::Display for FisherFError {
 #[cfg(feature = "std")]
 impl std::error::Error for FisherFError {}
 
-impl<F: Float> FisherF<F>
+impl<F> FisherF<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -381,8 +430,9 @@ where
         })
     }
 }
-impl<F: Float> Distribution<F> for FisherF<F>
+impl<F> Distribution<F> for FisherF<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -405,13 +455,20 @@ where
 /// println!("{} is from a t(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct StudentT<F: Float> {
+pub struct StudentT<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
     chi: ChiSquared<F>,
     dof: F,
 }
 
-impl<F: Float> StudentT<F>
+impl<F> StudentT<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -425,8 +482,9 @@ where
         })
     }
 }
-impl<F: Float> Distribution<F> for StudentT<F>
+impl<F> Distribution<F> for StudentT<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -449,7 +507,13 @@ where
 /// println!("{} is from a Beta(2, 5) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Beta<F: Float> {
+pub struct Beta<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
     gamma_a: Gamma<F>,
     gamma_b: Gamma<F>,
 }
@@ -475,8 +539,9 @@ impl fmt::Display for BetaError {
 #[cfg(feature = "std")]
 impl std::error::Error for BetaError {}
 
-impl<F: Float> Beta<F>
+impl<F> Beta<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -491,8 +556,9 @@ where
     }
 }
 
-impl<F: Float> Distribution<F> for Beta<F>
+impl<F> Distribution<F> for Beta<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,

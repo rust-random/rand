@@ -32,7 +32,9 @@ use core::fmt;
 ///
 /// [`Pert`]: crate::Pert
 #[derive(Clone, Copy, Debug)]
-pub struct Triangular<F: Float> {
+pub struct Triangular<F>
+where F: Float, Standard: Distribution<F>
+{
     min: F,
     max: F,
     mode: F,
@@ -61,8 +63,8 @@ impl fmt::Display for TriangularError {
 #[cfg(feature = "std")]
 impl std::error::Error for TriangularError {}
 
-impl<F: Float> Triangular<F>
-where Standard: Distribution<F>
+impl<F> Triangular<F>
+where F: Float, Standard: Distribution<F>
 {
     /// Set up the Triangular distribution with defined `min`, `max` and `mode`.
     #[inline]
@@ -77,8 +79,8 @@ where Standard: Distribution<F>
     }
 }
 
-impl<F: Float> Distribution<F> for Triangular<F>
-where Standard: Distribution<F>
+impl<F> Distribution<F> for Triangular<F>
+where F: Float, Standard: Distribution<F>
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {

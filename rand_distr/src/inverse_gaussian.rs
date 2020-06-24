@@ -13,13 +13,21 @@ pub enum Error {
 
 /// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution)
 #[derive(Debug)]
-pub struct InverseGaussian<F: Float> {
+pub struct InverseGaussian<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
+{
     mean: F,
     shape: F,
 }
 
-impl<F: Float> InverseGaussian<F>
-where StandardNormal: Distribution<F>
+impl<F> InverseGaussian<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
 {
     /// Construct a new `InverseGaussian` distribution with the given mean and
     /// shape.
@@ -37,8 +45,9 @@ where StandardNormal: Distribution<F>
     }
 }
 
-impl<F: Float> Distribution<F> for InverseGaussian<F>
+impl<F> Distribution<F> for InverseGaussian<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Standard: Distribution<F>,
 {

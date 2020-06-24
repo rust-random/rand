@@ -91,7 +91,9 @@ impl Distribution<f64> for Exp1 {
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Exp<F: Float> {
+pub struct Exp<F>
+where F: Float, Exp1: Distribution<F>
+{
     /// `lambda` stored as `1/lambda`, since this is what we scale by.
     lambda_inverse: F,
 }
@@ -115,7 +117,7 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 impl<F: Float> Exp<F>
-where Exp1: Distribution<F>
+where F: Float, Exp1: Distribution<F>
 {
     /// Construct a new `Exp` with the given shape parameter
     /// `lambda`.
@@ -130,8 +132,8 @@ where Exp1: Distribution<F>
     }
 }
 
-impl<F: Float> Distribution<F> for Exp<F>
-where Exp1: Distribution<F>
+impl<F> Distribution<F> for Exp<F>
+where F: Float, Exp1: Distribution<F>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         rng.sample(Exp1) * self.lambda_inverse

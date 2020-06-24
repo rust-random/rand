@@ -24,7 +24,9 @@ use core::fmt;
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Pareto<F:Float> {
+pub struct Pareto<F>
+where F: Float, OpenClosed01: Distribution<F>
+{
     scale: F,
     inv_neg_shape: F,
 }
@@ -50,8 +52,8 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<F: Float> Pareto<F>
-where OpenClosed01: Distribution<F>
+impl<F> Pareto<F>
+where F: Float, OpenClosed01: Distribution<F>
 {
     /// Construct a new Pareto distribution with given `scale` and `shape`.
     ///
@@ -73,8 +75,8 @@ where OpenClosed01: Distribution<F>
     }
 }
 
-impl<F: Float> Distribution<F> for Pareto<F>
-where OpenClosed01: Distribution<F>
+impl<F> Distribution<F> for Pareto<F>
+where F: Float, OpenClosed01: Distribution<F>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         let u: F = OpenClosed01.sample(rng);

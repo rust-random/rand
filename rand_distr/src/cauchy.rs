@@ -32,7 +32,9 @@ use core::fmt;
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Cauchy<F: Float + FloatConst> {
+pub struct Cauchy<F>
+where F: Float + FloatConst, Standard: Distribution<F>
+{
     median: F,
     scale: F,
 }
@@ -55,8 +57,8 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<F: Float + FloatConst> Cauchy<F>
-where Standard: Distribution<F>
+impl<F> Cauchy<F>
+where F: Float + FloatConst, Standard: Distribution<F>
 {
     /// Construct a new `Cauchy` with the given shape parameters
     /// `median` the peak location and `scale` the scale factor.
@@ -68,8 +70,8 @@ where Standard: Distribution<F>
     }
 }
 
-impl<F: Float + FloatConst> Distribution<F> for Cauchy<F>
-where Standard: Distribution<F>
+impl<F> Distribution<F> for Cauchy<F>
+where F: Float + FloatConst, Standard: Distribution<F>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         // sample from [0, 1)

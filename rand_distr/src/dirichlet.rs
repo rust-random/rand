@@ -32,7 +32,13 @@ use alloc::{vec, vec::Vec};
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
 #[derive(Clone, Debug)]
-pub struct Dirichlet<F: Float> {
+pub struct Dirichlet<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
     /// Concentration parameters (alpha)
     alpha: Vec<F>,
 }
@@ -62,8 +68,9 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<F: Float> Dirichlet<F>
+impl<F> Dirichlet<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -103,8 +110,9 @@ where
     }
 }
 
-impl<F: Float> Distribution<Vec<F>> for Dirichlet<F>
+impl<F> Distribution<Vec<F>> for Dirichlet<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,

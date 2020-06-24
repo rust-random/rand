@@ -112,7 +112,9 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// [`StandardNormal`]: crate::StandardNormal
 #[derive(Clone, Copy, Debug)]
-pub struct Normal<F: Float> {
+pub struct Normal<F>
+where F: Float, StandardNormal: Distribution<F>
+{
     mean: F,
     std_dev: F,
 }
@@ -135,8 +137,8 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<F: Float> Normal<F>
-where StandardNormal: Distribution<F>
+impl<F> Normal<F>
+where F: Float, StandardNormal: Distribution<F>
 {
     /// Construct a new `Normal` distribution with the given mean and
     /// standard deviation.
@@ -149,8 +151,8 @@ where StandardNormal: Distribution<F>
     }
 }
 
-impl<F: Float> Distribution<F> for Normal<F>
-where StandardNormal: Distribution<F>
+impl<F> Distribution<F> for Normal<F>
+where F: Float, StandardNormal: Distribution<F>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         let n: F = rng.sample(StandardNormal);
@@ -175,12 +177,14 @@ where StandardNormal: Distribution<F>
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct LogNormal<F: Float> {
+pub struct LogNormal<F>
+where F: Float, StandardNormal: Distribution<F>
+{
     norm: Normal<F>,
 }
 
-impl<F: Float> LogNormal<F>
-where StandardNormal: Distribution<F>
+impl<F> LogNormal<F>
+where F: Float, StandardNormal: Distribution<F>
 {
     /// Construct a new `LogNormal` distribution with the given mean
     /// and standard deviation of the logarithm of the distribution.
@@ -195,8 +199,8 @@ where StandardNormal: Distribution<F>
     }
 }
 
-impl<F: Float> Distribution<F> for LogNormal<F>
-where StandardNormal: Distribution<F>
+impl<F> Distribution<F> for LogNormal<F>
+where F: Float, StandardNormal: Distribution<F>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         self.norm.sample(rng).exp()

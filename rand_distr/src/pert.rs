@@ -31,7 +31,13 @@ use core::fmt;
 ///
 /// [`Triangular`]: crate::Triangular
 #[derive(Clone, Copy, Debug)]
-pub struct Pert<F: Float> {
+pub struct Pert<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
     min: F,
     range: F,
     beta: Beta<F>,
@@ -61,8 +67,9 @@ impl fmt::Display for PertError {
 #[cfg(feature = "std")]
 impl std::error::Error for PertError {}
 
-impl<F: Float> Pert<F>
+impl<F> Pert<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
@@ -101,8 +108,9 @@ where
     }
 }
 
-impl<F: Float> Distribution<F> for Pert<F>
+impl<F> Distribution<F> for Pert<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,

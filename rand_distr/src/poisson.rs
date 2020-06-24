@@ -29,7 +29,9 @@ use core::fmt;
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Poisson<F: Float + FloatConst> {
+pub struct Poisson<F>
+where F: Float + FloatConst, Standard: Distribution<F>
+{
     lambda: F,
     // precalculated values
     exp_lambda: F,
@@ -56,8 +58,8 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<F: Float + FloatConst> Poisson<F>
-where Standard: Distribution<F>
+impl<F> Poisson<F>
+where F: Float + FloatConst, Standard: Distribution<F>
 {
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
@@ -76,8 +78,8 @@ where Standard: Distribution<F>
     }
 }
 
-impl<F: Float + FloatConst> Distribution<F> for Poisson<F>
-where Standard: Distribution<F>
+impl<F> Distribution<F> for Poisson<F>
+where F: Float + FloatConst, Standard: Distribution<F>
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {

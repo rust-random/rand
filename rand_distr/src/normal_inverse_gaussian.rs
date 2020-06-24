@@ -13,14 +13,22 @@ pub enum Error {
 
 /// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution)
 #[derive(Debug)]
-pub struct NormalInverseGaussian<F: Float> {
+pub struct NormalInverseGaussian<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
+{
     alpha: F,
     beta: F,
     inverse_gaussian: InverseGaussian<F>,
 }
 
-impl<F: Float> NormalInverseGaussian<F>
-where StandardNormal: Distribution<F>
+impl<F> NormalInverseGaussian<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
 {
     /// Construct a new `NormalInverseGaussian` distribution with the given alpha (tail heaviness) and
     /// beta (asymmetry) parameters.
@@ -47,8 +55,9 @@ where StandardNormal: Distribution<F>
     }
 }
 
-impl<F: Float> Distribution<F> for NormalInverseGaussian<F>
+impl<F> Distribution<F> for NormalInverseGaussian<F>
 where
+    F: Float,
     StandardNormal: Distribution<F>,
     Standard: Distribution<F>,
 {
