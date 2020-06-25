@@ -27,7 +27,7 @@ use alloc::{boxed::Box, vec, vec::Vec};
 /// use rand::prelude::*;
 /// use rand_distr::Dirichlet;
 ///
-/// let dirichlet = Dirichlet::new(vec![1.0, 2.0, 3.0]).unwrap();
+/// let dirichlet = Dirichlet::new(&[1.0, 2.0, 3.0]).unwrap();
 /// let samples = dirichlet.sample(&mut rand::thread_rng());
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
