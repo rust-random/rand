@@ -13,7 +13,7 @@ use num_traits::Float;
 use crate::{Distribution, Exp1, Gamma, Open01, StandardNormal};
 use rand::Rng;
 use core::fmt;
-use alloc::{vec, vec::Vec};
+use alloc::{boxed::Box, vec, vec::Vec};
 
 /// The Dirichlet distribution `Dirichlet(alpha)`.
 ///
@@ -40,7 +40,7 @@ where
     Open01: Distribution<F>,
 {
     /// Concentration parameters (alpha)
-    alpha: Vec<F>,
+    alpha: Box<[F]>,
 }
 
 /// Error type returned from `Dirchlet::new`.
@@ -79,18 +79,17 @@ where
     ///
     /// Requires `alpha.len() >= 2`.
     #[inline]
-    pub fn new<V: Into<Vec<F>>>(alpha: V) -> Result<Dirichlet<F>, Error> {
-        let a = alpha.into();
-        if a.len() < 2 {
+    pub fn new(alpha: &[F]) -> Result<Dirichlet<F>, Error> {
+        if alpha.len() < 2 {
             return Err(Error::AlphaTooShort);
         }
-        for &ai in &a {
+        for &ai in alpha.iter() {
             if !(ai > F::zero()) {
                 return Err(Error::AlphaTooSmall);
             }
         }
 
-        Ok(Dirichlet { alpha: a })
+        Ok(Dirichlet { alpha: alpha.to_vec().into_boxed_slice() })
     }
 
     /// Construct a new `Dirichlet` with the given shape parameter `alpha` and `size`.
@@ -105,7 +104,7 @@ where
             return Err(Error::SizeTooSmall);
         }
         Ok(Dirichlet {
-            alpha: vec![alpha; size],
+            alpha: vec![alpha; size].into_boxed_slice(),
         })
     }
 }
@@ -141,7 +140,7 @@ mod test {
 
     #[test]
     fn test_dirichlet() {
-        let d = Dirichlet::new(vec![1.0, 2.0, 3.0]).unwrap();
+        let d = Dirichlet::new(&[1.0, 2.0, 3.0]).unwrap();
         let mut rng = crate::test::rng(221);
         let samples = d.sample(&mut rng);
         let _: Vec<f64> = samples
