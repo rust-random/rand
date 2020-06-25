@@ -286,7 +286,7 @@ fn weibull_stability() {
 fn dirichlet_stability() {
     let mut rng = get_rng(223);
     assert_eq!(
-        rng.sample(Dirichlet::new(vec![1.0, 2.0, 3.0]).unwrap()),
+        rng.sample(Dirichlet::new(&[1.0, 2.0, 3.0]).unwrap()),
         vec![0.12941567177708177, 0.4702121891675036, 0.4003721390554146]
     );
     assert_eq!(rng.sample(Dirichlet::new_with_size(8.0, 5).unwrap()), vec![
