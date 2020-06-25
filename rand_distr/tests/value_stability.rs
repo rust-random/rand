@@ -281,7 +281,7 @@ fn weibull_stability() {
     ]);
 }
 
-
+#[cfg(feature = "alloc")]
 #[test]
 fn dirichlet_stability() {
     let mut rng = get_rng(223);
@@ -297,7 +297,6 @@ fn dirichlet_stability() {
         0.19815030417417595
     ]);
 }
-
 
 #[test]
 fn cauchy_stability() {

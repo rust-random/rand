@@ -71,18 +71,20 @@
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
 
-#[cfg(feature = "alloc")]
+#[cfg(all(feature = "alloc", not(feature = "std")))]
 extern crate alloc;
 
 #[cfg(feature = "std")]
 extern crate std;
+// TODO: remove on MSRV bump to 1.36
+#[cfg(feature = "std")]
+extern crate std as alloc;
 
 pub use rand::distributions::{
     uniform, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01, OpenClosed01,
     Standard, Uniform,
 };
 
-#[cfg(feature = "std")]
 pub use self::binomial::{Binomial, Error as BinomialError};
 pub use self::cauchy::{Cauchy, Error as CauchyError};
 #[cfg(feature = "alloc")]
@@ -112,7 +114,6 @@ pub use num_traits;
 #[cfg(feature = "alloc")]
 pub mod weighted;
 
-#[cfg(feature = "std")]
 mod binomial;
 mod cauchy;
 mod dirichlet;
