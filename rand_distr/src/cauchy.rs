@@ -135,8 +135,6 @@ mod test {
 
     #[test]
     fn value_stability() {
-
-
         fn gen_samples<F: Float + FloatConst + core::fmt::Debug>(m: F, s: F, buf: &mut [F])
         where Standard: Distribution<F> {
             let distr = Cauchy::new(m, s).unwrap();
