@@ -39,34 +39,18 @@ use serde::{Serialize, Deserialize};
 ///
 /// # Passwords
 ///
+/// Users sometimes ask whether it is safe to use a string of random characters
+/// as a password. `Alphanumeric` generates from an alphabet of 62 symbols, thus
+/// each character can provide `log2(62) = 5.95...` bits of entropy. We suggest
+/// consulting external sources for more. One may start with the
+/// [Wikipedia article on Password Strength](https://en.wikipedia.org/wiki/Password_strength).
+///
 /// We caution that strings produced by sampling `Alphanumeric` tend not
-/// to be particularly memorable when used as passwords by humans.  
-/// Instead, we suggest that human memorable passwords be created by
-/// drawing words independently and uniformly at random from a large wordlist. 
-///
+/// to be particularly memorable when used as passwords by humans.
+/// Drawing words from a specially-curated word-list such as
+/// [Diceware](https://en.wikipedia.org/wiki/Diceware) may be a better option
+/// for memorable passwords.
 /// Each random word contributes `log2(wordlist_length)` bits of entropy.
-///
-/// Among the widely reviewed wordlists, there are [Diceware](https://en.wikipedia.org/wiki/Diceware)
-/// wordlists for many major langauges, including some from security
-/// organizations like the E.F.F., and many of which further facilitate
-/// memorability by avoiding homophones and words with tricky spelling.
-///
-/// There exists [several crates](https://crates.io/search?q=diceware) for
-/// this but `rand::seq::SliceRandom::choose` works too:
-/// ```
-/// # use rand::Rng;
-/// #[allow(dead_code)]
-/// pub fn make_password<R: Rng>(wordlist: &[impl ::core::borrow::Borrow<str>], entropy: u32, rng: &mut R) -> String {
-///     use rand::seq::SliceRandom;
-///     use core::convert::TryInto;
-///     let entropy: f64 = entropy.into();
-///     let l: u32 = wordlist.len().try_into().unwrap();
-///     assert!( l > 0 );
-///     let l: f64 = l.into();
-///     let l = (entropy / l.log2()).ceil() as usize;
-///     (0..l).map(|_| wordlist.choose(rng).unwrap().borrow() ).collect::<String>()
-/// }
-/// ```
 #[derive(Debug)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Alphanumeric;
