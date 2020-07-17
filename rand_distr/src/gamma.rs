@@ -544,8 +544,7 @@ where
     F: Float,
     Open01: Distribution<F>,
 {
-    a: F, a0: F,
-    b: F, b0: F,
+    a: F, b: F, switched_params: bool,
     algorithm: BetaAlgorithm<F>,
 }
 
@@ -587,7 +586,11 @@ where
         // From now on, we use the notation from the reference,
         // i.e. `alpha` and `beta` are renamed to `a0` and `b0`.
         let (a0, b0) = (alpha, beta);
-        let (a, b) = if a0 < b0 { (a0, b0) } else { (b0, a0) };
+        let (a, b, switched_params) = if a0 < b0 {
+            (a0, b0, false)
+        } else {
+            (b0, a0, true)
+        };
         if alpha > F::one() {
             let alpha = a + b;
             let beta = ((alpha - F::from(2.).unwrap())
@@ -595,7 +598,7 @@ where
             let gamma = a + F::one() / beta;
 
             Ok(Beta {
-                a, a0, b, b0,
+                a, b, switched_params,
                 algorithm: BetaAlgorithm::BB(BB {
                     alpha, beta, gamma,
                 })
@@ -611,7 +614,7 @@ where
                 + (F::from(0.5).unwrap() + F::from(0.25).unwrap()/delta)*b;
 
             Ok(Beta {
-                a, a0, b, b0,
+                a, b, switched_params,
                 algorithm: BetaAlgorithm::BC(BC {
                     alpha, beta, delta, kappa1, kappa2,
                 })
@@ -654,7 +657,7 @@ where
                     }
                 }
                 // 5.
-                if self.a == self.a0 {
+                if !self.switched_params {
                     w / (self.b + w)
                 } else {
                     self.b / (self.b + w)
@@ -696,7 +699,7 @@ where
                     };
                 }
                 // 6.
-                if self.a == self.a0 {
+                if !self.switched_params {
                     if w == F::infinity() {
                         // Assuming `b` is finite, for large `w`:
                         return F::one();
