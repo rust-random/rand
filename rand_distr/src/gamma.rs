@@ -605,8 +605,8 @@ where
             let beta = F::one() / b;
             let delta = F::one() + a - b;
             let kappa1 = delta
-                * (F::from(0.0138889).unwrap() + F::from(0.0416667).unwrap()*b)
-                / (a*beta - F::from(0.777778).unwrap());
+                * (F::from(1. / 18. / 4.).unwrap() + F::from(3. / 18. / 4.).unwrap()*b)
+                / (a*beta - F::from(14. / 18.).unwrap());
             let kappa2 = F::from(0.25).unwrap()
                 + (F::from(0.5).unwrap() + F::from(0.25).unwrap()/delta)*b;
 
@@ -691,7 +691,7 @@ where
                     let v = algo.beta * (u1 / (F::one() - u1)).ln();
                     w = self.a * v.exp();
                     if !(algo.alpha * ((algo.alpha / (self.b + w)).ln() + v)
-                         - F::from(1.3862944).unwrap() < z.ln()) {
+                         - F::from(4.).unwrap().ln() < z.ln()) {
                         break;
                     };
                 }
