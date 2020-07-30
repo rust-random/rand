@@ -25,7 +25,7 @@ use core::fmt;
 /// use rand_distr::{Poisson, Distribution};
 ///
 /// let poi = Poisson::new(2.0).unwrap();
-/// let v = poi.sample(&mut rand::thread_rng()) as u64;
+/// let v = poi.sample(&mut rand::thread_rng());
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
