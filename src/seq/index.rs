@@ -85,10 +85,15 @@ impl IndexVec {
             IndexVec::USize(ref v) => IndexVecIter::USize(v.iter()),
         }
     }
+}
+
+impl IntoIterator for IndexVec {
+    type Item = usize;
+    type IntoIter = IndexVecIntoIter;
 
     /// Convert into an iterator over the indices as a sequence of `usize` values
     #[inline]
-    pub fn into_iter(self) -> IndexVecIntoIter {
+    fn into_iter(self) -> IndexVecIntoIter {
         match self {
             IndexVec::U32(v) => IndexVecIntoIter::U32(v.into_iter()),
             IndexVec::USize(v) => IndexVecIntoIter::USize(v.into_iter()),
