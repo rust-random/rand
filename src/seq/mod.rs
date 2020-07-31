@@ -44,13 +44,11 @@ use crate::Rng;
 /// ```
 /// use rand::seq::SliceRandom;
 ///
-/// fn main() {
-///     let mut rng = rand::thread_rng();
-///     let mut bytes = "Hello, random!".to_string().into_bytes();
-///     bytes.shuffle(&mut rng);
-///     let str = String::from_utf8(bytes).unwrap();
-///     println!("{}", str);
-/// }
+/// let mut rng = rand::thread_rng();
+/// let mut bytes = "Hello, random!".to_string().into_bytes();
+/// bytes.shuffle(&mut rng);
+/// let str = String::from_utf8(bytes).unwrap();
+/// println!("{}", str);
 /// ```
 /// Example output (non-deterministic):
 /// ```none
@@ -228,12 +226,10 @@ pub trait SliceRandom {
 /// ```
 /// use rand::seq::IteratorRandom;
 ///
-/// fn main() {
-///     let mut rng = rand::thread_rng();
-///     
-///     let faces = "😀😎😐😕😠😢";
-///     println!("I am {}!", faces.chars().choose(&mut rng).unwrap());
-/// }
+/// let mut rng = rand::thread_rng();
+///
+/// let faces = "😀😎😐😕😠😢";
+/// println!("I am {}!", faces.chars().choose(&mut rng).unwrap());
 /// ```
 /// Example output (non-deterministic):
 /// ```none

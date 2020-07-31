@@ -163,7 +163,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
             if !(*w >= zero) {
                 return Err(WeightedError::InvalidWeight);
             }
-            if i >= self.cumulative_weights.len() + 1 {
+            if i > self.cumulative_weights.len() {
                 return Err(WeightedError::TooMany);
             }
 
