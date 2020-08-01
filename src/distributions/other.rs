@@ -40,17 +40,19 @@ use serde::{Serialize, Deserialize};
 /// # Passwords
 ///
 /// Users sometimes ask whether it is safe to use a string of random characters
-/// as a password. `Alphanumeric` generates from an alphabet of 62 symbols, thus
-/// each character can provide `log2(62) = 5.95...` bits of entropy. We suggest
-/// consulting external sources for more. One may start with the
-/// [Wikipedia article on Password Strength](https://en.wikipedia.org/wiki/Password_strength).
+/// as a password. In principle, all RNGs in Rand implementing `CryptoRng` are
+/// suitable as a source of randomness for generating passwords (if they are
+/// properly seeded), but it is more conservative to only use randomness
+/// directly from the operating system via the `getrandom` crate, or the
+/// corresponding bindings of a crypto library.
 ///
-/// We caution that strings produced by sampling `Alphanumeric` tend not
-/// to be particularly memorable when used as passwords by humans.
-/// Drawing words from a specially-curated word-list such as
-/// [Diceware](https://en.wikipedia.org/wiki/Diceware) may be a better option
-/// for memorable passwords.
-/// Each random word contributes `log2(wordlist_length)` bits of entropy.
+/// When generating passwords or keys, it is important to consider the threat
+/// model and in some cases the memorability of the password. This is out of
+/// scope of the Rand project, and therefore we defer to the following
+/// references:
+///
+/// - [Wikipedia article on Password Strength](https://en.wikipedia.org/wiki/Password_strength)
+/// - [Diceware for generating memorable passwords](https://en.wikipedia.org/wiki/Diceware)
 #[derive(Debug)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Alphanumeric;
