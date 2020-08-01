@@ -246,7 +246,7 @@ mod test {
     #[cfg(feature = "serde1")]
     #[test]
     fn test_weightedindex_serde1() {
-        let weighted_index = WeightedIndex::new(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).unwrap();
+        let weighted_index = WeightedIndex::new(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).unwrap();
 
         let ser_weighted_index = bincode::serialize(&weighted_index).unwrap();
         let de_weighted_index: WeightedIndex<i32> =
