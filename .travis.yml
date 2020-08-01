@@ -8,7 +8,6 @@ matrix:
   include:
     - rust: 1.36.0
       name: "Linux, 1.36.0"
-      env: ALLOC=0
       os: linux
 
     - rust: stable
