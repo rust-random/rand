@@ -23,7 +23,7 @@ use alloc::{boxed::Box, vec, vec::Vec};
 /// selected element from the vector used to create the [`WeightedAliasIndex<W>`].
 /// The chance of a given element being picked is proportional to the value of
 /// the element. The weights can have any type `W` for which a implementation of
-/// [`Weight`] exists.
+/// [`AliasableWeight`] exists.
 ///
 /// # Performance
 ///

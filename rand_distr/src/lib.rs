@@ -107,12 +107,14 @@ pub use self::unit_disc::UnitDisc;
 pub use self::unit_sphere::UnitSphere;
 pub use self::weibull::{Error as WeibullError, Weibull};
 #[cfg(feature = "alloc")]
-pub use self::weighted::{WeightedError, WeightedIndex};
+pub use rand::distributions::weighted::{WeightedError, WeightedIndex};
+#[cfg(feature = "alloc")]
+pub use weighted_alias::WeightedAliasIndex;
 
 pub use num_traits;
 
 #[cfg(feature = "alloc")]
-pub mod weighted;
+pub mod weighted_alias;
 
 mod binomial;
 mod cauchy;
