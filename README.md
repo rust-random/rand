@@ -6,7 +6,7 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.32+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.36+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 A Rust library for random number generation.
 
@@ -75,11 +75,11 @@ issue tracker with the keyword `yank` *should* uncover the motivation.
 
 ### Rust version requirements
 
-Since version 0.7, Rand requires **Rustc version 1.32 or greater**.
-Rand 0.5 requires Rustc 1.22 or greater while versions
-0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
-greater. Subsets of the Rand code may work with older Rust versions, but this
-is not supported.
+Since version 0.8, Rand requires **Rustc version 1.36 or greater**.
+Rand 0.7 requires Rustc 1.32 or greater while versions 0.5 require Rustc 1.22 or
+greater, and 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
+greater. Subsets of the Rand code may work with older Rust versions, but this is
+not supported.
 
 Travis CI always has a build with a pinned version of Rustc matching the oldest
 supported Rust release. The current policy is that this can be updated in any
@@ -91,8 +91,6 @@ Rand is built with these features enabled by default:
 
 -   `std` enables functionality dependent on the `std` lib
 -   `alloc` (implied by `std`) enables functionality requiring an allocator
-    (when using this feature in `no_std`, Rand requires Rustc version 1.36 or
-    greater)
 -   `getrandom` (implied by `std`) is an optional dependency providing the code
     behind `rngs::OsRng`
 -   `std_rng` enables inclusion of `StdRng`, `thread_rng` and `random`
