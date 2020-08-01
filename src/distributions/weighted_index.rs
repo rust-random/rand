@@ -15,7 +15,7 @@ use core::cmp::PartialOrd;
 use core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
-#[cfg(not(feature = "std"))] use crate::alloc::vec::Vec;
+use alloc::vec::Vec;
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};

@@ -31,7 +31,7 @@ pub mod index;
 
 #[cfg(feature = "alloc")] use core::ops::Index;
 
-#[cfg(all(feature = "alloc", not(feature = "std")))] use crate::alloc::vec::Vec;
+#[cfg(feature = "alloc")] use alloc::vec::Vec;
 
 #[cfg(feature = "alloc")]
 use crate::distributions::uniform::{SampleBorrow, SampleUniform};

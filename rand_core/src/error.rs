@@ -11,6 +11,8 @@
 use core::fmt;
 use core::num::NonZeroU32;
 
+#[cfg(feature = "std")] use std::boxed::Box;
+
 /// Error type of random number generators
 ///
 /// In order to be compatible with `std` and `no_std`, this type has two

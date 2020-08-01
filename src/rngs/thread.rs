@@ -10,6 +10,7 @@
 
 use core::cell::UnsafeCell;
 use core::ptr::NonNull;
+use std::thread_local;
 
 use super::std::Core;
 use crate::rngs::adapter::ReseedingRng;

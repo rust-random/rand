@@ -19,7 +19,7 @@ pub mod alias_method {
     // This module exists to provide a deprecation warning which minimises
     // compile errors, but still fails to compile if ever used.
     use core::marker::PhantomData;
-    #[cfg(not(feature = "std"))] use crate::alloc::vec::Vec;
+    use alloc::vec::Vec;
     use super::WeightedError;
 
     #[derive(Debug)]

@@ -419,7 +419,7 @@ mod test {
     use super::*;
     use crate::test::rng;
     use crate::rngs::mock::StepRng;
-    #[cfg(all(not(feature = "std"), feature = "alloc"))] use alloc::boxed::Box;
+    #[cfg(feature = "alloc")] use alloc::boxed::Box;
 
     #[test]
     fn test_fill_bytes_default() {
