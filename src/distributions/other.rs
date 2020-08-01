@@ -19,7 +19,7 @@ use serde::{Serialize, Deserialize};
 
 // ----- Sampling distributions -----
 
-/// Sample a `char` or `u8`, uniformly distributed over ASCII letters and numbers:
+/// Sample a `u8`, uniformly distributed over ASCII letters and numbers:
 /// a-z, A-Z and 0-9.
 ///
 /// # Example
@@ -32,6 +32,7 @@ use serde::{Serialize, Deserialize};
 /// let mut rng = thread_rng();
 /// let chars: String = iter::repeat(())
 ///         .map(|()| rng.sample(Alphanumeric))
+///         .map(char::from)
 ///         .take(7)
 ///         .collect();
 /// println!("Random chars: {}", chars);
@@ -78,13 +79,6 @@ impl Distribution<char> for Standard {
             n -= GAP_SIZE;
         }
         unsafe { char::from_u32_unchecked(n) }
-    }
-}
-
-impl Distribution<char> for Alphanumeric {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> char {
-        let byte: u8 = self.sample(rng);
-        byte as char
     }
 }
 
@@ -245,7 +239,7 @@ mod tests {
         // take the rejection sampling path.
         let mut incorrect = false;
         for _ in 0..100 {
-            let c = rng.sample(Alphanumeric);
+            let c: char = rng.sample(Alphanumeric).into();
             incorrect |= !((c >= '0' && c <= '9') ||
                            (c >= 'A' && c <= 'Z') ||
                            (c >= 'a' && c <= 'z') );
@@ -273,7 +267,7 @@ mod tests {
             '\u{ed692}',
             '\u{35888}',
         ]);
-        test_samples(&Alphanumeric, 'a', &['h', 'm', 'e', '3', 'M']);
+        test_samples(&Alphanumeric, 0, &[104, 109, 101, 51, 77]);
         test_samples(&Standard, false, &[true, true, false, true, false]);
         test_samples(&Standard, None as Option<bool>, &[
             Some(true),
