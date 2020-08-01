@@ -1,4 +1,4 @@
-// Copyright 2018 Developers of the Rand project.
+// Copyright 2018-2020 Developers of the Rand project.
 // Copyright 2017 The Rust Project Developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -34,7 +34,7 @@
 //! let side = Uniform::new(-10.0, 10.0);
 //!
 //! // sample between 1 and 10 points
-//! for _ in 0..rng.gen_range(1, 11) {
+//! for _ in 0..rng.gen_range(1..=10) {
 //!     // sample a point from the square with sides -10 - 10 in two dimensions
 //!     let (x, y) = (rng.sample(side), rng.sample(side));
 //!     println!("Point: {}, {}", x, y);
@@ -105,11 +105,12 @@
 
 #[cfg(not(feature = "std"))] use core::time::Duration;
 #[cfg(feature = "std")] use std::time::Duration;
+use core::ops::{Range, RangeInclusive};
 
 use crate::distributions::float::IntoFloat;
 use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, WideningMultiply};
 use crate::distributions::Distribution;
-use crate::Rng;
+use crate::{Rng, RngCore};
 
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
@@ -124,7 +125,8 @@ use serde::{Serialize, Deserialize};
 ///
 /// [`Uniform::new`] and [`Uniform::new_inclusive`] construct a uniform
 /// distribution sampling from the given range; these functions may do extra
-/// work up front to make sampling of multiple values faster.
+/// work up front to make sampling of multiple values faster. If only one sample
+/// from the range is required, [`Rng::gen_range`] can be more efficient.
 ///
 /// When sampling from a constant range, many calculations can happen at
 /// compile-time and all methods should be fast; for floating-point ranges and
@@ -139,7 +141,7 @@ use serde::{Serialize, Deserialize};
 /// are of lower quality than the high bits.
 ///
 /// Implementations must sample in `[low, high)` range for
-/// `Uniform::new(low, high)`, i.e., excluding `high`. In particular care must
+/// `Uniform::new(low, high)`, i.e., excluding `high`. In particular, care must
 /// be taken to ensure that rounding never results values `< low` or `>= high`.
 ///
 /// # Example
@@ -147,19 +149,27 @@ use serde::{Serialize, Deserialize};
 /// ```
 /// use rand::distributions::{Distribution, Uniform};
 ///
-/// fn main() {
-///     let between = Uniform::from(10..10000);
-///     let mut rng = rand::thread_rng();
-///     let mut sum = 0;
-///     for _ in 0..1000 {
-///         sum += between.sample(&mut rng);
-///     }
-///     println!("{}", sum);
+/// let between = Uniform::from(10..10000);
+/// let mut rng = rand::thread_rng();
+/// let mut sum = 0;
+/// for _ in 0..1000 {
+///     sum += between.sample(&mut rng);
 /// }
+/// println!("{}", sum);
+/// ```
+///
+/// For a single sample, [`Rng::gen_range`] may be prefered:
+///
+/// ```
+/// use rand::Rng;
+///
+/// let mut rng = rand::thread_rng();
+/// println!("{}", rng.gen_range(0..10));
 /// ```
 ///
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
+/// [`Rng::gen_range`]: Rng::gen_range
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Uniform<X: SampleUniform>(X::Sampler);
@@ -287,17 +297,18 @@ pub trait UniformSampler: Sized {
     }
 }
 
-impl<X: SampleUniform> From<::core::ops::Range<X>> for Uniform<X> {
+impl<X: SampleUniform> From<Range<X>> for Uniform<X> {
     fn from(r: ::core::ops::Range<X>) -> Uniform<X> {
         Uniform::new(r.start, r.end)
     }
 }
 
-impl<X: SampleUniform> From<::core::ops::RangeInclusive<X>> for Uniform<X> {
+impl<X: SampleUniform> From<RangeInclusive<X>> for Uniform<X> {
     fn from(r: ::core::ops::RangeInclusive<X>) -> Uniform<X> {
         Uniform::new_inclusive(r.start(), r.end())
     }
 }
+
 
 /// Helper trait similar to [`Borrow`] but implemented
 /// only for SampleUniform and references to SampleUniform in
@@ -326,6 +337,43 @@ where Borrowed: SampleUniform
         *self
     }
 }
+
+/// Range that supports generating a single sample efficiently.
+///
+/// Any type implementing this trait can be used to specify the sampled range
+/// for `Rng::gen_range`.
+pub trait SampleRange<T> {
+    /// Generate a sample from the given range.
+    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> T;
+
+    /// Check whether the range is empty.
+    fn is_empty(&self) -> bool;
+}
+
+impl<T: SampleUniform + PartialOrd> SampleRange<T> for Range<T> {
+    #[inline]
+    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> T {
+        T::Sampler::sample_single(self.start, self.end, rng)
+    }
+
+    #[inline]
+    fn is_empty(&self) -> bool {
+        !(self.start < self.end)
+    }
+}
+
+impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
+    #[inline]
+    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> T {
+        T::Sampler::sample_single_inclusive(self.start(), self.end(), rng)
+    }
+
+    #[inline]
+    fn is_empty(&self) -> bool {
+        !(self.start() <= self.end())
+    }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -425,7 +473,7 @@ macro_rules! uniform_int_impl {
                 };
 
                 UniformInt {
-                    low: low,
+                    low,
                     // These are really $unsigned values, but store as $ty:
                     range: range as $ty,
                     z: ints_to_reject as $unsigned as $ty,
@@ -570,7 +618,7 @@ macro_rules! uniform_simd_int_impl {
                 let zone = unsigned_max - ints_to_reject;
 
                 UniformInt {
-                    low: low,
+                    low,
                     // These are really $unsigned values, but store as $ty:
                     range: range.cast(),
                     z: zone.cast(),
@@ -985,7 +1033,7 @@ impl UniformSampler for UniformDuration {
                 max_nanos,
                 secs,
             } => {
-                // constant folding means this is at least as fast as `gen_range`
+                // constant folding means this is at least as fast as `Rng::sample(Range)`
                 let nano_range = Uniform::new(0, 1_000_000_000);
                 loop {
                     let s = secs.sample(rng);
@@ -1112,7 +1160,7 @@ mod tests {
                     }
 
                     for _ in 0..1000 {
-                        let v: $ty = rng.gen_range(low, high);
+                        let v = <$ty as SampleUniform>::Sampler::sample_single(low, high, &mut rng);
                         assert!($le(low, v) && $lt(v, high));
                     }
                 }
@@ -1194,7 +1242,8 @@ mod tests {
                             assert!(low_scalar <= v && v < high_scalar);
                             let v = rng.sample(my_incl_uniform).extract(lane);
                             assert!(low_scalar <= v && v <= high_scalar);
-                            let v = rng.gen_range(low, high).extract(lane);
+                            let v = <$ty as SampleUniform>::Sampler
+                                ::sample_single(low, high, &mut rng).extract(lane);
                             assert!(low_scalar <= v && v < high_scalar);
                         }
 
@@ -1205,7 +1254,9 @@ mod tests {
 
                         assert_eq!(zero_rng.sample(my_uniform).extract(lane), low_scalar);
                         assert_eq!(zero_rng.sample(my_incl_uniform).extract(lane), low_scalar);
-                        assert_eq!(zero_rng.gen_range(low, high).extract(lane), low_scalar);
+                        assert_eq!(<$ty as SampleUniform>::Sampler
+                            ::sample_single(low, high, &mut zero_rng)
+                            .extract(lane), low_scalar);
                         assert!(max_rng.sample(my_uniform).extract(lane) < high_scalar);
                         assert!(max_rng.sample(my_incl_uniform).extract(lane) <= high_scalar);
 
@@ -1218,7 +1269,9 @@ mod tests {
                                 (-1i64 << $bits_shifted) as u64,
                             );
                             assert!(
-                                lowering_max_rng.gen_range(low, high).extract(lane) < high_scalar
+                                <$ty as SampleUniform>::Sampler
+                                    ::sample_single(low, high, &mut lowering_max_rng)
+                                    .extract(lane) < high_scalar
                             );
                         }
                     }
@@ -1266,7 +1319,7 @@ mod tests {
         use std::panic::catch_unwind;
         fn range<T: SampleUniform>(low: T, high: T) {
             let mut rng = crate::test::rng(253);
-            rng.gen_range(low, high);
+            T::Sampler::sample_single(low, high, &mut rng);
         }
 
         macro_rules! t {

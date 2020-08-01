@@ -119,6 +119,6 @@ mod test {
         use crate::Rng;
         let mut r = crate::thread_rng();
         r.gen::<i32>();
-        assert_eq!(r.gen_range(0, 1), 0);
+        assert_eq!(r.gen_range(0..1), 0);
     }
 }

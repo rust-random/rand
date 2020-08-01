@@ -520,9 +520,9 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 #[inline]
 fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
     if ubound <= (core::u32::MAX as usize) {
-        rng.gen_range(0, ubound as u32) as usize
+        rng.gen_range(0..ubound as u32) as usize
     } else {
-        rng.gen_range(0, ubound)
+        rng.gen_range(0..ubound)
     }
 }
 
