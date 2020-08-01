@@ -328,9 +328,8 @@ where
 pub struct Standard;
 
 
-#[cfg(all(test, feature = "std"))]
+#[cfg(test)]
 mod tests {
-    use std::{vec::Vec, println};
     use super::{Distribution, Uniform};
     use crate::Rng;
 
@@ -339,8 +338,12 @@ mod tests {
         use crate::distributions::Open01;
         let mut rng = crate::test::rng(210);
         let distr = Open01;
-        let results: Vec<f32> = distr.sample_iter(&mut rng).take(100).collect();
-        println!("{:?}", results);
+        let mut iter = Distribution::<f32>::sample_iter(distr, &mut rng);
+        let mut sum: f32 = 0.;
+        for _ in 0..100 {
+            sum += iter.next().unwrap();
+        }
+        assert!(sum > 0.);
     }
 
     #[test]
