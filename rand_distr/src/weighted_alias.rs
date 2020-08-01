@@ -39,7 +39,7 @@ use alloc::{boxed::Box, vec, vec::Vec};
 /// # Example
 ///
 /// ```
-/// use rand_distr::weighted::WeightedAliasIndex;
+/// use rand_distr::WeightedAliasIndex;
 /// use rand::prelude::*;
 ///
 /// let choices = vec!['a', 'b', 'c'];
