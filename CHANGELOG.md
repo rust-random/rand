@@ -12,10 +12,18 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ### Additions
 - impl PartialEq+Eq for StdRng, SmallRng, and StepRng (#975)
 - Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
+- Document types supported by `random` (#994)
 
 ### Changes
 - `gen_range(a, b)` was replaced with `gen_range(a..b)`, and `gen_range(a..=b)`
-  is supported (#744, #1003). Note that `a` and `b` can no longer be references.
+  is supported (#744, #1003). Note that `a` and `b` can no longer be references or SIMD types.
+- Replace `AsByteSliceMut` with `Fill` (#940)
+- Move alias method for `WeightedIndex` to `rand_distr` (#945)
+- Better NaN handling for `WeightedIndex` (#1005)
+- Implement `IntoIterator` for `IndexVec`, replacing the `into_iter` method (#1007)
+- Reduce packaged crate size (#983)
+- Drop some unsafe code (#962, #963)
+- Improve treatment of rounding errors in `WeightedIndex::update_weights` (#956)
 
 ## [0.7.3] - 2020-01-10
 ### Fixes

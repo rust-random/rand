@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - impl PartialEq+Eq for ChaChaXRng and ChaChaXCore (#975)
-- Fix panic on block counter wrap that was occurring in debug builds
+- Fix panic on block counter wrap that was occurring in debug builds (#980)
 
 ## [0.2.2] - 2020-03-09
 - Integrate `c2-chacha`, reducing dependency count (#931)
