@@ -54,11 +54,12 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
 
 macro_rules! fill_via_chunks {
     ($src:expr, $dst:expr, $ty:ty, $size:expr) => {{
+        debug_assert_eq!(core::mem::size_of::<$ty>(), $size);
         let chunk_size_u8 = min($src.len() * $size, $dst.len());
         let chunk_size = (chunk_size_u8 + $size - 1) / $size;
 
         for (&n, chunk) in $src.iter().zip($dst.chunks_mut($size)) {
-            chunk.clone_from_slice(&n.to_le_bytes());
+            chunk.copy_from_slice(&n.to_le_bytes()[..chunk.len()]);
         }
 
         (chunk_size, chunk_size_u8)
@@ -127,4 +128,39 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
     u64::from_ne_bytes(buf)
 }
 
-// TODO: implement tests for the above
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_fill_via_u32_chunks() {
+        let src = [1, 2, 3];
+        let mut dst = [0u8; 11];
+        assert_eq!(fill_via_u32_chunks(&src, &mut dst), (3, 11));
+        assert_eq!(dst, [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0]);
+
+        let mut dst = [0u8; 13];
+        assert_eq!(fill_via_u32_chunks(&src, &mut dst), (3, 12));
+        assert_eq!(dst, [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 0]);
+
+        let mut dst = [0u8; 5];
+        assert_eq!(fill_via_u32_chunks(&src, &mut dst), (2, 5));
+        assert_eq!(dst, [1, 0, 0, 0, 2]);
+    }
+
+    #[test]
+    fn test_fill_via_u64_chunks() {
+        let src = [1, 2];
+        let mut dst = [0u8; 11];
+        assert_eq!(fill_via_u64_chunks(&src, &mut dst), (2, 11));
+        assert_eq!(dst, [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0]);
+
+        let mut dst = [0u8; 17];
+        assert_eq!(fill_via_u64_chunks(&src, &mut dst), (2, 16));
+        assert_eq!(dst, [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+        let mut dst = [0u8; 5];
+        assert_eq!(fill_via_u64_chunks(&src, &mut dst), (1, 5));
+        assert_eq!(dst, [1, 0, 0, 0, 0]);
+    }
+}
