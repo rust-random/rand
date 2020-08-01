@@ -53,12 +53,12 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
 }
 
 macro_rules! fill_via_chunks {
-    ($src:expr, $dst:expr, $ty:ty, $size:expr) => {{
-        debug_assert_eq!(core::mem::size_of::<$ty>(), $size);
-        let chunk_size_u8 = min($src.len() * $size, $dst.len());
-        let chunk_size = (chunk_size_u8 + $size - 1) / $size;
+    ($src:expr, $dst:expr, $ty:ty) => {{
+        const SIZE: usize = core::mem::size_of::<$ty>();
+        let chunk_size_u8 = min($src.len() * SIZE, $dst.len());
+        let chunk_size = (chunk_size_u8 + SIZE - 1) / SIZE;
 
-        for (&n, chunk) in $src.iter().zip($dst.chunks_mut($size)) {
+        for (&n, chunk) in $src.iter().zip($dst.chunks_mut(SIZE)) {
             chunk.copy_from_slice(&n.to_le_bytes()[..chunk.len()]);
         }
 
@@ -97,7 +97,7 @@ macro_rules! fill_via_chunks {
 /// }
 /// ```
 pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, u32, 4)
+    fill_via_chunks!(src, dest, u32)
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
@@ -111,7 +111,7 @@ pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
 ///
 /// See `fill_via_u32_chunks` for an example.
 pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, u64, 8)
+    fill_via_chunks!(src, dest, u64)
 }
 
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
