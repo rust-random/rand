@@ -9,10 +9,11 @@
 
 //! The normal and derived distributions.
 
-use crate::utils::{ziggurat, Float};
+use crate::utils::ziggurat;
+use num_traits::Float;
 use crate::{ziggurat_tables, Distribution, Open01};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
@@ -111,9 +112,11 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// [`StandardNormal`]: crate::StandardNormal
 #[derive(Clone, Copy, Debug)]
-pub struct Normal<N> {
-    mean: N,
-    std_dev: N,
+pub struct Normal<F>
+where F: Float, StandardNormal: Distribution<F>
+{
+    mean: F,
+    std_dev: F,
 }
 
 /// Error type returned from `Normal::new` and `LogNormal::new`.
@@ -131,27 +134,28 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
-impl<N: Float> Normal<N>
-where StandardNormal: Distribution<N>
+impl<F> Normal<F>
+where F: Float, StandardNormal: Distribution<F>
 {
     /// Construct a new `Normal` distribution with the given mean and
     /// standard deviation.
     #[inline]
-    pub fn new(mean: N, std_dev: N) -> Result<Normal<N>, Error> {
-        if !(std_dev >= N::from(0.0)) {
+    pub fn new(mean: F, std_dev: F) -> Result<Normal<F>, Error> {
+        if !(std_dev >= F::zero()) {
             return Err(Error::StdDevTooSmall);
         }
         Ok(Normal { mean, std_dev })
     }
 }
 
-impl<N: Float> Distribution<N> for Normal<N>
-where StandardNormal: Distribution<N>
+impl<F> Distribution<F> for Normal<F>
+where F: Float, StandardNormal: Distribution<F>
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
-        let n: N = rng.sample(StandardNormal);
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
+        let n: F = rng.sample(StandardNormal);
         self.mean + self.std_dev * n
     }
 }
@@ -173,18 +177,20 @@ where StandardNormal: Distribution<N>
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct LogNormal<N> {
-    norm: Normal<N>,
+pub struct LogNormal<F>
+where F: Float, StandardNormal: Distribution<F>
+{
+    norm: Normal<F>,
 }
 
-impl<N: Float> LogNormal<N>
-where StandardNormal: Distribution<N>
+impl<F> LogNormal<F>
+where F: Float, StandardNormal: Distribution<F>
 {
     /// Construct a new `LogNormal` distribution with the given mean
     /// and standard deviation of the logarithm of the distribution.
     #[inline]
-    pub fn new(mean: N, std_dev: N) -> Result<LogNormal<N>, Error> {
-        if !(std_dev >= N::from(0.0)) {
+    pub fn new(mean: F, std_dev: F) -> Result<LogNormal<F>, Error> {
+        if !(std_dev >= F::zero()) {
             return Err(Error::StdDevTooSmall);
         }
         Ok(LogNormal {
@@ -193,10 +199,10 @@ where StandardNormal: Distribution<N>
     }
 }
 
-impl<N: Float> Distribution<N> for LogNormal<N>
-where StandardNormal: Distribution<N>
+impl<F> Distribution<F> for LogNormal<F>
+where F: Float, StandardNormal: Distribution<F>
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         self.norm.sample(rng).exp()
     }
 }
@@ -232,55 +238,5 @@ mod tests {
     #[should_panic]
     fn test_log_normal_invalid_sd() {
         LogNormal::new(10.0, -1.0).unwrap();
-    }
-
-    #[test]
-    fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
-            distr: D, zero: N, expected: &[N],
-        ) {
-            let mut rng = crate::test::rng(213);
-            let mut buf = [zero; 4];
-            for x in &mut buf {
-                *x = rng.sample(&distr);
-            }
-            assert_eq!(buf, expected);
-        }
-
-        test_samples(StandardNormal, 0f32, &[
-            -0.11844189,
-            0.781378,
-            0.06563994,
-            -1.1932899,
-        ]);
-        test_samples(StandardNormal, 0f64, &[
-            -0.11844188827977231,
-            0.7813779637772346,
-            0.06563993969580051,
-            -1.1932899004186373,
-        ]);
-
-        test_samples(Normal::new(0.0, 1.0).unwrap(), 0f32, &[
-            -0.11844189,
-            0.781378,
-            0.06563994,
-            -1.1932899,
-        ]);
-        test_samples(Normal::new(2.0, 0.5).unwrap(), 0f64, &[
-            1.940779055860114,
-            2.3906889818886174,
-            2.0328199698479,
-            1.4033550497906813,
-        ]);
-
-        test_samples(LogNormal::new(0.0, 1.0).unwrap(), 0f32, &[
-            0.88830346, 2.1844804, 1.0678421, 0.30322206,
-        ]);
-        test_samples(LogNormal::new(2.0, 0.5).unwrap(), 0f64, &[
-            6.964174338639032,
-            10.921015733601452,
-            7.6355881556915906,
-            4.068828213584092,
-        ]);
     }
 }

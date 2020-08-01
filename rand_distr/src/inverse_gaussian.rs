@@ -1,4 +1,5 @@
-use crate::{Distribution, Float, Standard, StandardNormal};
+use crate::{Distribution, Standard, StandardNormal};
+use num_traits::Float;
 use rand::Rng;
 
 /// Error type returned from `InverseGaussian::new`
@@ -12,22 +13,31 @@ pub enum Error {
 
 /// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution)
 #[derive(Debug)]
-pub struct InverseGaussian<N> {
-    mean: N,
-    shape: N,
+pub struct InverseGaussian<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
+{
+    mean: F,
+    shape: F,
 }
 
-impl<N: Float> InverseGaussian<N>
-where StandardNormal: Distribution<N>
+impl<F> InverseGaussian<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
 {
     /// Construct a new `InverseGaussian` distribution with the given mean and
     /// shape.
-    pub fn new(mean: N, shape: N) -> Result<InverseGaussian<N>, Error> {
-        if !(mean > N::from(0.0)) {
+    pub fn new(mean: F, shape: F) -> Result<InverseGaussian<F>, Error> {
+        let zero = F::zero();
+        if !(mean > zero) {
             return Err(Error::MeanNegativeOrNull);
         }
 
-        if !(shape > N::from(0.0)) {
+        if !(shape > zero) {
             return Err(Error::ShapeNegativeOrNull);
         }
 
@@ -35,24 +45,25 @@ where StandardNormal: Distribution<N>
     }
 }
 
-impl<N: Float> Distribution<N> for InverseGaussian<N>
+impl<F> Distribution<F> for InverseGaussian<F>
 where
-    StandardNormal: Distribution<N>,
-    Standard: Distribution<N>,
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
 {
-    fn sample<R>(&self, rng: &mut R) -> N
+    fn sample<R>(&self, rng: &mut R) -> F
     where R: Rng + ?Sized {
         let mu = self.mean;
         let l = self.shape;
 
-        let v: N = rng.sample(StandardNormal);
+        let v: F = rng.sample(StandardNormal);
         let y = mu * v * v;
 
-        let mu_2l = mu / (N::from(2.) * l);
+        let mu_2l = mu / (F::from(2.).unwrap() * l);
 
-        let x = mu + mu_2l * (y - (N::from(4.) * l * y + y * y).sqrt());
+        let x = mu + mu_2l * (y - (F::from(4.).unwrap() * l * y + y * y).sqrt());
 
-        let u: N = rng.gen();
+        let u: F = rng.gen();
 
         if u <= mu / (mu + x) {
             return x;
@@ -81,29 +92,5 @@ mod tests {
         assert!(InverseGaussian::new(-1.0, -1.0).is_err());
         assert!(InverseGaussian::new(1.0, -1.0).is_err());
         assert!(InverseGaussian::new(1.0, 1.0).is_ok());
-    }
-
-    #[test]
-    fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
-            distr: D, zero: N, expected: &[N],
-        ) {
-            let mut rng = crate::test::rng(213);
-            let mut buf = [zero; 4];
-            for x in &mut buf {
-                *x = rng.sample(&distr);
-            }
-            assert_eq!(buf, expected);
-        }
-
-        test_samples(InverseGaussian::new(1.0, 3.0).unwrap(), 0f32, &[
-            0.9339157, 1.108113, 0.50864697, 0.39849377,
-        ]);
-        test_samples(InverseGaussian::new(1.0, 3.0).unwrap(), 0f64, &[
-            1.0707604954722476,
-            0.9628140605340697,
-            0.4069687656468226,
-            0.660283852985818,
-        ]);
     }
 }

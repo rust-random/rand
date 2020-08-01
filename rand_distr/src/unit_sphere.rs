@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::utils::Float;
+use num_traits::Float;
 use crate::{uniform::SampleUniform, Distribution, Uniform};
 use rand::Rng;
 
@@ -30,18 +30,18 @@ use rand::Rng;
 #[derive(Clone, Copy, Debug)]
 pub struct UnitSphere;
 
-impl<N: Float + SampleUniform> Distribution<[N; 3]> for UnitSphere {
+impl<F: Float + SampleUniform> Distribution<[F; 3]> for UnitSphere {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [N; 3] {
-        let uniform = Uniform::new(N::from(-1.), N::from(1.));
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [F; 3] {
+        let uniform = Uniform::new(F::from(-1.).unwrap(), F::from(1.).unwrap());
         loop {
             let (x1, x2) = (uniform.sample(rng), uniform.sample(rng));
             let sum = x1 * x1 + x2 * x2;
-            if sum >= N::from(1.) {
+            if sum >= F::from(1.).unwrap() {
                 continue;
             }
-            let factor = N::from(2.) * (N::from(1.0) - sum).sqrt();
-            return [x1 * factor, x2 * factor, N::from(1.) - N::from(2.) * sum];
+            let factor = F::from(2.).unwrap() * (F::one() - sum).sqrt();
+            return [x1 * factor, x2 * factor, F::from(1.).unwrap() - F::from(2.).unwrap() * sum];
         }
     }
 }
@@ -59,11 +59,11 @@ mod tests {
         ($a:expr, $b:expr, $prec:expr) => {
             let diff = ($a - $b).abs();
             if diff > $prec {
-                panic!(format!(
+                panic!(
                     "assertion failed: `abs(left - right) = {:.1e} < {:e}`, \
                      (left: `{}`, right: `{}`)",
                     diff, $prec, $a, $b
-                ));
+                );
             }
         };
     }
@@ -75,21 +75,5 @@ mod tests {
             let x: [f64; 3] = UnitSphere.sample(&mut rng);
             assert_almost_eq!(x[0] * x[0] + x[1] * x[1] + x[2] * x[2], 1., 1e-15);
         }
-    }
-
-    #[test]
-    fn value_stability() {
-        let mut rng = crate::test::rng(2);
-        let expected = [
-            [0.03247542860231647, -0.7830477442152738, 0.6211131755296027],
-            [-0.09978440840914075, 0.9706650829833128, -0.21875184231323952],
-            [0.2735582468624679, 0.9435374242279655, -0.1868234852870203],
-        ];
-        let samples: [[f64; 3]; 3] = [
-            UnitSphere.sample(&mut rng),
-            UnitSphere.sample(&mut rng),
-            UnitSphere.sample(&mut rng),
-        ];
-        assert_eq!(samples, expected);
     }
 }

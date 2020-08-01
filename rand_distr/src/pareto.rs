@@ -8,10 +8,10 @@
 
 //! The Pareto distribution.
 
-use crate::utils::Float;
+use num_traits::Float;
 use crate::{Distribution, OpenClosed01};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// Samples floating-point numbers according to the Pareto distribution
 ///
@@ -24,9 +24,11 @@ use std::{error, fmt};
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Pareto<N> {
-    scale: N,
-    inv_neg_shape: N,
+pub struct Pareto<F>
+where F: Float, OpenClosed01: Distribution<F>
+{
+    scale: F,
+    inv_neg_shape: F,
 }
 
 /// Error type returned from `Pareto::new`.
@@ -47,34 +49,37 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
-impl<N: Float> Pareto<N>
-where OpenClosed01: Distribution<N>
+impl<F> Pareto<F>
+where F: Float, OpenClosed01: Distribution<F>
 {
     /// Construct a new Pareto distribution with given `scale` and `shape`.
     ///
     /// In the literature, `scale` is commonly written as x<sub>m</sub> or k and
     /// `shape` is often written as α.
-    pub fn new(scale: N, shape: N) -> Result<Pareto<N>, Error> {
-        if !(scale > N::from(0.0)) {
+    pub fn new(scale: F, shape: F) -> Result<Pareto<F>, Error> {
+        let zero = F::zero();
+
+        if !(scale > zero) {
             return Err(Error::ScaleTooSmall);
         }
-        if !(shape > N::from(0.0)) {
+        if !(shape > zero) {
             return Err(Error::ShapeTooSmall);
         }
         Ok(Pareto {
             scale,
-            inv_neg_shape: N::from(-1.0) / shape,
+            inv_neg_shape: F::from(-1.0).unwrap() / shape,
         })
     }
 }
 
-impl<N: Float> Distribution<N> for Pareto<N>
-where OpenClosed01: Distribution<N>
+impl<F> Distribution<F> for Pareto<F>
+where F: Float, OpenClosed01: Distribution<F>
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
-        let u: N = OpenClosed01.sample(rng);
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
+        let u: F = OpenClosed01.sample(rng);
         self.scale * u.powf(self.inv_neg_shape)
     }
 }
@@ -103,8 +108,8 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
-            distr: D, zero: N, expected: &[N],
+        fn test_samples<F: Float + core::fmt::Debug, D: Distribution<F>>(
+            distr: D, zero: F, expected: &[F],
         ) {
             let mut rng = crate::test::rng(213);
             let mut buf = [zero; 4];

@@ -1,4 +1,5 @@
-use crate::{Distribution, Float, InverseGaussian, Standard, StandardNormal};
+use crate::{Distribution, InverseGaussian, Standard, StandardNormal};
+use num_traits::Float;
 use rand::Rng;
 
 /// Error type returned from `NormalInverseGaussian::new`
@@ -12,19 +13,27 @@ pub enum Error {
 
 /// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution)
 #[derive(Debug)]
-pub struct NormalInverseGaussian<N> {
-    alpha: N,
-    beta: N,
-    inverse_gaussian: InverseGaussian<N>,
+pub struct NormalInverseGaussian<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
+{
+    alpha: F,
+    beta: F,
+    inverse_gaussian: InverseGaussian<F>,
 }
 
-impl<N: Float> NormalInverseGaussian<N>
-where StandardNormal: Distribution<N>
+impl<F> NormalInverseGaussian<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
 {
     /// Construct a new `NormalInverseGaussian` distribution with the given alpha (tail heaviness) and
     /// beta (asymmetry) parameters.
-    pub fn new(alpha: N, beta: N) -> Result<NormalInverseGaussian<N>, Error> {
-        if !(alpha > N::from(0.0)) {
+    pub fn new(alpha: F, beta: F) -> Result<NormalInverseGaussian<F>, Error> {
+        if !(alpha > F::zero()) {
             return Err(Error::AlphaNegativeOrNull);
         }
 
@@ -34,9 +43,9 @@ where StandardNormal: Distribution<N>
 
         let gamma = (alpha * alpha - beta * beta).sqrt();
 
-        let mu = N::from(1.) / gamma;
+        let mu = F::one() / gamma;
 
-        let inverse_gaussian = InverseGaussian::new(mu, N::from(1.)).unwrap();
+        let inverse_gaussian = InverseGaussian::new(mu, F::one()).unwrap();
 
         Ok(Self {
             alpha,
@@ -46,12 +55,13 @@ where StandardNormal: Distribution<N>
     }
 }
 
-impl<N: Float> Distribution<N> for NormalInverseGaussian<N>
+impl<F> Distribution<F> for NormalInverseGaussian<F>
 where
-    StandardNormal: Distribution<N>,
-    Standard: Distribution<N>,
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Standard: Distribution<F>,
 {
-    fn sample<R>(&self, rng: &mut R) -> N
+    fn sample<R>(&self, rng: &mut R) -> F
     where R: Rng + ?Sized {
         let inv_gauss = rng.sample(&self.inverse_gaussian);
 
@@ -78,30 +88,5 @@ mod tests {
         assert!(NormalInverseGaussian::new(-1.0, -1.0).is_err());
         assert!(NormalInverseGaussian::new(1.0, 2.0).is_err());
         assert!(NormalInverseGaussian::new(2.0, 1.0).is_ok());
-    }
-
-
-    #[test]
-    fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
-            distr: D, zero: N, expected: &[N],
-        ) {
-            let mut rng = crate::test::rng(213);
-            let mut buf = [zero; 4];
-            for x in &mut buf {
-                *x = rng.sample(&distr);
-            }
-            assert_eq!(buf, expected);
-        }
-
-        test_samples(NormalInverseGaussian::new(2.0, 1.0).unwrap(), 0f32, &[
-            0.6568966, 1.3744819, 2.216063, 0.11488572,
-        ]);
-        test_samples(NormalInverseGaussian::new(2.0, 1.0).unwrap(), 0f64, &[
-            0.6838707059642927,
-            2.4447306460569784,
-            0.2361045023235968,
-            1.7774534624785319,
-        ]);
     }
 }

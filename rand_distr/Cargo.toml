@@ -20,9 +20,17 @@ travis-ci = { repository = "rust-random/rand" }
 appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
-rand = { path = "..", version = "0.7" }
+rand = { path = "..", version = "0.7", default-features = false }
+num-traits = { version = "0.2", default-features = false, features = ["libm"] }
+
+[features]
+default = ["std"]
+std = ["alloc"]
+alloc = []
 
 [dev-dependencies]
 rand_pcg = { version = "0.2", path = "../rand_pcg" }
+# For inline examples
+rand = { path = "..", version = "0.7", default-features = false, features = ["std_rng", "std"] }
 # Histogram implementation for testing uniformity
 average = "0.10.3"

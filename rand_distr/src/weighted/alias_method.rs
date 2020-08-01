@@ -15,6 +15,7 @@ use core::fmt;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use rand::Rng;
+use alloc::{boxed::Box, vec, vec::Vec};
 
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///
@@ -63,8 +64,8 @@ use rand::Rng;
 /// [`Uniform<u32>::sample`]: Distribution::sample
 /// [`Uniform<W>::sample`]: Distribution::sample
 pub struct WeightedIndex<W: Weight> {
-    aliases: Vec<u32>,
-    no_alias_odds: Vec<W>,
+    aliases: Box<[u32]>,
+    no_alias_odds: Box<[W]>,
     uniform_index: Uniform<u32>,
     uniform_within_weight_sum: Uniform<W>,
 }
@@ -112,7 +113,7 @@ impl<W: Weight> WeightedIndex<W> {
         // `weight_sum` would have been zero if `try_from_lossy` causes an error here.
         let n_converted = W::try_from_u32_lossy(n).unwrap();
 
-        let mut no_alias_odds = weights;
+        let mut no_alias_odds = weights.into_boxed_slice();
         for odds in no_alias_odds.iter_mut() {
             *odds *= n_converted;
             // Prevent floating point overflow due to rounding errors.
@@ -126,7 +127,7 @@ impl<W: Weight> WeightedIndex<W> {
         /// be ensured that a single index is only ever in one of them at the
         /// same time.
         struct Aliases {
-            aliases: Vec<u32>,
+            aliases: Box<[u32]>,
             smalls_head: u32,
             bigs_head: u32,
         }
@@ -134,7 +135,7 @@ impl<W: Weight> WeightedIndex<W> {
         impl Aliases {
             fn new(size: u32) -> Self {
                 Aliases {
-                    aliases: vec![0; size as usize],
+                    aliases: vec![0; size as usize].into_boxed_slice(),
                     smalls_head: ::core::u32::MAX,
                     bigs_head: ::core::u32::MAX,
                 }

@@ -8,10 +8,10 @@
 
 //! The Weibull distribution.
 
-use crate::utils::Float;
+use num_traits::Float;
 use crate::{Distribution, OpenClosed01};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// Samples floating-point numbers according to the Weibull distribution
 ///
@@ -24,9 +24,11 @@ use std::{error, fmt};
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Weibull<N> {
-    inv_shape: N,
-    scale: N,
+pub struct Weibull<F>
+where F: Float, OpenClosed01: Distribution<F>
+{
+    inv_shape: F,
+    scale: F,
 }
 
 /// Error type returned from `Weibull::new`.
@@ -47,31 +49,32 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
-impl<N: Float> Weibull<N>
-where OpenClosed01: Distribution<N>
+impl<F> Weibull<F>
+where F: Float, OpenClosed01: Distribution<F>
 {
     /// Construct a new `Weibull` distribution with given `scale` and `shape`.
-    pub fn new(scale: N, shape: N) -> Result<Weibull<N>, Error> {
-        if !(scale > N::from(0.0)) {
+    pub fn new(scale: F, shape: F) -> Result<Weibull<F>, Error> {
+        if !(scale > F::zero()) {
             return Err(Error::ScaleTooSmall);
         }
-        if !(shape > N::from(0.0)) {
+        if !(shape > F::zero()) {
             return Err(Error::ShapeTooSmall);
         }
         Ok(Weibull {
-            inv_shape: N::from(1.) / shape,
+            inv_shape: F::from(1.).unwrap() / shape,
             scale,
         })
     }
 }
 
-impl<N: Float> Distribution<N> for Weibull<N>
-where OpenClosed01: Distribution<N>
+impl<F> Distribution<F> for Weibull<F>
+where F: Float, OpenClosed01: Distribution<F>
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> N {
-        let x: N = rng.sample(OpenClosed01);
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
+        let x: F = rng.sample(OpenClosed01);
         self.scale * (-x.ln()).powf(self.inv_shape)
     }
 }
@@ -100,8 +103,8 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        fn test_samples<N: Float + core::fmt::Debug, D: Distribution<N>>(
-            distr: D, zero: N, expected: &[N],
+        fn test_samples<F: Float + core::fmt::Debug, D: Distribution<F>>(
+            distr: D, zero: F, expected: &[F],
         ) {
             let mut rng = crate::test::rng(213);
             let mut buf = [zero; 4];

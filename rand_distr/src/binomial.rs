@@ -11,7 +11,7 @@
 
 use crate::{Distribution, Uniform};
 use rand::Rng;
-use std::{error, fmt};
+use core::fmt;
 
 /// The binomial distribution `Binomial(n, p)`.
 ///
@@ -53,7 +53,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
 impl Binomial {
     /// Construct a new `Binomial` with the given shape parameters `n` (number
@@ -72,7 +73,7 @@ impl Binomial {
 /// Convert a `f64` to an `i64`, panicing on overflow.
 // In the future (Rust 1.34), this might be replaced with `TryFrom`.
 fn f64_to_i64(x: f64) -> i64 {
-    assert!(x < (::std::i64::MAX as f64));
+    assert!(x < (core::i64::MAX as f64));
     x as i64
 }
 
@@ -106,7 +107,7 @@ impl Distribution<u64> for Binomial {
         // Ranlib uses 30, and GSL uses 14.
         const BINV_THRESHOLD: f64 = 10.;
 
-        if (self.n as f64) * p < BINV_THRESHOLD && self.n <= (::std::i32::MAX as u64) {
+        if (self.n as f64) * p < BINV_THRESHOLD && self.n <= (core::i32::MAX as u64) {
             // Use the BINV algorithm.
             let s = p / q;
             let a = ((self.n + 1) as f64) * s;
@@ -337,23 +338,5 @@ mod test {
     #[should_panic]
     fn test_binomial_invalid_lambda_neg() {
         Binomial::new(20, -10.0).unwrap();
-    }
-
-    #[test]
-    fn value_stability() {
-        fn test_samples(n: u64, p: f64, expected: &[u64]) {
-            let distr = Binomial::new(n, p).unwrap();
-            let mut rng = crate::test::rng(353);
-            let mut buf = [0; 4];
-            for x in &mut buf {
-                *x = rng.sample(&distr);
-            }
-            assert_eq!(buf, expected);
-        }
-
-        // We have multiple code paths: np < 10, p > 0.5
-        test_samples(2, 0.7, &[1, 1, 2, 1]);
-        test_samples(20, 0.3, &[7, 7, 5, 7]);
-        test_samples(2000, 0.6, &[1194, 1208, 1192, 1210]);
     }
 }
