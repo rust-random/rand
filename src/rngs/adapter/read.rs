@@ -105,7 +105,7 @@ impl std::error::Error for ReadError {
 
 #[cfg(test)]
 mod test {
-    use std::{vec, println};
+    use std::println;
 
     use super::ReadRng;
     use crate::RngCore;
@@ -114,9 +114,9 @@ mod test {
     fn test_reader_rng_u64() {
         // transmute from the target to avoid endianness concerns.
         #[rustfmt::skip]
-        let v = vec![0u8, 0, 0, 0, 0, 0, 0, 1,
-                     0  , 0, 0, 0, 0, 0, 0, 2,
-                     0,   0, 0, 0, 0, 0, 0, 3];
+        let v = [0u8, 0, 0, 0, 0, 0, 0, 1,
+                 0,   0, 0, 0, 0, 0, 0, 2,
+                 0,   0, 0, 0, 0, 0, 0, 3];
         let mut rng = ReadRng::new(&v[..]);
 
         assert_eq!(rng.next_u64(), 1_u64.to_be());
@@ -126,7 +126,7 @@ mod test {
 
     #[test]
     fn test_reader_rng_u32() {
-        let v = vec![0u8, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3];
+        let v = [0u8, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3];
         let mut rng = ReadRng::new(&v[..]);
 
         assert_eq!(rng.next_u32(), 1_u32.to_be());
