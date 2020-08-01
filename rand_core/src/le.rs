@@ -11,36 +11,22 @@
 //! Little-Endian order has been chosen for internal usage; this makes some
 //! useful functions available.
 
-use core::ptr;
-
-macro_rules! read_slice {
-    ($src:expr, $dst:expr, $size:expr, $which:ident) => {{
-        assert_eq!($src.len(), $size * $dst.len());
-
-        unsafe {
-            ptr::copy_nonoverlapping(
-                $src.as_ptr(),
-                $dst.as_mut_ptr() as *mut u8,
-                $src.len());
-        }
-        for v in $dst.iter_mut() {
-            *v = v.$which();
-        }
-    }};
-}
+use core::convert::TryInto;
 
 /// Reads unsigned 32 bit integers from `src` into `dst`.
-/// Borrowed from the `byteorder` crate.
 #[inline]
 pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
-    read_slice!(src, dst, 4, to_le);
+    for i in 0..dst.len() {
+        dst[i] = u32::from_le_bytes((&src[i..i + 4]).try_into().unwrap());
+    }
 }
 
 /// Reads unsigned 64 bit integers from `src` into `dst`.
-/// Borrowed from the `byteorder` crate.
 #[inline]
 pub fn read_u64_into(src: &[u8], dst: &mut [u64]) {
-    read_slice!(src, dst, 8, to_le);
+    for i in 0..dst.len() {
+        dst[i] = u64::from_le_bytes((&src[i..i + 8]).try_into().unwrap());
+    }
 }
 
 #[test]

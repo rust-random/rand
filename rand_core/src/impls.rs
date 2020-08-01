@@ -19,9 +19,6 @@
 
 use crate::RngCore;
 use core::cmp::min;
-use core::mem::size_of;
-use core::ptr::copy_nonoverlapping;
-use core::slice;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
 pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
@@ -55,41 +52,13 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     }
 }
 
-macro_rules! impl_uint_from_fill {
-    ($rng:expr, $ty:ty, $N:expr) => {{
-        debug_assert!($N == size_of::<$ty>());
-
-        let mut int: $ty = 0;
-        unsafe {
-            let ptr = &mut int as *mut $ty as *mut u8;
-            let slice = slice::from_raw_parts_mut(ptr, $N);
-            $rng.fill_bytes(slice);
-        }
-        int
-    }};
-}
-
 macro_rules! fill_via_chunks {
     ($src:expr, $dst:expr, $ty:ty, $size:expr) => {{
         let chunk_size_u8 = min($src.len() * $size, $dst.len());
         let chunk_size = (chunk_size_u8 + $size - 1) / $size;
-        if cfg!(target_endian = "little") {
-            unsafe {
-                copy_nonoverlapping(
-                    $src.as_ptr() as *const u8,
-                    $dst.as_mut_ptr(),
-                    chunk_size_u8);
-            }
-        } else {
-            for (&n, chunk) in $src.iter().zip($dst.chunks_mut($size)) {
-                let tmp = n.to_le();
-                let src_ptr = &tmp as *const $ty as *const u8;
-                unsafe {
-                    copy_nonoverlapping(src_ptr,
-                                        chunk.as_mut_ptr(),
-                                        chunk.len());
-                }
-            }
+
+        for (&n, chunk) in $src.iter().zip($dst.chunks_mut($size)) {
+            chunk.clone_from_slice(&n.to_le_bytes());
         }
 
         (chunk_size, chunk_size_u8)
@@ -146,12 +115,16 @@ pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
 
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
 pub fn next_u32_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u32 {
-    impl_uint_from_fill!(rng, u32, 4)
+    let mut buf = [0; 4];
+    rng.fill_bytes(&mut buf);
+    u32::from_le_bytes(buf)
 }
 
 /// Implement `next_u64` via `fill_bytes`, little-endian order.
 pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
-    impl_uint_from_fill!(rng, u64, 8)
+    let mut buf = [0; 8];
+    rng.fill_bytes(&mut buf);
+    u64::from_le_bytes(buf)
 }
 
 // TODO: implement tests for the above
