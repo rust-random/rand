@@ -176,7 +176,7 @@ distr_nz_int!(distr_standard_nz64, NonZeroU64, u64, Standard);
 distr_nz_int!(distr_standard_nz128, NonZeroU128, u128, Standard);
 
 distr!(distr_standard_bool, bool, Standard);
-distr!(distr_standard_alphanumeric, char, Alphanumeric);
+distr!(distr_standard_alphanumeric, u8, Alphanumeric);
 distr!(distr_standard_codepoint, char, Standard);
 
 distr_float!(distr_standard_f32, f32, Standard);
