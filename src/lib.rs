@@ -48,7 +48,7 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
-#![cfg_attr(not(feature = "std"), no_std)]
+#![no_std]
 #![cfg_attr(all(feature = "simd_support", feature = "nightly"), feature(stdsimd))]
 #![cfg_attr(feature = "nightly", feature(slice_partition_at_index))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
@@ -58,7 +58,8 @@
     clippy::float_cmp
 )]
 
-#[cfg(all(feature = "alloc", not(feature = "std")))] extern crate alloc;
+#[cfg(feature = "std")] extern crate std;
+#[cfg(feature = "alloc")] extern crate alloc;
 
 #[allow(unused)]
 macro_rules! trace { ($($x:tt)*) => (

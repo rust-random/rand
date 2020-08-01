@@ -10,12 +10,10 @@
 
 #[cfg(feature = "alloc")] use core::slice;
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
-use crate::alloc::vec::{self, Vec};
-#[cfg(feature = "std")] use std::vec;
+#[cfg(feature = "alloc")] use alloc::vec::{self, Vec};
 // BTreeMap is not as fast in tests, but better than nothing.
 #[cfg(all(feature = "alloc", not(feature = "std")))]
-use crate::alloc::collections::BTreeSet;
+use alloc::collections::BTreeSet;
 #[cfg(feature = "std")] use std::collections::HashSet;
 
 #[cfg(feature = "alloc")]
@@ -562,8 +560,7 @@ mod test {
         }
     }
 
-    #[cfg(all(feature = "alloc", not(feature = "std")))] use crate::alloc::vec;
-    #[cfg(feature = "std")] use std::vec;
+    #[cfg(feature = "alloc")] use alloc::vec;
 
     #[test]
     fn test_sample_boundaries() {

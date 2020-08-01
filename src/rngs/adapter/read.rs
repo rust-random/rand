@@ -105,6 +105,8 @@ impl std::error::Error for ReadError {
 
 #[cfg(test)]
 mod test {
+    use std::{vec, println};
+
     use super::ReadRng;
     use crate::RngCore;
 

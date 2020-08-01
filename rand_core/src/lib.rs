@@ -36,14 +36,15 @@
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![allow(clippy::unreadable_literal)]
-#![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
+#![no_std]
 
 use core::convert::AsMut;
 use core::default::Default;
 
-#[cfg(all(feature = "alloc", not(feature = "std")))] extern crate alloc;
-#[cfg(all(feature = "alloc", not(feature = "std")))] use alloc::boxed::Box;
+#[cfg(feature = "std")] extern crate std;
+#[cfg(feature = "alloc")] extern crate alloc;
+#[cfg(feature = "alloc")] use alloc::boxed::Box;
 
 pub use error::Error;
 #[cfg(feature = "getrandom")] pub use os::OsRng;

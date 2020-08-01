@@ -206,7 +206,7 @@ where Standard: Distribution<T>
 mod tests {
     use super::*;
     use crate::RngCore;
-    #[cfg(all(not(feature = "std"), feature = "alloc"))] use alloc::string::String;
+    #[cfg(feature = "alloc")] use alloc::string::String;
 
     #[test]
     fn test_misc() {

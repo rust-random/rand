@@ -330,6 +330,7 @@ pub struct Standard;
 
 #[cfg(all(test, feature = "std"))]
 mod tests {
+    use std::{vec::Vec, println};
     use super::{Distribution, Uniform};
     use crate::Rng;
 
