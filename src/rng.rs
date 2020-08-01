@@ -171,7 +171,7 @@ pub trait Rng: RngCore {
     /// let v: Vec<f32> = rng.sample_iter(Standard).take(16).collect();
     ///
     /// // String:
-    /// let s: String = rng.sample_iter(Alphanumeric).take(7).collect();
+    /// let s: String = rng.sample_iter(Alphanumeric).take(7).map(char::from).collect();
     ///
     /// // Combined values
     /// println!("{:?}", rng.sample_iter(Standard).take(5)

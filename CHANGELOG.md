@@ -19,6 +19,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
   is supported (#744, #1003). Note that `a` and `b` can no longer be references or SIMD types.
 - Replace `AsByteSliceMut` with `Fill` (#940)
 - Move alias method for `WeightedIndex` to `rand_distr` (#945)
+- `Alphanumeric` samples bytes instead of chars (#935)
 - Better NaN handling for `WeightedIndex` (#1005)
 - Implement `IntoIterator` for `IndexVec`, replacing the `into_iter` method (#1007)
 - Reduce packaged crate size (#983)

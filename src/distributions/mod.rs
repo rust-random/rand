@@ -166,7 +166,7 @@ pub trait Distribution<T> {
     /// let v: Vec<f32> = Standard.sample_iter(rng).take(16).collect();
     ///
     /// // String:
-    /// let s: String = Alphanumeric.sample_iter(rng).take(7).collect();
+    /// let s: String = Alphanumeric.sample_iter(rng).take(7).map(char::from).collect();
     ///
     /// // Dice-rolling:
     /// let die_range = Uniform::new_inclusive(1, 6);
