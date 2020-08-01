@@ -32,8 +32,8 @@
 //! The following are re-exported:
 //!
 //! - The [`Distribution`] trait and [`DistIter`] helper type
-//! - The [`Standard`], [`Alphanumeric`], [`Uniform`], [`OpenClosed01`], [`Open01`] and [`Bernoulli`] distributions
-//! - The [`weighted`] sub-module
+//! - The [`Standard`], [`Alphanumeric`], [`Uniform`], [`OpenClosed01`],
+//! [`Open01`], [`Bernoulli`], and [`WeightedIndex`] distributions
 //!
 //! ## Distributions
 //!
