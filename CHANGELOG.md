@@ -13,6 +13,10 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - impl PartialEq+Eq for StdRng, SmallRng, and StepRng (#975)
 - Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
 
+### Changes
+- `gen_range(a, b)` was replaced with `gen_range(a..b)`, and `gen_range(a..=b)`
+  is supported (#744, #1003). Note that `a` and `b` can no longer be references.
+
 ## [0.7.3] - 2020-01-10
 ### Fixes
 - The `Bernoulli` distribution constructors now reports an error on NaN and on

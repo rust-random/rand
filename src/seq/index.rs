@@ -274,7 +274,7 @@ where R: Rng + ?Sized {
     debug_assert!(amount <= length);
     let mut indices = Vec::with_capacity(amount as usize);
     for j in length - amount..length {
-        let t = rng.gen_range(0, j + 1);
+        let t = rng.gen_range(0..=j);
         if floyd_shuffle {
             if let Some(pos) = indices.iter().position(|&x| x == t) {
                 indices.insert(pos, j);
@@ -290,7 +290,7 @@ where R: Rng + ?Sized {
         // Reimplement SliceRandom::shuffle with smaller indices
         for i in (1..amount).rev() {
             // invariant: elements with index > i have been locked in place.
-            indices.swap(i as usize, rng.gen_range(0, i + 1) as usize);
+            indices.swap(i as usize, rng.gen_range(0..=i) as usize);
         }
     }
     IndexVec::from(indices)
@@ -314,7 +314,7 @@ where R: Rng + ?Sized {
     let mut indices: Vec<u32> = Vec::with_capacity(length as usize);
     indices.extend(0..length);
     for i in 0..amount {
-        let j: u32 = rng.gen_range(i, length);
+        let j: u32 = rng.gen_range(i..length);
         indices.swap(i as usize, j as usize);
     }
     indices.truncate(amount as usize);

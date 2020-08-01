@@ -10,7 +10,7 @@
 //! [`Rng`] trait
 
 use rand_core::{Error, RngCore};
-use crate::distributions::uniform::{SampleBorrow, SampleUniform, UniformSampler};
+use crate::distributions::uniform::{SampleRange, SampleUniform};
 use crate::distributions::{self, Distribution, Standard};
 use core::num::Wrapping;
 use core::{mem, slice};
@@ -93,16 +93,17 @@ pub trait Rng: RngCore {
         Standard.sample(self)
     }
 
-    /// Generate a random value in the range [`low`, `high`), i.e. inclusive of
-    /// `low` and exclusive of `high`.
+    /// Generate a random value in the given range.
     ///
     /// This function is optimised for the case that only a single sample is
     /// made from the given range. See also the [`Uniform`] distribution
     /// type which may be faster if sampling from the same range repeatedly.
     ///
+    /// Only `gen_range(low..high)` and `gen_range(low..=high)` are supported.
+    ///
     /// # Panics
     ///
-    /// Panics if `low >= high`.
+    /// Panics if the range is empty.
     ///
     /// # Example
     ///
@@ -110,19 +111,26 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
-    /// let n: u32 = rng.gen_range(0, 10);
+    ///
+    /// // Exclusive range
+    /// let n: u32 = rng.gen_range(0..10);
     /// println!("{}", n);
-    /// let m: f64 = rng.gen_range(-40.0f64, 1.3e5f64);
+    /// let m: f64 = rng.gen_range(-40.0..1.3e5);
     /// println!("{}", m);
+    ///
+    /// // Inclusive range
+    /// let n: u32 = rng.gen_range(0..=10);
+    /// println!("{}", n);
     /// ```
     ///
     /// [`Uniform`]: distributions::uniform::Uniform
-    fn gen_range<T: SampleUniform, B1, B2>(&mut self, low: B1, high: B2) -> T
+    fn gen_range<T, R>(&mut self, range: R) -> T
     where
-        B1: SampleBorrow<T> + Sized,
-        B2: SampleBorrow<T> + Sized,
+        T: SampleUniform,
+        R: SampleRange<T>
     {
-        T::Sampler::sample_single(low, high, self)
+        assert!(!range.is_empty(), "cannot sample empty range");
+        range.sample_single(self)
     }
 
     /// Sample a new value, using the given distribution.
@@ -472,23 +480,38 @@ mod test {
     }
 
     #[test]
-    fn test_gen_range() {
+    fn test_gen_range_int() {
         let mut r = rng(101);
         for _ in 0..1000 {
-            let a = r.gen_range(-4711, 17);
+            let a = r.gen_range(-4711..17);
             assert!(a >= -4711 && a < 17);
-            let a = r.gen_range(-3i8, 42);
+            let a = r.gen_range(-3i8..42);
             assert!(a >= -3i8 && a < 42i8);
-            let a = r.gen_range(&10u16, 99);
+            let a: u16 = r.gen_range(10..99);
             assert!(a >= 10u16 && a < 99u16);
-            let a = r.gen_range(-100i32, &2000);
+            let a = r.gen_range(-100i32..2000);
             assert!(a >= -100i32 && a < 2000i32);
-            let a = r.gen_range(&12u32, &24u32);
-            assert!(a >= 12u32 && a < 24u32);
+            let a: u32 = r.gen_range(12..=24);
+            assert!(a >= 12u32 && a <= 24u32);
 
-            assert_eq!(r.gen_range(0u32, 1), 0u32);
-            assert_eq!(r.gen_range(-12i64, -11), -12i64);
-            assert_eq!(r.gen_range(3_000_000, 3_000_001), 3_000_000);
+            assert_eq!(r.gen_range(0u32..1), 0u32);
+            assert_eq!(r.gen_range(-12i64..-11), -12i64);
+            assert_eq!(r.gen_range(3_000_000..3_000_001), 3_000_000);
+        }
+    }
+
+    #[test]
+    fn test_gen_range_float() {
+        let mut r = rng(101);
+        for _ in 0..1000 {
+            let a = r.gen_range(-4.5..1.7);
+            assert!(a >= -4.5 && a < 1.7);
+            let a = r.gen_range(-1.1..=-0.3);
+            assert!(a >= -1.1 && a <= -0.3);
+
+            assert_eq!(r.gen_range(0.0f32..=0.0), 0.);
+            assert_eq!(r.gen_range(-11.0..=-11.0), -11.);
+            assert_eq!(r.gen_range(3_000_000.0..=3_000_000.0), 3_000_000.);
         }
     }
 
@@ -496,14 +519,14 @@ mod test {
     #[should_panic]
     fn test_gen_range_panic_int() {
         let mut r = rng(102);
-        r.gen_range(5, -2);
+        r.gen_range(5..-2);
     }
 
     #[test]
     #[should_panic]
     fn test_gen_range_panic_usize() {
         let mut r = rng(103);
-        r.gen_range(5, 2);
+        r.gen_range(5..2);
     }
 
     #[test]
@@ -522,7 +545,7 @@ mod test {
         let mut r = &mut rng as &mut dyn RngCore;
         r.next_u32();
         r.gen::<i32>();
-        assert_eq!(r.gen_range(0, 1), 0);
+        assert_eq!(r.gen_range(0..1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
 
@@ -534,7 +557,7 @@ mod test {
         let mut r = Box::new(rng) as Box<dyn RngCore>;
         r.next_u32();
         r.gen::<i32>();
-        assert_eq!(r.gen_range(0, 1), 0);
+        assert_eq!(r.gen_range(0..1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
 

@@ -11,8 +11,8 @@
 //!
 //! This module is the home of the [`Distribution`] trait and several of its
 //! implementations. It is the workhorse behind some of the convenient
-//! functionality of the [`Rng`] trait, e.g. [`Rng::gen`], [`Rng::gen_range`] and
-//! of course [`Rng::sample`].
+//! functionality of the [`Rng`] trait, e.g. [`Rng::gen`] and of course
+//! [`Rng::sample`].
 //!
 //! Abstractly, a [probability distribution] describes the probability of
 //! occurrence of each value in its sample space.
@@ -54,16 +54,16 @@
 //! space to be specified as an arbitrary range within its target type `T`.
 //! Both [`Standard`] and [`Uniform`] are in some sense uniform distributions.
 //!
-//! Values may be sampled from this distribution using [`Rng::gen_range`] or
+//! Values may be sampled from this distribution using [`Rng::sample(Range)`] or
 //! by creating a distribution object with [`Uniform::new`],
 //! [`Uniform::new_inclusive`] or `From<Range>`. When the range limits are not
 //! known at compile time it is typically faster to reuse an existing
-//! distribution object than to call [`Rng::gen_range`].
+//! `Uniform` object than to call [`Rng::sample(Range)`].
 //!
 //! User types `T` may also implement `Distribution<T>` for [`Uniform`],
 //! although this is less straightforward than for [`Standard`] (see the
-//! documentation in the [`uniform`] module. Doing so enables generation of
-//! values of type `T` with  [`Rng::gen_range`].
+//! documentation in the [`uniform`] module). Doing so enables generation of
+//! values of type `T` with  [`Rng::sample(Range)`].
 //!
 //! ## Open and half-open ranges
 //!
@@ -315,11 +315,10 @@ where
 /// multiplicative method: `(rng.gen::<$uty>() >> N) as $ty * (ε/2)`.
 ///
 /// See also: [`Open01`] which samples from `(0, 1)`, [`OpenClosed01`] which
-/// samples from `(0, 1]` and `Rng::gen_range(0, 1)` which also samples from
-/// `[0, 1)`. Note that `Open01` and `gen_range` (which uses [`Uniform`]) use
-/// transmute-based methods which yield 1 bit less precision but may perform
-/// faster on some architectures (on modern Intel CPUs all methods have
-/// approximately equal performance).
+/// samples from `(0, 1]` and `Rng::gen_range(0..1)` which also samples from
+/// `[0, 1)`. Note that `Open01` uses transmute-based methods which yield 1 bit
+/// less precision but may perform faster on some architectures (on modern Intel
+/// CPUs all methods have approximately equal performance).
 ///
 /// [`Uniform`]: uniform::Uniform
 #[derive(Clone, Copy, Debug)]
