@@ -25,8 +25,8 @@ num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 
 [features]
 default = ["std"]
-std = ["alloc"]
-alloc = []
+std = ["alloc", "rand/std"]
+alloc = ["rand/alloc"]
 
 [dev-dependencies]
 rand_pcg = { version = "0.2", path = "../rand_pcg" }
