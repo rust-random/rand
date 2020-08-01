@@ -162,7 +162,7 @@ mod test {
     #[test]
     fn test_zero() {
         let d = Exp::new(0.0).unwrap();
-        assert_eq!(d.sample(&mut crate::test::rng(21)), std::f64::INFINITY);
+        assert_eq!(d.sample(&mut crate::test::rng(21)), f64::infinity());
     }
     #[test]
     #[should_panic]
@@ -173,6 +173,6 @@ mod test {
     #[test]
     #[should_panic]
     fn test_exp_invalid_lambda_nan() {
-        Exp::new(std::f64::NAN).unwrap();
+        Exp::new(f64::nan()).unwrap();
     }
 }
