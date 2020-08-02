@@ -58,8 +58,20 @@ macro_rules! fill_via_chunks {
         let chunk_size_u8 = min($src.len() * SIZE, $dst.len());
         let chunk_size = (chunk_size_u8 + SIZE - 1) / SIZE;
 
-        for (&n, chunk) in $src.iter().zip($dst.chunks_mut(SIZE)) {
-            chunk.copy_from_slice(&n.to_le_bytes()[..chunk.len()]);
+        let mut iter_src = $src.iter();
+        let mut iter_chunks = $dst.chunks_exact_mut(SIZE);
+        let mut n;
+        loop {
+            n = iter_src.next();
+            if let (Some(n_), Some(chunk)) = (n, iter_chunks.next()) {
+                chunk.copy_from_slice(&n_.to_le_bytes());
+            } else {
+                break;
+            }
+        }
+        let rem = iter_chunks.into_remainder();
+        if let Some(n_) = n {
+            rem.copy_from_slice(&n_.to_le_bytes()[..rem.len()]);
         }
 
         (chunk_size, chunk_size_u8)
