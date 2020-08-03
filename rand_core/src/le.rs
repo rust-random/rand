@@ -16,7 +16,8 @@ use core::convert::TryInto;
 /// Reads unsigned 32 bit integers from `src` into `dst`.
 #[inline]
 pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
-    for (out, chunk) in dst.iter_mut().zip(src.chunks(4)) {
+    assert!(4 * src.len() >= dst.len());
+    for (out, chunk) in dst.iter_mut().zip(src.chunks_exact(4)) {
         *out = u32::from_le_bytes(chunk.try_into().unwrap());
     }
 }
@@ -24,7 +25,8 @@ pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
 /// Reads unsigned 64 bit integers from `src` into `dst`.
 #[inline]
 pub fn read_u64_into(src: &[u8], dst: &mut [u64]) {
-    for (out, chunk) in dst.iter_mut().zip(src.chunks(8)) {
+    assert!(8 * src.len() >= dst.len());
+    for (out, chunk) in dst.iter_mut().zip(src.chunks_exact(8)) {
         *out = u64::from_le_bytes(chunk.try_into().unwrap());
     }
 }
