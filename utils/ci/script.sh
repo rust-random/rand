@@ -29,6 +29,7 @@ main() {
   if [ "0$NIGHTLY" -ge 1 ]; then
     $CARGO test $TARGET --all-features
     $CARGO test $TARGET --benches --features=nightly
+    $CARGO test $TARGET --manifest-path rand_distr/Cargo.toml --benches --features=nightly
   else
     # all stable features:
     $CARGO test $TARGET --features=serde1,log,small_rng
