@@ -280,6 +280,10 @@ where
     F: Fn(usize) -> X,
     X: Into<f64>,
 {
+    if amount == 0 {
+        return Ok(IndexVec::USize(Vec::new()));
+    }
+
     if amount > length {
         panic!("`amount` of samples must be less than or equal to `length`");
     }
@@ -312,10 +316,6 @@ where
 
     #[cfg(feature = "partition_at_index")]
     {
-        if length == 0 {
-            return Ok(IndexVec::USize(Vec::new()));
-        }
-
         let mut candidates = Vec::with_capacity(length);
         for index in 0..length {
             let weight = weight(index).into();
