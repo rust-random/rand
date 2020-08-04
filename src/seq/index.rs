@@ -297,14 +297,14 @@ where
     }
     impl PartialOrd for Element {
         fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-            self.key
-                .partial_cmp(&other.key)
-                .or(Some(core::cmp::Ordering::Less))
+            self.key.partial_cmp(&other.key)
         }
     }
     impl Ord for Element {
         fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-            self.partial_cmp(other).unwrap() // partial_cmp will always produce a value
+             // partial_cmp will always produce a value,
+             // because we check that the weights are not nan
+            self.partial_cmp(other).unwrap()
         }
     }
     impl PartialEq for Element {
@@ -319,7 +319,7 @@ where
         let mut candidates = Vec::with_capacity(length);
         for index in 0..length {
             let weight = weight(index).into();
-            if weight < 0.0 || weight.is_nan() {
+            if !(weight >= 0.) {
                 return Err(WeightedError::InvalidWeight);
             }
 
