@@ -23,7 +23,7 @@ appveyor = { repository = "rust-random/rand" }
 [features]
 # Meta-features:
 default = ["std", "std_rng"]
-nightly = ["simd_support", "partition_at_index"] # enables all features requiring nightly rust
+nightly = ["simd_support"] # enables all features requiring nightly rust
 serde1 = ["serde"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
@@ -44,9 +44,6 @@ std_rng = ["rand_chacha", "rand_hc"]
 
 # Option: enable SmallRng
 small_rng = ["rand_pcg"]
-
-# Option (requires nightly): better performance of choose_multiple_weighted
-partition_at_index = []
 
 [workspace]
 members = [

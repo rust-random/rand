@@ -268,7 +268,7 @@ where R: Rng + ?Sized {
 /// an alternative.
 ///
 /// This implementation uses `O(length + amount)` space and `O(length)` time
-/// if the "partition_at_index" feature is enabled, or `O(length)` space and
+/// if the "nightly" feature is enabled, or `O(length)` space and
 /// `O(length + amount * log length)` time otherwise.
 ///
 /// Panics if `amount > length`.
@@ -298,7 +298,7 @@ where
 /// This implementation uses the algorithm described by Efraimidis and Spirakis
 /// in this paper: https://doi.org/10.1016/j.ipl.2005.11.003
 /// It uses `O(length + amount)` space and `O(length)` time if the
-/// "partition_at_index" feature is enabled, or `O(length)` space and `O(length
+/// "nightly" feature is enabled, or `O(length)` space and `O(length
 /// + amount * log length)` time otherwise.
 ///
 /// Panics if `amount > length`.
@@ -342,7 +342,7 @@ where
     }
     impl<N> Eq for Element<N> {}
 
-    #[cfg(feature = "partition_at_index")]
+    #[cfg(feature = "nightly")]
     {
         let mut candidates = Vec::with_capacity(length.as_usize());
         for index in 0..length.as_usize() {
@@ -370,7 +370,7 @@ where
         Ok(IndexVec::from(result))
     }
 
-    #[cfg(not(feature = "partition_at_index"))]
+    #[cfg(not(feature = "nightly"))]
     {
         #[cfg(all(feature = "alloc", not(feature = "std")))]
         use crate::alloc::collections::BinaryHeap;

@@ -50,7 +50,7 @@
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(all(feature = "simd_support", feature = "nightly"), feature(stdsimd))]
-#![cfg_attr(all(feature = "partition_at_index", feature = "nightly"), feature(slice_partition_at_index))]
+#![cfg_attr(feature = "nightly", feature(slice_partition_at_index))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(
     clippy::excessive_precision,
