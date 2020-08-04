@@ -20,7 +20,7 @@ use std::mem::size_of;
 use test::Bencher;
 
 use rand::prelude::*;
-use rand_distr::{weighted::WeightedIndex, *};
+use rand_distr::*;
 
 // At this time, distributions are optimised for 64-bit platforms.
 use rand_pcg::Pcg64Mcg;
@@ -120,7 +120,7 @@ distr_float!(distr_cauchy, f64, Cauchy::new(4.2, 6.9).unwrap());
 distr_float!(distr_triangular, f64, Triangular::new(0., 1., 0.9).unwrap());
 distr_int!(distr_binomial, u64, Binomial::new(20, 0.7).unwrap());
 distr_int!(distr_binomial_small, u64, Binomial::new(1000000, 1e-30).unwrap());
-distr_int!(distr_poisson, u64, Poisson::new(4.0).unwrap());
+distr_float!(distr_poisson, f64, Poisson::new(4.0).unwrap());
 distr!(distr_bernoulli, bool, Bernoulli::new(0.18).unwrap());
 distr_arr!(distr_circle, [f64; 2], UnitCircle);
 distr_arr!(distr_sphere, [f64; 3], UnitSphere);
@@ -131,10 +131,10 @@ distr_int!(distr_weighted_u32, usize, WeightedIndex::new(&[1u32, 2, 3, 4, 12, 0,
 distr_int!(distr_weighted_f64, usize, WeightedIndex::new(&[1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
 distr_int!(distr_weighted_large_set, usize, WeightedIndex::new((0..10000).rev().chain(1..10001)).unwrap());
 
-distr_int!(distr_weighted_alias_method_i8, usize, weighted::alias_method::WeightedIndex::new(vec![1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-distr_int!(distr_weighted_alias_method_u32, usize, weighted::alias_method::WeightedIndex::new(vec![1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-distr_int!(distr_weighted_alias_method_f64, usize, weighted::alias_method::WeightedIndex::new(vec![1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
-distr_int!(distr_weighted_alias_method_large_set, usize, weighted::alias_method::WeightedIndex::new((0..10000).rev().chain(1..10001).collect()).unwrap());
+distr_int!(distr_weighted_alias_method_i8, usize, WeightedAliasIndex::new(vec![1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+distr_int!(distr_weighted_alias_method_u32, usize, WeightedAliasIndex::new(vec![1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+distr_int!(distr_weighted_alias_method_f64, usize, WeightedAliasIndex::new(vec![1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
+distr_int!(distr_weighted_alias_method_large_set, usize, WeightedAliasIndex::new((0..10000).rev().chain(1..10001).collect()).unwrap());
 
 
 #[bench]
