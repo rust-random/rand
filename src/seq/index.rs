@@ -8,18 +8,15 @@
 
 //! Low-level API for sampling indices
 
-#[cfg(feature = "alloc")]
-use core::slice;
+#[cfg(feature = "alloc")] use core::slice;
 
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use crate::alloc::vec::{self, Vec};
-#[cfg(feature = "std")]
-use std::vec;
+#[cfg(feature = "std")] use std::vec;
 // BTreeMap is not as fast in tests, but better than nothing.
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use crate::alloc::collections::BTreeSet;
-#[cfg(feature = "std")]
-use std::collections::HashSet;
+#[cfg(feature = "std")] use std::collections::HashSet;
 
 #[cfg(feature = "alloc")]
 use crate::distributions::{uniform::SampleUniform, Distribution, Uniform, WeightedError};
