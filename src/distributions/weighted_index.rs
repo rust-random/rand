@@ -48,7 +48,7 @@ use serde::{Serialize, Deserialize};
 /// Sampling from `WeightedIndex` will result in a single call to
 /// `Uniform<X>::sample` (method of the [`Distribution`] trait), which typically
 /// will request a single value from the underlying [`RngCore`], though the
-/// exact number depends on the implementaiton of `Uniform<X>::sample`.
+/// exact number depends on the implementation of `Uniform<X>::sample`.
 ///
 /// # Example
 ///
