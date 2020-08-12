@@ -58,6 +58,29 @@ macro_rules! fill_via_chunks {
         let chunk_size_u8 = min($src.len() * SIZE, $dst.len());
         let chunk_size = (chunk_size_u8 + SIZE - 1) / SIZE;
 
+        if cfg!(target_endian = "little") {
+            unsafe {
+                core::ptr::copy_nonoverlapping(
+                    $src.as_ptr() as *const u8,
+                    $dst.as_mut_ptr(),
+                    chunk_size_u8);
+            }
+        } else {
+            for (&n, chunk) in $src.iter().zip($dst.chunks_mut(SIZE)) {
+                let tmp = n.to_le();
+                let src_ptr = &tmp as *const $ty as *const u8;
+                unsafe {
+                    core::ptr::copy_nonoverlapping(
+                        src_ptr,
+                        chunk.as_mut_ptr(),
+                        chunk.len());
+                }
+            }
+        }
+
+        // The following code is a safe replacement, but unfortunately ca. 8%
+        // slower.
+        /*
         let mut iter_src = $src.iter();
         let mut chunks = $dst.chunks_exact_mut(SIZE);
         for (chunk, n) in (&mut chunks).zip(&mut iter_src) {
@@ -67,6 +90,7 @@ macro_rules! fill_via_chunks {
         if let Some(n) = iter_src.next() {
             rem.copy_from_slice(&n.to_le_bytes()[..rem.len()]);
         }
+        */
 
         (chunk_size, chunk_size_u8)
     }};
