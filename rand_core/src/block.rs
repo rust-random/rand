@@ -21,12 +21,14 @@
 //!
 //! # Example
 //!
-//! ```norun
+//! ```no_run
+//! use rand_core::{RngCore, SeedableRng};
 //! use rand_core::block::{BlockRngCore, BlockRng};
 //!
 //! struct MyRngCore;
 //!
 //! impl BlockRngCore for MyRngCore {
+//!     type Item = u32;
 //!     type Results = [u32; 16];
 //!
 //!     fn generate(&mut self, results: &mut Self::Results) {
@@ -35,7 +37,7 @@
 //! }
 //!
 //! impl SeedableRng for MyRngCore {
-//!     type Seed = unimplemented!();
+//!     type Seed = [u8; 32];
 //!     fn from_seed(seed: Self::Seed) -> Self {
 //!         unimplemented!()
 //!     }
@@ -44,7 +46,8 @@
 //! // optionally, also implement CryptoRng for MyRngCore
 //!
 //! // Final RNG.
-//! type MyRng = BlockRng<u32, MyRngCore>;
+//! let mut rng = BlockRng::<MyRngCore>::seed_from_u64(0);
+//! println!("First value: {}", rng.next_u32());
 //! ```
 //!
 //! [`BlockRngCore`]: crate::block::BlockRngCore
