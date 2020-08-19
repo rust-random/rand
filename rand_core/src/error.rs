@@ -11,7 +11,6 @@
 use core::fmt;
 use core::num::NonZeroU32;
 
-
 /// Error type of random number generators
 ///
 /// In order to be compatible with `std` and `no_std`, this type has two
@@ -41,7 +40,9 @@ impl Error {
     #[cfg(feature = "std")]
     #[inline]
     pub fn new<E>(err: E) -> Self
-    where E: Into<Box<dyn std::error::Error + Send + Sync + 'static>> {
+    where
+        E: Into<Box<dyn std::error::Error + Send + Sync + 'static>>,
+    {
         Error { inner: err.into() }
     }
 
