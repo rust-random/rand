@@ -124,7 +124,7 @@ where F: Float, Exp1: Distribution<F>
     /// 
     /// # Remarks
     /// 
-    /// For custom types `N` implementing the [`Float`](crate::Float) trait, 
+    /// For custom types `N` implementing the [`Float`] trait,
     /// the case `lambda = 0` is handled as follows: each sample corresponds
     /// to a sample from an `Exp1` multiplied by `1 / 0`. Primitive types 
     /// yield infinity, since `1 / 0 = infinity`.
