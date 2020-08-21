@@ -178,7 +178,7 @@ use crate::distributions::{Distribution, Standard};
 ///
 /// [`Standard`]: distributions::Standard
 #[cfg(all(feature = "std", feature = "std_rng"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std_rng")))]
+#[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng"))))]
 #[inline]
 pub fn random<T>() -> T
 where Standard: Distribution<T> {

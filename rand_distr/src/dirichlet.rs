@@ -31,6 +31,7 @@ use alloc::{boxed::Box, vec, vec::Vec};
 /// let samples = dirichlet.sample(&mut rand::thread_rng());
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Debug)]
 pub struct Dirichlet<F>
 where
@@ -44,6 +45,7 @@ where
 }
 
 /// Error type returned from `Dirchlet::new`.
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `alpha.len() < 2`.

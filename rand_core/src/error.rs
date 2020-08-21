@@ -38,6 +38,7 @@ impl Error {
     ///
     /// See also `From<NonZeroU32>`, which is available with and without `std`.
     #[cfg(feature = "std")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     #[inline]
     pub fn new<E>(err: E) -> Self
     where
@@ -51,6 +52,7 @@ impl Error {
     /// When configured with `std`, this is a trivial operation and never
     /// panics. Without `std`, this method is simply unavailable.
     #[cfg(feature = "std")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     #[inline]
     pub fn inner(&self) -> &(dyn std::error::Error + Send + Sync + 'static) {
         &*self.inner
@@ -61,6 +63,7 @@ impl Error {
     /// When configured with `std`, this is a trivial operation and never
     /// panics. Without `std`, this method is simply unavailable.
     #[cfg(feature = "std")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     #[inline]
     pub fn take_inner(self) -> Box<dyn std::error::Error + Send + Sync + 'static> {
         self.inner

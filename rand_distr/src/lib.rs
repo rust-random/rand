@@ -20,6 +20,7 @@
 )]
 #![allow(clippy::neg_cmp_op_on_partial_ord)] // suggested fix too verbose
 #![no_std]
+#![cfg_attr(doc_cfg, feature(doc_cfg))]
 
 //! Generating random samples from probability distributions.
 //!
@@ -107,6 +108,7 @@ pub use self::unit_disc::UnitDisc;
 pub use self::unit_sphere::UnitSphere;
 pub use self::weibull::{Error as WeibullError, Weibull};
 #[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use rand::distributions::weighted::{WeightedError, WeightedIndex};
 #[cfg(feature = "alloc")]
 pub use weighted_alias::WeightedAliasIndex;
@@ -114,6 +116,7 @@ pub use weighted_alias::WeightedAliasIndex;
 pub use num_traits;
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod weighted_alias;
 
 mod binomial;
