@@ -11,7 +11,7 @@
 #[cfg(feature = "simd_support")] use packed_simd::*;
 
 
-pub trait WideningMultiply<RHS = Self> {
+pub(crate) trait WideningMultiply<RHS = Self> {
     type Output;
 
     fn wmul(self, x: RHS) -> Self::Output;

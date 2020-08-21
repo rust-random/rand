@@ -50,6 +50,7 @@
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(all(feature = "simd_support", feature = "nightly"), feature(stdsimd))]
+#![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(
     clippy::excessive_precision,
     clippy::unreadable_literal,
@@ -177,6 +178,7 @@ use crate::distributions::{Distribution, Standard};
 ///
 /// [`Standard`]: distributions::Standard
 #[cfg(all(feature = "std", feature = "std_rng"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "std_rng")))]
 #[inline]
 pub fn random<T>() -> T
 where Standard: Distribution<T> {

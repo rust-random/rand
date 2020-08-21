@@ -86,4 +86,7 @@ rand_hc = { path = "rand_hc", version = "0.2" }
 bincode = "1.2.1"
 
 [package.metadata.docs.rs]
+# To build locally:
+# RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --no-deps --open
 all-features = true
+rustdoc-args = ["--cfg", "doc_cfg"]
