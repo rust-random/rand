@@ -20,7 +20,7 @@ appveyor = { repository = "rust-random/rand" }
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.5" }
-ppv-lite86 = { version = "0.2.8", default-features = false }
+ppv-lite86 = { version = "0.2.8", default-features = false, features = ["simd"] }
 
 [features]
 default = ["std"]
