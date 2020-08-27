@@ -13,6 +13,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - impl PartialEq+Eq for StdRng, SmallRng, and StepRng (#975)
 - Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
 - Document types supported by `random` (#994)
+- Implement weighted sampling without replacement (#976, #1013)
 
 ### Changes
 - `gen_range(a, b)` was replaced with `gen_range(a..b)`, and `gen_range(a..=b)`
@@ -20,6 +21,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Replace `AsByteSliceMut` with `Fill` (#940)
 - Move alias method for `WeightedIndex` to `rand_distr` (#945)
 - `Alphanumeric` samples bytes instead of chars (#935)
+- The minimum supported Rust version is now 1.36 (#1011)
 - Better NaN handling for `WeightedIndex` (#1005)
 - Implement `IntoIterator` for `IndexVec`, replacing the `into_iter` method (#1007)
 - Reduce packaged crate size (#983)
