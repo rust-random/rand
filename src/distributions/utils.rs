@@ -11,7 +11,7 @@
 #[cfg(feature = "simd_support")] use packed_simd::*;
 
 
-pub trait WideningMultiply<RHS = Self> {
+pub(crate) trait WideningMultiply<RHS = Self> {
     type Output;
 
     fn wmul(self, x: RHS) -> Self::Output;
@@ -208,9 +208,6 @@ mod simd_wmul {
     wmul_impl_large! { (u32x16,) u32, 16 }
     wmul_impl_large! { (u64x2, u64x4, u64x8,) u64, 32 }
 }
-#[cfg(all(feature = "simd_support", feature = "nightly"))]
-pub use self::simd_wmul::*;
-
 
 /// Helper trait when dealing with scalar and SIMD floating point types.
 pub(crate) trait FloatSIMDUtils {

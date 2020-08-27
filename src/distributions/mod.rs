@@ -108,7 +108,9 @@ mod bernoulli;
 pub mod uniform;
 
 #[deprecated(since = "0.8.0", note = "use rand::distributions::{WeightedIndex, WeightedError} instead")]
-#[cfg(feature = "alloc")] pub mod weighted;
+#[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+pub mod weighted;
 #[cfg(feature = "alloc")] mod weighted_index;
 
 #[cfg(feature = "serde1")]

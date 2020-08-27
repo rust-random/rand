@@ -63,6 +63,7 @@ use alloc::{boxed::Box, vec, vec::Vec};
 /// [`Vec<u32>`]: Vec
 /// [`Uniform<u32>::sample`]: Distribution::sample
 /// [`Uniform<W>::sample`]: Distribution::sample
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub struct WeightedAliasIndex<W: AliasableWeight> {
     aliases: Box<[u32]>,
     no_alias_odds: Box<[W]>,
@@ -269,6 +270,7 @@ where Uniform<W>: Clone
 /// Trait that must be implemented for weights, that are used with
 /// [`WeightedAliasIndex`]. Currently no guarantees on the correctness of
 /// [`WeightedAliasIndex`] are given for custom implementations of this trait.
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub trait AliasableWeight:
     Sized
     + Copy

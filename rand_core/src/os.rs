@@ -43,6 +43,7 @@ use getrandom::getrandom;
 /// ```
 ///
 /// [getrandom]: https://crates.io/crates/getrandom
+#[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct OsRng;
 

@@ -22,9 +22,6 @@ type Rng = rand_pcg::Pcg32;
 /// It is **not** a good choice when security against prediction or
 /// reproducibility are important.
 ///
-/// This PRNG is **feature-gated**: to use, you must enable the crate feature
-/// `small_rng`.
-///
 /// The algorithm is deterministic but should not be considered reproducible
 /// due to dependence on platform and possible replacement in future
 /// library versions. For a reproducible generator, use a named PRNG from an
@@ -73,6 +70,7 @@ type Rng = rand_pcg::Pcg32;
 /// [`thread_rng`]: crate::thread_rng
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
 /// [rand_pcg]: https://crates.io/crates/rand_pcg
+#[cfg_attr(doc_cfg, doc(cfg(feature = "small_rng")))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
 

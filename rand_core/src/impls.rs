@@ -23,7 +23,6 @@ use core::mem::size_of;
 use core::ptr::copy_nonoverlapping;
 use core::slice;
 
-
 /// Implement `next_u64` via `next_u32`, little-endian order.
 pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
     // Use LE; we explicitly generate one value before the next.

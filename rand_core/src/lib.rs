@@ -37,7 +37,7 @@
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![allow(clippy::unreadable_literal)]
 #![cfg_attr(not(feature = "std"), no_std)]
-
+#![cfg_attr(doc_cfg, feature(doc_cfg))]
 
 use core::convert::AsMut;
 use core::default::Default;
@@ -364,6 +364,7 @@ pub trait SeedableRng: Sized {
     ///
     /// [`getrandom`]: https://docs.rs/getrandom
     #[cfg(feature = "getrandom")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
     fn from_entropy() -> Self {
         let mut seed = Self::Seed::default();
         if let Err(err) = getrandom::getrandom(seed.as_mut()) {
