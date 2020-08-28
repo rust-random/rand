@@ -79,7 +79,7 @@
 //! the [`Bernoulli`] distribution (this is used by [`Rng::gen_bool`]).
 //!
 //! For weighted sampling from a sequence of discrete values, use the
-//! [`weighted`] module.
+//! [`WeightedIndex`] distribution.
 //!
 //! This crate no longer includes other non-uniform distributions; instead
 //! it is recommended that you use either [`rand_distr`] or [`statrs`].
