@@ -11,11 +11,11 @@
 use crate::{CryptoRng, Error, RngCore, SeedableRng};
 
 #[cfg(all(any(test, feature = "std"), not(target_os = "emscripten")))]
-pub(crate) use rand_chacha::ChaCha20Core as Core;
+pub(crate) use rand_chacha::ChaCha12Core as Core;
 #[cfg(all(any(test, feature = "std"), target_os = "emscripten"))]
 pub(crate) use rand_hc::Hc128Core as Core;
 
-#[cfg(not(target_os = "emscripten"))] use rand_chacha::ChaCha20Rng as Rng;
+#[cfg(not(target_os = "emscripten"))] use rand_chacha::ChaCha12Rng as Rng;
 #[cfg(target_os = "emscripten")] use rand_hc::Hc128Rng as Rng;
 
 /// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
@@ -88,9 +88,6 @@ mod test {
         let seed = [1,0,0,0, 23,0,0,0, 200,1,0,0, 210,30,0,0,
                     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
 
-        #[cfg(any(feature = "stdrng_strong", not(feature = "stdrng_fast")))]
-        let target = [3950704604716924505, 5573172343717151650];
-        #[cfg(all(not(feature = "stdrng_strong"), feature = "stdrng_fast"))]
         let target = [10719222850664546238, 14064965282130556830];
 
         let mut rng0 = StdRng::from_seed(seed);
