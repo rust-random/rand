@@ -12,5 +12,4 @@ mod read;
 mod reseeding;
 
 pub use self::read::{ReadError, ReadRng};
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 pub use self::reseeding::ReseedingRng;
