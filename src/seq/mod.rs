@@ -17,8 +17,8 @@
 //!
 //! Also see:
 //!
-//! *   [`crate::distributions::weighted`] module which provides
-//!     implementations of weighted index sampling.
+//! *   [`crate::distributions::WeightedIndex`] distribution which provides
+//!     weighted index sampling.
 //!
 //! In order to make results reproducible across 32-64 bit architectures, all
 //! `usize` indices are sampled as a `u32` where possible (also providing a
