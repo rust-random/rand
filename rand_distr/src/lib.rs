@@ -106,7 +106,7 @@ pub use self::unit_sphere::UnitSphere;
 pub use self::weibull::{Error as WeibullError, Weibull};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
-pub use rand::distributions::weighted::{WeightedError, WeightedIndex};
+pub use rand::distributions::{WeightedError, WeightedIndex};
 #[cfg(feature = "alloc")]
 pub use weighted_alias::WeightedAliasIndex;
 
