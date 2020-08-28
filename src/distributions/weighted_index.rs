@@ -43,7 +43,7 @@ use serde::{Serialize, Deserialize};
 /// `Vec` doesn't guarantee a particular growth strategy, additional memory
 /// might be allocated but not used. Since the `WeightedIndex` object also
 /// contains, this might cause additional allocations, though for primitive
-/// types, ['Uniform<X>`] doesn't allocate any memory.
+/// types, [`Uniform<X>`] doesn't allocate any memory.
 ///
 /// Sampling from `WeightedIndex` will result in a single call to
 /// `Uniform<X>::sample` (method of the [`Distribution`] trait), which typically
@@ -73,7 +73,7 @@ use serde::{Serialize, Deserialize};
 /// }
 /// ```
 ///
-/// [`Uniform<X>`]: crate::distributions::uniform::Uniform
+/// [`Uniform<X>`]: crate::distributions::Uniform
 /// [`RngCore`]: crate::RngCore
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
