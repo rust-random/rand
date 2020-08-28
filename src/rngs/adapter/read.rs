@@ -43,7 +43,6 @@ use rand_core::{impls, Error, RngCore};
 ///
 /// [`OsRng`]: crate::rngs::OsRng
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 #[derive(Debug)]
 pub struct ReadRng<R> {
     reader: R,
@@ -86,7 +85,6 @@ impl<R: Read> RngCore for ReadRng<R> {
 }
 
 /// `ReadRng` error type
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 #[derive(Debug)]
 pub struct ReadError(std::io::Error);
 
