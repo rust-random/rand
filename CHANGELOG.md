@@ -22,11 +22,13 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Move alias method for `WeightedIndex` to `rand_distr` (#945)
 - `Alphanumeric` samples bytes instead of chars (#935)
 - The minimum supported Rust version is now 1.36 (#1011)
+- Restrict `rand::rngs::adapter` to `std` (#1027)
 - Better NaN handling for `WeightedIndex` (#1005)
 - Implement `IntoIterator` for `IndexVec`, replacing the `into_iter` method (#1007)
 - Reduce packaged crate size (#983)
-- Drop some unsafe code (#962, #963)
+- Drop some unsafe code (#962, #963, #1011)
 - Improve treatment of rounding errors in `WeightedIndex::update_weights` (#956)
+- `StdRng`: Switch from ChaCha20 to ChaCha12 for better performance (#1028)
 
 ## [0.7.3] - 2020-01-10
 ### Fixes
