@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove `Distribution<u64>` impl for `Poisson` (#987)
 - Tweak `Dirichlet` and `alias_method` to use boxed slice instead of `Vec` (#987)
 - Use whitelist for package contents, reducing size by 5kb (#983)
-- Add case `lambda = 0` in the parametrixation of `Exp` (#972)
+- Add case `lambda = 0` in the parametrization of `Exp` (#972)
 - Implement inverse Gaussian distribution (#954)
 - Reformatting and use of `rustfmt::skip` (#926)
 - All error types now implement `std::error::Error` (#919)
