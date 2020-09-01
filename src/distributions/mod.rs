@@ -162,17 +162,21 @@ pub trait Distribution<T> {
     /// use rand::thread_rng;
     /// use rand::distributions::{Distribution, Alphanumeric, Uniform, Standard};
     ///
-    /// let rng = thread_rng();
+    /// let mut rng = thread_rng();
     ///
     /// // Vec of 16 x f32:
-    /// let v: Vec<f32> = Standard.sample_iter(rng).take(16).collect();
+    /// let v: Vec<f32> = Standard.sample_iter(&mut rng).take(16).collect();
     ///
     /// // String:
-    /// let s: String = Alphanumeric.sample_iter(rng).take(7).map(char::from).collect();
+    /// let s: String = Alphanumeric
+    ///     .sample_iter(&mut rng)
+    ///     .take(7)
+    ///     .map(char::from)
+    ///     .collect();
     ///
     /// // Dice-rolling:
     /// let die_range = Uniform::new_inclusive(1, 6);
-    /// let mut roll_die = die_range.sample_iter(rng);
+    /// let mut roll_die = die_range.sample_iter(&mut rng);
     /// while roll_die.next().unwrap() != 6 {
     ///     println!("Not a 6; rolling again!");
     /// }

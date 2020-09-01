@@ -165,21 +165,24 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     /// use rand::distributions::{Alphanumeric, Uniform, Standard};
     ///
-    /// let rng = thread_rng();
+    /// let mut rng = thread_rng();
     ///
     /// // Vec of 16 x f32:
-    /// let v: Vec<f32> = rng.sample_iter(Standard).take(16).collect();
+    /// let v: Vec<f32> = (&mut rng).sample_iter(Standard).take(16).collect();
     ///
     /// // String:
-    /// let s: String = rng.sample_iter(Alphanumeric).take(7).map(char::from).collect();
+    /// let s: String = (&mut rng).sample_iter(Alphanumeric)
+    ///     .take(7)
+    ///     .map(char::from)
+    ///     .collect();
     ///
     /// // Combined values
-    /// println!("{:?}", rng.sample_iter(Standard).take(5)
+    /// println!("{:?}", (&mut rng).sample_iter(Standard).take(5)
     ///                              .collect::<Vec<(f64, bool)>>());
     ///
     /// // Dice-rolling:
     /// let die_range = Uniform::new_inclusive(1, 6);
-    /// let mut roll_die = rng.sample_iter(die_range);
+    /// let mut roll_die = (&mut rng).sample_iter(die_range);
     /// while roll_die.next().unwrap() != 6 {
     ///     println!("Not a 6; rolling again!");
     /// }
