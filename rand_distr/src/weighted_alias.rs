@@ -261,7 +261,7 @@ where Uniform<W>: Clone
         Self {
             aliases: self.aliases.clone(),
             no_alias_odds: self.no_alias_odds.clone(),
-            uniform_index: self.uniform_index.clone(),
+            uniform_index: self.uniform_index,
             uniform_within_weight_sum: self.uniform_within_weight_sum.clone(),
         }
     }
@@ -299,7 +299,7 @@ pub trait AliasableWeight:
 
     /// Sums all values in slice `values`.
     fn sum(values: &[Self]) -> Self {
-        values.iter().map(|x| *x).sum()
+        values.iter().copied().sum()
     }
 }
 
@@ -324,7 +324,7 @@ macro_rules! impl_weight_for_float {
 /// rounding errors when there are many floating point values.
 fn pairwise_sum<T: AliasableWeight>(values: &[T]) -> T {
     if values.len() <= 32 {
-        values.iter().map(|x| *x).sum()
+        values.iter().copied().sum()
     } else {
         let mid = values.len() / 2;
         let (a, b) = values.split_at(mid);

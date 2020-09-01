@@ -35,7 +35,6 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
-#![allow(clippy::unreadable_literal)]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![no_std]
 
