@@ -100,12 +100,6 @@ impl ThreadRng {
     fn rng(&mut self) -> &mut ReseedingRng<Core, OsRng> {
         unsafe { &mut *self.rng.get() }
     }
-
-    // Safe alternative using Rc<RefCell<..>>:
-    // #[inline(always)]
-    // fn rng(&mut self) -> RefMut<ReseedingRng<Core, OsRng>> {
-    //     self.rng.borrow_mut()
-    // }
 }
 
 impl RngCore for ThreadRng {
