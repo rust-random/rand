@@ -12,6 +12,7 @@
 use crate::{Distribution, Uniform};
 use rand::Rng;
 use core::fmt;
+use core::cmp::Ordering;
 
 /// The binomial distribution `Binomial(n, p)`.
 ///
@@ -210,24 +211,28 @@ impl Distribution<u64> for Binomial {
                     let s = p / q;
                     let a = s * (n + 1.);
                     let mut f = 1.0;
-                    if m < y {
-                        let mut i = m;
-                        loop {
-                            i += 1;
-                            f *= a / (i as f64) - s;
-                            if i == y {
-                                break;
+                    match m.cmp(&y) {
+                        Ordering::Less => {
+                            let mut i = m;
+                            loop {
+                                i += 1;
+                                f *= a / (i as f64) - s;
+                                if i == y {
+                                    break;
+                                }
                             }
-                        }
-                    } else if m > y {
-                        let mut i = y;
-                        loop {
-                            i += 1;
-                            f /= a / (i as f64) - s;
-                            if i == m {
-                                break;
+                        },
+                        Ordering::Greater => {
+                            let mut i = y;
+                            loop {
+                                i += 1;
+                                f /= a / (i as f64) - s;
+                                if i == m {
+                                    break;
+                                }
                             }
-                        }
+                        },
+                        Ordering::Equal => {},
                     }
                     if v > f {
                         continue;

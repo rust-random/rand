@@ -51,6 +51,7 @@ where
     StandardNormal: Distribution<F>,
     Standard: Distribution<F>,
 {
+    #[allow(clippy::many_single_char_names)]
     fn sample<R>(&self, rng: &mut R) -> F
     where R: Rng + ?Sized {
         let mu = self.mean;
