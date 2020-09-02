@@ -95,30 +95,35 @@ impl Default for ThreadRng {
     }
 }
 
-impl ThreadRng {
-    #[inline(always)]
-    fn rng(&mut self) -> &mut ReseedingRng<Core, OsRng> {
-        unsafe { &mut *self.rng.get() }
-    }
-}
-
 impl RngCore for ThreadRng {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
-        self.rng().next_u32()
+        // SAFETY: We must make sure to stop using `rng` before anyone else
+        // creates another mutable reference
+        let rng = unsafe { &mut *self.rng.get() };
+        rng.next_u32()
     }
 
     #[inline(always)]
     fn next_u64(&mut self) -> u64 {
-        self.rng().next_u64()
+        // SAFETY: We must make sure to stop using `rng` before anyone else
+        // creates another mutable reference
+        let rng = unsafe { &mut *self.rng.get() };
+        rng.next_u64()
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.rng().fill_bytes(dest)
+        // SAFETY: We must make sure to stop using `rng` before anyone else
+        // creates another mutable reference
+        let rng = unsafe { &mut *self.rng.get() };
+        rng.fill_bytes(dest)
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.rng().try_fill_bytes(dest)
+        // SAFETY: We must make sure to stop using `rng` before anyone else
+        // creates another mutable reference
+        let rng = unsafe { &mut *self.rng.get() };
+        rng.try_fill_bytes(dest)
     }
 }
 
