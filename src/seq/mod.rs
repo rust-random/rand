@@ -265,7 +265,8 @@ pub trait SliceRandom {
 
 /// Extension trait on iterators, providing random sampling methods.
 ///
-/// This trait is implemented on all sized iterators, providing methods for
+/// This trait is implemented on all iterators `I` where `I: Iterator + Sized`
+/// and provides methods for
 /// choosing one or more elements. You must `use` this trait:
 ///
 /// ```
