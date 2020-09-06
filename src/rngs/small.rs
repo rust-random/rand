@@ -19,8 +19,11 @@ type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 ///
 /// `SmallRng` may be a good choice when a PRNG with small state, cheap
 /// initialization, good statistical quality and good performance are required.
-/// It is **not** a good choice when security against prediction or
-/// reproducibility are important.
+/// It is **not** a good choice when:
+/// - Security against prediction or reproducibility are important.
+///   Use [`StdRng`] instead.
+/// - The best runtime performance on platforms with SIMD support is required.
+///   Use [`StdRng`] or `rand_chacha::ChaCha8Rng` instead.
 ///
 /// The algorithm is deterministic but should not be considered reproducible
 /// due to dependence on platform and possible replacement in future
@@ -68,7 +71,7 @@ type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 /// [`StdRng`]: crate::rngs::StdRng
 /// [`thread_rng`]: crate::thread_rng
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
-/// [rand_xoshiro]: https://crates.io/crates/rand_pcg
+/// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
 #[cfg_attr(doc_cfg, doc(cfg(feature = "small_rng")))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
