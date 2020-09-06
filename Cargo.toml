@@ -43,7 +43,7 @@ simd_support = ["packed_simd"]
 std_rng = ["rand_chacha", "rand_hc"]
 
 # Option: enable SmallRng
-small_rng = ["rand_pcg"]
+small_rng = []
 
 [workspace]
 members = [
@@ -56,7 +56,6 @@ members = [
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.5.1" }
-rand_pcg = { path = "rand_pcg", version = "0.2.1", optional = true }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 

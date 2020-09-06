@@ -10,10 +10,10 @@
 
 use rand_core::{Error, RngCore, SeedableRng};
 
-#[cfg(all(not(target_os = "emscripten"), target_pointer_width = "64"))]
-type Rng = rand_pcg::Pcg64Mcg;
-#[cfg(not(all(not(target_os = "emscripten"), target_pointer_width = "64")))]
-type Rng = rand_pcg::Pcg32;
+#[cfg(target_pointer_width = "64")]
+type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
+#[cfg(not(target_pointer_width = "64"))]
+type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 
 /// A small-state, fast non-crypto PRNG
 ///
@@ -25,15 +25,14 @@ type Rng = rand_pcg::Pcg32;
 /// The algorithm is deterministic but should not be considered reproducible
 /// due to dependence on platform and possible replacement in future
 /// library versions. For a reproducible generator, use a named PRNG from an
-/// external crate, e.g. [rand_pcg] or [rand_chacha].
+/// external crate, e.g. [rand_xoshiro] or [rand_chacha].
 /// Refer also to [The Book](https://rust-random.github.io/book/guide-rngs.html).
 ///
-/// The PRNG algorithm in `SmallRng` is chosen to be
-/// efficient on the current platform, without consideration for cryptography
-/// or security. The size of its state is much smaller than [`StdRng`].
-/// The current algorithm is [`Pcg64Mcg`](rand_pcg::Pcg64Mcg) on 64-bit
-/// platforms and [`Pcg32`](rand_pcg::Pcg32) on 32-bit platforms. Both are
-/// implemented by the [rand_pcg] crate.
+/// The PRNG algorithm in `SmallRng` is chosen to be efficient on the current
+/// platform, without consideration for cryptography or security. The size of
+/// its state is much smaller than [`StdRng`]. The current algorithm is
+/// `Xoshiro256PlusPlus` on 64-bit platforms and `Xoshiro128PlusPlus` on 32-bit
+/// platforms. Both are implemented by the [rand_xoshiro] crate.
 ///
 /// # Examples
 ///
@@ -69,7 +68,7 @@ type Rng = rand_pcg::Pcg32;
 /// [`StdRng`]: crate::rngs::StdRng
 /// [`thread_rng`]: crate::thread_rng
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
-/// [rand_pcg]: https://crates.io/crates/rand_pcg
+/// [rand_xoshiro]: https://crates.io/crates/rand_pcg
 #[cfg_attr(doc_cfg, doc(cfg(feature = "small_rng")))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
