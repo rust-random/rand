@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+- Improve algorithm for sampling `Beta` (#1000)
+
 ## [0.3.0] - 2020-08-25
 - Move alias method for `WeightedIndex` from `rand` (#945)
 - Rename `WeightedIndex` to `WeightedAliasIndex` (#1008)
@@ -18,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All error types now implement `std::error::Error` (#919)
 - Re-exported `rand::distributions::BernoulliError` (#919)
 - Add value stability tests for distributions (#891)
-- Improve algorithm for sampling `Beta` (#1000)
 
 ## [0.2.2] - 2019-09-10
 - Fix version requirement on rand lib (#847)
