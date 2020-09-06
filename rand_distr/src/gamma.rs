@@ -634,9 +634,9 @@ where
     Open01: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
+        let mut w;
         match self.algorithm {
             BetaAlgorithm::BB(algo) => {
-                let mut w;
                 loop {
                     // 1.
                     let u1 = rng.sample(Open01);
@@ -661,19 +661,8 @@ where
                         break;
                     }
                 }
-                // 5.
-                if !self.switched_params {
-                    if w == F::infinity() {
-                        // Assuming `b` is finite, for large `w`:
-                        return F::one();
-                    }
-                    w / (self.b + w)
-                } else {
-                    self.b / (self.b + w)
-                }
             },
             BetaAlgorithm::BC(algo) => {
-                let mut w;
                 loop {
                     let z;
                     // 1.
@@ -707,17 +696,17 @@ where
                         break;
                     };
                 }
-                // 6.
-                if !self.switched_params {
-                    if w == F::infinity() {
-                        // Assuming `b` is finite, for large `w`:
-                        return F::one();
-                    }
-                    w / (self.b + w)
-                } else {
-                    self.b / (self.b + w)
-                }
             },
+        };
+        // 5. for BB, 6. for BC
+        if !self.switched_params {
+            if w == F::infinity() {
+                // Assuming `b` is finite, for large `w`:
+                return F::one();
+            }
+            w / (self.b + w)
+        } else {
+            self.b / (self.b + w)
         }
     }
 }
