@@ -591,7 +591,8 @@ where
         } else {
             (b0, a0, true)
         };
-        if alpha > F::one() {
+        if a > F::one() {
+            // Algorithm BB
             let alpha = a + b;
             let beta = ((alpha - F::from(2.).unwrap())
                         / (F::from(2.).unwrap()*a*b - alpha)).sqrt();
@@ -604,6 +605,10 @@ where
                 })
             })
         } else {
+            // Algorithm BC
+            //
+            // Here `a` is the maximum instead of the minimum.
+            let (a, b, switched_params) = (b, a, !switched_params);
             let alpha = a + b;
             let beta = F::one() / b;
             let delta = F::one() + a - b;
@@ -658,6 +663,10 @@ where
                 }
                 // 5.
                 if !self.switched_params {
+                    if w == F::infinity() {
+                        // Assuming `b` is finite, for large `w`:
+                        return F::one();
+                    }
                     w / (self.b + w)
                 } else {
                     self.b / (self.b + w)
