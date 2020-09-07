@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Improve algorithm for sampling `Beta` (#1000)
+- New `Beta` sampling algorithm for improved performance and accuracy (#1000)
 
 ## [0.3.0] - 2020-08-25
 - Move alias method for `WeightedIndex` from `rand` (#945)
