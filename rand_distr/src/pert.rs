@@ -12,6 +12,9 @@ use crate::{Beta, Distribution, Exp1, Open01, StandardNormal};
 use rand::Rng;
 use core::fmt;
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// The PERT distribution.
 ///
 /// Similar to the [`Triangular`] distribution, the PERT distribution is
@@ -31,6 +34,7 @@ use core::fmt;
 ///
 /// [`Triangular`]: crate::Triangular
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Pert<F>
 where
     F: Float,
