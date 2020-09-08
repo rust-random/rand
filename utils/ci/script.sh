@@ -47,6 +47,7 @@ main() {
   $CARGO test $TARGET --manifest-path rand_core/Cargo.toml --no-default-features --features=getrandom
   
   $CARGO test $TARGET --manifest-path rand_distr/Cargo.toml
+  $CARGO test $TARGET --manifest-path rand_distr/Cargo.toml --features=serde1
   $CARGO test $TARGET --manifest-path rand_pcg/Cargo.toml --features=serde1
   $CARGO test $TARGET --manifest-path rand_chacha/Cargo.toml
   $CARGO test $TARGET --manifest-path rand_hc/Cargo.toml

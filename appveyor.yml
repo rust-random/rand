@@ -42,6 +42,7 @@ test_script:
   - cargo test --manifest-path rand_core/Cargo.toml --no-default-features
   - cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc
   - cargo test --manifest-path rand_distr/Cargo.toml
+  - cargo test --manifest-path rand_distr/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
   - cargo test --manifest-path rand_chacha/Cargo.toml
   - cargo test --manifest-path rand_hc/Cargo.toml
