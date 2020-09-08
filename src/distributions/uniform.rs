@@ -1405,6 +1405,7 @@ mod tests {
             x: f32,
         }
         #[derive(Clone, Copy, Debug)]
+        #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
         struct UniformMyF32(UniformFloat<f32>);
         impl UniformSampler for UniformMyF32 {
             type X = MyF32;
