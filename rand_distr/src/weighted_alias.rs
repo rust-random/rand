@@ -17,6 +17,9 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use rand::Rng;
 use alloc::{boxed::Box, vec, vec::Vec};
 
+#[cfg(feature = "serde")]
+use serde::{Serialize, Deserialize};
+
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///
 /// Sampling a [`WeightedAliasIndex<W>`] distribution returns the index of a randomly
@@ -64,6 +67,7 @@ use alloc::{boxed::Box, vec, vec::Vec};
 /// [`Uniform<u32>::sample`]: Distribution::sample
 /// [`Uniform<W>::sample`]: Distribution::sample
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WeightedAliasIndex<W: AliasableWeight> {
     aliases: Box<[u32]>,
     no_alias_odds: Box<[W]>,
