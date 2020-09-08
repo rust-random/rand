@@ -263,7 +263,7 @@ pub trait Rng: RngCore {
     ///
     /// If `p < 0` or `p > 1`.
     ///
-    /// [`Bernoulli`]: distributions::bernoulli::Bernoulli
+    /// [`Bernoulli`]: distributions::Bernoulli
     #[inline]
     fn gen_bool(&mut self, p: f64) -> bool {
         let d = distributions::Bernoulli::new(p).unwrap();
@@ -292,7 +292,7 @@ pub trait Rng: RngCore {
     /// println!("{}", rng.gen_ratio(2, 3));
     /// ```
     ///
-    /// [`Bernoulli`]: distributions::bernoulli::Bernoulli
+    /// [`Bernoulli`]: distributions::Bernoulli
     #[inline]
     fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
         let d = distributions::Bernoulli::from_ratio(numerator, denominator).unwrap();
