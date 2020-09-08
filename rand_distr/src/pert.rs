@@ -12,7 +12,7 @@ use crate::{Beta, Distribution, Exp1, Open01, StandardNormal};
 use rand::Rng;
 use core::fmt;
 
-#[cfg(feature = "serde")]
+#[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
 
 /// The PERT distribution.
@@ -34,7 +34,7 @@ use serde::{Serialize, Deserialize};
 ///
 /// [`Triangular`]: crate::Triangular
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Pert<F>
 where
     F: Float,

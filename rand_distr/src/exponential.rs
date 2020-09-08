@@ -15,7 +15,7 @@ use crate::{ziggurat_tables, Distribution};
 use rand::Rng;
 use core::fmt;
 
-#[cfg(feature = "serde")]
+#[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
 
 /// Samples floating-point numbers according to the exponential distribution,
@@ -94,7 +94,7 @@ impl Distribution<f64> for Exp1 {
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Exp<F>
 where F: Float, Exp1: Distribution<F>
 {

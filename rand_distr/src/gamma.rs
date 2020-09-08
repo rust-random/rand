@@ -18,7 +18,7 @@ use crate::{Distribution, Exp, Exp1, Open01};
 use rand::Rng;
 use core::fmt;
 
-#[cfg(feature = "serde")]
+#[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
@@ -52,7 +52,7 @@ use serde::{Serialize, Deserialize};
 ///       (September 2000), 363-372.
 ///       DOI:[10.1145/358407.358414](https://doi.acm.org/10.1145/358407.358414)
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Gamma<F>
 where
     F: Float,
@@ -88,7 +88,7 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum GammaRepr<F>
 where
     F: Float,
@@ -116,7 +116,7 @@ where
 /// See `Gamma` for sampling from a Gamma distribution with general
 /// shape parameters.
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct GammaSmallShape<F>
 where
     F: Float,
@@ -132,7 +132,7 @@ where
 /// See `Gamma` for sampling from a Gamma distribution with general
 /// shape parameters.
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct GammaLargeShape<F>
 where
     F: Float,
@@ -514,7 +514,7 @@ where
 /// println!("{} is from a Beta(2, 5) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Beta<F>
 where
     F: Float,
