@@ -188,6 +188,14 @@ where F: Float, StandardNormal: Distribution<F>
 {
     /// Construct a new `LogNormal` distribution with the given mean
     /// and standard deviation of the logarithm of the distribution.
+    ///
+    /// Note that the parameters are not the resulting mean and standard 
+    /// deviation of the actual samples returned by the LogNormal 
+    /// distribution. Instead, they are the mean and standard deviation 
+    /// of the *logarithm* of those returned values.
+    ///
+    /// Equivalently, the parameters mean and std_dev are the μ(mu) 
+    /// and σ(sigma) parameters of the LogNormal distribution.
     #[inline]
     pub fn new(mean: F, std_dev: F) -> Result<LogNormal<F>, Error> {
         if !(std_dev >= F::zero()) {
