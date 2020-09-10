@@ -44,7 +44,9 @@ impl SeedableRng for Xoshiro256PlusPlus {
 impl RngCore for Xoshiro256PlusPlus {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        self.next_u64() as u32
+        // The lowest bits have some linear dependencies, so we use the
+        // upper bits instead.
+        (self.next_u64() >> 32) as u32
     }
 
     #[inline]
