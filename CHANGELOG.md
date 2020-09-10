@@ -16,6 +16,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Implement weighted sampling without replacement (#976, #1013)
 
 ### Changes
+- `getrandom` updated to v0.2
 - `ThreadRng` is no longer `Copy` to enable safe usage within thread-local destructors (see #968)
 - `gen_range(a, b)` was replaced with `gen_range(a..b)`, and `gen_range(a..=b)`
   is supported (#744, #1003). Note that `a` and `b` can no longer be references or SIMD types.
