@@ -122,14 +122,18 @@ where F: Float, StandardNormal: Distribution<F>
 /// Error type returned from `Normal::new` and `LogNormal::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `std_dev < 0` or `nan`.
-    StdDevTooSmall,
+    /// The mean value is too small (log-normal samples must be positive)
+    MeanTooSmall,
+    /// The standard deviation or other dispersion parameter is negative,
+    /// infinite, or not-a-number.
+    BadVariance,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            Error::StdDevTooSmall => "std_dev < 0 or is NaN in normal distribution",
+            Error::MeanTooSmall => "mean < 0 or NaN in log-normal distribution",
+            Error::BadVariance => "variation parameter is negative or non-finite in (log)normal distribution",
         })
     }
 }
@@ -140,13 +144,32 @@ impl std::error::Error for Error {}
 impl<F> Normal<F>
 where F: Float, StandardNormal: Distribution<F>
 {
-    /// Construct a new `Normal` distribution with the given mean and
-    /// standard deviation.
+    /// Construct, from mean and standard deviation
+    ///
+    /// Parameters:
+    ///
+    /// -   mean (`μ`, unrestricted)
+    /// -   standard deviation (`σ ≥ 0`)
     #[inline]
     pub fn new(mean: F, std_dev: F) -> Result<Normal<F>, Error> {
-        if !(std_dev >= F::zero()) {
-            return Err(Error::StdDevTooSmall);
+        if !std_dev.is_finite() || std_dev < F::zero() {
+            return Err(Error::BadVariance);
         }
+        Ok(Normal { mean, std_dev })
+    }
+
+    /// Construct, from mean and coefficient of variation
+    ///
+    /// Parameters:
+    ///
+    /// -   mean (`μ`, unrestricted)
+    /// -   coefficient of variation (`cv = σ / μ` where `cv ≥ 0`)
+    #[inline]
+    pub fn from_mean_cv(mean: F, cv: F) -> Result<Normal<F>, Error> {
+        if !cv.is_finite() || cv < F::zero() {
+            return Err(Error::BadVariance);
+        }
+        let std_dev = cv * mean;
         Ok(Normal { mean, std_dev })
     }
 }
@@ -186,16 +209,54 @@ where F: Float, StandardNormal: Distribution<F>
 impl<F> LogNormal<F>
 where F: Float, StandardNormal: Distribution<F>
 {
-    /// Construct a new `LogNormal` distribution with the given mean
-    /// and standard deviation of the logarithm of the distribution.
+    /// Construct, from (log-space) mean and standard deviation
+    ///
+    /// Parameters are the "standard" log-space measures (these are the mean
+    /// and standard deviation of the logarithm of samples):
+    ///
+    /// -   `mu` (`μ`, unrestricted) is the mean of the underlying distribution
+    /// -   `sigma` (`σ ≥ 0`) is the standard deviation of the
+    ///     underlying Normal distribution
     #[inline]
-    pub fn new(mean: F, std_dev: F) -> Result<LogNormal<F>, Error> {
-        if !(std_dev >= F::zero()) {
-            return Err(Error::StdDevTooSmall);
+    pub fn new(mu: F, sigma: F) -> Result<LogNormal<F>, Error> {
+        let norm = Normal::new(mu, sigma)?;
+        Ok(LogNormal { norm })
+    }
+
+    /// Construct, from (linear-space) mean and coefficient of variation
+    ///
+    /// Parameters are linear-space measures:
+    ///
+    /// -   mean (`μ > 0`) is the (real) mean of the distribution
+    /// -   coefficient of variation (`cv = σ / μ`, requiring `cv ≥ 0`) is a
+    ///     standardized measure of dispersion
+    ///
+    /// As a special exception, `μ = 0, cv = 0` is allowed (samples are `-inf`).
+    #[inline]
+    pub fn from_mean_cv(mean: F, cv: F) -> Result<LogNormal<F>, Error> {
+        if cv == F::zero() {
+            let mu = mean.ln();
+            let norm = Normal::new(mu, F::zero()).unwrap();
+            return Ok(LogNormal { norm });
         }
-        Ok(LogNormal {
-            norm: Normal::new(mean, std_dev).unwrap(),
-        })
+        if !(mean > F::zero()) {
+            return Err(Error::MeanTooSmall);
+        }
+        if !(cv >= F::zero()) {
+            return Err(Error::BadVariance);
+        }
+
+        // Using X ~ lognormal(μ, σ), CV² = Var(X) / E(X)²
+        // E(X) = exp(μ + σ² / 2) = exp(μ) × exp(σ² / 2)
+        // Var(X) = exp(2μ + σ²)(exp(σ²) - 1) = E(X)² × (exp(σ²) - 1)
+        // but Var(X) = (CV × E(X))² so CV² = exp(σ²) - 1
+        // thus σ² = log(CV² + 1)
+        // and exp(μ) = E(X) / exp(σ² / 2) = E(X) / sqrt(CV² + 1)
+        let a = F::one() + cv * cv; // e
+        let mu = (mean / a.sqrt()).ln();
+        let sigma = a.ln().sqrt();
+        let norm = Normal::new(mu, sigma)?;
+        Ok(LogNormal { norm })
     }
 }
 
@@ -220,11 +281,15 @@ mod tests {
         }
     }
     #[test]
-    #[should_panic]
-    fn test_normal_invalid_sd() {
-        Normal::new(10.0, -1.0).unwrap();
+    fn test_normal_cv() {
+        let norm = Normal::from_mean_cv(1024.0, 1.0 / 256.0).unwrap();
+        assert_eq!((norm.mean, norm.std_dev), (1024.0, 4.0));
     }
-
+    #[test]
+    fn test_normal_invalid_sd() {
+        assert!(Normal::new(10.0, -1.0).is_err());
+        assert!(Normal::from_mean_cv(10.0, -1.0).is_err());
+    }
 
     #[test]
     fn test_log_normal() {
@@ -235,8 +300,24 @@ mod tests {
         }
     }
     #[test]
-    #[should_panic]
+    fn test_log_normal_cv() {
+        let lnorm = LogNormal::from_mean_cv(0.0, 0.0).unwrap();
+        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (-std::f64::INFINITY, 0.0));
+
+        let lnorm = LogNormal::from_mean_cv(1.0, 0.0).unwrap();
+        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (0.0, 0.0));
+
+        let e = std::f64::consts::E;
+        let lnorm = LogNormal::from_mean_cv(e.sqrt(), (e - 1.0).sqrt()).unwrap();
+        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (0.0, 1.0));
+
+        let lnorm = LogNormal::from_mean_cv(e.powf(1.5), (e - 1.0).sqrt()).unwrap();
+        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (1.0, 1.0));
+    }
+    #[test]
     fn test_log_normal_invalid_sd() {
-        LogNormal::new(10.0, -1.0).unwrap();
+        assert!(LogNormal::from_mean_cv(-1.0, 1.0).is_err());
+        assert!(LogNormal::from_mean_cv(0.0, 1.0).is_err());
+        assert!(LogNormal::from_mean_cv(1.0, -1.0).is_err());
     }
 }
