@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - New `Beta` sampling algorithm for improved performance and accuracy (#1000)
+- `Normal` and `LogNormal` now support `from_mean_cv` and `from_zscore` (#1044)
+- Variants of `NormalError` changed (#1044)
 
 ## [0.3.0] - 2020-08-25
 - Move alias method for `WeightedIndex` from `rand` (#945)

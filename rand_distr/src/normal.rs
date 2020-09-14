@@ -149,10 +149,10 @@ where F: Float, StandardNormal: Distribution<F>
     /// Parameters:
     ///
     /// -   mean (`μ`, unrestricted)
-    /// -   standard deviation (`σ ≥ 0`)
+    /// -   standard deviation (`σ`, must be finite)
     #[inline]
     pub fn new(mean: F, std_dev: F) -> Result<Normal<F>, Error> {
-        if !std_dev.is_finite() || std_dev < F::zero() {
+        if !std_dev.is_finite() {
             return Err(Error::BadVariance);
         }
         Ok(Normal { mean, std_dev })
@@ -163,7 +163,7 @@ where F: Float, StandardNormal: Distribution<F>
     /// Parameters:
     ///
     /// -   mean (`μ`, unrestricted)
-    /// -   coefficient of variation (`cv = σ / μ` where `cv ≥ 0`)
+    /// -   coefficient of variation (`cv = abs(σ / μ)`)
     #[inline]
     pub fn from_mean_cv(mean: F, cv: F) -> Result<Normal<F>, Error> {
         if !cv.is_finite() || cv < F::zero() {
@@ -172,14 +172,29 @@ where F: Float, StandardNormal: Distribution<F>
         let std_dev = cv * mean;
         Ok(Normal { mean, std_dev })
     }
+
+    /// Sample from a z-score
+    ///
+    /// This may be useful for generating correlated samples, as follows.
+    /// ```
+    /// # use rand::prelude::*;
+    /// # use rand_distr::{Normal, StandardNormal};
+    /// let mut rng = thread_rng();
+    /// let z = StandardNormal.sample(&mut rng);
+    /// let x1 = Normal::new(0.0, 1.0).unwrap().from_zscore(z);
+    /// let x2 = Normal::new(2.0, -1.0).unwrap().from_zscore(z);
+    /// ```
+    #[inline]
+    pub fn from_zscore(&self, zscore: F) -> F {
+        self.mean + self.std_dev * zscore
+    }
 }
 
 impl<F> Distribution<F> for Normal<F>
 where F: Float, StandardNormal: Distribution<F>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
-        let n: F = rng.sample(StandardNormal);
-        self.mean + self.std_dev * n
+        self.from_zscore(rng.sample(StandardNormal))
     }
 }
 
@@ -215,7 +230,7 @@ where F: Float, StandardNormal: Distribution<F>
     /// and standard deviation of the logarithm of samples):
     ///
     /// -   `mu` (`μ`, unrestricted) is the mean of the underlying distribution
-    /// -   `sigma` (`σ ≥ 0`) is the standard deviation of the
+    /// -   `sigma` (`σ`, must be finite) is the standard deviation of the
     ///     underlying Normal distribution
     #[inline]
     pub fn new(mu: F, sigma: F) -> Result<LogNormal<F>, Error> {
@@ -253,16 +268,34 @@ where F: Float, StandardNormal: Distribution<F>
         // thus σ² = log(CV² + 1)
         // and exp(μ) = E(X) / exp(σ² / 2) = E(X) / sqrt(CV² + 1)
         let a = F::one() + cv * cv; // e
+        // let mu = F::from(0.5).unwrap() * (mean * mean / a).ln();
         let mu = (mean / a.sqrt()).ln();
         let sigma = a.ln().sqrt();
         let norm = Normal::new(mu, sigma)?;
         Ok(LogNormal { norm })
+    }
+
+    /// Sample from a z-score
+    ///
+    /// This may be useful for generating correlated samples, as follows.
+    /// ```
+    /// # use rand::prelude::*;
+    /// # use rand_distr::{LogNormal, StandardNormal};
+    /// let mut rng = thread_rng();
+    /// let z = StandardNormal.sample(&mut rng);
+    /// let x1 = LogNormal::from_mean_cv(3.0, 1.0).unwrap().from_zscore(z);
+    /// let x2 = LogNormal::from_mean_cv(2.0, 1.0).unwrap().from_zscore(z);
+    /// ```
+    #[inline]
+    pub fn from_zscore(&self, zscore: F) -> F {
+        self.norm.from_zscore(zscore).exp()
     }
 }
 
 impl<F> Distribution<F> for LogNormal<F>
 where F: Float, StandardNormal: Distribution<F>
 {
+    #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         self.norm.sample(rng).exp()
     }
@@ -287,7 +320,6 @@ mod tests {
     }
     #[test]
     fn test_normal_invalid_sd() {
-        assert!(Normal::new(10.0, -1.0).is_err());
         assert!(Normal::from_mean_cv(10.0, -1.0).is_err());
     }
 
