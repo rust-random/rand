@@ -28,10 +28,14 @@ pub struct Error {
 impl Error {
     /// Codes at or above this point can be used by users to define their own
     /// custom errors.
+    ///
+    /// This is identical to `getrandom::Error::CUSTOM_START`.
     pub const CUSTOM_START: u32 = (1 << 31) + (1 << 30);
     /// Codes below this point represent OS Errors (i.e. positive i32 values).
     /// Codes at or above this point, but below [`Error::CUSTOM_START`] are
     /// reserved for use by the `rand` and `getrandom` crates.
+    ///
+    /// This is identical to `getrandom::Error::INTERNAL_START`.
     pub const INTERNAL_START: u32 = 1 << 31;
 
     /// Construct from any type supporting `std::error::Error`
@@ -208,3 +212,14 @@ impl fmt::Display for ErrorCode {
 
 #[cfg(feature = "std")]
 impl std::error::Error for ErrorCode {}
+
+#[cfg(test)]
+mod test {
+    #[cfg(feature = "getrandom")]
+    #[test]
+    fn test_error_codes() {
+        // Make sure the values are the same as in `getrandom`.
+        assert_eq!(super::Error::CUSTOM_START, getrandom::Error::CUSTOM_START);
+        assert_eq!(super::Error::INTERNAL_START, getrandom::Error::INTERNAL_START);
+    }
+}
