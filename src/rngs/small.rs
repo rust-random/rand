@@ -19,11 +19,10 @@ type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 ///
 /// `SmallRng` may be a good choice when a PRNG with small state, cheap
 /// initialization, good statistical quality and good performance are required.
-/// Note that depending on the application, [`StdRng`] is faster on many modern
-/// platforms while providing higher-quality randomness. Furthermore, `SmallRng`
-/// is **not** a good choice when:
-/// - Security against prediction or reproducibility are important.
-///   Use [`StdRng`] instead.
+/// Note that depending on the application, [`StdRng`] may be faster on many
+/// modern platforms while providing higher-quality randomness. Furthermore,
+/// `SmallRng` is **not** a good choice when:
+/// - Security against prediction is important. Use [`StdRng`] instead.
 /// - Seeds with many zeros are provided. In such cases, it takes `SmallRng`
 ///   about 10 samples to produce 0 and 1 bits with equal probability. Either
 ///   provide seeds with an approximately equal number of 0 and 1 (for example
