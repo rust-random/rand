@@ -39,6 +39,23 @@ impl SeedableRng for Xoshiro256PlusPlus {
         read_u64_into(&seed, &mut state);
         Xoshiro256PlusPlus { s: state }
     }
+
+    /// Create a new `Xoshiro256PlusPlus` from a `u64` seed.
+    ///
+    /// This uses the SplitMix64 generator internally.
+    fn seed_from_u64(mut state: u64) -> Self {
+        const PHI: u64 = 0x9e3779b97f4a7c15;
+        let mut seed = Self::Seed::default();
+        for chunk in seed.as_mut().chunks_mut(8) {
+            state = state.wrapping_add(PHI);
+            let mut z = state;
+            z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+            z = z ^ (z >> 31);
+            chunk.copy_from_slice(&z.to_le_bytes());
+        }
+        Self::from_seed(seed)
+    }
 }
 
 impl RngCore for Xoshiro256PlusPlus {
