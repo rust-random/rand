@@ -29,13 +29,13 @@ impl Error {
     /// Codes at or above this point can be used by users to define their own
     /// custom errors.
     ///
-    /// This is identical to `getrandom::Error::CUSTOM_START`.
+    /// This is identical to [`getrandom::Error::CUSTOM_START`](https://docs.rs/getrandom/latest/getrandom/struct.Error.html#associatedconstant.CUSTOM_START).
     pub const CUSTOM_START: u32 = (1 << 31) + (1 << 30);
     /// Codes below this point represent OS Errors (i.e. positive i32 values).
     /// Codes at or above this point, but below [`Error::CUSTOM_START`] are
     /// reserved for use by the `rand` and `getrandom` crates.
     ///
-    /// This is identical to `getrandom::Error::INTERNAL_START`.
+    /// This is identical to [`getrandom::Error::INTERNAL_START`](https://docs.rs/getrandom/latest/getrandom/struct.Error.html#associatedconstant.INTERNAL_START).
     pub const INTERNAL_START: u32 = 1 << 31;
 
     /// Construct from any type supporting `std::error::Error`
