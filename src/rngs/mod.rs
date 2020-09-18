@@ -58,7 +58,7 @@
 //!     is local, it is typically much faster than [`OsRng`]. It should be
 //!     secure, though the paranoid may prefer [`OsRng`].
 //! -   [`StdRng`] is a CSPRNG chosen for good performance and trust of security
-//!     (based on reviews, maturity and usage). The current algorithm is ChaCha20,
+//!     (based on reviews, maturity and usage). The current algorithm is ChaCha12,
 //!     which is well established and rigorously analysed.
 //!     [`StdRng`] provides the algorithm used by [`ThreadRng`] but without
 //!     periodic reseeding.
