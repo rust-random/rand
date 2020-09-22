@@ -114,31 +114,8 @@ pub use weighted_alias::WeightedAliasIndex;
 
 pub use num_traits;
 
-#[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
-pub mod weighted_alias;
-
-mod binomial;
-mod cauchy;
-mod dirichlet;
-mod exponential;
-mod gamma;
-mod inverse_gaussian;
-mod normal;
-mod normal_inverse_gaussian;
-mod pareto;
-mod pert;
-mod poisson;
-mod triangular;
-mod unit_ball;
-mod unit_circle;
-mod unit_disc;
-mod unit_sphere;
-mod utils;
-mod weibull;
-mod ziggurat_tables;
-
 #[cfg(test)]
+#[macro_use]
 mod test {
     // Notes on testing
     //
@@ -167,4 +144,46 @@ mod test {
         const INC: u64 = 11634580027462260723;
         rand_pcg::Pcg32::new(seed, INC)
     }
+
+    /// Assert that two numbers are almost equal to each other.
+    ///
+    /// On panic, this macro will print the values of the expressions with their
+    /// debug representations.
+    macro_rules! assert_almost_eq {
+        ($a:expr, $b:expr, $prec:expr) => {
+            let diff = ($a - $b).abs();
+            if diff > $prec {
+                panic!(
+                    "assertion failed: `abs(left - right) = {:.1e} < {:e}`, \
+                     (left: `{}`, right: `{}`)",
+                    diff, $prec, $a, $b
+                );
+            }
+        };
+    }
 }
+
+#[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+pub mod weighted_alias;
+
+mod binomial;
+mod cauchy;
+mod dirichlet;
+mod exponential;
+mod gamma;
+mod inverse_gaussian;
+mod normal;
+mod normal_inverse_gaussian;
+mod pareto;
+mod pert;
+mod poisson;
+mod triangular;
+mod unit_ball;
+mod unit_circle;
+mod unit_disc;
+mod unit_sphere;
+mod utils;
+mod weibull;
+mod ziggurat_tables;
+
