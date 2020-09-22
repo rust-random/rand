@@ -268,8 +268,7 @@ where F: Float, StandardNormal: Distribution<F>
         // thus σ² = log(CV² + 1)
         // and exp(μ) = E(X) / exp(σ² / 2) = E(X) / sqrt(CV² + 1)
         let a = F::one() + cv * cv; // e
-        // let mu = F::from(0.5).unwrap() * (mean * mean / a).ln();
-        let mu = (mean / a.sqrt()).ln();
+        let mu = F::from(0.5).unwrap() * (mean * mean / a).ln();
         let sigma = a.ln().sqrt();
         let norm = Normal::new(mu, sigma)?;
         Ok(LogNormal { norm })
@@ -341,7 +340,8 @@ mod tests {
 
         let e = std::f64::consts::E;
         let lnorm = LogNormal::from_mean_cv(e.sqrt(), (e - 1.0).sqrt()).unwrap();
-        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (0.0, 1.0));
+        assert_almost_eq!(lnorm.norm.mean, 0.0, 2e-16);
+        assert_almost_eq!(lnorm.norm.std_dev, 1.0, 2e-16);
 
         let lnorm = LogNormal::from_mean_cv(e.powf(1.5), (e - 1.0).sqrt()).unwrap();
         assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (1.0, 1.0));
