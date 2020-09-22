@@ -23,7 +23,7 @@ appveyor = { repository = "rust-random/rand" }
 [features]
 # Meta-features:
 default = ["std", "std_rng"]
-nightly = ["simd_support"] # enables all features requiring nightly rust
+nightly = [] # enables performance optimizations requiring nightly rust
 serde1 = ["serde"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option

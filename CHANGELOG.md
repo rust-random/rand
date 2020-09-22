@@ -32,6 +32,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Improve treatment of rounding errors in `WeightedIndex::update_weights` (#956)
 - `StdRng`: Switch from ChaCha20 to ChaCha12 for better performance (#1028)
 - `SmallRng`: Replace PCG algorithm with xoshiro{128,256}++ (#1038)
+- The `nightly` feature no longer implies the `simd_support` feature
 
 ## [0.7.3] - 2020-01-10
 ### Fixes

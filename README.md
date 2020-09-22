@@ -103,9 +103,13 @@ Optionally, the following dependencies can be enabled:
 Additionally, these features configure Rand:
 
 -   `small_rng` enables inclusion of the `SmallRng` PRNG
--   `nightly` enables all experimental features
+-   `nightly` enables some optimizations requiring nightly Rust
 -   `simd_support` (experimental) enables sampling of SIMD values
-    (uniformly random SIMD integers and floats)
+    (uniformly random SIMD integers and floats), requiring nightly Rust
+
+Note that the `simd_support` feature (and to a lesser extent the `nightly`
+feature) may be broken on some nightly Rust versions and cause `rand` to not
+compile.
 
 Rand supports limited functionality in `no_std` mode (enabled via
 `default-features = false`). In this case, `OsRng` and `from_entropy` are
