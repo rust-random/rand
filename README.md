@@ -107,9 +107,9 @@ Additionally, these features configure Rand:
 -   `simd_support` (experimental) enables sampling of SIMD values
     (uniformly random SIMD integers and floats), requiring nightly Rust
 
-Note that the `simd_support` feature (and to a lesser extent the `nightly`
-feature) may be broken on some nightly Rust versions and cause `rand` to not
-compile.
+Note that nightly features are not stable and therefore not all library and
+compiler versions will be compatible. This is especially true of Rand's
+experimental `simd_support` feature.
 
 Rand supports limited functionality in `no_std` mode (enabled via
 `default-features = false`). In this case, `OsRng` and `from_entropy` are
