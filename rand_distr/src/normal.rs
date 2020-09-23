@@ -277,14 +277,15 @@ where F: Float, StandardNormal: Distribution<F>
 
     /// Sample from a z-score
     ///
-    /// This may be useful for generating correlated samples, as follows.
+    /// This may be useful for generating correlated samples `x1` and `x2`
+    /// from two different distributions, as follows.
     /// ```
     /// # use rand::prelude::*;
     /// # use rand_distr::{LogNormal, StandardNormal};
     /// let mut rng = thread_rng();
     /// let z = StandardNormal.sample(&mut rng);
     /// let x1 = LogNormal::from_mean_cv(3.0, 1.0).unwrap().from_zscore(z);
-    /// let x2 = LogNormal::from_mean_cv(2.0, 1.0).unwrap().from_zscore(z);
+    /// let x2 = LogNormal::from_mean_cv(2.0, 4.0).unwrap().from_zscore(z);
     /// ```
     #[inline]
     pub fn from_zscore(&self, zscore: F) -> F {
