@@ -292,9 +292,10 @@ pub trait IteratorRandom: Iterator + Sized {
     /// available, complexity is `O(n)` where `n` is the iterator length.
     /// Partial hints (where `lower > 0`) also improve performance.
     ///
-    /// Note that value stability depends on the size hints. In particular,
-    /// `Iterator` combinators that don't change the values yielded but change
-    /// the size hints may result in `choose` returning different elements.
+    /// Note that the output values and the the number of RNG samples used
+    /// depends on size hints. In particular, `Iterator` combinators that don't
+    /// change the values yielded but change the size hints may result in
+    /// `choose` returning different elements.
     ///
     /// For slices, prefer [`SliceRandom::choose`] which guarantees `O(1)`
     /// performance.
