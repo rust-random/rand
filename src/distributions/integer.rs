@@ -11,9 +11,9 @@
 use crate::distributions::{Distribution, Standard};
 use crate::Rng;
 #[cfg(all(target_arch = "x86", feature = "simd_support"))]
-use core::arch::x86::{__m64, __m128i, __m256i};
+use core::arch::x86::{__m128i, __m256i};
 #[cfg(all(target_arch = "x86_64", feature = "simd_support"))]
-use core::arch::x86_64::{__m64, __m128i, __m256i};
+use core::arch::x86_64::{__m128i, __m256i};
 #[cfg(not(target_os = "emscripten"))] use core::num::NonZeroU128;
 use core::num::{NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize};
 #[cfg(feature = "simd_support")] use packed_simd::*;
@@ -158,7 +158,7 @@ simd_impl!(512, u8x64, i8x64, u16x32, i16x32, u32x16, i32x16, u64x8, i64x8,);
     feature = "simd_support",
     any(target_arch = "x86", target_arch = "x86_64")
 ))]
-simd_impl!((__m64, u8x8), (__m128i, u8x16), (__m256i, u8x32),);
+simd_impl!((__m128i, u8x16), (__m256i, u8x32),);
 
 #[cfg(test)]
 mod tests {

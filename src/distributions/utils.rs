@@ -159,7 +159,6 @@ mod simd_wmul {
     }
 
     wmul_impl! { (u16x2, u32x2),, 16 }
-    #[cfg(not(target_feature = "sse2"))]
     wmul_impl! { (u16x4, u32x4),, 16 }
     #[cfg(not(target_feature = "sse4.2"))]
     wmul_impl! { (u16x8, u32x8),, 16 }
@@ -186,8 +185,6 @@ mod simd_wmul {
         };
     }
 
-    #[cfg(target_feature = "sse2")]
-    wmul_impl_16! { u16x4, __m64, _mm_mulhi_pu16, _mm_mullo_pi16 }
     #[cfg(target_feature = "sse4.2")]
     wmul_impl_16! { u16x8, __m128i, _mm_mulhi_epu16, _mm_mullo_epi16 }
     #[cfg(target_feature = "avx2")]
