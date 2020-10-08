@@ -61,8 +61,8 @@ serde = { version = "1.0.103", features = ["derive"], optional = true }
 
 [dependencies.packed_simd]
 # NOTE: so far no version works reliably due to dependence on unstable features
-version = "0.3"
-# git = "https://github.com/rust-lang-nursery/packed_simd"
+package = "packed_simd_2"
+version = "0.3.4"
 optional = true
 features = ["into_bits"]
 
