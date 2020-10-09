@@ -124,8 +124,7 @@ where F: Float, StandardNormal: Distribution<F>
 pub enum Error {
     /// The mean value is too small (log-normal samples must be positive)
     MeanTooSmall,
-    /// The standard deviation or other dispersion parameter is negative,
-    /// infinite, or not-a-number.
+    /// The standard deviation or other dispersion parameter is not finite.
     BadVariance,
 }
 
@@ -133,7 +132,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             Error::MeanTooSmall => "mean < 0 or NaN in log-normal distribution",
-            Error::BadVariance => "variation parameter is negative or non-finite in (log)normal distribution",
+            Error::BadVariance => "variation parameter is non-finite in (log)normal distribution",
         })
     }
 }
