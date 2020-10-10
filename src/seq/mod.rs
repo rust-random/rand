@@ -292,10 +292,11 @@ pub trait IteratorRandom: Iterator + Sized {
     /// available, complexity is `O(n)` where `n` is the iterator length.
     /// Partial hints (where `lower > 0`) also improve performance.
     ///
-    /// Note that the output values and the the number of RNG samples used
+    /// Note that the output values and the number of RNG samples used
     /// depends on size hints. In particular, `Iterator` combinators that don't
     /// change the values yielded but change the size hints may result in
-    /// `choose` returning different elements.
+    /// `choose` returning different elements. If you want consistent results
+    /// and RNG usage consider using [`choose_stable`].
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
     where R: Rng + ?Sized {
         let (mut lower, mut upper) = self.size_hint();
