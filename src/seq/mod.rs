@@ -336,8 +336,7 @@ pub trait IteratorRandom: Iterator + Sized {
                     return result;
                 }
                 consumed += 1;
-                let denom = consumed as f64; // accurate to 2^53 elements
-                if rng.gen_bool(1.0 / denom) {
+                if gen_index(rng, consumed) == 0 {
                     result = elem;
                 }
             }
@@ -963,7 +962,7 @@ mod test {
 
         assert_eq!(choose([].iter().cloned()), None);
         assert_eq!(choose(0..100), Some(33));
-        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(76));
+        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(40));
         assert_eq!(
             choose(ChunkHintedIterator {
                 iter: 0..100,
