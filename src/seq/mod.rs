@@ -302,6 +302,9 @@ pub trait IteratorRandom: Iterator + Sized {
         let mut consumed = 0;
         let mut result = None;
 
+        // Handling for this condition outside the loop allows the optimizer to eliminate the loop
+        // when the Iterator is an ExactSizeIterator. This has a large performance impact on e.g.
+        // seq_iter_choose_from_1000.
         if upper == Some(lower) {
             return if lower == 0 {
                 None
