@@ -296,15 +296,15 @@ pub trait IteratorRandom: Iterator + Sized {
     /// depends on size hints. In particular, `Iterator` combinators that don't
     /// change the values yielded but change the size hints may result in
     /// `choose` returning different elements.
-    ///
-    /// For slices, prefer [`SliceRandom::choose`] which guarantees `O(1)`
-    /// performance.
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
     where R: Rng + ?Sized {
         let (mut lower, mut upper) = self.size_hint();
         let mut consumed = 0;
         let mut result = None;
 
+        // Handling for this condition outside the loop allows the optimizer to eliminate the loop
+        // when the Iterator is an ExactSizeIterator. This has a large performance impact on e.g.
+        // seq_iter_choose_from_1000.
         if upper == Some(lower) {
             return if lower == 0 {
                 None
@@ -336,8 +336,7 @@ pub trait IteratorRandom: Iterator + Sized {
                     return result;
                 }
                 consumed += 1;
-                let denom = consumed as f64; // accurate to 2^53 elements
-                if rng.gen_bool(1.0 / denom) {
+                if gen_index(rng, consumed) == 0 {
                     result = elem;
                 }
             }
@@ -963,7 +962,7 @@ mod test {
 
         assert_eq!(choose([].iter().cloned()), None);
         assert_eq!(choose(0..100), Some(33));
-        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(76));
+        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(40));
         assert_eq!(
             choose(ChunkHintedIterator {
                 iter: 0..100,
