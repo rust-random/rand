@@ -14,6 +14,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
 - Document types supported by `random` (#994)
 - Implement weighted sampling without replacement (#976, #1013)
+- Add `IteratorRandom::choose_stable` as an alternative to `choose` which does not depend on size hints (#1057)
 
 ### Changes
 - `getrandom` updated to v0.2 (#1041)
@@ -33,6 +34,8 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - `StdRng`: Switch from ChaCha20 to ChaCha12 for better performance (#1028)
 - `SmallRng`: Replace PCG algorithm with xoshiro{128,256}++ (#1038)
 - The `nightly` feature no longer implies the `simd_support` feature (#1048)
+- Fix `simd_support` feature to work on current nightlies (#1056)
+- Improve accuracy and performance of `IteratorRandom::choose` (#1059)
 
 ## [0.7.3] - 2020-01-10
 ### Fixes
