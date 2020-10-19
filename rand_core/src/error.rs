@@ -29,6 +29,9 @@ impl Error {
     /// Codes at or above this point can be used by users to define their own
     /// custom errors.
     ///
+    /// This has a fixed value of `(1 << 31) + (1 << 30) = 0xC000_0000`,
+    /// therefore the number of values available for custom codes is `1 << 30`.
+    ///
     /// This is identical to [`getrandom::Error::CUSTOM_START`](https://docs.rs/getrandom/latest/getrandom/struct.Error.html#associatedconstant.CUSTOM_START).
     pub const CUSTOM_START: u32 = (1 << 31) + (1 << 30);
     /// Codes below this point represent OS Errors (i.e. positive i32 values).
