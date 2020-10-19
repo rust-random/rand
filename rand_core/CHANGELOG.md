@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+- Bump MSRV to 1.36, various code improvements (#1011)
+- Update to getrandom v0.2 (#1041)
+- Fix: `next_u32_via_fill` and `next_u64_via_fill` now use LE as documented (#?)
+- Reduce usage of `unsafe` (#962, #963, #1011)
+- Annotate feature-gates in documentation (#1019)
+- Various documentation tweaks
+- Fix some clippy warnings (#1036)
+- Apply rustfmt (#926)
+
 ## [0.5.1] - 2019-08-28
 - `OsRng` added to `rand_core` (#863)
 - `Error::INTERNAL_START` and `Error::CUSTOM_START` constants (#864)
