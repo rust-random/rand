@@ -36,6 +36,8 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - The `nightly` feature no longer implies the `simd_support` feature (#1048)
 - Fix `simd_support` feature to work on current nightlies (#1056)
 - Improve accuracy and performance of `IteratorRandom::choose` (#1059)
+- `ReadRng::next_u32` and `next_u64` now use little-Endian conversion instead
+  of native-Endian, affecting results on Big-Endian platforms (#1026)
 
 ## [0.7.3] - 2020-01-10
 ### Fixes
