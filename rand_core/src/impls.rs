@@ -136,14 +136,14 @@ pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
 pub fn next_u32_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u32 {
     let mut buf = [0; 4];
     rng.fill_bytes(&mut buf);
-    u32::from_ne_bytes(buf)
+    u32::from_le_bytes(buf)
 }
 
 /// Implement `next_u64` via `fill_bytes`, little-endian order.
 pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
     let mut buf = [0; 8];
     rng.fill_bytes(&mut buf);
-    u64::from_ne_bytes(buf)
+    u64::from_le_bytes(buf)
 }
 
 #[cfg(test)]
