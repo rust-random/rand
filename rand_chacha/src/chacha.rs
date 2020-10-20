@@ -12,7 +12,7 @@
 #[cfg(not(feature = "std"))] use core;
 #[cfg(feature = "std")] use std as core;
 
-use self::core::{fmt, slice};
+use self::core::fmt;
 use crate::guts::ChaCha;
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
@@ -29,29 +29,6 @@ const BLOCK_WORDS: u8 = 16;
 #[derive(Eq, PartialEq, Default, Clone, Copy, Debug)]
 pub struct Results([u64; 32]);
 
-impl AsRef<[u8]> for Results {
-    #[inline(always)]
-    fn as_ref(&self) -> &[u8] {
-        unsafe {
-            slice::from_raw_parts(
-                self.0.as_ptr() as *const u8,
-                8 * self.0.len(),
-            )
-        }
-    }
-}
-
-impl AsRef<[u32]> for Results {
-    #[inline(always)]
-    fn as_ref(&self) -> &[u32] {
-        unsafe {
-            slice::from_raw_parts(
-                self.0.as_ptr() as *const u32,
-                2 * self.0.len(),
-            )
-        }
-    }
-}
 impl AsRef<[u64]> for Results {
     #[inline(always)]
     fn as_ref(&self) -> &[u64] {

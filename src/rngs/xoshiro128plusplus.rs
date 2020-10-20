@@ -60,6 +60,11 @@ impl SeedableRng for Xoshiro128PlusPlus {
 
 impl RngCore for Xoshiro128PlusPlus {
     #[inline]
+    fn next_bool(&mut self) -> bool {
+        self.next_u32() & 1 != 0
+    }
+
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         let result_starstar = self.s[0]
             .wrapping_add(self.s[3])

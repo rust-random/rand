@@ -82,6 +82,11 @@ pub struct SmallRng(Rng);
 
 impl RngCore for SmallRng {
     #[inline(always)]
+    fn next_bool(&mut self) -> bool {
+        self.0.next_bool()
+    }
+
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }

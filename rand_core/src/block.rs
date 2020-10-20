@@ -30,7 +30,12 @@
 //! #[derive(Eq, PartialEq, Default)]
 //! pub struct Results([u64; 8]);
 //!
-//! // implement `AsRef<[u8]>`, `AsRef<[u32]>`, and `AsRef<[u64]>` for `Results`
+//! impl AsRef<[u64]> for Results {
+//!     #[inline(always)]
+//!     fn as_ref(&self) -> &[u64] {
+//!         &self.0
+//!     }
+//! }
 //!
 //! impl BlockRngCore for MyRngCore {
 //!     type Results = Results;
@@ -60,7 +65,7 @@
 
 use crate::{CryptoRng, Error, RngCore, SeedableRng};
 use core::convert::AsRef;
-use core::fmt;
+use core::{fmt, slice};
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 
@@ -72,7 +77,7 @@ use serde::{Deserialize, Serialize};
 pub trait BlockRngCore {
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u8; 64]`.
-    type Results: AsRef<[u8]> + AsRef<[u32]> + AsRef<[u64]> + Default + Sized;
+    type Results: AsRef<[u64]> + Default + Sized;
 
     /// Generate a new block of results.
     fn generate(&mut self, results: &mut Self::Results);
@@ -86,6 +91,7 @@ pub trait BlockRngCore {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum IndexLevel {
     U1,
     U8,
@@ -180,29 +186,40 @@ impl<R: BlockRngCore> BlockRng<R> {
     #[inline]
     pub fn new(core: R) -> BlockRng<R> {
         let results = R::Results::default();
-        let index = AsRef::<[u8]>::as_ref(&results).len();
+        let index = 8*results.as_ref().len();
         BlockRng { core, results, index, level: IndexLevel::U8 }
     }
 
     #[inline(always)]
+    fn results_to_u8(results: &R::Results) -> &[u8] {
+        let buf = results.as_ref();
+        unsafe {
+            slice::from_raw_parts(buf.as_ptr() as *const u8, 8 * buf.len())
+        }
+    }
+
+    #[inline(always)]
     fn get_results_u8(&self) -> &[u8] {
-        AsRef::<[u8]>::as_ref(&self.results)
+        Self::results_to_u8(&self.results)
     }
 
     #[inline(always)]
     fn get_results_u32(&self) -> &[u32] {
-        AsRef::<[u32]>::as_ref(&self.results)
+        let buf = self.results.as_ref();
+        unsafe {
+            slice::from_raw_parts(buf.as_ptr() as *const u32, 2 * buf.len())
+        }
     }
 
     #[inline(always)]
     fn get_results_u64(&self) -> &[u64] {
-        AsRef::<[u64]>::as_ref(&self.results)
+        self.results.as_ref()
     }
 }
 
 impl<R: BlockRngCore> RngCore for BlockRng<R>
 where
-    <R as BlockRngCore>::Results: AsRef<[u8]> + AsRef<[u32]> + AsRef<[u64]> + Default + Sized,
+    <R as BlockRngCore>::Results: AsRef<[u64]> + Default + Sized,
 {
     #[inline]
     fn next_bool(&mut self) -> bool {
@@ -233,7 +250,7 @@ where
                 self.index = 1;
                 self.get_results_u32()[0]
             }
-        }
+        }.to_le()
     }
 
     #[inline]
@@ -249,7 +266,7 @@ where
                 self.index = 1;
                 self.get_results_u64()[0]
             }
-        }
+        }.to_le()
     }
 
     #[inline]
@@ -276,11 +293,11 @@ where
             }
         }
 
+        let mut buf = R::Results::default();
         let mut chunks = dest.chunks_exact_mut(rlen);
         for chunk in &mut chunks {
-            let mut buf = R::Results::default();
             self.core.try_generate(&mut buf)?;
-            chunk.copy_from_slice(buf.as_ref());
+            chunk.copy_from_slice(Self::results_to_u8(&buf));
         }
 
         let rem = chunks.into_remainder();

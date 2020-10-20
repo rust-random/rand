@@ -8,7 +8,7 @@
 
 //! The HC-128 random number generator.
 
-use core::{fmt, slice};
+use core::fmt;
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{le, CryptoRng, Error, RngCore, SeedableRng};
 
@@ -133,30 +133,6 @@ impl fmt::Debug for Hc128Core {
 /// Type representing result of the [`Hc128Core`] iteration
 #[derive(Eq, PartialEq, Clone, Debug, Default)]
 pub struct Results([u64; 8]);
-
-impl AsRef<[u8]> for Results {
-    #[inline(always)]
-    fn as_ref(&self) -> &[u8] {
-        unsafe {
-            slice::from_raw_parts(
-                self.0.as_ptr() as *const u8,
-                8 * self.0.len(),
-            )
-        }
-    }
-}
-
-impl AsRef<[u32]> for Results {
-    #[inline(always)]
-    fn as_ref(&self) -> &[u32] {
-        unsafe {
-            slice::from_raw_parts(
-                self.0.as_ptr() as *const u32,
-                2 * self.0.len(),
-            )
-        }
-    }
-}
 
 impl AsRef<[u64]> for Results {
     #[inline(always)]
