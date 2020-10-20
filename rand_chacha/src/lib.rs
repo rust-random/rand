@@ -16,7 +16,7 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
-#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(not(feature = "std"), no_std)] // TODO: use `#![no_std]`
 
 pub use rand_core;
 

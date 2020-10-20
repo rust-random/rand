@@ -111,6 +111,10 @@ pub mod le;
 /// struct CountingRng(u64);
 ///
 /// impl RngCore for CountingRng {
+///     fn next_bool(&mut self) -> bool {
+///         (self.next_u64() & 1) == 1
+///     }
+///
 ///     fn next_u32(&mut self) -> u32 {
 ///         self.next_u64() as u32
 ///     }
@@ -136,6 +140,9 @@ pub mod le;
 /// [`next_u32`]: RngCore::next_u32
 /// [`next_u64`]: RngCore::next_u64
 pub trait RngCore {
+    /// Return the next random `bool`.
+    fn next_bool(&mut self) -> bool;
+
     /// Return the next random `u32`.
     ///
     /// RNGs must implement at least one method from this trait directly. In
@@ -380,6 +387,11 @@ pub trait SeedableRng: Sized {
 // implementation and the optimizer to decide on inlining.
 impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
     #[inline(always)]
+    fn next_bool(&mut self) -> bool {
+        (**self).next_bool()
+    }
+
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
     }
@@ -405,6 +417,11 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
 // implementation and the optimizer to decide on inlining.
 #[cfg(feature = "alloc")]
 impl<R: RngCore + ?Sized> RngCore for Box<R> {
+    #[inline(always)]
+    fn next_bool(&mut self) -> bool {
+        (**self).next_bool()
+    }
+
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()

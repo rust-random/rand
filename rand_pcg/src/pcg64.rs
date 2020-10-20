@@ -95,6 +95,11 @@ impl SeedableRng for Lcg64Xsh32 {
 
 impl RngCore for Lcg64Xsh32 {
     #[inline]
+    fn next_bool(&mut self) -> bool {
+        (self.next_u32() & 1) == 1
+    }
+
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         let state = self.state;
         self.step();

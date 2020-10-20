@@ -50,6 +50,10 @@ pub struct OsRng;
 impl CryptoRng for OsRng {}
 
 impl RngCore for OsRng {
+    fn next_bool(&mut self) -> bool {
+        impls::next_bool_via_fill(self)
+    }
+
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
     }

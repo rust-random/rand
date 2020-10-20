@@ -132,6 +132,13 @@ pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
     fill_via_chunks!(src, dest, u64)
 }
 
+/// Implement `next_bool` via `fill_bytes`, little-endian order.
+pub fn next_bool_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> bool {
+    let mut buf = [0; 1];
+    rng.fill_bytes(&mut buf);
+    (buf[0] & 1) == 1
+}
+
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
 pub fn next_u32_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u32 {
     let mut buf = [0; 4];

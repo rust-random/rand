@@ -94,6 +94,11 @@ impl Default for ThreadRng {
 
 impl RngCore for ThreadRng {
     #[inline(always)]
+    fn next_bool(&mut self) -> bool {
+        unsafe { self.rng.as_mut().next_bool() }
+    }
+
+    #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         unsafe { self.rng.as_mut().next_u32() }
     }

@@ -106,9 +106,13 @@ where
 // implements RngCore, but we can't specify that because ReseedingCore is private
 impl<R, Rsdr: RngCore> RngCore for ReseedingRng<R, Rsdr>
 where
-    R: BlockRngCore<Item = u32> + SeedableRng,
-    <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>,
+    R: BlockRngCore + SeedableRng
 {
+    #[inline(always)]
+    fn next_bool(&mut self) -> bool {
+        self.0.next_bool()
+    }
+
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
@@ -161,7 +165,6 @@ where
     R: BlockRngCore + SeedableRng,
     Rsdr: RngCore,
 {
-    type Item = <R as BlockRngCore>::Item;
     type Results = <R as BlockRngCore>::Results;
 
     fn generate(&mut self, results: &mut Self::Results) {
@@ -172,7 +175,7 @@ where
             // returning from a non-inlined function.
             return self.reseed_and_generate(results, global_fork_counter);
         }
-        let num_bytes = results.as_ref().len() * size_of::<Self::Item>();
+        let num_bytes = results.as_ref().len();
         self.bytes_until_reseed -= num_bytes as i64;
         self.inner.generate(results);
     }
@@ -242,7 +245,7 @@ where
             trace!("Reseeding RNG (periodic reseed)");
         }
 
-        let num_bytes = results.as_ref().len() * size_of::<<R as BlockRngCore>::Item>();
+        let num_bytes = results.as_ref().len();
 
         if let Err(e) = self.reseed() {
             warn!("Reseeding RNG failed: {}", e);

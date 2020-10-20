@@ -56,6 +56,12 @@ impl<R: Read> ReadRng<R> {
 }
 
 impl<R: Read> RngCore for ReadRng<R> {
+    fn next_bool(&mut self) -> bool {
+        let mut buf = [0; 1];
+        self.fill_bytes(&mut buf);
+        (buf[0] & 1) == 1
+    }
+
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
     }
