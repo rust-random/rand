@@ -23,7 +23,7 @@ appveyor = { repository = "rust-random/rand" }
 [features]
 # Meta-features:
 default = ["std", "std_rng"]
-nightly = ["simd_support"] # enables all features requiring nightly rust
+nightly = [] # enables performance optimizations requiring nightly rust
 serde1 = ["serde"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
@@ -43,7 +43,7 @@ simd_support = ["packed_simd"]
 std_rng = ["rand_chacha", "rand_hc"]
 
 # Option: enable SmallRng
-small_rng = ["rand_pcg"]
+small_rng = []
 
 [workspace]
 members = [
@@ -56,14 +56,13 @@ members = [
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.5.1" }
-rand_pcg = { path = "rand_pcg", version = "0.2.1", optional = true }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 
 [dependencies.packed_simd]
 # NOTE: so far no version works reliably due to dependence on unstable features
-version = "0.3"
-# git = "https://github.com/rust-lang-nursery/packed_simd"
+package = "packed_simd_2"
+version = "0.3.4"
 optional = true
 features = ["into_bits"]
 

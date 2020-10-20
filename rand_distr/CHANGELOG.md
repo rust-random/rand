@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+- New `Beta` sampling algorithm for improved performance and accuracy (#1000)
+- `Normal` and `LogNormal` now support `from_mean_cv` and `from_zscore` (#1044)
+- Variants of `NormalError` changed (#1044)
+
 ## [0.3.0] - 2020-08-25
 - Move alias method for `WeightedIndex` from `rand` (#945)
 - Rename `WeightedIndex` to `WeightedAliasIndex` (#1008)
@@ -12,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove `Distribution<u64>` impl for `Poisson` (#987)
 - Tweak `Dirichlet` and `alias_method` to use boxed slice instead of `Vec` (#987)
 - Use whitelist for package contents, reducing size by 5kb (#983)
-- Add case `lambda = 0` in the parametrixation of `Exp` (#972)
+- Add case `lambda = 0` in the parametrization of `Exp` (#972)
 - Implement inverse Gaussian distribution (#954)
 - Reformatting and use of `rustfmt::skip` (#926)
 - All error types now implement `std::error::Error` (#919)

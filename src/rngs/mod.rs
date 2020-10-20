@@ -58,7 +58,7 @@
 //!     is local, it is typically much faster than [`OsRng`]. It should be
 //!     secure, though the paranoid may prefer [`OsRng`].
 //! -   [`StdRng`] is a CSPRNG chosen for good performance and trust of security
-//!     (based on reviews, maturity and usage). The current algorithm is ChaCha20,
+//!     (based on reviews, maturity and usage). The current algorithm is ChaCha12,
 //!     which is well established and rigorously analysed.
 //!     [`StdRng`] provides the algorithm used by [`ThreadRng`] but without
 //!     periodic reseeding.
@@ -101,7 +101,13 @@
 
 pub mod mock; // Public so we don't export `StepRng` directly, making it a bit
               // more clear it is intended for testing.
+
+#[cfg(all(feature = "small_rng", target_pointer_width = "64"))]
+mod xoshiro256plusplus;
+#[cfg(all(feature = "small_rng", not(target_pointer_width = "64")))]
+mod xoshiro128plusplus;
 #[cfg(feature = "small_rng")] mod small;
+
 #[cfg(feature = "std_rng")] mod std;
 #[cfg(all(feature = "std", feature = "std_rng"))] pub(crate) mod thread;
 

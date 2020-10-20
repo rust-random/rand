@@ -101,6 +101,7 @@ impl ChaCha {
     }
 }
 
+#[allow(clippy::many_single_char_names)]
 #[inline(always)]
 fn refill_wide_impl<Mach: Machine>(
     m: Mach, state: &mut ChaCha, drounds: u32, out: &mut [u8; BUFSZ],

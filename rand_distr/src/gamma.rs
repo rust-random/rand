@@ -495,6 +495,38 @@ where
     }
 }
 
+/// The algorithm used for sampling the Beta distribution.
+///
+/// Reference:
+///
+/// R. C. H. Cheng (1978).
+/// Generating beta variates with nonintegral shape parameters.
+/// Communications of the ACM 21, 317-322.
+/// https://doi.org/10.1145/359460.359482
+#[derive(Clone, Copy, Debug)]
+enum BetaAlgorithm<N> {
+    BB(BB<N>),
+    BC(BC<N>),
+}
+
+/// Algorithm BB for `min(alpha, beta) > 1`.
+#[derive(Clone, Copy, Debug)]
+struct BB<N> {
+    alpha: N,
+    beta: N,
+    gamma: N,
+}
+
+/// Algorithm BC for `min(alpha, beta) <= 1`.
+#[derive(Clone, Copy, Debug)]
+struct BC<N> {
+    alpha: N,
+    beta: N,
+    delta: N,
+    kappa1: N,
+    kappa2: N,
+}
+
 /// The Beta distribution with shape parameters `alpha` and `beta`.
 ///
 /// # Example
@@ -510,12 +542,10 @@ where
 pub struct Beta<F>
 where
     F: Float,
-    StandardNormal: Distribution<F>,
-    Exp1: Distribution<F>,
     Open01: Distribution<F>,
 {
-    gamma_a: Gamma<F>,
-    gamma_b: Gamma<F>,
+    a: F, b: F, switched_params: bool,
+    algorithm: BetaAlgorithm<F>,
 }
 
 /// Error type returned from `Beta::new`.
@@ -542,31 +572,142 @@ impl std::error::Error for BetaError {}
 impl<F> Beta<F>
 where
     F: Float,
-    StandardNormal: Distribution<F>,
-    Exp1: Distribution<F>,
     Open01: Distribution<F>,
 {
     /// Construct an object representing the `Beta(alpha, beta)`
     /// distribution.
     pub fn new(alpha: F, beta: F) -> Result<Beta<F>, BetaError> {
-        Ok(Beta {
-            gamma_a: Gamma::new(alpha, F::one()).map_err(|_| BetaError::AlphaTooSmall)?,
-            gamma_b: Gamma::new(beta, F::one()).map_err(|_| BetaError::BetaTooSmall)?,
-        })
+        if !(alpha > F::zero()) {
+            return Err(BetaError::AlphaTooSmall);
+        }
+        if !(beta > F::zero()) {
+            return Err(BetaError::BetaTooSmall);
+        }
+        // From now on, we use the notation from the reference,
+        // i.e. `alpha` and `beta` are renamed to `a0` and `b0`.
+        let (a0, b0) = (alpha, beta);
+        let (a, b, switched_params) = if a0 < b0 {
+            (a0, b0, false)
+        } else {
+            (b0, a0, true)
+        };
+        if a > F::one() {
+            // Algorithm BB
+            let alpha = a + b;
+            let beta = ((alpha - F::from(2.).unwrap())
+                        / (F::from(2.).unwrap()*a*b - alpha)).sqrt();
+            let gamma = a + F::one() / beta;
+
+            Ok(Beta {
+                a, b, switched_params,
+                algorithm: BetaAlgorithm::BB(BB {
+                    alpha, beta, gamma,
+                })
+            })
+        } else {
+            // Algorithm BC
+            //
+            // Here `a` is the maximum instead of the minimum.
+            let (a, b, switched_params) = (b, a, !switched_params);
+            let alpha = a + b;
+            let beta = F::one() / b;
+            let delta = F::one() + a - b;
+            let kappa1 = delta
+                * (F::from(1. / 18. / 4.).unwrap() + F::from(3. / 18. / 4.).unwrap()*b)
+                / (a*beta - F::from(14. / 18.).unwrap());
+            let kappa2 = F::from(0.25).unwrap()
+                + (F::from(0.5).unwrap() + F::from(0.25).unwrap()/delta)*b;
+
+            Ok(Beta {
+                a, b, switched_params,
+                algorithm: BetaAlgorithm::BC(BC {
+                    alpha, beta, delta, kappa1, kappa2,
+                })
+            })
+        }
     }
 }
 
 impl<F> Distribution<F> for Beta<F>
 where
     F: Float,
-    StandardNormal: Distribution<F>,
-    Exp1: Distribution<F>,
     Open01: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
-        let x = self.gamma_a.sample(rng);
-        let y = self.gamma_b.sample(rng);
-        x / (x + y)
+        let mut w;
+        match self.algorithm {
+            BetaAlgorithm::BB(algo) => {
+                loop {
+                    // 1.
+                    let u1 = rng.sample(Open01);
+                    let u2 = rng.sample(Open01);
+                    let v = algo.beta * (u1 / (F::one() - u1)).ln();
+                    w = self.a * v.exp();
+                    let z = u1*u1 * u2;
+                    let r = algo.gamma * v - F::from(4.).unwrap().ln();
+                    let s = self.a + r - w;
+                    // 2.
+                    if s + F::one() + F::from(5.).unwrap().ln()
+                        >= F::from(5.).unwrap() * z {
+                        break;
+                    }
+                    // 3.
+                    let t = z.ln();
+                    if s >= t {
+                        break;
+                    }
+                    // 4.
+                    if !(r + algo.alpha * (algo.alpha / (self.b + w)).ln() < t) {
+                        break;
+                    }
+                }
+            },
+            BetaAlgorithm::BC(algo) => {
+                loop {
+                    let z;
+                    // 1.
+                    let u1 = rng.sample(Open01);
+                    let u2 = rng.sample(Open01);
+                    if u1 < F::from(0.5).unwrap() {
+                        // 2.
+                        let y = u1 * u2;
+                        z = u1 * y;
+                        if F::from(0.25).unwrap() * u2 + z - y >= algo.kappa1 {
+                            continue;
+                        }
+                    } else {
+                        // 3.
+                        z = u1 * u1 * u2;
+                        if z <= F::from(0.25).unwrap() {
+                            let v = algo.beta * (u1 / (F::one() - u1)).ln();
+                            w = self.a * v.exp();
+                            break;
+                        }
+                        // 4.
+                        if z >= algo.kappa2 {
+                            continue;
+                        }
+                    }
+                    // 5.
+                    let v = algo.beta * (u1 / (F::one() - u1)).ln();
+                    w = self.a * v.exp();
+                    if !(algo.alpha * ((algo.alpha / (self.b + w)).ln() + v)
+                         - F::from(4.).unwrap().ln() < z.ln()) {
+                        break;
+                    };
+                }
+            },
+        };
+        // 5. for BB, 6. for BC
+        if !self.switched_params {
+            if w == F::infinity() {
+                // Assuming `b` is finite, for large `w`:
+                return F::one();
+            }
+            w / (self.b + w)
+        } else {
+            self.b / (self.b + w)
+        }
     }
 }
 
@@ -635,5 +776,14 @@ mod test {
     #[should_panic]
     fn test_beta_invalid_dof() {
         Beta::new(0., 0.).unwrap();
+    }
+
+    #[test]
+    fn test_beta_small_param() {
+        let beta = Beta::<f64>::new(1e-3, 1e-3).unwrap();
+        let mut rng = crate::test::rng(206);
+        for i in 0..1000 {
+            assert!(!beta.sample(&mut rng).is_nan(), "failed at i={}", i);
+        }
     }
 }

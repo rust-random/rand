@@ -9,7 +9,7 @@
 //! Thread-local random number generator
 
 use core::cell::UnsafeCell;
-use core::ptr::NonNull;
+use std::rc::Rc;
 use std::thread_local;
 
 use super::std::Core;
@@ -37,17 +37,19 @@ use crate::{CryptoRng, Error, RngCore, SeedableRng};
 // of 32 kB and less. We choose 64 kB to avoid significant overhead.
 const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 
-/// The type returned by [`thread_rng`], essentially just a reference to the
-/// PRNG in thread-local memory.
+/// A reference to the thread-local generator
 ///
-/// `ThreadRng` uses the same PRNG as [`StdRng`] for security and performance.
-/// As hinted by the name, the generator is thread-local. `ThreadRng` is a
-/// handle to this generator and thus supports `Copy`, but not `Send` or `Sync`.
+/// An instance can be obtained via [`thread_rng`] or via `ThreadRng::default()`.
+/// This handle is safe to use everywhere (including thread-local destructors)
+/// but cannot be passed between threads (is not `Send` or `Sync`).
+///
+/// `ThreadRng` uses the same PRNG as [`StdRng`] for security and performance
+/// and is automatically seeded from [`OsRng`].
 ///
 /// Unlike `StdRng`, `ThreadRng` uses the  [`ReseedingRng`] wrapper to reseed
-/// the PRNG from fresh entropy every 64 kiB of random data.
-/// [`OsRng`] is used to provide seed data.
-///
+/// the PRNG from fresh entropy every 64 kiB of random data as well as after a
+/// fork on Unix (though not quite immediately; see documentation of
+/// [`ReseedingRng`]).
 /// Note that the reseeding is done as an extra precaution against side-channel
 /// attacks and mis-use (e.g. if somehow weak entropy were supplied initially).
 /// The PRNG algorithms used are assumed to be secure.
@@ -55,20 +57,22 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// [`ReseedingRng`]: crate::rngs::adapter::ReseedingRng
 /// [`StdRng`]: crate::rngs::StdRng
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng"))))]
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct ThreadRng {
-    // inner raw pointer implies type is neither Send nor Sync
-    rng: NonNull<ReseedingRng<Core, OsRng>>,
+    // Rc is explictly !Send and !Sync
+    rng: Rc<UnsafeCell<ReseedingRng<Core, OsRng>>>,
 }
 
 thread_local!(
-    static THREAD_RNG_KEY: UnsafeCell<ReseedingRng<Core, OsRng>> = {
+    // We require Rc<..> to avoid premature freeing when thread_rng is used
+    // within thread-local destructors. See #968.
+    static THREAD_RNG_KEY: Rc<UnsafeCell<ReseedingRng<Core, OsRng>>> = {
         let r = Core::from_rng(OsRng).unwrap_or_else(|err|
                 panic!("could not initialize thread_rng: {}", err));
         let rng = ReseedingRng::new(r,
                                     THREAD_RNG_RESEED_THRESHOLD,
                                     OsRng);
-        UnsafeCell::new(rng)
+        Rc::new(UnsafeCell::new(rng))
     }
 );
 
@@ -81,9 +85,8 @@ thread_local!(
 /// For more information see [`ThreadRng`].
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng"))))]
 pub fn thread_rng() -> ThreadRng {
-    let raw = THREAD_RNG_KEY.with(|t| t.get());
-    let nn = NonNull::new(raw).unwrap();
-    ThreadRng { rng: nn }
+    let rng = THREAD_RNG_KEY.with(|t| t.clone());
+    ThreadRng { rng }
 }
 
 impl Default for ThreadRng {
@@ -100,20 +103,32 @@ impl RngCore for ThreadRng {
 
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
-        unsafe { self.rng.as_mut().next_u32() }
+        // SAFETY: We must make sure to stop using `rng` before anyone else
+        // creates another mutable reference
+        let rng = unsafe { &mut *self.rng.get() };
+        rng.next_u32()
     }
 
     #[inline(always)]
     fn next_u64(&mut self) -> u64 {
-        unsafe { self.rng.as_mut().next_u64() }
+        // SAFETY: We must make sure to stop using `rng` before anyone else
+        // creates another mutable reference
+        let rng = unsafe { &mut *self.rng.get() };
+        rng.next_u64()
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        unsafe { self.rng.as_mut().fill_bytes(dest) }
+        // SAFETY: We must make sure to stop using `rng` before anyone else
+        // creates another mutable reference
+        let rng = unsafe { &mut *self.rng.get() };
+        rng.fill_bytes(dest)
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        unsafe { self.rng.as_mut().try_fill_bytes(dest) }
+        // SAFETY: We must make sure to stop using `rng` before anyone else
+        // creates another mutable reference
+        let rng = unsafe { &mut *self.rng.get() };
+        rng.try_fill_bytes(dest)
     }
 }
 

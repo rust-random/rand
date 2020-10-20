@@ -49,13 +49,12 @@
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![no_std]
-#![cfg_attr(all(feature = "simd_support", feature = "nightly"), feature(stdsimd))]
+#![cfg_attr(feature = "simd_support", feature(stdsimd))]
 #![cfg_attr(feature = "nightly", feature(slice_partition_at_index))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(
-    clippy::excessive_precision,
-    clippy::unreadable_literal,
-    clippy::float_cmp
+    clippy::float_cmp,
+    clippy::neg_cmp_op_on_partial_ord,
 )]
 
 #[cfg(feature = "std")] extern crate std;
