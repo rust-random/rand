@@ -3,7 +3,7 @@
 use crate::{Distribution, Exp, Exp1};
 use num_traits::Float;
 use rand::Rng;
-use std::fmt;
+use core::fmt;
 
 /// The geometric distribution `Geo(p)`.
 /// 
