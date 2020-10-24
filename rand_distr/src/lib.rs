@@ -95,6 +95,7 @@ pub use self::gamma::{
     Gamma, StudentT,
 };
 pub use self::geometric::{Error as GeoError, Geo};
+pub use self::hypergeometric::{Error as HyperGeoError, Hypergeometric};
 pub use self::inverse_gaussian::{InverseGaussian, Error as InverseGaussianError};
 pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal};
 pub use self::normal_inverse_gaussian::{NormalInverseGaussian, Error as NormalInverseGaussianError};
@@ -174,6 +175,7 @@ mod dirichlet;
 mod exponential;
 mod gamma;
 mod geometric;
+mod hypergeometric;
 mod inverse_gaussian;
 mod normal;
 mod normal_inverse_gaussian;
