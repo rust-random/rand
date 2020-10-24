@@ -46,6 +46,7 @@
 //!   - [`Cauchy`] distribution
 //! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
+//!   - [`Geo`]metric distribution
 //! - Related to positive real-valued quantities that grow exponentially
 //!   (e.g. prices, incomes, populations):
 //!   - [`LogNormal`] distribution
@@ -73,6 +74,7 @@
 //! - Misc. distributions
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
+//!   - [`Hypergeometric`] distribution
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
