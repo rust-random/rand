@@ -77,9 +77,9 @@ mod test {
 
     #[test]
     fn test_geo_invalid_p() {
-        assert!(Geo::new(f64::NAN).is_err());
-        assert!(Geo::new(f64::INFINITY).is_err());
-        assert!(Geo::new(f64::NEG_INFINITY).is_err());
+        assert!(Geo::new(core::f64::NAN).is_err());
+        assert!(Geo::new(core::f64::INFINITY).is_err());
+        assert!(Geo::new(core::f64::NEG_INFINITY).is_err());
 
         assert!(Geo::new(-0.5).is_err());
         assert!(Geo::new(0.0).is_ok());
