@@ -46,6 +46,11 @@ fn geometric_stability() {
 }
 
 #[test]
+fn hypergeometric_stability() {
+    test_samples(7221, Hypergeometric::new(99, 33, 8).unwrap(), &[4, 3, 2, 3, 3]);
+}
+
+#[test]
 fn unit_ball_stability() {
     test_samples(2, UnitBall, &[
         [0.018035709265959987f64, -0.4348771383120438, -0.07982762085055706],
