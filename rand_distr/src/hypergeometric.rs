@@ -2,7 +2,7 @@
 
 use crate::Distribution;
 use rand::Rng;
-use std::fmt;
+use core::fmt;
 
 /// The hypergeometric distribution `Hypergeometric(N, K, n)`.
 /// 

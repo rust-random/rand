@@ -334,12 +334,12 @@ mod tests {
     #[test]
     fn test_log_normal_cv() {
         let lnorm = LogNormal::from_mean_cv(0.0, 0.0).unwrap();
-        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (-std::f64::INFINITY, 0.0));
+        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (-core::f64::INFINITY, 0.0));
 
         let lnorm = LogNormal::from_mean_cv(1.0, 0.0).unwrap();
         assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (0.0, 0.0));
 
-        let e = std::f64::consts::E;
+        let e = core::f64::consts::E;
         let lnorm = LogNormal::from_mean_cv(e.sqrt(), (e - 1.0).sqrt()).unwrap();
         assert_almost_eq!(lnorm.norm.mean, 0.0, 2e-16);
         assert_almost_eq!(lnorm.norm.std_dev, 1.0, 2e-16);
