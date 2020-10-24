@@ -94,6 +94,7 @@ pub use self::gamma::{
     Beta, BetaError, ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError,
     Gamma, StudentT,
 };
+pub use self::geometric::{Error as GeoError, Geo};
 pub use self::inverse_gaussian::{InverseGaussian, Error as InverseGaussianError};
 pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal};
 pub use self::normal_inverse_gaussian::{NormalInverseGaussian, Error as NormalInverseGaussianError};
@@ -172,6 +173,7 @@ mod cauchy;
 mod dirichlet;
 mod exponential;
 mod gamma;
+mod geometric;
 mod inverse_gaussian;
 mod normal;
 mod normal_inverse_gaussian;
