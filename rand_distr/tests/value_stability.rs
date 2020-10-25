@@ -47,7 +47,9 @@ fn geometric_stability() {
 
 #[test]
 fn hypergeometric_stability() {
-    test_samples(7221, Hypergeometric::new(99, 33, 8).unwrap(), &[4, 3, 2, 3, 3]);
+    // We have multiple code paths based on the distribution's mode and sample_size
+    test_samples(7221, Hypergeometric::new(99, 33, 8).unwrap(), &[4, 3, 2, 2, 3, 2, 3, 1]); // Algorithm HIN
+    test_samples(7221, Hypergeometric::new(100, 50, 50).unwrap(), &[0]); // Algorithm H2PE
 }
 
 #[test]
