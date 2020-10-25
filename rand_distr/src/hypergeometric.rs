@@ -65,29 +65,95 @@ impl Hypergeometric {
     }
 }
 
+// evaluate fact(numerator.0)*fact(numerator.1) / fact(denominator.0)*fact(denominator.1)
+fn fraction_of_products_of_factorials(numerator: (u64, u64), denominator: (u64, u64)) -> f64 {
+    let min_top = u64::min(numerator.0, numerator.1);
+    let min_bottom = u64::min(denominator.0, denominator.1);
+    // the factorial of this will cancel out:
+    let min_all = u64::min(min_top, min_bottom);
+
+    let max_top = u64::max(numerator.0, numerator.1);
+    let max_bottom = u64::max(denominator.0, denominator.1);
+    let max_all = u64::max(max_top, max_bottom);
+
+    let mut result = 1.0;
+    for i in (min_all + 1)..=max_all {
+        if i <= min_top {
+            result *= i as f64;
+        }
+        
+        if i <= min_bottom {
+            result /= i as f64;
+        }
+        
+        if i <= max_top {
+            result *= i as f64;
+        }
+        
+        if i <= max_bottom {
+            result /= i as f64;
+        }
+    }
+    
+    result
+}
+
 impl Distribution<u64> for Hypergeometric {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
-        // This is exact, but very naive; execution time is linear in `sample_size`.
-        // I've found references to a better rejection-based method called H2PEC
-        // (published in 1988 by Kachitvichyanukul and Schmeiser), but no existing
-        // implementations, pseudo-code or even an informal explanation of it, so...
+        // set-up constants as function of original parameters
+        let n = self.total_population_size;
+        let (mut sign_x, mut offset_x) = (1, 0);
+        let (n1, n2) = {
+            // switch around success and failure states if necessary to ensure n1 <= n2
+            let population_without_feature = n - self.population_with_feature;
+            if self.population_with_feature > population_without_feature {
+                sign_x = -1;
+                offset_x = self.sample_size as i64;
+                (population_without_feature, self.population_with_feature)
+            } else {
+                (self.population_with_feature, population_without_feature)
+            }
+        };
+        // when sampling more than half the total population, take the smaller
+        // group as sampled instead (we can then return n1-x instead):
+        let k = if self.sample_size <= n / 2 {
+            self.sample_size
+        } else {
+            offset_x += n1 as i64 * sign_x;
+            sign_x *= -1;
+            n - self.sample_size
+        };
 
-        let mut n = self.total_population_size;
-        let mut k = self.population_with_feature;
+        // Algorithm H2PE has bounded runtime only if `M - max(0, k-n2) >= 10`,
+        // where `M` is the mode of the distribution.
+        // Use algorithm HIN for the remaining parameter space.
+        // 
+        // Voratas Kachitvichyanukul and Bruce W. Schmeiser. 1985. Computer
+        // generation of hypergeometric random variates.
+        // J. Statist. Comput. Simul. Vol.22 (August 1985), 127-145
+        // https://www.researchgate.net/publication/233212638
+        const HIN_THRESHOLD: f64 = 10.0;
+        let m = ((k + 1) as f64 * (n1 + 1) as f64 / (n + 2) as f64).floor();
+        if m - f64::max(0.0, k as f64 - n2 as f64) < HIN_THRESHOLD {
+            let (mut p, mut x) = if k < n2 {
+                (fraction_of_products_of_factorials((n2, n - k), (n, n2 - k)), 0)
+            } else {
+                (fraction_of_products_of_factorials((n1, k), (n, k - n2)), k - n2)
+            };
 
-        let mut result = 0;
-        for _ in 0..self.sample_size {
-            let x = rng.gen_range(0..n);
-            
-            if x < k {
-                k -= 1;
-                result += 1;
+            assert!(p.is_finite());
+            let mut u = rng.gen::<f64>();
+            while u > p && x < k { // the paper erroneously uses `until n < p`, which doesn't make any sense
+                u -= p;
+                p *= ((n1 as i64 - x as i64) * (k as i64 - x as i64)) as f64;
+                p /= ((x as i64 + 1) * (n2 as i64 - k as i64 + 1 + x as i64)) as f64;
+                x += 1;
             }
 
-            n -= 1;
+            return (offset_x + sign_x * x as i64) as u64;
         }
 
-        result
+        unimplemented!("Algorithm H2PE")
     }
 }
 
@@ -131,10 +197,13 @@ mod test {
     fn test_hypergeometric() {
         let mut rng = crate::test::rng(737);
 
-        test_hypergeometric_mean_and_variance(1000, 500, 100, &mut rng);
+        // exercise algorithm HIN:
         test_hypergeometric_mean_and_variance(500, 400, 30, &mut rng);
-        test_hypergeometric_mean_and_variance(100, 30, 7, &mut rng);
-        test_hypergeometric_mean_and_variance(60, 24, 7, &mut rng);
-        test_hypergeometric_mean_and_variance(40, 17, 7, &mut rng);
+        test_hypergeometric_mean_and_variance(250, 200, 230, &mut rng);
+        test_hypergeometric_mean_and_variance(100, 20, 6, &mut rng);
+        test_hypergeometric_mean_and_variance(50, 10, 47, &mut rng);
+
+        // exercise algorithm H2PE
+        test_hypergeometric_mean_and_variance(1000, 500, 100, &mut rng);
     }
 }
