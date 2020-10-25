@@ -46,7 +46,7 @@
 //!   - [`Cauchy`] distribution
 //! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
-//!   - [`Geo`]metric distribution
+//!   - [`Geometric`] distribution
 //! - Related to positive real-valued quantities that grow exponentially
 //!   (e.g. prices, incomes, populations):
 //!   - [`LogNormal`] distribution
@@ -96,7 +96,7 @@ pub use self::gamma::{
     Beta, BetaError, ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError,
     Gamma, StudentT,
 };
-pub use self::geometric::{Error as GeoError, Geo};
+pub use self::geometric::{Error as GeoError, Geometric};
 pub use self::hypergeometric::{Error as HyperGeoError, Hypergeometric};
 pub use self::inverse_gaussian::{InverseGaussian, Error as InverseGaussianError};
 pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal};
