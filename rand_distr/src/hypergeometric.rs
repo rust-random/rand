@@ -195,11 +195,11 @@ impl Hypergeometric {
             
             let numerator = x_l * ((n2 - k) as f64 + x_l);
             let denominator = (n1 as f64 - x_l + 1.0) * (k as f64 - x_l + 1.0);
-            let lambda_l = -ln_of_factorial(numerator / denominator);
+            let lambda_l = -((numerator / denominator).ln());
 
             let numerator = (n1 as f64 - x_r + 1.0) * (k as f64 - x_r + 1.0);
             let denominator = x_r * ((n2 - k) as f64 + x_r);
-            let lambda_r = -ln_of_factorial(numerator / denominator);
+            let lambda_r = -((numerator / denominator).ln());
 
             // the paper literally gives `p2 + kL/lambdaL` where it (probably)
             // should have been `p2 <- p1 + kL/lambdaL`; another print error?!
@@ -245,15 +245,15 @@ impl Distribution<u64> for Hypergeometric {
                             break (y, v);
                         } else if u <= p2 {
                             // Region 2, left exponential tail
-                            let y = (x_l + v.ln() / lambda_l).floor(); // TODO: use an `Exp` instead
+                            let y = (x_l + v.ln() / lambda_l).floor();
                             if y as i64 >= i64::max(0, k as i64 - n2 as i64) {
                                 let v = v * (u - p1) * lambda_l;
                                 break (y, v);
                             }
                         } else {
                             // Region 3, right exponential tail
-                            let y = (x_r - v.ln() / lambda_r).floor(); // TODO: use an `Exp` instead
-                            if y as u64 >= u64::min(n1, k) {
+                            let y = (x_r - v.ln() / lambda_r).floor();
+                            if y as u64 <= u64::min(n1, k) {
                                 let v = v * (u - p2) * lambda_r;
                                 break (y, v);
                             }
@@ -379,11 +379,11 @@ mod test {
         }
 
         let mean = results.iter().sum::<f64>() / results.len() as f64;
-        assert!((mean as f64 - expected_mean).abs() < expected_mean / 20.0);
+        assert!((mean as f64 - expected_mean).abs() < expected_mean / 50.0);
 
         let variance =
             results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;
-        assert!((variance - expected_variance).abs() < expected_variance / 2.6);
+        assert!((variance - expected_variance).abs() < expected_variance / 10.0);
     }
 
     #[test]
