@@ -108,7 +108,11 @@ macro_rules! distr_arr {
 
 // distributions
 distr_float!(distr_exp, f64, Exp::new(1.23 * 4.56).unwrap());
+distr_float!(distr_exp1_specialized, f64, Exp1);
+distr_float!(distr_exp1_general, f64, Exp::new(1.).unwrap());
 distr_float!(distr_normal, f64, Normal::new(-1.23, 4.56).unwrap());
+distr_float!(distr_standardnormal_specialized, f64, StandardNormal);
+distr_float!(distr_standardnormal_general, f64, Normal::new(0., 1.).unwrap());
 distr_float!(distr_log_normal, f64, LogNormal::new(-1.23, 4.56).unwrap());
 distr_float!(distr_gamma_large_shape, f64, Gamma::new(10., 1.0).unwrap());
 distr_float!(distr_gamma_small_shape, f64, Gamma::new(0.1, 1.0).unwrap());
