@@ -98,7 +98,12 @@ fn fraction_of_products_of_factorials(numerator: (u64, u64), denominator: (u64, 
     result
 }
 
+fn ln_of_factorial(v: f64) -> f64 {
+    v * v.ln() - v
+}
+
 impl Distribution<u64> for Hypergeometric {
+    #[allow(clippy::many_single_char_names)] // Same names as in the reference.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         // set-up constants as function of original parameters
         let n = self.total_population_size;
@@ -141,7 +146,6 @@ impl Distribution<u64> for Hypergeometric {
                 (fraction_of_products_of_factorials((n1, k), (n, k - n2)), k - n2)
             };
 
-            assert!(p.is_finite());
             let mut u = rng.gen::<f64>();
             while u > p && x < k { // the paper erroneously uses `until n < p`, which doesn't make any sense
                 u -= p;
@@ -153,7 +157,158 @@ impl Distribution<u64> for Hypergeometric {
             return (offset_x + sign_x * x as i64) as u64;
         }
 
-        unimplemented!("Algorithm H2PE")
+        // setup constants used only for H2PE
+        let a = ln_of_factorial(m) +
+            ln_of_factorial(n1 as f64 - m) +
+            ln_of_factorial(k as f64 - m) +
+            ln_of_factorial((n2 - k) as f64 + m);
+        let (k_l, k_r, lambda_l, lambda_r, x_l, x_r, p1, p2, p3);
+        {
+            let numerator = (n - k) as f64 * k as f64 * n1 as f64 * n2 as f64;
+            let denominator = (n - 1) as f64 * n as f64 * n as f64;
+            let d = 1.5 * (numerator / denominator).sqrt() + 0.5;
+
+            x_l = m - d + 0.5;
+            x_r = m + d + 0.5;
+
+            k_l = f64::exp(a -
+                ln_of_factorial(x_l) -
+                ln_of_factorial(n1 as f64 - x_l) -
+                ln_of_factorial(k as f64 - x_l) -
+                ln_of_factorial((n2 - k) as f64 + x_l));
+            k_r = f64::exp(a -
+                ln_of_factorial(x_r - 1.0) -
+                ln_of_factorial(n1 as f64 - x_r + 1.0) -
+                ln_of_factorial(k as f64 - x_r + 1.0) -
+                ln_of_factorial((n2 - k) as f64 + x_r - 1.0));
+            
+            let numerator = x_l * ((n2 - k) as f64 + x_l);
+            let denominator = (n1 as f64 - x_l + 1.0) * (k as f64 - x_l + 1.0);
+            lambda_l = -ln_of_factorial(numerator / denominator);
+
+            let numerator = (n1 as f64 - x_r + 1.0) * (k as f64 - x_r + 1.0);
+            let denominator = x_r * ((n2 - k) as f64 + x_r);
+            lambda_r = -ln_of_factorial(numerator / denominator);
+
+            // the paper literally gives `p2 + kL/lambdaL` where it (probably)
+            // should have been `p2 <- p1 + kL/lambdaL`; another print error?!
+            p1 = 2.0 * d;
+            p2 = p1 + k_l / lambda_l;
+            p3 = p2 + k_r / lambda_r;
+        }
+
+        // begin rejection sampling
+        let x = loop {
+            let (y, v) = loop {
+                let u = rng.gen::<f64>() * p3; // for selecting the region
+                let v = rng.gen::<f64>(); // for the accept/reject decision
+    
+                if u <= p1 {
+                    // Region 1, centrel bell
+                    let y = (x_l + u).floor();
+                    break (y, v);
+                } else if u <= p2 {
+                    // Region 2, left exponential tail
+                    let y = (x_l + v.ln() / lambda_l).floor(); // TODO: use an `Exp` instead
+                    if y as i64 >= i64::max(0, k as i64 - n2 as i64) {
+                        let v = v * (u - p1) * lambda_l;
+                        break (y, v);
+                    }
+                } else {
+                    // Region 3, right exponential tail
+                    let y = (x_r - v.ln() / lambda_r).floor(); // TODO: use an `Exp` instead
+                    if y as u64 >= u64::min(n1, k) {
+                        let v = v * (u - p2) * lambda_r;
+                        break (y, v);
+                    }
+                }
+            };
+
+            // Step 4: Acceptance/Rejection Comparison
+            if m < 100.0 || y <= 50.0 {
+                // Step 4.1: evaluate f(y) via recursive relationship
+                let mut f = 1.0;
+                if m < y {
+                    for i in (m as u64 + 1)..=(y as u64) {
+                        f *= (n1 - i + 1) as f64 * (k - i + 1) as f64;
+                        f /= i as f64 * (n2 - k + i) as f64;
+                    }
+                } else {
+                    for i in (y as u64 + 1)..=(m as u64) {
+                        f *= i as f64 * (n2 - k + i) as f64;
+                        f /= (n1 - i) as f64 * (k - i) as f64;
+                    }
+                }
+
+                if v < f { break y as i64; }
+            } else {
+                // Step 4.2: Squeezing
+                let y1 = y + 1.0;
+                let ym = y - m;
+                let yn = n1 as f64 - y + 1.0;
+                let yk = k as f64 - y + 1.0;
+                let nk = n2 as f64 - k as f64 + y1;
+                let r = -ym / y1;
+                let s = ym / yn;
+                let t = ym / yk;
+                let e = -ym / nk;
+                let g = yn * yk / (y1 * nk) - 1.0;
+                let dg = if g < 0.0 {
+                    1.0 + g
+                } else {
+                    g
+                };
+                let gu = g * (1.0 + g * (-0.5 + g / 3.0));
+                let gl = gu - g.powi(4) / (4.0 * dg);
+                let xm = m + 0.5;
+                let xn = n1 as f64 - m + 0.5;
+                let xk = k as f64 - m + 0.5;
+                let nm = n2 as f64 - k as f64 + xm;
+                let ub = xm * r * (1.0 + r * (-0.5 + r / 3.0)) +
+                    xn * s * (1.0 + s * (-0.5 + s / 3.0)) +
+                    xk * t * (1.0 + t * (-0.5 + t / 3.0)) +
+                    nm * e * (1.0 + e * (-0.5 + e / 3.0)) +
+                    y * gu - m * gl + 0.0034;
+                let av = v.ln();
+                if av > ub { continue; }
+                let dr = if r < 0.0 {
+                    xm * r.powi(4) / (1.0 + r)
+                } else {
+                    xm * r.powi(4)
+                };
+                let ds = if s < 0.0 {
+                    xn * s.powi(4) / (1.0 + s)
+                } else {
+                    xn * s.powi(4)
+                };
+                let dt = if t < 0.0 {
+                    xk * t.powi(4) / (1.0 + t)
+                } else {
+                    xk * t.powi(4)
+                };
+                let de = if e < 0.0 {
+                    nm * e.powi(4) / (1.0 + e)
+                } else {
+                    nm * e.powi(4)
+                };
+
+                if av < ub - 0.25*(dr + ds + dt + de) + (y + m)*(gl - gu) - 0.0078 {
+                    break y as i64;
+                }
+
+                // Step 4.3: Final Acceptance/Rejection Test
+                let av_critical = a -
+                    ln_of_factorial(y) -
+                    ln_of_factorial(n1 as f64 - y) - 
+                    ln_of_factorial(k as f64 - y) - 
+                    ln_of_factorial((n2 - k) as f64 + y);
+                if v.ln() <= av_critical {
+                    break y as i64;
+                }
+            }
+        };
+        
+        (offset_x + sign_x * x as i64) as u64
     }
 }
 
@@ -186,11 +341,11 @@ mod test {
         }
 
         let mean = results.iter().sum::<f64>() / results.len() as f64;
-        assert!((mean as f64 - expected_mean).abs() < expected_mean / 50.0);
+        assert!((mean as f64 - expected_mean).abs() < expected_mean / 20.0);
 
         let variance =
             results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;
-        assert!((variance - expected_variance).abs() < expected_variance / 10.0);
+        assert!((variance - expected_variance).abs() < expected_variance / 2.6);
     }
 
     #[test]
@@ -204,6 +359,8 @@ mod test {
         test_hypergeometric_mean_and_variance(50, 10, 47, &mut rng);
 
         // exercise algorithm H2PE
-        test_hypergeometric_mean_and_variance(1000, 500, 100, &mut rng);
+        test_hypergeometric_mean_and_variance(5000, 2500, 500, &mut rng);
+        test_hypergeometric_mean_and_variance(10100, 10000, 1000, &mut rng);
+        test_hypergeometric_mean_and_variance(100100, 100, 10000, &mut rng);
     }
 }
