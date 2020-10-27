@@ -36,6 +36,8 @@ fn binominal_stability() {
 
 #[test]
 fn geometric_stability() {
+    test_samples(464, StandardGeometric, &[0, 2, 0, 2, 10, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2]);
+    
     test_samples(464, Geometric::new(0.5).unwrap(), &[0, 1, 2, 4, 0, 2, 0, 1]);
     test_samples(464, Geometric::new(0.05).unwrap(), &[2, 24, 36, 62, 0, 28, 6, 26]);
     test_samples(464, Geometric::new(0.95).unwrap(), &[0, 0, 0, 1, 0, 0, 0, 0]);

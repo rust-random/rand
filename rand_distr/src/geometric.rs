@@ -5,7 +5,7 @@ use num_traits::Float;
 use rand::Rng;
 use core::fmt;
 
-/// The geometric distribution `Geometric(p)`.
+/// The geometric distribution `Geometric(p)` bounded to `[0, u64::MAX]`.
 /// 
 /// This is the probability distribution of the number of failures before the
 /// first success in a series of Bernoulli trials. It has the density function
@@ -13,15 +13,18 @@ use core::fmt;
 /// on each trial.
 /// 
 /// This is the discrete analogue of the [exponential distribution](crate::Exp).
+/// 
+/// Note that [`StandardGeometric`](crate::StandardGeometric) is an optimised
+/// implementation for `p = 0.5`.
 ///
 /// # Example
 ///
 /// ```
 /// use rand_distr::{Geometric, Distribution};
 ///
-/// let geo = Geometric::new(0.5).unwrap();
+/// let geo = Geometric::new(0.25).unwrap();
 /// let v = geo.sample(&mut rand::thread_rng());
-/// println!("{} is from a Geometric(0.5) distribution", v);
+/// println!("{} is from a Geometric(0.25) distribution", v);
 /// ```
 #[derive(Copy, Clone, Debug)]
 pub struct Geometric<F>
@@ -51,7 +54,7 @@ impl std::error::Error for Error {}
 impl<F> Geometric<F>
 where F: Float, Exp1: Distribution<F>
 {
-    /// Construct a new `Geo` with the given shape parameter `p`
+    /// Construct a new `Geometric` with the given shape parameter `p`
     /// (probablity of success on each trial).
     pub fn new(p: F) -> Result<Self, Error> {
         let lambda = -F::ln(F::one() - p);
@@ -68,6 +71,37 @@ where F: Float, Exp1: Distribution<F>
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         let f = self.exp.sample(rng).floor();
         num_traits::NumCast::from(f).unwrap_or(u64::max_value())
+    }
+}
+
+/// Samples integers according to the geometric distribution with success
+/// probability `p = 0.5`. This is equivalent to `Geometeric::new(0.5)`,
+/// but faster.
+/// 
+/// See [`Geometric`](crate::Geometric) for the general geometric distribution.
+/// 
+/// Implemented via iterated [Rng::gen::<u64>().leading_ones()].
+/// 
+/// # Example
+/// ```
+/// use rand::prelude::*;
+/// use rand_distr::StandardGeometric;
+/// 
+/// let v = StandardGeometric.sample(&mut thread_rng());
+/// println!("{} is from a Geometric(0.5) distribution", v);
+/// ```
+#[derive(Copy, Clone, Debug)]
+pub struct StandardGeometric;
+
+impl Distribution<u64> for StandardGeometric {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
+        let mut result = 0;
+        loop {
+            let x = rng.gen::<u64>().leading_ones() as u64;
+            result += x;
+            if x < 64 { break; }
+        }
+        result
     }
 }
 
@@ -115,5 +149,26 @@ mod test {
         test_geo_mean_and_variance(0.50, &mut rng);
         test_geo_mean_and_variance(0.75, &mut rng);
         test_geo_mean_and_variance(0.90, &mut rng);
+    }
+
+    #[test]
+    fn test_standard_geometric() {
+        let mut rng = crate::test::rng(54321);
+
+        let distr = StandardGeometric;
+        let expected_mean = 1.0;
+        let expected_variance = 2.0;
+
+        let mut results = [0.0; 1000];
+        for i in results.iter_mut() {
+            *i = distr.sample(&mut rng) as f64;
+        }
+
+        let mean = results.iter().sum::<f64>() / results.len() as f64;
+        assert!((mean as f64 - expected_mean).abs() < expected_mean / 50.0);
+
+        let variance =
+            results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;
+        assert!((variance - expected_variance).abs() < expected_variance / 10.0);
     }
 }
