@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- New `Geo`metric and `Hypergeometric` distributions (#1062)
+- New `Geometric`, `StandardGeometric` and `Hypergeometric` distributions (#1062)
 - New `Beta` sampling algorithm for improved performance and accuracy (#1000)
 - `Normal` and `LogNormal` now support `from_mean_cv` and `from_zscore` (#1044)
 - Variants of `NormalError` changed (#1044)

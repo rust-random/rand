@@ -140,6 +140,8 @@ distr_int!(distr_weighted_alias_method_u32, usize, WeightedAliasIndex::new(vec![
 distr_int!(distr_weighted_alias_method_f64, usize, WeightedAliasIndex::new(vec![1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
 distr_int!(distr_weighted_alias_method_large_set, usize, WeightedAliasIndex::new((0..10000).rev().chain(1..10001).collect()).unwrap());
 
+distr_int!(distr_geometric, u64, Geometric::new(0.5).unwrap());
+distr_int!(distr_standard_geometric, u64, StandardGeometric);
 
 #[bench]
 fn dist_iter(b: &mut Bencher) {
