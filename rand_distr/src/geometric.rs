@@ -28,7 +28,9 @@ use core::fmt;
 #[derive(Copy, Clone, Debug)]
 pub struct Geometric
 {
-    p: f64
+    p: f64,
+    pi: f64,
+    k: u64
 }
 
 /// Error type returned from `Geometric::new`.
@@ -55,8 +57,21 @@ impl Geometric {
     pub fn new(p: f64) -> Result<Self, Error> {
         if !p.is_finite() || p < 0.0 || p > 1.0 {
             Err(Error::InvalidProbability)
+        } else if p == 0.0 || p >= 2.0 / 3.0 {
+            Ok(Geometric { p, pi: p, k: 0 })
         } else {
-            Ok(Geometric { p })
+            let (pi, k) = {
+                // choose smallest k such that pi = (1 - p)^(2^k) <= 0.5
+                let mut k = 1;
+                let mut pi = (1.0 - p).powi(2);
+                while pi > 0.5 {
+                    k += 1;
+                    pi = pi * pi;
+                }
+                (pi, k)
+            };
+
+            Ok(Geometric { p, pi, k })
         }
     }
 }
@@ -77,21 +92,14 @@ impl Distribution<u64> for Geometric
         
         if self.p == 0.0 { return core::u64::MAX; }
 
+        let Geometric { p, pi, k } = *self;
+
         // Based on the algorithm presented in section 3 of
         // Karl Bringmann and Tobias Friedrich (July 2013) - Exact and Efficient
         // Generation of Geometric Random Variates and Random Graphs, published
         // in International Colloquium on Automata, Languages and Programming
         // (pp.267-278)
-        let (pi, k) = {
-            // choose smallest k such that pi = (1 - p)^(2^k) <= 0.5
-            let mut k = 1;
-            let mut pi = (1.0 - self.p).powi(2);
-            while pi > 0.5 {
-                k += 1;
-                pi = pi * pi;
-            }
-            (pi, k)
-        };
+        // https://people.mpi-inf.mpg.de/~kbringma/paper/2013ICALP-1.pdf
 
         // Use the trivial algorithm to sample D from Geo(pi) = Geo(p) / 2^k:
         let d = {
@@ -104,12 +112,15 @@ impl Distribution<u64> for Geometric
 
         // Use rejection sampling for the remainder M from Geo(p) % 2^k:
         // choose M uniformly from [0, 2^k), but reject with probability (1 - p)^M
+        // NOTE: The paper suggests using bitwise sampling here, which is 
+        // currently unsupported, but should improve performance by requiring
+        // fewer iterations on average.                 ~ October 28, 2020
         let m = loop {
             let m = rng.gen::<u64>() & ((1 << k) - 1);
             let p_reject = if m <= core::i32::MAX as u64 {
-                (1.0 - self.p).powi(m as i32)
+                (1.0 - p).powi(m as i32)
             } else {
-                (1.0 - self.p).powf(m as f64)
+                (1.0 - p).powf(m as f64)
             };
             
             let u = rng.gen::<f64>();
