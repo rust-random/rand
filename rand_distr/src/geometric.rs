@@ -75,7 +75,7 @@ impl Distribution<u64> for Geometric
             return failures;
         }
         
-        if self.p == 0.0 { return u64::MAX; }
+        if self.p == 0.0 { return core::u64::MAX; }
 
         // Based on the algorithm presented in section 3 of
         // Karl Bringmann and Tobias Friedrich (July 2013) - Exact and Efficient
@@ -106,7 +106,7 @@ impl Distribution<u64> for Geometric
         // choose M uniformly from [0, 2^k), but reject with probability (1 - p)^M
         let m = loop {
             let m = rng.gen::<u64>() & ((1 << k) - 1);
-            let p_reject = if m <= i32::MAX as u64 {
+            let p_reject = if m <= core::i32::MAX as u64 {
                 (1.0 - self.p).powi(m as i32)
             } else {
                 (1.0 - self.p).powf(m as f64)
@@ -128,7 +128,7 @@ impl Distribution<u64> for Geometric
 /// 
 /// See [`Geometric`](crate::Geometric) for the general geometric distribution.
 /// 
-/// Implemented via iterated [Rng::gen::<u64>().leading_ones()].
+/// Implemented via iterated [Rng::gen::<u64>().leading_zeros()].
 /// 
 /// # Example
 /// ```
@@ -145,7 +145,7 @@ impl Distribution<u64> for StandardGeometric {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         let mut result = 0;
         loop {
-            let x = rng.gen::<u64>().leading_ones() as u64;
+            let x = rng.gen::<u64>().leading_zeros() as u64;
             result += x;
             if x < 64 { break; }
         }
@@ -201,7 +201,7 @@ mod test {
 
     #[test]
     fn test_standard_geometric() {
-        let mut rng = crate::test::rng(54321);
+        let mut rng = crate::test::rng(654321);
 
         let distr = StandardGeometric;
         let expected_mean = 1.0;
