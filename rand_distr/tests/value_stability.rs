@@ -38,9 +38,9 @@ fn binominal_stability() {
 fn geometric_stability() {
     test_samples(464, StandardGeometric, &[0, 2, 0, 2, 10, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2]);
     
-    test_samples(464, Geometric::new(0.5).unwrap(), &[0, 1, 2, 4, 0, 2, 0, 1]);
-    test_samples(464, Geometric::new(0.05).unwrap(), &[2, 24, 36, 62, 0, 28, 6, 26]);
-    test_samples(464, Geometric::new(0.95).unwrap(), &[0, 0, 0, 1, 0, 0, 0, 0]);
+    test_samples(464, Geometric::new(0.5).unwrap(), &[2, 1, 1, 0, 0, 1, 0, 1]);
+    test_samples(464, Geometric::new(0.05).unwrap(), &[24, 51, 81, 67, 27, 11, 7, 6]);
+    test_samples(464, Geometric::new(0.95).unwrap(), &[0, 0, 0, 0, 1, 0, 0, 0]);
 
     // expect non-random behaviour for series of pre-determined trials
     test_samples(464, Geometric::new(0.0).unwrap(), &[u64::max_value(); 100][..]);
