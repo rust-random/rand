@@ -2,6 +2,7 @@
 
 use crate::Distribution;
 use rand::Rng;
+use rand::distributions::uniform::Uniform;
 use core::fmt;
 
 #[derive(Clone, Copy, Debug)]
@@ -112,7 +113,10 @@ fn ln_of_factorial(v: f64) -> f64 {
 }
 
 impl Hypergeometric {
-    /// Constructs a new `Hypergeometric` with the given shape parameters.
+    /// Constructs a new `Hypergeometric` with the shape parameters
+    /// `N = total_population_size`,
+    /// `K = population_with_feature`,
+    /// `n = sample_size`.
     #[allow(clippy::many_single_char_names)] // Same names as in the reference.
     pub fn new(total_population_size: u64, population_with_feature: u64, sample_size: u64) -> Result<Self, Error> {
         if population_with_feature > total_population_size {
@@ -234,13 +238,14 @@ impl Distribution<u64> for Hypergeometric {
                 x
             },
             RejectionAcceptance { m, a, lambda_l, lambda_r, x_l, x_r, p1, p2, p3 } => {
+                let distr_region_select = Uniform::new(0.0, p3);
                 loop {
                     let (y, v) = loop {
-                        let u = rng.gen::<f64>() * p3; // for selecting the region
+                        let u = distr_region_select.sample(rng);
                         let v = rng.gen::<f64>(); // for the accept/reject decision
             
                         if u <= p1 {
-                            // Region 1, centrel bell
+                            // Region 1, central bell
                             let y = (x_l + u).floor();
                             break (y, v);
                         } else if u <= p2 {
@@ -276,7 +281,7 @@ impl Distribution<u64> for Hypergeometric {
                             }
                         }
         
-                        if v < f { break y as i64; }
+                        if v <= f { break y as i64; }
                     } else {
                         // Step 4.2: Squeezing
                         let y1 = y + 1.0;
@@ -292,7 +297,7 @@ impl Distribution<u64> for Hypergeometric {
                         let dg = if g < 0.0 {
                             1.0 + g
                         } else {
-                            g
+                            1.0
                         };
                         let gu = g * (1.0 + g * (-0.5 + g / 3.0));
                         let gl = gu - g.powi(4) / (4.0 * dg);
