@@ -1,7 +1,6 @@
 //! The geometric distribution.
 
-use crate::{Distribution, Exp, Exp1};
-use num_traits::Float;
+use crate::Distribution;
 use rand::Rng;
 use core::fmt;
 
@@ -27,10 +26,9 @@ use core::fmt;
 /// println!("{} is from a Geometric(0.25) distribution", v);
 /// ```
 #[derive(Copy, Clone, Debug)]
-pub struct Geometric<F>
-where F: Float, Exp1: Distribution<F>
+pub struct Geometric
 {
-    exp: Exp<F>
+    p: f64
 }
 
 /// Error type returned from `Geometric::new`.
@@ -51,26 +49,76 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-impl<F> Geometric<F>
-where F: Float, Exp1: Distribution<F>
-{
+impl Geometric {
     /// Construct a new `Geometric` with the given shape parameter `p`
     /// (probablity of success on each trial).
-    pub fn new(p: F) -> Result<Self, Error> {
-        let lambda = -F::ln(F::one() - p);
-        match Exp::new(lambda) {
-            Ok(exp) => Ok(Geometric { exp }),
-            Err(_) => Err(Error::InvalidProbability)
+    pub fn new(p: f64) -> Result<Self, Error> {
+        if !p.is_finite() || p < 0.0 || p > 1.0 {
+            Err(Error::InvalidProbability)
+        } else {
+            Ok(Geometric { p })
         }
     }
 }
 
-impl<F> Distribution<u64> for Geometric<F>
-where F: Float, Exp1: Distribution<F>
+impl Distribution<u64> for Geometric
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
-        let f = self.exp.sample(rng).floor();
-        num_traits::NumCast::from(f).unwrap_or(u64::max_value())
+        if self.p >= 2.0 / 3.0 {
+            // use the trivial algorithm:
+            let mut failures = 0;
+            loop {
+                let u = rng.gen::<f64>();
+                if u <= self.p { break; }
+                failures += 1;
+            }
+            return failures;
+        }
+        
+        if self.p == 0.0 { return u64::MAX; }
+
+        // Based on the algorithm presented in section 3 of
+        // Karl Bringmann and Tobias Friedrich (July 2013) - Exact and Efficient
+        // Generation of Geometric Random Variates and Random Graphs, published
+        // in International Colloquium on Automata, Languages and Programming
+        // (pp.267-278)
+        let (pi, k) = {
+            // choose smallest k such that pi = (1 - p)^(2^k) <= 0.5
+            let mut k = 1;
+            let mut pi = (1.0 - self.p).powi(2);
+            while pi > 0.5 {
+                k += 1;
+                pi = pi * pi;
+            }
+            (pi, k)
+        };
+
+        // Use the trivial algorithm to sample D from Geo(pi) = Geo(p) / 2^k:
+        let d = {
+            let mut failures = 0;
+            while rng.gen::<f64>() < pi {
+                failures += 1;
+            }
+            failures
+        };
+
+        // Use rejection sampling for the remainder M from Geo(p) % 2^k:
+        // choose M uniformly from [0, 2^k), but reject with probability (1 - p)^M
+        let m = loop {
+            let m = rng.gen::<u64>() & ((1 << k) - 1);
+            let p_reject = if m <= i32::MAX as u64 {
+                (1.0 - self.p).powi(m as i32)
+            } else {
+                (1.0 - self.p).powf(m as f64)
+            };
+            
+            let u = rng.gen::<f64>();
+            if u < p_reject {
+                break m;
+            }
+        };
+
+        (d << k) + m
     }
 }
 
@@ -127,17 +175,17 @@ mod test {
         let expected_mean = (1.0 - p) / p;
         let expected_variance = (1.0 - p) / (p * p);
 
-        let mut results = [0.0; 1000];
+        let mut results = [0.0; 10000];
         for i in results.iter_mut() {
             *i = distr.sample(rng) as f64;
         }
 
         let mean = results.iter().sum::<f64>() / results.len() as f64;
-        assert!((mean as f64 - expected_mean).abs() < expected_mean / 20.0);
+        assert!((mean as f64 - expected_mean).abs() < expected_mean / 40.0);
 
         let variance =
             results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;
-        assert!((variance - expected_variance).abs() < expected_variance / 5.0);
+        assert!((variance - expected_variance).abs() < expected_variance / 10.0);
     }
 
     #[test]
