@@ -31,13 +31,13 @@ It's also worth pointing out what `rand` *is not*:
 
 -   Small. Most low-level crates are small, but the higher-level `rand` and
     `rand_distr` each contain a lot of functionality.
--   Simple. We have a strong focus on correctness, speed and flexibility, but
+-   Simple (implementation). We have a strong focus on correctness, speed and flexibility, but
     not simplicity. If you prefer a small-and-simple library, there are
     alternatives including [fastrand](https://crates.io/crates/fastrand)
     and [oorandom](https://crates.io/crates/oorandom).
 -   Slow. We take performance seriously, with considerations also for set-up
     time of new distributions, commonly-used parameters, and parameters of the
-    current sampler
+    current sampler.
 
 Documentation:
 
@@ -60,6 +60,27 @@ To get started using Rand, see [The Book](https://rust-random.github.io/book).
 
 ## Versions
 
+Rand is *mature* (suitable for general usage, with infrequent breaking releases
+which minimise breakage) but not yet at 1.0. We maintain compatibility with
+pinned versions of the Rust compiler (see below).
+
+Current Rand versions are:
+
+-   Version 0.7 was released in June 2019, moving most non-uniform distributions
+    to an external crate, moving `from_entropy` to `SeedableRng`, and many small
+    changes and fixes.
+-   The `master` branch is close to 0.8 release.
+
+A detailed [changelog](CHANGELOG.md) is available for releases.
+
+When upgrading to the next minor series (especially 0.4 → 0.5), we recommend
+reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
+
+Rand has not yet reached 1.0 implying some breaking changes may arrive in the
+future ([SemVer](https://semver.org/) allows each 0.x.0 release to include
+breaking changes), but is considered *mature*: breaking changes are minimised
+and breaking releases are infrequent.
+
 Rand libs have inter-dependencies and make use of the
 [semver trick](https://github.com/dtolnay/semver-trick/) in order to make traits
 compatible across crate versions. (This is especially important for `RngCore`
@@ -68,26 +89,6 @@ depending on the *next* lib version (e.g. `rand_core` versions `0.2.2` and
 `0.3.1`). This means, for example, that `rand_core_0_4_0::SeedableRng` and
 `rand_core_0_3_0::SeedableRng` are distinct, incompatible traits, which can
 cause build errors. Usually, running `cargo update` is enough to fix any issues.
-
-The Rand lib is not yet stable, however we are careful to limit breaking changes
-and warn via deprecation wherever possible. Patch versions never introduce
-breaking changes. The following minor versions are supported:
-
--   Version 0.7 was released in June 2019, moving most non-uniform distributions
-    to an external crate, moving `from_entropy` to `SeedableRng`, and many small
-    changes and fixes.
--   Version 0.6 was released in November 2018, redesigning the `seq` module,
-    moving most PRNGs to external crates, and many small changes.
--   Version 0.5 was released in May 2018, as a major reorganisation
-    (introducing `RngCore` and `rand_core`, and deprecating `Rand` and the
-    previous distribution traits).
--   Version 0.4 was released in December 2017, but contained almost no breaking
-    changes from the 0.3 series.
-
-A detailed [changelog](CHANGELOG.md) is available.
-
-When upgrading to the next minor series (especially 0.4 → 0.5), we recommend
-reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
 
 ### Yanked versions
 
