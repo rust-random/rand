@@ -8,19 +8,41 @@
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.36+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
-A Rust library for random number generation.
+A Rust library for random number generation, featuring:
 
-Rand provides utilities to generate random numbers, to convert them to useful
-types and distributions, and some randomness-related algorithms.
+-   Easy random value generation and usage via the [`Rng`](https://docs.rs/rand/*/rand/trait.Rng.html),
+    [`SliceRandom`](https://docs.rs/rand/*/rand/seq/trait.SliceRandom.html) and
+    [`IteratorRandom`](https://docs.rs/rand/*/rand/seq/trait.IteratorRandom.html) traits
+-   Secure seeding via the [`getrandom` crate](https://crates.io/crates/getrandom)
+    and fast, convenient generation via [`thread_rng`](https://docs.rs/rand/*/rand/fn.thread_rng.html)
+-   A modular design built over [`rand_core`](https://crates.io/crates/rand_core)
+    ([see the book](https://rust-random.github.io/book/crates.html))
+-   Fast implementations of the best-in-class [cryptographic](https://rust-random.github.io/book/guide-rngs.html#cryptographically-secure-pseudo-random-number-generators-csprngs) and
+    [non-cryptographic](https://rust-random.github.io/book/guide-rngs.html#basic-pseudo-random-number-generators-prngs) generators
+-   A flexible [`distributions`](https://docs.rs/rand/*/rand/distributions/index.html) module
+-   Samplers for a large number of random number distributions via our own
+    [`rand_distr`](https://docs.rs/rand_distr) and via
+    the [`statrs`](https://docs.rs/statrs/0.13.0/statrs/)
+-   [Portably reproducible output](https://rust-random.github.io/book/portability.html)
+-   `#[no_std]` compatibility (partial)
+-   *Many* performance optimisations
 
-The core random number generation traits of Rand live in the [rand_core](
-https://crates.io/crates/rand_core) crate but are also exposed here; RNG
-implementations should prefer to use `rand_core` while most other users should
-depend on `rand`.
+It's also worth pointing out what `rand` *is not*:
+
+-   Small. Most low-level crates are small, but the higher-level `rand` and
+    `rand_distr` each contain a lot of functionality.
+-   Simple. We have a strong focus on correctness, speed and flexibility, but
+    not simplicity. If you prefer a small-and-simple library, there are
+    alternatives including [fastrand](https://crates.io/crates/fastrand)
+    and [oorandom](https://crates.io/crates/oorandom).
+-   Slow. We take performance seriously, with considerations also for set-up
+    time of new distributions, commonly-used parameters, and parameters of the
+    current sampler
 
 Documentation:
+
 -   [The Rust Rand Book](https://rust-random.github.io/book)
--   [API reference (master)](https://rust-random.github.io/rand)
+-   [API reference (master branch)](https://rust-random.github.io/rand)
 -   [API reference (docs.rs)](https://docs.rs/rand)
 
 
