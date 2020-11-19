@@ -34,6 +34,7 @@ build: false
 test_script:
   - cargo test --tests --no-default-features
   - cargo test --tests --no-default-features --features=alloc,getrandom
+  - cargo test --features simd_support
   # all stable features:
   - cargo test --features=serde1,log
   - cargo test --benches --features=nightly
