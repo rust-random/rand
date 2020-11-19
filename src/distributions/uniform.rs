@@ -706,6 +706,75 @@ uniform_simd_int_impl! {
     u8
 }
 
+impl SampleUniform for char {
+    type Sampler = UniformChar;
+}
+
+/// The back-end implementing [`UniformSampler`] for `char`.
+///
+/// Unless you are implementing [`UniformSampler`] for your own type, this type
+/// should not be used directly, use [`Uniform`] instead.
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+pub struct UniformChar {
+    sampler: UniformInt<u32>,
+}
+
+impl UniformChar {
+    #[inline]
+    fn new_(mut low: u32, mut high: u32) -> Self {
+        if low >= 0xD800 {
+            low -= 0xE000 - 0xD800;
+        }
+        if high >= 0xD800 {
+            high -= 0xE000 - 0xD800;
+        }
+        UniformChar {
+            sampler: UniformInt::<u32>::new_inclusive(low, high),
+        }
+    }
+}
+
+impl UniformSampler for UniformChar {
+    type X = char;
+
+    #[inline] // if the range is constant, this helps LLVM to do the
+              // calculations at compile-time.
+    fn new<B1, B2>(low_b: B1, high_b: B2) -> Self
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow() as u32;
+        let high = *high_b.borrow() as u32;
+        assert!(low < high, "Uniform::new called with `low >= high`");
+        Self::new_(low, high - 1)
+    }
+
+    #[inline] // if the range is constant, this helps LLVM to do the
+              // calculations at compile-time.
+    fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Self
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow() as u32;
+        let high = *high_b.borrow() as u32;
+        assert!(
+            low <= high,
+            "Uniform::new_inclusive called with `low > high`"
+        );
+        Self::new_(low, high)
+    }
+
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+        let mut x = self.sampler.sample(rng);
+        if x >= 0xD800 {
+            x += 0xE000 - 0xD800;
+        }
+        unsafe { core::char::from_u32_unchecked(x) }
+    }
+}
 
 /// The back-end implementing [`UniformSampler`] for floating-point types.
 ///
@@ -1204,6 +1273,27 @@ mod tests {
             t!(i32x2, i32x4, i32x8, i32x16 => i32);
             t!(u64x2, u64x4, u64x8 => u64);
             t!(i64x2, i64x4, i64x8 => i64);
+        }
+    }
+
+    #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
+    fn test_char() {
+        let mut rng = crate::test::rng(891);
+        let mut max = core::char::from_u32(0).unwrap();
+        for _ in 0..100 {
+            let c = rng.gen_range('A'..='Z');
+            assert!('A' <= c && c <= 'Z');
+            max = max.max(c);
+        }
+        assert_eq!(max, 'Z');
+        let d = Uniform::new(
+            core::char::from_u32(0xD7F0).unwrap(),
+            core::char::from_u32(0xE010).unwrap(),
+        );
+        for _ in 0..100 {
+            let c = d.sample(&mut rng);
+            assert!((c as u32) < 0xD800 || (c as u32) > 0xDFFF);
         }
     }
 
