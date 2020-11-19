@@ -22,7 +22,7 @@ use core::{mem, slice};
 ///
 /// # Generic usage
 ///
-/// The basic pattern is `fn foo<R: Rng + ?Sized>(rng: &mut R)`. Some
+/// The basic pattern is `fn foo<R: Rng + ?Sized>(rng: &mut R)`. Some
 /// things are worth noting here:
 ///
 /// - Since `Rng: RngCore` and every `RngCore` implements `Rng`, it makes no
