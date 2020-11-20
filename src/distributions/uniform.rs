@@ -714,20 +714,30 @@ impl SampleUniform for char {
 ///
 /// Unless you are implementing [`UniformSampler`] for your own type, this type
 /// should not be used directly, use [`Uniform`] instead.
+///
+/// This differs from integer range sampling since the range `0xD800..=0xDFFF`
+/// are used for surrogate pairs in UCS and UTF-16, and consequently are not
+/// valid Unicode code points. We must therefore avoid sampling values in this
+/// range.
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformChar {
     sampler: UniformInt<u32>,
 }
 
+/// UTF-16 surrogate range start
+const CHAR_SURROGATE_START: u32 = 0xD800
+/// UTF-16 surrogate range size
+const CHAR_SURROGATE_LEN: u32 = 0xE000 - CHAR_SURROGATE_START;
+
 impl UniformChar {
     #[inline]
     fn new_(mut low: u32, mut high: u32) -> Self {
-        if low >= 0xD800 {
-            low -= 0xE000 - 0xD800;
+        if low >= CHAR_SURROGATE_START {
+            low -= CHAR_SURROGATE_LEN;
         }
-        if high >= 0xD800 {
-            high -= 0xE000 - 0xD800;
+        if high >= CHAR_SURROGATE_START {
+            high -= CHAR_SURROGATE_LEN;
         }
         UniformChar {
             sampler: UniformInt::<u32>::new_inclusive(low, high),
@@ -769,9 +779,12 @@ impl UniformSampler for UniformChar {
 
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
         let mut x = self.sampler.sample(rng);
-        if x >= 0xD800 {
-            x += 0xE000 - 0xD800;
+        if x >= CHAR_SURROGATE_START {
+            x += CHAR_SURROGATE_LEN;
         }
+        // SAFETY: x must not be in surrogate range or greater than char::MAX.
+        // This relies on range constructors which accept char arguments.
+        // Validity of input char values is assumed.
         unsafe { core::char::from_u32_unchecked(x) }
     }
 }
