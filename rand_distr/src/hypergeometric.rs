@@ -142,7 +142,12 @@ impl Hypergeometric {
             }
         };
         // when sampling more than half the total population, take the smaller
-        // group as sampled instead (we can then return n1-x instead):
+        // group as sampled instead (we can then return n1-x instead).
+        // 
+        // Note: the boundary condition given in the paper is `sample_size < n / 2`;
+        // we're deviating here, because when n is even, it doesn't matter whether
+        // we switch here or not, but when n is odd `n/2 < n - n/2`, so switching
+        // when `k == n/2`, we'd actually be taking the _larger_ group as sampled.
         let k = if sample_size <= n / 2 {
             sample_size
         } else {
