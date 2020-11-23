@@ -726,22 +726,15 @@ pub struct UniformChar {
 }
 
 /// UTF-16 surrogate range start
-const CHAR_SURROGATE_START: u32 = 0xD800
+const CHAR_SURROGATE_START: u32 = 0xD800;
 /// UTF-16 surrogate range size
 const CHAR_SURROGATE_LEN: u32 = 0xE000 - CHAR_SURROGATE_START;
 
-impl UniformChar {
-    #[inline]
-    fn new_(mut low: u32, mut high: u32) -> Self {
-        if low >= CHAR_SURROGATE_START {
-            low -= CHAR_SURROGATE_LEN;
-        }
-        if high >= CHAR_SURROGATE_START {
-            high -= CHAR_SURROGATE_LEN;
-        }
-        UniformChar {
-            sampler: UniformInt::<u32>::new_inclusive(low, high),
-        }
+/// Convert `char` to compressed `u32`
+fn char_to_comp_u32(c: char) -> u32 {
+    match c as u32 {
+        c if c >= CHAR_SURROGATE_START => c - CHAR_SURROGATE_LEN,
+        c => c,
     }
 }
 
@@ -755,10 +748,10 @@ impl UniformSampler for UniformChar {
         B1: SampleBorrow<Self::X> + Sized,
         B2: SampleBorrow<Self::X> + Sized,
     {
-        let low = *low_b.borrow() as u32;
-        let high = *high_b.borrow() as u32;
-        assert!(low < high, "Uniform::new called with `low >= high`");
-        Self::new_(low, high - 1)
+        let low = char_to_comp_u32(*low_b.borrow());
+        let high = char_to_comp_u32(*high_b.borrow());
+        let sampler = UniformInt::<u32>::new(low, high);
+        UniformChar { sampler }
     }
 
     #[inline] // if the range is constant, this helps LLVM to do the
@@ -768,13 +761,10 @@ impl UniformSampler for UniformChar {
         B1: SampleBorrow<Self::X> + Sized,
         B2: SampleBorrow<Self::X> + Sized,
     {
-        let low = *low_b.borrow() as u32;
-        let high = *high_b.borrow() as u32;
-        assert!(
-            low <= high,
-            "Uniform::new_inclusive called with `low > high`"
-        );
-        Self::new_(low, high)
+        let low = char_to_comp_u32(*low_b.borrow());
+        let high = char_to_comp_u32(*high_b.borrow());
+        let sampler = UniformInt::<u32>::new_inclusive(low, high);
+        UniformChar { sampler }
     }
 
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
