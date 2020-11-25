@@ -359,11 +359,11 @@ where
         }
 
         // Partially sort the array to find the `amount` elements with the greatest
-        // keys. Do this by using `partition_at_index` to put the elements with
+        // keys. Do this by using `select_nth_unstable` to put the elements with
         // the *smallest* keys at the beginning of the list in `O(n)` time, which
         // provides equivalent information about the elements with the *greatest* keys.
         let (_, mid, greater)
-            = candidates.partition_at_index(length.as_usize() - amount.as_usize());
+            = candidates.select_nth_unstable(length.as_usize() - amount.as_usize());
 
         let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
         result.push(mid.index);
