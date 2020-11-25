@@ -296,7 +296,7 @@ pub trait IteratorRandom: Iterator + Sized {
     /// depends on size hints. In particular, `Iterator` combinators that don't
     /// change the values yielded but change the size hints may result in
     /// `choose` returning different elements. If you want consistent results
-    /// and RNG usage consider using [`choose_stable`].
+    /// and RNG usage consider using [`IteratorRandom::choose_stable`].
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
     where R: Rng + ?Sized {
         let (mut lower, mut upper) = self.size_hint();
@@ -364,6 +364,8 @@ pub trait IteratorRandom: Iterator + Sized {
     /// constructing elements where possible, however the selection and `rng`
     /// calls are the same in the face of this optimization. If you want to
     /// force every element to be created regardless call `.inspect(|e| ())`.
+    ///
+    /// [`choose`]: IteratorRandom::choose
     fn choose_stable<R>(mut self, rng: &mut R) -> Option<Self::Item>
     where R: Rng + ?Sized {
         let mut consumed = 0;
