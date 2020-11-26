@@ -80,6 +80,10 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+// This is used for doc links:
+#[allow(unused)]
+use rand::Rng;
+
 pub use rand::distributions::{
     uniform, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01, OpenClosed01,
     Standard, Uniform,
