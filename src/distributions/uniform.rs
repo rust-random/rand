@@ -706,6 +706,78 @@ uniform_simd_int_impl! {
     u8
 }
 
+impl SampleUniform for char {
+    type Sampler = UniformChar;
+}
+
+/// The back-end implementing [`UniformSampler`] for `char`.
+///
+/// Unless you are implementing [`UniformSampler`] for your own type, this type
+/// should not be used directly, use [`Uniform`] instead.
+///
+/// This differs from integer range sampling since the range `0xD800..=0xDFFF`
+/// are used for surrogate pairs in UCS and UTF-16, and consequently are not
+/// valid Unicode code points. We must therefore avoid sampling values in this
+/// range.
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+pub struct UniformChar {
+    sampler: UniformInt<u32>,
+}
+
+/// UTF-16 surrogate range start
+const CHAR_SURROGATE_START: u32 = 0xD800;
+/// UTF-16 surrogate range size
+const CHAR_SURROGATE_LEN: u32 = 0xE000 - CHAR_SURROGATE_START;
+
+/// Convert `char` to compressed `u32`
+fn char_to_comp_u32(c: char) -> u32 {
+    match c as u32 {
+        c if c >= CHAR_SURROGATE_START => c - CHAR_SURROGATE_LEN,
+        c => c,
+    }
+}
+
+impl UniformSampler for UniformChar {
+    type X = char;
+
+    #[inline] // if the range is constant, this helps LLVM to do the
+              // calculations at compile-time.
+    fn new<B1, B2>(low_b: B1, high_b: B2) -> Self
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = char_to_comp_u32(*low_b.borrow());
+        let high = char_to_comp_u32(*high_b.borrow());
+        let sampler = UniformInt::<u32>::new(low, high);
+        UniformChar { sampler }
+    }
+
+    #[inline] // if the range is constant, this helps LLVM to do the
+              // calculations at compile-time.
+    fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Self
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = char_to_comp_u32(*low_b.borrow());
+        let high = char_to_comp_u32(*high_b.borrow());
+        let sampler = UniformInt::<u32>::new_inclusive(low, high);
+        UniformChar { sampler }
+    }
+
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+        let mut x = self.sampler.sample(rng);
+        if x >= CHAR_SURROGATE_START {
+            x += CHAR_SURROGATE_LEN;
+        }
+        // SAFETY: x must not be in surrogate range or greater than char::MAX.
+        // This relies on range constructors which accept char arguments.
+        // Validity of input char values is assumed.
+        unsafe { core::char::from_u32_unchecked(x) }
+    }
+}
 
 /// The back-end implementing [`UniformSampler`] for floating-point types.
 ///
@@ -1204,6 +1276,27 @@ mod tests {
             t!(i32x2, i32x4, i32x8, i32x16 => i32);
             t!(u64x2, u64x4, u64x8 => u64);
             t!(i64x2, i64x4, i64x8 => i64);
+        }
+    }
+
+    #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
+    fn test_char() {
+        let mut rng = crate::test::rng(891);
+        let mut max = core::char::from_u32(0).unwrap();
+        for _ in 0..100 {
+            let c = rng.gen_range('A'..='Z');
+            assert!('A' <= c && c <= 'Z');
+            max = max.max(c);
+        }
+        assert_eq!(max, 'Z');
+        let d = Uniform::new(
+            core::char::from_u32(0xD7F0).unwrap(),
+            core::char::from_u32(0xE010).unwrap(),
+        );
+        for _ in 0..100 {
+            let c = d.sample(&mut rng);
+            assert!((c as u32) < 0xD800 || (c as u32) > 0xDFFF);
         }
     }
 
