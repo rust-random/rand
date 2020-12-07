@@ -4,11 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
+## [0.6.0] - 2020-12-08
+### Breaking changes
 - Bump MSRV to 1.36, various code improvements (#1011)
 - Update to getrandom v0.2 (#1041)
 - Fix: `next_u32_via_fill` and `next_u64_via_fill` now use LE as documented (#1061)
+
+### Other
 - Reduce usage of `unsafe` (#962, #963, #1011)
 - Annotate feature-gates in documentation (#1019)
 - Document available error codes (#1061)

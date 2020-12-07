@@ -15,4 +15,4 @@ categories = ["algorithms", "no-std"]
 edition = "2018"
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.5" }
+rand_core = { path = "../rand_core", version = "0.6.0" }

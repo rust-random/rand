@@ -18,7 +18,7 @@ edition = "2018"
 serde1 = ["serde"]
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.5" }
+rand_core = { path = "../rand_core", version = "0.6.0" }
 serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
