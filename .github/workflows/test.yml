@@ -111,7 +111,7 @@ jobs:
       - name: Build top-level only
         run: cargo build --target=thumbv6m-none-eabi --no-default-features
 
-  test-no-std:
+  test-ios:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2

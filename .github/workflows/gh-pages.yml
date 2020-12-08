@@ -18,7 +18,8 @@ jobs:
           toolchain: nightly
           override: true
       - name: doc (rand)
-        env: RUSTDOCFLAGS: --cfg doc_cfg
+        env:
+          RUSTDOCFLAGS: --cfg doc_cfg
         # --all builds all crates, but with default features for other crates (okay in this case)
         run: cargo doc --all --features nightly,serde1,getrandom,small_rng
       - name: Deploy
