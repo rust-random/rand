@@ -14,9 +14,5 @@ keywords = ["random", "rng", "hc128"]
 categories = ["algorithms", "no-std"]
 edition = "2018"
 
-[badges]
-travis-ci = { repository = "rust-random/rand" }
-appveyor = { repository = "rust-random/rand" }
-
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.5" }

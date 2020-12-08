@@ -14,10 +14,6 @@ keywords = ["random", "rng", "chacha"]
 categories = ["algorithms", "no-std"]
 edition = "2018"
 
-[badges]
-travis-ci = { repository = "rust-random/rand" }
-appveyor = { repository = "rust-random/rand" }
-
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.5" }
 ppv-lite86 = { version = "0.2.8", default-features = false, features = ["simd"] }
