@@ -20,7 +20,8 @@ jobs:
           override: true
         run: cargo install cargo-deadlinks
       - name: doc (rand)
-        env: RUSTDOCFLAGS: --cfg doc_cfg
+        env:
+          RUSTDOCFLAGS: --cfg doc_cfg
         # --all builds all crates, but with default features for other crates (okay in this case)
         run: cargo deadlinks --ignore-fragments -- --all --features nightly,serde1,getrandom,small_rng
 
@@ -47,10 +48,10 @@ jobs:
             toolchain: ${{ matrix.toolchain }}
             override: true
       - name: Maybe minimal
-        if ${{ matrix.minimal }}
+        if: ${{ matrix.minimal }}
         run: cargo generate-lockfile -Z minimal-versions
       - name: Maybe nightly
-        if ${{ matrix.toolchain == 'nightly' }}
+        if: ${{ matrix.toolchain == 'nightly' }}
         run: |
           cargo test --tests --features=nightly
           cargo test --all-features
