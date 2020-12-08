@@ -25,29 +25,6 @@ matrix:
     - rust: beta
       name: "Linux, beta"
 
-    - rust: nightly
-      os: linux
-      name: "Linux, nightly, docs"
-      env: NIGHTLY=1
-      install:
-        - cargo --list | egrep "^\s*deadlinks$" -q || cargo install cargo-deadlinks
-        - cargo deadlinks -V
-      before_script:
-        - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
-      script:
-        - bash utils/ci/script.sh
-        # remove cached documentation, otherwise files from previous PRs can get included
-        - rm -rf target/doc
-        - cargo doc --no-deps --all --all-features
-        - cargo deadlinks --dir target/doc
-      deploy:
-        local_dir: target/doc
-        provider: pages
-        skip_cleanup: true
-        github_token: $GITHUB_TOKEN
-        on:
-          branch: master
-
     # This target catches endianness issues
     - rust: stable
       sudo: required

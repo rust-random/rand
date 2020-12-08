@@ -1,0 +1,25 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master, '0.[0-9]+' ]
+  pull_request:
+    branches: [ master, '0.[0-9]+' ]
+
+jobs:
+  check-doc:
+    name: Check doc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+        run: cargo install cargo-deadlinks
+      - name: doc (rand)
+        env: RUSTDOCFLAGS: --cfg doc_cfg
+        # --all builds all crates, but with default features for other crates (okay in this case)
+        run: cargo deadlinks --ignore-fragments -- --all --features nightly,serde1,getrandom,small_rng
