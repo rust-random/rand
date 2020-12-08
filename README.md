@@ -1,7 +1,6 @@
 # Rand
 
-[![Build Status](https://travis-ci.org/rust-random/rand.svg?branch=master)](https://travis-ci.org/rust-random/rand)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/rust-random/rand?svg=true)](https://ci.appveyor.com/project/rust-random/rand)
+[![Test Status](https://github.com/rust-random/rand/workflows/Tests/badge.svg?event=push)](https://github.com/rust-random/rand/actions)
 [![Crate](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand)
@@ -104,8 +103,8 @@ greater, and 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
 greater. Subsets of the Rand code may work with older Rust versions, but this is
 not supported.
 
-Travis CI always has a build with a pinned version of Rustc matching the oldest
-supported Rust release. The current policy is that this can be updated in any
+Continuous Integration (CI) will always test the oldest supported Rustc version
+(the MSRV). The current policy is that this can be updated in any
 Rand release if required, but the change must be noted in the changelog.
 
 ## Crate Features
