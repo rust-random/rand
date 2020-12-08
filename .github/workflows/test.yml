@@ -41,6 +41,7 @@ jobs:
           - os: ubuntu-latest
             toolchain: nightly
           - os: ubuntu-latest
+            toolchain: nightly
             minimal: true
 
     steps:
