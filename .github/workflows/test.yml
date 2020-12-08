@@ -35,7 +35,11 @@ jobs:
         minimal: [false]
         include:
           - os: ubuntu-latest
-            toolchain: [beta, 1.36.0, nightly]
+            toolchain: beta
+          - os: ubuntu-latest
+            toolchain: 1.36.0
+          - os: ubuntu-latest
+            toolchain: nightly
           - os: ubuntu-latest
             minimal: true
 
@@ -85,6 +89,7 @@ jobs:
         run: |
           MIRI_NIGHTLY=nightly-$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri)
           rustup default "$MIRI_NIGHTLY"
+          rustup component add miri
       - name: Test rand
         run: |
           cargo miri test --no-default-features
