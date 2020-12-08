@@ -31,10 +31,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        toolchain: []
+        toolchain: [stable]
         minimal: [false]
         include:
-          - toolchain: [stable]
           - os: ubuntu-latest
             toolchain: [beta, 1.36.0, nightly]
           - os: ubuntu-latest
