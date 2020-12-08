@@ -16,10 +16,6 @@ autobenches = true
 edition = "2018"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
-[badges]
-travis-ci = { repository = "rust-random/rand" }
-appveyor = { repository = "rust-random/rand" }
-
 [features]
 # Meta-features:
 default = ["std", "std_rng"]
