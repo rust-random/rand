@@ -18,8 +18,113 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
-        run: cargo install cargo-deadlinks
+      - run: cargo install cargo-deadlinks
       - name: doc (rand)
-        env: RUSTDOCFLAGS: --cfg doc_cfg
+        env:
+          RUSTDOCFLAGS: --cfg doc_cfg
         # --all builds all crates, but with default features for other crates (okay in this case)
         run: cargo deadlinks --ignore-fragments -- --all --features nightly,serde1,getrandom,small_rng
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        toolchain: [stable]
+        minimal: [false]
+        include:
+          - os: ubuntu-latest
+            toolchain: beta
+          - os: ubuntu-latest
+            toolchain: 1.36.0
+          - os: ubuntu-latest
+            toolchain: nightly
+          - os: ubuntu-latest
+            toolchain: nightly
+            minimal: true
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: ${{ matrix.toolchain }}
+            override: true
+      - name: Maybe minimal
+        if: ${{ matrix.minimal }}
+        run: cargo generate-lockfile -Z minimal-versions
+      - name: Maybe nightly
+        if: ${{ matrix.toolchain == 'nightly' }}
+        run: |
+          cargo test --tests --features=nightly
+          cargo test --all-features
+          cargo test --benches --features=nightly
+          cargo test --manifest-path rand_distr/Cargo.toml --benches
+      - name: Test rand
+        run: |
+          cargo test --tests --no-default-features
+          cargo test --tests --no-default-features --features=alloc,getrandom,small_rng
+          # all stable features:
+          cargo test --features=serde1,log,small_rng
+          cargo test --examples
+      - name: Test rand_core
+        run: |
+          cargo test --manifest-path rand_core/Cargo.toml
+          cargo test --manifest-path rand_core/Cargo.toml --no-default-features
+          cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc,getrandom
+      - name: Test rand_distr
+        run: cargo test --manifest-path rand_distr/Cargo.toml
+      - name: Test rand_pcg
+        run: cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
+      - name: Test rand_chacha
+        run: cargo test --manifest-path rand_chacha/Cargo.toml
+      - name: Test rand_hc
+        run: cargo test --manifest-path rand_hc/Cargo.toml
+
+  test-miri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        run: |
+          MIRI_NIGHTLY=nightly-$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri)
+          rustup default "$MIRI_NIGHTLY"
+          rustup component add miri
+      - name: Test rand
+        run: |
+          cargo miri test --no-default-features
+          cargo miri test --features=log,small_rng
+          cargo miri test --manifest-path rand_core/Cargo.toml
+          cargo miri test --manifest-path rand_core/Cargo.toml --features=serde1
+          cargo miri test --manifest-path rand_core/Cargo.toml --no-default-features
+          #cargo miri test --manifest-path rand_distr/Cargo.toml # no unsafe and lots of slow tests
+          cargo miri test --manifest-path rand_pcg/Cargo.toml --features=serde1
+          cargo miri test --manifest-path rand_chacha/Cargo.toml --no-default-features
+          cargo miri test --manifest-path rand_hc/Cargo.toml
+
+  test-no-std:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            target: thumbv6m-none-eabi
+            override: true
+      - name: Build top-level only
+        run: cargo build --target=thumbv6m-none-eabi --no-default-features
+
+  test-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            target: aarch64-apple-ios
+            override: true
+      - name: Build top-level only
+        run: cargo build --target=aarch64-apple-ios
