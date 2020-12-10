@@ -30,17 +30,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        toolchain: [stable]
         minimal: [false]
         include:
           - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            toolchain: stable
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            toolchain: stable
+            # TODO: also aarch64 / M1
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu
+            toolchain: stable
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
             toolchain: beta
+            # Test both windows-gnu and windows-msvc; use beta rust on one
           - os: ubuntu-latest
-            toolchain: 1.36.0
+            target: x86_64-unknown-linux-gnu
+            toolchain: 1.36.0 # MSRV
           - os: ubuntu-latest
+            target: i686-unknown-linux-gnu
             toolchain: nightly
           - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
             toolchain: nightly
             minimal: true
 
@@ -49,38 +62,39 @@ jobs:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: ${{ matrix.toolchain }}
-            override: true
+          target: ${{ matrix.target }}
+          toolchain: ${{ matrix.toolchain }}
+          override: true
       - name: Maybe minimal
         if: ${{ matrix.minimal }}
         run: cargo generate-lockfile -Z minimal-versions
       - name: Maybe nightly
         if: ${{ matrix.toolchain == 'nightly' }}
         run: |
-          cargo test --tests --features=nightly
-          cargo test --all-features
-          cargo test --benches --features=nightly
-          cargo test --manifest-path rand_distr/Cargo.toml --benches
+          cargo test --target $${ matrix.target }} --tests --features=nightly
+          cargo test --target $${ matrix.target }} --all-features
+          cargo test --target $${ matrix.target }} --benches --features=nightly
+          cargo test --target $${ matrix.target }} --manifest-path rand_distr/Cargo.toml --benches
       - name: Test rand
         run: |
-          cargo test --tests --no-default-features
-          cargo test --tests --no-default-features --features=alloc,getrandom,small_rng
+          cargo test --target $${ matrix.target }} --tests --no-default-features
+          cargo test --target $${ matrix.target }} --tests --no-default-features --features=alloc,getrandom,small_rng
           # all stable features:
-          cargo test --features=serde1,log,small_rng
-          cargo test --examples
+          cargo test --target $${ matrix.target }} --features=serde1,log,small_rng
+          cargo test --target $${ matrix.target }} --examples
       - name: Test rand_core
         run: |
-          cargo test --manifest-path rand_core/Cargo.toml
-          cargo test --manifest-path rand_core/Cargo.toml --no-default-features
-          cargo test --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc,getrandom
+          cargo test --target $${ matrix.target }} --manifest-path rand_core/Cargo.toml
+          cargo test --target $${ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features
+          cargo test --target $${ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc,getrandom
       - name: Test rand_distr
-        run: cargo test --manifest-path rand_distr/Cargo.toml
+        run: cargo test --target $${ matrix.target }} --manifest-path rand_distr/Cargo.toml
       - name: Test rand_pcg
-        run: cargo test --manifest-path rand_pcg/Cargo.toml --features=serde1
+        run: cargo test --target $${ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde1
       - name: Test rand_chacha
-        run: cargo test --manifest-path rand_chacha/Cargo.toml
+        run: cargo test --target $${ matrix.target }} --manifest-path rand_chacha/Cargo.toml
       - name: Test rand_hc
-        run: cargo test --manifest-path rand_hc/Cargo.toml
+        run: cargo test --target $${ matrix.target }} --manifest-path rand_hc/Cargo.toml
 
   test-miri:
     runs-on: ubuntu-latest
