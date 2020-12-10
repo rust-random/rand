@@ -37,8 +37,7 @@ jobs:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
-          target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
           override: true
       - run: cargo test
-      - run: cargo test --target ${{ matrix.target }} --all-features
+      - run: cargo test --all-features
