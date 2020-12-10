@@ -71,30 +71,30 @@ jobs:
       - name: Maybe nightly
         if: ${{ matrix.toolchain == 'nightly' }}
         run: |
-          cargo test --target $${ matrix.target }} --tests --features=nightly
-          cargo test --target $${ matrix.target }} --all-features
-          cargo test --target $${ matrix.target }} --benches --features=nightly
-          cargo test --target $${ matrix.target }} --manifest-path rand_distr/Cargo.toml --benches
+          cargo test --target ${{ matrix.target }} --tests --features=nightly
+          cargo test --target ${{ matrix.target }} --all-features
+          cargo test --target ${{ matrix.target }} --benches --features=nightly
+          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --benches
       - name: Test rand
         run: |
-          cargo test --target $${ matrix.target }} --tests --no-default-features
-          cargo test --target $${ matrix.target }} --tests --no-default-features --features=alloc,getrandom,small_rng
+          cargo test --target ${{ matrix.target }} --tests --no-default-features
+          cargo test --target ${{ matrix.target }} --tests --no-default-features --features=alloc,getrandom,small_rng
           # all stable features:
-          cargo test --target $${ matrix.target }} --features=serde1,log,small_rng
-          cargo test --target $${ matrix.target }} --examples
+          cargo test --target ${{ matrix.target }} --features=serde1,log,small_rng
+          cargo test --target ${{ matrix.target }} --examples
       - name: Test rand_core
         run: |
-          cargo test --target $${ matrix.target }} --manifest-path rand_core/Cargo.toml
-          cargo test --target $${ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features
-          cargo test --target $${ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc,getrandom
+          cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
+          cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features
+          cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc,getrandom
       - name: Test rand_distr
-        run: cargo test --target $${ matrix.target }} --manifest-path rand_distr/Cargo.toml
+        run: cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml
       - name: Test rand_pcg
-        run: cargo test --target $${ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde1
+        run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde1
       - name: Test rand_chacha
-        run: cargo test --target $${ matrix.target }} --manifest-path rand_chacha/Cargo.toml
+        run: cargo test --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml
       - name: Test rand_hc
-        run: cargo test --target $${ matrix.target }} --manifest-path rand_hc/Cargo.toml
+        run: cargo test --target ${{ matrix.target }} --manifest-path rand_hc/Cargo.toml
 
   test-miri:
     runs-on: ubuntu-latest
