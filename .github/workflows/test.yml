@@ -50,6 +50,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
             toolchain: 1.36.0 # MSRV
           - os: ubuntu-latest
+            deps: sudo apt install gcc-multilib
             target: i686-unknown-linux-gnu
             toolchain: nightly
           - os: ubuntu-latest
@@ -65,6 +66,7 @@ jobs:
           target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
           override: true
+      - run: ${{ matrix.deps }}
       - name: Maybe minimal
         if: ${{ matrix.minimal }}
         run: cargo generate-lockfile -Z minimal-versions
