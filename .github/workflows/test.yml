@@ -30,32 +30,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
+        target: [x86_64-unknown-linux-gnu]
+        toolchain: [stable]
         minimal: [false]
         include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            toolchain: stable
           - os: macos-latest
             target: x86_64-apple-darwin
-            toolchain: stable
             # TODO: also aarch64 / M1
           - os: windows-latest
             target: x86_64-pc-windows-gnu
-            toolchain: stable
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             toolchain: beta
             # Test both windows-gnu and windows-msvc; use beta rust on one
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            toolchain: 1.36.0 # MSRV
-          - os: ubuntu-latest
-            deps: sudo apt install gcc-multilib
+          - toolchain: 1.36.0 # MSRV
+          - deps: sudo apt install gcc-multilib
             target: i686-unknown-linux-gnu
             toolchain: nightly
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            toolchain: nightly
+          - toolchain: nightly
             minimal: true
 
     steps:
