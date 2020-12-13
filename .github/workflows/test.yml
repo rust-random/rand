@@ -62,6 +62,7 @@ jobs:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
+          profile: minimal
           target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
           override: true
@@ -97,6 +98,43 @@ jobs:
       - name: Test rand_hc
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_hc/Cargo.toml
 
+  test-cross:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: mips-unknown-linux-gnu
+            toolchain: stable
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          target: ${{ matrix.target }}
+          toolchain: ${{ matrix.toolchain }}
+          override: true
+      - name: Cache cargo plugins
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/bin/
+          key: ${{ runner.os }}-cargo-plugins
+      - name: Install cross
+        run: cargo install cross || true
+      - name: Test
+        run: |
+          # all stable features:
+          cross test --no-fail-fast --target ${{ matrix.target }} --features=serde1,log,small_rng
+          cross test --no-fail-fast --target ${{ matrix.target }} --examples
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde1
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_hc/Cargo.toml
+
   test-miri:
     runs-on: ubuntu-latest
     steps:
@@ -125,6 +163,7 @@ jobs:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
+            profile: minimal
             toolchain: nightly
             target: thumbv6m-none-eabi
             override: true
@@ -138,6 +177,7 @@ jobs:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
+            profile: minimal
             toolchain: nightly
             target: aarch64-apple-ios
             override: true
