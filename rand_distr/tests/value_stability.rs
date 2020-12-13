@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core::{fmt::Debug, cmp::PartialEq};
+use core::fmt::Debug;
 use rand::Rng;
 use rand_distr::*;
 
@@ -17,12 +17,45 @@ fn get_rng(seed: u64) -> impl rand::Rng {
     rand_pcg::Pcg32::new(seed, INC)
 }
 
-fn test_samples<F: Debug + Copy + PartialEq, D: Distribution<F>>(
+/// We only assert approximate equality since some platforms do not perform
+/// identically (i686-unknown-linux-gnu and most notably x86_64-pc-windows-gnu).
+trait ApproxEq {
+    fn is_approx_eq(&self, rhs: &Self) -> bool;
+}
+
+impl ApproxEq for f32 {
+    fn is_approx_eq(&self, rhs: &Self) -> bool {
+        (self - rhs).abs() < 1e-6
+    }
+}
+impl ApproxEq for f64 {
+    fn is_approx_eq(&self, rhs: &Self) -> bool {
+        (self - rhs).abs() < 1e-14
+    }
+}
+impl ApproxEq for u64 {
+    fn is_approx_eq(&self, rhs: &Self) -> bool {
+        self == rhs
+    }
+}
+impl<T: ApproxEq> ApproxEq for [T; 2] {
+    fn is_approx_eq(&self, rhs: &Self) -> bool {
+        self[0].is_approx_eq(&rhs[0]) && self[1].is_approx_eq(&rhs[1])
+    }
+}
+impl<T: ApproxEq> ApproxEq for [T; 3] {
+    fn is_approx_eq(&self, rhs: &Self) -> bool {
+        self[0].is_approx_eq(&rhs[0]) && self[1].is_approx_eq(&rhs[1]) && self[2].is_approx_eq(&rhs[2])
+    }
+}
+
+fn test_samples<F: Debug + ApproxEq, D: Distribution<F>>(
     seed: u64, distr: D, expected: &[F],
 ) {
     let mut rng = get_rng(seed);
-    for &val in expected {
-        assert_eq!(val, rng.sample(&distr));
+    for val in expected {
+        let x = rng.sample(&distr);
+        assert!(x.is_approx_eq(&val), "not approx eq: {:?}, {:?}", x, val);
     }
 }
 
@@ -334,11 +367,12 @@ fn cauchy_stability() {
 
     // Unfortunately this test is not fully portable due to reliance on the
     // system's implementation of tanf (see doc on Cauchy struct).
+    // We use a lower threshold of 1e-5 here.
     let distr = Cauchy::new(10f32, 7.0).unwrap();
     let mut rng = get_rng(353);
     let expected = [15.023088, -5.446413, 3.7092876, 3.112482];
     for &a in expected.iter() {
         let b = rng.sample(&distr);
-        assert!((a - b).abs() < 1e-6, "expected: {} = {}", a, b);
+        assert!((a - b).abs() < 1e-5, "not approx eq: {:?}, {:?}", a, b);
     }
 }

@@ -160,7 +160,7 @@ mod test {
         let expected = [15.023088, -5.446413, 3.7092876, 3.112482];
         for (a, b) in buf.iter().zip(expected.iter()) {
             let (a, b) = (*a, *b);
-            assert!((a - b).abs() < 1e-6, "expected: {} = {}", a, b);
+            assert!((a - b).abs() < 1e-5, "expected: {} = {}", a, b);
         }
     }
 }
