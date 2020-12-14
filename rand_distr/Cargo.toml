@@ -15,10 +15,6 @@ categories = ["algorithms"]
 edition = "2018"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
-[badges]
-travis-ci = { repository = "rust-random/rand" }
-appveyor = { repository = "rust-random/rand" }
-
 [dependencies]
 rand = { path = "..", version = "0.7", default-features = false }
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }

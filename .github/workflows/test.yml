@@ -1,0 +1,185 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master, '0.[0-9]+' ]
+  pull_request:
+    branches: [ master, '0.[0-9]+' ]
+
+jobs:
+  check-doc:
+    name: Check doc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - run: cargo install cargo-deadlinks
+      - name: doc (rand)
+        env:
+          RUSTDOCFLAGS: --cfg doc_cfg
+        # --all builds all crates, but with default features for other crates (okay in this case)
+        run: cargo deadlinks --ignore-fragments -- --all --features nightly,serde1,getrandom,small_rng
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            toolchain: stable
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            toolchain: stable
+            # TODO: also aarch64 / M1
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu
+            toolchain: stable
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            toolchain: beta
+            # Test both windows-gnu and windows-msvc; use beta rust on one
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            toolchain: 1.36.0 # MSRV
+          - os: ubuntu-latest
+            deps: sudo apt install gcc-multilib
+            target: i686-unknown-linux-gnu
+            toolchain: nightly
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            toolchain: nightly
+            variant: minimal
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          target: ${{ matrix.target }}
+          toolchain: ${{ matrix.toolchain }}
+          override: true
+      - run: ${{ matrix.deps }}
+      - name: Maybe minimal
+        if: ${{ matrix.variant == 'minimal' }}
+        run: cargo generate-lockfile -Z minimal-versions
+      - name: Maybe nightly
+        if: ${{ matrix.toolchain == 'nightly' }}
+        run: |
+          cargo test --target ${{ matrix.target }} --tests --features=nightly
+          cargo test --target ${{ matrix.target }} --all-features
+          cargo test --target ${{ matrix.target }} --benches --features=nightly
+          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --benches
+      - name: Test rand
+        run: |
+          cargo test --target ${{ matrix.target }} --tests --no-default-features
+          cargo test --target ${{ matrix.target }} --tests --no-default-features --features=alloc,getrandom,small_rng
+          # all stable features:
+          cargo test --target ${{ matrix.target }} --features=serde1,log,small_rng
+          cargo test --target ${{ matrix.target }} --examples
+      - name: Test rand_core
+        run: |
+          cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
+          cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features
+          cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc,getrandom
+      - name: Test rand_distr
+        run: cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml
+      - name: Test rand_pcg
+        run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde1
+      - name: Test rand_chacha
+        run: cargo test --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml
+      - name: Test rand_hc
+        run: cargo test --target ${{ matrix.target }} --manifest-path rand_hc/Cargo.toml
+
+  test-cross:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: mips-unknown-linux-gnu
+            toolchain: stable
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          target: ${{ matrix.target }}
+          toolchain: ${{ matrix.toolchain }}
+          override: true
+      - name: Cache cargo plugins
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/bin/
+          key: ${{ runner.os }}-cargo-plugins
+      - name: Install cross
+        run: cargo install cross || true
+      - name: Test
+        run: |
+          # all stable features:
+          cross test --no-fail-fast --target ${{ matrix.target }} --features=serde1,log,small_rng
+          cross test --no-fail-fast --target ${{ matrix.target }} --examples
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde1
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_hc/Cargo.toml
+
+  test-miri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        run: |
+          MIRI_NIGHTLY=nightly-$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri)
+          rustup default "$MIRI_NIGHTLY"
+          rustup component add miri
+      - name: Test rand
+        run: |
+          cargo miri test --no-default-features
+          cargo miri test --features=log,small_rng
+          cargo miri test --manifest-path rand_core/Cargo.toml
+          cargo miri test --manifest-path rand_core/Cargo.toml --features=serde1
+          cargo miri test --manifest-path rand_core/Cargo.toml --no-default-features
+          #cargo miri test --manifest-path rand_distr/Cargo.toml # no unsafe and lots of slow tests
+          cargo miri test --manifest-path rand_pcg/Cargo.toml --features=serde1
+          cargo miri test --manifest-path rand_chacha/Cargo.toml --no-default-features
+          cargo miri test --manifest-path rand_hc/Cargo.toml
+
+  test-no-std:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            profile: minimal
+            toolchain: nightly
+            target: thumbv6m-none-eabi
+            override: true
+      - name: Build top-level only
+        run: cargo build --target=thumbv6m-none-eabi --no-default-features
+
+  test-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            profile: minimal
+            toolchain: nightly
+            target: aarch64-apple-ios
+            override: true
+      - name: Build top-level only
+        run: cargo build --target=aarch64-apple-ios
