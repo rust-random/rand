@@ -1,6 +1,6 @@
 [package]
 name = "rand_chacha"
-version = "0.2.3"
+version = "0.3.0"
 authors = ["The Rand Project Developers", "The Rust Project Developers", "The CryptoCorrosion Contributors"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -15,7 +15,7 @@ categories = ["algorithms", "no-std"]
 edition = "2018"
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.5" }
+rand_core = { path = "../rand_core", version = "0.6.0" }
 ppv-lite86 = { version = "0.2.8", default-features = false, features = ["simd"] }
 
 [features]

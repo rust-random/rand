@@ -43,7 +43,7 @@ The traits and error types are also available via `rand`.
 
 The current version is:
 ```
-rand_core = "0.5.0"
+rand_core = "0.6.0"
 ```
 
 Rand libs have inter-dependencies and make use of the

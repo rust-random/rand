@@ -25,7 +25,7 @@ std = ["alloc", "rand/std"]
 alloc = ["rand/alloc"]
 
 [dev-dependencies]
-rand_pcg = { version = "0.2", path = "../rand_pcg" }
+rand_pcg = { version = "0.3.0", path = "../rand_pcg" }
 # For inline examples
 rand = { path = "..", version = "0.7", default-features = false, features = ["std_rng", "std"] }
 # Histogram implementation for testing uniformity

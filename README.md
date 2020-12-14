@@ -3,7 +3,7 @@
 [![Test Status](https://github.com/rust-random/rand/workflows/Tests/badge.svg?event=push)](https://github.com/rust-random/rand/actions)
 [![Crate](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
-[![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand)
+[![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.36+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 

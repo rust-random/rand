@@ -1,6 +1,6 @@
 [package]
 name = "rand_hc"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["The Rand Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -15,4 +15,4 @@ categories = ["algorithms", "no-std"]
 edition = "2018"
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.5" }
+rand_core = { path = "../rand_core", version = "0.6.0" }
