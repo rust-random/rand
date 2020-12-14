@@ -55,7 +55,7 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             toolchain: nightly
-            variant: minimal
+            variant: minimal_versions
 
     steps:
       - uses: actions/checkout@v2
@@ -67,8 +67,8 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           override: true
       - run: ${{ matrix.deps }}
-      - name: Maybe minimal
-        if: ${{ matrix.variant == 'minimal' }}
+      - name: Maybe minimal versions
+        if: ${{ matrix.variant == 'minimal_versions' }}
         run: cargo generate-lockfile -Z minimal-versions
       - name: Maybe nightly
         if: ${{ matrix.toolchain == 'nightly' }}
