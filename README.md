@@ -103,7 +103,7 @@ greater, and 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
 greater. Subsets of the Rand code may work with older Rust versions, but this is
 not supported.
 
-Continuous Integration (CI) will always test the oldest supported Rustc version
+Continuous Integration (CI) will always test the minimum supported Rustc version
 (the MSRV). The current policy is that this can be updated in any
 Rand release if required, but the change must be noted in the changelog.
 

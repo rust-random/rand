@@ -87,7 +87,7 @@ where F: Float, OpenClosed01: Distribution<F>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use core::fmt::{Debug, Display};
+    use core::fmt::{Debug, Display, LowerExp};
 
     #[test]
     #[should_panic]
@@ -109,13 +109,13 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        fn test_samples<F: Float + Debug + Display, D: Distribution<F>>(
+        fn test_samples<F: Float + Debug + Display + LowerExp, D: Distribution<F>>(
             distr: D, thresh: F, expected: &[F],
         ) {
             let mut rng = crate::test::rng(213);
             for v in expected {
                 let x = rng.sample(&distr);
-                assert!((x - *v).abs() < thresh, "not approx eq: {}, {}", x, *v);
+                assert_almost_eq!(x, *v, thresh);
             }
         }
 

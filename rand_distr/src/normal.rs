@@ -345,7 +345,7 @@ mod tests {
         assert_almost_eq!(lnorm.norm.std_dev, 1.0, 2e-16);
 
         let lnorm = LogNormal::from_mean_cv(e.powf(1.5), (e - 1.0).sqrt()).unwrap();
-        assert!((lnorm.norm.mean - 1.0).abs() < 1e-15);
+        assert_almost_eq!(lnorm.norm.mean, 1.0, 1e-15);
         assert_eq!(lnorm.norm.std_dev, 1.0);
     }
     #[test]
