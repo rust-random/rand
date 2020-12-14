@@ -51,7 +51,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.7"
+rand = "0.8.0"
 ```
 
 To get started using Rand, see [The Book](https://rust-random.github.io/book).
@@ -68,7 +68,7 @@ Current Rand versions are:
 -   Version 0.7 was released in June 2019, moving most non-uniform distributions
     to an external crate, moving `from_entropy` to `SeedableRng`, and many small
     changes and fixes.
--   The `master` branch is close to 0.8 release.
+-   Version 0.8 was released in December 2020 with many small changes.
 
 A detailed [changelog](CHANGELOG.md) is available for releases.
 

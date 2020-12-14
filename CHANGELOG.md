@@ -8,7 +8,7 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [Unreleased]
+## [0.8.0] - 2020-12-18
 ### Additions
 - impl PartialEq+Eq for StdRng, SmallRng, and StepRng (#975)
 - Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
