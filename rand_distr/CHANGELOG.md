@@ -4,7 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0] - 2020-12-18
+- Bump `rand` to v0.8.0
 - New `Geometric`, `StandardGeometric` and `Hypergeometric` distributions (#1062)
 - New `Beta` sampling algorithm for improved performance and accuracy (#1000)
 - `Normal` and `LogNormal` now support `from_mean_cv` and `from_zscore` (#1044)
