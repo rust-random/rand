@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-random/rand"
 documentation = "https://docs.rs/rand_distr"
-homepage = "https://crates.io/crates/rand_distr"
+homepage = "https://rust-random.github.io/book"
 description = """
 Sampling from random number distributions
 """
