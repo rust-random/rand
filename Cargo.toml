@@ -5,8 +5,8 @@ authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/rust-random/rand"
-documentation = "https://rust-random.github.io/rand/"
-homepage = "https://crates.io/crates/rand"
+documentation = "https://docs.rs/rand"
+homepage = "https://rust-random.github.io/book"
 description = """
 Random number generators and other randomness functionality.
 """
