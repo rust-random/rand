@@ -21,7 +21,9 @@ jobs:
         env:
           RUSTDOCFLAGS: --cfg doc_cfg
         # --all builds all crates, but with default features for other crates (okay in this case)
-        run: cargo doc --all --features nightly,serde1,getrandom,small_rng
+        run: |
+          cargo doc --all --features nightly,serde1,getrandom,small_rng
+          echo '<meta http-equiv="refresh" content="0; URL=rand/index.html"/>' > target/doc/index.html
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
