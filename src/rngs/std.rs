@@ -22,9 +22,9 @@ pub(crate) use rand_hc::Hc128Core as Core;
 /// on the current platform, to be statistically strong and unpredictable
 /// (meaning a cryptographically secure PRNG).
 ///
-/// The current algorithm used is the ChaCha block cipher with 20 rounds.
-/// This may change as new evidence of cipher security and performance
-/// becomes available.
+/// The current algorithm used is the ChaCha block cipher with 12 rounds. Please
+/// see this relevant [rand issue] for the discussion. This may change as new 
+/// evidence of cipher security and performance becomes available.
 ///
 /// The algorithm is deterministic but should not be considered reproducible
 /// due to dependence on configuration and possible replacement in future
@@ -32,6 +32,7 @@ pub(crate) use rand_hc::Hc128Core as Core;
 /// the [rand_chacha] crate directly.
 ///
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
+/// [rand issue]: https://github.com/rust-random/rand/issues/932
 #[cfg_attr(doc_cfg, doc(cfg(feature = "std_rng")))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct StdRng(Rng);
