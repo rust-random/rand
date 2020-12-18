@@ -49,7 +49,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
             toolchain: 1.36.0 # MSRV
           - os: ubuntu-latest
-            deps: sudo apt install gcc-multilib
+            deps: sudo apt-get update ; sudo apt install gcc-multilib
             target: i686-unknown-linux-gnu
             toolchain: nightly
           - os: ubuntu-latest

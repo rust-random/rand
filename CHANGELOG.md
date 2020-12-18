@@ -8,36 +8,61 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [Unreleased]
-### Additions
-- impl PartialEq+Eq for StdRng, SmallRng, and StepRng (#975)
-- Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
-- Document types supported by `random` (#994)
-- Implement weighted sampling without replacement (#976, #1013)
-- Add `IteratorRandom::choose_stable` as an alternative to `choose` which does not depend on size hints (#1057)
-
-### Changes
-- `getrandom` updated to v0.2 (#1041)
-- `ThreadRng` is no longer `Copy` to enable safe usage within thread-local destructors (see #968)
-- `gen_range(a, b)` was replaced with `gen_range(a..b)`, and `gen_range(a..=b)`
-  is supported (#744, #1003). Note that `a` and `b` can no longer be references or SIMD types.
-- Replace `AsByteSliceMut` with `Fill` (#940)
-- Move alias method for `WeightedIndex` to `rand_distr` (#945)
-- `Alphanumeric` samples bytes instead of chars (#935)
+## [0.8.0] - 2020-12-18
+### Platform support
 - The minimum supported Rust version is now 1.36 (#1011)
-- Restrict `rand::rngs::adapter` to `std` (#1027)
-- Better NaN handling for `WeightedIndex` (#1005)
-- Implement `IntoIterator` for `IndexVec`, replacing the `into_iter` method (#1007)
-- Reduce packaged crate size (#983)
-- Drop some unsafe code (#962, #963, #1011)
-- Improve treatment of rounding errors in `WeightedIndex::update_weights` (#956)
-- `StdRng`: Switch from ChaCha20 to ChaCha12 for better performance (#1028)
-- `SmallRng`: Replace PCG algorithm with xoshiro{128,256}++ (#1038)
+- `getrandom` updated to v0.2 (#1041)
+- Remove `wasm-bindgen` and `stdweb` feature flags. For details of WASM support,
+  see the [getrandom documentation](https://docs.rs/getrandom/latest). (#948)
+- `ReadRng::next_u32` and `next_u64` now use little-Endian conversion instead
+  of native-Endian, affecting results on Big-Endian platforms (#1061)
 - The `nightly` feature no longer implies the `simd_support` feature (#1048)
 - Fix `simd_support` feature to work on current nightlies (#1056)
+
+### Rngs
+- `ThreadRng` is no longer `Copy` to enable safe usage within thread-local destructors (#1035)
+- `gen_range(a, b)` was replaced with `gen_range(a..b)`. `gen_range(a..=b)` is
+  also supported. Note that `a` and `b` can no longer be references or SIMD types. (#744, #1003)
+- Replace `AsByteSliceMut` with `Fill` and add support for `[bool], [char], [f32], [f64]` (#940)
+- Restrict `rand::rngs::adapter` to `std` (#1027; see also #928)
+- `StdRng`: add new `std_rng` feature flag (enabled by default, but might need
+  to be used if disabling default crate features) (#948)
+- `StdRng`: Switch from ChaCha20 to ChaCha12 for better performance (#1028)
+- `SmallRng`: Replace PCG algorithm with xoshiro{128,256}++ (#1038)
+
+### Sequences
+- Add `IteratorRandom::choose_stable` as an alternative to `choose` which does
+  not depend on size hints (#1057)
 - Improve accuracy and performance of `IteratorRandom::choose` (#1059)
-- `ReadRng::next_u32` and `next_u64` now use little-Endian conversion instead
-  of native-Endian, affecting results on Big-Endian platforms (#1026)
+- Implement `IntoIterator` for `IndexVec`, replacing the `into_iter` method (#1007)
+- Add value stability tests for `seq` module (#933)
+
+### Misc
+- Support `PartialEq` and `Eq` for `StdRng`, `SmallRng` and `StepRng` (#979)
+- Added a `serde1` feature and added Serialize/Deserialize to `UniformInt` and `WeightedIndex` (#974)
+- Drop some unsafe code (#962, #963, #1011)
+- Reduce packaged crate size (#983)
+- Migrate to GitHub Actions from Travis+AppVeyor (#1073)
+
+### Distributions
+- `Alphanumeric` samples bytes instead of chars (#935)
+- `Uniform` now supports `char`, enabling `rng.gen_range('A'..='Z')` (#1068)
+- Add `UniformSampler::sample_single_inclusive` (#1003)
+
+#### Weighted sampling
+- Implement weighted sampling without replacement (#976, #1013)
+- `rand::distributions::alias_method::WeightedIndex` was moved to `rand_distr::WeightedAliasIndex`.
+  The simpler alternative `rand::distribution::WeightedIndex` remains. (#945)
+- Improve treatment of rounding errors in `WeightedIndex::update_weights` (#956)
+- `WeightedIndex`: return error on NaN instead of panic (#1005)
+
+### Documentation
+- Document types supported by `random` (#994)
+- Document notes on password generation (#995)
+- Note that `SmallRng` may not be the best choice for performance and in some
+  other cases (#1038)
+- Use `doc(cfg)` to annotate feature-gated items (#1019)
+- Adjust README (#1065)
 
 ## [0.7.3] - 2020-01-10
 ### Fixes

@@ -43,12 +43,13 @@ exceptions for theoretical issues without a known exploit:
 
 | Crate | Versions | Exceptions |
 | ----- | -------- | ---------- |
+| `rand` | 0.8 |  |
 | `rand` | 0.7 |  |
 | `rand` | 0.5, 0.6 | Jitter |
 | `rand` | 0.4 | Jitter, ISAAC |
-| `rand_core` | 0.2 - 0.5 | |
-| `rand_chacha` | 0.1 - 0.2 | |
-| `rand_hc` | 0.1 - 0.2 | |
+| `rand_core` | 0.2 - 0.6 | |
+| `rand_chacha` | 0.1 - 0.3 | |
+| `rand_hc` | 0.1 - 0.3 | |
 
 Explanation of exceptions:
 

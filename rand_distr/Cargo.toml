@@ -1,6 +1,6 @@
 [package]
 name = "rand_distr"
-version = "0.2.2"
+version = "0.4.0"
 authors = ["The Rand Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -16,7 +16,7 @@ edition = "2018"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
 [dependencies]
-rand = { path = "..", version = "0.7", default-features = false }
+rand = { path = "..", version = "0.8.0", default-features = false }
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 
 [features]
@@ -27,6 +27,6 @@ alloc = ["rand/alloc"]
 [dev-dependencies]
 rand_pcg = { version = "0.3.0", path = "../rand_pcg" }
 # For inline examples
-rand = { path = "..", version = "0.7", default-features = false, features = ["std_rng", "std"] }
+rand = { path = "..", version = "0.8.0", default-features = false, features = ["std_rng", "std"] }
 # Histogram implementation for testing uniformity
 average = "0.10.3"
