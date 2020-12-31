@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2020-12-31
+### Other
+- Enable all stable features in the playground (#1081)
+
 ## [0.6.0] - 2020-12-08
 ### Breaking changes
 - Bump MSRV to 1.36, various code improvements (#1011)
