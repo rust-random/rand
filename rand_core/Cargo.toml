@@ -28,3 +28,6 @@ getrandom = { version = "0.2", optional = true }
 # RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --no-deps --open
 all-features = true
 rustdoc-args = ["--cfg", "doc_cfg"]
+
+[package.metadata.playground]
+all-features = true

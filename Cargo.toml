@@ -85,3 +85,6 @@ bincode = "1.2.1"
 # RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --no-deps --open
 all-features = true
 rustdoc-args = ["--cfg", "doc_cfg"]
+
+[package.metadata.playground]
+features = ["small_rng", "serde1"]
