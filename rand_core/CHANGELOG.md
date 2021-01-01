@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.1] - 2020-12-31
+## [0.6.1] - 2021-01-03
+### Fixed
+- Avoid panic when using `RngCore::seed_from_u64` with a seed which is not a
+  multiple of four (#1082)
 ### Other
 - Enable all stable features in the playground (#1081)
 

@@ -313,7 +313,7 @@ pub trait SeedableRng: Sized {
             let xorshifted = (((state >> 18) ^ state) >> 27) as u32;
             let rot = (state >> 59) as u32;
             let x = xorshifted.rotate_right(rot);
-            chunk.copy_from_slice(&x.to_le_bytes());
+            chunk.copy_from_slice(&x.to_le_bytes()[..chunk.len()]);
         }
 
         Self::from_seed(seed)
