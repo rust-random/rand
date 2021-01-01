@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -85,3 +85,6 @@ bincode = "1.2.1"
 # RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --no-deps --open
 all-features = true
 rustdoc-args = ["--cfg", "doc_cfg"]
+
+[package.metadata.playground]
+features = ["small_rng", "serde1"]

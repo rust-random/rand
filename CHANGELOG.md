@@ -8,6 +8,10 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.8.1] - 2020-12-31
+### Other
+- Enable all stable features in the playground (#1081)
+
 ## [0.8.0] - 2020-12-18
 ### Platform support
 - The minimum supported Rust version is now 1.36 (#1011)
