@@ -170,6 +170,20 @@ jobs:
       - name: Build top-level only
         run: cargo build --target=thumbv6m-none-eabi --no-default-features
 
+  test-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            profile: minimal
+            toolchain: stable
+            target: wasm32-unknown-unknown
+            override: true
+      - name: Build rand_chacha for WASM target
+        run: cargo build --manifest-path rand_chacha/Cargo.toml --target=wasm32-unknown-unknown --no-default-features
+
   test-ios:
     runs-on: macos-latest
     steps:
