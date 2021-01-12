@@ -19,6 +19,7 @@ rand_core = { path = "../rand_core", version = "0.6.0", default-features = false
 ppv-lite86 = { version = "0.2.8", default-features = false, features = ["simd"] }
 
 [features]
-default = ["std", "rand_core/getrandom"]
+default = ["std"]
 std = ["ppv-lite86/std", "rand_core/std"]
+getrandom = ["rand_core/getrandom"]
 simd = [] # deprecated
