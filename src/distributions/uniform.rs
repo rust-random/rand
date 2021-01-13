@@ -521,6 +521,12 @@ macro_rules! uniform_int_impl {
                 let high = *high_b.borrow();
                 assert!(low <= high, "UniformSampler::sample_single_inclusive: low > high");
                 let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_large;
+                // If the above resulted in wrap-around to 0, the range is $ty::MIN..=$ty::MAX,
+                // and any integer will do.
+                if range == 0 {
+                    return rng.gen();
+                }
+
                 let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
                     // Using a modulus is faster than the approximation for
                     // i8 and i16. I suppose we trade the cost of one
@@ -1234,6 +1240,11 @@ mod tests {
                     for _ in 0..1000 {
                         let v = <$ty as SampleUniform>::Sampler::sample_single(low, high, &mut rng);
                         assert!($le(low, v) && $lt(v, high));
+                    }
+
+                    for _ in 0..1000 {
+                        let v = <$ty as SampleUniform>::Sampler::sample_single_inclusive(low, high, &mut rng);
+                        assert!($le(low, v) && $le(v, high));
                     }
                 }
             }};
