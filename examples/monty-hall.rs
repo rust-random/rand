@@ -26,7 +26,7 @@
 //!
 //! [Monty Hall Problem]: https://en.wikipedia.org/wiki/Monty_Hall_problem
 
-#![cfg(feature = "std")]
+#![cfg(all(feature = "std", feature = "std_rng"))]
 
 use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
