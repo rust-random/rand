@@ -8,6 +8,10 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.8.3] - 2021-01-25
+### Fixes
+- Fix `no-std` + `alloc` build by gating `choose_multiple_weighted` on `std` (#1088)
+
 ## [0.8.2] - 2021-01-12
 ### Fixes
 - Fix panic in `UniformInt::sample_single_inclusive` and `Rng::gen_range` when

@@ -17,7 +17,9 @@ use alloc::collections::BTreeSet;
 #[cfg(feature = "std")] use std::collections::HashSet;
 
 #[cfg(feature = "alloc")]
-use crate::distributions::{uniform::SampleUniform, Distribution, Uniform, WeightedError};
+use crate::distributions::{uniform::SampleUniform, Distribution, Uniform};
+#[cfg(feature = "std")]
+use crate::distributions::WeightedError;
 use crate::Rng;
 
 #[cfg(feature = "serde1")]
@@ -270,6 +272,8 @@ where R: Rng + ?Sized {
 /// `O(length + amount * log length)` time otherwise.
 ///
 /// Panics if `amount > length`.
+#[cfg(feature = "std")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 pub fn sample_weighted<R, F, X>(
     rng: &mut R, length: usize, weight: F, amount: usize,
 ) -> Result<IndexVec, WeightedError>
@@ -301,6 +305,7 @@ where
 /// + amount * log length)` time otherwise.
 ///
 /// Panics if `amount > length`.
+#[cfg(feature = "std")]
 fn sample_efraimidis_spirakis<R, F, X, N>(
     rng: &mut R, length: N, weight: F, amount: N,
 ) -> Result<IndexVec, WeightedError>
@@ -375,9 +380,6 @@ where
 
     #[cfg(not(feature = "nightly"))]
     {
-        #[cfg(all(feature = "alloc", not(feature = "std")))]
-        use crate::alloc::collections::BinaryHeap;
-        #[cfg(feature = "std")]
         use std::collections::BinaryHeap;
 
         // Partially sort the array such that the `amount` elements with the largest
@@ -619,6 +621,7 @@ mod test {
         assert_eq!(v1, v2);
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn test_sample_weighted() {
         let seed_rng = crate::test::rng;

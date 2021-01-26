@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.8.2"
+version = "0.8.3"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
