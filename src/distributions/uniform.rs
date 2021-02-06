@@ -827,11 +827,15 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.all_lt(high), "Uniform::new called with `low >= high`");
                 assert!(
-                    low.all_finite() && high.all_finite(),
-                    "Uniform::new called with non-finite boundaries"
+                    low.all_finite()
+                    "Uniform::new called with `low` non-finite."
                 );
+                assert!(
+                    high.all_finite()
+                    "Uniform::new called with `high` non-finite."
+                );
+                assert!(low.all_lt(high), "Uniform::new called with `low >= high`");
                 let max_rand = <$ty>::splat(
                     (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
                 );
