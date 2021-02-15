@@ -51,7 +51,7 @@ members = [
 ]
 
 [dependencies]
-rand_core = { path = "rand_core", version = "0.6.0" }
+rand_core = { path = "rand_core", version = "0.6.2" }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 
