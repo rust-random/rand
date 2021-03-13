@@ -156,6 +156,24 @@ tuple_impl! {A, B, C, D, E, F, G, H, I, J}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K, L}
 
+#[cfg(feature = "nightly")]
+impl<T, const N: usize> Distribution<[T; N]> for Standard
+where
+    Standard: Distribution<T>,
+    T: Default + Copy,
+{
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; N] {
+        let mut sample = [Default::default(); N];
+        for elem in &mut sample {
+            *elem = _rng.gen();
+        }
+
+        sample
+    }
+}
+
+#[cfg(not(feature = "nightly"))]
 macro_rules! array_impl {
     // recursive, given at least one type parameter:
     {$n:expr, $t:ident, $($ts:ident,)*} => {
@@ -176,6 +194,7 @@ macro_rules! array_impl {
     };
 }
 
+#[cfg(not(feature = "nightly"))]
 array_impl! {32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
 
 impl<T> Distribution<Option<T>> for Standard
