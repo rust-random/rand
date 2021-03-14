@@ -156,7 +156,7 @@ tuple_impl! {A, B, C, D, E, F, G, H, I, J}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K, L}
 
-#[cfg(feature = "nightly")]
+#[cfg(feature = "min_const_gen")]
 impl<T, const N: usize> Distribution<[T; N]> for Standard
 where
     Standard: Distribution<T>,
@@ -173,7 +173,7 @@ where
     }
 }
 
-#[cfg(not(feature = "nightly"))]
+#[cfg(not(feature = "min_const_gen"))]
 macro_rules! array_impl {
     // recursive, given at least one type parameter:
     {$n:expr, $t:ident, $($ts:ident,)*} => {
@@ -194,7 +194,7 @@ macro_rules! array_impl {
     };
 }
 
-#[cfg(not(feature = "nightly"))]
+#[cfg(not(feature = "min_const_gen"))]
 array_impl! {32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
 
 impl<T> Distribution<Option<T>> for Standard

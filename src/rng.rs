@@ -394,7 +394,7 @@ impl_fill!(i8, i16, i32, i64, isize,);
 #[cfg(not(target_os = "emscripten"))]
 impl_fill!(i128);
 
-#[cfg(feature = "nightly")]
+#[cfg(feature = "min_const_gen")]
 impl<T, const N: usize> Fill for [T; N]
 where [T]: Fill
 {
@@ -403,7 +403,7 @@ where [T]: Fill
     }
 }
 
-#[cfg(not(feature = "nightly"))]
+#[cfg(not(feature = "min_const_gen"))]
 macro_rules! impl_fill_arrays {
     ($n:expr,) => {};
     ($n:expr, $N:ident) => {
@@ -423,10 +423,10 @@ macro_rules! impl_fill_arrays {
         impl_fill_arrays!(!div $n / 2, $($NN,)*);
     };
 }
-#[cfg(not(feature = "nightly"))]
+#[cfg(not(feature = "min_const_gen"))]
 #[rustfmt::skip]
 impl_fill_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
-#[cfg(not(feature = "nightly"))]
+#[cfg(not(feature = "min_const_gen"))]
 impl_fill_arrays!(!div 4096, N,N,N,N,N,N,N,);
 
 #[cfg(test)]

@@ -41,6 +41,9 @@ std_rng = ["rand_chacha", "rand_hc"]
 # Option: enable SmallRng
 small_rng = []
 
+# Option: TODO - enable SmallRng
+min_const_gen = []
+
 [workspace]
 members = [
     "rand_core",
