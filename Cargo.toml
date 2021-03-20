@@ -41,7 +41,7 @@ std_rng = ["rand_chacha", "rand_hc"]
 # Option: enable SmallRng
 small_rng = []
 
-# Option: TODO - enable SmallRng
+# Option: enable generating random arrays of any size using min-const-generics
 min_const_gen = []
 
 [workspace]
