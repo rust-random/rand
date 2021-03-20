@@ -28,7 +28,7 @@ use core::{mem, slice};
 /// - Since `Rng: RngCore` and every `RngCore` implements `Rng`, it makes no
 ///   difference whether we use `R: Rng` or `R: RngCore`.
 /// - The `+ ?Sized` un-bounding allows functions to be called directly on
-///   type-erased references; i.e. `foo(r)` where `r: &mut RngCore`. Without
+///   type-erased references; i.e. `foo(r)` where `r: &mut dyn RngCore`. Without
 ///   this it would be necessary to write `foo(&mut r)`.
 ///
 /// An alternative pattern is possible: `fn foo<R: Rng>(rng: R)`. This has some
