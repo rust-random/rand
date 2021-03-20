@@ -21,7 +21,7 @@ num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 
 [features]
 default = ["std"]
-std = ["alloc", "rand/std", "num-traits/std"]
+std = ["alloc", "rand/std"]
 alloc = ["rand/alloc"]
 
 [dev-dependencies]

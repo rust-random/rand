@@ -21,8 +21,7 @@ contrast, this `rand_distr` crate focusses on sampling from distributions.
 
 If the `std` default feature is enabled, `rand_distr` uses the floating point
 functions from `std`. Otherwise, the floating point functions from `num_traits`
-and `libm` are used to support `no_std` environments. Note that this may affect
-the value stability of the distributions.
+and `libm` are used to support `no_std` environments.
 
 The default `alloc` feature (which is implied by the `std` feature) is required
 for some distributions (in particular, `Dirichlet` and `WeightedAliasIndex`).
