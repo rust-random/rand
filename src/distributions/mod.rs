@@ -99,7 +99,9 @@ use core::iter;
 pub use self::bernoulli::{Bernoulli, BernoulliError};
 pub use self::float::{Open01, OpenClosed01};
 pub use self::other::Alphanumeric;
-#[doc(inline)] pub use self::uniform::Uniform;
+pub use self::slice::Slice;
+#[doc(inline)]
+pub use self::uniform::Uniform;
 
 #[cfg(feature = "alloc")]
 pub use self::weighted_index::{WeightedError, WeightedIndex};
@@ -107,14 +109,18 @@ pub use self::weighted_index::{WeightedError, WeightedIndex};
 mod bernoulli;
 pub mod uniform;
 
-#[deprecated(since = "0.8.0", note = "use rand::distributions::{WeightedIndex, WeightedError} instead")]
+#[deprecated(
+    since = "0.8.0",
+    note = "use rand::distributions::{WeightedIndex, WeightedError} instead"
+)]
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod weighted;
-#[cfg(feature = "alloc")] mod weighted_index;
+#[cfg(feature = "alloc")]
+mod weighted_index;
 
 #[cfg(feature = "serde1")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 mod float;
 #[doc(hidden)]
@@ -123,6 +129,7 @@ pub mod hidden_export {
 }
 mod integer;
 mod other;
+mod slice;
 mod utils;
 
 /// Types (distributions) that can be used to create a random instance of `T`.
@@ -200,7 +207,6 @@ impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
     }
 }
 
-
 /// An iterator that generates random values of `T` with distribution `D`,
 /// using `R` as the source of randomness.
 ///
@@ -249,7 +255,6 @@ where
     R: Rng,
 {
 }
-
 
 /// A generic random value distribution, implemented for many primitive types.
 /// Usually generates values with a numerically uniform distribution, and with a
@@ -330,7 +335,6 @@ where
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Standard;
-
 
 #[cfg(test)]
 mod tests {
