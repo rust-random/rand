@@ -281,6 +281,10 @@ where
 ///     types and tends to be faster for `u32` and smaller types.
 ///     When using `rustc` ≥ 1.51, enable the `min_const_gen` feature to support
 ///     arrays larger than 32 elements.
+///     Note that [`Rng::fill`] and `Standard`'s array support are *not* equivalent:
+///     the former is optimised for integer types (using fewer RNG calls for
+///     element types smaller than the RNG word size), while the latter supports
+///     any element type supported by `Standard`.
 /// *   `Option<T>` first generates a `bool`, and if true generates and returns
 ///     `Some(value)` where `value: T`, otherwise returning `None`.
 ///

@@ -41,7 +41,8 @@ std_rng = ["rand_chacha", "rand_hc"]
 # Option: enable SmallRng
 small_rng = []
 
-# Option: enable generating random arrays of any size using min-const-generics
+# Option: for rustc ≥ 1.51, enable generating random arrays of any size
+# using min-const-generics
 min_const_gen = []
 
 [workspace]
