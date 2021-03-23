@@ -279,8 +279,8 @@ where
 /// *   Arrays (up to 32 elements): each element is generated sequentially;
 ///     see also [`Rng::fill`] which supports arbitrary array length for integer
 ///     types and tends to be faster for `u32` and smaller types.
-///     For arrays of size larger than 32 elements, enable the `min_const_gen`
-///     feature.
+///     When using `rustc` ≥ 1.51, enable the `min_const_gen` feature to support
+///     arrays larger than 32 elements.
 /// *   `Option<T>` first generates a `bool`, and if true generates and returns
 ///     `Some(value)` where `value: T`, otherwise returning `None`.
 ///

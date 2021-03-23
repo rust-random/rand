@@ -71,7 +71,8 @@ pub trait Rng: RngCore {
     /// The `rng.gen()` method is able to generate arrays (up to 32 elements)
     /// and tuples (up to 12 elements), so long as all element types can be
     /// generated.
-    /// For arrays larger than 32 elements, enable the `min_const_gen` feature.
+    /// When using `rustc` ≥ 1.51, enable the `min_const_gen` feature to support
+    /// arrays larger than 32 elements.
     ///
     /// For arrays of integers, especially for those with small element types
     /// (< 64 bit), it will likely be faster to instead use [`Rng::fill`].
