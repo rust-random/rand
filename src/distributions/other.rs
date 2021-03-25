@@ -16,6 +16,9 @@ use crate::Rng;
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
+#[cfg(feature = "min_const_gen")]
+use std::mem::{self, MaybeUninit};
+
 
 // ----- Sampling distributions -----
 
@@ -156,6 +159,23 @@ tuple_impl! {A, B, C, D, E, F, G, H, I, J}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K, L}
 
+#[cfg(feature = "min_const_gen")]
+impl<T, const N: usize> Distribution<[T; N]> for Standard
+where Standard: Distribution<T>
+{
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; N] {
+        let mut buff: [MaybeUninit<T>; N] = unsafe { MaybeUninit::uninit().assume_init() };
+
+        for elem in &mut buff {
+            *elem = MaybeUninit::new(_rng.gen());
+        }
+
+        unsafe { mem::transmute_copy::<_, _>(&buff) }
+    }
+}
+
+#[cfg(not(feature = "min_const_gen"))]
 macro_rules! array_impl {
     // recursive, given at least one type parameter:
     {$n:expr, $t:ident, $($ts:ident,)*} => {
@@ -176,6 +196,7 @@ macro_rules! array_impl {
     };
 }
 
+#[cfg(not(feature = "min_const_gen"))]
 array_impl! {32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
 
 impl<T> Distribution<Option<T>> for Standard
