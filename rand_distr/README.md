@@ -26,7 +26,10 @@ The default `alloc` feature (which is implied by the `std` feature) is required
 for some distributions (in particular, `Dirichlet` and `WeightedAliasIndex`).
 
 The floating point functions from `num_traits` and `libm` are used to support
-`no_std` environments and ensure reproducibility.
+`no_std` environments and ensure reproducibility. If the floating point
+functions from `std` are prefered, which may provide better accuracy and
+performance but may produce different random values, the `std_math` feature
+can be enabled.
 
 Links:
 
