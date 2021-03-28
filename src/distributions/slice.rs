@@ -22,34 +22,34 @@ use crate::distributions::{Distribution, Uniform};
 /// # Example
 ///
 /// ```
+/// use rand::Rng;
 /// use rand::distributions::Slice;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
-/// let vowels = Slice::new(vowels).unwrap();
-/// let mut rng = rand::thread_rng();
+/// let vowels_dist = Slice::new(&vowels).unwrap();
+/// let rng = rand::thread_rng();
 ///
 /// // build a string of 10 vowels
-/// let vowel_string: String = vowels
-///     .sample_iter(&mut rng)
+/// let vowel_string: String = rng
+///     .sample_iter(&vowels_dist)
 ///     .take(10)
 ///     .collect();
 ///
 /// println!("{}", vowel_string);
 /// assert_eq!(vowel_string.len(), 10);
-/// assert!(vowel_string().chars().all(|c| vowels.contains(c)));
+/// assert!(vowel_string.chars().all(|c| vowels.contains(&c)));
 /// ```
 ///
 /// For a single sample, [`SliceRandom::choose`][crate::seq::SliceRandom::choose]
 /// may be preferred:
 ///
 /// ```
-/// use rand::Rng;
 /// use rand::seq::SliceRandom;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
 /// let mut rng = rand::thread_rng();
 ///
-/// println!("{}", vowels.choose(&mut rng))
+/// println!("{}", vowels.choose(&mut rng).unwrap())
 /// ```
 ///
 /// [`SliceRandom`]: crate::seq::SliceRandom
