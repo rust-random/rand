@@ -1430,14 +1430,14 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_float_overflow() {
-        Uniform::from(f64::MIN..f64::MAX);
+        Uniform::from(::core::f64::MIN..::core::f64::MAX);
     }
 
     #[test]
     #[should_panic]
     fn test_float_overflow_single() {
         let mut rng = crate::test::rng(252);
-        rng.gen_range(f64::MIN..f64::MAX);
+        rng.gen_range(::core::f64::MIN..::core::f64::MAX);
     }
 
     #[test]
