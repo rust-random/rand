@@ -64,10 +64,10 @@ pub struct Slice<'a, T> {
 impl<'a, T> Slice<'a, T> {
     /// Create a new `Slice` instance which samples uniformly from the slice.
     /// Returns `None` if the slice is empty.
-    pub fn new(slice: &'a [T]) -> Option<Self> {
+    pub fn new(slice: &'a [T]) -> Result<Self, EmptySlice> {
         match slice.len() {
-            0 => None,
-            len => Some(Self {
+            0 => Err(EmptySlice),
+            len => Ok(Self {
                 slice,
                 range: Uniform::new(0, len),
             }),
@@ -87,9 +87,33 @@ impl<'a, T> Distribution<&'a T> for Slice<'a, T> {
     fn sample<R: crate::Rng + ?Sized>(&self, rng: &mut R) -> &'a T {
         let idx = self.range.sample(rng);
 
+        debug_assert!(
+            idx < self.slice.len(),
+            "Uniform::new(0, {}) somehow returned {}",
+            self.slice.len(),
+            idx
+        );
+
         // Safety: at construction time, it was ensured that the slice was
         // non-empty, and that the `Uniform` range produces values in range
         // for the slice
         unsafe { self.slice.get_unchecked(idx) }
     }
 }
+
+/// Error type indicating that a [`Slice`] distribution was improperly
+/// constructed with an empty slice.
+#[derive(Debug, Clone, Copy)]
+pub struct EmptySlice;
+
+impl core::fmt::Display for EmptySlice {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+            "Tried to create a `distributions::Slice` with an empty slice"
+        )
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for EmptySlice {}
