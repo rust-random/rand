@@ -2,7 +2,7 @@
 
 [![Test Status](https://github.com/rust-random/rand/workflows/Tests/badge.svg?event=push)](https://github.com/rust-random/rand/actions)
 [![Latest version](https://img.shields.io/crates/v/rand_distr.svg)](https://crates.io/crates/rand_distr)
-[[![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
+[![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand_distr)
 [![API](https://docs.rs/rand_distr/badge.svg)](https://docs.rs/rand_distr)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.36+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
@@ -17,7 +17,7 @@ sphere surface.
 
 It is worth mentioning the [statrs] crate which provides similar functionality
 along with various support functions, including PDF and CDF computation. In
-contrast, this `rand_distr` crate focusses on sampling from distributions.
+contrast, this `rand_distr` crate focuses on sampling from distributions.
 
 Unlike most Rand crates, `rand_distr` does not currently support `no_std`.
 
