@@ -7,13 +7,14 @@
 [![API](https://docs.rs/rand_distr/badge.svg)](https://docs.rs/rand_distr)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.36+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
-Implements a full suite of random number distributions sampling routines.
+Implements a full suite of random number distribution sampling routines.
 
-This crate is a super-set of the [rand::distributions] module, including support
-for sampling from Beta, Binomial, Cauchy, ChiSquared, Dirichlet, exponential,
-Fisher F, Gamma, Log-normal, Normal, Pareto, Poisson, StudentT, Triangular and
-Weibull distributions, as well as sampling points from the unit circle and unit
-sphere surface.
+This crate is a superset of the [rand::distributions] module, including support
+for sampling from Beta, Binomial, Cauchy, ChiSquared, Dirichlet, Exponential,
+FisherF, Gamma, Geometric, Hypergeometric, InverseGaussian, LogNormal, Normal,
+Pareto, PERT, Poisson, StudentT, Triangular and Weibull distributions.  Sampling
+from the unit ball, unit circle, unit disc and unit sphere surfaces is also
+supported.
 
 It is worth mentioning the [statrs] crate which provides similar functionality
 along with various support functions, including PDF and CDF computation. In
