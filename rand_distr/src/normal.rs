@@ -189,6 +189,16 @@ where F: Float, StandardNormal: Distribution<F>
     pub fn from_zscore(&self, zscore: F) -> F {
         self.mean + self.std_dev * zscore
     }
+
+    /// Returns the mean (`μ`) of the distribution.
+    pub fn mean(&self) -> F {
+        self.mean
+    }
+
+    /// Returns the standard deviation (`σ`) of the distribution.
+    pub fn std_dev(&self) -> F {
+        self.std_dev
+    }
 }
 
 impl<F> Distribution<F> for Normal<F>
