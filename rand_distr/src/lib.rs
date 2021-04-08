@@ -94,6 +94,7 @@ pub use rand::distributions::{
 pub use self::binomial::{Binomial, Error as BinomialError};
 pub use self::cauchy::{Cauchy, Error as CauchyError};
 #[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use self::dirichlet::{Dirichlet, Error as DirichletError};
 pub use self::exponential::{Error as ExpError, Exp, Exp1};
 pub use self::gamma::{
@@ -118,6 +119,7 @@ pub use self::weibull::{Error as WeibullError, Weibull};
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use rand::distributions::{WeightedError, WeightedIndex};
 #[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use weighted_alias::WeightedAliasIndex;
 
 pub use num_traits;

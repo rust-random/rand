@@ -20,7 +20,17 @@ It is worth mentioning the [statrs] crate which provides similar functionality
 along with various support functions, including PDF and CDF computation. In
 contrast, this `rand_distr` crate focuses on sampling from distributions.
 
-Unlike most Rand crates, `rand_distr` does not currently support `no_std`.
+If the `std` default feature is enabled, `rand_distr` implements the `Error`
+trait for its error types.
+
+The default `alloc` feature (which is implied by the `std` feature) is required
+for some distributions (in particular, `Dirichlet` and `WeightedAliasIndex`).
+
+The floating point functions from `num_traits` and `libm` are used to support
+`no_std` environments and ensure reproducibility. If the floating point
+functions from `std` are prefered, which may provide better accuracy and
+performance but may produce different random values, the `std_math` feature
+can be enabled.
 
 Links:
 

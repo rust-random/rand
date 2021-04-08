@@ -11,7 +11,7 @@ description = """
 Sampling from random number distributions
 """
 keywords = ["random", "rng", "distribution", "probability"]
-categories = ["algorithms"]
+categories = ["algorithms", "no-std"]
 edition = "2018"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
@@ -23,6 +23,7 @@ num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 default = ["std"]
 std = ["alloc", "rand/std"]
 alloc = ["rand/alloc"]
+std_math = ["num-traits/std"]
 
 [dev-dependencies]
 rand_pcg = { version = "0.3.0", path = "../rand_pcg" }
