@@ -2,6 +2,18 @@ use rand_core::{RngCore, SeedableRng};
 use rand_pcg::{Lcg128Xsl64, Pcg64};
 
 #[test]
+fn test_lcg128xsl64_advancing() {
+    let seed = Default::default();
+    let mut rng1 = Lcg128Xsl64::from_seed(seed);
+    let mut rng2 = Lcg128Xsl64::from_seed(seed);
+    for _ in 0..20 {
+        rng1.next_u64();
+    }
+    rng2.advance(20);
+    assert_eq!(rng1.next_u64(), rng2.next_u64());
+}
+
+#[test]
 fn test_lcg128xsl64_construction() {
     // Test that various construction techniques produce a working RNG.
     #[rustfmt::skip]
