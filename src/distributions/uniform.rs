@@ -827,11 +827,11 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(
+                debug_assert!(
                     low.all_finite(),
                     "Uniform::new called with `low` non-finite."
                 );
-                assert!(
+                debug_assert!(
                     high.all_finite(),
                     "Uniform::new called with `high` non-finite."
                 );
@@ -841,6 +841,7 @@ macro_rules! uniform_float_impl {
                 );
 
                 let mut scale = high - low;
+                assert!(scale.all_finite(), "Uniform::new: range overflow");
 
                 loop {
                     let mask = (scale * max_rand + low).ge_mask(high);
@@ -862,19 +863,24 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
+                debug_assert!(
+                    low.all_finite(),
+                    "Uniform::new_inclusive called with `low` non-finite."
+                );
+                debug_assert!(
+                    high.all_finite(),
+                    "Uniform::new_inclusive called with `high` non-finite."
+                );
                 assert!(
                     low.all_le(high),
                     "Uniform::new_inclusive called with `low > high`"
-                );
-                assert!(
-                    low.all_finite() && high.all_finite(),
-                    "Uniform::new_inclusive called with non-finite boundaries"
                 );
                 let max_rand = <$ty>::splat(
                     (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
                 );
 
                 let mut scale = (high - low) / max_rand;
+                assert!(scale.all_finite(), "Uniform::new_inclusive: range overflow");
 
                 loop {
                     let mask = (scale * max_rand + low).gt_mask(high);
@@ -913,11 +919,20 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
+                debug_assert!(
+                    low.all_finite(),
+                    "UniformSampler::sample_single called with `low` non-finite."
+                );
+                debug_assert!(
+                    high.all_finite(),
+                    "UniformSampler::sample_single called with `high` non-finite."
+                );
                 assert!(
                     low.all_lt(high),
                     "UniformSampler::sample_single: low >= high"
                 );
                 let mut scale = high - low;
+                assert!(scale.all_finite(), "UniformSampler::sample_single: range overflow");
 
                 loop {
                     // Generate a value in the range [1, 2)
@@ -1332,12 +1347,8 @@ mod tests {
                     (-<$f_scalar>::from_bits(10), -<$f_scalar>::from_bits(1)),
                     (-<$f_scalar>::from_bits(5), 0.0),
                     (-<$f_scalar>::from_bits(7), -0.0),
-                    (10.0, ::core::$f_scalar::MAX),
-                    (-100.0, ::core::$f_scalar::MAX),
-                    (-::core::$f_scalar::MAX / 5.0, ::core::$f_scalar::MAX),
-                    (-::core::$f_scalar::MAX, ::core::$f_scalar::MAX / 5.0),
-                    (-::core::$f_scalar::MAX * 0.8, ::core::$f_scalar::MAX * 0.7),
-                    (-::core::$f_scalar::MAX, ::core::$f_scalar::MAX),
+                    (0.1 * ::core::$f_scalar::MAX, ::core::$f_scalar::MAX),
+                    (-::core::$f_scalar::MAX * 0.2, ::core::$f_scalar::MAX * 0.7),
                 ];
                 for &(low_scalar, high_scalar) in v.iter() {
                     for lane in 0..<$ty>::lanes() {
@@ -1414,6 +1425,19 @@ mod tests {
             t!(f64x4, f64, 64 - 52);
             t!(f64x8, f64, 64 - 52);
         }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_float_overflow() {
+        Uniform::from(::core::f64::MIN..::core::f64::MAX);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_float_overflow_single() {
+        let mut rng = crate::test::rng(252);
+        rng.gen_range(::core::f64::MIN..::core::f64::MAX);
     }
 
     #[test]
