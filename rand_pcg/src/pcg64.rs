@@ -55,8 +55,8 @@ impl Lcg64Xsh32 {
         let mut acc_plus: u64 = 0;
         let mut cur_mult = MULTIPLIER;
         let mut cur_plus = self.increment;
-        let mut mdelta = delta.wrapping_mul(2);
- 
+        let mut mdelta = delta;
+
         while mdelta > 0 {
             if (mdelta & 1) != 0 {
                 acc_mult = acc_mult.wrapping_mul(cur_mult);
