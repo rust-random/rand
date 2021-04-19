@@ -7,10 +7,10 @@ fn test_lcg64xsh32_advancing() {
     let mut rng1 = Lcg64Xsh32::from_seed(seed);
     let mut rng2 = Lcg64Xsh32::from_seed(seed);
     for _ in 0..20 {
-        rng1.next_u64();
+        rng1.next_u32();
     }
     rng2.advance(20);
-    assert_eq!(rng1.next_u64(), rng2.next_u64());
+    assert_eq!(rng1.next_u32(), rng2.next_u32());
 }
 
 #[test]
