@@ -49,6 +49,9 @@ impl Lcg128Xsl64 {
     ///
     /// Even though delta is an unsigned integer, we can pass a
     /// signed integer to go backwards, it just goes "the long way round".
+    ///
+    /// Using this function is equivalent to calling `next_64()` `delta`
+    /// number of times.
     #[inline]
     pub fn advance(&mut self, delta: u128) {
         let mut acc_mult: u128 = 1;
@@ -178,6 +181,9 @@ impl Mcg128Xsl64 {
     ///
     /// Even though delta is an unsigned integer, we can pass a
     /// signed integer to go backwards, it just goes "the long way round".
+    ///
+    /// Using this function is equivalent to calling `next_64()` `delta`
+    /// number of times.
     #[inline]
     pub fn advance(&mut self, delta: u128) {
         let mut acc_mult: u128 = 1;

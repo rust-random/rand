@@ -49,6 +49,9 @@ impl Lcg64Xsh32 {
     ///
     /// Even though delta is an unsigned integer, we can pass a
     /// signed integer to go backwards, it just goes "the long way round".
+    ///
+    /// Using this function is equivalent to calling `next_32()` `delta`
+    /// number of times.
     #[inline]
     pub fn advance(&mut self, delta: u64) {
         let mut acc_mult: u64 = 1;

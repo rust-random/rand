@@ -5,12 +5,12 @@ use rand_pcg::{Lcg64Xsh32, Pcg32};
 fn test_lcg64xsh32_advancing() {
     let seed = Default::default();
     let mut rng1 = Lcg64Xsh32::from_seed(seed);
-    let mut rng2 = Lcg64Xsh32::from_seed(seed);
+    let mut rng2 = rng1.clone();
     for _ in 0..20 {
         rng1.next_u32();
     }
     rng2.advance(20);
-    assert_eq!(rng1.next_u32(), rng2.next_u32());
+    assert_eq!(rng1, rng2);
 }
 
 #[test]
