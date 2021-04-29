@@ -150,7 +150,7 @@ jobs:
           rustup component add miri
       - name: Test rand
         run: |
-          cargo miri test --no-default-features
+          cargo miri test --no-default-features --lib --tests
           cargo miri test --features=log,small_rng
           cargo miri test --manifest-path rand_core/Cargo.toml
           cargo miri test --manifest-path rand_core/Cargo.toml --features=serde1
