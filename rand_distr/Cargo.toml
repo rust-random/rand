@@ -30,4 +30,4 @@ rand_pcg = { version = "0.3.0", path = "../rand_pcg" }
 # For inline examples
 rand = { path = "..", version = "0.8.0", default-features = false, features = ["std_rng", "std"] }
 # Histogram implementation for testing uniformity
-average = { version = "0.12", features = [ "std" ] }
+average = { version = "0.13", features = [ "std" ] }
