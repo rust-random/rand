@@ -49,7 +49,8 @@ fn normal() {
 
     println!("Difference:\n{}",
         sparkline::render_f64_as_string(&diff[..]));
-    println!("max diff: {:?}", diff.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b)));
+    println!("max diff: {:?}", diff.iter().fold(
+        core::f64::NEG_INFINITY, |a, &b| a.max(b)));
 
     // Check that the differences are significantly smaller than the expected error.
     let mut expected_error = [0.; 100];
@@ -63,7 +64,8 @@ fn normal() {
     }
     // TODO: Calculate error from distribution cutoff / normalization
 
-    println!("max expected_error: {:?}", expected_error.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b)));
+    println!("max expected_error: {:?}", expected_error.iter().fold(
+        core::f64::NEG_INFINITY, |a, &b| a.max(b)));
     for (&d, &e) in diff.iter().zip(expected_error.iter()) {
         // Difference larger than 3 standard deviations or cutoff
         let tol = (3. * e).max(1e-4);
