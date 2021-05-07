@@ -29,6 +29,9 @@ const MULTIPLIER: u64 = 6364136223846793005;
 /// Despite the name, this implementation uses 16 bytes (128 bit) space
 /// comprising 64 bits of state and 64 bits stream selector. These are both set
 /// by `SeedableRng`, using a 128-bit seed.
+///
+/// Note that two generators with different stream parameter may be closely
+/// correlated.
 #[derive(Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Lcg64Xsh32 {
@@ -74,7 +77,10 @@ impl Lcg64Xsh32 {
 
     /// Construct an instance compatible with PCG seed and stream.
     ///
-    /// Note that PCG specifies default values for both parameters:
+    /// Note that two generators with different stream parameters may be closely
+    /// correlated.
+    ///
+    /// PCG specifies the following default values for both parameters:
     ///
     /// - `state = 0xcafef00dd15ea5e5`
     /// - `stream = 0xa02bdbf7bb3c0a7`
