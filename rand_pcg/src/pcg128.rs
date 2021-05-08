@@ -29,6 +29,9 @@ use rand_core::{le, Error, RngCore, SeedableRng};
 /// Despite the name, this implementation uses 32 bytes (256 bit) space
 /// comprising 128 bits of state and 128 bits stream selector. These are both
 /// set by `SeedableRng`, using a 256-bit seed.
+///
+/// Note that two generators with different stream parameters may be closely
+/// correlated.
 #[derive(Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Lcg128Xsl64 {
@@ -74,7 +77,10 @@ impl Lcg128Xsl64 {
 
     /// Construct an instance compatible with PCG seed and stream.
     ///
-    /// Note that PCG specifies default values for both parameters:
+    /// Note that two generators with different stream parameters may be closely
+    /// correlated.
+    ///
+    /// PCG specifies the following default values for both parameters:
     ///
     /// - `state = 0xcafef00dd15ea5e5`
     /// - `stream = 0xa02bdbf7bb3c0a7ac28fa16a64abf96`
