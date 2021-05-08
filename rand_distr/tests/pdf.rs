@@ -33,7 +33,7 @@ fn normal() {
 
     let mut bin_centers = hist.centers();
     let mut expected = [0.; 100];
-    for e in &mut expected {
+    for e in &mut expected[..] {
         *e = pdf(bin_centers.next().unwrap());
     }
 
