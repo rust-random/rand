@@ -263,12 +263,12 @@ impl Serialize for ChaCha {
     where S: Serializer {
         // 3 is the number of fields in the struct.
         let mut state = serializer.serialize_struct("ChaCha", 3)?;
-        let b: &[u32; 4] = (&self.b).into();
-        let c: &[u32; 4] = (&self.c).into();
-        let d: &[u32; 4] = (&self.d).into();
-        state.serialize_field("b", b)?;
-        state.serialize_field("c", c)?;
-        state.serialize_field("d", d)?;
+        let b: [u32; 4] = self.b.clone().into();
+        let c: [u32; 4] = self.b.clone().into();
+        let d: [u32; 4] = self.b.clone().into();
+        state.serialize_field("b", &b)?;
+        state.serialize_field("c", &c)?;
+        state.serialize_field("d", &d)?;
         state.end()
     }
 }
