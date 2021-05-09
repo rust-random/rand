@@ -201,10 +201,10 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "std_rng"))]
     fn test_random() {
-        // not sure how to test this aside from just getting some values
         let _n: usize = random();
         let _f: f32 = random();
         let _o: Option<Option<i8>> = random();
+        #[allow(clippy::type_complexity)]
         let _many: (
             (),
             (usize, isize, Option<(u32, (bool,))>),

@@ -501,15 +501,15 @@ mod test {
         let mut r = rng(101);
         for _ in 0..1000 {
             let a = r.gen_range(-4711..17);
-            assert!(a >= -4711 && a < 17);
-            let a = r.gen_range(-3i8..42);
-            assert!(a >= -3i8 && a < 42i8);
+            assert!((-4711..17).contains(&a));
+            let a: i8 = r.gen_range(-3..42);
+            assert!((-3..42).contains(&a));
             let a: u16 = r.gen_range(10..99);
-            assert!(a >= 10u16 && a < 99u16);
-            let a = r.gen_range(-100i32..2000);
-            assert!(a >= -100i32 && a < 2000i32);
+            assert!((10..99).contains(&a));
+            let a: i32 = r.gen_range(-100..2000);
+            assert!((-100..2000).contains(&a));
             let a: u32 = r.gen_range(12..=24);
-            assert!(a >= 12u32 && a <= 24u32);
+            assert!((12..=24).contains(&a));
 
             assert_eq!(r.gen_range(0u32..1), 0u32);
             assert_eq!(r.gen_range(-12i64..-11), -12i64);
@@ -522,9 +522,9 @@ mod test {
         let mut r = rng(101);
         for _ in 0..1000 {
             let a = r.gen_range(-4.5..1.7);
-            assert!(a >= -4.5 && a < 1.7);
+            assert!((-4.5..1.7).contains(&a));
             let a = r.gen_range(-1.1..=-0.3);
-            assert!(a >= -1.1 && a <= -0.3);
+            assert!((-1.1..=-0.3).contains(&a));
 
             assert_eq!(r.gen_range(0.0f32..=0.0), 0.);
             assert_eq!(r.gen_range(-11.0..=-11.0), -11.);
@@ -535,6 +535,7 @@ mod test {
     #[test]
     #[should_panic]
     fn test_gen_range_panic_int() {
+        #![allow(clippy::reversed_empty_ranges)]
         let mut r = rng(102);
         r.gen_range(5..-2);
     }
@@ -542,12 +543,15 @@ mod test {
     #[test]
     #[should_panic]
     fn test_gen_range_panic_usize() {
+        #![allow(clippy::reversed_empty_ranges)]
         let mut r = rng(103);
         r.gen_range(5..2);
     }
 
     #[test]
     fn test_gen_bool() {
+        #![allow(clippy::bool_assert_comparison)]
+
         let mut r = rng(105);
         for _ in 0..5 {
             assert_eq!(r.gen_bool(0.0), false);
