@@ -263,9 +263,9 @@ impl Serialize for ChaCha {
     where S: Serializer {
         // 3 is the number of fields in the struct.
         let mut state = serializer.serialize_struct("ChaCha", 3)?;
-        let b: [u32; 4] = self.b.clone().into();
-        let c: [u32; 4] = self.b.clone().into();
-        let d: [u32; 4] = self.b.clone().into();
+        let b: [u128; 1] = self.b.clone().into();
+        let c: [u128; 1] = self.c.clone().into();
+        let d: [u128; 1] = self.d.clone().into();
         state.serialize_field("b", &b)?;
         state.serialize_field("c", &c)?;
         state.serialize_field("d", &d)?;
@@ -296,13 +296,13 @@ impl<'de> Deserialize<'de> for ChaCha {
 
             fn visit_seq<V>(self, mut seq: V) -> Result<ChaCha, V::Error>
             where V: SeqAccess<'de> {
-                let b: [u32; 4] = seq
+                let b: [u128; 1] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let c: [u32; 4] = seq
+                let c: [u128; 1] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                let d: [u32; 4] = seq
+                let d: [u128; 1] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
@@ -324,21 +324,24 @@ impl<'de> Deserialize<'de> for ChaCha {
                             if b.is_some() {
                                 return Err(de::Error::duplicate_field("b"));
                             }
-                            let raw_b: [u32; 4] = map.next_value()?;
+                            let raw_b: [u128; 1] = map.next_value()?;
+                            let raw_b: [u32; 4] = unsafe { std::mem::transmute(raw_b) };
                             b = Some(raw_b.into());
                         }
                         Field::C => {
                             if c.is_some() {
                                 return Err(de::Error::duplicate_field("c"));
                             }
-                            let raw_c: [u32; 4] = map.next_value()?;
+                            let raw_c: [u128; 1] = map.next_value()?;
+                            let raw_c: [u32; 4] = unsafe { std::mem::transmute(raw_c) };
                             c = Some(raw_c.into());
                         }
                         Field::D => {
                             if d.is_some() {
                                 return Err(de::Error::duplicate_field("d"));
                             }
-                            let raw_d: [u32; 4] = map.next_value()?;
+                            let raw_d: [u128; 1] = map.next_value()?;
+                            let raw_d: [u32; 4] = unsafe { std::mem::transmute(raw_d) };
                             d = Some(raw_d.into());
                         }
                     }
