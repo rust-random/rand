@@ -263,9 +263,12 @@ impl Serialize for ChaCha {
     where S: Serializer {
         // 3 is the number of fields in the struct.
         let mut state = serializer.serialize_struct("ChaCha", 3)?;
-        let b: [u128; 1] = self.b.clone().into();
-        let c: [u128; 1] = self.c.clone().into();
-        let d: [u128; 1] = self.d.clone().into();
+        let b: &[u32; 4] = (&self.b).into();
+        let c: &[u32; 4] = (&self.c).into();
+        let d: &[u32; 4] = (&self.d).into();
+        let b: &[u128; 1] = unsafe { std::mem::transmute(b) };
+        let c: &[u128; 1] = unsafe { std::mem::transmute(c) };
+        let d: &[u128; 1] = unsafe { std::mem::transmute(d) };
         state.serialize_field("b", &b)?;
         state.serialize_field("c", &c)?;
         state.serialize_field("d", &d)?;
