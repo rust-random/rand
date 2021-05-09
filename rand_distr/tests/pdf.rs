@@ -51,10 +51,9 @@ fn normal() {
     println!("Expected normal distribution:\n{}",
         sparkline::render_u64_as_string(hist.bins()));
 
-    let mut normalized_bins= hist.normalized_bins();
     let mut diff = [0.; HIST_LEN];
-    for i in 0..HIST_LEN {
-        let bin = (normalized_bins.next().unwrap() as f64) / (N_SAMPLES as f64) ;
+    for (i, n) in hist.normalized_bins().enumerate() {
+        let bin = (n as f64) / (N_SAMPLES as f64) ;
         diff[i] = (bin - expected[i]).abs();
     }
 
