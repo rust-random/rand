@@ -9,6 +9,10 @@
 
 //! The Gamma and derived distributions.
 
+// We use the variable names from the published reference, therefore this
+// warning is not helpful.
+#![allow(clippy::many_single_char_names)]
+
 use self::ChiSquaredRepr::*;
 use self::GammaRepr::*;
 

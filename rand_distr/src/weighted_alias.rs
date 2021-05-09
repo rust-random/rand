@@ -466,7 +466,7 @@ mod test {
             weights[ZERO_WEIGHT_INDEX as usize] = W::ZERO;
             weights
         };
-        let weight_sum = weights.iter().map(|w| *w).sum::<W>();
+        let weight_sum = weights.iter().copied().sum::<W>();
         let expected_counts = weights
             .iter()
             .map(|&w| w_to_f64(w) / w_to_f64(weight_sum) * NUM_SAMPLES as f64)

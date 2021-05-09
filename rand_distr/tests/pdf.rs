@@ -1,3 +1,5 @@
+#![allow(clippy::float_cmp)]
+
 use average::Histogram;
 use rand::{Rng, SeedableRng};
 use rand_distr::Normal;
