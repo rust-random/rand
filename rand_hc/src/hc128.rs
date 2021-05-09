@@ -6,6 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+// Disable some noisy clippy lints.
+#![allow(clippy::many_single_char_names)]
+#![allow(clippy::identity_op)]
+// Disable a lint that cannot be fixed without increasing the MSRV
+#![allow(clippy::op_ref)]
+
 //! The HC-128 random number generator.
 
 use core::fmt;
