@@ -12,7 +12,8 @@ use average::Histogram;
 use rand::{Rng, SeedableRng};
 use rand_distr::Normal;
 
-average::define_histogram!(hist, 100);
+const HIST_LEN: usize = 100;
+average::define_histogram!(hist, crate::HIST_LEN);
 use hist::Histogram as Histogram100;
 
 mod sparkline;
@@ -42,7 +43,7 @@ fn normal() {
     }
 
     let mut bin_centers = hist.centers();
-    let mut expected = [0.; 100];
+    let mut expected = [0.; HIST_LEN];
     for e in &mut expected[..] {
         *e = pdf(bin_centers.next().unwrap());
     }
@@ -51,8 +52,8 @@ fn normal() {
         sparkline::render_u64_as_string(hist.bins()));
 
     let mut normalized_bins= hist.normalized_bins();
-    let mut diff = [0.; 100];
-    for i in 0..100 {
+    let mut diff = [0.; HIST_LEN];
+    for i in 0..HIST_LEN {
         let bin = (normalized_bins.next().unwrap() as f64) / (N_SAMPLES as f64) ;
         diff[i] = (bin - expected[i]).abs();
     }
@@ -63,7 +64,7 @@ fn normal() {
         core::f64::NEG_INFINITY, |a, &b| a.max(b)));
 
     // Check that the differences are significantly smaller than the expected error.
-    let mut expected_error = [0.; 100];
+    let mut expected_error = [0.; HIST_LEN];
     // Calculate error from histogram
     for (err, var) in expected_error.iter_mut().zip(hist.variances()) {
         *err = var.sqrt() / (N_SAMPLES as f64);
