@@ -14,6 +14,12 @@ use ppv_lite86::{dispatch, dispatch_light128};
 pub use ppv_lite86::Machine;
 use ppv_lite86::{vec128_storage, ArithOps, BitOps32, LaneWords4, MultiLane, StoreBytes, Vec4};
 
+#[cfg(feature = "serde1")]
+use serde::de::{self, Deserializer, MapAccess, SeqAccess, Visitor};
+#[cfg(feature = "serde1")] use serde::ser::SerializeStruct;
+#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize, Serializer};
+#[cfg(feature = "serde1")] use std::fmt;
+
 pub(crate) const BLOCK: usize = 64;
 pub(crate) const BLOCK64: u64 = BLOCK as u64;
 const LOG2_BUFBLOCKS: u64 = 2;
@@ -250,3 +256,101 @@ dispatch_light128!(m, Mach, {
         state
     }
 });
+
+#[cfg(feature = "serde1")]
+impl Serialize for ChaCha {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: Serializer {
+        // 3 is the number of fields in the struct.
+        let mut state = serializer.serialize_struct("ChaCha", 3)?;
+        let b: &[u32; 4] = (&self.b).into();
+        let c: &[u32; 4] = (&self.c).into();
+        let d: &[u32; 4] = (&self.d).into();
+        state.serialize_field("b", b)?;
+        state.serialize_field("c", c)?;
+        state.serialize_field("d", d)?;
+        state.end()
+    }
+}
+
+#[cfg(feature = "serde1")]
+impl<'de> Deserialize<'de> for ChaCha {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: Deserializer<'de> {
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "lowercase")]
+        enum Field {
+            B,
+            C,
+            D,
+        }
+
+        struct ChaChaVisitor;
+
+        impl<'de> Visitor<'de> for ChaChaVisitor {
+            type Value = ChaCha;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct ChaCha")
+            }
+
+            fn visit_seq<V>(self, mut seq: V) -> Result<ChaCha, V::Error>
+            where V: SeqAccess<'de> {
+                let b: [u32; 4] = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let c: [u32; 4] = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(1, &self))?;
+                let d: [u32; 4] = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(2, &self))?;
+
+                let b = unsafe { std::mem::transmute(b) };
+                let c = unsafe { std::mem::transmute(c) };
+                let d = unsafe { std::mem::transmute(d) };
+
+                Ok(ChaCha { b, c, d })
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<ChaCha, V::Error>
+            where V: MapAccess<'de> {
+                let mut b: Option<vec128_storage> = None;
+                let mut c: Option<vec128_storage> = None;
+                let mut d: Option<vec128_storage> = None;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::B => {
+                            if b.is_some() {
+                                return Err(de::Error::duplicate_field("b"));
+                            }
+                            let raw_b: [u32; 4] = map.next_value()?;
+                            b = Some(raw_b.into());
+                        }
+                        Field::C => {
+                            if c.is_some() {
+                                return Err(de::Error::duplicate_field("c"));
+                            }
+                            let raw_c: [u32; 4] = map.next_value()?;
+                            c = Some(raw_c.into());
+                        }
+                        Field::D => {
+                            if d.is_some() {
+                                return Err(de::Error::duplicate_field("d"));
+                            }
+                            let raw_d: [u32; 4] = map.next_value()?;
+                            d = Some(raw_d.into());
+                        }
+                    }
+                }
+                let b = b.ok_or_else(|| de::Error::missing_field("b"))?;
+                let c = c.ok_or_else(|| de::Error::missing_field("c"))?;
+                let d = d.ok_or_else(|| de::Error::missing_field("d"))?;
+                Ok(ChaCha { b, c, d })
+            }
+        }
+
+        const FIELDS: &'static [&'static str] = &["b", "c", "d"];
+        deserializer.deserialize_struct("ChaCha", FIELDS, ChaChaVisitor)
+    }
+}

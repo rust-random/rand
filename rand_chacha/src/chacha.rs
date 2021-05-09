@@ -16,6 +16,10 @@ use crate::guts::ChaCha;
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
+#[cfg(feature = "serde1")] use serde::de::{self, Deserializer, Visitor, SeqAccess, MapAccess};
+#[cfg(feature = "serde1")] use serde::{Serialize, Deserialize, Serializer};
+#[cfg(feature = "serde1")] use serde::ser::SerializeStruct;
+
 const STREAM_PARAM_NONCE: u32 = 1;
 const STREAM_PARAM_BLOCK: u32 = 0;
 
@@ -71,6 +75,10 @@ impl<T> fmt::Debug for Array64<T> {
 macro_rules! chacha_impl {
     ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr) => {
         #[doc=$doc]
+        #[cfg_attr(
+            feature = "serde1",
+            derive(Serialize, Deserialize),
+        )]
         #[derive(Clone, PartialEq, Eq)]
         pub struct $ChaChaXCore {
             state: ChaCha,
@@ -146,6 +154,10 @@ macro_rules! chacha_impl {
         ///
         /// [^2]: [eSTREAM: the ECRYPT Stream Cipher Project](
         ///       http://www.ecrypt.eu.org/stream/)
+        #[cfg_attr(
+            feature = "serde1",
+            derive(Serialize, Deserialize),
+        )]
         #[derive(Clone, Debug)]
         pub struct $ChaChaXRng {
             rng: BlockRng<$ChaChaXCore>,
@@ -270,6 +282,78 @@ macro_rules! chacha_impl {
 chacha_impl!(ChaCha20Core, ChaCha20Rng, 10, "ChaCha with 20 rounds");
 chacha_impl!(ChaCha12Core, ChaCha12Rng, 6, "ChaCha with 12 rounds");
 chacha_impl!(ChaCha8Core, ChaCha8Rng, 4, "ChaCha with 8 rounds");
+
+#[cfg(feature = "serde1")]
+impl Serialize for Array64<u32> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("Array64<u32>", 1)?;
+        // must transmute to 32 length because serde can't serialize 64 length arrays yet
+        let field: [u64; 32] = unsafe { std::mem::transmute(self.0.clone()) };
+        state.serialize_field("field", &field)?;
+        state.end()
+    }
+}
+
+#[cfg(feature = "serde1")]
+impl<'de> Deserialize<'de> for Array64<u32> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "lowercase")]
+        enum Field { Array }
+
+        struct Array64Visitor;
+
+        impl<'de> Visitor<'de> for Array64Visitor {
+            type Value = Array64<u32>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct Array64<u32>")
+            }
+
+            fn visit_seq<V>(self, mut seq: V) -> Result<Array64<u32>, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                let raw_field: [u64; 32] = seq.next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+
+                let field: [u32; 64] = unsafe { std::mem::transmute(raw_field) };
+
+                Ok(Array64(field))
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<Array64<u32>, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut field = None;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Array => {
+                            if field.is_some() {
+                                return Err(de::Error::duplicate_field("array"));
+                            }
+                            let raw_field: [u64; 32] = map.next_value()?;
+                            let raw_field: [u32; 64] = unsafe { std::mem::transmute(raw_field) };
+                            field = Some(raw_field);
+                        }
+                    }
+                }
+                let field: [u32; 64] = field.ok_or_else(|| de::Error::missing_field("array"))?;
+                Ok(Array64(field))
+            }
+        }
+
+        const FIELDS: &'static [&'static str] = &["array"];
+        deserializer.deserialize_struct("Array64<u32>", FIELDS, Array64Visitor)
+    }
+}
 
 #[cfg(test)]
 mod test {
