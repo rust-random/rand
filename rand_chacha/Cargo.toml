@@ -21,7 +21,7 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 
 [dev-dependencies]
 # Only to test serde1
-bincode = "1.2.1"
+serde_json = "1.0"
 
 [features]
 default = ["std"]

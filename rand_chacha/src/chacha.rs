@@ -366,13 +366,13 @@ mod test {
         let mut rng2 = ChaCha12Rng::from_seed(seed);
         let mut rng3 = ChaCha8Rng::from_seed(seed);
 
-        let encoded1 = bincode::serialize(&rng1).unwrap();
-        let encoded2 = bincode::serialize(&rng2).unwrap();
-        let encoded3 = bincode::serialize(&rng3).unwrap();
+        let encoded1 = serde_json::to_string(&rng1).unwrap();
+        let encoded2 = serde_json::to_string(&rng2).unwrap();
+        let encoded3 = serde_json::to_string(&rng3).unwrap();
 
-        let mut decoded1: ChaCha20Rng = bincode::deserialize(&encoded1).unwrap();
-        let mut decoded2: ChaCha12Rng = bincode::deserialize(&encoded2).unwrap();
-        let mut decoded3: ChaCha8Rng = bincode::deserialize(&encoded3).unwrap();
+        let mut decoded1: ChaCha20Rng = serde_json::from_str(&encoded1).unwrap();
+        let mut decoded2: ChaCha12Rng = serde_json::from_str(&encoded2).unwrap();
+        let mut decoded3: ChaCha8Rng = serde_json::from_str(&encoded3).unwrap();
 
         assert_eq!(rng1, decoded1);
         assert_eq!(rng2, decoded2);
@@ -381,6 +381,25 @@ mod test {
         assert_eq!(rng1.next_u32(), decoded1.next_u32());
         assert_eq!(rng2.next_u32(), decoded2.next_u32());
         assert_eq!(rng3.next_u32(), decoded3.next_u32());
+    }
+
+    // This test validates that:
+    // 1. a hard-coded serialization demonstrating the format at time of initial release can still
+    //    be deserialized to a ChaChaRng
+    // 2. re-serializing the resultant object produces exactly the original string
+    //
+    // Condition 2 is stronger than necessary: an equivalent serialization (e.g. with field order
+    // permuted, or whitespace differences) would also be admissible, but would fail this test.
+    // However testing for equivalence of serialized data is difficult, and there shouldn't be any
+    // reason we need to violate the stronger-than-needed condition, e.g. by changing the field
+    // definition order.
+    #[cfg(feature = "serde1")]
+    #[test]
+    fn test_chacha_serde_format_stability() {
+        let j = r#"{"seed":[4,8,15,16,23,42,4,8,15,16,23,42,4,8,15,16,23,42,4,8,15,16,23,42,4,8,15,16,23,42,4,8],"stream":27182818284,"word_pos":314159265359}"#;
+        let r: ChaChaRng = serde_json::from_str(&j).unwrap();
+        let j1 = serde_json::to_string(&r).unwrap();
+        assert_eq!(j, j1);
     }
 
     #[test]
