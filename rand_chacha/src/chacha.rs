@@ -16,6 +16,8 @@ use crate::guts::ChaCha;
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
+#[cfg(feature = "serde1")] use serde::{Serialize, Deserialize, Serializer, Deserializer};
+
 const STREAM_PARAM_NONCE: u32 = 1;
 const STREAM_PARAM_BLOCK: u32 = 0;
 
@@ -284,11 +286,31 @@ macro_rules! chacha_impl {
         }
         impl Eq for $ChaChaXRng {}
 
+        #[cfg(feature = "serde1")]
+        impl Serialize for $ChaChaXRng {
+            fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+            where S: Serializer {
+                $abst::$ChaChaXRng::from(self).serialize(s)
+            }
+        }
+        #[cfg(feature = "serde1")]
+        impl<'de> Deserialize<'de> for $ChaChaXRng {
+            fn deserialize<D>(d: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+                $abst::$ChaChaXRng::deserialize(d).map(|x| Self::from(&x))
+            }
+        }
+
         mod $abst {
+            #[cfg(feature = "serde1")] use serde::{Serialize, Deserialize};
+
             // The abstract state of a ChaCha stream, independent of implementation choices. The
             // comparison and serialization of this object is considered a semver-covered part of
             // the API.
             #[derive(Debug, PartialEq, Eq)]
+            #[cfg_attr(
+                feature = "serde1",
+                derive(Serialize, Deserialize),
+            )]
             pub(crate) struct $ChaChaXRng {
                 seed: [u8; 32],
                 stream: u64,
