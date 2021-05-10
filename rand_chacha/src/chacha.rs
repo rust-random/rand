@@ -69,7 +69,7 @@ impl<T> fmt::Debug for Array64<T> {
 }
 
 macro_rules! chacha_impl {
-    ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr) => {
+    ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr, $abst:ident) => {
         #[doc=$doc]
         #[derive(Clone, PartialEq, Eq)]
         pub struct $ChaChaXCore {
@@ -245,6 +245,24 @@ macro_rules! chacha_impl {
                     self.set_word_pos(wp);
                 }
             }
+
+            /// Get the stream number.
+            #[inline]
+            pub fn get_stream(&self) -> u64 {
+                self.rng
+                    .core
+                    .state
+                    .get_stream_param(STREAM_PARAM_NONCE)
+            }
+
+            /// Get the seed.
+            #[inline]
+            pub fn get_seed(&self) -> [u8; 32] {
+                self.rng
+                    .core
+                    .state
+                    .get_seed()
+            }
         }
 
         impl CryptoRng for $ChaChaXRng {}
@@ -259,17 +277,53 @@ macro_rules! chacha_impl {
 
         impl PartialEq<$ChaChaXRng> for $ChaChaXRng {
             fn eq(&self, rhs: &$ChaChaXRng) -> bool {
-                self.rng.core.state.stream64_eq(&rhs.rng.core.state)
-                    && self.get_word_pos() == rhs.get_word_pos()
+                let a: $abst::$ChaChaXRng = self.into();
+                let b: $abst::$ChaChaXRng = rhs.into();
+                a == b
             }
         }
         impl Eq for $ChaChaXRng {}
+
+        mod $abst {
+            // The abstract state of a ChaCha stream, independent of implementation choices. The
+            // comparison and serialization of this object is considered a semver-covered part of
+            // the API.
+            #[derive(Debug, PartialEq, Eq)]
+            pub(crate) struct $ChaChaXRng {
+                seed: [u8; 32],
+                stream: u64,
+                word_pos: u128,
+            }
+
+            impl From<&super::$ChaChaXRng> for $ChaChaXRng {
+                // Forget all information about the input except what is necessary to determine the
+                // outputs of any sequence of pub API calls.
+                fn from(r: &super::$ChaChaXRng) -> Self {
+                    Self {
+                        seed: r.get_seed(),
+                        stream: r.get_stream(),
+                        word_pos: r.get_word_pos(),
+                    }
+                }
+            }
+
+            impl From<&$ChaChaXRng> for super::$ChaChaXRng {
+                // Construct one of the possible concrete RNGs realizing an abstract state.
+                fn from(a: &$ChaChaXRng) -> Self {
+                    use rand_core::SeedableRng;
+                    let mut r = Self::from_seed(a.seed);
+                    r.set_stream(a.stream);
+                    r.set_word_pos(a.word_pos);
+                    r
+                }
+            }
+        }
     }
 }
 
-chacha_impl!(ChaCha20Core, ChaCha20Rng, 10, "ChaCha with 20 rounds");
-chacha_impl!(ChaCha12Core, ChaCha12Rng, 6, "ChaCha with 12 rounds");
-chacha_impl!(ChaCha8Core, ChaCha8Rng, 4, "ChaCha with 8 rounds");
+chacha_impl!(ChaCha20Core, ChaCha20Rng, 10, "ChaCha with 20 rounds", abstract20);
+chacha_impl!(ChaCha12Core, ChaCha12Rng, 6, "ChaCha with 12 rounds", abstract12);
+chacha_impl!(ChaCha8Core, ChaCha8Rng, 4, "ChaCha with 8 rounds", abstract8);
 
 #[cfg(test)]
 mod test {

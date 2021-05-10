@@ -96,14 +96,6 @@ impl ChaCha {
     pub fn get_seed(&self) -> [u8; 32] {
         get_seed(self)
     }
-
-    /// Return whether rhs is equal in all parameters except current 64-bit position.
-    #[inline]
-    pub fn stream64_eq(&self, rhs: &Self) -> bool {
-        let self_d: [u32; 4] = self.d.into();
-        let rhs_d: [u32; 4] = rhs.d.into();
-        self.b == rhs.b && self.c == rhs.c && self_d[3] == rhs_d[3] && self_d[2] == rhs_d[2]
-    }
 }
 
 #[allow(clippy::many_single_char_names)]
