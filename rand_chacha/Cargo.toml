@@ -1,6 +1,6 @@
 [package]
 name = "rand_chacha"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["The Rand Project Developers", "The Rust Project Developers", "The CryptoCorrosion Contributors"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"

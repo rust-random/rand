@@ -92,6 +92,11 @@ impl ChaCha {
         get_stream_param(self, param)
     }
 
+    #[inline(always)]
+    pub fn get_seed(&self) -> [u8; 32] {
+        get_seed(self)
+    }
+
     /// Return whether rhs is equal in all parameters except current 64-bit position.
     #[inline]
     pub fn stream64_eq(&self, rhs: &Self) -> bool {
@@ -202,6 +207,17 @@ dispatch_light128!(m, Mach, {
     fn get_stream_param(state: &ChaCha, param: u32) -> u64 {
         let d: Mach::u32x4 = m.unpack(state.d);
         ((d.extract((param << 1) | 1) as u64) << 32) | d.extract(param << 1) as u64
+    }
+});
+
+dispatch_light128!(m, Mach, {
+    fn get_seed(state: &ChaCha) -> [u8; 32] {
+        let b: Mach::u32x4 = m.unpack(state.b);
+        let c: Mach::u32x4 = m.unpack(state.c);
+        let mut key = [0u8; 32];
+        b.write_le(&mut key[..16]);
+        c.write_le(&mut key[16..]);
+        key
     }
 });
 
