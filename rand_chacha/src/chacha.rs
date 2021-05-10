@@ -300,8 +300,37 @@ chacha_impl!(ChaCha8Core, ChaCha8Rng, 4, "ChaCha with 8 rounds");
 #[cfg(test)]
 mod test {
     use rand_core::{RngCore, SeedableRng};
+    #[cfg(feature = "serde1")] use super::{ChaCha20Rng, ChaCha12Rng, ChaCha8Rng};
 
     type ChaChaRng = super::ChaCha20Rng;
+
+    #[cfg(feature = "serde1")]
+    #[test]
+    fn test_chacha_serde_roundtrip() {
+        let seed = [
+            1, 0, 52, 0, 0, 0, 0, 0, 1, 0, 10, 0, 22, 32, 0, 0, 2, 0, 55, 49, 0, 11, 0, 0, 3, 0, 0, 0, 0,
+            0, 2, 92,
+        ];
+        let mut rng1 = ChaCha20Rng::from_seed(seed);
+        let mut rng2 = ChaCha12Rng::from_seed(seed);
+        let mut rng3 = ChaCha8Rng::from_seed(seed);
+
+        let encoded1 = bincode::serialize(&rng1).unwrap();
+        let encoded2 = bincode::serialize(&rng2).unwrap();
+        let encoded3 = bincode::serialize(&rng3).unwrap();
+
+        let mut decoded1: ChaCha20Rng = bincode::deserialize(&encoded1).unwrap();
+        let mut decoded2: ChaCha12Rng = bincode::deserialize(&encoded2).unwrap();
+        let mut decoded3: ChaCha8Rng = bincode::deserialize(&encoded3).unwrap();
+
+        assert_eq!(rng1, decoded1);
+        assert_eq!(rng2, decoded2);
+        assert_eq!(rng3, decoded3);
+
+        assert_eq!(rng1.next_u32(), decoded1.next_u32());
+        assert_eq!(rng2.next_u32(), decoded2.next_u32());
+        assert_eq!(rng3.next_u32(), decoded3.next_u32());
+    }
 
     #[test]
     fn test_chacha_construction() {

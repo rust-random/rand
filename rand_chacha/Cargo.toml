@@ -20,6 +20,10 @@ ppv-lite86 = { version = "0.2.10", default-features = false, features = ["simd"]
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde-big-array = { version = "0.3.2", optional = true }
 
+[dev-dependencies]
+# Only to test serde1
+bincode = "1.2.1"
+
 [features]
 default = ["std"]
 std = ["ppv-lite86/std"]
