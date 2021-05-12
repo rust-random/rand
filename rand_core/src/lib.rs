@@ -485,7 +485,7 @@ mod test {
             // This is the binomial distribution B(64, 0.5), so chance of
             // weight < 20 is binocdf(19, 64, 0.5) = 7.8e-4, and same for
             // weight > 44.
-            assert!(weight >= 20 && weight <= 44);
+            assert!((20..=44).contains(&weight));
 
             for (i2, r2) in results.iter().enumerate() {
                 if i1 == i2 {

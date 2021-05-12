@@ -1316,7 +1316,7 @@ mod tests {
         let mut max = core::char::from_u32(0).unwrap();
         for _ in 0..100 {
             let c = rng.gen_range('A'..='Z');
-            assert!('A' <= c && c <= 'Z');
+            assert!(('A'..='Z').contains(&c));
             max = max.max(c);
         }
         assert_eq!(max, 'Z');

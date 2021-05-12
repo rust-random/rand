@@ -221,7 +221,7 @@ impl Hypergeometric {
             }
         };
 
-        Ok(Hypergeometric { n1, n2, k, sign_x, offset_x, sampling_method })
+        Ok(Hypergeometric { n1, n2, k, offset_x, sign_x, sampling_method })
     }
 }
 

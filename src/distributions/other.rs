@@ -249,7 +249,7 @@ mod tests {
             .map(|()| rng.gen::<char>())
             .take(1000)
             .collect();
-        assert!(word.len() != 0);
+        assert!(!word.is_empty());
     }
 
     #[test]
@@ -261,11 +261,11 @@ mod tests {
         let mut incorrect = false;
         for _ in 0..100 {
             let c: char = rng.sample(Alphanumeric).into();
-            incorrect |= !((c >= '0' && c <= '9') ||
-                           (c >= 'A' && c <= 'Z') ||
-                           (c >= 'a' && c <= 'z') );
+            incorrect |= !(('0'..='9').contains(&c) ||
+                           ('A'..='Z').contains(&c) ||
+                           ('a'..='z').contains(&c) );
         }
-        assert!(incorrect == false);
+        assert!(!incorrect);
     }
 
     #[test]

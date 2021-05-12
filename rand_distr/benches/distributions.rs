@@ -144,6 +144,7 @@ distr_int!(distr_geometric, u64, Geometric::new(0.5).unwrap());
 distr_int!(distr_standard_geometric, u64, StandardGeometric);
 
 #[bench]
+#[allow(clippy::approx_constant)]
 fn dist_iter(b: &mut Bencher) {
     let mut rng = Pcg64Mcg::from_entropy();
     let distr = Normal::new(-2.71828, 3.14159).unwrap();
@@ -177,4 +178,4 @@ sample_binomial!(misc_binomial_1, 1, 0.9);
 sample_binomial!(misc_binomial_10, 10, 0.9);
 sample_binomial!(misc_binomial_100, 100, 0.99);
 sample_binomial!(misc_binomial_1000, 1000, 0.01);
-sample_binomial!(misc_binomial_1e12, 1000_000_000_000, 0.2);
+sample_binomial!(misc_binomial_1e12, 1_000_000_000_000, 0.2);

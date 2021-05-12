@@ -355,6 +355,8 @@ mod test {
 
     #[test]
     fn test_clone_reseeding() {
+        #![allow(clippy::redundant_clone)]
+
         let mut zero = StepRng::new(0, 0);
         let rng = Core::from_rng(&mut zero).unwrap();
         let mut rng1 = ReseedingRng::new(rng, 32 * 4, zero);

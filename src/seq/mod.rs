@@ -991,8 +991,8 @@ mod test {
                 move_last(&mut arr, pos);
                 assert_eq!(arr[3], i);
             }
-            for i in 0..4 {
-                assert_eq!(arr[i], i);
+            for (i, &a) in arr.iter().enumerate() {
+                assert_eq!(a, i);
             }
             counts[permutation] += 1;
         }

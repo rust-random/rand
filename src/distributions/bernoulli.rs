@@ -96,7 +96,7 @@ impl Bernoulli {
     /// 2<sup>-64</sup> in `[0, 1]` can be represented as a `f64`.)
     #[inline]
     pub fn new(p: f64) -> Result<Bernoulli, BernoulliError> {
-        if !(p >= 0.0 && p < 1.0) {
+        if !(0.0..1.0).contains(&p) {
             if p == 1.0 {
                 return Ok(Bernoulli { p_int: ALWAYS_TRUE });
             }
@@ -157,6 +157,9 @@ mod test {
 
     #[test]
     fn test_trivial() {
+        // We prefer to be explicit here.
+        #![allow(clippy::bool_assert_comparison)]
+
         let mut r = crate::test::rng(1);
         let always_false = Bernoulli::new(0.0).unwrap();
         let always_true = Bernoulli::new(1.0).unwrap();
