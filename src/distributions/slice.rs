@@ -69,7 +69,7 @@ pub struct Slice<'a, T> {
 
 impl<'a, T> Slice<'a, T> {
     /// Create a new `Slice` instance which samples uniformly from the slice.
-    /// Returns `None` if the slice is empty.
+    /// Returns `Err` if the slice is empty.
     pub fn new(slice: &'a [T]) -> Result<Self, EmptySlice> {
         match slice.len() {
             0 => Err(EmptySlice),
