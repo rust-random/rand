@@ -29,6 +29,9 @@ use rand_core::{le, Error, RngCore, SeedableRng};
 /// Despite the name, this implementation uses 32 bytes (256 bit) space
 /// comprising 128 bits of state and 128 bits stream selector. These are both
 /// set by `SeedableRng`, using a 256-bit seed.
+///
+/// Note that two generators with different stream parameters may be closely
+/// correlated.
 #[derive(Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Lcg128Xsl64 {
@@ -40,9 +43,44 @@ pub struct Lcg128Xsl64 {
 pub type Pcg64 = Lcg128Xsl64;
 
 impl Lcg128Xsl64 {
+    /// Multi-step advance functions (jump-ahead, jump-back)
+    ///
+    /// The method used here is based on Brown, "Random Number Generation
+    /// with Arbitrary Stride,", Transactions of the American Nuclear
+    /// Society (Nov. 1994).  The algorithm is very similar to fast
+    /// exponentiation.
+    ///
+    /// Even though delta is an unsigned integer, we can pass a
+    /// signed integer to go backwards, it just goes "the long way round".
+    ///
+    /// Using this function is equivalent to calling `next_64()` `delta`
+    /// number of times.
+    #[inline]
+    pub fn advance(&mut self, delta: u128) {
+        let mut acc_mult: u128 = 1;
+        let mut acc_plus: u128 = 0;
+        let mut cur_mult = MULTIPLIER;
+        let mut cur_plus = self.increment;
+        let mut mdelta = delta;
+
+        while mdelta > 0 {
+            if (mdelta & 1) != 0 {
+                acc_mult = acc_mult.wrapping_mul(cur_mult);
+                acc_plus = acc_plus.wrapping_mul(cur_mult).wrapping_add(cur_plus);
+            }
+            cur_plus = cur_mult.wrapping_add(1).wrapping_mul(cur_plus);
+            cur_mult = cur_mult.wrapping_mul(cur_mult);
+            mdelta /= 2;
+        }
+        self.state = acc_mult.wrapping_mul(self.state).wrapping_add(acc_plus);
+    }
+
     /// Construct an instance compatible with PCG seed and stream.
     ///
-    /// Note that PCG specifies default values for both parameters:
+    /// Note that two generators with different stream parameters may be closely
+    /// correlated.
+    ///
+    /// PCG specifies the following default values for both parameters:
     ///
     /// - `state = 0xcafef00dd15ea5e5`
     /// - `stream = 0xa02bdbf7bb3c0a7ac28fa16a64abf96`
@@ -140,6 +178,38 @@ pub struct Mcg128Xsl64 {
 pub type Pcg64Mcg = Mcg128Xsl64;
 
 impl Mcg128Xsl64 {
+    /// Multi-step advance functions (jump-ahead, jump-back)
+    ///
+    /// The method used here is based on Brown, "Random Number Generation
+    /// with Arbitrary Stride,", Transactions of the American Nuclear
+    /// Society (Nov. 1994).  The algorithm is very similar to fast
+    /// exponentiation.
+    ///
+    /// Even though delta is an unsigned integer, we can pass a
+    /// signed integer to go backwards, it just goes "the long way round".
+    ///
+    /// Using this function is equivalent to calling `next_64()` `delta`
+    /// number of times.
+    #[inline]
+    pub fn advance(&mut self, delta: u128) {
+        let mut acc_mult: u128 = 1;
+        let mut acc_plus: u128 = 0;
+        let mut cur_mult = MULTIPLIER;
+        let mut cur_plus: u128 = 0;
+        let mut mdelta = delta;
+
+        while mdelta > 0 {
+            if (mdelta & 1) != 0 {
+                acc_mult = acc_mult.wrapping_mul(cur_mult);
+                acc_plus = acc_plus.wrapping_mul(cur_mult).wrapping_add(cur_plus);
+            }
+            cur_plus = cur_mult.wrapping_add(1).wrapping_mul(cur_plus);
+            cur_mult = cur_mult.wrapping_mul(cur_mult);
+            mdelta /= 2;
+        }
+        self.state = acc_mult.wrapping_mul(self.state).wrapping_add(acc_plus);
+    }
+
     /// Construct an instance compatible with PCG seed.
     ///
     /// Note that PCG specifies a default value for the parameter:

@@ -8,7 +8,15 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [0.8.4] - unreleased
+## [Unreleased]
+### Additions
+- Use const-generics to support arrays of all sizes (#1104)
+
+### Other
+- Reorder asserts in `Uniform` float distributions for easier debugging of non-finite arguments
+  (#1094, #1108)
+- Add range overflow check in `Uniform` float distributions (#1108)
+
 ### Distributions
 - Add slice distribution (#1107)
 

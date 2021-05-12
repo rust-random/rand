@@ -76,12 +76,17 @@ pub mod le;
 /// [`next_u32`] or [`next_u64`] since the latter methods are almost always used
 /// with algorithmic generators (PRNGs), which are normally infallible.
 ///
+/// Implementers should produce bits uniformly. Pathological RNGs (e.g. always
+/// returning the same value, or never setting certain bits) can break rejection
+/// sampling used by random distributions, and also break other RNGs when
+/// seeding them via [`SeedableRng::from_rng`].
+///
 /// Algorithmic generators implementing [`SeedableRng`] should normally have
 /// *portable, reproducible* output, i.e. fix Endianness when converting values
 /// to avoid platform differences, and avoid making any changes which affect
 /// output (except by communicating that the release has breaking changes).
 ///
-/// Typically implementators will implement only one of the methods available
+/// Typically an RNG will implement only one of the methods available
 /// in this trait directly, then use the helper functions from the
 /// [`impls`] module to implement the other methods.
 ///
@@ -480,7 +485,7 @@ mod test {
             // This is the binomial distribution B(64, 0.5), so chance of
             // weight < 20 is binocdf(19, 64, 0.5) = 7.8e-4, and same for
             // weight > 44.
-            assert!(weight >= 20 && weight <= 44);
+            assert!((20..=44).contains(&weight));
 
             for (i2, r2) in results.iter().enumerate() {
                 if i1 == i2 {

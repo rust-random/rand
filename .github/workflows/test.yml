@@ -91,7 +91,10 @@ jobs:
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc,getrandom
       - name: Test rand_distr
-        run: cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml
+        run: |
+          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml
+          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --no-default-features
+          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --no-default-features --features=std,std_math
       - name: Test rand_pcg
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde1
       - name: Test rand_chacha
@@ -147,7 +150,7 @@ jobs:
           rustup component add miri
       - name: Test rand
         run: |
-          cargo miri test --no-default-features
+          cargo miri test --no-default-features --lib --tests
           cargo miri test --features=log,small_rng
           cargo miri test --manifest-path rand_core/Cargo.toml
           cargo miri test --manifest-path rand_core/Cargo.toml --features=serde1

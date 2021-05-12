@@ -24,6 +24,7 @@ const BUF_BLOCKS: u8 = 4;
 // number of 32-bit words per ChaCha block (fixed by algorithm definition)
 const BLOCK_WORDS: u8 = 16;
 
+#[repr(transparent)]
 pub struct Array64<T>([T; 64]);
 impl<T> Default for Array64<T>
 where T: Default

@@ -2,6 +2,19 @@ use rand_core::{RngCore, SeedableRng};
 use rand_pcg::{Lcg64Xsh32, Pcg32};
 
 #[test]
+fn test_lcg64xsh32_advancing() {
+    for seed in 0..20 {
+        let mut rng1 = Lcg64Xsh32::seed_from_u64(seed);
+        let mut rng2 = rng1.clone();
+        for _ in 0..20 {
+            rng1.next_u32();
+        }
+        rng2.advance(20);
+        assert_eq!(rng1, rng2);
+    }
+}
+
+#[test]
 fn test_lcg64xsh32_construction() {
     // Test that various construction techniques produce a working RNG.
     let seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];

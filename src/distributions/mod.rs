@@ -284,6 +284,12 @@ where
 /// *   Arrays (up to 32 elements): each element is generated sequentially;
 ///     see also [`Rng::fill`] which supports arbitrary array length for integer
 ///     types and tends to be faster for `u32` and smaller types.
+///     When using `rustc` ≥ 1.51, enable the `min_const_gen` feature to support
+///     arrays larger than 32 elements.
+///     Note that [`Rng::fill`] and `Standard`'s array support are *not* equivalent:
+///     the former is optimised for integer types (using fewer RNG calls for
+///     element types smaller than the RNG word size), while the latter supports
+///     any element type supported by `Standard`.
 /// *   `Option<T>` first generates a `bool`, and if true generates and returns
 ///     `Some(value)` where `value: T`, otherwise returning `None`.
 ///
@@ -356,9 +362,9 @@ mod tests {
 
     #[test]
     fn test_make_an_iter() {
-        fn ten_dice_rolls_other_than_five<'a, R: Rng>(
-            rng: &'a mut R,
-        ) -> impl Iterator<Item = i32> + 'a {
+        fn ten_dice_rolls_other_than_five<R: Rng>(
+            rng: &mut R,
+        ) -> impl Iterator<Item = i32> + '_ {
             Uniform::new_inclusive(1, 6)
                 .sample_iter(rng)
                 .filter(|x| *x != 5)
@@ -368,7 +374,7 @@ mod tests {
         let mut rng = crate::test::rng(211);
         let mut count = 0;
         for val in ten_dice_rolls_other_than_five(&mut rng) {
-            assert!(val >= 1 && val <= 6 && val != 5);
+            assert!((1..=6).contains(&val) && val != 5);
             count += 1;
         }
         assert_eq!(count, 10);

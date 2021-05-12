@@ -235,6 +235,8 @@ pub(crate) trait FloatSIMDUtils {
 
 /// Implement functions available in std builds but missing from core primitives
 #[cfg(not(std))]
+// False positive: We are following `std` here.
+#[allow(clippy::wrong_self_convention)]
 pub(crate) trait Float: Sized {
     fn is_nan(self) -> bool;
     fn is_infinite(self) -> bool;

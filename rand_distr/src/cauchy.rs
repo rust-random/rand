@@ -55,6 +55,7 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature = "std")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}
 
 impl<F> Cauchy<F>
@@ -106,9 +107,9 @@ mod test {
         let mut rng = crate::test::rng(123);
         let mut numbers: [f64; 1000] = [0.0; 1000];
         let mut sum = 0.0;
-        for i in 0..1000 {
-            numbers[i] = cauchy.sample(&mut rng);
-            sum += numbers[i];
+        for number in &mut numbers[..] {
+            *number = cauchy.sample(&mut rng);
+            sum += *number;
         }
         let median = median(&mut numbers);
         #[cfg(feature = "std")]

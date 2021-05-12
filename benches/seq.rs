@@ -37,8 +37,8 @@ fn seq_shuffle_100(b: &mut Bencher) {
 fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x: &mut [usize] = &mut [1; 1000];
-    for i in 0..1000 {
-        x[i] = i;
+    for (i, r) in x.iter_mut().enumerate() {
+        *r = i;
     }
     b.iter(|| {
         let mut s = 0;
@@ -78,8 +78,8 @@ seq_slice_choose_multiple!(seq_slice_choose_multiple_90_of_100, 90, 100);
 fn seq_iter_choose_from_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
     let x: &mut [usize] = &mut [1; 1000];
-    for i in 0..1000 {
-        x[i] = i;
+    for (i, r) in x.iter_mut().enumerate() {
+        *r = i;
     }
     b.iter(|| {
         let mut s = 0;
@@ -172,11 +172,11 @@ macro_rules! sample_indices {
 sample_indices!(misc_sample_indices_1_of_1k, sample, 1, 1000);
 sample_indices!(misc_sample_indices_10_of_1k, sample, 10, 1000);
 sample_indices!(misc_sample_indices_100_of_1k, sample, 100, 1000);
-sample_indices!(misc_sample_indices_100_of_1M, sample, 100, 1000_000);
-sample_indices!(misc_sample_indices_100_of_1G, sample, 100, 1000_000_000);
-sample_indices!(misc_sample_indices_200_of_1G, sample, 200, 1000_000_000);
-sample_indices!(misc_sample_indices_400_of_1G, sample, 400, 1000_000_000);
-sample_indices!(misc_sample_indices_600_of_1G, sample, 600, 1000_000_000);
+sample_indices!(misc_sample_indices_100_of_1M, sample, 100, 1_000_000);
+sample_indices!(misc_sample_indices_100_of_1G, sample, 100, 1_000_000_000);
+sample_indices!(misc_sample_indices_200_of_1G, sample, 200, 1_000_000_000);
+sample_indices!(misc_sample_indices_400_of_1G, sample, 400, 1_000_000_000);
+sample_indices!(misc_sample_indices_600_of_1G, sample, 600, 1_000_000_000);
 
 macro_rules! sample_indices_rand_weights {
     ($name:ident, $amount:expr, $length:expr) => {
@@ -193,8 +193,8 @@ macro_rules! sample_indices_rand_weights {
 sample_indices_rand_weights!(misc_sample_weighted_indices_1_of_1k, 1, 1000);
 sample_indices_rand_weights!(misc_sample_weighted_indices_10_of_1k, 10, 1000);
 sample_indices_rand_weights!(misc_sample_weighted_indices_100_of_1k, 100, 1000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_100_of_1M, 100, 1000_000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_200_of_1M, 200, 1000_000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_400_of_1M, 400, 1000_000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_600_of_1M, 600, 1000_000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_1k_of_1M, 1000, 1000_000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_100_of_1M, 100, 1_000_000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_200_of_1M, 200, 1_000_000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_400_of_1M, 400, 1_000_000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_600_of_1M, 600, 1_000_000);
+sample_indices_rand_weights!(misc_sample_weighted_indices_1k_of_1M, 1000, 1_000_000);
