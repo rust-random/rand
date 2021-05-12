@@ -61,7 +61,7 @@ use crate::distributions::{Distribution, Uniform};
 /// [`SliceRandom`]: crate::seq::SliceRandom
 /// [`SliceRandom::choose`]: crate::seq::SliceRandom::choose
 /// [`SliceRandom::choose_multiple`]: crate::seq::SliceRandom::choose_multiple
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Slice<'a, T> {
     slice: &'a [T],
     range: Uniform<usize>,
@@ -80,14 +80,6 @@ impl<'a, T> Slice<'a, T> {
         }
     }
 }
-
-impl<T> Clone for Slice<'_, T> {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-impl<T> Copy for Slice<'_, T> {}
 
 impl<'a, T> Distribution<&'a T> for Slice<'a, T> {
     fn sample<R: crate::Rng + ?Sized>(&self, rng: &mut R) -> &'a T {
