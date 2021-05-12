@@ -21,6 +21,9 @@ const BUFBLOCKS: u64 = 1 << LOG2_BUFBLOCKS;
 pub(crate) const BUFSZ64: u64 = BLOCK64 * BUFBLOCKS;
 pub(crate) const BUFSZ: usize = BUFSZ64 as usize;
 
+const STREAM_PARAM_NONCE: u32 = 1;
+const STREAM_PARAM_BLOCK: u32 = 0;
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct ChaCha {
     pub(crate) b: vec128_storage,
@@ -83,13 +86,23 @@ impl ChaCha {
     }
 
     #[inline(always)]
-    pub fn set_stream_param(&mut self, param: u32, value: u64) {
-        set_stream_param(self, param, value)
+    pub fn set_block_pos(&mut self, value: u64) {
+        set_stream_param(self, STREAM_PARAM_BLOCK, value)
     }
 
     #[inline(always)]
-    pub fn get_stream_param(&self, param: u32) -> u64 {
-        get_stream_param(self, param)
+    pub fn get_block_pos(&self) -> u64 {
+        get_stream_param(self, STREAM_PARAM_BLOCK)
+    }
+
+    #[inline(always)]
+    pub fn set_nonce(&mut self, value: u64) {
+        set_stream_param(self, STREAM_PARAM_NONCE, value)
+    }
+
+    #[inline(always)]
+    pub fn get_nonce(&self) -> u64 {
+        get_stream_param(self, STREAM_PARAM_NONCE)
     }
 
     #[inline(always)]

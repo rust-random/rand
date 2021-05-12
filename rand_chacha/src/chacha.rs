@@ -18,9 +18,6 @@ use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
 #[cfg(feature = "serde1")] use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
-const STREAM_PARAM_NONCE: u32 = 1;
-const STREAM_PARAM_BLOCK: u32 = 0;
-
 // NB. this must remain consistent with some currently hard-coded numbers in this module
 const BUF_BLOCKS: u8 = 4;
 // number of 32-bit words per ChaCha block (fixed by algorithm definition)
@@ -196,7 +193,7 @@ macro_rules! chacha_impl {
             #[inline]
             pub fn get_word_pos(&self) -> u128 {
                 let buf_start_block = {
-                    let buf_end_block = self.rng.core.state.get_stream_param(STREAM_PARAM_BLOCK);
+                    let buf_end_block = self.rng.core.state.get_block_pos();
                     u64::wrapping_sub(buf_end_block, BUF_BLOCKS.into())
                 };
                 let (buf_offset_blocks, block_offset_words) = {
@@ -221,7 +218,7 @@ macro_rules! chacha_impl {
                 self.rng
                     .core
                     .state
-                    .set_stream_param(STREAM_PARAM_BLOCK, block);
+                    .set_block_pos(block);
                 self.rng.generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
             }
 
@@ -241,7 +238,7 @@ macro_rules! chacha_impl {
                 self.rng
                     .core
                     .state
-                    .set_stream_param(STREAM_PARAM_NONCE, stream);
+                    .set_nonce(stream);
                 if self.rng.index() != 64 {
                     let wp = self.get_word_pos();
                     self.set_word_pos(wp);
@@ -254,7 +251,7 @@ macro_rules! chacha_impl {
                 self.rng
                     .core
                     .state
-                    .get_stream_param(STREAM_PARAM_NONCE)
+                    .get_nonce()
             }
 
             /// Get the seed.
