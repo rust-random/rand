@@ -1,6 +1,7 @@
 use crate::{Distribution, InverseGaussian, Standard, StandardNormal};
 use num_traits::Float;
 use rand::Rng;
+use core::fmt;
 
 /// Error type returned from `NormalInverseGaussian::new`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -10,6 +11,19 @@ pub enum Error {
     /// `|beta| >= alpha` or `nan`.
     AbsoluteBetaNotLessThanAlpha,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Error::AlphaNegativeOrNull => "alpha <= 0 or is NaN in normal inverse Gaussian distribution",
+            Error::AbsoluteBetaNotLessThanAlpha => "|beta| >= alpha or is NaN in normal inverse Gaussian distribution",
+        })
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
+impl std::error::Error for Error {}
 
 /// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution)
 #[derive(Debug, Clone, Copy)]
