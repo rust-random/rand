@@ -12,7 +12,7 @@ pub enum Error {
 }
 
 /// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution)
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct InverseGaussian<F>
 where
     F: Float,
