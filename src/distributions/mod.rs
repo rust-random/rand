@@ -142,7 +142,7 @@ mod utils;
 /// of The Rust Rand Book. In some cases this does not apply, e.g. the `usize`
 /// type requires different sampling on 32-bit and 64-bit machines.
 ///
-/// [`sample_iter`]: Distribution::method.sample_iter
+/// [`sample_iter`]: Distribution::sample_iter
 pub trait Distribution<T> {
     /// Generate a random value of `T`, using `rng` as the source of randomness.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T;
