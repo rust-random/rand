@@ -73,6 +73,10 @@ impl fmt::Display for Error {
     }
 }
 
+#[cfg(feature = "std")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
+impl std::error::Error for Error {}
+
 // evaluate fact(numerator.0)*fact(numerator.1) / fact(denominator.0)*fact(denominator.1)
 fn fraction_of_products_of_factorials(numerator: (u64, u64), denominator: (u64, u64)) -> f64 {
     let min_top = u64::min(numerator.0, numerator.1);

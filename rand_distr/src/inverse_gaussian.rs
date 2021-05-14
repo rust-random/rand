@@ -1,9 +1,10 @@
 use crate::{Distribution, Standard, StandardNormal};
 use num_traits::Float;
 use rand::Rng;
+use core::fmt;
 
 /// Error type returned from `InverseGaussian::new`
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Error {
     /// `mean <= 0` or `nan`.
     MeanNegativeOrNull,
@@ -11,8 +12,21 @@ pub enum Error {
     ShapeNegativeOrNull,
 }
 
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Error::MeanNegativeOrNull => "mean <= 0 or is NaN in inverse Gaussian distribution",
+            Error::ShapeNegativeOrNull => "shape <= 0 or is NaN in inverse Gaussian distribution",
+        })
+    }
+}
+
+#[cfg(feature = "std")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
+impl std::error::Error for Error {}
+
 /// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution)
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct InverseGaussian<F>
 where
     F: Float,
