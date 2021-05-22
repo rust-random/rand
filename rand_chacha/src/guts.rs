@@ -21,6 +21,9 @@ const BUFBLOCKS: u64 = 1 << LOG2_BUFBLOCKS;
 pub(crate) const BUFSZ64: u64 = BLOCK64 * BUFBLOCKS;
 pub(crate) const BUFSZ: usize = BUFSZ64 as usize;
 
+const STREAM_PARAM_NONCE: u32 = 1;
+const STREAM_PARAM_BLOCK: u32 = 0;
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct ChaCha {
     pub(crate) b: vec128_storage,
@@ -83,21 +86,28 @@ impl ChaCha {
     }
 
     #[inline(always)]
-    pub fn set_stream_param(&mut self, param: u32, value: u64) {
-        set_stream_param(self, param, value)
+    pub fn set_block_pos(&mut self, value: u64) {
+        set_stream_param(self, STREAM_PARAM_BLOCK, value)
     }
 
     #[inline(always)]
-    pub fn get_stream_param(&self, param: u32) -> u64 {
-        get_stream_param(self, param)
+    pub fn get_block_pos(&self) -> u64 {
+        get_stream_param(self, STREAM_PARAM_BLOCK)
     }
 
-    /// Return whether rhs is equal in all parameters except current 64-bit position.
-    #[inline]
-    pub fn stream64_eq(&self, rhs: &Self) -> bool {
-        let self_d: [u32; 4] = self.d.into();
-        let rhs_d: [u32; 4] = rhs.d.into();
-        self.b == rhs.b && self.c == rhs.c && self_d[3] == rhs_d[3] && self_d[2] == rhs_d[2]
+    #[inline(always)]
+    pub fn set_nonce(&mut self, value: u64) {
+        set_stream_param(self, STREAM_PARAM_NONCE, value)
+    }
+
+    #[inline(always)]
+    pub fn get_nonce(&self) -> u64 {
+        get_stream_param(self, STREAM_PARAM_NONCE)
+    }
+
+    #[inline(always)]
+    pub fn get_seed(&self) -> [u8; 32] {
+        get_seed(self)
     }
 }
 
@@ -202,6 +212,17 @@ dispatch_light128!(m, Mach, {
     fn get_stream_param(state: &ChaCha, param: u32) -> u64 {
         let d: Mach::u32x4 = m.unpack(state.d);
         ((d.extract((param << 1) | 1) as u64) << 32) | d.extract(param << 1) as u64
+    }
+});
+
+dispatch_light128!(m, Mach, {
+    fn get_seed(state: &ChaCha) -> [u8; 32] {
+        let b: Mach::u32x4 = m.unpack(state.b);
+        let c: Mach::u32x4 = m.unpack(state.c);
+        let mut key = [0u8; 32];
+        b.write_le(&mut key[..16]);
+        c.write_le(&mut key[16..]);
+        key
     }
 });
 

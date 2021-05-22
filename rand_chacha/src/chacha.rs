@@ -16,8 +16,7 @@ use crate::guts::ChaCha;
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
-const STREAM_PARAM_NONCE: u32 = 1;
-const STREAM_PARAM_BLOCK: u32 = 0;
+#[cfg(feature = "serde1")] use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
 // NB. this must remain consistent with some currently hard-coded numbers in this module
 const BUF_BLOCKS: u8 = 4;
@@ -69,7 +68,7 @@ impl<T> fmt::Debug for Array64<T> {
 }
 
 macro_rules! chacha_impl {
-    ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr) => {
+    ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr, $abst:ident) => {
         #[doc=$doc]
         #[derive(Clone, PartialEq, Eq)]
         pub struct $ChaChaXCore {
@@ -194,7 +193,7 @@ macro_rules! chacha_impl {
             #[inline]
             pub fn get_word_pos(&self) -> u128 {
                 let buf_start_block = {
-                    let buf_end_block = self.rng.core.state.get_stream_param(STREAM_PARAM_BLOCK);
+                    let buf_end_block = self.rng.core.state.get_block_pos();
                     u64::wrapping_sub(buf_end_block, BUF_BLOCKS.into())
                 };
                 let (buf_offset_blocks, block_offset_words) = {
@@ -219,7 +218,7 @@ macro_rules! chacha_impl {
                 self.rng
                     .core
                     .state
-                    .set_stream_param(STREAM_PARAM_BLOCK, block);
+                    .set_block_pos(block);
                 self.rng.generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
             }
 
@@ -239,11 +238,29 @@ macro_rules! chacha_impl {
                 self.rng
                     .core
                     .state
-                    .set_stream_param(STREAM_PARAM_NONCE, stream);
+                    .set_nonce(stream);
                 if self.rng.index() != 64 {
                     let wp = self.get_word_pos();
                     self.set_word_pos(wp);
                 }
+            }
+
+            /// Get the stream number.
+            #[inline]
+            pub fn get_stream(&self) -> u64 {
+                self.rng
+                    .core
+                    .state
+                    .get_nonce()
+            }
+
+            /// Get the seed.
+            #[inline]
+            pub fn get_seed(&self) -> [u8; 32] {
+                self.rng
+                    .core
+                    .state
+                    .get_seed()
             }
         }
 
@@ -259,23 +276,128 @@ macro_rules! chacha_impl {
 
         impl PartialEq<$ChaChaXRng> for $ChaChaXRng {
             fn eq(&self, rhs: &$ChaChaXRng) -> bool {
-                self.rng.core.state.stream64_eq(&rhs.rng.core.state)
-                    && self.get_word_pos() == rhs.get_word_pos()
+                let a: $abst::$ChaChaXRng = self.into();
+                let b: $abst::$ChaChaXRng = rhs.into();
+                a == b
             }
         }
         impl Eq for $ChaChaXRng {}
+
+        #[cfg(feature = "serde1")]
+        impl Serialize for $ChaChaXRng {
+            fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+            where S: Serializer {
+                $abst::$ChaChaXRng::from(self).serialize(s)
+            }
+        }
+        #[cfg(feature = "serde1")]
+        impl<'de> Deserialize<'de> for $ChaChaXRng {
+            fn deserialize<D>(d: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+                $abst::$ChaChaXRng::deserialize(d).map(|x| Self::from(&x))
+            }
+        }
+
+        mod $abst {
+            #[cfg(feature = "serde1")] use serde::{Serialize, Deserialize};
+
+            // The abstract state of a ChaCha stream, independent of implementation choices. The
+            // comparison and serialization of this object is considered a semver-covered part of
+            // the API.
+            #[derive(Debug, PartialEq, Eq)]
+            #[cfg_attr(
+                feature = "serde1",
+                derive(Serialize, Deserialize),
+            )]
+            pub(crate) struct $ChaChaXRng {
+                seed: [u8; 32],
+                stream: u64,
+                word_pos: u128,
+            }
+
+            impl From<&super::$ChaChaXRng> for $ChaChaXRng {
+                // Forget all information about the input except what is necessary to determine the
+                // outputs of any sequence of pub API calls.
+                fn from(r: &super::$ChaChaXRng) -> Self {
+                    Self {
+                        seed: r.get_seed(),
+                        stream: r.get_stream(),
+                        word_pos: r.get_word_pos(),
+                    }
+                }
+            }
+
+            impl From<&$ChaChaXRng> for super::$ChaChaXRng {
+                // Construct one of the possible concrete RNGs realizing an abstract state.
+                fn from(a: &$ChaChaXRng) -> Self {
+                    use rand_core::SeedableRng;
+                    let mut r = Self::from_seed(a.seed);
+                    r.set_stream(a.stream);
+                    r.set_word_pos(a.word_pos);
+                    r
+                }
+            }
+        }
     }
 }
 
-chacha_impl!(ChaCha20Core, ChaCha20Rng, 10, "ChaCha with 20 rounds");
-chacha_impl!(ChaCha12Core, ChaCha12Rng, 6, "ChaCha with 12 rounds");
-chacha_impl!(ChaCha8Core, ChaCha8Rng, 4, "ChaCha with 8 rounds");
+chacha_impl!(ChaCha20Core, ChaCha20Rng, 10, "ChaCha with 20 rounds", abstract20);
+chacha_impl!(ChaCha12Core, ChaCha12Rng, 6, "ChaCha with 12 rounds", abstract12);
+chacha_impl!(ChaCha8Core, ChaCha8Rng, 4, "ChaCha with 8 rounds", abstract8);
 
 #[cfg(test)]
 mod test {
     use rand_core::{RngCore, SeedableRng};
 
+    #[cfg(feature = "serde1")] use super::{ChaCha20Rng, ChaCha12Rng, ChaCha8Rng};
+
     type ChaChaRng = super::ChaCha20Rng;
+
+    #[cfg(feature = "serde1")]
+    #[test]
+    fn test_chacha_serde_roundtrip() {
+        let seed = [
+            1, 0, 52, 0, 0, 0, 0, 0, 1, 0, 10, 0, 22, 32, 0, 0, 2, 0, 55, 49, 0, 11, 0, 0, 3, 0, 0, 0, 0,
+            0, 2, 92,
+        ];
+        let mut rng1 = ChaCha20Rng::from_seed(seed);
+        let mut rng2 = ChaCha12Rng::from_seed(seed);
+        let mut rng3 = ChaCha8Rng::from_seed(seed);
+
+        let encoded1 = serde_json::to_string(&rng1).unwrap();
+        let encoded2 = serde_json::to_string(&rng2).unwrap();
+        let encoded3 = serde_json::to_string(&rng3).unwrap();
+
+        let mut decoded1: ChaCha20Rng = serde_json::from_str(&encoded1).unwrap();
+        let mut decoded2: ChaCha12Rng = serde_json::from_str(&encoded2).unwrap();
+        let mut decoded3: ChaCha8Rng = serde_json::from_str(&encoded3).unwrap();
+
+        assert_eq!(rng1, decoded1);
+        assert_eq!(rng2, decoded2);
+        assert_eq!(rng3, decoded3);
+
+        assert_eq!(rng1.next_u32(), decoded1.next_u32());
+        assert_eq!(rng2.next_u32(), decoded2.next_u32());
+        assert_eq!(rng3.next_u32(), decoded3.next_u32());
+    }
+
+    // This test validates that:
+    // 1. a hard-coded serialization demonstrating the format at time of initial release can still
+    //    be deserialized to a ChaChaRng
+    // 2. re-serializing the resultant object produces exactly the original string
+    //
+    // Condition 2 is stronger than necessary: an equivalent serialization (e.g. with field order
+    // permuted, or whitespace differences) would also be admissible, but would fail this test.
+    // However testing for equivalence of serialized data is difficult, and there shouldn't be any
+    // reason we need to violate the stronger-than-needed condition, e.g. by changing the field
+    // definition order.
+    #[cfg(feature = "serde1")]
+    #[test]
+    fn test_chacha_serde_format_stability() {
+        let j = r#"{"seed":[4,8,15,16,23,42,4,8,15,16,23,42,4,8,15,16,23,42,4,8,15,16,23,42,4,8,15,16,23,42,4,8],"stream":27182818284,"word_pos":314159265359}"#;
+        let r: ChaChaRng = serde_json::from_str(&j).unwrap();
+        let j1 = serde_json::to_string(&r).unwrap();
+        assert_eq!(j, j1);
+    }
 
     #[test]
     fn test_chacha_construction() {
