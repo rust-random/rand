@@ -199,6 +199,35 @@ pub trait Distribution<T> {
             phantom: ::core::marker::PhantomData,
         }
     }
+
+    /// Create a distribution of values of 'S' by mapping the output of `Self`
+    /// through the closure `F`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::thread_rng;
+    /// use rand::distributions::{Distribution, Uniform};
+    ///
+    /// let mut rng = thread_rng();
+    ///
+    /// let die = Uniform::new_inclusive(1, 6);
+    /// let even_number = die.map(|num| num % 2 == 0);
+    /// while !even_number.sample(&mut rng) {
+    ///     println!("Still odd; rolling again!");
+    /// }
+    /// ```
+    fn map<F, S>(self, func: F) -> DistMap<Self, F, T, S>
+    where
+        F: Fn(T) -> S,
+        Self: Sized,
+    {
+        DistMap {
+            distr: self,
+            func,
+            phantom: ::core::marker::PhantomData,
+        }
+    }
 }
 
 impl<'a, T, D: Distribution<T>> Distribution<T> for &'a D {
@@ -254,6 +283,28 @@ where
     D: Distribution<T>,
     R: Rng,
 {
+}
+
+/// A distribution of values of type `S` derived from the distribution `D`
+/// by mapping its output of type `T` through the closure `F`.
+///
+/// This `struct` is created by the [`Distribution::map`] method.
+/// See its documentation for more.
+#[derive(Debug)]
+pub struct DistMap<D, F, T, S> {
+    distr: D,
+    func: F,
+    phantom: ::core::marker::PhantomData<fn(T) -> S>,
+}
+
+impl<D, F, T, S> Distribution<S> for DistMap<D, F, T, S>
+where
+    D: Distribution<T>,
+    F: Fn(T) -> S,
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> S {
+        (self.func)(self.distr.sample(rng))
+    }
 }
 
 /// A generic random value distribution, implemented for many primitive types.
@@ -358,6 +409,15 @@ mod tests {
             sum += iter.next().unwrap();
         }
         assert!(0. < sum && sum < 100.);
+    }
+
+    #[test]
+    fn test_distributions_map() {
+        let dist = Uniform::new_inclusive(0, 5).map(|val| val + 15);
+
+        let mut rng = crate::test::rng(212);
+        let val = dist.sample(&mut rng);
+        assert!(val >= 15 && val <= 20);
     }
 
     #[test]

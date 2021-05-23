@@ -12,6 +12,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ### Additions
 - Use const-generics to support arrays of all sizes (#1104)
 - Implement `Clone` and `Copy` for `Alphanumeric` (#1126)
+- Add `Distribution::map` to derive a distribution using a closure (#1129)
 
 ### Other
 - Reorder asserts in `Uniform` float distributions for easier debugging of non-finite arguments
