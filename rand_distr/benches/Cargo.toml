@@ -1,0 +1,22 @@
+[package]
+name = "benches"
+version = "0.0.0"
+authors = ["The Rand Project Developers"]
+license = "MIT OR Apache-2.0"
+description = "Criterion benchmarks of the rand_distr crate"
+edition = "2018"
+publish = false
+
+[workspace]
+
+[dependencies]
+criterion = { version = "0.3", features = ["html_reports"] }
+criterion-cycles-per-byte = "0.1"
+rand = { path = "../../" }
+rand_distr = { path = "../" }
+rand_pcg = { path = "../../rand_pcg/" }
+
+[[bench]]
+name = "distributions"
+path = "src/distributions.rs"
+harness = false
