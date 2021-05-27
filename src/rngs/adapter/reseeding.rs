@@ -14,6 +14,8 @@ use core::mem::size_of;
 
 use rand_core::block::{BlockRng, BlockRngCore};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
+#[cfg(feature = "serde1")]
+use serde::{Deserialize, Serialize};
 
 /// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
 /// ability to reseed it.
@@ -76,6 +78,13 @@ use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 /// [`ReseedingRng::new`]: ReseedingRng::new
 /// [`reseed()`]: ReseedingRng::reseed
 #[derive(Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(
+    feature = "serde1",
+    serde(
+        bound = "for<'x> R: Serialize + Deserialize<'x> + Sized, for<'x> R::Results: Serialize + Deserialize<'x>, for<'x> Rsdr: Serialize + Deserialize<'x>"
+    )
+)]
 pub struct ReseedingRng<R, Rsdr>(BlockRng<ReseedingCore<R, Rsdr>>)
 where
     R: BlockRngCore + SeedableRng,
@@ -148,6 +157,7 @@ where
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct ReseedingCore<R, Rsdr> {
     inner: R,
     reseeder: Rsdr,

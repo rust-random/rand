@@ -20,7 +20,7 @@ include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 # Meta-features:
 default = ["std", "std_rng"]
 nightly = [] # enables performance optimizations requiring nightly rust
-serde1 = ["serde"]
+serde1 = ["serde", "rand_core/serde1"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
 # enables functionality expected to be available on a standard platform.
