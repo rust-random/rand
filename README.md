@@ -139,6 +139,14 @@ unavailable (unless `getrandom` is enabled), large parts of `seq` are
 unavailable (unless `alloc` is enabled), and `thread_rng` and `random` are
 unavailable.
 
+### WASM support
+
+The WASM target `wasm32-unknown-unknown` is not *automatically* supported by
+`rand` or `getrandom`. To solve this, either use a different target such as
+`wasm32-wasi` or add a direct dependancy on `getrandom` with the `js` feature
+(if the target supports JavaScript). See
+[getrandom#WebAssembly support](https://docs.rs/getrandom/latest/getrandom/#webassembly-support).
+
 # License
 
 Rand is distributed under the terms of both the MIT license and the
