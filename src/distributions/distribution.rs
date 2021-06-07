@@ -11,6 +11,8 @@
 
 use crate::Rng;
 use core::iter;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 /// Types (distributions) that can be used to create a random instance of `T`.
 ///
@@ -187,9 +189,27 @@ where
     }
 }
 
+/// `String` sampler
+///
+/// Sampling a `String` of random characters is not quite the same as collecting
+/// a sequence of chars. This trait contains some helpers.
+#[cfg(feature = "alloc")]
+pub trait DistString {
+    /// Append `len` random chars to `string`
+    fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize);
+
+    /// Generate a `String` of `len` random chars
+    #[inline]
+    fn sample_string<R: Rng + ?Sized>(&self, rng: &mut R, len: usize) -> String {
+        let mut s = String::new();
+        self.append_string(rng, &mut s, len);
+        s
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::distributions::{Distribution, Uniform};
+    use crate::distributions::{Alphanumeric, Distribution, Standard, Uniform};
     use crate::Rng;
 
     #[test]
@@ -232,5 +252,21 @@ mod tests {
             count += 1;
         }
         assert_eq!(count, 10);
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_dist_string() {
+        use core::str;
+        use crate::distributions::DistString;
+        let mut rng = crate::test::rng(213);
+
+        let s1 = Alphanumeric.sample_string(&mut rng, 20);
+        assert_eq!(s1.len(), 20);
+        assert_eq!(str::from_utf8(s1.as_bytes()), Ok(s1.as_str()));
+
+        let s2 = Standard.sample_string(&mut rng, 20);
+        assert_eq!(s2.chars().count(), 20);
+        assert_eq!(str::from_utf8(s2.as_bytes()), Ok(s2.as_str()));
     }
 }

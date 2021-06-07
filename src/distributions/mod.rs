@@ -118,6 +118,8 @@ pub mod weighted;
 
 pub use self::bernoulli::{Bernoulli, BernoulliError};
 pub use self::distribution::{Distribution, DistIter, DistMap};
+#[cfg(feature = "alloc")]
+pub use self::distribution::DistString;
 pub use self::float::{Open01, OpenClosed01};
 pub use self::other::Alphanumeric;
 pub use self::slice::Slice;
