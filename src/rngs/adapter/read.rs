@@ -44,7 +44,6 @@ use rand_core::{impls, Error, RngCore};
 /// [`OsRng`]: crate::rngs::OsRng
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Debug)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct ReadRng<R> {
     reader: R,
 }
