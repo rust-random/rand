@@ -97,7 +97,7 @@ impl DistString for Standard {
         // A char is encoded with at most four bytes, thus this reservation is
         // guaranteed to be sufficient. We do not shrink_to_fit afterwards so
         // that repeated usage on the same `String` buffer does not reallocate.
-        s.reserve(s.len() + 4 * len);
+        s.reserve(4 * len);
         s.extend(Distribution::<char>::sample_iter(self, rng).take(len));
     }
 }
@@ -126,7 +126,6 @@ impl DistString for Alphanumeric {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
         unsafe {
             let v = string.as_mut_vec();
-            v.reserve(v.len() + len);
             v.extend(self.sample_iter(rng).take(len));
         }
     }
