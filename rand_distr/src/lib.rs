@@ -75,6 +75,7 @@
 //! - Misc. distributions
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
+//!   - [`Zipf`] distribution
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -115,6 +116,7 @@ pub use self::unit_circle::UnitCircle;
 pub use self::unit_disc::UnitDisc;
 pub use self::unit_sphere::UnitSphere;
 pub use self::weibull::{Error as WeibullError, Weibull};
+pub use self::zipf::{Error as ZipfError, Zipf};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use rand::distributions::{WeightedError, WeightedIndex};
@@ -198,4 +200,4 @@ mod unit_sphere;
 mod utils;
 mod weibull;
 mod ziggurat_tables;
-
+mod zipf;
