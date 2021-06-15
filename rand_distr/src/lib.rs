@@ -76,6 +76,7 @@
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
 //!   - [`Zeta`] distribution
+//!   - [`Zipf`] distribution
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -116,7 +117,7 @@ pub use self::unit_circle::UnitCircle;
 pub use self::unit_disc::UnitDisc;
 pub use self::unit_sphere::UnitSphere;
 pub use self::weibull::{Error as WeibullError, Weibull};
-pub use self::zipf::{Error as ZetaError, Zeta};
+pub use self::zipf::{ZetaError, Zeta, ZipfError, Zipf};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use rand::distributions::{WeightedError, WeightedIndex};
