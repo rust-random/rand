@@ -8,7 +8,7 @@ No binding guarantees can be provided.
 ## Security premises
 
 Rand provides the trait `rand_core::CryptoRng` aka `rand::CryptoRng` as a marker
-trait. Generators implementating `RngCore` *and* `CryptoRng`, and given the
+trait. Generators implementing `RngCore` *and* `CryptoRng`, and given the
 additional constraints that:
 
 -   Instances of seedable RNGs (those implementing `SeedableRng`) are

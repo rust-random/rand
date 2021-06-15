@@ -91,14 +91,14 @@ where
         let i = bits as usize & 0xff;
 
         let u = if symmetric {
-            // Convert to a value in the range [2,4) and substract to get [-1,1)
+            // Convert to a value in the range [2,4) and subtract to get [-1,1)
             // We can't convert to an open range directly, that would require
-            // substracting `3.0 - EPSILON`, which is not representable.
+            // subtracting `3.0 - EPSILON`, which is not representable.
             // It is possible with an extra step, but an open range does not
-            // seem neccesary for the ziggurat algorithm anyway.
+            // seem necessary for the ziggurat algorithm anyway.
             (bits >> 12).into_float_with_exponent(1) - 3.0
         } else {
-            // Convert to a value in the range [1,2) and substract to get (0,1)
+            // Convert to a value in the range [1,2) and subtract to get (0,1)
             (bits >> 12).into_float_with_exponent(0) - (1.0 - core::f64::EPSILON / 2.0)
         };
         let x = u * x_tab[i];

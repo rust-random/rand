@@ -158,7 +158,7 @@ use serde::{Serialize, Deserialize};
 /// println!("{}", sum);
 /// ```
 ///
-/// For a single sample, [`Rng::gen_range`] may be prefered:
+/// For a single sample, [`Rng::gen_range`] may be preferred:
 ///
 /// ```
 /// use rand::Rng;

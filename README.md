@@ -143,7 +143,7 @@ unavailable.
 
 The WASM target `wasm32-unknown-unknown` is not *automatically* supported by
 `rand` or `getrandom`. To solve this, either use a different target such as
-`wasm32-wasi` or add a direct dependancy on `getrandom` with the `js` feature
+`wasm32-wasi` or add a direct dependency on `getrandom` with the `js` feature
 (if the target supports JavaScript). See
 [getrandom#WebAssembly support](https://docs.rs/getrandom/latest/getrandom/#webassembly-support).
 
