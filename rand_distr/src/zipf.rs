@@ -10,7 +10,7 @@
 
 use num_traits::Float;
 use crate::{Distribution, Standard};
-use rand::Rng;
+use rand::{Rng, distributions::OpenClosed01};
 use core::fmt;
 
 /// Samples floating-point numbers according to the Zipf distribution.
@@ -29,7 +29,7 @@ use core::fmt;
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Zipf<F>
-where F: Float, Standard: Distribution<F>
+where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
     a_minus_1: F,
     b: F,
@@ -55,7 +55,7 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 impl<F> Zipf<F>
-where F: Float, Standard: Distribution<F>
+where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
     /// Construct a new `Zipf` distribution with given `a` parameter.
     pub fn new(a: F) -> Result<Zipf<F>, Error> {
@@ -72,12 +72,12 @@ where F: Float, Standard: Distribution<F>
 }
 
 impl<F> Distribution<F> for Zipf<F>
-where F: Float, Standard: Distribution<F>
+where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         // This is based on the numpy implementation.
         loop {
-            let u = F::one() - rng.sample(Standard);
+            let u = rng.sample(OpenClosed01);
             let v = rng.sample(Standard);
             let x = u.powf(-F::one() / self.a_minus_1).floor();
 
