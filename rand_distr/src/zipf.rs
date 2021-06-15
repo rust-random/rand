@@ -6,36 +6,36 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Zipf distribution.
+//! The Zeta and related distributions.
 
 use num_traits::Float;
 use crate::{Distribution, Standard};
 use rand::{Rng, distributions::OpenClosed01};
 use core::fmt;
 
-/// Samples floating-point numbers according to the Zipf distribution.
+/// Samples floating-point numbers according to the zeta distribution.
 ///
-/// The Zipf distribution (also known as the zeta distribution) is a continuous
-/// probability distribution that satisfies Zipf’s law: the frequency of an item
-/// is inversely proportional to its rank in a frequency table.
+/// The zeta distribution is a continuous probability distribution that
+/// satisfies Zipf’s law: the frequency of an item is inversely proportional to
+/// its rank in a frequency table. It is a limit of the Zipf distribution.
 ///
 /// # Example
 /// ```
 /// use rand::prelude::*;
-/// use rand_distr::Zipf;
+/// use rand_distr::Zeta;
 ///
-/// let val: f64 = thread_rng().sample(Zipf::new(1.5).unwrap());
+/// let val: f64 = thread_rng().sample(Zeta::new(1.5).unwrap());
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct Zipf<F>
+pub struct Zeta<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
     a_minus_1: F,
     b: F,
 }
 
-/// Error type returned from `Zipf::new`.
+/// Error type returned from `Zeta::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `a <= 1` or `nan`.
@@ -45,7 +45,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            Error::ATooSmall => "a <= 0 or is NaN in Zipf distribution",
+            Error::ATooSmall => "a <= 0 or is NaN in Zeta distribution",
         })
     }
 }
@@ -54,24 +54,24 @@ impl fmt::Display for Error {
 #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}
 
-impl<F> Zipf<F>
+impl<F> Zeta<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
-    /// Construct a new `Zipf` distribution with given `a` parameter.
-    pub fn new(a: F) -> Result<Zipf<F>, Error> {
+    /// Construct a new `Zeta` distribution with given `a` parameter.
+    pub fn new(a: F) -> Result<Zeta<F>, Error> {
         if !(a > F::one()) {
             return Err(Error::ATooSmall);
         }
         let a_minus_1 = a - F::one();
         let two = F::one() + F::one();
-        Ok(Zipf {
+        Ok(Zeta {
             a_minus_1,
             b: two.powf(a_minus_1),
         })
     }
 }
 
-impl<F> Distribution<F> for Zipf<F>
+impl<F> Distribution<F> for Zeta<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
@@ -100,19 +100,19 @@ mod tests {
     #[test]
     #[should_panic]
     fn invalid() {
-        Zipf::new(1.).unwrap();
+        Zeta::new(1.).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn nan() {
-        Zipf::new(core::f64::NAN).unwrap();
+        Zeta::new(core::f64::NAN).unwrap();
     }
 
     #[test]
     fn sample() {
         let a = 2.0;
-        let d = Zipf::new(a).unwrap();
+        let d = Zeta::new(a).unwrap();
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);
@@ -133,10 +133,10 @@ mod tests {
             assert_eq!(buf, expected);
         }
 
-        test_samples(Zipf::new(1.5).unwrap(), 0f32, &[
+        test_samples(Zeta::new(1.5).unwrap(), 0f32, &[
             1.0, 2.0, 1.0, 1.0,
         ]);
-        test_samples(Zipf::new(2.0).unwrap(), 0f64, &[
+        test_samples(Zeta::new(2.0).unwrap(), 0f64, &[
             2.0, 1.0, 1.0, 1.0,
         ]);
     }
