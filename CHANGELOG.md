@@ -678,4 +678,4 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 
 ## [0.10-pre] - 2014-03-02
 ### Added
-- Seperate `rand` out of the standard library
+- Separate `rand` out of the standard library

@@ -142,7 +142,7 @@ impl BlockRngCore for Hc128Core {
         let dd = (cc + 16) % 512;
         let ee = cc.wrapping_sub(16) % 512;
         // These asserts let the compiler optimize out the bounds checks.
-        // Some of them may be superflous, and that's fine:
+        // Some of them may be superfluous, and that's fine:
         // they'll be optimized out if that's the case.
         assert!(ee + 15 < 512);
         assert!(cc + 15 < 512);
@@ -238,7 +238,7 @@ impl Hc128Core {
         let dd = (cc + 16) % 512;
         let ee = cc.wrapping_sub(16) % 512;
         // These asserts let the compiler optimize out the bounds checks.
-        // Some of them may be superflous, and that's fine:
+        // Some of them may be superfluous, and that's fine:
         // they'll be optimized out if that's the case.
         assert!(ee + 15 < 512);
         assert!(cc + 15 < 512);

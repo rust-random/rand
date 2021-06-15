@@ -105,7 +105,7 @@ impl Distribution<u64> for Binomial {
         // random variate generation. Commun. ACM 31, 2 (February 1988),
         // 216-222. http://dx.doi.org/10.1145/42372.42381
 
-        // Threshold for prefering the BINV algorithm. The paper suggests 10,
+        // Threshold for preferring the BINV algorithm. The paper suggests 10,
         // Ranlib uses 30, and GSL uses 14.
         const BINV_THRESHOLD: f64 = 10.;
 
@@ -242,7 +242,7 @@ impl Distribution<u64> for Binomial {
                     }
                 }
 
-                // Step 5.2: Squeezing. Check the value of ln(v) againts upper and
+                // Step 5.2: Squeezing. Check the value of ln(v) against upper and
                 // lower bound of ln(f(y)).
                 let k = k as f64;
                 let rho = (k / npq) * ((k * (k / 3. + 0.625) + 1. / 6.) / npq + 0.5);

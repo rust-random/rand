@@ -49,7 +49,7 @@ pub struct Bernoulli {
 // `f64` only has 53 bits of precision, and the next largest value of `p` will
 // result in `2^64 - 2048`.
 //
-// Also there is a 100% theoretical concern: if someone consistenly wants to
+// Also there is a 100% theoretical concern: if someone consistently wants to
 // generate `true` using the Bernoulli distribution (i.e. by using a probability
 // of `1.0`), just using `u64::MAX` is not enough. On average it would return
 // false once every 2^64 iterations. Some people apparently care about this
