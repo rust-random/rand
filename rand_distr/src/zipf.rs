@@ -15,9 +15,7 @@ use core::fmt;
 
 /// Samples floating-point numbers according to the zeta distribution.
 ///
-/// The zeta distribution is a continuous probability distribution that
-/// satisfies Zipf’s law: the frequency of an item is inversely proportional to
-/// its rank in a frequency table. It is a limit of the Zipf distribution.
+/// The zeta distribution is a limit of the Zipf distribution.
 ///
 /// # Example
 /// ```
