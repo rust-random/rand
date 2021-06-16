@@ -142,6 +142,8 @@ impl<F> Zipf<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F> {
     /// Construct a new `Zipf` distribution for a set with `n` elements and a
     /// frequency rank exponent `s`.
+    ///
+    /// For large `n`, rounding may occur to fit the number into the float type.
     #[inline]
     pub fn new(n: u64, s: F) -> Result<Zipf<F>, ZipfError> {
         if !(s >= F::zero()) {
@@ -150,7 +152,7 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F> {
         if n < 1 {
             return Err(ZipfError::NTooSmall);
         }
-        let n = F::from(n).unwrap();  // FIXME
+        let n = F::from(n).unwrap();  // This does not fail.
         let t = if s != F::one() {
             (n.powf(F::one() - s) - s) / (F::one() - s)
         } else {
