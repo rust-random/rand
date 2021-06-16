@@ -187,15 +187,13 @@ where F: Float, Standard: Distribution<F>
         loop {
             let inv_b = self.inv_cdf(rng.sample(Standard));
             let x = (inv_b + one).floor();
-            let numer = x.powf(-self.s);
-            let denom = if x <= one {
-                one / self.t
-            } else {
-                inv_b.powf(-self.s) / self.t
+            let mut ratio = x.powf(-self.s) * self.t;
+            if x > one {
+                ratio = ratio * inv_b.powf(self.s)
             };
 
             let y = rng.sample(Standard);
-            if y < numer / denom {
+            if y < ratio {
                 return x;
             }
         }
