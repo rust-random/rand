@@ -56,6 +56,7 @@ impl<F> Zeta<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
     /// Construct a new `Zeta` distribution with given `a` parameter.
+    #[inline]
     pub fn new(a: F) -> Result<Zeta<F>, ZetaError> {
         if !(a > F::one()) {
             return Err(ZetaError::ATooSmall);
@@ -72,6 +73,7 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 impl<F> Distribution<F> for Zeta<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
+    #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         // This is based on the numpy implementation.
         loop {
