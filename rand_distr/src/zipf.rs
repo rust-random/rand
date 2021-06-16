@@ -110,7 +110,7 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 /// ```
 #[derive(Clone, Copy, Debug)]
 pub struct Zipf<F>
-where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F> {
+where F: Float, Standard: Distribution<F> {
     n: F,
     s: F,
     t: F,
@@ -139,7 +139,7 @@ impl fmt::Display for ZipfError {
 impl std::error::Error for ZipfError {}
 
 impl<F> Zipf<F>
-where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F> {
+where F: Float, Standard: Distribution<F> {
     /// Construct a new `Zipf` distribution for a set with `n` elements and a
     /// frequency rank exponent `s`.
     ///
@@ -179,7 +179,7 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F> {
 }
 
 impl<F> Distribution<F> for Zipf<F>
-where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
+where F: Float, Standard: Distribution<F>
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
