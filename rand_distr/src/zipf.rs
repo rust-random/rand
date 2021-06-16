@@ -142,6 +142,7 @@ impl<F> Zipf<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F> {
     /// Construct a new `Zipf` distribution for a set with `n` elements and a
     /// frequency rank exponent `s`.
+    #[inline]
     pub fn new(n: u64, s: F) -> Result<Zipf<F>, ZipfError> {
         if !(s >= F::zero()) {
             return Err(ZipfError::STooSmall);
@@ -149,21 +150,28 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F> {
         if n < 1 {
             return Err(ZipfError::NTooSmall);
         }
-        let n = F::from(n).unwrap();
+        let n = F::from(n).unwrap();  // FIXME
+        let t = if s != F::one() {
+            (n.powf(F::one() - s) - s) / (F::one() - s)
+        } else {
+            F::one() + n.ln()
+        };
         Ok(Zipf {
-            // FIXME: properly deal with `s == 1`
-            n, s, t: (n.powf(F::one() - s) - s) / (F::one() - s)
+            n, s, t
         })
     }
 
     /// Inverse cumulative density function
+    #[inline]
     fn inv_cdf(&self, p: F) -> F {
         let one = F::one();
         let pt = p * self.t;
         if pt <= one {
             pt
-        } else {
+        } else if self.s != F::one() {
             (pt * (one - self.s) + self.s).powf(one / (one - self.s))
+        } else {
+            pt.exp()
         }
     }
 }
@@ -171,6 +179,7 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F> {
 impl<F> Distribution<F> for Zipf<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
+    #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         let one = F::one();
         loop {
