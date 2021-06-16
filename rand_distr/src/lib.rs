@@ -56,6 +56,8 @@
 //!   - [`Poisson`] distribution
 //!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
 //!   - [`Weibull`] distribution
+//!   - [`Zeta`] distribution
+//!   - [`Zipf`] distribution
 //! - Gamma and derived distributions:
 //!   - [`Gamma`] distribution
 //!   - [`ChiSquared`] distribution
@@ -75,8 +77,6 @@
 //! - Misc. distributions
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
-//!   - [`Zeta`] distribution
-//!   - [`Zipf`] distribution
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
