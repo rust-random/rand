@@ -20,11 +20,7 @@ It is worth mentioning the [statrs] crate which provides similar functionality
 along with various support functions, including PDF and CDF computation. In
 contrast, this `rand_distr` crate focuses on sampling from distributions.
 
-If the `std` default feature is enabled, `rand_distr` implements the `Error`
-trait for its error types.
-
-The default `alloc` feature (which is implied by the `std` feature) is required
-for some distributions (in particular, `Dirichlet` and `WeightedAliasIndex`).
+## Portability and libm
 
 The floating point functions from `num_traits` and `libm` are used to support
 `no_std` environments and ensure reproducibility. If the floating point
@@ -32,7 +28,16 @@ functions from `std` are prefered, which may provide better accuracy and
 performance but may produce different random values, the `std_math` feature
 can be enabled.
 
-Links:
+## Crate features
+
+-   `std` (enabled by default): `rand_distr` implements the `Error` trait for
+    its error types. Implies `alloc` and `rand/std`.
+-   `alloc` (enabled by default): required for some distributions when not using
+    `std` (in particular, `Dirichlet` and `WeightedAliasIndex`).
+-   `std_math`: see above on portability and libm
+-   `serde1`: implement (de)seriaialization using `serde`
+
+## Links
 
 -   [API documentation (master)](https://rust-random.github.io/rand/rand_distr)
 -   [API documentation (docs.rs)](https://docs.rs/rand_distr)
