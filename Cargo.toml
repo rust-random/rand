@@ -36,7 +36,7 @@ getrandom = ["rand_core/getrandom"]
 simd_support = ["packed_simd"]
 
 # Option (enabled by default): enable StdRng
-std_rng = ["rand_chacha", "rand_hc"]
+std_rng = ["rand_chacha"]
 
 # Option: enable SmallRng
 small_rng = []
@@ -58,6 +58,7 @@ members = [
 rand_core = { path = "rand_core", version = "0.6.0" }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
+rand_chacha = { path = "rand_chacha", version = "0.3.0", default-features = false, optional = true }
 
 [dependencies.packed_simd]
 # NOTE: so far no version works reliably due to dependence on unstable features
@@ -69,13 +70,6 @@ features = ["into_bits"]
 [target.'cfg(unix)'.dependencies]
 # Used for fork protection (reseeding.rs)
 libc = { version = "0.2.22", optional = true, default-features = false }
-
-# Emscripten does not support 128-bit integers, which are used by ChaCha code.
-# We work around this by using a different RNG.
-[target.'cfg(not(target_os = "emscripten"))'.dependencies]
-rand_chacha = { path = "rand_chacha", version = "0.3.0", default-features = false, optional = true }
-[target.'cfg(target_os = "emscripten")'.dependencies]
-rand_hc = { path = "rand_hc", version = "0.3.0", optional = true }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "0.3.0" }
