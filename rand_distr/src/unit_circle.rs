@@ -29,6 +29,7 @@ use rand::Rng;
 ///       NBS Appl. Math. Ser., No. 12. Washington, DC: U.S. Government Printing
 ///       Office, pp. 36-38.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnitCircle;
 
 impl<F: Float + SampleUniform> Distribution<[F; 2]> for UnitCircle {

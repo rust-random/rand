@@ -27,6 +27,7 @@ impl std::error::Error for Error {}
 
 /// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution)
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct NormalInverseGaussian<F>
 where
     F: Float,

@@ -32,6 +32,7 @@ use core::fmt;
 ///
 /// [`Pert`]: crate::Pert
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Triangular<F>
 where F: Float, Standard: Distribution<F>
 {

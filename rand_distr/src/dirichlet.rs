@@ -33,6 +33,7 @@ use alloc::{boxed::Box, vec, vec::Vec};
 /// ```
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Dirichlet<F>
 where
     F: Float,

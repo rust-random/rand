@@ -26,6 +26,7 @@ use core::fmt;
 /// println!("{} is from a Geometric(0.25) distribution", v);
 /// ```
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Geometric
 {
     p: f64,
@@ -151,6 +152,7 @@ impl Distribution<u64> for Geometric
 /// println!("{} is from a Geometric(0.5) distribution", v);
 /// ```
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct StandardGeometric;
 
 impl Distribution<u64> for StandardGeometric {

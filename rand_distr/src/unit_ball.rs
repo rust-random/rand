@@ -25,6 +25,7 @@ use rand::Rng;
 /// println!("{:?} is from the unit ball.", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnitBall;
 
 impl<F: Float + SampleUniform> Distribution<[F; 3]> for UnitBall {

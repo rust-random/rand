@@ -37,6 +37,7 @@ use core::fmt;
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct StandardNormal;
 
 impl Distribution<f32> for StandardNormal {
@@ -112,6 +113,7 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// [`StandardNormal`]: crate::StandardNormal
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Normal<F>
 where F: Float, StandardNormal: Distribution<F>
 {
@@ -226,6 +228,7 @@ where F: Float, StandardNormal: Distribution<F>
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct LogNormal<F>
 where F: Float, StandardNormal: Distribution<F>
 {
