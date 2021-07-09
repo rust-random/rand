@@ -27,6 +27,7 @@ impl std::error::Error for Error {}
 
 /// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution)
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct InverseGaussian<F>
 where
     F: Float,

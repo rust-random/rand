@@ -92,7 +92,7 @@ jobs:
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc,getrandom
       - name: Test rand_distr
         run: |
-          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml
+          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --features=serde1
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --no-default-features
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --no-default-features --features=std,std_math
       - name: Test rand_pcg
@@ -134,7 +134,7 @@ jobs:
           cross test --no-fail-fast --target ${{ matrix.target }} --features=serde1,log,small_rng
           cross test --no-fail-fast --target ${{ matrix.target }} --examples
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
-          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --features=serde1
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde1
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_hc/Cargo.toml

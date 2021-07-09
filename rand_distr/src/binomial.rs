@@ -29,6 +29,7 @@ use core::cmp::Ordering;
 /// println!("{} is from a binomial distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Binomial {
     /// Number of trials.
     n: u64,

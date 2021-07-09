@@ -172,6 +172,8 @@ use serde::{Serialize, Deserialize};
 /// [`Rng::gen_range`]: Rng::gen_range
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", serde(bound(serialize = "X::Sampler: Serialize")))]
+#[cfg_attr(feature = "serde1", serde(bound(deserialize = "X::Sampler: Deserialize<'de>")))]
 pub struct Uniform<X: SampleUniform>(X::Sampler);
 
 impl<X: SampleUniform> Uniform<X> {

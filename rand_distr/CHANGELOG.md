@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make sure all distributions and their error types implement `Error`, `Display`, `Clone`,
  `Copy`, `PartialEq` and `Eq` as appropriate (#1126)
 - Port benchmarks to use Criterion crate (#1116)
+- Support serde for distributions (#1141)
 
 ## [0.4.0] - 2020-12-18
 - Bump `rand` to v0.8.0

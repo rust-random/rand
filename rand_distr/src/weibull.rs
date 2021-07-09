@@ -24,6 +24,7 @@ use core::fmt;
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Weibull<F>
 where F: Float, OpenClosed01: Distribution<F>
 {

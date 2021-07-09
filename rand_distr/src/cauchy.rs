@@ -32,6 +32,7 @@ use core::fmt;
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Cauchy<F>
 where F: Float + FloatConst, Standard: Distribution<F>
 {

@@ -21,6 +21,8 @@ use num_traits::Float;
 use crate::{Distribution, Exp, Exp1, Open01};
 use rand::Rng;
 use core::fmt;
+#[cfg(feature = "serde1")]
+use serde::{Serialize, Deserialize};
 
 /// The Gamma distribution `Gamma(shape, scale)` distribution.
 ///
@@ -53,6 +55,7 @@ use core::fmt;
 ///       (September 2000), 363-372.
 ///       DOI:[10.1145/358407.358414](https://doi.acm.org/10.1145/358407.358414)
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Gamma<F>
 where
     F: Float,
@@ -89,6 +92,7 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum GammaRepr<F>
 where
     F: Float,
@@ -116,6 +120,7 @@ where
 /// See `Gamma` for sampling from a Gamma distribution with general
 /// shape parameters.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct GammaSmallShape<F>
 where
     F: Float,
@@ -131,6 +136,7 @@ where
 /// See `Gamma` for sampling from a Gamma distribution with general
 /// shape parameters.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct GammaLargeShape<F>
 where
     F: Float,
@@ -275,6 +281,7 @@ where
 /// println!("{} is from a χ²(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct ChiSquared<F>
 where
     F: Float,
@@ -287,6 +294,7 @@ where
 
 /// Error type returned from `ChiSquared::new` and `StudentT::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub enum ChiSquaredError {
     /// `0.5 * k <= 0` or `nan`.
     DoFTooSmall,
@@ -307,6 +315,7 @@ impl fmt::Display for ChiSquaredError {
 impl std::error::Error for ChiSquaredError {}
 
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum ChiSquaredRepr<F>
 where
     F: Float,
@@ -377,6 +386,7 @@ where
 /// println!("{} is from an F(2, 32) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct FisherF<F>
 where
     F: Float,
@@ -393,6 +403,7 @@ where
 
 /// Error type returned from `FisherF::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub enum FisherFError {
     /// `m <= 0` or `nan`.
     MTooSmall,
@@ -462,6 +473,7 @@ where
 /// println!("{} is from a t(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct StudentT<F>
 where
     F: Float,
@@ -511,6 +523,7 @@ where
 /// Communications of the ACM 21, 317-322.
 /// https://doi.org/10.1145/359460.359482
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum BetaAlgorithm<N> {
     BB(BB<N>),
     BC(BC<N>),
@@ -518,6 +531,7 @@ enum BetaAlgorithm<N> {
 
 /// Algorithm BB for `min(alpha, beta) > 1`.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct BB<N> {
     alpha: N,
     beta: N,
@@ -526,6 +540,7 @@ struct BB<N> {
 
 /// Algorithm BC for `min(alpha, beta) <= 1`.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct BC<N> {
     alpha: N,
     beta: N,
@@ -546,6 +561,7 @@ struct BC<N> {
 /// println!("{} is from a Beta(2, 5) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Beta<F>
 where
     F: Float,
@@ -557,6 +573,7 @@ where
 
 /// Error type returned from `Beta::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub enum BetaError {
     /// `alpha <= 0` or `nan`.
     AlphaTooSmall,

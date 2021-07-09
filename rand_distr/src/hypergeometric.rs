@@ -6,6 +6,7 @@ use rand::distributions::uniform::Uniform;
 use core::fmt;
 
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 enum SamplingMethod {
     InverseTransform{ initial_p: f64, initial_x: i64 },
     RejectionAcceptance{
@@ -43,6 +44,7 @@ enum SamplingMethod {
 /// println!("{} is from a hypergeometric distribution", v);
 /// ```
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Hypergeometric {
     n1: u64,
     n2: u64,

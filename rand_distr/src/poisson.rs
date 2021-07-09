@@ -29,6 +29,7 @@ use core::fmt;
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Poisson<F>
 where F: Float + FloatConst, Standard: Distribution<F>
 {
