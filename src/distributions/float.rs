@@ -78,7 +78,7 @@ pub struct Open01;
 pub trait IntoFloat {
     type F;
 
-    /// Helper method to combine the fraction and a contant exponent into a
+    /// Helper method to combine the fraction and a constant exponent into a
     /// float.
     ///
     /// Only the least significant bits of `self` may be set, 23 for `f32` and

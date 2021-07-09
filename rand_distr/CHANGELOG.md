@@ -4,12 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.4.1] - 2021-06-15
+- Empirically test PDF of normal distribution (#1121)
 - Correctly document `no_std` support (#1100)
 - Add `std_math` feature to prefer `std` over `libm` for floating point math (#1100)
 - Add mean and std_dev accessors to Normal (#1114)
 - Make sure all distributions and their error types implement `Error`, `Display`, `Clone`,
  `Copy`, `PartialEq` and `Eq` as appropriate (#1126)
+- Port benchmarks to use Criterion crate (#1116)
 - Support serde for distributions (#1141)
 
 ## [0.4.0] - 2020-12-18

@@ -110,7 +110,7 @@ where F: Float + FloatConst, Standard: Distribution<F>
                 loop {
                     // draw from the Cauchy distribution
                     comp_dev = rng.sample(cauchy);
-                    // shift the peak of the comparison ditribution
+                    // shift the peak of the comparison distribution
                     result = self.sqrt_2lambda * comp_dev + self.lambda;
                     // repeat the drawing until we are in the range of possible values
                     if result >= F::zero() {

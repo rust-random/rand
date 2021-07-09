@@ -24,7 +24,7 @@ contrast, this `rand_distr` crate focuses on sampling from distributions.
 
 The floating point functions from `num_traits` and `libm` are used to support
 `no_std` environments and ensure reproducibility. If the floating point
-functions from `std` are prefered, which may provide better accuracy and
+functions from `std` are preferred, which may provide better accuracy and
 performance but may produce different random values, the `std_math` feature
 can be enabled.
 

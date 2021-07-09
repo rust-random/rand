@@ -95,7 +95,7 @@ pub trait BlockRngCore {
 /// [`fill_bytes`] / [`try_fill_bytes`] is called on a large array. These methods
 /// also handle the bookkeeping of when to generate a new batch of values.
 ///
-/// No whole generated `u32` values are thown away and all values are consumed
+/// No whole generated `u32` values are thrown away and all values are consumed
 /// in-order. [`next_u32`] simply takes the next available `u32` value.
 /// [`next_u64`] is implemented by combining two `u32` values, least
 /// significant first. [`fill_bytes`] and [`try_fill_bytes`] consume a whole
