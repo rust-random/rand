@@ -138,6 +138,8 @@ macro_rules! wmul_impl_usize {
         }
     };
 }
+#[cfg(target_pointer_width = "16")]
+wmul_impl_usize! { u16 }
 #[cfg(target_pointer_width = "32")]
 wmul_impl_usize! { u32 }
 #[cfg(target_pointer_width = "64")]
