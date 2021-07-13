@@ -186,7 +186,7 @@ jobs:
             target: avr-unknown-gnu-atmega328
             override: true
       - name: Build top-level only
-        run: cargo build --target=avr-unknown-gnu-atmega328 --no-default-features
+        run: cargo build -Z build-std=core --target=avr-unknown-gnu-atmega328 --no-default-features
 
   test-ios:
     runs-on: macos-latest
