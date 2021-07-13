@@ -8,6 +8,10 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.8.5] - unreleased
+### Fixes
+-  Fix build on non-32/64-bit architectures (#1144)
+
 ## [0.8.4] - 2021-06-15
 ### Additions
 - Use const-generics to support arrays of all sizes (#1104)
