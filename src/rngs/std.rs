@@ -10,13 +10,9 @@
 
 use crate::{CryptoRng, Error, RngCore, SeedableRng};
 
-#[cfg(all(any(test, feature = "std"), not(target_os = "emscripten")))]
 pub(crate) use rand_chacha::ChaCha12Core as Core;
-#[cfg(all(any(test, feature = "std"), target_os = "emscripten"))]
-pub(crate) use rand_hc::Hc128Core as Core;
 
-#[cfg(not(target_os = "emscripten"))] use rand_chacha::ChaCha12Rng as Rng;
-#[cfg(target_os = "emscripten")] use rand_hc::Hc128Rng as Rng;
+use rand_chacha::ChaCha12Rng as Rng;
 
 /// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
 /// on the current platform, to be statistically strong and unpredictable
