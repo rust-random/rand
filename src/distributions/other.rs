@@ -32,16 +32,11 @@ use std::mem::{self, MaybeUninit};
 /// # Example
 ///
 /// ```
-/// use std::iter;
 /// use rand::{Rng, thread_rng};
 /// use rand::distributions::Alphanumeric;
 ///
 /// let mut rng = thread_rng();
-/// let chars: String = iter::repeat(())
-///         .map(|()| rng.sample(Alphanumeric))
-///         .map(char::from)
-///         .take(7)
-///         .collect();
+/// let chars: String = (0..7).map(|_| rng.sample(Alphanumeric) as char).collect();
 /// println!("Random chars: {}", chars);
 /// ```
 ///
