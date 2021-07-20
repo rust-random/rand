@@ -218,12 +218,14 @@ gen_range_int!(gen_range_i64_low, i64, -1i64, 0);
 gen_range_int!(gen_range_i128_low, i128, -1i128, 0);
 
 // These were the initially tested ranges. They are likely to see fewer
-// rejections than the low tests.
-gen_range_int!(gen_range_i8_high, i8, -20i8, 100);
-gen_range_int!(gen_range_i16_high, i16, -500i16, 2000);
-gen_range_int!(gen_range_i32_high, i32, -200_000_000i32, 800_000_000);
-gen_range_int!(gen_range_i64_high, i64, 3i64, 123_456_789_123);
-gen_range_int!(gen_range_i128_high, i128, -12345678901234i128, 123_456_789_123_456_789);
+// rejections than the low tests. The starting range here is
+// `2^(N - 1) + 1`, the region with the highest rejection chance for
+// modulo/bitmask/leading_zeros methods.
+gen_range_int!(gen_range_i8_high, i8, i8::min_value(), 1);
+gen_range_int!(gen_range_i16_high, i16, i16::min_value(), 1);
+gen_range_int!(gen_range_i32_high, i32, i32::min_value(), 1);
+gen_range_int!(gen_range_i64_high, i64, i64::min_value(), 1);
+gen_range_int!(gen_range_i128_high, i128, i128::min_value(), 1);
 
 // construct and sample from a floating-point range
 macro_rules! gen_range_float {

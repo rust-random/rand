@@ -529,26 +529,28 @@ macro_rules! uniform_int_impl {
                     return rng.gen();
                 }
 
-                let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
-                    // Using a modulus is faster than the approximation for
-                    // i8 and i16. I suppose we trade the cost of one
-                    // modulus for near-perfect branch prediction.
-                    let unsigned_max: $u_large = ::core::$u_large::MAX;
-                    let ints_to_reject = (unsigned_max - range + 1) % range;
-                    unsigned_max - ints_to_reject
-                } else {
-                    // conservative but fast approximation. `- 1` is necessary to allow the
-                    // same comparison without bias.
-                    (range << range.leading_zeros()).wrapping_sub(1)
-                };
+                // we use the "Debiased Int Mult (t-opt, m-opt)" rejection sampling method
+                // described here https://www.pcg-random.org/posts/bounded-rands.html
+                // and here https://github.com/imneme/bounded-rands
 
-                loop {
-                    let v: $u_large = rng.gen();
-                    let (hi, lo) = v.wmul(range);
-                    if lo <= zone {
-                        return low.wrapping_add(hi as $ty);
+                let (mut hi, mut lo) = rng.gen::<$u_large>().wmul(range);
+                // this shortcut works best with small ranges
+                if lo < range {
+                    let mut threshold = range.wrapping_neg();
+                    // this shortcut works best with large ranges
+                    if threshold >= range {
+                        threshold -= range;
+                        if threshold >= range {
+                            threshold %= range;
+                        }
+                    }
+                    while lo < threshold {
+                        let (new_hi, new_lo) = rng.gen::<$u_large>().wmul(range);
+                        hi = new_hi;
+                        lo = new_lo;
                     }
                 }
+                low.wrapping_add(hi as $ty)
             }
         }
     };
