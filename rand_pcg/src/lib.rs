@@ -37,9 +37,8 @@
 #![deny(missing_debug_implementations)]
 #![no_std]
 
-#[cfg(not(target_os = "emscripten"))] mod pcg128;
+mod pcg128;
 mod pcg64;
 
-#[cfg(not(target_os = "emscripten"))]
 pub use self::pcg128::{Lcg128Xsl64, Mcg128Xsl64, Pcg64, Pcg64Mcg};
 pub use self::pcg64::{Lcg64Xsh32, Pcg32};

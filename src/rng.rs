@@ -389,12 +389,8 @@ macro_rules! impl_fill {
     }
 }
 
-impl_fill!(u16, u32, u64, usize,);
-#[cfg(not(target_os = "emscripten"))]
-impl_fill!(u128);
-impl_fill!(i8, i16, i32, i64, isize,);
-#[cfg(not(target_os = "emscripten"))]
-impl_fill!(i128);
+impl_fill!(u16, u32, u64, usize, u128,);
+impl_fill!(i8, i16, i32, i64, isize, i128,);
 
 #[cfg(feature = "min_const_gen")]
 impl<T, const N: usize> Fill for [T; N]

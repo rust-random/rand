@@ -43,6 +43,5 @@ pub mod alias_method {
     impl_weight!(f64, f32,);
     impl_weight!(u8, u16, u32, u64, usize,);
     impl_weight!(i8, i16, i32, i64, isize,);
-    #[cfg(not(target_os = "emscripten"))]
     impl_weight!(u128, i128,);
 }
