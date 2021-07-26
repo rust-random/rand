@@ -128,6 +128,8 @@ Additionally, these features configure Rand:
 -   `nightly` enables some optimizations requiring nightly Rust
 -   `simd_support` (experimental) enables sampling of SIMD values
     (uniformly random SIMD integers and floats), requiring nightly Rust
+-   `min_const_gen` enables generating random arrays of 
+    any size using min-const-generics, requiring Rust ≥ 1.51.
 
 Note that nightly features are not stable and therefore not all library and
 compiler versions will be compatible. This is especially true of Rand's
