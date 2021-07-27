@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Made `rand_chacha` propagate the `std` and `getrandom` features down to `rand_core`
+- Made `rand_chacha` propagate the `std` feature down to `rand_core`
 
 ## [0.3.1] - 2021-06-09
 - add getters corresponding to existing setters: `get_seed`, `get_stream` (#1124)

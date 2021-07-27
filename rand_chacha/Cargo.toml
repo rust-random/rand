@@ -26,6 +26,5 @@ serde_json = "1.0"
 [features]
 default = ["std"]
 std = ["ppv-lite86/std", "rand_core/std"]
-getrandom = ["rand_core/getrandom"]
 simd = [] # deprecated
 serde1 = ["serde"]
