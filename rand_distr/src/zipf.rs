@@ -85,14 +85,12 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
         // This is based on https://doi.org/10.1007/978-1-4613-8643-8.
         loop {
             let u = rng.sample(OpenClosed01);
-            let v = rng.sample(Standard);
             let x = u.powf(-F::one() / self.a_minus_1).floor();
-
-            if x < F::one() {
-                continue;
-            }
+            debug_assert!(x >= F::one());
 
             let t = (F::one() + F::one() / x).powf(self.a_minus_1);
+
+            let v = rng.sample(Standard);
             if v * x * (t - F::one()) / (self.b - F::one()) <= t / self.b {
                 return x;
             }
