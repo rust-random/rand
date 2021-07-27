@@ -13,9 +13,14 @@ use crate::{Distribution, Standard};
 use rand::{Rng, distributions::OpenClosed01};
 use core::fmt;
 
-/// Samples floating-point numbers according to the zeta distribution.
+/// Samples integers according to the [zeta distribution].
 ///
-/// The zeta distribution is a limit of the [`Zipf`] distribution.
+/// The zeta distribution is a limit of the [`Zipf`] distribution. Sometimes it
+/// is called one of the following: discrete Pareto, Riemann-Zeta, Zipf, or
+/// Zipf–Estoup distribution.
+///
+/// It has the density function `f(k) = k^(-a) / C(a)` for `k >= 1`, where `a`
+/// is the parameter and `C(a)` is the Riemann zeta function.
 ///
 /// # Example
 /// ```
@@ -25,6 +30,8 @@ use core::fmt;
 /// let val: f64 = thread_rng().sample(Zeta::new(1.5).unwrap());
 /// println!("{}", val);
 /// ```
+///
+/// [zeta distribution]: https://en.wikipedia.org/wiki/Zeta_distribution
 #[derive(Clone, Copy, Debug)]
 pub struct Zeta<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
@@ -75,7 +82,7 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
-        // This is based on the numpy implementation.
+        // This is based on https://doi.org/10.1007/978-1-4613-8643-8.
         loop {
             let u = rng.sample(OpenClosed01);
             let v = rng.sample(Standard);
@@ -93,10 +100,11 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
     }
 }
 
-/// Samples floating-point numbers according to the Zipf distribution.
+/// Samples integers according to the Zipf distribution.
 ///
-/// The samples follow Zipf's law: The frequency of each sample is inversely
-/// proportional to a power of its frequency rank.
+/// The samples follow Zipf's law: The frequency of each sample from a finite
+/// set of size `n` is inversely proportional to a power of its frequency rank
+/// (with exponent `s`).
 ///
 /// For large `n`, this converges to the [`Zeta`] distribution.
 ///
