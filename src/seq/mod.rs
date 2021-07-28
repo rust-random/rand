@@ -710,7 +710,7 @@ mod test {
         let mut nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
         assert_eq!(chars.choose(&mut r), Some(&'l'));
-        assert_eq!(nums.choose_mut(&mut r), Some(&mut 10));
+        assert_eq!(nums.choose_mut(&mut r), Some(&mut 3));
 
         #[cfg(feature = "alloc")]
         assert_eq!(
@@ -718,21 +718,21 @@ mod test {
                 .choose_multiple(&mut r, 8)
                 .cloned()
                 .collect::<Vec<char>>(),
-            &['d', 'm', 'b', 'n', 'c', 'k', 'h', 'e']
+            &['f', 'i', 'd', 'b', 'c', 'm', 'j', 'k']
         );
 
         #[cfg(feature = "alloc")]
-        assert_eq!(chars.choose_weighted(&mut r, |_| 1), Ok(&'f'));
+        assert_eq!(chars.choose_weighted(&mut r, |_| 1), Ok(&'l'));
         #[cfg(feature = "alloc")]
-        assert_eq!(nums.choose_weighted_mut(&mut r, |_| 1), Ok(&mut 5));
+        assert_eq!(nums.choose_weighted_mut(&mut r, |_| 1), Ok(&mut 8));
 
         let mut r = crate::test::rng(414);
         nums.shuffle(&mut r);
-        assert_eq!(nums, [9, 5, 3, 10, 7, 12, 8, 11, 6, 4, 0, 2, 1]);
+        assert_eq!(nums, [10, 11, 8, 7, 4, 6, 12, 5, 3, 0, 9, 2, 1]);
         nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         let res = nums.partial_shuffle(&mut r, 6);
-        assert_eq!(res.0, &mut [7, 4, 8, 6, 9, 3]);
-        assert_eq!(res.1, &mut [0, 1, 2, 12, 11, 5, 10]);
+        assert_eq!(res.0, &mut [6, 10, 7, 2, 0, 8]);
+        assert_eq!(res.1, &mut [11, 1, 12, 3, 4, 5, 9]);
     }
 
     #[derive(Clone)]
@@ -1122,7 +1122,7 @@ mod test {
 
         assert_eq!(choose([].iter().cloned()), None);
         assert_eq!(choose(0..100), Some(33));
-        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(40));
+        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(54));
         assert_eq!(
             choose(ChunkHintedIterator {
                 iter: 0..100,
@@ -1130,7 +1130,7 @@ mod test {
                 chunk_remaining: 32,
                 hint_total_size: false,
             }),
-            Some(39)
+            Some(74)
         );
         assert_eq!(
             choose(ChunkHintedIterator {
@@ -1139,7 +1139,7 @@ mod test {
                 chunk_remaining: 32,
                 hint_total_size: true,
             }),
-            Some(39)
+            Some(74)
         );
         assert_eq!(
             choose(WindowHintedIterator {
@@ -1147,7 +1147,7 @@ mod test {
                 window_size: 32,
                 hint_total_size: false,
             }),
-            Some(90)
+            Some(34)
         );
         assert_eq!(
             choose(WindowHintedIterator {
@@ -1155,7 +1155,7 @@ mod test {
                 window_size: 32,
                 hint_total_size: true,
             }),
-            Some(90)
+            Some(34)
         );
     }
 
@@ -1167,8 +1167,8 @@ mod test {
         }
 
         assert_eq!(choose([].iter().cloned()), None);
-        assert_eq!(choose(0..100), Some(40));
-        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(40));
+        assert_eq!(choose(0..100), Some(54));
+        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(54));
         assert_eq!(
             choose(ChunkHintedIterator {
                 iter: 0..100,
@@ -1176,7 +1176,7 @@ mod test {
                 chunk_remaining: 32,
                 hint_total_size: false,
             }),
-            Some(40)
+            Some(54)
         );
         assert_eq!(
             choose(ChunkHintedIterator {
@@ -1185,7 +1185,7 @@ mod test {
                 chunk_remaining: 32,
                 hint_total_size: true,
             }),
-            Some(40)
+            Some(54)
         );
         assert_eq!(
             choose(WindowHintedIterator {
@@ -1193,7 +1193,7 @@ mod test {
                 window_size: 32,
                 hint_total_size: false,
             }),
-            Some(40)
+            Some(54)
         );
         assert_eq!(
             choose(WindowHintedIterator {
@@ -1201,7 +1201,7 @@ mod test {
                 window_size: 32,
                 hint_total_size: true,
             }),
-            Some(40)
+            Some(54)
         );
     }
 
@@ -1216,7 +1216,7 @@ mod test {
 
         do_test(0..4, &[0, 1, 2, 3]);
         do_test(0..8, &[0, 1, 2, 3, 4, 5, 6, 7]);
-        do_test(0..100, &[58, 78, 80, 92, 43, 8, 96, 7]);
+        do_test(0..100, &[77, 95, 38, 23, 25, 8, 58, 40]);
 
         #[cfg(feature = "alloc")]
         {
@@ -1227,7 +1227,7 @@ mod test {
 
             do_test(0..4, &[0, 1, 2, 3]);
             do_test(0..8, &[0, 1, 2, 3, 4, 5, 6, 7]);
-            do_test(0..100, &[58, 78, 80, 92, 43, 8, 96, 7]);
+            do_test(0..100, &[77, 95, 38, 23, 25, 8, 58, 40]);
         }
     }
 
