@@ -188,7 +188,7 @@ where F: Float, Standard: Distribution<F> {
         } else if self.s != F::one() {
             (pt * (one - self.s) + self.s).powf(one / (one - self.s))
         } else {
-            pt.exp()
+            (pt - one).exp()
         }
     }
 }
