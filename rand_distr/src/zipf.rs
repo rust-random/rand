@@ -202,7 +202,7 @@ where F: Float, Standard: Distribution<F>
         loop {
             let inv_b = self.inv_cdf(rng.sample(Standard));
             let x = (inv_b + one).floor();
-            let mut ratio = x.powf(-self.s) * self.t;
+            let mut ratio = x.powf(-self.s);
             if x > one {
                 ratio = ratio * inv_b.powf(self.s)
             };
