@@ -173,6 +173,7 @@ where F: Float, Standard: Distribution<F> {
         } else {
             F::one() + n.ln()
         };
+        debug_assert!(t > F::zero());
         Ok(Zipf {
             n, s, t
         })
