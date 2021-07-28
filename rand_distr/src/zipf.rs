@@ -116,6 +116,13 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 /// let val: f64 = thread_rng().sample(Zipf::new(10, 1.5).unwrap());
 /// println!("{}", val);
 /// ```
+///
+/// # Implementation details
+///
+/// Implemented via [rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling),
+/// due to Jason Crease[1].
+///
+/// [1]: https://jasoncrease.medium.com/rejection-sampling-the-zipf-distribution-6b359792cffa
 #[derive(Clone, Copy, Debug)]
 pub struct Zipf<F>
 where F: Float, Standard: Distribution<F> {
