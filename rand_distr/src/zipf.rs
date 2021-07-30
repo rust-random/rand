@@ -96,7 +96,7 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
             let t = (F::one() + F::one() / x).powf(self.a_minus_1);
 
             let v = rng.sample(Standard);
-            if v * x * (t - F::one()) / (self.b - F::one()) <= t / self.b {
+            if v * x * (t - F::one()) * self.b <= t * (self.b - F::one()) {
                 return x;
             }
         }
