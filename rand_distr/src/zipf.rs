@@ -31,7 +31,13 @@ use core::fmt;
 /// println!("{}", val);
 /// ```
 ///
+/// # Implementation details
+///
+/// We are using the algorithm from [Non-Uniform Random Variate Generation],
+/// Section 6.1, page 551.
+///
 /// [zeta distribution]: https://en.wikipedia.org/wiki/Zeta_distribution
+/// [Non-Uniform Random Variate Generation]: https://doi.org/10.1007/978-1-4613-8643-8
 #[derive(Clone, Copy, Debug)]
 pub struct Zeta<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
@@ -82,7 +88,6 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
-        // This is based on https://doi.org/10.1007/978-1-4613-8643-8.
         loop {
             let u = rng.sample(OpenClosed01);
             let x = u.powf(-F::one() / self.a_minus_1).floor();
