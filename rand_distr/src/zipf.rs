@@ -129,6 +129,7 @@ where F: Float, Standard: Distribution<F> {
     n: F,
     s: F,
     t: F,
+    q: F,
 }
 
 /// Error type returned from `Zipf::new`.
@@ -168,14 +169,21 @@ where F: Float, Standard: Distribution<F> {
             return Err(ZipfError::NTooSmall);
         }
         let n = F::from(n).unwrap();  // This does not fail.
+        let q = if s != F::one() {
+            // Make sure to calculate the division only once.
+            F::one() / (F::one() - s)
+        } else {
+            // This value is never used.
+            F::zero()
+        };
         let t = if s != F::one() {
-            (n.powf(F::one() - s) - s) / (F::one() - s)
+            (n.powf(F::one() - s) - s) * q
         } else {
             F::one() + n.ln()
         };
         debug_assert!(t > F::zero());
         Ok(Zipf {
-            n, s, t
+            n, s, t, q
         })
     }
 
@@ -186,8 +194,8 @@ where F: Float, Standard: Distribution<F> {
         let pt = p * self.t;
         if pt <= one {
             pt
-        } else if self.s != F::one() {
-            (pt * (one - self.s) + self.s).powf(one / (one - self.s))
+        } else if self.s != one {
+            (pt * (one - self.s) + self.s).powf(self.q)
         } else {
             (pt - one).exp()
         }
