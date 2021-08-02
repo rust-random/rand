@@ -92,6 +92,12 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
             let u = rng.sample(OpenClosed01);
             let x = u.powf(-F::one() / self.a_minus_1).floor();
             debug_assert!(x >= F::one());
+            if x.is_infinite() {
+                // For sufficiently small `a`, `x` will always be infinite,
+                // which is rejected, resulting in an infinite loop. We avoid
+                // this by always returning infinity instead.
+                return x;
+            }
 
             let t = (F::one() + F::one() / x).powf(self.a_minus_1);
 
@@ -261,6 +267,17 @@ mod tests {
         let a = 2.0;
         let d = Zeta::new(a).unwrap();
         let mut rng = crate::test::rng(1);
+        for _ in 0..1000 {
+            let r = d.sample(&mut rng);
+            assert!(r >= 1.);
+        }
+    }
+
+    #[test]
+    fn zeta_small_a() {
+        let a = 1. + 1e-15;
+        let d = Zeta::new(a).unwrap();
+        let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);
             assert!(r >= 1.);
