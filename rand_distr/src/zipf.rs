@@ -31,6 +31,14 @@ use core::fmt;
 /// println!("{}", val);
 /// ```
 ///
+/// # Remarks
+///
+/// The zeta distribution has no upper limit. Sampled values may be infinite.
+/// In particular, a value of infinity might be returned for the following
+/// reasons:
+/// 1. it is the best representation in the type `F` of the actual sample.
+/// 2. to prevent infinite loops for very small `a`.
+///
 /// # Implementation details
 ///
 /// We are using the algorithm from [Non-Uniform Random Variate Generation],
