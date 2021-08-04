@@ -72,8 +72,6 @@ libc = { version = "0.2.22", optional = true, default-features = false }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "0.3.0" }
-# Only for benches:
-rand_hc = "0.3.0"
 # Only to test serde1
 bincode = "1.2.1"
 
