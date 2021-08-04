@@ -196,6 +196,12 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     }
 
     {
+    let mut g = c.benchmark_group("zipf");
+    distr_float!(g, "zipf", f64, Zipf::new(10, 1.5).unwrap());
+    distr_float!(g, "zeta", f64, Zeta::new(1.5).unwrap());
+    }
+
+    {
     let mut g = c.benchmark_group("bernoulli");
     distr!(g, "bernoulli", bool, Bernoulli::new(0.18).unwrap());
     }

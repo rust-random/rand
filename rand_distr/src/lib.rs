@@ -56,6 +56,8 @@
 //!   - [`Poisson`] distribution
 //!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
 //!   - [`Weibull`] distribution
+//!   - [`Zeta`] distribution
+//!   - [`Zipf`] distribution
 //! - Gamma and derived distributions:
 //!   - [`Gamma`] distribution
 //!   - [`ChiSquared`] distribution
@@ -115,6 +117,7 @@ pub use self::unit_circle::UnitCircle;
 pub use self::unit_disc::UnitDisc;
 pub use self::unit_sphere::UnitSphere;
 pub use self::weibull::{Error as WeibullError, Weibull};
+pub use self::zipf::{ZetaError, Zeta, ZipfError, Zipf};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use rand::distributions::{WeightedError, WeightedIndex};
@@ -198,4 +201,4 @@ mod unit_sphere;
 mod utils;
 mod weibull;
 mod ziggurat_tables;
-
+mod zipf;
