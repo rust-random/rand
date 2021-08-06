@@ -217,9 +217,8 @@ gen_range_int!(gen_range_i32_low, i32, -1i32, 0);
 gen_range_int!(gen_range_i64_low, i64, -1i64, 0);
 gen_range_int!(gen_range_i128_low, i128, -1i128, 0);
 
-// These were the initially tested ranges. They are likely to see fewer
-// rejections than the low tests. The starting range here is
-// `2^(N - 1) + 1`, the region with the highest rejection chance for
+// These are likely to see fewer rejections than the low tests. The starting
+// range here is `2^(N - 1) + 1`, the region with the highest rejection chance for
 // modulo/bitmask/leading_zeros methods.
 gen_range_int!(gen_range_i8_high, i8, i8::min_value(), 1);
 gen_range_int!(gen_range_i16_high, i16, i16::min_value(), 1);
