@@ -14,15 +14,6 @@ keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 edition = "2018"
 
-[features]
-std = ["alloc", "getrandom", "getrandom/std"]    # use std library; should be default but for above bug
-alloc = []  # enables Vec and Box support without std
-serde1 = ["serde"] # enables serde for BlockRng wrapper
-
-[dependencies]
-serde = { version = "1", features = ["derive"], optional = true }
-getrandom = { version = "0.2", optional = true }
-
 [package.metadata.docs.rs]
 # To build locally:
 # RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --no-deps --open
@@ -31,3 +22,12 @@ rustdoc-args = ["--cfg", "doc_cfg"]
 
 [package.metadata.playground]
 all-features = true
+
+[features]
+std = ["alloc", "getrandom", "getrandom/std"]    # use std library; should be default but for above bug
+alloc = []  # enables Vec and Box support without std
+serde1 = ["serde"] # enables serde for BlockRng wrapper
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+getrandom = { version = "0.2", optional = true }
