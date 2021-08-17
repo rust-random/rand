@@ -40,7 +40,8 @@ use std::mem::{self, MaybeUninit};
 /// println!("Random chars: {}", chars);
 /// ```
 ///
-/// Alternatively, one can use the [`DistString`] trait:
+/// The [`DistString`] trait provides an easier method of generating
+/// a random `String`, and offers more efficient allocation:
 /// ```
 /// use rand::distributions::{Alphanumeric, DistString};
 /// let string = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
