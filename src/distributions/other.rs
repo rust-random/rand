@@ -40,6 +40,13 @@ use std::mem::{self, MaybeUninit};
 /// println!("Random chars: {}", chars);
 /// ```
 ///
+/// Alternatively, one can use the [`DistString`] trait:
+/// ```
+/// use rand::distributions::{Alphanumeric, DistString};
+/// let string = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
+/// println!("Random string: {}", string);
+/// ```
+///
 /// # Passwords
 ///
 /// Users sometimes ask whether it is safe to use a string of random characters
