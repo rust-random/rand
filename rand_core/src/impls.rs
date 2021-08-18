@@ -65,17 +65,15 @@ macro_rules! fill_via_chunks {
                 core::ptr::copy_nonoverlapping(
                     $src.as_ptr() as *const u8,
                     $dst.as_mut_ptr(),
-                    chunk_size_u8);
+                    chunk_size_u8,
+                );
             }
         } else {
             for (&n, chunk) in $src.iter().zip($dst.chunks_mut(SIZE)) {
                 let tmp = n.to_le();
                 let src_ptr = &tmp as *const $ty as *const u8;
                 unsafe {
-                    core::ptr::copy_nonoverlapping(
-                        src_ptr,
-                        chunk.as_mut_ptr(),
-                        chunk.len());
+                    core::ptr::copy_nonoverlapping(src_ptr, chunk.as_mut_ptr(), chunk.len());
                 }
             }
         }

@@ -57,8 +57,7 @@ use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 use crate::{CryptoRng, Error, RngCore, SeedableRng};
 use core::convert::AsRef;
 use core::fmt;
-#[cfg(feature = "serde1")]
-use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
 
 /// A trait for RNGs which do not generate random numbers individually, but in
 /// blocks (typically `[u32; N]`). This technique is commonly used by
@@ -71,6 +70,12 @@ pub trait BlockRngCore {
 
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u32; 16]`.
+    ///
+    /// # Panics
+    ///
+    /// Code which uses this type is allowed to assume that `Results` is a type
+    /// with at least one element. It may panic or exhibit incorrect behavior
+    /// if this is not the case. It may *not* exhibit undefined behavior.
     type Results: AsRef<[Self::Item]> + AsMut<[Self::Item]> + Default;
 
     /// Generate a new block of results.
@@ -179,8 +184,7 @@ impl<R: BlockRngCore> BlockRng<R> {
 }
 
 impl<R: BlockRngCore<Item = u32>> RngCore for BlockRng<R>
-where
-    <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>,
+where <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
@@ -347,12 +351,11 @@ impl<R: BlockRngCore> BlockRng64<R> {
 }
 
 impl<R: BlockRngCore<Item = u64>> RngCore for BlockRng64<R>
-where
-    <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>,
+where <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>
 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        let mut index = self.index * 2 - self.half_used as usize;
+        let mut index = self.index * 2 - usize::from(self.half_used);
         if index >= self.results.as_ref().len() * 2 {
             self.core.generate(&mut self.results);
             self.index = 0;
@@ -364,14 +367,34 @@ where
         self.half_used = !self.half_used;
         self.index += self.half_used as usize;
 
-        // Index as if this is a u32 slice.
+        let index = if cfg!(target_endian = "little") {
+            index
+        } else {
+            index ^ 1
+        };
+
+        let results = self.results.as_ref();
+        // Convert the `&[u64]` into an equivalent `&[u32]`, which has twice as
+        // many elements. The conversion is sound because `u64` never has a
+        // smaller alignment requirement than `u32`.
+        let ptr = results.as_ptr() as *const u32;
+        // We are guaranteed that this multiplication can't overflow. If it did
+        // overflow, that would mean that there were at least 2^(word size)
+        // 32-bit values in the slice, and thus 4 * 2^(word size) bytes. There
+        // can only ever be at most 2^(word size) - 1 addressable bytes in
+        // memory at a time, so we could never be in this situation.
+        let len = results.len() * 2;
+
         unsafe {
-            let results = &*(self.results.as_ref() as *const [u64] as *const [u32]);
-            if cfg!(target_endian = "little") {
-                *results.get_unchecked(index)
-            } else {
-                *results.get_unchecked(index ^ 1)
-            }
+            let results = core::slice::from_raw_parts(ptr, len);
+            // Note that this bounds check is required for soundness. There's no
+            // guarantee that `<<R as BlockRngCore>::Results as AsRef>::as_ref`,
+            // which is supplied by code outside of this crate, returns a slice
+            // of any particular length, or even that two subsequent calls to it
+            // return slices of the same length. Thus, it would be unsound to
+            // assume that this index is in-bounds and to elide the bounds
+            // check.
+            results[index]
         }
     }
 
