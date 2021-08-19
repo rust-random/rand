@@ -231,7 +231,7 @@ mod tests {
 
         let mut rng = crate::test::rng(212);
         let val = dist.sample(&mut rng);
-        assert!(val >= 15 && val <= 20);
+        assert!((15..=20).contains(&val));
     }
 
     #[test]
