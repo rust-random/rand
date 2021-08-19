@@ -352,27 +352,22 @@ where
 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        let mut index = self.index * 2 - self.half_used as usize;
-        if index >= self.results.as_ref().len() * 2 {
+        if self.index >= self.results.as_ref().len() {
             self.core.generate(&mut self.results);
             self.index = 0;
             // `self.half_used` is by definition `false`
             self.half_used = false;
-            index = 0;
         }
 
         self.half_used = !self.half_used;
         self.index += self.half_used as usize;
 
-        // Index as if this is a u32 slice.
-        unsafe {
-            let results = &*(self.results.as_ref() as *const [u64] as *const [u32]);
-            if cfg!(target_endian = "little") {
-                *results.get_unchecked(index)
-            } else {
-                *results.get_unchecked(index ^ 1)
-            }
-        }
+        let half_used = if cfg!(target_endian = "little") {
+            self.half_used
+        } else {
+            !self.half_used
+        };
+        (self.results.as_ref()[self.index] >> (32 * (half_used as usize))) as u32
     }
 
     #[inline]
