@@ -8,7 +8,7 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [0.8.5] - unreleased
+## [0.8.5] - 2021-08-20
 ### Fixes
 - Fix build on non-32/64-bit architectures (#1144)
 
