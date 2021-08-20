@@ -41,7 +41,7 @@ alloc = ["rand_core/alloc"]
 # Option: use getrandom package for seeding
 getrandom = ["rand_core/getrandom"]
 
-# Option (requires nightly): experimental SIMD support
+# Option (requires nightly Rust): experimental SIMD support
 simd_support = ["packed_simd"]
 
 # Option (enabled by default): enable StdRng

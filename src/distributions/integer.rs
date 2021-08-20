@@ -10,12 +10,10 @@
 
 use crate::distributions::{Distribution, Standard};
 use crate::Rng;
-#[cfg(all(target_arch = "x86", feature = "simd_support"))]
-use core::arch::x86::{__m128i, __m256i};
-#[cfg(all(target_arch = "x86_64", feature = "simd_support"))]
-use core::arch::x86_64::{__m128i, __m256i};
-use core::num::{NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize,
-    NonZeroU128};
+#[cfg(target_arch = "x86")] use core::arch::x86::{__m128i, __m256i};
+#[cfg(target_arch = "x86_64")] use core::arch::x86_64::{__m128i, __m256i};
+use core::mem::{self, MaybeUninit};
+use core::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize};
 #[cfg(feature = "simd_support")] use packed_simd::*;
 
 impl Distribution<u8> for Standard {
@@ -109,53 +107,80 @@ impl_nzint!(NonZeroU64, NonZeroU64::new);
 impl_nzint!(NonZeroU128, NonZeroU128::new);
 impl_nzint!(NonZeroUsize, NonZeroUsize::new);
 
-#[cfg(feature = "simd_support")]
-macro_rules! simd_impl {
-    ($(($intrinsic:ident, $vec:ty),)+) => {$(
-        impl Distribution<$intrinsic> for Standard {
-            #[inline]
-            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $intrinsic {
-                $intrinsic::from_bits(rng.gen::<$vec>())
-            }
-        }
-    )+};
 
-    ($bits:expr,) => {};
-    ($bits:expr, $ty:ty, $($ty_more:ty,)*) => {
-        simd_impl!($bits, $($ty_more,)*);
+// Useful for implementations for SIMD types on stable Rust where we cannot use
+// packed_simd's to_le.
+pub(crate) trait SampleNativeEndian {
+    /// Generate a native endian random value of `T`, using `rng` as the source of randomness.
+    fn sample_ne<R: Rng + ?Sized>(rng: &mut R) -> Self;
+}
 
-        impl Distribution<$ty> for Standard {
-            #[inline]
-            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let mut vec: $ty = Default::default();
-                unsafe {
-                    let ptr = &mut vec;
-                    let b_ptr = &mut *(ptr as *mut $ty as *mut [u8; $bits/8]);
-                    rng.fill_bytes(b_ptr);
+macro_rules! ne_impl {
+    ($($ty:ty),+) => {
+        $(
+            impl SampleNativeEndian for $ty {
+                #[inline]
+                fn sample_ne<R: Rng + ?Sized>(rng: &mut R) -> Self {
+                    let mut vec: MaybeUninit<Self> = MaybeUninit::uninit();
+                    unsafe {
+                        let raw_ptr = vec.as_mut_ptr();
+                        let b_ptr = &mut *(raw_ptr as *mut [u8; mem::size_of::<$ty>()]);
+                        rng.fill_bytes(b_ptr);
+                        vec.assume_init()
+                    }
                 }
-                vec.to_le()
             }
-        }
+        )+
+    };
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+ne_impl!(__m128i, __m256i);
+
+#[cfg(feature = "simd_support")]
+macro_rules! le_impl {
+    ($($ty:ty),+) => {
+        $(
+            ne_impl!($ty);
+
+            impl Distribution<$ty> for Standard {
+                #[inline]
+                fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                    <$ty>::sample_ne(rng).to_le()
+                }
+            }
+        )+
     };
 }
 
 #[cfg(feature = "simd_support")]
-simd_impl!(16, u8x2, i8x2,);
-#[cfg(feature = "simd_support")]
-simd_impl!(32, u8x4, i8x4, u16x2, i16x2,);
-#[cfg(feature = "simd_support")]
-simd_impl!(64, u8x8, i8x8, u16x4, i16x4, u32x2, i32x2,);
-#[cfg(feature = "simd_support")]
-simd_impl!(128, u8x16, i8x16, u16x8, i16x8, u32x4, i32x4, u64x2, i64x2,);
-#[cfg(feature = "simd_support")]
-simd_impl!(256, u8x32, i8x32, u16x16, i16x16, u32x8, i32x8, u64x4, i64x4,);
-#[cfg(feature = "simd_support")]
-simd_impl!(512, u8x64, i8x64, u16x32, i16x32, u32x16, i32x16, u64x8, i64x8,);
-#[cfg(all(
-    feature = "simd_support",
-    any(target_arch = "x86", target_arch = "x86_64")
-))]
-simd_impl!((__m128i, u8x16), (__m256i, u8x32),);
+#[rustfmt::skip]
+le_impl!(
+    u8x2, i8x2,
+    u8x4, i8x4, u16x2, i16x2,
+    u8x8, i8x8, u16x4, i16x4, u32x2, i32x2,
+    u8x16, i8x16, u16x8, i16x8, u32x4, i32x4, u64x2, i64x2, u128x1, i128x1,
+    u8x32, i8x32, u16x16, i16x16, u32x8, i32x8, u64x4, i64x4, u128x2, i128x2,
+    u8x64, i8x64, u16x32, i16x32, u32x16, i32x16, u64x8, i64x8, u128x4, i128x4
+);
+
+// x86/64 are already little endian so we don't need packed_simd's `to_le` and
+// therefore can provide this on stable Rust.
+macro_rules! intrinsic_native_le_impl {
+    ($($ty:ty),+) => {
+        $(
+            impl Distribution<$ty> for Standard {
+                #[inline]
+                fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                    <$ty>::sample_ne(rng)
+                }
+            }
+        )+
+    };
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+intrinsic_native_le_impl!(__m128i, __m256i);
 
 #[cfg(test)]
 mod tests {
