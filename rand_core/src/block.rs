@@ -362,11 +362,11 @@ where
         self.half_used = !self.half_used;
         self.index += self.half_used as usize;
 
-        let half_used = if cfg!(target_endian = "little") {
-            self.half_used
-        } else {
-            !self.half_used
-        };
+        #[cfg(target_endian = "little")]
+        let half_used = self.half_used;
+        #[cfg(not(target_endian = "little"))]
+        let half_used = !self.half_used;
+
         (self.results.as_ref()[self.index] >> (32 * (half_used as usize))) as u32
     }
 
