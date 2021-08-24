@@ -55,7 +55,7 @@ impl std::error::Error for Error {}
 
 impl Geometric {
     /// Construct a new `Geometric` with the given shape parameter `p`
-    /// (probablity of success on each trial).
+    /// (probability of success on each trial).
     pub fn new(p: f64) -> Result<Self, Error> {
         if !p.is_finite() || p < 0.0 || p > 1.0 {
             Err(Error::InvalidProbability)

@@ -215,7 +215,7 @@ pub trait CryptoRng {}
 ///
 /// [`rand`]: https://docs.rs/rand
 pub trait SeedableRng: Sized {
-    /// Seed type, which is restricted to types mutably-dereferencable as `u8`
+    /// Seed type, which is restricted to types mutably-dereferenceable as `u8`
     /// arrays (we recommend `[u8; N]` for some `N`).
     ///
     /// It is recommended to seed PRNGs with a seed of at least circa 100 bits,
