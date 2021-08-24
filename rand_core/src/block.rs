@@ -352,9 +352,11 @@ where
 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        if self.index >= self.results.as_ref().len() {
+        let mut index = self.index - self.half_used as usize;
+        if index >= self.results.as_ref().len() {
             self.core.generate(&mut self.results);
             self.index = 0;
+            index = 0;
             // `self.half_used` is by definition `false`
             self.half_used = false;
         }
@@ -367,19 +369,17 @@ where
         #[cfg(not(target_endian = "little"))]
         let half_used = !self.half_used;
 
-        (self.results.as_ref()[self.index] >> (32 * (half_used as usize))) as u32
+        (self.results.as_ref()[index] >> (32 * (half_used as usize))) as u32
     }
 
     #[inline]
     fn next_u64(&mut self) -> u64 {
-        let mut index = self.index - self.half_used as usize;
-        if index >= self.results.as_ref().len() {
+        if self.index >= self.results.as_ref().len() {
             self.core.generate(&mut self.results);
             self.index = 0;
-            index = 0;
         }
 
-        let value = self.results.as_ref()[index];
+        let value = self.results.as_ref()[self.index];
         self.index += 1;
         self.half_used = false;
         value
