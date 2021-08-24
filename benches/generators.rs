@@ -21,7 +21,6 @@ use rand::prelude::*;
 use rand::rngs::adapter::ReseedingRng;
 use rand::rngs::{mock::StepRng, OsRng};
 use rand_chacha::{ChaCha12Rng, ChaCha20Core, ChaCha20Rng, ChaCha8Rng};
-use rand_hc::Hc128Rng;
 use rand_pcg::{Pcg32, Pcg64, Pcg64Mcg};
 
 macro_rules! gen_bytes {
@@ -48,7 +47,6 @@ gen_bytes!(gen_bytes_pcg64mcg, Pcg64Mcg::from_entropy());
 gen_bytes!(gen_bytes_chacha8, ChaCha8Rng::from_entropy());
 gen_bytes!(gen_bytes_chacha12, ChaCha12Rng::from_entropy());
 gen_bytes!(gen_bytes_chacha20, ChaCha20Rng::from_entropy());
-gen_bytes!(gen_bytes_hc128, Hc128Rng::from_entropy());
 gen_bytes!(gen_bytes_std, StdRng::from_entropy());
 #[cfg(feature = "small_rng")]
 gen_bytes!(gen_bytes_small, SmallRng::from_entropy());
@@ -78,7 +76,6 @@ gen_uint!(gen_u32_pcg64mcg, u32, Pcg64Mcg::from_entropy());
 gen_uint!(gen_u32_chacha8, u32, ChaCha8Rng::from_entropy());
 gen_uint!(gen_u32_chacha12, u32, ChaCha12Rng::from_entropy());
 gen_uint!(gen_u32_chacha20, u32, ChaCha20Rng::from_entropy());
-gen_uint!(gen_u32_hc128, u32, Hc128Rng::from_entropy());
 gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
 #[cfg(feature = "small_rng")]
 gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
@@ -91,7 +88,6 @@ gen_uint!(gen_u64_pcg64mcg, u64, Pcg64Mcg::from_entropy());
 gen_uint!(gen_u64_chacha8, u64, ChaCha8Rng::from_entropy());
 gen_uint!(gen_u64_chacha12, u64, ChaCha12Rng::from_entropy());
 gen_uint!(gen_u64_chacha20, u64, ChaCha20Rng::from_entropy());
-gen_uint!(gen_u64_hc128, u64, Hc128Rng::from_entropy());
 gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
 #[cfg(feature = "small_rng")]
 gen_uint!(gen_u64_small, u64, SmallRng::from_entropy());
@@ -113,7 +109,6 @@ macro_rules! init_gen {
 init_gen!(init_pcg32, Pcg32);
 init_gen!(init_pcg64, Pcg64);
 init_gen!(init_pcg64mcg, Pcg64Mcg);
-init_gen!(init_hc128, Hc128Rng);
 init_gen!(init_chacha, ChaCha20Rng);
 
 const RESEEDING_BYTES_LEN: usize = 1024 * 1024;

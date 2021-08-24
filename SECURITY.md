@@ -49,7 +49,6 @@ exceptions for theoretical issues without a known exploit:
 | `rand` | 0.4 | Jitter, ISAAC |
 | `rand_core` | 0.2 - 0.6 | |
 | `rand_chacha` | 0.1 - 0.3 | |
-| `rand_hc` | 0.1 - 0.3 | |
 
 Explanation of exceptions:
 

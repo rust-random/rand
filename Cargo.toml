@@ -16,6 +16,15 @@ autobenches = true
 edition = "2018"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
+[package.metadata.docs.rs]
+# To build locally:
+# RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --no-deps --open
+all-features = true
+rustdoc-args = ["--cfg", "doc_cfg"]
+
+[package.metadata.playground]
+features = ["small_rng", "serde1"]
+
 [features]
 # Meta-features:
 default = ["std", "std_rng"]
@@ -50,7 +59,6 @@ members = [
     "rand_core",
     "rand_distr",
     "rand_chacha",
-    "rand_hc",
     "rand_pcg",
 ]
 
@@ -73,16 +81,5 @@ libc = { version = "0.2.22", optional = true, default-features = false }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "0.3.0" }
-# Only for benches:
-rand_hc = { path = "rand_hc", version = "0.3.0" }
 # Only to test serde1
 bincode = "1.2.1"
-
-[package.metadata.docs.rs]
-# To build locally:
-# RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --no-deps --open
-all-features = true
-rustdoc-args = ["--cfg", "doc_cfg"]
-
-[package.metadata.playground]
-features = ["small_rng", "serde1"]
