@@ -196,7 +196,7 @@ pub trait RngCore {
 /// Some generators may satisfy an additional property, however this is not
 /// required by this trait: if the CSPRNG's state is revealed, it should not be
 /// computationally-feasible to reconstruct output prior to this. Some other
-/// generators allow backwards-computation and are consided *reversible*.
+/// generators allow backwards-computation and are considered *reversible*.
 ///
 /// Note that this trait is provided for guidance only and cannot guarantee
 /// suitability for cryptographic applications. In general it should only be
@@ -215,7 +215,7 @@ pub trait CryptoRng {}
 ///
 /// [`rand`]: https://docs.rs/rand
 pub trait SeedableRng: Sized {
-    /// Seed type, which is restricted to types mutably-dereferencable as `u8`
+    /// Seed type, which is restricted to types mutably-dereferenceable as `u8`
     /// arrays (we recommend `[u8; N]` for some `N`).
     ///
     /// It is recommended to seed PRNGs with a seed of at least circa 100 bits,

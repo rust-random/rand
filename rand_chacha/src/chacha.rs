@@ -182,7 +182,7 @@ macro_rules! chacha_impl {
 
         impl $ChaChaXRng {
             // The buffer is a 4-block window, i.e. it is always at a block-aligned position in the
-            // stream but if the stream has been seeked it may not be self-aligned.
+            // stream but if the stream has been sought it may not be self-aligned.
 
             /// Get the offset from the start of the stream, in 32-bit words.
             ///
