@@ -636,7 +636,6 @@ mod test {
         let mut rng2 = rng1.clone();
         let mut rng3 = rng1.clone();
 
-
         let mut a = [0; 16];
         (&mut a[..4]).copy_from_slice(&rng1.next_u32().to_le_bytes());
         (&mut a[4..12]).copy_from_slice(&rng1.next_u64().to_le_bytes());
@@ -652,6 +651,6 @@ mod test {
         (&mut c[..8]).copy_from_slice(&rng3.next_u64().to_le_bytes());
         (&mut c[8..12]).copy_from_slice(&rng3.next_u32().to_le_bytes());
         (&mut c[12..]).copy_from_slice(&rng3.next_u32().to_le_bytes());
-        assert_eq!(a, b);
+        assert_eq!(a, c);
     }
 }
