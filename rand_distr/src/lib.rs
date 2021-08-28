@@ -77,6 +77,7 @@
 //! - Misc. distributions
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
+//!   - [`Gumbel`] distribution
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -104,6 +105,7 @@ pub use self::gamma::{
     Gamma, StudentT,
 };
 pub use self::geometric::{Error as GeoError, Geometric, StandardGeometric};
+pub use self::gumbel::{Error as GumbelError, Gumbel};
 pub use self::hypergeometric::{Error as HyperGeoError, Hypergeometric};
 pub use self::inverse_gaussian::{InverseGaussian, Error as InverseGaussianError};
 pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal};
@@ -186,6 +188,7 @@ mod dirichlet;
 mod exponential;
 mod gamma;
 mod geometric;
+mod gumbel;
 mod hypergeometric;
 mod inverse_gaussian;
 mod normal;
