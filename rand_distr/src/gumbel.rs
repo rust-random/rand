@@ -101,25 +101,25 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_infinite_scale() {
-        Gumbel::new(0.0, std::f64::INFINITY).unwrap();
+        Gumbel::new(0.0, core::f64::INFINITY).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_nan_scale() {
-        Gumbel::new(0.0, std::f64::NAN).unwrap();
+        Gumbel::new(0.0, core::f64::NAN).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_infinite_location() {
-        Gumbel::new(std::f64::INFINITY, 1.0).unwrap();
+        Gumbel::new(core::f64::INFINITY, 1.0).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_nan_location() {
-        Gumbel::new(std::f64::NAN, 1.0).unwrap();
+        Gumbel::new(core::f64::NAN, 1.0).unwrap();
     }
 
     #[test]
