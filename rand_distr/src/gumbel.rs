@@ -38,16 +38,16 @@ where
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// location is infinite or NaN
-    LocationNotValid,
+    LocationNotFinite,
     /// scale is not finite positive number
-    ScaleNotValid,
+    ScaleNotPositive,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            Error::ScaleNotValid => "scale is not positive and finite in Gumbel distribution",
-            Error::LocationNotValid => "location is not finite in Gumbel distribution",
+            Error::ScaleNotPositive => "scale is not positive and finite in Gumbel distribution",
+            Error::LocationNotFinite => "location is not finite in Gumbel distribution",
         })
     }
 }
@@ -64,10 +64,10 @@ where
     /// Construct a new `Gumbel` distribution with given `location` and `scale`.
     pub fn new(location: F, scale: F) -> Result<Gumbel<F>, Error> {
         if scale <= F::zero() || scale.is_infinite() || scale.is_nan() {
-            return Err(Error::ScaleNotValid);
+            return Err(Error::ScaleNotPositive);
         }
         if location.is_infinite() || location.is_nan() {
-            return Err(Error::LocationNotValid);
+            return Err(Error::LocationNotFinite);
         }
         Ok(Gumbel { location, scale })
     }
