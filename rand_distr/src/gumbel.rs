@@ -80,7 +80,7 @@ where
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         let x: F = rng.sample(OpenClosed01);
-        self.location - self.scale * (-(x).ln()).ln()
+        self.location - self.scale * (-x.ln()).ln()
     }
 }
 
