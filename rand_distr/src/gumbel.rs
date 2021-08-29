@@ -87,6 +87,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::vec;
 
     #[test]
     #[should_panic]
@@ -120,13 +121,32 @@ mod tests {
 
     #[test]
     fn test_sample_against_cdf() {
-        let scale = 1.0;
-        let shape = 2.0;
-        let d = Gumbel::new(scale, shape).unwrap();
-        let mut rng = crate::test::rng(1);
-        for _ in 0..1000 {
-            let r = d.sample(&mut rng);
-            assert!(r >= 0.);
+        fn neg_log_log(x: f64) -> f64 {
+            -(-x.ln()).ln()
         }
+        let location = 0.0;
+        let scale = 1.0;
+        let iterations = 100_000;
+        let increment = 1.0 / iterations as f64;
+        let probabilities = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
+        let quantiles = probabilities
+            .iter()
+            .map(|x| neg_log_log(*x))
+            .collect::<vec::Vec<f64>>();
+        let mut proportions = vec![0.0; 9];
+        let d = Gumbel::new(location, scale).unwrap();
+        let mut rng = crate::test::rng(1);
+        for _ in 0..iterations {
+            let replicate = d.sample(&mut rng);
+            for (i, q) in quantiles.iter().enumerate() {
+                if replicate < *q {
+                    proportions[i] += increment;
+                }
+            }
+        }
+        assert!(proportions
+            .iter()
+            .zip(&probabilities)
+            .all(|(p_hat, p)| (p_hat - p).abs() < 0.003))
     }
 }
