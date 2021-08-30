@@ -16,7 +16,8 @@ use rand::Rng;
 /// Samples floating-point numbers according to the Gumbel distribution
 ///
 /// This distribution has density function:
-/// `f(x) = exp(-(z + exp(-z))) / σ`, where `z = (x - μ) / σ`
+/// `f(x) = exp(-(z + exp(-z))) / σ`, where `z = (x - μ) / σ`,
+/// `μ` is the location parameter, and `σ` the scale parameter.
 ///
 /// # Example
 /// ```
