@@ -90,7 +90,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloc::vec;
 
     #[test]
     #[should_panic]
@@ -132,11 +131,11 @@ mod tests {
         let iterations = 100_000;
         let increment = 1.0 / iterations as f64;
         let probabilities = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
-        let quantiles = probabilities
-            .iter()
-            .map(|x| neg_log_log(*x))
-            .collect::<vec::Vec<f64>>();
-        let mut proportions = vec![0.0; 9];
+        let mut quantiles = [0.0; 9];
+        for (i, p) in probabilities.iter().enumerate() {
+            quantiles[i] = neg_log_log(*p);
+        }
+        let mut proportions = [0.0; 9];
         let d = Gumbel::new(location, scale).unwrap();
         let mut rng = crate::test::rng(1);
         for _ in 0..iterations {
