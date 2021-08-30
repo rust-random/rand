@@ -90,7 +90,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::vec;
+    use alloc::vec;
 
     #[test]
     #[should_panic]
