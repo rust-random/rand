@@ -16,7 +16,7 @@ use rand::Rng;
 /// Samples floating-point numbers according to the Fréchet distribution
 ///
 /// This distribution has density function:
-/// `f(x) = [(x - μ) / σ]^(-1 - α)` exp[-(x - μ) / σ]^(-α) α / σ ,
+/// `f(x) = [(x - μ) / σ]^(-1 - α) exp[-(x - μ) / σ]^(-α) α / σ`,
 /// where `μ` is the location parameter, `σ` the scale parameter, and `α` the shape parameter.
 ///
 /// # Example
