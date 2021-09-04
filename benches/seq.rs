@@ -15,7 +15,7 @@ use test::Bencher;
 
 use rand::prelude::*;
 use rand::seq::*;
-use std::mem::size_of;
+use core::mem::size_of;
 
 // We force use of 32-bit RNG since seq code is optimised for use with 32-bit
 // generators on all platforms.
@@ -116,7 +116,7 @@ impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (std::cmp::min(self.iter.len(), self.window_size), None)
+        (core::cmp::min(self.iter.len(), self.window_size), None)
     }
 }
 

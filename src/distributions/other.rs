@@ -21,7 +21,7 @@ use crate::Rng;
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "min_const_gen")]
-use std::mem::{self, MaybeUninit};
+use core::mem::{self, MaybeUninit};
 
 
 // ----- Sampling distributions -----

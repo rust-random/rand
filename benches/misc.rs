@@ -98,7 +98,7 @@ fn misc_bernoulli_var(b: &mut Bencher) {
 
 #[bench]
 fn gen_1kb_u16_iter_repeat(b: &mut Bencher) {
-    use std::iter;
+    use core::iter;
     let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let v: Vec<u16> = iter::repeat(()).map(|()| rng.gen()).take(512).collect();
@@ -141,7 +141,7 @@ fn gen_1kb_u16_fill(b: &mut Bencher) {
 
 #[bench]
 fn gen_1kb_u64_iter_repeat(b: &mut Bencher) {
-    use std::iter;
+    use core::iter;
     let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let v: Vec<u64> = iter::repeat(()).map(|()| rng.gen()).take(128).collect();

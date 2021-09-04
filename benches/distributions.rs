@@ -18,9 +18,9 @@ const RAND_BENCH_N: u64 = 1000;
 
 use rand::distributions::{Alphanumeric, Open01, OpenClosed01, Standard, Uniform};
 use rand::distributions::uniform::{UniformInt, UniformSampler};
-use std::mem::size_of;
-use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
-use std::time::Duration;
+use core::mem::size_of;
+use core::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
+use core::time::Duration;
 use test::{Bencher, black_box};
 
 use rand::prelude::*;
@@ -199,7 +199,7 @@ macro_rules! gen_range_int {
                 for _ in 0..RAND_BENCH_N {
                     accum = accum.wrapping_add(rng.gen_range($low..high));
                     // force recalculation of range each time
-                    high = high.wrapping_add(1) & std::$ty::MAX;
+                    high = high.wrapping_add(1) & core::$ty::MAX;
                 }
                 accum
             });
