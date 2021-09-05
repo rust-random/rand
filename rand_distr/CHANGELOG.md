@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 - New `Zeta` and `Zipf` distributions (#1136)
+- New `SkewNormal` distribution (#1149)
 
 ## [0.4.1] - 2021-06-15
 - Empirically test PDF of normal distribution (#1121)
