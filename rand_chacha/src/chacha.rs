@@ -629,28 +629,4 @@ mod test {
         rng.set_word_pos(0);
         assert_eq!(rng.get_word_pos(), 0);
     }
-
-    #[test]
-    fn test_chacha_next_u32_vs_next_u64() {
-        let mut rng1 = ChaChaRng::from_seed(Default::default());
-        let mut rng2 = rng1.clone();
-        let mut rng3 = rng1.clone();
-
-        let mut a = [0; 16];
-        (&mut a[..4]).copy_from_slice(&rng1.next_u32().to_le_bytes());
-        (&mut a[4..12]).copy_from_slice(&rng1.next_u64().to_le_bytes());
-        (&mut a[12..]).copy_from_slice(&rng1.next_u32().to_le_bytes());
-
-        let mut b = [0; 16];
-        (&mut b[..4]).copy_from_slice(&rng2.next_u32().to_le_bytes());
-        (&mut b[4..8]).copy_from_slice(&rng2.next_u32().to_le_bytes());
-        (&mut b[8..]).copy_from_slice(&rng2.next_u64().to_le_bytes());
-        assert_eq!(a, b);
-
-        let mut c = [0; 16];
-        (&mut c[..8]).copy_from_slice(&rng3.next_u64().to_le_bytes());
-        (&mut c[8..12]).copy_from_slice(&rng3.next_u32().to_le_bytes());
-        (&mut c[12..]).copy_from_slice(&rng3.next_u32().to_le_bytes());
-        assert_eq!(a, c);
-    }
 }
