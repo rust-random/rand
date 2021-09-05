@@ -361,15 +361,17 @@ where
             self.half_used = false;
         }
 
+        #[cfg(target_endian = "little")]
+        let use_second_half = self.half_used;
+        #[cfg(not(target_endian = "little"))]
+        let use_second_half = !self.half_used;
+
+        let shift = 32 * (use_second_half as usize);
+
         self.half_used = !self.half_used;
         self.index += self.half_used as usize;
 
-        #[cfg(target_endian = "little")]
-        let half_used = self.half_used;
-        #[cfg(not(target_endian = "little"))]
-        let half_used = !self.half_used;
-
-        (self.results.as_ref()[index] >> (32 * (half_used as usize))) as u32
+        (self.results.as_ref()[index] >> shift) as u32
     }
 
     #[inline]
