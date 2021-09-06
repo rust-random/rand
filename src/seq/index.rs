@@ -16,11 +16,11 @@
 use alloc::collections::BTreeSet;
 #[cfg(feature = "std")] use std::collections::HashSet;
 
-#[cfg(feature = "alloc")]
-use crate::distributions::{uniform::SampleUniform, Distribution, Uniform};
 #[cfg(feature = "std")]
 use crate::distributions::WeightedError;
-use crate::Rng;
+
+#[cfg(feature = "alloc")]
+use crate::{Rng, distributions::{uniform::SampleUniform, Distribution, Uniform}};
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
@@ -272,8 +272,8 @@ where R: Rng + ?Sized {
 /// `O(length + amount * log length)` time otherwise.
 ///
 /// Panics if `amount > length`.
-#[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+#[cfg(feature = "std")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 pub fn sample_weighted<R, F, X>(
     rng: &mut R, length: usize, weight: F, amount: usize,
 ) -> Result<IndexVec, WeightedError>
@@ -305,7 +305,7 @@ where
 /// + amount * log length)` time otherwise.
 ///
 /// Panics if `amount > length`.
-#[cfg(feature = "alloc")]
+#[cfg(feature = "std")]
 fn sample_efraimidis_spirakis<R, F, X, N>(
     rng: &mut R, length: N, weight: F, amount: N,
 ) -> Result<IndexVec, WeightedError>
@@ -621,7 +621,7 @@ mod test {
         assert_eq!(v1, v2);
     }
 
-    #[cfg(feature = "alloc")]
+    #[cfg(feature = "std")]
     #[test]
     fn test_sample_weighted() {
         let seed_rng = crate::test::rng;

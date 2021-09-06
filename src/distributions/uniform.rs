@@ -1152,7 +1152,6 @@ mod tests {
     #[test]
     #[cfg(feature = "serde1")]
     fn test_serialization_uniform_duration() {
-        use core::time::Duration;
         let distr = UniformDuration::new(Duration::from_secs(10), Duration::from_secs(60));
         let de_distr: UniformDuration = bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
         assert_eq!(
@@ -1503,8 +1502,6 @@ mod tests {
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_durations() {
-        use core::time::Duration;
-
         let mut rng = crate::test::rng(253);
 
         let v = &[

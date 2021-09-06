@@ -23,7 +23,7 @@ jobs:
         env:
           RUSTDOCFLAGS: --cfg doc_cfg
         # --all builds all crates, but with default features for other crates (okay in this case)
-        run: cargo deadlinks --ignore-fragments -- --all --features nightly,serde1,getrandom,small_rng
+        run: cargo deadlinks --ignore-fragments -- --all --features nightly,serde1,getrandom,small_rng,min_const_gen
 
   test:
     runs-on: ${{ matrix.os }}
@@ -80,8 +80,8 @@ jobs:
       - name: Test rand
         run: |
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
-          cargo build --target ${{ matrix.target }} --no-default-features --features alloc,getrandom,small_rng
-          cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features=alloc,getrandom,small_rng
+          cargo build --target ${{ matrix.target }} --no-default-features --features alloc,getrandom,small_rng,min_const_gen
+          cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features=alloc,getrandom,small_rng,min_const_gen
           # all stable features:
           cargo test --target ${{ matrix.target }} --features=serde1,log,small_rng
           cargo test --target ${{ matrix.target }} --examples
