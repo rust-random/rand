@@ -139,7 +139,7 @@ where
             } else {
                 let normalized = ((F::one() + self.shape) * u + (F::one() - self.shape) * v)
                     / ((F::one() + self.shape * self.shape).sqrt()
-                        * F::from(std::f64::consts::SQRT_2).unwrap());
+                        * F::from(core::f64::consts::SQRT_2).unwrap());
                 linear_map(normalized)
             }
         }
