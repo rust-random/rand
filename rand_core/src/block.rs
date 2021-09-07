@@ -439,11 +439,10 @@ impl<R: BlockRngCore + CryptoRng> CryptoRng for BlockRng<R> {}
 mod test {
     use crate::{SeedableRng, RngCore};
     use crate::block::{BlockRng, BlockRng64, BlockRngCore};
-    use crate::mock::StepRng;
 
     #[derive(Debug, Clone)]
     struct DummyRng {
-        rng: StepRng,
+        counter: u32,
     }
 
     impl BlockRngCore for DummyRng {
@@ -453,16 +452,17 @@ mod test {
 
         fn generate(&mut self, results: &mut Self::Results) {
             for r in results {
-                *r = self.rng.next_u32();
+                *r = self.counter;
+                self.counter += 1;
             }
         }
     }
 
     impl SeedableRng for DummyRng {
-        type Seed = [u8; 8];
+        type Seed = [u8; 4];
 
         fn from_seed(seed: Self::Seed) -> Self {
-            DummyRng { rng: StepRng::new(u64::from_le_bytes(seed), 1) }
+            DummyRng { counter: u32::from_le_bytes(seed) }
         }
     }
 
@@ -492,7 +492,7 @@ mod test {
 
     #[derive(Debug, Clone)]
     struct DummyRng64 {
-        rng: StepRng,
+        counter: u64,
     }
 
     impl BlockRngCore for DummyRng64 {
@@ -502,7 +502,8 @@ mod test {
 
         fn generate(&mut self, results: &mut Self::Results) {
             for r in results {
-                *r = self.rng.next_u64();
+                *r = self.counter;
+                self.counter += 1;
             }
         }
     }
@@ -511,7 +512,7 @@ mod test {
         type Seed = [u8; 8];
 
         fn from_seed(seed: Self::Seed) -> Self {
-            DummyRng64 { rng: StepRng::new(u64::from_le_bytes(seed), 1) }
+            DummyRng64 { counter: u64::from_le_bytes(seed) }
         }
     }
 

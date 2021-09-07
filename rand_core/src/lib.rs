@@ -54,7 +54,6 @@ mod error;
 pub mod impls;
 pub mod le;
 #[cfg(feature = "getrandom")] mod os;
-#[cfg(test)] mod mock;
 
 
 /// The core of a random number generator.
