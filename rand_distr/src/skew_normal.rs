@@ -252,7 +252,7 @@ mod tests {
         for x in &mut buf {
             *x = rng.sample(&skew_normal);
         }
-        for value in buf {
+        for value in buf.iter() {
             assert!(value.is_nan());
         }
     }
