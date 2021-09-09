@@ -222,6 +222,26 @@ mod tests {
                 -1.1932899004186373,
             ],
         );
+        test_samples(
+            SkewNormal::new(core::f64::INFINITY, 1.0, 0.0).unwrap(),
+            0f64,
+            &[
+                core::f64::INFINITY,
+                core::f64::INFINITY,
+                core::f64::INFINITY,
+                core::f64::INFINITY,
+            ],
+        );
+        test_samples(
+            SkewNormal::new(core::f64::NEG_INFINITY, 1.0, 0.0).unwrap(),
+            0f64,
+            &[
+                core::f64::NEG_INFINITY,
+                core::f64::NEG_INFINITY,
+                core::f64::NEG_INFINITY,
+                core::f64::NEG_INFINITY,
+            ],
+        );
     }
 
     #[test]
