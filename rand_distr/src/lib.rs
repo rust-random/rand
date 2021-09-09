@@ -58,6 +58,7 @@
 //!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
 //!   - [`Weibull`] distribution
 //!   - [`Gumbel`] distribution
+//!   - [`Frechet`] distribution
 //!   - [`Zeta`] distribution
 //!   - [`Zipf`] distribution
 //! - Gamma and derived distributions:
@@ -101,6 +102,7 @@ pub use self::cauchy::{Cauchy, Error as CauchyError};
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use self::dirichlet::{Dirichlet, Error as DirichletError};
 pub use self::exponential::{Error as ExpError, Exp, Exp1};
+pub use self::frechet::{Error as FrechetError, Frechet};
 pub use self::gamma::{
     Beta, BetaError, ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError,
     Gamma, StudentT,
@@ -190,6 +192,7 @@ mod binomial;
 mod cauchy;
 mod dirichlet;
 mod exponential;
+mod frechet;
 mod gamma;
 mod geometric;
 mod gumbel;
