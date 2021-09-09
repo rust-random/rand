@@ -119,12 +119,13 @@ fn skew_normal() {
         sparkline::render_u64_as_string(hist.bins())
     );
 
+    use special::Error;
     fn pdf(x: f64) -> f64 {
         let x_normalized = (x - LOCATION) / SCALE;
         let normal_density_x =
             (-0.5 * (x_normalized).powi(2)).exp() / (2. * core::f64::consts::PI).sqrt();
-        let normal_distribution_x = 0.5
-            * (1.0 + statrs::function::erf::erf(SHAPE * x_normalized / core::f64::consts::SQRT_2));
+        let normal_distribution_x =
+            0.5 * (1.0 + (SHAPE * x_normalized / core::f64::consts::SQRT_2).error());
         2.0 / SCALE * normal_density_x * normal_distribution_x
     }
 

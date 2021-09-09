@@ -34,4 +34,4 @@ rand = { path = "..", version = "0.8.0", default-features = false, features = ["
 # Histogram implementation for testing uniformity
 average = { version = "0.13", features = [ "std" ] }
 # Special functions for testing distributions
-statrs = "0.15.0"
+special = "0.8.1"
