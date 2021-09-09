@@ -18,7 +18,7 @@ use rand::Rng;
 /// The skew normal distribution is a generalization of the
 /// [`Normal`] distribution to allow for non-zero skewness.
 ///
-/// It has the density function
+/// It has the density function, for `scale > 0`,
 /// `f(x) = 2 / scale * phi((x - location) / scale) * Phi(alpha * (x - location) / scale)`
 /// where `phi` and `Phi` are the density and distribution of a standard normal variable.
 ///
@@ -37,7 +37,8 @@ use rand::Rng;
 ///
 /// We are using the algorithm from [A Method to Simulate the Skew Normal Distribution].
 ///
-/// [`skew normal distribution`]: https://en.wikipedia.org/wiki/Skew_normal_distribution
+/// [skew normal distribution]: https://en.wikipedia.org/wiki/Skew_normal_distribution
+/// [`Normal`]: struct.Normal.html
 /// [A Method to Simulate the Skew Normal Distribution]:
 /// 	Ghorbanzadeh, D. , Jaupi, L. and Durand, P. (2014)
 /// 	[A Method to Simulate the Skew Normal Distribution](https://dx.doi.org/10.4236/am.2014.513201).
@@ -57,8 +58,8 @@ where
 /// Error type returned from `SkewNormal::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// The scale parameter is not finite or not positive.
-    BadScale,
+    /// The scale parameter is not finite or it is less or equal to zero.
+    ScaleTooSmall,
     /// The shape parameter is not finite.
     BadShape,
 }
@@ -66,7 +67,9 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            Error::BadScale => "scale parameter is non-finite in skew normal distribution",
+            Error::ScaleTooSmall => {
+                "scale parameter is either non-finite or it is less or equal to zero in skew normal distribution"
+            }
             Error::BadShape => "shape parameter is non-finite in skew normal distribution",
         })
     }
@@ -86,12 +89,12 @@ where
     /// Parameters:
     ///
     /// -   location (unrestricted)
-    /// -   scale (must be finite and positive)
+    /// -   scale (must be finite and larger than zero)
     /// -   shape (must be finite)
     #[inline]
     pub fn new(location: F, scale: F, shape: F) -> Result<SkewNormal<F>, Error> {
         if !scale.is_finite() || !(scale > F::zero()) {
-            return Err(Error::BadScale);
+            return Err(Error::ScaleTooSmall);
         }
         if !shape.is_finite() {
             return Err(Error::BadShape);
@@ -198,6 +201,11 @@ mod tests {
     }
 
     #[test]
+    fn valid_location_nan() {
+        SkewNormal::new(core::f64::NAN, 1.0, 0.0).unwrap();
+    }
+
+    #[test]
     fn skew_normal_value_stability() {
         test_samples(
             SkewNormal::new(0.0, 1.0, 0.0).unwrap(),
@@ -214,5 +222,18 @@ mod tests {
                 -1.1932899004186373,
             ],
         );
+    }
+
+    #[test]
+    fn skew_normal_value_location_nan() {
+        let skew_normal = SkewNormal::new(core::f64::NAN, 1.0, 0.0).unwrap();
+        let mut rng = crate::test::rng(213);
+        let mut buf = [0.0; 4];
+        for x in &mut buf {
+            *x = rng.sample(&skew_normal);
+        }
+        for value in buf {
+            assert!(value.is_nan());
+        }
     }
 }
