@@ -71,7 +71,7 @@ rand_chacha = { path = "rand_chacha", version = "0.3.0", default-features = fals
 [dependencies.packed_simd]
 # NOTE: so far no version works reliably due to dependence on unstable features
 package = "packed_simd_2"
-version = "0.3.5"
+version = "0.3.6"
 optional = true
 features = ["into_bits"]
 
