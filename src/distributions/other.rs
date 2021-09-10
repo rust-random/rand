@@ -21,7 +21,7 @@ use crate::Rng;
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "min_const_gen")]
-use std::mem::{self, MaybeUninit};
+use core::mem::{self, MaybeUninit};
 
 
 // ----- Sampling distributions -----
@@ -189,8 +189,8 @@ tuple_impl! {A, B, C, D, E, F, G, H, I, J}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K, L}
 
-#[cfg_attr(doc_cfg, doc(cfg(feature = "min_const_gen")))]
 #[cfg(feature = "min_const_gen")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "min_const_gen")))]
 impl<T, const N: usize> Distribution<[T; N]> for Standard
 where Standard: Distribution<T>
 {

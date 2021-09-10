@@ -17,7 +17,7 @@ use criterion::{criterion_group, criterion_main, Criterion,
     Throughput};
 use criterion_cycles_per_byte::CyclesPerByte;
 
-use std::mem::size_of;
+use core::mem::size_of;
 
 use rand::prelude::*;
 use rand_distr::*;

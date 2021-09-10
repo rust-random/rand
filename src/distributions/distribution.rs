@@ -209,7 +209,7 @@ pub trait DistString {
 
 #[cfg(test)]
 mod tests {
-    use crate::distributions::{Alphanumeric, Distribution, Standard, Uniform};
+    use crate::distributions::{Distribution, Uniform};
     use crate::Rng;
 
     #[test]
@@ -258,7 +258,7 @@ mod tests {
     #[cfg(feature = "alloc")]
     fn test_dist_string() {
         use core::str;
-        use crate::distributions::DistString;
+        use crate::distributions::{Alphanumeric, DistString, Standard};
         let mut rng = crate::test::rng(213);
 
         let s1 = Alphanumeric.sample_string(&mut rng, 20);

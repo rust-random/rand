@@ -14,7 +14,7 @@ extern crate test;
 const RAND_BENCH_N: u64 = 1000;
 const BYTES_LEN: usize = 1024;
 
-use std::mem::size_of;
+use core::mem::size_of;
 use test::{black_box, Bencher};
 
 use rand::prelude::*;
