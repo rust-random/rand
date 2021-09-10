@@ -142,6 +142,13 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     }
 
     {
+    let mut g = c.benchmark_group("skew_normal");
+    distr_float!(g, "shape_zero", f64, SkewNormal::new(0.0, 1.0, 0.0).unwrap());
+    distr_float!(g, "shape_positive", f64, SkewNormal::new(0.0, 1.0, 100.0).unwrap());
+    distr_float!(g, "shape_negative", f64, SkewNormal::new(0.0, 1.0, -100.0).unwrap());
+    }
+
+    {
     let mut g = c.benchmark_group("gamma");
     distr_float!(g, "gamma_large_shape", f64, Gamma::new(10., 1.0).unwrap());
     distr_float!(g, "gamma_small_shape", f64, Gamma::new(0.1, 1.0).unwrap());
