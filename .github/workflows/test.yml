@@ -83,9 +83,16 @@ jobs:
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
           cargo build --target ${{ matrix.target }} --no-default-features --features alloc,getrandom,small_rng
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features=alloc,getrandom,small_rng
-          # all stable features:
-          cargo test --target ${{ matrix.target }} --features=serde1,log,small_rng,min_const_gen
           cargo test --target ${{ matrix.target }} --examples
+      - name: Test rand (all stable features, non-MSRV)
+        if: ${{ matrix.toolchain != '1.36.0' }}
+        run: |
+          cargo test --target ${{ matrix.target }} --features=serde1,log,small_rng,min_const_gen
+      - name: Test rand (all stable features, MSRV)
+        if: ${{ matrix.toolchain == '1.36.0' }}
+        run: |
+          # const generics are not stable on 1.36.0
+          cargo test --target ${{ matrix.target }} --features=serde1,log,small_rng
       - name: Test rand_core
         run: |
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
