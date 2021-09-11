@@ -58,9 +58,8 @@ macro_rules! fill_via_chunks {
         let chunk_size_u8 = min($src.len() * SIZE, $dst.len());
         let chunk_size = (chunk_size_u8 + SIZE - 1) / SIZE;
 
-        // The following can be replaced with safe code, but unfortunately it's
-        // ca. 8% slower.
         if cfg!(target_endian = "little") {
+            // On LE we can do a simple copy, which is 25-50% faster:
             unsafe {
                 core::ptr::copy_nonoverlapping(
                     $src.as_ptr() as *const u8,
@@ -68,15 +67,16 @@ macro_rules! fill_via_chunks {
                     chunk_size_u8);
             }
         } else {
-            for (&n, chunk) in $src.iter().zip($dst.chunks_mut(SIZE)) {
-                let tmp = n.to_le();
-                let src_ptr = &tmp as *const $ty as *const u8;
-                unsafe {
-                    core::ptr::copy_nonoverlapping(
-                        src_ptr,
-                        chunk.as_mut_ptr(),
-                        chunk.len());
-                }
+            // This code is valid on all arches, but slower than the above:
+            let mut i = 0;
+            let mut iter = $dst[..chunk_size_u8].chunks_exact_mut(SIZE);
+            while let Some(chunk) = iter.next() {
+                chunk.copy_from_slice(&$src[i].to_le_bytes());
+                i += 1;
+            }
+            let chunk = iter.into_remainder();
+            if !chunk.is_empty() {
+                chunk.copy_from_slice(&$src[i].to_le_bytes()[..chunk.len()]);
             }
         }
 
