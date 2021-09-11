@@ -87,13 +87,7 @@ macro_rules! chacha_impl {
             type Results = Array64<u32>;
             #[inline]
             fn generate(&mut self, r: &mut Self::Results) {
-                // Fill slice of words by writing to equivalent slice of bytes, then fixing endianness.
-                self.state.refill4($rounds, unsafe {
-                    &mut *(&mut *r as *mut Array64<u32> as *mut [u8; 256])
-                });
-                for x in r.as_mut() {
-                    *x = x.to_le();
-                }
+                self.state.refill4($rounds, &mut r.0);
             }
         }
 

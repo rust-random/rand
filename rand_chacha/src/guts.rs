@@ -14,7 +14,7 @@ use ppv_lite86::{dispatch, dispatch_light128};
 pub use ppv_lite86::Machine;
 use ppv_lite86::{vec128_storage, ArithOps, BitOps32, LaneWords4, MultiLane, StoreBytes, Vec4};
 
-pub(crate) const BLOCK: usize = 64;
+pub(crate) const BLOCK: usize = 16;
 pub(crate) const BLOCK64: u64 = BLOCK as u64;
 const LOG2_BUFBLOCKS: u64 = 2;
 const BUFBLOCKS: u64 = 1 << LOG2_BUFBLOCKS;
@@ -81,7 +81,7 @@ impl ChaCha {
 
     /// Produce 4 blocks of output, advancing the state
     #[inline(always)]
-    pub fn refill4(&mut self, drounds: u32, out: &mut [u8; BUFSZ]) {
+    pub fn refill4(&mut self, drounds: u32, out: &mut [u32; BUFSZ]) {
         refill_wide(self, drounds, out)
     }
 
@@ -114,7 +114,7 @@ impl ChaCha {
 #[allow(clippy::many_single_char_names)]
 #[inline(always)]
 fn refill_wide_impl<Mach: Machine>(
-    m: Mach, state: &mut ChaCha, drounds: u32, out: &mut [u8; BUFSZ],
+    m: Mach, state: &mut ChaCha, drounds: u32, out: &mut [u32; BUFSZ],
 ) {
     let k = m.vec([0x6170_7865, 0x3320_646e, 0x7962_2d32, 0x6b20_6574]);
     let mut pos = state.pos64(m);
@@ -159,17 +159,17 @@ fn refill_wide_impl<Mach: Machine>(
     let sc = m.unpack(state.c);
     let sd = [m.unpack(state.d), d1, d2, d3];
     state.d = d4.into();
-    let mut words = out.chunks_exact_mut(16);
+    let mut words = out.chunks_exact_mut(4);
     for ((((&a, &b), &c), &d), &sd) in a.iter().zip(&b).zip(&c).zip(&d).zip(&sd) {
-        (a + k).write_le(words.next().unwrap());
-        (b + sb).write_le(words.next().unwrap());
-        (c + sc).write_le(words.next().unwrap());
-        (d + sd).write_le(words.next().unwrap());
+        words.next().unwrap().copy_from_slice(&(a + k).to_lanes());
+        words.next().unwrap().copy_from_slice(&(b + sb).to_lanes());
+        words.next().unwrap().copy_from_slice(&(c + sc).to_lanes());
+        words.next().unwrap().copy_from_slice(&(d + sd).to_lanes());
     }
 }
 
 dispatch!(m, Mach, {
-    fn refill_wide(state: &mut ChaCha, drounds: u32, out: &mut [u8; BUFSZ]) {
+    fn refill_wide(state: &mut ChaCha, drounds: u32, out: &mut [u32; BUFSZ]) {
         refill_wide_impl(m, state, drounds, out);
     }
 });
