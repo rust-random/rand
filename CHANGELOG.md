@@ -10,7 +10,9 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ## [0.8.5] - unreleased
 ### Fixes
--  Fix build on non-32/64-bit architectures (#1144)
+- Fix build on non-32/64-bit architectures (#1144)
+- Check `libc::pthread_atfork` return value with panic on error (#1178)
+- More robust reseeding in case `ReseedingRng` is used from a fork handler (#1178)
 
 ## [0.8.4] - 2021-06-15
 ### Additions
