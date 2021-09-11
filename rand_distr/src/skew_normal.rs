@@ -39,10 +39,7 @@ use rand::Rng;
 ///
 /// [skew normal distribution]: https://en.wikipedia.org/wiki/Skew_normal_distribution
 /// [`Normal`]: struct.Normal.html
-/// [A Method to Simulate the Skew Normal Distribution]:
-///     Ghorbanzadeh, D. , Jaupi, L. and Durand, P. (2014)
-///     [A Method to Simulate the Skew Normal Distribution](https://dx.doi.org/10.4236/am.2014.513201).
-///     Applied Mathematics, 5, 2073-2076.
+/// [A Method to Simulate the Skew Normal Distribution]: https://dx.doi.org/10.4236/am.2014.513201
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct SkewNormal<F>
