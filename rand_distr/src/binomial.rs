@@ -73,8 +73,7 @@ impl Binomial {
     }
 }
 
-/// Convert a `f64` to an `i64`, panicing on overflow.
-// In the future (Rust 1.34), this might be replaced with `TryFrom`.
+/// Convert a `f64` to an `i64`, panicking on overflow.
 fn f64_to_i64(x: f64) -> i64 {
     assert!(x < (core::i64::MAX as f64));
     x as i64

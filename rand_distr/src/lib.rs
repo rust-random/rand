@@ -43,6 +43,7 @@
 //! - Related to real-valued quantities that grow linearly
 //!   (e.g. errors, offsets):
 //!   - [`Normal`] distribution, and [`StandardNormal`] as a primitive
+//!   - [`SkewNormal`] distribution
 //!   - [`Cauchy`] distribution
 //! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
@@ -56,6 +57,8 @@
 //!   - [`Poisson`] distribution
 //!   - [`Exp`]onential distribution, and [`Exp1`] as a primitive
 //!   - [`Weibull`] distribution
+//!   - [`Gumbel`] distribution
+//!   - [`Frechet`] distribution
 //!   - [`Zeta`] distribution
 //!   - [`Zipf`] distribution
 //! - Gamma and derived distributions:
@@ -99,25 +102,30 @@ pub use self::cauchy::{Cauchy, Error as CauchyError};
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use self::dirichlet::{Dirichlet, Error as DirichletError};
 pub use self::exponential::{Error as ExpError, Exp, Exp1};
+pub use self::frechet::{Error as FrechetError, Frechet};
 pub use self::gamma::{
     Beta, BetaError, ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError,
     Gamma, StudentT,
 };
 pub use self::geometric::{Error as GeoError, Geometric, StandardGeometric};
+pub use self::gumbel::{Error as GumbelError, Gumbel};
 pub use self::hypergeometric::{Error as HyperGeoError, Hypergeometric};
-pub use self::inverse_gaussian::{InverseGaussian, Error as InverseGaussianError};
+pub use self::inverse_gaussian::{Error as InverseGaussianError, InverseGaussian};
 pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal};
-pub use self::normal_inverse_gaussian::{NormalInverseGaussian, Error as NormalInverseGaussianError};
+pub use self::normal_inverse_gaussian::{
+    Error as NormalInverseGaussianError, NormalInverseGaussian,
+};
 pub use self::pareto::{Error as ParetoError, Pareto};
 pub use self::pert::{Pert, PertError};
 pub use self::poisson::{Error as PoissonError, Poisson};
+pub use self::skew_normal::{Error as SkewNormalError, SkewNormal};
 pub use self::triangular::{Triangular, TriangularError};
 pub use self::unit_ball::UnitBall;
 pub use self::unit_circle::UnitCircle;
 pub use self::unit_disc::UnitDisc;
 pub use self::unit_sphere::UnitSphere;
 pub use self::weibull::{Error as WeibullError, Weibull};
-pub use self::zipf::{ZetaError, Zeta, ZipfError, Zipf};
+pub use self::zipf::{Zeta, ZetaError, Zipf, ZipfError};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use rand::distributions::{WeightedError, WeightedIndex};
@@ -184,8 +192,10 @@ mod binomial;
 mod cauchy;
 mod dirichlet;
 mod exponential;
+mod frechet;
 mod gamma;
 mod geometric;
+mod gumbel;
 mod hypergeometric;
 mod inverse_gaussian;
 mod normal;
@@ -193,6 +203,7 @@ mod normal_inverse_gaussian;
 mod pareto;
 mod pert;
 mod poisson;
+mod skew_normal;
 mod triangular;
 mod unit_ball;
 mod unit_circle;

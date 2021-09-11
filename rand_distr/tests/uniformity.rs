@@ -48,7 +48,7 @@ fn unit_sphere() {
 
 #[test]
 fn unit_circle() {
-    use std::f64::consts::PI;
+    use core::f64::consts::PI;
     let mut h = Histogram100::with_const_width(-PI, PI);
     let dist = rand_distr::UnitCircle;
     let mut rng = rand_pcg::Pcg32::from_entropy();

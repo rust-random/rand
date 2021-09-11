@@ -33,3 +33,5 @@ rand_pcg = { version = "0.3.0", path = "../rand_pcg" }
 rand = { path = "..", version = "0.8.0", default-features = false, features = ["std_rng", "std", "small_rng"] }
 # Histogram implementation for testing uniformity
 average = { version = "0.13", features = [ "std" ] }
+# Special functions for testing distributions
+special = "0.8.1"

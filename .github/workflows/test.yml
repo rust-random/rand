@@ -23,7 +23,7 @@ jobs:
         env:
           RUSTDOCFLAGS: --cfg doc_cfg
         # --all builds all crates, but with default features for other crates (okay in this case)
-        run: cargo deadlinks --ignore-fragments -- --all --features nightly,serde1,getrandom,small_rng
+        run: cargo deadlinks --ignore-fragments -- --all --features nightly,serde1,getrandom,small_rng,min_const_gen
 
   test:
     runs-on: ${{ matrix.os }}
@@ -77,14 +77,22 @@ jobs:
           cargo test --target ${{ matrix.target }} --all-features
           cargo test --target ${{ matrix.target }} --benches --features=nightly
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --benches
+          cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features min_const_gen
       - name: Test rand
         run: |
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
           cargo build --target ${{ matrix.target }} --no-default-features --features alloc,getrandom,small_rng
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features=alloc,getrandom,small_rng
-          # all stable features:
-          cargo test --target ${{ matrix.target }} --features=serde1,log,small_rng
           cargo test --target ${{ matrix.target }} --examples
+      - name: Test rand (all stable features, non-MSRV)
+        if: ${{ matrix.toolchain != '1.36.0' }}
+        run: |
+          cargo test --target ${{ matrix.target }} --features=serde1,log,small_rng,min_const_gen
+      - name: Test rand (all stable features, MSRV)
+        if: ${{ matrix.toolchain == '1.36.0' }}
+        run: |
+          # const generics are not stable on 1.36.0
+          cargo test --target ${{ matrix.target }} --features=serde1,log,small_rng
       - name: Test rand_core
         run: |
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml

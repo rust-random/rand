@@ -16,11 +16,11 @@
 use alloc::collections::BTreeSet;
 #[cfg(feature = "std")] use std::collections::HashSet;
 
-#[cfg(feature = "alloc")]
-use crate::distributions::{uniform::SampleUniform, Distribution, Uniform};
 #[cfg(feature = "std")]
 use crate::distributions::WeightedError;
-use crate::Rng;
+
+#[cfg(feature = "alloc")]
+use crate::{Rng, distributions::{uniform::SampleUniform, Distribution, Uniform}};
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
@@ -380,7 +380,7 @@ where
 
     #[cfg(not(feature = "nightly"))]
     {
-        use std::collections::BinaryHeap;
+        use alloc::collections::BinaryHeap;
 
         // Partially sort the array such that the `amount` elements with the largest
         // keys are first using a binary max heap.

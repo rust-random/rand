@@ -17,7 +17,7 @@ use criterion::{criterion_group, criterion_main, Criterion,
     Throughput};
 use criterion_cycles_per_byte::CyclesPerByte;
 
-use std::mem::size_of;
+use core::mem::size_of;
 
 use rand::prelude::*;
 use rand_distr::*;
@@ -139,6 +139,13 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
             accum
         });
     });
+    }
+
+    {
+    let mut g = c.benchmark_group("skew_normal");
+    distr_float!(g, "shape_zero", f64, SkewNormal::new(0.0, 1.0, 0.0).unwrap());
+    distr_float!(g, "shape_positive", f64, SkewNormal::new(0.0, 1.0, 100.0).unwrap());
+    distr_float!(g, "shape_negative", f64, SkewNormal::new(0.0, 1.0, -100.0).unwrap());
     }
 
     {

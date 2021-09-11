@@ -103,8 +103,7 @@
 //! [`UniformDuration`]: crate::distributions::uniform::UniformDuration
 //! [`SampleBorrow::borrow`]: crate::distributions::uniform::SampleBorrow::borrow
 
-#[cfg(not(feature = "std"))] use core::time::Duration;
-#[cfg(feature = "std")] use std::time::Duration;
+use core::time::Duration;
 use core::ops::{Range, RangeInclusive};
 
 use crate::distributions::float::IntoFloat;
@@ -1153,7 +1152,7 @@ mod tests {
     #[test]
     #[cfg(feature = "serde1")]
     fn test_serialization_uniform_duration() {
-        let distr = UniformDuration::new(std::time::Duration::from_secs(10), std::time::Duration::from_secs(60));
+        let distr = UniformDuration::new(Duration::from_secs(10), Duration::from_secs(60));
         let de_distr: UniformDuration = bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
         assert_eq!(
             distr.offset, de_distr.offset
@@ -1503,9 +1502,6 @@ mod tests {
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_durations() {
-        #[cfg(not(feature = "std"))] use core::time::Duration;
-        #[cfg(feature = "std")] use std::time::Duration;
-
         let mut rng = crate::test::rng(253);
 
         let v = &[
