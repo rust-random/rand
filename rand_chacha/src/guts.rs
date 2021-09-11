@@ -159,13 +159,22 @@ fn refill_wide_impl<Mach: Machine>(
     let sc = m.unpack(state.c);
     let sd = [m.unpack(state.d), d1, d2, d3];
     state.d = d4.into();
-    let mut words = out.chunks_exact_mut(4);
-    for ((((&a, &b), &c), &d), &sd) in a.iter().zip(&b).zip(&c).zip(&d).zip(&sd) {
-        words.next().unwrap().copy_from_slice(&(a + k).to_lanes());
-        words.next().unwrap().copy_from_slice(&(b + sb).to_lanes());
-        words.next().unwrap().copy_from_slice(&(c + sc).to_lanes());
-        words.next().unwrap().copy_from_slice(&(d + sd).to_lanes());
-    }
+    out[0..4].copy_from_slice(&(a[0] + k).to_lanes());
+    out[4..8].copy_from_slice(&(b[0] + sb).to_lanes());
+    out[8..12].copy_from_slice(&(c[0] + sc).to_lanes());
+    out[12..16].copy_from_slice(&(d[0] + sd[0]).to_lanes());
+    out[16..20].copy_from_slice(&(a[1] + k).to_lanes());
+    out[20..24].copy_from_slice(&(b[1] + sb).to_lanes());
+    out[24..28].copy_from_slice(&(c[1] + sc).to_lanes());
+    out[28..32].copy_from_slice(&(d[1] + sd[1]).to_lanes());
+    out[32..36].copy_from_slice(&(a[2] + k).to_lanes());
+    out[36..40].copy_from_slice(&(b[2] + sb).to_lanes());
+    out[40..44].copy_from_slice(&(c[2] + sc).to_lanes());
+    out[44..48].copy_from_slice(&(d[2] + sd[2]).to_lanes());
+    out[48..52].copy_from_slice(&(a[3] + k).to_lanes());
+    out[52..56].copy_from_slice(&(b[3] + sb).to_lanes());
+    out[56..60].copy_from_slice(&(c[3] + sc).to_lanes());
+    out[60..64].copy_from_slice(&(d[3] + sd[3]).to_lanes());
 }
 
 dispatch!(m, Mach, {
