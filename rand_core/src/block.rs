@@ -448,7 +448,7 @@ mod test {
         fn generate(&mut self, results: &mut Self::Results) {
             for r in results {
                 *r = self.counter;
-                self.counter += 1;
+                self.counter = self.counter.wrapping_add(3511615422);
             }
         }
     }
@@ -463,7 +463,7 @@ mod test {
 
     #[test]
     fn blockrng_next_u32_vs_next_u64() {
-        let mut rng1 = BlockRng::<DummyRng>::from_seed(Default::default());
+        let mut rng1 = BlockRng::<DummyRng>::from_seed([1, 2, 3, 4]);
         let mut rng2 = rng1.clone();
         let mut rng3 = rng1.clone();
 
@@ -498,7 +498,7 @@ mod test {
         fn generate(&mut self, results: &mut Self::Results) {
             for r in results {
                 *r = self.counter;
-                self.counter += 1;
+                self.counter = self.counter.wrapping_add(2781463553396133982);
             }
         }
     }
@@ -513,7 +513,7 @@ mod test {
 
     #[test]
     fn blockrng64_next_u32_vs_next_u64() {
-        let mut rng1 = BlockRng64::<DummyRng64>::from_seed(Default::default());
+        let mut rng1 = BlockRng64::<DummyRng64>::from_seed([1, 2, 3, 4, 5, 6, 7, 8]);
         let mut rng2 = rng1.clone();
         let mut rng3 = rng1.clone();
 
