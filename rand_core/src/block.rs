@@ -527,6 +527,8 @@ mod test {
         (&mut b[4..8]).copy_from_slice(&rng2.next_u32().to_le_bytes());
         (&mut b[8..]).copy_from_slice(&rng2.next_u64().to_le_bytes());
         assert_ne!(a, b);
+        assert_eq!(&a[..4], &b[..4]);
+        assert_eq!(&a[4..12], &b[8..]);
 
         let mut c = [0; 16];
         (&mut c[..8]).copy_from_slice(&rng3.next_u64().to_le_bytes());
