@@ -12,6 +12,8 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ### Fixes
 - Fix build on non-32/64-bit architectures (#1144)
 - Fix "min_const_gen" feature for `no_std` (#1173)
+- Check `libc::pthread_atfork` return value with panic on error (#1178)
+- More robust reseeding in case `ReseedingRng` is used from a fork handler (#1178)
 
 ### Rngs
 - `StdRng`: Switch from HC128 to ChaCha12 on emscripten (#1142).

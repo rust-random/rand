@@ -40,8 +40,9 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// A reference to the thread-local generator
 ///
 /// An instance can be obtained via [`thread_rng`] or via `ThreadRng::default()`.
-/// This handle is safe to use everywhere (including thread-local destructors)
-/// but cannot be passed between threads (is not `Send` or `Sync`).
+/// This handle is safe to use everywhere (including thread-local destructors),
+/// though it is recommended not to use inside a fork handler.
+/// The handle cannot be passed between threads (is not `Send` or `Sync`).
 ///
 /// `ThreadRng` uses the same PRNG as [`StdRng`] for security and performance
 /// and is automatically seeded from [`OsRng`].
