@@ -146,11 +146,10 @@ macro_rules! intrinsic_native_le_impl {
     ($($ty:ty),+) => {
         $(
             impl Distribution<$ty> for Standard {
-                /// This is supported on x86/64 and supported target features only.
                 #[inline]
                 fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                    // this should compile to SIMD intrinsics, verified on x86 Haswell
-                    // with __m128i, __m256i
+                    // On proper hardware, this should compile to SIMD intrinsics
+                    // Verified on x86 Haswell with __m128i, __m256i
                     let mut buf = [0_u8; mem::size_of::<$ty>()];
                     rng.fill_bytes(&mut buf);
                     unsafe { mem::transmute_copy(&buf) }
