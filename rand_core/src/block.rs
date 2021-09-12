@@ -448,7 +448,7 @@ mod test {
         fn generate(&mut self, results: &mut Self::Results) {
             for r in results {
                 *r = self.counter;
-                self.counter = self.counter.wrapping_add(3511615422);
+                self.counter = self.counter.wrapping_add(3511615421);
             }
         }
     }
@@ -498,7 +498,7 @@ mod test {
         fn generate(&mut self, results: &mut Self::Results) {
             for r in results {
                 *r = self.counter;
-                self.counter = self.counter.wrapping_add(2781463553396133982);
+                self.counter = self.counter.wrapping_add(2781463553396133981);
             }
         }
     }
