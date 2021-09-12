@@ -10,8 +10,8 @@
 
 use crate::distributions::{Distribution, Standard};
 use crate::Rng;
-#[cfg(target_arch = "x86")] use core::arch::x86::*;
-#[cfg(target_arch = "x86_64")] use core::arch::x86_64::*;
+#[cfg(target_arch = "x86")] use core::arch::x86::{__m128i, __m256i};
+#[cfg(target_arch = "x86_64")] use core::arch::x86_64::{__m128i, __m256i};
 use core::mem;
 use core::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize};
 #[cfg(feature = "simd_support")] use packed_simd::*;
@@ -136,38 +136,32 @@ packed_simd_types_impl!(
     u8x8, i8x8, u16x4, i16x4, u32x2, i32x2,
     u8x16, i8x16, u16x8, i16x8, u32x4, i32x4, u64x2, i64x2, u128x1, i128x1,
     u8x32, i8x32, u16x16, i16x16, u32x8, i32x8, u64x4, i64x4, u128x2, i128x2,
-    u8x64, i8x64, u16x32, i16x32, u32x16, i32x16, u64x8, i64x8, u128x4, i128x4
+    u8x64, i8x64, u16x32, i16x32, u32x16, i32x16, u64x8, i64x8, u128x4, i128x4,
+    usizex2, usizex4, usizex8
 );
 
 // x86/64 are already little endian so we don't need packed_simd's `to_le` and
 // therefore can provide this on stable Rust.
 macro_rules! intrinsic_native_le_impl {
-    ($(($ty:ty, $init:ident)),+) => {
+    ($($ty:ty),+) => {
         $(
             impl Distribution<$ty> for Standard {
                 /// This is supported on x86/64 and supported target features only.
                 #[inline]
                 fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                    let mut vec: $ty = unsafe { $init() };
-                    unsafe {
-                        let ptr = &mut vec;
-                        let b_ptr = &mut *(ptr as *mut $ty as *mut [u8; mem::size_of::<$ty>()]);
-                        rng.fill_bytes(b_ptr);
-                    }
-                    vec
+                    // this should compile to SIMD intrinsics, verified on x86 Haswell
+                    // with __m128i, __m256i
+                    let mut buf = [0_u8; mem::size_of::<$ty>()];
+                    rng.fill_bytes(&mut buf);
+                    unsafe { mem::transmute_copy(&buf) }
                 }
             }
         )+
     };
 }
 
-// this could perhaps be _mm_undefined_si128 but it seems the return type
-// for that will change to MaybeUninit<__m128i>
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-intrinsic_native_le_impl!(
-    (__m128i, _mm_setzero_si128),
-    (__m256i, _mm256_setzero_si256)
-);
+intrinsic_native_le_impl!(__m128i, __m256i);
 
 #[cfg(test)]
 mod tests {

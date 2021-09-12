@@ -712,6 +712,21 @@ uniform_simd_int_impl! {
     u8
 }
 
+#[cfg(feature = "simd_support")]
+uniform_simd_int_impl! {
+    (usizex2, isizex2),
+    (usizex4, isizex4),
+    (usizex8, isizex8),
+    usize
+}
+
+#[cfg(feature = "simd_support")]
+uniform_simd_int_impl! {
+    (u128x2, i128x2),
+    (u128x4, i128x4),
+    u128
+}
+
 impl SampleUniform for char {
     type Sampler = UniformChar;
 }

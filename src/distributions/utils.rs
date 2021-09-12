@@ -202,6 +202,14 @@ mod simd_wmul {
     wmul_impl_large! { (u16x32,) u16, 8 }
     wmul_impl_large! { (u32x16,) u32, 16 }
     wmul_impl_large! { (u64x2, u64x4, u64x8,) u64, 32 }
+    wmul_impl_large! { (u128x2, u128x4,) u128, 64 }
+
+    #[cfg(target_pointer_width = "64")]
+    wmul_impl_large! { (usizex2, usizex4, usizex8,) usize, 32 }
+    #[cfg(target_pointer_width = "32")]
+    wmul_impl! { (usizex2, u64x2), (usizex4, u64x4), (usizex8, u64x8),, 32 }
+    #[cfg(target_pointer_width = "16")]
+    wmul_impl! { (usizex2, u32x2), (usizex4, u32x4), (usizex8, u32x8),, 16 }
 }
 
 /// Helper trait when dealing with scalar and SIMD floating point types.
