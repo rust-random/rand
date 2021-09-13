@@ -52,36 +52,52 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     }
 }
 
-macro_rules! fill_via_chunks {
-    ($src:expr, $dst:expr, $ty:ty) => {{
-        const SIZE: usize = core::mem::size_of::<$ty>();
-        let chunk_size_u8 = min($src.len() * SIZE, $dst.len());
-        let chunk_size = (chunk_size_u8 + SIZE - 1) / SIZE;
+trait ToLe: Copy {
+    type Bytes: AsRef<[u8]>;
+    fn to_le_bytes(self) -> Self::Bytes;
+}
+impl ToLe for u32 {
+    type Bytes = [u8; 4];
+    fn to_le_bytes(self) -> Self::Bytes {
+        self.to_le_bytes()
+    }
+}
+impl ToLe for u64 {
+    type Bytes = [u8; 8];
+    fn to_le_bytes(self) -> Self::Bytes {
+        self.to_le_bytes()
+    }
+}
 
-        if cfg!(target_endian = "little") {
-            // On LE we can do a simple copy, which is 25-50% faster:
-            unsafe {
-                core::ptr::copy_nonoverlapping(
-                    $src.as_ptr() as *const u8,
-                    $dst.as_mut_ptr(),
-                    chunk_size_u8);
-            }
-        } else {
-            // This code is valid on all arches, but slower than the above:
-            let mut i = 0;
-            let mut iter = $dst[..chunk_size_u8].chunks_exact_mut(SIZE);
-            while let Some(chunk) = iter.next() {
-                chunk.copy_from_slice(&$src[i].to_le_bytes());
-                i += 1;
-            }
-            let chunk = iter.into_remainder();
-            if !chunk.is_empty() {
-                chunk.copy_from_slice(&$src[i].to_le_bytes()[..chunk.len()]);
-            }
+fn fill_via_chunks<T: ToLe>(src: &[T], dest: &mut [u8]) -> (usize, usize) {
+    let size = core::mem::size_of::<T>();
+    let chunk_size_u8 = min(src.len() * size, dest.len());
+    let chunk_size = (chunk_size_u8 + size - 1) / size;
+
+    if cfg!(target_endian = "little") {
+        // On LE we can do a simple copy, which is 25-50% faster:
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                src.as_ptr() as *const u8,
+                dest.as_mut_ptr(),
+                chunk_size_u8,
+            );
         }
+    } else {
+        // This code is valid on all arches, but slower than the above:
+        let mut i = 0;
+        let mut iter = dest[..chunk_size_u8].chunks_exact_mut(size);
+        while let Some(chunk) = iter.next() {
+            chunk.copy_from_slice(src[i].to_le_bytes().as_ref());
+            i += 1;
+        }
+        let chunk = iter.into_remainder();
+        if !chunk.is_empty() {
+            chunk.copy_from_slice(&src[i].to_le_bytes().as_ref()[..chunk.len()]);
+        }
+    }
 
-        (chunk_size, chunk_size_u8)
-    }};
+    (chunk_size, chunk_size_u8)
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
@@ -115,7 +131,7 @@ macro_rules! fill_via_chunks {
 /// }
 /// ```
 pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, u32)
+    fill_via_chunks(src, dest)
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
@@ -129,7 +145,7 @@ pub fn fill_via_u32_chunks(src: &[u32], dest: &mut [u8]) -> (usize, usize) {
 ///
 /// See `fill_via_u32_chunks` for an example.
 pub fn fill_via_u64_chunks(src: &[u64], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks!(src, dest, u64)
+    fill_via_chunks(src, dest)
 }
 
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
