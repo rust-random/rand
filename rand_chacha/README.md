@@ -36,7 +36,8 @@ Links:
 
 `rand_chacha` is `no_std` compatible when disabling default features; the `std`
 feature can be explicitly required to re-enable `std` support. Using `std`
-allows detection of CPU features and thus better optimisation.
+allows detection of CPU features and thus better optimisation. Using `std`
+also enables `getrandom` functionality, such as `ChaCha20Rng::from_entropy()`.
 
 
 # License
