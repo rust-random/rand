@@ -14,7 +14,7 @@ use ppv_lite86::{dispatch, dispatch_light128};
 pub use ppv_lite86::Machine;
 use ppv_lite86::{vec128_storage, ArithOps, BitOps32, LaneWords4, MultiLane, StoreBytes, Vec4};
 
-pub(crate) const BLOCK: usize = 64;
+pub(crate) const BLOCK: usize = 16;
 pub(crate) const BLOCK64: u64 = BLOCK as u64;
 const LOG2_BUFBLOCKS: u64 = 2;
 const BUFBLOCKS: u64 = 1 << LOG2_BUFBLOCKS;
@@ -81,7 +81,7 @@ impl ChaCha {
 
     /// Produce 4 blocks of output, advancing the state
     #[inline(always)]
-    pub fn refill4(&mut self, drounds: u32, out: &mut [u8; BUFSZ]) {
+    pub fn refill4(&mut self, drounds: u32, out: &mut [u32; BUFSZ]) {
         refill_wide(self, drounds, out)
     }
 
@@ -114,7 +114,7 @@ impl ChaCha {
 #[allow(clippy::many_single_char_names)]
 #[inline(always)]
 fn refill_wide_impl<Mach: Machine>(
-    m: Mach, state: &mut ChaCha, drounds: u32, out: &mut [u8; BUFSZ],
+    m: Mach, state: &mut ChaCha, drounds: u32, out: &mut [u32; BUFSZ],
 ) {
     let k = m.vec([0x6170_7865, 0x3320_646e, 0x7962_2d32, 0x6b20_6574]);
     let mut pos = state.pos64(m);
@@ -159,17 +159,26 @@ fn refill_wide_impl<Mach: Machine>(
     let sc = m.unpack(state.c);
     let sd = [m.unpack(state.d), d1, d2, d3];
     state.d = d4.into();
-    let mut words = out.chunks_exact_mut(16);
-    for ((((&a, &b), &c), &d), &sd) in a.iter().zip(&b).zip(&c).zip(&d).zip(&sd) {
-        (a + k).write_le(words.next().unwrap());
-        (b + sb).write_le(words.next().unwrap());
-        (c + sc).write_le(words.next().unwrap());
-        (d + sd).write_le(words.next().unwrap());
-    }
+    out[0..4].copy_from_slice(&(a[0] + k).to_lanes());
+    out[4..8].copy_from_slice(&(b[0] + sb).to_lanes());
+    out[8..12].copy_from_slice(&(c[0] + sc).to_lanes());
+    out[12..16].copy_from_slice(&(d[0] + sd[0]).to_lanes());
+    out[16..20].copy_from_slice(&(a[1] + k).to_lanes());
+    out[20..24].copy_from_slice(&(b[1] + sb).to_lanes());
+    out[24..28].copy_from_slice(&(c[1] + sc).to_lanes());
+    out[28..32].copy_from_slice(&(d[1] + sd[1]).to_lanes());
+    out[32..36].copy_from_slice(&(a[2] + k).to_lanes());
+    out[36..40].copy_from_slice(&(b[2] + sb).to_lanes());
+    out[40..44].copy_from_slice(&(c[2] + sc).to_lanes());
+    out[44..48].copy_from_slice(&(d[2] + sd[2]).to_lanes());
+    out[48..52].copy_from_slice(&(a[3] + k).to_lanes());
+    out[52..56].copy_from_slice(&(b[3] + sb).to_lanes());
+    out[56..60].copy_from_slice(&(c[3] + sc).to_lanes());
+    out[60..64].copy_from_slice(&(d[3] + sd[3]).to_lanes());
 }
 
 dispatch!(m, Mach, {
-    fn refill_wide(state: &mut ChaCha, drounds: u32, out: &mut [u8; BUFSZ]) {
+    fn refill_wide(state: &mut ChaCha, drounds: u32, out: &mut [u32; BUFSZ]) {
         refill_wide_impl(m, state, drounds, out);
     }
 });
