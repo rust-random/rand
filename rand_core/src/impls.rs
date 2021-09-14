@@ -71,8 +71,8 @@ impl ToLe for u64 {
 
 fn fill_via_chunks<T: ToLe>(src: &[T], dest: &mut [u8]) -> (usize, usize) {
     let size = core::mem::size_of::<T>();
-    let chunk_size_u8 = min(src.len() * size, dest.len());
-    let chunk_size = (chunk_size_u8 + size - 1) / size;
+    let byte_len = min(src.len() * size, dest.len());
+    let num_chunks = (byte_len + size - 1) / size;
 
     if cfg!(target_endian = "little") {
         // On LE we can do a simple copy, which is 25-50% faster:
@@ -80,13 +80,13 @@ fn fill_via_chunks<T: ToLe>(src: &[T], dest: &mut [u8]) -> (usize, usize) {
             core::ptr::copy_nonoverlapping(
                 src.as_ptr() as *const u8,
                 dest.as_mut_ptr(),
-                chunk_size_u8,
+                byte_len,
             );
         }
     } else {
         // This code is valid on all arches, but slower than the above:
         let mut i = 0;
-        let mut iter = dest[..chunk_size_u8].chunks_exact_mut(size);
+        let mut iter = dest[..byte_len].chunks_exact_mut(size);
         while let Some(chunk) = iter.next() {
             chunk.copy_from_slice(src[i].to_le_bytes().as_ref());
             i += 1;
@@ -97,7 +97,7 @@ fn fill_via_chunks<T: ToLe>(src: &[T], dest: &mut [u8]) -> (usize, usize) {
         }
     }
 
-    (chunk_size, chunk_size_u8)
+    (num_chunks, byte_len)
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
