@@ -52,17 +52,19 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     }
 }
 
-trait ToLe: Copy {
+/// Contract: implementing type must be memory-safe to observe as a byte array
+/// (implies no uninitialised padding).
+unsafe trait ToLe: Copy {
     type Bytes: AsRef<[u8]>;
     fn to_le_bytes(self) -> Self::Bytes;
 }
-impl ToLe for u32 {
+unsafe impl ToLe for u32 {
     type Bytes = [u8; 4];
     fn to_le_bytes(self) -> Self::Bytes {
         self.to_le_bytes()
     }
 }
-impl ToLe for u64 {
+unsafe impl ToLe for u64 {
     type Bytes = [u8; 8];
     fn to_le_bytes(self) -> Self::Bytes {
         self.to_le_bytes()
