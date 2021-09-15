@@ -145,7 +145,6 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Zipf<F>
 where F: Float, Standard: Distribution<F> {
-    n: F,
     s: F,
     t: F,
     q: F,
@@ -202,7 +201,7 @@ where F: Float, Standard: Distribution<F> {
         };
         debug_assert!(t > F::zero());
         Ok(Zipf {
-            n, s, t, q
+            s, t, q
         })
     }
 

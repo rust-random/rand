@@ -544,7 +544,6 @@ struct BB<N> {
 struct BC<N> {
     alpha: N,
     beta: N,
-    delta: N,
     kappa1: N,
     kappa2: N,
 }
@@ -646,7 +645,7 @@ where
             Ok(Beta {
                 a, b, switched_params,
                 algorithm: BetaAlgorithm::BC(BC {
-                    alpha, beta, delta, kappa1, kappa2,
+                    alpha, beta, kappa1, kappa2,
                 })
             })
         }
