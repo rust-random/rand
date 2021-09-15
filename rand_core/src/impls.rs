@@ -52,39 +52,44 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     }
 }
 
-/// Contract: implementing type must be memory-safe to observe as a byte array
-/// (implies no uninitialised padding).
-unsafe trait ToLe: Copy {
+trait Observable: Copy {
     type Bytes: AsRef<[u8]>;
     fn to_le_bytes(self) -> Self::Bytes;
+
+    // Contract: observing self is memory-safe (implies no uninitialised padding)
+    fn as_byte_slice(x: &[Self]) -> &[u8];
 }
-unsafe impl ToLe for u32 {
+impl Observable for u32 {
     type Bytes = [u8; 4];
     fn to_le_bytes(self) -> Self::Bytes {
         self.to_le_bytes()
     }
+    fn as_byte_slice(x: &[Self]) -> &[u8] {
+        let ptr = x.as_ptr() as *const u8;
+        let len = x.len() * core::mem::size_of::<Self>();
+        unsafe { core::slice::from_raw_parts(ptr, len) }
+    }
 }
-unsafe impl ToLe for u64 {
+impl Observable for u64 {
     type Bytes = [u8; 8];
     fn to_le_bytes(self) -> Self::Bytes {
         self.to_le_bytes()
     }
+    fn as_byte_slice(x: &[Self]) -> &[u8] {
+        let ptr = x.as_ptr() as *const u8;
+        let len = x.len() * core::mem::size_of::<Self>();
+        unsafe { core::slice::from_raw_parts(ptr, len) }
+    }
 }
 
-fn fill_via_chunks<T: ToLe>(src: &[T], dest: &mut [u8]) -> (usize, usize) {
+fn fill_via_chunks<T: Observable>(src: &[T], dest: &mut [u8]) -> (usize, usize) {
     let size = core::mem::size_of::<T>();
     let byte_len = min(src.len() * size, dest.len());
     let num_chunks = (byte_len + size - 1) / size;
 
     if cfg!(target_endian = "little") {
         // On LE we can do a simple copy, which is 25-50% faster:
-        unsafe {
-            core::ptr::copy_nonoverlapping(
-                src.as_ptr() as *const u8,
-                dest.as_mut_ptr(),
-                byte_len,
-            );
-        }
+        dest[..byte_len].copy_from_slice(&T::as_byte_slice(&src[..num_chunks])[..byte_len]);
     } else {
         // This code is valid on all arches, but slower than the above:
         let mut i = 0;
