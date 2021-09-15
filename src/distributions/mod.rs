@@ -158,7 +158,7 @@ use crate::Rng;
 /// *   Tuples (up to 12 elements): each element is generated sequentially.
 /// *   Arrays (up to 32 elements): each element is generated sequentially;
 ///     see also [`Rng::fill`] which supports arbitrary array length for integer
-///     types and tends to be faster for `u32` and smaller types.
+///     and float types and tends to be faster for `u32` and smaller types.
 ///     When using `rustc` ≥ 1.51, enable the `min_const_gen` feature to support
 ///     arrays larger than 32 elements.
 ///     Note that [`Rng::fill`] and `Standard`'s array support are *not* equivalent:
