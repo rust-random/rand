@@ -448,10 +448,10 @@ impl std::io::Read for dyn RngCore {
     }
 }
 
-// Implement `CryptoRng` for references to an `CryptoRng`.
+// Implement `CryptoRng` for references to a `CryptoRng`.
 impl<'a, R: CryptoRng + ?Sized> CryptoRng for &'a mut R {}
 
-// Implement `CryptoRng` for boxed references to an `CryptoRng`.
+// Implement `CryptoRng` for boxed references to a `CryptoRng`.
 #[cfg(feature = "alloc")]
 impl<R: CryptoRng + ?Sized> CryptoRng for Box<R> {}
 
