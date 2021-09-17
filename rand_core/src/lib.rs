@@ -208,6 +208,20 @@ pub trait RngCore {
 /// [`BlockRngCore`]: block::BlockRngCore
 pub trait CryptoRng {}
 
+/// An extension trait to support trait objects that implement [`RngCore`] and
+/// [`CryptoRng`]. Upcasting to [`RngCore`] is supported via the
+/// [`CryptoRngCore::upcast`] method.
+pub trait CryptoRngCore: RngCore {
+    /// Upcast to an [`RngCore`] trait object.
+    fn upcast(&mut self) -> &mut dyn RngCore;
+}
+
+impl<T: CryptoRng + RngCore> CryptoRngCore for T {
+    fn upcast(&mut self) -> &mut dyn RngCore {
+        self
+    }
+}
+
 /// A random number generator that can be explicitly seeded.
 ///
 /// This trait encapsulates the low-level functionality common to all
