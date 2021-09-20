@@ -630,7 +630,7 @@ mod test {
 
         let rng = &mut ChaChaRng::from_seed(Default::default()) as &mut dyn CryptoRngCore;
         let r1 = rng.next_u64();
-        let rng: &mut dyn RngCore = rng.upcast();
+        let rng: &mut dyn RngCore = rng.as_rngcore();
         let r2 = rng.next_u64();
         assert_ne!(r1, r2);
     }

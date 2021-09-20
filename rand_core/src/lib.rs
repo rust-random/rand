@@ -210,14 +210,14 @@ pub trait CryptoRng {}
 
 /// An extension trait to support trait objects that implement [`RngCore`] and
 /// [`CryptoRng`]. Upcasting to [`RngCore`] is supported via the
-/// [`CryptoRngCore::upcast`] method.
+/// [`CryptoRngCore::as_rngcore`] method.
 pub trait CryptoRngCore: RngCore {
     /// Upcast to an [`RngCore`] trait object.
-    fn upcast(&mut self) -> &mut dyn RngCore;
+    fn as_rngcore(&mut self) -> &mut dyn RngCore;
 }
 
 impl<T: CryptoRng + RngCore> CryptoRngCore for T {
-    fn upcast(&mut self) -> &mut dyn RngCore {
+    fn as_rngcore(&mut self) -> &mut dyn RngCore {
         self
     }
 }
