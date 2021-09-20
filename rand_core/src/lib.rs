@@ -208,9 +208,24 @@ pub trait RngCore {
 /// [`BlockRngCore`]: block::BlockRngCore
 pub trait CryptoRng {}
 
-/// An extension trait to support trait objects that implement [`RngCore`] and
-/// [`CryptoRng`]. Upcasting to [`RngCore`] is supported via the
-/// [`CryptoRngCore::as_rngcore`] method.
+/// An extension trait that is automatically implemented for any type
+/// implementing [`RngCore`] and [`CryptoRng`].
+///
+/// It may be used as a trait object, and supports upcasting to [`RngCore`] via
+/// the [`CryptoRngCore::as_rngcore`] method.
+///
+/// # Example
+///
+/// ```
+/// use rand_core::CryptoRngCore;
+///
+/// #[allow(unused)]
+/// fn make_token(rng: &mut dyn CryptoRngCore) -> [u8; 32] {
+///     let mut buf = [0u8; 32];
+///     rng.fill_bytes(&mut buf);
+///     buf
+/// }
+/// ```
 pub trait CryptoRngCore: RngCore {
     /// Upcast to an [`RngCore`] trait object.
     fn as_rngcore(&mut self) -> &mut dyn RngCore;
