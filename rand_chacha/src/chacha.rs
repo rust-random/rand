@@ -623,4 +623,15 @@ mod test {
         rng.set_word_pos(0);
         assert_eq!(rng.get_word_pos(), 0);
     }
+
+    #[test]
+    fn test_trait_objects() {
+        use rand_core::CryptoRngCore;
+
+        let rng = &mut ChaChaRng::from_seed(Default::default()) as &mut dyn CryptoRngCore;
+        let r1 = rng.next_u64();
+        let rng: &mut dyn RngCore = rng.as_rngcore();
+        let r2 = rng.next_u64();
+        assert_ne!(r1, r2);
+    }
 }

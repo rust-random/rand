@@ -208,6 +208,35 @@ pub trait RngCore {
 /// [`BlockRngCore`]: block::BlockRngCore
 pub trait CryptoRng {}
 
+/// An extension trait that is automatically implemented for any type
+/// implementing [`RngCore`] and [`CryptoRng`].
+///
+/// It may be used as a trait object, and supports upcasting to [`RngCore`] via
+/// the [`CryptoRngCore::as_rngcore`] method.
+///
+/// # Example
+///
+/// ```
+/// use rand_core::CryptoRngCore;
+///
+/// #[allow(unused)]
+/// fn make_token(rng: &mut dyn CryptoRngCore) -> [u8; 32] {
+///     let mut buf = [0u8; 32];
+///     rng.fill_bytes(&mut buf);
+///     buf
+/// }
+/// ```
+pub trait CryptoRngCore: RngCore {
+    /// Upcast to an [`RngCore`] trait object.
+    fn as_rngcore(&mut self) -> &mut dyn RngCore;
+}
+
+impl<T: CryptoRng + RngCore> CryptoRngCore for T {
+    fn as_rngcore(&mut self) -> &mut dyn RngCore {
+        self
+    }
+}
+
 /// A random number generator that can be explicitly seeded.
 ///
 /// This trait encapsulates the low-level functionality common to all
@@ -448,10 +477,10 @@ impl std::io::Read for dyn RngCore {
     }
 }
 
-// Implement `CryptoRng` for references to an `CryptoRng`.
+// Implement `CryptoRng` for references to a `CryptoRng`.
 impl<'a, R: CryptoRng + ?Sized> CryptoRng for &'a mut R {}
 
-// Implement `CryptoRng` for boxed references to an `CryptoRng`.
+// Implement `CryptoRng` for boxed references to a `CryptoRng`.
 #[cfg(feature = "alloc")]
 impl<R: CryptoRng + ?Sized> CryptoRng for Box<R> {}
 
