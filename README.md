@@ -120,7 +120,7 @@ Rand is built with these features enabled by default:
 
 Optionally, the following dependencies can be enabled:
 
--   `log` enables logging via the `log` crate` crate
+-   `log` enables logging via the `log` crate
 
 Additionally, these features configure Rand:
 
