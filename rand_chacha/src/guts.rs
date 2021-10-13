@@ -12,7 +12,7 @@
 use ppv_lite86::{dispatch, dispatch_light128};
 
 pub use ppv_lite86::Machine;
-use ppv_lite86::{vec128_storage, ArithOps, BitOps32, LaneWords4, MultiLane, StoreBytes, Vec4};
+use ppv_lite86::{vec128_storage, ArithOps, BitOps32, LaneWords4, MultiLane, StoreBytes, Vec4, Vec4Ext, Vector};
 
 pub(crate) const BLOCK: usize = 16;
 pub(crate) const BLOCK64: u64 = BLOCK as u64;
@@ -162,32 +162,18 @@ fn refill_wide_impl<Mach: Machine>(
         x = round(x);
         x = undiagonalize(round(diagonalize(x)));
     }
-    let (a, b, c, d) = (
-        x.a.to_lanes(),
-        x.b.to_lanes(),
-        x.c.to_lanes(),
-        x.d.to_lanes(),
-    );
+    let kk = Mach::u32x4x4::from_lanes([k, k, k, k]);
     let sb = m.unpack(state.b);
+    let sb = Mach::u32x4x4::from_lanes([sb, sb, sb, sb]);
     let sc = m.unpack(state.c);
-    let sd = d0123(m, state.d).to_lanes();
-    state.d = add_pos(m, sd[0], 4).into();
-    out[0..4].copy_from_slice(&(a[0] + k).to_lanes());
-    out[4..8].copy_from_slice(&(b[0] + sb).to_lanes());
-    out[8..12].copy_from_slice(&(c[0] + sc).to_lanes());
-    out[12..16].copy_from_slice(&(d[0] + sd[0]).to_lanes());
-    out[16..20].copy_from_slice(&(a[1] + k).to_lanes());
-    out[20..24].copy_from_slice(&(b[1] + sb).to_lanes());
-    out[24..28].copy_from_slice(&(c[1] + sc).to_lanes());
-    out[28..32].copy_from_slice(&(d[1] + sd[1]).to_lanes());
-    out[32..36].copy_from_slice(&(a[2] + k).to_lanes());
-    out[36..40].copy_from_slice(&(b[2] + sb).to_lanes());
-    out[40..44].copy_from_slice(&(c[2] + sc).to_lanes());
-    out[44..48].copy_from_slice(&(d[2] + sd[2]).to_lanes());
-    out[48..52].copy_from_slice(&(a[3] + k).to_lanes());
-    out[52..56].copy_from_slice(&(b[3] + sb).to_lanes());
-    out[56..60].copy_from_slice(&(c[3] + sc).to_lanes());
-    out[60..64].copy_from_slice(&(d[3] + sd[3]).to_lanes());
+    let sc = Mach::u32x4x4::from_lanes([sc, sc, sc, sc]);
+    let sd = d0123(m, state.d);
+    let results = Mach::u32x4x4::transpose4(x.a + kk, x.b + sb, x.c + sc, x.d + sd);
+    out[0..16].copy_from_slice(&results.0.to_scalars());
+    out[16..32].copy_from_slice(&results.1.to_scalars());
+    out[32..48].copy_from_slice(&results.2.to_scalars());
+    out[48..64].copy_from_slice(&results.3.to_scalars());
+    state.d = add_pos(m, sd.to_lanes()[0], 4).into();
 }
 
 dispatch!(m, Mach, {
