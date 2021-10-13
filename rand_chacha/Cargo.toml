@@ -16,7 +16,7 @@ edition = "2018"
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.6.0" }
-ppv-lite86 = { version = "0.2.8", default-features = false, features = ["simd"] }
+ppv-lite86 = { version = "0.2.14", default-features = false, features = ["simd"] }
 serde = { version = "1.0", features = ["derive"], optional = true }
 
 [dev-dependencies]

@@ -73,12 +73,6 @@ impl ChaCha {
         init_chacha(key, nonce)
     }
 
-    #[inline(always)]
-    fn pos64<M: Machine>(&self, m: M) -> u64 {
-        let d: M::u32x4 = m.unpack(self.d);
-        ((d.extract(1) as u64) << 32) | d.extract(0) as u64
-    }
-
     /// Produce 4 blocks of output, advancing the state
     #[inline(always)]
     pub fn refill4(&mut self, drounds: u32, out: &mut [u32; BUFSZ]) {
@@ -111,44 +105,63 @@ impl ChaCha {
     }
 }
 
+// This implementation is platform-independent.
+#[inline(always)]
+#[cfg(target_endian = "big")]
+fn add_pos<Mach: Machine>(_m: Mach, d0: Mach::u32x4, i: u64) -> Mach::u32x4 {
+    let pos0 = ((d0.extract(1) as u64) << 32) | d0.extract(0) as u64;
+    let pos = pos0.wrapping_add(i);
+    d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0)
+}
+#[inline(always)]
+#[cfg(target_endian = "big")]
+fn d0123<Mach: Machine>(m: Mach, d: vec128_storage) -> Mach::u32x4x4 {
+    let d0: Mach::u32x4 = m.unpack(d);
+    let mut pos = ((d0.extract(1) as u64) << 32) | d0.extract(0) as u64;
+    pos = pos.wrapping_add(1);
+    let d1 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
+    pos = pos.wrapping_add(1);
+    let d2 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
+    pos = pos.wrapping_add(1);
+    let d3 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
+    Mach::u32x4x4::from_lanes([d0, d1, d2, d3])
+}
+
+// Pos is packed into the state vectors as a little-endian u64,
+// so on LE platforms we can use native vector ops to increment it.
+#[inline(always)]
+#[cfg(target_endian = "little")]
+fn add_pos<Mach: Machine>(m: Mach, d: Mach::u32x4, i: u64) -> Mach::u32x4 {
+    let d0: Mach::u64x2 = m.unpack(d.into());
+    let incr = m.vec([i, 0]);
+    m.unpack((d0 + incr).into())
+}
+#[inline(always)]
+#[cfg(target_endian = "little")]
+fn d0123<Mach: Machine>(m: Mach, d: vec128_storage) -> Mach::u32x4x4 {
+    let d0: Mach::u64x2 = m.unpack(d);
+    let incr = Mach::u64x2x4::from_lanes([m.vec([0, 0]), m.vec([1, 0]), m.vec([2, 0]), m.vec([3, 0])]);
+    m.unpack((Mach::u64x2x4::from_lanes([d0, d0, d0, d0]) + incr).into())
+}
+
 #[allow(clippy::many_single_char_names)]
 #[inline(always)]
 fn refill_wide_impl<Mach: Machine>(
     m: Mach, state: &mut ChaCha, drounds: u32, out: &mut [u32; BUFSZ],
 ) {
     let k = m.vec([0x6170_7865, 0x3320_646e, 0x7962_2d32, 0x6b20_6574]);
-    let mut pos = state.pos64(m);
-    let d0: Mach::u32x4 = m.unpack(state.d);
-    pos = pos.wrapping_add(1);
-    let d1 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-    pos = pos.wrapping_add(1);
-    let d2 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-    pos = pos.wrapping_add(1);
-    let d3 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-
     let b = m.unpack(state.b);
     let c = m.unpack(state.c);
     let mut x = State {
         a: Mach::u32x4x4::from_lanes([k, k, k, k]),
         b: Mach::u32x4x4::from_lanes([b, b, b, b]),
         c: Mach::u32x4x4::from_lanes([c, c, c, c]),
-        d: m.unpack(Mach::u32x4x4::from_lanes([d0, d1, d2, d3]).into()),
+        d: d0123(m, state.d),
     };
     for _ in 0..drounds {
         x = round(x);
         x = undiagonalize(round(diagonalize(x)));
     }
-    let mut pos = state.pos64(m);
-    let d0: Mach::u32x4 = m.unpack(state.d);
-    pos = pos.wrapping_add(1);
-    let d1 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-    pos = pos.wrapping_add(1);
-    let d2 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-    pos = pos.wrapping_add(1);
-    let d3 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-    pos = pos.wrapping_add(1);
-    let d4 = d0.insert((pos >> 32) as u32, 1).insert(pos as u32, 0);
-
     let (a, b, c, d) = (
         x.a.to_lanes(),
         x.b.to_lanes(),
@@ -157,8 +170,8 @@ fn refill_wide_impl<Mach: Machine>(
     );
     let sb = m.unpack(state.b);
     let sc = m.unpack(state.c);
-    let sd = [m.unpack(state.d), d1, d2, d3];
-    state.d = d4.into();
+    let sd = d0123(m, state.d).to_lanes();
+    state.d = add_pos(m, sd[0], 4).into();
     out[0..4].copy_from_slice(&(a[0] + k).to_lanes());
     out[4..8].copy_from_slice(&(b[0] + sb).to_lanes());
     out[8..12].copy_from_slice(&(c[0] + sc).to_lanes());
