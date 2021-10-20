@@ -202,6 +202,197 @@ mod simd_wmul {
     wmul_impl_large! { (u16x32,) u16, 8 }
     wmul_impl_large! { (u32x16,) u32, 16 }
     wmul_impl_large! { (u64x2, u64x4, u64x8,) u64, 32 }
+    wmul_impl_large! { (u128x2, u128x4,) u128, 64 }
+
+    #[cfg(target_pointer_width = "64")]
+    wmul_impl_large! { (usizex2, usizex4, usizex8,) usize, 32 }
+    #[cfg(target_pointer_width = "32")]
+    wmul_impl_large! { (usizex2, usizex4, usizex8,) usize, 16 }
+    #[cfg(target_pointer_width = "16")]
+    wmul_impl_large! { (usizex2, usizex4, usizex8,) usize, 8 }
+}
+
+pub(crate) trait OverflowingAdd<T> {
+    fn overflowing_add(&self, y: Self) -> (Self, T) where Self: Sized;
+}
+
+#[cfg(feature = "simd_support")]
+macro_rules! impl_overflowing_add {
+    ($(($ty:ty, $signed_ty:ty, $mask:ty)),+) => {$(
+        #[cfg(feature = "simd_support")]
+        impl OverflowingAdd<$mask> for $ty {
+            #[inline]
+            fn overflowing_add(&self, y: Self) -> (Self, $mask) {
+                let sum = *self + y;
+
+                let lane_bitwidth = std::mem::size_of::<$ty>() / <$ty>::lanes();
+                let mask = <$ty>::splat(1 << (lane_bitwidth - 1));
+
+                let neg_self: $signed_ty = (mask ^ *self).cast();
+                let neg_sum: $signed_ty = (mask ^ sum).cast();
+
+                let overflowed = neg_self.gt(neg_sum);
+
+                (sum, overflowed)
+            }
+        }
+    )+};
+}
+
+#[cfg(feature = "simd_support")]
+impl_overflowing_add!(
+    (u8x2, i8x2, m8x2),
+    (u8x4, i8x4, m8x4),
+    (u8x8, i8x8, m8x8),
+    (u8x16, i8x16, m8x16),
+    (u8x32, i8x32, m8x32),
+    (u8x64, i8x64, m8x64),
+
+    (u16x2, i16x2, m16x2),
+    (u16x4, i16x4, m16x4),
+    (u16x8, i16x8, m16x8),
+    (u16x16, i16x16, m16x16),
+    (u16x32, i16x32, m16x32),
+
+    (u32x2, i32x2, m32x2),
+    (u32x4, i32x4, m32x4),
+    (u32x8, i32x8, m32x8),
+    (u32x16, i32x16, m32x16),
+
+    (u64x2, i64x2, m64x2),
+    (u64x4, i64x4, m64x4),
+    (u64x8, i64x8, m64x8),
+
+    (u128x2, i128x2, m128x2),
+    (u128x4, i128x4, m128x4)
+);
+
+
+#[cfg(feature = "simd_support")]
+pub(crate) trait SimdCombine<T> {
+    fn simd_combine(&self) -> T;
+}
+
+#[cfg(feature = "simd_support")]
+macro_rules! impl_combine_2 {
+    ($(($wide:ident, $short:ident)),+) => {$(
+        impl SimdCombine<$wide> for [$short] {
+            #[inline]
+            fn simd_combine(&self) -> $wide {
+                shuffle!(self[0], self[1], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
+            }
+        }
+    )+};
+}
+
+#[cfg(feature = "simd_support")]
+impl_combine_2!{
+    (u32x16, u32x8),
+    (u16x16, u16x8),
+    (u8x16, u8x8)
+}
+
+#[cfg(feature = "simd_support")]
+macro_rules! impl_combine_4 {
+    ($(($wide:ident, $mid:ident, $short:ident)),+) => {$(
+        impl SimdCombine<$wide> for [$short] {
+            #[inline]
+            fn simd_combine(&self) -> $wide {
+                let a: $mid = self.chunks_exact(2).nth(0).unwrap().simd_combine();
+                let b: $mid = self.chunks_exact(2).nth(1).unwrap().simd_combine();
+                shuffle!(a, b, [
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+                ])
+            }
+        }
+    )+};
+}
+
+#[cfg(feature = "simd_support")]
+impl_combine_4!{
+    (u16x32, u16x16, u16x8),
+    (u8x32, u8x16, u8x8)
+}
+
+#[cfg(feature = "simd_support")]
+impl SimdCombine<u8x64> for [u8x8; 8] {
+    #[inline]
+    fn simd_combine(&self) -> u8x64 {
+        let a: u8x32 = self.chunks_exact(4).nth(0).unwrap().simd_combine();
+        let b: u8x32 = self.chunks_exact(4).nth(1).unwrap().simd_combine();
+        shuffle!(a, b, [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+            16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+            32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+            48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+        ])
+    }
+}
+
+
+#[cfg(feature = "simd_support")]
+pub(crate) trait SimdSplit<T> {
+    fn simd_split(&self) -> T;
+}
+
+#[cfg(feature = "simd_support")]
+macro_rules! impl_split_2 {
+    ($(($wide:ident, $short:ident)),+) => {$(
+        impl SimdSplit<[$short; 2]> for $wide {
+            #[inline]
+            fn simd_split(&self) -> [$short; 2] {
+                let a = shuffle!(self, [0, 1, 2, 3, 4, 5, 6, 7]);
+                let b = shuffle!(self, [8, 9, 10, 11, 12, 13, 14, 15]);
+                [a, b]
+            }
+        }
+    )+};
+}
+
+#[cfg(feature = "simd_support")]
+impl_split_2!{
+    (u32x16, u32x8),
+    (u16x16, u16x8),
+    (u8x16, u8x8)
+}
+
+#[cfg(feature = "simd_support")]
+macro_rules! impl_split_4 {
+    ($(($wide:ident, $mid:ident, $short:ident)),+) => {$(
+        impl SimdSplit<[$short; 4]> for $wide {
+            #[inline]
+            fn simd_split(&self) -> [$short; 4] {
+                let a = shuffle!(self, [0, 1, 2, 3, 4, 5, 6, 7]);
+                let b = shuffle!(self, [8, 9, 10, 11, 12, 13, 14, 15]);
+                let c = shuffle!(self, [16, 17, 18, 19, 20, 21, 22, 23]);
+                let d = shuffle!(self, [24, 25, 26, 27, 28, 29, 30, 31]);
+                [a, b, c, d]
+            }
+        }
+    )+};
+}
+
+#[cfg(feature = "simd_support")]
+impl_split_4!{
+    (u16x32, u16x16, u16x8),
+    (u8x32, u8x16, u8x8)
+}
+
+#[cfg(feature = "simd_support")]
+impl SimdSplit<[u8x8; 8]> for u8x64 {
+    #[inline]
+    fn simd_split(&self) -> [u8x8; 8] {
+        let x0 = shuffle!(self, [0, 1, 2, 3, 4, 5, 6, 7]);
+        let x1 = shuffle!(self, [8, 9, 10, 11, 12, 13, 14, 15]);
+        let x2 = shuffle!(self, [16, 17, 18, 19, 20, 21, 22, 23]);
+        let x3 = shuffle!(self, [24, 25, 26, 27, 28, 29, 30, 31]);
+        let x4 = shuffle!(self, [32, 33, 34, 35, 36, 37, 38, 39]);
+        let x5 = shuffle!(self, [40, 41, 42, 43, 44, 45, 46, 47]);
+        let x6 = shuffle!(self, [48, 49, 50, 51, 52, 53, 54, 55]);
+        let x7 = shuffle!(self, [56, 57, 58, 59, 60, 61, 62, 63]);
+        [x0, x1, x2, x3, x4, x5, x6, x7]
+    }
 }
 
 /// Helper trait when dealing with scalar and SIMD floating point types.
