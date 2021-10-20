@@ -51,7 +51,8 @@ pub struct UniformInt<X> {
     // HACK: fields are pub(crate)
     pub(crate) low: X,
     pub(crate) range: X,
-    pub(crate) z: X, // either ints_to_reject or zone depending on implementation
+    pub(crate) nrmr: X, // range.wrapping_neg() % range
+    pub(crate) z: X,    // either ints_to_reject or zone depending on implementation
 }
 
 macro_rules! uniform_int_impl {
@@ -108,6 +109,7 @@ macro_rules! uniform_int_impl {
                     low,
                     // These are really $unsigned values, but store as $ty:
                     range: range as $ty,
+                    nrmr: (range.wrapping_neg() % range) as $ty,
                     z: ints_to_reject as $unsigned as $ty,
                 }
             }
@@ -115,19 +117,18 @@ macro_rules! uniform_int_impl {
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range = self.range as $unsigned as $u_large;
-                if range > 0 {
-                    let unsigned_max = ::core::$u_large::MAX;
-                    let zone = unsigned_max - (self.z as $unsigned as $u_large);
-                    loop {
-                        let v: $u_large = rng.gen();
-                        let (hi, lo) = v.wmul(range);
-                        if lo <= zone {
-                            return self.low.wrapping_add(hi as $ty);
-                        }
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let unsigned_max = ::core::$u_large::MAX;
+                let zone = unsigned_max - (self.z as $unsigned as $u_large);
+                loop {
+                    let v: $u_large = rng.gen();
+                    let (hi, lo) = v.wmul(range);
+                    if lo <= zone {
+                        return self.low.wrapping_add(hi as $ty);
                     }
-                } else {
-                    // Sample from the entire integer range.
-                    rng.gen()
                 }
             }
 
@@ -187,6 +188,97 @@ macro_rules! uniform_int_impl {
         }
 
         impl UniformInt<$ty> {
+            /// Sample, Lemire's method
+            #[inline]
+            pub fn sample_lemire<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $unsigned as $u_large;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let (mut hi, mut lo) = rng.gen::<$u_large>().wmul(range);
+                if lo < range {
+                    while lo < (self.nrmr as $u_large) {
+                        let (new_hi, new_lo) = rng.gen::<$u_large>().wmul(range);
+                        hi = new_hi;
+                        lo = new_lo;
+                    }
+                }
+                self.low.wrapping_add(hi as $ty)
+            }
+
+            /// Sample, Canon's method
+            #[inline]
+            pub fn sample_canon<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $unsigned as $u_extra_large;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                // generate a sample using a sensible integer type
+                let (mut result, lo_order) = rng.gen::<$u_extra_large>().wmul(range);
+
+                // if the sample is biased...
+                if lo_order > range.wrapping_neg() {
+                    // ...generate a new sample with 64 more bits, enough that bias is undetectable
+                    let (new_hi_order, _) =
+                        (rng.gen::<$u_extra_large>()).wmul(range as $u_extra_large);
+                    // and adjust if needed
+                    result += lo_order
+                        .checked_add(new_hi_order as $u_extra_large)
+                        .is_none() as $u_extra_large;
+                }
+
+                self.low.wrapping_add(result as $ty)
+            }
+
+            /// Sample, Canon's method with Lemire's early-out
+            #[inline]
+            pub fn sample_canon_lemire<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $unsigned as $u_extra_large;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                // generate a sample using a sensible integer type
+                let (mut result, lo_order) = rng.gen::<$u_extra_large>().wmul(range);
+
+                // if the sample is biased...
+                if lo_order < (self.nrmr as $u_extra_large) {
+                    // ...generate a new sample with 64 more bits, enough that bias is undetectable
+                    let (new_hi_order, _) =
+                        (rng.gen::<$u_extra_large>()).wmul(range as $u_extra_large);
+                    // and adjust if needed
+                    result += lo_order
+                        .checked_add(new_hi_order as $u_extra_large)
+                        .is_none() as $u_extra_large;
+                }
+
+                self.low.wrapping_add(result as $ty)
+            }
+
+            /// Sample, Bitmask method
+            #[inline]
+            pub fn sample_bitmask<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let mut range = self.range as $unsigned as $u_large;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                // the old impl use a mix of methods for different integer sizes, we only use
+                // the lz method here for a better comparison.
+
+                let mut mask = $u_large::max_value();
+                range -= 1;
+                mask >>= (range | 1).leading_zeros();
+                loop {
+                    let x = rng.gen::<$u_large>() & mask;
+                    if x <= range {
+                        return self.low.wrapping_add(x as $ty);
+                    }
+                }
+            }
+
             /// Sample single inclusive, using ONeill's method
             #[inline]
             pub fn sample_single_inclusive_oneill<R: Rng + ?Sized, B1, B2>(

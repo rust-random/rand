@@ -71,6 +71,7 @@ macro_rules! uniform_simd_int_impl {
                     // These are really $unsigned values, but store as $ty:
                     range: range.cast(),
                     z: zone.cast(),
+                    nrmr: ((0 - range) % range).cast(),
                 }
             }
 
