@@ -178,7 +178,8 @@ pub use uniform_other::{UniformChar, UniformDuration};
     feature = "serde1",
     serde(bound(deserialize = "X::Sampler: Deserialize<'de>"))
 )]
-pub struct Uniform<X: SampleUniform>(X::Sampler);
+// HACK: field is pub
+pub struct Uniform<X: SampleUniform>(pub X::Sampler);
 
 impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance which samples uniformly from the half

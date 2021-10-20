@@ -9,10 +9,26 @@
 use criterion::{criterion_group, criterion_main};
 use criterion::{BenchmarkId, Criterion};
 #[cfg(feature = "simd_support")] use packed_simd::*;
-use rand::distributions::uniform::{SampleUniform, UniformSampler};
+use rand::distributions::uniform::{SampleUniform, Uniform, UniformSampler};
 use rand::prelude::*;
 
 type BenchRng = SmallRng;
+
+macro_rules! bench_dist_int_group {
+    ($name:literal, $T:ty, $f:ident, $g:expr, $inputs:expr) => {
+        for input in $inputs {
+            $g.bench_with_input(
+                BenchmarkId::new($name, input.0),
+                &input.1,
+                |b, (low, high)| {
+                    let mut rng = BenchRng::from_entropy();
+                    let dist = Uniform::new_inclusive(low, high);
+                    b.iter(|| <$T as SampleUniform>::Sampler::$f(&dist.0, &mut rng))
+                },
+            );
+        }
+    };
+}
 
 macro_rules! bench_int_group {
     ($name:literal, $T:ty, $f:ident, $g:expr, $inputs:expr) => {
@@ -39,9 +55,17 @@ macro_rules! bench_int_group {
 
 macro_rules! bench_int {
     ($c:expr, $T:ty, $high:expr) => {{
-        let mut g = $c.benchmark_group(concat!("uniform_int_", stringify!($T)));
         let inputs = &[("high_reject", $high), ("low_reject", (-1, 2))];
 
+        let mut g = $c.benchmark_group(concat!("uniform_dist_int_", stringify!($T)));
+        bench_dist_int_group!("Old", $T, sample, g, inputs);
+        bench_dist_int_group!("Lemire", $T, sample_lemire, g, inputs);
+        bench_dist_int_group!("Canon", $T, sample_canon, g, inputs);
+        bench_dist_int_group!("Canon-Lemire", $T, sample_canon_lemire, g, inputs);
+        bench_dist_int_group!("Bitmask", $T, sample_bitmask, g, inputs);
+        drop(g);
+
+        let mut g = $c.benchmark_group(concat!("uniform_int_", stringify!($T)));
         bench_int_group!("Old", $T, sample_single_inclusive, g, inputs);
         bench_int_group!("ONeill", $T, sample_single_inclusive_oneill, g, inputs);
         bench_int_group!("Canon", $T, sample_single_inclusive_canon, g, inputs);
