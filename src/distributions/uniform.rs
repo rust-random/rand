@@ -844,6 +844,22 @@ macro_rules! uniform_simd_int_impl {
                 }
             }
         }
+
+        impl UniformInt<$ty> {
+            #[inline(always)]
+            fn sample_inc_setup<B1, B2>(low_b: B1, high_b: B2) -> ($unsigned, $ty)
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                assert!(low.le(high).all(), "UniformSampler::sample_single_inclusive: low > high");
+                // wrapping sub and add
+                let range: $unsigned = ((high - low) + 1).cast();
+                (range, low)
+            }
+        }
     };
 
     // bulk implementation
@@ -859,19 +875,6 @@ macro_rules! uniform_simd_int_impl {
 macro_rules! uniform_simd_int_gt8_impl {
     ($ty:ident, $unsigned:ident) => {
         impl UniformInt<$ty> {
-            #[inline(always)]
-            fn sample_inc_setup<B1, B2>(low_b: B1, high_b: B2) -> ($unsigned, $ty)
-            where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
-            {
-                let low = *low_b.borrow();
-                let high = *high_b.borrow();
-                assert!(low.le(high).all(), "UniformSampler::sample_single_inclusive: low > high");
-                let range: $unsigned = ((high - low) + 1).cast();
-                (range, low)
-            }
-
             #[inline(always)]
             fn canon_successive<R: Rng + ?Sized>(
                 range: $unsigned,
@@ -1005,20 +1008,6 @@ macro_rules! uniform_simd_int_gt8_impl {
 macro_rules! uniform_simd_int_le8_impl {
     ($ty:ident, $unsigned:ident, $u64xN_type:ident, $u_extra_large:ident) => {
         impl UniformInt<$ty> {
-            #[inline(always)]
-            fn sample_inc_setup<B1, B2>(low_b: B1, high_b: B2) -> ($unsigned, $ty)
-            where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
-            {
-                let low = *low_b.borrow();
-                let high = *high_b.borrow();
-                assert!(low.le(high).all(), "UniformSampler::sample_single_inclusive: low > high");
-                // wrapping sub and add
-                let range: $unsigned = ((high - low) + 1).cast();
-                (range, low)
-            }
-
             #[inline(always)]
             fn canon_successive<R: Rng + ?Sized>(
                 range: $unsigned,
