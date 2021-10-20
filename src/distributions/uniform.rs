@@ -891,7 +891,7 @@ macro_rules! uniform_simd_int_gt8_impl {
 
             /// Canon's method
             #[inline(always)]
-            pub fn sample_inclusive_canon<R: Rng + ?Sized, B1, B2>(
+            pub fn sample_single_inclusive_canon_branchless<R: Rng + ?Sized, B1, B2>(
                 low_b: B1, high_b: B2, rng: &mut R,
             ) -> $ty
             where
@@ -911,6 +911,18 @@ macro_rules! uniform_simd_int_gt8_impl {
                 is_full_range.select(cast_rand_bits, low + cast_result)
             }
 
+            ///
+            #[inline(always)]
+            pub fn sample_inclusive_canon_scalar<R: Rng + ?Sized, B1, B2>(
+                _low_b: B1, _high_b: B2, _rng: &mut R,
+            ) -> $ty
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                Default::default() // dummy impl
+            }
+
             /// Canon's method
             #[inline(always)]
             pub fn sample_single_inclusive_canon<R: Rng + ?Sized, B1, B2>(
@@ -928,33 +940,6 @@ macro_rules! uniform_simd_int_gt8_impl {
                 let (mut result, lo_order) = rand_bits.wmul(range);
 
                 if lo_order.gt(0 - range).any() {
-                    Self::canon_successive(range, &mut result, lo_order, rng);
-                }
-
-                let cast_result: $ty = result.cast();
-                let cast_rand_bits: $ty = rand_bits.cast();
-                is_full_range.select(cast_rand_bits, low + cast_result)
-            }
-
-            /// Canon + Lemire's early-out
-            #[inline(always)]
-            pub fn sample_inclusive_canon_lemire<R: Rng + ?Sized, B1, B2>(
-                low_b: B1, high_b: B2, rng: &mut R,
-            ) -> $ty
-            where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
-            {
-                let (range, low) = Self::sample_inc_setup(low_b, high_b);
-                let is_full_range = range.eq($unsigned::splat(0));
-
-                // generate a sample using a sensible integer type
-                let rand_bits = rng.gen::<$unsigned>();
-                let (mut result, lo_order) = rand_bits.wmul(range);
-
-                // lo_order < range.wrapping_neg() % range {
-                // may panic if range == 0
-                if lo_order.lt((0 - range) % range).any() {
                     Self::canon_successive(range, &mut result, lo_order, rng);
                 }
 
@@ -1053,7 +1038,7 @@ macro_rules! uniform_simd_int_le8_impl {
 
             ///
             #[inline(always)]
-            pub fn sample_inclusive_canon<R: Rng + ?Sized, B1, B2>(
+            pub fn sample_single_inclusive_canon_branchless<R: Rng + ?Sized, B1, B2>(
                 low_b: B1, high_b: B2, rng: &mut R,
             ) -> $ty
             where
@@ -1129,33 +1114,6 @@ macro_rules! uniform_simd_int_le8_impl {
                 let (mut result, lo_order) = rand_bits.wmul(range);
 
                 if lo_order.gt(0 - range).any() {
-                    Self::canon_successive(range, &mut result, lo_order, rng);
-                }
-
-                let cast_result: $ty = result.cast();
-                let cast_rand_bits: $ty = rand_bits.cast();
-                is_full_range.select(cast_rand_bits, low + cast_result)
-            }
-
-            ///
-            #[inline(always)]
-            pub fn sample_inclusive_canon_lemire<R: Rng + ?Sized, B1, B2>(
-                low_b: B1, high_b: B2, rng: &mut R,
-            ) -> $ty
-            where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
-            {
-                let (range, low) = Self::sample_inc_setup(low_b, high_b);
-                let is_full_range = range.eq($unsigned::splat(0));
-
-                // generate a sample using a sensible integer type
-                let rand_bits = rng.gen::<$unsigned>();
-                let (mut result, lo_order) = rand_bits.wmul(range);
-
-                // lo_order < range.wrapping_neg() % range {
-                // may panic if range == 0
-                if lo_order.lt((0 - range) % range).any() {
                     Self::canon_successive(range, &mut result, lo_order, rng);
                 }
 
