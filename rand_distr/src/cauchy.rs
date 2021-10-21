@@ -90,8 +90,8 @@ where F: Float + FloatConst, Standard: Distribution<F>
 mod test {
     use super::*;
 
-    fn median(mut numbers: &mut [f64]) -> f64 {
-        sort(&mut numbers);
+    fn median(numbers: &mut [f64]) -> f64 {
+        sort(numbers);
         let mid = numbers.len() / 2;
         numbers[mid]
     }

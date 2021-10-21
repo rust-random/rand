@@ -91,9 +91,7 @@ fn normal() {
     for (&d, &e) in diff.iter().zip(expected_error.iter()) {
         // Difference larger than 3 standard deviations or cutoff
         let tol = (3. * e).max(1e-4);
-        if d > tol {
-            panic!("Difference = {} * tol", d / tol);
-        }
+        assert!(d <= tol, "Difference = {} * tol", d / tol);
     }
 }
 
@@ -176,8 +174,6 @@ fn skew_normal() {
     for (&d, &e) in diff.iter().zip(expected_error.iter()) {
         // Difference larger than 3 standard deviations or cutoff
         let tol = (3. * e).max(1e-4);
-        if d > tol {
-            panic!("Difference = {} * tol", d / tol);
-        }
+        assert!(d <= tol, "Difference = {} * tol", d / tol);
     }
 }
