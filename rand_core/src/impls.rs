@@ -94,7 +94,7 @@ fn fill_via_chunks<T: Observable>(src: &[T], dest: &mut [u8]) -> (usize, usize) 
         // This code is valid on all arches, but slower than the above:
         let mut i = 0;
         let mut iter = dest[..byte_len].chunks_exact_mut(size);
-        for chunk in iter.by_ref() {
+        for chunk in &mut iter {
             chunk.copy_from_slice(src[i].to_le_bytes().as_ref());
             i += 1;
         }
