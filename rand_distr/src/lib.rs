@@ -173,13 +173,11 @@ mod test {
     macro_rules! assert_almost_eq {
         ($a:expr, $b:expr, $prec:expr) => {
             let diff = ($a - $b).abs();
-            if diff > $prec {
-                panic!(
-                    "assertion failed: `abs(left - right) = {:.1e} < {:e}`, \
-                     (left: `{}`, right: `{}`)",
-                    diff, $prec, $a, $b
-                );
-            }
+            assert!(diff <= $prec,
+                "assertion failed: `abs(left - right) = {:.1e} < {:e}`, \
+                    (left: `{}`, right: `{}`)",
+                diff, $prec, $a, $b
+            );
         };
     }
 }
