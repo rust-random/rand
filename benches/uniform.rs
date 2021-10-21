@@ -133,8 +133,12 @@ macro_rules! bench_simd {
 fn uniform_simd(c: &mut Criterion) {
     // for i8/i16, we use 32-bit integers internally so rejection is most common near full-size
     // the exact values were determined with an exhaustive search
+    bench_simd!(c, i8x2, (i8::MIN, 116));
+    bench_simd!(c, i8x4, (i8::MIN, 116));
+    bench_simd!(c, i8x8, (i8::MIN, 116));
     bench_simd!(c, i8x16, (i8::MIN, 116));
     bench_simd!(c, i8x32, (i8::MIN, 116));
+    bench_simd!(c, i8x64, (i8::MIN, 116));
     bench_simd!(c, i16x8, (i16::MIN, 32407));
     bench_simd!(c, i16x16, (i16::MIN, 32407));
     bench_simd!(c, i32x4, (i32::MIN, 1));
