@@ -460,6 +460,66 @@ mod isize_int_impls {
     uniform_int_impl! { usize, usize, usize, usize }
 }
 
+macro_rules! uniform_int_64_impl {
+    ($ty:ty, $unsigned:ident) => {
+        impl UniformInt<$ty> {
+            /// Sample, Canon's method variant
+            #[inline]
+            pub fn sample_canon_64<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $unsigned as u64;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let (result, _lo1) = rng.gen::<u64>().wmul(range);
+                // bias is at most 1 in 2.pow(56) for i8, 1 in 2.pow(48) for i16
+                self.low.wrapping_add(result as $ty)
+            }
+        }
+    };
+}
+uniform_int_64_impl!(i8, u8);
+uniform_int_64_impl!(i16, u16);
+
+macro_rules! uniform_int_64void_impl {
+    ($ty:ty) => {
+        impl UniformInt<$ty> {
+            /// Sample, Canon's method variant
+            #[inline]
+            pub fn sample_canon_64<R: Rng + ?Sized>(&self, _rng: &mut R) -> $ty {
+                Default::default() // not used
+            }
+        }
+    };
+}
+uniform_int_64void_impl!(i32);
+uniform_int_64void_impl!(i64);
+
+impl UniformInt<i128> {
+    /// Sample, Canon's method variant
+    #[inline]
+    pub fn sample_canon_64<R: Rng + ?Sized>(&self, rng: &mut R) -> i128 {
+        let range = self.range as u128;
+        if range == 0 {
+            return rng.gen();
+        }
+
+        // Sample multiplied by 2.pow(-128) makes lo1 fractional (>>128):
+        let (mut result, lo1) = rng.gen::<u128>().wmul(range);
+
+        if lo1 > range.wrapping_neg() {
+            // Generate more bits. Sample is multiplied by 2.pow(-192), so
+            // hi2 is multiplied by 2.pow(-64):
+            let (hi2, lo2) = (rng.gen::<u64>() as u128).wmul(range);
+            debug_assert_eq!(hi2 >> 64, 0u128);
+            let is_overflow = lo1.checked_add((hi2 << 64) | (lo2 >> 64)).is_none();
+            result += is_overflow as u128;
+        }
+
+        self.low.wrapping_add(result as i128)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

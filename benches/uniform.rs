@@ -60,6 +60,7 @@ macro_rules! bench_int {
         bench_dist_int_group!("Old", $T, sample, g, inputs);
         bench_dist_int_group!("Lemire", $T, sample_lemire, g, inputs);
         bench_dist_int_group!("Canon", $T, sample_canon, g, inputs);
+        bench_dist_int_group!("Canon64", $T, sample_canon_64, g, inputs);
         bench_dist_int_group!("Canon-Lemire", $T, sample_canon_lemire, g, inputs);
         bench_dist_int_group!("Bitmask", $T, sample_bitmask, g, inputs);
         drop(g);
