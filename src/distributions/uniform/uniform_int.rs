@@ -462,6 +462,31 @@ mod isize_int_impls {
     uniform_int_impl! { usize, usize, usize, usize }
 }
 
+impl UniformInt<i128> {
+    /// Sample, Canon's method variant
+    #[inline]
+    pub fn sample_canon_64<R: Rng + ?Sized>(&self, rng: &mut R) -> i128 {
+        let range = self.range as i128 as u128;
+        if range == 0 {
+            return rng.gen();
+        }
+
+        // Sample multiplied by 2.pow(-128) makes lo1 fractional (>>128):
+        let (mut result, lo1) = rng.gen::<u128>().wmul(range);
+
+        if lo1 > range.wrapping_neg() {
+            // Generate more bits. Sample is multiplied by 2.pow(-192), so
+            // hi2 is multiplied by 2.pow(-64):
+            let (hi2, lo2) = (rng.gen::<u64>() as u128).wmul(range);
+            debug_assert_eq!(hi2 >> 64, 0u128);
+            let is_overflow = lo1.checked_add((hi2 << 64) | (lo2 >> 64)).is_none();
+            result += is_overflow as u128;
+        }
+
+        self.low.wrapping_add(result as i128)
+    }
+}
+
 #[cfg(feature = "simd_support")]
 macro_rules! uniform_simd_int_impl {
     ($ty:ident, $unsigned:ident, $u_scalar:ident) => {
