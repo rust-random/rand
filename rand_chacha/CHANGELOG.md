@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Made `rand_chacha` propagate the `std` feature down to `rand_core`
+- Performance improvements for AVX2: ~4-7%
 
 ## [0.3.1] - 2021-06-09
 - add getters corresponding to existing setters: `get_seed`, `get_stream` (#1124)
