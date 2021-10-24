@@ -61,6 +61,7 @@ macro_rules! bench_int {
         bench_dist_int_group!("Old", $T, sample, g, inputs);
         bench_dist_int_group!("Lemire", $T, sample_lemire, g, inputs);
         bench_dist_int_group!("Canon", $T, sample_canon, g, inputs);
+        bench_dist_int_group!("Canon64", $T, sample_canon_64, g, inputs);
         bench_dist_int_group!("Canon-Lemire", $T, sample_canon_lemire, g, inputs);
         bench_dist_int_group!("Bitmask", $T, sample_bitmask, g, inputs);
         drop(g);
@@ -82,10 +83,6 @@ fn uniform_int(c: &mut Criterion) {
     bench_int!(c, i32, (i32::MIN, 1));
     bench_int!(c, i64, (i64::MIN, 1));
     bench_int!(c, i128, (i128::MIN, 1));
-
-    let inputs = &[("high_reject", (i128::MIN, 1)), ("low_reject", (-1, 2))];
-    let mut g = c.benchmark_group(concat!("uniform_dist_int_", stringify!(i128)));
-    bench_dist_int_group!("Canon64", i128, sample_canon_64, g, inputs);
 }
 
 #[cfg(feature = "simd_support")]

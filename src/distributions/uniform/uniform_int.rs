@@ -462,11 +462,46 @@ mod isize_int_impls {
     uniform_int_impl! { usize, usize, usize, usize }
 }
 
+macro_rules! uniform_int_64_impl {
+    ($ty:ty, $unsigned:ident) => {
+        impl UniformInt<$ty> {
+            /// Sample, Canon's method variant
+            #[inline]
+            pub fn sample_canon_64<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $unsigned as u64;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let (result, _lo1) = rng.gen::<u64>().wmul(range);
+                // bias is at most 1 in 2.pow(56) for i8, 1 in 2.pow(48) for i16
+                self.low.wrapping_add(result as $ty)
+            }
+        }
+    }
+}
+uniform_int_64_impl!(i8, u8);
+uniform_int_64_impl!(i16, u16);
+
+macro_rules! uniform_int_64void_impl {
+    ($ty:ty) => {
+        impl UniformInt<$ty> {
+            /// Sample, Canon's method variant
+            #[inline]
+            pub fn sample_canon_64<R: Rng + ?Sized>(&self, _rng: &mut R) -> $ty {
+                Default::default() // not used
+            }
+        }
+    }
+}
+uniform_int_64void_impl!(i32);
+uniform_int_64void_impl!(i64);
+
 impl UniformInt<i128> {
     /// Sample, Canon's method variant
     #[inline]
     pub fn sample_canon_64<R: Rng + ?Sized>(&self, rng: &mut R) -> i128 {
-        let range = self.range as i128 as u128;
+        let range = self.range as u128;
         if range == 0 {
             return rng.gen();
         }
