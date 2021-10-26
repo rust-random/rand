@@ -37,7 +37,7 @@ fn weighted_index_assignment_large(b: &mut Bencher) {
 }
 
 #[bench]
-fn weighted_index_creation(b: &mut Bencher) {
+fn weighted_index_new(b: &mut Bencher) {
     let mut rng = rand::thread_rng();
     let weights = &[1u32, 2, 4, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 7][..];
     b.iter(|| {
@@ -47,11 +47,65 @@ fn weighted_index_creation(b: &mut Bencher) {
 }
 
 #[bench]
-fn weighted_index_creation_large(b: &mut Bencher) {
+fn weighted_index_new_large(b: &mut Bencher) {
     let mut rng = rand::thread_rng();
     let weights: Vec<u64> = (0u64..1000).collect();
     b.iter(|| {
         let distr = WeightedIndex::new(&weights).unwrap();
+        rng.sample(&distr)
+    })
+}
+
+#[bench]
+fn weighted_index_from_cumulative_weights(b: &mut Bencher) {
+    let mut rng = rand::thread_rng();
+    let weights = vec![1u32, 2, 4, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 7];
+    let cumulative_weights: Vec<_> = weights
+        .into_iter()
+        .scan(0, |acc, item| {
+            *acc += item;
+            Some(*acc)
+        })
+        .collect();
+    b.iter(|| {
+        let distr = WeightedIndex::from_cumulative_weights_unchecked(cumulative_weights.clone());
+        rng.sample(distr)
+    })
+}
+
+#[bench]
+fn weighted_index_from_cumulative_weights_large(b: &mut Bencher) {
+    let mut rng = rand::thread_rng();
+    let weights: Vec<u64> = (0u64..1000).collect();
+    let cumulative_weights: Vec<_> = weights
+        .into_iter()
+        .scan(0, |acc, item| {
+            *acc += item;
+            Some(*acc)
+        })
+        .collect();
+    b.iter(|| {
+        let distr = WeightedIndex::from_cumulative_weights_unchecked(cumulative_weights.clone());
+        rng.sample(&distr)
+    })
+}
+
+#[bench]
+fn weighted_index_from_weights(b: &mut Bencher) {
+    let mut rng = rand::thread_rng();
+    let weights = vec![1u32, 2, 4, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 7];
+    b.iter(|| {
+        let distr = WeightedIndex::from_weights(weights.clone()).unwrap();
+        rng.sample(distr)
+    })
+}
+
+#[bench]
+fn weighted_index_from_weights_large(b: &mut Bencher) {
+    let mut rng = rand::thread_rng();
+    let weights: Vec<u64> = (0u64..1000).collect();
+    b.iter(|| {
+        let distr = WeightedIndex::from_weights(weights.clone()).unwrap();
         rng.sample(&distr)
     })
 }

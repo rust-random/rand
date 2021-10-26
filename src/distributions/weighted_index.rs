@@ -180,6 +180,70 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         Ok(())
     }
 
+    /// Create a `WeightedIndex` from a vector of cumulative weights without verification.
+    pub fn from_cumulative_weights_unchecked(ws: Vec<X>) -> Self
+    where
+        X: Clone + Default,
+    {
+        let mut cumulative_weights = ws;
+        let total_weight = cumulative_weights.pop().unwrap();
+        let zero = <X as Default>::default();
+        let weight_distribution = X::Sampler::new(zero, total_weight.clone());
+        Self {
+            cumulative_weights,
+            total_weight,
+            weight_distribution,
+        }
+    }
+
+    /// Create a `WeightedIndex` from a vector of cumulative weights without verification.
+    pub fn from_weights(ws: Vec<X>) -> Result<Self, WeightedError>
+    where
+        X: for<'a> ::core::ops::AddAssign<&'a X> + Clone + Default,
+        for<'a> &'a X: SampleBorrow<X>,
+    {
+        let mut cumulative_weights = ws;
+        let mut iter = cumulative_weights.iter_mut();
+
+        let mut total_weight: X = iter.next().ok_or(WeightedError::NoItem)?.borrow().clone();
+        let zero = <X as Default>::default();
+
+        if !(total_weight >= zero) {
+            return Err(WeightedError::InvalidWeight);
+        }
+
+        for w in iter {
+            if !(w.borrow() >= &zero) {
+                return Err(WeightedError::InvalidWeight);
+            }
+            total_weight += w.borrow();
+            *w = total_weight.clone();
+        }
+
+        if total_weight == zero {
+            return Err(WeightedError::AllWeightsZero);
+        };
+
+        let weight_distribution = X::Sampler::new(zero, total_weight.clone());
+        cumulative_weights.pop().unwrap();
+        Ok(Self {
+            cumulative_weights,
+            total_weight,
+            weight_distribution,
+        })
+    }
+
+    /// Remove the inner vector containing the cumulative weights.
+    pub fn into_cumulative_weights(self) -> Vec<X> {
+        let Self {
+            mut cumulative_weights,
+            total_weight,
+            ..
+        } = self;
+        cumulative_weights.push(total_weight);
+        cumulative_weights
+    }
+
     /// Update a subset of weights, without changing the number of weights.
     ///
     /// `new_weights` must be sorted by the index.
