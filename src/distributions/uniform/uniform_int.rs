@@ -464,6 +464,8 @@ macro_rules! uniform_int_64_impl {
     ($ty:ty, $unsigned:ident) => {
         impl UniformInt<$ty> {
             /// Sample, Canon's method variant
+            ///
+            /// Variant: potential increase to bias (uses a single `u64` sample).
             #[inline]
             pub fn sample_canon_64<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 let range = self.range as $unsigned as u64;
@@ -474,6 +476,35 @@ macro_rules! uniform_int_64_impl {
                 let (result, _lo1) = rng.gen::<u64>().wmul(range);
                 // bias is at most 1 in 2.pow(56) for i8, 1 in 2.pow(48) for i16
                 self.low.wrapping_add(result as $ty)
+            }
+
+            /// Sample single inclusive, using Canon's method variant
+            ///
+            /// Variant: potential increase to bias (uses a single `u64` sample).
+            #[inline]
+            pub fn sample_single_inclusive_canon_64<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> $ty
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                assert!(
+                    low <= high,
+                    "UniformSampler::sample_single_inclusive: low > high"
+                );
+                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as u64;
+                if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
+                    return rng.gen();
+                }
+
+                // generate a sample using a sensible integer type
+                let (result, _lo1) = rng.gen::<u64>().wmul(range);
+                // bias is at most 1 in 2.pow(56) for i8, 1 in 2.pow(48) for i16
+                low.wrapping_add(result as $ty)
             }
         }
     };
@@ -487,6 +518,18 @@ macro_rules! uniform_int_64void_impl {
             /// Sample, Canon's method variant
             #[inline]
             pub fn sample_canon_64<R: Rng + ?Sized>(&self, _rng: &mut R) -> $ty {
+                Default::default() // not used
+            }
+
+            /// Sample single inclusive, using Canon's method variant
+            #[inline]
+            pub fn sample_single_inclusive_canon_64<R: Rng + ?Sized, B1, B2>(
+                _low_b: B1, _high_b: B2, _rng: &mut R,
+            ) -> $ty
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
                 Default::default() // not used
             }
         }
@@ -517,6 +560,44 @@ impl UniformInt<i128> {
         }
 
         self.low.wrapping_add(result as i128)
+    }
+
+    /// Sample single inclusive, using Canon's method variant
+    ///
+    /// Variant: potential increase to bias (uses a single `u64` sample).
+    #[inline]
+    pub fn sample_single_inclusive_canon_64<R: Rng + ?Sized, B1, B2>(
+        low_b: B1, high_b: B2, rng: &mut R,
+    ) -> i128
+    where
+        B1: SampleBorrow<i128> + Sized,
+        B2: SampleBorrow<i128> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        assert!(
+            low <= high,
+            "UniformSampler::sample_single_inclusive: low > high"
+        );
+        let range = high.wrapping_sub(low).wrapping_add(1) as u128;
+        if range == 0 {
+            // Range is MAX+1 (unrepresentable), so we need a special case
+            return rng.gen();
+        }
+
+        // generate a sample using a sensible integer type
+        let (mut result, lo1) = rng.gen::<u128>().wmul(range);
+
+        if lo1 > range.wrapping_neg() {
+            // Generate more bits. Sample is multiplied by 2.pow(-192), so
+            // hi2 is multiplied by 2.pow(-64):
+            let (hi2, lo2) = (rng.gen::<u64>() as u128).wmul(range);
+            debug_assert_eq!(hi2 >> 64, 0u128);
+            let is_overflow = lo1.checked_add((hi2 << 64) | (lo2 >> 64)).is_none();
+            result += is_overflow as u128;
+        }
+
+        low.wrapping_add(result as i128)
     }
 }
 
