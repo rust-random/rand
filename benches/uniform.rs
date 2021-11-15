@@ -70,6 +70,7 @@ macro_rules! bench_int {
         bench_int_group!("Old", $T, sample_single_inclusive, g, inputs);
         bench_int_group!("ONeill", $T, sample_single_inclusive_oneill, g, inputs);
         bench_int_group!("Canon", $T, sample_single_inclusive_canon, g, inputs);
+        bench_int_group!("Canon64", $T, sample_single_inclusive_canon_64, g, inputs);
         bench_int_group!("Canon-Lemire", $T, sample_inclusive_canon_lemire, g, inputs);
         bench_int_group!("Bitmask", $T, sample_single_inclusive_bitmask, g, inputs);
     }};
