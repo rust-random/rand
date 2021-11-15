@@ -79,12 +79,19 @@ impl Observable for u64 {
     }
 }
 
+/// Fill dest from src
+///
+/// Returns `(n, byte_len)`. `src[..n]` is consumed (and possibly mutated),
+/// `dest[..byte_len]` is filled. `src[n..]` and `dest[byte_len..]` are left
+/// unaltered.
 fn fill_via_chunks<T: Observable>(src: &mut [T], dest: &mut [u8]) -> (usize, usize) {
     let size = core::mem::size_of::<T>();
     let byte_len = min(src.len() * size, dest.len());
     let num_chunks = (byte_len + size - 1) / size;
 
-    // Byte-swap for portability of results:
+    // Byte-swap for portability of results. This must happen before copying
+    // since the size of dest is not guaranteed to be a multiple of T or to be
+    // sufficiently aligned.
     if cfg!(target_endian = "big") {
         for x in &mut src[..num_chunks] {
             *x = x.to_le();
