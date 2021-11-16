@@ -702,6 +702,48 @@ macro_rules! uniform_simd_int_impl {
         }
 
         impl UniformInt<$ty> {
+            /// Sample, Bitmask method
+            #[inline]
+            pub fn sample_bitmask<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let mut range: $unsigned = self.range.cast();
+                let is_full_range = range.eq($unsigned::splat(0));
+
+                // the old impl use a mix of methods for different integer sizes, we only use
+                // the lz method here for a better comparison.
+
+                // generate bitmask
+                range -= 1;
+                let mut mask = range | 1;
+
+                mask |= mask >> 1;
+                mask |= mask >> 2;
+                mask |= mask >> 4;
+
+                const LANE_WIDTH: usize = std::mem::size_of::<$ty>() * 8 / <$ty>::lanes();
+                if LANE_WIDTH >=  16 { mask |= mask >>  8; }
+                if LANE_WIDTH >=  32 { mask |= mask >> 16; }
+                if LANE_WIDTH >=  64 { mask |= mask >> 32; }
+                if LANE_WIDTH >= 128 { mask |= mask >> 64; }
+
+                let mut v: $unsigned = rng.gen();
+                loop {
+                    let masked = v & mask;
+                    let accept = masked.le(range);
+                    if accept.all() {
+                        let masked: $ty = masked.cast();
+                        // wrapping addition
+                        let result = self.low + masked;
+                        // `select` here compiles to a blend operation
+                        // When `range.eq(0).none()` the compare and blend
+                        // operations are avoided.
+                        let v: $ty = v.cast();
+                        return is_full_range.select(v, result);
+                    }
+                    // Replace only the failing lanes
+                    v = accept.select(v, rng.gen());
+                }
+            }
+
             #[inline(always)]
             fn sample_inc_setup<B1, B2>(low_b: B1, high_b: B2) -> ($unsigned, $ty)
             where
@@ -716,8 +758,8 @@ macro_rules! uniform_simd_int_impl {
                 (range, low)
             }
 
-            ///
-            #[inline(always)]
+            /// Sample single inclusive, using the Bitmask method
+            #[inline]
             pub fn sample_single_inclusive_bitmask<R: Rng + ?Sized, B1, B2>(
                 low_b: B1, high_b: B2, rng: &mut R,
             ) -> $ty
@@ -771,7 +813,7 @@ macro_rules! uniform_simd_int_impl {
         )+
     };
 }
-
+/*
 #[cfg(feature = "simd_support")]
 macro_rules! uniform_simd_int_gt8_impl {
     ($ty:ident, $unsigned:ident) => {
@@ -792,7 +834,7 @@ macro_rules! uniform_simd_int_gt8_impl {
                 let (_, overflowed) = lo_order.overflowing_add(cast_new_hi);
                 *result += overflowed.select($unsigned::splat(1), $unsigned::splat(0));
             }
-
+/*
             /// Canon's method
             #[inline(always)]
             pub fn sample_single_inclusive_canon_branchless<R: Rng + ?Sized, B1, B2>(
@@ -851,6 +893,7 @@ macro_rules! uniform_simd_int_gt8_impl {
                 let cast_rand_bits: $ty = rand_bits.cast();
                 is_full_range.select(cast_rand_bits, low + cast_result)
             }
+*/
         }
     };
 
@@ -859,91 +902,76 @@ macro_rules! uniform_simd_int_gt8_impl {
         uniform_simd_int_gt8_impl!{ $signed, $unsigned }
     )+};
 }
+*/
 
+// These are the naive ports of the above algorithms to SIMD.
+// Caveat: supports only up to x8, and at x8 it relies on 512-bit SIMD.
+// Caveat: always generates u64 samples which will often be missing.
 #[cfg(feature = "simd_support")]
 macro_rules! uniform_simd_int_le8_impl {
-    ($ty:ident, $unsigned:ident, $u64xN_type:ident, $u_extra_large:ident) => {
+    ($ty:ident, $unsigned:ident, $u_extra_large:ident) => {
         impl UniformInt<$ty> {
             #[inline(always)]
             fn canon_successive<R: Rng + ?Sized>(
-                range: $unsigned,
-                result: &mut $unsigned,
-                lo_order: $unsigned,
+                range: $u_extra_large,
+                result: &mut $u_extra_large,
+                lo_order: $u_extra_large,
                 rng: &mut R
             ) {
                 // ...generate a new sample with 64 more bits, enough that bias is undetectable
-                let new_bits: $u_extra_large = rng.gen::<$u64xN_type>().cast();
-                let large_range: $u_extra_large = range.cast();
-                let (new_hi_order, _) = new_bits.wmul(large_range);
+                let new_bits: $u_extra_large = rng.gen::<$u_extra_large>();
+                let (new_hi_order, _) = new_bits.wmul(range);
                 // and adjust if needed
-                let cast_new_hi: $unsigned = new_hi_order.cast();
-                let (_, overflowed) = lo_order.overflowing_add(cast_new_hi);
-                *result += overflowed.select($unsigned::splat(1), $unsigned::splat(0));
+                let (_, overflowed) = lo_order.overflowing_add(new_hi_order);
+                *result += overflowed.select($u_extra_large::splat(1), $u_extra_large::splat(0));
             }
 
-            ///
-            #[inline(always)]
-            pub fn sample_single_inclusive_canon_branchless<R: Rng + ?Sized, B1, B2>(
-                low_b: B1, high_b: B2, rng: &mut R,
-            ) -> $ty
-            where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
-            {
-                let (range, low) = Self::sample_inc_setup(low_b, high_b);
+            /// Sample, Canon's method
+            #[inline]
+            pub fn sample_canon<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range: $unsigned = self.range.cast();
                 let is_full_range = range.eq($unsigned::splat(0));
+                let range: $u_extra_large = range.cast();
 
                 // generate a sample using a sensible integer type
-                let rand_bits = rng.gen::<$unsigned>();
+                let rand_bits = rng.gen::<$u_extra_large>();
                 let (mut result, lo_order) = rand_bits.wmul(range);
 
-                Self::canon_successive(range, &mut result, lo_order, rng);
-
-                let cast_result: $ty = result.cast();
-                let cast_rand_bits: $ty = rand_bits.cast();
-                is_full_range.select(cast_rand_bits, low + cast_result)
-            }
-
-            ///
-            #[inline(always)]
-            pub fn sample_inclusive_canon_scalar<R: Rng + ?Sized, B1, B2>(
-                low_b: B1, high_b: B2, rng: &mut R,
-            ) -> $ty
-            where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
-            {
-                let (range, low) = Self::sample_inc_setup(low_b, high_b);
-                let is_full_range = range.eq($unsigned::splat(0));
-
-                // generate a sample using a sensible integer type
-                let rand_bits = rng.gen::<$unsigned>();
-                let (mut result, lo_order) = rand_bits.wmul(range);
-
-                // ...generate a new sample with 64 more bits, enough that bias is undetectable
-                let new_bits: $u_extra_large = rng.gen::<$u64xN_type>().cast();
-                let large_range: $u_extra_large = range.cast();
-
-                // let (new_hi_order, _) = new_bits.wmul(large_range);
-                let mut new_hi_order = <$u_extra_large>::default();
-
-                for i in 0..<$ty>::lanes() {
-                    let (shi, _slo) = new_bits.extract(i).wmul(large_range.extract(i));
-                    new_hi_order = new_hi_order.replace(i, shi);
+                if lo_order.gt(0 - range).any() {
+                    Self::canon_successive(range, &mut result, lo_order, rng);
                 }
 
-                // and adjust if needed
-                let cast_new_hi: $unsigned = new_hi_order.cast();
-                let (_, overflowed) = lo_order.overflowing_add(cast_new_hi);
-                result += overflowed.select($unsigned::splat(1), $unsigned::splat(0));
-
-                let cast_result: $ty = result.cast();
-                let cast_rand_bits: $ty = rand_bits.cast();
-                is_full_range.select(cast_rand_bits, low + cast_result)
+                // truncate and return the result:
+                let result: $ty = result.cast();
+                let rand_bits: $ty = rand_bits.cast();
+                is_full_range.select(rand_bits, self.low + result)
             }
 
-            ///
-            #[inline(always)]
+            /// Sample, Canon's method with Lemire's early-out
+            #[inline]
+            pub fn sample_canon_lemire<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range: $unsigned = self.range.cast();
+                let is_full_range = range.eq($unsigned::splat(0));
+                let range: $u_extra_large = range.cast();
+
+                // generate a sample using a sensible integer type
+                let rand_bits = rng.gen::<$u_extra_large>();
+                let (mut result, lo_order) = rand_bits.wmul(range);
+
+                let nrmr: $unsigned = self.nrmr.cast();
+                let nrmr: $u_extra_large = nrmr.cast();
+                if lo_order.lt(nrmr).any() {
+                    Self::canon_successive(range, &mut result, lo_order, rng);
+                }
+
+                // truncate and return the result:
+                let result: $ty = result.cast();
+                let rand_bits: $ty = rand_bits.cast();
+                is_full_range.select(rand_bits, self.low + result)
+            }
+
+            /// Sample single inclusive, using Canon's method
+            #[inline]
             pub fn sample_single_inclusive_canon<R: Rng + ?Sized, B1, B2>(
                 low_b: B1, high_b: B2, rng: &mut R,
             ) -> $ty
@@ -953,25 +981,55 @@ macro_rules! uniform_simd_int_le8_impl {
             {
                 let (range, low) = Self::sample_inc_setup(low_b, high_b);
                 let is_full_range = range.eq($unsigned::splat(0));
+                let range: $u_extra_large = range.cast();
 
                 // generate a sample using a sensible integer type
-                let rand_bits = rng.gen::<$unsigned>();
+                let rand_bits = rng.gen::<$u_extra_large>();
                 let (mut result, lo_order) = rand_bits.wmul(range);
 
                 if lo_order.gt(0 - range).any() {
                     Self::canon_successive(range, &mut result, lo_order, rng);
                 }
 
-                let cast_result: $ty = result.cast();
-                let cast_rand_bits: $ty = rand_bits.cast();
-                is_full_range.select(cast_rand_bits, low + cast_result)
+                // truncate and return the result:
+                let result: $ty = result.cast();
+                let rand_bits: $ty = rand_bits.cast();
+                is_full_range.select(rand_bits, low + result)
+            }
+
+            /// Sample single inclusive, using Canon's method with Lemire's early-out
+            #[inline]
+            pub fn sample_inclusive_canon_lemire<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> $ty
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                let (range, low) = Self::sample_inc_setup(low_b, high_b);
+                let is_full_range = range.eq($unsigned::splat(0));
+                let range: $u_extra_large = range.cast();
+
+                // generate a sample using a sensible integer type
+                let rand_bits = rng.gen::<$u_extra_large>();
+                let (mut result, lo_order) = rand_bits.wmul(range);
+
+                let nrmr = ((0 - range) % range);
+                if lo_order.lt(nrmr).any() {
+                    Self::canon_successive(range, &mut result, lo_order, rng);
+                }
+
+                // truncate and return the result:
+                let result: $ty = result.cast();
+                let rand_bits: $ty = rand_bits.cast();
+                is_full_range.select(rand_bits, low + result)
             }
         }
     };
 
-    ($(($unsigned:ident, $signed:ident, $u64xN_type:ident, $u_extra_large:ident)),+) => {$(
-        uniform_simd_int_le8_impl!{ $unsigned, $unsigned, $u64xN_type, $u_extra_large }
-        uniform_simd_int_le8_impl!{ $signed, $unsigned, $u64xN_type, $u_extra_large }
+    ($(($unsigned:ident, $signed:ident, $u_extra_large:ident),)+) => {$(
+        uniform_simd_int_le8_impl!{ $unsigned, $unsigned, $u_extra_large }
+        uniform_simd_int_le8_impl!{ $signed, $unsigned, $u_extra_large }
     )+};
 }
 
@@ -1023,41 +1081,37 @@ uniform_simd_int_impl! {
     u8
 }
 
-#[cfg(feature = "simd_support")]
-uniform_simd_int_gt8_impl! {
-    (u8x16, i8x16),
-    (u8x32, i8x32),
-    (u8x64, i8x64),
-
-    (u16x16, i16x16),
-    (u16x32, i16x32),
-
-    (u32x16, i32x16)
-}
+// #[cfg(feature = "simd_support")]
+// uniform_simd_int_gt8_impl! {
+//     (u8x16, i8x16),
+//     (u8x32, i8x32),
+//     (u8x64, i8x64),
+//
+//     (u16x16, i16x16),
+//     (u16x32, i16x32),
+//
+//     (u32x16, i32x16)
+// }
 #[cfg(feature = "simd_support")]
 uniform_simd_int_le8_impl! {
-    (u8x2, i8x2, i64x2, u64x2),
-    (u8x4, i8x4, i64x4, u64x4),
-    (u8x8, i8x8, i64x8, u64x8),
+    (u8x2, i8x2, u64x2),
+    (u8x4, i8x4, u64x4),
+    (u8x8, i8x8, u64x8),
 
-    (u16x2, i16x2, i64x2, u64x2),
-    (u16x4, i16x4, i64x4, u64x4),
-    (u16x8, i16x8, i64x8, u64x8),
+    (u16x2, i16x2, u64x2),
+    (u16x4, i16x4, u64x4),
+    (u16x8, i16x8, u64x8),
 
-    (u32x2, i32x2, i64x2, u64x2),
-    (u32x4, i32x4, i64x4, u64x4),
-    (u32x8, i32x8, i64x8, u64x8),
+    (u32x2, i32x2, u64x2),
+    (u32x4, i32x4, u64x4),
+    (u32x8, i32x8, u64x8),
 
-    (u64x2, i64x2, i64x2, u64x2),
-    (u64x4, i64x4, i64x4, u64x4),
-    (u64x8, i64x8, i64x8, u64x8),
+    (u64x2, i64x2, u64x2),
+    (u64x4, i64x4, u64x4),
+    (u64x8, i64x8, u64x8),
 
-    (u128x2, i128x2, i64x2, u128x2),
-    (u128x4, i128x4, i64x4, u128x4)
-
-    // (usizex2, isizex2, i64x2, u64x2),
-    // (usizex4, isizex4, i64x4, u64x4),
-    // (usizex8, isizex8, i64x8, u64x8)
+    (u128x2, i128x2, u128x2),
+    (u128x4, i128x4, u128x4),
 }
 
 #[cfg(test)]

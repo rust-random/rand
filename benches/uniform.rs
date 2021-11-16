@@ -87,6 +87,24 @@ fn uniform_int(c: &mut Criterion) {
 }
 
 #[cfg(feature = "simd_support")]
+macro_rules! bench_dist_simd_group {
+    ($name:literal, $T:ty, $f:ident, $g:expr, $inputs:expr) => {
+        for input in $inputs {
+            $g.bench_with_input(
+                BenchmarkId::new($name, input.0),
+                &input.1,
+                |b, (low, high)| {
+                    let mut rng = BenchRng::from_entropy();
+                    let (low, high) = (<$T>::splat(*low), <$T>::splat(*high));
+                    let dist = Uniform::new_inclusive(low, high);
+                    b.iter(|| <$T as SampleUniform>::Sampler::$f(&dist.0, &mut rng))
+                },
+            );
+        }
+    };
+}
+
+#[cfg(feature = "simd_support")]
 macro_rules! bench_simd_group {
     ($name:literal, $T:ty, $f:ident, $g:expr, $inputs:expr) => {
         for input in $inputs {
@@ -114,20 +132,21 @@ macro_rules! bench_simd_group {
 #[cfg(feature = "simd_support")]
 macro_rules! bench_simd {
     ($c:expr, $T:ty, $high:expr/*, $incr:expr*/) => {{
-        let mut g = $c.benchmark_group(concat!("uniform_simd_", stringify!($T)));
         let inputs = &[("high_reject", $high), ("low_reject", (-1, 2))];
 
+        let mut g = $c.benchmark_group(concat!("uniform_dist_simd_", stringify!($T)));
+        bench_dist_simd_group!("Old", $T, sample, g, inputs);
+        bench_dist_simd_group!("Canon", $T, sample_canon, g, inputs);
+        bench_dist_simd_group!("Canon-Lemire", $T, sample_canon_lemire, g, inputs);
+        bench_dist_simd_group!("Bitmask", $T, sample_bitmask, g, inputs);
+        drop(g);
+
+        let mut g = $c.benchmark_group(concat!("uniform_int_", stringify!($T)));
         bench_simd_group!("Old", $T, sample_single_inclusive, g, inputs);
         bench_simd_group!("Canon", $T, sample_single_inclusive_canon, g, inputs);
-        bench_simd_group!(
-            "Canon-branchless",
-            $T,
-            sample_single_inclusive_canon_branchless,
-            g,
-            inputs
-        );
-        bench_simd_group!("Canon-scalar", $T, sample_inclusive_canon_scalar, g, inputs);
+        bench_simd_group!("Canon-Lemire", $T, sample_inclusive_canon_lemire, g, inputs);
         bench_simd_group!("Bitmask", $T, sample_single_inclusive_bitmask, g, inputs);
+
     }};
 }
 
@@ -138,11 +157,11 @@ fn uniform_simd(c: &mut Criterion) {
     bench_simd!(c, i8x2, (i8::MIN, 116));
     bench_simd!(c, i8x4, (i8::MIN, 116));
     bench_simd!(c, i8x8, (i8::MIN, 116));
-    bench_simd!(c, i8x16, (i8::MIN, 116));
-    bench_simd!(c, i8x32, (i8::MIN, 116));
-    bench_simd!(c, i8x64, (i8::MIN, 116));
+//     bench_simd!(c, i8x16, (i8::MIN, 116));
+//     bench_simd!(c, i8x32, (i8::MIN, 116));
+//     bench_simd!(c, i8x64, (i8::MIN, 116));
     bench_simd!(c, i16x8, (i16::MIN, 32407));
-    bench_simd!(c, i16x16, (i16::MIN, 32407));
+//     bench_simd!(c, i16x16, (i16::MIN, 32407));
     bench_simd!(c, i32x4, (i32::MIN, 1));
     bench_simd!(c, i32x8, (i32::MIN, 1));
     bench_simd!(c, i64x2, (i64::MIN, 1));
