@@ -41,4 +41,4 @@ mod pcg128;
 mod pcg64;
 
 pub use self::pcg128::{Lcg128Xsl64, Mcg128Xsl64, Pcg64, Pcg64Mcg};
-pub use self::pcg64::{Lcg64Xsh32, Pcg32};
+pub use self::pcg64::{Lcg64Dxsm32, Lcg64Xsh32, Pcg32};
