@@ -205,6 +205,7 @@ impl_lcg128!(
 ///
 /// This is a 128-bit MCG with the PCG-XSL-RR output function, also known as
 /// `pcg64_fast`.
+///
 /// Note that compared to the standard `pcg64` (128-bit LCG with PCG-XSL-RR
 /// output function), this RNG is faster, also has a long cycle, and still has
 /// good performance on statistical tests.
@@ -217,94 +218,120 @@ pub struct Mcg128Xsl64 {
 /// A friendly name for [`Mcg128Xsl64`] (also known as `pcg64_fast`).
 pub type Pcg64Mcg = Mcg128Xsl64;
 
-impl Mcg128Xsl64 {
-    /// Multi-step advance functions (jump-ahead, jump-back)
-    ///
-    /// The method used here is based on Brown, "Random Number Generation
-    /// with Arbitrary Stride,", Transactions of the American Nuclear
-    /// Society (Nov. 1994).  The algorithm is very similar to fast
-    /// exponentiation.
-    ///
-    /// Even though delta is an unsigned integer, we can pass a
-    /// signed integer to go backwards, it just goes "the long way round".
-    ///
-    /// Using this function is equivalent to calling `next_64()` `delta`
-    /// number of times.
-    #[inline]
-    pub fn advance(&mut self, delta: u128) {
-        let mut acc_mult: u128 = 1;
-        let mut acc_plus: u128 = 0;
-        let mut cur_mult = MULTIPLIER;
-        let mut cur_plus: u128 = 0;
-        let mut mdelta = delta;
+/// A PCG random number generator (DXSM 128/64 (MCG) variant).
+///
+/// Permuted Congruential Generator with 128-bit state, internal Multiplicative
+/// Congruential Generator, and 64-bit output via "double xorshift multiply"
+/// output function.
+///
+/// This is a 128-bit MCG with the PCG-DXSM output function, corresponding to
+/// `pcg_engines::mcg_dxsm_128_64` from pcg-cpp.
+///
+/// Note that compared to `Lcg128Dxsm64` (128-bit LCG with PCG-DXSM
+/// output function), this RNG is faster, also has a long cycle, and still has
+/// good performance on statistical tests.
+#[derive(Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+pub struct Mcg128Dxsm64 {
+    state: u128,
+}
 
-        while mdelta > 0 {
-            if (mdelta & 1) != 0 {
-                acc_mult = acc_mult.wrapping_mul(cur_mult);
-                acc_plus = acc_plus.wrapping_mul(cur_mult).wrapping_add(cur_plus);
+macro_rules! impl_mcg128 {
+    ($ty:ty, $out:ident) => {
+        impl $ty {
+            /// Multi-step advance functions (jump-ahead, jump-back)
+            ///
+            /// The method used here is based on Brown, "Random Number Generation
+            /// with Arbitrary Stride,", Transactions of the American Nuclear
+            /// Society (Nov. 1994).  The algorithm is very similar to fast
+            /// exponentiation.
+            ///
+            /// Even though delta is an unsigned integer, we can pass a
+            /// signed integer to go backwards, it just goes "the long way round".
+            ///
+            /// Using this function is equivalent to calling `next_64()` `delta`
+            /// number of times.
+            #[inline]
+            pub fn advance(&mut self, delta: u128) {
+                let mut acc_mult: u128 = 1;
+                let mut acc_plus: u128 = 0;
+                let mut cur_mult = MULTIPLIER;
+                let mut cur_plus: u128 = 0;
+                let mut mdelta = delta;
+
+                while mdelta > 0 {
+                    if (mdelta & 1) != 0 {
+                        acc_mult = acc_mult.wrapping_mul(cur_mult);
+                        acc_plus = acc_plus.wrapping_mul(cur_mult).wrapping_add(cur_plus);
+                    }
+                    cur_plus = cur_mult.wrapping_add(1).wrapping_mul(cur_plus);
+                    cur_mult = cur_mult.wrapping_mul(cur_mult);
+                    mdelta /= 2;
+                }
+                self.state = acc_mult.wrapping_mul(self.state).wrapping_add(acc_plus);
             }
-            cur_plus = cur_mult.wrapping_add(1).wrapping_mul(cur_plus);
-            cur_mult = cur_mult.wrapping_mul(cur_mult);
-            mdelta /= 2;
+
+            /// Construct an instance compatible with PCG seed.
+            ///
+            /// Note that PCG specifies a default value for the parameter:
+            ///
+            /// - `state = 0xcafef00dd15ea5e5`
+            pub fn new(state: u128) -> Self {
+                // Force low bit to 1, as in C version (C++ uses `state | 3` instead).
+                Self { state: state | 1 }
+            }
         }
-        self.state = acc_mult.wrapping_mul(self.state).wrapping_add(acc_plus);
-    }
 
-    /// Construct an instance compatible with PCG seed.
-    ///
-    /// Note that PCG specifies a default value for the parameter:
-    ///
-    /// - `state = 0xcafef00dd15ea5e5`
-    pub fn new(state: u128) -> Self {
-        // Force low bit to 1, as in C version (C++ uses `state | 3` instead).
-        Mcg128Xsl64 { state: state | 1 }
-    }
+        // Custom Debug implementation that does not expose the internal state
+        impl fmt::Debug for $ty {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "{} {{}}", stringify!($ty))
+            }
+        }
+
+        /// We use a single 126-bit seed to initialise the state and select a stream.
+        /// Two `seed` bits (lowest order of last byte) are ignored.
+        impl SeedableRng for $ty {
+            type Seed = [u8; 16];
+
+            fn from_seed(seed: Self::Seed) -> Self {
+                // Read as if a little-endian u128 value:
+                let mut seed_u64 = [0u64; 2];
+                le::read_u64_into(&seed, &mut seed_u64);
+                let state = u128::from(seed_u64[0]) | u128::from(seed_u64[1]) << 64;
+                Self::new(state)
+            }
+        }
+
+        impl RngCore for $ty {
+            #[inline]
+            fn next_u32(&mut self) -> u32 {
+                self.next_u64() as u32
+            }
+
+            #[inline]
+            fn next_u64(&mut self) -> u64 {
+                self.state = self.state.wrapping_mul(MULTIPLIER);
+                $out(self.state)
+            }
+
+            #[inline]
+            fn fill_bytes(&mut self, dest: &mut [u8]) {
+                impls::fill_bytes_via_next(self, dest)
+            }
+
+            #[inline]
+            fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+                self.fill_bytes(dest);
+                Ok(())
+            }
+        }
+    };
 }
 
-// Custom Debug implementation that does not expose the internal state
-impl fmt::Debug for Mcg128Xsl64 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Mcg128Xsl64 {{}}")
-    }
-}
+impl_mcg128!(Mcg128Xsl64, output_xsl_rr);
 
-/// We use a single 126-bit seed to initialise the state and select a stream.
-/// Two `seed` bits (lowest order of last byte) are ignored.
-impl SeedableRng for Mcg128Xsl64 {
-    type Seed = [u8; 16];
-
-    fn from_seed(seed: Self::Seed) -> Self {
-        // Read as if a little-endian u128 value:
-        let mut seed_u64 = [0u64; 2];
-        le::read_u64_into(&seed, &mut seed_u64);
-        let state = u128::from(seed_u64[0]) | u128::from(seed_u64[1]) << 64;
-        Mcg128Xsl64::new(state)
-    }
-}
-
-impl RngCore for Mcg128Xsl64 {
-    #[inline]
-    fn next_u32(&mut self) -> u32 {
-        self.next_u64() as u32
-    }
-
-    #[inline]
-    fn next_u64(&mut self) -> u64 {
-        self.state = self.state.wrapping_mul(MULTIPLIER);
-        output_xsl_rr(self.state)
-    }
-
-    #[inline]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        impls::fill_bytes_via_next(self, dest)
-    }
-
-    #[inline]
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.fill_bytes(dest);
-        Ok(())
-    }
-}
+impl_mcg128!(Mcg128Dxsm64, output_dxsm);
 
 #[inline(always)]
 fn output_xsl_rr(state: u128) -> u64 {
