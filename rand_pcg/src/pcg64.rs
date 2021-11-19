@@ -77,6 +77,9 @@ impl Lcg64Xsh32 {
 
     /// Construct an instance compatible with PCG seed and stream.
     ///
+    /// Note that the highest bit of the `stream` parameter is discarded
+    /// to simplify upholding internal invariants.
+    ///
     /// Note that two generators with different stream parameters may be closely
     /// correlated.
     ///
@@ -117,11 +120,11 @@ impl fmt::Debug for Lcg64Xsh32 {
     }
 }
 
-/// We use a single 127-bit seed to initialise the state and select a stream.
-/// One `seed` bit (lowest bit of `seed[8]`) is ignored.
 impl SeedableRng for Lcg64Xsh32 {
     type Seed = [u8; 16];
 
+    /// We use a single 127-bit seed to initialise the state and select a stream.
+    /// One `seed` bit (lowest bit of `seed[8]`) is ignored.
     fn from_seed(seed: Self::Seed) -> Self {
         let mut seed_u64 = [0u64; 2];
         le::read_u64_into(&seed, &mut seed_u64);

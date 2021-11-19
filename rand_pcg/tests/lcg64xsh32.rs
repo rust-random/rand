@@ -33,7 +33,7 @@ fn test_lcg64xsh32_construction() {
 }
 
 #[test]
-fn test_lcg64xsh32_true_values() {
+fn test_lcg64xsh32_reference() {
     // Numbers copied from official test suite.
     let mut rng = Lcg64Xsh32::new(42, 54);
 
