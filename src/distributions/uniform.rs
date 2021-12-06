@@ -80,7 +80,10 @@
 //!         where B1: SampleBorrow<Self::X> + Sized,
 //!               B2: SampleBorrow<Self::X> + Sized
 //!     {
-//!         UniformSampler::new(low, high)
+//!         UniformMyF32(UniformFloat::<f32>::new_inclusive(
+//!             low.borrow().0,
+//!             high.borrow().0,
+//!         ))
 //!     }
 //!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
 //!         MyF32(self.0.sample(rng))
