@@ -3,6 +3,7 @@
 use crate::Distribution;
 use rand::Rng;
 use core::fmt;
+use num_traits::Float;
 
 /// The geometric distribution `Geometric(p)` bounded to `[0, u64::MAX]`.
 /// 

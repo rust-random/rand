@@ -11,6 +11,7 @@
 use crate::ziggurat_tables;
 use rand::distributions::hidden_export::IntoFloat;
 use rand::Rng;
+use num_traits::Float;
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma
 /// function) using the Lanczos approximation.

@@ -13,6 +13,7 @@ use crate::{Distribution, Uniform};
 use rand::Rng;
 use core::fmt;
 use core::cmp::Ordering;
+use num_traits::Float;
 
 /// The binomial distribution `Binomial(n, p)`.
 ///

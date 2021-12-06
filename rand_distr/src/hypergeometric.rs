@@ -4,6 +4,7 @@ use crate::Distribution;
 use rand::Rng;
 use rand::distributions::uniform::Uniform;
 use core::fmt;
+use num_traits::Float;
 
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
