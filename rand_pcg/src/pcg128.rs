@@ -14,7 +14,7 @@
 const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
 use core::fmt;
-use rand_core::{le, Error, RngCore, SeedableRng};
+use rand_core::{impls, le, Error, RngCore, SeedableRng};
 #[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
 
 /// A PCG random number generator (XSL RR 128/64 (LCG) variant).
@@ -77,6 +77,9 @@ impl Lcg128Xsl64 {
 
     /// Construct an instance compatible with PCG seed and stream.
     ///
+    /// Note that the highest bit of the `stream` parameter is discarded
+    /// to simplify upholding internal invariants.
+    ///
     /// Note that two generators with different stream parameters may be closely
     /// correlated.
     ///
@@ -116,11 +119,11 @@ impl fmt::Debug for Lcg128Xsl64 {
     }
 }
 
-/// We use a single 255-bit seed to initialise the state and select a stream.
-/// One `seed` bit (lowest bit of `seed[8]`) is ignored.
 impl SeedableRng for Lcg128Xsl64 {
     type Seed = [u8; 32];
 
+    /// We use a single 255-bit seed to initialise the state and select a stream.
+    /// One `seed` bit (lowest bit of `seed[8]`) is ignored.
     fn from_seed(seed: Self::Seed) -> Self {
         let mut seed_u64 = [0u64; 4];
         le::read_u64_into(&seed, &mut seed_u64);
@@ -146,7 +149,7 @@ impl RngCore for Lcg128Xsl64 {
 
     #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        fill_bytes_impl(self, dest)
+        impls::fill_bytes_via_next(self, dest)
     }
 
     #[inline]
@@ -237,8 +240,7 @@ impl SeedableRng for Mcg128Xsl64 {
         // Read as if a little-endian u128 value:
         let mut seed_u64 = [0u64; 2];
         le::read_u64_into(&seed, &mut seed_u64);
-        let state = u128::from(seed_u64[0])  |
-                    u128::from(seed_u64[1]) << 64;
+        let state = u128::from(seed_u64[0]) | u128::from(seed_u64[1]) << 64;
         Mcg128Xsl64::new(state)
     }
 }
@@ -257,7 +259,7 @@ impl RngCore for Mcg128Xsl64 {
 
     #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        fill_bytes_impl(self, dest)
+        impls::fill_bytes_via_next(self, dest)
     }
 
     #[inline]
@@ -277,20 +279,4 @@ fn output_xsl_rr(state: u128) -> u64 {
     let rot = (state >> ROTATE) as u32;
     let xsl = ((state >> XSHIFT) as u64) ^ (state as u64);
     xsl.rotate_right(rot)
-}
-
-#[inline(always)]
-fn fill_bytes_impl<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
-    let mut left = dest;
-    while left.len() >= 8 {
-        let (l, r) = { left }.split_at_mut(8);
-        left = r;
-        let chunk: [u8; 8] = rng.next_u64().to_le_bytes();
-        l.copy_from_slice(&chunk);
-    }
-    let n = left.len();
-    if n > 0 {
-        let chunk: [u8; 8] = rng.next_u64().to_le_bytes();
-        left.copy_from_slice(&chunk[..n]);
-    }
 }

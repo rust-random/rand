@@ -33,7 +33,7 @@ fn test_mcg128xsl64_construction() {
 }
 
 #[test]
-fn test_mcg128xsl64_true_values() {
+fn test_mcg128xsl64_reference() {
     // Numbers copied from official test suite (C version).
     let mut rng = Mcg128Xsl64::new(42);
 
