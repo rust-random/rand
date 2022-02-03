@@ -13,6 +13,7 @@ ChaCha random number generator
 keywords = ["random", "rng", "chacha"]
 categories = ["algorithms", "no-std"]
 edition = "2018"
+rust-version = "1.36"
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.6.0" }

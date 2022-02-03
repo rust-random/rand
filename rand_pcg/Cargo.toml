@@ -13,6 +13,7 @@ Selected PCG random number generators
 keywords = ["random", "rng", "pcg"]
 categories = ["algorithms", "no-std"]
 edition = "2018"
+rust-version = "1.36"
 
 [features]
 serde1 = ["serde"]

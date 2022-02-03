@@ -13,6 +13,7 @@ Sampling from random number distributions
 keywords = ["random", "rng", "distribution", "probability"]
 categories = ["algorithms", "no-std"]
 edition = "2018"
+rust-version = "1.36"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
 [features]
