@@ -50,7 +50,6 @@
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![no_std]
 #![cfg_attr(feature = "simd_support", feature(stdsimd))]
-#![cfg_attr(feature = "nightly", feature(slice_partition_at_index))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(
     clippy::float_cmp,
