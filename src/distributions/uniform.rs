@@ -1430,7 +1430,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_float_overflow() {
-        Uniform::from(::core::f64::MIN..::core::f64::MAX);
+        let _ = Uniform::from(::core::f64::MIN..::core::f64::MAX);
     }
 
     #[test]
