@@ -23,7 +23,7 @@ use core::fmt;
 /// let val: f64 = thread_rng().sample(Pareto::new(1., 2.).unwrap());
 /// println!("{}", val);
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Pareto<F>
 where F: Float, OpenClosed01: Distribution<F>
@@ -130,5 +130,10 @@ mod tests {
             6.837815045397157,
             105.8826669383772,
         ]);
+    }
+
+    #[test]
+    fn pareto_distributions_can_be_compared() {
+        assert_eq!(Pareto::new(1.0, 2.0), Pareto::new(1.0, 2.0));
     }
 }

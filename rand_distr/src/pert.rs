@@ -30,7 +30,7 @@ use core::fmt;
 /// ```
 ///
 /// [`Triangular`]: crate::Triangular
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Pert<F>
 where
@@ -145,5 +145,10 @@ mod test {
         ] {
             assert!(Pert::new(min, max, mode).is_err());
         }
+    }
+
+    #[test]
+    fn pert_distributions_can_be_compared() {
+        assert_eq!(Pert::new(1.0, 3.0, 2.0), Pert::new(1.0, 3.0, 2.0));
     }
 }

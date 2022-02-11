@@ -27,7 +27,7 @@ use num_traits::Float;
 /// let v = geo.sample(&mut rand::thread_rng());
 /// println!("{} is from a Geometric(0.25) distribution", v);
 /// ```
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Geometric
 {
@@ -234,5 +234,10 @@ mod test {
         let variance =
             results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;
         assert!((variance - expected_variance).abs() < expected_variance / 10.0);
+    }
+
+    #[test]
+    fn geometric_distributions_can_be_compared() {
+        assert_eq!(Geometric::new(1.0), Geometric::new(1.0));
     }
 }

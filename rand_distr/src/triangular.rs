@@ -31,7 +31,7 @@ use core::fmt;
 /// ```
 ///
 /// [`Pert`]: crate::Pert
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Triangular<F>
 where F: Float, Standard: Distribution<F>
@@ -129,5 +129,10 @@ mod test {
         ] {
             assert!(Triangular::new(min, max, mode).is_err());
         }
+    }
+
+    #[test]
+    fn triangular_distributions_can_be_compared() {
+        assert_eq!(Triangular::new(1.0, 3.0, 2.0), Triangular::new(1.0, 3.0, 2.0));
     }
 }

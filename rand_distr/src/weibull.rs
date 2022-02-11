@@ -23,7 +23,7 @@ use core::fmt;
 /// let val: f64 = thread_rng().sample(Weibull::new(1., 10.).unwrap());
 /// println!("{}", val);
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Weibull<F>
 where F: Float, OpenClosed01: Distribution<F>
@@ -128,5 +128,10 @@ mod tests {
             0.7556151370284702,
             7.877212340241561,
         ]);
+    }
+
+    #[test]
+    fn weibull_distributions_can_be_compared() {
+        assert_eq!(Weibull::new(1.0, 2.0), Weibull::new(1.0, 2.0));
     }
 }

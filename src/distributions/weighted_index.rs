@@ -75,7 +75,7 @@ use serde::{Serialize, Deserialize};
 ///
 /// [`Uniform<X>`]: crate::distributions::Uniform
 /// [`RngCore`]: crate::RngCore
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
@@ -417,6 +417,11 @@ mod test {
         test_samples(&[1.0f64, 0.999, 0.998, 0.997], &mut buf, &[
             2, 2, 1, 3, 2, 1, 3, 3, 2, 1,
         ]);
+    }
+
+    #[test]
+    fn weighted_index_distributions_can_be_compared() {
+        assert_eq!(WeightedIndex::new(&[1, 2]), WeightedIndex::new(&[1, 2]));
     }
 }
 
