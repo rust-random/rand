@@ -30,7 +30,7 @@ use num_traits::Float;
 /// let v = bin.sample(&mut rand::thread_rng());
 /// println!("{} is from a binomial distribution", v);
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Binomial {
     /// Number of trials.
@@ -346,5 +346,10 @@ mod test {
     #[should_panic]
     fn test_binomial_invalid_lambda_neg() {
         Binomial::new(20, -10.0).unwrap();
+    }
+
+    #[test]
+    fn binomial_distributions_can_be_compared() {
+        assert_eq!(Binomial::new(1, 1.0), Binomial::new(1, 1.0));
     }
 }

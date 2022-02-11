@@ -40,7 +40,7 @@ use rand::Rng;
 /// [skew normal distribution]: https://en.wikipedia.org/wiki/Skew_normal_distribution
 /// [`Normal`]: struct.Normal.html
 /// [A Method to Simulate the Skew Normal Distribution]: https://dx.doi.org/10.4236/am.2014.513201
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct SkewNormal<F>
 where
@@ -252,5 +252,10 @@ mod tests {
         for value in buf.iter() {
             assert!(value.is_nan());
         }
+    }
+
+    #[test]
+    fn skew_normal_distributions_can_be_compared() {
+        assert_eq!(SkewNormal::new(1.0, 2.0, 3.0), SkewNormal::new(1.0, 2.0, 3.0));
     }
 }

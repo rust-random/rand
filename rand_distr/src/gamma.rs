@@ -54,7 +54,7 @@ use serde::{Serialize, Deserialize};
 ///       Generating Gamma Variables" *ACM Trans. Math. Softw.* 26, 3
 ///       (September 2000), 363-372.
 ///       DOI:[10.1145/358407.358414](https://doi.acm.org/10.1145/358407.358414)
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Gamma<F>
 where
@@ -91,7 +91,7 @@ impl fmt::Display for Error {
 #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum GammaRepr<F>
 where
@@ -119,7 +119,7 @@ where
 ///
 /// See `Gamma` for sampling from a Gamma distribution with general
 /// shape parameters.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct GammaSmallShape<F>
 where
@@ -135,7 +135,7 @@ where
 ///
 /// See `Gamma` for sampling from a Gamma distribution with general
 /// shape parameters.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct GammaLargeShape<F>
 where
@@ -280,7 +280,7 @@ where
 /// let v = chi.sample(&mut rand::thread_rng());
 /// println!("{} is from a χ²(11) distribution", v)
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct ChiSquared<F>
 where
@@ -314,7 +314,7 @@ impl fmt::Display for ChiSquaredError {
 #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for ChiSquaredError {}
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum ChiSquaredRepr<F>
 where
@@ -385,7 +385,7 @@ where
 /// let v = f.sample(&mut rand::thread_rng());
 /// println!("{} is from an F(2, 32) distribution", v)
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct FisherF<F>
 where
@@ -472,7 +472,7 @@ where
 /// let v = t.sample(&mut rand::thread_rng());
 /// println!("{} is from a t(11) distribution", v)
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct StudentT<F>
 where
@@ -522,7 +522,7 @@ where
 /// Generating beta variates with nonintegral shape parameters.
 /// Communications of the ACM 21, 317-322.
 /// https://doi.org/10.1145/359460.359482
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum BetaAlgorithm<N> {
     BB(BB<N>),
@@ -530,7 +530,7 @@ enum BetaAlgorithm<N> {
 }
 
 /// Algorithm BB for `min(alpha, beta) > 1`.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct BB<N> {
     alpha: N,
@@ -539,7 +539,7 @@ struct BB<N> {
 }
 
 /// Algorithm BC for `min(alpha, beta) <= 1`.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 struct BC<N> {
     alpha: N,
@@ -560,7 +560,7 @@ struct BC<N> {
 /// let v = beta.sample(&mut rand::thread_rng());
 /// println!("{} is from a Beta(2, 5) distribution", v);
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Beta<F>
 where
@@ -810,5 +810,30 @@ mod test {
         for i in 0..1000 {
             assert!(!beta.sample(&mut rng).is_nan(), "failed at i={}", i);
         }
+    }
+
+    #[test]
+    fn gamma_distributions_can_be_compared() {
+        assert_eq!(Gamma::new(1.0, 2.0), Gamma::new(1.0, 2.0));
+    }
+
+    #[test]
+    fn beta_distributions_can_be_compared() {
+        assert_eq!(Beta::new(1.0, 2.0), Beta::new(1.0, 2.0));
+    }
+
+    #[test]
+    fn chi_squared_distributions_can_be_compared() {
+        assert_eq!(ChiSquared::new(1.0), ChiSquared::new(1.0));
+    }
+
+    #[test]
+    fn fisher_f_distributions_can_be_compared() {
+        assert_eq!(FisherF::new(1.0, 2.0), FisherF::new(1.0, 2.0));
+    }
+
+    #[test]
+    fn student_t_distributions_can_be_compared() {
+        assert_eq!(StudentT::new(1.0), StudentT::new(1.0));
     }
 }
