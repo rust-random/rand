@@ -14,6 +14,8 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Fix "min_const_gen" feature for `no_std` (#1173)
 - Check `libc::pthread_atfork` return value with panic on error (#1178)
 - More robust reseeding in case `ReseedingRng` is used from a fork handler (#1178)
+- Fix nightly: remove unused `slice_partition_at_index` feature (#1215)
+- Fix nightly + `simd_support`: update `packed_simd` (#1216)
 
 ### Rngs
 - `StdRng`: Switch from HC128 to ChaCha12 on emscripten (#1142).
