@@ -10,9 +10,8 @@ use criterion::{criterion_group, criterion_main};
 use criterion::{BenchmarkId, Criterion};
 #[cfg(feature = "simd_support")] use packed_simd::*;
 use rand::distributions::uniform::{SampleUniform, Uniform, UniformSampler};
-use rand::prelude::*;
 
-type BenchRng = SmallRng;
+type BenchRng = rand::rngs::SmallRng;
 
 macro_rules! bench_dist_int_group {
     ($name:literal, $T:ty, $f:ident, $g:expr, $inputs:expr) => {
