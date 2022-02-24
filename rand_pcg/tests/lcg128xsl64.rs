@@ -35,7 +35,7 @@ fn test_lcg128xsl64_construction() {
 }
 
 #[test]
-fn test_lcg128xsl64_true_values() {
+fn test_lcg128xsl64_reference() {
     // Numbers copied from official test suite (C version).
     let mut rng = Lcg128Xsl64::new(42, 54);
 

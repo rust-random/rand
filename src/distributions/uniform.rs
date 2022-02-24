@@ -80,7 +80,10 @@
 //!         where B1: SampleBorrow<Self::X> + Sized,
 //!               B2: SampleBorrow<Self::X> + Sized
 //!     {
-//!         UniformSampler::new(low, high)
+//!         UniformMyF32(UniformFloat::<f32>::new_inclusive(
+//!             low.borrow().0,
+//!             high.borrow().0,
+//!         ))
 //!     }
 //!     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
 //!         MyF32(self.0.sample(rng))
@@ -169,7 +172,7 @@ use serde::{Serialize, Deserialize};
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
 /// [`Rng::gen_range`]: Rng::gen_range
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde1", serde(bound(serialize = "X::Sampler: Serialize")))]
 #[cfg_attr(feature = "serde1", serde(bound(deserialize = "X::Sampler: Deserialize<'de>")))]
@@ -415,7 +418,7 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
 /// An alternative to using a modulus is widening multiply: After a widening
 /// multiply by `range`, the result is in the high word. Then comparing the low
 /// word against `zone` makes sure our distribution is uniform.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformInt<X> {
     low: X,
@@ -803,7 +806,7 @@ impl UniformSampler for UniformChar {
 /// [`new`]: UniformSampler::new
 /// [`new_inclusive`]: UniformSampler::new_inclusive
 /// [`Standard`]: crate::distributions::Standard
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformFloat<X> {
     low: X,
@@ -1427,7 +1430,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_float_overflow() {
-        Uniform::from(::core::f64::MIN..::core::f64::MAX);
+        let _ = Uniform::from(::core::f64::MIN..::core::f64::MAX);
     }
 
     #[test]
@@ -1643,5 +1646,13 @@ mod tests {
                 Duration::new(3, 236507617),
             ],
         );
+    }
+
+    #[test]
+    fn uniform_distributions_can_be_compared() {
+        assert_eq!(Uniform::new(1.0, 2.0), Uniform::new(1.0, 2.0));
+
+        // To cover UniformInt
+        assert_eq!(Uniform::new(1 as u32, 2 as u32), Uniform::new(1 as u32, 2 as u32));
     }
 }

@@ -26,7 +26,7 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 /// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct InverseGaussian<F>
 where
@@ -108,5 +108,10 @@ mod tests {
         assert!(InverseGaussian::new(-1.0, -1.0).is_err());
         assert!(InverseGaussian::new(1.0, -1.0).is_err());
         assert!(InverseGaussian::new(1.0, 1.0).is_ok());
+    }
+
+    #[test]
+    fn inverse_gaussian_distributions_can_be_compared() {
+        assert_eq!(InverseGaussian::new(1.0, 2.0), InverseGaussian::new(1.0, 2.0));
     }
 }

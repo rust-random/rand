@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+- Add `Lcg128CmDxsm64` generator compatible with NumPy's `PCG64DXSM` (#1202)
+
 ## [0.3.1] - 2021-06-15
 - Add `advance` methods to RNGs (#1111)
 - Document dependencies between streams (#1122)

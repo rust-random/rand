@@ -28,7 +28,7 @@ use core::fmt;
 /// let v = poi.sample(&mut rand::thread_rng());
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Poisson<F>
 where F: Float + FloatConst, Standard: Distribution<F>
@@ -177,5 +177,10 @@ mod test {
     #[should_panic]
     fn test_poisson_invalid_lambda_neg() {
         Poisson::new(-10.0).unwrap();
+    }
+
+    #[test]
+    fn poisson_distributions_can_be_compared() {
+        assert_eq!(Poisson::new(1.0), Poisson::new(1.0));
     }
 }

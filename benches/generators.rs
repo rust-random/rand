@@ -21,7 +21,7 @@ use rand::prelude::*;
 use rand::rngs::adapter::ReseedingRng;
 use rand::rngs::{mock::StepRng, OsRng};
 use rand_chacha::{ChaCha12Rng, ChaCha20Core, ChaCha20Rng, ChaCha8Rng};
-use rand_pcg::{Pcg32, Pcg64, Pcg64Mcg};
+use rand_pcg::{Pcg32, Pcg64, Pcg64Mcg, Pcg64Dxsm};
 
 macro_rules! gen_bytes {
     ($fnn:ident, $gen:expr) => {
@@ -44,6 +44,7 @@ gen_bytes!(gen_bytes_step, StepRng::new(0, 1));
 gen_bytes!(gen_bytes_pcg32, Pcg32::from_entropy());
 gen_bytes!(gen_bytes_pcg64, Pcg64::from_entropy());
 gen_bytes!(gen_bytes_pcg64mcg, Pcg64Mcg::from_entropy());
+gen_bytes!(gen_bytes_pcg64dxsm, Pcg64Dxsm::from_entropy());
 gen_bytes!(gen_bytes_chacha8, ChaCha8Rng::from_entropy());
 gen_bytes!(gen_bytes_chacha12, ChaCha12Rng::from_entropy());
 gen_bytes!(gen_bytes_chacha20, ChaCha20Rng::from_entropy());
@@ -73,6 +74,7 @@ gen_uint!(gen_u32_step, u32, StepRng::new(0, 1));
 gen_uint!(gen_u32_pcg32, u32, Pcg32::from_entropy());
 gen_uint!(gen_u32_pcg64, u32, Pcg64::from_entropy());
 gen_uint!(gen_u32_pcg64mcg, u32, Pcg64Mcg::from_entropy());
+gen_uint!(gen_u32_pcg64dxsm, u32, Pcg64Dxsm::from_entropy());
 gen_uint!(gen_u32_chacha8, u32, ChaCha8Rng::from_entropy());
 gen_uint!(gen_u32_chacha12, u32, ChaCha12Rng::from_entropy());
 gen_uint!(gen_u32_chacha20, u32, ChaCha20Rng::from_entropy());
@@ -85,6 +87,7 @@ gen_uint!(gen_u64_step, u64, StepRng::new(0, 1));
 gen_uint!(gen_u64_pcg32, u64, Pcg32::from_entropy());
 gen_uint!(gen_u64_pcg64, u64, Pcg64::from_entropy());
 gen_uint!(gen_u64_pcg64mcg, u64, Pcg64Mcg::from_entropy());
+gen_uint!(gen_u64_pcg64dxsm, u64, Pcg64Dxsm::from_entropy());
 gen_uint!(gen_u64_chacha8, u64, ChaCha8Rng::from_entropy());
 gen_uint!(gen_u64_chacha12, u64, ChaCha12Rng::from_entropy());
 gen_uint!(gen_u64_chacha20, u64, ChaCha20Rng::from_entropy());
@@ -109,6 +112,7 @@ macro_rules! init_gen {
 init_gen!(init_pcg32, Pcg32);
 init_gen!(init_pcg64, Pcg64);
 init_gen!(init_pcg64mcg, Pcg64Mcg);
+init_gen!(init_pcg64dxsm, Pcg64Dxsm);
 init_gen!(init_chacha, ChaCha20Rng);
 
 const RESEEDING_BYTES_LEN: usize = 1024 * 1024;
