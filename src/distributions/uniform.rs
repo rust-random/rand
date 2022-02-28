@@ -120,6 +120,7 @@ use crate::distributions::utils::Float;
 mod uniform_float;
 mod uniform_int;
 mod uniform_other;
+#[cfg(feature = "simd_support")] mod uniform_simd;
 
 pub use uniform_float::UniformFloat;
 pub use uniform_int::UniformInt;
