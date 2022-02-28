@@ -206,7 +206,7 @@ macro_rules! uniform_int_impl {
                 self.low.wrapping_add(hi as $ty)
             }
 
-            /// Sample, Canon's method
+            /// Sample, Canon's method (bias max 1 in 2^64 samples)
             #[inline]
             pub fn sample_canon<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 let range = self.range as $unsigned as $u_extra_large;
@@ -214,18 +214,12 @@ macro_rules! uniform_int_impl {
                     return rng.gen();
                 }
 
-                // generate a sample using a sensible integer type
-                let (mut result, lo_order) = rng.gen::<$u_extra_large>().wmul(range);
+                let (mut result, lo) = rng.gen::<$u_extra_large>().wmul(range);
 
-                // if the sample is biased...
-                if lo_order > range.wrapping_neg() {
-                    // ...generate a new sample with 64 more bits, enough that bias is undetectable
-                    let (new_hi_order, _) =
-                        (rng.gen::<$u_extra_large>()).wmul(range as $u_extra_large);
-                    // and adjust if needed
-                    result += lo_order
-                        .checked_add(new_hi_order as $u_extra_large)
-                        .is_none() as $u_extra_large;
+                if lo > range.wrapping_neg() {
+                    let (new_hi, _) = (rng.gen::<$u_extra_large>()).wmul(range);
+                    let is_overflow = lo.checked_add(new_hi).is_none();
+                    result += is_overflow as $u_extra_large;
                 }
 
                 self.low.wrapping_add(result as $ty)
@@ -239,18 +233,12 @@ macro_rules! uniform_int_impl {
                     return rng.gen();
                 }
 
-                // generate a sample using a sensible integer type
-                let (mut result, lo_order) = rng.gen::<$u_extra_large>().wmul(range);
+                let (mut result, lo) = rng.gen::<$u_extra_large>().wmul(range);
 
-                // if the sample is biased...
-                if lo_order < (self.nrmr as $u_extra_large) {
-                    // ...generate a new sample with 64 more bits, enough that bias is undetectable
-                    let (new_hi_order, _) =
-                        (rng.gen::<$u_extra_large>()).wmul(range as $u_extra_large);
-                    // and adjust if needed
-                    result += lo_order
-                        .checked_add(new_hi_order as $u_extra_large)
-                        .is_none() as $u_extra_large;
+                if lo < (self.nrmr as $u_extra_large) {
+                    let (new_hi, _) = (rng.gen::<$u_extra_large>()).wmul(range);
+                    let is_overflow = lo.checked_add(new_hi).is_none();
+                    result += is_overflow as $u_extra_large;
                 }
 
                 self.low.wrapping_add(result as $ty)
