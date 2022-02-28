@@ -206,7 +206,7 @@ macro_rules! uniform_int_impl {
                 self.low.wrapping_add(hi as $ty)
             }
 
-            /// Sample, Canon's method (bias max 1 in 2^64 samples)
+            /// Sample, Canon's method, max(u64, $ty) samples, bias ≤ 1-in-2^(sample size)
             #[inline]
             pub fn sample_canon<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 let range = self.range as $unsigned as $u_extra_large;
@@ -220,6 +220,39 @@ macro_rules! uniform_int_impl {
                     let (new_hi, _) = (rng.gen::<$u_extra_large>()).wmul(range);
                     let is_overflow = lo.checked_add(new_hi).is_none();
                     result += is_overflow as $u_extra_large;
+                }
+
+                self.low.wrapping_add(result as $ty)
+            }
+
+            /// Sample, Canon's method, max(u64, $ty) samples, unbiased
+            #[inline]
+            pub fn sample_canon_unbiased<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $unsigned as $u_extra_large;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let (mut result, mut lo) = rng.gen::<$u_extra_large>().wmul(range);
+
+                while lo > range.wrapping_neg() {
+                    let (new_hi, new_lo) = (rng.gen::<$u_extra_large>()).wmul(range);
+                    match lo.checked_add(new_hi) {
+                        None => {
+                            // Overflow: last term is 1
+                            result += 1;
+                            break;
+                        }
+                        Some(x) if x < $u_extra_large::MAX => {
+                            // Anything less than MAX: last term is 0
+                            break;
+                        }
+                        _ => {
+                            // Unlikely case: must check next sample
+                            lo = new_lo;
+                            continue;
+                        }
+                    }
                 }
 
                 self.low.wrapping_add(result as $ty)
@@ -343,6 +376,52 @@ macro_rules! uniform_int_impl {
                     result += lo_order
                         .checked_add(new_hi_order as $u_extra_large)
                         .is_none() as $u_extra_large;
+                }
+
+                low.wrapping_add(result as $ty)
+            }
+
+            /// Sample, Canon's method, max(u64, $ty) samples, unbiased
+            #[inline]
+            pub fn sample_single_inclusive_canon_unbiased<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> $ty
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                assert!(
+                    low <= high,
+                    "UniformSampler::sample_single_inclusive: low > high"
+                );
+                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_extra_large;
+                if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
+                    return rng.gen();
+                }
+
+                let (mut result, mut lo) = rng.gen::<$u_extra_large>().wmul(range);
+
+                while lo > range.wrapping_neg() {
+                    let (new_hi, new_lo) = (rng.gen::<$u_extra_large>()).wmul(range);
+                    match lo.checked_add(new_hi) {
+                        None => {
+                            // Overflow: last term is 1
+                            result += 1;
+                            break;
+                        }
+                        Some(x) if x < $u_extra_large::MAX => {
+                            // Anything less than MAX: last term is 0
+                            break;
+                        }
+                        _ => {
+                            // Unlikely case: must check next sample
+                            lo = new_lo;
+                            continue;
+                        }
+                    }
                 }
 
                 low.wrapping_add(result as $ty)

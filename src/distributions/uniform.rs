@@ -320,7 +320,6 @@ impl<X: SampleUniform> From<RangeInclusive<X>> for Uniform<X> {
     }
 }
 
-
 /// Helper trait similar to [`Borrow`] but implemented
 /// only for SampleUniform and references to SampleUniform in
 /// order to resolve ambiguity issues.

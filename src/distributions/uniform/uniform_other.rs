@@ -85,7 +85,6 @@ impl UniformSampler for UniformChar {
     }
 }
 
-
 /// The back-end implementing [`UniformSampler`] for `Duration`.
 ///
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
