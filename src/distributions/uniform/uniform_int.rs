@@ -196,14 +196,13 @@ macro_rules! uniform_int_impl {
                     return rng.gen();
                 }
 
-                let (mut hi, mut lo) = rng.gen::<$u_large>().wmul(range);
-                if lo < range {
-                    while lo < (self.nrmr as $u_large) {
-                        let (new_hi, new_lo) = rng.gen::<$u_large>().wmul(range);
-                        hi = new_hi;
-                        lo = new_lo;
+                let thresh = self.nrmr as $u_large;
+                let hi = loop {
+                    let (hi, lo) = rng.gen::<$u_large>().wmul(range);
+                    if lo >= thresh {
+                        break hi;
                     }
-                }
+                };
                 self.low.wrapping_add(hi as $ty)
             }
 
