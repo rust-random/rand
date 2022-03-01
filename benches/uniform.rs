@@ -50,6 +50,14 @@ macro_rules! bench_single_int_group {
                 <$T as SampleUniform>::Sampler::$f(low, high, &mut rng)
             })
         });
+        $g.bench_function(BenchmarkId::new($name, "random"), |b| {
+            let low = <$T>::MIN;
+            let mut rng = BenchRng::from_entropy();
+            b.iter(|| {
+                let high: $T = rng.gen();
+                <$T as SampleUniform>::Sampler::$f(low, high, &mut rng)
+            })
+        });
     };
 }
 
