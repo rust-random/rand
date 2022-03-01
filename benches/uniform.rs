@@ -19,19 +19,22 @@
 //! -   Canon-Lemire: as Canon but with more precise bias-reduction step trigger
 //! -   Bitmask: bitmasking + rejection method
 
+use core::time::Duration;
 use criterion::{criterion_group, criterion_main};
 use criterion::{BenchmarkId, Criterion};
 use rand::distributions::uniform::{SampleUniform, Uniform, UniformSampler};
 use rand::prelude::*;
+use rand_chacha::ChaCha8Rng;
+use rand_pcg::{Pcg32, Pcg64};
 
-// TODO: multiple RNGs
-type BenchRng = SmallRng;
+const WARM_UP_TIME: Duration = Duration::from_millis(100);
+const MEASUREMENT_TIME: Duration = Duration::from_secs(1);
 
 macro_rules! single_random {
-    ($name:literal, $T:ty, $f:ident, $g:expr) => {
-        $g.bench_function(BenchmarkId::new($name, "SmallRng"), |b| {
+    ($name:literal, $R:ty, $T:ty, $f:ident, $g:expr) => {
+        $g.bench_function(BenchmarkId::new(stringify!($R), $name), |b| {
             let low = <$T>::MIN;
-            let mut rng = BenchRng::from_entropy();
+            let mut rng = <$R>::from_entropy();
             b.iter(|| {
                 let high: $T = rng.gen();
                 <$T as SampleUniform>::Sampler::$f(low, high, &mut rng)
@@ -39,15 +42,24 @@ macro_rules! single_random {
         });
     };
 
+    ($R:ty, $T:ty, $g:expr) => {
+        single_random!("Old", $R, $T, sample_single_inclusive, $g);
+        single_random!("ONeill", $R, $T, sample_single_inclusive_oneill, $g);
+        single_random!("Canon-Unbiased", $R, $T, sample_single_inclusive_canon_unbiased, $g);
+        single_random!("Canon", $R, $T, sample_single_inclusive_canon, $g);
+        single_random!("Canon64", $R, $T, sample_single_inclusive_canon_64, $g);
+        single_random!("Canon-Lemire", $R, $T, sample_inclusive_canon_lemire, $g);
+        single_random!("Bitmask", $R, $T, sample_single_inclusive_bitmask, $g);
+    };
+
     ($c:expr, $T:ty) => {{
         let mut g = $c.benchmark_group(concat!("single_random_", stringify!($T)));
-        single_random!("Old", $T, sample_single_inclusive, g);
-        single_random!("ONeill", $T, sample_single_inclusive_oneill, g);
-        single_random!("Canon-Unbiased", $T, sample_single_inclusive_canon_unbiased, g);
-        single_random!("Canon", $T, sample_single_inclusive_canon, g);
-        single_random!("Canon64", $T, sample_single_inclusive_canon_64, g);
-        single_random!("Canon-Lemire", $T, sample_inclusive_canon_lemire, g);
-        single_random!("Bitmask", $T, sample_single_inclusive_bitmask, g);
+        g.warm_up_time(WARM_UP_TIME);
+        g.measurement_time(MEASUREMENT_TIME);
+        single_random!(SmallRng, $T, g);
+        single_random!(ChaCha8Rng, $T, g);
+        single_random!(Pcg32, $T, g);
+        single_random!(Pcg64, $T, g);
     }};
 }
 
@@ -60,18 +72,27 @@ fn single_random(c: &mut Criterion) {
 }
 
 macro_rules! distr_range {
-    ($name:literal, $T:ty, $f:ident, $g:expr, $range:expr) => {
-        $g.bench_function(BenchmarkId::new($name, "SmallRng"), |b| {
-            let mut rng = BenchRng::from_entropy();
+    ($name:literal, $R:ty, $T:ty, $f:ident, $g:expr, $range:expr) => {
+        $g.bench_function(BenchmarkId::new(stringify!($R), $name), |b| {
+            let mut rng = <$R>::from_entropy();
             let dist = Uniform::<$T>::new_inclusive($range.0, $range.1);
             b.iter(|| <$T as SampleUniform>::Sampler::$f(&dist.0, &mut rng))
         });
+    };
+
+    ($name:literal, $T:ty, $f:ident, $g:expr, $range:expr) => {
+        distr_range!($name, SmallRng, $T, $f, $g, $range);
+        distr_range!($name, ChaCha8Rng, $T, $f, $g, $range);
+        distr_range!($name, Pcg32, $T, $f, $g, $range);
+        distr_range!($name, Pcg64, $T, $f, $g, $range);
     };
 }
 
 macro_rules! distr_low_reject {
     ($c:expr, $T:ty) => {{
         let mut g = $c.benchmark_group(concat!("distr_low_reject_", stringify!($T)));
+        g.warm_up_time(WARM_UP_TIME);
+        g.measurement_time(MEASUREMENT_TIME);
         distr_range!("Old", $T, sample, g, (-1, 2));
         distr_range!("Lemire", $T, sample_lemire, g, (-1, 2));
         distr_range!("Canon-Unbiased", $T, sample_canon_unbiased, g, (-1, 2));
@@ -93,6 +114,8 @@ fn distr_low_reject(c: &mut Criterion) {
 macro_rules! distr_high_reject {
     ($c:expr, $T:ty, $range:expr) => {{
         let mut g = $c.benchmark_group(concat!("distr_high_reject_", stringify!($T)));
+        g.warm_up_time(WARM_UP_TIME);
+        g.measurement_time(MEASUREMENT_TIME);
         distr_range!("Old", $T, sample, g, $range);
         distr_range!("Lemire", $T, sample_lemire, g, $range);
         distr_range!("Canon-Unbiased", $T, sample_canon_unbiased, g, $range);
