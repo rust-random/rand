@@ -14,8 +14,8 @@
 //! -   Lemire: widening multiply with rejection test
 //! -   Canon: widening multiply using max(64, ty-bits) sample with bias reduction adjustment
 //! -   Canon32 (TODO): Canon's method with 32-bit samples (up to two bias reduction steps)
-//! -   Canon64: for 8- and 16-bit types this is just biased widening multiply; for 128-bit
-//!     types this is Canon's method with 64-bit sample
+//! -   Canon-reduced: for 8-, 16- and 32-bit types this is just biased widening multiply; for
+//!     64- and 128-bit types this is Canon's method with half-size sample (single step)
 //! -   Canon-Lemire: as Canon but with more precise bias-reduction step trigger
 //! -   Bitmask: bitmasking + rejection method
 
@@ -47,7 +47,7 @@ macro_rules! single_random {
         single_random!("ONeill", $R, $T, sample_single_inclusive_oneill, $g);
         single_random!("Canon-Unbiased", $R, $T, sample_single_inclusive_canon_unbiased, $g);
         single_random!("Canon", $R, $T, sample_single_inclusive_canon, $g);
-        single_random!("Canon64", $R, $T, sample_single_inclusive_canon_64, $g);
+        single_random!("Canon-reduced", $R, $T, sample_single_inclusive_canon_reduced, $g);
         single_random!("Canon-Lemire", $R, $T, sample_inclusive_canon_lemire, $g);
         single_random!("Bitmask", $R, $T, sample_single_inclusive_bitmask, $g);
     };
@@ -97,7 +97,7 @@ macro_rules! distr_low_reject {
         distr_range!("Lemire", $T, sample_lemire, g, (-1, 2));
         distr_range!("Canon-Unbiased", $T, sample_canon_unbiased, g, (-1, 2));
         distr_range!("Canon", $T, sample_canon, g, (-1, 2));
-        distr_range!("Canon64", $T, sample_canon_64, g, (-1, 2));
+        distr_range!("Canon-reduced", $T, sample_canon_reduced, g, (-1, 2));
         distr_range!("Canon-Lemire", $T, sample_canon_lemire, g, (-1, 2));
         distr_range!("Bitmask", $T, sample_bitmask, g, (-1, 2));
     }};
@@ -120,7 +120,7 @@ macro_rules! distr_high_reject {
         distr_range!("Lemire", $T, sample_lemire, g, $range);
         distr_range!("Canon-Unbiased", $T, sample_canon_unbiased, g, $range);
         distr_range!("Canon", $T, sample_canon, g, $range);
-        distr_range!("Canon64", $T, sample_canon_64, g, $range);
+        distr_range!("Canon-reduced", $T, sample_canon_reduced, g, $range);
         distr_range!("Canon-Lemire", $T, sample_canon_lemire, g, $range);
         distr_range!("Bitmask", $T, sample_bitmask, g, $range);
     }};

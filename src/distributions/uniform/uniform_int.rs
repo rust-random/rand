@@ -526,15 +526,15 @@ mod isize_int_impls {
     uniform_int_impl! { usize, usize, usize, usize }
 }
 
-macro_rules! uniform_int_64_impl {
-    ($ty:ty, $unsigned:ident) => {
+macro_rules! uniform_int_canon_reduced_impl {
+    ($ty:ty, $uty:ident) => {
         impl UniformInt<$ty> {
             /// Sample, Canon's method variant
             ///
             /// Variant: potential increase to bias (uses a single `u64` sample).
             #[inline]
-            pub fn sample_canon_64<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let range = self.range as $unsigned as u64;
+            pub fn sample_canon_reduced<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $uty as u64;
                 if range == 0 {
                     return rng.gen();
                 }
@@ -548,7 +548,7 @@ macro_rules! uniform_int_64_impl {
             ///
             /// Variant: potential increase to bias (uses a single `u64` sample).
             #[inline]
-            pub fn sample_single_inclusive_canon_64<R: Rng + ?Sized, B1, B2>(
+            pub fn sample_single_inclusive_canon_reduced<R: Rng + ?Sized, B1, B2>(
                 low_b: B1, high_b: B2, rng: &mut R,
             ) -> $ty
             where
@@ -561,7 +561,7 @@ macro_rules! uniform_int_64_impl {
                     low <= high,
                     "UniformSampler::sample_single_inclusive: low > high"
                 );
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as u64;
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as u64;
                 if range == 0 {
                     // Range is MAX+1 (unrepresentable), so we need a special case
                     return rng.gen();
@@ -574,98 +574,73 @@ macro_rules! uniform_int_64_impl {
             }
         }
     };
-}
-uniform_int_64_impl!(i8, u8);
-uniform_int_64_impl!(i16, u16);
-
-macro_rules! uniform_int_64void_impl {
-    ($ty:ty) => {
+    ($ty:ty, $uty:ident, $u_half:ty, $shift:expr) => {
         impl UniformInt<$ty> {
             /// Sample, Canon's method variant
             #[inline]
-            pub fn sample_canon_64<R: Rng + ?Sized>(&self, _rng: &mut R) -> $ty {
-                Default::default() // not used
+            pub fn sample_canon_reduced<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $uty;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let (mut result, lo1) = rng.gen::<$uty>().wmul(range);
+
+                if lo1 > range.wrapping_neg() {
+                    // Generate more bits. For i128, sample is multiplied by 2.pow(-192), so
+                    // hi2 is multiplied by 2.pow(-64):
+                    let (hi2, lo2) = (rng.gen::<$u_half>() as $uty).wmul(range);
+                    debug_assert_eq!(hi2 >> $shift, 0 as $uty);
+                    let is_overflow = lo1.checked_add((hi2 << $shift) | (lo2 >> $shift)).is_none();
+                    result += is_overflow as $uty;
+                }
+
+                self.low.wrapping_add(result as $ty)
             }
 
             /// Sample single inclusive, using Canon's method variant
             #[inline]
-            pub fn sample_single_inclusive_canon_64<R: Rng + ?Sized, B1, B2>(
-                _low_b: B1, _high_b: B2, _rng: &mut R,
+            pub fn sample_single_inclusive_canon_reduced<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
             ) -> $ty
             where
                 B1: SampleBorrow<$ty> + Sized,
                 B2: SampleBorrow<$ty> + Sized,
             {
-                Default::default() // not used
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                assert!(
+                    low <= high,
+                    "UniformSampler::sample_single_inclusive: low > high"
+                );
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
+                if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
+                    return rng.gen();
+                }
+
+                let (mut result, lo1) = rng.gen::<$uty>().wmul(range);
+
+                if lo1 > range.wrapping_neg() {
+                    // Generate more bits. For i128, sample is multiplied by 2.pow(-192), so
+                    // hi2 is multiplied by 2.pow(-64):
+                    let (hi2, lo2) = (rng.gen::<$u_half>() as $uty).wmul(range);
+                    debug_assert_eq!(hi2 >> $shift, 0 as $uty);
+                    let is_overflow = lo1.checked_add((hi2 << $shift) | (lo2 >> $shift)).is_none();
+                    result += is_overflow as $uty;
+                }
+
+                low.wrapping_add(result as $ty)
             }
         }
     };
 }
-uniform_int_64void_impl!(i32);
-uniform_int_64void_impl!(i64);
 
-impl UniformInt<i128> {
-    /// Sample, Canon's method variant
-    #[inline]
-    pub fn sample_canon_64<R: Rng + ?Sized>(&self, rng: &mut R) -> i128 {
-        let range = self.range as u128;
-        if range == 0 {
-            return rng.gen();
-        }
-
-        // Sample multiplied by 2.pow(-128) makes lo1 fractional (>>128):
-        let (mut result, lo1) = rng.gen::<u128>().wmul(range);
-
-        if lo1 > range.wrapping_neg() {
-            // Generate more bits. Sample is multiplied by 2.pow(-192), so
-            // hi2 is multiplied by 2.pow(-64):
-            let (hi2, lo2) = (rng.gen::<u64>() as u128).wmul(range);
-            debug_assert_eq!(hi2 >> 64, 0u128);
-            let is_overflow = lo1.checked_add((hi2 << 64) | (lo2 >> 64)).is_none();
-            result += is_overflow as u128;
-        }
-
-        self.low.wrapping_add(result as i128)
-    }
-
-    /// Sample single inclusive, using Canon's method variant
-    ///
-    /// Variant: potential increase to bias (uses a single `u64` sample).
-    #[inline]
-    pub fn sample_single_inclusive_canon_64<R: Rng + ?Sized, B1, B2>(
-        low_b: B1, high_b: B2, rng: &mut R,
-    ) -> i128
-    where
-        B1: SampleBorrow<i128> + Sized,
-        B2: SampleBorrow<i128> + Sized,
-    {
-        let low = *low_b.borrow();
-        let high = *high_b.borrow();
-        assert!(
-            low <= high,
-            "UniformSampler::sample_single_inclusive: low > high"
-        );
-        let range = high.wrapping_sub(low).wrapping_add(1) as u128;
-        if range == 0 {
-            // Range is MAX+1 (unrepresentable), so we need a special case
-            return rng.gen();
-        }
-
-        // generate a sample using a sensible integer type
-        let (mut result, lo1) = rng.gen::<u128>().wmul(range);
-
-        if lo1 > range.wrapping_neg() {
-            // Generate more bits. Sample is multiplied by 2.pow(-192), so
-            // hi2 is multiplied by 2.pow(-64):
-            let (hi2, lo2) = (rng.gen::<u64>() as u128).wmul(range);
-            debug_assert_eq!(hi2 >> 64, 0u128);
-            let is_overflow = lo1.checked_add((hi2 << 64) | (lo2 >> 64)).is_none();
-            result += is_overflow as u128;
-        }
-
-        low.wrapping_add(result as i128)
-    }
-}
+uniform_int_canon_reduced_impl!(i8, u8);
+uniform_int_canon_reduced_impl!(i16, u16);
+uniform_int_canon_reduced_impl!(i32, u32);
+uniform_int_canon_reduced_impl!(i64, u64, u32, 32);
+uniform_int_canon_reduced_impl!(i128, u128, u64, 64);
 
 #[cfg(test)]
 mod tests {
