@@ -31,26 +31,8 @@ macro_rules! bench_distr_int_group {
 }
 
 macro_rules! bench_single_int_group {
-    ($name:literal, $T:ty, $f:ident, $g:expr, $inputs:expr) => {
-        for input in $inputs {
-            $g.bench_with_input(
-                BenchmarkId::new($name, input.0),
-                &input.1,
-                |b, (low, high)| {
-                    let mut rng = BenchRng::from_entropy();
-                    b.iter(|| <$T as SampleUniform>::Sampler::$f(low, high, &mut rng))
-                },
-            );
-        }
-        $g.bench_function(BenchmarkId::new($name, "varying"), |b| {
-            let (low, mut high) = ($inputs[0].1 .0, $inputs[1].1 .1);
-            let mut rng = BenchRng::from_entropy();
-            b.iter(|| {
-                high = high.wrapping_add(1);
-                <$T as SampleUniform>::Sampler::$f(low, high, &mut rng)
-            })
-        });
-        $g.bench_function(BenchmarkId::new($name, "random"), |b| {
+    ($name:literal, $T:ty, $f:ident, $g:expr) => {
+        $g.bench_function(BenchmarkId::new($name, "single_random"), |b| {
             let low = <$T>::MIN;
             let mut rng = BenchRng::from_entropy();
             b.iter(|| {
@@ -80,9 +62,9 @@ macro_rules! bench_single_int_group {
 /// -   Bitmask: bitmasking + rejection method
 macro_rules! bench_int {
     ($c:expr, $T:ty, $high:expr) => {{
-        let inputs = &[("high_reject", $high), ("low_reject", (-1, 2))];
+        let mut g = $c.benchmark_group(concat!("uniform_int_", stringify!($T)));
+        let inputs = &[("distr_high_reject", $high), ("distr_low_reject", (-1, 2))];
 
-        let mut g = $c.benchmark_group(concat!("uniform_distr_int_", stringify!($T)));
         bench_distr_int_group!("Old", $T, sample, g, inputs);
         bench_distr_int_group!("Lemire", $T, sample_lemire, g, inputs);
         bench_distr_int_group!("Canon-Unbiased", $T, sample_canon_unbiased, g, inputs);
@@ -90,16 +72,13 @@ macro_rules! bench_int {
         bench_distr_int_group!("Canon64", $T, sample_canon_64, g, inputs);
         bench_distr_int_group!("Canon-Lemire", $T, sample_canon_lemire, g, inputs);
         bench_distr_int_group!("Bitmask", $T, sample_bitmask, g, inputs);
-        drop(g);
-
-        let mut g = $c.benchmark_group(concat!("uniform_single_int_", stringify!($T)));
-        bench_single_int_group!("Old", $T, sample_single_inclusive, g, inputs);
-        bench_single_int_group!("ONeill", $T, sample_single_inclusive_oneill, g, inputs);
-        bench_single_int_group!("Canon-Unbiased", $T, sample_single_inclusive_canon_unbiased, g, inputs);
-        bench_single_int_group!("Canon", $T, sample_single_inclusive_canon, g, inputs);
-        bench_single_int_group!("Canon64", $T, sample_single_inclusive_canon_64, g, inputs);
-        bench_single_int_group!("Canon-Lemire", $T, sample_inclusive_canon_lemire, g, inputs);
-        bench_single_int_group!("Bitmask", $T, sample_single_inclusive_bitmask, g, inputs);
+        bench_single_int_group!("Old", $T, sample_single_inclusive, g);
+        bench_single_int_group!("ONeill", $T, sample_single_inclusive_oneill, g);
+        bench_single_int_group!("Canon-Unbiased", $T, sample_single_inclusive_canon_unbiased, g);
+        bench_single_int_group!("Canon", $T, sample_single_inclusive_canon, g);
+        bench_single_int_group!("Canon64", $T, sample_single_inclusive_canon_64, g);
+        bench_single_int_group!("Canon-Lemire", $T, sample_inclusive_canon_lemire, g);
+        bench_single_int_group!("Bitmask", $T, sample_single_inclusive_bitmask, g);
     }};
 }
 
