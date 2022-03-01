@@ -82,72 +82,6 @@ fn single_random(c: &mut Criterion) {
     single_random!(c, i128, u128);
 }
 
-macro_rules! distr_range {
-    ($name:literal, $R:ty, $T:ty, $f:ident, $g:expr, $range:expr) => {
-        $g.bench_function(BenchmarkId::new(stringify!($R), $name), |b| {
-            let mut rng = <$R>::from_entropy();
-            let dist = Uniform::<$T>::new_inclusive($range.0, $range.1);
-            b.iter(|| <$T as SampleUniform>::Sampler::$f(&dist.0, &mut rng))
-        });
-    };
-
-    ($name:literal, $T:ty, $f:ident, $g:expr, $range:expr) => {
-        distr_range!($name, SmallRng, $T, $f, $g, $range);
-        distr_range!($name, ChaCha8Rng, $T, $f, $g, $range);
-        distr_range!($name, Pcg32, $T, $f, $g, $range);
-        distr_range!($name, Pcg64, $T, $f, $g, $range);
-    };
-}
-
-macro_rules! distr_low_reject {
-    ($c:expr, $T:ty) => {{
-        let mut g = $c.benchmark_group(concat!("distr_low_reject_", stringify!($T)));
-        g.warm_up_time(WARM_UP_TIME);
-        g.measurement_time(MEASUREMENT_TIME);
-        distr_range!("Old", $T, sample, g, (-1, 2));
-        distr_range!("Lemire", $T, sample_lemire, g, (-1, 2));
-        distr_range!("Canon-Unbiased", $T, sample_canon_unbiased, g, (-1, 2));
-        distr_range!("Canon", $T, sample_canon, g, (-1, 2));
-        distr_range!("Canon32", $T, sample_canon_u32, g, (-1, 2));
-        distr_range!("Canon-reduced", $T, sample_canon_reduced, g, (-1, 2));
-        distr_range!("Canon-Lemire", $T, sample_canon_lemire, g, (-1, 2));
-        distr_range!("Bitmask", $T, sample_bitmask, g, (-1, 2));
-    }};
-}
-
-fn distr_low_reject(c: &mut Criterion) {
-    distr_low_reject!(c, i8);
-    distr_low_reject!(c, i16);
-    distr_low_reject!(c, i32);
-    distr_low_reject!(c, i64);
-    distr_low_reject!(c, i128);
-}
-
-macro_rules! distr_high_reject {
-    ($c:expr, $T:ty, $range:expr) => {{
-        let mut g = $c.benchmark_group(concat!("distr_high_reject_", stringify!($T)));
-        g.warm_up_time(WARM_UP_TIME);
-        g.measurement_time(MEASUREMENT_TIME);
-        distr_range!("Old", $T, sample, g, $range);
-        distr_range!("Lemire", $T, sample_lemire, g, $range);
-        distr_range!("Canon-Unbiased", $T, sample_canon_unbiased, g, $range);
-        distr_range!("Canon", $T, sample_canon, g, $range);
-        distr_range!("Canon-reduced", $T, sample_canon_reduced, g, $range);
-        distr_range!("Canon-Lemire", $T, sample_canon_lemire, g, $range);
-        distr_range!("Bitmask", $T, sample_bitmask, g, $range);
-    }};
-}
-
-fn distr_high_reject(c: &mut Criterion) {
-    // for i8/i16, we use 32-bit integers internally so rejection is most common near full-size
-    // the exact values were determined with an exhaustive search
-    distr_high_reject!(c, i8, (i8::MIN, 116));
-    distr_high_reject!(c, i16, (i16::MIN, 32407));
-    distr_high_reject!(c, i32, (i32::MIN, 1));
-    distr_high_reject!(c, i64, (i64::MIN, 1));
-    distr_high_reject!(c, i128, (i128::MIN, 1));
-}
-
 macro_rules! distr_random {
     ($name:literal, $R:ty, $T:ty, $U:ty, $f:ident, $g:expr) => {
         $g.bench_function(BenchmarkId::new(stringify!($R), $name), |b| {
@@ -203,6 +137,6 @@ fn distr_random(c: &mut Criterion) {
 criterion_group! {
     name = benches;
     config = Criterion::default();
-    targets = single_random, distr_low_reject, distr_high_reject, distr_random
+    targets = single_random, distr_random
 }
 criterion_main!(benches);
