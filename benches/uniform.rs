@@ -13,7 +13,7 @@
 //! -   Old: prior implementation of this method as a baseline
 //! -   Lemire: widening multiply with rejection test
 //! -   Canon: widening multiply using max(64, ty-bits) sample with bias reduction adjustment
-//! -   Canon32 (TODO): Canon's method with 32-bit samples (up to two bias reduction steps)
+//! -   Canon32: Canon's method with 32-bit samples (at most one bias reduction step)
 //! -   Canon-reduced: for 8-, 16- and 32-bit types this is just biased widening multiply; for
 //!     64- and 128-bit types this is Canon's method with half-size sample (single step)
 //! -   Canon-Lemire: as Canon but with more precise bias-reduction step trigger
@@ -47,6 +47,7 @@ macro_rules! single_random {
         single_random!("ONeill", $R, $T, sample_single_inclusive_oneill, $g);
         single_random!("Canon-Unbiased", $R, $T, sample_single_inclusive_canon_unbiased, $g);
         single_random!("Canon", $R, $T, sample_single_inclusive_canon, $g);
+        single_random!("Canon32", $R, $T, sample_single_inclusive_canon_u32, $g);
         single_random!("Canon-reduced", $R, $T, sample_single_inclusive_canon_reduced, $g);
         single_random!("Canon-Lemire", $R, $T, sample_inclusive_canon_lemire, $g);
         single_random!("Bitmask", $R, $T, sample_single_inclusive_bitmask, $g);
@@ -97,6 +98,7 @@ macro_rules! distr_low_reject {
         distr_range!("Lemire", $T, sample_lemire, g, (-1, 2));
         distr_range!("Canon-Unbiased", $T, sample_canon_unbiased, g, (-1, 2));
         distr_range!("Canon", $T, sample_canon, g, (-1, 2));
+        distr_range!("Canon32", $T, sample_canon_u32, g, (-1, 2));
         distr_range!("Canon-reduced", $T, sample_canon_reduced, g, (-1, 2));
         distr_range!("Canon-Lemire", $T, sample_canon_lemire, g, (-1, 2));
         distr_range!("Bitmask", $T, sample_bitmask, g, (-1, 2));
