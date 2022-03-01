@@ -138,9 +138,61 @@ fn distr_high_reject(c: &mut Criterion) {
     distr_high_reject!(c, i128, (i128::MIN, 1));
 }
 
+macro_rules! distr_random {
+    ($name:literal, $R:ty, $T:ty, $U:ty, $f:ident, $g:expr) => {
+        $g.bench_function(BenchmarkId::new(stringify!($R), $name), |b| {
+            let mut rng = <$R>::from_entropy();
+            let x = rng.gen::<$U>();
+            let bits = (<$T>::BITS / 2);
+            let mask = (1 as $U).wrapping_neg() >> bits;
+            let range = (x >> bits) * (x & mask);
+            let high = <$T>::MIN.wrapping_add(range as $T);
+            let dist = Uniform::<$T>::new_inclusive(<$T>::MIN, high);
+            const SAMPLES: usize = 50;
+            b.iter(|| {
+                let mut result: $T = 0;
+                for _ in 0..SAMPLES {
+                    result =
+                        result.wrapping_add(<$T as SampleUniform>::Sampler::$f(&dist.0, &mut rng));
+                }
+                result
+            });
+        });
+    };
+
+    ($name:literal, $T:ty, $U:ty, $f:ident, $g:expr) => {
+        distr_random!($name, SmallRng, $T, $U, $f, $g);
+        distr_random!($name, ChaCha8Rng, $T, $U, $f, $g);
+        distr_random!($name, Pcg32, $T, $U, $f, $g);
+        distr_random!($name, Pcg64, $T, $U, $f, $g);
+    };
+
+    ($c:expr, $T:ty, $U:ty) => {{
+        let mut g = $c.benchmark_group(concat!("distr_random_", stringify!($T)));
+        g.warm_up_time(WARM_UP_TIME);
+        g.measurement_time(MEASUREMENT_TIME);
+        distr_random!("Old", $T, $U, sample, g);
+        distr_random!("Lemire", $T, $U, sample_lemire, g);
+        distr_random!("Canon-Unbiased", $T, $U, sample_canon_unbiased, g);
+        distr_random!("Canon", $T, $U, sample_canon, g);
+        distr_random!("Canon32", $T, $U, sample_canon_u32, g);
+        distr_random!("Canon-reduced", $T, $U, sample_canon_reduced, g);
+        distr_random!("Canon-Lemire", $T, $U, sample_canon_lemire, g);
+        distr_random!("Bitmask", $T, $U, sample_bitmask, g);
+    }};
+}
+
+fn distr_random(c: &mut Criterion) {
+    distr_random!(c, i8, u8);
+    distr_random!(c, i16, u16);
+    distr_random!(c, i32, u32);
+    distr_random!(c, i64, u64);
+    distr_random!(c, i128, u128);
+}
+
 criterion_group! {
     name = benches;
     config = Criterion::default();
-    targets = single_random, distr_low_reject, distr_high_reject
+    targets = single_random, distr_low_reject, distr_high_reject, distr_random
 }
 criterion_main!(benches);
