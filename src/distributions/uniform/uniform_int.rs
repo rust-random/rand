@@ -40,7 +40,7 @@ use crate::Rng;
 /// use `u32` for our `zone` and samples (because it's not slower and because
 /// it reduces the chance of having to reject a sample). In this case we cannot
 /// store `zone` in the target type since it is too large, however we know
-/// `ints_to_reject < range <= $unsigned::MAX`.
+/// `ints_to_reject < range <= $uty::MAX`.
 ///
 /// An alternative to using a modulus is widening multiply: After a widening
 /// multiply by `range`, the result is in the high word. Then comparing the low
@@ -56,7 +56,7 @@ pub struct UniformInt<X> {
 }
 
 macro_rules! uniform_int_impl {
-    ($ty:ty, $unsigned:ident, $u_large:ident, $u_extra_large:ident) => {
+    ($ty:ty, $uty:ident, $u32_or_uty:ident, $u64_or_uty:ident) => {
         impl SampleUniform for $ty {
             type Sampler = UniformInt<$ty>;
         }
@@ -64,7 +64,7 @@ macro_rules! uniform_int_impl {
         impl UniformSampler for UniformInt<$ty> {
             // We play free and fast with unsigned vs signed here
             // (when $ty is signed), but that's fine, since the
-            // contract of this macro is for $ty and $unsigned to be
+            // contract of this macro is for $ty and $uty to be
             // "bit-equal", so casting between them is a no-op.
 
             type X = $ty;
@@ -95,11 +95,11 @@ macro_rules! uniform_int_impl {
                     low <= high,
                     "Uniform::new_inclusive called with `low > high`"
                 );
-                let unsigned_max = ::core::$u_large::MAX;
+                let unsigned_max = ::core::$u32_or_uty::MAX;
 
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
                 let ints_to_reject = if range > 0 {
-                    let range = $u_large::from(range);
+                    let range = $u32_or_uty::from(range);
                     (unsigned_max - range + 1) % range
                 } else {
                     0
@@ -107,24 +107,24 @@ macro_rules! uniform_int_impl {
 
                 UniformInt {
                     low,
-                    // These are really $unsigned values, but store as $ty:
+                    // These are really $uty values, but store as $ty:
                     range: range as $ty,
                     nrmr: (range.wrapping_neg() % range) as $ty,
-                    z: ints_to_reject as $unsigned as $ty,
+                    z: ints_to_reject as $uty as $ty,
                 }
             }
 
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                let range = self.range as $unsigned as $u_large;
+                let range = self.range as $uty as $u32_or_uty;
                 if range == 0 {
                     return rng.gen();
                 }
 
-                let unsigned_max = ::core::$u_large::MAX;
-                let zone = unsigned_max - (self.z as $unsigned as $u_large);
+                let unsigned_max = ::core::$u32_or_uty::MAX;
+                let zone = unsigned_max - (self.z as $uty as $u32_or_uty);
                 loop {
-                    let v: $u_large = rng.gen();
+                    let v: $u32_or_uty = rng.gen();
                     let (hi, lo) = v.wmul(range);
                     if lo <= zone {
                         return self.low.wrapping_add(hi as $ty);
@@ -158,17 +158,17 @@ macro_rules! uniform_int_impl {
                     low <= high,
                     "UniformSampler::sample_single_inclusive: low > high"
                 );
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_large;
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u32_or_uty;
                 if range == 0 {
                     // Range is MAX+1 (unrepresentable), so we need a special case
                     return rng.gen();
                 }
 
-                let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
+                let zone = if ::core::$uty::MAX <= ::core::u16::MAX as $uty {
                     // Using a modulus is faster than the approximation for
                     // i8 and i16. I suppose we trade the cost of one
                     // modulus for near-perfect branch prediction.
-                    let unsigned_max: $u_large = ::core::$u_large::MAX;
+                    let unsigned_max: $u32_or_uty = ::core::$u32_or_uty::MAX;
                     let ints_to_reject = (unsigned_max - range + 1) % range;
                     unsigned_max - ints_to_reject
                 } else {
@@ -178,7 +178,7 @@ macro_rules! uniform_int_impl {
                 };
 
                 loop {
-                    let v: $u_large = rng.gen();
+                    let v: $u32_or_uty = rng.gen();
                     let (hi, lo) = v.wmul(range);
                     if lo <= zone {
                         return low.wrapping_add(hi as $ty);
@@ -191,14 +191,14 @@ macro_rules! uniform_int_impl {
             /// Sample, Lemire's method
             #[inline]
             pub fn sample_lemire<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let range = self.range as $unsigned as $u_large;
+                let range = self.range as $uty as $u32_or_uty;
                 if range == 0 {
                     return rng.gen();
                 }
 
-                let thresh = self.nrmr as $u_large;
+                let thresh = self.nrmr as $u32_or_uty;
                 let hi = loop {
-                    let (hi, lo) = rng.gen::<$u_large>().wmul(range);
+                    let (hi, lo) = rng.gen::<$u32_or_uty>().wmul(range);
                     if lo >= thresh {
                         break hi;
                     }
@@ -209,17 +209,17 @@ macro_rules! uniform_int_impl {
             /// Sample, Canon's method, max(u64, $ty) samples, bias ≤ 1-in-2^(sample size)
             #[inline]
             pub fn sample_canon<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let range = self.range as $unsigned as $u_extra_large;
+                let range = self.range as $uty as $u64_or_uty;
                 if range == 0 {
                     return rng.gen();
                 }
 
-                let (mut result, lo) = rng.gen::<$u_extra_large>().wmul(range);
+                let (mut result, lo) = rng.gen::<$u64_or_uty>().wmul(range);
 
                 if lo > range.wrapping_neg() {
-                    let (new_hi, _) = (rng.gen::<$u_extra_large>()).wmul(range);
+                    let (new_hi, _) = (rng.gen::<$u64_or_uty>()).wmul(range);
                     let is_overflow = lo.checked_add(new_hi).is_none();
-                    result += is_overflow as $u_extra_large;
+                    result += is_overflow as $u64_or_uty;
                 }
 
                 self.low.wrapping_add(result as $ty)
@@ -228,22 +228,22 @@ macro_rules! uniform_int_impl {
             /// Sample, Canon's method, max(u64, $ty) samples, unbiased
             #[inline]
             pub fn sample_canon_unbiased<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let range = self.range as $unsigned as $u_extra_large;
+                let range = self.range as $uty as $u64_or_uty;
                 if range == 0 {
                     return rng.gen();
                 }
 
-                let (mut result, mut lo) = rng.gen::<$u_extra_large>().wmul(range);
+                let (mut result, mut lo) = rng.gen::<$u64_or_uty>().wmul(range);
 
                 while lo > range.wrapping_neg() {
-                    let (new_hi, new_lo) = (rng.gen::<$u_extra_large>()).wmul(range);
+                    let (new_hi, new_lo) = (rng.gen::<$u64_or_uty>()).wmul(range);
                     match lo.checked_add(new_hi) {
                         None => {
                             // Overflow: last term is 1
                             result += 1;
                             break;
                         }
-                        Some(x) if x < $u_extra_large::MAX => {
+                        Some(x) if x < $u64_or_uty::MAX => {
                             // Anything less than MAX: last term is 0
                             break;
                         }
@@ -261,17 +261,17 @@ macro_rules! uniform_int_impl {
             /// Sample, Canon's method with Lemire's early-out
             #[inline]
             pub fn sample_canon_lemire<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let range = self.range as $unsigned as $u_extra_large;
+                let range = self.range as $uty as $u64_or_uty;
                 if range == 0 {
                     return rng.gen();
                 }
 
-                let (mut result, lo) = rng.gen::<$u_extra_large>().wmul(range);
+                let (mut result, lo) = rng.gen::<$u64_or_uty>().wmul(range);
 
-                if lo < (self.nrmr as $u_extra_large) {
-                    let (new_hi, _) = (rng.gen::<$u_extra_large>()).wmul(range);
+                if lo < (self.nrmr as $u64_or_uty) {
+                    let (new_hi, _) = (rng.gen::<$u64_or_uty>()).wmul(range);
                     let is_overflow = lo.checked_add(new_hi).is_none();
-                    result += is_overflow as $u_extra_large;
+                    result += is_overflow as $u64_or_uty;
                 }
 
                 self.low.wrapping_add(result as $ty)
@@ -280,7 +280,7 @@ macro_rules! uniform_int_impl {
             /// Sample, Bitmask method
             #[inline]
             pub fn sample_bitmask<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let mut range = self.range as $unsigned as $u_large;
+                let mut range = self.range as $uty as $u32_or_uty;
                 if range == 0 {
                     return rng.gen();
                 }
@@ -288,11 +288,11 @@ macro_rules! uniform_int_impl {
                 // the old impl use a mix of methods for different integer sizes, we only use
                 // the lz method here for a better comparison.
 
-                let mut mask = $u_large::max_value();
+                let mut mask = $u32_or_uty::max_value();
                 range -= 1;
                 mask >>= (range | 1).leading_zeros();
                 loop {
-                    let x = rng.gen::<$u_large>() & mask;
+                    let x = rng.gen::<$u32_or_uty>() & mask;
                     if x <= range {
                         return self.low.wrapping_add(x as $ty);
                     }
@@ -314,7 +314,7 @@ macro_rules! uniform_int_impl {
                     low <= high,
                     "UniformSampler::sample_single_inclusive: low > high"
                 );
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_large;
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u32_or_uty;
                 if range == 0 {
                     // Range is MAX+1 (unrepresentable), so we need a special case
                     return rng.gen();
@@ -324,7 +324,7 @@ macro_rules! uniform_int_impl {
                 // described here https://www.pcg-random.org/posts/bounded-rands.html
                 // and here https://github.com/imneme/bounded-rands
 
-                let (mut hi, mut lo) = rng.gen::<$u_large>().wmul(range);
+                let (mut hi, mut lo) = rng.gen::<$u32_or_uty>().wmul(range);
                 if lo < range {
                     let mut threshold = range.wrapping_neg();
                     // this shortcut works best with large ranges
@@ -335,7 +335,7 @@ macro_rules! uniform_int_impl {
                         }
                     }
                     while lo < threshold {
-                        let (new_hi, new_lo) = rng.gen::<$u_large>().wmul(range);
+                        let (new_hi, new_lo) = rng.gen::<$u32_or_uty>().wmul(range);
                         hi = new_hi;
                         lo = new_lo;
                     }
@@ -358,24 +358,24 @@ macro_rules! uniform_int_impl {
                     low <= high,
                     "UniformSampler::sample_single_inclusive: low > high"
                 );
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_extra_large;
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u64_or_uty;
                 if range == 0 {
                     // Range is MAX+1 (unrepresentable), so we need a special case
                     return rng.gen();
                 }
 
                 // generate a sample using a sensible integer type
-                let (mut result, lo_order) = rng.gen::<$u_extra_large>().wmul(range);
+                let (mut result, lo_order) = rng.gen::<$u64_or_uty>().wmul(range);
 
                 // if the sample is biased...
                 if lo_order > range.wrapping_neg() {
                     // ...generate a new sample with 64 more bits, enough that bias is undetectable
                     let (new_hi_order, _) =
-                        (rng.gen::<$u_extra_large>()).wmul(range as $u_extra_large);
+                        (rng.gen::<$u64_or_uty>()).wmul(range as $u64_or_uty);
                     // and adjust if needed
                     result += lo_order
-                        .checked_add(new_hi_order as $u_extra_large)
-                        .is_none() as $u_extra_large;
+                        .checked_add(new_hi_order as $u64_or_uty)
+                        .is_none() as $u64_or_uty;
                 }
 
                 low.wrapping_add(result as $ty)
@@ -396,23 +396,23 @@ macro_rules! uniform_int_impl {
                     low <= high,
                     "UniformSampler::sample_single_inclusive: low > high"
                 );
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_extra_large;
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u64_or_uty;
                 if range == 0 {
                     // Range is MAX+1 (unrepresentable), so we need a special case
                     return rng.gen();
                 }
 
-                let (mut result, mut lo) = rng.gen::<$u_extra_large>().wmul(range);
+                let (mut result, mut lo) = rng.gen::<$u64_or_uty>().wmul(range);
 
                 while lo > range.wrapping_neg() {
-                    let (new_hi, new_lo) = (rng.gen::<$u_extra_large>()).wmul(range);
+                    let (new_hi, new_lo) = (rng.gen::<$u64_or_uty>()).wmul(range);
                     match lo.checked_add(new_hi) {
                         None => {
                             // Overflow: last term is 1
                             result += 1;
                             break;
                         }
-                        Some(x) if x < $u_extra_large::MAX => {
+                        Some(x) if x < $u64_or_uty::MAX => {
                             // Anything less than MAX: last term is 0
                             break;
                         }
@@ -442,25 +442,25 @@ macro_rules! uniform_int_impl {
                     low <= high,
                     "UniformSampler::sample_single_inclusive: low > high"
                 );
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_extra_large;
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u64_or_uty;
                 if range == 0 {
                     // Range is MAX+1 (unrepresentable), so we need a special case
                     return rng.gen();
                 }
 
                 // generate a sample using a sensible integer type
-                let (mut result, lo_order) = rng.gen::<$u_extra_large>().wmul(range);
+                let (mut result, lo_order) = rng.gen::<$u64_or_uty>().wmul(range);
 
                 // if the sample is biased... (since range won't be changing we can further
                 // improve this check with a modulo)
                 if lo_order < range.wrapping_neg() % range {
                     // ...generate a new sample with 64 more bits, enough that bias is undetectable
                     let (new_hi_order, _) =
-                        (rng.gen::<$u_extra_large>()).wmul(range as $u_extra_large);
+                        (rng.gen::<$u64_or_uty>()).wmul(range as $u64_or_uty);
                     // and adjust if needed
                     result += lo_order
-                        .checked_add(new_hi_order as $u_extra_large)
-                        .is_none() as $u_extra_large;
+                        .checked_add(new_hi_order as $u64_or_uty)
+                        .is_none() as $u64_or_uty;
                 }
 
                 low.wrapping_add(result as $ty)
@@ -481,7 +481,7 @@ macro_rules! uniform_int_impl {
                     low <= high,
                     "UniformSampler::sample_single_inclusive: low > high"
                 );
-                let mut range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_large;
+                let mut range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u32_or_uty;
                 if range == 0 {
                     // Range is MAX+1 (unrepresentable), so we need a special case
                     return rng.gen();
@@ -490,11 +490,11 @@ macro_rules! uniform_int_impl {
                 // the old impl use a mix of methods for different integer sizes, we only use
                 // the lz method here for a better comparison.
 
-                let mut mask = $u_large::max_value();
+                let mut mask = $u32_or_uty::max_value();
                 range -= 1;
                 mask >>= (range | 1).leading_zeros();
                 loop {
-                    let x = rng.gen::<$u_large>() & mask;
+                    let x = rng.gen::<$u32_or_uty>() & mask;
                     if x <= range {
                         return low.wrapping_add(x as $ty);
                     }
@@ -516,8 +516,8 @@ uniform_int_impl! { u128, u128, u128, u128 }
 #[cfg(any(target_pointer_width = "16", target_pointer_width = "32",))]
 mod isize_int_impls {
     use super::*;
-    uniform_int_impl! { isize, usize, usize, u64 }
-    uniform_int_impl! { usize, usize, usize, u64 }
+    uniform_int_impl! { isize, usize, u32, u64 }
+    uniform_int_impl! { usize, usize, u32, u64 }
 }
 #[cfg(not(any(target_pointer_width = "16", target_pointer_width = "32",)))]
 mod isize_int_impls {
