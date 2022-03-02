@@ -82,7 +82,7 @@ Benchmarks are done on the following system:
 Results
 ----------
 
-Full results may be viewed here: <report/index.html>
+Full results may be viewed here: [report/index.html](https://htmlpreview.github.io/?https://github.com/rust-random/rand/blob/canon-uniform-benches/results-uniform-int/report/index.html).
 
 ### i8
 
