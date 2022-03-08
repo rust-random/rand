@@ -150,9 +150,9 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install toolchain
         run: |
-          MIRI_NIGHTLY=nightly-$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri)
-          rustup default "$MIRI_NIGHTLY"
-          rustup component add miri
+          rustup toolchain install nightly --component miri
+          rustup override set nightly
+          cargo miri setup
       - name: Test rand
         run: |
           cargo miri test --no-default-features --lib --tests
