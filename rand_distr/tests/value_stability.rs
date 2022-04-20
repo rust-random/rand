@@ -64,7 +64,7 @@ fn test_samples<F: Debug + ApproxEq, D: Distribution<F>>(
 }
 
 #[test]
-fn binominal_stability() {
+fn binomial_stability() {
     // We have multiple code paths: np < 10, p > 0.5
     test_samples(353, Binomial::new(2, 0.7).unwrap(), &[1, 1, 2, 1]);
     test_samples(353, Binomial::new(20, 0.3).unwrap(), &[7, 7, 5, 7]);
