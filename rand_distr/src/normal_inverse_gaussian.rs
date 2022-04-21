@@ -34,7 +34,6 @@ where
     StandardNormal: Distribution<F>,
     Standard: Distribution<F>,
 {
-    alpha: F,
     beta: F,
     inverse_gaussian: InverseGaussian<F>,
 }
@@ -63,7 +62,6 @@ where
         let inverse_gaussian = InverseGaussian::new(mu, F::one()).unwrap();
 
         Ok(Self {
-            alpha,
             beta,
             inverse_gaussian,
         })
