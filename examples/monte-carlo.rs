@@ -29,7 +29,7 @@
 use rand::distributions::{Distribution, Uniform};
 
 fn main() {
-    let range = Uniform::new(-1.0f64, 1.0);
+    let range = Uniform::new(-1.0f64, 1.0).unwrap();
     let mut rng = rand::thread_rng();
 
     let total = 1_000_000;

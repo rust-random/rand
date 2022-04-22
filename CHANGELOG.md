@@ -8,6 +8,11 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.9.0] - unreleased
+### Distributions
+- `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking)
+- `Uniform` implements `TryFrom` instead of `From` for ranges
+
 ## [0.8.5] - 2021-08-20
 ### Fixes
 - Fix build on non-32/64-bit architectures (#1144)

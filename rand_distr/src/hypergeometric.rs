@@ -251,7 +251,7 @@ impl Distribution<u64> for Hypergeometric {
                 x
             },
             RejectionAcceptance { m, a, lambda_l, lambda_r, x_l, x_r, p1, p2, p3 } => {
-                let distr_region_select = Uniform::new(0.0, p3);
+                let distr_region_select = Uniform::new(0.0, p3).unwrap();
                 loop {
                     let (y, v) = loop {
                         let u = distr_region_select.sample(rng);

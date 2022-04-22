@@ -144,10 +144,10 @@ pub trait Rng: RngCore {
     /// use rand::distributions::Uniform;
     ///
     /// let mut rng = thread_rng();
-    /// let x = rng.sample(Uniform::new(10u32, 15));
+    /// let x = rng.sample(Uniform::new(10u32, 15).unwrap());
     /// // Type annotation requires two types, the type and distribution; the
     /// // distribution can be inferred.
-    /// let y = rng.sample::<u16, _>(Uniform::new(10, 15));
+    /// let y = rng.sample::<u16, _>(Uniform::new(10, 15).unwrap());
     /// ```
     fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
         distr.sample(self)
@@ -183,7 +183,7 @@ pub trait Rng: RngCore {
     ///                              .collect::<Vec<(f64, bool)>>());
     ///
     /// // Dice-rolling:
-    /// let die_range = Uniform::new_inclusive(1, 6);
+    /// let die_range = Uniform::new_inclusive(1, 6).unwrap();
     /// let mut roll_die = (&mut rng).sample_iter(die_range);
     /// while roll_die.next().unwrap() != 6 {
     ///     println!("Not a 6; rolling again!");

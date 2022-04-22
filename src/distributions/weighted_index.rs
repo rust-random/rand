@@ -121,7 +121,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         if total_weight == zero {
             return Err(WeightedError::AllWeightsZero);
         }
-        let distr = X::Sampler::new(zero, total_weight.clone());
+        let distr = X::Sampler::new(zero, total_weight.clone()).unwrap();
 
         Ok(WeightedIndex {
             cumulative_weights: weights,
@@ -214,7 +214,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         }
 
         self.total_weight = total_weight;
-        self.weight_distribution = X::Sampler::new(zero, self.total_weight.clone());
+        self.weight_distribution = X::Sampler::new(zero, self.total_weight.clone()).unwrap();
 
         Ok(())
     }
