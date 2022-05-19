@@ -226,7 +226,7 @@ pub trait CryptoRng {}
 ///     buf
 /// }
 /// ```
-pub trait CryptoRngCore: RngCore {
+pub trait CryptoRngCore: CryptoRng + RngCore {
     /// Upcast to an [`RngCore`] trait object.
     fn as_rngcore(&mut self) -> &mut dyn RngCore;
 }
