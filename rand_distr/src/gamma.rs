@@ -694,6 +694,24 @@ where
             })
         }
     }
+
+    /// Returns the alpha shape (`alpha`) of the distribution.
+    pub fn alpha(&self) -> F {
+        if self.switched_params {
+            return self.b;
+        }
+
+        self.a
+    }
+
+    /// Returns the beta shape (`beta`) of the distribution.
+    pub fn beta(&self) -> F {
+        if self.switched_params {
+            return self.a;
+        }
+
+        self.b
+    }
 }
 
 impl<F> Distribution<F> for Beta<F>
