@@ -114,7 +114,7 @@ where
 
     /// Returns the shape parameter (`alpha`) of the distribution.
     pub fn alpha(&self) -> Box<[F]> {
-        self.alpha
+        self.alpha.clone()
     }
 }
 
