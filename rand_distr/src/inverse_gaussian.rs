@@ -58,6 +58,16 @@ where
 
         Ok(Self { mean, shape })
     }
+
+    /// Returns the mean (`μ`) of the distribution.
+    pub fn mean(&self) -> F {
+        self.mean
+    }
+
+    /// Returns the shape (`shape`) of the distribution.
+    pub fn shape(&self) -> F {
+        self.shape
+    }
 }
 
 impl<F> Distribution<F> for InverseGaussian<F>
