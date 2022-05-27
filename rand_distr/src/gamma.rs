@@ -374,6 +374,16 @@ where
         };
         Ok(ChiSquared { repr })
     }
+
+    /// Returns the degrees-of-freedom (`k`) of the distribution.
+    pub fn k(&self) -> F {
+        match self.repr {
+            DoFExactlyOne => F::one(),
+            // Since `DoFAnythingElse` is computed using Gamma(shape = 0.5 * k, ...),
+            // we revert the operation k = (1. / 0.5) * shape = 2. * shape.
+            DoFAnythingElse(gamma) => F::from(2.).unwrap() * gamma.shape(),
+        }
+    }
 }
 impl<F> Distribution<F> for ChiSquared<F>
 where
