@@ -80,7 +80,7 @@ impl Binomial {
     }
 
     /// Returns the probability of success (`p`) of the distribution.
-    pub fn p(&self) -> u64 {
+    pub fn p(&self) -> f64 {
         self.p
     }
 }
