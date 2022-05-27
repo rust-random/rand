@@ -481,6 +481,16 @@ where
             dof_ratio: n / m,
         })
     }
+
+    /// Returns the m parameter (`m`) of the distribution.
+    pub fn m(&self) -> F {
+        self.numer.k()
+    }
+
+    /// Returns the n parameter (`n`) of the distribution.
+    pub fn n(&self) -> F {
+        self.denom.k()
+    }
 }
 impl<F> Distribution<F> for FisherF<F>
 where
