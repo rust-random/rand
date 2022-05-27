@@ -175,6 +175,30 @@ where
         };
         Ok(Gamma { repr })
     }
+
+    /// Returns the shape parameter (`shape`) of the distribution.
+    pub fn shape(&self) -> F {
+        match self.repr {
+            // By definition of `one`.
+            One(_) => F::one(),
+            // By definition of `small shape`.
+            Small(gamma) => gamma.inv_shape.recip(),
+            // By definition of `large shape`.
+            Large(gamma) => gamma.d + F::from(1. / 3.).unwrap(),
+        }
+    }
+
+    /// Returns the scale parameter (`scale`) of the distribution.
+    pub fn scale(&self) -> F {
+        match self.repr {
+            // By definition of `one`.
+            One(exp) => exp.lambda_inverse().recip(),
+            // By definition of `small shape`.
+            Small(gamma) => gamma.large_shape.scale,
+            // By definition of `large shape`.
+            Large(gamma) => gamma.scale,
+        }
+    }
 }
 
 impl<F> GammaSmallShape<F>
