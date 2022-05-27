@@ -111,6 +111,11 @@ where
             alpha: vec![alpha; size].into_boxed_slice(),
         })
     }
+
+    /// Returns the shape parameter (`alpha`) of the distribution.
+    pub fn alpha(&self) -> Box<[F]> {
+        self.alpha
+    }
 }
 
 impl<F> Distribution<Vec<F>> for Dirichlet<F>
