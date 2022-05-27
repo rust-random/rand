@@ -75,6 +75,16 @@ where
         }
         Ok(Gumbel { location, scale })
     }
+
+    /// Returns the location (`location`) of the distribution.
+    pub fn location(&self) -> F {
+        self.location
+    }
+
+    /// Returns the scale (`scale`) of the distribution.
+    pub fn scale(&self) -> F {
+        self.scale
+    }
 }
 
 impl<F> Distribution<F> for Gumbel<F>
