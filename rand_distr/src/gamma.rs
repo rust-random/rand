@@ -544,6 +544,11 @@ where
             dof: n,
         })
     }
+
+    /// Return the degrees-of-freedom (`n`) of the distribution.
+    pub fn n(&self) -> F {
+        self.chi.k()
+    }
 }
 impl<F> Distribution<F> for StudentT<F>
 where
