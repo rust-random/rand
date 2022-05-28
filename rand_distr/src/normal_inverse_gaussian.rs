@@ -66,6 +66,25 @@ where
             inverse_gaussian,
         })
     }
+
+    /// Returns the alpha parameter (`alpha`) of the distribution.
+    pub fn alpha(&self) -> F {
+        // By definition:
+        //      gamma = sqrt(alpha^2 - beta^2) with alpha > 0
+        //      mu = 1 / gamma
+        // Therefore:
+        //      mu = 1 / sqrt(alpha^2 - beta^2)
+        //      mu^2 = 1 / (alpha^2 - beta^2)
+        //      1 / mu^2 = alpha^2 - beta^2
+        //      1 / mu^2 + beta^2 = alpha^2
+        //      sqrt(1 / mu^2 + beta^2) = alpha with alpha > 0
+        F::sqrt(self.inverse_gaussian.mean().powi(2).recip() + self.beta.powi(2))
+    }
+
+    /// Returns the beta parameter (`beta`) of the distribution.
+    pub fn beta(&self) -> F {
+        self.beta
+    }
 }
 
 impl<F> Distribution<F> for NormalInverseGaussian<F>
