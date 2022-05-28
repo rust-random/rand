@@ -79,6 +79,21 @@ where F: Float, Standard: Distribution<F>
         }
         Ok(Triangular { min, max, mode })
     }
+
+    /// Return the min shape (`min`) of the distribution.
+    pub fn min(&self) -> F {
+        self.min
+    }
+
+    /// Return the min shape (`max`) of the distribution.
+    pub fn max(&self) -> F {
+        self.max
+    }
+
+    /// Return the min shape (`mode`) of the distribution.
+    pub fn mode(&self) -> F {
+        self.mode
+    }
 }
 
 impl<F> Distribution<F> for Triangular<F>
