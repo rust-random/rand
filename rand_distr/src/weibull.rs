@@ -70,6 +70,16 @@ where F: Float, OpenClosed01: Distribution<F>
             scale,
         })
     }
+
+    /// Returns the scale parameter (`scale`) of the distribution.
+    pub fn scale(&self) -> F {
+        self.scale
+    }
+
+    /// Returns the shape parameter (`shape`) of the distribution.
+    pub fn shape(&self) -> F {
+        self.inv_shape.recip()
+    }
 }
 
 impl<F> Distribution<F> for Weibull<F>
