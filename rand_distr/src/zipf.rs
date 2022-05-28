@@ -89,6 +89,11 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
             b: two.powf(a_minus_1),
         })
     }
+
+    /// Returns the a parameter (`a`) of the distribution.
+    pub fn a(&self) -> F {
+        self.a_minus_1 + F::one()
+    }
 }
 
 impl<F> Distribution<F> for Zeta<F>
