@@ -703,19 +703,19 @@ where
     /// Returns the alpha shape (`alpha`) of the distribution.
     pub fn alpha(&self) -> F {
         if self.switched_params {
-            return self.b;
+            self.b
+        } else {
+            self.a
         }
-
-        self.a
     }
 
     /// Returns the beta shape (`beta`) of the distribution.
     pub fn beta(&self) -> F {
         if self.switched_params {
-            return self.a;
+            self.a
+        } else {
+            self.b
         }
-
-        self.b
     }
 }
 
