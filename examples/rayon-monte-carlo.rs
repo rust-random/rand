@@ -27,41 +27,41 @@
 #![cfg(all(feature = "std", feature = "std_rng"))]
 
 use rand::distributions::{Distribution, Uniform};
-use rand_chacha::rand_core::SeedableRng;
-use rand_chacha::ChaCha8Rng;
+use rand_chacha::{rand_core::SeedableRng, ChaCha8Rng};
 use rayon::prelude::*;
 
 static SEED: u64 = 0;
+static BATCH_SIZE: u64 = 10_000;
+static BATCHES: u64 = 1000;
 
 fn main() {
     let range = Uniform::new(-1.0f64, 1.0);
 
-    let total = 1_000_000;
-    let cha_cha = ChaCha8Rng::seed_from_u64(SEED);
-
-    let in_circle: usize = (0..total)
+    // We have to manually batch the work so that we can get Rng construction
+    // out of the hot loop. Due to work-stealing, ParallelIterator::map_init 
+    // doesn't guarantee the same # and order of work items per run.
+    let in_circle = (0..BATCHES)
         .into_par_iter()
-        .map_init(
-            || cha_cha.clone(),
-            |rng, i| {
-                // ChaCha supports indexing into its stream. We need this because due to work-stealing, 
-                // Rayon does not guarantee that the same work items will be run in the same order
-                // between runs of the program. We can only guarantee determinism by setting the stream 
-                // according to the work number.
-                rng.set_word_pos(i);
-                let a = range.sample(rng);
-                let b = range.sample(rng);
+        .map(|i| {
+            let mut rng = ChaCha8Rng::seed_from_u64(SEED);
+            // using set_stream() here force every batch to use a different part of the rng stream
+            rng.set_stream(i);
+            let mut count = 0;
+            for _ in 0..BATCH_SIZE {
+                let a = range.sample(&mut rng);
+                let b = range.sample(&mut rng);
                 if a * a + b * b <= 1.0 {
-                    1
-                } else {
-                    0
+                    count += 1;
                 }
-            },
-        )
-        .reduce(|| 0, |a, b| a + b);
+            }
+            count
+        })
+        .reduce(|| 0usize, |a, b| a + b);
+
+        
     // prints something close to 3.14159...
     println!(
         "π is approximately {}",
-        4. * (in_circle as f64) / (total as f64)
+        4. * (in_circle as f64) / ((BATCH_SIZE * BATCHES) as f64)
     );
 }
