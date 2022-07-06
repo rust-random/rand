@@ -23,6 +23,20 @@
 //! We can use the above fact to estimate the value of π: pick many points in
 //! the square at random, calculate the fraction that fall within the circle,
 //! and multiply this fraction by 4.
+//!
+//! Note on determinism:
+//! It's slightly tricky to build a parallel simulation using Rayon
+//! which is both efficient *and* reproducible.
+//!
+//! Rayon's ParallelIterator api does not guarantee that the work will be
+//! batched into identical batches on every run, so we can't simply use
+//! map_init to construct one RNG per Rayon batch.
+//!
+//! Instead, we do our own batching, so that a Rayon work item becomes a
+//! batch. Then we can fix our rng stream to the batched work item. This
+//! Then we amortizes the cost of constructing the Rng over BATCH_SIZE trials.
+//! Manually batching also turns out to be faster for the nondeterministic
+//! version of this program as well.
 
 #![cfg(all(feature = "std", feature = "std_rng"))]
 
@@ -37,14 +51,13 @@ static BATCHES: u64 = 1000;
 fn main() {
     let range = Uniform::new(-1.0f64, 1.0);
 
-    // We have to manually batch the work so that we can get Rng construction
-    // out of the hot loop. Due to work-stealing, ParallelIterator::map_init 
-    // doesn't guarantee the same # and order of work items per run.
     let in_circle = (0..BATCHES)
         .into_par_iter()
         .map(|i| {
             let mut rng = ChaCha8Rng::seed_from_u64(SEED);
-            // using set_stream() here force every batch to use a different part of the rng stream
+            // We chose ChaCha because it's fast, has suitable statical properties for simulation,
+            // and because it supports this set_stream() api, which lets us chose a different stream
+            // per work item. ChaCha supports 2^64 independent streams.
             rng.set_stream(i);
             let mut count = 0;
             for _ in 0..BATCH_SIZE {
@@ -58,7 +71,6 @@ fn main() {
         })
         .reduce(|| 0usize, |a, b| a + b);
 
-        
     // prints something close to 3.14159...
     println!(
         "π is approximately {}",
