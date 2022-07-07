@@ -22,6 +22,8 @@ use crate::Rng;
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "min_const_gen")]
 use core::mem::{self, MaybeUninit};
+#[cfg(feature = "simd_support")]
+use core::simd::{Mask, Simd, LaneCount, SupportedLaneCount, MaskElement, SimdElement};
 
 
 // ----- Sampling distributions -----
@@ -142,6 +144,37 @@ impl Distribution<bool> for Standard {
         // simple patterns, we compare against the most significant bit. This is
         // easiest done using a sign test.
         (rng.next_u32() as i32) < 0
+    }
+}
+
+/// Requires nightly Rust and the [`simd_support`] feature
+///
+/// Note that on some hardware like x86/64 mask operations like [`_mm_blendv_epi8`]
+/// only care about a single bit. This means that you could use uniform random bits
+/// directly:
+///
+/// ```ignore
+/// // this may be faster...
+/// let x = unsafe { _mm_blendv_epi8(a.into(), b.into(), rng.gen::<__m128i>()) };
+///
+/// // ...than this
+/// let x = rng.gen::<mask8x16>().select(b, a);
+/// ```
+///
+/// Since most bits are unused you could also generate only as many bits as you need.
+///
+/// [`_mm_blendv_epi8`]: https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_blendv_epi8&ig_expand=514/
+/// [`simd_support`]: https://github.com/rust-random/rand#crate-features
+#[cfg(feature = "simd_support")]
+impl<T, const LANES: usize> Distribution<Mask<T, LANES>> for Standard
+where
+    T: MaskElement + PartialOrd + SimdElement<Mask = T> + Default,
+    LaneCount<LANES>: SupportedLaneCount,
+    Standard: Distribution<Simd<T, LANES>>,
+{
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Mask<T, LANES> {
+        rng.gen().lanes_lt(Simd::default())
     }
 }
 

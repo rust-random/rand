@@ -41,8 +41,8 @@ alloc = ["rand_core/alloc"]
 # Option: use getrandom package for seeding
 getrandom = ["rand_core/getrandom"]
 
-# Option (requires nightly): experimental SIMD support
-simd_support = ["packed_simd"]
+# Option (requires nightly Rust): experimental SIMD support
+simd_support = []
 
 # Option (enabled by default): enable StdRng
 std_rng = ["rand_chacha"]
@@ -67,13 +67,6 @@ rand_core = { path = "rand_core", version = "0.6.0" }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 rand_chacha = { path = "rand_chacha", version = "0.3.0", default-features = false, optional = true }
-
-[dependencies.packed_simd]
-# NOTE: so far no version works reliably due to dependence on unstable features
-package = "packed_simd_2"
-version = "0.3.7"
-optional = true
-features = ["into_bits"]
 
 [target.'cfg(unix)'.dependencies]
 # Used for fork protection (reseeding.rs)

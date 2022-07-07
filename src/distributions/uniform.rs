@@ -110,15 +110,17 @@ use core::time::Duration;
 use core::ops::{Range, RangeInclusive};
 
 use crate::distributions::float::IntoFloat;
-use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, WideningMultiply};
+use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAsSIMD, WideningMultiply};
 use crate::distributions::Distribution;
+#[cfg(feature = "simd_support")]
+use crate::distributions::Standard;
 use crate::{Rng, RngCore};
 
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
 use crate::distributions::utils::Float;
 
-#[cfg(feature = "simd_support")] use packed_simd::*;
+#[cfg(feature = "simd_support")] use core::simd::*;
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
@@ -571,21 +573,30 @@ uniform_int_impl! { u128, u128, u128 }
 
 #[cfg(feature = "simd_support")]
 macro_rules! uniform_simd_int_impl {
-    ($ty:ident, $unsigned:ident, $u_scalar:ident) => {
+    ($ty:ident, $unsigned:ident) => {
         // The "pick the largest zone that can fit in an `u32`" optimization
         // is less useful here. Multiple lanes complicate things, we don't
         // know the PRNG's minimal output size, and casting to a larger vector
         // is generally a bad idea for SIMD performance. The user can still
         // implement it manually.
-
-        // TODO: look into `Uniform::<u32x4>::new(0u32, 100)` functionality
-        //       perhaps `impl SampleUniform for $u_scalar`?
-        impl SampleUniform for $ty {
-            type Sampler = UniformInt<$ty>;
+        impl<const LANES: usize> SampleUniform for Simd<$ty, LANES>
+        where
+            LaneCount<LANES>: SupportedLaneCount,
+            Simd<$unsigned, LANES>:
+                WideningMultiply<Output = (Simd<$unsigned, LANES>, Simd<$unsigned, LANES>)>,
+            Standard: Distribution<Simd<$unsigned, LANES>>,
+        {
+            type Sampler = UniformInt<Simd<$ty, LANES>>;
         }
 
-        impl UniformSampler for UniformInt<$ty> {
-            type X = $ty;
+        impl<const LANES: usize> UniformSampler for UniformInt<Simd<$ty, LANES>>
+        where
+            LaneCount<LANES>: SupportedLaneCount,
+            Simd<$unsigned, LANES>:
+                WideningMultiply<Output = (Simd<$unsigned, LANES>, Simd<$unsigned, LANES>)>,
+            Standard: Distribution<Simd<$unsigned, LANES>>,
+        {
+            type X = Simd<$ty, LANES>;
 
             #[inline] // if the range is constant, this helps LLVM to do the
                       // calculations at compile-time.
@@ -595,8 +606,8 @@ macro_rules! uniform_simd_int_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.lt(high).all(), "Uniform::new called with `low >= high`");
-                UniformSampler::new_inclusive(low, high - 1)
+                assert!(low.lanes_lt(high).all(), "Uniform::new called with `low >= high`");
+                UniformSampler::new_inclusive(low, high - Simd::splat(1))
             }
 
             #[inline] // if the range is constant, this helps LLVM to do the
@@ -607,20 +618,20 @@ macro_rules! uniform_simd_int_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.le(high).all(),
+                assert!(low.lanes_le(high).all(),
                         "Uniform::new_inclusive called with `low > high`");
-                let unsigned_max = ::core::$u_scalar::MAX;
+                let unsigned_max = Simd::splat(::core::$unsigned::MAX);
 
-                // NOTE: these may need to be replaced with explicitly
-                // wrapping operations if `packed_simd` changes
-                let range: $unsigned = ((high - low) + 1).cast();
+                // NOTE: all `Simd` operations are inherently wrapping,
+                //       see https://doc.rust-lang.org/std/simd/struct.Simd.html
+                let range: Simd<$unsigned, LANES> = ((high - low) + Simd::splat(1)).cast();
                 // `% 0` will panic at runtime.
-                let not_full_range = range.gt($unsigned::splat(0));
+                let not_full_range = range.lanes_gt(Simd::splat(0));
                 // replacing 0 with `unsigned_max` allows a faster `select`
                 // with bitwise OR
-                let modulo = not_full_range.select(range, $unsigned::splat(unsigned_max));
+                let modulo = not_full_range.select(range, unsigned_max);
                 // wrapping addition
-                let ints_to_reject = (unsigned_max - range + 1) % modulo;
+                let ints_to_reject = (unsigned_max - range + Simd::splat(1)) % modulo;
                 // When `range` is 0, `lo` of `v.wmul(range)` will always be
                 // zero which means only one sample is needed.
                 let zone = unsigned_max - ints_to_reject;
@@ -634,8 +645,8 @@ macro_rules! uniform_simd_int_impl {
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                let range: $unsigned = self.range.cast();
-                let zone: $unsigned = self.z.cast();
+                let range: Simd<$unsigned, LANES> = self.range.cast();
+                let zone: Simd<$unsigned, LANES> = self.z.cast();
 
                 // This might seem very slow, generating a whole new
                 // SIMD vector for every sample rejection. For most uses
@@ -646,19 +657,19 @@ macro_rules! uniform_simd_int_impl {
                 // rejection. The replacement method does however add a little
                 // overhead. Benchmarking or calculating probabilities might
                 // reveal contexts where this replacement method is slower.
-                let mut v: $unsigned = rng.gen();
+                let mut v: Simd<$unsigned, LANES> = rng.gen();
                 loop {
                     let (hi, lo) = v.wmul(range);
-                    let mask = lo.le(zone);
+                    let mask = lo.lanes_le(zone);
                     if mask.all() {
-                        let hi: $ty = hi.cast();
+                        let hi: Simd<$ty, LANES> = hi.cast();
                         // wrapping addition
                         let result = self.low + hi;
                         // `select` here compiles to a blend operation
                         // When `range.eq(0).none()` the compare and blend
                         // operations are avoided.
-                        let v: $ty = v.cast();
-                        return range.gt($unsigned::splat(0)).select(result, v);
+                        let v: Simd<$ty, LANES> = v.cast();
+                        return range.lanes_gt(Simd::splat(0)).select(result, v);
                     }
                     // Replace only the failing lanes
                     v = mask.select(v, rng.gen());
@@ -668,51 +679,16 @@ macro_rules! uniform_simd_int_impl {
     };
 
     // bulk implementation
-    ($(($unsigned:ident, $signed:ident),)+ $u_scalar:ident) => {
+    ($(($unsigned:ident, $signed:ident)),+) => {
         $(
-            uniform_simd_int_impl!($unsigned, $unsigned, $u_scalar);
-            uniform_simd_int_impl!($signed, $unsigned, $u_scalar);
+            uniform_simd_int_impl!($unsigned, $unsigned);
+            uniform_simd_int_impl!($signed, $unsigned);
         )+
     };
 }
 
 #[cfg(feature = "simd_support")]
-uniform_simd_int_impl! {
-    (u64x2, i64x2),
-    (u64x4, i64x4),
-    (u64x8, i64x8),
-    u64
-}
-
-#[cfg(feature = "simd_support")]
-uniform_simd_int_impl! {
-    (u32x2, i32x2),
-    (u32x4, i32x4),
-    (u32x8, i32x8),
-    (u32x16, i32x16),
-    u32
-}
-
-#[cfg(feature = "simd_support")]
-uniform_simd_int_impl! {
-    (u16x2, i16x2),
-    (u16x4, i16x4),
-    (u16x8, i16x8),
-    (u16x16, i16x16),
-    (u16x32, i16x32),
-    u16
-}
-
-#[cfg(feature = "simd_support")]
-uniform_simd_int_impl! {
-    (u8x2, i8x2),
-    (u8x4, i8x4),
-    (u8x8, i8x8),
-    (u8x16, i8x16),
-    (u8x32, i8x32),
-    (u8x64, i8x64),
-    u8
-}
+uniform_simd_int_impl! { (u8, i8), (u16, i16), (u32, i32), (u64, i64) }
 
 impl SampleUniform for char {
     type Sampler = UniformChar;
@@ -847,7 +823,7 @@ macro_rules! uniform_float_impl {
 
                 loop {
                     let mask = (scale * max_rand + low).ge_mask(high);
-                    if mask.none() {
+                    if !mask.any() {
                         break;
                     }
                     scale = scale.decrease_masked(mask);
@@ -886,7 +862,7 @@ macro_rules! uniform_float_impl {
 
                 loop {
                     let mask = (scale * max_rand + low).gt_mask(high);
-                    if mask.none() {
+                    if !mask.any() {
                         break;
                     }
                     scale = scale.decrease_masked(mask);
@@ -899,11 +875,11 @@ macro_rules! uniform_float_impl {
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 // Generate a value in the range [1, 2)
-                let value1_2 = (rng.gen::<$uty>() >> $bits_to_discard).into_float_with_exponent(0);
+                let value1_2 = (rng.gen::<$uty>() >> $uty::splat($bits_to_discard)).into_float_with_exponent(0);
 
                 // Get a value in the range [0, 1) in order to avoid
                 // overflowing into infinity when multiplying with scale
-                let value0_1 = value1_2 - 1.0;
+                let value0_1 = value1_2 - <$ty>::splat(1.0);
 
                 // We don't use `f64::mul_add`, because it is not available with
                 // `no_std`. Furthermore, it is slower for some targets (but
@@ -939,11 +915,11 @@ macro_rules! uniform_float_impl {
                 loop {
                     // Generate a value in the range [1, 2)
                     let value1_2 =
-                        (rng.gen::<$uty>() >> $bits_to_discard).into_float_with_exponent(0);
+                        (rng.gen::<$uty>() >> $uty::splat($bits_to_discard)).into_float_with_exponent(0);
 
                     // Get a value in the range [0, 1) in order to avoid
                     // overflowing into infinity when multiplying with scale
-                    let value0_1 = value1_2 - 1.0;
+                    let value0_1 = value1_2 - <$ty>::splat(1.0);
 
                     // Doing multiply before addition allows some architectures
                     // to use a single instruction.
@@ -1184,7 +1160,7 @@ mod tests {
             _ => panic!("`UniformDurationMode` was not serialized/deserialized correctly")
         }
     }
-    
+
     #[test]
     #[cfg(feature = "serde1")]
     fn test_uniform_serialization() {
@@ -1289,8 +1265,8 @@ mod tests {
                         ($ty::splat(10), $ty::splat(127)),
                         ($ty::splat($scalar::MIN), $ty::splat($scalar::MAX)),
                     ],
-                    |x: $ty, y| x.le(y).all(),
-                    |x: $ty, y| x.lt(y).all()
+                    |x: $ty, y| x.lanes_le(y).all(),
+                    |x: $ty, y| x.lanes_lt(y).all()
                 );)*
             }};
         }
@@ -1298,8 +1274,8 @@ mod tests {
 
         #[cfg(feature = "simd_support")]
         {
-            t!(u8x2, u8x4, u8x8, u8x16, u8x32, u8x64 => u8);
-            t!(i8x2, i8x4, i8x8, i8x16, i8x32, i8x64 => i8);
+            t!(u8x4, u8x8, u8x16, u8x32, u8x64 => u8);
+            t!(i8x4, i8x8, i8x16, i8x32, i8x64 => i8);
             t!(u16x2, u16x4, u16x8, u16x16, u16x32 => u16);
             t!(i16x2, i16x4, i16x8, i16x16, i16x32 => i16);
             t!(u32x2, u32x4, u32x8, u32x16 => u32);
@@ -1351,7 +1327,7 @@ mod tests {
                     (-::core::$f_scalar::MAX * 0.2, ::core::$f_scalar::MAX * 0.7),
                 ];
                 for &(low_scalar, high_scalar) in v.iter() {
-                    for lane in 0..<$ty>::lanes() {
+                    for lane in 0..<$ty>::LANES {
                         let low = <$ty>::splat(0.0 as $f_scalar).replace(lane, low_scalar);
                         let high = <$ty>::splat(1.0 as $f_scalar).replace(lane, high_scalar);
                         let my_uniform = Uniform::new(low, high);
@@ -1474,7 +1450,7 @@ mod tests {
                     (::std::$f_scalar::NEG_INFINITY, ::std::$f_scalar::INFINITY),
                 ];
                 for &(low_scalar, high_scalar) in v.iter() {
-                    for lane in 0..<$ty>::lanes() {
+                    for lane in 0..<$ty>::LANES {
                         let low = <$ty>::splat(0.0 as $f_scalar).replace(lane, low_scalar);
                         let high = <$ty>::splat(1.0 as $f_scalar).replace(lane, high_scalar);
                         assert!(catch_unwind(|| range(low, high)).is_err());
