@@ -83,3 +83,4 @@ libc = { version = "0.2.22", optional = true, default-features = false }
 rand_pcg = { path = "rand_pcg", version = "0.3.0" }
 # Only to test serde1
 bincode = "1.2.1"
+rayon = "1.5.3"
