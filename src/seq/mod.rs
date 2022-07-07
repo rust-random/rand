@@ -192,10 +192,9 @@ pub trait SliceRandom {
     /// If all of the weights are equal, even if they are all zero, each element has
     /// an equal likelihood of being selected.
     ///
-    /// The complexity of this method depends on the feature `partition_at_index`.
-    /// If the feature is enabled, then for slices of length `n`, the complexity
-    /// is `O(n)` space and `O(n)` time. Otherwise, the complexity is `O(n)` space and
-    /// `O(n * log amount)` time.
+    /// This implementation uses `O(length + amount)` space and `O(length)` time
+    /// if the "nightly" feature is enabled, or `O(length)` space and
+    /// `O(length + amount * log length)` time otherwise.
     ///
     /// # Example
     ///
