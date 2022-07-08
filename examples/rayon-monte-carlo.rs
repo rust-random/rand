@@ -71,6 +71,9 @@ fn main() {
         })
         .sum::<usize>();
 
+    // assert this is deterministic
+    assert_eq!(in_circle, 7852263);
+
     // prints something close to 3.14159...
     println!(
         "π is approximately {}",
