@@ -56,7 +56,7 @@ fn main() {
         .map(|i| {
             let mut rng = ChaCha8Rng::seed_from_u64(SEED);
             // We chose ChaCha because it's fast, has suitable statistical properties for simulation,
-            // and because it supports this set_stream() api, which lets us chose a different stream
+            // and because it supports this set_stream() api, which lets us choose a different stream
             // per work item. ChaCha supports 2^64 independent streams.
             rng.set_stream(i);
             let mut count = 0;
