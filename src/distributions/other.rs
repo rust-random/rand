@@ -174,6 +174,8 @@ where
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Mask<T, LANES> {
+        // `MaskElement` must be a signed integer, so this is equivalent
+        // to the scalar `i32 < 0` method
         rng.gen().lanes_lt(Simd::default())
     }
 }

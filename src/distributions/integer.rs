@@ -138,31 +138,22 @@ macro_rules! simd_impl {
         /// Requires nightly Rust and the [`simd_support`] feature
         ///
         /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
-        impl Distribution<$ty> for Standard {
+        impl<const LANES: usize> Distribution<Simd<$ty, LANES>> for Standard
+        where
+            LaneCount<LANES>: SupportedLaneCount,
+        {
             #[inline]
-            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                // TODO: impl this generically once const generics are robust enough
-                let mut vec: Simd<u8, { mem::size_of::<$ty>() }> = Default::default();
-                rng.fill_bytes(vec.as_mut_array());
-                // NOTE: replace with `to_le` if added to core::simd
-                #[cfg(not(target_endian = "little"))]
-                {
-                    vec = vec.reverse();
-                }
-                // SAFETY: we know u8xN and $ty have the same size
-                unsafe { mem::transmute_copy(&vec) }
+            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Simd<$ty, LANES> {
+                let mut vec = Simd::default();
+                rng.fill(vec.as_mut_array().as_mut_slice());
+                vec
             }
         }
     )+};
 }
 
 #[cfg(feature = "simd_support")]
-simd_impl!(
-    i8x4, i8x8, i8x16, i8x32, i8x64, i16x2, i16x4, i16x8, i16x16, i16x32, i32x2, i32x4, i32x8,
-    i32x16, i64x2, i64x4, i64x8, isizex2, isizex4, isizex8, u8x4, u8x8, u8x16, u8x32, u8x64, u16x2,
-    u16x4, u16x8, u16x16, u16x32, u32x2, u32x4, u32x8, u32x16, u64x2, u64x4, u64x8, usizex2,
-    usizex4, usizex8
-);
+simd_impl!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 intrinsic_impl!(__m128i, __m256i);
