@@ -123,21 +123,24 @@ pub trait SliceRandom {
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
     ///
     /// For slices of length `n`, complexity is `O(n)`.
-    /// See also [`choose_weighted_mut`], [`distributions::weighted`].
+    /// For more information about the underlying algorithm, see [`distributions::WeightedIndex`].
+    ///
+    /// See also [`choose_weighted_mut`].
     ///
     /// # Example
     ///
     /// ```
     /// use rand::prelude::*;
     ///
-    /// let choices = [('a', 2), ('b', 1), ('c', 1)];
+    /// let choices = [('a', 2), ('b', 1), ('c', 1), ('d', 0)];
     /// let mut rng = thread_rng();
-    /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
+    /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c',
+    /// // and 'd' will never be printed
     /// println!("{:?}", choices.choose_weighted(&mut rng, |item| item.1).unwrap().0);
     /// ```
     /// [`choose`]: SliceRandom::choose
     /// [`choose_weighted_mut`]: SliceRandom::choose_weighted_mut
-    /// [`distributions::weighted`]: crate::distributions::weighted
+    /// [`distributions::WeightedIndex`]: crate::distributions::WeightedIndex
     #[cfg(feature = "alloc")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_weighted<R, F, B, X>(
@@ -161,11 +164,13 @@ pub trait SliceRandom {
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
     ///
     /// For slices of length `n`, complexity is `O(n)`.
-    /// See also [`choose_weighted`], [`distributions::weighted`].
+    /// For more information about the underlying algorithm, see [`distributions::WeightedIndex`].
+    ///
+    /// See also [`choose_weighted`].
     ///
     /// [`choose_mut`]: SliceRandom::choose_mut
     /// [`choose_weighted`]: SliceRandom::choose_weighted
-    /// [`distributions::weighted`]: crate::distributions::weighted
+    /// [`distributions::WeightedIndex`]: crate::distributions::WeightedIndex
     #[cfg(feature = "alloc")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_weighted_mut<R, F, B, X>(
