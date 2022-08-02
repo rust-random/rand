@@ -26,7 +26,9 @@ use serde::{Serialize, Deserialize};
 /// selected element from the iterator used when the `WeightedIndex` was
 /// created. The chance of a given element being picked is proportional to the
 /// weight of the element. The weights can use any type `X` for which an
-/// implementation of [`Uniform<X>`] exists. The implementation guarantees that elements with zero weight are never picked, even when the weights are floating point numbers.
+/// implementation of [`Uniform<X>`] exists. The implementation guarantees that
+/// elements with zero weight are never picked, even when the weights are
+/// floating point numbers.
 ///
 /// # Performance
 ///
@@ -42,8 +44,8 @@ use serde::{Serialize, Deserialize};
 /// weights of type `X`, where `N` is the number of weights. However, since
 /// `Vec` doesn't guarantee a particular growth strategy, additional memory
 /// might be allocated but not used. Since the `WeightedIndex` object also
-/// contains an instance of `X::Sampler`, this might cause additional allocations, though for primitive
-/// types, [`Uniform<X>`] doesn't allocate any memory.
+/// contains an instance of `X::Sampler`, this might cause additional allocations,
+/// though for primitive types, [`Uniform<X>`] doesn't allocate any memory.
 ///
 /// Sampling from `WeightedIndex` will result in a single call to
 /// `Uniform<X>::sample` (method of the [`Distribution`] trait), which typically

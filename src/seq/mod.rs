@@ -123,7 +123,8 @@ pub trait SliceRandom {
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
     ///
     /// For slices of length `n`, complexity is `O(n)`.
-    /// For more information about the underlying algorithm, see [`distributions::WeightedIndex`].
+    /// For more information about the underlying algorithm,
+    /// see [`distributions::WeightedIndex`].
     ///
     /// See also [`choose_weighted_mut`].
     ///
@@ -164,7 +165,8 @@ pub trait SliceRandom {
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
     ///
     /// For slices of length `n`, complexity is `O(n)`.
-    /// For more information about the underlying algorithm, see [`distributions::WeightedIndex`].
+    /// For more information about the underlying algorithm,
+    /// see [`distributions::WeightedIndex`].
     ///
     /// See also [`choose_weighted`].
     ///
