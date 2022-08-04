@@ -221,7 +221,7 @@ use crate::Rng;
 /// [`Uniform`]: uniform::Uniform
 /// [`Wrapping<T>`]: std::num::Wrapping
 /// [`NonZeroU8`]: std::num::NonZeroU8
-/// [`__m128i`]: https://doc.rust-lang.org/nightly/core/arch/x86/struct.__m128i.html
+/// [`__m128i`]: https://doc.rust-lang.org/core/arch/x86/struct.__m128i.html
 /// [`u32x4`]: std::simd::u32x4
 /// [`f32x4`]: std::simd::f32x4
 /// [`mask32x4`]: std::simd::mask32x4
