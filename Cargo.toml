@@ -28,7 +28,7 @@ features = ["small_rng", "serde1"]
 [features]
 # Meta-features:
 default = ["std", "std_rng"]
-nightly = [] # enables performance optimizations requiring nightly rust
+nightly = [] # some additions requiring nightly Rust
 serde1 = ["serde", "rand_core/serde1"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option

@@ -125,7 +125,7 @@ Optionally, the following dependencies can be enabled:
 Additionally, these features configure Rand:
 
 -   `small_rng` enables inclusion of the `SmallRng` PRNG
--   `nightly` enables some optimizations requiring nightly Rust
+-   `nightly` includes some additions requiring nightly Rust
 -   `simd_support` (experimental) enables sampling of SIMD values
     (uniformly random SIMD integers and floats), requiring nightly Rust
 

@@ -267,9 +267,7 @@ where R: Rng + ?Sized {
 /// sometimes be useful to have the indices themselves so this is provided as
 /// an alternative.
 ///
-/// This implementation uses `O(length + amount)` space and `O(length)` time
-/// if the "nightly" feature is enabled, or `O(length)` space and
-/// `O(length + amount * log length)` time otherwise.
+/// This implementation uses `O(length + amount)` space and `O(length)` time.
 ///
 /// Panics if `amount > length`.
 #[cfg(feature = "std")]
@@ -300,9 +298,7 @@ where
 ///
 /// This implementation uses the algorithm described by Efraimidis and Spirakis
 /// in this paper: https://doi.org/10.1016/j.ipl.2005.11.003
-/// It uses `O(length + amount)` space and `O(length)` time if the
-/// "nightly" feature is enabled, or `O(length)` space and `O(length
-/// + amount * log length)` time otherwise.
+/// It uses `O(length + amount)` space and `O(length)` time.
 ///
 /// Panics if `amount > length`.
 #[cfg(feature = "std")]
@@ -347,63 +343,33 @@ where
     }
     impl<N> Eq for Element<N> {}
 
-    #[cfg(feature = "nightly")]
-    {
-        let mut candidates = Vec::with_capacity(length.as_usize());
-        let mut index = N::zero();
-        while index < length {
-            let weight = weight(index.as_usize()).into();
-            if !(weight >= 0.) {
-                return Err(WeightedError::InvalidWeight);
-            }
-
-            let key = rng.gen::<f64>().powf(1.0 / weight);
-            candidates.push(Element { index, key });
-
-            index += N::one();
+    let mut candidates = Vec::with_capacity(length.as_usize());
+    let mut index = N::zero();
+    while index < length {
+        let weight = weight(index.as_usize()).into();
+        if !(weight >= 0.) {
+            return Err(WeightedError::InvalidWeight);
         }
 
-        // Partially sort the array to find the `amount` elements with the greatest
-        // keys. Do this by using `select_nth_unstable` to put the elements with
-        // the *smallest* keys at the beginning of the list in `O(n)` time, which
-        // provides equivalent information about the elements with the *greatest* keys.
-        let (_, mid, greater)
-            = candidates.select_nth_unstable(length.as_usize() - amount.as_usize());
+        let key = rng.gen::<f64>().powf(1.0 / weight);
+        candidates.push(Element { index, key });
 
-        let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
-        result.push(mid.index);
-        for element in greater {
-            result.push(element.index);
-        }
-        Ok(IndexVec::from(result))
+        index += N::one();
     }
 
-    #[cfg(not(feature = "nightly"))]
-    {
-        use alloc::collections::BinaryHeap;
+    // Partially sort the array to find the `amount` elements with the greatest
+    // keys. Do this by using `select_nth_unstable` to put the elements with
+    // the *smallest* keys at the beginning of the list in `O(n)` time, which
+    // provides equivalent information about the elements with the *greatest* keys.
+    let (_, mid, greater)
+        = candidates.select_nth_unstable(length.as_usize() - amount.as_usize());
 
-        // Partially sort the array such that the `amount` elements with the largest
-        // keys are first using a binary max heap.
-        let mut candidates = BinaryHeap::with_capacity(length.as_usize());
-        let mut index = N::zero();
-        while index < length {
-            let weight = weight(index.as_usize()).into();
-            if !(weight >= 0.) {
-                return Err(WeightedError::InvalidWeight);
-            }
-
-            let key = rng.gen::<f64>().powf(1.0 / weight);
-            candidates.push(Element { index, key });
-
-            index += N::one();
-        }
-
-        let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
-        while result.len() < amount.as_usize() {
-            result.push(candidates.pop().unwrap().index);
-        }
-        Ok(IndexVec::from(result))
+    let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
+    result.push(mid.index);
+    for element in greater {
+        result.push(element.index);
     }
+    Ok(IndexVec::from(result))
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using Floyd's
