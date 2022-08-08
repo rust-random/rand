@@ -163,7 +163,12 @@ impl Distribution<bool> for Standard {
 ///
 /// Since most bits are unused you could also generate only as many bits as you need, i.e.:
 /// ```
-/// let x = u16x8::splat(rng.gen::<u8> as u16);
+/// #![feature(portable_simd)]
+/// use std::simd::*;
+/// use rand::prelude::*;
+/// let mut rng = thread_rng();
+///
+/// let x = u16x8::splat(rng.gen::<u8>() as u16);
 /// let mask = u16x8::splat(1) << u16x8::from([0, 1, 2, 3, 4, 5, 6, 7]);
 /// let rand_mask = (x & mask).simd_eq(mask);
 /// ```
