@@ -606,7 +606,7 @@ macro_rules! uniform_simd_int_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.lanes_lt(high).all(), "Uniform::new called with `low >= high`");
+                assert!(low.simd_lt(high).all(), "Uniform::new called with `low >= high`");
                 UniformSampler::new_inclusive(low, high - Simd::splat(1))
             }
 
@@ -618,7 +618,7 @@ macro_rules! uniform_simd_int_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                assert!(low.lanes_le(high).all(),
+                assert!(low.simd_le(high).all(),
                         "Uniform::new_inclusive called with `low > high`");
                 let unsigned_max = Simd::splat(::core::$unsigned::MAX);
 
@@ -626,7 +626,7 @@ macro_rules! uniform_simd_int_impl {
                 //       see https://doc.rust-lang.org/std/simd/struct.Simd.html
                 let range: Simd<$unsigned, LANES> = ((high - low) + Simd::splat(1)).cast();
                 // `% 0` will panic at runtime.
-                let not_full_range = range.lanes_gt(Simd::splat(0));
+                let not_full_range = range.simd_gt(Simd::splat(0));
                 // replacing 0 with `unsigned_max` allows a faster `select`
                 // with bitwise OR
                 let modulo = not_full_range.select(range, unsigned_max);
@@ -660,7 +660,7 @@ macro_rules! uniform_simd_int_impl {
                 let mut v: Simd<$unsigned, LANES> = rng.gen();
                 loop {
                     let (hi, lo) = v.wmul(range);
-                    let mask = lo.lanes_le(zone);
+                    let mask = lo.simd_le(zone);
                     if mask.all() {
                         let hi: Simd<$ty, LANES> = hi.cast();
                         // wrapping addition
@@ -669,7 +669,7 @@ macro_rules! uniform_simd_int_impl {
                         // When `range.eq(0).none()` the compare and blend
                         // operations are avoided.
                         let v: Simd<$ty, LANES> = v.cast();
-                        return range.lanes_gt(Simd::splat(0)).select(result, v);
+                        return range.simd_gt(Simd::splat(0)).select(result, v);
                     }
                     // Replace only the failing lanes
                     v = mask.select(v, rng.gen());
@@ -1265,8 +1265,8 @@ mod tests {
                         ($ty::splat(10), $ty::splat(127)),
                         ($ty::splat($scalar::MIN), $ty::splat($scalar::MAX)),
                     ],
-                    |x: $ty, y| x.lanes_le(y).all(),
-                    |x: $ty, y| x.lanes_lt(y).all()
+                    |x: $ty, y| x.simd_le(y).all(),
+                    |x: $ty, y| x.simd_lt(y).all()
                 );)*
             }};
         }

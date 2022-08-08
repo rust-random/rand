@@ -114,7 +114,7 @@ impl_nzint!(NonZeroU64, NonZeroU64::new);
 impl_nzint!(NonZeroU128, NonZeroU128::new);
 impl_nzint!(NonZeroUsize, NonZeroUsize::new);
 
-macro_rules! intrinsic_impl {
+macro_rules! x86_intrinsic_impl {
     ($($intrinsic:ident),+) => {$(
         /// Available only on x86/64 platforms
         impl Distribution<$intrinsic> for Standard {
@@ -156,12 +156,12 @@ macro_rules! simd_impl {
 simd_impl!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-intrinsic_impl!(__m128i, __m256i);
+x86_intrinsic_impl!(__m128i, __m256i);
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "simd_support"
 ))]
-intrinsic_impl!(__m512i);
+x86_intrinsic_impl!(__m512i);
 
 #[cfg(test)]
 mod tests {

@@ -99,20 +99,20 @@ macro_rules! wmul_impl_large {
                 #[inline(always)]
                 fn wmul(self, b: $ty) -> Self::Output {
                     // needs wrapping multiplication
-                    const LOWER_MASK: $ty = <$ty>::splat(!0 >> $half);
-                    const HALF: $ty = <$ty>::splat($half);
-                    let mut low = (self & LOWER_MASK) * (b & LOWER_MASK);
-                    let mut t = low >> HALF;
-                    low &= LOWER_MASK;
-                    t += (self >> HALF) * (b & LOWER_MASK);
-                    low += (t & LOWER_MASK) << HALF;
-                    let mut high = t >> HALF;
-                    t = low >> HALF;
-                    low &= LOWER_MASK;
-                    t += (b >> HALF) * (self & LOWER_MASK);
-                    low += (t & LOWER_MASK) << HALF;
-                    high += t >> HALF;
-                    high += (self >> HALF) * (b >> HALF);
+                    let lower_mask = <$ty>::splat(!0 >> $half);
+                    let half = <$ty>::splat($half);
+                    let mut low = (self & lower_mask) * (b & lower_mask);
+                    let mut t = low >> half;
+                    low &= lower_mask;
+                    t += (self >> half) * (b & lower_mask);
+                    low += (t & lower_mask) << half;
+                    let mut high = t >> half;
+                    t = low >> half;
+                    low &= lower_mask;
+                    t += (b >> half) * (self & lower_mask);
+                    low += (t & lower_mask) << half;
+                    high += t >> half;
+                    high += (self >> half) * (b >> half);
 
                     (high, low)
                 }
@@ -385,12 +385,12 @@ macro_rules! simd_impl {
 
             #[inline(always)]
             fn all_lt(self, other: Self) -> bool {
-                self.lanes_lt(other).all()
+                self.simd_lt(other).all()
             }
 
             #[inline(always)]
             fn all_le(self, other: Self) -> bool {
-                self.lanes_le(other).all()
+                self.simd_le(other).all()
             }
 
             #[inline(always)]
@@ -405,12 +405,12 @@ macro_rules! simd_impl {
 
             #[inline(always)]
             fn gt_mask(self, other: Self) -> Self::Mask {
-                self.lanes_gt(other)
+                self.simd_gt(other)
             }
 
             #[inline(always)]
             fn ge_mask(self, other: Self) -> Self::Mask {
-                self.lanes_ge(other)
+                self.simd_ge(other)
             }
 
             #[inline(always)]
