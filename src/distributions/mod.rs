@@ -149,8 +149,14 @@ use crate::Rng;
 /// * `bool`: Generates `false` or `true`, each with probability 0.5.
 /// * Floating point types (`f32` and `f64`): Uniformly distributed in the
 ///   half-open range `[0, 1)`. See notes below.
-/// * Wrapping integers (`Wrapping<T>`), besides the type identical to their
+/// * Wrapping integers ([`Wrapping<T>`]), besides the type identical to their
 ///   normal integer variants.
+/// * Non-zero integers ([`NonZeroU8`]), which are like their normal integer
+///   variants but cannot produce zero.
+/// * SIMD types like x86's [`__m128i`], `std::simd`'s [`u32x4`]/[`f32x4`]/
+///   [`mask32x4`] (requires [`simd_support`]), where each lane is distributed
+///   like their scalar `Standard` variants. See the list of `Standard`
+///   implementations for more.
 ///
 /// The `Standard` distribution also supports generation of the following
 /// compound types where all component types are supported:
@@ -213,6 +219,13 @@ use crate::Rng;
 /// CPUs all methods have approximately equal performance).
 ///
 /// [`Uniform`]: uniform::Uniform
+/// [`Wrapping<T>`]: std::num::Wrapping
+/// [`NonZeroU8`]: std::num::NonZeroU8
+/// [`__m128i`]: https://doc.rust-lang.org/core/arch/x86/struct.__m128i.html
+/// [`u32x4`]: std::simd::u32x4
+/// [`f32x4`]: std::simd::f32x4
+/// [`mask32x4`]: std::simd::mask32x4
+/// [`simd_support`]: https://github.com/rust-random/rand#crate-features
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Standard;
