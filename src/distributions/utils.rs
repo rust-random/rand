@@ -31,7 +31,7 @@ macro_rules! wmul_impl {
     };
 
     // simd bulk implementation
-    ($(($ty:ident, $wide:ident),)+, $shift:expr) => {
+    ($(($ty:ident, $wide:ty),)+, $shift:expr) => {
         $(
             impl WideningMultiply for $ty {
                 type Output = ($ty, $ty);
@@ -152,7 +152,8 @@ mod simd_wmul {
         (u8x4, u16x4),
         (u8x8, u16x8),
         (u8x16, u16x16),
-        (u8x32, u16x32),,
+        (u8x32, u16x32),
+        (u8x64, Simd<u16, 64>),,
         8
     }
 
@@ -162,6 +163,8 @@ mod simd_wmul {
     wmul_impl! { (u16x8, u32x8),, 16 }
     #[cfg(not(target_feature = "avx2"))]
     wmul_impl! { (u16x16, u32x16),, 16 }
+    #[cfg(not(target_feature = "avx512bw"))]
+    wmul_impl! { (u16x32, Simd<u32, 32>),, 16 }
 
     // 16-bit lane widths allow use of the x86 `mulhi` instructions, which
     // means `wmul` can be implemented with only two instructions.
@@ -191,15 +194,11 @@ mod simd_wmul {
     wmul_impl! {
         (u32x2, u64x2),
         (u32x4, u64x4),
-        (u32x8, u64x8),,
+        (u32x8, u64x8),
+        (u32x16, Simd<u64, 16>),,
         32
     }
 
-    // TODO: optimize, this seems to seriously slow things down
-    wmul_impl_large! { (u8x64,) u8, 4 }
-    #[cfg(not(target_feature = "avx512bw"))]
-    wmul_impl_large! { (u16x32,) u16, 8 }
-    wmul_impl_large! { (u32x16,) u32, 16 }
     wmul_impl_large! { (u64x2, u64x4, u64x8,) u64, 32 }
 }
 
