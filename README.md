@@ -143,10 +143,13 @@ unavailable.
 
 ### WASM support
 
-The WASM target `wasm32-unknown-unknown` is not *automatically* supported by
-`rand` or `getrandom`. To solve this, either use a different target such as
-`wasm32-wasi` or add a direct dependency on `getrandom` with the `js` feature
-(if the target supports JavaScript). See
+Seeding entropy from OS on WASM target `wasm32-unknown-unknown` is not
+*automatically* supported by `rand` or `getrandom`. If you are fine with
+seeding the generator manually, you can disable the `getrandom` feature
+and use the methods on the `SeedableRng` trait. To enable seeding from OS,
+either use a different target such as `wasm32-wasi` or add a direct
+dependency on `getrandom` with the `js` feature (if the target supports
+JavaScript). See
 [getrandom#WebAssembly support](https://docs.rs/getrandom/latest/getrandom/#webassembly-support).
 
 # License
