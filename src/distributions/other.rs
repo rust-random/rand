@@ -20,7 +20,6 @@ use crate::Rng;
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
-#[cfg(feature = "min_const_gen")]
 use core::mem::{self, MaybeUninit};
 #[cfg(feature = "simd_support")]
 use core::simd::*;
@@ -236,8 +235,6 @@ tuple_impl! {A, B, C, D, E, F, G, H, I, J}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K, L}
 
-#[cfg(feature = "min_const_gen")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "min_const_gen")))]
 impl<T, const N: usize> Distribution<[T; N]> for Standard
 where Standard: Distribution<T>
 {
@@ -252,30 +249,6 @@ where Standard: Distribution<T>
         unsafe { mem::transmute_copy::<_, _>(&buff) }
     }
 }
-
-#[cfg(not(feature = "min_const_gen"))]
-macro_rules! array_impl {
-    // recursive, given at least one type parameter:
-    {$n:expr, $t:ident, $($ts:ident,)*} => {
-        array_impl!{($n - 1), $($ts,)*}
-
-        impl<T> Distribution<[T; $n]> for Standard where Standard: Distribution<T> {
-            #[inline]
-            fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; $n] {
-                [_rng.gen::<$t>(), $(_rng.gen::<$ts>()),*]
-            }
-        }
-    };
-    // empty case:
-    {$n:expr,} => {
-        impl<T> Distribution<[T; $n]> for Standard {
-            fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; $n] { [] }
-        }
-    };
-}
-
-#[cfg(not(feature = "min_const_gen"))]
-array_impl! {32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
 
 impl<T> Distribution<Option<T>> for Standard
 where Standard: Distribution<T>
