@@ -107,8 +107,6 @@ pub use rng::{Fill, Rng};
 
 #[cfg(all(feature = "std", feature = "std_rng"))]
 use crate::distributions::{Distribution, Standard};
-#[allow(unused)]
-use crate::rngs::thread::ThreadRng;
 
 /// Generates a random value using the thread-local random number generator.
 ///
@@ -153,6 +151,7 @@ use crate::rngs::thread::ThreadRng;
 /// ```
 ///
 /// [`Standard`]: distributions::Standard
+/// [`ThreadRng`]: rngs::ThreadRng
 #[cfg(all(feature = "std", feature = "std_rng"))]
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng"))))]
 #[inline]
