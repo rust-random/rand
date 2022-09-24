@@ -11,6 +11,7 @@
 use core::cell::UnsafeCell;
 use std::rc::Rc;
 use std::thread_local;
+use std::fmt;
 
 use super::std::Core;
 use crate::rngs::adapter::ReseedingRng;
@@ -58,10 +59,17 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// [`ReseedingRng`]: crate::rngs::adapter::ReseedingRng
 /// [`StdRng`]: crate::rngs::StdRng
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng"))))]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ThreadRng {
     // Rc is explicitly !Send and !Sync
     rng: Rc<UnsafeCell<ReseedingRng<Core, OsRng>>>,
+}
+
+/// Debug implementation does not leak internal state
+impl fmt::Debug for ThreadRng {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.debug_struct("ThreadRng").finish_non_exhaustive()
+    }
 }
 
 thread_local!(
@@ -92,7 +100,7 @@ pub fn thread_rng() -> ThreadRng {
 
 impl Default for ThreadRng {
     fn default() -> ThreadRng {
-        crate::prelude::thread_rng()
+        thread_rng()
     }
 }
 
@@ -139,5 +147,12 @@ mod test {
         let mut r = crate::thread_rng();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0..1), 0);
+    }
+
+    #[test]
+    fn test_debug_output() {
+        // We don't care about the exact output here, but it must not include
+        // private CSPRNG state or the cache stored by BlockRng!
+        assert_eq!(std::format!("{:?}", crate::thread_rng()), "ThreadRng { .. }");
     }
 }
