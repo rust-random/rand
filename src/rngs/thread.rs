@@ -73,7 +73,7 @@ pub struct ThreadRng {
 /// Debug implementation does not leak internal state
 impl fmt::Debug for ThreadRng {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.debug_struct("ThreadRng").finish_non_exhaustive()
+        write!(fmt, "ThreadRng {{ .. }}")
     }
 }
 
