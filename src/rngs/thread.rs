@@ -11,6 +11,7 @@
 use core::cell::UnsafeCell;
 use std::rc::Rc;
 use std::thread_local;
+use std::fmt;
 
 use super::std::Core;
 use crate::rngs::adapter::ReseedingRng;
@@ -39,29 +40,41 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 
 /// A reference to the thread-local generator
 ///
+/// This type is a reference to a lazily-initialized thread-local generator.
 /// An instance can be obtained via [`thread_rng`] or via `ThreadRng::default()`.
 /// This handle is safe to use everywhere (including thread-local destructors),
 /// though it is recommended not to use inside a fork handler.
 /// The handle cannot be passed between threads (is not `Send` or `Sync`).
 ///
-/// `ThreadRng` uses the same PRNG as [`StdRng`] for security and performance
-/// and is automatically seeded from [`OsRng`].
+/// `ThreadRng` uses the same CSPRNG as [`StdRng`], ChaCha12. As with
+/// [`StdRng`], the algorithm may be changed, subject to reasonable expectations
+/// of security and performance.
 ///
-/// Unlike `StdRng`, `ThreadRng` uses the  [`ReseedingRng`] wrapper to reseed
-/// the PRNG from fresh entropy every 64 kiB of random data as well as after a
-/// fork on Unix (though not quite immediately; see documentation of
-/// [`ReseedingRng`]).
-/// Note that the reseeding is done as an extra precaution against side-channel
-/// attacks and mis-use (e.g. if somehow weak entropy were supplied initially).
-/// The PRNG algorithms used are assumed to be secure.
+/// `ThreadRng` is automatically seeded from [`OsRng`] with periodic reseeding
+/// (every 64 kiB, as well as "soon" after a fork on Unix — see [`ReseedingRng`]
+/// documentation for details).
+///
+/// Security must be considered relative to a thread model and validation
+/// requirements. `ThreadRng` attempts to meet basic security considerations
+/// for producing unpredictable random numbers: use a CSPRNG, use a
+/// recommended platform-specific seed ([`OsRng`]), and avoid
+/// leaking internal secrets e.g. via [`Debug`] implementation or serialization.
+/// Memory is not zeroized on drop.
 ///
 /// [`ReseedingRng`]: crate::rngs::adapter::ReseedingRng
 /// [`StdRng`]: crate::rngs::StdRng
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng"))))]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ThreadRng {
     // Rc is explicitly !Send and !Sync
     rng: Rc<UnsafeCell<ReseedingRng<Core, OsRng>>>,
+}
+
+/// Debug implementation does not leak internal state
+impl fmt::Debug for ThreadRng {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "ThreadRng {{ .. }}")
+    }
 }
 
 thread_local!(
@@ -77,13 +90,23 @@ thread_local!(
     }
 );
 
-/// Retrieve the lazily-initialized thread-local random number generator,
-/// seeded by the system. Intended to be used in method chaining style,
-/// e.g. `thread_rng().gen::<i32>()`, or cached locally, e.g.
-/// `let mut rng = thread_rng();`.  Invoked by the `Default` trait, making
-/// `ThreadRng::default()` equivalent.
+/// Access the thread-local generator
 ///
-/// For more information see [`ThreadRng`].
+/// Returns a reference to the local [`ThreadRng`], initializing the generator
+/// on the first call on each thread.
+///
+/// Example usage:
+/// ```
+/// use rand::Rng;
+///
+/// # fn main() {
+/// // rand::random() may be used instead of rand::thread_rng().gen():
+/// println!("A random boolean: {}", rand::random::<bool>());
+///
+/// let mut rng = rand::thread_rng();
+/// println!("A simulated die roll: {}", rng.gen_range(1..=6));
+/// # }
+/// ```
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng"))))]
 pub fn thread_rng() -> ThreadRng {
     let rng = THREAD_RNG_KEY.with(|t| t.clone());
@@ -92,7 +115,7 @@ pub fn thread_rng() -> ThreadRng {
 
 impl Default for ThreadRng {
     fn default() -> ThreadRng {
-        crate::prelude::thread_rng()
+        thread_rng()
     }
 }
 
@@ -139,5 +162,12 @@ mod test {
         let mut r = crate::thread_rng();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0..1), 0);
+    }
+
+    #[test]
+    fn test_debug_output() {
+        // We don't care about the exact output here, but it must not include
+        // private CSPRNG state or the cache stored by BlockRng!
+        assert_eq!(std::format!("{:?}", crate::thread_rng()), "ThreadRng { .. }");
     }
 }

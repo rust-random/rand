@@ -53,7 +53,7 @@ use core::{mem, slice};
 /// # let v = foo(&mut thread_rng());
 /// ```
 pub trait Rng: RngCore {
-    /// Return a random value supporting the [`Standard`] distribution.
+    /// Return a random value via the [`Standard`] distribution.
     ///
     /// # Example
     ///
