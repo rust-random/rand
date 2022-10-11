@@ -235,6 +235,7 @@ pub trait SliceRandom {
     /// Shuffle a mutable slice in place.
     ///
     /// For slices of length `n`, complexity is `O(n)`.
+    /// The resulting permutation is picked uniformly from the set of all possible permutations.
     ///
     /// # Example
     ///
