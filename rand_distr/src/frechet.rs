@@ -86,6 +86,21 @@ where
             shape,
         })
     }
+
+    /// Returns the location (`location`) of the distribution.
+    pub fn location(&self) -> F {
+        self.location
+    }
+
+    /// Returns the scale (`scale`) of the distribution.
+    pub fn scale(&self) -> F {
+        self.scale
+    }
+
+    /// Returns the shape (`shape`) of the distribution.
+    pub fn shape(&self) -> F {
+        self.shape
+    }
 }
 
 impl<F> Distribution<F> for Frechet<F>

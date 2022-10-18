@@ -175,6 +175,30 @@ where
         };
         Ok(Gamma { repr })
     }
+
+    /// Returns the shape parameter (`shape`) of the distribution.
+    pub fn shape(&self) -> F {
+        match self.repr {
+            // By definition of `one`.
+            One(_) => F::one(),
+            // By definition of `small shape`.
+            Small(gamma) => gamma.inv_shape.recip(),
+            // By definition of `large shape`.
+            Large(gamma) => gamma.d + F::from(1. / 3.).unwrap(),
+        }
+    }
+
+    /// Returns the scale parameter (`scale`) of the distribution.
+    pub fn scale(&self) -> F {
+        match self.repr {
+            // By definition of `one`.
+            One(exp) => exp.lambda_inverse().recip(),
+            // By definition of `small shape`.
+            Small(gamma) => gamma.large_shape.scale,
+            // By definition of `large shape`.
+            Large(gamma) => gamma.scale,
+        }
+    }
 }
 
 impl<F> GammaSmallShape<F>
@@ -350,6 +374,16 @@ where
         };
         Ok(ChiSquared { repr })
     }
+
+    /// Returns the degrees-of-freedom (`k`) of the distribution.
+    pub fn k(&self) -> F {
+        match self.repr {
+            DoFExactlyOne => F::one(),
+            // Since `DoFAnythingElse` is computed using Gamma(shape = 0.5 * k, ...),
+            // we revert the operation k = (1. / 0.5) * shape = 2. * shape.
+            DoFAnythingElse(gamma) => F::from(2.).unwrap() * gamma.shape(),
+        }
+    }
 }
 impl<F> Distribution<F> for ChiSquared<F>
 where
@@ -447,6 +481,16 @@ where
             dof_ratio: n / m,
         })
     }
+
+    /// Returns the m parameter (`m`) of the distribution.
+    pub fn m(&self) -> F {
+        self.numer.k()
+    }
+
+    /// Returns the n parameter (`n`) of the distribution.
+    pub fn n(&self) -> F {
+        self.denom.k()
+    }
 }
 impl<F> Distribution<F> for FisherF<F>
 where
@@ -499,6 +543,11 @@ where
             chi: ChiSquared::new(n)?,
             dof: n,
         })
+    }
+
+    /// Return the degrees-of-freedom (`n`) of the distribution.
+    pub fn n(&self) -> F {
+        self.chi.k()
     }
 }
 impl<F> Distribution<F> for StudentT<F>
@@ -648,6 +697,24 @@ where
                     alpha, beta, kappa1, kappa2,
                 })
             })
+        }
+    }
+
+    /// Returns the alpha shape (`alpha`) of the distribution.
+    pub fn alpha(&self) -> F {
+        if self.switched_params {
+            self.b
+        } else {
+            self.a
+        }
+    }
+
+    /// Returns the beta shape (`beta`) of the distribution.
+    pub fn beta(&self) -> F {
+        if self.switched_params {
+            self.a
+        } else {
+            self.b
         }
     }
 }

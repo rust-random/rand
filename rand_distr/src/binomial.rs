@@ -73,6 +73,16 @@ impl Binomial {
         }
         Ok(Binomial { n, p })
     }
+
+    /// Returns the number of trials (`n`) of the distribution.
+    pub fn n(&self) -> u64 {
+        self.n
+    }
+
+    /// Returns the probability of success (`p`) of the distribution.
+    pub fn p(&self) -> f64 {
+        self.p
+    }
 }
 
 /// Convert a `f64` to an `i64`, panicking on overflow.

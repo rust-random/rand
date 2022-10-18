@@ -78,6 +78,11 @@ impl Geometric {
             Ok(Geometric { p, pi, k })
         }
     }
+
+    /// Returns the probability of success on each trial (`p`) of the distribution.
+    pub fn p(&self) -> f64 {
+        self.p
+    }
 }
 
 impl Distribution<u64> for Geometric

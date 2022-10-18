@@ -140,6 +140,11 @@ where F: Float, Exp1: Distribution<F>
             lambda_inverse: F::one() / lambda,
         })
     }
+
+    /// Returns the (inverse of the) shape parameter (`lambda`) of the distribution.
+    pub fn lambda_inverse(&self) -> F {
+        self.lambda_inverse
+    }
 }
 
 impl<F> Distribution<F> for Exp<F>

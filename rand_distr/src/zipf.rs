@@ -89,6 +89,11 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
             b: two.powf(a_minus_1),
         })
     }
+
+    /// Returns the a parameter (`a`) of the distribution.
+    pub fn a(&self) -> F {
+        self.a_minus_1 + F::one()
+    }
 }
 
 impl<F> Distribution<F> for Zeta<F>
@@ -203,6 +208,35 @@ where F: Float, Standard: Distribution<F> {
         Ok(Zipf {
             s, t, q
         })
+    }
+
+    /// Returns the cardinality of the set of elements (`n`) of the distribution.
+    pub fn n(&self) -> F {
+        match self.s != F::one() {
+            true => {
+                // By definition:
+                //      t = (n^(1 - s) - s) * q
+                // Therefore:
+                //      t / q = n^(1 - s) - s
+                //      t / q + s = n^(1 - s)
+                //      (t / q + s)^(1/(1 - s)) = n
+                F::powf(self.t / self.q + self.s, F::recip(F::one() - self.s))
+            },
+            false => {
+                // By definition:
+                //      t = 1 - ln(n)
+                // Therefore:
+                //      t - 1 = - ln(n)
+                //      1 - t = ln(n)
+                //      e^(1 - t) = n
+                F::exp(F::one() - self.t)
+            },
+        }
+    }
+
+    /// Returns the frequency rank exponent (`s`) of the distribution.
+    pub fn s(&self) -> F {
+        self.s
     }
 
     /// Inverse cumulative density function

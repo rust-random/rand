@@ -70,6 +70,16 @@ where F: Float + FloatConst, Standard: Distribution<F>
         }
         Ok(Cauchy { median, scale })
     }
+
+    /// Returns the median (`median`) of the distribution.
+    pub fn median(&self) -> F {
+        self.median
+    }
+
+    /// Returns the scale (`scale`) of the distribution.
+    pub fn scale(&self) -> F {
+        self.scale
+    }
 }
 
 impl<F> Distribution<F> for Cauchy<F>

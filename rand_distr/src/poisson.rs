@@ -78,6 +78,11 @@ where F: Float + FloatConst, Standard: Distribution<F>
             magic_val: lambda * log_lambda - crate::utils::log_gamma(F::one() + lambda),
         })
     }
+
+    /// Returns the lambda shape (`lambda`) of the distribution.
+    pub fn lambda(&self) -> F {
+        self.lambda
+    }
 }
 
 impl<F> Distribution<F> for Poisson<F>

@@ -75,6 +75,16 @@ where F: Float, OpenClosed01: Distribution<F>
             inv_neg_shape: F::from(-1.0).unwrap() / shape,
         })
     }
+
+    /// Returns the scale (`scale`) of the distribution.
+    pub fn scale(&self) -> F {
+        self.scale
+    }
+
+    /// Returns the shape (`shape`) of the distribution.
+    pub fn shape(&self) -> F {
+        self.inv_neg_shape.recip().neg()
+    }
 }
 
 impl<F> Distribution<F> for Pareto<F>

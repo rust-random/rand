@@ -304,6 +304,16 @@ where F: Float, StandardNormal: Distribution<F>
     pub fn from_zscore(&self, zscore: F) -> F {
         self.norm.from_zscore(zscore).exp()
     }
+
+    /// Returns the mean (`μ`) of the distribution.
+    pub fn mean(&self) -> F {
+        self.norm.mean()
+    }
+
+    /// Returns the standard deviation (`σ`) of the distribution.
+    pub fn std_dev(&self) -> F {
+        self.norm.std_dev()
+    }
 }
 
 impl<F> Distribution<F> for LogNormal<F>
