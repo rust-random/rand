@@ -11,13 +11,9 @@ jobs:
     name: Check doc
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
+        uses: dtolnay/rust-toolchain@nightly
       - run: cargo install cargo-deadlinks
       - name: doc (rand)
         env:
@@ -58,14 +54,12 @@ jobs:
             variant: minimal_versions
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
-          override: true
       - run: ${{ matrix.deps }}
       - name: Maybe minimal versions
         if: ${{ matrix.variant == 'minimal_versions' }}
@@ -113,16 +107,14 @@ jobs:
             toolchain: stable
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
-          override: true
       - name: Cache cargo plugins
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: ~/.cargo/bin/
           key: ${{ runner.os }}-cargo-plugins
@@ -141,7 +133,7 @@ jobs:
   test-miri:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install toolchain
         run: |
           rustup toolchain install nightly --component miri
@@ -161,41 +153,33 @@ jobs:
   test-no-std:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@nightly
         with:
-            profile: minimal
-            toolchain: nightly
             target: thumbv6m-none-eabi
-            override: true
       - name: Build top-level only
         run: cargo build --target=thumbv6m-none-eabi --no-default-features
 
   test-avr:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
-            profile: minimal
             toolchain: nightly-2021-01-07 # Pinned compiler version due to https://github.com/rust-lang/compiler-builtins/issues/400
             components: rust-src
-            override: true
       - name: Build top-level only
         run: cargo build -Z build-std=core --target=avr-unknown-gnu-atmega328 --no-default-features
 
   test-ios:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@nightly
         with:
-            profile: minimal
-            toolchain: nightly
             target: aarch64-apple-ios
-            override: true
       - name: Build top-level only
         run: cargo build --target=aarch64-apple-ios

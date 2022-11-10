@@ -5,7 +5,7 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.36+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.51+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 A Rust library for random number generation, featuring:
 
@@ -95,17 +95,9 @@ Some versions of Rand crates have been yanked ("unreleased"). Where this occurs,
 the crate's CHANGELOG *should* be updated with a rationale, and a search on the
 issue tracker with the keyword `yank` *should* uncover the motivation.
 
-### Rust version requirements
+### Rust version requirements (MSRV)
 
-Since version 0.8, Rand requires **Rustc version 1.36 or greater**.
-Rand 0.7 requires Rustc 1.32 or greater while versions 0.5 require Rustc 1.22 or
-greater, and 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
-greater. Subsets of the Rand code may work with older Rust versions, but this is
-not supported.
-
-Continuous Integration (CI) will always test the minimum supported Rustc version
-(the MSRV). The current policy is that this can be updated in any
-Rand release if required, but the change must be noted in the changelog.
+This version of Rand requires Rustc >= 1.51.0.
 
 ## Crate Features
 
