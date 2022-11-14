@@ -54,7 +54,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// (every 64 kiB, as well as "soon" after a fork on Unix — see [`ReseedingRng`]
 /// documentation for details).
 ///
-/// Security must be considered relative to a thread model and validation
+/// Security must be considered relative to a threat model and validation
 /// requirements. `ThreadRng` attempts to meet basic security considerations
 /// for producing unpredictable random numbers: use a CSPRNG, use a
 /// recommended platform-specific seed ([`OsRng`]), and avoid
