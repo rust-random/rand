@@ -476,15 +476,6 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
     }
 }
 
-#[cfg(feature = "std")]
-#[deprecated = "Use rng.read_adapter() instead."]
-impl std::io::Read for dyn RngCore {
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
-        self.try_fill_bytes(buf)?;
-        Ok(buf.len())
-    }
-}
-
 /// Adapter that enables reading through a [`io::Read`](std::io::Read) from a [`RngCore`].
 ///
 /// # Examples
