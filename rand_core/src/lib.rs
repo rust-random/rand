@@ -41,8 +41,8 @@
 use core::convert::AsMut;
 use core::default::Default;
 
-#[cfg(feature = "std")] extern crate std;
 #[cfg(feature = "alloc")] extern crate alloc;
+#[cfg(feature = "std")] extern crate std;
 #[cfg(feature = "alloc")] use alloc::boxed::Box;
 
 pub use error::Error;
@@ -182,6 +182,13 @@ pub trait RngCore {
     /// `fill_bytes` may be implemented with
     /// `self.try_fill_bytes(dest).unwrap()` or more specific error handling.
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
+
+    /// Convert an [`RngCore`] to a [`RngReadAdapter`].
+    #[cfg(feature = "std")]
+    fn read_adapter(&mut self) -> RngReadAdapter<'_, Self>
+    where Self: Sized {
+        RngReadAdapter { inner: self }
+    }
 }
 
 /// A marker trait used to indicate that an [`RngCore`] or [`BlockRngCore`]
@@ -470,10 +477,42 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
 }
 
 #[cfg(feature = "std")]
+#[deprecated = "Use rng.read_adapter() instead."]
 impl std::io::Read for dyn RngCore {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         self.try_fill_bytes(buf)?;
         Ok(buf.len())
+    }
+}
+
+/// Adapter that enables reading through a [`io::Read`](std::io::Read) from a [`RngCore`].
+///
+/// # Examples
+///
+/// ```rust
+/// # use std::{io, io::Read};
+/// # use std::fs::File;
+/// # use rand_core::{OsRng, RngCore};
+///
+/// io::copy(&mut OsRng.read_adapter().take(100), &mut File::create("/tmp/random.bytes").unwrap()).unwrap();
+/// ```
+#[cfg(feature = "std")]
+pub struct RngReadAdapter<'a, R: RngCore + ?Sized> {
+    inner: &'a mut R,
+}
+
+#[cfg(feature = "std")]
+impl<R: RngCore + ?Sized> std::io::Read for RngReadAdapter<'_, R> {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
+        self.inner.try_fill_bytes(buf)?;
+        Ok(buf.len())
+    }
+}
+
+#[cfg(feature = "std")]
+impl<R: RngCore + ?Sized> std::fmt::Debug for RngReadAdapter<'_, R> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ReadAdapter").finish()
     }
 }
 
