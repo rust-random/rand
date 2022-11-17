@@ -24,7 +24,7 @@
 //! `usize` indices are sampled as a `u32` where possible (also providing a
 //! small performance boost in some cases).
 
-
+mod coin_flipper;
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod index;
@@ -37,6 +37,8 @@ pub mod index;
 use crate::distributions::uniform::{SampleBorrow, SampleUniform};
 #[cfg(feature = "alloc")] use crate::distributions::WeightedError;
 use crate::Rng;
+
+use self::coin_flipper::CoinFlipper;
 
 /// Extension trait on slices, providing random mutation and sampling methods.
 ///
@@ -359,6 +361,62 @@ pub trait IteratorRandom: Iterator + Sized {
         }
     }
 
+    /// New version of choose
+    fn choose_new_version<R>(mut self, rng: &mut R) -> Option<Self::Item>
+    where
+        R: Rng + ?Sized,
+    {
+        let (mut lower, mut upper) = self.size_hint();
+        let mut result = None;
+
+        // Handling for this condition outside the loop allows the optimizer to eliminate the loop
+        // when the Iterator is an ExactSizeIterator. This has a large performance impact on e.g.
+        // seq_iter_choose_from_1000.
+        if upper == Some(lower) {
+            return if lower == 0 {
+                None
+            } else {
+                self.nth(gen_index(rng, lower))
+            };
+        }
+
+        let mut coin_flipper = coin_flipper::CoinFlipper::new(rng);
+        let mut consumed = 0;
+
+        // Continue until the iterator is exhausted
+        loop {
+            if lower > 1 {
+                let ix = gen_index(coin_flipper.rng, lower + consumed);
+                let skip = if ix < lower {
+                    result = self.nth(ix);
+                    lower - (ix + 1)
+                } else {
+                    lower
+                };
+                if upper == Some(lower) {
+                    return result;
+                }
+                consumed += lower;
+                if skip > 0 {
+                    self.nth(skip - 1);
+                }
+            } else {
+                let elem = self.next();
+                if elem.is_none() {
+                    return result;
+                }
+                consumed += 1;
+                if coin_flipper.gen_ratio_one_over(consumed) {
+                    result = elem;
+                }
+            }
+
+            let hint = self.size_hint();
+            lower = hint.0;
+            upper = hint.1;
+        }
+    }
+
     /// Choose one element at random from the iterator.
     ///
     /// Returns `None` if and only if the iterator is empty.
@@ -411,6 +469,49 @@ pub trait IteratorRandom: Iterator + Sized {
             }
 
             if gen_index(rng, consumed+1) == 0 {
+                result = elem;
+            }
+            consumed += 1;
+        }
+    }
+
+    /// New version of choose stable
+    fn choose_stable_new_version<R>(mut self, rng: &mut R) -> Option<Self::Item>
+    where R: Rng + ?Sized {
+        let mut consumed = 0;
+        let mut result = None;
+        let mut coin_flipper = CoinFlipper::new(rng);
+
+        loop {
+            // Currently the only way to skip elements is `nth()`. So we need to
+            // store what index to access next here.
+            // This should be replaced by `advance_by()` once it is stable:
+            // https://github.com/rust-lang/rust/issues/77404
+            let mut next = 0;
+            
+
+            let (lower, _) = self.size_hint();
+            if lower >= 2 {
+                let highest_selected = (0..lower)
+                    .filter(|ix| coin_flipper.gen_ratio_one_over(consumed+ix+1))
+                    .last();
+
+                consumed += lower;
+                next = lower;
+
+                if let Some(ix) = highest_selected {
+                    result = self.nth(ix);
+                    next -= ix + 1;
+                    debug_assert!(result.is_some(), "iterator shorter than size_hint().0");
+                }
+            }
+
+            let elem = self.nth(next);
+            if elem.is_none() {
+                return result
+            }
+
+            if coin_flipper.gen_ratio_one_over(consumed+1) {
                 result = elem;
             }
             consumed += 1;
@@ -863,6 +964,60 @@ mod test {
         assert_eq!((0..0).choose(r), None);
         assert_eq!(UnhintedIterator { iter: 0..0 }.choose(r), None);
     }
+    
+    #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
+    fn test_iterator_choose_new_version() {
+        let r = &mut crate::test::rng(109);
+        fn test_iter<R: Rng + ?Sized, Iter: Iterator<Item = usize> + Clone>(r: &mut R, iter: Iter) {
+            let mut chosen = [0i32; 9];
+            for _ in 0..1000 {
+                let picked = iter.clone().choose_new_version(r).unwrap();
+                chosen[picked] += 1;
+            }
+            for count in chosen.iter() {
+                // Samples should follow Binomial(1000, 1/9)
+                // Octave: binopdf(x, 1000, 1/9) gives the prob of *count == x
+                // Note: have seen 153, which is unlikely but not impossible.
+                assert!(
+                    72 < *count && *count < 154,
+                    "count not close to 1000/9: {}",
+                    count
+                );
+            }
+        }
+
+        test_iter(r, 0..9);
+        test_iter(r, [0, 1, 2, 3, 4, 5, 6, 7, 8].iter().cloned());
+        #[cfg(feature = "alloc")]
+        test_iter(r, (0..9).collect::<Vec<_>>().into_iter());
+        test_iter(r, UnhintedIterator { iter: 0..9 });
+        test_iter(r, ChunkHintedIterator {
+            iter: 0..9,
+            chunk_size: 4,
+            chunk_remaining: 4,
+            hint_total_size: false,
+        });
+        test_iter(r, ChunkHintedIterator {
+            iter: 0..9,
+            chunk_size: 4,
+            chunk_remaining: 4,
+            hint_total_size: true,
+        });
+        test_iter(r, WindowHintedIterator {
+            iter: 0..9,
+            window_size: 2,
+            hint_total_size: false,
+        });
+        test_iter(r, WindowHintedIterator {
+            iter: 0..9,
+            window_size: 2,
+            hint_total_size: true,
+        });
+
+        assert_eq!((0..0).choose(r), None);
+        assert_eq!(UnhintedIterator { iter: 0..0 }.choose(r), None);
+    }
 
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
@@ -917,10 +1072,107 @@ mod test {
         assert_eq!((0..0).choose(r), None);
         assert_eq!(UnhintedIterator { iter: 0..0 }.choose(r), None);
     }
+    
+    #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
+    fn test_iterator_choose_stable_new_version() {
+        let r = &mut crate::test::rng(109);
+        fn test_iter<R: Rng + ?Sized, Iter: Iterator<Item = usize> + Clone>(r: &mut R, iter: Iter) {
+            let mut chosen = [0i32; 9];
+            for _ in 0..1000 {
+                let picked = iter.clone().choose_stable_new_version(r).unwrap();
+                chosen[picked] += 1;
+            }
+            for count in chosen.iter() {
+                // Samples should follow Binomial(1000, 1/9)
+                // Octave: binopdf(x, 1000, 1/9) gives the prob of *count == x
+                // Note: have seen 153, which is unlikely but not impossible.
+                assert!(
+                    72 < *count && *count < 154,
+                    "count not close to 1000/9: {}",
+                    count
+                );
+            }
+        }
+
+        test_iter(r, 0..9);
+        test_iter(r, [0, 1, 2, 3, 4, 5, 6, 7, 8].iter().cloned());
+        #[cfg(feature = "alloc")]
+        test_iter(r, (0..9).collect::<Vec<_>>().into_iter());
+        test_iter(r, UnhintedIterator { iter: 0..9 });
+        test_iter(r, ChunkHintedIterator {
+            iter: 0..9,
+            chunk_size: 4,
+            chunk_remaining: 4,
+            hint_total_size: false,
+        });
+        test_iter(r, ChunkHintedIterator {
+            iter: 0..9,
+            chunk_size: 4,
+            chunk_remaining: 4,
+            hint_total_size: true,
+        });
+        test_iter(r, WindowHintedIterator {
+            iter: 0..9,
+            window_size: 2,
+            hint_total_size: false,
+        });
+        test_iter(r, WindowHintedIterator {
+            iter: 0..9,
+            window_size: 2,
+            hint_total_size: true,
+        });
+
+        assert_eq!((0..0).choose(r), None);
+        assert_eq!(UnhintedIterator { iter: 0..0 }.choose(r), None);
+    }
 
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_iterator_choose_stable_stability() {
+        fn test_iter(iter: impl Iterator<Item = usize> + Clone) -> [i32; 9] {
+            let r = &mut crate::test::rng(109);
+            let mut chosen = [0i32; 9];
+            for _ in 0..1000 {
+                let picked = iter.clone().choose_stable(r).unwrap();
+                chosen[picked] += 1;
+            }
+            chosen
+        }
+
+        let reference = test_iter(0..9);
+        assert_eq!(test_iter([0, 1, 2, 3, 4, 5, 6, 7, 8].iter().cloned()), reference);
+
+        #[cfg(feature = "alloc")]
+        assert_eq!(test_iter((0..9).collect::<Vec<_>>().into_iter()), reference);
+        assert_eq!(test_iter(UnhintedIterator { iter: 0..9 }), reference);
+        assert_eq!(test_iter(ChunkHintedIterator {
+            iter: 0..9,
+            chunk_size: 4,
+            chunk_remaining: 4,
+            hint_total_size: false,
+        }), reference);
+        assert_eq!(test_iter(ChunkHintedIterator {
+            iter: 0..9,
+            chunk_size: 4,
+            chunk_remaining: 4,
+            hint_total_size: true,
+        }), reference);
+        assert_eq!(test_iter(WindowHintedIterator {
+            iter: 0..9,
+            window_size: 2,
+            hint_total_size: false,
+        }), reference);
+        assert_eq!(test_iter(WindowHintedIterator {
+            iter: 0..9,
+            window_size: 2,
+            hint_total_size: true,
+        }), reference);
+    }
+    
+    #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
+    fn test_iterator_choose_stable_stability_new_version() {
         fn test_iter(iter: impl Iterator<Item = usize> + Clone) -> [i32; 9] {
             let r = &mut crate::test::rng(109);
             let mut chosen = [0i32; 9];
