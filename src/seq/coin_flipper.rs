@@ -35,7 +35,7 @@ impl<R: RngCore> CoinFlipper<R> {
 
         while numerator < denominator {
             //The exponent is the number of heads that need to be won in a row to not return false
-            let exponent = numerator.leading_zeros() - denominator.leading_zeros();
+            let exponent = (numerator.leading_zeros() - denominator.leading_zeros()).min(32);
 
             if exponent > 1 {
                 //n * 2^exponent < d
@@ -72,7 +72,9 @@ impl<R: RngCore> CoinFlipper<R> {
     /// Otherwise return false and consume the number of zeroes plus one
     /// Generates new bits of randomness when necessary (int 32 bit chunks)
     /// Has a one in 2 to the n chance of returning true
+    /// n must be less than or equal to 32
     fn flip_until_tails(&mut self, mut n: u32) -> bool {
+        debug_assert!(n <= 32); //If n > 32 this wil always return false
         //Note that zeros on the left of the chunk represent heads. It needs to be this way round because zeros are filled in when left shifting
         loop {
             let zeros = self.chunk.leading_zeros();
