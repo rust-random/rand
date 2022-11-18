@@ -16,11 +16,6 @@ impl<R: RngCore> CoinFlipper<R> {
     }
 
     #[inline]
-    pub fn gen_ratio_one_over(&mut self, denominator: usize) -> bool {
-        return self.gen_ratio(1, denominator);
-    }
-
-    #[inline]
     /// Returns true with a probability of numerator / denominator
     /// Uses an expected two bits of randomness
     pub fn gen_ratio(&mut self, mut numerator: usize, denominator: usize) -> bool {
@@ -32,7 +27,7 @@ impl<R: RngCore> CoinFlipper<R> {
         // If 2n < d
         //  If it comes up tails, return false
         //  If it comes up heads, double n and start again
-        //  This is fair because (0.5 * 0) + (0.5 * 2n / d) = n / d and 2n is less than d (if 2n was greater than d we would effectively round it down to 1)
+        //  This is fair because (0.5 * 0) + (0.5 * 2n / d) = n / d and 2n is less than d (if 2n was greater than d we would effectively round it down to 1 by returning true)
         // If 2n >= d
         //   If it comes up tails, set n to 2n - d
         //   If it comes up heads, return true
@@ -43,7 +38,7 @@ impl<R: RngCore> CoinFlipper<R> {
             let exponent = numerator.leading_zeros() - denominator.leading_zeros();
 
             if exponent > 1 {
-                //n * 2^exp < d
+                //n * 2^exponent < d
                 if self.flip_until_tails(exponent) {
                     // all heads
                     numerator <<= exponent;
@@ -51,14 +46,21 @@ impl<R: RngCore> CoinFlipper<R> {
                     // a tails somewhere
                     return false;
                 }
+            }
+            //Otherwise n * 2 is either greater than or very close to d
+            else if self.flip_until_tails(1) {
+                // Heads - double n.
+                // If it is now larger than d the loop will exit a
+                numerator = numerator.saturating_mul(2);
             } else {
-                if self.flip_until_tails(1) {
-                    numerator = numerator.saturating_mul(2);
-                } else {
-                    numerator = numerator.wrapping_sub(denominator).wrapping_add(numerator);
-                    if numerator > denominator {
-                        return false;
-                    }
+                // Tails
+                // If 2n < d return false
+                // Else set n to 2n -d
+
+                numerator = numerator.wrapping_sub(denominator).wrapping_add(numerator);
+                if numerator > denominator {
+                    //This is equivalent to checking if 2n < d (hence the wrapping)
+                    return false;
                 }
             }
         }
@@ -76,16 +78,16 @@ impl<R: RngCore> CoinFlipper<R> {
             let zeros = self.chunk.leading_zeros();
 
             if zeros < n {
-                // The happy path - we found a 1 and can return false                
+                // The happy path - we found a 1 and can return false
                 // Note that because a 1 bit was detected, we cannot have run out of random bits so we don't need to check
 
                 // First consume all of the bits read
                 self.chunk = self.chunk.wrapping_shl(zeros + 1);
                 self.chunk_remaining = self.chunk_remaining.saturating_sub(zeros + 1);
                 return false;
-            } else { 
+            } else {
                 // The number of zeros is larger than n
-                //There are two possibilities                
+                //There are two possibilities
                 if let Some(new_remaining) = self.chunk_remaining.checked_sub(n) {
                     //Those zeroes were all part of our random chunk, so throw away n bits of randomness and return true
                     self.chunk_remaining = new_remaining;
@@ -98,7 +100,7 @@ impl<R: RngCore> CoinFlipper<R> {
                     // Generate a new chunk
                     self.chunk = self.rng.next_u32();
                     self.chunk_remaining = 32; //TODO change back to U32::BITS
-                    //Go back to start of loop
+                                               //Go back to start of loop
                 }
             }
         }
