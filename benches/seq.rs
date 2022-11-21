@@ -122,7 +122,7 @@ impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<
 }
 
 macro_rules! bench_seq_iter_size_hinted {
-    ($name:ident,$rng:ident, $fn:ident,  $length:expr) => {
+    ($name:ident, $rng:ident, $fn:ident, $length:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
             let mut rng = $rng::from_rng(thread_rng()).unwrap();
