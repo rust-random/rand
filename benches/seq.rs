@@ -122,7 +122,7 @@ impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<
 }
 
 macro_rules! bench_seq_iter_size_hinted {
-    ($name:ident,$rng:ident, $fn:ident,  $length:expr) => {
+    ($name:ident, $rng:ident, $fn:ident, $length:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
             let mut rng = $rng::from_rng(thread_rng()).unwrap();
@@ -673,18 +673,6 @@ bench_seq_iter_unhinted!(
     10
 );
 
-//#[bench]
-// fn seq_iter_window_hinted_choose_from_1000(b: &mut Bencher) {
-//     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-//     let x: &[usize] = &[1; 1000];
-//     b.iter(|| {
-//         WindowHintedIterator {
-//             iter: x.iter(),
-//             window_size: 7,
-//         }
-//         .choose(&mut rng)
-//     })
-// }
 #[bench]
 fn seq_iter_choose_multiple_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
