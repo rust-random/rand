@@ -12,7 +12,8 @@ Selected PCG random number generators
 """
 keywords = ["random", "rng", "pcg"]
 categories = ["algorithms", "no-std"]
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 
 [features]
 serde1 = ["serde"]
