@@ -340,7 +340,7 @@ where Borrowed: SampleUniform
 {
     #[inline(always)]
     fn borrow(&self) -> &Borrowed {
-        *self
+        self
     }
 }
 
