@@ -43,7 +43,7 @@ jobs:
             # Test both windows-gnu and windows-msvc; use beta rust on one
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            toolchain: 1.51.0 # MSRV
+            toolchain: 1.56.0 # MSRV
           - os: ubuntu-latest
             deps: sudo apt-get update ; sudo apt install gcc-multilib
             target: i686-unknown-linux-gnu
