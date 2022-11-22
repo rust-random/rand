@@ -166,9 +166,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@nightly
         with:
-            toolchain: nightly-2021-01-07 # Pinned compiler version due to https://github.com/rust-lang/compiler-builtins/issues/400
             components: rust-src
       - name: Build top-level only
         run: cargo build -Z build-std=core --target=avr-unknown-gnu-atmega328 --no-default-features
