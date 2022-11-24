@@ -119,13 +119,12 @@ use crate::distributions::utils::Float;
 
 #[cfg(feature = "simd_support")] use packed_simd::*;
 
-/// Error type returned from `Uniform::new{,_inclusive}`.
+/// Error type returned from [`Uniform::new`] and `new_inclusive`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `low > high`, or equal in case of exclusive range.
     EmptyRange,
-    /// Input or range `high - low` is non-finite. Not relevant to integer types. In release mode,
-    /// only the range is checked.
+    /// Input or range `high - low` is non-finite. Not relevant to integer types.
     NonFinite,
 }
 
@@ -203,7 +202,10 @@ pub struct Uniform<X: SampleUniform>(X::Sampler);
 
 impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance, which samples uniformly from the half
-    /// open range `[low, high)` (excluding `high`). Fails if `low >= high`.
+    /// open range `[low, high)` (excluding `high`).
+    ///
+    /// Fails if `low >= high`, or if `low`, `high` or the range `high - low` is
+    /// non-finite. In release mode, only the range is checked.
     pub fn new<B1, B2>(low: B1, high: B2) -> Result<Uniform<X>, Error>
     where
         B1: SampleBorrow<X> + Sized,
@@ -213,7 +215,10 @@ impl<X: SampleUniform> Uniform<X> {
     }
 
     /// Create a new `Uniform` instance, which samples uniformly from the closed
-    /// range `[low, high]` (inclusive). Fails if `low > high`.
+    /// range `[low, high]` (inclusive).
+    ///
+    /// Fails if `low > high`, or if `low`, `high` or the range `high - low` is
+    /// non-finite. In release mode, only the range is checked.
     pub fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Uniform<X>, Error>
     where
         B1: SampleBorrow<X> + Sized,
@@ -257,7 +262,8 @@ pub trait UniformSampler: Sized {
 
     /// Construct self, with inclusive lower bound and exclusive upper bound `[low, high)`.
     ///
-    /// Usually users should not call this directly but instead use `Uniform::new`.
+    /// Usually users should not call this directly but prefer to use
+    /// [`Uniform::new`].
     fn new<B1, B2>(low: B1, high: B2) -> Result<Self, Error>
     where
         B1: SampleBorrow<Self::X> + Sized,
@@ -265,7 +271,8 @@ pub trait UniformSampler: Sized {
 
     /// Construct self, with inclusive bounds `[low, high]`.
     ///
-    /// Usually users should not call this directly but instead use `Uniform::new_inclusive`.
+    /// Usually users should not call this directly but prefer to use
+    /// [`Uniform::new_inclusive`].
     fn new_inclusive<B1, B2>(low: B1, high: B2) -> Result<Self, Error>
     where
         B1: SampleBorrow<Self::X> + Sized,
@@ -856,11 +863,10 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                /*
+                #[cfg(debug_assertions)]
                 if !(low.all_finite()) || !(high.all_finite()) {
                     return Err(Error::NonFinite);
                 }
-                */
                 if !(low.all_lt(high)) {
                     return Err(Error::EmptyRange);
                 }
@@ -893,11 +899,10 @@ macro_rules! uniform_float_impl {
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
-                /*
+                #[cfg(debug_assertions)]
                 if !(low.all_finite()) || !(high.all_finite()) {
                     return Err(Error::NonFinite);
                 }
-                */
                 if !low.all_le(high) {
                     return Err(Error::EmptyRange);
                 }
