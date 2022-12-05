@@ -135,8 +135,8 @@ impl<R: RngCore> CoinFlipper<R> {
 
                     // Generate a new chunk
                     self.chunk = self.rng.next_u32();
-                    self.chunk_remaining = 32; //TODO change back to U32::BITS
-                                               //Go back to start of loop
+                    self.chunk_remaining = 32;
+                    //Go back to start of loop
                 }
             }
         }
