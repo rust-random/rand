@@ -8,13 +8,16 @@
 
 #![feature(test)]
 #![allow(non_snake_case)]
+#![feature(custom_inner_attributes)]
+// Rustfmt splits macro invocations to shorten lines; in this case longer-lines are more readable
+#![rustfmt::skip]
 
 extern crate test;
 
 use test::Bencher;
 
-use rand::prelude::*;
 use core::mem::size_of;
+use rand::prelude::*;
 
 // We force use of 32-bit RNG since seq code is optimised for use with 32-bit
 // generators on all platforms.
@@ -23,11 +26,9 @@ use rand_pcg::Pcg32 as SmallRng;
 
 const RAND_BENCH_N: u64 = 1000;
 
-
 #[derive(Clone)]
 struct UnhintedIterator<I: Iterator + Clone> {
-    iter: I,
-}
+    iter: I, }
 impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
     type Item = I::Item;
 
@@ -38,9 +39,7 @@ impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
 
 #[derive(Clone)]
 struct WindowHintedIterator<I: ExactSizeIterator + Iterator + Clone> {
-    iter: I,
-    window_size: usize,
-}
+    iter: I, window_size: usize, }
 impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<I> {
     type Item = I::Item;
 
@@ -75,7 +74,7 @@ macro_rules! bench_seq_iter_size_hinted {
 }
 
 macro_rules! bench_seq_iter_unhinted {
-    ($name:ident,$rng:ident, $fn:ident,  $length:expr) => {
+    ($name:ident,$rng:ident, $fn:ident, $length:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
             let mut rng = $rng::from_rng(thread_rng()).unwrap();
@@ -86,16 +85,14 @@ macro_rules! bench_seq_iter_unhinted {
 }
 
 macro_rules! bench_seq_iter_window_hinted {
-    ($name:ident,$rng:ident, $fn:ident,  $length:expr) => {
+    ($name:ident,$rng:ident, $fn:ident, $length:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
             let mut rng = $rng::from_rng(thread_rng()).unwrap();
             let x: &[usize] = &[1; $length];
             b.iter(|| {
                 WindowHintedIterator {
-                    iter: x.iter(),
-                    window_size: 7,
-                }
+                    iter: x.iter(), window_size: 7, }
                 .$fn(&mut rng)
                 .unwrap()
             })
@@ -104,295 +101,66 @@ macro_rules! bench_seq_iter_window_hinted {
 }
 
 //Size Hinted
-bench_seq_iter_size_hinted!(
-    seq_iter_size_hinted_choose_from_10000_cryptoRng,
-    CryptoRng,
-    choose,
-    10000
-);
-bench_seq_iter_size_hinted!(
-    seq_iter_size_hinted_choose_from_10000_smallRng,
-    SmallRng,
-    choose,
-    10000
-);
-bench_seq_iter_size_hinted!(
-    seq_iter_size_hinted_choose_from_1000_cryptoRng,
-    CryptoRng,
-    choose,
-    1000
-);
-bench_seq_iter_size_hinted!(
-    seq_iter_size_hinted_choose_from_1000_smallRng,
-    SmallRng,
-    choose,
-    1000
-);
-bench_seq_iter_size_hinted!(
-    seq_iter_size_hinted_choose_from_100_cryptoRng,
-    CryptoRng,
-    choose,
-    100
-);
-bench_seq_iter_size_hinted!(
-    seq_iter_size_hinted_choose_from_100_smallRng,
-    SmallRng,
-    choose,
-    100
-);
-bench_seq_iter_size_hinted!(
-    seq_iter_size_hinted_choose_from_10_smallRng,
-    SmallRng,
-    choose,
-    10
-);
-bench_seq_iter_size_hinted!(
-    seq_iter_size_hinted_choose_from_10_cryptoRng,
-    CryptoRng,
-    choose,
-    10
-);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_10000_cryptoRng, CryptoRng, choose, 10000);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_10000_smallRng, SmallRng, choose, 10000);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_1000_cryptoRng, CryptoRng, choose, 1000);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_1000_smallRng, SmallRng, choose, 1000);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_100_cryptoRng, CryptoRng, choose, 100);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_100_smallRng, SmallRng, choose, 100);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_10_smallRng, SmallRng, choose, 10);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_10_cryptoRng, CryptoRng, choose, 10);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_3_smallRng, SmallRng, choose, 3);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_3_cryptoRng, CryptoRng, choose, 3);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_2_smallRng, SmallRng, choose, 2);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_2_cryptoRng, CryptoRng, choose, 2);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_1_smallRng, SmallRng, choose, 1);
+bench_seq_iter_size_hinted!(seq_iter_size_hinted_choose_from_1_cryptoRng, CryptoRng, choose, 1);
 
 //Unhinted
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_10000_cryptoRng,
-    CryptoRng,
-    choose,
-    10000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_10000_smallRng,
-    SmallRng,
-    choose,
-    10000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_1000_cryptoRng,
-    CryptoRng,
-    choose,
-    1000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_1000_smallRng,
-    SmallRng,
-    choose,
-    1000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_100_cryptoRng,
-    CryptoRng,
-    choose,
-    100
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_100_smallRng,
-    SmallRng,
-    choose,
-    100
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_10_smallRng,
-    SmallRng,
-    choose,
-    10
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_10_cryptoRng,
-    CryptoRng,
-    choose,
-    10
-);
-
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_4_smallRng,
-    SmallRng,
-    choose,
-    4
-);
-
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_2_smallRng,
-    SmallRng,
-    choose,
-    2
-);
-
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_1_smallRng,
-    SmallRng,
-    choose,
-    1
-);
-
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_4_cryptoRng,
-    CryptoRng,
-    choose,
-    4
-);
-
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_2_cryptoRng,
-    CryptoRng,
-    choose,
-    2
-);
-
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_from_1_cryptoRng,
-    CryptoRng,
-    choose,
-    1
-);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_10000_cryptoRng, CryptoRng, choose, 10000);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_10000_smallRng, SmallRng, choose, 10000);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_1000_cryptoRng, CryptoRng, choose, 1000);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_1000_smallRng, SmallRng, choose, 1000);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_100_cryptoRng, CryptoRng, choose, 100);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_100_smallRng, SmallRng, choose, 100);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_10_smallRng, SmallRng, choose, 10);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_10_cryptoRng, CryptoRng, choose, 10);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_3_smallRng, SmallRng, choose, 3);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_3_cryptoRng, CryptoRng, choose, 3);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_2_smallRng, SmallRng, choose, 2);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_2_cryptoRng, CryptoRng, choose, 2);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_1_smallRng, SmallRng, choose, 1);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_from_1_cryptoRng, CryptoRng, choose, 1);
 
 // Window hinted
-bench_seq_iter_window_hinted!(
-    seq_iter_window_hinted_choose_from_10000_cryptoRng,
-    CryptoRng,
-    choose,
-    10000
-);
-bench_seq_iter_window_hinted!(
-    seq_iter_window_hinted_choose_from_10000_smallRng,
-    SmallRng,
-    choose,
-    10000
-);
-bench_seq_iter_window_hinted!(
-    seq_iter_window_hinted_choose_from_1000_cryptoRng,
-    CryptoRng,
-    choose,
-    1000
-);
-bench_seq_iter_window_hinted!(
-    seq_iter_window_hinted_choose_from_1000_smallRng,
-    SmallRng,
-    choose,
-    1000
-);
-
-bench_seq_iter_window_hinted!(
-    seq_iter_window_hinted_choose_from_100_cryptoRng,
-    CryptoRng,
-    choose,
-    100
-);
-bench_seq_iter_window_hinted!(
-    seq_iter_window_hinted_choose_from_100_smallRng,
-    SmallRng,
-    choose,
-    100
-);
-bench_seq_iter_window_hinted!(
-    seq_iter_window_hinted_choose_from_10_smallRng,
-    SmallRng,
-    choose,
-    10
-);
-bench_seq_iter_window_hinted!(
-    seq_iter_window_hinted_choose_from_10_cryptoRng,
-    CryptoRng,
-    choose,
-    10
-);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_10000_cryptoRng, CryptoRng, choose, 10000);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_10000_smallRng, SmallRng, choose, 10000);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_1000_cryptoRng, CryptoRng, choose, 1000);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_1000_smallRng, SmallRng, choose, 1000);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_100_cryptoRng, CryptoRng, choose, 100);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_100_smallRng, SmallRng, choose, 100);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_10_smallRng, SmallRng, choose, 10);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_10_cryptoRng, CryptoRng, choose, 10);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_3_smallRng, SmallRng, choose, 3);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_3_cryptoRng, CryptoRng, choose, 3);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_2_smallRng, SmallRng, choose, 2);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_2_cryptoRng, CryptoRng, choose, 2);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_1_smallRng, SmallRng, choose, 1);
+bench_seq_iter_window_hinted!(seq_iter_window_hinted_choose_from_1_cryptoRng, CryptoRng, choose, 1);
 
 //Choose Stable
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_stable_from_10000_cryptoRng,
-    CryptoRng,
-    choose_stable,
-    10000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_stable_from_10000_smallRng,
-    SmallRng,
-    choose_stable,
-    10000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_stable_from_1000_cryptoRng,
-    CryptoRng,
-    choose_stable,
-    1000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_stable_from_1000_smallRng,
-    SmallRng,
-    choose_stable,
-    1000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_stable_from_100_cryptoRng,
-    CryptoRng,
-    choose_stable,
-    100
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_stable_from_100_smallRng,
-    SmallRng,
-    choose_stable,
-    100
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_stable_from_10_smallRng,
-    SmallRng,
-    choose_stable,
-    10
-);
-bench_seq_iter_unhinted!(
-    seq_iter_unhinted_choose_stable_from_10_cryptoRng,
-    CryptoRng,
-    choose_stable,
-    10
-);
-
-// Window hinted
-bench_seq_iter_unhinted!(
-    seq_iter_stable_choose_from_10000_cryptoRng,
-    CryptoRng,
-    choose_stable,
-    10000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_stable_choose_from_10000_smallRng,
-    SmallRng,
-    choose_stable,
-    10000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_stable_choose_from_1000_cryptoRng,
-    CryptoRng,
-    choose_stable,
-    1000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_stable_choose_from_1000_smallRng,
-    SmallRng,
-    choose_stable,
-    1000
-);
-bench_seq_iter_unhinted!(
-    seq_iter_stable_choose_from_100_cryptoRng,
-    CryptoRng,
-    choose_stable,
-    100
-);
-bench_seq_iter_unhinted!(
-    seq_iter_stable_choose_from_100_smallRng,
-    SmallRng,
-    choose_stable,
-    100
-);
-bench_seq_iter_unhinted!(
-    seq_iter_stable_choose_from_10_smallRng,
-    SmallRng,
-    choose_stable,
-    10
-);
-bench_seq_iter_unhinted!(
-    seq_iter_stable_choose_from_10_cryptoRng,
-    CryptoRng,
-    choose_stable,
-    10
-);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_10000_smallRng, SmallRng, choose_stable, 10000);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_10000_cryptoRng, CryptoRng, choose_stable, 10000);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_1000_smallRng, SmallRng, choose_stable, 1000);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_1000_cryptoRng, CryptoRng, choose_stable, 1000);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_100_smallRng, SmallRng, choose_stable, 100);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_100_cryptoRng, CryptoRng, choose_stable, 100);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_10_smallRng, SmallRng, choose_stable, 10);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_10_cryptoRng, CryptoRng, choose_stable, 10);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_3_smallRng, SmallRng, choose_stable, 3);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_3_cryptoRng, CryptoRng, choose_stable, 3);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_2_smallRng, SmallRng, choose_stable, 2);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_2_cryptoRng, CryptoRng, choose_stable, 2);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_1_smallRng, SmallRng, choose_stable, 1);
+bench_seq_iter_unhinted!(seq_iter_unhinted_choose_stable_from_1_cryptoRng, CryptoRng, choose_stable, 1);
 
