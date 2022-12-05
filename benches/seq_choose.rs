@@ -203,6 +203,48 @@ bench_seq_iter_unhinted!(
     10
 );
 
+bench_seq_iter_unhinted!(
+    seq_iter_unhinted_choose_from_4_smallRng,
+    SmallRng,
+    choose,
+    4
+);
+
+bench_seq_iter_unhinted!(
+    seq_iter_unhinted_choose_from_2_smallRng,
+    SmallRng,
+    choose,
+    2
+);
+
+bench_seq_iter_unhinted!(
+    seq_iter_unhinted_choose_from_1_smallRng,
+    SmallRng,
+    choose,
+    1
+);
+
+bench_seq_iter_unhinted!(
+    seq_iter_unhinted_choose_from_4_cryptoRng,
+    CryptoRng,
+    choose,
+    4
+);
+
+bench_seq_iter_unhinted!(
+    seq_iter_unhinted_choose_from_2_cryptoRng,
+    CryptoRng,
+    choose,
+    2
+);
+
+bench_seq_iter_unhinted!(
+    seq_iter_unhinted_choose_from_1_cryptoRng,
+    CryptoRng,
+    choose,
+    1
+);
+
 // Window hinted
 bench_seq_iter_window_hinted!(
     seq_iter_window_hinted_choose_from_10000_cryptoRng,
