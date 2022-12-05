@@ -53,26 +53,20 @@ impl<R: RngCore> CoinFlipper<R> {
 
         // As a performance optimization we can flip multiple coins at once (using the `lzcnt` intrinsic)
         // We can check up to 32 flips at once but we only receive one bit of information - all heads or at least one tail.
-        // c is the number of coins to flip.
-        // If 2n < d, c is the highest number such that n * 2^c < d and c <= 32.
+        // Let c be the number of coins to flip. 1 <= c <= 32
+        // If 2n < d, n * 2^c < d
         // If the result is all heads, then set n to n * 2^c
         // If there was at least one tail, return false
-        // If 2n >= d, the order of the heads and tails matters so we flip one coin at a time - c = 1 
+        // If 2n >= d, the order of the heads and tails matters so we flip one coin at a time so c = 1
+        // Ideally, c will be as high as possible within these constraints
 
         while n < d {
-            //Estimate c by counting leading zeros. This will either give the correct c, or c + 1
-            let mut c = (n.leading_zeros() - d.leading_zeros()).min(32).max(1);
-
+            //Find a good value for c by counting leading zeros
+            //This will either give the highest possible c, or 1 less than that
+            let c = n.leading_zeros().saturating_sub(d.leading_zeros() + 1).min(32).max(1);
 
             // set next_n to n * 2^c (checked_shl will fail if 2n >= `usize::max`)
-            if let Some(mut next_n) = n.checked_shl(c) {               
-
-                // Check here that our estimate for c was correct, if not, lower it by one
-                if next_n > d && c > 1 {
-                    next_n >>= 1;
-                    c -= 1;
-                }
-
+            if let Some(next_n) = n.checked_shl(c) {
                 if self.flip_until_tails(c) {
                     //All heads
                     //if 2n < d, set n to 2n
