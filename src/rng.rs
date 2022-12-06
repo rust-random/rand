@@ -132,7 +132,7 @@ pub trait Rng: RngCore {
         R: SampleRange<T>
     {
         assert!(!range.is_empty(), "cannot sample empty range");
-        range.sample_single(self)
+        range.sample_single(self).unwrap()
     }
 
     /// Sample a new value, using the given distribution.
