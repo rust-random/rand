@@ -208,8 +208,8 @@ where
         ReseedingCore {
             inner: rng,
             reseeder,
-            threshold: threshold as i64,
-            bytes_until_reseed: threshold as i64,
+            threshold,
+            bytes_until_reseed: threshold,
             fork_counter: 0,
         }
     }

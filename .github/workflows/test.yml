@@ -43,7 +43,7 @@ jobs:
             # Test both windows-gnu and windows-msvc; use beta rust on one
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            toolchain: 1.51.0 # MSRV
+            toolchain: 1.56.0 # MSRV
           - os: ubuntu-latest
             deps: sudo apt-get update ; sudo apt install gcc-multilib
             target: i686-unknown-linux-gnu
@@ -161,17 +161,17 @@ jobs:
       - name: Build top-level only
         run: cargo build --target=thumbv6m-none-eabi --no-default-features
 
-  test-avr:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-            toolchain: nightly-2021-01-07 # Pinned compiler version due to https://github.com/rust-lang/compiler-builtins/issues/400
-            components: rust-src
-      - name: Build top-level only
-        run: cargo build -Z build-std=core --target=avr-unknown-gnu-atmega328 --no-default-features
+  # Disabled due to lack of known working compiler versions (not older than our MSRV)
+  # test-avr:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Install toolchain
+  #       uses: dtolnay/rust-toolchain@nightly
+  #       with:
+  #           components: rust-src
+  #     - name: Build top-level only
+  #       run: cargo build -Z build-std=core --target=avr-unknown-gnu-atmega328 --no-default-features
 
   test-ios:
     runs-on: macos-latest
