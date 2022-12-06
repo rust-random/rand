@@ -161,16 +161,17 @@ jobs:
       - name: Build top-level only
         run: cargo build --target=thumbv6m-none-eabi --no-default-features
 
-  test-avr:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install toolchain
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-            components: rust-src
-      - name: Build top-level only
-        run: cargo build -Z build-std=core --target=avr-unknown-gnu-atmega328 --no-default-features
+  # Disabled due to lack of known working compiler versions (not older than our MSRV)
+  # test-avr:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Install toolchain
+  #       uses: dtolnay/rust-toolchain@nightly
+  #       with:
+  #           components: rust-src
+  #     - name: Build top-level only
+  #       run: cargo build -Z build-std=core --target=avr-unknown-gnu-atmega328 --no-default-features
 
   test-ios:
     runs-on: macos-latest
