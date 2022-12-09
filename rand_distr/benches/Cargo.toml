@@ -4,7 +4,8 @@ version = "0.0.0"
 authors = ["The Rand Project Developers"]
 license = "MIT OR Apache-2.0"
 description = "Criterion benchmarks of the rand_distr crate"
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 publish = false
 
 [workspace]

@@ -1,6 +1,6 @@
 [package]
 name = "rand_pcg"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["The Rand Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -12,13 +12,14 @@ Selected PCG random number generators
 """
 keywords = ["random", "rng", "pcg"]
 categories = ["algorithms", "no-std"]
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 
 [features]
 serde1 = ["serde"]
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.6.0" }
+rand_core = { path = "../rand_core", version = "0.7.0" }
 serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]

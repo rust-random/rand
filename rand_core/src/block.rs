@@ -223,7 +223,7 @@ impl<R: BlockRngCore<Item = u32>> RngCore for BlockRng<R> {
                 self.generate_and_set(0);
             }
             let (consumed_u32, filled_u8) =
-                fill_via_u32_chunks(&self.results.as_ref()[self.index..], &mut dest[read_len..]);
+                fill_via_u32_chunks(&mut self.results.as_mut()[self.index..], &mut dest[read_len..]);
 
             self.index += consumed_u32;
             read_len += filled_u8;
@@ -381,13 +381,13 @@ impl<R: BlockRngCore<Item = u64>> RngCore for BlockRng64<R> {
         let mut read_len = 0;
         self.half_used = false;
         while read_len < dest.len() {
-            if self.index as usize >= self.results.as_ref().len() {
+            if self.index >= self.results.as_ref().len() {
                 self.core.generate(&mut self.results);
                 self.index = 0;
             }
 
             let (consumed_u64, filled_u8) = fill_via_u64_chunks(
-                &self.results.as_ref()[self.index as usize..],
+                &mut self.results.as_mut()[self.index..],
                 &mut dest[read_len..],
             );
 

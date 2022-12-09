@@ -670,7 +670,7 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceCho
 
     fn next(&mut self) -> Option<Self::Item> {
         // TODO: investigate using SliceIndex::get_unchecked when stable
-        self.indices.next().map(|i| &self.slice[i as usize])
+        self.indices.next().map(|i| &self.slice[i])
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

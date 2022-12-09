@@ -5,7 +5,7 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.51+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.56+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 A Rust library for random number generation, featuring:
 
@@ -95,9 +95,10 @@ Some versions of Rand crates have been yanked ("unreleased"). Where this occurs,
 the crate's CHANGELOG *should* be updated with a rationale, and a search on the
 issue tracker with the keyword `yank` *should* uncover the motivation.
 
-### Rust version requirements (MSRV)
+### Rust version requirements
 
-This version of Rand requires Rustc >= 1.51.0.
+The Minimum Supported Rust Version (MSRV) is `rustc >= 1.56.0`.
+Older releases may work (depending on feature configuration) but are untested.
 
 ## Crate Features
 

@@ -238,7 +238,7 @@ where R: Rng + ?Sized {
 
     if amount < 163 {
         const C: [[f32; 2]; 2] = [[1.6, 8.0 / 45.0], [10.0, 70.0 / 9.0]];
-        let j = if length < 500_000 { 0 } else { 1 };
+        let j = usize::from(length >= 500_000);
         let amount_fp = amount as f32;
         let m4 = C[0][j] * amount_fp;
         // Short-cut: when amount < 12, floyd's is always faster
@@ -249,7 +249,7 @@ where R: Rng + ?Sized {
         }
     } else {
         const C: [f32; 2] = [270.0, 330.0 / 9.0];
-        let j = if length < 500_000 { 0 } else { 1 };
+        let j = usize::from(length >= 500_000);
         if (length as f32) < C[j] * (amount as f32) {
             sample_inplace(rng, length, amount)
         } else {
