@@ -18,13 +18,15 @@ impl<R: RngCore> CoinFlipper<R> {
     #[inline]
     /// Returns true with a probability of 1 / d
     /// Uses an expected two bits of randomness
+    /// Panics if d == 0
     pub fn gen_ratio_one_over(&mut self, d: usize) -> bool {
+        debug_assert_ne!(d, 0);
         // This uses the same logic as `gen_ratio` but is optimized for the case that the starting numerator is one (which it always is for `Sequence::Choose()`)
 
         // In this case (unlike in `gen_ratio`), this way of calculating c is always accurate
         let c = (usize::BITS - 1 - d.leading_zeros()).min(32);
 
-        if self.flip_until_tails(c) {
+        if self.flip_c_heads(c) {
             let numerator = 1 << c;
             return self.gen_ratio(numerator, d);
         } else {
@@ -63,11 +65,11 @@ impl<R: RngCore> CoinFlipper<R> {
         while n < d {
             //Find a good value for c by counting leading zeros
             //This will either give the highest possible c, or 1 less than that
-            let c = n.leading_zeros().saturating_sub(d.leading_zeros() + 1).min(32).max(1);
+            let c = n.leading_zeros().saturating_sub(d.leading_zeros() + 1).clamp(1, 32);
 
             // set next_n to n * 2^c (checked_shl will fail if 2n >= `usize::max`)
             if let Some(next_n) = n.checked_shl(c) {
-                if self.flip_until_tails(c) {
+                if self.flip_c_heads(c) {
                     //All heads
                     //if 2n < d, set n to 2n
                     //if 2n >= d, the while loop will exit and we will return `true`
@@ -84,26 +86,26 @@ impl<R: RngCore> CoinFlipper<R> {
             } else {
                 // This branch will only be reached when 2n >= `usize::max`
                 // Obviously 2n > d
-                if self.flip_until_tails(1) {
+                if self.flip_c_heads(1) {
                     //heads
                     return true;
                 } else {
                     //tails
-                    n = n.saturating_add(n).saturating_sub(d); // set n to 2n -d
+                    n = n.wrapping_add(n).saturating_sub(d); // set n to 2n -d
                 }
             }
         }
         true
     }
         
-    /// If the next `c` bits of randomness are all zeroes, consume them and return true.
-    /// Otherwise return false and consume the number of zeroes plus one
-    /// Generates new bits of randomness when necessary (int 32 bit chunks)
-    /// Has a one in 2 to the `c` chance of returning true
+    /// If the next `c` bits of randomness all represent heads, consume them and return true.
+    /// Otherwise return false and consume the number of heads plus one.
+    /// Generates new bits of randomness when necessary (in 32 bit chunks)
+    /// Has a 1 in 2 to the `c` chance of returning true
     /// `c` must be less than or equal to 32
-    fn flip_until_tails(&mut self, mut c: u32) -> bool {
-        debug_assert!(c <= 32); //If `c` > 32 this wil always return false
-                                //Note that zeros on the left of the chunk represent heads. It needs to be this way round because zeros are filled in when left shifting
+    fn flip_c_heads(&mut self, mut c: u32) -> bool {        
+        debug_assert!(c <= 32); 
+        //Note that zeros on the left of the chunk represent heads. It needs to be this way round because zeros are filled in when left shifting
         loop {
             let zeros = self.chunk.leading_zeros();
 
