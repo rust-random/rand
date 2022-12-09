@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master, '0.[0-9]+' ]
 
+permissions:
+  contents: read #  to fetch code (actions/checkout)
+
 jobs:
   check-doc:
     name: Check doc
