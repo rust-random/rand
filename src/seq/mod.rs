@@ -331,8 +331,10 @@ pub trait IteratorRandom: Iterator + Sized {
         if upper == Some(lower) {
             return if lower == 0 {
                 None
-            } else {
-                self.nth(gen_index(rng, lower))
+            }
+            else {
+                let index = if lower == 1 {0} else {gen_index(rng, lower)};
+                self.nth(index)
             };
         }
 
@@ -692,6 +694,7 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 // platforms.
 #[inline]
 fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
+
     if ubound <= (core::u32::MAX as usize) {
         rng.gen_range(0..ubound as u32) as usize
     } else {
