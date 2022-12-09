@@ -38,7 +38,7 @@ impl<R: RngCore> CoinFlipper<R> {
     /// Returns true with a probability of n / d
     /// Uses an expected two bits of randomness
     fn gen_ratio(&mut self, mut n: usize, d: usize) -> bool {
-        // Explanation:        
+        // Explanation:
         // We are trying to return true with a probability of n / d
         // If n >= d, we can just return true
         // Otherwise there are two possibilities 2n < d and 2n >= d
@@ -65,46 +65,43 @@ impl<R: RngCore> CoinFlipper<R> {
         while n < d {
             //Find a good value for c by counting leading zeros
             //This will either give the highest possible c, or 1 less than that
-            let c = n.leading_zeros().saturating_sub(d.leading_zeros() + 1).clamp(1, 32);
+            let c = n
+                .leading_zeros()
+                .saturating_sub(d.leading_zeros() + 1)
+                .clamp(1, 32);
 
-            // set next_n to n * 2^c (checked_shl will fail if 2n >= `usize::max`)
-            if let Some(next_n) = n.checked_shl(c) {
-                if self.flip_c_heads(c) {
-                    //All heads
-                    //if 2n < d, set n to 2n
-                    //if 2n >= d, the while loop will exit and we will return `true`
-                    n = next_n
-                } else {
-                    //At least one tail - either return false or set n to 2n-d
-                    n = next_n.saturating_sub(d);
-                    
-                    if n == 0 {                        
-                        //Because we used saturating_sub, n will be zero if 2n was less than d or 2n was equal to d, in either case we can return false.
+            if self.flip_c_heads(c) {
+                // All heads
+                // Set n to n * 2^c
+                // If 2n >= d, the while loop will exit and we will return `true`
+                // If n * 2^c > `usize::MAX` then using `saturating_mul` will give `usize::MAX` and the loop will exit returning true
+                n = n.saturating_mul(2_usize.pow(c));
+            } else {
+                //At least one tail
+                if c == 1 {
+                    //Calculate 2n - d. We need to use wrapping as 2n might be greater than `usize::MAX`
+                    let next_n = n.wrapping_add(n).wrapping_sub(d);
+                    if next_n == 0 || next_n > n {
+                        //This will happen if 2n < d
                         return false;
                     }
-                }
-            } else {
-                // This branch will only be reached when 2n >= `usize::max`
-                // Obviously 2n > d
-                if self.flip_c_heads(1) {
-                    //heads
-                    return true;
+                    n = next_n;
                 } else {
-                    //tails
-                    n = n.wrapping_add(n).saturating_sub(d); // set n to 2n -d
+                    //c > 1 so 2n < d so we can return false
+                    return false;
                 }
             }
         }
         true
     }
-        
+
     /// If the next `c` bits of randomness all represent heads, consume them and return true.
     /// Otherwise return false and consume the number of heads plus one.
     /// Generates new bits of randomness when necessary (in 32 bit chunks)
     /// Has a 1 in 2 to the `c` chance of returning true
     /// `c` must be less than or equal to 32
-    fn flip_c_heads(&mut self, mut c: u32) -> bool {        
-        debug_assert!(c <= 32); 
+    fn flip_c_heads(&mut self, mut c: u32) -> bool {
+        debug_assert!(c <= 32);
         //Note that zeros on the left of the chunk represent heads. It needs to be this way round because zeros are filled in when left shifting
         loop {
             let zeros = self.chunk.leading_zeros();
@@ -113,8 +110,8 @@ impl<R: RngCore> CoinFlipper<R> {
                 // The happy path - we found a 1 and can return false
                 // Note that because a 1 bit was detected, we cannot have run out of random bits so we don't need to check
 
-                // First consume all of the bits read
-                self.chunk = self.chunk.wrapping_shl(zeros + 1);
+                // First consume all of the bits read                
+                self.chunk = self.chunk.wrapping_shl(zeros + 1); //using regular shl seems to give worse performance for size-hinted iterators
                 self.chunk_remaining = self.chunk_remaining.saturating_sub(zeros + 1);
                 return false;
             } else {
