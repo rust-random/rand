@@ -178,10 +178,7 @@ impl<R: BlockRngCore> BlockRng<R> {
     }
 }
 
-impl<R: BlockRngCore<Item = u32>> RngCore for BlockRng<R>
-where
-    <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>,
-{
+impl<R: BlockRngCore<Item = u32>> RngCore for BlockRng<R> {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         if self.index >= self.results.as_ref().len() {
@@ -226,7 +223,7 @@ where
                 self.generate_and_set(0);
             }
             let (consumed_u32, filled_u8) =
-                fill_via_u32_chunks(&self.results.as_ref()[self.index..], &mut dest[read_len..]);
+                fill_via_u32_chunks(&mut self.results.as_mut()[self.index..], &mut dest[read_len..]);
 
             self.index += consumed_u32;
             read_len += filled_u8;
@@ -346,10 +343,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
     }
 }
 
-impl<R: BlockRngCore<Item = u64>> RngCore for BlockRng64<R>
-where
-    <R as BlockRngCore>::Results: AsRef<[u64]> + AsMut<[u64]>,
-{
+impl<R: BlockRngCore<Item = u64>> RngCore for BlockRng64<R> {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         let mut index = self.index - self.half_used as usize;
@@ -387,13 +381,13 @@ where
         let mut read_len = 0;
         self.half_used = false;
         while read_len < dest.len() {
-            if self.index as usize >= self.results.as_ref().len() {
+            if self.index >= self.results.as_ref().len() {
                 self.core.generate(&mut self.results);
                 self.index = 0;
             }
 
             let (consumed_u64, filled_u8) = fill_via_u64_chunks(
-                &self.results.as_ref()[self.index as usize..],
+                &mut self.results.as_mut()[self.index..],
                 &mut dest[read_len..],
             );
 

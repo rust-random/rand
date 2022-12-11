@@ -53,7 +53,7 @@ use core::{mem, slice};
 /// # let v = foo(&mut thread_rng());
 /// ```
 pub trait Rng: RngCore {
-    /// Return a random value supporting the [`Standard`] distribution.
+    /// Return a random value via the [`Standard`] distribution.
     ///
     /// # Example
     ///
@@ -68,11 +68,9 @@ pub trait Rng: RngCore {
     ///
     /// # Arrays and tuples
     ///
-    /// The `rng.gen()` method is able to generate arrays (up to 32 elements)
+    /// The `rng.gen()` method is able to generate arrays
     /// and tuples (up to 12 elements), so long as all element types can be
     /// generated.
-    /// When using `rustc` ≥ 1.51, enable the `min_const_gen` feature to support
-    /// arrays larger than 32 elements.
     ///
     /// For arrays of integers, especially for those with small element types
     /// (< 64 bit), it will likely be faster to instead use [`Rng::fill`].
@@ -392,8 +390,6 @@ macro_rules! impl_fill {
 impl_fill!(u16, u32, u64, usize, u128,);
 impl_fill!(i8, i16, i32, i64, isize, i128,);
 
-#[cfg_attr(doc_cfg, doc(cfg(feature = "min_const_gen")))]
-#[cfg(feature = "min_const_gen")]
 impl<T, const N: usize> Fill for [T; N]
 where [T]: Fill
 {
@@ -401,32 +397,6 @@ where [T]: Fill
         self[..].try_fill(rng)
     }
 }
-
-#[cfg(not(feature = "min_const_gen"))]
-macro_rules! impl_fill_arrays {
-    ($n:expr,) => {};
-    ($n:expr, $N:ident) => {
-        impl<T> Fill for [T; $n] where [T]: Fill {
-            fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
-                self[..].try_fill(rng)
-            }
-        }
-    };
-    ($n:expr, $N:ident, $($NN:ident,)*) => {
-        impl_fill_arrays!($n, $N);
-        impl_fill_arrays!($n - 1, $($NN,)*);
-    };
-    (!div $n:expr,) => {};
-    (!div $n:expr, $N:ident, $($NN:ident,)*) => {
-        impl_fill_arrays!($n, $N);
-        impl_fill_arrays!(!div $n / 2, $($NN,)*);
-    };
-}
-#[cfg(not(feature = "min_const_gen"))]
-#[rustfmt::skip]
-impl_fill_arrays!(32, N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,);
-#[cfg(not(feature = "min_const_gen"))]
-impl_fill_arrays!(!div 4096, N,N,N,N,N,N,N,);
 
 #[cfg(test)]
 mod test {

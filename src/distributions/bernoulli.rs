@@ -14,6 +14,7 @@ use core::{fmt, u64};
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
+
 /// The Bernoulli distribution.
 ///
 /// This is a special case of the Binomial distribution where `n = 1`.
@@ -147,10 +148,10 @@ mod test {
     use crate::Rng;
 
     #[test]
-    #[cfg(feature="serde1")]
+    #[cfg(feature = "serde1")]
     fn test_serializing_deserializing_bernoulli() {
         let coin_flip = Bernoulli::new(0.5).unwrap();
-        let de_coin_flip : Bernoulli = bincode::deserialize(&bincode::serialize(&coin_flip).unwrap()).unwrap();
+        let de_coin_flip: Bernoulli = bincode::deserialize(&bincode::serialize(&coin_flip).unwrap()).unwrap();
 
         assert_eq!(coin_flip.p_int, de_coin_flip.p_int);
     }

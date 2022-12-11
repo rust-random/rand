@@ -19,8 +19,9 @@ use getrandom::getrandom;
 /// The implementation is provided by the [getrandom] crate. Refer to
 /// [getrandom] documentation for details.
 ///
-/// This struct is only available when specifying the crate feature `getrandom`
-/// or `std`. When using the `rand` lib, it is also available as `rand::rngs::OsRng`.
+/// This struct is available as `rand_core::OsRng` and as `rand::rngs::OsRng`.
+/// In both cases, this requires the crate feature `getrandom` or `std`
+/// (enabled by default in `rand` but not in `rand_core`).
 ///
 /// # Blocking and error handling
 ///

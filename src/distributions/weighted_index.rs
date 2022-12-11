@@ -25,8 +25,10 @@ use serde::{Serialize, Deserialize};
 /// Sampling a `WeightedIndex` distribution returns the index of a randomly
 /// selected element from the iterator used when the `WeightedIndex` was
 /// created. The chance of a given element being picked is proportional to the
-/// value of the element. The weights can use any type `X` for which an
-/// implementation of [`Uniform<X>`] exists.
+/// weight of the element. The weights can use any type `X` for which an
+/// implementation of [`Uniform<X>`] exists. The implementation guarantees that
+/// elements with zero weight are never picked, even when the weights are
+/// floating point numbers.
 ///
 /// # Performance
 ///
@@ -42,8 +44,8 @@ use serde::{Serialize, Deserialize};
 /// weights of type `X`, where `N` is the number of weights. However, since
 /// `Vec` doesn't guarantee a particular growth strategy, additional memory
 /// might be allocated but not used. Since the `WeightedIndex` object also
-/// contains, this might cause additional allocations, though for primitive
-/// types, [`Uniform<X>`] doesn't allocate any memory.
+/// contains an instance of `X::Sampler`, this might cause additional allocations,
+/// though for primitive types, [`Uniform<X>`] doesn't allocate any memory.
 ///
 /// Sampling from `WeightedIndex` will result in a single call to
 /// `Uniform<X>::sample` (method of the [`Distribution`] trait), which typically
@@ -65,7 +67,7 @@ use serde::{Serialize, Deserialize};
 ///     println!("{}", choices[dist.sample(&mut rng)]);
 /// }
 ///
-/// let items = [('a', 0), ('b', 3), ('c', 7)];
+/// let items = [('a', 0.0), ('b', 3.0), ('c', 7.0)];
 /// let dist2 = WeightedIndex::new(items.iter().map(|item| item.1)).unwrap();
 /// for _ in 0..100 {
 ///     // 0% chance to print 'a', 30% chance to print 'b', 70% chance to print 'c'

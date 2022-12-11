@@ -113,7 +113,6 @@ where
 impl<R, Rsdr: RngCore> RngCore for ReseedingRng<R, Rsdr>
 where
     R: BlockRngCore<Item = u32> + SeedableRng,
-    <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>,
 {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -209,8 +208,8 @@ where
         ReseedingCore {
             inner: rng,
             reseeder,
-            threshold: threshold as i64,
-            bytes_until_reseed: threshold as i64,
+            threshold,
+            bytes_until_reseed: threshold,
             fork_counter: 0,
         }
     }

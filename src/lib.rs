@@ -49,7 +49,7 @@
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![no_std]
-#![cfg_attr(feature = "simd_support", feature(stdsimd))]
+#![cfg_attr(feature = "simd_support", feature(stdsimd, portable_simd))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(
     clippy::float_cmp,
@@ -110,36 +110,10 @@ use crate::distributions::{Distribution, Standard};
 
 /// Generates a random value using the thread-local random number generator.
 ///
-/// This is simply a shortcut for `thread_rng().gen()`. See [`thread_rng`] for
-/// documentation of the entropy source and [`Standard`] for documentation of
-/// distributions and type-specific generation.
+/// This function is simply a shortcut for `thread_rng().gen()`:
 ///
-/// # Provided implementations
-///
-/// The following types have provided implementations that
-/// generate values with the following ranges and distributions:
-///
-/// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
-///   over all values of the type.
-/// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
-///   code points in the range `0...0x10_FFFF`, except for the range
-///   `0xD800...0xDFFF` (the surrogate code points). This includes
-///   unassigned/reserved code points.
-/// * `bool`: Generates `false` or `true`, each with probability 0.5.
-/// * Floating point types (`f32` and `f64`): Uniformly distributed in the
-///   half-open range `[0, 1)`. See notes below.
-/// * Wrapping integers (`Wrapping<T>`), besides the type identical to their
-///   normal integer variants.
-///
-/// Also supported is the generation of the following
-/// compound types where all component types are supported:
-///
-/// *   Tuples (up to 12 elements): each element is generated sequentially.
-/// *   Arrays (up to 32 elements): each element is generated sequentially;
-///     see also [`Rng::fill`] which supports arbitrary array length for integer
-///     types and tends to be faster for `u32` and smaller types.
-/// *   `Option<T>` first generates a `bool`, and if true generates and returns
-///     `Some(value)` where `value: T`, otherwise returning `None`.
+/// -   See [`ThreadRng`] for documentation of the generator and security
+/// -   See [`Standard`] for documentation of supported types and distributions
 ///
 /// # Examples
 ///
@@ -177,6 +151,7 @@ use crate::distributions::{Distribution, Standard};
 /// ```
 ///
 /// [`Standard`]: distributions::Standard
+/// [`ThreadRng`]: rngs::ThreadRng
 #[cfg(all(feature = "std", feature = "std_rng"))]
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng"))))]
 #[inline]
