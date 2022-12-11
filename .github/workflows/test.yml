@@ -46,7 +46,8 @@ jobs:
             # Test both windows-gnu and windows-msvc; use beta rust on one
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            toolchain: 1.56.0 # MSRV
+            variant: MSRV
+            toolchain: 1.56.0
           - os: ubuntu-latest
             deps: sudo apt-get update ; sudo apt install gcc-multilib
             target: i686-unknown-linux-gnu
@@ -58,6 +59,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: MSRV
+        if: ${{ matrix.variant == 'MSRV' }}
+        run: cp Cargo.lock.msrv Cargo.lock
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@master
         with:
@@ -66,7 +70,10 @@ jobs:
       - run: ${{ matrix.deps }}
       - name: Maybe minimal versions
         if: ${{ matrix.variant == 'minimal_versions' }}
-        run: cargo generate-lockfile -Z minimal-versions
+        run: |
+          cargo generate-lockfile -Z minimal-versions
+          # Overrides for dependencies with incorrect requirements (may need periodic updating)
+          cargo update -p regex --precise 1.5.1
       - name: Maybe nightly
         if: ${{ matrix.toolchain == 'nightly' }}
         run: |

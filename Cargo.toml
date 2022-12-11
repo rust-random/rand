@@ -74,3 +74,4 @@ rand_pcg = { path = "rand_pcg", version = "0.4.0" }
 # Only to test serde1
 bincode = "1.2.1"
 rayon = "1.5.3"
+criterion = { version = "0.4" }
