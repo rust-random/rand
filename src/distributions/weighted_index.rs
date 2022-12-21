@@ -229,7 +229,7 @@ where X: SampleUniform + PartialOrd
         use ::core::cmp::Ordering;
         let chosen_weight = self.weight_distribution.sample(rng);
         // Find the first item which has a weight *higher* than the chosen weight.
-        self.cumulative_weights.partition_point(|w| w <= chosen_weight)
+        self.cumulative_weights.partition_point(|&w| w <= chosen_weight)
     }
 }
 
