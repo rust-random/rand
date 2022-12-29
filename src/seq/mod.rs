@@ -725,7 +725,7 @@ mod test {
                 .choose_multiple(&mut r, 8)
                 .cloned()
                 .collect::<Vec<char>>(),
-            &['d', 'm', 'b', 'n', 'c', 'k', 'h', 'e']
+            &['d', 'm', 'n', 'k', 'h', 'e', 'b', 'c']
         );
 
         #[cfg(feature = "alloc")]
