@@ -8,6 +8,13 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [Unreleased API changing release]
+
+### Other
+- Simpler and faster implementation of Floyd's F2 (#1277). This
+  changes some outputs from `rand::seq::index::sample` and
+  `rand::seq::SliceRandom::choose_multiple`.
+
 ## [0.8.5] - 2021-08-20
 ### Fixes
 - Fix build on non-32/64-bit architectures (#1144)
