@@ -4,6 +4,7 @@ use crate::{Rng, RngCore};
 pub(crate) struct IncreasingUniform<R: RngCore> {
     pub rng: R,
     n: u32,
+    //TODO(opt): this should depend on RNG word size
     chunk: u32, //Chunk is a random number in [0, (n + 1) * (n + 2) *..* (n + chunk_remaining) )
     chunk_remaining: u8,
 }
