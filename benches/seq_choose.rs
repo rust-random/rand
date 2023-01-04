@@ -21,6 +21,7 @@ criterion_main!(benches);
 pub fn bench(c: &mut Criterion) {
     bench_rng::<rand_chacha::ChaCha20Rng>(c, "ChaCha20");
     bench_rng::<rand_pcg::Pcg32>(c, "Pcg32");
+    bench_rng::<rand_pcg::Pcg64>(c, "Pcg64");
 }
 
 fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
