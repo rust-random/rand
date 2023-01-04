@@ -80,3 +80,8 @@ criterion = { version = "0.4" }
 name = "seq_choose"
 path = "benches/seq_choose.rs"
 harness = false
+
+[[bench]]
+name = "shuffle"
+path = "benches/shuffle.rs"
+harness = false
