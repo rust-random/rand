@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 // Copyright 2018-2022 Developers of the Rand project.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -13,7 +11,7 @@ use rand::SeedableRng;
 
 criterion_group!(
 name = benches;
-config = Criterion::default().warm_up_time(Duration::from_millis(500)).measurement_time(Duration::from_millis(1000));
+config = Criterion::default();
 targets = bench
 );
 criterion_main!(benches);
