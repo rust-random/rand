@@ -2,7 +2,7 @@ use crate::RngCore;
 
 pub(crate) struct CoinFlipper<R: RngCore> {
     pub rng: R,
-    chunk: u32,
+    chunk: u32, //TODO(opt): this should depend on RNG word size
     chunk_remaining: u32,
 }
 
