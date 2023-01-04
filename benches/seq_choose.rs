@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 // Copyright 2018-2022 Developers of the Rand project.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -5,74 +7,52 @@
 // <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-use criterion::{criterion_group, criterion_main, Criterion, black_box};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::prelude::*;
-
-use rand_chacha::ChaCha20Rng as CryptoRng;
-// We force use of 32-bit RNG since seq code is optimised for use with 32-bit
-// generators on all platforms.
-use rand_pcg::Pcg32 as SmallRng;
+use rand::SeedableRng;
 
 criterion_group!(
 name = benches;
-config = Criterion::default();
+config = Criterion::default().warm_up_time(Duration::from_millis(500)).measurement_time(Duration::from_millis(1000));
 targets = bench
 );
 criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
+    bench_rng::<rand_chacha::ChaCha20Rng>(c, "ChaCha20");
+    bench_rng::<rand_pcg::Pcg32>(c, "Pcg32");
+}
+
+fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
     for length in [1, 2, 3, 10, 100, 1000].map(|x| black_box(x)) {
-        c.bench_function(format!("choose_size-hinted_from_{length}_small").as_str(), |b| {
-            let mut rng = SmallRng::seed_from_u64(123);
-            b.iter(|| choose_size_hinted(length, &mut rng))
-        });
-
-        c.bench_function(format!("choose_stable_from_{length}_small").as_str(), |b| {
-            let mut rng = SmallRng::seed_from_u64(123);
-            b.iter(|| choose_stable(length, &mut rng))
-        });
-
         c.bench_function(
-            format!("choose_unhinted_from_{length}_small").as_str(),
+            format!("choose_size-hinted_from_{length}_{rng_name}").as_str(),
             |b| {
-                let mut rng = SmallRng::seed_from_u64(123);
-                b.iter(|| choose_unhinted(length, &mut rng))
+                let mut rng = Rng::seed_from_u64(123);
+                b.iter(|| choose_size_hinted(length, &mut rng))
             },
         );
 
         c.bench_function(
-            format!("choose_windowed_from_{length}_small").as_str(),
+            format!("choose_stable_from_{length}_{rng_name}").as_str(),
             |b| {
-                let mut rng = SmallRng::seed_from_u64(123);
-                b.iter(|| choose_windowed(length, 7, &mut rng))
-            },
-        );
-
-        c.bench_function(format!("choose_size-hinted-from_{length}_crypto").as_str(), |b| {
-            let mut rng = CryptoRng::seed_from_u64(123);
-            b.iter(|| choose_size_hinted(length, &mut rng))
-        });
-
-        c.bench_function(
-            format!("choose_stable_from_{length}_crypto").as_str(),
-            |b| {
-                let mut rng = CryptoRng::seed_from_u64(123);
+                let mut rng = Rng::seed_from_u64(123);
                 b.iter(|| choose_stable(length, &mut rng))
             },
         );
 
         c.bench_function(
-            format!("choose_unhinted_from_{length}_crypto").as_str(),
+            format!("choose_unhinted_from_{length}_{rng_name}").as_str(),
             |b| {
-                let mut rng = CryptoRng::seed_from_u64(123);
+                let mut rng = Rng::seed_from_u64(123);
                 b.iter(|| choose_unhinted(length, &mut rng))
             },
         );
 
         c.bench_function(
-            format!("choose_windowed_from_{length}_crypto").as_str(),
+            format!("choose_windowed_from_{length}_{rng_name}").as_str(),
             |b| {
-                let mut rng = CryptoRng::seed_from_u64(123);
+                let mut rng = Rng::seed_from_u64(123);
                 b.iter(|| choose_windowed(length, 7, &mut rng))
             },
         );
@@ -104,7 +84,8 @@ fn choose_windowed<R: Rng>(max: usize, window_size: usize, rng: &mut R) -> Optio
 
 #[derive(Clone)]
 struct UnhintedIterator<I: Iterator + Clone> {
-    iter: I, }
+    iter: I,
+}
 impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
     type Item = I::Item;
 
@@ -115,7 +96,9 @@ impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
 
 #[derive(Clone)]
 struct WindowHintedIterator<I: ExactSizeIterator + Iterator + Clone> {
-    iter: I, window_size: usize, }
+    iter: I,
+    window_size: usize,
+}
 impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<I> {
     type Item = I::Item;
 
