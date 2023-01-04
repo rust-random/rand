@@ -329,12 +329,10 @@ pub trait IteratorRandom: Iterator + Sized {
         // when the Iterator is an ExactSizeIterator. This has a large performance impact on e.g.
         // seq_iter_choose_from_1000.
         if upper == Some(lower) {
-            return if lower == 0 {
-                None
-            }
-            else {
-                let index = if lower == 1 {0} else {gen_index(rng, lower)};
-                self.nth(index)
+            return match lower {
+                0 => None,
+                1 => self.next(),
+                _ => self.nth(gen_index(rng, lower)),
             };
         }
 
