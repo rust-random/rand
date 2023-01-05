@@ -13,9 +13,9 @@ extern crate test;
 
 use test::Bencher;
 
+use core::mem::size_of;
 use rand::prelude::*;
 use rand::seq::*;
-use core::mem::size_of;
 
 // We force use of 32-bit RNG since seq code is optimised for use with 32-bit
 // generators on all platforms.
@@ -73,76 +73,6 @@ seq_slice_choose_multiple!(seq_slice_choose_multiple_1_of_1000, 1, 1000);
 seq_slice_choose_multiple!(seq_slice_choose_multiple_950_of_1000, 950, 1000);
 seq_slice_choose_multiple!(seq_slice_choose_multiple_10_of_100, 10, 100);
 seq_slice_choose_multiple!(seq_slice_choose_multiple_90_of_100, 90, 100);
-
-#[bench]
-fn seq_iter_choose_from_1000(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x: &mut [usize] = &mut [1; 1000];
-    for (i, r) in x.iter_mut().enumerate() {
-        *r = i;
-    }
-    b.iter(|| {
-        let mut s = 0;
-        for _ in 0..RAND_BENCH_N {
-            s += x.iter().choose(&mut rng).unwrap();
-        }
-        s
-    });
-    b.bytes = size_of::<usize>() as u64 * crate::RAND_BENCH_N;
-}
-
-#[derive(Clone)]
-struct UnhintedIterator<I: Iterator + Clone> {
-    iter: I,
-}
-impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
-    type Item = I::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
-
-#[derive(Clone)]
-struct WindowHintedIterator<I: ExactSizeIterator + Iterator + Clone> {
-    iter: I,
-    window_size: usize,
-}
-impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<I> {
-    type Item = I::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        (core::cmp::min(self.iter.len(), self.window_size), None)
-    }
-}
-
-#[bench]
-fn seq_iter_unhinted_choose_from_1000(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x: &[usize] = &[1; 1000];
-    b.iter(|| {
-        UnhintedIterator { iter: x.iter() }
-            .choose(&mut rng)
-            .unwrap()
-    })
-}
-
-#[bench]
-fn seq_iter_window_hinted_choose_from_1000(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x: &[usize] = &[1; 1000];
-    b.iter(|| {
-        WindowHintedIterator {
-            iter: x.iter(),
-            window_size: 7,
-        }
-        .choose(&mut rng)
-    })
-}
 
 #[bench]
 fn seq_iter_choose_multiple_10_of_100(b: &mut Bencher) {
