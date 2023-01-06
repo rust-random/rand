@@ -32,6 +32,12 @@ impl<R: RngCore> IncreasingUniform<R> {
     pub fn next_index(&mut self) -> usize {
         let next_n = self.n + 1;
 
+        // There's room for further optimisation here:
+        // gen_range uses rejection sampling (or other method; see #1196) to avoid bias.
+        // When the initial sample is biased for range 0..bound
+        // it may still be viable to use for a smaller bound
+        // (especially if small biases are considered acceptable).
+
         let next_chunk_remaining = self.chunk_remaining.checked_sub(1).unwrap_or_else(|| {
             // If the chunk is empty, generate a new chunk
             let (bound, remaining) = calculate_bound_u32(next_n);
