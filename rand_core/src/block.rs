@@ -43,7 +43,7 @@
 //!     }
 //! }
 //!
-//! // optionally, also implement CryptoRng for MyRngCore
+//! // optionally, also implement CryptoBlockRng for MyRngCore
 //!
 //! // Final RNG.
 //! let mut rng = BlockRng::<MyRngCore>::seed_from_u64(0);
@@ -54,7 +54,7 @@
 //! [`fill_bytes`]: RngCore::fill_bytes
 
 use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
-use crate::{CryptoRng, Error, RngCore, SeedableRng};
+use crate::{Error, CryptoRng, RngCore, SeedableRng};
 use core::convert::AsRef;
 use core::fmt;
 #[cfg(feature = "serde1")]
@@ -76,6 +76,12 @@ pub trait BlockRngCore {
     /// Generate a new block of results.
     fn generate(&mut self, results: &mut Self::Results);
 }
+
+/// A marker trait used to indicate that an [`RngCore`] implementation is
+/// supposed to be cryptographically secure.
+///
+/// See [`CryptoRng`][crate::CryptoRng] docs for more information.
+pub trait CryptoBlockRng: BlockRngCore { }
 
 /// A wrapper type implementing [`RngCore`] for some type implementing
 /// [`BlockRngCore`] with `u32` array buffer; i.e. this can be used to implement
@@ -256,6 +262,8 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
     }
 }
 
+impl<R: CryptoBlockRng + BlockRngCore<Item = u32>> CryptoRng for BlockRng<R> {}
+
 /// A wrapper type implementing [`RngCore`] for some type implementing
 /// [`BlockRngCore`] with `u64` array buffer; i.e. this can be used to implement
 /// a full RNG from just a `generate` function.
@@ -422,7 +430,7 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng64<R> {
     }
 }
 
-impl<R: BlockRngCore + CryptoRng> CryptoRng for BlockRng<R> {}
+impl<R: CryptoBlockRng + BlockRngCore<Item = u64>> CryptoRng for BlockRng64<R> {}
 
 #[cfg(test)]
 mod test {

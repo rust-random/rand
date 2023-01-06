@@ -13,7 +13,7 @@
 
 use self::core::fmt;
 use crate::guts::ChaCha;
-use rand_core::block::{BlockRng, BlockRngCore};
+use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
 #[cfg(feature = "serde1")] use serde::{Serialize, Deserialize, Serializer, Deserializer};
@@ -99,7 +99,7 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl CryptoRng for $ChaChaXCore {}
+        impl CryptoBlockRng for $ChaChaXCore {}
 
         /// A cryptographically secure random number generator that uses the ChaCha algorithm.
         ///
@@ -626,12 +626,12 @@ mod test {
 
     #[test]
     fn test_trait_objects() {
-        use rand_core::CryptoRngCore;
+        use rand_core::CryptoRng;
 
-        let rng = &mut ChaChaRng::from_seed(Default::default()) as &mut dyn CryptoRngCore;
-        let r1 = rng.next_u64();
-        let rng: &mut dyn RngCore = rng.as_rngcore();
-        let r2 = rng.next_u64();
-        assert_ne!(r1, r2);
+        let mut rng1 = ChaChaRng::from_seed(Default::default());
+        let rng2 = &mut rng1.clone() as &mut dyn CryptoRng;
+        for _ in 0..1000 {
+            assert_eq!(rng1.next_u64(), rng2.next_u64());
+        }
     }
 }
