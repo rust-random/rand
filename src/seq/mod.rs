@@ -642,24 +642,12 @@ impl<T> SliceRandom for [T] {
         // The algorithm below is based on Durstenfeld's algorithm for the
         // [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
         // for an unbiased permutation.
-        // It ensures that the last `amount` elements of the slice are randomly selected from the whole slice.
-
-        // The loop invariant is that elements in the range [m,i) are randomly selected from the first i elements.
-        // This is true initially because the range is empty as i = m.
-        // The loop body swaps the element at i with a random one of the first i + 1 elements, then increments i.
-        // After the swap, the element at i will be randomly selected from the first i + 1 elements.
-        // Because of the invariant, before the swap, every element in the range [m,i) was randomly selected from the first i elements.
-        // Each of those elements has a 1 in i chance of being swapped with the element at i.
-        // Therefore, after the swap, the elements in the range [m,i) will be randomly selected from the first i + 1 elements.
-        // But the element at i was also randomly selected from the first i + 1 elements.
-        // So the elements in the range [m,i+1) are all randomly selected from the first i + 1 elements.
-        // So before we increment i, the elements in the range [m,i + 1) are randomly selected from the first i + 1 elements.
-        // Therefore, the loop invariant holds.        
-        // When the loop exits, elements in the range [m,length] will be randomly selected from the whole slice.
+        // It ensures that the last `amount` elements of the slice
+        // are randomly selected from the whole slice.
         
-        
-        //`IncreasingUniform::next_index()` is about twice as fast as `gen_index` but only works for 32 bit integers
-        //Therefore we must use the slow method if the slice is longer than that.
+        //`IncreasingUniform::next_index()` is faster than `gen_index`
+        //but only works for 32 bit integers
+        //So we must use the slow method if the slice is longer than that.
         if self.len() < (u32::MAX as usize) {
             let mut chooser = IncreasingUniform::new(rng, m as u32);
             for i in m..self.len() {

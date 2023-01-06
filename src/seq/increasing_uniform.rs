@@ -1,11 +1,12 @@
 use crate::{Rng, RngCore};
 
-/// Similar to a Uniform distribution, but after returning a number in the range [0,n], n is increased by 1.
+/// Similar to a Uniform distribution,
+/// but after returning a number in the range [0,n], n is increased by 1.
 pub(crate) struct IncreasingUniform<R: RngCore> {
     pub rng: R,
     n: u32,
-    //TODO(opt): this should depend on RNG word size
-    chunk: u32, //Chunk is a random number in [0, (n + 1) * (n + 2) *..* (n + chunk_remaining) )
+    // Chunk is a random number in [0, (n + 1) * (n + 2) *..* (n + chunk_remaining) )
+    chunk: u32,
     chunk_remaining: u8,
 }
 
@@ -13,7 +14,9 @@ impl<R: RngCore> IncreasingUniform<R> {
     /// Create a dice roller.
     /// The next item returned will be a random number in the range [0,n]
     pub fn new(rng: R, n: u32) -> Self {
-        let chunk_remaining = if n == 0 { 1 } else { 0 }; // If n = 0, the first number returned will always be 0, so we don't need to generate a random number
+        // If n = 0, the first number returned will always be 0
+        // so we don't need to generate a random number
+        let chunk_remaining = if n == 0 { 1 } else { 0 };
         Self {
             rng,
             n,
@@ -30,22 +33,24 @@ impl<R: RngCore> IncreasingUniform<R> {
         let next_n = self.n + 1;
 
         let next_chunk_remaining = self.chunk_remaining.checked_sub(1).unwrap_or_else(|| {
-            //If the chunk is empty, generate a new chunk
+            // If the chunk is empty, generate a new chunk
             let (bound, remaining) = calculate_bound_u32(next_n);
-            //bound = (n + 1) * (n + 2) *..* (n + remaining)
+            // bound = (n + 1) * (n + 2) *..* (n + remaining)
             self.chunk = self.rng.gen_range(0..bound);
-            // Chunk is a random number in [0, (n + 1) * (n + 2) *..* (n + remaining) )
+            // Chunk is a random number in
+            // [0, (n + 1) * (n + 2) *..* (n + remaining) )
 
             remaining - 1
         });
 
         let result = if next_chunk_remaining == 0 {
-            //If the chunk is empty we asr
-            self.chunk as usize
             // `chunk` is a random number in the range [0..n+1)
-            // Because `chunk_remaining` is about to be set to zero, we do not need to clear the chunk here
+            // Because `chunk_remaining` is about to be set to zero
+            // we do not need to clear the chunk here
+            self.chunk as usize
         } else {
-            // `chunk` is a random number in a range that is a multiple of n+1 so r will be a random number in [0..n+1)
+            // `chunk` is a random number in a range that is a multiple of n+1
+            // so r will be a random number in [0..n+1)
             let r = self.chunk % next_n;
             self.chunk /= next_n;
             r as usize
@@ -70,7 +75,8 @@ fn calculate_bound_u32(m: u32) -> (u32, u8) {
                 product = p;
                 current += 1;
             } else {
-                let count = (current - m) as u8; //Maximum value of 13 for when min is 1 or 2
+                // Count has a maximum value of 13 for when min is 1 or 2
+                let count = (current - m) as u8;
                 return (product, count);
             }
         }
@@ -78,7 +84,9 @@ fn calculate_bound_u32(m: u32) -> (u32, u8) {
 
     const RESULT2: (u32, u8) = inner(2);
     if m == 2 {
-        return RESULT2; //Making this value a constant instead of recalculating it gives a significant (~50%) performance boost for small shuffles
+        // Making this value a constant instead of recalculating it
+        // gives a significant (~50%) performance boost for small shuffles
+        return RESULT2;
     }
 
     inner(m)
