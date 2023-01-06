@@ -29,7 +29,6 @@ mod coin_flipper;
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod index;
 
-#[cfg(feature = "alloc")]
 mod increasing_uniform;
 
 #[cfg(feature = "alloc")]
@@ -1070,7 +1069,7 @@ mod test {
             *slice.last_mut().unwrap() = last_val;
         }
         let mut counts = [0i32; 24];
-        for _ in 0..10000 {
+        for _ in 0..100000 {
             let mut arr: [usize; 4] = [0, 1, 2, 3];
             arr.shuffle(&mut r);
             let mut permutation = 0usize;
