@@ -67,6 +67,7 @@ impl<R: RngCore> IncreasingUniform<R> {
 fn calculate_bound_u32(m: u32) -> (u32, u8) {
     #[inline]
     const fn inner(m: u32) -> (u32, u8) {
+        debug_assert!(m > 0);
         let mut product = m;
         let mut current = m + 1;
 
