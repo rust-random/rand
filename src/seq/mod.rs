@@ -1,4 +1,4 @@
-// Copyright 2018 Developers of the Rand project.
+// Copyright 2018-2023 Developers of the Rand project.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -29,6 +29,8 @@ mod coin_flipper;
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod index;
 
+mod increasing_uniform;
+
 #[cfg(feature = "alloc")]
 use core::ops::Index;
 
@@ -42,6 +44,7 @@ use crate::distributions::WeightedError;
 use crate::Rng;
 
 use self::coin_flipper::CoinFlipper;
+use self::increasing_uniform::IncreasingUniform;
 
 /// Extension trait on slices, providing random mutation and sampling methods.
 ///
@@ -620,10 +623,11 @@ impl<T> SliceRandom for [T] {
     where
         R: Rng + ?Sized,
     {
-        for i in (1..self.len()).rev() {
-            // invariant: elements with index > i have been locked in place.
-            self.swap(i, gen_index(rng, i + 1));
+        if self.len() <= 1 {
+            // There is no need to shuffle an empty or single element slice
+            return;
         }
+        self.partial_shuffle(rng, self.len());
     }
 
     fn partial_shuffle<R>(
@@ -632,19 +636,30 @@ impl<T> SliceRandom for [T] {
     where
         R: Rng + ?Sized,
     {
-        // This applies Durstenfeld's algorithm for the
+        let m = self.len().saturating_sub(amount);
+
+        // The algorithm below is based on Durstenfeld's algorithm for the
         // [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
-        // for an unbiased permutation, but exits early after choosing `amount`
-        // elements.
-
-        let len = self.len();
-        let end = if amount >= len { 0 } else { len - amount };
-
-        for i in (end..len).rev() {
-            // invariant: elements with index > i have been locked in place.
-            self.swap(i, gen_index(rng, i + 1));
+        // for an unbiased permutation.
+        // It ensures that the last `amount` elements of the slice
+        // are randomly selected from the whole slice.
+        
+        //`IncreasingUniform::next_index()` is faster than `gen_index`
+        //but only works for 32 bit integers
+        //So we must use the slow method if the slice is longer than that.
+        if self.len() < (u32::MAX as usize) {
+            let mut chooser = IncreasingUniform::new(rng, m as u32);
+            for i in m..self.len() {
+                let index = chooser.next_index();
+                self.swap(i, index);
+            }
+        } else {            
+            for i in m..self.len() {
+                let index = gen_index(rng, i + 1);
+                self.swap(i, index);
+            }
         }
-        let r = self.split_at_mut(end);
+        let r = self.split_at_mut(m);
         (r.1, r.0)
     }
 }
@@ -765,11 +780,11 @@ mod test {
 
         let mut r = crate::test::rng(414);
         nums.shuffle(&mut r);
-        assert_eq!(nums, [9, 5, 3, 10, 7, 12, 8, 11, 6, 4, 0, 2, 1]);
+        assert_eq!(nums, [5, 11, 0, 8, 7, 12, 6, 4, 9, 3, 1, 2, 10]);
         nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         let res = nums.partial_shuffle(&mut r, 6);
-        assert_eq!(res.0, &mut [7, 4, 8, 6, 9, 3]);
-        assert_eq!(res.1, &mut [0, 1, 2, 12, 11, 5, 10]);
+        assert_eq!(res.0, &mut [7, 12, 6, 8, 1, 9]);
+        assert_eq!(res.1, &mut [0, 11, 2, 3, 4, 5, 10]);
     }
 
     #[derive(Clone)]
