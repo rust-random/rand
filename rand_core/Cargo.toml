@@ -31,4 +31,4 @@ serde1 = ["serde"] # enables serde for BlockRng wrapper
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }
-getrandom = { version = "0.2", optional = true }
+getrandom = { version = "0.2", optional = true, features = ["js"] }
