@@ -636,6 +636,190 @@ uniform_int_canon_reduced_impl!(i32, u32);
 uniform_int_canon_reduced_impl!(i64, u64, u32, 32);
 uniform_int_canon_reduced_impl!(i128, u128, u64, 64);
 
+macro_rules! uniform_int_canon_u32_2_impl {
+    // Bits <= 32
+    ($ty:ty, $uty:ident) => {
+        impl UniformInt<$ty> {
+            /// Sample, Canon's method variant
+            #[inline]
+            pub fn sample_canon_u32_2<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $uty as u32;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let (mut result, lo1) = rng.gen::<u32>().wmul(range);
+
+                if lo1 > range.wrapping_neg() {
+                    // Generate more bits. Sample is multiplied by 2.pow(-64),
+                    // so hi2 is multiplied by 2.pow(-32):
+                    let (hi2, lo2) = rng.gen::<u32>().wmul(range);
+                    if let Some(sum) = lo1.checked_add(hi2) {
+                        // No overflow yet; try adding more bits
+                        if sum == u32::MAX {
+                            let (hi3, _) = rng.gen::<u32>().wmul(range);
+                            let is_overflow = lo2.checked_add(hi3).is_none();
+                            result += is_overflow as u32;
+                        }
+                    } else {
+                        // Overflow: short path
+                        result += 1;
+                    }
+                }
+
+                self.low.wrapping_add(result as $ty)
+            }
+
+            /// Sample single inclusive, using Canon's method variant
+            #[inline]
+            pub fn sample_single_inclusive_canon_u32_2<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> $ty
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                assert!(
+                    low <= high,
+                    "UniformSampler::sample_single_inclusive: low > high"
+                );
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as u32;
+                if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
+                    return rng.gen();
+                }
+
+                let (mut result, lo1) = rng.gen::<u32>().wmul(range);
+
+                if lo1 > range.wrapping_neg() {
+                    // Generate more bits. Sample is multiplied by 2.pow(-64),
+                    // so hi2 is multiplied by 2.pow(-32):
+                    let (hi2, lo2) = rng.gen::<u32>().wmul(range);
+                    if let Some(sum) = lo1.checked_add(hi2) {
+                        // No overflow yet; try adding more bits
+                        if sum == u32::MAX {
+                            let (hi3, _) = rng.gen::<u32>().wmul(range);
+                            let is_overflow = lo2.checked_add(hi3).is_none();
+                            result += is_overflow as u32;
+                        }
+                    } else {
+                        // Overflow: short path
+                        result += 1;
+                    }
+                }
+
+                low.wrapping_add(result as $ty)
+            }
+        }
+    };
+
+    // Bits > 32
+    (k#half, $ty:ty, $uty:ident) => {
+        impl UniformInt<$ty> {
+            /// Sample, Canon's method variant
+            #[inline]
+            pub fn sample_canon_u32_2<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $uty;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let (mut result, lo1) = rng.gen::<$uty>().wmul(range);
+
+                if lo1 > range.wrapping_neg() {
+                    // Generate more bits. For i128, sample is multiplied by 2.pow(-160), so
+                    // hi2 is multiplied by 2.pow(-32):
+                    let (hi2, lo2) = (rng.gen::<u32>() as $uty).wmul(range);
+                    debug_assert_eq!(hi2 >> 32, 0 as $uty);
+                    let lshift = $uty::BITS - 32;
+                    if let Some(sum) = lo1.checked_add((hi2 << lshift) | (lo2 >> 32)) {
+                        // No overflow yet; try adding more bits
+                        // Note: hi3 < 2.pow(32) so we may know extra bits won't overflow
+                        if sum > ((u32::MAX as $uty) << lshift) {
+                            // Sample is multiplied by 2.pow(-192) for i128,
+                            // so hi3 is multiplied by 2.pow(-64)
+                            let (hi3, lo3) = (rng.gen::<u32>() as $uty).wmul(range);
+                            let v = uniform_int_canon_u32_2_impl!(k#add $uty, hi3, lo3);
+                            let is_overflow = sum.checked_add(v).is_none();
+                            result += is_overflow as $uty;
+                        }
+                    } else {
+                        // Overflow: short path
+                        result += 1;
+                    }
+                }
+
+                self.low.wrapping_add(result as $ty)
+            }
+
+            /// Sample single inclusive, using Canon's method variant
+            #[inline]
+            pub fn sample_single_inclusive_canon_u32_2<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> $ty
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                assert!(
+                    low <= high,
+                    "UniformSampler::sample_single_inclusive: low > high"
+                );
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
+                if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
+                    return rng.gen();
+                }
+
+                let (mut result, lo1) = rng.gen::<$uty>().wmul(range);
+
+                if lo1 > range.wrapping_neg() {
+                    // Generate more bits. For i128, sample is multiplied by 2.pow(-192), so
+                    // hi2 is multiplied by 2.pow(-64):
+                    let (hi2, lo2) = (rng.gen::<u32>() as $uty).wmul(range);
+                    debug_assert_eq!(hi2 >> 32, 0 as $uty);
+                    let lshift = $uty::BITS - 32;
+                    if let Some(sum) = lo1.checked_add((hi2 << lshift) | (lo2 >> 32)) {
+                        // No overflow yet; try adding more bits
+                        // Note: hi3 < 2.pow(32) so we may know extra bits won't overflow
+                        if sum > ((u32::MAX as $uty) << lshift) {
+                            // Sample is multiplied by 2.pow(-192) for i128,
+                            // so hi3 is multiplied by 2.pow(-64)
+                            let (hi3, lo3) = (rng.gen::<u32>() as $uty).wmul(range);
+                            let v = uniform_int_canon_u32_2_impl!(k#add $uty, hi3, lo3);
+                            let is_overflow = sum.checked_add(v).is_none();
+                            result += is_overflow as $uty;
+                        }
+                    } else {
+                        // Overflow: short path
+                        result += 1;
+                    }
+                }
+
+                low.wrapping_add(result as $ty)
+            }
+        }
+    };
+
+    // Helper
+    (k#add u64, $hi:expr, $lo:expr) => {
+        { let _ = $lo; $hi }
+    };
+    (k#add u128, $hi:expr, $lo:expr) => {
+        ($hi << 64) | ($lo >> 64)
+    };
+}
+
+uniform_int_canon_u32_2_impl!(i8, u8);
+uniform_int_canon_u32_2_impl!(i16, u16);
+uniform_int_canon_u32_2_impl!(i32, u32);
+uniform_int_canon_u32_2_impl!(k#half, i64, u64);
+uniform_int_canon_u32_2_impl!(k#half, i128, u128);
+
 #[cfg(test)]
 mod tests {
     use super::*;
