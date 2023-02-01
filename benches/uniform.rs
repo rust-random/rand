@@ -17,7 +17,6 @@
 //! -   Canon-reduced: for 8-, 16- and 32-bit types this is just biased widening multiply; for
 //!     64- and 128-bit types this is Canon's method with half-size sample (single step)
 //! -   Canon-Lemire: as Canon but with more precise bias-reduction step trigger
-//! -   Bitmask: bitmasking + rejection method
 
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main};
@@ -60,7 +59,6 @@ macro_rules! single_random {
         single_random!("Canon32", $R, $T, $U, sample_single_inclusive_canon_u32, $g);
         single_random!("Canon-reduced", $R, $T, $U, sample_single_inclusive_canon_reduced, $g);
         single_random!("Canon-Lemire", $R, $T, $U, sample_inclusive_canon_lemire, $g);
-        single_random!("Bitmask", $R, $T, $U, sample_single_inclusive_bitmask, $g);
     };
 
     ($c:expr, $T:ty, $U:ty) => {{
@@ -122,7 +120,6 @@ macro_rules! distr_random {
         distr_random!("Canon32", $T, $U, sample_canon_u32, g);
         distr_random!("Canon-reduced", $T, $U, sample_canon_reduced, g);
         distr_random!("Canon-Lemire", $T, $U, sample_canon_lemire, g);
-        distr_random!("Bitmask", $T, $U, sample_bitmask, g);
     }};
 }
 

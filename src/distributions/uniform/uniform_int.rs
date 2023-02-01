@@ -296,28 +296,6 @@ macro_rules! uniform_int_impl {
                 self.low.wrapping_add(result as $ty)
             }
 
-            /// Sample, Bitmask method
-            #[inline]
-            pub fn sample_bitmask<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let mut range = self.range as $uty as $u32_or_uty;
-                if range == 0 {
-                    return rng.gen();
-                }
-
-                // the old impl use a mix of methods for different integer sizes, we only use
-                // the lz method here for a better comparison.
-
-                let mut mask = $u32_or_uty::max_value();
-                range -= 1;
-                mask >>= (range | 1).leading_zeros();
-                loop {
-                    let x = rng.gen::<$u32_or_uty>() & mask;
-                    if x <= range {
-                        return self.low.wrapping_add(x as $ty);
-                    }
-                }
-            }
-
             /// Sample single inclusive, using ONeill's method
             #[inline]
             pub fn sample_single_inclusive_oneill<R: Rng + ?Sized, B1, B2>(
@@ -515,41 +493,6 @@ macro_rules! uniform_int_impl {
                 }
 
                 low.wrapping_add(result as $ty)
-            }
-
-            /// Sample single inclusive, using the Bitmask method
-            #[inline]
-            pub fn sample_single_inclusive_bitmask<R: Rng + ?Sized, B1, B2>(
-                low_b: B1, high_b: B2, rng: &mut R,
-            ) -> $ty
-            where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
-            {
-                let low = *low_b.borrow();
-                let high = *high_b.borrow();
-                assert!(
-                    low <= high,
-                    "UniformSampler::sample_single_inclusive: low > high"
-                );
-                let mut range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u32_or_uty;
-                if range == 0 {
-                    // Range is MAX+1 (unrepresentable), so we need a special case
-                    return rng.gen();
-                }
-
-                // the old impl use a mix of methods for different integer sizes, we only use
-                // the lz method here for a better comparison.
-
-                let mut mask = $u32_or_uty::max_value();
-                range -= 1;
-                mask >>= (range | 1).leading_zeros();
-                loop {
-                    let x = rng.gen::<$u32_or_uty>() & mask;
-                    if x <= range {
-                        return low.wrapping_add(x as $ty);
-                    }
-                }
             }
         }
     };
