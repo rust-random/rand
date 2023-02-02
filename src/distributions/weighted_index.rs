@@ -141,6 +141,10 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// allocation internally.
     ///
     /// In case of error, `self` is not modified.
+    /// 
+    /// Note: Updating floating-point weights may cause slight inaccuracies in the total weight.
+    ///       This method may not return `WeightedError::AllWeightsZero` when all weights
+    ///       are zero if using floating-point weights. 
     pub fn update_weights(&mut self, new_weights: &[(usize, &X)]) -> Result<(), WeightedError>
     where X: for<'a> ::core::ops::AddAssign<&'a X>
             + for<'a> ::core::ops::SubAssign<&'a X>
