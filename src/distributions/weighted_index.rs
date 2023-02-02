@@ -142,7 +142,6 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     ///
     /// In case of error, `self` is not modified.
     /// 
-```suggestion
     /// Note: Updating floating-point weights may cause slight inaccuracies in the total weight.
     ///       This method may not return `WeightedError::AllWeightsZero` when all weights
     ///       are zero if using floating-point weights. 
