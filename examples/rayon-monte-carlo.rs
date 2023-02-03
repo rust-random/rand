@@ -49,7 +49,7 @@ static BATCH_SIZE: u64 = 10_000;
 static BATCHES: u64 = 1000;
 
 fn main() {
-    let range = Uniform::new(-1.0f64, 1.0);
+    let range = Uniform::new(-1.0f64, 1.0).unwrap();
 
     let in_circle = (0..BATCHES)
         .into_par_iter()

@@ -106,7 +106,7 @@
 use core::fmt;
 use core::time::Duration;
 use core::ops::{Range, RangeInclusive};
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use crate::distributions::float::IntoFloat;
 use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAsSIMD, WideningMultiply};
