@@ -230,7 +230,6 @@ impl<X> Distribution<usize> for WeightedIndex<X>
 where X: SampleUniform + PartialOrd
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        use ::core::cmp::Ordering;
         let chosen_weight = self.weight_distribution.sample(rng);
         // Find the first item which has a weight *higher* than the chosen weight.
         self.cumulative_weights.partition_point(|w| w <= &chosen_weight)
