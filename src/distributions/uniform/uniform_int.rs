@@ -633,6 +633,7 @@ macro_rules! uniform_int_canon_reduced_impl {
 uniform_int_canon_reduced_impl!(i8, u8);
 uniform_int_canon_reduced_impl!(i16, u16);
 uniform_int_canon_reduced_impl!(i32, u32);
+uniform_int_canon_reduced_impl!(u64, u64, u32, 32);
 uniform_int_canon_reduced_impl!(i64, u64, u32, 32);
 uniform_int_canon_reduced_impl!(i128, u128, u64, 64);
 
@@ -817,6 +818,7 @@ macro_rules! uniform_int_canon_u32_2_impl {
 uniform_int_canon_u32_2_impl!(i8, u8);
 uniform_int_canon_u32_2_impl!(i16, u16);
 uniform_int_canon_u32_2_impl!(i32, u32);
+uniform_int_canon_u32_2_impl!(k#half, u64, u64);
 uniform_int_canon_u32_2_impl!(k#half, i64, u64);
 uniform_int_canon_u32_2_impl!(k#half, i128, u128);
 
