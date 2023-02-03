@@ -380,32 +380,17 @@ where
 /// This implementation uses `O(amount)` memory and `O(amount^2)` time.
 fn sample_floyd<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
 where R: Rng + ?Sized {
-    // For small amount we use Floyd's fully-shuffled variant. For larger
-    // amounts this is slow due to Vec::insert performance, so we shuffle
-    // afterwards. Benchmarks show little overhead from extra logic.
-    let floyd_shuffle = amount < 50;
-
+    // Note that the values returned by `rng.gen_range()` can be
+    // inferred from the returned vector by working backwards from
+    // the last entry. This bijection proves the algorithm fair.
     debug_assert!(amount <= length);
     let mut indices = Vec::with_capacity(amount as usize);
     for j in length - amount..length {
         let t = rng.gen_range(0..=j);
-        if floyd_shuffle {
-            if let Some(pos) = indices.iter().position(|&x| x == t) {
-                indices.insert(pos, j);
-                continue;
-            }
-        } else if indices.contains(&t) {
-            indices.push(j);
-            continue;
+        if let Some(pos) = indices.iter().position(|&x| x == t) {
+            indices[pos] = j;
         }
         indices.push(t);
-    }
-    if !floyd_shuffle {
-        // Reimplement SliceRandom::shuffle with smaller indices
-        for i in (1..amount).rev() {
-            // invariant: elements with index > i have been locked in place.
-            indices.swap(i as usize, rng.gen_range(0..=i) as usize);
-        }
     }
     IndexVec::from(indices)
 }
@@ -628,8 +613,8 @@ mod test {
             );
         };
 
-        do_test(10, 6, &[8, 0, 3, 5, 9, 6]); // floyd
-        do_test(25, 10, &[18, 15, 14, 9, 0, 13, 5, 24]); // floyd
+        do_test(10, 6, &[8, 3, 5, 9, 0, 6]); // floyd
+        do_test(25, 10, &[18, 14, 9, 15, 0, 13, 5, 24]); // floyd
         do_test(300, 8, &[30, 283, 150, 1, 73, 13, 285, 35]); // floyd
         do_test(300, 80, &[31, 289, 248, 154, 5, 78, 19, 286]); // inplace
         do_test(300, 180, &[31, 289, 248, 154, 5, 78, 19, 286]); // inplace

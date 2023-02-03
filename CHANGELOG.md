@@ -10,8 +10,13 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ## [0.9.0] - unreleased
 ### Distributions
-- `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking)
-- `Uniform` implements `TryFrom` instead of `From` for ranges
+- `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking) (#1229)
+- `Uniform` implements `TryFrom` instead of `From` for ranges (#1229)
+
+### Other
+- Simpler and faster implementation of Floyd's F2 (#1277). This
+  changes some outputs from `rand::seq::index::sample` and
+  `rand::seq::SliceRandom::choose_multiple`.
 
 ## [0.8.5] - 2021-08-20
 ### Fixes

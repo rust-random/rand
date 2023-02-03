@@ -1,4 +1,4 @@
-// Copyright 2018 Developers of the Rand project.
+// Copyright 2018-2023 Developers of the Rand project.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -24,19 +24,27 @@
 //! `usize` indices are sampled as a `u32` where possible (also providing a
 //! small performance boost in some cases).
 
-
+mod coin_flipper;
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod index;
 
-#[cfg(feature = "alloc")] use core::ops::Index;
+mod increasing_uniform;
 
-#[cfg(feature = "alloc")] use alloc::vec::Vec;
+#[cfg(feature = "alloc")]
+use core::ops::Index;
+
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
 
 #[cfg(feature = "alloc")]
 use crate::distributions::uniform::{SampleBorrow, SampleUniform};
-#[cfg(feature = "alloc")] use crate::distributions::WeightedError;
+#[cfg(feature = "alloc")]
+use crate::distributions::WeightedError;
 use crate::Rng;
+
+use self::coin_flipper::CoinFlipper;
+use self::increasing_uniform::IncreasingUniform;
 
 /// Extension trait on slices, providing random mutation and sampling methods.
 ///
@@ -77,14 +85,16 @@ pub trait SliceRandom {
     /// assert_eq!(choices[..0].choose(&mut rng), None);
     /// ```
     fn choose<R>(&self, rng: &mut R) -> Option<&Self::Item>
-    where R: Rng + ?Sized;
+    where
+        R: Rng + ?Sized;
 
     /// Returns a mutable reference to one random element of the slice, or
     /// `None` if the slice is empty.
     ///
     /// For slices, complexity is `O(1)`.
     fn choose_mut<R>(&mut self, rng: &mut R) -> Option<&mut Self::Item>
-    where R: Rng + ?Sized;
+    where
+        R: Rng + ?Sized;
 
     /// Chooses `amount` elements from the slice at random, without repetition,
     /// and in random order. The returned iterator is appropriate both for
@@ -113,7 +123,8 @@ pub trait SliceRandom {
     #[cfg(feature = "alloc")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
-    where R: Rng + ?Sized;
+    where
+        R: Rng + ?Sized;
 
     /// Similar to [`choose`], but where the likelihood of each outcome may be
     /// specified.
@@ -249,7 +260,8 @@ pub trait SliceRandom {
     /// println!("Shuffled:   {:?}", y);
     /// ```
     fn shuffle<R>(&mut self, rng: &mut R)
-    where R: Rng + ?Sized;
+    where
+        R: Rng + ?Sized;
 
     /// Shuffle a slice in place, but exit early.
     ///
@@ -271,7 +283,8 @@ pub trait SliceRandom {
     fn partial_shuffle<R>(
         &mut self, rng: &mut R, amount: usize,
     ) -> (&mut [Self::Item], &mut [Self::Item])
-    where R: Rng + ?Sized;
+    where
+        R: Rng + ?Sized;
 }
 
 /// Extension trait on iterators, providing random sampling methods.
@@ -309,26 +322,30 @@ pub trait IteratorRandom: Iterator + Sized {
     /// `choose` returning different elements. If you want consistent results
     /// and RNG usage consider using [`IteratorRandom::choose_stable`].
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
-    where R: Rng + ?Sized {
+    where
+        R: Rng + ?Sized,
+    {
         let (mut lower, mut upper) = self.size_hint();
-        let mut consumed = 0;
         let mut result = None;
 
         // Handling for this condition outside the loop allows the optimizer to eliminate the loop
         // when the Iterator is an ExactSizeIterator. This has a large performance impact on e.g.
         // seq_iter_choose_from_1000.
         if upper == Some(lower) {
-            return if lower == 0 {
-                None
-            } else {
-                self.nth(gen_index(rng, lower))
+            return match lower {
+                0 => None,
+                1 => self.next(),
+                _ => self.nth(gen_index(rng, lower)),
             };
         }
+
+        let mut coin_flipper = coin_flipper::CoinFlipper::new(rng);
+        let mut consumed = 0;
 
         // Continue until the iterator is exhausted
         loop {
             if lower > 1 {
-                let ix = gen_index(rng, lower + consumed);
+                let ix = gen_index(coin_flipper.rng, lower + consumed);
                 let skip = if ix < lower {
                     result = self.nth(ix);
                     lower - (ix + 1)
@@ -348,7 +365,7 @@ pub trait IteratorRandom: Iterator + Sized {
                     return result;
                 }
                 consumed += 1;
-                if gen_index(rng, consumed) == 0 {
+                if coin_flipper.gen_ratio_one_over(consumed) {
                     result = elem;
                 }
             }
@@ -378,9 +395,12 @@ pub trait IteratorRandom: Iterator + Sized {
     ///
     /// [`choose`]: IteratorRandom::choose
     fn choose_stable<R>(mut self, rng: &mut R) -> Option<Self::Item>
-    where R: Rng + ?Sized {
+    where
+        R: Rng + ?Sized,
+    {
         let mut consumed = 0;
         let mut result = None;
+        let mut coin_flipper = CoinFlipper::new(rng);
 
         loop {
             // Currently the only way to skip elements is `nth()`. So we need to
@@ -392,7 +412,7 @@ pub trait IteratorRandom: Iterator + Sized {
             let (lower, _) = self.size_hint();
             if lower >= 2 {
                 let highest_selected = (0..lower)
-                    .filter(|ix| gen_index(rng, consumed+ix+1) == 0)
+                    .filter(|ix| coin_flipper.gen_ratio_one_over(consumed + ix + 1))
                     .last();
 
                 consumed += lower;
@@ -407,10 +427,10 @@ pub trait IteratorRandom: Iterator + Sized {
 
             let elem = self.nth(next);
             if elem.is_none() {
-                return result
+                return result;
             }
 
-            if gen_index(rng, consumed+1) == 0 {
+            if coin_flipper.gen_ratio_one_over(consumed + 1) {
                 result = elem;
             }
             consumed += 1;
@@ -431,7 +451,9 @@ pub trait IteratorRandom: Iterator + Sized {
     /// Complexity is `O(n)` where `n` is the length of the iterator.
     /// For slices, prefer [`SliceRandom::choose_multiple`].
     fn choose_multiple_fill<R>(mut self, rng: &mut R, buf: &mut [Self::Item]) -> usize
-    where R: Rng + ?Sized {
+    where
+        R: Rng + ?Sized,
+    {
         let amount = buf.len();
         let mut len = 0;
         while len < amount {
@@ -471,7 +493,9 @@ pub trait IteratorRandom: Iterator + Sized {
     #[cfg(feature = "alloc")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_multiple<R>(mut self, rng: &mut R, amount: usize) -> Vec<Self::Item>
-    where R: Rng + ?Sized {
+    where
+        R: Rng + ?Sized,
+    {
         let mut reservoir = Vec::with_capacity(amount);
         reservoir.extend(self.by_ref().take(amount));
 
@@ -495,12 +519,13 @@ pub trait IteratorRandom: Iterator + Sized {
     }
 }
 
-
 impl<T> SliceRandom for [T] {
     type Item = T;
 
     fn choose<R>(&self, rng: &mut R) -> Option<&Self::Item>
-    where R: Rng + ?Sized {
+    where
+        R: Rng + ?Sized,
+    {
         if self.is_empty() {
             None
         } else {
@@ -509,7 +534,9 @@ impl<T> SliceRandom for [T] {
     }
 
     fn choose_mut<R>(&mut self, rng: &mut R) -> Option<&mut Self::Item>
-    where R: Rng + ?Sized {
+    where
+        R: Rng + ?Sized,
+    {
         if self.is_empty() {
             None
         } else {
@@ -520,7 +547,9 @@ impl<T> SliceRandom for [T] {
 
     #[cfg(feature = "alloc")]
     fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Item>
-    where R: Rng + ?Sized {
+    where
+        R: Rng + ?Sized,
+    {
         let amount = ::core::cmp::min(amount, self.len());
         SliceChooseIter {
             slice: self,
@@ -591,36 +620,51 @@ impl<T> SliceRandom for [T] {
     }
 
     fn shuffle<R>(&mut self, rng: &mut R)
-    where R: Rng + ?Sized {
-        for i in (1..self.len()).rev() {
-            // invariant: elements with index > i have been locked in place.
-            self.swap(i, gen_index(rng, i + 1));
+    where
+        R: Rng + ?Sized,
+    {
+        if self.len() <= 1 {
+            // There is no need to shuffle an empty or single element slice
+            return;
         }
+        self.partial_shuffle(rng, self.len());
     }
 
     fn partial_shuffle<R>(
         &mut self, rng: &mut R, amount: usize,
     ) -> (&mut [Self::Item], &mut [Self::Item])
-    where R: Rng + ?Sized {
-        // This applies Durstenfeld's algorithm for the
+    where
+        R: Rng + ?Sized,
+    {
+        let m = self.len().saturating_sub(amount);
+
+        // The algorithm below is based on Durstenfeld's algorithm for the
         // [Fisher–Yates shuffle](https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm)
-        // for an unbiased permutation, but exits early after choosing `amount`
-        // elements.
-
-        let len = self.len();
-        let end = if amount >= len { 0 } else { len - amount };
-
-        for i in (end..len).rev() {
-            // invariant: elements with index > i have been locked in place.
-            self.swap(i, gen_index(rng, i + 1));
+        // for an unbiased permutation.
+        // It ensures that the last `amount` elements of the slice
+        // are randomly selected from the whole slice.
+        
+        //`IncreasingUniform::next_index()` is faster than `gen_index`
+        //but only works for 32 bit integers
+        //So we must use the slow method if the slice is longer than that.
+        if self.len() < (u32::MAX as usize) {
+            let mut chooser = IncreasingUniform::new(rng, m as u32);
+            for i in m..self.len() {
+                let index = chooser.next_index();
+                self.swap(i, index);
+            }
+        } else {            
+            for i in m..self.len() {
+                let index = gen_index(rng, i + 1);
+                self.swap(i, index);
+            }
         }
-        let r = self.split_at_mut(end);
+        let r = self.split_at_mut(m);
         (r.1, r.0)
     }
 }
 
 impl<I> IteratorRandom for I where I: Iterator + Sized {}
-
 
 /// An iterator over multiple slice elements.
 ///
@@ -658,12 +702,12 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
     }
 }
 
-
 // Sample a number uniformly between 0 and `ubound`. Uses 32-bit sampling where
 // possible, primarily in order to produce the same output on 32-bit and 64-bit
 // platforms.
 #[inline]
 fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
+
     if ubound <= (core::u32::MAX as usize) {
         rng.gen_range(0..ubound as u32) as usize
     } else {
@@ -671,12 +715,13 @@ fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
-    #[cfg(feature = "alloc")] use crate::Rng;
-    #[cfg(all(feature = "alloc", not(feature = "std")))] use alloc::vec::Vec;
+    #[cfg(feature = "alloc")]
+    use crate::Rng;
+    #[cfg(all(feature = "alloc", not(feature = "std")))]
+    use alloc::vec::Vec;
 
     #[test]
     fn test_slice_choose() {
@@ -725,7 +770,7 @@ mod test {
                 .choose_multiple(&mut r, 8)
                 .cloned()
                 .collect::<Vec<char>>(),
-            &['d', 'm', 'b', 'n', 'c', 'k', 'h', 'e']
+            &['d', 'm', 'n', 'k', 'h', 'e', 'b', 'c']
         );
 
         #[cfg(feature = "alloc")]
@@ -735,11 +780,11 @@ mod test {
 
         let mut r = crate::test::rng(414);
         nums.shuffle(&mut r);
-        assert_eq!(nums, [9, 5, 3, 10, 7, 12, 8, 11, 6, 4, 0, 2, 1]);
+        assert_eq!(nums, [5, 11, 0, 8, 7, 12, 6, 4, 9, 3, 1, 2, 10]);
         nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         let res = nums.partial_shuffle(&mut r, 6);
-        assert_eq!(res.0, &mut [7, 4, 8, 6, 9, 3]);
-        assert_eq!(res.1, &mut [0, 1, 2, 12, 11, 5, 10]);
+        assert_eq!(res.0, &mut [7, 12, 6, 8, 1, 9]);
+        assert_eq!(res.1, &mut [0, 11, 2, 3, 4, 5, 10]);
     }
 
     #[derive(Clone)]
@@ -837,28 +882,40 @@ mod test {
         #[cfg(feature = "alloc")]
         test_iter(r, (0..9).collect::<Vec<_>>().into_iter());
         test_iter(r, UnhintedIterator { iter: 0..9 });
-        test_iter(r, ChunkHintedIterator {
-            iter: 0..9,
-            chunk_size: 4,
-            chunk_remaining: 4,
-            hint_total_size: false,
-        });
-        test_iter(r, ChunkHintedIterator {
-            iter: 0..9,
-            chunk_size: 4,
-            chunk_remaining: 4,
-            hint_total_size: true,
-        });
-        test_iter(r, WindowHintedIterator {
-            iter: 0..9,
-            window_size: 2,
-            hint_total_size: false,
-        });
-        test_iter(r, WindowHintedIterator {
-            iter: 0..9,
-            window_size: 2,
-            hint_total_size: true,
-        });
+        test_iter(
+            r,
+            ChunkHintedIterator {
+                iter: 0..9,
+                chunk_size: 4,
+                chunk_remaining: 4,
+                hint_total_size: false,
+            },
+        );
+        test_iter(
+            r,
+            ChunkHintedIterator {
+                iter: 0..9,
+                chunk_size: 4,
+                chunk_remaining: 4,
+                hint_total_size: true,
+            },
+        );
+        test_iter(
+            r,
+            WindowHintedIterator {
+                iter: 0..9,
+                window_size: 2,
+                hint_total_size: false,
+            },
+        );
+        test_iter(
+            r,
+            WindowHintedIterator {
+                iter: 0..9,
+                window_size: 2,
+                hint_total_size: true,
+            },
+        );
 
         assert_eq!((0..0).choose(r), None);
         assert_eq!(UnhintedIterator { iter: 0..0 }.choose(r), None);
@@ -891,28 +948,40 @@ mod test {
         #[cfg(feature = "alloc")]
         test_iter(r, (0..9).collect::<Vec<_>>().into_iter());
         test_iter(r, UnhintedIterator { iter: 0..9 });
-        test_iter(r, ChunkHintedIterator {
-            iter: 0..9,
-            chunk_size: 4,
-            chunk_remaining: 4,
-            hint_total_size: false,
-        });
-        test_iter(r, ChunkHintedIterator {
-            iter: 0..9,
-            chunk_size: 4,
-            chunk_remaining: 4,
-            hint_total_size: true,
-        });
-        test_iter(r, WindowHintedIterator {
-            iter: 0..9,
-            window_size: 2,
-            hint_total_size: false,
-        });
-        test_iter(r, WindowHintedIterator {
-            iter: 0..9,
-            window_size: 2,
-            hint_total_size: true,
-        });
+        test_iter(
+            r,
+            ChunkHintedIterator {
+                iter: 0..9,
+                chunk_size: 4,
+                chunk_remaining: 4,
+                hint_total_size: false,
+            },
+        );
+        test_iter(
+            r,
+            ChunkHintedIterator {
+                iter: 0..9,
+                chunk_size: 4,
+                chunk_remaining: 4,
+                hint_total_size: true,
+            },
+        );
+        test_iter(
+            r,
+            WindowHintedIterator {
+                iter: 0..9,
+                window_size: 2,
+                hint_total_size: false,
+            },
+        );
+        test_iter(
+            r,
+            WindowHintedIterator {
+                iter: 0..9,
+                window_size: 2,
+                hint_total_size: true,
+            },
+        );
 
         assert_eq!((0..0).choose(r), None);
         assert_eq!(UnhintedIterator { iter: 0..0 }.choose(r), None);
@@ -932,33 +1001,48 @@ mod test {
         }
 
         let reference = test_iter(0..9);
-        assert_eq!(test_iter([0, 1, 2, 3, 4, 5, 6, 7, 8].iter().cloned()), reference);
+        assert_eq!(
+            test_iter([0, 1, 2, 3, 4, 5, 6, 7, 8].iter().cloned()),
+            reference
+        );
 
         #[cfg(feature = "alloc")]
         assert_eq!(test_iter((0..9).collect::<Vec<_>>().into_iter()), reference);
         assert_eq!(test_iter(UnhintedIterator { iter: 0..9 }), reference);
-        assert_eq!(test_iter(ChunkHintedIterator {
-            iter: 0..9,
-            chunk_size: 4,
-            chunk_remaining: 4,
-            hint_total_size: false,
-        }), reference);
-        assert_eq!(test_iter(ChunkHintedIterator {
-            iter: 0..9,
-            chunk_size: 4,
-            chunk_remaining: 4,
-            hint_total_size: true,
-        }), reference);
-        assert_eq!(test_iter(WindowHintedIterator {
-            iter: 0..9,
-            window_size: 2,
-            hint_total_size: false,
-        }), reference);
-        assert_eq!(test_iter(WindowHintedIterator {
-            iter: 0..9,
-            window_size: 2,
-            hint_total_size: true,
-        }), reference);
+        assert_eq!(
+            test_iter(ChunkHintedIterator {
+                iter: 0..9,
+                chunk_size: 4,
+                chunk_remaining: 4,
+                hint_total_size: false,
+            }),
+            reference
+        );
+        assert_eq!(
+            test_iter(ChunkHintedIterator {
+                iter: 0..9,
+                chunk_size: 4,
+                chunk_remaining: 4,
+                hint_total_size: true,
+            }),
+            reference
+        );
+        assert_eq!(
+            test_iter(WindowHintedIterator {
+                iter: 0..9,
+                window_size: 2,
+                hint_total_size: false,
+            }),
+            reference
+        );
+        assert_eq!(
+            test_iter(WindowHintedIterator {
+                iter: 0..9,
+                window_size: 2,
+                hint_total_size: true,
+            }),
+            reference
+        );
     }
 
     #[test]
@@ -1129,7 +1213,7 @@ mod test {
 
         assert_eq!(choose([].iter().cloned()), None);
         assert_eq!(choose(0..100), Some(33));
-        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(40));
+        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(27));
         assert_eq!(
             choose(ChunkHintedIterator {
                 iter: 0..100,
@@ -1174,8 +1258,8 @@ mod test {
         }
 
         assert_eq!(choose([].iter().cloned()), None);
-        assert_eq!(choose(0..100), Some(40));
-        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(40));
+        assert_eq!(choose(0..100), Some(27));
+        assert_eq!(choose(UnhintedIterator { iter: 0..100 }), Some(27));
         assert_eq!(
             choose(ChunkHintedIterator {
                 iter: 0..100,
@@ -1183,7 +1267,7 @@ mod test {
                 chunk_remaining: 32,
                 hint_total_size: false,
             }),
-            Some(40)
+            Some(27)
         );
         assert_eq!(
             choose(ChunkHintedIterator {
@@ -1192,7 +1276,7 @@ mod test {
                 chunk_remaining: 32,
                 hint_total_size: true,
             }),
-            Some(40)
+            Some(27)
         );
         assert_eq!(
             choose(WindowHintedIterator {
@@ -1200,7 +1284,7 @@ mod test {
                 window_size: 32,
                 hint_total_size: false,
             }),
-            Some(40)
+            Some(27)
         );
         assert_eq!(
             choose(WindowHintedIterator {
@@ -1208,7 +1292,7 @@ mod test {
                 window_size: 32,
                 hint_total_size: true,
             }),
-            Some(40)
+            Some(27)
         );
     }
 
@@ -1260,9 +1344,13 @@ mod test {
         // Case 2: All of the weights are 0
         let choices = [('a', 0), ('b', 0), ('c', 0)];
 
-        assert_eq!(choices
-            .choose_multiple_weighted(&mut rng, 2, |item| item.1)
-            .unwrap().count(), 2);
+        assert_eq!(
+            choices
+                .choose_multiple_weighted(&mut rng, 2, |item| item.1)
+                .unwrap()
+                .count(),
+            2
+        );
 
         // Case 3: Negative weights
         let choices = [('a', -1), ('b', 1), ('c', 1)];
@@ -1275,9 +1363,13 @@ mod test {
 
         // Case 4: Empty list
         let choices = [];
-        assert_eq!(choices
-            .choose_multiple_weighted(&mut rng, 0, |_: &()| 0)
-            .unwrap().count(), 0);
+        assert_eq!(
+            choices
+                .choose_multiple_weighted(&mut rng, 0, |_: &()| 0)
+                .unwrap()
+                .count(),
+            0
+        );
 
         // Case 5: NaN weights
         let choices = [('a', core::f64::NAN), ('b', 1.0), ('c', 1.0)];
