@@ -22,7 +22,7 @@
 
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use rand::distributions::uniform::{SampleUniform, Uniform, UniformInt, UniformSampler};
+use rand::distributions::uniform::{SampleUniform, Uniform, UniformSampler};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use rand_pcg::{Pcg32, Pcg64};
@@ -136,65 +136,9 @@ fn distr_random(c: &mut Criterion) {
     distr_random!(c, i128, u128);
 }
 
-macro_rules! gen_range {
-    ($name:literal, $R:ty, $f:ident, $g:expr) => {
-        for &range_size in TEST_RANGE_SIZES {
-            $g.bench_with_input(
-                BenchmarkId::new($name, range_size),
-                &range_size,
-                |b, &range_size| {
-                    let mut rng = <$R>::from_entropy();
-                    b.iter(|| UniformInt::<u64>::$f(0, range_size, &mut rng));
-                },
-            );
-        }
-    };
-
-    ($c:expr, $R:ty) => {
-        let mut g = $c.benchmark_group(concat!("gen_range_", stringify!($R)));
-        g.warm_up_time(WARM_UP_TIME);
-        g.measurement_time(MEASUREMENT_TIME);
-        gen_range!("Old", $R, sample_single_inclusive, g);
-        gen_range!("ONeill", $R, sample_single_inclusive_oneill, g);
-        gen_range!("Canon-Unbiased", $R, sample_single_inclusive_canon_unbiased, g);
-        gen_range!("Canon", $R, sample_single_inclusive_canon, g);
-        gen_range!("Canon32", $R, sample_single_inclusive_canon_u32, g);
-        gen_range!("Canon-reduced", $R, sample_single_inclusive_canon_reduced, g);
-        gen_range!("Canon32-2", $R, sample_single_inclusive_canon_u32_2, g);
-        gen_range!("Canon-Lemire", $R, sample_inclusive_canon_lemire, g);
-        g.finish();
-    };
-}
-
-fn gen_range(c: &mut Criterion) {
-    const TEST_RANGE_SIZES: &'static [u64] = &[
-        1,
-        2,
-        3,
-        4,
-        5,
-        7,
-        8,
-        9,
-        15,
-        16,
-        17,
-        (1 << 31) - 1,
-        1 << 31,
-        (1 << 31) + 1,
-        (1 << 62) + 1,
-        (1 << 63) - 1,
-    ];
-
-    gen_range!(c, SmallRng);
-    gen_range!(c, ChaCha8Rng);
-    gen_range!(c, Pcg32);
-    gen_range!(c, Pcg64);
-}
-
 criterion_group! {
     name = benches;
     config = Criterion::default();
-    targets = single_random, distr_random, gen_range
+    targets = single_random, distr_random
 }
 criterion_main!(benches);
