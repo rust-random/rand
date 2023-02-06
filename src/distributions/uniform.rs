@@ -172,7 +172,6 @@ use serde::{Serialize, Deserialize};
 /// # Example
 ///
 /// ```
-/// use std::convert::TryFrom;
 /// use rand::distributions::{Distribution, Uniform};
 ///
 /// let between = Uniform::try_from(10..10000).unwrap();
