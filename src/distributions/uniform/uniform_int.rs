@@ -51,8 +51,8 @@ pub struct UniformInt<X> {
     // HACK: fields are pub(crate)
     pub(crate) low: X,
     pub(crate) range: X,
-    pub(crate) nrmr: X, // range.wrapping_neg() % range
-    pub(crate) z: X,    // either ints_to_reject or zone depending on implementation
+    pub(crate) thresh32_or_uty: X, // effectively 2.pow(max(32, uty_bits)) % range
+    pub(crate) thresh64_or_uty: X, // effectively 2.pow(max(64, uty_bits)) % range
 }
 
 macro_rules! uniform_int_impl {
@@ -95,22 +95,25 @@ macro_rules! uniform_int_impl {
                     low <= high,
                     "Uniform::new_inclusive called with `low > high`"
                 );
-                let unsigned_max = ::core::$u32_or_uty::MAX;
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
-                let ints_to_reject = if range > 0 {
-                    let range = $u32_or_uty::from(range);
-                    (unsigned_max - range + 1) % range
+                let (thresh32_or_uty, thresh64_or_uty);
+                if range > 0 {
+                    let range32 = $u32_or_uty::from(range);
+                    thresh32_or_uty = (range32.wrapping_neg() % range32);
+
+                    let range64 = $u64_or_uty::from(range);
+                    thresh64_or_uty = (range64.wrapping_neg() % range64);
                 } else {
-                    0
+                    thresh32_or_uty = 0;
+                    thresh64_or_uty = 0;
                 };
 
                 UniformInt {
                     low,
-                    // These are really $uty values, but store as $ty:
-                    range: range as $ty,
-                    nrmr: (range.wrapping_neg() % range) as $ty,
-                    z: ints_to_reject as $uty as $ty,
+                    range: range as $ty, // type: $uty
+                    thresh32_or_uty: thresh32_or_uty as $uty as $ty, // type: $u32_or_uty
+                    thresh64_or_uty: thresh64_or_uty as $uty as $ty, // type: $u64_or_uty
                 }
             }
 
@@ -122,7 +125,8 @@ macro_rules! uniform_int_impl {
                 }
 
                 let unsigned_max = ::core::$u32_or_uty::MAX;
-                let zone = unsigned_max - (self.z as $uty as $u32_or_uty);
+                let thresh = self.thresh32_or_uty as $uty as $u32_or_uty;
+                let zone = unsigned_max - thresh;
                 loop {
                     let v: $u32_or_uty = rng.gen();
                     let (hi, lo) = v.wmul(range);
@@ -196,7 +200,7 @@ macro_rules! uniform_int_impl {
                     return rng.gen();
                 }
 
-                let thresh = self.nrmr as $u32_or_uty;
+                let thresh = self.thresh32_or_uty as $uty as $u32_or_uty;
                 let hi = loop {
                     let (hi, lo) = rng.gen::<$u32_or_uty>().wmul(range);
                     if lo >= thresh {
@@ -287,7 +291,7 @@ macro_rules! uniform_int_impl {
 
                 let (mut result, lo) = rng.gen::<$u64_or_uty>().wmul(range);
 
-                if lo < (self.nrmr as $u64_or_uty) {
+                if lo < self.thresh64_or_uty as $uty as $u64_or_uty {
                     let (new_hi, _) = (rng.gen::<$u64_or_uty>()).wmul(range);
                     let is_overflow = lo.checked_add(new_hi).is_none();
                     result += is_overflow as $u64_or_uty;
