@@ -520,14 +520,14 @@ mod isize_int_impls {
     uniform_int_impl! { usize, usize, usize, usize }
 }
 
-macro_rules! uniform_int_canon_reduced_impl {
+macro_rules! uniform_int_canon_biased_impl {
     ($ty:ty, $uty:ident) => {
         impl UniformInt<$ty> {
             /// Sample, Canon's method variant
             ///
             /// Variant: potential increase to bias (uses a single `u64` sample).
             #[inline]
-            pub fn sample_canon_reduced<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+            pub fn sample_biased_64<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 let range = self.range as $uty as u64;
                 if range == 0 {
                     return rng.gen();
@@ -542,7 +542,7 @@ macro_rules! uniform_int_canon_reduced_impl {
             ///
             /// Variant: potential increase to bias (uses a single `u64` sample).
             #[inline]
-            pub fn sample_single_inclusive_canon_reduced<R: Rng + ?Sized, B1, B2>(
+            pub fn sample_single_inclusive_biased_64<R: Rng + ?Sized, B1, B2>(
                 low_b: B1, high_b: B2, rng: &mut R,
             ) -> $ty
             where
@@ -568,6 +568,13 @@ macro_rules! uniform_int_canon_reduced_impl {
             }
         }
     };
+}
+
+uniform_int_canon_biased_impl!(i8, u8);
+uniform_int_canon_biased_impl!(i16, u16);
+uniform_int_canon_biased_impl!(i32, u32);
+
+macro_rules! uniform_int_canon_reduced_impl {
     ($ty:ty, $uty:ident, $u_half:ty, $shift:expr) => {
         impl UniformInt<$ty> {
             /// Sample, Canon's method variant
@@ -630,9 +637,6 @@ macro_rules! uniform_int_canon_reduced_impl {
     };
 }
 
-uniform_int_canon_reduced_impl!(i8, u8);
-uniform_int_canon_reduced_impl!(i16, u16);
-uniform_int_canon_reduced_impl!(i32, u32);
 uniform_int_canon_reduced_impl!(u64, u64, u32, 32);
 uniform_int_canon_reduced_impl!(i64, u64, u32, 32);
 uniform_int_canon_reduced_impl!(i128, u128, u64, 64);
