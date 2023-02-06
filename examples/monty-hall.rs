@@ -80,7 +80,7 @@ fn main() {
     let num_simulations = 10000;
 
     let mut rng = rand::thread_rng();
-    let random_door = Uniform::new(0u32, 3);
+    let random_door = Uniform::new(0u32, 3).unwrap();
 
     let (mut switch_wins, mut switch_losses) = (0, 0);
     let (mut keep_wins, mut keep_losses) = (0, 0);

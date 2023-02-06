@@ -64,7 +64,7 @@ pub trait Distribution<T> {
     ///     .collect();
     ///
     /// // Dice-rolling:
-    /// let die_range = Uniform::new_inclusive(1, 6);
+    /// let die_range = Uniform::new_inclusive(1, 6).unwrap();
     /// let mut roll_die = die_range.sample_iter(&mut rng);
     /// while roll_die.next().unwrap() != 6 {
     ///     println!("Not a 6; rolling again!");
@@ -93,7 +93,7 @@ pub trait Distribution<T> {
     ///
     /// let mut rng = thread_rng();
     ///
-    /// let die = Uniform::new_inclusive(1, 6);
+    /// let die = Uniform::new_inclusive(1, 6).unwrap();
     /// let even_number = die.map(|num| num % 2 == 0);
     /// while !even_number.sample(&mut rng) {
     ///     println!("Still odd; rolling again!");
@@ -227,7 +227,7 @@ mod tests {
 
     #[test]
     fn test_distributions_map() {
-        let dist = Uniform::new_inclusive(0, 5).map(|val| val + 15);
+        let dist = Uniform::new_inclusive(0, 5).unwrap().map(|val| val + 15);
 
         let mut rng = crate::test::rng(212);
         let val = dist.sample(&mut rng);
@@ -240,6 +240,7 @@ mod tests {
             rng: &mut R,
         ) -> impl Iterator<Item = i32> + '_ {
             Uniform::new_inclusive(1, 6)
+                .unwrap()
                 .sample_iter(rng)
                 .filter(|x| *x != 5)
                 .take(10)

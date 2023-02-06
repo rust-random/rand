@@ -163,8 +163,8 @@ impl Distribution<u64> for Binomial {
             // return value
             let mut y: i64;
 
-            let gen_u = Uniform::new(0., p4);
-            let gen_v = Uniform::new(0., 1.);
+            let gen_u = Uniform::new(0., p4).unwrap();
+            let gen_v = Uniform::new(0., 1.).unwrap();
 
             loop {
                 // Step 1: Generate `u` for selecting the region. If region 1 is

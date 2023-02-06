@@ -479,7 +479,7 @@ where
     let mut cache = HashSet::with_capacity(amount.as_usize());
     #[cfg(not(feature = "std"))]
     let mut cache = BTreeSet::new();
-    let distr = Uniform::new(X::zero(), length);
+    let distr = Uniform::new(X::zero(), length).unwrap();
     let mut indices = Vec::with_capacity(amount.as_usize());
     for _ in 0..amount.as_usize() {
         let mut pos = distr.sample(rng);

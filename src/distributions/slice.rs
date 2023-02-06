@@ -75,7 +75,7 @@ impl<'a, T> Slice<'a, T> {
             0 => Err(EmptySlice),
             len => Ok(Self {
                 slice,
-                range: Uniform::new(0, len),
+                range: Uniform::new(0, len).unwrap(),
             }),
         }
     }

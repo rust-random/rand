@@ -131,36 +131,36 @@ macro_rules! distr {
 }
 
 // uniform
-distr_int!(distr_uniform_i8, i8, Uniform::new(20i8, 100));
-distr_int!(distr_uniform_i16, i16, Uniform::new(-500i16, 2000));
-distr_int!(distr_uniform_i32, i32, Uniform::new(-200_000_000i32, 800_000_000));
-distr_int!(distr_uniform_i64, i64, Uniform::new(3i64, 123_456_789_123));
-distr_int!(distr_uniform_i128, i128, Uniform::new(-123_456_789_123i128, 123_456_789_123_456_789));
-distr_int!(distr_uniform_usize16, usize, Uniform::new(0usize, 0xb9d7));
-distr_int!(distr_uniform_usize32, usize, Uniform::new(0usize, 0x548c0f43));
+distr_int!(distr_uniform_i8, i8, Uniform::new(20i8, 100).unwrap());
+distr_int!(distr_uniform_i16, i16, Uniform::new(-500i16, 2000).unwrap());
+distr_int!(distr_uniform_i32, i32, Uniform::new(-200_000_000i32, 800_000_000).unwrap());
+distr_int!(distr_uniform_i64, i64, Uniform::new(3i64, 123_456_789_123).unwrap());
+distr_int!(distr_uniform_i128, i128, Uniform::new(-123_456_789_123i128, 123_456_789_123_456_789).unwrap());
+distr_int!(distr_uniform_usize16, usize, Uniform::new(0usize, 0xb9d7).unwrap());
+distr_int!(distr_uniform_usize32, usize, Uniform::new(0usize, 0x548c0f43).unwrap());
 #[cfg(target_pointer_width = "64")]
-distr_int!(distr_uniform_usize64, usize, Uniform::new(0usize, 0x3a42714f2bf927a8));
-distr_int!(distr_uniform_isize, isize, Uniform::new(-1060478432isize, 1858574057));
+distr_int!(distr_uniform_usize64, usize, Uniform::new(0usize, 0x3a42714f2bf927a8).unwrap());
+distr_int!(distr_uniform_isize, isize, Uniform::new(-1060478432isize, 1858574057).unwrap());
 
-distr_float!(distr_uniform_f32, f32, Uniform::new(2.26f32, 2.319));
-distr_float!(distr_uniform_f64, f64, Uniform::new(2.26f64, 2.319));
+distr_float!(distr_uniform_f32, f32, Uniform::new(2.26f32, 2.319).unwrap());
+distr_float!(distr_uniform_f64, f64, Uniform::new(2.26f64, 2.319).unwrap());
 
 const LARGE_SEC: u64 = u64::max_value() / 1000;
 
 distr_duration!(distr_uniform_duration_largest,
-    Uniform::new_inclusive(Duration::new(0, 0), Duration::new(u64::max_value(), 999_999_999))
+    Uniform::new_inclusive(Duration::new(0, 0), Duration::new(u64::max_value(), 999_999_999)).unwrap()
 );
 distr_duration!(distr_uniform_duration_large,
-    Uniform::new(Duration::new(0, 0), Duration::new(LARGE_SEC, 1_000_000_000 / 2))
+    Uniform::new(Duration::new(0, 0), Duration::new(LARGE_SEC, 1_000_000_000 / 2)).unwrap()
 );
 distr_duration!(distr_uniform_duration_one,
-    Uniform::new(Duration::new(0, 0), Duration::new(1, 0))
+    Uniform::new(Duration::new(0, 0), Duration::new(1, 0)).unwrap()
 );
 distr_duration!(distr_uniform_duration_variety,
-    Uniform::new(Duration::new(10000, 423423), Duration::new(200000, 6969954))
+    Uniform::new(Duration::new(10000, 423423), Duration::new(200000, 6969954)).unwrap()
 );
 distr_duration!(distr_uniform_duration_edge,
-    Uniform::new_inclusive(Duration::new(LARGE_SEC, 999_999_999), Duration::new(LARGE_SEC + 1, 1))
+    Uniform::new_inclusive(Duration::new(LARGE_SEC, 999_999_999), Duration::new(LARGE_SEC + 1, 1)).unwrap()
 );
 
 // standard
@@ -272,7 +272,7 @@ macro_rules! uniform_sample {
             let high = black_box($high);
             b.iter(|| {
                 for _ in 0..10 {
-                    let dist = UniformInt::<$type>::new(low, high);
+                    let dist = UniformInt::<$type>::new(low, high).unwrap();
                     for _ in 0..$count {
                         black_box(dist.sample(&mut rng));
                     }
@@ -291,7 +291,7 @@ macro_rules! uniform_inclusive {
             let high = black_box($high);
             b.iter(|| {
                 for _ in 0..10 {
-                    let dist = UniformInt::<$type>::new_inclusive(low, high);
+                    let dist = UniformInt::<$type>::new_inclusive(low, high).unwrap();
                     for _ in 0..$count {
                         black_box(dist.sample(&mut rng));
                     }
@@ -311,7 +311,7 @@ macro_rules! uniform_single {
             let high = black_box($high);
             b.iter(|| {
                 for _ in 0..(10 * $count) {
-                    black_box(UniformInt::<$type>::sample_single(low, high, &mut rng));
+                    black_box(UniformInt::<$type>::sample_single(low, high, &mut rng).unwrap());
                 }
             });
         }

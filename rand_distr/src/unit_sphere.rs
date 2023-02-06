@@ -34,7 +34,7 @@ pub struct UnitSphere;
 impl<F: Float + SampleUniform> Distribution<[F; 3]> for UnitSphere {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [F; 3] {
-        let uniform = Uniform::new(F::from(-1.).unwrap(), F::from(1.).unwrap());
+        let uniform = Uniform::new(F::from(-1.).unwrap(), F::from(1.).unwrap()).unwrap();
         loop {
             let (x1, x2) = (uniform.sample(rng), uniform.sample(rng));
             let sum = x1 * x1 + x2 * x2;

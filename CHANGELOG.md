@@ -8,7 +8,10 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [Unreleased API changing release]
+## [0.9.0] - unreleased
+### Distributions
+- `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking) (#1229)
+- `Uniform` implements `TryFrom` instead of `From` for ranges (#1229)
 
 ### Other
 - Simpler and faster implementation of Floyd's F2 (#1277). This

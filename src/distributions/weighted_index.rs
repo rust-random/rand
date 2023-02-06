@@ -123,7 +123,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         if total_weight == zero {
             return Err(WeightedError::AllWeightsZero);
         }
-        let distr = X::Sampler::new(zero, total_weight.clone());
+        let distr = X::Sampler::new(zero, total_weight.clone()).unwrap();
 
         Ok(WeightedIndex {
             cumulative_weights: weights,
@@ -220,7 +220,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         }
 
         self.total_weight = total_weight;
-        self.weight_distribution = X::Sampler::new(zero, self.total_weight.clone());
+        self.weight_distribution = X::Sampler::new(zero, self.total_weight.clone()).unwrap();
 
         Ok(())
     }
@@ -230,7 +230,6 @@ impl<X> Distribution<usize> for WeightedIndex<X>
 where X: SampleUniform + PartialOrd
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        use ::core::cmp::Ordering;
         let chosen_weight = self.weight_distribution.sample(rng);
         // Find the first item which has a weight *higher* than the chosen weight.
         self.cumulative_weights.partition_point(|w| w <= &chosen_weight)
