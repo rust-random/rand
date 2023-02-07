@@ -377,3 +377,53 @@ thus using 8- or 16-bits per channel at each step.
 
 It would make sense to narrow the number of methods under investigation before
 extending the work to SIMD types.
+
+---
+
+# New benchmarks 2023-02-07
+
+## Distributions
+
+i8: Biased64 best in one case, worst in two. Canon32 generally good, Canon32-2
+and Canon32-Un slightly behind. Lemire poor.
+
+i16: Similar to above. Canon32-2 has small penalty over Canon32; Canon32-Un has
+larger penalty.
+
+i32: Biased64 easily the fastest (but most biased). Canon and Canon-Un next
+best (-Un is only a little behind, in one case ahead). Canon32 and Lemire
+significantly behind.
+
+i64: Lemire best but for tail; Canon and Canon-red tie for next best. Unbiased
+variants have maybe 30% penalty. Canon just beats Canon-red (also -Un variants).
+
+i128: Lemire best on average but longer tail. Canon-red beats Canon; unbiased
+variants have significant pentaly.
+
+## Single samples
+
+i8: Biased64 wins for 64-bit RNGs, poor for 32-bit. Canon32 and ONeill good
+all around. Canon32-2 mostly *very* close to Canon32 but is far behind for
+ChaCha8Rng; odd. -Un variant similar, slightly worse.
+
+i16: Biased64 as above. ONeill decent except on Pcg64. Canon variants mostly
+close together; in two cases Canon32-2 significantly beats Canon32; odd.
+
+i32: Biased64 easily the fastest (and most biased); Canon next, Canon-Un
+next (10% penalty). Canon32 up to 100% behind, ONeill is easily the worst.
+
+i64: Canon best; Canon-red close behind. Canon-Un 20-30% penalty; -red-un is
+worse. ONeill in between (beats -un variants).
+
+i128: Canon-red is best, followed by Canon, Canon-red-un and ONeill (the latter
+two with very similar PDF). In one case Canon-Un beats -red-un.
+
+## Conclusions
+
+Best for i8, i16: Canon32, or if less bias is wanted, Canon32-2 or Canon32-Un.
+
+Best for i32: Canon or Canon-Un (Biased64 is fastest, but too biased).
+
+Best for i64: Canon, Lemire, ONeill or Canon-Un.
+
+Best for i128: Probably Lemire (distr). Unclear.
