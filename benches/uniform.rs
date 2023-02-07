@@ -12,13 +12,15 @@
 //!
 //! -   Old: prior implementation of this method as a baseline
 //! -   Lemire: widening multiply with rejection test
-//! -   Canon: widening multiply using max(64, ty-bits) sample with bias reduction adjustment
-//! -   Canon32: Canon's method with max(32,size)-bit samples (at most one bias reduction step)
-//! -   Canon-reduced: for 8-32 bit types this is a single max(64, size) bit
-//!     sample (biased) using widening multiply; for larger sizes this is Canon
-//!     but using half the bit-width for the bias reduction sample.
-//! -   Canon32-2: max(32, size) bit sample, optionally followed by one or two 32-bit bias reduction steps
-//! -   Canon-Lemire: as Canon but with more precise bias-reduction step trigger
+//! -   ONeill: O'Neill's proposed method: https://www.pcg-random.org/posts/bounded-rands.html
+//! -   Canon: widening multiply using max(64, ty-bits) sample, followed by one bias-reduction
+//!     step at the same sample size where required
+//! -   Canon32: as above, but using max(32, ty-bits) sample sizes
+//! -   Canon32-2: as above, but with up to two bias-reduction steps
+//! -   Canon-Un[biased]: as Canon, but with an unlimited number of bias-reduction steps
+//! -   Canon-Red[uced]: Canon's method with max(64, ty-bits) initial sample size and half with
+//!     for the bias reduction step steps
+//! -   Canon-Red-Un: as Canon-Red, but with an unlimited number of bias reduction steps
 
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
@@ -62,18 +64,13 @@ macro_rules! single_random {
 
     ($R:ty, 32, $T:ty, $U:ty, $g:expr) => {
         single_random!("Biased64", $R, $T, $U, sample_single_inclusive_biased_64, $g);
+        single_random!("Canon32", $R, $T, $U, sample_single_inclusive_canon_u32, $g);
         single_random!("Canon", $R, $T, $U, sample_single_inclusive_canon, $g);
         single_random!("Canon-Un", $R, $T, $U, sample_single_inclusive_canon_unbiased, $g);
         single_random!("ONeill", $R, $T, $U, sample_single_inclusive_oneill, $g);
     };
 
-    ($R:ty, 64, $T:ty, $U:ty, $g:expr) => {
-        single_random!("Canon", $R, $T, $U, sample_single_inclusive_canon, $g);
-        single_random!("Canon-Un", $R, $T, $U, sample_single_inclusive_canon_unbiased, $g);
-        single_random!("ONeill", $R, $T, $U, sample_single_inclusive_oneill, $g);
-    };
-
-    ($R:ty, 128, $T:ty, $U:ty, $g:expr) => {
+    ($R:ty, large, $T:ty, $U:ty, $g:expr) => {
         single_random!("Canon", $R, $T, $U, sample_single_inclusive_canon, $g);
         single_random!("Canon-Un", $R, $T, $U, sample_single_inclusive_canon_unbiased, $g);
         single_random!("Canon-Red", $R, $T, $U, sample_single_inclusive_canon_reduced, $g);
@@ -97,8 +94,8 @@ fn single_random(c: &mut Criterion) {
     single_random!(c, small, i8, u8);
     single_random!(c, small, i16, u16);
     single_random!(c, 32, i32, u32);
-    single_random!(c, 64, i64, u64);
-    single_random!(c, 128, i128, u128);
+    single_random!(c, large, i64, u64);
+    single_random!(c, large, i128, u128);
 }
 
 macro_rules! distr_random {
@@ -133,6 +130,7 @@ macro_rules! distr_random {
 
     ($R:ty, 32, $T:ty, $U:ty, $g:expr) => {
         distr_random!("Biased64", $R, $T, $U, sample_biased_64, $g);
+        distr_random!("Canon32", $R, $T, $U, sample_canon_u32, $g);
         distr_random!("Canon", $R, $T, $U, sample_canon, $g);
         distr_random!("Canon-Un", $R, $T, $U, sample_canon_unbiased, $g);
         distr_random!("Lemire", $R, $T, $U, sample_lemire, $g);
