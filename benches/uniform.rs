@@ -74,7 +74,7 @@ macro_rules! single_random {
         single_random!("Canon", $R, $T, $U, sample_single_inclusive_canon, $g);
         single_random!("Canon-Un", $R, $T, $U, sample_single_inclusive_canon_unbiased, $g);
         single_random!("Canon-Red", $R, $T, $U, sample_single_inclusive_canon_reduced, $g);
-        // single_random!("Canon-Red-Un", $R, $T, $U, sample_single_inclusive_canon_reduced_unbiased, $g);
+        single_random!("Canon-Red-Un", $R, $T, $U, sample_single_inclusive_canon_reduced_unbiased, $g);
         single_random!("ONeill", $R, $T, $U, sample_single_inclusive_oneill, $g);
     };
 
@@ -139,7 +139,7 @@ macro_rules! distr_random {
     ($R:ty, large, $T:ty, $U:ty, $g:expr) => {
         distr_random!("Canon", $R, $T, $U, sample_canon, $g);
         distr_random!("Canon-Red", $R, $T, $U, sample_canon_reduced, $g);
-        // distr_random!("Canon-Red-Un", $R, $T, $U, sample_canon_reduced_unbiased, $g);
+        distr_random!("Canon-Red-Un", $R, $T, $U, sample_canon_reduced_unbiased, $g);
         distr_random!("Canon-Un", $R, $T, $U, sample_canon_unbiased, $g);
         distr_random!("Lemire", $R, $T, $U, sample_lemire, $g);
     };

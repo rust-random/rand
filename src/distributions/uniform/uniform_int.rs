@@ -261,13 +261,13 @@ macro_rules! uniform_int_impl {
                 while lo > range.wrapping_neg() {
                     let (new_hi, new_lo) = (rng.gen::<$u64_or_uty>()).wmul(range);
                     match lo.checked_add(new_hi) {
+                        Some(x) if x < $u64_or_uty::MAX => {
+                            // Anything less than MAX: last term is 0
+                            break;
+                        }
                         None => {
                             // Overflow: last term is 1
                             result += 1;
-                            break;
-                        }
-                        Some(x) if x < $u64_or_uty::MAX => {
-                            // Anything less than MAX: last term is 0
                             break;
                         }
                         _ => {
@@ -294,13 +294,13 @@ macro_rules! uniform_int_impl {
                 while lo > range.wrapping_neg() {
                     let (new_hi, new_lo) = (rng.gen::<$u32_or_uty>()).wmul(range);
                     match lo.checked_add(new_hi) {
+                        Some(x) if x < $u32_or_uty::MAX => {
+                            // Anything less than MAX: last term is 0
+                            break;
+                        }
                         None => {
                             // Overflow: last term is 1
                             result += 1;
-                            break;
-                        }
-                        Some(x) if x < $u32_or_uty::MAX => {
-                            // Anything less than MAX: last term is 0
                             break;
                         }
                         _ => {
@@ -456,13 +456,13 @@ macro_rules! uniform_int_impl {
                 while lo > range.wrapping_neg() {
                     let (new_hi, new_lo) = (rng.gen::<$u64_or_uty>()).wmul(range);
                     match lo.checked_add(new_hi) {
+                        Some(x) if x < $u64_or_uty::MAX => {
+                            // Anything less than MAX: last term is 0
+                            break;
+                        }
                         None => {
                             // Overflow: last term is 1
                             result += 1;
-                            break;
-                        }
-                        Some(x) if x < $u64_or_uty::MAX => {
-                            // Anything less than MAX: last term is 0
                             break;
                         }
                         _ => {
@@ -502,13 +502,13 @@ macro_rules! uniform_int_impl {
                 while lo > range.wrapping_neg() {
                     let (new_hi, new_lo) = (rng.gen::<$u32_or_uty>()).wmul(range);
                     match lo.checked_add(new_hi) {
+                        Some(x) if x < $u32_or_uty::MAX => {
+                            // Anything less than MAX: last term is 0
+                            break;
+                        }
                         None => {
                             // Overflow: last term is 1
                             result += 1;
-                            break;
-                        }
-                        Some(x) if x < $u32_or_uty::MAX => {
-                            // Anything less than MAX: last term is 0
                             break;
                         }
                         _ => {
@@ -626,6 +626,40 @@ macro_rules! uniform_int_canon_reduced_impl {
                 self.low.wrapping_add(result as $ty)
             }
 
+            /// Sample, Canon's method variant
+            #[inline]
+            pub fn sample_canon_reduced_unbiased<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $uty;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let (mut result, mut lo) = rng.gen::<$uty>().wmul(range);
+
+                while lo > range.wrapping_neg() {
+                    let (hi2, lo2) = (rng.gen::<$u_half>() as $uty).wmul(range);
+                    debug_assert_eq!(hi2 >> $shift, 0 as $uty);
+                    match lo.checked_add((hi2 << $shift) | (lo2 >> $shift)) {
+                        Some(x) if x < (<$u_half>::MAX as $uty) => {
+                            // Anything less than MAX: cannot overflow
+                            break;
+                        }
+                        Some(x) => {
+                            const LOWER: $u_half = !0;
+                            lo = (x << $shift) | (lo2 & (LOWER as $uty));
+                            continue;
+                        }
+                        None => {
+                            // Overflow: last term is 1
+                            result += 1;
+                            break;
+                        }
+                    }
+                }
+
+                self.low.wrapping_add(result as $ty)
+            }
+
             /// Sample single inclusive, using Canon's method variant
             #[inline]
             pub fn sample_single_inclusive_canon_reduced<R: Rng + ?Sized, B1, B2>(
@@ -656,6 +690,53 @@ macro_rules! uniform_int_canon_reduced_impl {
                     debug_assert_eq!(hi2 >> $shift, 0 as $uty);
                     let is_overflow = lo1.checked_add((hi2 << $shift) | (lo2 >> $shift)).is_none();
                     result += is_overflow as $uty;
+                }
+
+                low.wrapping_add(result as $ty)
+            }
+
+            /// Sample single inclusive, using Canon's method variant
+            #[inline]
+            pub fn sample_single_inclusive_canon_reduced_unbiased<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> $ty
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                assert!(
+                    low <= high,
+                    "UniformSampler::sample_single_inclusive: low > high"
+                );
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
+                if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
+                    return rng.gen();
+                }
+
+                let (mut result, mut lo) = rng.gen::<$uty>().wmul(range);
+
+                while lo > range.wrapping_neg() {
+                    let (hi2, lo2) = (rng.gen::<$u_half>() as $uty).wmul(range);
+                    debug_assert_eq!(hi2 >> $shift, 0 as $uty);
+                    match lo.checked_add((hi2 << $shift) | (lo2 >> $shift)) {
+                        Some(x) if x < (<$u_half>::MAX as $uty) => {
+                            // Anything less than MAX: cannot overflow
+                            break;
+                        }
+                        Some(x) => {
+                            const LOWER: $u_half = !0;
+                            lo = (x << $shift) | (lo2 & (LOWER as $uty));
+                            continue;
+                        }
+                        None => {
+                            // Overflow: last term is 1
+                            result += 1;
+                            break;
+                        }
+                    }
                 }
 
                 low.wrapping_add(result as $ty)
