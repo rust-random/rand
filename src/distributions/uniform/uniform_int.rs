@@ -281,6 +281,39 @@ macro_rules! uniform_int_impl {
                 self.low.wrapping_add(result as $ty)
             }
 
+            /// Sample, Canon's method, max(u32, $ty) samples, unbiased
+            #[inline]
+            pub fn sample_canon_u32_unbiased<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $uty as $u32_or_uty;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let (mut result, mut lo) = rng.gen::<$u32_or_uty>().wmul(range);
+
+                while lo > range.wrapping_neg() {
+                    let (new_hi, new_lo) = (rng.gen::<$u32_or_uty>()).wmul(range);
+                    match lo.checked_add(new_hi) {
+                        None => {
+                            // Overflow: last term is 1
+                            result += 1;
+                            break;
+                        }
+                        Some(x) if x < $u32_or_uty::MAX => {
+                            // Anything less than MAX: last term is 0
+                            break;
+                        }
+                        _ => {
+                            // Unlikely case: must check next sample
+                            lo = new_lo;
+                            continue;
+                        }
+                    }
+                }
+
+                self.low.wrapping_add(result as $ty)
+            }
+
             /// Sample single inclusive, using ONeill's method
             #[inline]
             pub fn sample_single_inclusive_oneill<R: Rng + ?Sized, B1, B2>(
@@ -429,6 +462,52 @@ macro_rules! uniform_int_impl {
                             break;
                         }
                         Some(x) if x < $u64_or_uty::MAX => {
+                            // Anything less than MAX: last term is 0
+                            break;
+                        }
+                        _ => {
+                            // Unlikely case: must check next sample
+                            lo = new_lo;
+                            continue;
+                        }
+                    }
+                }
+
+                low.wrapping_add(result as $ty)
+            }
+
+            /// Sample, Canon's method, max(u64, $ty) samples, unbiased
+            #[inline]
+            pub fn sample_single_inclusive_canon_u32_unbiased<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> $ty
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                assert!(
+                    low <= high,
+                    "UniformSampler::sample_single_inclusive: low > high"
+                );
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u32_or_uty;
+                if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
+                    return rng.gen();
+                }
+
+                let (mut result, mut lo) = rng.gen::<$u32_or_uty>().wmul(range);
+
+                while lo > range.wrapping_neg() {
+                    let (new_hi, new_lo) = (rng.gen::<$u32_or_uty>()).wmul(range);
+                    match lo.checked_add(new_hi) {
+                        None => {
+                            // Overflow: last term is 1
+                            result += 1;
+                            break;
+                        }
+                        Some(x) if x < $u32_or_uty::MAX => {
                             // Anything less than MAX: last term is 0
                             break;
                         }

@@ -58,7 +58,7 @@ macro_rules! single_random {
         single_random!("Biased64", $R, $T, $U, sample_single_inclusive_biased_64, $g);
         single_random!("Canon32", $R, $T, $U, sample_single_inclusive_canon_u32, $g);
         single_random!("Canon32-2", $R, $T, $U, sample_single_inclusive_canon_u32_2, $g);
-        // single_random!("Canon32-Un", $R, $T, $U, sample_single_inclusive_canon_u32_unbiased, $g);
+        single_random!("Canon32-Un", $R, $T, $U, sample_single_inclusive_canon_u32_unbiased, $g);
         single_random!("ONeill", $R, $T, $U, sample_single_inclusive_oneill, $g);
     };
 
@@ -124,7 +124,7 @@ macro_rules! distr_random {
         distr_random!("Biased64", $R, $T, $U, sample_biased_64, $g);
         distr_random!("Canon32", $R, $T, $U, sample_canon_u32, $g);
         distr_random!("Canon32-2", $R, $T, $U, sample_canon_u32_2, $g);
-        // distr_random!("Canon32-Un", $R, $T, $U, sample_canon_u32_unbiased, $g);
+        distr_random!("Canon32-Un", $R, $T, $U, sample_canon_u32_unbiased, $g);
         distr_random!("Lemire", $R, $T, $U, sample_lemire, $g);
     };
 
