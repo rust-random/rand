@@ -281,25 +281,6 @@ macro_rules! uniform_int_impl {
                 self.low.wrapping_add(result as $ty)
             }
 
-            /// Sample, Canon's method with Lemire's early-out
-            #[inline]
-            pub fn sample_canon_lemire<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let range = self.range as $uty as $u64_or_uty;
-                if range == 0 {
-                    return rng.gen();
-                }
-
-                let (mut result, lo) = rng.gen::<$u64_or_uty>().wmul(range);
-
-                if lo < self.thresh64_or_uty as $uty as $u64_or_uty {
-                    let (new_hi, _) = (rng.gen::<$u64_or_uty>()).wmul(range);
-                    let is_overflow = lo.checked_add(new_hi).is_none();
-                    result += is_overflow as $u64_or_uty;
-                }
-
-                self.low.wrapping_add(result as $ty)
-            }
-
             /// Sample single inclusive, using ONeill's method
             #[inline]
             pub fn sample_single_inclusive_oneill<R: Rng + ?Sized, B1, B2>(
@@ -457,43 +438,6 @@ macro_rules! uniform_int_impl {
                             continue;
                         }
                     }
-                }
-
-                low.wrapping_add(result as $ty)
-            }
-
-            /// Sample single inclusive, using Canon's method with Lemire's early-out
-            #[inline]
-            pub fn sample_inclusive_canon_lemire<R: Rng + ?Sized, B1, B2>(
-                low_b: B1, high_b: B2, rng: &mut R,
-            ) -> $ty
-            where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
-            {
-                let low = *low_b.borrow();
-                let high = *high_b.borrow();
-                assert!(
-                    low <= high,
-                    "UniformSampler::sample_single_inclusive: low > high"
-                );
-                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u64_or_uty;
-                if range == 0 {
-                    // Range is MAX+1 (unrepresentable), so we need a special case
-                    return rng.gen();
-                }
-
-                // generate a sample using a sensible integer type
-                let (mut result, lo_order) = rng.gen::<$u64_or_uty>().wmul(range);
-
-                // if the sample is biased... (since range won't be changing we can further
-                // improve this check with a modulo)
-                if lo_order < range.wrapping_neg() % range {
-                    // ...generate a new sample with 64 more bits, enough that bias is undetectable
-                    let (new_hi_order, _) = (rng.gen::<$u64_or_uty>()).wmul(range as $u64_or_uty);
-                    // and adjust if needed
-                    result +=
-                        lo_order.checked_add(new_hi_order as $u64_or_uty).is_none() as $u64_or_uty;
                 }
 
                 low.wrapping_add(result as $ty)

@@ -70,8 +70,6 @@ macro_rules! single_random {
     ($R:ty, 64, $T:ty, $U:ty, $g:expr) => {
         single_random!("Canon", $R, $T, $U, sample_single_inclusive_canon, $g);
         single_random!("Canon-Un", $R, $T, $U, sample_single_inclusive_canon_unbiased, $g);
-        single_random!("Canon-Lemire", $R, $T, $U, sample_inclusive_canon_lemire, $g);
-        // single_random!("Canon-Lemire-Un", $R, $T, $U, sample_inclusive_canon_lemire_unbiased, $g);
         single_random!("ONeill", $R, $T, $U, sample_single_inclusive_oneill, $g);
     };
 
