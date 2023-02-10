@@ -617,6 +617,7 @@ macro_rules! uniform_int_canon_reduced_impl {
                 if lo1 > range.wrapping_neg() {
                     // Generate more bits. For i128, sample is multiplied by 2.pow(-192), so
                     // hi2 is multiplied by 2.pow(-64):
+                    // TODO: can optimise since upper half of LHS is zero
                     let (hi2, lo2) = (rng.gen::<$u_half>() as $uty).wmul(range);
                     debug_assert_eq!(hi2 >> $shift, 0 as $uty);
                     let is_overflow = lo1.checked_add((hi2 << $shift) | (lo2 >> $shift)).is_none();
