@@ -48,10 +48,10 @@ use crate::Rng;
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformInt<X> {
-    // HACK: fields are pub(crate)
-    pub(crate) low: X,
-    pub(crate) range: X,
-    pub(crate) thresh: X, // effectively 2.pow(max(64, uty_bits)) % range
+    low: X,
+    range: X,
+    #[cfg(feature = "unbiased")]
+    thresh: X, // effectively 2.pow(max(64, uty_bits)) % range
 }
 
 macro_rules! uniform_int_impl {
@@ -96,6 +96,7 @@ macro_rules! uniform_int_impl {
                 );
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
+                #[cfg(feature = "unbiased")]
                 let thresh = if range > 0 {
                     let range = $sample_ty::from(range);
                     (range.wrapping_neg() % range)
@@ -106,61 +107,18 @@ macro_rules! uniform_int_impl {
                 UniformInt {
                     low,
                     range: range as $ty, // type: $uty
+                    #[cfg(feature = "unbiased")]
                     thresh: thresh as $uty as $ty, // type: $sample_ty
                 }
             }
 
+            /// Sample from distribution, Canon's method, biased
+            ///
+            /// In the worst case, bias affects 1 in `2^n` samples where n is
+            /// 56 (`i8`), 48 (`i16`), 96 (`i32`), 64 (`i64`), 128 (`i128`).
+            #[cfg(not(feature = "unbiased"))]
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                todo!()
-            }
-
-            #[inline]
-            fn sample_single<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R) -> Self::X
-            where
-                B1: SampleBorrow<Self::X> + Sized,
-                B2: SampleBorrow<Self::X> + Sized,
-            {
-                let low = *low_b.borrow();
-                let high = *high_b.borrow();
-                assert!(low < high, "UniformSampler::sample_single: low >= high");
-                Self::sample_single_inclusive(low, high - 1, rng)
-            }
-
-            #[inline]
-            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(
-                low_b: B1, high_b: B2, rng: &mut R,
-            ) -> Self::X
-            where
-                B1: SampleBorrow<Self::X> + Sized,
-                B2: SampleBorrow<Self::X> + Sized,
-            {
-                todo!()
-            }
-        }
-
-        impl UniformInt<$ty> {
-            /// Sample, Lemire's method
-            #[inline]
-            pub fn sample_lemire<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let range = self.range as $uty as $sample_ty;
-                if range == 0 {
-                    return rng.gen();
-                }
-
-                let thresh = self.thresh as $uty as $sample_ty;
-                let hi = loop {
-                    let (hi, lo) = rng.gen::<$sample_ty>().wmul(range);
-                    if lo >= thresh {
-                        break hi;
-                    }
-                };
-                self.low.wrapping_add(hi as $ty)
-            }
-
-            /// Sample, Canon's method, max(u64, $ty) samples, bias ≤ 1-in-2^(sample size)
-            #[inline]
-            pub fn sample_canon<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 let range = self.range as $uty as $sample_ty;
                 if range == 0 {
                     return rng.gen();
@@ -177,14 +135,49 @@ macro_rules! uniform_int_impl {
                 self.low.wrapping_add(result as $ty)
             }
 
-            /// Sample single inclusive, using Canon's method
+            /// Sample from distribution, Lemire's method, unbiased
+            #[cfg(feature = "unbiased")]
             #[inline]
-            pub fn sample_single_inclusive_canon<R: Rng + ?Sized, B1, B2>(
-                low_b: B1, high_b: B2, rng: &mut R,
-            ) -> $ty
+            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+                let range = self.range as $uty as $sample_ty;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let thresh = self.thresh as $uty as $sample_ty;
+                let hi = loop {
+                    let (hi, lo) = rng.gen::<$sample_ty>().wmul(range);
+                    if lo >= thresh {
+                        break hi;
+                    }
+                };
+                self.low.wrapping_add(hi as $ty)
+            }
+
+            #[inline]
+            fn sample_single<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R) -> Self::X
             where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                assert!(low < high, "UniformSampler::sample_single: low >= high");
+                Self::sample_single_inclusive(low, high - 1, rng)
+            }
+
+            /// Sample single value, Canon's method, biased
+            ///
+            /// In the worst case, bias affects 1 in `2^n` samples where n is
+            /// 56 (`i8`), 48 (`i16`), 96 (`i32`), 64 (`i64`), 128 (`i128`).
+            #[cfg(not(feature = "unbiased"))]
+            #[inline]
+            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> Self::X
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
             {
                 let low = *low_b.borrow();
                 let high = *high_b.borrow();
@@ -213,11 +206,12 @@ macro_rules! uniform_int_impl {
                 low.wrapping_add(result as $ty)
             }
 
-            /// Sample, Canon's method, max(u64, $ty) samples, unbiased
+            /// Sample single value, Canon's method, unbiased
+            #[cfg(feature = "unbiased")]
             #[inline]
-            pub fn sample_single_inclusive_canon_unbiased<R: Rng + ?Sized, B1, B2>(
+            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(
                 low_b: B1, high_b: B2, rng: &mut R,
-            ) -> $ty
+            ) -> Self::X
             where
                 B1: SampleBorrow<$ty> + Sized,
                 B2: SampleBorrow<$ty> + Sized,

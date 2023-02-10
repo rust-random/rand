@@ -54,6 +54,11 @@ small_rng = []
 # using min-const-generics
 min_const_gen = []
 
+# Option: use unbiased sampling. By default, bias affecting no more than one in
+# 2^48 samples (for uniform distributions) is accepted.
+# Note: enabling this option is expected to affect reproducibility of results.
+unbiased = []
+
 [workspace]
 members = [
     "rand_core",

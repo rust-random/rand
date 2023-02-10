@@ -93,8 +93,7 @@ macro_rules! distr_random {
     };
 
     ($R:ty, $T:ty, $U:ty, $g:expr) => {
-        distr_random!("sample", $R, $T, $U, sample_canon, $g);
-        distr_random!("Lemire", $R, $T, $U, sample_lemire, $g);
+        distr_random!("sample", $R, $T, $U, sample, $g);
     };
 
     ($c:expr, $T:ty, $U:ty) => {{
