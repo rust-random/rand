@@ -77,6 +77,10 @@ rayon = "1.5.3"
 criterion = { version = "0.4" }
 
 [[bench]]
+name = "uniform"
+harness = false
+
+[[bench]]
 name = "seq_choose"
 path = "benches/seq_choose.rs"
 harness = false
