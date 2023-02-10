@@ -50,13 +50,12 @@ macro_rules! single_random {
     };
 
     ($R:ty, small, $T:ty, $U:ty, $g:expr) => {
-        single_random!("sample", $R, $T, $U, sample_single_inclusive_canon_u32, $g);
+        single_random!("sample", $R, $T, $U, sample_single_inclusive_canon, $g);
         single_random!("Canon32-2", $R, $T, $U, sample_single_inclusive_canon_u32_2, $g);
-        single_random!("sample-unbiased", $R, $T, $U, sample_single_inclusive_canon_u32_unbiased, $g);
+        single_random!("sample-unbiased", $R, $T, $U, sample_single_inclusive_canon_unbiased, $g);
     };
 
     ($R:ty, 32, $T:ty, $U:ty, $g:expr) => {
-        single_random!("Canon32", $R, $T, $U, sample_single_inclusive_canon_u32, $g);
         single_random!("sample", $R, $T, $U, sample_single_inclusive_canon, $g);
         single_random!("sample-unbiased", $R, $T, $U, sample_single_inclusive_canon_unbiased, $g);
     };
@@ -107,14 +106,13 @@ macro_rules! distr_random {
     };
 
     ($R:ty, small, $T:ty, $U:ty, $g:expr) => {
-        distr_random!("sample", $R, $T, $U, sample_canon_u32, $g);
+        distr_random!("sample", $R, $T, $U, sample_canon, $g);
         distr_random!("Canon32-2", $R, $T, $U, sample_canon_u32_2, $g);
-        distr_random!("sample-unbiased", $R, $T, $U, sample_canon_u32_unbiased, $g);
+        distr_random!("sample-unbiased", $R, $T, $U, sample_canon_unbiased, $g);
         distr_random!("Lemire", $R, $T, $U, sample_lemire, $g);
     };
 
     ($R:ty, 32, $T:ty, $U:ty, $g:expr) => {
-        distr_random!("Canon32", $R, $T, $U, sample_canon_u32, $g);
         distr_random!("sample", $R, $T, $U, sample_canon, $g);
         distr_random!("sample-unbiased", $R, $T, $U, sample_canon_unbiased, $g);
         distr_random!("Lemire", $R, $T, $U, sample_lemire, $g);
