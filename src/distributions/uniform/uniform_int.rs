@@ -51,7 +51,6 @@ pub struct UniformInt<X> {
     // HACK: fields are pub(crate)
     pub(crate) low: X,
     pub(crate) range: X,
-    pub(crate) thresh32_or_uty: X, // effectively 2.pow(max(32, uty_bits)) % range
     pub(crate) thresh64_or_uty: X, // effectively 2.pow(max(64, uty_bits)) % range
 }
 
@@ -97,43 +96,23 @@ macro_rules! uniform_int_impl {
                 );
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
-                let (thresh32_or_uty, thresh64_or_uty);
-                if range > 0 {
-                    let range32 = $u32_or_uty::from(range);
-                    thresh32_or_uty = (range32.wrapping_neg() % range32);
-
+                let thresh64_or_uty = if range > 0 {
                     let range64 = $u64_or_uty::from(range);
-                    thresh64_or_uty = (range64.wrapping_neg() % range64);
+                    (range64.wrapping_neg() % range64)
                 } else {
-                    thresh32_or_uty = 0;
-                    thresh64_or_uty = 0;
+                    0
                 };
 
                 UniformInt {
                     low,
                     range: range as $ty, // type: $uty
-                    thresh32_or_uty: thresh32_or_uty as $uty as $ty, // type: $u32_or_uty
                     thresh64_or_uty: thresh64_or_uty as $uty as $ty, // type: $u64_or_uty
                 }
             }
 
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                let range = self.range as $uty as $u32_or_uty;
-                if range == 0 {
-                    return rng.gen();
-                }
-
-                let unsigned_max = ::core::$u32_or_uty::MAX;
-                let thresh = self.thresh32_or_uty as $uty as $u32_or_uty;
-                let zone = unsigned_max - thresh;
-                loop {
-                    let v: $u32_or_uty = rng.gen();
-                    let (hi, lo) = v.wmul(range);
-                    if lo <= zone {
-                        return self.low.wrapping_add(hi as $ty);
-                    }
-                }
+                todo!()
             }
 
             #[inline]
@@ -156,38 +135,7 @@ macro_rules! uniform_int_impl {
                 B1: SampleBorrow<Self::X> + Sized,
                 B2: SampleBorrow<Self::X> + Sized,
             {
-                let low = *low_b.borrow();
-                let high = *high_b.borrow();
-                assert!(
-                    low <= high,
-                    "UniformSampler::sample_single_inclusive: low > high"
-                );
-                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u32_or_uty;
-                if range == 0 {
-                    // Range is MAX+1 (unrepresentable), so we need a special case
-                    return rng.gen();
-                }
-
-                let zone = if ::core::$uty::MAX <= ::core::u16::MAX as $uty {
-                    // Using a modulus is faster than the approximation for
-                    // i8 and i16. I suppose we trade the cost of one
-                    // modulus for near-perfect branch prediction.
-                    let unsigned_max: $u32_or_uty = ::core::$u32_or_uty::MAX;
-                    let ints_to_reject = (unsigned_max - range + 1) % range;
-                    unsigned_max - ints_to_reject
-                } else {
-                    // conservative but fast approximation. `- 1` is necessary to allow the
-                    // same comparison without bias.
-                    (range << range.leading_zeros()).wrapping_sub(1)
-                };
-
-                loop {
-                    let v: $u32_or_uty = rng.gen();
-                    let (hi, lo) = v.wmul(range);
-                    if lo <= zone {
-                        return low.wrapping_add(hi as $ty);
-                    }
-                }
+                todo!()
             }
         }
 
