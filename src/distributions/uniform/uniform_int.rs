@@ -314,50 +314,6 @@ macro_rules! uniform_int_impl {
                 self.low.wrapping_add(result as $ty)
             }
 
-            /// Sample single inclusive, using ONeill's method
-            #[inline]
-            pub fn sample_single_inclusive_oneill<R: Rng + ?Sized, B1, B2>(
-                low_b: B1, high_b: B2, rng: &mut R,
-            ) -> $ty
-            where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
-            {
-                let low = *low_b.borrow();
-                let high = *high_b.borrow();
-                assert!(
-                    low <= high,
-                    "UniformSampler::sample_single_inclusive: low > high"
-                );
-                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $u32_or_uty;
-                if range == 0 {
-                    // Range is MAX+1 (unrepresentable), so we need a special case
-                    return rng.gen();
-                }
-
-                // we use the "Debiased Int Mult (t-opt, m-opt)" rejection sampling method
-                // described here https://www.pcg-random.org/posts/bounded-rands.html
-                // and here https://github.com/imneme/bounded-rands
-
-                let (mut hi, mut lo) = rng.gen::<$u32_or_uty>().wmul(range);
-                if lo < range {
-                    let mut threshold = range.wrapping_neg();
-                    // this shortcut works best with large ranges
-                    if threshold >= range {
-                        threshold -= range;
-                        if threshold >= range {
-                            threshold %= range;
-                        }
-                    }
-                    while lo < threshold {
-                        let (new_hi, new_lo) = rng.gen::<$u32_or_uty>().wmul(range);
-                        hi = new_hi;
-                        lo = new_lo;
-                    }
-                }
-                low.wrapping_add(hi as $ty)
-            }
-
             /// Sample single inclusive, using Canon's method
             #[inline]
             pub fn sample_single_inclusive_canon<R: Rng + ?Sized, B1, B2>(
@@ -546,60 +502,6 @@ mod isize_int_impls {
     uniform_int_impl! { isize, usize, usize, usize }
     uniform_int_impl! { usize, usize, usize, usize }
 }
-
-macro_rules! uniform_int_canon_biased_impl {
-    ($ty:ty, $uty:ident) => {
-        impl UniformInt<$ty> {
-            /// Sample, Canon's method variant
-            ///
-            /// Variant: potential increase to bias (uses a single `u64` sample).
-            #[inline]
-            pub fn sample_biased_64<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let range = self.range as $uty as u64;
-                if range == 0 {
-                    return rng.gen();
-                }
-
-                let (result, _lo1) = rng.gen::<u64>().wmul(range);
-                // bias is at most 1 in 2.pow(56) for i8, 1 in 2.pow(48) for i16
-                self.low.wrapping_add(result as $ty)
-            }
-
-            /// Sample single inclusive, using Canon's method variant
-            ///
-            /// Variant: potential increase to bias (uses a single `u64` sample).
-            #[inline]
-            pub fn sample_single_inclusive_biased_64<R: Rng + ?Sized, B1, B2>(
-                low_b: B1, high_b: B2, rng: &mut R,
-            ) -> $ty
-            where
-                B1: SampleBorrow<$ty> + Sized,
-                B2: SampleBorrow<$ty> + Sized,
-            {
-                let low = *low_b.borrow();
-                let high = *high_b.borrow();
-                assert!(
-                    low <= high,
-                    "UniformSampler::sample_single_inclusive: low > high"
-                );
-                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as u64;
-                if range == 0 {
-                    // Range is MAX+1 (unrepresentable), so we need a special case
-                    return rng.gen();
-                }
-
-                // generate a sample using a sensible integer type
-                let (result, _lo1) = rng.gen::<u64>().wmul(range);
-                // bias is at most 1 in 2.pow(56) for i8, 1 in 2.pow(48) for i16
-                low.wrapping_add(result as $ty)
-            }
-        }
-    };
-}
-
-uniform_int_canon_biased_impl!(i8, u8);
-uniform_int_canon_biased_impl!(i16, u16);
-uniform_int_canon_biased_impl!(i32, u32);
 
 macro_rules! uniform_int_canon_reduced_impl {
     ($ty:ty, $uty:ident, $u_half:ty, $shift:expr) => {
