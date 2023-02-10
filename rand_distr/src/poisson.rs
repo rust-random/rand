@@ -89,8 +89,8 @@ where F: Float + FloatConst, Standard: Distribution<F>
 
         // for low expected values use the Knuth method
         if self.lambda < F::from(12.0).unwrap() {
-            let mut result = F::zero();
-            let mut p = F::one();
+            let mut result = F::one();
+            let mut p = rng.gen::<F>();
             while p > self.exp_lambda {
                 p = p*rng.gen::<F>();
                 result = result + F::one();
@@ -161,10 +161,16 @@ mod test {
 
     #[test]
     fn test_poisson_avg() {
-        test_poisson_avg_gen::<f64>(10.0, 0.5);
-        test_poisson_avg_gen::<f64>(15.0, 0.5);
-        test_poisson_avg_gen::<f32>(10.0, 0.5);
-        test_poisson_avg_gen::<f32>(15.0, 0.5);
+        test_poisson_avg_gen::<f64>(10.0, 0.1);
+        test_poisson_avg_gen::<f64>(15.0, 0.1);
+
+        
+        test_poisson_avg_gen::<f32>(10.0, 0.1);
+        test_poisson_avg_gen::<f32>(15.0, 0.1);
+
+        //Small lambda will use Knuth's method with exp_lambda == 1.0
+        test_poisson_avg_gen::<f32>(0.00000000000000005, 0.1);
+        test_poisson_avg_gen::<f64>(0.00000000000000005, 0.1);
     }
 
     #[test]
