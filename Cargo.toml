@@ -80,7 +80,7 @@ features = ["into_bits"]
 libc = { version = "0.2.22", optional = true, default-features = false }
 
 [dev-dependencies]
-criterion = { version = "0.3", features = ["html_reports"] }
+criterion = "0.4.0"
 num-traits = "0.2.14"
 rand_pcg = { path = "rand_pcg", version = "0.3.0" }
 # Only to test serde1
