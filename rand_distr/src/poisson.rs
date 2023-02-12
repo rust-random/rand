@@ -163,7 +163,6 @@ mod test {
     fn test_poisson_avg() {
         test_poisson_avg_gen::<f64>(10.0, 0.1);
         test_poisson_avg_gen::<f64>(15.0, 0.1);
-
         
         test_poisson_avg_gen::<f32>(10.0, 0.1);
         test_poisson_avg_gen::<f32>(15.0, 0.1);
