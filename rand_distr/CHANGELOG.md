@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove unused fields from `Gamma`, `NormalInverseGaussian` and `Zipf` distributions (#1184)
   This breaks serialization compatibility with older versions.
 - Upgrade Rand
+- Fix Knuth's method so `Poisson` doesn't return -1.0 for small lambda
 
 ## [0.4.3] - 2021-12-30
 - Fix `no_std` build (#1208)
