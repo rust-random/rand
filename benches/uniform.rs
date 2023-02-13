@@ -29,8 +29,10 @@ use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use rand_pcg::{Pcg32, Pcg64};
 
-const WARM_UP_TIME: Duration = Duration::from_millis(100);
-const MEASUREMENT_TIME: Duration = Duration::from_secs(1);
+const WARM_UP_TIME: Duration = Duration::from_millis(1000);
+const MEASUREMENT_TIME: Duration = Duration::from_secs(3);
+const SAMPLE_SIZE: usize = 100_000;
+const N_RESAMPLES: usize = 10_000;
 
 macro_rules! single_random {
     ($name:literal, $R:ty, $T:ty, $U:ty, $f:ident, $g:expr) => {
@@ -42,15 +44,8 @@ macro_rules! single_random {
             let range = (x >> bits) * (x & mask);
             let low = <$T>::MIN;
             let high = low.wrapping_add(range as $T);
-            const SAMPLES: usize = 50;
-            b.iter(|| {
-                let mut result: $T = 0;
-                for _ in 0..SAMPLES {
-                    result =
-                        result.wrapping_add(<$T as SampleUniform>::Sampler::$f(low, high, &mut rng));
-                }
-                result
-            });
+
+            b.iter(|| <$T as SampleUniform>::Sampler::$f(low, high, &mut rng));
         });
     };
 
@@ -80,8 +75,10 @@ macro_rules! single_random {
 
     ($c:expr, $set:tt, $T:ty, $U:ty) => {{
         let mut g = $c.benchmark_group(concat!("single_random_", stringify!($T)));
+        g.sample_size(SAMPLE_SIZE);
         g.warm_up_time(WARM_UP_TIME);
         g.measurement_time(MEASUREMENT_TIME);
+        g.nresamples(N_RESAMPLES);
         single_random!(SmallRng, $set, $T, $U, g);
         single_random!(ChaCha8Rng, $set, $T, $U, g);
         single_random!(Pcg32, $set, $T, $U, g);
@@ -106,17 +103,11 @@ macro_rules! distr_random {
             let bits = (<$T>::BITS / 2);
             let mask = (1 as $U).wrapping_neg() >> bits;
             let range = (x >> bits) * (x & mask);
-            let high = <$T>::MIN.wrapping_add(range as $T);
+            let low = <$T>::MIN;
+            let high = low.wrapping_add(range as $T);
             let dist = Uniform::<$T>::new_inclusive(<$T>::MIN, high);
-            const SAMPLES: usize = 50;
-            b.iter(|| {
-                let mut result: $T = 0;
-                for _ in 0..SAMPLES {
-                    result =
-                        result.wrapping_add(<$T as SampleUniform>::Sampler::$f(&dist.0, &mut rng));
-                }
-                result
-            });
+
+            b.iter(|| <$T as SampleUniform>::Sampler::$f(&dist.0, &mut rng));
         });
     };
 
@@ -146,8 +137,10 @@ macro_rules! distr_random {
 
     ($c:expr, $set:tt, $T:ty, $U:ty) => {{
         let mut g = $c.benchmark_group(concat!("distr_random_", stringify!($T)));
+        g.sample_size(SAMPLE_SIZE);
         g.warm_up_time(WARM_UP_TIME);
         g.measurement_time(MEASUREMENT_TIME);
+        g.nresamples(N_RESAMPLES);
         distr_random!(SmallRng, $set, $T, $U, g);
         distr_random!(ChaCha8Rng, $set, $T, $U, g);
         distr_random!(Pcg32, $set, $T, $U, g);
