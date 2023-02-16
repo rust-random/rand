@@ -177,39 +177,6 @@ macro_rules! uniform_int_impl {
                 self.low.wrapping_add(result as $ty)
             }
 
-            /// Sample, Canon's method, max(u64, $ty) samples, unbiased
-            #[inline]
-            pub fn sample_canon_unbiased<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
-                let range = self.range as $uty as $sample_ty;
-                if range == 0 {
-                    return rng.gen();
-                }
-
-                let (mut result, mut lo) = rng.gen::<$sample_ty>().wmul(range);
-
-                while lo > range.wrapping_neg() {
-                    let (new_hi, new_lo) = (rng.gen::<$sample_ty>()).wmul(range);
-                    match lo.checked_add(new_hi) {
-                        Some(x) if x < $sample_ty::MAX => {
-                            // Anything less than MAX: last term is 0
-                            break;
-                        }
-                        None => {
-                            // Overflow: last term is 1
-                            result += 1;
-                            break;
-                        }
-                        _ => {
-                            // Unlikely case: must check next sample
-                            lo = new_lo;
-                            continue;
-                        }
-                    }
-                }
-
-                self.low.wrapping_add(result as $ty)
-            }
-
             /// Sample single inclusive, using Canon's method
             #[inline]
             pub fn sample_single_inclusive_canon<R: Rng + ?Sized, B1, B2>(

@@ -94,7 +94,6 @@ macro_rules! distr_random {
 
     ($R:ty, $T:ty, $U:ty, $g:expr) => {
         distr_random!("sample", $R, $T, $U, sample_canon, $g);
-        distr_random!("sample-unbiased", $R, $T, $U, sample_canon_unbiased, $g);
         distr_random!("Lemire", $R, $T, $U, sample_lemire, $g);
     };
 
