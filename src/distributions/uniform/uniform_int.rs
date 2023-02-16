@@ -210,6 +210,24 @@ macro_rules! uniform_int_impl {
                 self.low.wrapping_add(hi as $ty)
             }
 
+            /// Sample, Lemire's method (u64 for 32-bit output)
+            #[inline]
+            pub fn sample_lemire_u64<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
+                let range = self.range as $uty as $u64_or_uty;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let thresh = self.thresh64_or_uty as $uty as $u64_or_uty;
+                let hi = loop {
+                    let (hi, lo) = rng.gen::<$u64_or_uty>().wmul(range);
+                    if lo >= thresh {
+                        break hi;
+                    }
+                };
+                self.low.wrapping_add(hi as $ty)
+            }
+
             /// Sample, Canon's method, max(u64, $ty) samples, bias ≤ 1-in-2^(sample size)
             #[inline]
             pub fn sample_canon<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
