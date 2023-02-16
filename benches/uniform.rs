@@ -49,41 +49,31 @@ macro_rules! single_random {
         });
     };
 
-    ($R:ty, small, $T:ty, $U:ty, $g:expr) => {
+    ($R:ty, $T:ty, $U:ty, $g:expr) => {
         single_random!("sample", $R, $T, $U, sample_single_inclusive_canon, $g);
         single_random!("sample-unbiased", $R, $T, $U, sample_single_inclusive_canon_unbiased, $g);
     };
 
-    ($R:ty, 32, $T:ty, $U:ty, $g:expr) => {
-        single_random!("sample", $R, $T, $U, sample_single_inclusive_canon, $g);
-        single_random!("sample-unbiased", $R, $T, $U, sample_single_inclusive_canon_unbiased, $g);
-    };
-
-    ($R:ty, large, $T:ty, $U:ty, $g:expr) => {
-        single_random!("sample", $R, $T, $U, sample_single_inclusive_canon, $g);
-        single_random!("sample-unbiased", $R, $T, $U, sample_single_inclusive_canon_unbiased, $g);
-    };
-
-    ($c:expr, $set:tt, $T:ty, $U:ty) => {{
+    ($c:expr, $T:ty, $U:ty) => {{
         let mut g = $c.benchmark_group(concat!("single_random_", stringify!($T)));
         g.sample_size(SAMPLE_SIZE);
         g.warm_up_time(WARM_UP_TIME);
         g.measurement_time(MEASUREMENT_TIME);
         g.nresamples(N_RESAMPLES);
-        single_random!(SmallRng, $set, $T, $U, g);
-        single_random!(ChaCha8Rng, $set, $T, $U, g);
-        single_random!(Pcg32, $set, $T, $U, g);
-        single_random!(Pcg64, $set, $T, $U, g);
+        single_random!(SmallRng, $T, $U, g);
+        single_random!(ChaCha8Rng, $T, $U, g);
+        single_random!(Pcg32, $T, $U, g);
+        single_random!(Pcg64, $T, $U, g);
         g.finish();
     }};
 }
 
 fn single_random(c: &mut Criterion) {
-    single_random!(c, small, i8, u8);
-    single_random!(c, small, i16, u16);
-    single_random!(c, 32, i32, u32);
-    single_random!(c, large, i64, u64);
-    single_random!(c, large, i128, u128);
+    single_random!(c, i8, u8);
+    single_random!(c, i16, u16);
+    single_random!(c, i32, u32);
+    single_random!(c, i64, u64);
+    single_random!(c, i128, u128);
 }
 
 macro_rules! distr_random {
@@ -102,44 +92,32 @@ macro_rules! distr_random {
         });
     };
 
-    ($R:ty, small, $T:ty, $U:ty, $g:expr) => {
+    ($R:ty, $T:ty, $U:ty, $g:expr) => {
         distr_random!("sample", $R, $T, $U, sample_canon, $g);
         distr_random!("sample-unbiased", $R, $T, $U, sample_canon_unbiased, $g);
         distr_random!("Lemire", $R, $T, $U, sample_lemire, $g);
     };
 
-    ($R:ty, 32, $T:ty, $U:ty, $g:expr) => {
-        distr_random!("sample", $R, $T, $U, sample_canon, $g);
-        distr_random!("sample-unbiased", $R, $T, $U, sample_canon_unbiased, $g);
-        distr_random!("Lemire", $R, $T, $U, sample_lemire, $g);
-    };
-
-    ($R:ty, large, $T:ty, $U:ty, $g:expr) => {
-        distr_random!("sample", $R, $T, $U, sample_canon, $g);
-        distr_random!("sample-unbiased", $R, $T, $U, sample_canon_unbiased, $g);
-        distr_random!("Lemire", $R, $T, $U, sample_lemire, $g);
-    };
-
-    ($c:expr, $set:tt, $T:ty, $U:ty) => {{
+    ($c:expr, $T:ty, $U:ty) => {{
         let mut g = $c.benchmark_group(concat!("distr_random_", stringify!($T)));
         g.sample_size(SAMPLE_SIZE);
         g.warm_up_time(WARM_UP_TIME);
         g.measurement_time(MEASUREMENT_TIME);
         g.nresamples(N_RESAMPLES);
-        distr_random!(SmallRng, $set, $T, $U, g);
-        distr_random!(ChaCha8Rng, $set, $T, $U, g);
-        distr_random!(Pcg32, $set, $T, $U, g);
-        distr_random!(Pcg64, $set, $T, $U, g);
+        distr_random!(SmallRng, $T, $U, g);
+        distr_random!(ChaCha8Rng, $T, $U, g);
+        distr_random!(Pcg32, $T, $U, g);
+        distr_random!(Pcg64, $T, $U, g);
         g.finish();
     }};
 }
 
 fn distr_random(c: &mut Criterion) {
-    distr_random!(c, small, i8, u8);
-    distr_random!(c, small, i16, u16);
-    distr_random!(c, 32, i32, u32);
-    distr_random!(c, large, i64, u64);
-    distr_random!(c, large, i128, u128);
+    distr_random!(c, i8, u8);
+    distr_random!(c, i16, u16);
+    distr_random!(c, i32, u32);
+    distr_random!(c, i64, u64);
+    distr_random!(c, i128, u128);
 }
 
 criterion_group! {
