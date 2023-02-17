@@ -741,19 +741,18 @@ macro_rules! uniform_simd_int_impl {
                 let ints_to_reject = (unsigned_max - range + Simd::splat(1)) % modulo;
                 // When `range` is 0, `lo` of `v.wmul(range)` will always be
                 // zero which means only one sample is needed.
-                let zone = unsigned_max - ints_to_reject;
 
                 Ok(UniformInt {
                     low,
                     // These are really $unsigned values, but store as $ty:
                     range: range.cast(),
-                    thresh: zone.cast(),
+                    thresh: ints_to_reject.cast(),
                 })
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range: Simd<$unsigned, LANES> = self.range.cast();
-                let zone: Simd<$unsigned, LANES> = self.thresh.cast();
+                let thresh: Simd<$unsigned, LANES> = self.thresh.cast();
 
                 // This might seem very slow, generating a whole new
                 // SIMD vector for every sample rejection. For most uses
@@ -767,7 +766,7 @@ macro_rules! uniform_simd_int_impl {
                 let mut v: Simd<$unsigned, LANES> = rng.gen();
                 loop {
                     let (hi, lo) = v.wmul(range);
-                    let mask = lo.simd_le(zone);
+                    let mask = lo.simd_ge(thresh);
                     if mask.all() {
                         let hi: Simd<$ty, LANES> = hi.cast();
                         // wrapping addition
