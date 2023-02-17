@@ -454,7 +454,7 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
 pub struct UniformInt<X> {
     low: X,
     range: X,
-    #[cfg(feature = "unbiased")]
+    #[cfg(any(feature = "unbiased", feature = "simd_support"))]
     thresh: X, // effectively 2.pow(max(64, uty_bits)) % range
 }
 
@@ -501,7 +501,7 @@ macro_rules! uniform_int_impl {
                 }
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
-                #[cfg(feature = "unbiased")]
+                #[cfg(any(feature = "unbiased", feature = "simd_support"))]
                 let thresh = if range > 0 {
                     let range = $sample_ty::from(range);
                     (range.wrapping_neg() % range)
@@ -512,7 +512,7 @@ macro_rules! uniform_int_impl {
                 Ok(UniformInt {
                     low,
                     range: range as $ty, // type: $uty
-                    #[cfg(feature = "unbiased")]
+                    #[cfg(any(feature = "unbiased", feature = "simd_support"))]
                     thresh: thresh as $uty as $ty, // type: $sample_ty
                 })
             }
@@ -737,6 +737,7 @@ macro_rules! uniform_simd_int_impl {
                 // with bitwise OR
                 let modulo = not_full_range.select(range, unsigned_max);
                 // wrapping addition
+                // TODO: replace with `range.wrapping_neg() % module` when Simd supports this.
                 let ints_to_reject = (unsigned_max - range + Simd::splat(1)) % modulo;
                 // When `range` is 0, `lo` of `v.wmul(range)` will always be
                 // zero which means only one sample is needed.
@@ -746,13 +747,13 @@ macro_rules! uniform_simd_int_impl {
                     low,
                     // These are really $unsigned values, but store as $ty:
                     range: range.cast(),
-                    z: zone.cast(),
+                    thresh: zone.cast(),
                 })
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range: Simd<$unsigned, LANES> = self.range.cast();
-                let zone: Simd<$unsigned, LANES> = self.z.cast();
+                let zone: Simd<$unsigned, LANES> = self.thresh.cast();
 
                 // This might seem very slow, generating a whole new
                 // SIMD vector for every sample rejection. For most uses
@@ -1240,12 +1241,12 @@ mod tests {
 
                 assert_eq!(a_nanos.0.low, nanos.0.low);
                 assert_eq!(a_nanos.0.range, nanos.0.range);
-                assert_eq!(a_nanos.0.z, nanos.0.z);
+                assert_eq!(a_nanos.0.thresh, nanos.0.thresh);
             }
             (UniformDurationMode::Medium {nanos: a_nanos} , UniformDurationMode::Medium {nanos}) => {
                 assert_eq!(a_nanos.0.low, nanos.0.low);
                 assert_eq!(a_nanos.0.range, nanos.0.range);
-                assert_eq!(a_nanos.0.z, nanos.0.z);
+                assert_eq!(a_nanos.0.thresh, nanos.0.thresh);
             }
             (UniformDurationMode::Large {max_secs:a_max_secs, max_nanos:a_max_nanos, secs:a_secs}, UniformDurationMode::Large {max_secs, max_nanos, secs} ) => {
                 assert_eq!(a_max_secs, max_secs);
@@ -1253,7 +1254,7 @@ mod tests {
 
                 assert_eq!(a_secs.0.low, secs.0.low);
                 assert_eq!(a_secs.0.range, secs.0.range);
-                assert_eq!(a_secs.0.z, secs.0.z);
+                assert_eq!(a_secs.0.thresh, secs.0.thresh);
             }
             _ => panic!("`UniformDurationMode` was not serialized/deserialized correctly")
         }
@@ -1267,7 +1268,7 @@ mod tests {
 
         assert_eq!(unit_box.0.low, de_unit_box.0.low);
         assert_eq!(unit_box.0.range, de_unit_box.0.range);
-        assert_eq!(unit_box.0.z, de_unit_box.0.z);
+        assert_eq!(unit_box.0.thresh, de_unit_box.0.thresh);
 
         let unit_box: Uniform<f32> = Uniform::new(-1., 1.).unwrap();
         let de_unit_box: Uniform<f32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
