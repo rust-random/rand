@@ -444,7 +444,7 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
 /// use `u32` for our `zone` and samples (because it's not slower and because
 /// it reduces the chance of having to reject a sample). In this case we cannot
 /// store `zone` in the target type since it is too large, however we know
-/// `ints_to_reject < range <= $unsigned::MAX`.
+/// `ints_to_reject < range <= $uty::MAX`.
 ///
 /// An alternative to using a modulus is widening multiply: After a widening
 /// multiply by `range`, the result is in the high word. Then comparing the low
@@ -454,11 +454,12 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
 pub struct UniformInt<X> {
     low: X,
     range: X,
-    z: X, // either ints_to_reject or zone depending on implementation
+    #[cfg(feature = "unbiased")]
+    thresh: X, // effectively 2.pow(max(64, uty_bits)) % range
 }
 
 macro_rules! uniform_int_impl {
-    ($ty:ty, $unsigned:ident, $u_large:ident) => {
+    ($ty:ty, $uty:ty, $sample_ty:ident) => {
         impl SampleUniform for $ty {
             type Sampler = UniformInt<$ty>;
         }
@@ -466,7 +467,7 @@ macro_rules! uniform_int_impl {
         impl UniformSampler for UniformInt<$ty> {
             // We play free and fast with unsigned vs signed here
             // (when $ty is signed), but that's fine, since the
-            // contract of this macro is for $ty and $unsigned to be
+            // contract of this macro is for $ty and $uty to be
             // "bit-equal", so casting between them is a no-op.
 
             type X = $ty;
@@ -498,41 +499,64 @@ macro_rules! uniform_int_impl {
                 if !(low <= high) {
                     return Err(Error::EmptyRange);
                 }
-                let unsigned_max = ::core::$u_large::MAX;
 
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
-                let ints_to_reject = if range > 0 {
-                    let range = $u_large::from(range);
-                    (unsigned_max - range + 1) % range
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
+                #[cfg(feature = "unbiased")]
+                let thresh = if range > 0 {
+                    let range = $sample_ty::from(range);
+                    (range.wrapping_neg() % range)
                 } else {
                     0
                 };
 
                 Ok(UniformInt {
                     low,
-                    // These are really $unsigned values, but store as $ty:
-                    range: range as $ty,
-                    z: ints_to_reject as $unsigned as $ty,
+                    range: range as $ty, // type: $uty
+                    #[cfg(feature = "unbiased")]
+                    thresh: thresh as $uty as $ty, // type: $sample_ty
                 })
             }
 
+            /// Sample from distribution, Canon's method, biased
+            ///
+            /// In the worst case, bias affects 1 in `2^n` samples where n is
+            /// 56 (`i8`), 48 (`i16`), 96 (`i32`), 64 (`i64`), 128 (`i128`).
+            #[cfg(not(feature = "unbiased"))]
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                let range = self.range as $unsigned as $u_large;
-                if range > 0 {
-                    let unsigned_max = ::core::$u_large::MAX;
-                    let zone = unsigned_max - (self.z as $unsigned as $u_large);
-                    loop {
-                        let v: $u_large = rng.gen();
-                        let (hi, lo) = v.wmul(range);
-                        if lo <= zone {
-                            return self.low.wrapping_add(hi as $ty);
-                        }
-                    }
-                } else {
-                    // Sample from the entire integer range.
-                    rng.gen()
+                let range = self.range as $uty as $sample_ty;
+                if range == 0 {
+                    return rng.gen();
                 }
+
+                let (mut result, lo) = rng.gen::<$sample_ty>().wmul(range);
+
+                if lo > range.wrapping_neg() {
+                    let (new_hi, _) = (rng.gen::<$sample_ty>()).wmul(range);
+                    let is_overflow = lo.checked_add(new_hi).is_none();
+                    result += is_overflow as $sample_ty;
+                }
+
+                self.low.wrapping_add(result as $ty)
+            }
+
+            /// Sample from distribution, Lemire's method, unbiased
+            #[cfg(feature = "unbiased")]
+            #[inline]
+            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+                let range = self.range as $uty as $sample_ty;
+                if range == 0 {
+                    return rng.gen();
+                }
+
+                let thresh = self.thresh as $uty as $sample_ty;
+                let hi = loop {
+                    let (hi, lo) = rng.gen::<$sample_ty>().wmul(range);
+                    if lo >= thresh {
+                        break hi;
+                    }
+                };
+                self.low.wrapping_add(hi as $ty)
             }
 
             #[inline]
@@ -549,8 +573,15 @@ macro_rules! uniform_int_impl {
                 Self::sample_single_inclusive(low, high - 1, rng)
             }
 
+            /// Sample single value, Canon's method, biased
+            ///
+            /// In the worst case, bias affects 1 in `2^n` samples where n is
+            /// 56 (`i8`), 48 (`i16`), 96 (`i32`), 64 (`i64`), 128 (`i128`).
+            #[cfg(not(feature = "unbiased"))]
             #[inline]
-            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R) -> Result<Self::X, Error>
+            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> Result<Self::X, Error>
             where
                 B1: SampleBorrow<Self::X> + Sized,
                 B2: SampleBorrow<Self::X> + Sized,
@@ -560,33 +591,71 @@ macro_rules! uniform_int_impl {
                 if !(low <= high) {
                     return Err(Error::EmptyRange);
                 }
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_large;
-                // If the above resulted in wrap-around to 0, the range is $ty::MIN..=$ty::MAX,
-                // and any integer will do.
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $sample_ty;
                 if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
                     return Ok(rng.gen());
                 }
 
-                let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
-                    // Using a modulus is faster than the approximation for
-                    // i8 and i16. I suppose we trade the cost of one
-                    // modulus for near-perfect branch prediction.
-                    let unsigned_max: $u_large = ::core::$u_large::MAX;
-                    let ints_to_reject = (unsigned_max - range + 1) % range;
-                    unsigned_max - ints_to_reject
-                } else {
-                    // conservative but fast approximation. `- 1` is necessary to allow the
-                    // same comparison without bias.
-                    (range << range.leading_zeros()).wrapping_sub(1)
-                };
+                // generate a sample using a sensible integer type
+                let (mut result, lo_order) = rng.gen::<$sample_ty>().wmul(range);
 
-                loop {
-                    let v: $u_large = rng.gen();
-                    let (hi, lo) = v.wmul(range);
-                    if lo <= zone {
-                        return Ok(low.wrapping_add(hi as $ty));
+                // if the sample is biased...
+                if lo_order > range.wrapping_neg() {
+                    // ...generate a new sample with 64 more bits, enough that bias is undetectable
+                    let (new_hi_order, _) = (rng.gen::<$sample_ty>()).wmul(range as $sample_ty);
+                    // and adjust if needed
+                    result +=
+                        lo_order.checked_add(new_hi_order as $sample_ty).is_none() as $sample_ty;
+                }
+
+                Ok(low.wrapping_add(result as $ty))
+            }
+
+            /// Sample single value, Canon's method, unbiased
+            #[cfg(feature = "unbiased")]
+            #[inline]
+            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> Result<Self::X, Error>
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                if !(low <= high) {
+                    return Err(Error::EmptyRange);
+                }
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $sample_ty;
+                if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
+                    return Ok(rng.gen());
+                }
+
+                let (mut result, mut lo) = rng.gen::<$sample_ty>().wmul(range);
+
+                while lo > range.wrapping_neg() {
+                    let (new_hi, new_lo) = (rng.gen::<$sample_ty>()).wmul(range);
+                    match lo.checked_add(new_hi) {
+                        Some(x) if x < $sample_ty::MAX => {
+                            // Anything less than MAX: last term is 0
+                            break;
+                        }
+                        None => {
+                            // Overflow: last term is 1
+                            result += 1;
+                            break;
+                        }
+                        _ => {
+                            // Unlikely case: must check next sample
+                            lo = new_lo;
+                            continue;
+                        }
                     }
                 }
+
+                Ok(low.wrapping_add(result as $ty))
             }
         }
     };
