@@ -195,7 +195,7 @@ use serde::{Serialize, Deserialize};
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
 /// [`Rng::gen_range`]: Rng::gen_range
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde1", serde(bound(serialize = "X::Sampler: Serialize")))]
 #[cfg_attr(feature = "serde1", serde(bound(deserialize = "X::Sampler: Deserialize<'de>")))]
@@ -449,7 +449,7 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
 /// An alternative to using a modulus is widening multiply: After a widening
 /// multiply by `range`, the result is in the high word. Then comparing the low
 /// word against `zone` makes sure our distribution is uniform.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformInt<X> {
     low: X,
@@ -809,7 +809,7 @@ impl SampleUniform for char {
 /// are used for surrogate pairs in UCS and UTF-16, and consequently are not
 /// valid Unicode code points. We must therefore avoid sampling values in this
 /// range.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformChar {
     sampler: UniformInt<u32>,
@@ -1092,14 +1092,14 @@ uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 ///
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformDuration {
     mode: UniformDurationMode,
     offset: u32,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum UniformDurationMode {
     Small {
@@ -1231,32 +1231,7 @@ mod tests {
     fn test_serialization_uniform_duration() {
         let distr = UniformDuration::new(Duration::from_secs(10), Duration::from_secs(60)).unwrap();
         let de_distr: UniformDuration = bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
-        assert_eq!(
-            distr.offset, de_distr.offset
-        );
-        match (distr.mode, de_distr.mode) {
-            (UniformDurationMode::Small {secs: a_secs, nanos: a_nanos}, UniformDurationMode::Small {secs, nanos}) => {
-                assert_eq!(a_secs, secs);
-
-                assert_eq!(a_nanos.0.low, nanos.0.low);
-                assert_eq!(a_nanos.0.range, nanos.0.range);
-                assert_eq!(a_nanos.0.thresh, nanos.0.thresh);
-            }
-            (UniformDurationMode::Medium {nanos: a_nanos} , UniformDurationMode::Medium {nanos}) => {
-                assert_eq!(a_nanos.0.low, nanos.0.low);
-                assert_eq!(a_nanos.0.range, nanos.0.range);
-                assert_eq!(a_nanos.0.thresh, nanos.0.thresh);
-            }
-            (UniformDurationMode::Large {max_secs:a_max_secs, max_nanos:a_max_nanos, secs:a_secs}, UniformDurationMode::Large {max_secs, max_nanos, secs} ) => {
-                assert_eq!(a_max_secs, max_secs);
-                assert_eq!(a_max_nanos, max_nanos);
-
-                assert_eq!(a_secs.0.low, secs.0.low);
-                assert_eq!(a_secs.0.range, secs.0.range);
-                assert_eq!(a_secs.0.thresh, secs.0.thresh);
-            }
-            _ => panic!("`UniformDurationMode` was not serialized/deserialized correctly")
-        }
+        assert_eq!(distr, de_distr);
     }
 
     #[test]
@@ -1264,16 +1239,11 @@ mod tests {
     fn test_uniform_serialization() {
         let unit_box: Uniform<i32>  = Uniform::new(-1, 1).unwrap();
         let de_unit_box: Uniform<i32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
-
-        assert_eq!(unit_box.0.low, de_unit_box.0.low);
-        assert_eq!(unit_box.0.range, de_unit_box.0.range);
-        assert_eq!(unit_box.0.thresh, de_unit_box.0.thresh);
+        assert_eq!(unit_box.0, de_unit_box.0);
 
         let unit_box: Uniform<f32> = Uniform::new(-1., 1.).unwrap();
         let de_unit_box: Uniform<f32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
-
-        assert_eq!(unit_box.0.low, de_unit_box.0.low);
-        assert_eq!(unit_box.0.scale, de_unit_box.0.scale);
+        assert_eq!(unit_box.0, de_unit_box.0);
     }
 
     #[test]
