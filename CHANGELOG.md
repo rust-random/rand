@@ -12,6 +12,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ### Distributions
 - `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking) (#1229)
 - `Uniform` implements `TryFrom` instead of `From` for ranges (#1229)
+- `Uniform` uses Canon's method for faster sampling (breaks value stability; #1286)
 
 ### Other
 - Simpler and faster implementation of Floyd's F2 (#1277). This
