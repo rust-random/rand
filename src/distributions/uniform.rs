@@ -454,7 +454,6 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
 pub struct UniformInt<X> {
     low: X,
     range: X,
-    #[cfg(any(feature = "unbiased", feature = "simd_support"))]
     thresh: X, // effectively 2.pow(max(64, uty_bits)) % range
 }
 
@@ -501,7 +500,6 @@ macro_rules! uniform_int_impl {
                 }
 
                 let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
-                #[cfg(any(feature = "unbiased", feature = "simd_support"))]
                 let thresh = if range > 0 {
                     let range = $sample_ty::from(range);
                     (range.wrapping_neg() % range)
@@ -512,36 +510,11 @@ macro_rules! uniform_int_impl {
                 Ok(UniformInt {
                     low,
                     range: range as $ty, // type: $uty
-                    #[cfg(any(feature = "unbiased", feature = "simd_support"))]
                     thresh: thresh as $uty as $ty, // type: $sample_ty
                 })
             }
 
-            /// Sample from distribution, Canon's method, biased
-            ///
-            /// In the worst case, bias affects 1 in `2^n` samples where n is
-            /// 56 (`i8`), 48 (`i16`), 96 (`i32`), 64 (`i64`), 128 (`i128`).
-            #[cfg(not(feature = "unbiased"))]
-            #[inline]
-            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                let range = self.range as $uty as $sample_ty;
-                if range == 0 {
-                    return rng.gen();
-                }
-
-                let (mut result, lo) = rng.gen::<$sample_ty>().wmul(range);
-
-                if lo > range.wrapping_neg() {
-                    let (new_hi, _) = (rng.gen::<$sample_ty>()).wmul(range);
-                    let is_overflow = lo.checked_add(new_hi).is_none();
-                    result += is_overflow as $sample_ty;
-                }
-
-                self.low.wrapping_add(result as $ty)
-            }
-
             /// Sample from distribution, Lemire's method, unbiased
-            #[cfg(feature = "unbiased")]
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range = self.range as $uty as $sample_ty;
