@@ -7,15 +7,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! [`Rng`] trait
+//! [`RngExt`] trait
 
-use rand_core::{Error, RngCore};
+use rand_core::{Error, Rng};
 use crate::distributions::uniform::{SampleRange, SampleUniform};
 use crate::distributions::{self, Distribution, Standard};
 use core::num::Wrapping;
 use core::{mem, slice};
 
-/// An automatically-implemented extension trait on [`RngCore`] providing high-level
+/// An automatically-implemented extension trait on [`Rng`] providing high-level
 /// generic methods for sampling values and other convenience methods.
 ///
 /// This is the primary trait to use when generating random values.
@@ -25,10 +25,10 @@ use core::{mem, slice};
 /// The basic pattern is `fn foo<R: Rng + ?Sized>(rng: &mut R)`. Some
 /// things are worth noting here:
 ///
-/// - Since `Rng: RngCore` and every `RngCore` implements `Rng`, it makes no
-///   difference whether we use `R: Rng` or `R: RngCore`.
+/// - Since `RngExt: Rng` and every `Rng` implements `RngExt`, it makes no
+///   difference whether we use `R: RngExt` or `R: Rng`.
 /// - The `+ ?Sized` un-bounding allows functions to be called directly on
-///   type-erased references; i.e. `foo(r)` where `r: &mut dyn RngCore`. Without
+///   type-erased references; i.e. `foo(r)` where `r: &mut dyn Rng`. Without
 ///   this it would be necessary to write `foo(&mut r)`.
 ///
 /// An alternative pattern is possible: `fn foo<R: Rng>(rng: R)`. This has some
@@ -44,21 +44,21 @@ use core::{mem, slice};
 ///
 /// ```
 /// # use rand::thread_rng;
-/// use rand::Rng;
+/// use rand::RngExt;
 ///
-/// fn foo<R: Rng + ?Sized>(rng: &mut R) -> f32 {
+/// fn foo<R: RngExt + ?Sized>(rng: &mut R) -> f32 {
 ///     rng.gen()
 /// }
 ///
 /// # let v = foo(&mut thread_rng());
 /// ```
-pub trait Rng: RngCore {
+pub trait RngExt: Rng {
     /// Return a random value via the [`Standard`] distribution.
     ///
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, RngExt};
     ///
     /// let mut rng = thread_rng();
     /// let x: u32 = rng.gen();
@@ -73,10 +73,10 @@ pub trait Rng: RngCore {
     /// generated.
     ///
     /// For arrays of integers, especially for those with small element types
-    /// (< 64 bit), it will likely be faster to instead use [`Rng::fill`].
+    /// (< 64 bit), it will likely be faster to instead use [`RngExt::fill`].
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, RngExt};
     ///
     /// let mut rng = thread_rng();
     /// let tuple: (u8, i32, char) = rng.gen(); // arbitrary tuple support
@@ -108,7 +108,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, RngExt};
     ///
     /// let mut rng = thread_rng();
     ///
@@ -138,7 +138,7 @@ pub trait Rng: RngCore {
     /// ### Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, RngExt};
     /// use rand::distributions::Uniform;
     ///
     /// let mut rng = thread_rng();
@@ -162,7 +162,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, RngExt};
     /// use rand::distributions::{Alphanumeric, Uniform, Standard};
     ///
     /// let mut rng = thread_rng();
@@ -205,16 +205,16 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, RngExt};
     ///
     /// let mut arr = [0i8; 20];
     /// thread_rng().fill(&mut arr[..]);
     /// ```
     ///
-    /// [`fill_bytes`]: RngCore::fill_bytes
-    /// [`try_fill`]: Rng::try_fill
+    /// [`fill_bytes`]: Rng::fill_bytes
+    /// [`try_fill`]: RngExt::try_fill
     fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
-        dest.try_fill(self).unwrap_or_else(|_| panic!("Rng::fill failed"))
+        dest.try_fill(self).unwrap_or_else(|_| panic!("RngExt::fill failed"))
     }
 
     /// Fill any type implementing [`Fill`] with random data
@@ -228,7 +228,7 @@ pub trait Rng: RngCore {
     ///
     /// ```
     /// # use rand::Error;
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, RngExt};
     ///
     /// # fn try_inner() -> Result<(), Error> {
     /// let mut arr = [0u64; 4];
@@ -239,8 +239,8 @@ pub trait Rng: RngCore {
     /// # try_inner().unwrap()
     /// ```
     ///
-    /// [`try_fill_bytes`]: RngCore::try_fill_bytes
-    /// [`fill`]: Rng::fill
+    /// [`try_fill_bytes`]: Rng::try_fill_bytes
+    /// [`fill`]: RngExt::fill
     fn try_fill<T: Fill + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
         dest.try_fill(self)
     }
@@ -253,7 +253,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, RngExt};
     ///
     /// let mut rng = thread_rng();
     /// println!("{}", rng.gen_bool(1.0 / 3.0));
@@ -286,7 +286,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::{thread_rng, RngExt};
     ///
     /// let mut rng = thread_rng();
     /// println!("{}", rng.gen_ratio(2, 3));
@@ -300,7 +300,7 @@ pub trait Rng: RngCore {
     }
 }
 
-impl<R: RngCore + ?Sized> Rng for R {}
+impl<R: Rng + ?Sized> RngExt for R {}
 
 /// Types which may be filled with random data
 ///
@@ -530,7 +530,7 @@ mod test {
     fn test_rng_trait_object() {
         use crate::distributions::{Distribution, Standard};
         let mut rng = rng(109);
-        let mut r = &mut rng as &mut dyn RngCore;
+        let mut r = &mut rng as &mut dyn Rng;
         r.next_u32();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0..1), 0);
@@ -542,7 +542,7 @@ mod test {
     fn test_rng_boxed_trait() {
         use crate::distributions::{Distribution, Standard};
         let rng = rng(110);
-        let mut r = Box::new(rng) as Box<dyn RngCore>;
+        let mut r = Box::new(rng) as Box<dyn Rng>;
         r.next_u32();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0..1), 0);

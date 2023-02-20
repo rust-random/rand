@@ -9,7 +9,7 @@
 #![allow(clippy::float_cmp)]
 
 use average::Histogram;
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 use rand_distr::{Normal, SkewNormal};
 
 const HIST_LEN: usize = 100;

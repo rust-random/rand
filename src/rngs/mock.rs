@@ -8,19 +8,19 @@
 
 //! Mock random number generator
 
-use rand_core::{impls, Error, RngCore};
+use rand_core::{impls, Error, Rng};
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
 
-/// A simple implementation of `RngCore` for testing purposes.
+/// A simple implementation of `Rng` for testing purposes.
 ///
 /// This generates an arithmetic sequence (i.e. adds a constant each step)
 /// over a `u64` number, using wrapping arithmetic. If the increment is 0
 /// the generator yields a constant.
 ///
 /// ```
-/// use rand::Rng;
+/// use rand::RngExt;
 /// use rand::rngs::mock::StepRng;
 ///
 /// let mut my_rng = StepRng::new(2, 1);
@@ -45,7 +45,7 @@ impl StepRng {
     }
 }
 
-impl RngCore for StepRng {
+impl Rng for StepRng {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         self.next_u64() as u32

@@ -16,7 +16,7 @@ use std::fmt;
 use super::std::Core;
 use crate::rngs::adapter::ReseedingRng;
 use crate::rngs::OsRng;
-use crate::{CryptoRng, Error, RngCore, SeedableRng};
+use crate::{CryptoRng, Error, Rng, SeedableRng};
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
 //
@@ -97,7 +97,7 @@ thread_local!(
 ///
 /// Example usage:
 /// ```
-/// use rand::Rng;
+/// use rand::RngExt;
 ///
 /// # fn main() {
 /// // rand::random() may be used instead of rand::thread_rng().gen():
@@ -119,7 +119,7 @@ impl Default for ThreadRng {
     }
 }
 
-impl RngCore for ThreadRng {
+impl Rng for ThreadRng {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         // SAFETY: We must make sure to stop using `rng` before anyone else
@@ -158,7 +158,7 @@ impl CryptoRng for ThreadRng {}
 mod test {
     #[test]
     fn test_thread_rng() {
-        use crate::Rng;
+        use crate::RngExt;
         let mut r = crate::thread_rng();
         r.gen::<i32>();
         assert_eq!(r.gen_range(0..1), 0);

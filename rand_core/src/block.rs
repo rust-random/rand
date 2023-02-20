@@ -14,7 +14,7 @@
 //!
 //! Usage of this trait is optional, but provides two advantages:
 //! implementations only need to concern themselves with generation of the
-//! block, not the various [`RngCore`] methods (especially [`fill_bytes`], where
+//! block, not the various [`Rng`] methods (especially [`fill_bytes`], where
 //! the optimal implementations are not trivial), and this allows
 //! `ReseedingRng` (see [`rand`](https://docs.rs/rand) crate) perform periodic
 //! reseeding with very low overhead.
@@ -22,7 +22,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use rand_core::{RngCore, SeedableRng};
+//! use rand_core::{Rng, SeedableRng};
 //! use rand_core::block::{BlockRngCore, BlockRng};
 //!
 //! struct MyRngCore;
@@ -51,10 +51,10 @@
 //! ```
 //!
 //! [`BlockRngCore`]: crate::block::BlockRngCore
-//! [`fill_bytes`]: RngCore::fill_bytes
+//! [`fill_bytes`]: Rng::fill_bytes
 
 use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
-use crate::{Error, CryptoRng, RngCore, SeedableRng};
+use crate::{Error, CryptoRng, Rng, SeedableRng};
 use core::convert::AsRef;
 use core::fmt;
 #[cfg(feature = "serde1")]
@@ -77,13 +77,13 @@ pub trait BlockRngCore {
     fn generate(&mut self, results: &mut Self::Results);
 }
 
-/// A marker trait used to indicate that an [`RngCore`] implementation is
+/// A marker trait used to indicate that an [`Rng`] implementation is
 /// supposed to be cryptographically secure.
 ///
 /// See [`CryptoRng`][crate::CryptoRng] docs for more information.
 pub trait CryptoBlockRng: BlockRngCore { }
 
-/// A wrapper type implementing [`RngCore`] for some type implementing
+/// A wrapper type implementing [`Rng`] for some type implementing
 /// [`BlockRngCore`] with `u32` array buffer; i.e. this can be used to implement
 /// a full RNG from just a `generate` function.
 ///
@@ -91,11 +91,11 @@ pub trait CryptoBlockRng: BlockRngCore { }
 /// PRNG implementations can simply use a type alias
 /// (`pub type MyRng = BlockRng<MyRngCore>;`) but might prefer to use a
 /// wrapper type (`pub struct MyRng(BlockRng<MyRngCore>);`); the latter must
-/// re-implement `RngCore` but hides the implementation details and allows
+/// re-implement `Rng` but hides the implementation details and allows
 /// extra functionality to be defined on the RNG
 /// (e.g. `impl MyRng { fn set_stream(...){...} }`).
 ///
-/// `BlockRng` has heavily optimized implementations of the [`RngCore`] methods
+/// `BlockRng` has heavily optimized implementations of the [`Rng`] methods
 /// reading values from the results buffer, as well as
 /// calling [`BlockRngCore::generate`] directly on the output array when
 /// [`fill_bytes`] / [`try_fill_bytes`] is called on a large array. These methods
@@ -114,10 +114,10 @@ pub trait CryptoBlockRng: BlockRngCore { }
 ///
 /// For easy initialization `BlockRng` also implements [`SeedableRng`].
 ///
-/// [`next_u32`]: RngCore::next_u32
-/// [`next_u64`]: RngCore::next_u64
-/// [`fill_bytes`]: RngCore::fill_bytes
-/// [`try_fill_bytes`]: RngCore::try_fill_bytes
+/// [`next_u32`]: Rng::next_u32
+/// [`next_u64`]: Rng::next_u64
+/// [`fill_bytes`]: Rng::fill_bytes
+/// [`try_fill_bytes`]: Rng::try_fill_bytes
 #[derive(Clone)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[cfg_attr(
@@ -184,7 +184,7 @@ impl<R: BlockRngCore> BlockRng<R> {
     }
 }
 
-impl<R: BlockRngCore<Item = u32>> RngCore for BlockRng<R> {
+impl<R: BlockRngCore<Item = u32>> Rng for BlockRng<R> {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         if self.index >= self.results.as_ref().len() {
@@ -257,14 +257,14 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
     }
 
     #[inline(always)]
-    fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
+    fn from_rng<S: Rng>(rng: S) -> Result<Self, Error> {
         Ok(Self::new(R::from_rng(rng)?))
     }
 }
 
 impl<R: CryptoBlockRng + BlockRngCore<Item = u32>> CryptoRng for BlockRng<R> {}
 
-/// A wrapper type implementing [`RngCore`] for some type implementing
+/// A wrapper type implementing [`Rng`] for some type implementing
 /// [`BlockRngCore`] with `u64` array buffer; i.e. this can be used to implement
 /// a full RNG from just a `generate` function.
 ///
@@ -282,10 +282,10 @@ impl<R: CryptoBlockRng + BlockRngCore<Item = u32>> CryptoRng for BlockRng<R> {}
 /// values. If the requested length is not a multiple of 8, some bytes will be
 /// discarded.
 ///
-/// [`next_u32`]: RngCore::next_u32
-/// [`next_u64`]: RngCore::next_u64
-/// [`fill_bytes`]: RngCore::fill_bytes
-/// [`try_fill_bytes`]: RngCore::try_fill_bytes
+/// [`next_u32`]: Rng::next_u32
+/// [`next_u64`]: Rng::next_u64
+/// [`fill_bytes`]: Rng::fill_bytes
+/// [`try_fill_bytes`]: Rng::try_fill_bytes
 #[derive(Clone)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct BlockRng64<R: BlockRngCore + ?Sized> {
@@ -351,7 +351,7 @@ impl<R: BlockRngCore> BlockRng64<R> {
     }
 }
 
-impl<R: BlockRngCore<Item = u64>> RngCore for BlockRng64<R> {
+impl<R: BlockRngCore<Item = u64>> Rng for BlockRng64<R> {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         let mut index = self.index - self.half_used as usize;
@@ -425,7 +425,7 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng64<R> {
     }
 
     #[inline(always)]
-    fn from_rng<S: RngCore>(rng: S) -> Result<Self, Error> {
+    fn from_rng<S: Rng>(rng: S) -> Result<Self, Error> {
         Ok(Self::new(R::from_rng(rng)?))
     }
 }
@@ -434,7 +434,7 @@ impl<R: CryptoBlockRng + BlockRngCore<Item = u64>> CryptoRng for BlockRng64<R> {
 
 #[cfg(test)]
 mod test {
-    use crate::{SeedableRng, RngCore};
+    use crate::{SeedableRng, Rng};
     use crate::block::{BlockRng, BlockRng64, BlockRngCore};
 
     #[derive(Debug, Clone)]

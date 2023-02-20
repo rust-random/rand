@@ -8,7 +8,7 @@
 
 //! Interface to the random number generator of the operating system.
 
-use crate::{impls, CryptoRng, Error, RngCore};
+use crate::{impls, CryptoRng, Error, Rng};
 use getrandom::getrandom;
 
 /// A random number generator that retrieves randomness from the
@@ -36,7 +36,7 @@ use getrandom::getrandom;
 ///
 /// # Usage example
 /// ```
-/// use rand_core::{RngCore, OsRng};
+/// use rand_core::{Rng, OsRng};
 ///
 /// let mut key = [0u8; 16];
 /// OsRng.fill_bytes(&mut key);
@@ -50,7 +50,7 @@ pub struct OsRng;
 
 impl CryptoRng for OsRng {}
 
-impl RngCore for OsRng {
+impl Rng for OsRng {
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
     }

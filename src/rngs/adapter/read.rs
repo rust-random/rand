@@ -14,7 +14,7 @@
 use std::fmt;
 use std::io::Read;
 
-use rand_core::{impls, Error, RngCore};
+use rand_core::{impls, Error, Rng};
 
 
 /// An RNG that reads random bytes straight from any type supporting
@@ -30,10 +30,10 @@ use rand_core::{impls, Error, RngCore};
 /// `ReadRng` uses [`std::io::Read::read_exact`], which retries on interrupts.
 /// All other errors from the underlying reader, including when it does not
 /// have enough data, will only be reported through [`try_fill_bytes`].
-/// The other [`RngCore`] methods will panic in case of an error.
+/// The other [`Rng`] methods will panic in case of an error.
 ///
 /// [`OsRng`]: crate::rngs::OsRng
-/// [`try_fill_bytes`]: RngCore::try_fill_bytes
+/// [`try_fill_bytes`]: Rng::try_fill_bytes
 #[derive(Debug)]
 #[deprecated(since="0.8.4", note="removal due to lack of usage")]
 pub struct ReadRng<R> {
@@ -47,7 +47,7 @@ impl<R: Read> ReadRng<R> {
     }
 }
 
-impl<R: Read> RngCore for ReadRng<R> {
+impl<R: Read> Rng for ReadRng<R> {
     fn next_u32(&mut self) -> u32 {
         impls::next_u32_via_fill(self)
     }
@@ -99,7 +99,7 @@ mod test {
     use std::println;
 
     use super::ReadRng;
-    use crate::RngCore;
+    use crate::Rng;
 
     #[test]
     fn test_reader_rng_u64() {

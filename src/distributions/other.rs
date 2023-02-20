@@ -16,7 +16,7 @@ use alloc::string::String;
 use crate::distributions::{Distribution, Standard, Uniform};
 #[cfg(feature = "alloc")]
 use crate::distributions::DistString;
-use crate::Rng;
+use crate::{Rng, RngExt};
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
@@ -33,7 +33,7 @@ use core::simd::*;
 /// # Example
 ///
 /// ```
-/// use rand::{Rng, thread_rng};
+/// use rand::{RngExt, thread_rng};
 /// use rand::distributions::Alphanumeric;
 ///
 /// let mut rng = thread_rng();
@@ -277,12 +277,12 @@ where Standard: Distribution<T>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::RngCore;
+    use crate::Rng;
     #[cfg(feature = "alloc")] use alloc::string::String;
 
     #[test]
     fn test_misc() {
-        let rng: &mut dyn RngCore = &mut crate::test::rng(820);
+        let rng: &mut dyn Rng = &mut crate::test::rng(820);
 
         rng.sample::<char, _>(Standard);
         rng.sample::<bool, _>(Standard);

@@ -11,7 +11,7 @@
 //! PCG random number generators
 
 use core::fmt;
-use rand_core::{impls, le, Error, RngCore, SeedableRng};
+use rand_core::{impls, le, Error, Rng, SeedableRng};
 #[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
 
 // This is the default multiplier used by PCG for 64-bit state.
@@ -134,7 +134,7 @@ impl SeedableRng for Lcg64Xsh32 {
     }
 }
 
-impl RngCore for Lcg64Xsh32 {
+impl Rng for Lcg64Xsh32 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         let state = self.state;

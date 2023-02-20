@@ -14,7 +14,7 @@
 use self::core::fmt;
 use crate::guts::ChaCha;
 use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
-use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
+use rand_core::{CryptoRng, Error, Rng, SeedableRng};
 
 #[cfg(feature = "serde1")] use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
@@ -132,7 +132,7 @@ macro_rules! chacha_impl {
         /// ```
         ///
         /// This implementation uses an output buffer of sixteen `u32` words, and uses
-        /// [`BlockRng`] to implement the [`RngCore`] methods.
+        /// [`BlockRng`] to implement the [`Rng`] methods.
         ///
         /// [^1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
         ///       https://cr.yp.to/chacha.html)
@@ -155,7 +155,7 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl RngCore for $ChaChaXRng {
+        impl Rng for $ChaChaXRng {
             #[inline]
             fn next_u32(&mut self) -> u32 {
                 self.rng.next_u32()
@@ -340,7 +340,7 @@ chacha_impl!(ChaCha8Core, ChaCha8Rng, 4, "ChaCha with 8 rounds", abstract8);
 
 #[cfg(test)]
 mod test {
-    use rand_core::{RngCore, SeedableRng};
+    use rand_core::{Rng, SeedableRng};
 
     #[cfg(feature = "serde1")] use super::{ChaCha20Rng, ChaCha12Rng, ChaCha8Rng};
 

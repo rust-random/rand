@@ -32,8 +32,8 @@
 //!
 //! ## Traits and functionality
 //!
-//! All RNGs implement the [`RngCore`] trait, as a consequence of which the
-//! [`Rng`] extension trait is automatically implemented. Secure RNGs may
+//! All RNGs implement the [`Rng`] trait, as a consequence of which the
+//! [`RngExt`] extension trait is automatically implemented. Secure RNGs may
 //! additionally implement the [`CryptoRng`] trait.
 //!
 //! All PRNGs require a seed to produce their random number sequence. The
@@ -84,8 +84,8 @@
 //! Some suggestions are: [`rand_chacha`], [`rand_pcg`], [`rand_xoshiro`].
 //! A full list can be found by searching for crates with the [`rng` tag].
 //!
+//! [`RngExt`]: crate::RngExt
 //! [`Rng`]: crate::Rng
-//! [`RngCore`]: crate::RngCore
 //! [`CryptoRng`]: crate::CryptoRng
 //! [`SeedableRng`]: crate::SeedableRng
 //! [`thread_rng`]: crate::thread_rng

@@ -22,10 +22,10 @@ pub fn bench(c: &mut Criterion) {
     bench_rng::<rand_pcg::Pcg64>(c, "Pcg64");
 }
 
-fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
+fn bench_rng<R: Rng + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
     for length in [1, 2, 3, 10, 100, 1000, 10000].map(|x| black_box(x)) {
         c.bench_function(format!("shuffle_{length}_{rng_name}").as_str(), |b| {
-            let mut rng = Rng::seed_from_u64(123);
+            let mut rng = R::seed_from_u64(123);
             let mut vec: Vec<usize> = (0..length).collect();
             b.iter(|| {
                 vec.shuffle(&mut rng);
@@ -37,7 +37,7 @@ fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static s
             c.bench_function(
                 format!("partial_shuffle_{length}_{rng_name}").as_str(),
                 |b| {
-                    let mut rng = Rng::seed_from_u64(123);
+                    let mut rng = R::seed_from_u64(123);
                     let mut vec: Vec<usize> = (0..length).collect();
                     b.iter(|| {
                         vec.partial_shuffle(&mut rng, length / 2);

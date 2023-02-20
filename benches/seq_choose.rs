@@ -22,12 +22,12 @@ pub fn bench(c: &mut Criterion) {
     bench_rng::<rand_pcg::Pcg64>(c, "Pcg64");
 }
 
-fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
+fn bench_rng<R: Rng + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
     for length in [1, 2, 3, 10, 100, 1000].map(|x| black_box(x)) {
         c.bench_function(
             format!("choose_size-hinted_from_{length}_{rng_name}").as_str(),
             |b| {
-                let mut rng = Rng::seed_from_u64(123);
+                let mut rng = R::seed_from_u64(123);
                 b.iter(|| choose_size_hinted(length, &mut rng))
             },
         );
@@ -35,7 +35,7 @@ fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static s
         c.bench_function(
             format!("choose_stable_from_{length}_{rng_name}").as_str(),
             |b| {
-                let mut rng = Rng::seed_from_u64(123);
+                let mut rng = R::seed_from_u64(123);
                 b.iter(|| choose_stable(length, &mut rng))
             },
         );
@@ -43,7 +43,7 @@ fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static s
         c.bench_function(
             format!("choose_unhinted_from_{length}_{rng_name}").as_str(),
             |b| {
-                let mut rng = Rng::seed_from_u64(123);
+                let mut rng = R::seed_from_u64(123);
                 b.iter(|| choose_unhinted(length, &mut rng))
             },
         );
@@ -51,7 +51,7 @@ fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static s
         c.bench_function(
             format!("choose_windowed_from_{length}_{rng_name}").as_str(),
             |b| {
-                let mut rng = Rng::seed_from_u64(123);
+                let mut rng = R::seed_from_u64(123);
                 b.iter(|| choose_windowed(length, 7, &mut rng))
             },
         );

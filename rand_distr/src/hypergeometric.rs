@@ -1,7 +1,7 @@
 //! The hypergeometric distribution.
 
 use crate::Distribution;
-use rand::Rng;
+use rand::{Rng, RngExt};
 use rand::distributions::uniform::Uniform;
 use core::fmt;
 #[allow(unused_imports)]

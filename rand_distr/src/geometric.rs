@@ -1,7 +1,7 @@
 //! The geometric distribution.
 
 use crate::Distribution;
-use rand::Rng;
+use rand::{Rng, RngExt};
 use core::fmt;
 #[allow(unused_imports)]
 use num_traits::Float;
@@ -143,7 +143,7 @@ impl Distribution<u64> for Geometric
 /// 
 /// See [`Geometric`](crate::Geometric) for the general geometric distribution.
 /// 
-/// Implemented via iterated [Rng::gen::<u64>().leading_zeros()].
+/// Implemented via iterated [`RngExt::gen::<u64>().leading_zeros()`].
 /// 
 /// # Example
 /// ```

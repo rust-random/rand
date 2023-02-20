@@ -8,12 +8,12 @@
 
 //! A small fast RNG
 
-use rand_core::{Error, RngCore, SeedableRng};
+use rand_core::{Error, Rng, SeedableRng};
 
 #[cfg(target_pointer_width = "64")]
-type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
+type Base = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 #[cfg(not(target_pointer_width = "64"))]
-type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
+type Base = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 
 /// A small-state, fast non-crypto PRNG
 ///
@@ -46,7 +46,7 @@ type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 /// Initializing `SmallRng` with a random seed can be done using [`SeedableRng::from_entropy`]:
 ///
 /// ```
-/// use rand::{Rng, SeedableRng};
+/// use rand::{RngExt, SeedableRng};
 /// use rand::rngs::SmallRng;
 ///
 /// // Create small, cheap to initialize and fast RNG with a random seed.
@@ -78,9 +78,9 @@ type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
 #[cfg_attr(doc_cfg, doc(cfg(feature = "small_rng")))]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SmallRng(Rng);
+pub struct SmallRng(Base);
 
-impl RngCore for SmallRng {
+impl Rng for SmallRng {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
@@ -103,20 +103,20 @@ impl RngCore for SmallRng {
 }
 
 impl SeedableRng for SmallRng {
-    type Seed = <Rng as SeedableRng>::Seed;
+    type Seed = <Base as SeedableRng>::Seed;
 
     #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
-        SmallRng(Rng::from_seed(seed))
+        SmallRng(Base::from_seed(seed))
     }
 
     #[inline(always)]
-    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        Rng::from_rng(rng).map(SmallRng)
+    fn from_rng<R: Rng>(rng: R) -> Result<Self, Error> {
+        Base::from_rng(rng).map(SmallRng)
     }
 
     #[inline(always)]
     fn seed_from_u64(state: u64) -> Self {
-        SmallRng(Rng::seed_from_u64(state))
+        SmallRng(Base::seed_from_u64(state))
     }
 }

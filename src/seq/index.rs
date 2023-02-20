@@ -20,7 +20,7 @@ use alloc::collections::BTreeSet;
 use crate::distributions::WeightedError;
 
 #[cfg(feature = "alloc")]
-use crate::{Rng, distributions::{uniform::SampleUniform, Distribution, Uniform}};
+use crate::{Rng, RngExt, distributions::{uniform::SampleUniform, Distribution, Uniform}};
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};

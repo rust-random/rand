@@ -11,7 +11,7 @@
 //!
 //! [`Uniform`] is the standard distribution to sample uniformly from a range;
 //! e.g. `Uniform::new_inclusive(1, 6).unwrap()` can sample integers from 1 to 6, like a
-//! standard die. [`Rng::gen_range`] supports any type supported by [`Uniform`].
+//! standard die. [`RngExt::gen_range`] supports any type supported by [`Uniform`].
 //!
 //! This distribution is provided with support for several primitive types
 //! (all integer and floating-point types) as well as [`std::time::Duration`],
@@ -26,7 +26,7 @@
 //! # Example usage
 //!
 //! ```
-//! use rand::{Rng, thread_rng};
+//! use rand::{RngExt, thread_rng};
 //! use rand::distributions::Uniform;
 //!
 //! let mut rng = thread_rng();
@@ -52,7 +52,7 @@
 //! `low < high`). The example below merely wraps another back-end.
 //!
 //! The `new`, `new_inclusive` and `sample_single` functions use arguments of
-//! type SampleBorrow<X> to support passing in values by reference or
+//! type `SampleBorrow<X>` to support passing in values by reference or
 //! by value. In the implementation of these functions, you can choose to
 //! simply use the reference returned by [`SampleBorrow::borrow`], or you can choose
 //! to copy or clone the value, whatever is appropriate for your type.
@@ -113,7 +113,7 @@ use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAs
 use crate::distributions::Distribution;
 #[cfg(feature = "simd_support")]
 use crate::distributions::Standard;
-use crate::{Rng, RngCore};
+use crate::{RngExt, Rng};
 
 #[cfg(not(feature = "std"))]
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
@@ -151,7 +151,7 @@ use serde::{Serialize, Deserialize};
 /// [`Uniform::new`] and [`Uniform::new_inclusive`] construct a uniform
 /// distribution sampling from the given range; these functions may do extra
 /// work up front to make sampling of multiple values faster. If only one sample
-/// from the range is required, [`Rng::gen_range`] can be more efficient.
+/// from the range is required, [`RngExt::gen_range`] can be more efficient.
 ///
 /// When sampling from a constant range, many calculations can happen at
 /// compile-time and all methods should be fast; for floating-point ranges and
@@ -183,10 +183,10 @@ use serde::{Serialize, Deserialize};
 /// println!("{}", sum);
 /// ```
 ///
-/// For a single sample, [`Rng::gen_range`] may be preferred:
+/// For a single sample, [`RngExt::gen_range`] may be preferred:
 ///
 /// ```
-/// use rand::Rng;
+/// use rand::RngExt;
 ///
 /// let mut rng = rand::thread_rng();
 /// println!("{}", rng.gen_range(0..10));
@@ -194,7 +194,7 @@ use serde::{Serialize, Deserialize};
 ///
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
-/// [`Rng::gen_range`]: Rng::gen_range
+/// [`RngExt::gen_range`]: RngExt::gen_range
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde1", serde(bound(serialize = "X::Sampler: Serialize")))]
@@ -376,10 +376,10 @@ where Borrowed: SampleUniform
 /// Range that supports generating a single sample efficiently.
 ///
 /// Any type implementing this trait can be used to specify the sampled range
-/// for `Rng::gen_range`.
+/// for `RngExt::gen_range`.
 pub trait SampleRange<T> {
     /// Generate a sample from the given range.
-    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error>;
+    fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error>;
 
     /// Check whether the range is empty.
     fn is_empty(&self) -> bool;
@@ -387,7 +387,7 @@ pub trait SampleRange<T> {
 
 impl<T: SampleUniform + PartialOrd> SampleRange<T> for Range<T> {
     #[inline]
-    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
+    fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
         T::Sampler::sample_single(self.start, self.end, rng)
     }
 
@@ -399,7 +399,7 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for Range<T> {
 
 impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
     #[inline]
-    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
+    fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
         T::Sampler::sample_single_inclusive(self.start(), self.end(), rng)
     }
 
@@ -1137,7 +1137,7 @@ impl UniformSampler for UniformDuration {
                 max_nanos,
                 secs,
             } => {
-                // constant folding means this is at least as fast as `Rng::sample(Range)`
+                // constant folding means this is at least as fast as `RngExt::sample(Range)`
                 let nano_range = Uniform::new(0, 1_000_000_000).unwrap();
                 loop {
                     let s = secs.sample(rng);

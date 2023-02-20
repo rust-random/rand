@@ -10,10 +10,10 @@
 //! Random number generation traits
 //!
 //! This crate is mainly of interest to crates publishing implementations of
-//! [`RngCore`]. Other users are encouraged to use the [`rand`] crate instead
+//! [`Rng`]. Other users are encouraged to use the [`rand`] crate instead
 //! which re-exports the main traits and error types.
 //!
-//! [`RngCore`] is the core trait implemented by algorithmic pseudo-random number
+//! [`Rng`] is the core trait implemented by algorithmic pseudo-random number
 //! generators and external random-number sources.
 //!
 //! [`SeedableRng`] is an extension trait for construction from fixed seeds and
@@ -23,7 +23,7 @@
 //! environments.
 //!
 //! The [`impls`] and [`le`] sub-modules include a few small functions to assist
-//! implementation of [`RngCore`].
+//! implementation of [`Rng`].
 //!
 //! [`rand`]: https://docs.rs/rand
 
@@ -61,7 +61,7 @@ pub mod le;
 /// This trait encapsulates the low-level functionality common to all
 /// generators, and is the "back end", to be implemented by generators.
 /// End users should normally use the `Rng` trait from the [`rand`] crate,
-/// which is automatically implemented for every type implementing `RngCore`.
+/// which is automatically implemented for every type implementing `Rng`.
 ///
 /// Three different methods for generating random data are provided since the
 /// optimal implementation of each is dependent on the type of generator. There
@@ -110,11 +110,11 @@ pub mod le;
 ///
 /// ```
 /// #![allow(dead_code)]
-/// use rand_core::{RngCore, Error, impls};
+/// use rand_core::{Rng, Error, impls};
 ///
 /// struct CountingRng(u64);
 ///
-/// impl RngCore for CountingRng {
+/// impl Rng for CountingRng {
 ///     fn next_u32(&mut self) -> u32 {
 ///         self.next_u64() as u32
 ///     }
@@ -135,11 +135,11 @@ pub mod le;
 /// ```
 ///
 /// [`rand`]: https://docs.rs/rand
-/// [`try_fill_bytes`]: RngCore::try_fill_bytes
-/// [`fill_bytes`]: RngCore::fill_bytes
-/// [`next_u32`]: RngCore::next_u32
-/// [`next_u64`]: RngCore::next_u64
-pub trait RngCore {
+/// [`try_fill_bytes`]: Rng::try_fill_bytes
+/// [`fill_bytes`]: Rng::fill_bytes
+/// [`next_u32`]: Rng::next_u32
+/// [`next_u64`]: Rng::next_u64
+pub trait Rng {
     /// Return the next random `u32`.
     ///
     /// RNGs must implement at least one method from this trait directly. In
@@ -159,7 +159,7 @@ pub trait RngCore {
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
     /// via [`impls::fill_bytes_via_next`] or
-    /// via [`RngCore::try_fill_bytes`]; if this generator can
+    /// via [`Rng::try_fill_bytes`]; if this generator can
     /// fail the implementation must choose how best to handle errors here
     /// (e.g. panic with a descriptive message or log a warning and retry a few
     /// times).
@@ -177,13 +177,13 @@ pub trait RngCore {
     /// by external (true) RNGs (e.g. `OsRng`) which can fail. It may be used
     /// directly to generate keys and to seed (infallible) PRNGs.
     ///
-    /// Other than error handling, this method is identical to [`RngCore::fill_bytes`];
+    /// Other than error handling, this method is identical to [`Rng::fill_bytes`];
     /// thus this may be implemented using `Ok(self.fill_bytes(dest))` or
     /// `fill_bytes` may be implemented with
     /// `self.try_fill_bytes(dest).unwrap()` or more specific error handling.
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
 
-    /// Convert an [`RngCore`] to a [`RngReadAdapter`].
+    /// Convert an [`Rng`] to a [`RngReadAdapter`].
     #[cfg(feature = "std")]
     fn read_adapter(&mut self) -> RngReadAdapter<'_, Self>
     where Self: Sized {
@@ -191,7 +191,7 @@ pub trait RngCore {
     }
 }
 
-/// A marker trait used to indicate that an [`RngCore`] implementation is
+/// A marker trait used to indicate that an [`Rng`] implementation is
 /// supposed to be cryptographically secure.
 ///
 /// *Cryptographically secure generators*, also known as *CSPRNGs*, should
@@ -213,7 +213,7 @@ pub trait RngCore {
 /// weaknesses such as seeding from a weak entropy source or leaking state.
 ///
 /// [`BlockRngCore`]: block::BlockRngCore
-pub trait CryptoRng: RngCore {}
+pub trait CryptoRng: Rng {}
 
 /// A random number generator that can be explicitly seeded.
 ///
@@ -365,7 +365,7 @@ pub trait SeedableRng: Sized {
     /// (in prior versions this was not required).
     ///
     /// [`rand`]: https://docs.rs/rand
-    fn from_rng<R: RngCore>(mut rng: R) -> Result<Self, Error> {
+    fn from_rng<R: Rng>(mut rng: R) -> Result<Self, Error> {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;
         Ok(Self::from_seed(seed))
@@ -396,10 +396,10 @@ pub trait SeedableRng: Sized {
     }
 }
 
-// Implement `RngCore` for references to an `RngCore`.
-// Force inlining all functions, so that it is up to the `RngCore`
+// Implement `Rng` for references to an `Rng`.
+// Force inlining all functions, so that it is up to the `Rng`
 // implementation and the optimizer to decide on inlining.
-impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
+impl<'a, R: Rng + ?Sized> Rng for &'a mut R {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
@@ -421,11 +421,11 @@ impl<'a, R: RngCore + ?Sized> RngCore for &'a mut R {
     }
 }
 
-// Implement `RngCore` for boxed references to an `RngCore`.
-// Force inlining all functions, so that it is up to the `RngCore`
+// Implement `Rng` for boxed references to an `Rng`.
+// Force inlining all functions, so that it is up to the `Rng`
 // implementation and the optimizer to decide on inlining.
 #[cfg(feature = "alloc")]
-impl<R: RngCore + ?Sized> RngCore for Box<R> {
+impl<R: Rng + ?Sized> Rng for Box<R> {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         (**self).next_u32()
@@ -447,24 +447,24 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
     }
 }
 
-/// Adapter that enables reading through a [`io::Read`](std::io::Read) from a [`RngCore`].
+/// Adapter that enables reading through a [`io::Read`](std::io::Read) from a [`Rng`].
 ///
 /// # Examples
 ///
 /// ```rust
 /// # use std::{io, io::Read};
 /// # use std::fs::File;
-/// # use rand_core::{OsRng, RngCore};
+/// # use rand_core::{OsRng, Rng};
 ///
 /// io::copy(&mut OsRng.read_adapter().take(100), &mut File::create("/tmp/random.bytes").unwrap()).unwrap();
 /// ```
 #[cfg(feature = "std")]
-pub struct RngReadAdapter<'a, R: RngCore + ?Sized> {
+pub struct RngReadAdapter<'a, R: Rng + ?Sized> {
     inner: &'a mut R,
 }
 
 #[cfg(feature = "std")]
-impl<R: RngCore + ?Sized> std::io::Read for RngReadAdapter<'_, R> {
+impl<R: Rng + ?Sized> std::io::Read for RngReadAdapter<'_, R> {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         self.inner.try_fill_bytes(buf)?;
         Ok(buf.len())
@@ -472,7 +472,7 @@ impl<R: RngCore + ?Sized> std::io::Read for RngReadAdapter<'_, R> {
 }
 
 #[cfg(feature = "std")]
-impl<R: RngCore + ?Sized> std::fmt::Debug for RngReadAdapter<'_, R> {
+impl<R: Rng + ?Sized> std::fmt::Debug for RngReadAdapter<'_, R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ReadAdapter").finish()
     }

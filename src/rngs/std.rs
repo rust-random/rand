@@ -8,11 +8,11 @@
 
 //! The standard RNG
 
-use crate::{CryptoRng, Error, RngCore, SeedableRng};
+use crate::{CryptoRng, Error, Rng, SeedableRng};
 
 pub(crate) use rand_chacha::ChaCha12Core as Core;
 
-use rand_chacha::ChaCha12Rng as Rng;
+use rand_chacha::ChaCha12Rng as Base;
 
 /// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
 /// on the current platform, to be statistically strong and unpredictable
@@ -31,9 +31,9 @@ use rand_chacha::ChaCha12Rng as Rng;
 /// [rand issue]: https://github.com/rust-random/rand/issues/932
 #[cfg_attr(doc_cfg, doc(cfg(feature = "std_rng")))]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct StdRng(Rng);
+pub struct StdRng(Base);
 
-impl RngCore for StdRng {
+impl Rng for StdRng {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
@@ -56,16 +56,16 @@ impl RngCore for StdRng {
 }
 
 impl SeedableRng for StdRng {
-    type Seed = <Rng as SeedableRng>::Seed;
+    type Seed = <Base as SeedableRng>::Seed;
 
     #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
-        StdRng(Rng::from_seed(seed))
+        StdRng(Base::from_seed(seed))
     }
 
     #[inline(always)]
-    fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        Rng::from_rng(rng).map(StdRng)
+    fn from_rng<R: Rng>(rng: R) -> Result<Self, Error> {
+        Base::from_rng(rng).map(StdRng)
     }
 }
 
@@ -75,7 +75,7 @@ impl CryptoRng for StdRng {}
 #[cfg(test)]
 mod test {
     use crate::rngs::StdRng;
-    use crate::{RngCore, SeedableRng};
+    use crate::{Rng, SeedableRng};
 
     #[test]
     fn test_stdrng_construction() {

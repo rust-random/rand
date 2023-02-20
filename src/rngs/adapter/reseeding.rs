@@ -13,7 +13,7 @@
 use core::mem::size_of;
 
 use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
-use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
+use rand_core::{CryptoRng, Error, Rng, SeedableRng};
 
 /// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
 /// ability to reseed it.
@@ -85,12 +85,12 @@ use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 pub struct ReseedingRng<R, Rsdr>(BlockRng<ReseedingCore<R, Rsdr>>)
 where
     R: BlockRngCore + SeedableRng,
-    Rsdr: RngCore;
+    Rsdr: Rng;
 
 impl<R, Rsdr> ReseedingRng<R, Rsdr>
 where
     R: BlockRngCore + SeedableRng,
-    Rsdr: RngCore,
+    Rsdr: Rng,
 {
     /// Create a new `ReseedingRng` from an existing PRNG, combined with a RNG
     /// to use as reseeder.
@@ -109,8 +109,8 @@ where
 }
 
 // TODO: this should be implemented for any type where the inner type
-// implements RngCore, but we can't specify that because ReseedingCore is private
-impl<R, Rsdr: RngCore> RngCore for ReseedingRng<R, Rsdr>
+// implements Rng, but we can't specify that because ReseedingCore is private
+impl<R, Rsdr: Rng> Rng for ReseedingRng<R, Rsdr>
 where
     R: BlockRngCore<Item = u32> + SeedableRng,
 {
@@ -136,7 +136,7 @@ where
 impl<R, Rsdr> Clone for ReseedingRng<R, Rsdr>
 where
     R: BlockRngCore + SeedableRng + Clone,
-    Rsdr: RngCore + Clone,
+    Rsdr: Rng + Clone,
 {
     fn clone(&self) -> ReseedingRng<R, Rsdr> {
         // Recreating `BlockRng` seems easier than cloning it and resetting
@@ -164,7 +164,7 @@ struct ReseedingCore<R, Rsdr> {
 impl<R, Rsdr> BlockRngCore for ReseedingCore<R, Rsdr>
 where
     R: BlockRngCore + SeedableRng,
-    Rsdr: RngCore,
+    Rsdr: Rng,
 {
     type Item = <R as BlockRngCore>::Item;
     type Results = <R as BlockRngCore>::Results;
@@ -186,7 +186,7 @@ where
 impl<R, Rsdr> ReseedingCore<R, Rsdr>
 where
     R: BlockRngCore + SeedableRng,
-    Rsdr: RngCore,
+    Rsdr: Rng,
 {
     /// Create a new `ReseedingCore`.
     fn new(rng: R, threshold: u64, reseeder: Rsdr) -> Self {
@@ -263,7 +263,7 @@ where
 impl<R, Rsdr> Clone for ReseedingCore<R, Rsdr>
 where
     R: BlockRngCore + SeedableRng + Clone,
-    Rsdr: RngCore + Clone,
+    Rsdr: Rng + Clone,
 {
     fn clone(&self) -> ReseedingCore<R, Rsdr> {
         ReseedingCore {
@@ -344,7 +344,7 @@ mod test {
     use super::ReseedingRng;
     use crate::rngs::mock::StepRng;
     use crate::rngs::std::Core;
-    use crate::{Rng, SeedableRng};
+    use crate::{RngExt, SeedableRng};
 
     #[test]
     fn test_reseeding() {

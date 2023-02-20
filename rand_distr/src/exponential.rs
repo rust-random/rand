@@ -12,7 +12,7 @@
 use crate::utils::ziggurat;
 use num_traits::Float;
 use crate::{ziggurat_tables, Distribution};
-use rand::Rng;
+use rand::{Rng, RngExt};
 use core::fmt;
 
 /// Samples floating-point numbers according to the exponential distribution,

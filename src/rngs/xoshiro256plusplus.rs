@@ -9,7 +9,7 @@
 #[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 use rand_core::impls::fill_bytes_via_next;
 use rand_core::le::read_u64_into;
-use rand_core::{SeedableRng, RngCore, Error};
+use rand_core::{SeedableRng, Rng, Error};
 
 /// A xoshiro256++ random number generator.
 ///
@@ -58,7 +58,7 @@ impl SeedableRng for Xoshiro256PlusPlus {
     }
 }
 
-impl RngCore for Xoshiro256PlusPlus {
+impl Rng for Xoshiro256PlusPlus {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         // The lowest bits have some linear dependencies, so we use the

@@ -11,8 +11,8 @@
 //!
 //! This module is the home of the [`Distribution`] trait and several of its
 //! implementations. It is the workhorse behind some of the convenient
-//! functionality of the [`Rng`] trait, e.g. [`Rng::gen`] and of course
-//! [`Rng::sample`].
+//! functionality of the [`RngExt`] trait, e.g. [`RngExt::gen`] and of course
+//! [`RngExt::sample`].
 //!
 //! Abstractly, a [probability distribution] describes the probability of
 //! occurrence of each value in its sample space.
@@ -31,13 +31,13 @@
 //! # The `Standard` distribution
 //!
 //! The [`Standard`] distribution is important to mention. This is the
-//! distribution used by [`Rng::gen`] and represents the "default" way to
+//! distribution used by [`RngExt::gen`] and represents the "default" way to
 //! produce a random value for many different types, including most primitive
 //! types, tuples, arrays, and a few derived types. See the documentation of
 //! [`Standard`] for more details.
 //!
 //! Implementing `Distribution<T>` for [`Standard`] for user types `T` makes it
-//! possible to generate type `T` with [`Rng::gen`], and by extension also
+//! possible to generate type `T` with [`RngExt::gen`], and by extension also
 //! with the [`random`] function.
 //!
 //! ## Random characters
@@ -54,16 +54,16 @@
 //! space to be specified as an arbitrary range within its target type `T`.
 //! Both [`Standard`] and [`Uniform`] are in some sense uniform distributions.
 //!
-//! Values may be sampled from this distribution using [`Rng::sample(Range)`] or
+//! Values may be sampled from this distribution using [`RngExt::sample(Range)`] or
 //! by creating a distribution object with [`Uniform::new`],
 //! [`Uniform::new_inclusive`] or `From<Range>`. When the range limits are not
 //! known at compile time it is typically faster to reuse an existing
-//! `Uniform` object than to call [`Rng::sample(Range)`].
+//! `Uniform` object than to call [`RngExt::sample(Range)`].
 //!
 //! User types `T` may also implement `Distribution<T>` for [`Uniform`],
 //! although this is less straightforward than for [`Standard`] (see the
 //! documentation in the [`uniform`] module). Doing so enables generation of
-//! values of type `T` with  [`Rng::sample(Range)`].
+//! values of type `T` with  [`RngExt::sample(Range)`].
 //!
 //! ## Open and half-open ranges
 //!
@@ -76,7 +76,7 @@
 //! # Non-uniform sampling
 //!
 //! Sampling a simple true/false outcome with a given probability has a name:
-//! the [`Bernoulli`] distribution (this is used by [`Rng::gen_bool`]).
+//! the [`Bernoulli`] distribution (this is used by [`RngExt::gen_bool`]).
 //!
 //! For weighted sampling from a sequence of discrete values, use the
 //! [`WeightedIndex`] distribution.
@@ -129,7 +129,7 @@ pub use self::uniform::Uniform;
 pub use self::weighted_index::{WeightedError, WeightedIndex};
 
 #[allow(unused)]
-use crate::Rng;
+use crate::{Rng, RngExt};
 
 /// A generic random value distribution, implemented for many primitive types.
 /// Usually generates values with a numerically uniform distribution, and with a
@@ -137,7 +137,7 @@ use crate::Rng;
 ///
 /// ## Provided implementations
 ///
-/// Assuming the provided `Rng` is well-behaved, these implementations
+/// Assuming the provided [`Rng`] is well-behaved, these implementations
 /// generate values with the following ranges and distributions:
 ///
 /// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
@@ -163,9 +163,9 @@ use crate::Rng;
 ///
 /// *   Tuples (up to 12 elements): each element is generated sequentially.
 /// *   Arrays: each element is generated sequentially;
-///     see also [`Rng::fill`] which supports arbitrary array length for integer
+///     see also [`RngExt::fill`] which supports arbitrary array length for integer
 ///     and float types and tends to be faster for `u32` and smaller types.
-///     Note that [`Rng::fill`] and `Standard`'s array support are *not* equivalent:
+///     Note that [`RngExt::fill`] and `Standard`'s array support are *not* equivalent:
 ///     the former is optimised for integer types (using fewer RNG calls for
 ///     element types smaller than the RNG word size), while the latter supports
 ///     any element type supported by `Standard`.
@@ -178,7 +178,7 @@ use crate::Rng;
 ///
 /// ```
 /// # #![allow(dead_code)]
-/// use rand::Rng;
+/// use rand::{Rng, RngExt};
 /// use rand::distributions::{Distribution, Standard};
 ///
 /// struct MyF32 {
@@ -211,7 +211,7 @@ use crate::Rng;
 /// multiplicative method: `(rng.gen::<$uty>() >> N) as $ty * (ε/2)`.
 ///
 /// See also: [`Open01`] which samples from `(0, 1)`, [`OpenClosed01`] which
-/// samples from `(0, 1]` and `Rng::gen_range(0..1)` which also samples from
+/// samples from `(0, 1]` and `RngExt::gen_range(0..1)` which also samples from
 /// `[0, 1)`. Note that `Open01` uses transmute-based methods which yield 1 bit
 /// less precision but may perform faster on some architectures (on modern Intel
 /// CPUs all methods have approximately equal performance).

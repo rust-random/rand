@@ -10,7 +10,7 @@
 
 use crate::distributions::utils::{IntAsSIMD, FloatAsSIMD, FloatSIMDUtils};
 use crate::distributions::{Distribution, Standard};
-use crate::Rng;
+use crate::{Rng, RngExt};
 use core::mem;
 #[cfg(feature = "simd_support")] use core::simd::*;
 
@@ -31,7 +31,7 @@ use serde::{Serialize, Deserialize};
 ///
 /// # Example
 /// ```
-/// use rand::{thread_rng, Rng};
+/// use rand::{thread_rng, RngExt};
 /// use rand::distributions::OpenClosed01;
 ///
 /// let val: f32 = thread_rng().sample(OpenClosed01);
@@ -58,7 +58,7 @@ pub struct OpenClosed01;
 ///
 /// # Example
 /// ```
-/// use rand::{thread_rng, Rng};
+/// use rand::{thread_rng, RngExt};
 /// use rand::distributions::Open01;
 ///
 /// let val: f32 = thread_rng().sample(Open01);

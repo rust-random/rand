@@ -41,7 +41,7 @@ use alloc::vec::Vec;
 use crate::distributions::uniform::{SampleBorrow, SampleUniform};
 #[cfg(feature = "alloc")]
 use crate::distributions::WeightedError;
-use crate::Rng;
+use crate::{Rng, RngExt};
 
 use self::coin_flipper::CoinFlipper;
 use self::increasing_uniform::IncreasingUniform;

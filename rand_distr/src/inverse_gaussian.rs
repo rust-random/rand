@@ -1,6 +1,6 @@
 use crate::{Distribution, Standard, StandardNormal};
 use num_traits::Float;
-use rand::Rng;
+use rand::{Rng, RngExt};
 use core::fmt;
 
 /// Error type returned from `InverseGaussian::new`

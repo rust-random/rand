@@ -88,10 +88,6 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-// This is used for doc links:
-#[allow(unused)]
-use rand::Rng;
-
 pub use rand::distributions::{
     uniform, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01, OpenClosed01,
     Standard, Uniform,
@@ -160,7 +156,7 @@ mod test {
     // generated. This is redundant with vector and correctness tests.
 
     /// Construct a deterministic RNG with the given seed
-    pub fn rng(seed: u64) -> impl rand::RngCore {
+    pub fn rng(seed: u64) -> impl rand::Rng {
         // For tests, we want a statistically good, fast, reproducible RNG.
         // PCG32 will do fine, and will be easy to embed if we ever need to.
         const INC: u64 = 11634580027462260723;

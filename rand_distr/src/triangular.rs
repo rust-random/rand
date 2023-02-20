@@ -9,7 +9,7 @@
 
 use num_traits::Float;
 use crate::{Distribution, Standard};
-use rand::Rng;
+use rand::{Rng, RngExt};
 use core::fmt;
 
 /// The triangular distribution.
@@ -101,7 +101,7 @@ where F: Float, Standard: Distribution<F>
 #[cfg(test)]
 mod test {
     use super::*;
-    use rand::{rngs::mock, Rng};
+    use rand::rngs::mock;
 
     #[test]
     fn test_triangular() {

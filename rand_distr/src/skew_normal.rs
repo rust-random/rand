@@ -11,7 +11,7 @@
 use crate::{Distribution, StandardNormal};
 use core::fmt;
 use num_traits::Float;
-use rand::Rng;
+use rand::{Rng, RngExt};
 
 /// The [skew normal distribution] `SN(location, scale, shape)`.
 ///

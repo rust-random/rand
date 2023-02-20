@@ -29,7 +29,7 @@
 #![cfg(all(feature = "std", feature = "std_rng"))]
 
 use rand::distributions::{Distribution, Uniform};
-use rand::Rng;
+use rand::{Rng, RngExt};
 
 struct SimulationResult {
     win: bool,

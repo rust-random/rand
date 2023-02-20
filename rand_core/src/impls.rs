@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Helper functions for implementing `RngCore` functions.
+//! Helper functions for implementing `Rng` functions.
 //!
 //! For cross-platform reproducibility, these functions all use Little Endian:
 //! least-significant part first. For example, `next_u64_via_u32` takes `u32`
@@ -17,11 +17,11 @@
 //! to/from byte sequences, and since its purpose is reproducibility,
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
 
-use crate::RngCore;
+use crate::Rng;
 use core::cmp::min;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
-pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
+pub fn next_u64_via_u32<R: Rng + ?Sized>(rng: &mut R) -> u64 {
     // Use LE; we explicitly generate one value before the next.
     let x = u64::from(rng.next_u32());
     let y = u64::from(rng.next_u32());
@@ -34,7 +34,7 @@ pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
 /// integers. That is why this method mostly uses `next_u64`, and only when
 /// there are 4 or less bytes remaining at the end of the slice it uses
 /// `next_u32` once.
-pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
+pub fn fill_bytes_via_next<R: Rng + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     let mut left = dest;
     while left.len() >= 8 {
         let (l, r) = { left }.split_at_mut(8);
@@ -159,14 +159,14 @@ pub fn fill_via_u64_chunks(src: &mut [u64], dest: &mut [u8]) -> (usize, usize) {
 }
 
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
-pub fn next_u32_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u32 {
+pub fn next_u32_via_fill<R: Rng + ?Sized>(rng: &mut R) -> u32 {
     let mut buf = [0; 4];
     rng.fill_bytes(&mut buf);
     u32::from_le_bytes(buf)
 }
 
 /// Implement `next_u64` via `fill_bytes`, little-endian order.
-pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
+pub fn next_u64_via_fill<R: Rng + ?Sized>(rng: &mut R) -> u64 {
     let mut buf = [0; 8];
     rng.fill_bytes(&mut buf);
     u64::from_le_bytes(buf)

@@ -16,7 +16,7 @@
 //!
 //! To get you started quickly, the easiest and highest-level way to get
 //! a random value is to use [`random()`]; alternatively you can use
-//! [`thread_rng()`]. The [`Rng`] trait provides a useful API on all RNGs, while
+//! [`thread_rng()`]. The [`RngExt`] trait provides a useful API on all RNGs, while
 //! the [`distributions`] and [`seq`] modules provide further
 //! functionality on top of RNGs.
 //!
@@ -91,7 +91,7 @@ macro_rules! error { ($($x:tt)*) => (
 ) }
 
 // Re-exports from rand_core
-pub use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
+pub use rand_core::{CryptoRng, Error, Rng, SeedableRng};
 
 // Public modules
 pub mod distributions;
@@ -103,7 +103,7 @@ pub mod seq;
 // Public exports
 #[cfg(all(feature = "std", feature = "std_rng"))]
 pub use crate::rngs::thread::thread_rng;
-pub use rng::{Fill, Rng};
+pub use rng::{Fill, RngExt};
 
 #[cfg(all(feature = "std", feature = "std_rng"))]
 use crate::distributions::{Distribution, Standard};
@@ -133,7 +133,7 @@ use crate::distributions::{Distribution, Standard};
 /// following example can increase performance.
 ///
 /// ```
-/// use rand::Rng;
+/// use rand::RngExt;
 ///
 /// let mut v = vec![1, 2, 3];
 ///
@@ -165,7 +165,7 @@ mod test {
     use super::*;
 
     /// Construct a deterministic RNG with the given seed
-    pub fn rng(seed: u64) -> impl RngCore {
+    pub fn rng(seed: u64) -> impl Rng {
         // For tests, we want a statistically good, fast, reproducible RNG.
         // PCG32 will do fine, and will be easy to embed if we ever need to.
         const INC: u64 = 11634580027462260723;

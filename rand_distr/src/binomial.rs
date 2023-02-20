@@ -10,7 +10,7 @@
 //! The binomial distribution.
 
 use crate::{Distribution, Uniform};
-use rand::Rng;
+use rand::{Rng, RngExt};
 use core::fmt;
 use core::cmp::Ordering;
 #[allow(unused_imports)]
@@ -304,7 +304,7 @@ impl Distribution<u64> for Binomial {
 mod test {
     use super::Binomial;
     use crate::Distribution;
-    use rand::Rng;
+    use rand::{Rng, RngExt};
 
     fn test_binomial_mean_and_variance<R: Rng>(n: u64, p: f64, rng: &mut R) {
         let binomial = Binomial::new(n, p).unwrap();

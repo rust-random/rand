@@ -9,7 +9,7 @@
 
 A Rust library for random number generation, featuring:
 
--   Easy random value generation and usage via the [`Rng`](https://docs.rs/rand/*/rand/trait.Rng.html),
+-   Easy random value generation and usage via the [`RngExt`](https://docs.rs/rand/*/rand/trait.RngExt.html),
     [`SliceRandom`](https://docs.rs/rand/*/rand/seq/trait.SliceRandom.html) and
     [`IteratorRandom`](https://docs.rs/rand/*/rand/seq/trait.IteratorRandom.html) traits
 -   Secure seeding via the [`getrandom` crate](https://crates.io/crates/getrandom)
@@ -82,7 +82,7 @@ and breaking releases are infrequent.
 
 Rand libs have inter-dependencies and make use of the
 [semver trick](https://github.com/dtolnay/semver-trick/) in order to make traits
-compatible across crate versions. (This is especially important for `RngCore`
+compatible across crate versions. (This is especially important for `Rng`
 and `SeedableRng`.) A few crate releases are thus compatibility shims,
 depending on the *next* lib version (e.g. `rand_core` versions `0.2.2` and
 `0.3.1`). This means, for example, that `rand_core_0_4_0::SeedableRng` and

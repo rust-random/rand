@@ -34,7 +34,7 @@
 //!
 //! Instead, we do our own batching, so that a Rayon work item becomes a
 //! batch. Then we can fix our rng stream to the batched work item.
-//! Batching amortizes the cost of constructing the Rng from a fixed seed
+//! Batching amortizes the cost of constructing the RNG from a fixed seed
 //! over BATCH_SIZE trials. Manually batching also turns out to be faster
 //! for the nondeterministic version of this program as well.
 

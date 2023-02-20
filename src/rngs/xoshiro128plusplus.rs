@@ -9,7 +9,7 @@
 #[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 use rand_core::impls::{next_u64_via_u32, fill_bytes_via_next};
 use rand_core::le::read_u32_into;
-use rand_core::{SeedableRng, RngCore, Error};
+use rand_core::{SeedableRng, Rng, Error};
 
 /// A xoshiro128++ random number generator.
 ///
@@ -58,7 +58,7 @@ impl SeedableRng for Xoshiro128PlusPlus {
     }
 }
 
-impl RngCore for Xoshiro128PlusPlus {
+impl Rng for Xoshiro128PlusPlus {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         let result_starstar = self.s[0]

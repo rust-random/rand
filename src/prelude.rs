@@ -31,4 +31,4 @@ pub use crate::rngs::ThreadRng;
 #[doc(no_inline)]
 #[cfg(all(feature = "std", feature = "std_rng"))]
 pub use crate::{random, thread_rng};
-#[doc(no_inline)] pub use crate::{CryptoRng, Rng, RngCore, SeedableRng};
+#[doc(no_inline)] pub use crate::{CryptoRng, Rng, RngExt, SeedableRng};

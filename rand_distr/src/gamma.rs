@@ -19,7 +19,7 @@ use self::GammaRepr::*;
 use crate::normal::StandardNormal;
 use num_traits::Float;
 use crate::{Distribution, Exp, Exp1, Open01};
-use rand::Rng;
+use rand::{Rng, RngExt};
 use core::fmt;
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};

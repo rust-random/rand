@@ -11,7 +11,7 @@
 use crate::{Distribution, OpenClosed01};
 use core::fmt;
 use num_traits::Float;
-use rand::Rng;
+use rand::{Rng, RngExt};
 
 /// Samples floating-point numbers according to the Fréchet distribution
 ///

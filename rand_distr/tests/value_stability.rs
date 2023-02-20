@@ -8,7 +8,7 @@
 
 use average::assert_almost_eq;
 use core::fmt::Debug;
-use rand::Rng;
+use rand::RngExt;
 use rand_distr::*;
 
 fn get_rng(seed: u64) -> impl rand::Rng {

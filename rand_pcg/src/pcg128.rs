@@ -14,7 +14,7 @@
 const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
 use core::fmt;
-use rand_core::{impls, le, Error, RngCore, SeedableRng};
+use rand_core::{impls, le, Error, Rng, SeedableRng};
 #[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
 
 /// A PCG random number generator (XSL RR 128/64 (LCG) variant).
@@ -135,7 +135,7 @@ impl SeedableRng for Lcg128Xsl64 {
     }
 }
 
-impl RngCore for Lcg128Xsl64 {
+impl Rng for Lcg128Xsl64 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         self.next_u64() as u32
@@ -245,7 +245,7 @@ impl SeedableRng for Mcg128Xsl64 {
     }
 }
 
-impl RngCore for Mcg128Xsl64 {
+impl Rng for Mcg128Xsl64 {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         self.next_u64() as u32

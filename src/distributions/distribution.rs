@@ -209,8 +209,8 @@ pub trait DistString {
 
 #[cfg(test)]
 mod tests {
-    use crate::distributions::{Distribution, Uniform};
-    use crate::Rng;
+    use super::*;
+    use crate::distributions::Uniform;
 
     #[test]
     fn test_distributions_iter() {

@@ -28,7 +28,7 @@ use crate::distributions::{Distribution, Uniform};
 /// # Example
 ///
 /// ```
-/// use rand::Rng;
+/// use rand::{RngExt};
 /// use rand::distributions::Slice;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
