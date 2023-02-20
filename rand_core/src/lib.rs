@@ -191,8 +191,8 @@ pub trait RngCore {
     }
 }
 
-/// A marker trait used to indicate that an [`RngCore`] or [`BlockRngCore`]
-/// implementation is supposed to be cryptographically secure.
+/// A marker trait used to indicate that an [`RngCore`] implementation is
+/// supposed to be cryptographically secure.
 ///
 /// *Cryptographically secure generators*, also known as *CSPRNGs*, should
 /// satisfy an additional properties over other generators: given the first
@@ -213,36 +213,7 @@ pub trait RngCore {
 /// weaknesses such as seeding from a weak entropy source or leaking state.
 ///
 /// [`BlockRngCore`]: block::BlockRngCore
-pub trait CryptoRng {}
-
-/// An extension trait that is automatically implemented for any type
-/// implementing [`RngCore`] and [`CryptoRng`].
-///
-/// It may be used as a trait object, and supports upcasting to [`RngCore`] via
-/// the [`CryptoRngCore::as_rngcore`] method.
-///
-/// # Example
-///
-/// ```
-/// use rand_core::CryptoRngCore;
-///
-/// #[allow(unused)]
-/// fn make_token(rng: &mut dyn CryptoRngCore) -> [u8; 32] {
-///     let mut buf = [0u8; 32];
-///     rng.fill_bytes(&mut buf);
-///     buf
-/// }
-/// ```
-pub trait CryptoRngCore: CryptoRng + RngCore {
-    /// Upcast to an [`RngCore`] trait object.
-    fn as_rngcore(&mut self) -> &mut dyn RngCore;
-}
-
-impl<T: CryptoRng + RngCore> CryptoRngCore for T {
-    fn as_rngcore(&mut self) -> &mut dyn RngCore {
-        self
-    }
-}
+pub trait CryptoRng: RngCore {}
 
 /// A random number generator that can be explicitly seeded.
 ///
