@@ -575,11 +575,11 @@ macro_rules! uniform_int_impl {
 
                 // if the sample is biased...
                 if lo_order > range.wrapping_neg() {
-                    // ...generate a new sample with 64 more bits, enough that bias is undetectable
+                    // ...generate a new sample to reduce bias...
                     let (new_hi_order, _) = (rng.gen::<$sample_ty>()).wmul(range as $sample_ty);
-                    // and adjust if needed
-                    result +=
-                        lo_order.checked_add(new_hi_order as $sample_ty).is_none() as $sample_ty;
+                    // ... incrementing result on overflow
+                    let is_overflow = lo_order.checked_add(new_hi_order as $sample_ty).is_none();
+                    result += is_overflow as $sample_ty;
                 }
 
                 Ok(low.wrapping_add(result as $ty))
@@ -608,6 +608,7 @@ macro_rules! uniform_int_impl {
 
                 let (mut result, mut lo) = rng.gen::<$sample_ty>().wmul(range);
 
+                // In constrast to the biased sampler, we use a loop:
                 while lo > range.wrapping_neg() {
                     let (new_hi, new_lo) = (rng.gen::<$sample_ty>()).wmul(range);
                     match lo.checked_add(new_hi) {
@@ -711,7 +712,7 @@ macro_rules! uniform_simd_int_impl {
                 let modulo = not_full_range.select(range, unsigned_max);
                 // wrapping addition
                 // TODO: replace with `range.wrapping_neg() % module` when Simd supports this.
-                let ints_to_reject = (unsigned_max - range + Simd::splat(1)) % modulo;
+                let ints_to_reject = (Simd::splat(0) - range) % modulo;
                 // When `range` is 0, `lo` of `v.wmul(range)` will always be
                 // zero which means only one sample is needed.
 
