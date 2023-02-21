@@ -996,6 +996,38 @@ macro_rules! uniform_float_impl {
                     }
                 }
             }
+
+            #[inline]
+            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R) -> Result<Self::X, Error>
+            where
+                B1: SampleBorrow<Self::X> + Sized,
+                B2: SampleBorrow<Self::X> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                #[cfg(debug_assertions)]
+                if !low.all_finite() || !high.all_finite() {
+                    return Err(Error::NonFinite);
+                }
+                if !low.all_le(high) {
+                    return Err(Error::EmptyRange);
+                }
+                let scale = high - low;
+                if !scale.all_finite() {
+                    return Err(Error::NonFinite);
+                }
+
+                // Generate a value in the range [1, 2)
+                let value1_2 =
+                    (rng.gen::<$uty>() >> $uty::splat($bits_to_discard)).into_float_with_exponent(0);
+
+                // Get a value in the range [0, 1) to avoid overflow when multiplying by scale
+                let value0_1 = value1_2 - <$ty>::splat(1.0);
+
+                // Doing multiply before addition allows some architectures
+                // to use a single instruction.
+                Ok(value0_1 * scale + low)
+            }
         }
     };
 }
