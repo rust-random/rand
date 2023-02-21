@@ -1,0 +1,112 @@
+// Copyright 2021 Developers of the Rand project.
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
+//! Implement benchmarks for uniform distributions over FP types
+//!
+//! Sampling methods compared:
+//!
+//! -   sample: current method: (x12 - 1.0) * (b - a) + a
+
+use core::time::Duration;
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use rand::distributions::uniform::{SampleUniform, Uniform, UniformSampler};
+use rand::prelude::*;
+use rand_chacha::ChaCha8Rng;
+use rand_pcg::{Pcg32, Pcg64};
+
+const WARM_UP_TIME: Duration = Duration::from_millis(1000);
+const MEASUREMENT_TIME: Duration = Duration::from_secs(3);
+const SAMPLE_SIZE: usize = 100_000;
+const N_RESAMPLES: usize = 10_000;
+
+macro_rules! single_random {
+    ($name:literal, $R:ty, $T:ty, $f:ident, $g:expr) => {
+        $g.bench_function(BenchmarkId::new(stringify!($R), $name), |b| {
+            let mut rng = <$R>::from_entropy();
+            let (mut low, mut high);
+            loop {
+                low = <$T>::from_bits(rng.gen());
+                high = <$T>::from_bits(rng.gen());
+                if (low < high) && (high - low).is_normal() {
+                    break;
+                }
+            }
+
+            b.iter(|| <$T as SampleUniform>::Sampler::$f(low, high, &mut rng));
+        });
+    };
+
+    ($R:ty, $T:ty, $g:expr) => {
+        single_random!("sample", $R, $T, sample_single, $g);
+        single_random!("sample_inclusive", $R, $T, sample_single_inclusive, $g);
+    };
+
+    ($c:expr, $T:ty) => {{
+        let mut g = $c.benchmark_group(concat!("single_random_", stringify!($T)));
+        g.sample_size(SAMPLE_SIZE);
+        g.warm_up_time(WARM_UP_TIME);
+        g.measurement_time(MEASUREMENT_TIME);
+        g.nresamples(N_RESAMPLES);
+        single_random!(SmallRng, $T, g);
+        single_random!(ChaCha8Rng, $T, g);
+        single_random!(Pcg32, $T, g);
+        single_random!(Pcg64, $T, g);
+        g.finish();
+    }};
+}
+
+fn single_random(c: &mut Criterion) {
+    single_random!(c, f32);
+    single_random!(c, f64);
+}
+
+macro_rules! distr_random {
+    ($name:literal, $R:ty, $T:ty, $f:ident, $g:expr) => {
+        $g.bench_function(BenchmarkId::new(stringify!($R), $name), |b| {
+            let mut rng = <$R>::from_entropy();
+            let dist = loop {
+                let low = <$T>::from_bits(rng.gen());
+                let high = <$T>::from_bits(rng.gen());
+                if let Ok(dist) = Uniform::<$T>::new_inclusive(low, high) {
+                    break dist;
+                }
+            };
+
+            b.iter(|| <$T as SampleUniform>::Sampler::$f(&dist.0, &mut rng));
+        });
+    };
+
+    ($R:ty, $T:ty, $g:expr) => {
+        distr_random!("sample", $R, $T, sample, $g);
+    };
+
+    ($c:expr, $T:ty) => {{
+        let mut g = $c.benchmark_group(concat!("distr_random_", stringify!($T)));
+        g.sample_size(SAMPLE_SIZE);
+        g.warm_up_time(WARM_UP_TIME);
+        g.measurement_time(MEASUREMENT_TIME);
+        g.nresamples(N_RESAMPLES);
+        distr_random!(SmallRng, $T, g);
+        distr_random!(ChaCha8Rng, $T, g);
+        distr_random!(Pcg32, $T, g);
+        distr_random!(Pcg64, $T, g);
+        g.finish();
+    }};
+}
+
+fn distr_random(c: &mut Criterion) {
+    distr_random!(c, f32);
+    distr_random!(c, f64);
+}
+
+criterion_group! {
+    name = benches;
+    config = Criterion::default();
+    targets = single_random, distr_random
+}
+criterion_main!(benches);

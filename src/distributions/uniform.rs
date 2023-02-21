@@ -199,7 +199,8 @@ use serde::{Serialize, Deserialize};
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde1", serde(bound(serialize = "X::Sampler: Serialize")))]
 #[cfg_attr(feature = "serde1", serde(bound(deserialize = "X::Sampler: Deserialize<'de>")))]
-pub struct Uniform<X: SampleUniform>(X::Sampler);
+// HACK: internals are public for benches
+pub struct Uniform<X: SampleUniform>(pub X::Sampler);
 
 impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance, which samples uniformly from the half
