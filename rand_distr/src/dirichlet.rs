@@ -13,7 +13,6 @@ use num_traits::Float;
 use crate::{Distribution, Exp1, Gamma, Open01, StandardNormal};
 use rand::Rng;
 use core::fmt;
-use alloc::{boxed::Box, vec, vec::Vec};
 
 /// The Dirichlet distribution `Dirichlet(alpha)`.
 ///
@@ -27,14 +26,14 @@ use alloc::{boxed::Box, vec, vec::Vec};
 /// use rand::prelude::*;
 /// use rand_distr::Dirichlet;
 ///
-/// let dirichlet = Dirichlet::new(&[1.0, 2.0, 3.0]).unwrap();
+/// let dirichlet = Dirichlet::new([1.0, 2.0, 3.0]).unwrap();
 /// let samples = dirichlet.sample(&mut rand::thread_rng());
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
-pub struct Dirichlet<F>
+pub struct Dirichlet<F, const N: usize>
 where
     F: Float,
     StandardNormal: Distribution<F>,
@@ -42,7 +41,7 @@ where
     Open01: Distribution<F>,
 {
     /// Concentration parameters (alpha)
-    alpha: Box<[F]>,
+    alpha: [F; N],
 }
 
 /// Error type returned from `Dirchlet::new`.
@@ -72,7 +71,7 @@ impl fmt::Display for Error {
 #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}
 
-impl<F> Dirichlet<F>
+impl<F, const N: usize> Dirichlet<F, N>
 where
     F: Float,
     StandardNormal: Distribution<F>,
@@ -83,8 +82,8 @@ where
     ///
     /// Requires `alpha.len() >= 2`.
     #[inline]
-    pub fn new(alpha: &[F]) -> Result<Dirichlet<F>, Error> {
-        if alpha.len() < 2 {
+    pub fn new(alpha: [F; N]) -> Result<Dirichlet<F, N>, Error> {
+        if N < 2 {
             return Err(Error::AlphaTooShort);
         }
         for &ai in alpha.iter() {
@@ -93,36 +92,19 @@ where
             }
         }
 
-        Ok(Dirichlet { alpha: alpha.to_vec().into_boxed_slice() })
-    }
-
-    /// Construct a new `Dirichlet` with the given shape parameter `alpha` and `size`.
-    ///
-    /// Requires `size >= 2`.
-    #[inline]
-    pub fn new_with_size(alpha: F, size: usize) -> Result<Dirichlet<F>, Error> {
-        if !(alpha > F::zero()) {
-            return Err(Error::AlphaTooSmall);
-        }
-        if size < 2 {
-            return Err(Error::SizeTooSmall);
-        }
-        Ok(Dirichlet {
-            alpha: vec![alpha; size].into_boxed_slice(),
-        })
+        Ok(Dirichlet { alpha })
     }
 }
 
-impl<F> Distribution<Vec<F>> for Dirichlet<F>
+impl<F, const N: usize> Distribution<[F; N]> for Dirichlet<F, N>
 where
     F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<F> {
-        let n = self.alpha.len();
-        let mut samples = vec![F::zero(); n];
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [F; N] {
+        let mut samples = [F::zero(); N];
         let mut sum = F::zero();
 
         for (s, &a) in samples.iter_mut().zip(self.alpha.iter()) {
@@ -140,27 +122,12 @@ where
 
 #[cfg(test)]
 mod test {
+    use alloc::vec::Vec;
     use super::*;
 
     #[test]
     fn test_dirichlet() {
-        let d = Dirichlet::new(&[1.0, 2.0, 3.0]).unwrap();
-        let mut rng = crate::test::rng(221);
-        let samples = d.sample(&mut rng);
-        let _: Vec<f64> = samples
-            .into_iter()
-            .map(|x| {
-                assert!(x > 0.0);
-                x
-            })
-            .collect();
-    }
-
-    #[test]
-    fn test_dirichlet_with_param() {
-        let alpha = 0.5f64;
-        let size = 2;
-        let d = Dirichlet::new_with_size(alpha, size).unwrap();
+        let d = Dirichlet::new([1.0, 2.0, 3.0]).unwrap();
         let mut rng = crate::test::rng(221);
         let samples = d.sample(&mut rng);
         let _: Vec<f64> = samples
@@ -175,17 +142,17 @@ mod test {
     #[test]
     #[should_panic]
     fn test_dirichlet_invalid_length() {
-        Dirichlet::new_with_size(0.5f64, 1).unwrap();
+        Dirichlet::new([0.5]).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_dirichlet_invalid_alpha() {
-        Dirichlet::new_with_size(0.0f64, 2).unwrap();
+        Dirichlet::new([0.1, 0.0, 0.3]).unwrap();
     }
 
     #[test]
     fn dirichlet_distributions_can_be_compared() {
-        assert_eq!(Dirichlet::new(&[1.0, 2.0]), Dirichlet::new(&[1.0, 2.0]));
+        assert_eq!(Dirichlet::new([1.0, 2.0]), Dirichlet::new([1.0, 2.0]));
     }
 }
