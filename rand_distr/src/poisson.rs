@@ -44,14 +44,17 @@ where F: Float + FloatConst, Standard: Distribution<F>
 /// Error type returned from `Poisson::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `lambda <= 0` or `nan`.
+    /// `lambda <= 0`
     ShapeTooSmall,
+    /// `lambda = ∞` or `lambda = nan`
+    NonFinite,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             Error::ShapeTooSmall => "lambda is not positive in Poisson distribution",
+            Error::NonFinite => "lambda is infinite or nan in Poisson distribution",
         })
     }
 }
@@ -66,6 +69,9 @@ where F: Float + FloatConst, Standard: Distribution<F>
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
     pub fn new(lambda: F) -> Result<Poisson<F>, Error> {
+	if !lambda.is_finite() {
+            return Err(Error::NonFinite);
+        }
         if !(lambda > F::zero()) {
             return Err(Error::ShapeTooSmall);
         }
@@ -163,7 +169,7 @@ mod test {
     fn test_poisson_avg() {
         test_poisson_avg_gen::<f64>(10.0, 0.1);
         test_poisson_avg_gen::<f64>(15.0, 0.1);
-        
+
         test_poisson_avg_gen::<f32>(10.0, 0.1);
         test_poisson_avg_gen::<f32>(15.0, 0.1);
 
@@ -176,6 +182,12 @@ mod test {
     #[should_panic]
     fn test_poisson_invalid_lambda_zero() {
         Poisson::new(0.0).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_poisson_invalid_lambda_infinity() {
+        Poisson::new(f64::INFINITY).unwrap();
     }
 
     #[test]

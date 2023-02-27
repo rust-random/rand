@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   This breaks serialization compatibility with older versions.
 - Upgrade Rand
 - Fix Knuth's method so `Poisson` doesn't return -1.0 for small lambda
+- Fix `Poisson` distribution instantiation so it return an error if lambda is infinite
 
 ## [0.4.3] - 2021-12-30
 - Fix `no_std` build (#1208)
