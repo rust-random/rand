@@ -31,7 +31,7 @@ use core::fmt;
 /// let v = cau.sample(&mut rand::thread_rng());
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Cauchy<F>
 where F: Float + FloatConst, Standard: Distribution<F>
@@ -163,5 +163,10 @@ mod test {
         for (a, b) in buf.iter().zip(expected.iter()) {
             assert_almost_eq!(*a, *b, 1e-5);
         }
+    }
+
+    #[test]
+    fn cauchy_distributions_can_be_compared() {
+        assert_eq!(Cauchy::new(1.0, 2.0), Cauchy::new(1.0, 2.0));
     }
 }

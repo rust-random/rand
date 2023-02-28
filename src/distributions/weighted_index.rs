@@ -25,8 +25,10 @@ use serde::{Serialize, Deserialize};
 /// Sampling a `WeightedIndex` distribution returns the index of a randomly
 /// selected element from the iterator used when the `WeightedIndex` was
 /// created. The chance of a given element being picked is proportional to the
-/// value of the element. The weights can use any type `X` for which an
-/// implementation of [`Uniform<X>`] exists.
+/// weight of the element. The weights can use any type `X` for which an
+/// implementation of [`Uniform<X>`] exists. The implementation guarantees that
+/// elements with zero weight are never picked, even when the weights are
+/// floating point numbers.
 ///
 /// # Performance
 ///
@@ -42,8 +44,8 @@ use serde::{Serialize, Deserialize};
 /// weights of type `X`, where `N` is the number of weights. However, since
 /// `Vec` doesn't guarantee a particular growth strategy, additional memory
 /// might be allocated but not used. Since the `WeightedIndex` object also
-/// contains, this might cause additional allocations, though for primitive
-/// types, [`Uniform<X>`] doesn't allocate any memory.
+/// contains an instance of `X::Sampler`, this might cause additional allocations,
+/// though for primitive types, [`Uniform<X>`] doesn't allocate any memory.
 ///
 /// Sampling from `WeightedIndex` will result in a single call to
 /// `Uniform<X>::sample` (method of the [`Distribution`] trait), which typically
@@ -65,7 +67,7 @@ use serde::{Serialize, Deserialize};
 ///     println!("{}", choices[dist.sample(&mut rng)]);
 /// }
 ///
-/// let items = [('a', 0), ('b', 3), ('c', 7)];
+/// let items = [('a', 0.0), ('b', 3.0), ('c', 7.0)];
 /// let dist2 = WeightedIndex::new(items.iter().map(|item| item.1)).unwrap();
 /// for _ in 0..100 {
 ///     // 0% chance to print 'a', 30% chance to print 'b', 70% chance to print 'c'
@@ -75,7 +77,7 @@ use serde::{Serialize, Deserialize};
 ///
 /// [`Uniform<X>`]: crate::distributions::Uniform
 /// [`RngCore`]: crate::RngCore
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
@@ -121,7 +123,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         if total_weight == zero {
             return Err(WeightedError::AllWeightsZero);
         }
-        let distr = X::Sampler::new(zero, total_weight.clone());
+        let distr = X::Sampler::new(zero, total_weight.clone()).unwrap();
 
         Ok(WeightedIndex {
             cumulative_weights: weights,
@@ -139,6 +141,10 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// allocation internally.
     ///
     /// In case of error, `self` is not modified.
+    /// 
+    /// Note: Updating floating-point weights may cause slight inaccuracies in the total weight.
+    ///       This method may not return `WeightedError::AllWeightsZero` when all weights
+    ///       are zero if using floating-point weights. 
     pub fn update_weights(&mut self, new_weights: &[(usize, &X)]) -> Result<(), WeightedError>
     where X: for<'a> ::core::ops::AddAssign<&'a X>
             + for<'a> ::core::ops::SubAssign<&'a X>
@@ -214,7 +220,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         }
 
         self.total_weight = total_weight;
-        self.weight_distribution = X::Sampler::new(zero, self.total_weight.clone());
+        self.weight_distribution = X::Sampler::new(zero, self.total_weight.clone()).unwrap();
 
         Ok(())
     }
@@ -224,18 +230,9 @@ impl<X> Distribution<usize> for WeightedIndex<X>
 where X: SampleUniform + PartialOrd
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        use ::core::cmp::Ordering;
         let chosen_weight = self.weight_distribution.sample(rng);
         // Find the first item which has a weight *higher* than the chosen weight.
-        self.cumulative_weights
-            .binary_search_by(|w| {
-                if *w <= chosen_weight {
-                    Ordering::Less
-                } else {
-                    Ordering::Greater
-                }
-            })
-            .unwrap_err()
+        self.cumulative_weights.partition_point(|w| w <= &chosen_weight)
     }
 }
 
@@ -417,6 +414,11 @@ mod test {
         test_samples(&[1.0f64, 0.999, 0.998, 0.997], &mut buf, &[
             2, 2, 1, 3, 2, 1, 3, 3, 2, 1,
         ]);
+    }
+
+    #[test]
+    fn weighted_index_distributions_can_be_compared() {
+        assert_eq!(WeightedIndex::new(&[1, 2]), WeightedIndex::new(&[1, 2]));
     }
 }
 

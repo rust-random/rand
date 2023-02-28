@@ -91,7 +91,7 @@ impl Distribution<f64> for Exp1 {
 /// let v = exp.sample(&mut rand::thread_rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Exp<F>
 where F: Float, Exp1: Distribution<F>
@@ -177,5 +177,10 @@ mod test {
     #[should_panic]
     fn test_exp_invalid_lambda_nan() {
         Exp::new(f64::nan()).unwrap();
+    }
+
+    #[test]
+    fn exponential_distributions_can_be_compared() {
+        assert_eq!(Exp::new(1.0), Exp::new(1.0));
     }
 }

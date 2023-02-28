@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - unreleased
+- Remove unused fields from `Gamma`, `NormalInverseGaussian` and `Zipf` distributions (#1184)
+  This breaks serialization compatibility with older versions.
+- Upgrade Rand
+- Fix Knuth's method so `Poisson` doesn't return -1.0 for small lambda
+- Fix `Poisson` distribution instantiation so it return an error if lambda is infinite
+
+## [0.4.3] - 2021-12-30
+- Fix `no_std` build (#1208)
+
 ## [0.4.2] - 2021-09-18
 - New `Zeta` and `Zipf` distributions (#1136)
 - New `SkewNormal` distribution (#1149)

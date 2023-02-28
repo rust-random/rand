@@ -4,8 +4,10 @@ use crate::Distribution;
 use rand::Rng;
 use rand::distributions::uniform::Uniform;
 use core::fmt;
+#[allow(unused_imports)]
+use num_traits::Float;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 enum SamplingMethod {
     InverseTransform{ initial_p: f64, initial_x: i64 },
@@ -43,7 +45,7 @@ enum SamplingMethod {
 /// let v = hypergeo.sample(&mut rand::thread_rng());
 /// println!("{} is from a hypergeometric distribution", v);
 /// ```
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Hypergeometric {
     n1: u64,
@@ -249,7 +251,7 @@ impl Distribution<u64> for Hypergeometric {
                 x
             },
             RejectionAcceptance { m, a, lambda_l, lambda_r, x_l, x_r, p1, p2, p3 } => {
-                let distr_region_select = Uniform::new(0.0, p3);
+                let distr_region_select = Uniform::new(0.0, p3).unwrap();
                 loop {
                     let (y, v) = loop {
                         let u = distr_region_select.sample(rng);
@@ -416,5 +418,10 @@ mod test {
         test_hypergeometric_mean_and_variance(5000, 2500, 500, &mut rng);
         test_hypergeometric_mean_and_variance(10100, 10000, 1000, &mut rng);
         test_hypergeometric_mean_and_variance(100100, 100, 10000, &mut rng);
+    }
+
+    #[test]
+    fn hypergeometric_distributions_can_be_compared() {
+        assert_eq!(Hypergeometric::new(1, 2, 3), Hypergeometric::new(1, 2, 3));
     }
 }

@@ -8,11 +8,11 @@
 
 //! Basic floating-point number distributions
 
-use crate::distributions::utils::FloatSIMDUtils;
+use crate::distributions::utils::{IntAsSIMD, FloatAsSIMD, FloatSIMDUtils};
 use crate::distributions::{Distribution, Standard};
 use crate::Rng;
 use core::mem;
-#[cfg(feature = "simd_support")] use packed_simd::*;
+#[cfg(feature = "simd_support")] use core::simd::*;
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
@@ -99,7 +99,7 @@ macro_rules! float_impls {
                 // The exponent is encoded using an offset-binary representation
                 let exponent_bits: $u_scalar =
                     (($exponent_bias + exponent) as $u_scalar) << $fraction_bits;
-                $ty::from_bits(self | exponent_bits)
+                $ty::from_bits(self | $uty::splat(exponent_bits))
             }
         }
 
@@ -108,13 +108,13 @@ macro_rules! float_impls {
                 // Multiply-based method; 24/53 random bits; [0, 1) interval.
                 // We use the most significant bits because for simple RNGs
                 // those are usually more random.
-                let float_size = mem::size_of::<$f_scalar>() as u32 * 8;
+                let float_size = mem::size_of::<$f_scalar>() as $u_scalar * 8;
                 let precision = $fraction_bits + 1;
                 let scale = 1.0 / ((1 as $u_scalar << precision) as $f_scalar);
 
                 let value: $uty = rng.gen();
-                let value = value >> (float_size - precision);
-                scale * $ty::cast_from_int(value)
+                let value = value >> $uty::splat(float_size - precision);
+                $ty::splat(scale) * $ty::cast_from_int(value)
             }
         }
 
@@ -123,14 +123,14 @@ macro_rules! float_impls {
                 // Multiply-based method; 24/53 random bits; (0, 1] interval.
                 // We use the most significant bits because for simple RNGs
                 // those are usually more random.
-                let float_size = mem::size_of::<$f_scalar>() as u32 * 8;
+                let float_size = mem::size_of::<$f_scalar>() as $u_scalar * 8;
                 let precision = $fraction_bits + 1;
                 let scale = 1.0 / ((1 as $u_scalar << precision) as $f_scalar);
 
                 let value: $uty = rng.gen();
-                let value = value >> (float_size - precision);
+                let value = value >> $uty::splat(float_size - precision);
                 // Add 1 to shift up; will not overflow because of right-shift:
-                scale * $ty::cast_from_int(value + 1)
+                $ty::splat(scale) * $ty::cast_from_int(value + $uty::splat(1))
             }
         }
 
@@ -140,11 +140,11 @@ macro_rules! float_impls {
                 // We use the most significant bits because for simple RNGs
                 // those are usually more random.
                 use core::$f_scalar::EPSILON;
-                let float_size = mem::size_of::<$f_scalar>() as u32 * 8;
+                let float_size = mem::size_of::<$f_scalar>() as $u_scalar * 8;
 
                 let value: $uty = rng.gen();
-                let fraction = value >> (float_size - $fraction_bits);
-                fraction.into_float_with_exponent(0) - (1.0 - EPSILON / 2.0)
+                let fraction = value >> $uty::splat(float_size - $fraction_bits);
+                fraction.into_float_with_exponent(0) - $ty::splat(1.0 - EPSILON / 2.0)
             }
         }
     }
@@ -169,10 +169,10 @@ float_impls! { f64x4, u64x4, f64, u64, 52, 1023 }
 #[cfg(feature = "simd_support")]
 float_impls! { f64x8, u64x8, f64, u64, 52, 1023 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::distributions::utils::FloatAsSIMD;
     use crate::rngs::mock::StepRng;
 
     const EPSILON32: f32 = ::core::f32::EPSILON;
@@ -182,29 +182,31 @@ mod tests {
         ($fnn:ident, $ty:ident, $ZERO:expr, $EPSILON:expr) => {
             #[test]
             fn $fnn() {
+                let two = $ty::splat(2.0);
+
                 // Standard
                 let mut zeros = StepRng::new(0, 0);
                 assert_eq!(zeros.gen::<$ty>(), $ZERO);
                 let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
-                assert_eq!(one.gen::<$ty>(), $EPSILON / 2.0);
+                assert_eq!(one.gen::<$ty>(), $EPSILON / two);
                 let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.gen::<$ty>(), 1.0 - $EPSILON / 2.0);
+                assert_eq!(max.gen::<$ty>(), $ty::splat(1.0) - $EPSILON / two);
 
                 // OpenClosed01
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01), 0.0 + $EPSILON / 2.0);
+                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01), $ZERO + $EPSILON / two);
                 let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
                 assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
                 let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.sample::<$ty, _>(OpenClosed01), $ZERO + 1.0);
+                assert_eq!(max.sample::<$ty, _>(OpenClosed01), $ZERO + $ty::splat(1.0));
 
                 // Open01
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(Open01), 0.0 + $EPSILON / 2.0);
+                assert_eq!(zeros.sample::<$ty, _>(Open01), $ZERO + $EPSILON / two);
                 let mut one = StepRng::new(1 << 9 | 1 << (9 + 32), 0);
-                assert_eq!(one.sample::<$ty, _>(Open01), $EPSILON / 2.0 * 3.0);
+                assert_eq!(one.sample::<$ty, _>(Open01), $EPSILON / two * $ty::splat(3.0));
                 let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.sample::<$ty, _>(Open01), 1.0 - $EPSILON / 2.0);
+                assert_eq!(max.sample::<$ty, _>(Open01), $ty::splat(1.0) - $EPSILON / two);
             }
         };
     }
@@ -222,29 +224,31 @@ mod tests {
         ($fnn:ident, $ty:ident, $ZERO:expr, $EPSILON:expr) => {
             #[test]
             fn $fnn() {
+                let two = $ty::splat(2.0);
+
                 // Standard
                 let mut zeros = StepRng::new(0, 0);
                 assert_eq!(zeros.gen::<$ty>(), $ZERO);
                 let mut one = StepRng::new(1 << 11, 0);
-                assert_eq!(one.gen::<$ty>(), $EPSILON / 2.0);
+                assert_eq!(one.gen::<$ty>(), $EPSILON / two);
                 let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.gen::<$ty>(), 1.0 - $EPSILON / 2.0);
+                assert_eq!(max.gen::<$ty>(), $ty::splat(1.0) - $EPSILON / two);
 
                 // OpenClosed01
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01), 0.0 + $EPSILON / 2.0);
+                assert_eq!(zeros.sample::<$ty, _>(OpenClosed01), $ZERO + $EPSILON / two);
                 let mut one = StepRng::new(1 << 11, 0);
                 assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
                 let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.sample::<$ty, _>(OpenClosed01), $ZERO + 1.0);
+                assert_eq!(max.sample::<$ty, _>(OpenClosed01), $ZERO + $ty::splat(1.0));
 
                 // Open01
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.sample::<$ty, _>(Open01), 0.0 + $EPSILON / 2.0);
+                assert_eq!(zeros.sample::<$ty, _>(Open01), $ZERO + $EPSILON / two);
                 let mut one = StepRng::new(1 << 12, 0);
-                assert_eq!(one.sample::<$ty, _>(Open01), $EPSILON / 2.0 * 3.0);
+                assert_eq!(one.sample::<$ty, _>(Open01), $EPSILON / two * $ty::splat(3.0));
                 let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.sample::<$ty, _>(Open01), 1.0 - $EPSILON / 2.0);
+                assert_eq!(max.sample::<$ty, _>(Open01), $ty::splat(1.0) - $EPSILON / two);
             }
         };
     }
@@ -296,16 +300,16 @@ mod tests {
             // non-SIMD types; we assume this pattern continues across all
             // SIMD types.
 
-            test_samples(&Standard, f32x2::new(0.0, 0.0), &[
-                f32x2::new(0.0035963655, 0.7346052),
-                f32x2::new(0.09778172, 0.20298547),
-                f32x2::new(0.34296435, 0.81664366),
+            test_samples(&Standard, f32x2::from([0.0, 0.0]), &[
+                f32x2::from([0.0035963655, 0.7346052]),
+                f32x2::from([0.09778172, 0.20298547]),
+                f32x2::from([0.34296435, 0.81664366]),
             ]);
 
-            test_samples(&Standard, f64x2::new(0.0, 0.0), &[
-                f64x2::new(0.7346051961657583, 0.20298547462974248),
-                f64x2::new(0.8166436635290655, 0.7423708925400552),
-                f64x2::new(0.16387782224016323, 0.9087068770169618),
+            test_samples(&Standard, f64x2::from([0.0, 0.0]), &[
+                f64x2::from([0.7346051961657583, 0.20298547462974248]),
+                f64x2::from([0.8166436635290655, 0.7423708925400552]),
+                f64x2::from([0.16387782224016323, 0.9087068770169618]),
             ]);
         }
     }

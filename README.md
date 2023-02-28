@@ -5,7 +5,7 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.36+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.56+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 A Rust library for random number generation, featuring:
 
@@ -51,7 +51,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.8.4"
+rand = "0.8.5"
 ```
 
 To get started using Rand, see [The Book](https://rust-random.github.io/book).
@@ -97,15 +97,8 @@ issue tracker with the keyword `yank` *should* uncover the motivation.
 
 ### Rust version requirements
 
-Since version 0.8, Rand requires **Rustc version 1.36 or greater**.
-Rand 0.7 requires Rustc 1.32 or greater while versions 0.5 require Rustc 1.22 or
-greater, and 0.4 and 0.3 (since approx. June 2017) require Rustc version 1.15 or
-greater. Subsets of the Rand code may work with older Rust versions, but this is
-not supported.
-
-Continuous Integration (CI) will always test the minimum supported Rustc version
-(the MSRV). The current policy is that this can be updated in any
-Rand release if required, but the change must be noted in the changelog.
+The Minimum Supported Rust Version (MSRV) is `rustc >= 1.56.0`.
+Older releases may work (depending on feature configuration) but are untested.
 
 ## Crate Features
 
@@ -125,11 +118,9 @@ Optionally, the following dependencies can be enabled:
 Additionally, these features configure Rand:
 
 -   `small_rng` enables inclusion of the `SmallRng` PRNG
--   `nightly` enables some optimizations requiring nightly Rust
+-   `nightly` includes some additions requiring nightly Rust
 -   `simd_support` (experimental) enables sampling of SIMD values
     (uniformly random SIMD integers and floats), requiring nightly Rust
--   `min_const_gen` enables generating random arrays of 
-    any size using min-const-generics, requiring Rust ≥ 1.51.
 
 Note that nightly features are not stable and therefore not all library and
 compiler versions will be compatible. This is especially true of Rand's
@@ -143,10 +134,13 @@ unavailable.
 
 ### WASM support
 
-The WASM target `wasm32-unknown-unknown` is not *automatically* supported by
-`rand` or `getrandom`. To solve this, either use a different target such as
-`wasm32-wasi` or add a direct dependency on `getrandom` with the `js` feature
-(if the target supports JavaScript). See
+Seeding entropy from OS on WASM target `wasm32-unknown-unknown` is not
+*automatically* supported by `rand` or `getrandom`. If you are fine with
+seeding the generator manually, you can disable the `getrandom` feature
+and use the methods on the `SeedableRng` trait. To enable seeding from OS,
+either use a different target such as `wasm32-wasi` or add a direct
+dependency on `getrandom` with the `js` feature (if the target supports
+JavaScript). See
 [getrandom#WebAssembly support](https://docs.rs/getrandom/latest/getrandom/#webassembly-support).
 
 # License

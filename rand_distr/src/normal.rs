@@ -112,7 +112,7 @@ impl Distribution<f64> for StandardNormal {
 /// ```
 ///
 /// [`StandardNormal`]: crate::StandardNormal
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Normal<F>
 where F: Float, StandardNormal: Distribution<F>
@@ -227,7 +227,7 @@ where F: Float, StandardNormal: Distribution<F>
 /// let v = log_normal.sample(&mut rand::thread_rng());
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct LogNormal<F>
 where F: Float, StandardNormal: Distribution<F>
@@ -367,5 +367,15 @@ mod tests {
         assert!(LogNormal::from_mean_cv(-1.0, 1.0).is_err());
         assert!(LogNormal::from_mean_cv(0.0, 1.0).is_err());
         assert!(LogNormal::from_mean_cv(1.0, -1.0).is_err());
+    }
+
+    #[test]
+    fn normal_distributions_can_be_compared() {
+        assert_eq!(Normal::new(1.0, 2.0), Normal::new(1.0, 2.0));
+    }
+
+    #[test]
+    fn log_normal_distributions_can_be_compared() {
+        assert_eq!(LogNormal::new(1.0, 2.0), LogNormal::new(1.0, 2.0));
     }
 }

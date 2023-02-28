@@ -27,7 +27,7 @@ use rand::Rng;
 /// let val: f64 = thread_rng().sample(Frechet::new(0.0, 1.0, 1.0).unwrap());
 /// println!("{}", val);
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Frechet<F>
 where
@@ -181,5 +181,10 @@ mod tests {
             .iter()
             .zip(&probabilities)
             .all(|(p_hat, p)| (p_hat - p).abs() < 0.003))
+    }
+
+    #[test]
+    fn frechet_distributions_can_be_compared() {
+        assert_eq!(Frechet::new(1.0, 2.0, 3.0), Frechet::new(1.0, 2.0, 3.0));
     }
 }

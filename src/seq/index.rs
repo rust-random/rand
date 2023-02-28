@@ -238,7 +238,7 @@ where R: Rng + ?Sized {
 
     if amount < 163 {
         const C: [[f32; 2]; 2] = [[1.6, 8.0 / 45.0], [10.0, 70.0 / 9.0]];
-        let j = if length < 500_000 { 0 } else { 1 };
+        let j = usize::from(length >= 500_000);
         let amount_fp = amount as f32;
         let m4 = C[0][j] * amount_fp;
         // Short-cut: when amount < 12, floyd's is always faster
@@ -249,7 +249,7 @@ where R: Rng + ?Sized {
         }
     } else {
         const C: [f32; 2] = [270.0, 330.0 / 9.0];
-        let j = if length < 500_000 { 0 } else { 1 };
+        let j = usize::from(length >= 500_000);
         if (length as f32) < C[j] * (amount as f32) {
             sample_inplace(rng, length, amount)
         } else {
@@ -267,9 +267,7 @@ where R: Rng + ?Sized {
 /// sometimes be useful to have the indices themselves so this is provided as
 /// an alternative.
 ///
-/// This implementation uses `O(length + amount)` space and `O(length)` time
-/// if the "nightly" feature is enabled, or `O(length)` space and
-/// `O(length + amount * log length)` time otherwise.
+/// This implementation uses `O(length + amount)` space and `O(length)` time.
 ///
 /// Panics if `amount > length`.
 #[cfg(feature = "std")]
@@ -300,9 +298,7 @@ where
 ///
 /// This implementation uses the algorithm described by Efraimidis and Spirakis
 /// in this paper: https://doi.org/10.1016/j.ipl.2005.11.003
-/// It uses `O(length + amount)` space and `O(length)` time if the
-/// "nightly" feature is enabled, or `O(length)` space and `O(length
-/// + amount * log length)` time otherwise.
+/// It uses `O(length + amount)` space and `O(length)` time.
 ///
 /// Panics if `amount > length`.
 #[cfg(feature = "std")]
@@ -347,63 +343,33 @@ where
     }
     impl<N> Eq for Element<N> {}
 
-    #[cfg(feature = "nightly")]
-    {
-        let mut candidates = Vec::with_capacity(length.as_usize());
-        let mut index = N::zero();
-        while index < length {
-            let weight = weight(index.as_usize()).into();
-            if !(weight >= 0.) {
-                return Err(WeightedError::InvalidWeight);
-            }
-
-            let key = rng.gen::<f64>().powf(1.0 / weight);
-            candidates.push(Element { index, key });
-
-            index += N::one();
+    let mut candidates = Vec::with_capacity(length.as_usize());
+    let mut index = N::zero();
+    while index < length {
+        let weight = weight(index.as_usize()).into();
+        if !(weight >= 0.) {
+            return Err(WeightedError::InvalidWeight);
         }
 
-        // Partially sort the array to find the `amount` elements with the greatest
-        // keys. Do this by using `select_nth_unstable` to put the elements with
-        // the *smallest* keys at the beginning of the list in `O(n)` time, which
-        // provides equivalent information about the elements with the *greatest* keys.
-        let (_, mid, greater)
-            = candidates.select_nth_unstable(length.as_usize() - amount.as_usize());
+        let key = rng.gen::<f64>().powf(1.0 / weight);
+        candidates.push(Element { index, key });
 
-        let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
-        result.push(mid.index);
-        for element in greater {
-            result.push(element.index);
-        }
-        Ok(IndexVec::from(result))
+        index += N::one();
     }
 
-    #[cfg(not(feature = "nightly"))]
-    {
-        use alloc::collections::BinaryHeap;
+    // Partially sort the array to find the `amount` elements with the greatest
+    // keys. Do this by using `select_nth_unstable` to put the elements with
+    // the *smallest* keys at the beginning of the list in `O(n)` time, which
+    // provides equivalent information about the elements with the *greatest* keys.
+    let (_, mid, greater)
+        = candidates.select_nth_unstable(length.as_usize() - amount.as_usize());
 
-        // Partially sort the array such that the `amount` elements with the largest
-        // keys are first using a binary max heap.
-        let mut candidates = BinaryHeap::with_capacity(length.as_usize());
-        let mut index = N::zero();
-        while index < length {
-            let weight = weight(index.as_usize()).into();
-            if !(weight >= 0.) {
-                return Err(WeightedError::InvalidWeight);
-            }
-
-            let key = rng.gen::<f64>().powf(1.0 / weight);
-            candidates.push(Element { index, key });
-
-            index += N::one();
-        }
-
-        let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
-        while result.len() < amount.as_usize() {
-            result.push(candidates.pop().unwrap().index);
-        }
-        Ok(IndexVec::from(result))
+    let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
+    result.push(mid.index);
+    for element in greater {
+        result.push(element.index);
     }
+    Ok(IndexVec::from(result))
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using Floyd's
@@ -414,32 +380,17 @@ where
 /// This implementation uses `O(amount)` memory and `O(amount^2)` time.
 fn sample_floyd<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
 where R: Rng + ?Sized {
-    // For small amount we use Floyd's fully-shuffled variant. For larger
-    // amounts this is slow due to Vec::insert performance, so we shuffle
-    // afterwards. Benchmarks show little overhead from extra logic.
-    let floyd_shuffle = amount < 50;
-
+    // Note that the values returned by `rng.gen_range()` can be
+    // inferred from the returned vector by working backwards from
+    // the last entry. This bijection proves the algorithm fair.
     debug_assert!(amount <= length);
     let mut indices = Vec::with_capacity(amount as usize);
     for j in length - amount..length {
         let t = rng.gen_range(0..=j);
-        if floyd_shuffle {
-            if let Some(pos) = indices.iter().position(|&x| x == t) {
-                indices.insert(pos, j);
-                continue;
-            }
-        } else if indices.contains(&t) {
-            indices.push(j);
-            continue;
+        if let Some(pos) = indices.iter().position(|&x| x == t) {
+            indices[pos] = j;
         }
         indices.push(t);
-    }
-    if !floyd_shuffle {
-        // Reimplement SliceRandom::shuffle with smaller indices
-        for i in (1..amount).rev() {
-            // invariant: elements with index > i have been locked in place.
-            indices.swap(i as usize, rng.gen_range(0..=i) as usize);
-        }
     }
     IndexVec::from(indices)
 }
@@ -528,7 +479,7 @@ where
     let mut cache = HashSet::with_capacity(amount.as_usize());
     #[cfg(not(feature = "std"))]
     let mut cache = BTreeSet::new();
-    let distr = Uniform::new(X::zero(), length);
+    let distr = Uniform::new(X::zero(), length).unwrap();
     let mut indices = Vec::with_capacity(amount.as_usize());
     for _ in 0..amount.as_usize() {
         let mut pos = distr.sample(rng);
@@ -662,8 +613,8 @@ mod test {
             );
         };
 
-        do_test(10, 6, &[8, 0, 3, 5, 9, 6]); // floyd
-        do_test(25, 10, &[18, 15, 14, 9, 0, 13, 5, 24]); // floyd
+        do_test(10, 6, &[8, 3, 5, 9, 0, 6]); // floyd
+        do_test(25, 10, &[18, 14, 9, 15, 0, 13, 5, 24]); // floyd
         do_test(300, 8, &[30, 283, 150, 1, 73, 13, 285, 35]); // floyd
         do_test(300, 80, &[31, 289, 248, 154, 5, 78, 19, 286]); // inplace
         do_test(300, 180, &[31, 289, 248, 154, 5, 78, 19, 286]); // inplace

@@ -41,8 +41,8 @@
 use core::convert::AsMut;
 use core::default::Default;
 
-#[cfg(feature = "std")] extern crate std;
 #[cfg(feature = "alloc")] extern crate alloc;
+#[cfg(feature = "std")] extern crate std;
 #[cfg(feature = "alloc")] use alloc::boxed::Box;
 
 pub use error::Error;
@@ -182,10 +182,17 @@ pub trait RngCore {
     /// `fill_bytes` may be implemented with
     /// `self.try_fill_bytes(dest).unwrap()` or more specific error handling.
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error>;
+
+    /// Convert an [`RngCore`] to a [`RngReadAdapter`].
+    #[cfg(feature = "std")]
+    fn read_adapter(&mut self) -> RngReadAdapter<'_, Self>
+    where Self: Sized {
+        RngReadAdapter { inner: self }
+    }
 }
 
-/// A marker trait used to indicate that an [`RngCore`] or [`BlockRngCore`]
-/// implementation is supposed to be cryptographically secure.
+/// A marker trait used to indicate that an [`RngCore`] implementation is
+/// supposed to be cryptographically secure.
 ///
 /// *Cryptographically secure generators*, also known as *CSPRNGs*, should
 /// satisfy an additional properties over other generators: given the first
@@ -206,36 +213,7 @@ pub trait RngCore {
 /// weaknesses such as seeding from a weak entropy source or leaking state.
 ///
 /// [`BlockRngCore`]: block::BlockRngCore
-pub trait CryptoRng {}
-
-/// An extension trait that is automatically implemented for any type
-/// implementing [`RngCore`] and [`CryptoRng`].
-///
-/// It may be used as a trait object, and supports upcasting to [`RngCore`] via
-/// the [`CryptoRngCore::as_rngcore`] method.
-///
-/// # Example
-///
-/// ```
-/// use rand_core::CryptoRngCore;
-///
-/// #[allow(unused)]
-/// fn make_token(rng: &mut dyn CryptoRngCore) -> [u8; 32] {
-///     let mut buf = [0u8; 32];
-///     rng.fill_bytes(&mut buf);
-///     buf
-/// }
-/// ```
-pub trait CryptoRngCore: RngCore {
-    /// Upcast to an [`RngCore`] trait object.
-    fn as_rngcore(&mut self) -> &mut dyn RngCore;
-}
-
-impl<T: CryptoRng + RngCore> CryptoRngCore for T {
-    fn as_rngcore(&mut self) -> &mut dyn RngCore {
-        self
-    }
-}
+pub trait CryptoRng: RngCore {}
 
 /// A random number generator that can be explicitly seeded.
 ///
@@ -469,11 +447,34 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
     }
 }
 
+/// Adapter that enables reading through a [`io::Read`](std::io::Read) from a [`RngCore`].
+///
+/// # Examples
+///
+/// ```no_run
+/// # use std::{io, io::Read};
+/// # use std::fs::File;
+/// # use rand_core::{OsRng, RngCore};
+///
+/// io::copy(&mut OsRng.read_adapter().take(100), &mut File::create("/tmp/random.bytes").unwrap()).unwrap();
+/// ```
 #[cfg(feature = "std")]
-impl std::io::Read for dyn RngCore {
+pub struct RngReadAdapter<'a, R: RngCore + ?Sized> {
+    inner: &'a mut R,
+}
+
+#[cfg(feature = "std")]
+impl<R: RngCore + ?Sized> std::io::Read for RngReadAdapter<'_, R> {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
-        self.try_fill_bytes(buf)?;
+        self.inner.try_fill_bytes(buf)?;
         Ok(buf.len())
+    }
+}
+
+#[cfg(feature = "std")]
+impl<R: RngCore + ?Sized> std::fmt::Debug for RngReadAdapter<'_, R> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ReadAdapter").finish()
     }
 }
 

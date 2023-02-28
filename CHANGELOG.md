@@ -8,12 +8,24 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.9.0] - unreleased
+### Distributions
+- `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking) (#1229)
+- `Uniform` implements `TryFrom` instead of `From` for ranges (#1229)
+
+### Other
+- Simpler and faster implementation of Floyd's F2 (#1277). This
+  changes some outputs from `rand::seq::index::sample` and
+  `rand::seq::SliceRandom::choose_multiple`.
+
 ## [0.8.5] - 2021-08-20
 ### Fixes
 - Fix build on non-32/64-bit architectures (#1144)
 - Fix "min_const_gen" feature for `no_std` (#1173)
 - Check `libc::pthread_atfork` return value with panic on error (#1178)
 - More robust reseeding in case `ReseedingRng` is used from a fork handler (#1178)
+- Fix nightly: remove unused `slice_partition_at_index` feature (#1215)
+- Fix nightly + `simd_support`: update `packed_simd` (#1216)
 
 ### Rngs
 - `StdRng`: Switch from HC128 to ChaCha12 on emscripten (#1142).

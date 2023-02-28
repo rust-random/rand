@@ -149,18 +149,22 @@ use crate::Rng;
 /// * `bool`: Generates `false` or `true`, each with probability 0.5.
 /// * Floating point types (`f32` and `f64`): Uniformly distributed in the
 ///   half-open range `[0, 1)`. See notes below.
-/// * Wrapping integers (`Wrapping<T>`), besides the type identical to their
+/// * Wrapping integers ([`Wrapping<T>`]), besides the type identical to their
 ///   normal integer variants.
+/// * Non-zero integers ([`NonZeroU8`]), which are like their normal integer
+///   variants but cannot produce zero.
+/// * SIMD types like x86's [`__m128i`], `std::simd`'s [`u32x4`]/[`f32x4`]/
+///   [`mask32x4`] (requires [`simd_support`]), where each lane is distributed
+///   like their scalar `Standard` variants. See the list of `Standard`
+///   implementations for more.
 ///
 /// The `Standard` distribution also supports generation of the following
 /// compound types where all component types are supported:
 ///
 /// *   Tuples (up to 12 elements): each element is generated sequentially.
-/// *   Arrays (up to 32 elements): each element is generated sequentially;
+/// *   Arrays: each element is generated sequentially;
 ///     see also [`Rng::fill`] which supports arbitrary array length for integer
-///     types and tends to be faster for `u32` and smaller types.
-///     When using `rustc` ≥ 1.51, enable the `min_const_gen` feature to support
-///     arrays larger than 32 elements.
+///     and float types and tends to be faster for `u32` and smaller types.
 ///     Note that [`Rng::fill`] and `Standard`'s array support are *not* equivalent:
 ///     the former is optimised for integer types (using fewer RNG calls for
 ///     element types smaller than the RNG word size), while the latter supports
@@ -213,6 +217,13 @@ use crate::Rng;
 /// CPUs all methods have approximately equal performance).
 ///
 /// [`Uniform`]: uniform::Uniform
+/// [`Wrapping<T>`]: std::num::Wrapping
+/// [`NonZeroU8`]: std::num::NonZeroU8
+/// [`__m128i`]: https://doc.rust-lang.org/core/arch/x86/struct.__m128i.html
+/// [`u32x4`]: std::simd::u32x4
+/// [`f32x4`]: std::simd::f32x4
+/// [`mask32x4`]: std::simd::mask32x4
+/// [`simd_support`]: https://github.com/rust-random/rand#crate-features
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Standard;

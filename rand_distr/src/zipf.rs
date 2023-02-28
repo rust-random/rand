@@ -46,7 +46,7 @@ use core::fmt;
 ///
 /// [zeta distribution]: https://en.wikipedia.org/wiki/Zeta_distribution
 /// [Non-Uniform Random Variate Generation]: https://doi.org/10.1007/978-1-4613-8643-8
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Zeta<F>
 where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 {
@@ -142,10 +142,9 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 /// due to Jason Crease[1].
 ///
 /// [1]: https://jasoncrease.medium.com/rejection-sampling-the-zipf-distribution-6b359792cffa
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Zipf<F>
 where F: Float, Standard: Distribution<F> {
-    n: F,
     s: F,
     t: F,
     q: F,
@@ -202,7 +201,7 @@ where F: Float, Standard: Distribution<F> {
         };
         debug_assert!(t > F::zero());
         Ok(Zipf {
-            n, s, t, q
+            s, t, q
         })
     }
 
@@ -370,5 +369,15 @@ mod tests {
         test_samples(Zipf::new(10, 2.0).unwrap(), 0f64, &[
             1.0, 2.0, 3.0, 2.0
         ]);
+    }
+
+    #[test]
+    fn zipf_distributions_can_be_compared() {
+        assert_eq!(Zipf::new(1, 2.0), Zipf::new(1, 2.0));
+    }
+
+    #[test]
+    fn zeta_distributions_can_be_compared() {
+        assert_eq!(Zeta::new(1.0), Zeta::new(1.0));
     }
 }

@@ -11,6 +11,7 @@
 use crate::ziggurat_tables;
 use rand::distributions::hidden_export::IntoFloat;
 use rand::Rng;
+use num_traits::Float;
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma
 /// function) using the Lanczos approximation.
@@ -25,7 +26,7 @@ use rand::Rng;
 /// `Ag(z)` is an infinite series with coefficients that can be calculated
 /// ahead of time - we use just the first 6 terms, which is good enough
 /// for most purposes.
-pub(crate) fn log_gamma<F: num_traits::Float>(x: F) -> F {
+pub(crate) fn log_gamma<F: Float>(x: F) -> F {
     // precalculated 6 coefficients for the first 6 terms of the series
     let coefficients: [F; 6] = [
         F::from(76.18009172947146).unwrap(),

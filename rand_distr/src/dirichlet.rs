@@ -32,7 +32,7 @@ use alloc::{boxed::Box, vec, vec::Vec};
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Dirichlet<F>
 where
@@ -291,5 +291,10 @@ mod test {
     #[should_panic]
     fn test_dirichlet_invalid_alpha() {
         Dirichlet::new_with_size(0.0f64, 2).unwrap();
+    }
+
+    #[test]
+    fn dirichlet_distributions_can_be_compared() {
+        assert_eq!(Dirichlet::new(&[1.0, 2.0]), Dirichlet::new(&[1.0, 2.0]));
     }
 }

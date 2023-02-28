@@ -14,6 +14,7 @@ use core::{fmt, u64};
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
+
 /// The Bernoulli distribution.
 ///
 /// This is a special case of the Binomial distribution where `n = 1`.
@@ -33,7 +34,7 @@ use serde::{Serialize, Deserialize};
 /// This `Bernoulli` distribution uses 64 bits from the RNG (a `u64`),
 /// so only probabilities that are multiples of 2<sup>-64</sup> can be
 /// represented.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Bernoulli {
     /// Probability of success, relative to the maximal integer.
@@ -147,10 +148,10 @@ mod test {
     use crate::Rng;
 
     #[test]
-    #[cfg(feature="serde1")]
+    #[cfg(feature = "serde1")]
     fn test_serializing_deserializing_bernoulli() {
         let coin_flip = Bernoulli::new(0.5).unwrap();
-        let de_coin_flip : Bernoulli = bincode::deserialize(&bincode::serialize(&coin_flip).unwrap()).unwrap();
+        let de_coin_flip: Bernoulli = bincode::deserialize(&bincode::serialize(&coin_flip).unwrap()).unwrap();
 
         assert_eq!(coin_flip.p_int, de_coin_flip.p_int);
     }
@@ -210,5 +211,10 @@ mod test {
         assert_eq!(buf, [
             true, false, false, true, false, false, true, true, true, true
         ]);
+    }
+
+    #[test]
+    fn bernoulli_distributions_can_be_compared() {
+        assert_eq!(Bernoulli::new(1.0), Bernoulli::new(1.0));
     }
 }

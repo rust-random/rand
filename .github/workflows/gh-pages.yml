@@ -1,5 +1,10 @@
 name: gh-pages
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 on:
   push:
     branches:
@@ -9,23 +14,33 @@ jobs:
   deploy:
     name: GH-pages documentation
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: https://rust-random.github.io/rand/
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-      - name: doc (rand)
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Build docs
         env:
           RUSTDOCFLAGS: --cfg doc_cfg
         # --all builds all crates, but with default features for other crates (okay in this case)
         run: |
           cargo doc --all --features nightly,serde1,getrandom,small_rng
           cp utils/redirect.html target/doc/index.html
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v2
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target/doc
+          path: './target/doc'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1

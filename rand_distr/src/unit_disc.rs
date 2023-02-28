@@ -30,7 +30,7 @@ pub struct UnitDisc;
 impl<F: Float + SampleUniform> Distribution<[F; 2]> for UnitDisc {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [F; 2] {
-        let uniform = Uniform::new(F::from(-1.).unwrap(), F::from(1.).unwrap());
+        let uniform = Uniform::new(F::from(-1.).unwrap(), F::from(1.).unwrap()).unwrap();
         let mut x1;
         let mut x2;
         loop {

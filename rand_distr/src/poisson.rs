@@ -28,7 +28,7 @@ use core::fmt;
 /// let v = poi.sample(&mut rand::thread_rng());
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Poisson<F>
 where F: Float + FloatConst, Standard: Distribution<F>
@@ -44,14 +44,17 @@ where F: Float + FloatConst, Standard: Distribution<F>
 /// Error type returned from `Poisson::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// `lambda <= 0` or `nan`.
+    /// `lambda <= 0`
     ShapeTooSmall,
+    /// `lambda = ∞` or `lambda = nan`
+    NonFinite,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             Error::ShapeTooSmall => "lambda is not positive in Poisson distribution",
+            Error::NonFinite => "lambda is infinite or nan in Poisson distribution",
         })
     }
 }
@@ -66,6 +69,9 @@ where F: Float + FloatConst, Standard: Distribution<F>
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
     pub fn new(lambda: F) -> Result<Poisson<F>, Error> {
+	if !lambda.is_finite() {
+            return Err(Error::NonFinite);
+        }
         if !(lambda > F::zero()) {
             return Err(Error::ShapeTooSmall);
         }
@@ -89,8 +95,8 @@ where F: Float + FloatConst, Standard: Distribution<F>
 
         // for low expected values use the Knuth method
         if self.lambda < F::from(12.0).unwrap() {
-            let mut result = F::zero();
-            let mut p = F::one();
+            let mut result = F::one();
+            let mut p = rng.gen::<F>();
             while p > self.exp_lambda {
                 p = p*rng.gen::<F>();
                 result = result + F::one();
@@ -161,10 +167,15 @@ mod test {
 
     #[test]
     fn test_poisson_avg() {
-        test_poisson_avg_gen::<f64>(10.0, 0.5);
-        test_poisson_avg_gen::<f64>(15.0, 0.5);
-        test_poisson_avg_gen::<f32>(10.0, 0.5);
-        test_poisson_avg_gen::<f32>(15.0, 0.5);
+        test_poisson_avg_gen::<f64>(10.0, 0.1);
+        test_poisson_avg_gen::<f64>(15.0, 0.1);
+
+        test_poisson_avg_gen::<f32>(10.0, 0.1);
+        test_poisson_avg_gen::<f32>(15.0, 0.1);
+
+        //Small lambda will use Knuth's method with exp_lambda == 1.0
+        test_poisson_avg_gen::<f32>(0.00000000000000005, 0.1);
+        test_poisson_avg_gen::<f64>(0.00000000000000005, 0.1);
     }
 
     #[test]
@@ -175,7 +186,18 @@ mod test {
 
     #[test]
     #[should_panic]
+    fn test_poisson_invalid_lambda_infinity() {
+        Poisson::new(f64::INFINITY).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
     fn test_poisson_invalid_lambda_neg() {
         Poisson::new(-10.0).unwrap();
+    }
+
+    #[test]
+    fn poisson_distributions_can_be_compared() {
+        assert_eq!(Poisson::new(1.0), Poisson::new(1.0));
     }
 }

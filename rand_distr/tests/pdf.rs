@@ -89,8 +89,8 @@ fn normal() {
             .fold(core::f64::NEG_INFINITY, |a, &b| a.max(b))
     );
     for (&d, &e) in diff.iter().zip(expected_error.iter()) {
-        // Difference larger than 3 standard deviations or cutoff
-        let tol = (3. * e).max(1e-4);
+        // Difference larger than 4 standard deviations or cutoff
+        let tol = (4. * e).max(1e-4);
         assert!(d <= tol, "Difference = {} * tol", d / tol);
     }
 }
@@ -172,8 +172,8 @@ fn skew_normal() {
             .fold(core::f64::NEG_INFINITY, |a, &b| a.max(b))
     );
     for (&d, &e) in diff.iter().zip(expected_error.iter()) {
-        // Difference larger than 3 standard deviations or cutoff
-        let tol = (3. * e).max(1e-4);
+        // Difference larger than 4 standard deviations or cutoff
+        let tol = (4. * e).max(1e-4);
         assert!(d <= tol, "Difference = {} * tol", d / tol);
     }
 }

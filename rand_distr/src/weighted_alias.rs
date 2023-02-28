@@ -221,8 +221,8 @@ impl<W: AliasableWeight> WeightedAliasIndex<W> {
 
         // Prepare distributions for sampling. Creating them beforehand improves
         // sampling performance.
-        let uniform_index = Uniform::new(0, n);
-        let uniform_within_weight_sum = Uniform::new(W::ZERO, weight_sum);
+        let uniform_index = Uniform::new(0, n).unwrap();
+        let uniform_within_weight_sum = Uniform::new(W::ZERO, weight_sum).unwrap();
 
         Ok(Self {
             aliases: aliases.aliases,
@@ -458,7 +458,7 @@ mod test {
             let random_weight_distribution = Uniform::new_inclusive(
                 W::ZERO,
                 W::MAX / W::try_from_u32_lossy(NUM_WEIGHTS).unwrap(),
-            );
+            ).unwrap();
             for _ in 0..NUM_WEIGHTS {
                 weights.push(rng.sample(&random_weight_distribution));
             }

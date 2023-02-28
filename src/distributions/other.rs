@@ -20,8 +20,9 @@ use crate::Rng;
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
-#[cfg(feature = "min_const_gen")]
 use core::mem::{self, MaybeUninit};
+#[cfg(feature = "simd_support")]
+use core::simd::*;
 
 
 // ----- Sampling distributions -----
@@ -80,9 +81,9 @@ impl Distribution<char> for Standard {
         // reserved for surrogates. This is the size of that gap.
         const GAP_SIZE: u32 = 0xDFFF - 0xD800 + 1;
 
-        // Uniform::new(0, 0x11_0000 - GAP_SIZE) can also be used but it
+        // Uniform::new(0, 0x11_0000 - GAP_SIZE) can also be used, but it
         // seemed slower.
-        let range = Uniform::new(GAP_SIZE, 0x11_0000);
+        let range = Uniform::new(GAP_SIZE, 0x11_0000).unwrap();
 
         let mut n = range.sample(rng);
         if n <= 0xDFFF {
@@ -145,6 +146,51 @@ impl Distribution<bool> for Standard {
     }
 }
 
+/// Requires nightly Rust and the [`simd_support`] feature
+///
+/// Note that on some hardware like x86/64 mask operations like [`_mm_blendv_epi8`]
+/// only care about a single bit. This means that you could use uniform random bits
+/// directly:
+///
+/// ```ignore
+/// // this may be faster...
+/// let x = unsafe { _mm_blendv_epi8(a.into(), b.into(), rng.gen::<__m128i>()) };
+///
+/// // ...than this
+/// let x = rng.gen::<mask8x16>().select(b, a);
+/// ```
+///
+/// Since most bits are unused you could also generate only as many bits as you need, i.e.:
+/// ```
+/// #![feature(portable_simd)]
+/// use std::simd::*;
+/// use rand::prelude::*;
+/// let mut rng = thread_rng();
+///
+/// let x = u16x8::splat(rng.gen::<u8>() as u16);
+/// let mask = u16x8::splat(1) << u16x8::from([0, 1, 2, 3, 4, 5, 6, 7]);
+/// let rand_mask = (x & mask).simd_eq(mask);
+/// ```
+///
+/// [`_mm_blendv_epi8`]: https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_blendv_epi8&ig_expand=514/
+/// [`simd_support`]: https://github.com/rust-random/rand#crate-features
+#[cfg(feature = "simd_support")]
+impl<T, const LANES: usize> Distribution<Mask<T, LANES>> for Standard
+where
+    T: MaskElement + Default,
+    LaneCount<LANES>: SupportedLaneCount,
+    Standard: Distribution<Simd<T, LANES>>,
+    Simd<T, LANES>: SimdPartialOrd<Mask = Mask<T, LANES>>,
+{
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Mask<T, LANES> {
+        // `MaskElement` must be a signed integer, so this is equivalent
+        // to the scalar `i32 < 0` method
+        let var = rng.gen::<Simd<T, LANES>>();
+        var.simd_lt(Simd::default())
+    }
+}
+
 macro_rules! tuple_impl {
     // use variables to indicate the arity of the tuple
     ($($tyvar:ident),* ) => {
@@ -189,8 +235,6 @@ tuple_impl! {A, B, C, D, E, F, G, H, I, J}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K}
 tuple_impl! {A, B, C, D, E, F, G, H, I, J, K, L}
 
-#[cfg(feature = "min_const_gen")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "min_const_gen")))]
 impl<T, const N: usize> Distribution<[T; N]> for Standard
 where Standard: Distribution<T>
 {
@@ -205,30 +249,6 @@ where Standard: Distribution<T>
         unsafe { mem::transmute_copy::<_, _>(&buff) }
     }
 }
-
-#[cfg(not(feature = "min_const_gen"))]
-macro_rules! array_impl {
-    // recursive, given at least one type parameter:
-    {$n:expr, $t:ident, $($ts:ident,)*} => {
-        array_impl!{($n - 1), $($ts,)*}
-
-        impl<T> Distribution<[T; $n]> for Standard where Standard: Distribution<T> {
-            #[inline]
-            fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; $n] {
-                [_rng.gen::<$t>(), $(_rng.gen::<$ts>()),*]
-            }
-        }
-    };
-    // empty case:
-    {$n:expr,} => {
-        impl<T> Distribution<[T; $n]> for Standard {
-            fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; $n] { [] }
-        }
-    };
-}
-
-#[cfg(not(feature = "min_const_gen"))]
-array_impl! {32, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T,}
 
 impl<T> Distribution<Option<T>> for Standard
 where Standard: Distribution<T>

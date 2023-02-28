@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.8.5"
+version = "0.9.0"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -13,7 +13,8 @@ Random number generators and other randomness functionality.
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 autobenches = true
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
 [package.metadata.docs.rs]
@@ -28,7 +29,7 @@ features = ["small_rng", "serde1"]
 [features]
 # Meta-features:
 default = ["std", "std_rng"]
-nightly = [] # enables performance optimizations requiring nightly rust
+nightly = [] # some additions requiring nightly Rust
 serde1 = ["serde", "rand_core/serde1"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
@@ -41,18 +42,14 @@ alloc = ["rand_core/alloc"]
 # Option: use getrandom package for seeding
 getrandom = ["rand_core/getrandom"]
 
-# Option (requires nightly): experimental SIMD support
-simd_support = ["packed_simd"]
+# Option (requires nightly Rust): experimental SIMD support
+simd_support = []
 
 # Option (enabled by default): enable StdRng
 std_rng = ["rand_chacha"]
 
 # Option: enable SmallRng
 small_rng = []
-
-# Option: for rustc ≥ 1.51, enable generating random arrays of any size
-# using min-const-generics
-min_const_gen = []
 
 [workspace]
 members = [
@@ -63,23 +60,28 @@ members = [
 ]
 
 [dependencies]
-rand_core = { path = "rand_core", version = "0.6.0" }
+rand_core = { path = "rand_core", version = "0.7.0" }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
-rand_chacha = { path = "rand_chacha", version = "0.3.0", default-features = false, optional = true }
-
-[dependencies.packed_simd]
-# NOTE: so far no version works reliably due to dependence on unstable features
-package = "packed_simd_2"
-version = "0.3.6"
-optional = true
-features = ["into_bits"]
+rand_chacha = { path = "rand_chacha", version = "0.4.0", default-features = false, optional = true }
 
 [target.'cfg(unix)'.dependencies]
 # Used for fork protection (reseeding.rs)
 libc = { version = "0.2.22", optional = true, default-features = false }
 
 [dev-dependencies]
-rand_pcg = { path = "rand_pcg", version = "0.3.0" }
+rand_pcg = { path = "rand_pcg", version = "0.4.0" }
 # Only to test serde1
 bincode = "1.2.1"
+rayon = "1.5.3"
+criterion = { version = "0.4" }
+
+[[bench]]
+name = "seq_choose"
+path = "benches/seq_choose.rs"
+harness = false
+
+[[bench]]
+name = "shuffle"
+path = "benches/shuffle.rs"
+harness = false

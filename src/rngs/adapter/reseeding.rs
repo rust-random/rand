@@ -12,7 +12,7 @@
 
 use core::mem::size_of;
 
-use rand_core::block::{BlockRng, BlockRngCore};
+use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
 /// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
@@ -113,7 +113,6 @@ where
 impl<R, Rsdr: RngCore> RngCore for ReseedingRng<R, Rsdr>
 where
     R: BlockRngCore<Item = u32> + SeedableRng,
-    <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>,
 {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -148,8 +147,8 @@ where
 
 impl<R, Rsdr> CryptoRng for ReseedingRng<R, Rsdr>
 where
-    R: BlockRngCore + SeedableRng + CryptoRng,
-    Rsdr: RngCore + CryptoRng,
+    R: BlockRngCore<Item = u32> + SeedableRng + CryptoBlockRng,
+    Rsdr: CryptoRng,
 {
 }
 
@@ -209,8 +208,8 @@ where
         ReseedingCore {
             inner: rng,
             reseeder,
-            threshold: threshold as i64,
-            bytes_until_reseed: threshold as i64,
+            threshold,
+            bytes_until_reseed: threshold,
             fork_counter: 0,
         }
     }
@@ -277,10 +276,10 @@ where
     }
 }
 
-impl<R, Rsdr> CryptoRng for ReseedingCore<R, Rsdr>
+impl<R, Rsdr> CryptoBlockRng for ReseedingCore<R, Rsdr>
 where
-    R: BlockRngCore + SeedableRng + CryptoRng,
-    Rsdr: RngCore + CryptoRng,
+    R: BlockRngCore<Item = u32> + SeedableRng + CryptoBlockRng,
+    Rsdr: CryptoRng,
 {
 }
 
