@@ -9,11 +9,144 @@
 
 //! The dirichlet distribution.
 #![cfg(feature = "alloc")]
-use num_traits::{Float, NumCast};
 use crate::{Beta, Distribution, Exp1, Gamma, Open01, StandardNormal};
-use rand::Rng;
-use core::fmt;
 use alloc::{boxed::Box, vec, vec::Vec};
+use core::fmt;
+use num_traits::{Float, NumCast};
+use rand::Rng;
+
+#[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+pub struct DirichletFromGamma<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
+    samplers: Box<[Gamma<F>]>,
+}
+
+impl<F> DirichletFromGamma<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
+    // Construct a new `Dirichlet` with the given alpha parameter `alpha`.
+    //
+    // This function is part of a private implementation detail.
+    // It assumes that the input is correct, so no validation is done.
+    #[inline]
+    fn new(alpha: &[F]) -> Dirichlet<F> {
+        let gamma_dists = alpha
+            .iter()
+            .map(|a| Gamma::new(*a, F::one()).unwrap())
+            .collect::<Vec<Gamma<F>>>()
+            .into_boxed_slice();
+        Dirichlet::FromGamma(DirichletFromGamma {
+            samplers: gamma_dists,
+        })
+    }
+}
+
+impl<F> Distribution<Vec<F>> for DirichletFromGamma<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<F> {
+        let n = self.samplers.len();
+        let mut samples = vec![F::zero(); n];
+        let mut sum = F::zero();
+        for (s, g) in samples.iter_mut().zip(self.samplers.iter()) {
+            *s = g.sample(rng);
+            sum = sum + (*s);
+        }
+        let invacc = F::one() / sum;
+        for s in samples.iter_mut() {
+            *s = (*s) * invacc;
+        }
+        samples
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+pub struct DirichletFromBeta<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
+    samplers: Box<[Beta<F>]>,
+}
+
+impl<F> DirichletFromBeta<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
+    // Construct a new `Dirichlet` with the given alpha parameter `alpha`.
+    //
+    // This function is part of a private implementation detail.
+    // It assumes that the input is correct, so no validation is done.
+    #[inline]
+    fn new(alpha: &[F]) -> Dirichlet<F> {
+        // Form the right-to-left cumulative sum of alpha, exluding the
+        // first element of alpha.  E.g. if alpha = [a0, a1, a2, a3], then
+        // after the call to `alpha_sum_rl.reverse()` below, alpha_sum_rl
+        // will hold [a1+a2+a3, a2+a3, a3].
+        let mut alpha_sum_rl: Vec<F> = alpha
+            .iter()
+            .skip(1)
+            .rev()
+            // scan does the cumulative sum
+            .scan(F::zero(), |sum, x| {
+                *sum = *sum + *x;
+                Some(*sum)
+            })
+            .collect();
+        alpha_sum_rl.reverse();
+        let beta_dists = alpha
+            .iter()
+            .zip(alpha_sum_rl.iter())
+            .map(|t| Beta::new(*t.0, *t.1).unwrap())
+            .collect::<Vec<Beta<F>>>()
+            .into_boxed_slice();
+        Dirichlet::FromBeta(DirichletFromBeta {
+            samplers: beta_dists,
+        })
+    }
+}
+
+impl<F> Distribution<Vec<F>> for DirichletFromBeta<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
+    Exp1: Distribution<F>,
+    Open01: Distribution<F>,
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<F> {
+        let n = self.samplers.len();
+        let mut samples = vec![F::zero(); n + 1];
+        let mut acc = F::one();
+
+        for (s, beta) in samples.iter_mut().zip(self.samplers.iter()) {
+            let beta_sample = beta.sample(rng);
+            *s = acc * beta_sample;
+            acc = acc * (F::one() - beta_sample);
+        }
+        samples[n] = acc;
+        samples
+    }
+}
 
 /// The Dirichlet distribution `Dirichlet(alpha)`.
 ///
@@ -34,15 +167,18 @@ use alloc::{boxed::Box, vec, vec::Vec};
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
-pub struct Dirichlet<F>
+pub enum Dirichlet<F>
 where
     F: Float,
     StandardNormal: Distribution<F>,
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
 {
-    /// Concentration parameters (alpha)
-    alpha: Box<[F]>,
+    /// Dirichlet distribution that generates samples using the gamma distribution.
+    FromGamma(DirichletFromGamma<F>),
+
+    /// Dirichlet distribution that generates samples using the beta distribution.
+    FromBeta(DirichletFromBeta<F>),
 }
 
 /// Error type returned from `Dirchlet::new`.
@@ -81,7 +217,7 @@ where
 {
     /// Construct a new `Dirichlet` with the given alpha parameter `alpha`.
     ///
-    /// Requires `alpha.len() >= 2`.
+    /// Requires `alpha.len() >= 2`, and each value in `alpha` must be positive.
     #[inline]
     pub fn new(alpha: &[F]) -> Result<Dirichlet<F>, Error> {
         if alpha.len() < 2 {
@@ -93,12 +229,17 @@ where
             }
         }
 
-        Ok(Dirichlet { alpha: alpha.to_vec().into_boxed_slice() })
+        if alpha.iter().all(|x| *x <= NumCast::from(0.1).unwrap()) {
+            // All the values in alpha are less than 0.1.
+            Ok(DirichletFromBeta::new(alpha))
+        } else {
+            Ok(DirichletFromGamma::new(alpha))
+        }
     }
 
     /// Construct a new `Dirichlet` with the given shape parameter `alpha` and `size`.
     ///
-    /// Requires `size >= 2`.
+    /// Requires `alpha > 0` and  `size >= 2`.
     #[inline]
     pub fn new_with_size(alpha: F, size: usize) -> Result<Dirichlet<F>, Error> {
         if !(alpha > F::zero()) {
@@ -107,9 +248,7 @@ where
         if size < 2 {
             return Err(Error::SizeTooSmall);
         }
-        Ok(Dirichlet {
-            alpha: vec![alpha; size].into_boxed_slice(),
-        })
+        Ok(Dirichlet::new(vec![alpha; size].as_slice()).unwrap())
     }
 }
 
@@ -121,60 +260,10 @@ where
     Open01: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Vec<F> {
-        let n = self.alpha.len();
-        let mut samples = vec![F::zero(); n];
-
-        if self.alpha.iter().all(|x| *x <= NumCast::from(0.1).unwrap()) {
-            // All the values in alpha are less than 0.1.
-            //
-            // When all the alpha parameters are sufficiently small, there
-            // is a nontrivial probability that the samples from the gamma
-            // distributions used in the other method will all be 0, which
-            // results in the dirichlet samples being nan.  So instead of
-            // use that method, use the "stick breaking" method based on the
-            // marginal beta distributions.
-            //
-            // Form the right-to-left cumulative sum of alpha, exluding the
-            // first element of alpha.  E.g. if alpha = [a0, a1, a2, a3], then
-            // after the call to `alpha_sum_rl.reverse()` below, alpha_sum_rl
-            // will hold [a1+a2+a3, a2+a3, a3].
-            let mut alpha_sum_rl: Vec<F> = self
-                .alpha
-                .iter()
-                .skip(1)
-                .rev()
-                // scan does the cumulative sum
-                .scan(F::zero(), |sum, x| {
-                    *sum = *sum + *x;
-                    Some(*sum)
-                })
-                .collect();
-            alpha_sum_rl.reverse();
-            let mut acc = F::one();
-            for ((s, &a), &b) in samples
-                .iter_mut()
-                .zip(self.alpha.iter())
-                .zip(alpha_sum_rl.iter())
-            {
-                let beta = Beta::new(a, b).unwrap();
-                let beta_sample = beta.sample(rng);
-                *s = acc * beta_sample;
-                acc = acc * (F::one() - beta_sample);
-            }
-            samples[n - 1] = acc;
-        } else {
-            let mut sum = F::zero();
-            for (s, &a) in samples.iter_mut().zip(self.alpha.iter()) {
-                let g = Gamma::new(a, F::one()).unwrap();
-                *s = g.sample(rng);
-                sum = sum + (*s);
-            }
-            let invacc = F::one() / sum;
-            for s in samples.iter_mut() {
-                *s = (*s) * invacc;
-            }
+        match self {
+            Dirichlet::FromGamma(dirichlet) => dirichlet.sample(rng),
+            Dirichlet::FromBeta(dirichlet) => dirichlet.sample(rng),
         }
-        samples
     }
 }
 
@@ -192,7 +281,7 @@ mod test {
     //
     fn check_dirichlet_means(alpha: &Vec<f64>, n: i32, rtol: f64, seed: u64) {
         let d = Dirichlet::new(&alpha).unwrap();
-        let alpha_len = d.alpha.len();
+        let alpha_len = alpha.len();
         let mut rng = crate::test::rng(seed);
         let mut sums = vec![0.0; alpha_len];
         for _ in 0..n {
@@ -202,8 +291,8 @@ mod test {
             }
         }
         let sample_mean: Vec<f64> = sums.iter().map(|x| x / n as f64).collect();
-        let alpha_sum: f64 = d.alpha.iter().sum();
-        let expected_mean: Vec<f64> = d.alpha.iter().map(|x| x / alpha_sum).collect();
+        let alpha_sum: f64 = alpha.iter().sum();
+        let expected_mean: Vec<f64> = alpha.iter().map(|x| x / alpha_sum).collect();
         for i in 0..alpha_len {
             assert_almost_eq!(sample_mean[i], expected_mean[i], rtol);
         }
@@ -289,8 +378,21 @@ mod test {
 
     #[test]
     #[should_panic]
+    fn test_dirichlet_invalid_length_slice() {
+        Dirichlet::new(&[0.25]).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
     fn test_dirichlet_invalid_alpha() {
         Dirichlet::new_with_size(0.0f64, 2).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_dirichlet_invalid_alpha_slice() {
+        // 0 in alpha must result in a panic.
+        Dirichlet::new(&[0.1f64, 0.0f64, 1.5f64]).unwrap();
     }
 
     #[test]
