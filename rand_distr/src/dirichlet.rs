@@ -149,7 +149,7 @@ where
 }
 
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 enum DirichletRepr<F>
 where
     F: Float,
