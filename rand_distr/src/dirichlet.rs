@@ -13,6 +13,8 @@ use num_traits::Float;
 use crate::{Distribution, Exp1, Gamma, Open01, StandardNormal};
 use rand::Rng;
 use core::fmt;
+#[cfg(feature = "serde_with")]
+use serde_with::serde_as;
 
 /// The Dirichlet distribution `Dirichlet(alpha)`.
 ///
@@ -31,8 +33,8 @@ use core::fmt;
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+#[cfg_attr(feature = "serde_with", serde_as)]
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Dirichlet<F, const N: usize>
 where
     F: Float,
@@ -41,6 +43,7 @@ where
     Open01: Distribution<F>,
 {
     /// Concentration parameters (alpha)
+    #[cfg_attr(feature = "serde_with", serde_as(as = "[_; N]"))]
     alpha: [F; N],
 }
 
