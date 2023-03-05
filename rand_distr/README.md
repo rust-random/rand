@@ -11,10 +11,10 @@ Implements a full suite of random number distribution sampling routines.
 
 This crate is a superset of the [rand::distributions] module, including support
 for sampling from Beta, Binomial, Cauchy, ChiSquared, Dirichlet, Exponential,
-FisherF, Gamma, Geometric, Hypergeometric, InverseGaussian, LogNormal, Normal,
-Pareto, PERT, Poisson, StudentT, Triangular and Weibull distributions.  Sampling
-from the unit ball, unit circle, unit disc and unit sphere surfaces is also
-supported.
+FisherF, Gamma, Geometric, Hypergeometric, InverseGaussian, LogNormal,
+Negative Binomial, Normal, Pareto, PERT, Poisson, StudentT, Triangular and
+Weibull distributions.  Sampling from the unit ball, unit circle, unit disc and
+unit sphere surfaces is also supported.
 
 It is worth mentioning the [statrs] crate which provides similar functionality
 along with various support functions, including PDF and CDF computation. In
