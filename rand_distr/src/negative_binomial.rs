@@ -149,6 +149,14 @@ where
         match &self.repr {
             NegativeBinomialRepr::POne => F::zero(),
             NegativeBinomialRepr::PLessThanOne(gamma) => {
+                // The method used here is to generate a Gamma(r, (1-p)/p)
+                // variate, and use it as the parameter of Poisson.  See,
+                // for example, section X.4.7 of the text *Non-Uniform Random
+                // Variate Generation* by Luc Devroye (Springer-Verlag, 1986).
+                // The gamma distribution was created in the `new()` method
+                // and saved in the NegativeBinomial instance, because it
+                // depends on just the parameters `r` and `p`.  We have to
+                // create a new Poisson instance for each variate generated.
                 Poisson::<F>::new(gamma.sample(rng)).unwrap().sample(rng)
             }
         }
