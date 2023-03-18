@@ -10,7 +10,6 @@
 
 #[cfg(feature = "simd_support")] use core::simd::*;
 
-
 pub(crate) trait WideningMultiply<RHS = Self> {
     type Output;
 
@@ -217,11 +216,21 @@ pub(crate) trait FloatSIMDUtils {
     fn finite_mask(self) -> Self::Mask;
     fn gt_mask(self, other: Self) -> Self::Mask;
     fn ge_mask(self, other: Self) -> Self::Mask;
+    fn lt_mask(self, other: Self) -> Self::Mask;
 
     // Decrease all lanes where the mask is `true` to the next lower value
     // representable by the floating-point type. At least one of the lanes
     // must be set.
     fn decrease_masked(self, mask: Self::Mask) -> Self;
+
+    // Increase all lanes where the mask is `true` to the next higher value
+    // representable by the floating-point type. At least one of the lanes
+    // must be set.
+    fn increase_masked(self, mask: Self::Mask) -> Self;
+
+    // Similar to the proposed `next_down()` method for rust's f32 and f64,
+    // but this implementation does not handle `inf` or `nan`.
+    fn utils_next_down(self) -> Self;
 
     // Convert from int value. Conversion is done while retaining the numerical
     // value, not by retaining the binary representation.
@@ -341,9 +350,34 @@ macro_rules! scalar_float_impl {
             }
 
             #[inline(always)]
+            fn lt_mask(self, other: Self) -> Self::Mask {
+                self < other
+            }
+
+            #[inline(always)]
             fn decrease_masked(self, mask: Self::Mask) -> Self {
                 debug_assert!(mask, "At least one lane must be set");
                 <$ty>::from_bits(self.to_bits() - 1)
+            }
+
+            #[inline(always)]
+            fn increase_masked(self, mask: Self::Mask) -> Self {
+                debug_assert!(mask, "At least one lane must be set");
+                <$ty>::from_bits(self.to_bits() + 1)
+            }
+
+            #[inline(always)]
+            fn utils_next_down(self) -> Self {
+                // This is not a drop-in replacement for the next_down() method
+                // proposed for rust (https://github.com/rust-lang/rust/issues/91399).
+                // This functions assumes that the input is not nan or inf.
+                if self > 0.0 {
+                    <$ty>::from_bits(self.to_bits() - 1)
+                } else if self < 0.0 {
+                    <$ty>::from_bits(self.to_bits() + 1)
+                } else {
+                    <$ty>::from_bits((-0.0 as $ty).to_bits() + 1)
+                }
             }
 
             #[inline]
@@ -413,6 +447,11 @@ macro_rules! simd_impl {
             }
 
             #[inline(always)]
+            fn lt_mask(self, other: Self) -> Self::Mask {
+                self.simd_lt(other)
+            }
+
+            #[inline(always)]
             fn decrease_masked(self, mask: Self::Mask) -> Self {
                 // Casting a mask into ints will produce all bits set for
                 // true, and 0 for false. Adding that to the binary
@@ -422,6 +461,34 @@ macro_rules! simd_impl {
                 // current value is infinity.
                 debug_assert!(mask.any(), "At least one lane must be set");
                 Self::from_bits(self.to_bits() + mask.to_int().cast())
+            }
+
+            #[inline(always)]
+            fn increase_masked(self, mask: Self::Mask) -> Self {
+                debug_assert!(mask.any(), "At least one lane must be set");
+                let zero = Simd::<$uty, LANES>::splat(0);
+                let one = Simd::<$uty, LANES>::splat(1);
+                Self::from_bits(self.to_bits() + mask.select(one, zero))
+            }
+
+            #[inline(always)]
+            fn utils_next_down(self) -> Self {
+                // This is not a drop-in replacement for the next_down() method
+                // proposed for rust (https://github.com/rust-lang/rust/issues/91399).
+                // This function assumes that no values are nan or inf.
+                let zero = Self::splat(0.0 as $fty);
+                let pos_mask = self.simd_gt(zero);
+                let neg_mask = self.simd_lt(zero);
+                let zero_mask = self.simd_eq(zero); // Could be +0.0 or -0.0
+                let mut bits = self.to_bits();
+                bits += pos_mask.to_int().cast();
+                bits += (-neg_mask.to_int()).cast();
+                // Shenanigans so both +0.0 and -0.0 end up as next_down(0.0).
+                // The bit patterns for 0.0 and -0.0 are 000...000 and 100...000, resp.
+                // We want both of these to result in 100...001.
+                let zero_next_down = (1 << ($uty::BITS - 1)) | 1; // This is 100...001
+                bits |= (zero_mask.to_int().cast()) & Simd::<$uty, LANES>::splat(zero_next_down);
+                Self::from_bits(bits)
             }
 
             #[inline]
@@ -447,3 +514,143 @@ macro_rules! simd_impl {
 simd_impl!(f32, u32);
 #[cfg(feature = "simd_support")]
 simd_impl!(f64, u64);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    macro_rules! scalar_increase_masked_tests {
+        ($($fname:ident: $value:expr,)*) => {
+            $(
+                #[test]
+                fn $fname() {
+                    let (input, expected) = $value;
+                    assert_eq!(input.increase_masked(true), expected);
+                }
+            )*
+        }
+    }
+
+    scalar_increase_masked_tests! {
+        scalar_increase_masked_case0: (1.0f64, 1.0f64 + f64::EPSILON),
+        scalar_increase_masked_case1: (1.0f32, 1.0f32 + f32::EPSILON),
+        scalar_increase_masked_case2: (0.625f64, 0.625f64 + 0.5f64 * f64::EPSILON),
+        scalar_increase_masked_case3: (0.625f32, 0.625f32 + 0.5f32 * f32::EPSILON),
+        scalar_increase_masked_case4: (f64::from_bits(1), f64::from_bits(2)),
+        scalar_increase_masked_case5: (f32::from_bits(1), f32::from_bits(2)),
+        scalar_increase_masked_case6: (0.0f64, f64::from_bits(1)),
+        scalar_increase_masked_case7: (0.0f32, f32::from_bits(1)),
+    }
+
+    macro_rules! simd_increase_masked_tests {
+        ($($fname:ident: ($ty:ty, $f_scalar:ident),)*) => {
+            $(
+                #[test]
+                #[cfg(feature = "simd_support")]
+                fn $fname() {
+                    let values = [
+                        10.5 as $f_scalar, 1.0 as $f_scalar, 1.0e-3 as $f_scalar, $f_scalar::from_bits(1), 0.0 as $f_scalar
+                    ];
+                    for input0 in values {
+                        let x = <$ty>::splat(input0);
+                        // Create a mask with just the first lane set.
+                        let mut mask = Mask::from_array([false; <$ty>::LANES]);
+                        mask.set(0, true);
+
+                        let y = x.increase_masked(mask);
+
+                        // Independently create the expected result, based on applying
+                        // increase_masked() to the scalar value in channel 0.
+                        let mut xa = x.to_array();
+                        xa[0] = xa[0].increase_masked(true);
+                        let expected = Simd::from_array(xa);
+
+                        assert_eq!(y, expected);
+                    }
+                }
+            )*
+        }
+    }
+
+    simd_increase_masked_tests! {
+        simd_increase_masked_case0: (f32x2, f32),
+        simd_increase_masked_case1: (f32x4, f32),
+        simd_increase_masked_case2: (f32x8, f32),
+        simd_increase_masked_case3: (f32x16, f32),
+        simd_increase_masked_case4: (f64x2, f64),
+        simd_increase_masked_case5: (f64x4, f64),
+        simd_increase_masked_case6: (f64x8, f64),
+    }
+
+    macro_rules! scalar_utils_next_down_tests {
+        ($($fname:ident: $value:expr,)*) => {
+            $(
+                #[test]
+                fn $fname() {
+                    let (input, expected) = $value;
+                    assert_eq!(input.utils_next_down(), expected);
+                }
+            )*
+        }
+    }
+
+    scalar_utils_next_down_tests! {
+        utils_next_down_case0: (3000.0f32, 2999.9998f32),
+        utils_next_down_case1: (-3000.0f32, -3000.0002f32),
+        utils_next_down_case2: (3000.0f64, 2999.9999999999995f64),
+        utils_next_down_case3: (-3000.0f64, -3000.0000000000005f64),
+        utils_next_down_case4: (1.0f64, 1.0f64 - 0.5f64 * f64::EPSILON),
+        utils_next_down_case5: (1.0f32, 1.0f32 - 0.5f32 * f32::EPSILON),
+        utils_next_down_case6: (-1.0f64, -1.0f64 - f64::EPSILON),
+        utils_next_down_case7: (-1.0f32, -1.0f32 - f32::EPSILON),
+        utils_next_down_case8: (0.625f64, 0.625f64 - 0.5f64 * f64::EPSILON),
+        utils_next_down_case9: (0.625f32, 0.625f32 - 0.5f32 * f32::EPSILON),
+        utils_next_down_case10: (-0.625f64, -0.625f64 - 0.5f64 * f64::EPSILON),
+        utils_next_down_case11: (-0.625f32, -0.625f32 - 0.5f32 * f32::EPSILON),
+        utils_next_down_case12: (f64::from_bits(2), f64::from_bits(1)),
+        utils_next_down_case13: (f32::from_bits(2), f32::from_bits(1)),
+        utils_next_down_case14: (f64::from_bits(1), 0.0f64),
+        utils_next_down_case15: (f32::from_bits(1), 0.0f32),
+        utils_next_down_case16: (0.0f64, -f64::from_bits(1)),
+        utils_next_down_case17: (0.0f32, -f32::from_bits(1)),
+        utils_next_down_case18: (-0.0f64, -f64::from_bits(1)),
+        utils_next_down_case19: (-0.0f32, -f32::from_bits(1)),
+    }
+
+    macro_rules! simd_utils_next_down_tests {
+        ($($fname:ident: ($ty:ty, $f_scalar:ident),)*) => {
+            $(
+                #[test]
+                #[cfg(feature = "simd_support")]
+                fn $fname() {
+                    let values = [
+                        10.5 as $f_scalar, 1.0 as $f_scalar, 1.0e-3 as $f_scalar, $f_scalar::from_bits(1), 0.0 as $f_scalar,
+                        -10.5 as $f_scalar, -1.0 as $f_scalar, -1.0e-3 as $f_scalar, -$f_scalar::from_bits(1), -0.0 as $f_scalar,
+                    ];
+                    // Test that the vector version gives the same results as
+                    // the scalar version.  Create test vectors that use two
+                    // values at a time from `values`.
+                    for k in 0..(values.len() - 1) {
+                        let c1 = <$ty>::splat(values[k]);
+                        let c2 = <$ty>::splat(values[k + 1]);
+                        let (x1, _x2) = c1.interleave(c2);
+                        let y1 = x1.utils_next_down();
+                        for i in 0..<$ty>::LANES {
+                            assert_eq!(y1.extract(i), x1.extract(i).utils_next_down());
+                        }
+                    }
+                }
+            )*
+        }
+    }
+
+    simd_utils_next_down_tests! {
+        test_utils_next_down_f32x2: (f32x2, f32),
+        test_utils_next_down_f32x4: (f32x4, f32),
+        test_utils_next_down_f32x8: (f32x8, f32),
+        test_utils_next_down_f32x16: (f32x16, f32),
+        test_utils_next_down_f64x2: (f64x2, f64),
+        test_utils_next_down_f64x4: (f64x4, f64),
+        test_utils_next_down_f64x8: (f64x8, f64),
+    }
+}
