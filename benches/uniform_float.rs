@@ -1,4 +1,4 @@
-// Copyright 2021 Developers of the Rand project.
+// Copyright 2023 Developers of the Rand project.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -25,8 +25,8 @@ const SAMPLE_SIZE: usize = 100_000;
 const N_RESAMPLES: usize = 10_000;
 
 macro_rules! single_random {
-    ($name:literal, $R:ty, $T:ty, $f:ident, $g:expr) => {
-        $g.bench_function(BenchmarkId::new(stringify!($R), $name), |b| {
+    ($R:ty, $T:ty, $g:expr) => {
+        $g.bench_function(BenchmarkId::new(stringify!($T), stringify!($R)), |b| {
             let mut rng = <$R>::from_entropy();
             let (mut low, mut high);
             loop {
@@ -37,17 +37,12 @@ macro_rules! single_random {
                 }
             }
 
-            b.iter(|| <$T as SampleUniform>::Sampler::$f(low, high, &mut rng));
+            b.iter(|| <$T as SampleUniform>::Sampler::sample_single_inclusive(low, high, &mut rng));
         });
     };
 
-    ($R:ty, $T:ty, $g:expr) => {
-        single_random!("sample", $R, $T, sample_single, $g);
-        single_random!("sample_inclusive", $R, $T, sample_single_inclusive, $g);
-    };
-
     ($c:expr, $T:ty) => {{
-        let mut g = $c.benchmark_group(concat!("single_random_", stringify!($T)));
+        let mut g = $c.benchmark_group("uniform_single");
         g.sample_size(SAMPLE_SIZE);
         g.warm_up_time(WARM_UP_TIME);
         g.measurement_time(MEASUREMENT_TIME);
@@ -66,8 +61,8 @@ fn single_random(c: &mut Criterion) {
 }
 
 macro_rules! distr_random {
-    ($name:literal, $R:ty, $T:ty, $f:ident, $g:expr) => {
-        $g.bench_function(BenchmarkId::new(stringify!($R), $name), |b| {
+    ($R:ty, $T:ty, $g:expr) => {
+        $g.bench_function(BenchmarkId::new(stringify!($T), stringify!($R)), |b| {
             let mut rng = <$R>::from_entropy();
             let dist = loop {
                 let low = <$T>::from_bits(rng.gen());
@@ -77,16 +72,12 @@ macro_rules! distr_random {
                 }
             };
 
-            b.iter(|| <$T as SampleUniform>::Sampler::$f(&dist.0, &mut rng));
+            b.iter(|| dist.sample(&mut rng));
         });
     };
 
-    ($R:ty, $T:ty, $g:expr) => {
-        distr_random!("sample", $R, $T, sample, $g);
-    };
-
     ($c:expr, $T:ty) => {{
-        let mut g = $c.benchmark_group(concat!("distr_random_", stringify!($T)));
+        let mut g = $c.benchmark_group("uniform_distribution");
         g.sample_size(SAMPLE_SIZE);
         g.warm_up_time(WARM_UP_TIME);
         g.measurement_time(MEASUREMENT_TIME);
