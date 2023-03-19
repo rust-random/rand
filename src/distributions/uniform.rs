@@ -109,7 +109,9 @@ use core::ops::{Range, RangeInclusive};
 use core::convert::TryFrom;
 
 use crate::distributions::float::IntoFloat;
-use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAsSIMD, WideningMultiply};
+use crate::distributions::utils::{
+    BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAsSIMD, ScaleComputable, WideningMultiply,
+};
 use crate::distributions::Distribution;
 #[cfg(feature = "simd_support")]
 use crate::distributions::Standard;
@@ -826,107 +828,10 @@ pub struct UniformFloat<X> {
     scale: X,
 }
 
-trait Summable<T> {
-    fn compensated_sum(&self) -> T;
-}
-
-trait ScaleComputable<T> {
-    fn compute_scale(low: T, high: T) -> T;
-}
-
 macro_rules! uniform_float_impl {
     ($ty:ty, $uty:ident, $f_scalar:ident, $u_scalar:ident, $bits_to_discard:expr) => {
         impl SampleUniform for $ty {
             type Sampler = UniformFloat<$ty>;
-        }
-
-        impl Summable<$ty> for &[$ty] {
-            fn compensated_sum(&self) -> $ty {
-                // Kahan compensated sum
-                let mut sum = <$ty>::splat(0.0);
-                let mut c = <$ty>::splat(0.0);
-                for val in *self {
-                    let y = val - c;
-                    let t = sum + y;
-                    c = (t - sum) - y;
-                    sum = t;
-                }
-                sum
-            }
-        }
-
-        impl ScaleComputable<$ty> for $ty {
-            fn compute_scale(low: $ty, high: $ty) -> $ty {
-                let eps = <$ty>::splat($f_scalar::EPSILON);
-
-                // `max_rand` is 1.0 - eps.  This is actually the second largest
-                // float less than 1.0, because the spacing of the floats in the
-                // interval [0.5, 1.0) is `eps/2`.
-                let max_rand = <$ty>::splat(
-                    (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
-                );
-
-                // `delta_high` is half the distance from `high` to the largest
-                // float that is less than `high`.  If `high` is subnormal or 0,
-                // then `delta_high` will be 0. Why this is needed is explained
-                // below.
-                let delta_high = <$ty>::splat(0.5) * (high - high.utils_next_down());
-
-                // We want `scale * max_rand + low < high`. Let `high_1` be the
-                // (hypothetical) float that is the midpoint between `high` and
-                // the largest float less than `high`.  The midpoint is used
-                // because any float calculation  that would result in a value in
-                // `(high_1, high)` would be rounded to `high`.   The ideal
-                // condition for upper bound of `scale` is then
-                //     scale * max_rand + low = high_1`
-                // or
-                //     scale = (high_1 - low)/max_rand
-                //
-                // Write `high_1 = high - delta_high`,  `max_rand = 1 - eps`,
-                // and approximate `1/(1 - eps)` as `(1 + eps)`.  Then we have
-                //
-                //     scale = (high - delta_high - low)*(1 + eps)
-                //           = high - low + eps*high - eps*low - delta_high
-                //
-                // (The extremely small term `-delta_high*eps` has been ignored.)
-                // The following uses Kahan's compensated summation to compute `scale`
-                // from those terms.
-                let terms: &[$ty] = &[high, -low, eps * high, -eps * low, -delta_high];
-                let mut scale = terms.compensated_sum();
-
-                // Empirical tests show that `scale` is generally within 1 or 2 ULPs
-                // of the "ideal" scale.  Next we adjust `scale`, if necessary, to
-                // the ideal value.
-
-                // Check that `scale * max_rand + low` is less than `high`. If it is
-                // not, repeatedly adjust `scale` down by one ULP until the condition
-                // is satisfied. Generally this requires 0 or 1 adjustments to `scale`.
-                // (The original `too_big_mask` is saved so we can use it again below.)
-                let too_big_mask = (scale * max_rand + low).ge_mask(high);
-                loop {
-                    let mask = (scale * max_rand + low).ge_mask(high);
-                    if !mask.any() {
-                        break;
-                    }
-                    scale = scale.decrease_masked(mask);
-                }
-                // We have ensured that `scale * max_rand + low < high`.  Now see if
-                // we can increase `scale` and still maintain that inequality.  We
-                // only need to do this if `scale` was not initially too big.
-                let not_too_big_mask = !too_big_mask;
-                let mut mask = not_too_big_mask;
-                if mask.any() {
-                    loop {
-                        let next_scale = scale.increase_masked(mask);
-                        mask = (next_scale * max_rand + low).lt_mask(high) & not_too_big_mask;
-                        if !mask.any() {
-                            break;
-                        }
-                        scale = scale.increase_masked(mask);
-                    }
-                }
-                scale
-            }
         }
 
         impl UniformSampler for UniformFloat<$ty> {
