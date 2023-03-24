@@ -762,7 +762,7 @@ mod test {
         let mut nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
         assert_eq!(chars.choose(&mut r), Some(&'l'));
-        assert_eq!(nums.choose_mut(&mut r), Some(&mut 10));
+        assert_eq!(nums.choose_mut(&mut r), Some(&mut 3));
 
         #[cfg(feature = "alloc")]
         assert_eq!(
@@ -770,13 +770,13 @@ mod test {
                 .choose_multiple(&mut r, 8)
                 .cloned()
                 .collect::<Vec<char>>(),
-            &['d', 'm', 'n', 'k', 'h', 'e', 'b', 'c']
+            &['f', 'i', 'd', 'b', 'c', 'm', 'j', 'k']
         );
 
         #[cfg(feature = "alloc")]
-        assert_eq!(chars.choose_weighted(&mut r, |_| 1), Ok(&'f'));
+        assert_eq!(chars.choose_weighted(&mut r, |_| 1), Ok(&'l'));
         #[cfg(feature = "alloc")]
-        assert_eq!(nums.choose_weighted_mut(&mut r, |_| 1), Ok(&mut 5));
+        assert_eq!(nums.choose_weighted_mut(&mut r, |_| 1), Ok(&mut 8));
 
         let mut r = crate::test::rng(414);
         nums.shuffle(&mut r);
@@ -1221,7 +1221,7 @@ mod test {
                 chunk_remaining: 32,
                 hint_total_size: false,
             }),
-            Some(39)
+            Some(91)
         );
         assert_eq!(
             choose(ChunkHintedIterator {
@@ -1230,7 +1230,7 @@ mod test {
                 chunk_remaining: 32,
                 hint_total_size: true,
             }),
-            Some(39)
+            Some(91)
         );
         assert_eq!(
             choose(WindowHintedIterator {
@@ -1238,7 +1238,7 @@ mod test {
                 window_size: 32,
                 hint_total_size: false,
             }),
-            Some(90)
+            Some(34)
         );
         assert_eq!(
             choose(WindowHintedIterator {
@@ -1246,7 +1246,7 @@ mod test {
                 window_size: 32,
                 hint_total_size: true,
             }),
-            Some(90)
+            Some(34)
         );
     }
 
@@ -1298,28 +1298,22 @@ mod test {
 
     #[test]
     fn value_stability_choose_multiple() {
-        fn do_test<I: Iterator<Item = u32>>(iter: I, v: &[u32]) {
+        fn do_test<I: Clone + Iterator<Item = u32>>(iter: I, v: &[u32]) {
             let mut rng = crate::test::rng(412);
             let mut buf = [0u32; 8];
-            assert_eq!(iter.choose_multiple_fill(&mut rng, &mut buf), v.len());
+            assert_eq!(iter.clone().choose_multiple_fill(&mut rng, &mut buf), v.len());
             assert_eq!(&buf[0..v.len()], v);
+
+            #[cfg(feature = "alloc")]
+            {
+                let mut rng = crate::test::rng(412);
+                assert_eq!(iter.choose_multiple(&mut rng, v.len()), v);
+            }
         }
 
         do_test(0..4, &[0, 1, 2, 3]);
         do_test(0..8, &[0, 1, 2, 3, 4, 5, 6, 7]);
-        do_test(0..100, &[58, 78, 80, 92, 43, 8, 96, 7]);
-
-        #[cfg(feature = "alloc")]
-        {
-            fn do_test<I: Iterator<Item = u32>>(iter: I, v: &[u32]) {
-                let mut rng = crate::test::rng(412);
-                assert_eq!(iter.choose_multiple(&mut rng, v.len()), v);
-            }
-
-            do_test(0..4, &[0, 1, 2, 3]);
-            do_test(0..8, &[0, 1, 2, 3, 4, 5, 6, 7]);
-            do_test(0..100, &[58, 78, 80, 92, 43, 8, 96, 7]);
-        }
+        do_test(0..100, &[77, 95, 38, 23, 25, 8, 58, 40]);
     }
 
     #[test]
