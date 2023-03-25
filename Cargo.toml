@@ -51,6 +51,11 @@ std_rng = ["rand_chacha"]
 # Option: enable SmallRng
 small_rng = []
 
+# Option: use unbiased sampling for algorithms supporting this option: Uniform distribution.
+# By default, bias affecting no more than one in  2^48 samples is accepted.
+# Note: enabling this option is expected to affect reproducibility of results.
+unbiased = []
+
 [workspace]
 members = [
     "rand_core",
@@ -75,6 +80,10 @@ rand_pcg = { path = "rand_pcg", version = "0.4.0" }
 bincode = "1.2.1"
 rayon = "1.5.3"
 criterion = { version = "0.4" }
+
+[[bench]]
+name = "uniform"
+harness = false
 
 [[bench]]
 name = "seq_choose"
