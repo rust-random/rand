@@ -348,16 +348,26 @@ fn weibull_stability() {
 fn dirichlet_stability() {
     let mut rng = get_rng(223);
     assert_eq!(
-        rng.sample(Dirichlet::new(&[1.0, 2.0, 3.0]).unwrap()),
-        vec![0.12941567177708177, 0.4702121891675036, 0.4003721390554146]
+        rng.sample(Dirichlet::new([1.0, 2.0, 3.0]).unwrap()),
+        [0.12941567177708177, 0.4702121891675036, 0.4003721390554146]
     );
-    assert_eq!(rng.sample(Dirichlet::new_with_size(8.0, 5).unwrap()), vec![
+    assert_eq!(rng.sample(Dirichlet::new([8.0; 5]).unwrap()), [
         0.17684200044809556,
         0.29915953935953055,
         0.1832858056608014,
         0.1425623503573967,
         0.19815030417417595
     ]);
+    // Test stability for the case where all alphas are less than 0.1.
+    assert_eq!(
+        rng.sample(Dirichlet::new([0.05, 0.025, 0.075, 0.05]).unwrap()),
+        [
+            0.00027580456855692104,
+            2.296135759821706e-20,
+            3.004118281150937e-9,
+            0.9997241924273248
+        ]
+    );
 }
 
 #[test]
