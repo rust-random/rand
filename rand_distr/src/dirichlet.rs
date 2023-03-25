@@ -112,11 +112,10 @@ where
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
 {
-    // Construct a new `Dirichlet` with the given alpha parameter `alpha`.
-    //
-    // This function is part of a private implementation detail.
-    // It assumes that the input is correct, so no validation is done.
-    //
+    /// Construct a new `DirichletFromBeta` with the given parameters `alpha`.
+    ///
+    /// This function is part of a private implementation detail.
+    /// It assumes that the input is correct, so no validation of alpha is done.
     #[inline]
     fn new(alpha: [F; N]) -> Result<DirichletFromBeta<F, N>, DirichletFromBetaError> {
         // `alpha_rev_csum` is the reverse of the cumulative sum of the
