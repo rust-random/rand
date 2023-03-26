@@ -13,11 +13,22 @@ use rand_core::{impls, Error, RngCore};
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
 
-/// A simple implementation of `RngCore` for testing purposes.
+/// A mock generator yielding very predictable output
 ///
 /// This generates an arithmetic sequence (i.e. adds a constant each step)
 /// over a `u64` number, using wrapping arithmetic. If the increment is 0
 /// the generator yields a constant.
+///
+/// Other integer types (64-bit and smaller) are produced via cast from `u64`.
+///
+/// Other types are produced via their implementation of [`Rng`](crate::Rng) or
+/// [`Distribution`](crate::distributions::Distribution).
+/// Output values may not be intuitive and may change in future releases but
+/// are considered
+/// [portable](https://rust-random.github.io/book/portability.html).
+/// (`bool` output is true when bit `1u64 << 31` is set.)
+///
+/// # Example
 ///
 /// ```
 /// use rand::Rng;
@@ -72,16 +83,29 @@ impl RngCore for StepRng {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(any(feature = "alloc", feature = "serde1"))]
+    use super::StepRng;
+
     #[test]
     #[cfg(feature = "serde1")]
     fn test_serialization_step_rng() {
-        use super::StepRng;
-
         let some_rng = StepRng::new(42, 7);
         let de_some_rng: StepRng =
             bincode::deserialize(&bincode::serialize(&some_rng).unwrap()).unwrap();
         assert_eq!(some_rng.v, de_some_rng.v);
         assert_eq!(some_rng.a, de_some_rng.a);
 
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_bool() {
+        use crate::{Rng, distributions::Standard};
+
+        // If this result ever changes, update doc on StepRng!
+        let rng = StepRng::new(0, 1 << 31);
+        let result: alloc::vec::Vec<bool> =
+            rng.sample_iter(Standard).take(6).collect();
+        assert_eq!(&result, &[false, true, false, true, false, true]);
     }
 }
