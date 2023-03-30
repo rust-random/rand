@@ -26,7 +26,7 @@ where
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
 {
-    samplers: Box<[Gamma<F>]>,
+    samplers: [Gamma<F>; N],
 }
 
 /// Error type returned from `DirchletFromGamma::new`.
@@ -35,6 +35,9 @@ where
 enum DirichletFromGammaError {
     /// Gamma::new(a, 1) failed.
     GammmaNewFailed,
+
+    /// gamma_dists.try_into() failed (in theory, this should not happen).
+    GammaArrayCreationFailed,
 }
 
 impl<F, const N: usize> DirichletFromGamma<F, N>
@@ -57,7 +60,9 @@ where
             gamma_dists.push(dist);
         }
         Ok(DirichletFromGamma {
-            samplers: gamma_dists.into_boxed_slice(),
+            samplers: gamma_dists
+                .try_into()
+                .map_err(|_| DirichletFromGammaError::GammaArrayCreationFailed)?,
         })
     }
 }
