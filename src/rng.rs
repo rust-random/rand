@@ -350,7 +350,7 @@ macro_rules! impl_fill {
                     rng.try_fill_bytes(unsafe {
                         slice::from_raw_parts_mut(self.as_mut_ptr()
                             as *mut u8,
-                            self.len() * mem::size_of::<$t>()
+                            mem::size_of_val(self)
                         )
                     })?;
                     for x in self {
