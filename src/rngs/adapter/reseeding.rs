@@ -10,7 +10,7 @@
 //! A wrapper around another PRNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use core::mem::size_of;
+use core::mem::size_of_val;
 
 use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
@@ -177,7 +177,7 @@ where
             // returning from a non-inlined function.
             return self.reseed_and_generate(results, global_fork_counter);
         }
-        let num_bytes = results.as_ref().len() * size_of::<Self::Item>();
+        let num_bytes = size_of_val(results.as_ref());
         self.bytes_until_reseed -= num_bytes as i64;
         self.inner.generate(results);
     }
@@ -247,7 +247,7 @@ where
             trace!("Reseeding RNG (periodic reseed)");
         }
 
-        let num_bytes = results.as_ref().len() * size_of::<<R as BlockRngCore>::Item>();
+        let num_bytes = size_of_val(results.as_ref());
 
         if let Err(e) = self.reseed() {
             warn!("Reseeding RNG failed: {}", e);
