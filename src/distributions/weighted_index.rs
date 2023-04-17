@@ -420,6 +420,11 @@ mod test {
     fn weighted_index_distributions_can_be_compared() {
         assert_eq!(WeightedIndex::new(&[1, 2]), WeightedIndex::new(&[1, 2]));
     }
+
+    #[test]
+    fn overflow() {
+        assert!(WeightedIndex::new([2, usize::MAX]).is_err());
+    }
 }
 
 /// Error type returned from `WeightedIndex::new`.
