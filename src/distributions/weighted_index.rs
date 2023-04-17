@@ -117,7 +117,11 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
                 return Err(WeightedError::InvalidWeight);
             }
             weights.push(total_weight.clone());
+
             total_weight += w.borrow();
+            if total_weight < *w.borrow() {
+                return Err(WeightedError::Overflow);
+            }
         }
 
         if total_weight == zero {
@@ -423,7 +427,7 @@ mod test {
 
     #[test]
     fn overflow() {
-        assert!(WeightedIndex::new([2, usize::MAX]).is_err());
+        assert_eq!(WeightedIndex::new([2, usize::MAX]), Err(WeightedError::Overflow));
     }
 }
 
@@ -443,6 +447,9 @@ pub enum WeightedError {
 
     /// Too many weights are provided (length greater than `u32::MAX`)
     TooMany,
+
+    /// The sum of weights overflows
+    Overflow,
 }
 
 #[cfg(feature = "std")]
@@ -455,6 +462,7 @@ impl fmt::Display for WeightedError {
             WeightedError::InvalidWeight => "A weight is invalid in distribution",
             WeightedError::AllWeightsZero => "All weights are zero in distribution",
             WeightedError::TooMany => "Too many weights (hit u32::MAX) in distribution",
+            WeightedError::Overflow => "The sum of weights overflowed",
         })
     }
 }
