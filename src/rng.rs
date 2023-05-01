@@ -133,6 +133,32 @@ pub trait Rng: RngCore {
         range.sample_single(self).unwrap()
     }
 
+    /// Generate values via an iterator
+    ///
+    /// This is a just a wrapper over [`Rng::sample_iter`] using
+    /// [`distributions::Standard`].
+    ///
+    /// Note: this method consumes its argument. Use
+    /// `(&mut rng).gen_iter()` to avoid consuming the RNG.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{rngs::mock::StepRng, Rng};
+    ///
+    /// let rng = StepRng::new(1, 1);
+    /// let v: Vec<i32> = rng.gen_iter().take(5).collect();
+    /// assert_eq!(&v, &[1, 2, 3, 4, 5]);
+    /// ```
+    #[inline]
+    fn gen_iter<T>(self) -> distributions::DistIter<Standard, Self, T>
+    where
+        Self: Sized,
+        Standard: Distribution<T>,
+    {
+        Standard.sample_iter(self)
+    }
+
     /// Sample a new value, using the given distribution.
     ///
     /// ### Example
@@ -153,11 +179,8 @@ pub trait Rng: RngCore {
 
     /// Create an iterator that generates values using the given distribution.
     ///
-    /// Note that this function takes its arguments by value. This works since
-    /// `(&mut R): Rng where R: Rng` and
-    /// `(&D): Distribution where D: Distribution`,
-    /// however borrowing is not automatic hence `rng.sample_iter(...)` may
-    /// need to be replaced with `(&mut rng).sample_iter(...)`.
+    /// Note: this method consumes its arguments. Use
+    /// `(&mut rng).sample_iter(..)` to avoid consuming the RNG.
     ///
     /// # Example
     ///
