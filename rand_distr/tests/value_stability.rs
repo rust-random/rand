@@ -358,6 +358,16 @@ fn dirichlet_stability() {
         0.1425623503573967,
         0.19815030417417595
     ]);
+    // Test stability for the case where all alphas are less than 0.1.
+    assert_eq!(
+        rng.sample(Dirichlet::new([0.05, 0.025, 0.075, 0.05]).unwrap()),
+        [
+            0.00027580456855692104,
+            2.296135759821706e-20,
+            3.004118281150937e-9,
+            0.9997241924273248
+        ]
+    );
 }
 
 #[test]
