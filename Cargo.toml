@@ -94,3 +94,8 @@ harness = false
 name = "shuffle"
 path = "benches/shuffle.rs"
 harness = false
+
+[[bench]]
+name = "uniform_float"
+path = "benches/uniform_float.rs"
+harness = false
