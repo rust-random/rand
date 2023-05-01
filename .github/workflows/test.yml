@@ -79,13 +79,13 @@ jobs:
         run: |
           cargo test --target ${{ matrix.target }} --features=nightly
           cargo test --target ${{ matrix.target }} --all-features
-          cargo test --target ${{ matrix.target }} --benches --features=nightly,small_rng
+          cargo test --target ${{ matrix.target }} --benches --features=small_rng,nightly
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --benches
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
       - name: Test rand
         run: |
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
-          cargo build --target ${{ matrix.target }} --no-default-features --features alloc,getrandom,small_rng
+          cargo build --target ${{ matrix.target }} --no-default-features --features alloc,getrandom,small_rng,unbiased
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features=alloc,getrandom,small_rng
           cargo test --target ${{ matrix.target }} --examples
       - name: Test rand (all stable features)

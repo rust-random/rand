@@ -451,7 +451,7 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// # use std::{io, io::Read};
 /// # use std::fs::File;
 /// # use rand_core::{OsRng, RngCore};

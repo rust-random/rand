@@ -195,7 +195,7 @@ use serde::{Serialize, Deserialize};
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
 /// [`Rng::gen_range`]: Rng::gen_range
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde1", serde(bound(serialize = "X::Sampler: Serialize")))]
 #[cfg_attr(feature = "serde1", serde(bound(deserialize = "X::Sampler: Deserialize<'de>")))]
@@ -444,21 +444,21 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
 /// use `u32` for our `zone` and samples (because it's not slower and because
 /// it reduces the chance of having to reject a sample). In this case we cannot
 /// store `zone` in the target type since it is too large, however we know
-/// `ints_to_reject < range <= $unsigned::MAX`.
+/// `ints_to_reject < range <= $uty::MAX`.
 ///
 /// An alternative to using a modulus is widening multiply: After a widening
 /// multiply by `range`, the result is in the high word. Then comparing the low
 /// word against `zone` makes sure our distribution is uniform.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformInt<X> {
     low: X,
     range: X,
-    z: X, // either ints_to_reject or zone depending on implementation
+    thresh: X, // effectively 2.pow(max(64, uty_bits)) % range
 }
 
 macro_rules! uniform_int_impl {
-    ($ty:ty, $unsigned:ident, $u_large:ident) => {
+    ($ty:ty, $uty:ty, $sample_ty:ident) => {
         impl SampleUniform for $ty {
             type Sampler = UniformInt<$ty>;
         }
@@ -466,7 +466,7 @@ macro_rules! uniform_int_impl {
         impl UniformSampler for UniformInt<$ty> {
             // We play free and fast with unsigned vs signed here
             // (when $ty is signed), but that's fine, since the
-            // contract of this macro is for $ty and $unsigned to be
+            // contract of this macro is for $ty and $uty to be
             // "bit-equal", so casting between them is a no-op.
 
             type X = $ty;
@@ -498,41 +498,38 @@ macro_rules! uniform_int_impl {
                 if !(low <= high) {
                     return Err(Error::EmptyRange);
                 }
-                let unsigned_max = ::core::$u_large::MAX;
 
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned;
-                let ints_to_reject = if range > 0 {
-                    let range = $u_large::from(range);
-                    (unsigned_max - range + 1) % range
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty;
+                let thresh = if range > 0 {
+                    let range = $sample_ty::from(range);
+                    (range.wrapping_neg() % range)
                 } else {
                     0
                 };
 
                 Ok(UniformInt {
                     low,
-                    // These are really $unsigned values, but store as $ty:
-                    range: range as $ty,
-                    z: ints_to_reject as $unsigned as $ty,
+                    range: range as $ty, // type: $uty
+                    thresh: thresh as $uty as $ty, // type: $sample_ty
                 })
             }
 
+            /// Sample from distribution, Lemire's method, unbiased
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
-                let range = self.range as $unsigned as $u_large;
-                if range > 0 {
-                    let unsigned_max = ::core::$u_large::MAX;
-                    let zone = unsigned_max - (self.z as $unsigned as $u_large);
-                    loop {
-                        let v: $u_large = rng.gen();
-                        let (hi, lo) = v.wmul(range);
-                        if lo <= zone {
-                            return self.low.wrapping_add(hi as $ty);
-                        }
-                    }
-                } else {
-                    // Sample from the entire integer range.
-                    rng.gen()
+                let range = self.range as $uty as $sample_ty;
+                if range == 0 {
+                    return rng.gen();
                 }
+
+                let thresh = self.thresh as $uty as $sample_ty;
+                let hi = loop {
+                    let (hi, lo) = rng.gen::<$sample_ty>().wmul(range);
+                    if lo >= thresh {
+                        break hi;
+                    }
+                };
+                self.low.wrapping_add(hi as $ty)
             }
 
             #[inline]
@@ -549,8 +546,15 @@ macro_rules! uniform_int_impl {
                 Self::sample_single_inclusive(low, high - 1, rng)
             }
 
+            /// Sample single value, Canon's method, biased
+            ///
+            /// In the worst case, bias affects 1 in `2^n` samples where n is
+            /// 56 (`i8`), 48 (`i16`), 96 (`i32`), 64 (`i64`), 128 (`i128`).
+            #[cfg(not(feature = "unbiased"))]
             #[inline]
-            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(low_b: B1, high_b: B2, rng: &mut R) -> Result<Self::X, Error>
+            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> Result<Self::X, Error>
             where
                 B1: SampleBorrow<Self::X> + Sized,
                 B2: SampleBorrow<Self::X> + Sized,
@@ -560,33 +564,72 @@ macro_rules! uniform_int_impl {
                 if !(low <= high) {
                     return Err(Error::EmptyRange);
                 }
-                let range = high.wrapping_sub(low).wrapping_add(1) as $unsigned as $u_large;
-                // If the above resulted in wrap-around to 0, the range is $ty::MIN..=$ty::MAX,
-                // and any integer will do.
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $sample_ty;
                 if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
                     return Ok(rng.gen());
                 }
 
-                let zone = if ::core::$unsigned::MAX <= ::core::u16::MAX as $unsigned {
-                    // Using a modulus is faster than the approximation for
-                    // i8 and i16. I suppose we trade the cost of one
-                    // modulus for near-perfect branch prediction.
-                    let unsigned_max: $u_large = ::core::$u_large::MAX;
-                    let ints_to_reject = (unsigned_max - range + 1) % range;
-                    unsigned_max - ints_to_reject
-                } else {
-                    // conservative but fast approximation. `- 1` is necessary to allow the
-                    // same comparison without bias.
-                    (range << range.leading_zeros()).wrapping_sub(1)
-                };
+                // generate a sample using a sensible integer type
+                let (mut result, lo_order) = rng.gen::<$sample_ty>().wmul(range);
 
-                loop {
-                    let v: $u_large = rng.gen();
-                    let (hi, lo) = v.wmul(range);
-                    if lo <= zone {
-                        return Ok(low.wrapping_add(hi as $ty));
+                // if the sample is biased...
+                if lo_order > range.wrapping_neg() {
+                    // ...generate a new sample to reduce bias...
+                    let (new_hi_order, _) = (rng.gen::<$sample_ty>()).wmul(range as $sample_ty);
+                    // ... incrementing result on overflow
+                    let is_overflow = lo_order.checked_add(new_hi_order as $sample_ty).is_none();
+                    result += is_overflow as $sample_ty;
+                }
+
+                Ok(low.wrapping_add(result as $ty))
+            }
+
+            /// Sample single value, Canon's method, unbiased
+            #[cfg(feature = "unbiased")]
+            #[inline]
+            fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(
+                low_b: B1, high_b: B2, rng: &mut R,
+            ) -> Result<Self::X, Error>
+            where
+                B1: SampleBorrow<$ty> + Sized,
+                B2: SampleBorrow<$ty> + Sized,
+            {
+                let low = *low_b.borrow();
+                let high = *high_b.borrow();
+                if !(low <= high) {
+                    return Err(Error::EmptyRange);
+                }
+                let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $sample_ty;
+                if range == 0 {
+                    // Range is MAX+1 (unrepresentable), so we need a special case
+                    return Ok(rng.gen());
+                }
+
+                let (mut result, mut lo) = rng.gen::<$sample_ty>().wmul(range);
+
+                // In constrast to the biased sampler, we use a loop:
+                while lo > range.wrapping_neg() {
+                    let (new_hi, new_lo) = (rng.gen::<$sample_ty>()).wmul(range);
+                    match lo.checked_add(new_hi) {
+                        Some(x) if x < $sample_ty::MAX => {
+                            // Anything less than MAX: last term is 0
+                            break;
+                        }
+                        None => {
+                            // Overflow: last term is 1
+                            result += 1;
+                            break;
+                        }
+                        _ => {
+                            // Unlikely case: must check next sample
+                            lo = new_lo;
+                            continue;
+                        }
                     }
                 }
+
+                Ok(low.wrapping_add(result as $ty))
             }
         }
     };
@@ -668,22 +711,22 @@ macro_rules! uniform_simd_int_impl {
                 // with bitwise OR
                 let modulo = not_full_range.select(range, unsigned_max);
                 // wrapping addition
-                let ints_to_reject = (unsigned_max - range + Simd::splat(1)) % modulo;
+                // TODO: replace with `range.wrapping_neg() % module` when Simd supports this.
+                let ints_to_reject = (Simd::splat(0) - range) % modulo;
                 // When `range` is 0, `lo` of `v.wmul(range)` will always be
                 // zero which means only one sample is needed.
-                let zone = unsigned_max - ints_to_reject;
 
                 Ok(UniformInt {
                     low,
                     // These are really $unsigned values, but store as $ty:
                     range: range.cast(),
-                    z: zone.cast(),
+                    thresh: ints_to_reject.cast(),
                 })
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range: Simd<$unsigned, LANES> = self.range.cast();
-                let zone: Simd<$unsigned, LANES> = self.z.cast();
+                let thresh: Simd<$unsigned, LANES> = self.thresh.cast();
 
                 // This might seem very slow, generating a whole new
                 // SIMD vector for every sample rejection. For most uses
@@ -697,7 +740,7 @@ macro_rules! uniform_simd_int_impl {
                 let mut v: Simd<$unsigned, LANES> = rng.gen();
                 loop {
                     let (hi, lo) = v.wmul(range);
-                    let mask = lo.simd_le(zone);
+                    let mask = lo.simd_ge(thresh);
                     if mask.all() {
                         let hi: Simd<$ty, LANES> = hi.cast();
                         // wrapping addition
@@ -740,7 +783,7 @@ impl SampleUniform for char {
 /// are used for surrogate pairs in UCS and UTF-16, and consequently are not
 /// valid Unicode code points. We must therefore avoid sampling values in this
 /// range.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformChar {
     sampler: UniformInt<u32>,
@@ -1055,14 +1098,14 @@ uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
 ///
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformDuration {
     mode: UniformDurationMode,
     offset: u32,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 enum UniformDurationMode {
     Small {
@@ -1194,32 +1237,7 @@ mod tests {
     fn test_serialization_uniform_duration() {
         let distr = UniformDuration::new(Duration::from_secs(10), Duration::from_secs(60)).unwrap();
         let de_distr: UniformDuration = bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
-        assert_eq!(
-            distr.offset, de_distr.offset
-        );
-        match (distr.mode, de_distr.mode) {
-            (UniformDurationMode::Small {secs: a_secs, nanos: a_nanos}, UniformDurationMode::Small {secs, nanos}) => {
-                assert_eq!(a_secs, secs);
-
-                assert_eq!(a_nanos.0.low, nanos.0.low);
-                assert_eq!(a_nanos.0.range, nanos.0.range);
-                assert_eq!(a_nanos.0.z, nanos.0.z);
-            }
-            (UniformDurationMode::Medium {nanos: a_nanos} , UniformDurationMode::Medium {nanos}) => {
-                assert_eq!(a_nanos.0.low, nanos.0.low);
-                assert_eq!(a_nanos.0.range, nanos.0.range);
-                assert_eq!(a_nanos.0.z, nanos.0.z);
-            }
-            (UniformDurationMode::Large {max_secs:a_max_secs, max_nanos:a_max_nanos, secs:a_secs}, UniformDurationMode::Large {max_secs, max_nanos, secs} ) => {
-                assert_eq!(a_max_secs, max_secs);
-                assert_eq!(a_max_nanos, max_nanos);
-
-                assert_eq!(a_secs.0.low, secs.0.low);
-                assert_eq!(a_secs.0.range, secs.0.range);
-                assert_eq!(a_secs.0.z, secs.0.z);
-            }
-            _ => panic!("`UniformDurationMode` was not serialized/deserialized correctly")
-        }
+        assert_eq!(distr, de_distr);
     }
 
     #[test]
@@ -1227,16 +1245,11 @@ mod tests {
     fn test_uniform_serialization() {
         let unit_box: Uniform<i32>  = Uniform::new(-1, 1).unwrap();
         let de_unit_box: Uniform<i32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
-
-        assert_eq!(unit_box.0.low, de_unit_box.0.low);
-        assert_eq!(unit_box.0.range, de_unit_box.0.range);
-        assert_eq!(unit_box.0.z, de_unit_box.0.z);
+        assert_eq!(unit_box.0, de_unit_box.0);
 
         let unit_box: Uniform<f32> = Uniform::new(-1., 1.).unwrap();
         let de_unit_box: Uniform<f32> = bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
-
-        assert_eq!(unit_box.0.low, de_unit_box.0.low);
-        assert_eq!(unit_box.0.scale, de_unit_box.0.scale);
+        assert_eq!(unit_box.0, de_unit_box.0);
     }
 
     #[test]
