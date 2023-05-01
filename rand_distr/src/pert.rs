@@ -99,7 +99,14 @@ where
 
         let range = max - min;
         let mu = (min + max + shape * mode) / (shape + F::from(2.).unwrap());
-        let v = if mu == mode {
+
+        // We need to check if `mu == mode`, but due to rounding errors we can't
+        // use a direct comparison. The epsilon used for the comparison is
+        // twice the machine epsilon scaled by the larger of the two numbers.
+        //
+        // https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+        let epsilon = F::max(mu.abs(), mode.abs()) * F::epsilon() * F::from(2.).unwrap();
+        let v = if (mu - mode).abs() <= epsilon {
             shape * F::from(0.5).unwrap() + F::from(1.).unwrap()
         } else {
             (mu - min) * (F::from(2.).unwrap() * mode - min - max) / ((mode - mu) * (max - min))
@@ -150,5 +157,10 @@ mod test {
     #[test]
     fn pert_distributions_can_be_compared() {
         assert_eq!(Pert::new(1.0, 3.0, 2.0), Pert::new(1.0, 3.0, 2.0));
+    }
+
+    #[test]
+    fn pert_mode_almost_half_range() {
+        assert!(Pert::new(0.0f32, 0.48258883, 0.24129441).is_ok());
     }
 }
