@@ -122,6 +122,7 @@ where
         if !r.is_finite() || r <= F::zero() {
             Err(Error::InvalidNumberOfSuccesses)
         } else if !(p > F::zero() && p <= F::one()) {
+            // This also catches p = nan implicitly.
             Err(Error::InvalidProbability)
         } else if p == F::one() {
             Ok(NegativeBinomial {
