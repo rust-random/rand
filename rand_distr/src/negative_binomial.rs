@@ -121,7 +121,7 @@ where
     pub fn new(r: F, p: F) -> Result<Self, Error> {
         if !r.is_finite() || r <= F::zero() {
             Err(Error::InvalidNumberOfSuccesses)
-        } else if !p.is_finite() || p <= F::zero() || p > F::one() {
+        } else if !(p > F::zero() && p <= F::one()) {
             Err(Error::InvalidProbability)
         } else if p == F::one() {
             Ok(NegativeBinomial {
