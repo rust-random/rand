@@ -36,6 +36,7 @@ serde1 = ["serde", "rand_core/serde1"]
 # enables functionality expected to be available on a standard platform.
 std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom", "libc"]
 
+wasm = ["rand_core/js", "rand_chacha/std", "alloc", "libc"]
 # Option: "alloc" enables support for Vec and Box when not using "std"
 alloc = ["rand_core/alloc"]
 
