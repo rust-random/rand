@@ -7,6 +7,8 @@
 // except according to those terms.
 
 use crate::distributions::{Distribution, Uniform};
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 /// A distribution to sample items uniformly from a slice.
 ///
@@ -115,3 +117,22 @@ impl core::fmt::Display for EmptySlice {
 
 #[cfg(feature = "std")]
 impl std::error::Error for EmptySlice {}
+
+/// Note: the `String` is potentially left with excess capacity; optionally the
+/// user may call `string.shrink_to_fit()` afterwards.
+#[cfg(feature = "alloc")]
+impl<'a> super::DistString for Slice<'a, char> {
+    fn append_string<R: crate::Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
+        let max_char_len = self
+            .slice
+            .iter()
+            .try_fold(1, |max_len, char| {
+                // When the current max_len is 4, the result max_char_len will be 4.
+                Some(max_len.max(char.len_utf8())).filter(|len| *len < 4)
+            })
+            .unwrap_or(4);
+
+        string.reserve(max_char_len * len);
+        string.extend(self.sample_iter(rng).take(len))
+    }
+}

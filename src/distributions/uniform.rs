@@ -843,6 +843,26 @@ impl UniformSampler for UniformChar {
     }
 }
 
+/// Note: the `String` is potentially left with excess capacity if the range 
+/// includes non ascii chars; optionally the user may call 
+/// `string.shrink_to_fit()` afterwards.
+#[cfg(feature = "alloc")]
+impl super::DistString for Uniform<char>{
+    fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut alloc::string::String, len: usize) {
+        // Getting the hi value to assume the required length to reserve in string.
+        let mut hi = self.0.sampler.low + self.0.sampler.range;
+        if hi >= CHAR_SURROGATE_START {
+            hi += CHAR_SURROGATE_LEN;
+        }
+        // Get the utf8 length of hi to minimize extra space.
+        // SAFETY: hi used to be valid char.
+        // This relies on range constructors which accept char arguments.
+        let max_char_len = unsafe { char::from_u32_unchecked(hi).len_utf8() };
+        string.reserve(max_char_len * len);
+        string.extend(self.sample_iter(rng).take(len))
+    }
+}
+
 /// The back-end implementing [`UniformSampler`] for floating-point types.
 ///
 /// Unless you are implementing [`UniformSampler`] for your own type, this type
