@@ -159,7 +159,7 @@ where
 {
 }
 
-#[cfg(features = "nightly")]
+#[cfg(feature = "nightly")]
 impl<D, R, T> iter::TrustedLen for DistIter<D, R, T>
 where
     D: Distribution<T>,
