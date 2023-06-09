@@ -159,14 +159,6 @@ where
 {
 }
 
-#[cfg(feature = "nightly")]
-unsafe impl<D, R, T> iter::TrustedLen for DistIter<D, R, T>
-where
-    D: Distribution<T>,
-    R: Rng,
-{
-}
-
 /// A distribution of values of type `S` derived from the distribution `D`
 /// by mapping its output of type `T` through the closure `F`.
 ///
