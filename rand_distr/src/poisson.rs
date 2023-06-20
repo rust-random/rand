@@ -69,7 +69,7 @@ where F: Float + FloatConst, Standard: Distribution<F>
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
     pub fn new(lambda: F) -> Result<Poisson<F>, Error> {
-	if !lambda.is_finite() {
+        if !lambda.is_finite() {
             return Err(Error::NonFinite);
         }
         if !(lambda > F::zero()) {
