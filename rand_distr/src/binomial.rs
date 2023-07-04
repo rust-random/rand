@@ -111,10 +111,10 @@ impl Distribution<u64> for Binomial {
         // Ranlib uses 30, and GSL uses 14.
         const BINV_THRESHOLD: f64 = 10.;
         
-        //Same value as in GSL
-        //It is possible for BINV to get stuck, so we break if x > BINV_MAX_X and try again
-        //It would be safer to set BINV_MAX_X to self.n, but it is extremly unlikely to be relevant
-        //When n*p < 10, so is n*p*q which is the variance, so a result > 110 would be 100 / sqrt(10) = 31 standard deviations away
+        // Same value as in GSL.
+        // It is possible for BINV to get stuck, so we break if x > BINV_MAX_X and try again.
+        // It would be safer to set BINV_MAX_X to self.n, but it is extremely unlikely to be relevant.
+        // When n*p < 10, so is n*p*q which is the variance, so a result > 110 would be 100 / sqrt(10) = 31 standard deviations away.
         const BINV_MAX_X : u64 = 110;
 
         if (self.n as f64) * p < BINV_THRESHOLD && self.n <= (core::i32::MAX as u64) {
