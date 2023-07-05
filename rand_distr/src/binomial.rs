@@ -366,4 +366,15 @@ mod test {
     fn binomial_distributions_can_be_compared() {
         assert_eq!(Binomial::new(1, 1.0), Binomial::new(1, 1.0));
     }
+    
+    #[test]
+    fn binomial_avoid_infinite_loop() {
+        let dist = Binomial::new(16000000, 3.1444753148558566e-10).unwrap();
+        let mut sum: u64 = 0;
+        let mut rng = crate::test::rng(742);
+        for _ in 0..100_000 {
+            sum = sum.wrapping_add(dist.sample(&mut rng));
+        }
+        assert_ne!(sum, 0);
+    }
 }
