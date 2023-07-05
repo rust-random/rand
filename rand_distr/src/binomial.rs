@@ -123,19 +123,19 @@ impl Distribution<u64> for Binomial {
             let a = ((self.n + 1) as f64) * s;
             
             result = 'outer: loop {
-            	let mut r = q.powi(self.n as i32);
-            	let mut u: f64 = rng.gen();
-            	let mut x = 0;
-            	
-            	while u > r as f64 {
-                	u -= r;
-                	x += 1;
-                	if x > BINV_MAX_X {
-                		continue 'outer;
-                	}
-                	r *= a / (x as f64) - s;
-            	}
-            	break x;
+                let mut r = q.powi(self.n as i32);
+                let mut u: f64 = rng.gen();
+                let mut x = 0;
+
+                while u > r as f64 {
+                    u -= r;
+                    x += 1;
+                    if x > BINV_MAX_X {
+                        continue 'outer;
+                    }
+                    r *= a / (x as f64) - s;
+                }
+                break x;
             
             }
         } else {
