@@ -15,6 +15,9 @@ categories = ["algorithms", "no-std"]
 edition = "2021"
 rust-version = "1.56"
 
+[package.metadata.docs.rs]
+rustdoc-args = ["--generate-link-to-definition"]
+
 [features]
 serde1 = ["serde"]
 
