@@ -843,6 +843,24 @@ impl UniformSampler for UniformChar {
     }
 }
 
+/// Note: the `String` is potentially left with excess capacity if the range 
+/// includes non ascii chars; optionally the user may call 
+/// `string.shrink_to_fit()` afterwards.
+#[cfg(feature = "alloc")]
+impl super::DistString for Uniform<char>{
+    fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut alloc::string::String, len: usize) {
+        // Getting the hi value to assume the required length to reserve in string.
+        let mut hi = self.0.sampler.low + self.0.sampler.range - 1;
+        if hi >= CHAR_SURROGATE_START {
+            hi += CHAR_SURROGATE_LEN;
+        }
+        // Get the utf8 length of hi to minimize extra space.
+        let max_char_len = char::from_u32(hi).map(char::len_utf8).unwrap_or(4);
+        string.reserve(max_char_len * len);
+        string.extend(self.sample_iter(rng).take(len))
+    }
+}
+
 /// The back-end implementing [`UniformSampler`] for floating-point types.
 ///
 /// Unless you are implementing [`UniformSampler`] for your own type, this type
@@ -1375,6 +1393,22 @@ mod tests {
         for _ in 0..100 {
             let c = d.sample(&mut rng);
             assert!((c as u32) < 0xD800 || (c as u32) > 0xDFFF);
+        }
+        #[cfg(feature = "alloc")]
+        {
+            use crate::distributions::DistString;
+            let string1 = d.sample_string(&mut rng, 100);
+            assert_eq!(string1.capacity(), 300);
+            let string2 = Uniform::new(
+                core::char::from_u32(0x0000).unwrap(),
+                core::char::from_u32(0x0080).unwrap(),
+            ).unwrap().sample_string(&mut rng, 100);
+            assert_eq!(string2.capacity(), 100);
+            let string3 = Uniform::new_inclusive(
+                core::char::from_u32(0x0000).unwrap(),
+                core::char::from_u32(0x0080).unwrap(),
+            ).unwrap().sample_string(&mut rng, 100);
+            assert_eq!(string3.capacity(), 200);
         }
     }
 
