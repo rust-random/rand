@@ -52,7 +52,7 @@
 //! `low < high`). The example below merely wraps another back-end.
 //!
 //! The `new`, `new_inclusive` and `sample_single` functions use arguments of
-//! type SampleBorrow<X> to support passing in values by reference or
+//! type `SampleBorrow<X>` to support passing in values by reference or
 //! by value. In the implementation of these functions, you can choose to
 //! simply use the reference returned by [`SampleBorrow::borrow`], or you can choose
 //! to copy or clone the value, whatever is appropriate for your type.
