@@ -143,7 +143,8 @@ impl Distribution<u64> for Geometric
 /// 
 /// See [`Geometric`](crate::Geometric) for the general geometric distribution.
 /// 
-/// Implemented via iterated [Rng::gen::<u64>().leading_zeros()].
+/// Implemented via iterated
+/// [`Rng::gen::<u64>().leading_zeros()`](Rng::gen::<u64>().leading_zeros()).
 /// 
 /// # Example
 /// ```
