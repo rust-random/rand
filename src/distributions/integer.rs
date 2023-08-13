@@ -18,8 +18,10 @@ use core::arch::x86::{__m128i, __m256i};
 use core::arch::x86_64::__m512i;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::{__m128i, __m256i};
-use core::num::{NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize,
-    NonZeroU128};
+use core::num::{
+    NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize,NonZeroU128,
+    NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize,NonZeroI128
+};
 #[cfg(feature = "simd_support")] use core::simd::*;
 use core::mem;
 
@@ -113,6 +115,13 @@ impl_nzint!(NonZeroU32, NonZeroU32::new);
 impl_nzint!(NonZeroU64, NonZeroU64::new);
 impl_nzint!(NonZeroU128, NonZeroU128::new);
 impl_nzint!(NonZeroUsize, NonZeroUsize::new);
+
+impl_nzint!(NonZeroI8, NonZeroI8::new);
+impl_nzint!(NonZeroI16, NonZeroI16::new);
+impl_nzint!(NonZeroI32, NonZeroI32::new);
+impl_nzint!(NonZeroI64, NonZeroI64::new);
+impl_nzint!(NonZeroI128, NonZeroI128::new);
+impl_nzint!(NonZeroIsize, NonZeroIsize::new);
 
 macro_rules! x86_intrinsic_impl {
     ($($intrinsic:ident),+) => {$(
