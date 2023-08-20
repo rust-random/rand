@@ -23,7 +23,7 @@ serde1 = ["serde"]
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.7.0" }
-serde = { version = "1", features = ["derive"], optional = true }
+serde = { version = "1.0.103, <1.0.172", features = ["derive"], optional = true }
 
 [dev-dependencies]
 # This is for testing serde, unfortunately we can't specify feature-gated dev

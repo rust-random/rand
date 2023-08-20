@@ -21,7 +21,7 @@ rustdoc-args = ["--generate-link-to-definition"]
 [dependencies]
 rand_core = { path = "../rand_core", version = "0.7.0" }
 ppv-lite86 = { version = "0.2.14", default-features = false, features = ["simd"] }
-serde = { version = "1.0", features = ["derive"], optional = true }
+serde = { version = "1.0.103, <1.0.172", optional = true, features = ["derive"] }
 
 [dev-dependencies]
 # Only to test serde1
