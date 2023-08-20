@@ -274,7 +274,7 @@ pub trait SliceRandom {
     ///
     /// If you only need to choose elements randomly and `amount > self.len()/2`
     /// then you may improve performance by taking
-    /// `amount = values.len() - amount` and using only the second slice.
+    /// `amount = self.len() - amount` and using only the second slice.
     ///
     /// If `amount` is greater than the number of elements in the slice, this
     /// will perform a full shuffle.
