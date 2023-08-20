@@ -1679,6 +1679,14 @@ mod tests {
     }
 
     #[test]
+    fn test_uniform_from_std_range_bad_limits() {
+        assert!(Uniform::try_from(100..10).is_err());
+        assert!(Uniform::try_from(100..100).is_err());
+        assert!(Uniform::try_from(100.0..10.0).is_err());
+        assert!(Uniform::try_from(100.0..100.0).is_err());
+    }
+
+    #[test]
     fn test_uniform_from_std_range_inclusive() {
         let r = Uniform::try_from(2u32..=6).unwrap();
         assert_eq!(r.0.low, 2);
@@ -1687,6 +1695,14 @@ mod tests {
         assert_eq!(r.0.low, 2.0);
         assert!(r.0.scale > 5.0);
         assert!(r.0.scale < 5.0 + 1e-14);
+    }
+
+    #[test]
+    fn test_uniform_from_std_range_inclusive_bad_limits() {
+        assert!(Uniform::try_from(100..=10).is_err());
+        assert!(Uniform::try_from(100..=99).is_err());
+        assert!(Uniform::try_from(100.0..=10.0).is_err());
+        assert!(Uniform::try_from(100.0..=99.0).is_err());
     }
 
     #[test]
