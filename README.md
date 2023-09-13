@@ -29,13 +29,13 @@ A Rust library for random number generation, featuring:
 It's also worth pointing out what `rand` *is not*:
 
 -   Small. Most low-level crates are small, but the higher-level `rand` and
-    `rand_distr` each contain a lot of functionality.
--   Simple (implementation). We have a strong focus on correctness, speed and flexibility, but
+    `rand_distr` each contains a lot of functionality.
+-   Simple (implementation). We have a strong focus on correctness, speed, and flexibility, but
     not simplicity. If you prefer a small-and-simple library, there are
     alternatives including [fastrand](https://crates.io/crates/fastrand)
     and [oorandom](https://crates.io/crates/oorandom).
 -   Slow. We take performance seriously, with considerations also for set-up
-    time of new distributions, commonly-used parameters, and parameters of the
+    time of new distributions, commonly used parameters, and parameters of the
     current sampler.
 
 Documentation:
@@ -60,7 +60,7 @@ To get started using Rand, see [The Book](https://rust-random.github.io/book).
 ## Versions
 
 Rand is *mature* (suitable for general usage, with infrequent breaking releases
-which minimise breakage) but not yet at 1.0. We maintain compatibility with
+that minimize breakage) but not yet at 1.0. We maintain compatibility with
 pinned versions of the Rust compiler (see below).
 
 Current Rand versions are:
@@ -70,18 +70,18 @@ Current Rand versions are:
     changes and fixes.
 -   Version 0.8 was released in December 2020 with many small changes.
 
-A detailed [changelog](CHANGELOG.md) is available for releases.
+A detailed [changelog](CHANGELOG.md) is available for release.
 
 When upgrading to the next minor series (especially 0.4 → 0.5), we recommend
 reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
 
 Rand has not yet reached 1.0 implying some breaking changes may arrive in the
 future ([SemVer](https://semver.org/) allows each 0.x.0 release to include
-breaking changes), but is considered *mature*: breaking changes are minimised
+breaking changes), but is considered *mature*: breaking changes are minimized
 and breaking releases are infrequent.
 
 Rand libs have inter-dependencies and make use of the
-[semver trick](https://github.com/dtolnay/semver-trick/) in order to make traits
+[semver trick](https://github.com/dtolnay/semver-trick/) to make traits
 compatible across crate versions. (This is especially important for `RngCore`
 and `SeedableRng`.) A few crate releases are thus compatibility shims,
 depending on the *next* lib version (e.g. `rand_core` versions `0.2.2` and
@@ -92,7 +92,7 @@ cause build errors. Usually, running `cargo update` is enough to fix any issues.
 ### Yanked versions
 
 Some versions of Rand crates have been yanked ("unreleased"). Where this occurs,
-the crate's CHANGELOG *should* be updated with a rationale, and a search on the
+the crate's CHANGELOG *should* be updated with a rationale and a search on the
 issue tracker with the keyword `yank` *should* uncover the motivation.
 
 ### Rust version requirements
@@ -108,7 +108,7 @@ Rand is built with these features enabled by default:
 -   `alloc` (implied by `std`) enables functionality requiring an allocator
 -   `getrandom` (implied by `std`) is an optional dependency providing the code
     behind `rngs::OsRng`
--   `std_rng` enables inclusion of `StdRng`, `thread_rng` and `random`
+-   `std_rng` enables the inclusion of `StdRng`, `thread_rng`, and `random`
     (the latter two *also* require that `std` be enabled)
 
 Optionally, the following dependencies can be enabled:
@@ -117,7 +117,7 @@ Optionally, the following dependencies can be enabled:
 
 Additionally, these features configure Rand:
 
--   `small_rng` enables inclusion of the `SmallRng` PRNG
+-   `small_rng` enables the inclusion of the `SmallRng` PRNG
 -   `nightly` includes some additions requiring nightly Rust
 -   `simd_support` (experimental) enables sampling of SIMD values
     (uniformly random SIMD integers and floats), requiring nightly Rust
