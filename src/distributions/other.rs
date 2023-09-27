@@ -191,49 +191,50 @@ where
     }
 }
 
+/// Implement `Distribution<(A, B, C, ...)> for Standard, using the list of
+/// identifiers
 macro_rules! tuple_impl {
-    // use variables to indicate the arity of the tuple
-    ($($tyvar:ident),* ) => {
-        // the trailing commas are for the 1 tuple
-        impl< $( $tyvar ),* >
-            Distribution<( $( $tyvar ),* , )>
-            for Standard
-            where $( Standard: Distribution<$tyvar> ),*
+    ($($tyvar:ident)*) => {
+        impl< $($tyvar,)* > Distribution<($($tyvar,)*)> for Standard
+        where $(
+            Standard: Distribution< $tyvar >,
+        )*
         {
             #[inline]
-            fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> ( $( $tyvar ),* , ) {
-                (
+            fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> ( $($tyvar,)* ) {
+                let out = ($(
                     // use the $tyvar's to get the appropriate number of
                     // repeats (they're not actually needed)
-                    $(
-                        _rng.gen::<$tyvar>()
-                    ),*
-                    ,
-                )
+                    rng.gen::<$tyvar>()
+                ,)*);
+
+                // Suppress the unused variable warning for empty tuple
+                let _rng = rng;
+
+                out
             }
         }
     }
 }
 
-impl Distribution<()> for Standard {
-    #[allow(clippy::unused_unit)]
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, _: &mut R) -> () {
-        ()
-    }
+/// Looping wrapper for `tuple_impl`. Given (A, B, C), it also generates
+/// implementations for (A, B) and (A,)
+macro_rules! tuple_impls {
+    ($($tyvar:ident)*) => {tuple_impls!{[] $($tyvar)*}};
+
+    ([$($prefix:ident)*] $head:ident $($tail:ident)*) => {
+        tuple_impl!{$($prefix)*}
+        tuple_impls!{[$($prefix)* $head] $($tail)*}
+    };
+
+
+    ([$($prefix:ident)*]) => {
+        tuple_impl!{$($prefix)*}
+    };
+
 }
-tuple_impl! {A}
-tuple_impl! {A, B}
-tuple_impl! {A, B, C}
-tuple_impl! {A, B, C, D}
-tuple_impl! {A, B, C, D, E}
-tuple_impl! {A, B, C, D, E, F}
-tuple_impl! {A, B, C, D, E, F, G}
-tuple_impl! {A, B, C, D, E, F, G, H}
-tuple_impl! {A, B, C, D, E, F, G, H, I}
-tuple_impl! {A, B, C, D, E, F, G, H, I, J}
-tuple_impl! {A, B, C, D, E, F, G, H, I, J, K}
-tuple_impl! {A, B, C, D, E, F, G, H, I, J, K, L}
+
+tuple_impls! {A B C D E F G H I J K L}
 
 impl<T, const N: usize> Distribution<[T; N]> for Standard
 where Standard: Distribution<T>
