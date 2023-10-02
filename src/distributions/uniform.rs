@@ -1536,11 +1536,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(all(
-        feature = "std",
-        not(target_arch = "wasm32"),
-        not(target_arch = "asmjs")
-    ))]
+    #[cfg(all(feature = "std", panic = "unwind"))]
     fn test_float_assertions() {
         use super::SampleUniform;
         use std::panic::catch_unwind;
