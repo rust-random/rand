@@ -113,7 +113,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            target: mips-unknown-linux-gnu
+            target: powerpc-unknown-linux-gnu
             toolchain: stable
 
     steps:
