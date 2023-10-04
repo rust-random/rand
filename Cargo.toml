@@ -14,7 +14,7 @@ keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 autobenches = true
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.60"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
 [package.metadata.docs.rs]
