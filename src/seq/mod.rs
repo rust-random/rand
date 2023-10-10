@@ -68,8 +68,10 @@ pub trait SliceRandom {
     /// The element type.
     type Item;
 
-    /// Returns a reference to one random element of the slice, or `None` if the
-    /// slice is empty.
+    /// Uniformly sample one element
+    ///
+    /// Returns a reference to one uniformly-sampled random element of
+    /// the slice, or `None` if the slice is empty.
     ///
     /// For slices, complexity is `O(1)`.
     ///
@@ -88,14 +90,18 @@ pub trait SliceRandom {
     where
         R: Rng + ?Sized;
 
-    /// Returns a mutable reference to one random element of the slice, or
-    /// `None` if the slice is empty.
+    /// Uniformly sample one element (mut)
+    ///
+    /// Returns a mutable reference to one uniformly-sampled random element of
+    /// the slice, or `None` if the slice is empty.
     ///
     /// For slices, complexity is `O(1)`.
     fn choose_mut<R>(&mut self, rng: &mut R) -> Option<&mut Self::Item>
     where
         R: Rng + ?Sized;
 
+    /// Uniformly sample `amount` distinct elements
+    ///
     /// Chooses `amount` elements from the slice at random, without repetition,
     /// and in random order. The returned iterator is appropriate both for
     /// collection into a `Vec` and filling an existing buffer (see example).
@@ -126,8 +132,10 @@ pub trait SliceRandom {
     where
         R: Rng + ?Sized;
 
-    /// Similar to [`choose`], but where the likelihood of each outcome may be
-    /// specified.
+    /// Biased sampling for one element
+    ///
+    /// Returns a reference to one element of the slice, sampled according
+    /// to the provided weights. Returns `None` only if the slice is empty.
     ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is
@@ -168,8 +176,10 @@ pub trait SliceRandom {
             + Clone
             + Default;
 
-    /// Similar to [`choose_mut`], but where the likelihood of each outcome may
-    /// be specified.
+    /// Biased sampling for one element (mut)
+    ///
+    /// Returns a mutable reference to one element of the slice, sampled according
+    /// to the provided weights. Returns `None` only if the slice is empty.
     ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is
@@ -199,6 +209,8 @@ pub trait SliceRandom {
             + Clone
             + Default;
 
+    /// Biased sampling of `amount` distinct elements
+    ///
     /// Similar to [`choose_multiple`], but where the likelihood of each element's
     /// inclusion in the output may be specified. The elements are returned in an
     /// arbitrary, unspecified order.
@@ -306,21 +318,28 @@ pub trait SliceRandom {
 /// I am 😀!
 /// ```
 pub trait IteratorRandom: Iterator + Sized {
-    /// Choose one element at random from the iterator.
+    /// Uniformly sample one element
     ///
-    /// Returns `None` if and only if the iterator is empty.
+    /// Assuming that the [`Iterator::size_hint`] is correct, this method
+    /// returns one uniformly-sampled random element of the slice, or `None`
+    /// only if the slice is empty. Incorrect bounds on the `size_hint` may
+    /// cause this method to incorrectly return `None` if fewer elements than
+    /// the advertised `lower` bound are present and may prevent sampling of
+    /// elements beyond an advertised `upper` bound (i.e. incorrect `size_hint`
+    /// is memory-safe, but may result in unexpected `None` result and
+    /// non-uniform distribution).
     ///
-    /// This method uses [`Iterator::size_hint`] for optimisation. With an
-    /// accurate hint and where [`Iterator::nth`] is a constant-time operation
-    /// this method can offer `O(1)` performance. Where no size hint is
+    /// With an accurate [`Iterator::size_hint`] and where [`Iterator::nth`] is
+    /// a constant-time operation, this method can offer `O(1)` performance.
+    /// Where no size hint is
     /// available, complexity is `O(n)` where `n` is the iterator length.
     /// Partial hints (where `lower > 0`) also improve performance.
     ///
-    /// Note that the output values and the number of RNG samples used
-    /// depends on size hints. In particular, `Iterator` combinators that don't
-    /// change the values yielded but change the size hints may result in
-    /// `choose` returning different elements. If you want consistent results
-    /// and RNG usage consider using [`IteratorRandom::choose_stable`].
+    /// Note further that [`Iterator::size_hint`] may affect the number of RNG
+    /// samples used as well as the result (while remaining uniform sampling).
+    /// Consider instead using [`IteratorRandom::choose_stable`] to avoid
+    /// [`Iterator`] combinators which only change size hints from affecting the
+    /// results.
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
     where
         R: Rng + ?Sized,
@@ -376,9 +395,7 @@ pub trait IteratorRandom: Iterator + Sized {
         }
     }
 
-    /// Choose one element at random from the iterator.
-    ///
-    /// Returns `None` if and only if the iterator is empty.
+    /// Uniformly sample one element (stable)
     ///
     /// This method is very similar to [`choose`] except that the result
     /// only depends on the length of the iterator and the values produced by
@@ -437,6 +454,8 @@ pub trait IteratorRandom: Iterator + Sized {
         }
     }
 
+    /// Uniformly sample `amount` distinct elements into a buffer
+    ///
     /// Collects values at random from the iterator into a supplied buffer
     /// until that buffer is filled.
     ///
@@ -476,7 +495,7 @@ pub trait IteratorRandom: Iterator + Sized {
         len
     }
 
-    /// Collects `amount` values at random from the iterator into a vector.
+    /// Uniformly sample `amount` distinct elements into a [`Vec`]
     ///
     /// This is equivalent to `choose_multiple_fill` except for the result type.
     ///
