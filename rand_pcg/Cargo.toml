@@ -13,7 +13,7 @@ Selected PCG random number generators
 keywords = ["random", "rng", "pcg"]
 categories = ["algorithms", "no-std"]
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.60"
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--generate-link-to-definition"]
