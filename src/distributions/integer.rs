@@ -134,8 +134,7 @@ macro_rules! x86_intrinsic_impl {
                 let mut buf = [0_u8; mem::size_of::<$intrinsic>()];
                 rng.fill_bytes(&mut buf);
                 // x86 is little endian so no need for conversion
-                // SAFETY: we know [u8; N] and $intrinsic have the same size
-                unsafe { mem::transmute_copy(&buf) }
+                zerocopy::transmute!(buf)
             }
         }
     )+};

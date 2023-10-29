@@ -19,6 +19,7 @@
 
 use crate::RngCore;
 use core::cmp::min;
+use zerocopy::AsBytes;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
 pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
@@ -52,30 +53,17 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     }
 }
 
-trait Observable: Copy {
+trait Observable: AsBytes + Copy {
     fn to_le(self) -> Self;
-
-    // Contract: observing self is memory-safe (implies no uninitialised padding)
-    fn as_byte_slice(x: &[Self]) -> &[u8];
 }
 impl Observable for u32 {
     fn to_le(self) -> Self {
         self.to_le()
     }
-    fn as_byte_slice(x: &[Self]) -> &[u8] {
-        let ptr = x.as_ptr() as *const u8;
-        let len = x.len() * core::mem::size_of::<Self>();
-        unsafe { core::slice::from_raw_parts(ptr, len) }
-    }
 }
 impl Observable for u64 {
     fn to_le(self) -> Self {
         self.to_le()
-    }
-    fn as_byte_slice(x: &[Self]) -> &[u8] {
-        let ptr = x.as_ptr() as *const u8;
-        let len = x.len() * core::mem::size_of::<Self>();
-        unsafe { core::slice::from_raw_parts(ptr, len) }
     }
 }
 
@@ -98,7 +86,7 @@ fn fill_via_chunks<T: Observable>(src: &mut [T], dest: &mut [u8]) -> (usize, usi
         }
     }
 
-    dest[..byte_len].copy_from_slice(&T::as_byte_slice(&src[..num_chunks])[..byte_len]);
+    dest[..byte_len].copy_from_slice(&<[T]>::as_bytes(&src[..num_chunks])[..byte_len]);
 
     (num_chunks, byte_len)
 }
