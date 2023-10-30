@@ -78,7 +78,7 @@ where
 {
     /// Set up the PERT distribution with defined `min`, `max` and `mode`.
     ///
-    /// This is equivalent to calling `Pert::new_shape` with `shape == 4.0`.
+    /// This is equivalent to calling `Pert::new_with_shape` with `shape == 4.0`.
     #[inline]
     pub fn new(min: F, max: F, mode: F) -> Result<Pert<F>, PertError> {
         Pert::new_with_shape(min, max, mode, F::from(4.).unwrap())
