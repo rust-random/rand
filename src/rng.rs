@@ -103,7 +103,7 @@ pub trait Rng: RngCore {
     ///
     /// # Panics
     ///
-    /// Panics if the range is empty.
+    /// Panics if the range is empty, or if `high - low` overflows for floats.
     ///
     /// # Example
     ///
