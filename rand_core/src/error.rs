@@ -50,9 +50,7 @@ impl Error {
     #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     #[inline]
     pub fn new<E>(err: E) -> Self
-    where
-        E: Into<Box<dyn std::error::Error + Send + Sync + 'static>>,
-    {
+    where E: Into<Box<dyn std::error::Error + Send + Sync + 'static>> {
         Error { inner: err.into() }
     }
 
@@ -125,7 +123,7 @@ impl fmt::Debug for Error {
         {
             getrandom::Error::from(self.code).fmt(f)
         }
-        #[cfg(not(feature = "getrandom"))]
+        #[cfg(not(any(feature = "getrandom", feature = "std")))]
         {
             write!(f, "Error {{ code: {} }}", self.code)
         }
@@ -142,7 +140,7 @@ impl fmt::Display for Error {
         {
             getrandom::Error::from(self.code).fmt(f)
         }
-        #[cfg(not(feature = "getrandom"))]
+        #[cfg(not(any(feature = "getrandom", feature = "std")))]
         {
             write!(f, "error code {}", self.code)
         }
