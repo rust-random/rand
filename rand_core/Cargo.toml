@@ -25,7 +25,7 @@ rustdoc-args = ["--cfg", "doc_cfg", "--generate-link-to-definition"]
 all-features = true
 
 [features]
-std = ["alloc", "getrandom?/std"]    # use std library; should be default but for above bug
+std = ["alloc", "getrandom?/std"]
 alloc = []  # enables Vec and Box support without std
 serde1 = ["serde"] # enables serde for BlockRng wrapper
 
