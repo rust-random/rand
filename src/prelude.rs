@@ -25,10 +25,10 @@ pub use crate::rngs::SmallRng;
 #[cfg(feature = "std_rng")]
 #[doc(no_inline)] pub use crate::rngs::StdRng;
 #[doc(no_inline)]
-#[cfg(all(feature = "std", feature = "std_rng"))]
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 pub use crate::rngs::ThreadRng;
 #[doc(no_inline)] pub use crate::seq::{IteratorRandom, SliceRandom};
 #[doc(no_inline)]
-#[cfg(all(feature = "std", feature = "std_rng"))]
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 pub use crate::{random, thread_rng};
 #[doc(no_inline)] pub use crate::{CryptoRng, Rng, RngCore, SeedableRng};
