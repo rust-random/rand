@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Add `Lcg128CmDxsm64` generator compatible with NumPy's `PCG64DXSM` (#1202)
+- Add examples for initializing the RNGs
 
 ## [0.3.1] - 2021-06-15
 - Add `advance` methods to RNGs (#1111)
