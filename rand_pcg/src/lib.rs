@@ -33,11 +33,12 @@
 //! To initialize a generator, use the [`SeedableRng`][rand_core::SeedableRng] trait:
 //!
 //! ```rust
-//! use rand::{SeedableRng, Rng};
+//! use rand_core::{SeedableRng, RngCore};
 //! use rand_pcg::Pcg64Mcg;
 //!
-//! let mut rng = Pcg64Mcg::from_entropy();
-//! let x: u32 = rng.gen();
+//! let mut rng = Pcg64Mcg::seed_from_u64(0);
+//! // Alternatively, you may use `Pcg64Mcg::from_entropy()`.
+//! let x: u32 = rng.next_u32();
 //! ```
 
 #![doc(
