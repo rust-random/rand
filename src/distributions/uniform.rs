@@ -119,7 +119,8 @@ use crate::{Rng, RngCore};
 #[allow(unused_imports)] // rustc doesn't detect that this is actually used
 use crate::distributions::utils::Float;
 
-#[cfg(feature = "simd_support")] use core::simd::*;
+#[cfg(feature = "simd_support")] use core::simd::prelude::*;
+#[cfg(feature = "simd_support")] use core::simd::{LaneCount, SupportedLaneCount};
 
 /// Error type returned from [`Uniform::new`] and `new_inclusive`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1433,7 +1434,7 @@ mod tests {
                     (-::core::$f_scalar::MAX * 0.2, ::core::$f_scalar::MAX * 0.7),
                 ];
                 for &(low_scalar, high_scalar) in v.iter() {
-                    for lane in 0..<$ty>::LANES {
+                    for lane in 0..<$ty>::LEN {
                         let low = <$ty>::splat(0.0 as $f_scalar).replace(lane, low_scalar);
                         let high = <$ty>::splat(1.0 as $f_scalar).replace(lane, high_scalar);
                         let my_uniform = Uniform::new(low, high).unwrap();
@@ -1565,7 +1566,7 @@ mod tests {
                     (::std::$f_scalar::NEG_INFINITY, ::std::$f_scalar::INFINITY),
                 ];
                 for &(low_scalar, high_scalar) in v.iter() {
-                    for lane in 0..<$ty>::LANES {
+                    for lane in 0..<$ty>::LEN {
                         let low = <$ty>::splat(0.0 as $f_scalar).replace(lane, low_scalar);
                         let high = <$ty>::splat(1.0 as $f_scalar).replace(lane, high_scalar);
                         assert!(catch_unwind(|| range(low, high)).is_err());
