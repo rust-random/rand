@@ -10,6 +10,8 @@
 
 use rand_core::{Error, RngCore, SeedableRng};
 
+#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
+
 #[cfg(target_pointer_width = "64")]
 type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 #[cfg(not(target_pointer_width = "64"))]
@@ -77,6 +79,7 @@ type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
 #[cfg_attr(doc_cfg, doc(cfg(feature = "small_rng")))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
 
