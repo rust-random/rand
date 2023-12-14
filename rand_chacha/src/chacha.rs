@@ -138,7 +138,7 @@ macro_rules! chacha_impl {
         ///       https://cr.yp.to/chacha.html)
         ///
         /// [^2]: [eSTREAM: the ECRYPT Stream Cipher Project](
-        ///       http://www.ecrypt.eu.org/stream/)
+        ///       https://www.ecrypt.eu.org/stream/)
         #[derive(Clone, Debug)]
         pub struct $ChaChaXRng {
             rng: BlockRng<$ChaChaXCore>,
