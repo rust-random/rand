@@ -59,7 +59,7 @@ impl Geometric {
     /// Construct a new `Geometric` with the given shape parameter `p`
     /// (probability of success on each trial).
     pub fn new(p: f64) -> Result<Self, Error> {
-        if !p.is_finite() || p < 0.0 || p > 1.0 {
+        if !p.is_finite() || !(0.0..=1.0).contains(&p) {
             Err(Error::InvalidProbability)
         } else if p == 0.0 || p >= 2.0 / 3.0 {
             Ok(Geometric { p, pi: p, k: 0 })
@@ -198,7 +198,7 @@ mod test {
         }
 
         let mean = results.iter().sum::<f64>() / results.len() as f64;
-        assert!((mean as f64 - expected_mean).abs() < expected_mean / 40.0);
+        assert!((mean - expected_mean).abs() < expected_mean / 40.0);
 
         let variance =
             results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;
@@ -230,7 +230,7 @@ mod test {
         }
 
         let mean = results.iter().sum::<f64>() / results.len() as f64;
-        assert!((mean as f64 - expected_mean).abs() < expected_mean / 50.0);
+        assert!((mean - expected_mean).abs() < expected_mean / 50.0);
 
         let variance =
             results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;

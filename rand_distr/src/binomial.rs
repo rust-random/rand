@@ -127,7 +127,7 @@ impl Distribution<u64> for Binomial {
                 let mut u: f64 = rng.gen();
                 let mut x = 0;
 
-                while u > r as f64 {
+                while u > r {
                     u -= r;
                     x += 1;
                     if x > BINV_MAX_X {
@@ -332,7 +332,7 @@ mod test {
         }
 
         let mean = results.iter().sum::<f64>() / results.len() as f64;
-        assert!((mean as f64 - expected_mean).abs() < expected_mean / 50.0);
+        assert!((mean - expected_mean).abs() < expected_mean / 50.0);
 
         let variance =
             results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;

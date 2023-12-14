@@ -37,9 +37,9 @@ impl<R: RngCore> CoinFlipper<R> {
 
         if self.flip_c_heads(c) {
             let numerator = 1 << c;
-            return self.gen_ratio(numerator, d);
+            self.gen_ratio(numerator, d)
         } else {
-            return false;
+            false
         }
     }
 

@@ -247,7 +247,7 @@ mod tests {
         let mut rng = crate::test::rng(213);
         let mut buf = [0.0; 4];
         for x in &mut buf {
-            *x = rng.sample(&skew_normal);
+            *x = rng.sample(skew_normal);
         }
         for value in buf.iter() {
             assert!(value.is_nan());

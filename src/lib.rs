@@ -54,6 +54,7 @@
 #![allow(
     clippy::float_cmp,
     clippy::neg_cmp_op_on_partial_ord,
+    clippy::nonminimal_bool
 )]
 
 #[cfg(feature = "std")] extern crate std;

@@ -206,7 +206,7 @@ mod test {
         let distr = Bernoulli::new(0.4532).unwrap();
         let mut buf = [false; 10];
         for x in &mut buf {
-            *x = rng.sample(&distr);
+            *x = rng.sample(distr);
         }
         assert_eq!(buf, [
             true, false, false, true, false, false, true, true, true, true

@@ -23,7 +23,7 @@ pub fn bench(c: &mut Criterion) {
 }
 
 fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
-    for length in [1, 2, 3, 10, 100, 1000].map(|x| black_box(x)) {
+    for length in [1, 2, 3, 10, 100, 1000].map(black_box) {
         c.bench_function(
             format!("choose_size-hinted_from_{length}_{rng_name}").as_str(),
             |b| {

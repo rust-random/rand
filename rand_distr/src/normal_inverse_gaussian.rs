@@ -76,7 +76,7 @@ where
 {
     fn sample<R>(&self, rng: &mut R) -> F
     where R: Rng + ?Sized {
-        let inv_gauss = rng.sample(&self.inverse_gaussian);
+        let inv_gauss = rng.sample(self.inverse_gaussian);
 
         self.beta * inv_gauss + inv_gauss.sqrt() * rng.sample(StandardNormal)
     }

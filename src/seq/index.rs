@@ -105,12 +105,12 @@ impl PartialEq for IndexVec {
     fn eq(&self, other: &IndexVec) -> bool {
         use self::IndexVec::*;
         match (self, other) {
-            (&U32(ref v1), &U32(ref v2)) => v1 == v2,
-            (&USize(ref v1), &USize(ref v2)) => v1 == v2,
-            (&U32(ref v1), &USize(ref v2)) => {
+            (U32(v1), U32(v2)) => v1 == v2,
+            (USize(v1), USize(v2)) => v1 == v2,
+            (U32(v1), USize(v2)) => {
                 (v1.len() == v2.len()) && (v1.iter().zip(v2.iter()).all(|(x, y)| *x as usize == *y))
             }
-            (&USize(ref v1), &U32(ref v2)) => {
+            (USize(v1), U32(v2)) => {
                 (v1.len() == v2.len()) && (v1.iter().zip(v2.iter()).all(|(x, y)| *x == *y as usize))
             }
         }

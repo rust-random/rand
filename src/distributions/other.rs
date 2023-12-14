@@ -328,7 +328,7 @@ mod tests {
             let mut rng = crate::test::rng(807);
             let mut buf = [zero; 5];
             for x in &mut buf {
-                *x = rng.sample(&distr);
+                *x = rng.sample(distr);
             }
             assert_eq!(&buf, expected);
         }
