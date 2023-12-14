@@ -23,7 +23,7 @@ pub fn bench(c: &mut Criterion) {
 }
 
 fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
-    for length in [1, 2, 3, 10, 100, 1000, 10000].map(|x| black_box(x)) {
+    for length in [1, 2, 3, 10, 100, 1000, 10000].map(black_box) {
         c.bench_function(format!("shuffle_{length}_{rng_name}").as_str(), |b| {
             let mut rng = Rng::seed_from_u64(123);
             let mut vec: Vec<usize> = (0..length).collect();

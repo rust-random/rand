@@ -470,20 +470,20 @@ mod test {
         let mut rng3 = rng1.clone();
 
         let mut a = [0; 16];
-        (&mut a[..4]).copy_from_slice(&rng1.next_u32().to_le_bytes());
-        (&mut a[4..12]).copy_from_slice(&rng1.next_u64().to_le_bytes());
-        (&mut a[12..]).copy_from_slice(&rng1.next_u32().to_le_bytes());
+        a[..4].copy_from_slice(&rng1.next_u32().to_le_bytes());
+        a[4..12].copy_from_slice(&rng1.next_u64().to_le_bytes());
+        a[12..].copy_from_slice(&rng1.next_u32().to_le_bytes());
 
         let mut b = [0; 16];
-        (&mut b[..4]).copy_from_slice(&rng2.next_u32().to_le_bytes());
-        (&mut b[4..8]).copy_from_slice(&rng2.next_u32().to_le_bytes());
-        (&mut b[8..]).copy_from_slice(&rng2.next_u64().to_le_bytes());
+        b[..4].copy_from_slice(&rng2.next_u32().to_le_bytes());
+        b[4..8].copy_from_slice(&rng2.next_u32().to_le_bytes());
+        b[8..].copy_from_slice(&rng2.next_u64().to_le_bytes());
         assert_eq!(a, b);
 
         let mut c = [0; 16];
-        (&mut c[..8]).copy_from_slice(&rng3.next_u64().to_le_bytes());
-        (&mut c[8..12]).copy_from_slice(&rng3.next_u32().to_le_bytes());
-        (&mut c[12..]).copy_from_slice(&rng3.next_u32().to_le_bytes());
+        c[..8].copy_from_slice(&rng3.next_u64().to_le_bytes());
+        c[8..12].copy_from_slice(&rng3.next_u32().to_le_bytes());
+        c[12..].copy_from_slice(&rng3.next_u32().to_le_bytes());
         assert_eq!(a, c);
     }
 
@@ -520,22 +520,22 @@ mod test {
         let mut rng3 = rng1.clone();
 
         let mut a = [0; 16];
-        (&mut a[..4]).copy_from_slice(&rng1.next_u32().to_le_bytes());
-        (&mut a[4..12]).copy_from_slice(&rng1.next_u64().to_le_bytes());
-        (&mut a[12..]).copy_from_slice(&rng1.next_u32().to_le_bytes());
+        a[..4].copy_from_slice(&rng1.next_u32().to_le_bytes());
+        a[4..12].copy_from_slice(&rng1.next_u64().to_le_bytes());
+        a[12..].copy_from_slice(&rng1.next_u32().to_le_bytes());
 
         let mut b = [0; 16];
-        (&mut b[..4]).copy_from_slice(&rng2.next_u32().to_le_bytes());
-        (&mut b[4..8]).copy_from_slice(&rng2.next_u32().to_le_bytes());
-        (&mut b[8..]).copy_from_slice(&rng2.next_u64().to_le_bytes());
+        b[..4].copy_from_slice(&rng2.next_u32().to_le_bytes());
+        b[4..8].copy_from_slice(&rng2.next_u32().to_le_bytes());
+        b[8..].copy_from_slice(&rng2.next_u64().to_le_bytes());
         assert_ne!(a, b);
         assert_eq!(&a[..4], &b[..4]);
         assert_eq!(&a[4..12], &b[8..]);
 
         let mut c = [0; 16];
-        (&mut c[..8]).copy_from_slice(&rng3.next_u64().to_le_bytes());
-        (&mut c[8..12]).copy_from_slice(&rng3.next_u32().to_le_bytes());
-        (&mut c[12..]).copy_from_slice(&rng3.next_u32().to_le_bytes());
+        c[..8].copy_from_slice(&rng3.next_u64().to_le_bytes());
+        c[8..12].copy_from_slice(&rng3.next_u32().to_le_bytes());
+        c[12..].copy_from_slice(&rng3.next_u32().to_le_bytes());
         assert_eq!(b, c);
     }
 }

@@ -1676,6 +1676,7 @@ mod tests {
 
     #[test]
     fn test_uniform_from_std_range_bad_limits() {
+        #![allow(clippy::reversed_empty_ranges)]
         assert!(Uniform::try_from(100..10).is_err());
         assert!(Uniform::try_from(100..100).is_err());
         assert!(Uniform::try_from(100.0..10.0).is_err());
@@ -1695,6 +1696,7 @@ mod tests {
 
     #[test]
     fn test_uniform_from_std_range_inclusive_bad_limits() {
+        #![allow(clippy::reversed_empty_ranges)]
         assert!(Uniform::try_from(100..=10).is_err());
         assert!(Uniform::try_from(100..=99).is_err());
         assert!(Uniform::try_from(100.0..=10.0).is_err());
@@ -1760,6 +1762,6 @@ mod tests {
         assert_eq!(Uniform::new(1.0, 2.0).unwrap(), Uniform::new(1.0, 2.0).unwrap());
 
         // To cover UniformInt
-        assert_eq!(Uniform::new(1 as u32, 2 as u32).unwrap(), Uniform::new(1 as u32, 2 as u32).unwrap());
+        assert_eq!(Uniform::new(1_u32, 2_u32).unwrap(), Uniform::new(1_u32, 2_u32).unwrap());
     }
 }

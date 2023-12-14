@@ -244,8 +244,8 @@ impl Distribution<u64> for Hypergeometric {
                 let mut u = rng.gen::<f64>();
                 while u > p && x < k as i64 { // the paper erroneously uses `until n < p`, which doesn't make any sense
                     u -= p;
-                    p *= ((n1 as i64 - x as i64) * (k as i64 - x as i64)) as f64;
-                    p /= ((x as i64 + 1) * (n2 as i64 - k as i64 + 1 + x as i64)) as f64;
+                    p *= ((n1 as i64 - x) * (k as i64 - x)) as f64;
+                    p /= ((x + 1) * (n2 as i64 - k as i64 + 1 + x)) as f64;
                     x += 1;
                 }
                 x
@@ -397,7 +397,7 @@ mod test {
         }
 
         let mean = results.iter().sum::<f64>() / results.len() as f64;
-        assert!((mean as f64 - expected_mean).abs() < expected_mean / 50.0);
+        assert!((mean - expected_mean).abs() < expected_mean / 50.0);
 
         let variance =
             results.iter().map(|x| (x - mean) * (x - mean)).sum::<f64>() / results.len() as f64;

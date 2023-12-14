@@ -142,7 +142,7 @@ mod test {
             let distr = Cauchy::new(m, s).unwrap();
             let mut rng = crate::test::rng(353);
             for x in buf {
-                *x = rng.sample(&distr);
+                *x = rng.sample(distr);
             }
         }
 
