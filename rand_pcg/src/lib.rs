@@ -1,4 +1,4 @@
-// Copyright 2018 Developers of the Rand project.
+// Copyright 2018-2023 Developers of the Rand project.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -27,6 +27,29 @@
 //! Both of these use 16 bytes of state and 128-bit seeds, and are considered
 //! value-stable (i.e. any change affecting the output given a fixed seed would
 //! be considered a breaking change to the crate).
+//!
+//! # Example
+//!
+//! To initialize a generator, use the [`SeedableRng`][rand_core::SeedableRng] trait:
+//!
+//! ```
+//! use rand_core::{SeedableRng, RngCore};
+//! use rand_pcg::Pcg64Mcg;
+//!
+//! let mut rng = Pcg64Mcg::seed_from_u64(0);
+//! let x: u32 = rng.next_u32();
+//! ```
+//!
+//! The functionality of this crate is implemented using traits from the `rand_core` crate, but you may use the `rand`
+//! crate for further functionality to initialize the generator from various sources and to generate random values:
+//!
+//! ```
+//! use rand::{Rng, SeedableRng};
+//! use rand_pcg::Pcg64Mcg;
+//!
+//! let mut rng = Pcg64Mcg::from_entropy();
+//! let x: f64 = rng.gen();
+//! ```
 
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
