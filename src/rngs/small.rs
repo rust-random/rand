@@ -81,10 +81,17 @@ impl SmallRng {
     }
 
     /// Construct an instance seeded from the thread-local RNG
+    ///
+    /// # Panics
+    ///
+    /// This method panics only if [`thread_rng`](crate::thread_rng) fails to
+    /// initialize.
     #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
     #[inline(always)]
-    pub fn from_thread_rng() -> Result<Self, Error> {
-        Rng::from_rng(crate::thread_rng()).map(SmallRng)
+    pub fn from_thread_rng() -> Self {
+        let mut seed = <Rng as SeedableRng>::Seed::default();
+        crate::thread_rng().fill_bytes(seed.as_mut());
+        SmallRng(Rng::from_seed(seed))
     }
 
     /// Construct an instance from a `u64` seed
