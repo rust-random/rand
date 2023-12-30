@@ -99,12 +99,12 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     where
         I: IntoIterator,
         I::Item: SampleBorrow<X>,
-        X: for<'a> ::core::ops::AddAssign<&'a X> + Clone + Default,
+        X: Weight,
     {
         let mut iter = weights.into_iter();
         let mut total_weight: X = iter.next().ok_or(WeightedError::NoItem)?.borrow().clone();
 
-        let zero = <X as Default>::default();
+        let zero = X::ZERO;
         if !(total_weight >= zero) {
             return Err(WeightedError::InvalidWeight);
         }
@@ -117,7 +117,10 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
                 return Err(WeightedError::InvalidWeight);
             }
             weights.push(total_weight.clone());
-            total_weight += w.borrow();
+
+            if let Err(()) = total_weight.checked_add_assign(w.borrow()) {
+                return Err(WeightedError::Overflow);
+            }
         }
 
         if total_weight == zero {
@@ -235,6 +238,60 @@ where X: SampleUniform + PartialOrd
         self.cumulative_weights.partition_point(|w| w <= &chosen_weight)
     }
 }
+
+/// Bounds on a weight
+///
+/// See usage in [`WeightedIndex`].
+pub trait Weight: Clone {
+    /// Representation of 0
+    const ZERO: Self;
+
+    /// Checked addition
+    ///
+    /// -   `Result::Ok`: On success, `v` is added to `self`
+    /// -   `Result::Err`: Returns an error when `Self` cannot represent the
+    ///     result of `self + v` (i.e. overflow). The value of `self` should be
+    ///     discarded.
+    fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()>;
+}
+
+macro_rules! impl_weight_int {
+    ($t:ty) => {
+        impl Weight for $t {
+            const ZERO: Self = 0;
+            fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()> {
+                match self.checked_add(*v) {
+                    Some(sum) => {
+                        *self = sum;
+                        Ok(())
+                    }
+                    None => Err(()),
+                }
+            }
+        }
+    };
+    ($t:ty, $($tt:ty),*) => {
+        impl_weight_int!($t);
+        impl_weight_int!($($tt),*);
+    }
+}
+impl_weight_int!(i8, i16, i32, i64, i128, isize);
+impl_weight_int!(u8, u16, u32, u64, u128, usize);
+
+macro_rules! impl_weight_float {
+    ($t:ty) => {
+        impl Weight for $t {
+            const ZERO: Self = 0.0;
+            fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()> {
+                // Floats have an explicit representation for overflow
+                *self += *v;
+                Ok(())
+            }
+        }
+    }
+}
+impl_weight_float!(f32);
+impl_weight_float!(f64);
 
 #[cfg(test)]
 mod test {
@@ -388,12 +445,11 @@ mod test {
 
     #[test]
     fn value_stability() {
-        fn test_samples<X: SampleUniform + PartialOrd, I>(
+        fn test_samples<X: Weight + SampleUniform + PartialOrd, I>(
             weights: I, buf: &mut [usize], expected: &[usize],
         ) where
             I: IntoIterator,
             I::Item: SampleBorrow<X>,
-            X: for<'a> ::core::ops::AddAssign<&'a X> + Clone + Default,
         {
             assert_eq!(buf.len(), expected.len());
             let distr = WeightedIndex::new(weights).unwrap();
@@ -420,6 +476,11 @@ mod test {
     fn weighted_index_distributions_can_be_compared() {
         assert_eq!(WeightedIndex::new(&[1, 2]), WeightedIndex::new(&[1, 2]));
     }
+
+    #[test]
+    fn overflow() {
+        assert_eq!(WeightedIndex::new([2, usize::MAX]), Err(WeightedError::Overflow));
+    }
 }
 
 /// Error type returned from `WeightedIndex::new`.
@@ -438,6 +499,9 @@ pub enum WeightedError {
 
     /// Too many weights are provided (length greater than `u32::MAX`)
     TooMany,
+
+    /// The sum of weights overflows
+    Overflow,
 }
 
 #[cfg(feature = "std")]
@@ -450,6 +514,7 @@ impl fmt::Display for WeightedError {
             WeightedError::InvalidWeight => "A weight is invalid in distribution",
             WeightedError::AllWeightsZero => "All weights are zero in distribution",
             WeightedError::TooMany => "Too many weights (hit u32::MAX) in distribution",
+            WeightedError::Overflow => "The sum of weights overflowed",
         })
     }
 }

@@ -12,7 +12,7 @@ use crate::distributions::utils::{IntAsSIMD, FloatAsSIMD, FloatSIMDUtils};
 use crate::distributions::{Distribution, Standard};
 use crate::Rng;
 use core::mem;
-#[cfg(feature = "simd_support")] use core::simd::*;
+#[cfg(feature = "simd_support")] use core::simd::prelude::*;
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};

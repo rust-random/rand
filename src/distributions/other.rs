@@ -22,7 +22,9 @@ use crate::Rng;
 use serde::{Serialize, Deserialize};
 use core::mem::{self, MaybeUninit};
 #[cfg(feature = "simd_support")]
-use core::simd::*;
+use core::simd::prelude::*;
+#[cfg(feature = "simd_support")]
+use core::simd::{LaneCount, MaskElement, SupportedLaneCount};
 
 
 // ----- Sampling distributions -----
@@ -163,7 +165,7 @@ impl Distribution<bool> for Standard {
 /// Since most bits are unused you could also generate only as many bits as you need, i.e.:
 /// ```
 /// #![feature(portable_simd)]
-/// use std::simd::*;
+/// use std::simd::prelude::*;
 /// use rand::prelude::*;
 /// let mut rng = thread_rng();
 ///

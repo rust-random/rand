@@ -8,7 +8,8 @@
 
 //! Math helper functions
 
-#[cfg(feature = "simd_support")] use core::simd::*;
+#[cfg(feature = "simd_support")] use core::simd::prelude::*;
+#[cfg(feature = "simd_support")] use core::simd::{LaneCount, SimdElement, SupportedLaneCount};
 
 
 pub(crate) trait WideningMultiply<RHS = Self> {
@@ -245,7 +246,7 @@ pub(crate) trait Float: Sized {
 
 /// Implement functions on f32/f64 to give them APIs similar to SIMD types
 pub(crate) trait FloatAsSIMD: Sized {
-    const LANES: usize = 1;
+    const LEN: usize = 1;
     #[inline(always)]
     fn splat(scalar: Self) -> Self {
         scalar

@@ -40,7 +40,7 @@ use alloc::vec::Vec;
 #[cfg(feature = "alloc")]
 use crate::distributions::uniform::{SampleBorrow, SampleUniform};
 #[cfg(feature = "alloc")]
-use crate::distributions::WeightedError;
+use crate::distributions::{Weight, WeightedError};
 use crate::Rng;
 
 use self::coin_flipper::CoinFlipper;
@@ -170,11 +170,7 @@ pub trait SliceRandom {
         R: Rng + ?Sized,
         F: Fn(&Self::Item) -> B,
         B: SampleBorrow<X>,
-        X: SampleUniform
-            + for<'a> ::core::ops::AddAssign<&'a X>
-            + ::core::cmp::PartialOrd<X>
-            + Clone
-            + Default;
+        X: SampleUniform + Weight + ::core::cmp::PartialOrd<X>;
 
     /// Biased sampling for one element (mut)
     ///
@@ -203,11 +199,7 @@ pub trait SliceRandom {
         R: Rng + ?Sized,
         F: Fn(&Self::Item) -> B,
         B: SampleBorrow<X>,
-        X: SampleUniform
-            + for<'a> ::core::ops::AddAssign<&'a X>
-            + ::core::cmp::PartialOrd<X>
-            + Clone
-            + Default;
+        X: SampleUniform + Weight + ::core::cmp::PartialOrd<X>;
 
     /// Biased sampling of `amount` distinct elements
     ///
@@ -585,11 +577,7 @@ impl<T> SliceRandom for [T] {
         R: Rng + ?Sized,
         F: Fn(&Self::Item) -> B,
         B: SampleBorrow<X>,
-        X: SampleUniform
-            + for<'a> ::core::ops::AddAssign<&'a X>
-            + ::core::cmp::PartialOrd<X>
-            + Clone
-            + Default,
+        X: SampleUniform + Weight + ::core::cmp::PartialOrd<X>,
     {
         use crate::distributions::{Distribution, WeightedIndex};
         let distr = WeightedIndex::new(self.iter().map(weight))?;
@@ -604,11 +592,7 @@ impl<T> SliceRandom for [T] {
         R: Rng + ?Sized,
         F: Fn(&Self::Item) -> B,
         B: SampleBorrow<X>,
-        X: SampleUniform
-            + for<'a> ::core::ops::AddAssign<&'a X>
-            + ::core::cmp::PartialOrd<X>
-            + Clone
-            + Default,
+        X: SampleUniform + Weight + ::core::cmp::PartialOrd<X>,
     {
         use crate::distributions::{Distribution, WeightedIndex};
         let distr = WeightedIndex::new(self.iter().map(weight))?;
