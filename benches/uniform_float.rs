@@ -27,7 +27,7 @@ const N_RESAMPLES: usize = 10_000;
 macro_rules! single_random {
     ($R:ty, $T:ty, $g:expr) => {
         $g.bench_function(BenchmarkId::new(stringify!($T), stringify!($R)), |b| {
-            let mut rng = <$R>::from_entropy();
+            let mut rng = <$R>::from_rng(thread_rng()).unwrap();
             let (mut low, mut high);
             loop {
                 low = <$T>::from_bits(rng.gen());
@@ -63,7 +63,7 @@ fn single_random(c: &mut Criterion) {
 macro_rules! distr_random {
     ($R:ty, $T:ty, $g:expr) => {
         $g.bench_function(BenchmarkId::new(stringify!($T), stringify!($R)), |b| {
-            let mut rng = <$R>::from_entropy();
+            let mut rng = <$R>::from_rng(thread_rng()).unwrap();
             let dist = loop {
                 let low = <$T>::from_bits(rng.gen());
                 let high = <$T>::from_bits(rng.gen());
