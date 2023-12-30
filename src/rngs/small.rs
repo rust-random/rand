@@ -9,7 +9,6 @@
 //! A small fast RNG
 
 use rand_core::{Error, RngCore, SeedableRng};
-use crate::thread_rng;
 
 #[cfg(target_pointer_width = "64")]
 type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
@@ -82,9 +81,10 @@ impl SmallRng {
     }
 
     /// Construct an instance seeded from the thread-local RNG
+    #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
     #[inline(always)]
     pub fn from_thread_rng() -> Result<Self, Error> {
-        Rng::from_rng(thread_rng()).map(SmallRng)
+        Rng::from_rng(crate::thread_rng()).map(SmallRng)
     }
 
     /// Construct an instance from a `u64` seed
