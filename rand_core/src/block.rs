@@ -80,7 +80,7 @@ pub trait BlockRngCore {
 /// A marker trait used to indicate that an [`RngCore`] implementation is
 /// supposed to be cryptographically secure.
 ///
-/// See [`CryptoRng`][crate::CryptoRng] docs for more information.
+/// See [`CryptoRng`] docs for more information.
 pub trait CryptoBlockRng: BlockRngCore { }
 
 /// A wrapper type implementing [`RngCore`] for some type implementing

@@ -57,7 +57,8 @@ impl RngCore for StdRng {
 }
 
 impl SeedableRng for StdRng {
-    type Seed = <Rng as SeedableRng>::Seed;
+    // Fix to 256 bits. Changing this is a breaking change!
+    type Seed = [u8; 32];
 
     #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
