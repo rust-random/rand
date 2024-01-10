@@ -133,6 +133,8 @@ pub use rand::distributions::{WeightedError, WeightedIndex};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use weighted_alias::WeightedAliasIndex;
+#[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use weighted_tree::WeightedTreeIndex;
 
 pub use num_traits;
@@ -187,6 +189,8 @@ mod test {
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod weighted_alias;
+#[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod weighted_tree;
 
 mod binomial;
