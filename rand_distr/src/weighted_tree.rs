@@ -32,7 +32,17 @@ use serde::{Deserialize, Serialize};
 /// The main distinction between [`WeightedTreeIndex<W>`] and [`rand::distributions::WeightedIndex<W>`]
 /// lies in the internal representation of weights. In [`WeightedTreeIndex<W>`],
 /// weights are structured as a tree, which is optimized for frequent updates of the weights.
-///
+/// 
+/// # Caution: Floating point types
+/// 
+/// When utilizing [`WeightedTreeIndex<W>`] with floating point types (such as f32 or f64),
+/// exercise caution due to the inherent nature of floating point arithmetic. Floating point types
+/// are susceptible to numerical rounding errors. Since operations on floating point weights are
+/// repeated numerous times, rounding errors can accumulate, potentially leading to noticeable
+/// deviations from the expected behavior.
+/// 
+/// Ideally, use fixed point or integer types whenever possible.
+/// 
 /// # Performance
 ///
 /// A [`WeightedTreeIndex<W>`] with `n` elements requires `O(n)` memory.
