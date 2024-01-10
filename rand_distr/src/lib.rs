@@ -133,6 +133,7 @@ pub use rand::distributions::{WeightedError, WeightedIndex};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use weighted_alias::WeightedAliasIndex;
+pub use weighted_tree::WeightedTreeIndex;
 
 pub use num_traits;
 
@@ -174,10 +175,14 @@ mod test {
     macro_rules! assert_almost_eq {
         ($a:expr, $b:expr, $prec:expr) => {
             let diff = ($a - $b).abs();
-            assert!(diff <= $prec,
+            assert!(
+                diff <= $prec,
                 "assertion failed: `abs(left - right) = {:.1e} < {:e}`, \
                     (left: `{}`, right: `{}`)",
-                diff, $prec, $a, $b
+                diff,
+                $prec,
+                $a,
+                $b
             );
         };
     }
@@ -186,6 +191,7 @@ mod test {
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod weighted_alias;
+pub mod weighted_tree;
 
 mod binomial;
 mod cauchy;
