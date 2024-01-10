@@ -61,8 +61,10 @@ use serde::{Deserialize, Serialize};
 /// use rand::prelude::*;
 ///
 /// let choices = vec!['a', 'b', 'c'];
-/// let weights = vec![2, 1, 1];
-/// let dist = WeightedTreeIndex::new(&weights).unwrap();
+/// let weights = vec![2, 0];
+/// let mut dist = WeightedTreeIndex::new(&weights).unwrap();
+/// dist.push(1).unwrap();
+/// dist.update(1, 1).unwrap();
 /// let mut rng = thread_rng();
 /// for _ in 0..100 {
 ///     // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
@@ -266,7 +268,7 @@ mod test {
     #[test]
     fn test_no_item_error() {
         let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
-        let mut tree = WeightedTreeIndex::<f64>::new(&[]).unwrap();
+        let tree = WeightedTreeIndex::<f64>::new(&[]).unwrap();
         assert_eq!(tree.sample(&mut rng).unwrap_err(), WeightedError::NoItem);
     }
 
