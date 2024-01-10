@@ -1,4 +1,4 @@
-// Copyright 2024 Developers of the Rand project.
+// Copyright 2018 Developers of the Rand project.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -6,327 +6,515 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! This module contains an implementation of a tree sttructure for sampling random
-//! indices with probabilities proportional to a collection of weights.
+//! Weighted index sampling
 
-use core::ops::{Add, AddAssign, Sub, SubAssign};
+use crate::distributions::uniform::{SampleBorrow, SampleUniform, UniformSampler};
+use crate::distributions::Distribution;
+use crate::Rng;
+use core::cmp::PartialOrd;
+use core::fmt;
 
-use super::WeightedError;
-use crate::Distribution;
-use alloc::{vec, vec::Vec};
-use num_traits::Zero;
-use rand::{distributions::uniform::SampleUniform, Rng};
+// Note that this whole module is only imported if feature="alloc" is enabled.
+use alloc::vec::Vec;
+
 #[cfg(feature = "serde1")]
-use serde::{Deserialize, Serialize};
+use serde::{Serialize, Deserialize};
 
-/// A distribution using weighted sampling to pick a discretely selected item.
+/// A distribution using weighted sampling of discrete items
 ///
-/// Sampling a [`WeightedTreeIndex<W>`] distribution returns the index of a randomly
-/// selected element from the vector used to create the [`WeightedTreeIndex<W>`].
-/// The chance of a given element being picked is proportional to the value of
-/// the element. The weights can have any type `W` for which a implementation of
-/// [`Weight`] exists.
-///
-/// # Key differences
-///
-/// The main distinction between [`WeightedTreeIndex<W>`] and [`rand::distributions::WeightedIndex<W>`]
-/// lies in the internal representation of weights. In [`WeightedTreeIndex<W>`],
-/// weights are structured as a tree, which is optimized for frequent updates of the weights.
+/// Sampling a `WeightedIndex` distribution returns the index of a randomly
+/// selected element from the iterator used when the `WeightedIndex` was
+/// created. The chance of a given element being picked is proportional to the
+/// weight of the element. The weights can use any type `X` for which an
+/// implementation of [`Uniform<X>`] exists. The implementation guarantees that
+/// elements with zero weight are never picked, even when the weights are
+/// floating point numbers.
 ///
 /// # Performance
 ///
-/// A [`WeightedTreeIndex<W>`] with `n` elements requires `O(n)` memory.
+/// Time complexity of sampling from `WeightedIndex` is `O(log N)` where
+/// `N` is the number of weights. As an alternative,
+/// [`rand_distr::weighted_alias`](https://docs.rs/rand_distr/*/rand_distr/weighted_alias/index.html)
+/// supports `O(1)` sampling, but with much higher initialisation cost.
 ///
-/// Time complexity for the operations of a [`WeightedTreeIndex<W>`] are:
-/// * Constructing: Building the initial tree from a slice of weights takes `O(n)` time.
-/// * Sampling: Choosing an index (traversing down the tree) requires `O(log n)` time.
-/// * Weight Update: Modifying a weight (traversing up the tree), requires `O(log n)` time.
-/// * Weight Addition (Pushing): Adding a new weight (traversing up the tree), requires `O(log n)` time.
-/// * Weight Removal (Popping): Removing a weight (traversing up the tree), requires `O(log n)` time.
+/// A `WeightedIndex<X>` contains a `Vec<X>` and a [`Uniform<X>`] and so its
+/// size is the sum of the size of those objects, possibly plus some alignment.
+///
+/// Creating a `WeightedIndex<X>` will allocate enough space to hold `N - 1`
+/// weights of type `X`, where `N` is the number of weights. However, since
+/// `Vec` doesn't guarantee a particular growth strategy, additional memory
+/// might be allocated but not used. Since the `WeightedIndex` object also
+/// contains an instance of `X::Sampler`, this might cause additional allocations,
+/// though for primitive types, [`Uniform<X>`] doesn't allocate any memory.
+///
+/// Sampling from `WeightedIndex` will result in a single call to
+/// `Uniform<X>::sample` (method of the [`Distribution`] trait), which typically
+/// will request a single value from the underlying [`RngCore`], though the
+/// exact number depends on the implementation of `Uniform<X>::sample`.
 ///
 /// # Example
 ///
 /// ```
-/// use rand_distr::WeightedTreeIndex;
 /// use rand::prelude::*;
+/// use rand::distributions::WeightedIndex;
 ///
-/// let choices = vec!['a', 'b', 'c'];
-/// let weights = vec![2, 1, 1];
-/// let dist = WeightedTreeIndex::new(&weights).unwrap();
+/// let choices = ['a', 'b', 'c'];
+/// let weights = [2,   1,   1];
+/// let dist = WeightedIndex::new(&weights).unwrap();
 /// let mut rng = thread_rng();
 /// for _ in 0..100 {
 ///     // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
-///     let i = dist.sample(&mut rng).unwrap();
-///     println!("{}", choices[i]);
+///     println!("{}", choices[dist.sample(&mut rng)]);
+/// }
+///
+/// let items = [('a', 0.0), ('b', 3.0), ('c', 7.0)];
+/// let dist2 = WeightedIndex::new(items.iter().map(|item| item.1)).unwrap();
+/// for _ in 0..100 {
+///     // 0% chance to print 'a', 30% chance to print 'b', 70% chance to print 'c'
+///     println!("{}", items[dist2.sample(&mut rng)].0);
 /// }
 /// ```
 ///
-/// [`WeightedTreeIndex<W>`]: WeightedTreeIndex
-/// [`Uniform<W>::sample`]: Distribution::sample
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+/// [`Uniform<X>`]: crate::distributions::Uniform
+/// [`RngCore`]: crate::RngCore
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "serde1",
-    serde(bound(serialize = "W: Serialize, W::Sampler: Serialize"))
-)]
-#[cfg_attr(
-    feature = "serde1 ",
-    serde(bound(deserialize = "W: Deserialize<'de>, W::Sampler: Deserialize<'de>"))
-)]
-#[derive(Clone, Default, Debug, PartialEq)]
-pub struct WeightedTreeIndex<W: Weight> {
-    subtotals: Vec<W>,
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
+    cumulative_weights: Vec<X>,
+    total_weight: X,
+    weight_distribution: X::Sampler,
 }
 
-impl<W: Weight> WeightedTreeIndex<W> {
-    /// Creates a new [`WeightedTreeIndex`] from a slice of weights.
-    pub fn new(weights: &[W]) -> Result<Self, WeightedError> {
-        for &weight in weights {
-            if weight < W::zero() {
+impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
+    /// Creates a new a `WeightedIndex` [`Distribution`] using the values
+    /// in `weights`. The weights can use any type `X` for which an
+    /// implementation of [`Uniform<X>`] exists.
+    ///
+    /// Returns an error if the iterator is empty, if any weight is `< 0`, or
+    /// if its total value is 0.
+    ///
+    /// [`Uniform<X>`]: crate::distributions::uniform::Uniform
+    pub fn new<I>(weights: I) -> Result<WeightedIndex<X>, WeightedError>
+    where
+        I: IntoIterator,
+        I::Item: SampleBorrow<X>,
+        X: Weight,
+    {
+        let mut iter = weights.into_iter();
+        let mut total_weight: X = iter.next().ok_or(WeightedError::NoItem)?.borrow().clone();
+
+        let zero = X::ZERO;
+        if !(total_weight >= zero) {
+            return Err(WeightedError::InvalidWeight);
+        }
+
+        let mut weights = Vec::<X>::with_capacity(iter.size_hint().0);
+        for w in iter {
+            // Note that `!(w >= x)` is not equivalent to `w < x` for partially
+            // ordered types due to NaNs which are equal to nothing.
+            if !(w.borrow() >= &zero) {
                 return Err(WeightedError::InvalidWeight);
             }
-        }
-        let n = weights.len();
-        let mut subtotals = vec![W::zero(); n];
-        for i in (0..n).rev() {
-            let left_index = 2 * i + 1;
-            let left_subtotal = if left_index < n {
-                subtotals[left_index]
-            } else {
-                W::zero()
-            };
-            let right_index = 2 * i + 2;
-            let right_subtotal = if right_index < n {
-                subtotals[right_index]
-            } else {
-                W::zero()
-            };
-            subtotals[i] = weights[i] + left_subtotal + right_subtotal;
-        }
-        Ok(Self { subtotals })
-    }
+            weights.push(total_weight.clone());
 
-    /// Returns `true` if the tree contains no weights.
-    pub fn is_empty(&self) -> bool {
-        self.subtotals.is_empty()
-    }
-
-    /// Returns the number of weights.
-    pub fn len(&self) -> usize {
-        self.subtotals.len()
-    }
-
-    /// Returns `true` if we can sample.
-    ///
-    /// This is the case if the total weight of the tree is greater than zero.
-    pub fn can_sample(&self) -> bool {
-        self.subtotals.first().is_some_and(|x| *x > W::zero())
-    }
-
-    /// Gets the weight at an index.
-    pub fn get(&self, index: usize) -> W {
-        let left_index = 2 * index + 1;
-        let right_index = 2 * index + 2;
-        self.subtotals[index] - self.subtotal(left_index) - self.subtotal(right_index)
-    }
-
-    /// Removes the last weight and returns it, or [`None`] if it is empty.
-    pub fn pop(&mut self) -> Option<W> {
-        self.subtotals.pop().map(|weight| {
-            let mut index = self.len();
-            while index != 0 {
-                index = (index - 1) / 2;
-                self.subtotals[index] -= weight;
+            if let Err(()) = total_weight.checked_add_assign(w.borrow()) {
+                return Err(WeightedError::Overflow);
             }
-            weight
+        }
+
+        if total_weight == zero {
+            return Err(WeightedError::AllWeightsZero);
+        }
+        let distr = X::Sampler::new(zero, total_weight.clone()).unwrap();
+
+        Ok(WeightedIndex {
+            cumulative_weights: weights,
+            total_weight,
+            weight_distribution: distr,
         })
     }
 
-    /// Appends a new weight at the end.
-    pub fn push(&mut self, weight: W) -> Result<(), WeightedError> {
-        if weight < W::zero() {
-            return Err(WeightedError::InvalidWeight);
-        }
-        let mut index = self.len();
-        self.subtotals.push(weight);
-        while index != 0 {
-            index = (index - 1) / 2;
-            self.subtotals[index] += weight;
-        }
-        Ok(())
-    }
-
-    /// Updates the weight at an index.
-    pub fn update(&mut self, mut index: usize, weight: W) -> Result<(), WeightedError> {
-        if weight < W::zero() {
-            return Err(WeightedError::InvalidWeight);
-        }
-        let difference = weight - self.get(index);
-        if difference == W::zero() {
+    /// Update a subset of weights, without changing the number of weights.
+    ///
+    /// `new_weights` must be sorted by the index.
+    ///
+    /// Using this method instead of `new` might be more efficient if only a small number of
+    /// weights is modified. No allocations are performed, unless the weight type `X` uses
+    /// allocation internally.
+    ///
+    /// In case of error, `self` is not modified.
+    /// 
+    /// Note: Updating floating-point weights may cause slight inaccuracies in the total weight.
+    ///       This method may not return `WeightedError::AllWeightsZero` when all weights
+    ///       are zero if using floating-point weights. 
+    pub fn update_weights(&mut self, new_weights: &[(usize, &X)]) -> Result<(), WeightedError>
+    where X: for<'a> ::core::ops::AddAssign<&'a X>
+            + for<'a> ::core::ops::SubAssign<&'a X>
+            + Clone
+            + Default {
+        if new_weights.is_empty() {
             return Ok(());
         }
-        self.subtotals[index] += difference;
-        while index != 0 {
-            index = (index - 1) / 2;
-            self.subtotals[index] += difference;
-        }
-        Ok(())
-    }
 
-    fn subtotal(&self, index: usize) -> W {
-        if index < self.subtotals.len() {
-            self.subtotals[index]
-        } else {
-            W::zero()
-        }
-    }
-}
+        let zero = <X as Default>::default();
 
-impl<W: Weight> Distribution<Result<usize, WeightedError>> for WeightedTreeIndex<W> {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<usize, WeightedError> {
-        if self.subtotals.is_empty() {
-            return Err(WeightedError::NoItem);
+        let mut total_weight = self.total_weight.clone();
+
+        // Check for errors first, so we don't modify `self` in case something
+        // goes wrong.
+        let mut prev_i = None;
+        for &(i, w) in new_weights {
+            if let Some(old_i) = prev_i {
+                if old_i >= i {
+                    return Err(WeightedError::InvalidWeight);
+                }
+            }
+            if !(*w >= zero) {
+                return Err(WeightedError::InvalidWeight);
+            }
+            if i > self.cumulative_weights.len() {
+                return Err(WeightedError::TooMany);
+            }
+
+            let mut old_w = if i < self.cumulative_weights.len() {
+                self.cumulative_weights[i].clone()
+            } else {
+                self.total_weight.clone()
+            };
+            if i > 0 {
+                old_w -= &self.cumulative_weights[i - 1];
+            }
+
+            total_weight -= &old_w;
+            total_weight += w;
+            prev_i = Some(i);
         }
-        let total_weight = self.subtotals[0];
-        if total_weight == W::zero() {
+        if total_weight <= zero {
             return Err(WeightedError::AllWeightsZero);
         }
-        let mut target_weight = rng.gen_range(W::zero()..total_weight);
-        let mut index = 0;
-        loop {
-            // Maybe descend into the left sub tree.
-            let left_index = 2 * index + 1;
-            let left_subtotal = self.subtotal(left_index);
-            if target_weight < left_subtotal {
-                index = left_index;
-                continue;
-            }
-            target_weight -= left_subtotal;
 
-            // Maybe descend into the right sub tree.
-            let right_index = 2 * index + 2;
-            let right_subtotal = self.subtotal(right_index);
-            if target_weight < right_subtotal {
-                index = right_index;
-                continue;
-            }
-            target_weight -= right_subtotal;
+        // Update the weights. Because we checked all the preconditions in the
+        // previous loop, this should never panic.
+        let mut iter = new_weights.iter();
 
-            // Otherwise we found the index with the target weight.
-            break;
+        let mut prev_weight = zero.clone();
+        let mut next_new_weight = iter.next();
+        let &(first_new_index, _) = next_new_weight.unwrap();
+        let mut cumulative_weight = if first_new_index > 0 {
+            self.cumulative_weights[first_new_index - 1].clone()
+        } else {
+            zero.clone()
+        };
+        for i in first_new_index..self.cumulative_weights.len() {
+            match next_new_weight {
+                Some(&(j, w)) if i == j => {
+                    cumulative_weight += w;
+                    next_new_weight = iter.next();
+                }
+                _ => {
+                    let mut tmp = self.cumulative_weights[i].clone();
+                    tmp -= &prev_weight; // We know this is positive.
+                    cumulative_weight += &tmp;
+                }
+            }
+            prev_weight = cumulative_weight.clone();
+            core::mem::swap(&mut prev_weight, &mut self.cumulative_weights[i]);
         }
-        Ok(index)
+
+        self.total_weight = total_weight;
+        self.weight_distribution = X::Sampler::new(zero, self.total_weight.clone()).unwrap();
+
+        Ok(())
     }
 }
 
-/// Trait that must be implemented for weights, that are used with
-/// [`WeightedTreeIndex`]. Currently no guarantees on the correctness of
-/// [`WeightedTreeIndex`] are given for custom implementations of this trait.
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
-pub trait Weight:
-    Sized
-    + Copy
-    + SampleUniform
-    + PartialOrd
-    + Add<Output = Self>
-    + AddAssign
-    + Sub<Output = Self>
-    + SubAssign
-    + Zero
+impl<X> Distribution<usize> for WeightedIndex<X>
+where X: SampleUniform + PartialOrd
 {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
+        let chosen_weight = self.weight_distribution.sample(rng);
+        // Find the first item which has a weight *higher* than the chosen weight.
+        self.cumulative_weights.partition_point(|w| w <= &chosen_weight)
+    }
 }
 
-impl<T> Weight for T where
-    T: Sized
-        + Copy
-        + SampleUniform
-        + PartialOrd
-        + Add<Output = Self>
-        + AddAssign
-        + Sub<Output = Self>
-        + SubAssign
-        + Zero
-{
+/// Bounds on a weight
+///
+/// See usage in [`WeightedIndex`].
+pub trait Weight: Clone {
+    /// Representation of 0
+    const ZERO: Self;
+
+    /// Checked addition
+    ///
+    /// -   `Result::Ok`: On success, `v` is added to `self`
+    /// -   `Result::Err`: Returns an error when `Self` cannot represent the
+    ///     result of `self + v` (i.e. overflow). The value of `self` should be
+    ///     discarded.
+    fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()>;
 }
+
+macro_rules! impl_weight_int {
+    ($t:ty) => {
+        impl Weight for $t {
+            const ZERO: Self = 0;
+            fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()> {
+                match self.checked_add(*v) {
+                    Some(sum) => {
+                        *self = sum;
+                        Ok(())
+                    }
+                    None => Err(()),
+                }
+            }
+        }
+    };
+    ($t:ty, $($tt:ty),*) => {
+        impl_weight_int!($t);
+        impl_weight_int!($($tt),*);
+    }
+}
+impl_weight_int!(i8, i16, i32, i64, i128, isize);
+impl_weight_int!(u8, u16, u32, u64, u128, usize);
+
+macro_rules! impl_weight_float {
+    ($t:ty) => {
+        impl Weight for $t {
+            const ZERO: Self = 0.0;
+            fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()> {
+                // Floats have an explicit representation for overflow
+                *self += *v;
+                Ok(())
+            }
+        }
+    }
+}
+impl_weight_float!(f32);
+impl_weight_float!(f64);
 
 #[cfg(test)]
 mod test {
     use super::*;
 
+    #[cfg(feature = "serde1")]
     #[test]
-    fn test_no_item_error() {
-        let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
-        let mut tree = WeightedTreeIndex::<f64>::new(&[]).unwrap();
-        assert_eq!(tree.sample(&mut rng).unwrap_err(), WeightedError::NoItem);
+    fn test_weightedindex_serde1() {
+        let weighted_index = WeightedIndex::new(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).unwrap();
+
+        let ser_weighted_index = bincode::serialize(&weighted_index).unwrap();
+        let de_weighted_index: WeightedIndex<i32> =
+            bincode::deserialize(&ser_weighted_index).unwrap();
+
+        assert_eq!(
+            de_weighted_index.cumulative_weights,
+            weighted_index.cumulative_weights
+        );
+        assert_eq!(de_weighted_index.total_weight, weighted_index.total_weight);
     }
 
     #[test]
-    fn test_all_weights_zero_error() {
-        let tree = WeightedTreeIndex::<f64>::new(&[0.0, 0.0]).unwrap();
-        let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
+    fn test_accepting_nan(){
         assert_eq!(
-            tree.sample(&mut rng).unwrap_err(),
+            WeightedIndex::new(&[core::f32::NAN, 0.5]).unwrap_err(),
+            WeightedError::InvalidWeight,
+        );
+        assert_eq!(
+            WeightedIndex::new(&[core::f32::NAN]).unwrap_err(),
+            WeightedError::InvalidWeight,
+        );
+        assert_eq!(
+            WeightedIndex::new(&[0.5, core::f32::NAN]).unwrap_err(),
+            WeightedError::InvalidWeight,
+        );
+
+        assert_eq!(
+            WeightedIndex::new(&[0.5, 7.0])
+                .unwrap()
+                .update_weights(&[(0, &core::f32::NAN)])
+                .unwrap_err(),
+            WeightedError::InvalidWeight,
+        )
+    }
+
+
+    #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
+    fn test_weightedindex() {
+        let mut r = crate::test::rng(700);
+        const N_REPS: u32 = 5000;
+        let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
+        let total_weight = weights.iter().sum::<u32>() as f32;
+
+        let verify = |result: [i32; 14]| {
+            for (i, count) in result.iter().enumerate() {
+                let exp = (weights[i] * N_REPS) as f32 / total_weight;
+                let mut err = (*count as f32 - exp).abs();
+                if err != 0.0 {
+                    err /= exp;
+                }
+                assert!(err <= 0.25);
+            }
+        };
+
+        // WeightedIndex from vec
+        let mut chosen = [0i32; 14];
+        let distr = WeightedIndex::new(weights.to_vec()).unwrap();
+        for _ in 0..N_REPS {
+            chosen[distr.sample(&mut r)] += 1;
+        }
+        verify(chosen);
+
+        // WeightedIndex from slice
+        chosen = [0i32; 14];
+        let distr = WeightedIndex::new(&weights[..]).unwrap();
+        for _ in 0..N_REPS {
+            chosen[distr.sample(&mut r)] += 1;
+        }
+        verify(chosen);
+
+        // WeightedIndex from iterator
+        chosen = [0i32; 14];
+        let distr = WeightedIndex::new(weights.iter()).unwrap();
+        for _ in 0..N_REPS {
+            chosen[distr.sample(&mut r)] += 1;
+        }
+        verify(chosen);
+
+        for _ in 0..5 {
+            assert_eq!(WeightedIndex::new(&[0, 1]).unwrap().sample(&mut r), 1);
+            assert_eq!(WeightedIndex::new(&[1, 0]).unwrap().sample(&mut r), 0);
+            assert_eq!(
+                WeightedIndex::new(&[0, 0, 0, 0, 10, 0])
+                    .unwrap()
+                    .sample(&mut r),
+                4
+            );
+        }
+
+        assert_eq!(
+            WeightedIndex::new(&[10][0..0]).unwrap_err(),
+            WeightedError::NoItem
+        );
+        assert_eq!(
+            WeightedIndex::new(&[0]).unwrap_err(),
             WeightedError::AllWeightsZero
         );
-    }
-
-    #[test]
-    fn test_invalid_weight_error() {
         assert_eq!(
-            WeightedTreeIndex::<i32>::new(&[1, -1]).unwrap_err(),
+            WeightedIndex::new(&[10, 20, -1, 30]).unwrap_err(),
             WeightedError::InvalidWeight
         );
-        let mut tree = WeightedTreeIndex::<i32>::new(&[]).unwrap();
-        assert_eq!(tree.push(-1).unwrap_err(), WeightedError::InvalidWeight);
-        tree.push(1).unwrap();
         assert_eq!(
-            tree.update(0, -1).unwrap_err(),
+            WeightedIndex::new(&[-10, 20, 1, 30]).unwrap_err(),
+            WeightedError::InvalidWeight
+        );
+        assert_eq!(
+            WeightedIndex::new(&[-10]).unwrap_err(),
             WeightedError::InvalidWeight
         );
     }
 
     #[test]
-    fn test_tree_modifications() {
-        let mut tree = WeightedTreeIndex::new(&[9, 1, 2]).unwrap();
-        tree.push(3).unwrap();
-        tree.push(5).unwrap();
-        tree.update(0, 0).unwrap();
-        assert_eq!(tree.pop(), Some(5));
-        let expected = WeightedTreeIndex::new(&[0, 1, 2, 3]).unwrap();
-        assert_eq!(tree, expected);
+    fn test_update_weights() {
+        let data = [
+            (
+                &[10u32, 2, 3, 4][..],
+                &[(1, &100), (2, &4)][..], // positive change
+                &[10, 100, 4, 4][..],
+            ),
+            (
+                &[1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
+                &[(2, &1), (5, &1), (13, &100)][..], // negative change and last element
+                &[1u32, 2, 1, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 100][..],
+            ),
+        ];
+
+        for (weights, update, expected_weights) in data.iter() {
+            let total_weight = weights.iter().sum::<u32>();
+            let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
+            assert_eq!(distr.total_weight, total_weight);
+
+            distr.update_weights(update).unwrap();
+            let expected_total_weight = expected_weights.iter().sum::<u32>();
+            let expected_distr = WeightedIndex::new(expected_weights.to_vec()).unwrap();
+            assert_eq!(distr.total_weight, expected_total_weight);
+            assert_eq!(distr.total_weight, expected_distr.total_weight);
+            assert_eq!(distr.cumulative_weights, expected_distr.cumulative_weights);
+        }
     }
 
     #[test]
-    fn test_sample_counts_match_probabilities() {
-        let start = 1;
-        let end = 3;
-        let samples = 20;
-        let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
-        let weights: Vec<_> = (0..end).map(|_| rng.gen()).collect();
-        let mut tree = WeightedTreeIndex::new(&weights).unwrap();
-        let mut total_weight = 0.0;
-        let mut weights = vec![0.0; end];
-        for i in 0..end {
-            tree.update(i, i as f64).unwrap();
-            weights[i] = i as f64;
-            total_weight += i as f64;
+    fn value_stability() {
+        fn test_samples<X: Weight + SampleUniform + PartialOrd, I>(
+            weights: I, buf: &mut [usize], expected: &[usize],
+        ) where
+            I: IntoIterator,
+            I::Item: SampleBorrow<X>,
+        {
+            assert_eq!(buf.len(), expected.len());
+            let distr = WeightedIndex::new(weights).unwrap();
+            let mut rng = crate::test::rng(701);
+            for r in buf.iter_mut() {
+                *r = rng.sample(&distr);
+            }
+            assert_eq!(buf, expected);
         }
-        for i in 0..start {
-            tree.update(i, 0.0).unwrap();
-            weights[i] = 0.0;
-            total_weight -= i as f64;
-        }
-        let mut counts = vec![0_usize; end];
-        for _ in 0..samples {
-            let i = tree.sample(&mut rng).unwrap();
-            counts[i] += 1;
-        }
-        for i in 0..start {
-            assert_eq!(counts[i], 0);
-        }
-        for i in start..end {
-            let diff = counts[i] as f64 / samples as f64 - weights[i] / total_weight;
-            assert!(diff.abs() < 0.05);
-        }
+
+        let mut buf = [0; 10];
+        test_samples(&[1i32, 1, 1, 1, 1, 1, 1, 1, 1], &mut buf, &[
+            0, 6, 2, 6, 3, 4, 7, 8, 2, 5,
+        ]);
+        test_samples(&[0.7f32, 0.1, 0.1, 0.1], &mut buf, &[
+            0, 0, 0, 1, 0, 0, 2, 3, 0, 0,
+        ]);
+        test_samples(&[1.0f64, 0.999, 0.998, 0.997], &mut buf, &[
+            2, 2, 1, 3, 2, 1, 3, 3, 2, 1,
+        ]);
+    }
+
+    #[test]
+    fn weighted_index_distributions_can_be_compared() {
+        assert_eq!(WeightedIndex::new(&[1, 2]), WeightedIndex::new(&[1, 2]));
+    }
+
+    #[test]
+    fn overflow() {
+        assert_eq!(WeightedIndex::new([2, usize::MAX]), Err(WeightedError::Overflow));
+    }
+}
+
+/// Error type returned from `WeightedIndex::new`.
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WeightedError {
+    /// The provided weight collection contains no items.
+    NoItem,
+
+    /// A weight is either less than zero, greater than the supported maximum,
+    /// NaN, or otherwise invalid.
+    InvalidWeight,
+
+    /// All items in the provided weight collection are zero.
+    AllWeightsZero,
+
+    /// Too many weights are provided (length greater than `u32::MAX`)
+    TooMany,
+
+    /// The sum of weights overflows
+    Overflow,
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for WeightedError {}
+
+impl fmt::Display for WeightedError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(match *self {
+            WeightedError::NoItem => "No weights provided in distribution",
+            WeightedError::InvalidWeight => "A weight is invalid in distribution",
+            WeightedError::AllWeightsZero => "All weights are zero in distribution",
+            WeightedError::TooMany => "Too many weights (hit u32::MAX) in distribution",
+            WeightedError::Overflow => "The sum of weights overflowed",
+        })
     }
 }
