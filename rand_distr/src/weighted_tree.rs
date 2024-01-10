@@ -132,7 +132,11 @@ impl<W: Weight> WeightedTreeIndex<W> {
     ///
     /// This is the case if the total weight of the tree is greater than zero.
     pub fn can_sample(&self) -> bool {
-        self.subtotals.first().is_some_and(|x| *x > W::zero())
+        if let Some(&w) = self.subtotals.first() {
+            w > W::zero()
+        } else {
+            false
+        }
     }
 
     /// Gets the weight at an index.
