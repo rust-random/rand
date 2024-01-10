@@ -227,6 +227,8 @@ impl<W: Weight> Distribution<Result<usize, WeightedError>> for WeightedTreeIndex
             // Otherwise we found the index with the target weight.
             break;
         }
+        assert!(target_weight >= W::zero());
+        assert!(target_weight < self.subtotal(index));
         Ok(index)
     }
 }
