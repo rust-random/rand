@@ -53,7 +53,7 @@ use serde::{Deserialize, Serialize};
 /// A [`WeightedTreeIndex<W>`] with `n` elements requires `O(n)` memory.
 ///
 /// Time complexity for the operations of a [`WeightedTreeIndex<W>`] are:
-/// * Constructing: Building the initial tree from a slice of weights takes `O(n)` time.
+/// * Constructing: Building the initial tree from an iterator of weights takes `O(n)` time.
 /// * Sampling: Choosing an index (traversing down the tree) requires `O(log n)` time.
 /// * Weight Update: Modifying a weight (traversing up the tree), requires `O(log n)` time.
 /// * Weight Addition (Pushing): Adding a new weight (traversing up the tree), requires `O(log n)` time.
