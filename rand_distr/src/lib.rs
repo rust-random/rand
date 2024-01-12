@@ -76,8 +76,9 @@
 //!   - [`UnitBall`] distribution
 //!   - [`UnitCircle`] distribution
 //!   - [`UnitDisc`] distribution
-//! - Alternative implementation for weighted index sampling
+//! - Alternative implementations for weighted index sampling
 //!   - [`WeightedAliasIndex`] distribution
+//!   - [`WeightedTreeIndex`] distribution
 //! - Misc. distributions
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
