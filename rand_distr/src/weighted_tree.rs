@@ -91,7 +91,7 @@ use serde::{Deserialize, Serialize};
     serde(bound(deserialize = "W: Deserialize<'de>, W::Sampler: Deserialize<'de>"))
 )]
 #[derive(Clone, Default, Debug, PartialEq)]
-pub struct WeightedTreeIndex<W> {
+pub struct WeightedTreeIndex<W: SampleUniform> {
     subtotals: Vec<W>,
 }
 
