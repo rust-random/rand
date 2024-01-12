@@ -95,7 +95,7 @@ pub struct WeightedTreeIndex<W> {
     subtotals: Vec<W>,
 }
 
-impl<W: Clone + PartialEq + PartialOrd + Weight> WeightedTreeIndex<W> {
+impl<W: Clone + PartialEq + PartialOrd + SampleUniform + Weight> WeightedTreeIndex<W> {
     /// Creates a new [`WeightedTreeIndex`] from a slice of weights.
     pub fn new<I>(weights: I) -> Result<Self, WeightedError>
     where
