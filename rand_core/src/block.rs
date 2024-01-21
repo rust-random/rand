@@ -69,16 +69,15 @@ use zeroize::{DefaultIsZeroes, Zeroize};
 /// See the [module][crate::block] documentation for details.
 pub trait BlockRngCore {
     /// Results element type, e.g. `u32`.
+    #[cfg(not(feature = "zeroize"))]
     type Item;
+    /// Results element type, e.g. `u32`.
+    #[cfg(feature = "zeroize")]
+    type Item: DefaultIsZeroes;
 
     /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
     /// generates, which will usually be an array like `[u32; 16]`.
-    #[cfg(not(feature = "zeroize"))]
     type Results: AsRef<[Self::Item]> + AsMut<[Self::Item]> + Default;
-    /// Results type. This is the 'block' an RNG implementing `BlockRngCore`
-    /// generates, which will usually be an array like `[u32; 16]`.
-    #[cfg(feature = "zeroize")]
-    type Results: AsRef<[Self::Item]> + AsMut<[Self::Item]> + Default + DefaultIsZeroes;
 
     /// Generate a new block of results.
     fn generate(&mut self, results: &mut Self::Results);
@@ -269,9 +268,11 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
     }
 }
 
+#[cfg(feature = "zeroize")]
+#[cfg_attr(docsrs, doc(cfg(feature = "zeroize")))]
 impl<R: BlockRngCore> Zeroize for BlockRng<R> {
     fn zeroize(&mut self) {
-        self.results.zeroize();
+        self.results.as_mut().zeroize()
     }
 }
 
@@ -443,44 +444,30 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng64<R> {
     }
 }
 
+#[cfg(feature = "zeroize")]
+#[cfg_attr(docsrs, doc(cfg(feature = "zeroize")))]
+impl<R: BlockRngCore> Zeroize for BlockRng64<R> {
+    fn zeroize(&mut self) {
+        self.results.as_mut().zeroize()
+    }
+}
+
 impl<R: CryptoBlockRng + BlockRngCore<Item = u64>> CryptoRng for BlockRng64<R> {}
 
 #[cfg(test)]
 mod test {
     use crate::{SeedableRng, RngCore};
     use crate::block::{BlockRng, BlockRng64, BlockRngCore};
-    #[cfg(feature = "zeroize")]
-    use zeroize::DefaultIsZeroes;
 
     #[derive(Debug, Clone)]
     struct DummyRng {
         counter: u32,
     }
 
-    #[cfg_attr(feature = "zeroize", derive(Copy, Clone))]
-    struct DummyRngResults([u32; 16]);
-    impl AsRef<[u32]> for DummyRngResults {
-        fn as_ref(&self) -> &[u32] {
-            &self.0
-        }
-    }
-    impl AsMut<[u32]> for DummyRngResults {
-        fn as_mut(&mut self) -> &mut [u32] {
-            &mut self.0
-        }
-    }
-    impl Default for DummyRngResults {
-        fn default() -> Self {
-            Self([0u32; 16])
-        }
-    }
-    #[cfg(feature = "zeroize")]
-    impl DefaultIsZeroes for DummyRngResults {}
-
     impl BlockRngCore for DummyRng {
         type Item = u32;
 
-        type Results = DummyRngResults;
+        type Results = [u32; 16];
 
         fn generate(&mut self, results: &mut Self::Results) {
             for r in results.as_mut() {
@@ -527,30 +514,10 @@ mod test {
         counter: u64,
     }
 
-    #[cfg_attr(feature = "zeroize", derive(Copy, Clone))]
-    struct DummyRng64Results([u64; 8]);
-    impl AsRef<[u64]> for DummyRng64Results {
-        fn as_ref(&self) -> &[u64] {
-            &self.0
-        }
-    }
-    impl AsMut<[u64]> for DummyRng64Results {
-        fn as_mut(&mut self) -> &mut [u64] {
-            &mut self.0
-        }
-    }
-    impl Default for DummyRng64Results {
-        fn default() -> Self {
-            Self([0u64; 8])
-        }
-    }
-    #[cfg(feature = "zeroize")]
-    impl DefaultIsZeroes for DummyRng64Results {}
-
     impl BlockRngCore for DummyRng64 {
         type Item = u64;
 
-        type Results = DummyRng64Results;
+        type Results = [u64; 8];
 
         fn generate(&mut self, results: &mut Self::Results) {
             for r in results.as_mut() {
