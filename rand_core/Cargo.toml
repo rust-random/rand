@@ -33,3 +33,4 @@ serde1 = ["serde"] # enables serde for BlockRng wrapper
 serde = { version = "1", features = ["derive"], optional = true }
 getrandom = { version = "0.2", optional = true }
 zerocopy = { version = "0.7.20", default-features = false }
+zeroize = { version = "1.7", optional = true }
