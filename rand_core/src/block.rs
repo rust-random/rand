@@ -470,7 +470,7 @@ mod test {
         type Results = [u32; 16];
 
         fn generate(&mut self, results: &mut Self::Results) {
-            for r in results.as_mut() {
+            for r in results {
                 *r = self.counter;
                 self.counter = self.counter.wrapping_add(3511615421);
             }
@@ -520,7 +520,7 @@ mod test {
         type Results = [u64; 8];
 
         fn generate(&mut self, results: &mut Self::Results) {
-            for r in results.as_mut() {
+            for r in results {
                 *r = self.counter;
                 self.counter = self.counter.wrapping_add(2781463553396133981);
             }
