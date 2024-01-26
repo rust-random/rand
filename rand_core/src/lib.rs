@@ -245,6 +245,7 @@ pub trait SeedableRng: Sized {
     ///
     /// const N: usize = 64;
     /// pub struct MyRngSeed(pub [u8; N]);
+    /// # #[allow(dead_code)]
     /// pub struct MyRng(MyRngSeed);
     ///
     /// impl Default for MyRngSeed {
