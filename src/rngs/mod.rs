@@ -110,10 +110,12 @@ mod xoshiro128plusplus;
 
 #[cfg(feature = "std_rng")] mod std;
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))] pub(crate) mod thread;
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))] pub(crate) mod global;
 
 #[cfg(feature = "small_rng")] pub use self::small::SmallRng;
 #[cfg(feature = "std_rng")] pub use self::std::StdRng;
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))] pub use self::thread::ThreadRng;
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))] pub use self::global::GlobalRng;
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
 #[cfg(feature = "getrandom")] pub use rand_core::OsRng;

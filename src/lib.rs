@@ -104,6 +104,8 @@ pub mod seq;
 // Public exports
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 pub use crate::rngs::thread::thread_rng;
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+pub use crate::rngs::global::global_rng;
 pub use rng::{Fill, Rng};
 
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]

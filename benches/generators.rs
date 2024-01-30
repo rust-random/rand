@@ -17,6 +17,7 @@ const BYTES_LEN: usize = 1024;
 use core::mem::size_of;
 use test::{black_box, Bencher};
 
+use rand::global_rng;
 use rand::prelude::*;
 use rand::rngs::adapter::ReseedingRng;
 use rand::rngs::{mock::StepRng, OsRng};
@@ -53,6 +54,7 @@ gen_bytes!(gen_bytes_std, StdRng::from_entropy());
 gen_bytes!(gen_bytes_small, SmallRng::from_entropy());
 gen_bytes!(gen_bytes_os, OsRng);
 gen_bytes!(gen_bytes_thread, thread_rng());
+gen_bytes!(gen_bytes_global, global_rng());
 
 macro_rules! gen_uint {
     ($fnn:ident, $ty:ty, $gen:expr) => {
@@ -84,6 +86,7 @@ gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
 gen_uint!(gen_u32_small, u32, SmallRng::from_entropy());
 gen_uint!(gen_u32_os, u32, OsRng);
 gen_uint!(gen_u32_thread, u32, thread_rng());
+gen_uint!(gen_u32_global, u32, global_rng());
 
 gen_uint!(gen_u64_step, u64, StepRng::new(0, 1));
 gen_uint!(gen_u64_pcg32, u64, Pcg32::from_entropy());
@@ -98,6 +101,7 @@ gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
 gen_uint!(gen_u64_small, u64, SmallRng::from_entropy());
 gen_uint!(gen_u64_os, u64, OsRng);
 gen_uint!(gen_u64_thread, u64, thread_rng());
+gen_uint!(gen_u64_global, u64, global_rng());
 
 macro_rules! init_gen {
     ($fnn:ident, $gen:ident) => {
