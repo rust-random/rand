@@ -34,7 +34,7 @@ serde1 = ["serde", "rand_core/serde1"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
 # enables functionality expected to be available on a standard platform.
-std = ["rand_core/std", "rand_chacha?/std", "alloc", "libc"]
+std = ["rand_core/std", "rand_chacha?/std", "alloc"]
 
 # Option: "alloc" enables support for Vec and Box when not using "std"
 alloc = ["rand_core/alloc"]
@@ -70,10 +70,6 @@ log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 rand_chacha = { path = "rand_chacha", version = "0.4.0", default-features = false, optional = true }
 zerocopy = { version = "0.7.20", default-features = false, features = ["simd"] }
-
-[target.'cfg(unix)'.dependencies]
-# Used for fork protection (reseeding.rs)
-libc = { version = "0.2.22", optional = true, default-features = false }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "0.4.0" }
