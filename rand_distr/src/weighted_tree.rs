@@ -232,7 +232,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
     ///
     /// Returns an error if there are no elements or all weights are zero. This
     /// is unlike [`Distribution::sample`], which panics in those cases.
-    fn safe_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<usize, WeightedError> {
+    fn try_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<usize, WeightedError> {
         if self.subtotals.is_empty() {
             return Err(WeightedError::NoItem);
         }
@@ -270,16 +270,16 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
     }
 }
 
+/// Samples a randomly selected index from the weighted distribution.
+///
+/// Caution: This method panics if there are no elements or all weights are zero. However,
+/// it is guaranteed that this method will not panic if a call to [`WeightedTreeIndex::is_valid`]
+/// returns `true`.
 impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight> Distribution<usize>
     for WeightedTreeIndex<W>
 {
-    /// Samples a randomly selected index from the weighted distribution.
-    ///
-    /// Caution: This method panics if there are no elements or all weights are zero. However,
-    /// it is guaranteed that this method will not panic if a call to [`WeightedTreeIndex::is_valid`]
-    /// returns `true`.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        self.safe_sample(rng).unwrap()
+        self.try_sample(rng).unwrap()
     }
 }
 
@@ -292,7 +292,7 @@ mod test {
         let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
         let tree = WeightedTreeIndex::<f64>::new(&[]).unwrap();
         assert_eq!(
-            tree.safe_sample(&mut rng).unwrap_err(),
+            tree.try_sample(&mut rng).unwrap_err(),
             WeightedError::NoItem
         );
     }
@@ -314,7 +314,7 @@ mod test {
         let tree = WeightedTreeIndex::<f64>::new(&[0.0, 0.0]).unwrap();
         let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
         assert_eq!(
-            tree.safe_sample(&mut rng).unwrap_err(),
+            tree.try_sample(&mut rng).unwrap_err(),
             WeightedError::AllWeightsZero
         );
     }
