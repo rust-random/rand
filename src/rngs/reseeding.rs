@@ -57,7 +57,7 @@ use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 /// use rand_chacha::ChaCha20Core; // Internal part of ChaChaRng that
 ///                              // implements BlockRngCore
 /// use rand::rngs::OsRng;
-/// use rand::rngs::adapter::ReseedingRng;
+/// use rand::rngs::ReseedingRng;
 ///
 /// let prng = ChaCha20Core::from_entropy();
 /// let mut reseeding_rng = ReseedingRng::new(prng, 0, OsRng);

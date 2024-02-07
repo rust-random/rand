@@ -14,7 +14,7 @@ use std::thread_local;
 use std::fmt;
 
 use super::std::Core;
-use crate::rngs::adapter::ReseedingRng;
+use crate::rngs::ReseedingRng;
 use crate::rngs::OsRng;
 use crate::{CryptoRng, Error, RngCore, SeedableRng};
 
@@ -74,7 +74,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// leaking internal secrets e.g. via [`Debug`] implementation or serialization.
 /// Memory is not zeroized on drop.
 ///
-/// [`ReseedingRng`]: crate::rngs::adapter::ReseedingRng
+/// [`ReseedingRng`]: crate::rngs::ReseedingRng
 /// [`StdRng`]: crate::rngs::StdRng
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))))]
 #[derive(Clone)]

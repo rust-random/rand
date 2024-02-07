@@ -18,7 +18,7 @@ use core::mem::size_of;
 use test::{black_box, Bencher};
 
 use rand::prelude::*;
-use rand::rngs::adapter::ReseedingRng;
+use rand::rngs::ReseedingRng;
 use rand::rngs::{mock::StepRng, OsRng};
 use rand_chacha::{ChaCha12Rng, ChaCha20Core, ChaCha20Rng, ChaCha8Rng};
 use rand_pcg::{Pcg32, Pcg64, Pcg64Mcg, Pcg64Dxsm};
