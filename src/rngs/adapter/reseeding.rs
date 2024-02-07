@@ -102,8 +102,11 @@ where
         ReseedingRng(BlockRng::new(ReseedingCore::new(rng, threshold, reseeder)))
     }
 
-    /// Reseed the internal PRNG.
+    /// Immediately reseed the generator
+    ///
+    /// This discards any remaining random data in the cache.
     pub fn reseed(&mut self) -> Result<(), Error> {
+        self.0.reset();
         self.0.core.reseed()
     }
 }
