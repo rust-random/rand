@@ -188,25 +188,33 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
         if weight < W::ZERO {
             return Err(WeightedError::InvalidWeight);
         }
-        let mut difference = weight;
-        difference -= self.get(index);
-        if difference == W::ZERO {
-            return Ok(());
-        }
-        if let Some(total) = self.subtotals.first() {
-            let mut total = total.clone();
-            if total.checked_add_assign(&difference).is_err() {
-                return Err(WeightedError::Overflow);
+        let old_weight = self.get(index);
+        if weight > old_weight {
+            let mut difference = weight;
+            difference -= old_weight;
+            if let Some(total) = self.subtotals.first() {
+                let mut total = total.clone();
+                if total.checked_add_assign(&difference).is_err() {
+                    return Err(WeightedError::Overflow);
+                }
             }
-        }
-        self.subtotals[index]
-            .checked_add_assign(&difference)
-            .unwrap();
-        while index != 0 {
-            index = (index - 1) / 2;
             self.subtotals[index]
                 .checked_add_assign(&difference)
                 .unwrap();
+            while index != 0 {
+                index = (index - 1) / 2;
+                self.subtotals[index]
+                    .checked_add_assign(&difference)
+                    .unwrap();
+            }
+        } else if weight < old_weight {
+            let mut difference = old_weight;
+            difference -= weight;
+            self.subtotals[index] -= difference.clone();
+            while index != 0 {
+                index = (index - 1) / 2;
+                self.subtotals[index] -= difference.clone();
+            }
         }
         Ok(())
     }
