@@ -268,7 +268,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
             break;
         }
         assert!(target_weight >= W::ZERO);
-        assert!(target_weight < self.subtotal(index));
+        assert!(target_weight < self.get(index));
         Ok(index)
     }
 }
