@@ -267,9 +267,11 @@ where R: Rng + ?Sized {
 /// sometimes be useful to have the indices themselves so this is provided as
 /// an alternative.
 ///
-/// This implementation uses `O(length + amount)` space and `O(length)` time.
+/// Error cases:
+/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
+/// -   [`WeightError::InsufficientNonZero`] when fewer than `amount` weights are positive.
 ///
-/// Panics if `amount > length`.
+/// This implementation uses `O(length + amount)` space and `O(length)` time.
 #[cfg(feature = "std")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 pub fn sample_weighted<R, F, X>(
@@ -300,7 +302,9 @@ where
 /// in this paper: https://doi.org/10.1016/j.ipl.2005.11.003
 /// It uses `O(length + amount)` space and `O(length)` time.
 ///
-/// Panics if `amount > length`.
+/// Error cases:
+/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
+/// -   [`WeightError::InsufficientNonZero`] when fewer than `amount` weights are positive.
 #[cfg(feature = "std")]
 fn sample_efraimidis_spirakis<R, F, X, N>(
     rng: &mut R, length: N, weight: F, amount: N,
@@ -314,10 +318,6 @@ where
 {
     if amount == N::zero() {
         return Ok(IndexVec::U32(Vec::new()));
-    }
-
-    if amount > length {
-        panic!("`amount` of samples must be less than or equal to `length`");
     }
 
     struct Element<N> {
@@ -347,14 +347,19 @@ where
     let mut index = N::zero();
     while index < length {
         let weight = weight(index.as_usize()).into();
-        if !(weight >= 0.) {
+        if weight > 0.0 {
+            let key = rng.gen::<f64>().powf(1.0 / weight);
+            candidates.push(Element { index, key });
+        } else if !(weight >= 0.0) {
             return Err(WeightError::InvalidWeight);
         }
 
-        let key = rng.gen::<f64>().powf(1.0 / weight);
-        candidates.push(Element { index, key });
-
         index += N::one();
+    }
+
+    let avail = candidates.len();
+    if avail < amount.as_usize() {
+        return Err(WeightError::InsufficientNonZero);
     }
 
     // Partially sort the array to find the `amount` elements with the greatest
@@ -362,7 +367,7 @@ where
     // the *smallest* keys at the beginning of the list in `O(n)` time, which
     // provides equivalent information about the elements with the *greatest* keys.
     let (_, mid, greater)
-        = candidates.select_nth_unstable(length.as_usize() - amount.as_usize());
+        = candidates.select_nth_unstable(avail - amount.as_usize());
 
     let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
     result.push(mid.index);
@@ -576,7 +581,7 @@ mod test {
     #[test]
     fn test_sample_weighted() {
         let seed_rng = crate::test::rng;
-        for &(amount, len) in &[(0, 10), (5, 10), (10, 10)] {
+        for &(amount, len) in &[(0, 10), (5, 10), (9, 10)] {
             let v = sample_weighted(&mut seed_rng(423), len, |i| i as f64, amount).unwrap();
             match v {
                 IndexVec::U32(mut indices) => {
@@ -591,6 +596,9 @@ mod test {
                 IndexVec::USize(_) => panic!("expected `IndexVec::U32`"),
             }
         }
+
+        let r = sample_weighted(&mut seed_rng(423), 10, |i| i as f64, 10);
+        assert_eq!(r.unwrap_err(), WeightError::InsufficientNonZero);
     }
 
     #[test]
