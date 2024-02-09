@@ -305,7 +305,7 @@ mod test {
         let tree = WeightedTreeIndex::<f64>::new(&[]).unwrap();
         assert_eq!(
             tree.try_sample(&mut rng).unwrap_err(),
-            WeightError::InvalidInput
+            WeightError::InsufficientNonZero
         );
     }
 

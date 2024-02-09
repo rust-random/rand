@@ -33,6 +33,7 @@ pub mod index;
 
 mod increasing_uniform;
 
+#[cfg(feature = "alloc")]
 #[doc(no_inline)]
 pub use crate::distributions::WeightError;
 
