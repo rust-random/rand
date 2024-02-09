@@ -31,6 +31,9 @@ pub mod index;
 
 mod increasing_uniform;
 
+#[doc(no_inline)]
+pub use crate::distributions::WeightError;
+
 #[cfg(feature = "alloc")]
 use core::ops::Index;
 
@@ -39,8 +42,7 @@ use alloc::vec::Vec;
 
 #[cfg(feature = "alloc")]
 use crate::distributions::uniform::{SampleBorrow, SampleUniform};
-#[cfg(feature = "alloc")]
-use crate::distributions::{Weight, WeightError};
+#[cfg(feature = "alloc")] use crate::distributions::Weight;
 use crate::Rng;
 
 use self::coin_flipper::CoinFlipper;

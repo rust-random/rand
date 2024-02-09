@@ -17,7 +17,7 @@ use alloc::collections::BTreeSet;
 #[cfg(feature = "std")] use std::collections::HashSet;
 
 #[cfg(feature = "std")]
-use crate::distributions::WeightError;
+use super::WeightError;
 
 #[cfg(feature = "alloc")]
 use crate::{Rng, distributions::{uniform::SampleUniform, Distribution, Uniform}};
