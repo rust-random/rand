@@ -108,13 +108,6 @@ pub mod hidden_export {
     pub use super::float::IntoFloat; // used by rand_distr
 }
 pub mod uniform;
-#[deprecated(
-    since = "0.8.0",
-    note = "use rand::distributions::{WeightedIndex, WeightedError} instead"
-)]
-#[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
-pub mod weighted;
 
 pub use self::bernoulli::{Bernoulli, BernoulliError};
 pub use self::distribution::{Distribution, DistIter, DistMap};
