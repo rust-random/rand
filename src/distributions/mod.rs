@@ -119,7 +119,7 @@ pub use self::slice::Slice;
 #[doc(inline)]
 pub use self::uniform::Uniform;
 #[cfg(feature = "alloc")]
-pub use self::weighted_index::{Weight, WeightedError, WeightedIndex};
+pub use self::weighted_index::{Weight, WeightError, WeightedIndex};
 
 #[allow(unused)]
 use crate::Rng;

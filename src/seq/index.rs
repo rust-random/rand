@@ -17,7 +17,7 @@ use alloc::collections::BTreeSet;
 #[cfg(feature = "std")] use std::collections::HashSet;
 
 #[cfg(feature = "std")]
-use crate::distributions::WeightedError;
+use crate::distributions::WeightError;
 
 #[cfg(feature = "alloc")]
 use crate::{Rng, distributions::{uniform::SampleUniform, Distribution, Uniform}};
@@ -274,7 +274,7 @@ where R: Rng + ?Sized {
 #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 pub fn sample_weighted<R, F, X>(
     rng: &mut R, length: usize, weight: F, amount: usize,
-) -> Result<IndexVec, WeightedError>
+) -> Result<IndexVec, WeightError>
 where
     R: Rng + ?Sized,
     F: Fn(usize) -> X,
@@ -304,7 +304,7 @@ where
 #[cfg(feature = "std")]
 fn sample_efraimidis_spirakis<R, F, X, N>(
     rng: &mut R, length: N, weight: F, amount: N,
-) -> Result<IndexVec, WeightedError>
+) -> Result<IndexVec, WeightError>
 where
     R: Rng + ?Sized,
     F: Fn(usize) -> X,
@@ -348,7 +348,7 @@ where
     while index < length {
         let weight = weight(index.as_usize()).into();
         if !(weight >= 0.) {
-            return Err(WeightedError::InvalidWeight);
+            return Err(WeightError::InvalidWeight);
         }
 
         let key = rng.gen::<f64>().powf(1.0 / weight);

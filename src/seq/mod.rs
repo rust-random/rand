@@ -40,7 +40,7 @@ use alloc::vec::Vec;
 #[cfg(feature = "alloc")]
 use crate::distributions::uniform::{SampleBorrow, SampleUniform};
 #[cfg(feature = "alloc")]
-use crate::distributions::{Weight, WeightedError};
+use crate::distributions::{Weight, WeightError};
 use crate::Rng;
 
 use self::coin_flipper::CoinFlipper;
@@ -165,7 +165,7 @@ pub trait SliceRandom {
     #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_weighted<R, F, B, X>(
         &self, rng: &mut R, weight: F,
-    ) -> Result<&Self::Item, WeightedError>
+    ) -> Result<&Self::Item, WeightError>
     where
         R: Rng + ?Sized,
         F: Fn(&Self::Item) -> B,
@@ -194,7 +194,7 @@ pub trait SliceRandom {
     #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_weighted_mut<R, F, B, X>(
         &mut self, rng: &mut R, weight: F,
-    ) -> Result<&mut Self::Item, WeightedError>
+    ) -> Result<&mut Self::Item, WeightError>
     where
         R: Rng + ?Sized,
         F: Fn(&Self::Item) -> B,
@@ -240,7 +240,7 @@ pub trait SliceRandom {
     #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     fn choose_multiple_weighted<R, F, X>(
         &self, rng: &mut R, amount: usize, weight: F,
-    ) -> Result<SliceChooseIter<Self, Self::Item>, WeightedError>
+    ) -> Result<SliceChooseIter<Self, Self::Item>, WeightError>
     where
         R: Rng + ?Sized,
         F: Fn(&Self::Item) -> X,
@@ -572,7 +572,7 @@ impl<T> SliceRandom for [T] {
     #[cfg(feature = "alloc")]
     fn choose_weighted<R, F, B, X>(
         &self, rng: &mut R, weight: F,
-    ) -> Result<&Self::Item, WeightedError>
+    ) -> Result<&Self::Item, WeightError>
     where
         R: Rng + ?Sized,
         F: Fn(&Self::Item) -> B,
@@ -587,7 +587,7 @@ impl<T> SliceRandom for [T] {
     #[cfg(feature = "alloc")]
     fn choose_weighted_mut<R, F, B, X>(
         &mut self, rng: &mut R, weight: F,
-    ) -> Result<&mut Self::Item, WeightedError>
+    ) -> Result<&mut Self::Item, WeightError>
     where
         R: Rng + ?Sized,
         F: Fn(&Self::Item) -> B,
@@ -602,7 +602,7 @@ impl<T> SliceRandom for [T] {
     #[cfg(feature = "std")]
     fn choose_multiple_weighted<R, F, X>(
         &self, rng: &mut R, amount: usize, weight: F,
-    ) -> Result<SliceChooseIter<Self, Self::Item>, WeightedError>
+    ) -> Result<SliceChooseIter<Self, Self::Item>, WeightError>
     where
         R: Rng + ?Sized,
         F: Fn(&Self::Item) -> X,
@@ -1187,23 +1187,23 @@ mod test {
         let empty_slice = &mut [10][0..0];
         assert_eq!(
             empty_slice.choose_weighted(&mut r, |_| 1),
-            Err(WeightedError::NoItem)
+            Err(WeightError::InvalidInput)
         );
         assert_eq!(
             empty_slice.choose_weighted_mut(&mut r, |_| 1),
-            Err(WeightedError::NoItem)
+            Err(WeightError::InvalidInput)
         );
         assert_eq!(
             ['x'].choose_weighted_mut(&mut r, |_| 0),
-            Err(WeightedError::AllWeightsZero)
+            Err(WeightError::InsufficientNonZero)
         );
         assert_eq!(
             [0, -1].choose_weighted_mut(&mut r, |x| *x),
-            Err(WeightedError::InvalidWeight)
+            Err(WeightError::InvalidWeight)
         );
         assert_eq!(
             [-1, 0].choose_weighted_mut(&mut r, |x| *x),
-            Err(WeightedError::InvalidWeight)
+            Err(WeightError::InvalidWeight)
         );
     }
 
@@ -1355,7 +1355,7 @@ mod test {
             choices
                 .choose_multiple_weighted(&mut rng, 2, |item| item.1)
                 .unwrap_err(),
-            WeightedError::InvalidWeight
+            WeightError::InvalidWeight
         );
 
         // Case 4: Empty list
@@ -1374,7 +1374,7 @@ mod test {
             choices
                 .choose_multiple_weighted(&mut rng, 2, |item| item.1)
                 .unwrap_err(),
-            WeightedError::InvalidWeight
+            WeightError::InvalidWeight
         );
 
         // Case 6: +infinity weights
@@ -1394,7 +1394,7 @@ mod test {
             choices
                 .choose_multiple_weighted(&mut rng, 2, |item| item.1)
                 .unwrap_err(),
-            WeightedError::InvalidWeight
+            WeightError::InvalidWeight
         );
 
         // Case 8: -0 weights
