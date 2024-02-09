@@ -105,7 +105,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
     {
         let mut subtotals: Vec<W> = weights.into_iter().map(|x| x.borrow().clone()).collect();
         for weight in subtotals.iter() {
-            if *weight < W::ZERO {
+            if !(*weight >= W::ZERO) {
                 return Err(WeightedError::InvalidWeight);
             }
         }
@@ -165,7 +165,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
 
     /// Appends a new weight at the end.
     pub fn push(&mut self, weight: W) -> Result<(), WeightedError> {
-        if weight < W::ZERO {
+        if !(weight >= W::ZERO) {
             return Err(WeightedError::InvalidWeight);
         }
         if let Some(total) = self.subtotals.first() {
@@ -185,7 +185,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
 
     /// Updates the weight at an index.
     pub fn update(&mut self, mut index: usize, weight: W) -> Result<(), WeightedError> {
-        if weight < W::ZERO {
+        if !(weight >= W::ZERO) {
             return Err(WeightedError::InvalidWeight);
         }
         let old_weight = self.get(index);
