@@ -236,10 +236,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
     /// Returns an error if there are no elements or all weights are zero. This
     /// is unlike [`Distribution::sample`], which panics in those cases.
     fn try_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<usize, WeightedError> {
-        if self.subtotals.is_empty() {
-            return Err(WeightedError::NoItem);
-        }
-        let total_weight = self.subtotals[0].clone();
+        let total_weight = self.subtotals.first().cloned().unwrap_or(W::ZERO);
         if total_weight == W::ZERO {
             return Err(WeightedError::AllWeightsZero);
         }
