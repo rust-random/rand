@@ -228,8 +228,12 @@ pub(crate) trait FloatSIMDUtils {
     // value, not by retaining the binary representation.
     type UInt;
     fn cast_from_int(i: Self::UInt) -> Self;
+}
 
+#[cfg(test)]
+pub(crate) trait FloatSIMDScalarUtils: FloatSIMDUtils {
     type Scalar;
+
     fn replace(self, index: usize, new_value: Self::Scalar) -> Self;
     fn extract(self, index: usize) -> Self::Scalar;
 }
@@ -308,7 +312,6 @@ macro_rules! scalar_float_impl {
 
         impl FloatSIMDUtils for $ty {
             type Mask = bool;
-            type Scalar = $ty;
             type UInt = $uty;
 
             #[inline(always)]
@@ -351,6 +354,11 @@ macro_rules! scalar_float_impl {
             fn cast_from_int(i: Self::UInt) -> Self {
                 i as $ty
             }
+        }
+
+        #[cfg(test)]
+        impl FloatSIMDScalarUtils for $ty {
+            type Scalar = $ty;
 
             #[inline]
             fn replace(self, index: usize, new_value: Self::Scalar) -> Self {
@@ -380,7 +388,6 @@ macro_rules! simd_impl {
         where LaneCount<LANES>: SupportedLaneCount
         {
             type Mask = Mask<<$fty as SimdElement>::Mask, LANES>;
-            type Scalar = $fty;
             type UInt = Simd<$uty, LANES>;
 
             #[inline(always)]
@@ -429,6 +436,14 @@ macro_rules! simd_impl {
             fn cast_from_int(i: Self::UInt) -> Self {
                 i.cast()
             }
+        }
+
+        #[cfg(test)]
+        impl<const LANES: usize> FloatSIMDScalarUtils for Simd<$fty, LANES>
+        where
+            LaneCount<LANES>: SupportedLaneCount,
+        {
+            type Scalar = $fty;
 
             #[inline]
             fn replace(mut self, index: usize, new_value: Self::Scalar) -> Self {

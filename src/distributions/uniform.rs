@@ -1250,6 +1250,7 @@ impl UniformSampler for UniformDuration {
 mod tests {
     use super::*;
     use crate::rngs::mock::StepRng;
+    use crate::distributions::utils::FloatSIMDScalarUtils;
 
     #[test]
     #[cfg(feature = "serde1")]
