@@ -115,10 +115,6 @@ use crate::distributions::Distribution;
 use crate::distributions::Standard;
 use crate::{Rng, RngCore};
 
-#[cfg(not(feature = "std"))]
-#[allow(unused_imports)] // rustc doesn't detect that this is actually used
-use crate::distributions::utils::Float;
-
 #[cfg(feature = "simd_support")] use core::simd::prelude::*;
 #[cfg(feature = "simd_support")] use core::simd::{LaneCount, SupportedLaneCount};
 
