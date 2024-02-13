@@ -228,20 +228,14 @@ pub(crate) trait FloatSIMDUtils {
     // value, not by retaining the binary representation.
     type UInt;
     fn cast_from_int(i: Self::UInt) -> Self;
-
-    type Scalar;
-    fn replace(self, index: usize, new_value: Self::Scalar) -> Self;
-    fn extract(self, index: usize) -> Self::Scalar;
 }
 
-/// Implement functions available in std builds but missing from core primitives
-#[cfg(not(std))]
-// False positive: We are following `std` here.
-#[allow(clippy::wrong_self_convention)]
-pub(crate) trait Float: Sized {
-    fn is_nan(self) -> bool;
-    fn is_infinite(self) -> bool;
-    fn is_finite(self) -> bool;
+#[cfg(test)]
+pub(crate) trait FloatSIMDScalarUtils: FloatSIMDUtils {
+    type Scalar;
+
+    fn replace(self, index: usize, new_value: Self::Scalar) -> Self;
+    fn extract(self, index: usize) -> Self::Scalar;
 }
 
 /// Implement functions on f32/f64 to give them APIs similar to SIMD types
@@ -265,8 +259,6 @@ impl IntAsSIMD for u64 {}
 
 pub(crate) trait BoolAsSIMD: Sized {
     fn any(self) -> bool;
-    fn all(self) -> bool;
-    fn none(self) -> bool;
 }
 
 impl BoolAsSIMD for bool {
@@ -274,41 +266,12 @@ impl BoolAsSIMD for bool {
     fn any(self) -> bool {
         self
     }
-
-    #[inline(always)]
-    fn all(self) -> bool {
-        self
-    }
-
-    #[inline(always)]
-    fn none(self) -> bool {
-        !self
-    }
 }
 
 macro_rules! scalar_float_impl {
     ($ty:ident, $uty:ident) => {
-        #[cfg(not(std))]
-        impl Float for $ty {
-            #[inline]
-            fn is_nan(self) -> bool {
-                self != self
-            }
-
-            #[inline]
-            fn is_infinite(self) -> bool {
-                self == ::core::$ty::INFINITY || self == ::core::$ty::NEG_INFINITY
-            }
-
-            #[inline]
-            fn is_finite(self) -> bool {
-                !(self.is_nan() || self.is_infinite())
-            }
-        }
-
         impl FloatSIMDUtils for $ty {
             type Mask = bool;
-            type Scalar = $ty;
             type UInt = $uty;
 
             #[inline(always)]
@@ -351,6 +314,11 @@ macro_rules! scalar_float_impl {
             fn cast_from_int(i: Self::UInt) -> Self {
                 i as $ty
             }
+        }
+
+        #[cfg(test)]
+        impl FloatSIMDScalarUtils for $ty {
+            type Scalar = $ty;
 
             #[inline]
             fn replace(self, index: usize, new_value: Self::Scalar) -> Self {
@@ -380,7 +348,6 @@ macro_rules! simd_impl {
         where LaneCount<LANES>: SupportedLaneCount
         {
             type Mask = Mask<<$fty as SimdElement>::Mask, LANES>;
-            type Scalar = $fty;
             type UInt = Simd<$uty, LANES>;
 
             #[inline(always)]
@@ -429,6 +396,14 @@ macro_rules! simd_impl {
             fn cast_from_int(i: Self::UInt) -> Self {
                 i.cast()
             }
+        }
+
+        #[cfg(test)]
+        impl<const LANES: usize> FloatSIMDScalarUtils for Simd<$fty, LANES>
+        where
+            LaneCount<LANES>: SupportedLaneCount,
+        {
+            type Scalar = $fty;
 
             #[inline]
             fn replace(mut self, index: usize, new_value: Self::Scalar) -> Self {
