@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0-alpha.0] - 2024-02-13
+This is a pre-release. To depend on this version, use `rand_core = "=0.9.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
+
+- Bump MSRV to 1.60.0 (#1207, #1246, #1269, #1341)
+- Allow `rand_core::impls::fill_via_u*_chunks` to mutate source (#1182)
+- Add `fn RngCore::read_adapter` implementing `std::io::Read` (#1267)
+- Add `trait CryptoBlockRng: BlockRngCore`; make `trait CryptoRng: RngCore` (#1273)
+- Use `zerocopy` to replace some `unsafe` code (#1349, #1393)
+
 ## [0.6.4] - 2022-09-15
 - Fix unsoundness in `<BlockRng64 as RngCore>::next_u32` (#1160)
 - Reduce use of `unsafe` and improve gen_bytes performance (#1180)

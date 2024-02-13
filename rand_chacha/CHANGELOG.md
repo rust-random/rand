@@ -4,9 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-- Made `rand_chacha` propagate the `std` feature down to `rand_core`
-- Performance improvements for AVX2: ~4-7%
+## [0.9.0-alpha.0] - 2024-02-13
+This is a pre-release. To depend on this version, use `rand_chacha = "=0.9.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
+
+- Made `rand_chacha` propagate the `std` feature down to `rand_core` (#1153)
+- Remove usage of `unsafe` in `fn generate` (#1181) then optimise for AVX2 (~4-7%) (#1192)
 
 ## [0.3.1] - 2021-06-09
 - add getters corresponding to existing setters: `get_seed`, `get_stream` (#1124)
