@@ -124,7 +124,7 @@ jobs:
           target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
       - name: Cache cargo plugins
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/
           key: ${{ runner.os }}-cargo-plugins
