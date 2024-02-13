@@ -92,6 +92,30 @@ fn hypergeometric_stability() {
 }
 
 #[test]
+fn negative_binomial_stability() {
+    test_samples(
+        314159265,
+        NegativeBinomial::<f64>::new(25.0, 0.125).unwrap(),
+        &[212.0, 168.0, 129.0, 86.0, 246.0, 194.0, 218.0, 234.0],
+    );
+    test_samples(
+        314159265,
+        NegativeBinomial::<f64>::new(18.0, 1.0).unwrap(),
+        &[0.0; 8]
+    );
+    test_samples(
+        314159265,
+        NegativeBinomial::<f32>::new(25.0, 0.125).unwrap(),
+        &[224.0, 156.0, 285.0, 171.0, 179.0, 88.0, 176.0, 170.0],
+    );
+    test_samples(
+        314159265,
+        NegativeBinomial::<f32>::new(18.0, 1.0).unwrap(),
+        &[0.0; 8]
+    );
+}
+
+#[test]
 fn unit_ball_stability() {
     test_samples(2, UnitBall, &[
         [0.018035709265959987f64, -0.4348771383120438, -0.07982762085055706],
