@@ -130,7 +130,7 @@ pub use self::weibull::{Error as WeibullError, Weibull};
 pub use self::zipf::{Zeta, ZetaError, Zipf, ZipfError};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
-pub use rand::distributions::{WeightedError, WeightedIndex};
+pub use rand::distributions::{WeightError, WeightedIndex};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use weighted_alias::WeightedAliasIndex;

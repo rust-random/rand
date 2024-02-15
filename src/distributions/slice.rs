@@ -15,7 +15,7 @@ use alloc::string::String;
 /// [`Slice::new`] constructs a distribution referencing a slice and uniformly
 /// samples references from the items in the slice. It may do extra work up
 /// front to make sampling of multiple values faster; if only one sample from
-/// the slice is required, [`SliceRandom::choose`] can be more efficient.
+/// the slice is required, [`IndexedRandom::choose`] can be more efficient.
 ///
 /// Steps are taken to avoid bias which might be present in naive
 /// implementations; for example `slice[rng.gen() % slice.len()]` samples from
@@ -25,7 +25,7 @@ use alloc::string::String;
 /// This distribution samples with replacement; each sample is independent.
 /// Sampling without replacement requires state to be retained, and therefore
 /// cannot be handled by a distribution; you should instead consider methods
-/// on [`SliceRandom`], such as [`SliceRandom::choose_multiple`].
+/// on [`IndexedRandom`], such as [`IndexedRandom::choose_multiple`].
 ///
 /// # Example
 ///
@@ -48,11 +48,11 @@ use alloc::string::String;
 /// assert!(vowel_string.chars().all(|c| vowels.contains(&c)));
 /// ```
 ///
-/// For a single sample, [`SliceRandom::choose`][crate::seq::SliceRandom::choose]
+/// For a single sample, [`IndexedRandom::choose`][crate::seq::IndexedRandom::choose]
 /// may be preferred:
 ///
 /// ```
-/// use rand::seq::SliceRandom;
+/// use rand::seq::IndexedRandom;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
 /// let mut rng = rand::thread_rng();
@@ -60,9 +60,9 @@ use alloc::string::String;
 /// println!("{}", vowels.choose(&mut rng).unwrap())
 /// ```
 ///
-/// [`SliceRandom`]: crate::seq::SliceRandom
-/// [`SliceRandom::choose`]: crate::seq::SliceRandom::choose
-/// [`SliceRandom::choose_multiple`]: crate::seq::SliceRandom::choose_multiple
+/// [`IndexedRandom`]: crate::seq::IndexedRandom
+/// [`IndexedRandom::choose`]: crate::seq::IndexedRandom::choose
+/// [`IndexedRandom::choose_multiple`]: crate::seq::IndexedRandom::choose_multiple
 #[derive(Debug, Clone, Copy)]
 pub struct Slice<'a, T> {
     slice: &'a [T],
