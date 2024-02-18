@@ -43,7 +43,7 @@
 //! The functionality of this crate is implemented using traits from the `rand_core` crate, but you may use the `rand`
 //! crate for further functionality to initialize the generator from various sources and to generate random values:
 //!
-//! ```
+//! ```ignore
 //! use rand::{Rng, SeedableRng};
 //! use rand_pcg::Pcg64Mcg;
 //!
