@@ -8,7 +8,7 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [0.9.0-alpha.0] - 2024-02-13
+## [0.9.0-alpha.0] - 2024-02-18
 This is a pre-release. To depend on this version, use `rand = "=0.9.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
 
 ### Generators
@@ -22,6 +22,7 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-alpha.0"` 
 - New, faster algorithms for `IteratorRandom::choose` and `choose_stable` (#1268)
 - New, faster algorithms for `SliceRandom::shuffle` and `partial_shuffle` (#1272)
 - Re-introduce `Rng::gen_iter` (#1305)
+- Split trait `SliceRandom` into `IndexedRandom`, `IndexedMutRandom`, `SliceRandom` (#1382)
 
 ### Distributions
 - `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking) (#1229)
@@ -32,6 +33,7 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-alpha.0"` 
 - Impl `DistString` for `Slice<char>` and `Uniform<char>` (#1315)
 - Let `Standard` support all `NonZero*` types (#1332)
 - Add `trait Weight`, allowing `WeightedIndex` to trap overflow (#1353)
+- Rename `WeightedError` to `WeightError`, revising variants (#1382)
 
 ### SIMD
 - Switch to `std::simd`, expand SIMD & docs (#1239)
