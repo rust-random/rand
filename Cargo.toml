@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.9.0"
+version = "0.9.0-alpha.0"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -65,10 +65,10 @@ members = [
 ]
 
 [dependencies]
-rand_core = { path = "rand_core", version = "0.7.0", default-features = false }
+rand_core = { path = "rand_core", version = "=0.9.0-alpha.0", default-features = false }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
-rand_chacha = { path = "rand_chacha", version = "0.4.0", default-features = false, optional = true }
+rand_chacha = { path = "rand_chacha", version = "=0.9.0-alpha.0", default-features = false, optional = true }
 zerocopy = { version = "=0.8.0-alpha.5", default-features = false, features = ["simd"] }
 
 [target.'cfg(unix)'.dependencies]
@@ -76,7 +76,7 @@ zerocopy = { version = "=0.8.0-alpha.5", default-features = false, features = ["
 libc = { version = "0.2.22", optional = true, default-features = false }
 
 [dev-dependencies]
-rand_pcg = { path = "rand_pcg", version = "0.4.0" }
+rand_pcg = { path = "rand_pcg", version = "=0.9.0-alpha.0" }
 # Only to test serde1
 bincode = "1.2.1"
 rayon = "1.5.3"

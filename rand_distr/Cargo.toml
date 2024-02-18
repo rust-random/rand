@@ -1,6 +1,6 @@
 [package]
 name = "rand_distr"
-version = "0.5.0"
+version = "0.5.0-alpha.0"
 authors = ["The Rand Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -27,15 +27,15 @@ std_math = ["num-traits/std"]
 serde1 = ["serde", "rand/serde1"]
 
 [dependencies]
-rand = { path = "..", version = "0.9.0", default-features = false }
+rand = { path = "..", version = "=0.9.0-alpha.0", default-features = false }
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 serde_with = { version = "3.6.1", optional = true }
 
 [dev-dependencies]
-rand_pcg = { version = "0.4.0", path = "../rand_pcg" }
+rand_pcg = { version = "=0.9.0-alpha.0", path = "../rand_pcg" }
 # For inline examples
-rand = { path = "..", version = "0.9.0", features = ["small_rng"] }
+rand = { path = "..", version = "=0.9.0-alpha.0", features = ["small_rng"] }
 # Histogram implementation for testing uniformity
 average = { version = "0.13", features = [ "std" ] }
 # Special functions for testing distributions

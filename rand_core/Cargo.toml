@@ -1,6 +1,6 @@
 [package]
 name = "rand_core"
-version = "0.7.0"
+version = "0.9.0-alpha.0"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"

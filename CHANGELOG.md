@@ -8,16 +8,44 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [0.9.0] - unreleased
+## [0.9.0-alpha.0] - 2024-02-18
+This is a pre-release. To depend on this version, use `rand = "=0.9.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
+
+### Generators
+- Change `SmallRng::seed_from_u64` implementation (#1203)
+- Replace `SeedableRng` impl for `SmallRng` with inherent methods, excluding `fn from_seed` (#1368)
+
+### Sequences
+- Simpler and faster implementation of Floyd's F2 (#1277). This
+  changes some outputs from `rand::seq::index::sample` and
+  `rand::seq::SliceRandom::choose_multiple`.
+- New, faster algorithms for `IteratorRandom::choose` and `choose_stable` (#1268)
+- New, faster algorithms for `SliceRandom::shuffle` and `partial_shuffle` (#1272)
+- Re-introduce `Rng::gen_iter` (#1305)
+- Split trait `SliceRandom` into `IndexedRandom`, `IndexedMutRandom`, `SliceRandom` (#1382)
+
 ### Distributions
 - `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking) (#1229)
 - `Uniform` implements `TryFrom` instead of `From` for ranges (#1229)
 - `Uniform` now uses Canon's method (single sampling) / Lemire's method (distribution sampling) for faster sampling (breaks value stability; #1287)
+- Relax `Sized` bound on `Distribution<T> for &D` (#1278)
+- Explicit impl of `sample_single_inclusive` (+~20% perf) (#1289)
+- Impl `DistString` for `Slice<char>` and `Uniform<char>` (#1315)
+- Let `Standard` support all `NonZero*` types (#1332)
+- Add `trait Weight`, allowing `WeightedIndex` to trap overflow (#1353)
+- Rename `WeightedError` to `WeightError`, revising variants (#1382)
+
+### SIMD
+- Switch to `std::simd`, expand SIMD & docs (#1239)
+- Optimise SIMD widening multipy (#1247)
 
 ### Other
-- Simpler and faster implementation of Floyd's F2 (#1277). This
-  changes some outputs from `rand::seq::index::sample` and
-  `rand::seq::SliceRandom::choose_multiple`.
+- Bump MSRV to 1.60.0 (#1207, #1246, #1269, #1341)
+- Improve `thread_rng` related docs (#1257)
+- Add `Cargo.lock.msrv` file (#1275)
+- Docs: enable experimental `--generate-link-to-definition` feature (#1327)
+- Use `zerocopy` to replace some `unsafe` code (#1349)
+- Support `std` feature without `getrandom` or `rand_chacha` (#1354)
 
 ## [0.8.5] - 2021-08-20
 ### Fixes
