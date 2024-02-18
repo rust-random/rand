@@ -32,6 +32,7 @@ jobs:
         run: |
           cargo doc --all --features nightly,serde1,getrandom,small_rng
           cp utils/redirect.html target/doc/index.html
+          rm target/doc/.lock
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
