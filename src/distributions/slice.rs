@@ -85,7 +85,7 @@ impl<'a, T> Slice<'a, T> {
     }
 
     /// Returns the count of choices in this distribution
-    pub fn choices(&self) -> NonZeroUsize {
+    pub fn num_choices(&self) -> NonZeroUsize {
         // Safety: at construction time, it was ensured that the slice was
         // non-empty, as such the length can never be 0.
         unsafe { NonZeroUsize::new_unchecked(self.slice.len()) }
