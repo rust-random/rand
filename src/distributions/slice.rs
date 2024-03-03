@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use core::num::NonZeroUsize;
+
 use crate::distributions::{Distribution, Uniform};
 #[cfg(feature = "alloc")]
 use alloc::string::String;
@@ -80,6 +82,13 @@ impl<'a, T> Slice<'a, T> {
                 range: Uniform::new(0, len).unwrap(),
             }),
         }
+    }
+
+    /// Returns the count of choices in this distribution
+    pub fn choices(&self) -> NonZeroUsize {
+        // Safety: at construction time, it was ensured that the slice was
+        // non-empty, as such the length can never be 0.
+        unsafe { NonZeroUsize::new_unchecked(self.slice.len()) }
     }
 }
 
