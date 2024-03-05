@@ -69,25 +69,25 @@ use alloc::string::String;
 pub struct Slice<'a, T> {
     slice: &'a [T],
     range: Uniform<usize>,
-    choices: NonZeroUsize,
+    num_choices: NonZeroUsize,
 }
 
 impl<'a, T> Slice<'a, T> {
     /// Create a new `Slice` instance which samples uniformly from the slice.
     /// Returns `Err` if the slice is empty.
     pub fn new(slice: &'a [T]) -> Result<Self, EmptySlice> {
-        let len = NonZeroUsize::new(slice.len()).ok_or(EmptySlice)?;
+        let num_choices = NonZeroUsize::new(slice.len()).ok_or(EmptySlice)?;
 
         Ok(Self {
             slice,
-            range: Uniform::new(0, len.get()).unwrap(),
-            choices: len,
+            range: Uniform::new(0, num_choices.get()).unwrap(),
+            num_choices,
         })
     }
 
     /// Returns the count of choices in this distribution
     pub fn num_choices(&self) -> NonZeroUsize {
-        self.choices
+        self.num_choices
     }
 }
 
