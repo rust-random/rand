@@ -76,10 +76,7 @@ impl<'a, T> Slice<'a, T> {
     /// Create a new `Slice` instance which samples uniformly from the slice.
     /// Returns `Err` if the slice is empty.
     pub fn new(slice: &'a [T]) -> Result<Self, EmptySlice> {
-        let len = match NonZeroUsize::new(slice.len()) {
-            None => return Err(EmptySlice),
-            Some(len) => len,
-        };
+        let len = NonZeroUsize::new(slice.len()).ok_or(EmptySlice)?;
 
         Ok(Self {
             slice,
