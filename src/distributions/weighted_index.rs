@@ -231,7 +231,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     ///     Note that due to floating-point loss of precision, this case is not
     ///     always correctly detected; usage of a fixed-point weight type may be
     ///     preferred.
-    pub fn update_weights_relative<R>(&mut self, relative_weights: &[(usize, &R)], op: impl Fn(X, &R) -> X) -> Result<(), WeightError>
+    pub fn update_weights_relative<R>(&mut self, relative_weights: &[(usize, &R)], op: impl Fn(X, &R) -> Option<X>) -> Result<(), WeightError>
     where
         X: for<'a> ::core::ops::AddAssign<&'a X>
             + for<'a> ::core::ops::SubAssign<&'a X>
@@ -274,7 +274,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
             }
             total_weight -= &old_w;
             // Apply the relative operation to the weight.
-            let new_w = op(old_w, relative);
+            let new_w = op(old_w, relative).ok_or(WeightError::InvalidWeight)?;
             if !(new_w >= zero) {
                 return Err(WeightError::InvalidWeight);
             }
@@ -555,32 +555,65 @@ mod test {
             assert_eq!(distr.cumulative_weights, expected_distr.cumulative_weights);
         }
     }
-    
+
+    #[test]
+    fn test_update_weights_errors() {
+        let data = [
+            (
+                &[1i32, 0, 0][..],
+                &[(0, &0)][..],
+                WeightError::InsufficientNonZero,
+            ),
+            (
+                &[10, 10, 10, 10][..],
+                &[(1, &-11)][..],
+                WeightError::InvalidWeight, // A weight is negative
+            ),
+            (
+                &[1, 2, 3, 4, 5][..],
+                &[(1, &5), (0, &5)][..], // Wrong order
+                WeightError::InvalidInput,
+            ),
+            (
+                &[1][..],
+                &[(1, &1)][..], // Index too large
+                WeightError::InvalidInput,
+            ),
+        ];
+
+        for (weights, update, err) in data.iter() {
+            let total_weight = weights.iter().sum::<i32>();
+            let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
+            assert_eq!(distr.total_weight, total_weight);
+            assert_eq!(distr.update_weights(update).unwrap_err(), *err);
+        }
+    }
+
     #[test]
     fn test_update_weights_relative() {
-        let data: [(&[u32], &[(usize, &u32)], fn(u32, &u32) -> u32, &[u32]); 4] = [
+        let data: [(&[u32], &[(usize, &u32)], fn(u32, &u32) -> Option<u32>, &[u32]); 4] = [
             (
-                &[2][..], // Total = 2
-                &[(0, &1)][..], // 2 + 1
-                |x, &y| x + y, // Add
-                &[3][..], // Total = 3
+                &[2][..],
+                &[(0, &1)][..],
+                |x, &y| x.checked_add(y), // Add 2 + 1
+                &[3][..],
             ),
             (
                 &[1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..], // Total = 52
-                &[(2, &1), (5, &1), (13, &100)][..], // 3 + 1, 6 + 1, 7 + 100
-                |x, &y| x + y, // Add
+                &[(2, &1), (5, &1), (13, &100)][..],
+                |x, &y| x.checked_add(y), // Add 3 + 1, 6 + 1, 7 + 100
                 &[1u32, 2, 4, 0, 5, 7, 7, 1, 2, 3, 4, 5, 6, 107][..], // Total = 154
             ),
             (
                 &[10u32, 55, 7, 4][..], // Total = 76
-                &[(1, &40), (2, &4)][..], // 55 - 40, 7 - 4
-                |x, &y| x - y, // Subtract
+                &[(1, &40), (2, &4)][..],
+                |x, &y| x.checked_sub(y), // Subtract 55 - 40, 7 - 4
                 &[10, 15, 3, 4][..], // Total = 124
             ),
             (
                 &[5u32, 4, 7, 4][..], // Total = 20
-                &[(0, &3), (2, &4)][..], // 5 * 3, 7 * 4
-                |x, &y| x * y, // Multiply
+                &[(0, &3), (2, &4)][..],
+                |x, &y| x.checked_mul(y), // Multiply 5 * 3, 7 * 4
                 &[15, 4, 28, 4][..], // Total = 51
             ),
         ];
@@ -596,6 +629,49 @@ mod test {
             assert_eq!(distr.total_weight, expected_total_weight);
             assert_eq!(distr.total_weight, expected_distr.total_weight);
             assert_eq!(distr.cumulative_weights, expected_distr.cumulative_weights);
+        }
+    }
+
+    #[test]
+    fn test_update_weights_relative_errors() {
+        let data: [(&[u32], &[(usize, &u32)], fn(u32, &u32) -> Option<u32>, WeightError); 5] = [
+            (
+                &[1][..],
+                &[(0, &1)][..], // 1 - 1
+                |x, &y| x.checked_sub(y),
+                WeightError::InsufficientNonZero, // Total = 0
+            ),
+            (
+                &[10, 10, 10, 10][..],
+                &[(1, &11)][..], // 10 - 11
+                |x, &y| x.checked_sub(y),
+                WeightError::InvalidWeight, // A weight is negative
+            ),
+            (
+                &[u32::MAX][..],
+                &[(0, &1)][..],
+                |x, &y| x.checked_add(y), // Add 1 (will overflow and return None)
+                WeightError::InvalidWeight, // Not ::Overflow here, because we don't know the reason of the error
+            ),
+            (
+                &[1, 2, 3, 4, 5][..],
+                &[(1, &5), (0, &5)][..], // Wrong order
+                |x, &y| x.checked_add(y),
+                WeightError::InvalidInput,
+            ),
+            (
+                &[1][..],
+                &[(1, &1)][..], // Index too large
+                |x, &y| x.checked_add(y),
+                WeightError::InvalidInput,
+            ),
+        ];
+
+        for (weights, update, op, err) in data.iter() {
+            let total_weight = weights.iter().sum::<u32>();
+            let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
+            assert_eq!(distr.total_weight, total_weight);
+            assert_eq!(distr.update_weights_relative(update, op).unwrap_err(), *err);
         }
     }
 
