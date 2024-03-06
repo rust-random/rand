@@ -55,7 +55,6 @@
 
 use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 use crate::{Error, CryptoRng, RngCore, SeedableRng};
-use core::convert::AsRef;
 use core::fmt;
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};

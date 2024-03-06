@@ -712,8 +712,6 @@ fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
 #[cfg(test)]
 mod test {
     use super::*;
-    #[cfg(feature = "alloc")]
-    use crate::Rng;
     #[cfg(all(feature = "alloc", not(feature = "std")))]
     use alloc::vec::Vec;
 
