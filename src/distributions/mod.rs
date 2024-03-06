@@ -170,7 +170,8 @@ use crate::Rng;
 /// The [`Standard`] distribution may be implemented for user types as follows:
 ///
 /// ```
-/// # #![allow(dead_code, non_local_definitions)]
+/// # #![allow(dead_code)]
+/// # #![allow(clippy::non_local_definitions)]
 /// use rand::Rng;
 /// use rand::distributions::{Distribution, Standard};
 ///
