@@ -172,7 +172,6 @@ float_impls! { f64x8, u64x8, f64, u64, 52, 1023 }
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::distributions::utils::FloatAsSIMD;
     use crate::rngs::mock::StepRng;
 
     const EPSILON32: f32 = ::core::f32::EPSILON;

@@ -38,9 +38,6 @@
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![no_std]
 
-use core::convert::AsMut;
-use core::default::Default;
-
 #[cfg(feature = "alloc")] extern crate alloc;
 #[cfg(feature = "std")] extern crate std;
 #[cfg(feature = "alloc")] use alloc::boxed::Box;

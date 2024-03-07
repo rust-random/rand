@@ -11,8 +11,6 @@
 //! Little-Endian order has been chosen for internal usage; this makes some
 //! useful functions available.
 
-use core::convert::TryInto;
-
 /// Reads unsigned 32 bit integers from `src` into `dst`.
 #[inline]
 pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
