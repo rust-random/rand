@@ -8,6 +8,9 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.9.1] - unreleased
+- Add the `Slice::num_choices` method to the Slice distribution (#1402)
+
 ## [0.9.0-alpha.0] - 2024-02-18
 This is a pre-release. To depend on this version, use `rand = "=0.9.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
 

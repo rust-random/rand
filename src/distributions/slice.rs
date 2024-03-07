@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use core::num::NonZeroUsize;
+
 use crate::distributions::{Distribution, Uniform};
 #[cfg(feature = "alloc")]
 use alloc::string::String;
@@ -67,19 +69,25 @@ use alloc::string::String;
 pub struct Slice<'a, T> {
     slice: &'a [T],
     range: Uniform<usize>,
+    num_choices: NonZeroUsize,
 }
 
 impl<'a, T> Slice<'a, T> {
     /// Create a new `Slice` instance which samples uniformly from the slice.
     /// Returns `Err` if the slice is empty.
     pub fn new(slice: &'a [T]) -> Result<Self, EmptySlice> {
-        match slice.len() {
-            0 => Err(EmptySlice),
-            len => Ok(Self {
-                slice,
-                range: Uniform::new(0, len).unwrap(),
-            }),
-        }
+        let num_choices = NonZeroUsize::new(slice.len()).ok_or(EmptySlice)?;
+
+        Ok(Self {
+            slice,
+            range: Uniform::new(0, num_choices.get()).unwrap(),
+            num_choices,
+        })
+    }
+
+    /// Returns the count of choices in this distribution
+    pub fn num_choices(&self) -> NonZeroUsize {
+        self.num_choices
     }
 }
 
