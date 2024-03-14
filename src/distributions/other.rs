@@ -98,6 +98,7 @@ impl Distribution<char> for Standard {
 /// Note: the `String` is potentially left with excess capacity; optionally the
 /// user may call `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl DistString for Standard {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, s: &mut String, len: usize) {
         // A char is encoded with at most four bytes, thus this reservation is
@@ -128,6 +129,7 @@ impl Distribution<u8> for Alphanumeric {
 }
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl DistString for Alphanumeric {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
         unsafe {
@@ -177,6 +179,7 @@ impl Distribution<bool> for Standard {
 /// [`_mm_blendv_epi8`]: https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_blendv_epi8&ig_expand=514/
 /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
 #[cfg(feature = "simd_support")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))]
 impl<T, const LANES: usize> Distribution<Mask<T, LANES>> for Standard
 where
     T: MaskElement + Default,

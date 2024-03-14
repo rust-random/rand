@@ -124,8 +124,11 @@ impl_nzint!(NonZeroI128, NonZeroI128::new);
 impl_nzint!(NonZeroIsize, NonZeroIsize::new);
 
 macro_rules! x86_intrinsic_impl {
-    ($($intrinsic:ident),+) => {$(
-        /// Available only on x86/64 platforms
+    ($meta:meta, $doc:literal, $($intrinsic:ident),+) => {$(
+        #[doc = $doc]
+        #[cfg($meta)]
+        // TODO: as doc_cfg/doc_auto_cfg mature ensure they catch this
+        #[cfg_attr(doc_cfg, doc(cfg($meta)))]
         impl Distribution<$intrinsic> for Standard {
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $intrinsic {
@@ -146,6 +149,9 @@ macro_rules! simd_impl {
         /// Requires nightly Rust and the [`simd_support`] feature
         ///
         /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
+        #[cfg(feature = "simd_support")]
+        // TODO: as doc_cfg/doc_auto_cfg mature ensure they catch this
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))]
         impl<const LANES: usize> Distribution<Simd<$ty, LANES>> for Standard
         where
             LaneCount<LANES>: SupportedLaneCount,
@@ -164,12 +170,24 @@ macro_rules! simd_impl {
 simd_impl!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-x86_intrinsic_impl!(__m128i, __m256i);
+x86_intrinsic_impl!(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    "Requires x86/64",
+    __m128i,
+    __m256i
+);
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     feature = "simd_support"
 ))]
-x86_intrinsic_impl!(__m512i);
+x86_intrinsic_impl!(
+    all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        feature = "simd_support"
+    ),
+    "Requires x86/64 and `simd_support`",
+    __m512i
+);
 
 #[cfg(test)]
 mod tests {
