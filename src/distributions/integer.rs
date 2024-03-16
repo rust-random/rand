@@ -124,10 +124,8 @@ impl_nzint!(NonZeroI128, NonZeroI128::new);
 impl_nzint!(NonZeroIsize, NonZeroIsize::new);
 
 macro_rules! x86_intrinsic_impl {
-    ($meta:meta, $doc:literal, $($intrinsic:ident),+) => {$(
-        #[doc = $doc]
+    ($meta:meta, $($intrinsic:ident),+) => {$(
         #[cfg($meta)]
-        // TODO: as doc_cfg/doc_auto_cfg mature ensure they catch this
         #[cfg_attr(doc_cfg, doc(cfg($meta)))]
         impl Distribution<$intrinsic> for Standard {
             #[inline]
@@ -172,7 +170,6 @@ simd_impl!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 x86_intrinsic_impl!(
     any(target_arch = "x86", target_arch = "x86_64"),
-    "Requires x86/64",
     __m128i,
     __m256i
 );
@@ -185,7 +182,6 @@ x86_intrinsic_impl!(
         any(target_arch = "x86", target_arch = "x86_64"),
         feature = "simd_support"
     ),
-    "Requires x86/64 and `simd_support`",
     __m512i
 );
 

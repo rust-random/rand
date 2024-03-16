@@ -150,8 +150,6 @@ impl Distribution<bool> for Standard {
     }
 }
 
-/// Requires nightly Rust and the [`simd_support`] feature
-///
 /// Note that on some hardware like x86/64 mask operations like [`_mm_blendv_epi8`]
 /// only care about a single bit. This means that you could use uniform random bits
 /// directly:

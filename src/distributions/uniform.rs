@@ -653,11 +653,7 @@ macro_rules! uniform_simd_int_impl {
         // is generally a bad idea for SIMD performance. The user can still
         // implement it manually.
 
-        /// Requires nightly Rust and the [`simd_support`] feature
-        ///
-        /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
         #[cfg(feature = "simd_support")]
-        // TODO: as doc_cfg/doc_auto_cfg mature ensure they catch this
         #[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))]
         impl<const LANES: usize> SampleUniform for Simd<$ty, LANES>
         where
@@ -669,11 +665,7 @@ macro_rules! uniform_simd_int_impl {
             type Sampler = UniformInt<Simd<$ty, LANES>>;
         }
 
-        /// Requires nightly Rust and the [`simd_support`] feature
-        ///
-        /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
         #[cfg(feature = "simd_support")]
-        // TODO: as doc_cfg/doc_auto_cfg mature ensure they catch this
         #[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))]
         impl<const LANES: usize> UniformSampler for UniformInt<Simd<$ty, LANES>>
         where
@@ -898,19 +890,15 @@ pub struct UniformFloat<X> {
 }
 
 macro_rules! uniform_float_impl {
-    ($($meta:meta, $doc:literal)?, $ty:ty, $uty:ident, $f_scalar:ident, $u_scalar:ident, $bits_to_discard:expr) => {
-        $(#[doc = $doc]
-        #[cfg(feature = "simd_support")]
-        // TODO: as doc_cfg/doc_auto_cfg mature ensure they catch this
-        #[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))])?
+    ($($meta:meta)?, $ty:ty, $uty:ident, $f_scalar:ident, $u_scalar:ident, $bits_to_discard:expr) => {
+        $(#[cfg($meta)]
+        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
         impl SampleUniform for $ty {
             type Sampler = UniformFloat<$ty>;
         }
 
-        $(#[doc = $doc]
-        #[cfg(feature = "simd_support")]
-        // TODO: as doc_cfg/doc_auto_cfg mature ensure they catch this
-        #[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))])?
+        $(#[cfg($meta)]
+        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
         impl UniformSampler for UniformFloat<$ty> {
             type X = $ty;
 
@@ -1114,20 +1102,20 @@ uniform_float_impl! { , f32, u32, f32, u32, 32 - 23 }
 uniform_float_impl! { , f64, u64, f64, u64, 64 - 52 }
 
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { feature = "simd_support", "Requires `simd_support`", f32x2, u32x2, f32, u32, 32 - 23 }
+uniform_float_impl! { feature = "simd_support", f32x2, u32x2, f32, u32, 32 - 23 }
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { feature = "simd_support", "Requires `simd_support`", f32x4, u32x4, f32, u32, 32 - 23 }
+uniform_float_impl! { feature = "simd_support", f32x4, u32x4, f32, u32, 32 - 23 }
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { feature = "simd_support", "Requires `simd_support`", f32x8, u32x8, f32, u32, 32 - 23 }
+uniform_float_impl! { feature = "simd_support", f32x8, u32x8, f32, u32, 32 - 23 }
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { feature = "simd_support", "Requires `simd_support`", f32x16, u32x16, f32, u32, 32 - 23 }
+uniform_float_impl! { feature = "simd_support", f32x16, u32x16, f32, u32, 32 - 23 }
 
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { feature = "simd_support", "Requires `simd_support`", f64x2, u64x2, f64, u64, 64 - 52 }
+uniform_float_impl! { feature = "simd_support", f64x2, u64x2, f64, u64, 64 - 52 }
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { feature = "simd_support", "Requires `simd_support`", f64x4, u64x4, f64, u64, 64 - 52 }
+uniform_float_impl! { feature = "simd_support", f64x4, u64x4, f64, u64, 64 - 52 }
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { feature = "simd_support", "Requires `simd_support`", f64x8, u64x8, f64, u64, 64 - 52 }
+uniform_float_impl! { feature = "simd_support", f64x8, u64x8, f64, u64, 64 - 52 }
 
 
 /// The back-end implementing [`UniformSampler`] for `Duration`.
