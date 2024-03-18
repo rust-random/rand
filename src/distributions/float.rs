@@ -90,8 +90,9 @@ pub trait IntoFloat {
 }
 
 macro_rules! float_impls {
-    ($ty:ident, $uty:ident, $f_scalar:ident, $u_scalar:ty,
+    ($($meta:meta)?, $ty:ident, $uty:ident, $f_scalar:ident, $u_scalar:ty,
      $fraction_bits:expr, $exponent_bias:expr) => {
+        $(#[cfg($meta)])?
         impl IntoFloat for $uty {
             type F = $ty;
             #[inline(always)]
@@ -103,6 +104,8 @@ macro_rules! float_impls {
             }
         }
 
+        $(#[cfg($meta)]
+        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
         impl Distribution<$ty> for Standard {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 // Multiply-based method; 24/53 random bits; [0, 1) interval.
@@ -118,6 +121,8 @@ macro_rules! float_impls {
             }
         }
 
+        $(#[cfg($meta)]
+        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
         impl Distribution<$ty> for OpenClosed01 {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 // Multiply-based method; 24/53 random bits; (0, 1] interval.
@@ -134,6 +139,8 @@ macro_rules! float_impls {
             }
         }
 
+        $(#[cfg($meta)]
+        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
         impl Distribution<$ty> for Open01 {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 // Transmute-based method; 23/52 random bits; (0, 1) interval.
@@ -150,24 +157,24 @@ macro_rules! float_impls {
     }
 }
 
-float_impls! { f32, u32, f32, u32, 23, 127 }
-float_impls! { f64, u64, f64, u64, 52, 1023 }
+float_impls! { , f32, u32, f32, u32, 23, 127 }
+float_impls! { , f64, u64, f64, u64, 52, 1023 }
 
 #[cfg(feature = "simd_support")]
-float_impls! { f32x2, u32x2, f32, u32, 23, 127 }
+float_impls! { feature = "simd_support", f32x2, u32x2, f32, u32, 23, 127 }
 #[cfg(feature = "simd_support")]
-float_impls! { f32x4, u32x4, f32, u32, 23, 127 }
+float_impls! { feature = "simd_support", f32x4, u32x4, f32, u32, 23, 127 }
 #[cfg(feature = "simd_support")]
-float_impls! { f32x8, u32x8, f32, u32, 23, 127 }
+float_impls! { feature = "simd_support", f32x8, u32x8, f32, u32, 23, 127 }
 #[cfg(feature = "simd_support")]
-float_impls! { f32x16, u32x16, f32, u32, 23, 127 }
+float_impls! { feature = "simd_support", f32x16, u32x16, f32, u32, 23, 127 }
 
 #[cfg(feature = "simd_support")]
-float_impls! { f64x2, u64x2, f64, u64, 52, 1023 }
+float_impls! { feature = "simd_support", f64x2, u64x2, f64, u64, 52, 1023 }
 #[cfg(feature = "simd_support")]
-float_impls! { f64x4, u64x4, f64, u64, 52, 1023 }
+float_impls! { feature = "simd_support", f64x4, u64x4, f64, u64, 52, 1023 }
 #[cfg(feature = "simd_support")]
-float_impls! { f64x8, u64x8, f64, u64, 52, 1023 }
+float_impls! { feature = "simd_support", f64x8, u64x8, f64, u64, 52, 1023 }
 
 #[cfg(test)]
 mod tests {
