@@ -23,9 +23,6 @@ are expected to provide the following:
 For some RNGs, notably `OsRng`, `ThreadRng` and those wrapped by `ReseedingRng`,
 we provide limited mitigations against side-channel attacks:
 
--   After a process fork on Unix, there is an upper-bound on the number of bits
-    output by the RNG before the processes diverge, after which outputs from
-    each process's RNG are uncorrelated
 -   After the state (memory) of an RNG is leaked, there is an upper-bound on the
     number of bits of output by the RNG before prediction of output by an
     observer again becomes computationally-infeasible

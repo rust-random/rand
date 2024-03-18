@@ -18,7 +18,7 @@ use core::mem::size_of;
 use test::{black_box, Bencher};
 
 use rand::prelude::*;
-use rand::rngs::adapter::ReseedingRng;
+use rand::rngs::ReseedingRng;
 use rand::rngs::{mock::StepRng, OsRng};
 use rand_chacha::{ChaCha12Rng, ChaCha20Core, ChaCha20Rng, ChaCha8Rng};
 use rand_pcg::{Pcg32, Pcg64, Pcg64Mcg, Pcg64Dxsm};
@@ -52,6 +52,7 @@ gen_bytes!(gen_bytes_std, StdRng::from_entropy());
 #[cfg(feature = "small_rng")]
 gen_bytes!(gen_bytes_small, SmallRng::from_thread_rng());
 gen_bytes!(gen_bytes_os, OsRng);
+gen_bytes!(gen_bytes_thread, thread_rng());
 
 macro_rules! gen_uint {
     ($fnn:ident, $ty:ty, $gen:expr) => {
@@ -82,6 +83,7 @@ gen_uint!(gen_u32_std, u32, StdRng::from_entropy());
 #[cfg(feature = "small_rng")]
 gen_uint!(gen_u32_small, u32, SmallRng::from_thread_rng());
 gen_uint!(gen_u32_os, u32, OsRng);
+gen_uint!(gen_u32_thread, u32, thread_rng());
 
 gen_uint!(gen_u64_step, u64, StepRng::new(0, 1));
 gen_uint!(gen_u64_pcg32, u64, Pcg32::from_entropy());
@@ -95,6 +97,7 @@ gen_uint!(gen_u64_std, u64, StdRng::from_entropy());
 #[cfg(feature = "small_rng")]
 gen_uint!(gen_u64_small, u64, SmallRng::from_thread_rng());
 gen_uint!(gen_u64_os, u64, OsRng);
+gen_uint!(gen_u64_thread, u64, thread_rng());
 
 macro_rules! init_gen {
     ($fnn:ident, $gen:ident) => {
@@ -141,24 +144,3 @@ reseeding_bytes!(reseeding_chacha20_32k, 32);
 reseeding_bytes!(reseeding_chacha20_64k, 64);
 reseeding_bytes!(reseeding_chacha20_256k, 256);
 reseeding_bytes!(reseeding_chacha20_1M, 1024);
-
-
-macro_rules! threadrng_uint {
-    ($fnn:ident, $ty:ty) => {
-        #[bench]
-        fn $fnn(b: &mut Bencher) {
-            let mut rng = thread_rng();
-            b.iter(|| {
-                let mut accum: $ty = 0;
-                for _ in 0..RAND_BENCH_N {
-                    accum = accum.wrapping_add(rng.gen::<$ty>());
-                }
-                accum
-            });
-            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
-        }
-    };
-}
-
-threadrng_uint!(thread_rng_u32, u32);
-threadrng_uint!(thread_rng_u64, u64);

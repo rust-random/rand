@@ -11,6 +11,10 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ## [0.9.1] - unreleased
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
 
+### Generators
+- `ReseedingRng::reseed` also resets the random data cache.
+- Remove fork-protection from `ReseedingRng` and `ThreadRng`. Instead, it is recommended to call `ThreadRng::reseed` on fork.
+
 ## [0.9.0-alpha.0] - 2024-02-18
 This is a pre-release. To depend on this version, use `rand = "=0.9.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
 

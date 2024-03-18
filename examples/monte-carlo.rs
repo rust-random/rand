@@ -23,9 +23,6 @@
 //! We can use the above fact to estimate the value of π: pick many points in
 //! the square at random, calculate the fraction that fall within the circle,
 //! and multiply this fraction by 4.
-
-#![cfg(all(feature = "std", feature = "std_rng"))]
-
 use rand::distributions::{Distribution, Uniform};
 
 fn main() {
