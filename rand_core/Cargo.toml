@@ -1,6 +1,6 @@
 [package]
 name = "rand_core"
-version = "0.7.0"
+version = "0.9.0-alpha.0"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -32,4 +32,4 @@ serde1 = ["serde"] # enables serde for BlockRng wrapper
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }
 getrandom = { version = "0.2", optional = true }
-zerocopy = { version = "0.7.20", default-features = false }
+zerocopy = { version = "=0.8.0-alpha.6", default-features = false }

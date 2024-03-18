@@ -76,8 +76,9 @@
 //!   - [`UnitBall`] distribution
 //!   - [`UnitCircle`] distribution
 //!   - [`UnitDisc`] distribution
-//! - Alternative implementation for weighted index sampling
+//! - Alternative implementations for weighted index sampling
 //!   - [`WeightedAliasIndex`] distribution
+//!   - [`WeightedTreeIndex`] distribution
 //! - Misc. distributions
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
@@ -129,10 +130,13 @@ pub use self::weibull::{Error as WeibullError, Weibull};
 pub use self::zipf::{Zeta, ZetaError, Zipf, ZipfError};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
-pub use rand::distributions::{WeightedError, WeightedIndex};
+pub use rand::distributions::{WeightError, WeightedIndex};
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use weighted_alias::WeightedAliasIndex;
+#[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+pub use weighted_tree::WeightedTreeIndex;
 
 pub use num_traits;
 
@@ -186,6 +190,9 @@ mod test {
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod weighted_alias;
+#[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+pub mod weighted_tree;
 
 mod binomial;
 mod cauchy;

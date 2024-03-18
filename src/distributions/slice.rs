@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use core::num::NonZeroUsize;
+
 use crate::distributions::{Distribution, Uniform};
 #[cfg(feature = "alloc")]
 use alloc::string::String;
@@ -15,7 +17,7 @@ use alloc::string::String;
 /// [`Slice::new`] constructs a distribution referencing a slice and uniformly
 /// samples references from the items in the slice. It may do extra work up
 /// front to make sampling of multiple values faster; if only one sample from
-/// the slice is required, [`SliceRandom::choose`] can be more efficient.
+/// the slice is required, [`IndexedRandom::choose`] can be more efficient.
 ///
 /// Steps are taken to avoid bias which might be present in naive
 /// implementations; for example `slice[rng.gen() % slice.len()]` samples from
@@ -25,7 +27,7 @@ use alloc::string::String;
 /// This distribution samples with replacement; each sample is independent.
 /// Sampling without replacement requires state to be retained, and therefore
 /// cannot be handled by a distribution; you should instead consider methods
-/// on [`SliceRandom`], such as [`SliceRandom::choose_multiple`].
+/// on [`IndexedRandom`], such as [`IndexedRandom::choose_multiple`].
 ///
 /// # Example
 ///
@@ -48,11 +50,11 @@ use alloc::string::String;
 /// assert!(vowel_string.chars().all(|c| vowels.contains(&c)));
 /// ```
 ///
-/// For a single sample, [`SliceRandom::choose`][crate::seq::SliceRandom::choose]
+/// For a single sample, [`IndexedRandom::choose`][crate::seq::IndexedRandom::choose]
 /// may be preferred:
 ///
 /// ```
-/// use rand::seq::SliceRandom;
+/// use rand::seq::IndexedRandom;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
 /// let mut rng = rand::thread_rng();
@@ -60,26 +62,32 @@ use alloc::string::String;
 /// println!("{}", vowels.choose(&mut rng).unwrap())
 /// ```
 ///
-/// [`SliceRandom`]: crate::seq::SliceRandom
-/// [`SliceRandom::choose`]: crate::seq::SliceRandom::choose
-/// [`SliceRandom::choose_multiple`]: crate::seq::SliceRandom::choose_multiple
+/// [`IndexedRandom`]: crate::seq::IndexedRandom
+/// [`IndexedRandom::choose`]: crate::seq::IndexedRandom::choose
+/// [`IndexedRandom::choose_multiple`]: crate::seq::IndexedRandom::choose_multiple
 #[derive(Debug, Clone, Copy)]
 pub struct Slice<'a, T> {
     slice: &'a [T],
     range: Uniform<usize>,
+    num_choices: NonZeroUsize,
 }
 
 impl<'a, T> Slice<'a, T> {
     /// Create a new `Slice` instance which samples uniformly from the slice.
     /// Returns `Err` if the slice is empty.
     pub fn new(slice: &'a [T]) -> Result<Self, EmptySlice> {
-        match slice.len() {
-            0 => Err(EmptySlice),
-            len => Ok(Self {
-                slice,
-                range: Uniform::new(0, len).unwrap(),
-            }),
-        }
+        let num_choices = NonZeroUsize::new(slice.len()).ok_or(EmptySlice)?;
+
+        Ok(Self {
+            slice,
+            range: Uniform::new(0, num_choices.get()).unwrap(),
+            num_choices,
+        })
+    }
+
+    /// Returns the count of choices in this distribution
+    pub fn num_choices(&self) -> NonZeroUsize {
+        self.num_choices
     }
 }
 
@@ -121,6 +129,7 @@ impl std::error::Error for EmptySlice {}
 /// Note: the `String` is potentially left with excess capacity; optionally the
 /// user may call `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl<'a> super::DistString for Slice<'a, char> {
     fn append_string<R: crate::Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
         // Get the max char length to minimize extra space.

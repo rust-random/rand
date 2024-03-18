@@ -59,7 +59,7 @@ fn simulate<R: Rng>(random_door: &Uniform<u32>, rng: &mut R) -> SimulationResult
 // Returns the door the game host opens given our choice and knowledge of
 // where the car is. The game host will never open the door with the car.
 fn game_host_open<R: Rng>(car: u32, choice: u32, rng: &mut R) -> u32 {
-    use rand::seq::SliceRandom;
+    use rand::seq::IndexedRandom;
     *free_doors(&[car, choice]).choose(rng).unwrap()
 }
 

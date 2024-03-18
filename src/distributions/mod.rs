@@ -108,17 +108,11 @@ pub mod hidden_export {
     pub use super::float::IntoFloat; // used by rand_distr
 }
 pub mod uniform;
-#[deprecated(
-    since = "0.8.0",
-    note = "use rand::distributions::{WeightedIndex, WeightedError} instead"
-)]
-#[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
-pub mod weighted;
 
 pub use self::bernoulli::{Bernoulli, BernoulliError};
 pub use self::distribution::{Distribution, DistIter, DistMap};
 #[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use self::distribution::DistString;
 pub use self::float::{Open01, OpenClosed01};
 pub use self::other::Alphanumeric;
@@ -126,7 +120,7 @@ pub use self::slice::Slice;
 #[doc(inline)]
 pub use self::uniform::Uniform;
 #[cfg(feature = "alloc")]
-pub use self::weighted_index::{Weight, WeightedError, WeightedIndex};
+pub use self::weighted_index::{Weight, WeightError, WeightedIndex};
 
 #[allow(unused)]
 use crate::Rng;

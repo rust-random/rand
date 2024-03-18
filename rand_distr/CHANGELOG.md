@@ -4,14 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0] - unreleased
+## [0.5.0-alpha.0] - 2024-02-18
+This is a pre-release. To depend on this version, use `rand_distr = "=0.5.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
+
+### Additions
+- Make distributions comparable with `PartialEq` (#1218)
+- Add `WeightedIndexTree` (#1372)
+
+### Changes
+- Target `rand` version `0.9.0-alpha.0`
 - Remove unused fields from `Gamma`, `NormalInverseGaussian` and `Zipf` distributions (#1184)
   This breaks serialization compatibility with older versions.
-- Upgrade Rand
-- Fix Knuth's method so `Poisson` doesn't return -1.0 for small lambda
-- Fix `Poisson` distribution instantiation so it return an error if lambda is infinite
 - `Dirichlet` now uses `const` generics, which means that its size is required at compile time (#1292)
 - The `Dirichlet::new_with_size` constructor was removed (#1292)
+
+### Fixes
+- Fix Knuth's method so `Poisson` doesn't return -1.0 for small lambda (#1284)
+- Fix `Poisson` distribution instantiation so it return an error if lambda is infinite (#1291)
+- Fix Dirichlet sample for small alpha values to avoid NaN samples (#1209)
+- Fix infinite loop in `Binomial` distribution (#1325)
 
 ## [0.4.3] - 2021-12-30
 - Fix `no_std` build (#1208)
