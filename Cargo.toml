@@ -69,7 +69,7 @@ rand_core = { path = "rand_core", version = "=0.9.0-alpha.0", default-features =
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 rand_chacha = { path = "rand_chacha", version = "=0.9.0-alpha.0", default-features = false, optional = true }
-zerocopy = { version = "=0.8.0-alpha.5", default-features = false, features = ["simd"] }
+zerocopy = { version = "=0.8.0-alpha.6", default-features = false, features = ["simd"] }
 
 [target.'cfg(unix)'.dependencies]
 # Used for fork protection (reseeding.rs)
