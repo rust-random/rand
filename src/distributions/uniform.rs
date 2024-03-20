@@ -108,7 +108,9 @@ use core::time::Duration;
 use core::ops::{Range, RangeInclusive};
 
 use crate::distributions::float::IntoFloat;
-use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAsSIMD, WideningMultiply};
+use crate::distributions::utils::{
+    BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAsSIMD, ScaleComputable, WideningMultiply,
+};
 use crate::distributions::Distribution;
 #[cfg(feature = "simd_support")]
 use crate::distributions::Standard;
@@ -916,22 +918,12 @@ macro_rules! uniform_float_impl {
                 if !(low.all_lt(high)) {
                     return Err(Error::EmptyRange);
                 }
-                let max_rand = <$ty>::splat(
-                    (::core::$u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
-                );
 
-                let mut scale = high - low;
-                if !(scale.all_finite()) {
+                if !((high - low).all_finite()) {
                     return Err(Error::NonFinite);
                 }
 
-                loop {
-                    let mask = (scale * max_rand + low).ge_mask(high);
-                    if !mask.any() {
-                        break;
-                    }
-                    scale = scale.decrease_masked(mask);
-                }
+                let scale = <$ty>::compute_scale(low, high);
 
                 debug_assert!(<$ty>::splat(0.0).all_le(scale));
 
