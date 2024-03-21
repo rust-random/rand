@@ -701,21 +701,15 @@ macro_rules! uniform_simd_int_impl {
                 if !(low.simd_le(high).all()) {
                     return Err(Error::EmptyRange);
                 }
-                let unsigned_max = Simd::splat(::core::$unsigned::MAX);
 
                 // NOTE: all `Simd` operations are inherently wrapping,
                 //       see https://doc.rust-lang.org/std/simd/struct.Simd.html
                 let range: Simd<$unsigned, LANES> = ((high - low) + Simd::splat(1)).cast();
-                // `% 0` will panic at runtime.
+
+                // We must avoid divide-by-zero by using 0 % 1 == 0.
                 let not_full_range = range.simd_gt(Simd::splat(0));
-                // replacing 0 with `unsigned_max` allows a faster `select`
-                // with bitwise OR
-                let modulo = not_full_range.select(range, unsigned_max);
-                // wrapping addition
-                // TODO: replace with `range.wrapping_neg() % module` when Simd supports this.
-                let ints_to_reject = (Simd::splat(0) - range) % modulo;
-                // When `range` is 0, `lo` of `v.wmul(range)` will always be
-                // zero which means only one sample is needed.
+                let modulo = not_full_range.select(range, Simd::splat(1));
+                let ints_to_reject = range.wrapping_neg() % modulo;
 
                 Ok(UniformInt {
                     low,
