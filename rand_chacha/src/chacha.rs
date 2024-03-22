@@ -14,7 +14,7 @@
 use self::core::fmt;
 use crate::guts::ChaCha;
 use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
-use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
+use rand_core::{CryptoRng, Error, InfallibleRng, RngCore, SeedableRng};
 
 #[cfg(feature = "serde1")] use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
@@ -100,6 +100,8 @@ macro_rules! chacha_impl {
         }
 
         impl CryptoBlockRng for $ChaChaXCore {}
+
+        impl InfallibleRng for $ChaChaXRng {}
 
         /// A cryptographically secure random number generator that uses the ChaCha algorithm.
         ///

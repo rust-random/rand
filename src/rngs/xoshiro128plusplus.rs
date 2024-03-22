@@ -9,7 +9,7 @@
 #[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
 use rand_core::impls::{next_u64_via_u32, fill_bytes_via_next};
 use rand_core::le::read_u32_into;
-use rand_core::{SeedableRng, RngCore, Error};
+use rand_core::{Error, InfallibleRng, RngCore, SeedableRng};
 
 /// A xoshiro128++ random number generator.
 ///
@@ -96,6 +96,8 @@ impl RngCore for Xoshiro128PlusPlus {
         Ok(())
     }
 }
+
+impl InfallibleRng for Xoshiro128PlusPlus {}
 
 #[cfg(test)]
 mod tests {

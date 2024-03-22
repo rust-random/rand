@@ -8,7 +8,7 @@
 
 //! The standard RNG
 
-use crate::{CryptoRng, Error, RngCore, SeedableRng};
+use rand_core::{CryptoRng, Error, InfallibleRng, RngCore, SeedableRng};
 
 #[cfg(any(test, feature = "getrandom"))]
 pub(crate) use rand_chacha::ChaCha12Core as Core;
@@ -73,6 +73,7 @@ impl SeedableRng for StdRng {
 
 impl CryptoRng for StdRng {}
 
+impl InfallibleRng for StdRng {}
 
 #[cfg(test)]
 mod test {

@@ -212,6 +212,14 @@ pub trait RngCore {
 /// [`BlockRngCore`]: block::BlockRngCore
 pub trait CryptoRng: RngCore {}
 
+/// A marker trait used to indicate that an [`RngCore`] implementation is
+/// supposed to never return errors from the [`RngCore::try_fill_bytes`] method
+/// and never panic on unwrapping [`Error`] while calling other methods.
+///
+/// This trait is usually implemented by PRNGs, as opposed to OS, hardware,
+/// and periodically-reseeded RNGs, which may fail with IO errors.
+pub trait InfallibleRng: RngCore {}
+
 /// A random number generator that can be explicitly seeded.
 ///
 /// This trait encapsulates the low-level functionality common to all
