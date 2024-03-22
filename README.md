@@ -5,7 +5,7 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.60+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.61+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 A Rust library for random number generation, featuring:
 
@@ -97,7 +97,7 @@ issue tracker with the keyword `yank` *should* uncover the motivation.
 
 ### Rust version requirements
 
-The Minimum Supported Rust Version (MSRV) is `rustc >= 1.60.0`.
+The Minimum Supported Rust Version (MSRV) is `rustc >= 1.61.0`.
 Older releases may work (depending on feature configuration) but are untested.
 
 ## Crate Features
