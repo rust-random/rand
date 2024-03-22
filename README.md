@@ -5,7 +5,6 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.61+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 A Rust library for random number generation, featuring:
 
