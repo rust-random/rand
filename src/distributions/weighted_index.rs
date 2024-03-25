@@ -244,6 +244,22 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         Ok(())
     }
     
+    /// Returns the weight at the given index, if it exists.
+    /// 
+    /// If the index is out of bounds, this will return `None`.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use rand::distributions::WeightedIndex;
+    /// 
+    /// let weights = [1, 2, 3];
+    /// let dist = WeightedIndex::new(&weights).unwrap();
+    /// assert_eq!(dist.weight_at(0), Some(1));
+    /// assert_eq!(dist.weight_at(1), Some(2));
+    /// assert_eq!(dist.weight_at(2), Some(3));
+    /// assert_eq!(dist.weight_at(3), None);
+    /// ```
     pub fn weight_at(&self, index: usize) -> Option<X>
     where 
         X: for<'a> ::core::ops::SubAssign<&'a X>
@@ -262,6 +278,24 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         Some(weight)
     }
     
+    /// Returns a Vec containing the current weights of this distribution.
+    /// 
+    /// If this distribution has not been updated since its creation, this will return the
+    /// same weights as were passed to `new`.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use rand::distributions::WeightedIndex;
+    ///
+    /// let weights = [1, 2, 3];
+    /// let mut dist = WeightedIndex::new(&weights).unwrap();
+    /// let weights = dist.weights();
+    /// assert_eq!(weights, vec![1, 2, 3]);
+    /// dist.update_weights(&[(0, &2)]).unwrap();
+    /// let weights = dist.weights();
+    /// assert_eq!(weights, vec![2, 2, 3]);
+    /// ```
     pub fn weights(&self) -> Vec<X>
     where
         X: for<'a> ::core::ops::SubAssign<&'a X>
@@ -288,6 +322,8 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         }
     }
     
+    /// Returns the total weight of this distribution.
+    /// This clones the internal total weight.
     pub fn total_weight(&self) -> X
     where
         X: Clone
