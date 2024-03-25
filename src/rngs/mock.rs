@@ -8,7 +8,7 @@
 
 //! Mock random number generator
 
-use rand_core::{impls, Error, RngCore};
+use rand_core::{impls, Error, InfallibleRng, RngCore};
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
@@ -80,6 +80,8 @@ impl RngCore for StepRng {
         Ok(())
     }
 }
+
+impl InfallibleRng for StepRng {}
 
 #[cfg(test)]
 mod tests {

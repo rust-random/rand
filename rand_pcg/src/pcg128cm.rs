@@ -14,7 +14,7 @@
 const MULTIPLIER: u64 = 15750249268501108917;
 
 use core::fmt;
-use rand_core::{impls, le, Error, RngCore, SeedableRng};
+use rand_core::{impls, le, Error, InfallibleRng, RngCore, SeedableRng};
 #[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
 
 /// A PCG random number generator (CM DXSM 128/64 (LCG) variant).
@@ -164,6 +164,8 @@ impl RngCore for Lcg128CmDxsm64 {
         Ok(())
     }
 }
+
+impl InfallibleRng for Lcg128CmDxsm64 {}
 
 #[inline(always)]
 fn output_dxsm(state: u128) -> u64 {

@@ -8,7 +8,7 @@
 
 //! A small fast RNG
 
-use rand_core::{Error, RngCore, SeedableRng};
+use rand_core::{Error, InfallibleRng, RngCore, SeedableRng};
 
 #[cfg(target_pointer_width = "64")]
 type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
@@ -63,6 +63,8 @@ impl RngCore for SmallRng {
         self.0.try_fill_bytes(dest)
     }
 }
+
+impl InfallibleRng for SmallRng {}
 
 impl SmallRng {
     /// Construct an instance seeded from another `Rng`

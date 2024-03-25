@@ -11,7 +11,7 @@
 //! PCG random number generators
 
 use core::fmt;
-use rand_core::{impls, le, Error, RngCore, SeedableRng};
+use rand_core::{impls, le, Error, InfallibleRng, RngCore, SeedableRng};
 #[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
 
 // This is the default multiplier used by PCG for 64-bit state.
@@ -167,3 +167,5 @@ impl RngCore for Lcg64Xsh32 {
         Ok(())
     }
 }
+
+impl InfallibleRng for Lcg64Xsh32 {}
