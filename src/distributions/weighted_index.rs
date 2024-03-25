@@ -16,7 +16,6 @@ use core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
 use alloc::vec::Vec;
-use std::vec;
 
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
@@ -318,7 +317,11 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
                 weights.push(final_weight);
                 weights
             }
-            None => vec![self.total_weight.clone()],
+            None => {
+                let mut weights = Vec::with_capacity(1);
+                weights.push(self.total_weight.clone());
+                weights
+            },
         }
     }
     
