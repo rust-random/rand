@@ -16,6 +16,7 @@ use core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
 use alloc::vec::Vec;
+use std::vec;
 
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
@@ -242,6 +243,57 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
 
         Ok(())
     }
+    
+    pub fn weight_at(&self, index: usize) -> Option<X>
+    where 
+        X: for<'a> ::core::ops::SubAssign<&'a X>
+            + Clone
+    {
+        let mut weight = if index < self.cumulative_weights.len() {
+            self.cumulative_weights[index].clone()
+        } else if index == self.cumulative_weights.len() {
+            self.total_weight.clone()
+        } else {
+            return None;
+        };
+        if index > 0 {
+            weight -= &self.cumulative_weights[index - 1];
+        }
+        Some(weight)
+    }
+    
+    pub fn weights(&self) -> Vec<X>
+    where
+        X: for<'a> ::core::ops::SubAssign<&'a X>
+            + Clone
+    {
+        let mut cumulative_weights = self.cumulative_weights.iter();
+        match cumulative_weights.next() {
+            Some(first_weight) => {
+                let mut weights = Vec::with_capacity(self.cumulative_weights.len() + 1);
+                weights.push(first_weight.clone());
+                let mut last_weight: &X = first_weight;
+                for cumulative_weight in cumulative_weights {
+                    let mut weight = cumulative_weight.clone();
+                    weight -= last_weight;
+                    last_weight = cumulative_weight;
+                    weights.push(weight);
+                }
+                let mut final_weight = self.total_weight.clone();
+                final_weight -= last_weight;
+                weights.push(final_weight);
+                weights
+            }
+            None => vec![self.total_weight.clone()],
+        }
+    }
+    
+    pub fn total_weight(&self) -> X
+    where
+        X: Clone
+    {
+        self.total_weight.clone()
+    }
 }
 
 impl<X> Distribution<usize> for WeightedIndex<X>
@@ -459,6 +511,73 @@ mod test {
         }
     }
 
+    #[test]
+    fn test_update_weights_errors() {
+        let data = [
+            (
+                &[1i32, 0, 0][..],
+                &[(0, &0)][..],
+                WeightError::InsufficientNonZero,
+            ),
+            (
+                &[10, 10, 10, 10][..],
+                &[(1, &-11)][..],
+                WeightError::InvalidWeight, // A weight is negative
+            ),
+            (
+                &[1, 2, 3, 4, 5][..],
+                &[(1, &5), (0, &5)][..], // Wrong order
+                WeightError::InvalidInput,
+            ),
+            (
+                &[1][..],
+                &[(1, &1)][..], // Index too large
+                WeightError::InvalidInput,
+            ),
+        ];
+
+        for (weights, update, err) in data.iter() {
+            let total_weight = weights.iter().sum::<i32>();
+            let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
+            assert_eq!(distr.total_weight, total_weight);
+            match distr.update_weights(update) {
+                Ok(_) => panic!("Expected update_weights to fail, but it succeeded"),
+                Err(e) => assert_eq!(e, *err),
+            }
+        }
+    }
+    
+    #[test]
+    fn test_weight_at() {
+        let data = [
+            &[10u32, 2, 3, 4][..],
+            &[1, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
+            &[u32::MAX][..],
+        ];
+        
+        for weights in data.iter() {
+            let distr = WeightedIndex::new(weights.to_vec()).unwrap();
+            for (i, weight) in weights.iter().enumerate() {
+                assert_eq!(distr.weight_at(i), Some(*weight));
+            }
+            assert_eq!(distr.weight_at(weights.len()), None);
+        }
+    }
+    
+    #[test]
+    fn test_weights() {
+        let data = [
+            &[10u32, 2, 3, 4][..],
+            &[1, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
+            &[u32::MAX][..],
+        ];
+        
+        for weights in data.iter() {
+            let distr = WeightedIndex::new(weights.to_vec()).unwrap();
+            assert_eq!(distr.weights(), weights.to_vec());
+        }
+    }
+    
     #[test]
     fn value_stability() {
         fn test_samples<X: Weight + SampleUniform + PartialOrd, I>(
