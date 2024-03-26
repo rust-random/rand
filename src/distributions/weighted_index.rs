@@ -252,11 +252,11 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// ```
     /// use rand::distributions::WeightedIndex;
     /// 
-    /// let weights = [1, 2, 3];
+    /// let weights = [0, 1, 2];
     /// let dist = WeightedIndex::new(&weights).unwrap();
-    /// assert_eq!(dist.weight_at(0), Some(1));
-    /// assert_eq!(dist.weight_at(1), Some(2));
-    /// assert_eq!(dist.weight_at(2), Some(3));
+    /// assert_eq!(dist.weight_at(0), Some(0));
+    /// assert_eq!(dist.weight_at(1), Some(1));
+    /// assert_eq!(dist.weight_at(2), Some(2));
     /// assert_eq!(dist.weight_at(3), None);
     /// ```
     pub fn weight_at(&self, index: usize) -> Option<X>
@@ -289,21 +289,19 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     ///
     /// let weights = [1, 2, 3];
     /// let mut dist = WeightedIndex::new(&weights).unwrap();
-    /// let weights = dist.weights();
-    /// assert_eq!(weights, vec![1, 2, 3]);
+    /// assert_eq!(dist.weights(), vec![1, 2, 3]);
     /// dist.update_weights(&[(0, &2)]).unwrap();
-    /// let weights = dist.weights();
-    /// assert_eq!(weights, vec![2, 2, 3]);
+    /// assert_eq!(dist.weights(), vec![2, 2, 3]);
     /// ```
     pub fn weights(&self) -> Vec<X>
     where
         X: for<'a> ::core::ops::SubAssign<&'a X>
             + Clone
     {
+        let mut weights = Vec::with_capacity(self.cumulative_weights.len() + 1);
         let mut cumulative_weights = self.cumulative_weights.iter();
         match cumulative_weights.next() {
             Some(first_weight) => {
-                let mut weights = Vec::with_capacity(self.cumulative_weights.len() + 1);
                 weights.push(first_weight.clone());
                 let mut last_weight: &X = first_weight;
                 for cumulative_weight in cumulative_weights {
@@ -315,14 +313,10 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
                 let mut final_weight = self.total_weight.clone();
                 final_weight -= last_weight;
                 weights.push(final_weight);
-                weights
             }
-            None => {
-                let mut weights = Vec::with_capacity(1);
-                weights.push(self.total_weight.clone());
-                weights
-            },
+            None => weights.push(self.total_weight.clone()),
         }
+        weights
     }
     
     /// Returns the total weight of this distribution.
