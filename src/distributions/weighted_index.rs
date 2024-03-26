@@ -242,13 +242,13 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
 
         Ok(())
     }
-    
+
     /// Returns the weight at the given index, if it exists.
-    /// 
+    ///
     /// If the index is out of bounds, this will return `None`.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```
     /// use rand::distributions::WeightedIndex;
     ///
@@ -260,7 +260,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// assert_eq!(dist.get(3), None);
     /// ```
     pub fn get(&self, index: usize) -> Option<X>
-    where 
+    where
         X: for<'a> ::core::ops::SubAssign<&'a X>
             + Clone
     {
@@ -276,14 +276,14 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         }
         Some(weight)
     }
-    
+
     /// Returns a Vec containing the current weights of this distribution.
-    /// 
+    ///
     /// If this distribution has not been updated since its creation, this will return the
     /// same weights as were passed to `new`.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```
     /// use rand::distributions::WeightedIndex;
     ///
@@ -318,7 +318,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         }
         weights
     }
-    
+
     /// Returns the sum of all weights in this distribution.
     pub fn total_weight(&self) -> X
     where
@@ -578,7 +578,7 @@ mod test {
             }
         }
     }
-    
+
     #[test]
     fn test_weight_at() {
         let data = [
@@ -586,7 +586,7 @@ mod test {
             &[1, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
             &[u32::MAX][..],
         ];
-        
+
         for weights in data.iter() {
             let distr = WeightedIndex::new(weights.to_vec()).unwrap();
             for (i, weight) in weights.iter().enumerate() {
@@ -595,7 +595,7 @@ mod test {
             assert_eq!(distr.get(weights.len()), None);
         }
     }
-    
+
     #[test]
     fn test_weights() {
         let data = [
@@ -603,13 +603,13 @@ mod test {
             &[1, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
             &[u32::MAX][..],
         ];
-        
+
         for weights in data.iter() {
             let distr = WeightedIndex::new(weights.to_vec()).unwrap();
             assert_eq!(distr.weights(), weights.to_vec());
         }
     }
-    
+
     #[test]
     fn value_stability() {
         fn test_samples<X: Weight + SampleUniform + PartialOrd, I>(
