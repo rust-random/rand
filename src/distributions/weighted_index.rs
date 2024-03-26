@@ -251,15 +251,15 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// 
     /// ```
     /// use rand::distributions::WeightedIndex;
-    /// 
+    ///
     /// let weights = [0, 1, 2];
     /// let dist = WeightedIndex::new(&weights).unwrap();
-    /// assert_eq!(dist.weight_at(0), Some(0));
-    /// assert_eq!(dist.weight_at(1), Some(1));
-    /// assert_eq!(dist.weight_at(2), Some(2));
-    /// assert_eq!(dist.weight_at(3), None);
+    /// assert_eq!(dist.get(0), Some(0));
+    /// assert_eq!(dist.get(1), Some(1));
+    /// assert_eq!(dist.get(2), Some(2));
+    /// assert_eq!(dist.get(3), None);
     /// ```
-    pub fn weight_at(&self, index: usize) -> Option<X>
+    pub fn get(&self, index: usize) -> Option<X>
     where 
         X: for<'a> ::core::ops::SubAssign<&'a X>
             + Clone
@@ -319,8 +319,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         weights
     }
     
-    /// Returns the total weight of this distribution.
-    /// This clones the internal total weight.
+    /// Returns the sum of all weights in this distribution.
     pub fn total_weight(&self) -> X
     where
         X: Clone
@@ -591,9 +590,9 @@ mod test {
         for weights in data.iter() {
             let distr = WeightedIndex::new(weights.to_vec()).unwrap();
             for (i, weight) in weights.iter().enumerate() {
-                assert_eq!(distr.weight_at(i), Some(*weight));
+                assert_eq!(distr.get(i), Some(*weight));
             }
-            assert_eq!(distr.weight_at(weights.len()), None);
+            assert_eq!(distr.get(weights.len()), None);
         }
     }
     
