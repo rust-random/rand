@@ -23,7 +23,12 @@ rustdoc-args = ["--generate-link-to-definition"]
 default = ["std"]
 std = ["alloc", "rand/std"]
 alloc = ["rand/alloc"]
+
+# Use std's floating-point arithmetic instead of libm.
+# Note that any other crate depending on `num-traits`'s `std`
+# feature (default-enabled) will have the same effect.
 std_math = ["num-traits/std"]
+
 serde1 = ["serde", "rand/serde1"]
 
 [dependencies]
