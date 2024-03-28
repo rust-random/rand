@@ -10,7 +10,7 @@
 
 use crate::distributions::Distribution;
 use crate::Rng;
-use core::{fmt, u64};
+use core::fmt;
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
@@ -145,7 +145,6 @@ impl Distribution<bool> for Bernoulli {
 mod test {
     use super::Bernoulli;
     use crate::distributions::Distribution;
-    use crate::Rng;
 
     #[test]
     #[cfg(feature = "serde1")]

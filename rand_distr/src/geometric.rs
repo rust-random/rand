@@ -94,7 +94,7 @@ impl Distribution<u64> for Geometric
             return failures;
         }
         
-        if self.p == 0.0 { return core::u64::MAX; }
+        if self.p == 0.0 { return u64::MAX; }
 
         let Geometric { p, pi, k } = *self;
 
@@ -121,7 +121,7 @@ impl Distribution<u64> for Geometric
         // fewer iterations on average.                 ~ October 28, 2020
         let m = loop {
             let m = rng.gen::<u64>() & ((1 << k) - 1);
-            let p_reject = if m <= core::i32::MAX as u64 {
+            let p_reject = if m <= i32::MAX as u64 {
                 (1.0 - p).powi(m as i32)
             } else {
                 (1.0 - p).powf(m as f64)
@@ -176,9 +176,9 @@ mod test {
 
     #[test]
     fn test_geo_invalid_p() {
-        assert!(Geometric::new(core::f64::NAN).is_err());
-        assert!(Geometric::new(core::f64::INFINITY).is_err());
-        assert!(Geometric::new(core::f64::NEG_INFINITY).is_err());
+        assert!(Geometric::new(f64::NAN).is_err());
+        assert!(Geometric::new(f64::INFINITY).is_err());
+        assert!(Geometric::new(f64::NEG_INFINITY).is_err());
 
         assert!(Geometric::new(-0.5).is_err());
         assert!(Geometric::new(0.0).is_ok());

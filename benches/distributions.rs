@@ -101,7 +101,7 @@ macro_rules! distr_duration {
                     let x: Duration = distr.sample(&mut rng);
                     accum = accum
                         .checked_add(x)
-                        .unwrap_or(Duration::new(u64::max_value(), 999_999_999));
+                        .unwrap_or(Duration::new(u64::MAX, 999_999_999));
                 }
                 accum
             });
@@ -145,10 +145,10 @@ distr_int!(distr_uniform_isize, isize, Uniform::new(-1060478432isize, 1858574057
 distr_float!(distr_uniform_f32, f32, Uniform::new(2.26f32, 2.319).unwrap());
 distr_float!(distr_uniform_f64, f64, Uniform::new(2.26f64, 2.319).unwrap());
 
-const LARGE_SEC: u64 = u64::max_value() / 1000;
+const LARGE_SEC: u64 = u64::MAX / 1000;
 
 distr_duration!(distr_uniform_duration_largest,
-    Uniform::new_inclusive(Duration::new(0, 0), Duration::new(u64::max_value(), 999_999_999)).unwrap()
+    Uniform::new_inclusive(Duration::new(0, 0), Duration::new(u64::MAX, 999_999_999)).unwrap()
 );
 distr_duration!(distr_uniform_duration_large,
     Uniform::new(Duration::new(0, 0), Duration::new(LARGE_SEC, 1_000_000_000 / 2)).unwrap()
@@ -332,26 +332,26 @@ macro_rules! uniform_single {
 // (32769) will only reject 32769 / 4294967296 samples.
 const HALF_16_BIT_UNSIGNED: u16 = 1 << 15;
 
-uniform_sample!(uniform_u16x1_allm1_new, u16, 0, u16::max_value(), 1);
+uniform_sample!(uniform_u16x1_allm1_new, u16, 0, u16::MAX, 1);
 uniform_sample!(uniform_u16x1_halfp1_new, u16, 0, HALF_16_BIT_UNSIGNED + 1, 1);
 uniform_sample!(uniform_u16x1_half_new, u16, 0, HALF_16_BIT_UNSIGNED, 1);
 uniform_sample!(uniform_u16x1_halfm1_new, u16, 0, HALF_16_BIT_UNSIGNED - 1, 1);
 uniform_sample!(uniform_u16x1_6_new, u16, 0, 6u16, 1);
 
-uniform_single!(uniform_u16x1_allm1_single, u16, 0, u16::max_value(), 1);
+uniform_single!(uniform_u16x1_allm1_single, u16, 0, u16::MAX, 1);
 uniform_single!(uniform_u16x1_halfp1_single, u16, 0, HALF_16_BIT_UNSIGNED + 1, 1);
 uniform_single!(uniform_u16x1_half_single, u16, 0, HALF_16_BIT_UNSIGNED, 1);
 uniform_single!(uniform_u16x1_halfm1_single, u16, 0, HALF_16_BIT_UNSIGNED - 1, 1);
 uniform_single!(uniform_u16x1_6_single, u16, 0, 6u16, 1);
 
-uniform_inclusive!(uniform_u16x10_all_new_inclusive, u16, 0, u16::max_value(), 10);
-uniform_sample!(uniform_u16x10_allm1_new, u16, 0, u16::max_value(), 10);
+uniform_inclusive!(uniform_u16x10_all_new_inclusive, u16, 0, u16::MAX, 10);
+uniform_sample!(uniform_u16x10_allm1_new, u16, 0, u16::MAX, 10);
 uniform_sample!(uniform_u16x10_halfp1_new, u16, 0, HALF_16_BIT_UNSIGNED + 1, 10);
 uniform_sample!(uniform_u16x10_half_new, u16, 0, HALF_16_BIT_UNSIGNED, 10);
 uniform_sample!(uniform_u16x10_halfm1_new, u16, 0, HALF_16_BIT_UNSIGNED - 1, 10);
 uniform_sample!(uniform_u16x10_6_new, u16, 0, 6u16, 10);
 
-uniform_single!(uniform_u16x10_allm1_single, u16, 0, u16::max_value(), 10);
+uniform_single!(uniform_u16x10_allm1_single, u16, 0, u16::MAX, 10);
 uniform_single!(uniform_u16x10_halfp1_single, u16, 0, HALF_16_BIT_UNSIGNED + 1, 10);
 uniform_single!(uniform_u16x10_half_single, u16, 0, HALF_16_BIT_UNSIGNED, 10);
 uniform_single!(uniform_u16x10_halfm1_single, u16, 0, HALF_16_BIT_UNSIGNED - 1, 10);
@@ -360,26 +360,26 @@ uniform_single!(uniform_u16x10_6_single, u16, 0, 6u16, 10);
 
 const HALF_32_BIT_UNSIGNED: u32 = 1 << 31;
 
-uniform_sample!(uniform_u32x1_allm1_new, u32, 0, u32::max_value(), 1);
+uniform_sample!(uniform_u32x1_allm1_new, u32, 0, u32::MAX, 1);
 uniform_sample!(uniform_u32x1_halfp1_new, u32, 0, HALF_32_BIT_UNSIGNED + 1, 1);
 uniform_sample!(uniform_u32x1_half_new, u32, 0, HALF_32_BIT_UNSIGNED, 1);
 uniform_sample!(uniform_u32x1_halfm1_new, u32, 0, HALF_32_BIT_UNSIGNED - 1, 1);
 uniform_sample!(uniform_u32x1_6_new, u32, 0, 6u32, 1);
 
-uniform_single!(uniform_u32x1_allm1_single, u32, 0, u32::max_value(), 1);
+uniform_single!(uniform_u32x1_allm1_single, u32, 0, u32::MAX, 1);
 uniform_single!(uniform_u32x1_halfp1_single, u32, 0, HALF_32_BIT_UNSIGNED + 1, 1);
 uniform_single!(uniform_u32x1_half_single, u32, 0, HALF_32_BIT_UNSIGNED, 1);
 uniform_single!(uniform_u32x1_halfm1_single, u32, 0, HALF_32_BIT_UNSIGNED - 1, 1);
 uniform_single!(uniform_u32x1_6_single, u32, 0, 6u32, 1);
 
-uniform_inclusive!(uniform_u32x10_all_new_inclusive, u32, 0, u32::max_value(), 10);
-uniform_sample!(uniform_u32x10_allm1_new, u32, 0, u32::max_value(), 10);
+uniform_inclusive!(uniform_u32x10_all_new_inclusive, u32, 0, u32::MAX, 10);
+uniform_sample!(uniform_u32x10_allm1_new, u32, 0, u32::MAX, 10);
 uniform_sample!(uniform_u32x10_halfp1_new, u32, 0, HALF_32_BIT_UNSIGNED + 1, 10);
 uniform_sample!(uniform_u32x10_half_new, u32, 0, HALF_32_BIT_UNSIGNED, 10);
 uniform_sample!(uniform_u32x10_halfm1_new, u32, 0, HALF_32_BIT_UNSIGNED - 1, 10);
 uniform_sample!(uniform_u32x10_6_new, u32, 0, 6u32, 10);
 
-uniform_single!(uniform_u32x10_allm1_single, u32, 0, u32::max_value(), 10);
+uniform_single!(uniform_u32x10_allm1_single, u32, 0, u32::MAX, 10);
 uniform_single!(uniform_u32x10_halfp1_single, u32, 0, HALF_32_BIT_UNSIGNED + 1, 10);
 uniform_single!(uniform_u32x10_half_single, u32, 0, HALF_32_BIT_UNSIGNED, 10);
 uniform_single!(uniform_u32x10_halfm1_single, u32, 0, HALF_32_BIT_UNSIGNED - 1, 10);
@@ -387,26 +387,26 @@ uniform_single!(uniform_u32x10_6_single, u32, 0, 6u32, 10);
 
 const HALF_64_BIT_UNSIGNED: u64 = 1 << 63;
 
-uniform_sample!(uniform_u64x1_allm1_new, u64, 0, u64::max_value(), 1);
+uniform_sample!(uniform_u64x1_allm1_new, u64, 0, u64::MAX, 1);
 uniform_sample!(uniform_u64x1_halfp1_new, u64, 0, HALF_64_BIT_UNSIGNED + 1, 1);
 uniform_sample!(uniform_u64x1_half_new, u64, 0, HALF_64_BIT_UNSIGNED, 1);
 uniform_sample!(uniform_u64x1_halfm1_new, u64, 0, HALF_64_BIT_UNSIGNED - 1, 1);
 uniform_sample!(uniform_u64x1_6_new, u64, 0, 6u64, 1);
 
-uniform_single!(uniform_u64x1_allm1_single, u64, 0, u64::max_value(), 1);
+uniform_single!(uniform_u64x1_allm1_single, u64, 0, u64::MAX, 1);
 uniform_single!(uniform_u64x1_halfp1_single, u64, 0, HALF_64_BIT_UNSIGNED + 1, 1);
 uniform_single!(uniform_u64x1_half_single, u64, 0, HALF_64_BIT_UNSIGNED, 1);
 uniform_single!(uniform_u64x1_halfm1_single, u64, 0, HALF_64_BIT_UNSIGNED - 1, 1);
 uniform_single!(uniform_u64x1_6_single, u64, 0, 6u64, 1);
 
-uniform_inclusive!(uniform_u64x10_all_new_inclusive, u64, 0, u64::max_value(), 10);
-uniform_sample!(uniform_u64x10_allm1_new, u64, 0, u64::max_value(), 10);
+uniform_inclusive!(uniform_u64x10_all_new_inclusive, u64, 0, u64::MAX, 10);
+uniform_sample!(uniform_u64x10_allm1_new, u64, 0, u64::MAX, 10);
 uniform_sample!(uniform_u64x10_halfp1_new, u64, 0, HALF_64_BIT_UNSIGNED + 1, 10);
 uniform_sample!(uniform_u64x10_half_new, u64, 0, HALF_64_BIT_UNSIGNED, 10);
 uniform_sample!(uniform_u64x10_halfm1_new, u64, 0, HALF_64_BIT_UNSIGNED - 1, 10);
 uniform_sample!(uniform_u64x10_6_new, u64, 0, 6u64, 10);
 
-uniform_single!(uniform_u64x10_allm1_single, u64, 0, u64::max_value(), 10);
+uniform_single!(uniform_u64x10_allm1_single, u64, 0, u64::MAX, 10);
 uniform_single!(uniform_u64x10_halfp1_single, u64, 0, HALF_64_BIT_UNSIGNED + 1, 10);
 uniform_single!(uniform_u64x10_half_single, u64, 0, HALF_64_BIT_UNSIGNED, 10);
 uniform_single!(uniform_u64x10_halfm1_single, u64, 0, HALF_64_BIT_UNSIGNED - 1, 10);
@@ -414,26 +414,26 @@ uniform_single!(uniform_u64x10_6_single, u64, 0, 6u64, 10);
 
 const HALF_128_BIT_UNSIGNED: u128 = 1 << 127;
 
-uniform_sample!(uniform_u128x1_allm1_new, u128, 0, u128::max_value(), 1);
+uniform_sample!(uniform_u128x1_allm1_new, u128, 0, u128::MAX, 1);
 uniform_sample!(uniform_u128x1_halfp1_new, u128, 0, HALF_128_BIT_UNSIGNED + 1, 1);
 uniform_sample!(uniform_u128x1_half_new, u128, 0, HALF_128_BIT_UNSIGNED, 1);
 uniform_sample!(uniform_u128x1_halfm1_new, u128, 0, HALF_128_BIT_UNSIGNED - 1, 1);
 uniform_sample!(uniform_u128x1_6_new, u128, 0, 6u128, 1);
 
-uniform_single!(uniform_u128x1_allm1_single, u128, 0, u128::max_value(), 1);
+uniform_single!(uniform_u128x1_allm1_single, u128, 0, u128::MAX, 1);
 uniform_single!(uniform_u128x1_halfp1_single, u128, 0, HALF_128_BIT_UNSIGNED + 1, 1);
 uniform_single!(uniform_u128x1_half_single, u128, 0, HALF_128_BIT_UNSIGNED, 1);
 uniform_single!(uniform_u128x1_halfm1_single, u128, 0, HALF_128_BIT_UNSIGNED - 1, 1);
 uniform_single!(uniform_u128x1_6_single, u128, 0, 6u128, 1);
 
-uniform_inclusive!(uniform_u128x10_all_new_inclusive, u128, 0, u128::max_value(), 10);
-uniform_sample!(uniform_u128x10_allm1_new, u128, 0, u128::max_value(), 10);
+uniform_inclusive!(uniform_u128x10_all_new_inclusive, u128, 0, u128::MAX, 10);
+uniform_sample!(uniform_u128x10_allm1_new, u128, 0, u128::MAX, 10);
 uniform_sample!(uniform_u128x10_halfp1_new, u128, 0, HALF_128_BIT_UNSIGNED + 1, 10);
 uniform_sample!(uniform_u128x10_half_new, u128, 0, HALF_128_BIT_UNSIGNED, 10);
 uniform_sample!(uniform_u128x10_halfm1_new, u128, 0, HALF_128_BIT_UNSIGNED - 1, 10);
 uniform_sample!(uniform_u128x10_6_new, u128, 0, 6u128, 10);
 
-uniform_single!(uniform_u128x10_allm1_single, u128, 0, u128::max_value(), 10);
+uniform_single!(uniform_u128x10_allm1_single, u128, 0, u128::MAX, 10);
 uniform_single!(uniform_u128x10_halfp1_single, u128, 0, HALF_128_BIT_UNSIGNED + 1, 10);
 uniform_single!(uniform_u128x10_half_single, u128, 0, HALF_128_BIT_UNSIGNED, 10);
 uniform_single!(uniform_u128x10_halfm1_single, u128, 0, HALF_128_BIT_UNSIGNED - 1, 10);

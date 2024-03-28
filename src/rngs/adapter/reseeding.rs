@@ -12,8 +12,8 @@
 
 use core::mem::size_of_val;
 
-use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
+use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
 
 /// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
 /// ability to reseed it.
@@ -190,7 +190,6 @@ where
 {
     /// Create a new `ReseedingCore`.
     fn new(rng: R, threshold: u64, reseeder: Rsdr) -> Self {
-        use ::core::i64::MAX;
         fork::register_fork_handler();
 
         // Because generating more values than `i64::MAX` takes centuries on
@@ -198,11 +197,11 @@ where
         // Also we set a threshold of 0, which indicates no limit, to that
         // value.
         let threshold = if threshold == 0 {
-            MAX
-        } else if threshold <= MAX as u64 {
+            i64::MAX
+        } else if threshold <= i64::MAX as u64 {
             threshold as i64
         } else {
-            MAX
+            i64::MAX
         };
 
         ReseedingCore {
@@ -289,7 +288,7 @@ mod fork {
     use core::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Once;
 
-    // Fork protection
+// Fork protection
     //
     // We implement fork protection on Unix using `pthread_atfork`.
     // When the process is forked, we increment `RESEEDING_RNG_FORK_COUNTER`.
@@ -341,10 +340,11 @@ mod fork {
 #[cfg(feature = "std_rng")]
 #[cfg(test)]
 mod test {
-    use super::ReseedingRng;
+    use crate::{Rng, SeedableRng};
     use crate::rngs::mock::StepRng;
     use crate::rngs::std::Core;
-    use crate::{Rng, SeedableRng};
+
+    use super::ReseedingRng;
 
     #[test]
     fn test_reseeding() {

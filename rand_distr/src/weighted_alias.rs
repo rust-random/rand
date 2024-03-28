@@ -86,7 +86,7 @@ impl<W: AliasableWeight> WeightedAliasIndex<W> {
     /// -   [`WeightError::InsufficientNonZero`] when the sum of all weights is zero.
     pub fn new(weights: Vec<W>) -> Result<Self, WeightError> {
         let n = weights.len();
-        if n == 0 || n > ::core::u32::MAX as usize {
+        if n == 0 || n > u32::MAX as usize {
             return Err(WeightError::InvalidInput);
         }
         let n = n as u32;
@@ -139,8 +139,8 @@ impl<W: AliasableWeight> WeightedAliasIndex<W> {
             fn new(size: u32) -> Self {
                 Aliases {
                     aliases: vec![0; size as usize].into_boxed_slice(),
-                    smalls_head: ::core::u32::MAX,
-                    bigs_head: ::core::u32::MAX,
+                    smalls_head: u32::MAX,
+                    bigs_head: u32::MAX,
                 }
             }
 
@@ -167,11 +167,11 @@ impl<W: AliasableWeight> WeightedAliasIndex<W> {
             }
 
             fn smalls_is_empty(&self) -> bool {
-                self.smalls_head == ::core::u32::MAX
+                self.smalls_head == u32::MAX
             }
 
             fn bigs_is_empty(&self) -> bool {
-                self.bigs_head == ::core::u32::MAX
+                self.bigs_head == u32::MAX
             }
 
             fn set_alias(&mut self, idx: u32, alias: u32) {
@@ -378,7 +378,7 @@ mod test {
 
         // Floating point special cases
         assert_eq!(
-            WeightedAliasIndex::new(vec![::core::f32::INFINITY]).unwrap_err(),
+            WeightedAliasIndex::new(vec![f32::INFINITY]).unwrap_err(),
             WeightError::InvalidWeight
         );
         assert_eq!(
@@ -390,11 +390,11 @@ mod test {
             WeightError::InvalidWeight
         );
         assert_eq!(
-            WeightedAliasIndex::new(vec![-::core::f32::INFINITY]).unwrap_err(),
+            WeightedAliasIndex::new(vec![f32::NEG_INFINITY]).unwrap_err(),
             WeightError::InvalidWeight
         );
         assert_eq!(
-            WeightedAliasIndex::new(vec![::core::f32::NAN]).unwrap_err(),
+            WeightedAliasIndex::new(vec![f32::NAN]).unwrap_err(),
             WeightError::InvalidWeight
         );
     }
@@ -416,7 +416,7 @@ mod test {
             WeightError::InvalidWeight
         );
         assert_eq!(
-            WeightedAliasIndex::new(vec![::core::i128::MIN]).unwrap_err(),
+            WeightedAliasIndex::new(vec![i128::MIN]).unwrap_err(),
             WeightError::InvalidWeight
         );
     }
@@ -438,7 +438,7 @@ mod test {
             WeightError::InvalidWeight
         );
         assert_eq!(
-            WeightedAliasIndex::new(vec![::core::i8::MIN]).unwrap_err(),
+            WeightedAliasIndex::new(vec![i8::MIN]).unwrap_err(),
             WeightError::InvalidWeight
         );
     }
