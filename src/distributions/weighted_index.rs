@@ -242,7 +242,38 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
 
         Ok(())
     }
+}
 
+/// A lazy-loading iterator over the weights of a `WeightedIndex` distribution.
+/// This is returned by [`WeightedIndex::weights`].
+#[derive(Clone)]
+#[allow(missing_debug_implementations)]
+pub struct WeightedIndexIter<'a, X: SampleUniform + PartialOrd> {
+    weighted_index: &'a WeightedIndex<X>,
+    index: usize,
+}
+
+impl<'a, X> Iterator for WeightedIndexIter<'a, X>
+where
+    X: for<'b> ::core::ops::SubAssign<&'b X>
+        + SampleUniform
+        + PartialOrd
+        + Clone,
+{
+    type Item = X;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.weighted_index.weight(self.index) {
+            None => None,
+            Some(weight) => {
+                self.index += 1;
+                Some(weight)
+            }
+        }
+    }
+}
+
+impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
     /// Returns the weight at the given index, if it exists.
     ///
     /// If the index is out of bounds, this will return `None`.
@@ -254,15 +285,14 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     ///
     /// let weights = [0, 1, 2];
     /// let dist = WeightedIndex::new(&weights).unwrap();
-    /// assert_eq!(dist.get(0), Some(0));
-    /// assert_eq!(dist.get(1), Some(1));
-    /// assert_eq!(dist.get(2), Some(2));
-    /// assert_eq!(dist.get(3), None);
+    /// assert_eq!(dist.weight(0), Some(0));
+    /// assert_eq!(dist.weight(1), Some(1));
+    /// assert_eq!(dist.weight(2), Some(2));
+    /// assert_eq!(dist.weight(3), None);
     /// ```
-    pub fn get(&self, index: usize) -> Option<X>
+    pub fn weight(&self, index: usize) -> Option<X>
     where
         X: for<'a> ::core::ops::SubAssign<&'a X>
-            + Clone
     {
         let mut weight = if index < self.cumulative_weights.len() {
             self.cumulative_weights[index].clone()
@@ -277,7 +307,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         Some(weight)
     }
 
-    /// Returns a Vec containing the current weights of this distribution.
+    /// Returns a lazy-loading iterator containing the current weights of this distribution.
     ///
     /// If this distribution has not been updated since its creation, this will return the
     /// same weights as were passed to `new`.
@@ -289,41 +319,22 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     ///
     /// let weights = [1, 2, 3];
     /// let mut dist = WeightedIndex::new(&weights).unwrap();
-    /// assert_eq!(dist.weights(), vec![1, 2, 3]);
+    /// assert_eq!(dist.weights().collect::<Vec<_>>(), vec![1, 2, 3]);
     /// dist.update_weights(&[(0, &2)]).unwrap();
-    /// assert_eq!(dist.weights(), vec![2, 2, 3]);
+    /// assert_eq!(dist.weights().collect::<Vec<_>>(), vec![2, 2, 3]);
     /// ```
-    pub fn weights(&self) -> Vec<X>
+    pub fn weights(&self) -> WeightedIndexIter<'_, X>
     where
         X: for<'a> ::core::ops::SubAssign<&'a X>
-            + Clone
     {
-        let mut weights = Vec::with_capacity(self.cumulative_weights.len() + 1);
-        let mut cumulative_weights = self.cumulative_weights.iter();
-        match cumulative_weights.next() {
-            Some(first_weight) => {
-                weights.push(first_weight.clone());
-                let mut last_weight: &X = first_weight;
-                for cumulative_weight in cumulative_weights {
-                    let mut weight = cumulative_weight.clone();
-                    weight -= last_weight;
-                    last_weight = cumulative_weight;
-                    weights.push(weight);
-                }
-                let mut final_weight = self.total_weight.clone();
-                final_weight -= last_weight;
-                weights.push(final_weight);
-            }
-            None => weights.push(self.total_weight.clone()),
+        WeightedIndexIter {
+            weighted_index: self,
+            index: 0,
         }
-        weights
     }
 
     /// Returns the sum of all weights in this distribution.
-    pub fn total_weight(&self) -> X
-    where
-        X: Clone
-    {
+    pub fn total_weight(&self) -> X {
         self.total_weight.clone()
     }
 }
@@ -417,22 +428,22 @@ mod test {
     #[test]
     fn test_accepting_nan() {
         assert_eq!(
-            WeightedIndex::new(&[core::f32::NAN, 0.5]).unwrap_err(),
+            WeightedIndex::new(&[f32::NAN, 0.5]).unwrap_err(),
             WeightError::InvalidWeight,
         );
         assert_eq!(
-            WeightedIndex::new(&[core::f32::NAN]).unwrap_err(),
+            WeightedIndex::new(&[f32::NAN]).unwrap_err(),
             WeightError::InvalidWeight,
         );
         assert_eq!(
-            WeightedIndex::new(&[0.5, core::f32::NAN]).unwrap_err(),
+            WeightedIndex::new(&[0.5, f32::NAN]).unwrap_err(),
             WeightError::InvalidWeight,
         );
 
         assert_eq!(
             WeightedIndex::new(&[0.5, 7.0])
                 .unwrap()
-                .update_weights(&[(0, &core::f32::NAN)])
+                .update_weights(&[(0, &f32::NAN)])
                 .unwrap_err(),
             WeightError::InvalidWeight,
         )
@@ -582,7 +593,8 @@ mod test {
     #[test]
     fn test_weight_at() {
         let data = [
-            &[10u32, 2, 3, 4][..],
+            &[1][..],
+            &[10, 2, 3, 4][..],
             &[1, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
             &[u32::MAX][..],
         ];
@@ -590,23 +602,24 @@ mod test {
         for weights in data.iter() {
             let distr = WeightedIndex::new(weights.to_vec()).unwrap();
             for (i, weight) in weights.iter().enumerate() {
-                assert_eq!(distr.get(i), Some(*weight));
+                assert_eq!(distr.weight(i), Some(*weight));
             }
-            assert_eq!(distr.get(weights.len()), None);
+            assert_eq!(distr.weight(weights.len()), None);
         }
     }
 
     #[test]
     fn test_weights() {
         let data = [
-            &[10u32, 2, 3, 4][..],
+            &[1][..],
+            &[10, 2, 3, 4][..],
             &[1, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
             &[u32::MAX][..],
         ];
 
         for weights in data.iter() {
             let distr = WeightedIndex::new(weights.to_vec()).unwrap();
-            assert_eq!(distr.weights(), weights.to_vec());
+            assert_eq!(distr.weights().collect::<Vec<_>>(), weights.to_vec());
         }
     }
 
