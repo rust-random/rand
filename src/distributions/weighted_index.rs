@@ -432,18 +432,18 @@ mod test {
             WeightError::InvalidWeight,
         );
         assert_eq!(
-            WeightedIndex::new(&[f32::NAN]).unwrap_err(),
+            WeightedIndex::new(&[core::f32::NAN]).unwrap_err(),
             WeightError::InvalidWeight,
         );
         assert_eq!(
-            WeightedIndex::new(&[0.5, f32::NAN]).unwrap_err(),
+            WeightedIndex::new(&[0.5, core::f32::NAN]).unwrap_err(),
             WeightError::InvalidWeight,
         );
 
         assert_eq!(
             WeightedIndex::new(&[0.5, 7.0])
                 .unwrap()
-                .update_weights(&[(0, &f32::NAN)])
+                .update_weights(&[(0, &core::f32::NAN)])
                 .unwrap_err(),
             WeightError::InvalidWeight,
         )
