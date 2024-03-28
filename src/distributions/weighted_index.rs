@@ -16,6 +16,7 @@ use core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
 use alloc::vec::Vec;
+use core::fmt::Debug;
 
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
@@ -246,11 +247,34 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
 
 /// A lazy-loading iterator over the weights of a `WeightedIndex` distribution.
 /// This is returned by [`WeightedIndex::weights`].
-#[derive(Clone)]
-#[allow(missing_debug_implementations)]
 pub struct WeightedIndexIter<'a, X: SampleUniform + PartialOrd> {
     weighted_index: &'a WeightedIndex<X>,
     index: usize,
+}
+
+impl<'a, X> Debug for WeightedIndexIter<'a, X>
+    where
+        X: SampleUniform + PartialOrd + Debug,
+        X::Sampler: Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WeightedIndexIter")
+            .field("weighted_index", &self.weighted_index)
+            .field("index", &self.index)
+            .finish()
+    }
+}
+
+impl<'a, X> Clone for WeightedIndexIter<'a, X>
+where
+    X: SampleUniform + PartialOrd,
+{
+    fn clone(&self) -> Self {
+        WeightedIndexIter {
+            weighted_index: self.weighted_index,
+            index: self.index,
+        }
+    }
 }
 
 impl<'a, X> Iterator for WeightedIndexIter<'a, X>
