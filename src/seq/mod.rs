@@ -703,7 +703,7 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 // platforms.
 #[inline]
 fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
-    if ubound <= (core::u32::MAX as usize) {
+    if ubound <= (u32::MAX as usize) {
         rng.gen_range(0..ubound as u32) as usize
     } else {
         rng.gen_range(0..ubound)
@@ -1344,12 +1344,12 @@ mod test {
         assert_eq!(r.unwrap().count(), 0);
 
         // Case 5: NaN weights
-        let choices = [('a', core::f64::NAN), ('b', 1.0), ('c', 1.0)];
+        let choices = [('a', f64::NAN), ('b', 1.0), ('c', 1.0)];
         let r = choices.choose_multiple_weighted(&mut rng, 2, |item| item.1);
         assert_eq!(r.unwrap_err(), WeightError::InvalidWeight);
 
         // Case 6: +infinity weights
-        let choices = [('a', core::f64::INFINITY), ('b', 1.0), ('c', 1.0)];
+        let choices = [('a', f64::INFINITY), ('b', 1.0), ('c', 1.0)];
         for _ in 0..100 {
             let result = choices
                 .choose_multiple_weighted(&mut rng, 2, |item| item.1)
@@ -1360,7 +1360,7 @@ mod test {
         }
 
         // Case 7: -infinity weights
-        let choices = [('a', core::f64::NEG_INFINITY), ('b', 1.0), ('c', 1.0)];
+        let choices = [('a', f64::NEG_INFINITY), ('b', 1.0), ('c', 1.0)];
         let r = choices.choose_multiple_weighted(&mut rng, 2, |item| item.1);
         assert_eq!(r.unwrap_err(), WeightError::InvalidWeight);
 

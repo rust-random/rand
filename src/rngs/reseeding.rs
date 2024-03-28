@@ -12,8 +12,8 @@
 
 use core::mem::size_of_val;
 
-use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
 use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
+use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
 
 /// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
 /// ability to reseed it.
@@ -181,18 +181,16 @@ where
 {
     /// Create a new `ReseedingCore`.
     fn new(rng: R, threshold: u64, reseeder: Rsdr) -> Self {
-        use ::core::i64::MAX;
-
         // Because generating more values than `i64::MAX` takes centuries on
         // current hardware, we just clamp to that value.
         // Also we set a threshold of 0, which indicates no limit, to that
         // value.
         let threshold = if threshold == 0 {
-            MAX
-        } else if threshold <= MAX as u64 {
+            i64::MAX
+        } else if threshold <= i64::MAX as u64 {
             threshold as i64
         } else {
-            MAX
+            i64::MAX
         };
 
         ReseedingCore {
@@ -252,10 +250,11 @@ where
 #[cfg(feature = "std_rng")]
 #[cfg(test)]
 mod test {
-    use super::ReseedingRng;
+    use crate::{Rng, SeedableRng};
     use crate::rngs::mock::StepRng;
     use crate::rngs::std::Core;
-    use crate::{Rng, SeedableRng};
+
+    use super::ReseedingRng;
 
     #[test]
     fn test_reseeding() {

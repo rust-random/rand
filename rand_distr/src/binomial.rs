@@ -77,7 +77,7 @@ impl Binomial {
 
 /// Convert a `f64` to an `i64`, panicking on overflow.
 fn f64_to_i64(x: f64) -> i64 {
-    assert!(x < (core::i64::MAX as f64));
+    assert!(x < (i64::MAX as f64));
     x as i64
 }
 
@@ -117,7 +117,7 @@ impl Distribution<u64> for Binomial {
         // When n*p < 10, so is n*p*q which is the variance, so a result > 110 would be 100 / sqrt(10) = 31 standard deviations away.
         const BINV_MAX_X : u64 = 110;
 
-        if (self.n as f64) * p < BINV_THRESHOLD && self.n <= (core::i32::MAX as u64) {
+        if (self.n as f64) * p < BINV_THRESHOLD && self.n <= (i32::MAX as u64) {
             // Use the BINV algorithm.
             let s = p / q;
             let a = ((self.n + 1) as f64) * s;

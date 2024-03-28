@@ -71,9 +71,9 @@ pub fn render_f64(data: &[f64], buffer: &mut String) {
         assert!(x.is_finite(), "can only render finite values");
     }
     let max = data.iter().fold(
-        core::f64::NEG_INFINITY, |a, &b| a.max(b));
+        f64::NEG_INFINITY, |a, &b| a.max(b));
     let min = data.iter().fold(
-        core::f64::INFINITY, |a, &b| a.min(b));
+        f64::INFINITY, |a, &b| a.min(b));
     let scale = ((N - 1) as f64) / (max - min);
     for x in data {
         let tick = ((x - min) * scale) as usize;

@@ -224,7 +224,7 @@ where R: Rng + ?Sized {
     if amount > length {
         panic!("`amount` of samples must be less than or equal to `length`");
     }
-    if length > (::core::u32::MAX as usize) {
+    if length > (u32::MAX as usize) {
         // We never want to use inplace here, but could use floyd's alg
         // Lazy version: always use the cache alg.
         return sample_rejection(rng, length, amount);
@@ -282,10 +282,10 @@ where
     F: Fn(usize) -> X,
     X: Into<f64>,
 {
-    if length > (core::u32::MAX as usize) {
+    if length > (u32::MAX as usize) {
         sample_efraimidis_spirakis(rng, length, weight, amount)
     } else {
-        assert!(amount <= core::u32::MAX as usize);
+        assert!(amount <= u32::MAX as usize);
         let amount = amount as u32;
         let length = length as u32;
         sample_efraimidis_spirakis(rng, length, weight, amount)

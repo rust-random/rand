@@ -80,7 +80,7 @@ fn geometric_stability() {
     test_samples(464, Geometric::new(0.95).unwrap(), &[0, 0, 0, 0, 1, 0, 0, 0]);
 
     // expect non-random behaviour for series of pre-determined trials
-    test_samples(464, Geometric::new(0.0).unwrap(), &[u64::max_value(); 100][..]);
+    test_samples(464, Geometric::new(0.0).unwrap(), &[u64::MAX; 100][..]);
     test_samples(464, Geometric::new(1.0).unwrap(), &[0; 100][..]);
 }
 
