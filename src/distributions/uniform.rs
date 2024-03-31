@@ -327,7 +327,7 @@ pub trait UniformSampler: Sized {
 impl<X: SampleUniform> TryFrom<Range<X>> for Uniform<X> {
     type Error = Error;
 
-    fn try_from(r: ::core::ops::Range<X>) -> Result<Uniform<X>, Error> {
+    fn try_from(r: Range<X>) -> Result<Uniform<X>, Error> {
         Uniform::new(r.start, r.end)
     }
 }
@@ -1706,7 +1706,7 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        fn test_samples<T: SampleUniform + Copy + core::fmt::Debug + PartialEq>(
+        fn test_samples<T: SampleUniform + Copy + fmt::Debug + PartialEq>(
             lb: T, ub: T, expected_single: &[T], expected_multiple: &[T],
         ) where Uniform<T>: Distribution<T> {
             let mut rng = crate::test::rng(897);

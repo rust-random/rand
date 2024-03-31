@@ -11,7 +11,7 @@ use core::fmt::Debug;
 use rand::Rng;
 use rand_distr::*;
 
-fn get_rng(seed: u64) -> impl rand::Rng {
+fn get_rng(seed: u64) -> impl Rng {
     // For tests, we want a statistically good, fast, reproducible RNG.
     // PCG32 will do fine, and will be easy to embed if we ever need to.
     const INC: u64 = 11634580027462260723;

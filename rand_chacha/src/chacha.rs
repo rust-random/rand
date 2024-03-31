@@ -344,7 +344,7 @@ mod test {
 
     #[cfg(feature = "serde1")] use super::{ChaCha20Rng, ChaCha12Rng, ChaCha8Rng};
 
-    type ChaChaRng = super::ChaCha20Rng;
+    type ChaChaRng = ChaCha20Rng;
 
     #[cfg(feature = "serde1")]
     #[test]

@@ -163,8 +163,8 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// as an alternative where an update is `O(log N)`.
     pub fn update_weights(&mut self, new_weights: &[(usize, &X)]) -> Result<(), WeightError>
     where
-        X: for<'a> ::core::ops::AddAssign<&'a X>
-            + for<'a> ::core::ops::SubAssign<&'a X>
+        X: for<'a> core::ops::AddAssign<&'a X>
+            + for<'a> core::ops::SubAssign<&'a X>
             + Clone
             + Default,
     {
