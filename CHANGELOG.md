@@ -10,6 +10,14 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ## [Unreleased]
 - Add `rand::distributions::WeightedIndex::{weight, weights, total_weight}` (#1420)
+- Bump the MSRV to 1.61.0
+
+## [0.9.0-alpha.1] - 2024-03-18
+- Add the `Slice::num_choices` method to the Slice distribution (#1402)
+
+### Generators
+- `ReseedingRng::reseed` also resets the random data cache.
+- Remove fork-protection from `ReseedingRng` and `ThreadRng`. Instead, it is recommended to call `ThreadRng::reseed` on fork.
 
 ## [0.9.0-alpha.0] - 2024-02-18
 This is a pre-release. To depend on this version, use `rand = "=0.9.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
@@ -40,7 +48,7 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-alpha.0"` 
 
 ### SIMD
 - Switch to `std::simd`, expand SIMD & docs (#1239)
-- Optimise SIMD widening multipy (#1247)
+- Optimise SIMD widening multiply (#1247)
 
 ### Other
 - Bump MSRV to 1.60.0 (#1207, #1246, #1269, #1341)

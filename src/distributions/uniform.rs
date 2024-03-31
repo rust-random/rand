@@ -106,7 +106,6 @@
 use core::fmt;
 use core::time::Duration;
 use core::ops::{Range, RangeInclusive};
-use core::convert::TryFrom;
 
 use crate::distributions::float::IntoFloat;
 use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAsSIMD, WideningMultiply};
@@ -605,7 +604,7 @@ macro_rules! uniform_int_impl {
 
                 let (mut result, mut lo) = rng.gen::<$sample_ty>().wmul(range);
 
-                // In constrast to the biased sampler, we use a loop:
+                // In contrast to the biased sampler, we use a loop:
                 while lo > range.wrapping_neg() {
                     let (new_hi, new_lo) = (rng.gen::<$sample_ty>()).wmul(range);
                     match lo.checked_add(new_hi) {
@@ -653,6 +652,9 @@ macro_rules! uniform_simd_int_impl {
         // know the PRNG's minimal output size, and casting to a larger vector
         // is generally a bad idea for SIMD performance. The user can still
         // implement it manually.
+
+        #[cfg(feature = "simd_support")]
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))]
         impl<const LANES: usize> SampleUniform for Simd<$ty, LANES>
         where
             LaneCount<LANES>: SupportedLaneCount,
@@ -663,6 +665,8 @@ macro_rules! uniform_simd_int_impl {
             type Sampler = UniformInt<Simd<$ty, LANES>>;
         }
 
+        #[cfg(feature = "simd_support")]
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))]
         impl<const LANES: usize> UniformSampler for UniformInt<Simd<$ty, LANES>>
         where
             LaneCount<LANES>: SupportedLaneCount,
@@ -697,21 +701,15 @@ macro_rules! uniform_simd_int_impl {
                 if !(low.simd_le(high).all()) {
                     return Err(Error::EmptyRange);
                 }
-                let unsigned_max = Simd::splat(::core::$unsigned::MAX);
 
                 // NOTE: all `Simd` operations are inherently wrapping,
                 //       see https://doc.rust-lang.org/std/simd/struct.Simd.html
                 let range: Simd<$unsigned, LANES> = ((high - low) + Simd::splat(1)).cast();
-                // `% 0` will panic at runtime.
+
+                // We must avoid divide-by-zero by using 0 % 1 == 0.
                 let not_full_range = range.simd_gt(Simd::splat(0));
-                // replacing 0 with `unsigned_max` allows a faster `select`
-                // with bitwise OR
-                let modulo = not_full_range.select(range, unsigned_max);
-                // wrapping addition
-                // TODO: replace with `range.wrapping_neg() % module` when Simd supports this.
-                let ints_to_reject = (Simd::splat(0) - range) % modulo;
-                // When `range` is 0, `lo` of `v.wmul(range)` will always be
-                // zero which means only one sample is needed.
+                let modulo = not_full_range.select(range, Simd::splat(1));
+                let ints_to_reject = range.wrapping_neg() % modulo;
 
                 Ok(UniformInt {
                     low,
@@ -840,11 +838,12 @@ impl UniformSampler for UniformChar {
     }
 }
 
-/// Note: the `String` is potentially left with excess capacity if the range 
-/// includes non ascii chars; optionally the user may call 
+/// Note: the `String` is potentially left with excess capacity if the range
+/// includes non ascii chars; optionally the user may call
 /// `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
-impl super::DistString for Uniform<char>{
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
+impl super::DistString for Uniform<char> {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut alloc::string::String, len: usize) {
         // Getting the hi value to assume the required length to reserve in string.
         let mut hi = self.0.sampler.low + self.0.sampler.range - 1;
@@ -885,11 +884,15 @@ pub struct UniformFloat<X> {
 }
 
 macro_rules! uniform_float_impl {
-    ($ty:ty, $uty:ident, $f_scalar:ident, $u_scalar:ident, $bits_to_discard:expr) => {
+    ($($meta:meta)?, $ty:ty, $uty:ident, $f_scalar:ident, $u_scalar:ident, $bits_to_discard:expr) => {
+        $(#[cfg($meta)]
+        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
         impl SampleUniform for $ty {
             type Sampler = UniformFloat<$ty>;
         }
 
+        $(#[cfg($meta)]
+        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
         impl UniformSampler for UniformFloat<$ty> {
             type X = $ty;
 
@@ -1089,24 +1092,24 @@ macro_rules! uniform_float_impl {
     };
 }
 
-uniform_float_impl! { f32, u32, f32, u32, 32 - 23 }
-uniform_float_impl! { f64, u64, f64, u64, 64 - 52 }
+uniform_float_impl! { , f32, u32, f32, u32, 32 - 23 }
+uniform_float_impl! { , f64, u64, f64, u64, 64 - 52 }
 
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { f32x2, u32x2, f32, u32, 32 - 23 }
+uniform_float_impl! { feature = "simd_support", f32x2, u32x2, f32, u32, 32 - 23 }
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { f32x4, u32x4, f32, u32, 32 - 23 }
+uniform_float_impl! { feature = "simd_support", f32x4, u32x4, f32, u32, 32 - 23 }
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { f32x8, u32x8, f32, u32, 32 - 23 }
+uniform_float_impl! { feature = "simd_support", f32x8, u32x8, f32, u32, 32 - 23 }
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { f32x16, u32x16, f32, u32, 32 - 23 }
+uniform_float_impl! { feature = "simd_support", f32x16, u32x16, f32, u32, 32 - 23 }
 
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { f64x2, u64x2, f64, u64, 64 - 52 }
+uniform_float_impl! { feature = "simd_support", f64x2, u64x2, f64, u64, 64 - 52 }
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { f64x4, u64x4, f64, u64, 64 - 52 }
+uniform_float_impl! { feature = "simd_support", f64x4, u64x4, f64, u64, 64 - 52 }
 #[cfg(feature = "simd_support")]
-uniform_float_impl! { f64x8, u64x8, f64, u64, 64 - 52 }
+uniform_float_impl! { feature = "simd_support", f64x8, u64x8, f64, u64, 64 - 52 }
 
 
 /// The back-end implementing [`UniformSampler`] for `Duration`.

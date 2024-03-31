@@ -96,8 +96,8 @@
 //! [`rand_xoshiro`]: https://crates.io/crates/rand_xoshiro
 //! [`rng` tag]: https://crates.io/keywords/rng
 
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
-#[cfg(feature = "std")] pub mod adapter;
+mod reseeding;
+pub use reseeding::ReseedingRng;
 
 pub mod mock; // Public so we don't export `StepRng` directly, making it a bit
               // more clear it is intended for testing.

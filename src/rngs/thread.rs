@@ -14,7 +14,7 @@ use std::thread_local;
 use std::fmt;
 
 use super::std::Core;
-use crate::rngs::adapter::ReseedingRng;
+use crate::rngs::ReseedingRng;
 use crate::rngs::OsRng;
 use crate::{CryptoRng, Error, RngCore, SeedableRng};
 
@@ -42,8 +42,6 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 ///
 /// This type is a reference to a lazily-initialized thread-local generator.
 /// An instance can be obtained via [`thread_rng`] or via `ThreadRng::default()`.
-/// This handle is safe to use everywhere (including thread-local destructors),
-/// though it is recommended not to use inside a fork handler.
 /// The handle cannot be passed between threads (is not `Send` or `Sync`).
 ///
 /// `ThreadRng` uses the same CSPRNG as [`StdRng`], ChaCha12. As with
@@ -51,8 +49,23 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// of security and performance.
 ///
 /// `ThreadRng` is automatically seeded from [`OsRng`] with periodic reseeding
-/// (every 64 kiB, as well as "soon" after a fork on Unix — see [`ReseedingRng`]
-/// documentation for details).
+/// (every 64 kiB — see [`ReseedingRng`] documentation for details).
+///
+/// `ThreadRng` is not automatically reseeded on fork. It is recommended to
+/// explicitly call [`ThreadRng::reseed`] immediately after a fork, for example:
+/// ```ignore
+/// fn do_fork() {
+///     let pid = unsafe { libc::fork() };
+///     if pid == 0 {
+///         // Reseed ThreadRng in child processes:
+///         rand::thread_rng().reseed();
+///     }
+/// }
+/// ```
+///
+/// Methods on `ThreadRng` are not reentrant-safe and thus should not be called
+/// from an interrupt (e.g. a fork handler) unless it can be guaranteed that no
+/// other method on the same `ThreadRng` is currently executing.
 ///
 /// Security must be considered relative to a threat model and validation
 /// requirements. `ThreadRng` attempts to meet basic security considerations
@@ -61,13 +74,25 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// leaking internal secrets e.g. via [`Debug`] implementation or serialization.
 /// Memory is not zeroized on drop.
 ///
-/// [`ReseedingRng`]: crate::rngs::adapter::ReseedingRng
+/// [`ReseedingRng`]: crate::rngs::ReseedingRng
 /// [`StdRng`]: crate::rngs::StdRng
 #[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))))]
 #[derive(Clone)]
 pub struct ThreadRng {
     // Rc is explicitly !Send and !Sync
     rng: Rc<UnsafeCell<ReseedingRng<Core, OsRng>>>,
+}
+
+impl ThreadRng {
+    /// Immediately reseed the generator
+    ///
+    /// This discards any remaining random data in the cache.
+    pub fn reseed(&mut self) -> Result<(), Error> {
+        // SAFETY: We must make sure to stop using `rng` before anyone else
+        // creates another mutable reference
+        let rng = unsafe { &mut *self.rng.get() };
+        rng.reseed()
+    }
 }
 
 /// Debug implementation does not leak internal state

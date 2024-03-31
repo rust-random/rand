@@ -5,7 +5,6 @@
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.60+-lightgray.svg)](https://github.com/rust-random/rand#rust-version-requirements)
 
 A Rust library for random number generation, featuring:
 
@@ -56,49 +55,15 @@ rand = "0.8.5"
 
 To get started using Rand, see [The Book](https://rust-random.github.io/book).
 
-
 ## Versions
 
 Rand is *mature* (suitable for general usage, with infrequent breaking releases
-which minimise breakage) but not yet at 1.0. We maintain compatibility with
-pinned versions of the Rust compiler (see below).
+which minimise breakage) but not yet at 1.0. Current versions are:
 
-Current Rand versions are:
-
--   Version 0.7 was released in June 2019, moving most non-uniform distributions
-    to an external crate, moving `from_entropy` to `SeedableRng`, and many small
-    changes and fixes.
 -   Version 0.8 was released in December 2020 with many small changes.
+-   Version 0.9 is in development with many small changes.
 
-A detailed [changelog](CHANGELOG.md) is available for releases.
-
-When upgrading to the next minor series (especially 0.4 → 0.5), we recommend
-reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
-
-Rand has not yet reached 1.0 implying some breaking changes may arrive in the
-future ([SemVer](https://semver.org/) allows each 0.x.0 release to include
-breaking changes), but is considered *mature*: breaking changes are minimised
-and breaking releases are infrequent.
-
-Rand libs have inter-dependencies and make use of the
-[semver trick](https://github.com/dtolnay/semver-trick/) in order to make traits
-compatible across crate versions. (This is especially important for `RngCore`
-and `SeedableRng`.) A few crate releases are thus compatibility shims,
-depending on the *next* lib version (e.g. `rand_core` versions `0.2.2` and
-`0.3.1`). This means, for example, that `rand_core_0_4_0::SeedableRng` and
-`rand_core_0_3_0::SeedableRng` are distinct, incompatible traits, which can
-cause build errors. Usually, running `cargo update` is enough to fix any issues.
-
-### Yanked versions
-
-Some versions of Rand crates have been yanked ("unreleased"). Where this occurs,
-the crate's CHANGELOG *should* be updated with a rationale, and a search on the
-issue tracker with the keyword `yank` *should* uncover the motivation.
-
-### Rust version requirements
-
-The Minimum Supported Rust Version (MSRV) is `rustc >= 1.60.0`.
-Older releases may work (depending on feature configuration) but are untested.
+See the [CHANGELOG](CHANGELOG.md) or [Upgrade Guide](https://rust-random.github.io/book/update.html) for more details.
 
 ## Crate Features
 
@@ -113,7 +78,7 @@ Rand is built with these features enabled by default:
 
 Optionally, the following dependencies can be enabled:
 
--   `log` enables logging via the `log` crate
+-   `log` enables logging via [log](https://crates.io/crates/log)
 
 Additionally, these features configure Rand:
 
@@ -131,6 +96,12 @@ Rand supports limited functionality in `no_std` mode (enabled via
 unavailable (unless `getrandom` is enabled), large parts of `seq` are
 unavailable (unless `alloc` is enabled), and `thread_rng` and `random` are
 unavailable.
+
+## Portability and platform support
+
+Many (but not all) algorithms are intended to have reproducible output. Read more in the book: [Portability](https://rust-random.github.io/book/portability.html).
+
+The Rand library supports a variety of CPU architectures. Platform integration is outsourced to [getrandom](https://docs.rs/getrandom/latest/getrandom/).
 
 ### WASM support
 

@@ -1,6 +1,6 @@
 [package]
 name = "rand_chacha"
-version = "0.9.0-alpha.0"
+version = "0.9.0-alpha.1"
 authors = ["The Rand Project Developers", "The Rust Project Developers", "The CryptoCorrosion Contributors"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -13,13 +13,13 @@ ChaCha random number generator
 keywords = ["random", "rng", "chacha"]
 categories = ["algorithms", "no-std"]
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.61"
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--generate-link-to-definition"]
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "=0.9.0-alpha.0" }
+rand_core = { path = "../rand_core", version = "=0.9.0-alpha.1" }
 ppv-lite86 = { version = "0.2.14", default-features = false, features = ["simd"] }
 serde = { version = "1.0", features = ["derive"], optional = true }
 

@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.9.0-alpha.0"
+version = "0.9.0-alpha.1"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -14,14 +14,14 @@ keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 autobenches = true
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.61"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
 [package.metadata.docs.rs]
 # To build locally:
-# RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --no-deps --generate-link-to-definition --open
+# RUSTDOCFLAGS="--cfg doc_cfg -Zunstable-options --generate-link-to-definition" cargo +nightly doc --all --all-features --no-deps --open
 all-features = true
-rustdoc-args = ["--cfg", "doc_cfg", "--generate-link-to-definition"]
+rustdoc-args = ["--cfg", "doc_cfg", "-Zunstable-options", "--generate-link-to-definition"]
 
 [package.metadata.playground]
 features = ["small_rng", "serde1"]
@@ -34,7 +34,7 @@ serde1 = ["serde", "rand_core/serde1"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
 # enables functionality expected to be available on a standard platform.
-std = ["rand_core/std", "rand_chacha?/std", "alloc", "libc"]
+std = ["rand_core/std", "rand_chacha?/std", "alloc"]
 
 # Option: "alloc" enables support for Vec and Box when not using "std"
 alloc = ["rand_core/alloc"]
@@ -65,18 +65,14 @@ members = [
 ]
 
 [dependencies]
-rand_core = { path = "rand_core", version = "=0.9.0-alpha.0", default-features = false }
+rand_core = { path = "rand_core", version = "=0.9.0-alpha.1", default-features = false }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
-rand_chacha = { path = "rand_chacha", version = "=0.9.0-alpha.0", default-features = false, optional = true }
-zerocopy = { version = "=0.8.0-alpha.5", default-features = false, features = ["simd"] }
-
-[target.'cfg(unix)'.dependencies]
-# Used for fork protection (reseeding.rs)
-libc = { version = "0.2.22", optional = true, default-features = false }
+rand_chacha = { path = "rand_chacha", version = "=0.9.0-alpha.1", default-features = false, optional = true }
+zerocopy = { version = "=0.8.0-alpha.6", default-features = false, features = ["simd"] }
 
 [dev-dependencies]
-rand_pcg = { path = "rand_pcg", version = "=0.9.0-alpha.0" }
+rand_pcg = { path = "rand_pcg", version = "=0.9.0-alpha.1" }
 # Only to test serde1
 bincode = "1.2.1"
 rayon = "1.5.3"

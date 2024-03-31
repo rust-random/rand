@@ -637,17 +637,17 @@ impl<T> SliceRandom for [T] {
         // for an unbiased permutation.
         // It ensures that the last `amount` elements of the slice
         // are randomly selected from the whole slice.
-        
-        //`IncreasingUniform::next_index()` is faster than `gen_index`
-        //but only works for 32 bit integers
-        //So we must use the slow method if the slice is longer than that.
+
+        // `IncreasingUniform::next_index()` is faster than `gen_index`
+        // but only works for 32 bit integers
+        // So we must use the slow method if the slice is longer than that.
         if self.len() < (u32::MAX as usize) {
             let mut chooser = IncreasingUniform::new(rng, m as u32);
             for i in m..self.len() {
                 let index = chooser.next_index();
                 self.swap(i, index);
             }
-        } else {            
+        } else {
             for i in m..self.len() {
                 let index = gen_index(rng, i + 1);
                 self.swap(i, index);
@@ -674,6 +674,7 @@ pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
 }
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceChooseIter<'a, S, T> {
     type Item = &'a T;
 
@@ -688,6 +689,7 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceCho
 }
 
 #[cfg(feature = "alloc")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
     for SliceChooseIter<'a, S, T>
 {
@@ -701,7 +703,6 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 // platforms.
 #[inline]
 fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
-
     if ubound <= (core::u32::MAX as usize) {
         rng.gen_range(0..ubound as u32) as usize
     } else {
@@ -712,8 +713,6 @@ fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
 #[cfg(test)]
 mod test {
     use super::*;
-    #[cfg(feature = "alloc")]
-    use crate::Rng;
     #[cfg(all(feature = "alloc", not(feature = "std")))]
     use alloc::vec::Vec;
 

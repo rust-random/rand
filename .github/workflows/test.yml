@@ -47,7 +47,7 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             variant: MSRV
-            toolchain: 1.60.0
+            toolchain: 1.61.0
           - os: ubuntu-latest
             deps: sudo apt-get update ; sudo apt install gcc-multilib
             target: i686-unknown-linux-gnu
