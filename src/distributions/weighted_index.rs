@@ -452,7 +452,7 @@ mod test {
     #[test]
     fn test_accepting_nan() {
         assert_eq!(
-            WeightedIndex::new(&[f32::NAN, 0.5]).unwrap_err(),
+            WeightedIndex::new(&[core::f32::NAN, 0.5]).unwrap_err(),
             WeightError::InvalidWeight,
         );
         assert_eq!(
