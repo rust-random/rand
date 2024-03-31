@@ -127,7 +127,7 @@ pub trait IndexedRandom: Index<usize> {
         Self::Output: Sized,
         R: Rng + ?Sized,
     {
-        let amount = ::core::cmp::min(amount, self.len());
+        let amount = core::cmp::min(amount, self.len());
         SliceChooseIter {
             slice: self,
             _phantom: Default::default(),
@@ -173,7 +173,7 @@ pub trait IndexedRandom: Index<usize> {
         R: Rng + ?Sized,
         F: Fn(&Self::Output) -> B,
         B: SampleBorrow<X>,
-        X: SampleUniform + Weight + ::core::cmp::PartialOrd<X>,
+        X: SampleUniform + Weight + PartialOrd<X>,
     {
         use crate::distributions::{Distribution, WeightedIndex};
         let distr = WeightedIndex::new((0..self.len()).map(|idx| weight(&self[idx])))?;
@@ -226,7 +226,7 @@ pub trait IndexedRandom: Index<usize> {
         F: Fn(&Self::Output) -> X,
         X: Into<f64>,
     {
-        let amount = ::core::cmp::min(amount, self.len());
+        let amount = core::cmp::min(amount, self.len());
         Ok(SliceChooseIter {
             slice: self,
             _phantom: Default::default(),
@@ -291,7 +291,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
         R: Rng + ?Sized,
         F: Fn(&Self::Output) -> B,
         B: SampleBorrow<X>,
-        X: SampleUniform + Weight + ::core::cmp::PartialOrd<X>,
+        X: SampleUniform + Weight + PartialOrd<X>,
     {
         use crate::distributions::{Distribution, WeightedIndex};
         let distr = WeightedIndex::new((0..self.len()).map(|idx| weight(&self[idx])))?;
@@ -424,7 +424,7 @@ pub trait IteratorRandom: Iterator + Sized {
             };
         }
 
-        let mut coin_flipper = coin_flipper::CoinFlipper::new(rng);
+        let mut coin_flipper = CoinFlipper::new(rng);
         let mut consumed = 0;
 
         // Continue until the iterator is exhausted
@@ -669,7 +669,7 @@ impl<I> IteratorRandom for I where I: Iterator + Sized {}
 #[derive(Debug)]
 pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
     slice: &'a S,
-    _phantom: ::core::marker::PhantomData<T>,
+    _phantom: core::marker::PhantomData<T>,
     indices: index::IndexVecIntoIter,
 }
 
@@ -805,7 +805,7 @@ mod test {
 
         fn next(&mut self) -> Option<Self::Item> {
             if self.chunk_remaining == 0 {
-                self.chunk_remaining = ::core::cmp::min(self.chunk_size, self.iter.len());
+                self.chunk_remaining = core::cmp::min(self.chunk_size, self.iter.len());
             }
             self.chunk_remaining = self.chunk_remaining.saturating_sub(1);
 
@@ -839,7 +839,7 @@ mod test {
 
         fn size_hint(&self) -> (usize, Option<usize>) {
             (
-                ::core::cmp::min(self.iter.len(), self.window_size),
+                core::cmp::min(self.iter.len(), self.window_size),
                 if self.hint_total_size {
                     Some(self.iter.len())
                 } else {

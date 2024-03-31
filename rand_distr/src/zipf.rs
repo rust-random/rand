@@ -246,7 +246,7 @@ where F: Float, Standard: Distribution<F>
 mod tests {
     use super::*;
 
-    fn test_samples<F: Float + core::fmt::Debug, D: Distribution<F>>(
+    fn test_samples<F: Float + fmt::Debug, D: Distribution<F>>(
         distr: D, zero: F, expected: &[F],
     ) {
         let mut rng = crate::test::rng(213);
