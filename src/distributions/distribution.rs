@@ -78,7 +78,7 @@ pub trait Distribution<T> {
         DistIter {
             distr: self,
             rng,
-            phantom: ::core::marker::PhantomData,
+            phantom: core::marker::PhantomData,
         }
     }
 
@@ -107,7 +107,7 @@ pub trait Distribution<T> {
         DistMap {
             distr: self,
             func,
-            phantom: ::core::marker::PhantomData,
+            phantom: core::marker::PhantomData,
         }
     }
 }
@@ -129,7 +129,7 @@ impl<'a, T, D: Distribution<T> + ?Sized> Distribution<T> for &'a D {
 pub struct DistIter<D, R, T> {
     distr: D,
     rng: R,
-    phantom: ::core::marker::PhantomData<T>,
+    phantom: core::marker::PhantomData<T>,
 }
 
 impl<D, R, T> Iterator for DistIter<D, R, T>
@@ -148,7 +148,7 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (usize::max_value(), None)
+        (usize::MAX, None)
     }
 }
 
@@ -168,7 +168,7 @@ where
 pub struct DistMap<D, F, T, S> {
     distr: D,
     func: F,
-    phantom: ::core::marker::PhantomData<fn(T) -> S>,
+    phantom: core::marker::PhantomData<fn(T) -> S>,
 }
 
 impl<D, F, T, S> Distribution<S> for DistMap<D, F, T, S>

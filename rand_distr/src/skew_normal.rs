@@ -150,7 +150,7 @@ where
 mod tests {
     use super::*;
 
-    fn test_samples<F: Float + core::fmt::Debug, D: Distribution<F>>(
+    fn test_samples<F: Float + fmt::Debug, D: Distribution<F>>(
         distr: D, zero: F, expected: &[F],
     ) {
         let mut rng = crate::test::rng(213);
@@ -164,7 +164,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn invalid_scale_nan() {
-        SkewNormal::new(0.0, core::f64::NAN, 0.0).unwrap();
+        SkewNormal::new(0.0, f64::NAN, 0.0).unwrap();
     }
 
     #[test]
@@ -182,24 +182,24 @@ mod tests {
     #[test]
     #[should_panic]
     fn invalid_scale_infinite() {
-        SkewNormal::new(0.0, core::f64::INFINITY, 0.0).unwrap();
+        SkewNormal::new(0.0, f64::INFINITY, 0.0).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn invalid_shape_nan() {
-        SkewNormal::new(0.0, 1.0, core::f64::NAN).unwrap();
+        SkewNormal::new(0.0, 1.0, f64::NAN).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn invalid_shape_infinite() {
-        SkewNormal::new(0.0, 1.0, core::f64::INFINITY).unwrap();
+        SkewNormal::new(0.0, 1.0, f64::INFINITY).unwrap();
     }
 
     #[test]
     fn valid_location_nan() {
-        SkewNormal::new(core::f64::NAN, 1.0, 0.0).unwrap();
+        SkewNormal::new(f64::NAN, 1.0, 0.0).unwrap();
     }
 
     #[test]
@@ -220,30 +220,30 @@ mod tests {
             ],
         );
         test_samples(
-            SkewNormal::new(core::f64::INFINITY, 1.0, 0.0).unwrap(),
+            SkewNormal::new(f64::INFINITY, 1.0, 0.0).unwrap(),
             0f64,
             &[
-                core::f64::INFINITY,
-                core::f64::INFINITY,
-                core::f64::INFINITY,
-                core::f64::INFINITY,
+                f64::INFINITY,
+                f64::INFINITY,
+                f64::INFINITY,
+                f64::INFINITY,
             ],
         );
         test_samples(
-            SkewNormal::new(core::f64::NEG_INFINITY, 1.0, 0.0).unwrap(),
+            SkewNormal::new(f64::NEG_INFINITY, 1.0, 0.0).unwrap(),
             0f64,
             &[
-                core::f64::NEG_INFINITY,
-                core::f64::NEG_INFINITY,
-                core::f64::NEG_INFINITY,
-                core::f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
             ],
         );
     }
 
     #[test]
     fn skew_normal_value_location_nan() {
-        let skew_normal = SkewNormal::new(core::f64::NAN, 1.0, 0.0).unwrap();
+        let skew_normal = SkewNormal::new(f64::NAN, 1.0, 0.0).unwrap();
         let mut rng = crate::test::rng(213);
         let mut buf = [0.0; 4];
         for x in &mut buf {

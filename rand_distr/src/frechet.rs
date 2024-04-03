@@ -112,13 +112,13 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_infinite_scale() {
-        Frechet::new(0.0, core::f64::INFINITY, 1.0).unwrap();
+        Frechet::new(0.0, f64::INFINITY, 1.0).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_nan_scale() {
-        Frechet::new(0.0, core::f64::NAN, 1.0).unwrap();
+        Frechet::new(0.0, f64::NAN, 1.0).unwrap();
     }
 
     #[test]
@@ -130,25 +130,25 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_infinite_shape() {
-        Frechet::new(0.0, 1.0, core::f64::INFINITY).unwrap();
+        Frechet::new(0.0, 1.0, f64::INFINITY).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_nan_shape() {
-        Frechet::new(0.0, 1.0, core::f64::NAN).unwrap();
+        Frechet::new(0.0, 1.0, f64::NAN).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_infinite_location() {
-        Frechet::new(core::f64::INFINITY, 1.0, 1.0).unwrap();
+        Frechet::new(f64::INFINITY, 1.0, 1.0).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn test_nan_location() {
-        Frechet::new(core::f64::NAN, 1.0, 1.0).unwrap();
+        Frechet::new(f64::NAN, 1.0, 1.0).unwrap();
     }
 
     #[test]

@@ -348,7 +348,7 @@ mod tests {
     #[test]
     fn test_log_normal_cv() {
         let lnorm = LogNormal::from_mean_cv(0.0, 0.0).unwrap();
-        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (-core::f64::INFINITY, 0.0));
+        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (f64::NEG_INFINITY, 0.0));
 
         let lnorm = LogNormal::from_mean_cv(1.0, 0.0).unwrap();
         assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (0.0, 0.0));

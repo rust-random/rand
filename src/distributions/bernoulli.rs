@@ -10,7 +10,7 @@
 
 use crate::distributions::Distribution;
 use crate::Rng;
-use core::{fmt, u64};
+use core::fmt;
 
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
@@ -82,7 +82,7 @@ impl fmt::Display for BernoulliError {
 }
 
 #[cfg(feature = "std")]
-impl ::std::error::Error for BernoulliError {}
+impl std::error::Error for BernoulliError {}
 
 impl Bernoulli {
     /// Construct a new `Bernoulli` with the given probability of success `p`.
@@ -145,7 +145,6 @@ impl Distribution<bool> for Bernoulli {
 mod test {
     use super::Bernoulli;
     use crate::distributions::Distribution;
-    use crate::Rng;
 
     #[test]
     #[cfg(feature = "serde1")]
