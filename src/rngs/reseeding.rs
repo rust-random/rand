@@ -181,6 +181,8 @@ where
 {
     /// Create a new `ReseedingCore`.
     fn new(rng: R, threshold: u64, reseeder: Rsdr) -> Self {
+        fork::register_fork_handler();
+
         // Because generating more values than `i64::MAX` takes centuries on
         // current hardware, we just clamp to that value.
         // Also we set a threshold of 0, which indicates no limit, to that
@@ -246,6 +248,61 @@ where
     Rsdr: CryptoRng,
 {
 }
+
+
+#[cfg(all(unix, not(target_os = "emscripten")))]
+mod fork {
+    use core::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Once;
+
+// Fork protection
+    //
+    // We implement fork protection on Unix using `pthread_atfork`.
+    // When the process is forked, we increment `RESEEDING_RNG_FORK_COUNTER`.
+    // Every `ReseedingRng` stores the last known value of the static in
+    // `fork_counter`. If the cached `fork_counter` is less than
+    // `RESEEDING_RNG_FORK_COUNTER`, it is time to reseed this RNG.
+    //
+    // If reseeding fails, we don't deal with this by setting a delay, but just
+    // don't update `fork_counter`, so a reseed is attempted as soon as
+    // possible.
+
+    static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = AtomicUsize::new(0);
+
+    pub fn get_fork_counter() -> usize {
+        RESEEDING_RNG_FORK_COUNTER.load(Ordering::Relaxed)
+    }
+
+    extern "C" fn fork_handler() {
+        // Note: fetch_add is defined to wrap on overflow
+        // (which is what we want).
+        RESEEDING_RNG_FORK_COUNTER.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn register_fork_handler() {
+        static REGISTER: Once = Once::new();
+        REGISTER.call_once(|| {
+            // Bump the counter before and after forking (see #1169):
+            let ret = unsafe { libc::pthread_atfork(
+                Some(fork_handler),
+                Some(fork_handler),
+                Some(fork_handler),
+            ) };
+            if ret != 0 {
+                panic!("libc::pthread_atfork failed with code {}", ret);
+            }
+        });
+    }
+}
+
+#[cfg(not(all(unix, not(target_os = "emscripten"))))]
+mod fork {
+    pub fn get_fork_counter() -> usize {
+        0
+    }
+    pub fn register_fork_handler() {}
+}
+
 
 #[cfg(feature = "std_rng")]
 #[cfg(test)]
