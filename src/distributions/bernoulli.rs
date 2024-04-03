@@ -145,6 +145,7 @@ impl Distribution<bool> for Bernoulli {
 mod test {
     use super::Bernoulli;
     use crate::distributions::Distribution;
+    use crate::Rng;
 
     #[test]
     #[cfg(feature = "serde1")]
