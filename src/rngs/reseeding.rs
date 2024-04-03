@@ -181,8 +181,6 @@ where
 {
     /// Create a new `ReseedingCore`.
     fn new(rng: R, threshold: u64, reseeder: Rsdr) -> Self {
-        fork::register_fork_handler();
-
         // Because generating more values than `i64::MAX` takes centuries on
         // current hardware, we just clamp to that value.
         // Also we set a threshold of 0, which indicates no limit, to that
