@@ -278,7 +278,7 @@ where
 
 impl<'a, X> Iterator for WeightedIndexIter<'a, X>
 where
-    X: for<'b> ::core::ops::SubAssign<&'b X>
+    X: for<'b> core::ops::SubAssign<&'b X>
         + SampleUniform
         + PartialOrd
         + Clone,
@@ -315,7 +315,7 @@ impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
     /// ```
     pub fn weight(&self, index: usize) -> Option<X>
     where
-        X: for<'a> ::core::ops::SubAssign<&'a X>
+        X: for<'a> core::ops::SubAssign<&'a X>
     {
         let mut weight = if index < self.cumulative_weights.len() {
             self.cumulative_weights[index].clone()
@@ -348,7 +348,7 @@ impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
     /// ```
     pub fn weights(&self) -> WeightedIndexIter<'_, X>
     where
-        X: for<'a> ::core::ops::SubAssign<&'a X>
+        X: for<'a> core::ops::SubAssign<&'a X>
     {
         WeightedIndexIter {
             weighted_index: self,

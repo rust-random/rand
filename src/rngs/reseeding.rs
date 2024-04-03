@@ -246,16 +246,14 @@ impl<R, Rsdr> CryptoBlockRng for ReseedingCore<R, Rsdr>
 where
     R: BlockRngCore<Item = u32> + SeedableRng + CryptoBlockRng,
     Rsdr: CryptoRng,
-{
-}
-
+{}
 
 #[cfg(all(unix, not(target_os = "emscripten")))]
 mod fork {
     use core::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Once;
 
-// Fork protection
+    // Fork protection
     //
     // We implement fork protection on Unix using `pthread_atfork`.
     // When the process is forked, we increment `RESEEDING_RNG_FORK_COUNTER`.
