@@ -67,7 +67,7 @@ fn normal() {
     );
     println!(
         "max diff: {:?}",
-        diff.iter().fold(core::f64::NEG_INFINITY, |a, &b| a.max(b))
+        diff.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
     );
 
     // Check that the differences are significantly smaller than the expected error.
@@ -86,7 +86,7 @@ fn normal() {
         "max expected_error: {:?}",
         expected_error
             .iter()
-            .fold(core::f64::NEG_INFINITY, |a, &b| a.max(b))
+            .fold(f64::NEG_INFINITY, |a, &b| a.max(b))
     );
     for (&d, &e) in diff.iter().zip(expected_error.iter()) {
         // Difference larger than 4 standard deviations or cutoff
@@ -150,7 +150,7 @@ fn skew_normal() {
     );
     println!(
         "max diff: {:?}",
-        diff.iter().fold(core::f64::NEG_INFINITY, |a, &b| a.max(b))
+        diff.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
     );
 
     // Check that the differences are significantly smaller than the expected error.
@@ -169,7 +169,7 @@ fn skew_normal() {
         "max expected_error: {:?}",
         expected_error
             .iter()
-            .fold(core::f64::NEG_INFINITY, |a, &b| a.max(b))
+            .fold(f64::NEG_INFINITY, |a, &b| a.max(b))
     );
     for (&d, &e) in diff.iter().zip(expected_error.iter()) {
         // Difference larger than 4 standard deviations or cutoff

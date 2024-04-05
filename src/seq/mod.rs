@@ -127,7 +127,7 @@ pub trait IndexedRandom: Index<usize> {
         Self::Output: Sized,
         R: Rng + ?Sized,
     {
-        let amount = ::core::cmp::min(amount, self.len());
+        let amount = core::cmp::min(amount, self.len());
         SliceChooseIter {
             slice: self,
             _phantom: Default::default(),
@@ -173,7 +173,7 @@ pub trait IndexedRandom: Index<usize> {
         R: Rng + ?Sized,
         F: Fn(&Self::Output) -> B,
         B: SampleBorrow<X>,
-        X: SampleUniform + Weight + ::core::cmp::PartialOrd<X>,
+        X: SampleUniform + Weight + PartialOrd<X>,
     {
         use crate::distributions::{Distribution, WeightedIndex};
         let distr = WeightedIndex::new((0..self.len()).map(|idx| weight(&self[idx])))?;
@@ -226,7 +226,7 @@ pub trait IndexedRandom: Index<usize> {
         F: Fn(&Self::Output) -> X,
         X: Into<f64>,
     {
-        let amount = ::core::cmp::min(amount, self.len());
+        let amount = core::cmp::min(amount, self.len());
         Ok(SliceChooseIter {
             slice: self,
             _phantom: Default::default(),
@@ -291,7 +291,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
         R: Rng + ?Sized,
         F: Fn(&Self::Output) -> B,
         B: SampleBorrow<X>,
-        X: SampleUniform + Weight + ::core::cmp::PartialOrd<X>,
+        X: SampleUniform + Weight + PartialOrd<X>,
     {
         use crate::distributions::{Distribution, WeightedIndex};
         let distr = WeightedIndex::new((0..self.len()).map(|idx| weight(&self[idx])))?;
@@ -424,7 +424,7 @@ pub trait IteratorRandom: Iterator + Sized {
             };
         }
 
-        let mut coin_flipper = coin_flipper::CoinFlipper::new(rng);
+        let mut coin_flipper = CoinFlipper::new(rng);
         let mut consumed = 0;
 
         // Continue until the iterator is exhausted
@@ -669,7 +669,7 @@ impl<I> IteratorRandom for I where I: Iterator + Sized {}
 #[derive(Debug)]
 pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
     slice: &'a S,
-    _phantom: ::core::marker::PhantomData<T>,
+    _phantom: core::marker::PhantomData<T>,
     indices: index::IndexVecIntoIter,
 }
 
@@ -703,7 +703,7 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 // platforms.
 #[inline]
 fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
-    if ubound <= (core::u32::MAX as usize) {
+    if ubound <= (u32::MAX as usize) {
         rng.gen_range(0..ubound as u32) as usize
     } else {
         rng.gen_range(0..ubound)
@@ -804,7 +804,7 @@ mod test {
 
         fn next(&mut self) -> Option<Self::Item> {
             if self.chunk_remaining == 0 {
-                self.chunk_remaining = ::core::cmp::min(self.chunk_size, self.iter.len());
+                self.chunk_remaining = core::cmp::min(self.chunk_size, self.iter.len());
             }
             self.chunk_remaining = self.chunk_remaining.saturating_sub(1);
 
@@ -838,7 +838,7 @@ mod test {
 
         fn size_hint(&self) -> (usize, Option<usize>) {
             (
-                ::core::cmp::min(self.iter.len(), self.window_size),
+                core::cmp::min(self.iter.len(), self.window_size),
                 if self.hint_total_size {
                     Some(self.iter.len())
                 } else {
@@ -1344,12 +1344,12 @@ mod test {
         assert_eq!(r.unwrap().count(), 0);
 
         // Case 5: NaN weights
-        let choices = [('a', core::f64::NAN), ('b', 1.0), ('c', 1.0)];
+        let choices = [('a', f64::NAN), ('b', 1.0), ('c', 1.0)];
         let r = choices.choose_multiple_weighted(&mut rng, 2, |item| item.1);
         assert_eq!(r.unwrap_err(), WeightError::InvalidWeight);
 
         // Case 6: +infinity weights
-        let choices = [('a', core::f64::INFINITY), ('b', 1.0), ('c', 1.0)];
+        let choices = [('a', f64::INFINITY), ('b', 1.0), ('c', 1.0)];
         for _ in 0..100 {
             let result = choices
                 .choose_multiple_weighted(&mut rng, 2, |item| item.1)
@@ -1360,7 +1360,7 @@ mod test {
         }
 
         // Case 7: -infinity weights
-        let choices = [('a', core::f64::NEG_INFINITY), ('b', 1.0), ('c', 1.0)];
+        let choices = [('a', f64::NEG_INFINITY), ('b', 1.0), ('c', 1.0)];
         let r = choices.choose_multiple_weighted(&mut rng, 2, |item| item.1);
         assert_eq!(r.unwrap_err(), WeightError::InvalidWeight);
 

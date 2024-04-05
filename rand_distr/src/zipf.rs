@@ -246,7 +246,7 @@ where F: Float, Standard: Distribution<F>
 mod tests {
     use super::*;
 
-    fn test_samples<F: Float + core::fmt::Debug, D: Distribution<F>>(
+    fn test_samples<F: Float + fmt::Debug, D: Distribution<F>>(
         distr: D, zero: F, expected: &[F],
     ) {
         let mut rng = crate::test::rng(213);
@@ -266,7 +266,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn zeta_nan() {
-        Zeta::new(core::f64::NAN).unwrap();
+        Zeta::new(f64::NAN).unwrap();
     }
 
     #[test]
@@ -316,7 +316,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn zipf_nan() {
-        Zipf::new(10, core::f64::NAN).unwrap();
+        Zipf::new(10, f64::NAN).unwrap();
     }
 
     #[test]
@@ -352,7 +352,7 @@ mod tests {
 
     #[test]
     fn zipf_sample_large_n() {
-        let d = Zipf::new(core::u64::MAX, 1.5).unwrap();
+        let d = Zipf::new(u64::MAX, 1.5).unwrap();
         let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);

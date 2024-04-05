@@ -327,7 +327,7 @@ pub trait UniformSampler: Sized {
 impl<X: SampleUniform> TryFrom<Range<X>> for Uniform<X> {
     type Error = Error;
 
-    fn try_from(r: ::core::ops::Range<X>) -> Result<Uniform<X>, Error> {
+    fn try_from(r: Range<X>) -> Result<Uniform<X>, Error> {
         Uniform::new(r.start, r.end)
     }
 }
@@ -1526,14 +1526,14 @@ mod tests {
 
     #[test]
     fn test_float_overflow() {
-        assert_eq!(Uniform::try_from(::core::f64::MIN..::core::f64::MAX), Err(Error::NonFinite));
+        assert_eq!(Uniform::try_from(f64::MIN..f64::MAX), Err(Error::NonFinite));
     }
 
     #[test]
     #[should_panic]
     fn test_float_overflow_single() {
         let mut rng = crate::test::rng(252);
-        rng.gen_range(::core::f64::MIN..::core::f64::MAX);
+        rng.gen_range(f64::MIN..f64::MAX);
     }
 
     #[test]
@@ -1604,7 +1604,7 @@ mod tests {
             (Duration::new(0, 100), Duration::new(1, 50)),
             (
                 Duration::new(0, 0),
-                Duration::new(u64::max_value(), 999_999_999),
+                Duration::new(u64::MAX, 999_999_999),
             ),
         ];
         for &(low, high) in v.iter() {
@@ -1706,7 +1706,7 @@ mod tests {
 
     #[test]
     fn value_stability() {
-        fn test_samples<T: SampleUniform + Copy + core::fmt::Debug + PartialEq>(
+        fn test_samples<T: SampleUniform + Copy + fmt::Debug + PartialEq>(
             lb: T, ub: T, expected_single: &[T], expected_multiple: &[T],
         ) where Uniform<T>: Distribution<T> {
             let mut rng = crate::test::rng(897);

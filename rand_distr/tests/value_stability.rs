@@ -11,7 +11,7 @@ use core::fmt::Debug;
 use rand::Rng;
 use rand_distr::*;
 
-fn get_rng(seed: u64) -> impl rand::Rng {
+fn get_rng(seed: u64) -> impl Rng {
     // For tests, we want a statistically good, fast, reproducible RNG.
     // PCG32 will do fine, and will be easy to embed if we ever need to.
     const INC: u64 = 11634580027462260723;
@@ -80,7 +80,7 @@ fn geometric_stability() {
     test_samples(464, Geometric::new(0.95).unwrap(), &[0, 0, 0, 0, 1, 0, 0, 0]);
 
     // expect non-random behaviour for series of pre-determined trials
-    test_samples(464, Geometric::new(0.0).unwrap(), &[u64::max_value(); 100][..]);
+    test_samples(464, Geometric::new(0.0).unwrap(), &[u64::MAX; 100][..]);
     test_samples(464, Geometric::new(1.0).unwrap(), &[0; 100][..]);
 }
 

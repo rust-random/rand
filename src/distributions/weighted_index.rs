@@ -163,8 +163,8 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// as an alternative where an update is `O(log N)`.
     pub fn update_weights(&mut self, new_weights: &[(usize, &X)]) -> Result<(), WeightError>
     where
-        X: for<'a> ::core::ops::AddAssign<&'a X>
-            + for<'a> ::core::ops::SubAssign<&'a X>
+        X: for<'a> core::ops::AddAssign<&'a X>
+            + for<'a> core::ops::SubAssign<&'a X>
             + Clone
             + Default,
     {
@@ -278,7 +278,7 @@ where
 
 impl<'a, X> Iterator for WeightedIndexIter<'a, X>
 where
-    X: for<'b> ::core::ops::SubAssign<&'b X>
+    X: for<'b> core::ops::SubAssign<&'b X>
         + SampleUniform
         + PartialOrd
         + Clone,
@@ -315,7 +315,7 @@ impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
     /// ```
     pub fn weight(&self, index: usize) -> Option<X>
     where
-        X: for<'a> ::core::ops::SubAssign<&'a X>
+        X: for<'a> core::ops::SubAssign<&'a X>
     {
         let mut weight = if index < self.cumulative_weights.len() {
             self.cumulative_weights[index].clone()
@@ -348,7 +348,7 @@ impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
     /// ```
     pub fn weights(&self) -> WeightedIndexIter<'_, X>
     where
-        X: for<'a> ::core::ops::SubAssign<&'a X>
+        X: for<'a> core::ops::SubAssign<&'a X>
     {
         WeightedIndexIter {
             weighted_index: self,
@@ -451,22 +451,22 @@ mod test {
     #[test]
     fn test_accepting_nan() {
         assert_eq!(
-            WeightedIndex::new(&[core::f32::NAN, 0.5]).unwrap_err(),
+            WeightedIndex::new(&[f32::NAN, 0.5]).unwrap_err(),
             WeightError::InvalidWeight,
         );
         assert_eq!(
-            WeightedIndex::new(&[core::f32::NAN]).unwrap_err(),
+            WeightedIndex::new(&[f32::NAN]).unwrap_err(),
             WeightError::InvalidWeight,
         );
         assert_eq!(
-            WeightedIndex::new(&[0.5, core::f32::NAN]).unwrap_err(),
+            WeightedIndex::new(&[0.5, f32::NAN]).unwrap_err(),
             WeightError::InvalidWeight,
         );
 
         assert_eq!(
             WeightedIndex::new(&[0.5, 7.0])
                 .unwrap()
-                .update_weights(&[(0, &core::f32::NAN)])
+                .update_weights(&[(0, &f32::NAN)])
                 .unwrap_err(),
             WeightError::InvalidWeight,
         )

@@ -181,8 +181,8 @@ mod tests {
     use super::*;
     use crate::rngs::mock::StepRng;
 
-    const EPSILON32: f32 = ::core::f32::EPSILON;
-    const EPSILON64: f64 = ::core::f64::EPSILON;
+    const EPSILON32: f32 = f32::EPSILON;
+    const EPSILON64: f64 = f64::EPSILON;
 
     macro_rules! test_f32 {
         ($fnn:ident, $ty:ident, $ZERO:expr, $EPSILON:expr) => {
