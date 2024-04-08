@@ -31,6 +31,7 @@ features = ["small_rng", "serde1"]
 default = ["std", "std_rng", "getrandom"]
 nightly = [] # some additions requiring nightly Rust
 serde1 = ["serde", "rand_core/serde1"]
+doc-images = ["embed-doc-image"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
 # enables functionality expected to be available on a standard platform.
@@ -70,6 +71,7 @@ log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 rand_chacha = { path = "rand_chacha", version = "=0.9.0-alpha.1", default-features = false, optional = true }
 zerocopy = { version = "=0.8.0-alpha.6", default-features = false, features = ["simd"] }
+embed-doc-image = { version = "0.1.4", optional = true }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "=0.9.0-alpha.1" }
