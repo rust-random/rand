@@ -37,12 +37,11 @@ use serde::{Serialize, Deserialize};
 /// 
 /// # Diagram
 /// 
-/// The diagram below shows the Bernoulli distribution with `p = 0.3`.
-/// <div>
-/// <img src="bernoulli.png" alt="Bernoulli distribution with p = 0.3">
-/// </div>
+/// The diagram shows the probabilities of either outcome for the Bernoulli
+/// distribution with `p = 0.1`, `p = 0.5`, and `p = 0.9`.
 /// 
-#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_doc_image("diagram", "assets/bernoulli.png"))]
+/// ![Bernoulli distribution][diagram]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "assets/bernoulli.png"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Bernoulli {

@@ -31,6 +31,13 @@ use core::fmt;
 /// let v = cau.sample(&mut rand::thread_rng());
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
+///
+/// # Diagram
+///
+/// The diagram shows the Cauchy distribution with various parameters.
+///
+/// ![Cauchy distribution][diagram]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "assets/cauchy.png"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Cauchy<F>
