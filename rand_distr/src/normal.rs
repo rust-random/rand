@@ -42,6 +42,7 @@ use core::fmt;
 /// The following diagram shows the standard normal distribution.
 ///
 /// ![Standard normal distribution][diagram]
+/// 
 #[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/standard_normal.svg"))]
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
