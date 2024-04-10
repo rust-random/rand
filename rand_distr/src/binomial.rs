@@ -37,7 +37,7 @@ use num_traits::Float;
 /// The probability of `k` successes is shown for each `k` from 0 to 10.
 ///
 /// ![Binomial distribution][diagram]
-#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "assets/binomial.png"))]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/binomial.png"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Binomial {

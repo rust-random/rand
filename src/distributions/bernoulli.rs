@@ -34,14 +34,6 @@ use serde::{Serialize, Deserialize};
 /// This `Bernoulli` distribution uses 64 bits from the RNG (a `u64`),
 /// so only probabilities that are multiples of 2<sup>-64</sup> can be
 /// represented.
-/// 
-/// # Diagram
-/// 
-/// The diagram shows the probabilities of either outcome for the Bernoulli
-/// distribution with `p = 0.1`, `p = 0.5`, and `p = 0.9`.
-/// 
-/// ![Bernoulli distribution][diagram]
-#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "assets/bernoulli.png"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Bernoulli {
