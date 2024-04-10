@@ -25,14 +25,12 @@ std = ["alloc", "rand/std"]
 alloc = ["rand/alloc"]
 std_math = ["num-traits/std"]
 serde1 = ["serde", "rand/serde1"]
-doc-images = ["embed-doc-image"]
 
 [dependencies]
 rand = { path = "..", version = "=0.9.0-alpha.1", default-features = false }
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 serde_with = { version = "3.6.1", optional = true }
-embed-doc-image = { version = "0.1.4", optional = true }
 
 [dev-dependencies]
 rand_pcg = { version = "=0.9.0-alpha.1", path = "../rand_pcg" }
