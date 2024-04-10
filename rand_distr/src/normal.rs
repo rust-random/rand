@@ -39,10 +39,10 @@ use core::fmt;
 ///
 /// # Diagram
 ///
-/// The following diagram shows the normal distribution with various parameters.
+/// The following diagram shows the standard normal distribution.
 ///
-/// ![Normal distribution][diagram]
-#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/normal.png"))]
+/// ![Standard normal distribution][diagram]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/standard_normal.svg"))]
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct StandardNormal;
@@ -118,7 +118,15 @@ impl Distribution<f64> for StandardNormal {
 /// println!("{} is from a N(2, 9) distribution", v)
 /// ```
 ///
+/// # Diagram
+///
+/// The following diagram shows the normal distribution with various parameters.
+/// [`StandardNormal`] is illustrated in `μ = 0` and `σ = 1`.
+///
+/// ![Normal distribution][diagram]
+///
 /// [`StandardNormal`]: crate::StandardNormal
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/normal.svg"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Normal<F>

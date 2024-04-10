@@ -3,23 +3,27 @@ import matplotlib.pyplot as plt
 
 
 OUT = "target"
-EXT = "png"
+EXT = "svg"
 
 
 def standard_normal():
-    from scipy.stats import norm
+    # Defining the standard normal distribution PDF
+    def y(x):
+        from scipy.stats import norm
+        return norm.pdf(x)
+
     # Possible values for the distribution
-    x = np.linspace(-3, 3, 1000)
+    x = np.linspace(-5, 5, 1000)
 
     # Creating the figure and the axis
     fig, ax = plt.subplots()
 
     # Plotting the PDF for the standard normal distribution
-    ax.plot(x, norm.pdf(x), label='Standard normal')
+    ax.plot(x, y(x), label=f'μ = 0, σ = 1')
 
     # Adding title and labels
     ax.set_title('Standard normal distribution')
-    ax.set_xlabel('Z-score (standard deviations from the mean)')
+    ax.set_xlabel('x')
     ax.set_ylabel('Probability density')
 
     # Adding a legend
@@ -331,8 +335,8 @@ def weibull():
 
 
 if __name__ == "__main__":
-    # standard_normal()
-    normal()
+    standard_normal()
+    # normal()
     # chi_squared()
     # binomial()
     # cauchy()

@@ -97,7 +97,7 @@ impl Distribution<f64> for Exp1 {
 /// The diagram shows the exponential distribution with `λ = 0.5`, `λ = 1` and `λ = 2`.
 ///
 /// ![Exponential distribution][diagram]
-#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/exponential.png"))]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/exponential.svg"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Exp<F>

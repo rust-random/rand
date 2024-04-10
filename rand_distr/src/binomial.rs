@@ -37,7 +37,7 @@ use num_traits::Float;
 /// `k` successes out of `n = 10` trials with `p = 0.2` and `p = 0.6` for each `k` from 0 to `n`.
 ///
 /// ![Binomial distribution][diagram]
-#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/binomial.png"))]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/binomial.svg"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Binomial {

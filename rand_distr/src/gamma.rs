@@ -60,7 +60,7 @@ use serde::{Serialize, Deserialize};
 ///       Generating Gamma Variables" *ACM Trans. Math. Softw.* 26, 3
 ///       (September 2000), 363-372.
 ///       DOI:[10.1145/358407.358414](https://doi.acm.org/10.1145/358407.358414)
-#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/gamma.png"))]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/gamma.svg"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Gamma<F>
@@ -293,7 +293,7 @@ where
 /// The diagram shows the chi-squared distribution with varying degrees of freedom.
 ///
 /// ![Chi-squared distribution][diagram]
-#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/chi_squared.png"))]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/chi_squared.svg"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct ChiSquared<F>

@@ -37,7 +37,7 @@ use core::fmt;
 /// The diagram shows the Cauchy distribution with various parameters.
 ///
 /// ![Cauchy distribution][diagram]
-#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/cauchy.png"))]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/cauchy.svg"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Cauchy<F>
