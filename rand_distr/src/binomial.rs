@@ -33,8 +33,8 @@ use num_traits::Float;
 ///
 /// # Diagram
 /// 
-/// The diagram shows the binomial distribution for `n = 10` and `p = 0.2`.
-/// The probability of `k` successes is shown for each `k` from 0 to 10.
+/// The following diagram of the binomial distribution illustrates the probability of 
+/// `k` successes out of `n = 10` trials with `p = 0.2` and `p = 0.6` for each `k` from 0 to `n`.
 ///
 /// ![Binomial distribution][diagram]
 #[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/binomial.png"))]

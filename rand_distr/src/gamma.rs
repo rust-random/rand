@@ -50,10 +50,17 @@ use serde::{Serialize, Deserialize};
 /// println!("{} is from a Gamma(2, 5) distribution", v);
 /// ```
 ///
+/// # Diagram
+///
+/// The diagram shows the Gamma distribution with varying shape and scale.
+///
+/// ![Gamma distribution][diagram]
+///
 /// [^1]: George Marsaglia and Wai Wan Tsang. 2000. "A Simple Method for
 ///       Generating Gamma Variables" *ACM Trans. Math. Softw.* 26, 3
 ///       (September 2000), 363-372.
 ///       DOI:[10.1145/358407.358414](https://doi.acm.org/10.1145/358407.358414)
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/gamma.png"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Gamma<F>
@@ -280,6 +287,13 @@ where
 /// let v = chi.sample(&mut rand::thread_rng());
 /// println!("{} is from a χ²(11) distribution", v)
 /// ```
+///
+/// # Diagram
+///
+/// The diagram shows the chi-squared distribution with varying degrees of freedom.
+///
+/// ![Chi-squared distribution][diagram]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/chi_squared.png"))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct ChiSquared<F>

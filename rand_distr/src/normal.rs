@@ -36,6 +36,13 @@ use core::fmt;
 /// let val: f64 = thread_rng().sample(StandardNormal);
 /// println!("{}", val);
 /// ```
+///
+/// # Diagram
+///
+/// The following diagram shows the normal distribution with various parameters.
+///
+/// ![Normal distribution][diagram]
+#[cfg_attr(feature = "doc-images", doc = embed_doc_image::embed_image!("diagram", "plots/normal.png"))]
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct StandardNormal;
