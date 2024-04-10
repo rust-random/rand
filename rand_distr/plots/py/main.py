@@ -6,92 +6,6 @@ OUT = "target"
 EXT = "svg"
 
 
-def standard_normal():
-    # Defining the standard normal distribution PDF
-    def y(x):
-        from scipy.stats import norm
-        return norm.pdf(x)
-
-    # Possible values for the distribution
-    x = np.linspace(-5, 5, 1000)
-
-    # Creating the figure and the axis
-    fig, ax = plt.subplots()
-
-    # Plotting the PDF for the standard normal distribution
-    ax.plot(x, y(x), label=f'μ = 0, σ = 1')
-
-    # Adding title and labels
-    ax.set_title('Standard normal distribution')
-    ax.set_xlabel('x')
-    ax.set_ylabel('Probability density')
-
-    # Adding a legend
-    ax.legend()
-
-    plt.savefig(f"{OUT}/standard_normal.{EXT}")
-    plt.close()
-
-
-def normal():
-    # Defining the normal distribution PDF
-    def y(mu, sigma, x):
-        from scipy.stats import norm
-        return norm.pdf(x, loc=mu, scale=sigma)
-
-    inputs = [(0, 0.5), (0, 1), (0, 2), (-2, 1)]
-    # Possible values for the distribution
-    x = np.linspace(-5, 5, 1000)
-
-    # Creating the figure and the axis
-    fig, ax = plt.subplots()
-
-    # Plotting the PDF for each value of mu and sigma
-    for mu, sigma in inputs:
-        ax.plot(x, y(mu, sigma, x), label=f'μ = {mu}, σ = {sigma}')
-
-    # Adding title and labels
-    ax.set_title('Normal distribution')
-    ax.set_xlabel('x')
-    ax.set_ylabel('Probability density')
-
-    # Adding a legend
-    ax.legend()
-
-    plt.savefig(f"{OUT}/normal.{EXT}")
-    plt.close()
-
-
-def chi_squared():
-    def y(x, df):
-        from scipy.stats import chi2
-        y = chi2.pdf(x, df)
-        y[y > 1.0] = np.nan
-        return y
-    # Degrees of freedom for the distribution
-    df_values = [1, 2, 3, 5, 9]
-    # Possible values for the distribution
-    x = np.linspace(0, 10, 1000)
-
-    # Creating the figure and the axis
-    fig, ax = plt.subplots()
-
-    # Plotting the PDF for each value of the degrees of freedom
-    for df in df_values:
-        ax.plot(x, y(x, df), label=f'k = {df}')
-
-    # Adding title and labels
-    ax.set_title('Chi-squared distribution')
-    ax.set_xlabel('Chi-squared statistic')
-    ax.set_ylabel('Probability density')
-
-    # Adding a legend
-    ax.legend()
-
-    plt.savefig(f"{OUT}/chi_squared.{EXT}")
-    plt.close()
-
-
 def binomial():
     # Defining the Binomial distribution PMF
     def y(n, p, k):
@@ -244,6 +158,14 @@ def exponential():
     plt.close()
 
 
+def exponential_exp1():
+    pass
+
+
+def frechet():
+    pass
+
+
 def gamma():
     # Defining the Gamma distribution PDF
     def y(k, theta, x):
@@ -271,6 +193,140 @@ def gamma():
 
     plt.savefig(f"{OUT}/gamma.{EXT}")
     plt.close()
+
+
+def chi_squared():
+    def y(x, df):
+        from scipy.stats import chi2
+        y = chi2.pdf(x, df)
+        y[y > 1.0] = np.nan
+        return y
+    # Degrees of freedom for the distribution
+    df_values = [1, 2, 3, 5, 9]
+    # Possible values for the distribution
+    x = np.linspace(0, 10, 1000)
+
+    # Creating the figure and the axis
+    fig, ax = plt.subplots()
+
+    # Plotting the PDF for each value of the degrees of freedom
+    for df in df_values:
+        ax.plot(x, y(x, df), label=f'k = {df}')
+
+    # Adding title and labels
+    ax.set_title('Chi-squared distribution')
+    ax.set_xlabel('Chi-squared statistic')
+    ax.set_ylabel('Probability density')
+
+    # Adding a legend
+    ax.legend()
+
+    plt.savefig(f"{OUT}/chi_squared.{EXT}")
+    plt.close()
+
+
+def fisher_f():
+    pass
+
+
+def student_t():
+    pass
+
+
+def beta():
+    pass
+
+
+def geometric():
+    pass
+
+
+def standard_geometric():
+    pass
+
+
+def gumbel():
+    pass
+
+
+def hypergeometric():
+    pass
+
+
+def inverse_gaussian():
+    pass
+
+
+def normal():
+    # Defining the normal distribution PDF
+    def y(mu, sigma, x):
+        from scipy.stats import norm
+        return norm.pdf(x, loc=mu, scale=sigma)
+
+    inputs = [(0, 0.5), (0, 1), (0, 2), (-2, 1)]
+    # Possible values for the distribution
+    x = np.linspace(-5, 5, 1000)
+
+    # Creating the figure and the axis
+    fig, ax = plt.subplots()
+
+    # Plotting the PDF for each value of mu and sigma
+    for mu, sigma in inputs:
+        ax.plot(x, y(mu, sigma, x), label=f'μ = {mu}, σ = {sigma}')
+
+    # Adding title and labels
+    ax.set_title('Normal distribution')
+    ax.set_xlabel('x')
+    ax.set_ylabel('Probability density')
+
+    # Adding a legend
+    ax.legend()
+
+    plt.savefig(f"{OUT}/normal.{EXT}")
+    plt.close()
+
+
+def standard_normal():
+    # Defining the standard normal distribution PDF
+    def y(x):
+        from scipy.stats import norm
+        return norm.pdf(x)
+
+    # Possible values for the distribution
+    x = np.linspace(-5, 5, 1000)
+
+    # Creating the figure and the axis
+    fig, ax = plt.subplots()
+
+    # Plotting the PDF for the standard normal distribution
+    ax.plot(x, y(x), label=f'μ = 0, σ = 1')
+
+    # Adding title and labels
+    ax.set_title('Standard normal distribution')
+    ax.set_xlabel('x')
+    ax.set_ylabel('Probability density')
+
+    # Adding a legend
+    ax.legend()
+
+    plt.savefig(f"{OUT}/standard_normal.{EXT}")
+    plt.close()
+
+
+def log_normal():
+    pass
+
+
+def normal_inverse_gaussian():
+    pass
+
+
+def pareto():
+    pass
+
+
+def pert():
+    pass
 
 
 def poisson():
@@ -304,6 +360,30 @@ def poisson():
     plt.close()
 
 
+def skew_normal():
+    pass
+
+
+def triangular():
+    pass
+
+
+def unit_ball():
+    pass
+
+
+def unit_circle():
+    pass
+
+
+def unit_disc():
+    pass
+
+
+def unit_sphere():
+    pass
+
+
 def weibull():
     # Defining the Weibull distribution PDF
     def y(alpha, x):
@@ -334,14 +414,44 @@ def weibull():
     plt.close()
 
 
+def zeta():
+    pass
+
+
+def zipf():
+    pass
+
+
 if __name__ == "__main__":
+    binomial()
+    cauchy()
+    dirichlet()
+    exponential()
+    exponential_exp1()
+    frechet()
+    gamma()
+    chi_squared()
+    fisher_f()
+    student_t()
+    beta()
+    geometric()
+    standard_geometric()
+    gumbel()
+    hypergeometric()
+    inverse_gaussian()
+    normal()
     standard_normal()
-    # normal()
-    # chi_squared()
-    # binomial()
-    # cauchy()
-    # dirichlet()
-    # exponential()
-    # gamma()
-    # poisson()
-    # weibull()
+    log_normal()
+    normal_inverse_gaussian()
+    pareto()
+    pert()
+    poisson()
+    skew_normal()
+    triangular()
+    unit_ball()
+    unit_circle()
+    unit_disc()
+    unit_sphere()
+    weibull()
+    zeta()
+    zipf()
