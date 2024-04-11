@@ -35,6 +35,14 @@ enum SamplingMethod {
 /// The [binomial distribution](crate::Binomial) is the analogous distribution
 /// for sampling with replacement. It is a good approximation when the population
 /// size is much larger than the sample size.
+///
+/// # Plot
+///
+/// The following plot of the hypergeometric distribution illustrates the probability of drawing
+/// `k` successes in `n = 10` draws from a population of `N = 50` items, of which either `K = 12`
+/// or `K = 25` are successes.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/hypergeometric.svg"/>
 /// 
 /// # Example
 /// 

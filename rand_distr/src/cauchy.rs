@@ -16,11 +16,24 @@ use core::fmt;
 
 /// The Cauchy distribution `Cauchy(median, scale)`.
 ///
+/// The Cauchy distribution is a continuous probability distribution with
+/// parameters `median` and `scale`.
+///
 /// This distribution has a density function:
 /// `f(x) = 1 / (pi * scale * (1 + ((x - median) / scale)^2))`
 ///
 /// Note that at least for `f32`, results are not fully portable due to minor
 /// differences in the target system's *tan* implementation, `tanf`.
+///
+/// # Plot
+///
+/// The plot illustrates the Cauchy distribution with various parameters.
+/// Note how the `median` parameter `x₀` shifts the distribution along the x-axis,
+/// and the `scale` parameter `γ` changes the density around the median.
+/// 
+/// The standard Cauchy distribution is the special case with `median = 0` and `scale = 1`.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/cauchy.svg"/>
 ///
 /// # Example
 ///
@@ -31,12 +44,6 @@ use core::fmt;
 /// let v = cau.sample(&mut rand::thread_rng());
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
-///
-/// # Diagram
-///
-/// The diagram shows the Cauchy distribution with various parameters.
-///
-/// ![Cauchy distribution]()
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Cauchy<F>

@@ -17,9 +17,23 @@ use core::cmp::Ordering;
 use num_traits::Float;
 
 /// The binomial distribution `Binomial(n, p)`.
+/// 
+/// The binomial distribution is a discrete probability distribution with
+/// parameters `n` (number of trials) and `p` (probability of success).
+/// Given some number of successes `k`, `Binomial(n, p)` describes the 
+/// probability of having `k` successes in `n` independent trials, 
+/// each of which has probability `p` to succeed.
 ///
-/// This distribution has density function:
+/// This distribution follows the density function:
 /// `f(k) = n!/(k! (n-k)!) p^k (1-p)^(n-k)` for `k >= 0`.
+///
+/// # Plot
+///
+/// The following plot of the binomial distribution illustrates the 
+/// probability of `k` successes out of `n = 10` trials with `p = 0.2` 
+/// and `p = 0.6` for `0 <= k <= n`.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/binomial.svg"/>
 ///
 /// # Example
 ///
@@ -30,13 +44,6 @@ use num_traits::Float;
 /// let v = bin.sample(&mut rand::thread_rng());
 /// println!("{} is from a binomial distribution", v);
 /// ```
-///
-/// # Diagram
-///
-/// The following diagram of the binomial distribution illustrates the probability of
-/// `k` successes out of `n = 10` trials with `p = 0.2` and `p = 0.6` for each `k` from 0 to `n`.
-///
-/// ![Binomial distribution]()
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Binomial {

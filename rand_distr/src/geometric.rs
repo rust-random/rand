@@ -18,6 +18,13 @@ use num_traits::Float;
 /// Note that [`StandardGeometric`](crate::StandardGeometric) is an optimised
 /// implementation for `p = 0.5`.
 ///
+/// # Plot
+///
+/// The following plot illustrates the geometric distribution for various values of `p`.
+/// Note how the higher `p` is, the more likely it is to have a success early on.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/geometric.svg"/>
+///
 /// # Example
 ///
 /// ```
@@ -145,6 +152,12 @@ impl Distribution<u64> for Geometric
 /// 
 /// Implemented via iterated
 /// [`Rng::gen::<u64>().leading_zeros()`](Rng::gen::<u64>().leading_zeros()).
+///
+/// # Plot
+///
+/// The following plot illustrates the standard geometric distribution.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/standard_geometric.svg"/>
 /// 
 /// # Example
 /// ```

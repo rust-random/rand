@@ -191,6 +191,12 @@ where
 /// The Dirichlet distribution is a family of continuous multivariate
 /// probability distributions parameterized by a vector alpha of positive reals.
 /// It is a multivariate generalization of the beta distribution.
+/// 
+/// # Plot
+/// 
+/// The following plot illustrates the Dirichlet distribution with various parameters.
+/// 
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/dirichlet.svg"/>
 ///
 /// # Example
 ///

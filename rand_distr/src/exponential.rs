@@ -21,6 +21,12 @@ use core::fmt;
 ///
 /// See `Exp` for the general exponential distribution.
 ///
+/// # Plot
+///
+/// The following plot illustrates the exponential distribution with `λ = 1`.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential_exp1.svg"/>
+///
 /// Implemented via the ZIGNOR variant[^1] of the Ziggurat method. The exact
 /// description in the paper was adjusted to use tables for the exponential
 /// distribution rather than normal.
@@ -82,6 +88,14 @@ impl Distribution<f64> for Exp1 {
 ///
 /// Note that [`Exp1`](crate::Exp1) is an optimised implementation for `lambda = 1`.
 ///
+/// # Plot
+///
+/// The following plot illustrates the exponential distribution with 
+/// various values of `lambda`.
+/// The `lambda` parameter controls the rate of decay as `x` approaches infinity.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential.svg"/>
+///
 /// # Example
 ///
 /// ```
@@ -91,12 +105,6 @@ impl Distribution<f64> for Exp1 {
 /// let v = exp.sample(&mut rand::thread_rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
-///
-/// # Diagram
-///
-/// The diagram shows the exponential distribution with `λ = 0.5`, `λ = 1` and `λ = 2`.
-///
-/// ![Exponential distribution]()
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Exp<F>

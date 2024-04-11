@@ -13,11 +13,22 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// Samples floating-point numbers according to the Gumbel distribution
+/// The Gumbel distribution `Gumbel(location, scale)`.
+/// 
+/// The Gumbel distribution is a continuous probability distribution with
+/// location parameter `μ` and scale parameter `σ`.
 ///
 /// This distribution has density function:
-/// `f(x) = exp(-(z + exp(-z))) / σ`, where `z = (x - μ) / σ`,
-/// `μ` is the location parameter, and `σ` the scale parameter.
+/// `f(x) = exp(-(z + exp(-z))) / σ`, where `z = (x - μ) / σ`.
+///
+/// # Plot
+///
+/// The following plot illustrates the Gumbel distribution with various parameters.
+/// Note how the location parameter `μ` shifts the distribution along the x-axis,
+/// and the scale parameter `σ` changes the density around `μ`.
+/// Note also the asymptotic behavior of the distribution towards the right.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/gumbel.svg"/>
 ///
 /// # Example
 /// ```

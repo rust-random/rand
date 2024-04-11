@@ -17,7 +17,18 @@ use rand::Rng;
 ///
 /// This distribution has density function:
 /// `f(x) = [(x - μ) / σ]^(-1 - α) exp[-(x - μ) / σ]^(-α) α / σ`,
-/// where `μ` is the location parameter, `σ` the scale parameter, and `α` the shape parameter.
+/// where `μ` is the location parameter, `σ` the scale parameter, 
+/// and `α` the shape parameter.
+///
+/// # Plot
+///
+/// The plot shows the Fréchet distribution with various parameters.
+/// Note how the location parameter `μ` shifts the distribution along the x-axis,
+/// the scale parameter `σ` stretches or compresses the distribution along the x-axis,
+/// and the shape parameter `α` changes the severity of the increase in density
+/// towards the lower bound.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/frechet.svg"/>
 ///
 /// # Example
 /// ```

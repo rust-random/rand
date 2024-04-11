@@ -24,7 +24,7 @@ use core::fmt;
 #[cfg(feature = "serde1")]
 use serde::{Serialize, Deserialize};
 
-/// The Gamma distribution `Gamma(shape, scale)` distribution.
+/// The Gamma distribution `Gamma(shape, scale)`.
 ///
 /// The density function of this distribution is
 ///
@@ -34,6 +34,13 @@ use serde::{Serialize, Deserialize};
 ///
 /// where `Γ` is the Gamma function, `k` is the shape and `θ` is the
 /// scale and both `k` and `θ` are strictly positive.
+///
+/// # Plot
+///
+/// The following plot illustrates the Gamma distribution with
+/// various parameters.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/gamma.svg"/>
 ///
 /// The algorithm used is that described by Marsaglia & Tsang 2000[^1],
 /// falling back to directly sampling from an Exponential for `shape
@@ -49,12 +56,6 @@ use serde::{Serialize, Deserialize};
 /// let v = gamma.sample(&mut rand::thread_rng());
 /// println!("{} is from a Gamma(2, 5) distribution", v);
 /// ```
-///
-/// # Diagram
-///
-/// The diagram shows the Gamma distribution with varying shape and scale.
-///
-/// ![Gamma distribution]()
 ///
 /// [^1]: George Marsaglia and Wai Wan Tsang. 2000. "A Simple Method for
 ///       Generating Gamma Variables" *ACM Trans. Math. Softw.* 26, 3
@@ -277,6 +278,13 @@ where
 /// `k`, this uses the equivalent characterisation
 /// `χ²(k) = Gamma(k/2, 2)`.
 ///
+/// # Plot
+///
+/// The plot shows the chi-squared distribution with varying degrees
+/// of freedom.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/chi_squared.svg"/>
+///
 /// # Example
 ///
 /// ```
@@ -382,11 +390,17 @@ where
     }
 }
 
-/// The Fisher F distribution `F(m, n)`.
+/// The Fisher F-distribution `F(m, n)`.
 ///
 /// This distribution is equivalent to the ratio of two normalised
 /// chi-squared distributions, that is, `F(m,n) = (χ²(m)/m) /
 /// (χ²(n)/n)`.
+///
+/// # Plot
+///
+/// The plot shows the F-distribution with various values of `m` and `n`.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/fisher_f.svg"/>
 ///
 /// # Example
 ///
@@ -472,8 +486,23 @@ where
     }
 }
 
-/// The Student t distribution, `t(nu)`, where `nu` is the degrees of
+/// The Student t-distribution, `t(nu)`, where `nu` is the degrees of
 /// freedom.
+/// 
+/// This is a continuous probability distribution that arises when
+/// estimating the mean of a normally-distributed population in
+/// situations where the sample size is small and the population's
+/// standard deviation is unknown.
+/// 
+/// For `nu = 1`, this is equivalent to the standard [`Cauchy`](crate::Cauchy) distribution,
+/// and as `nu` diverges to infinity, `t(nu)` converges to 
+/// [`StandardNormal`](crate::StandardNormal).
+///
+/// # Plot
+///
+/// The plot shows the t-distribution with various degrees of freedom.
+///
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/student_t.svg"/>
 ///
 /// # Example
 ///
@@ -560,7 +589,21 @@ struct BC<N> {
     kappa2: N,
 }
 
-/// The Beta distribution with shape parameters `alpha` and `beta`.
+/// The Beta distribution `Beta(alpha, beta)`.
+/// 
+/// The Beta distribution is a continuous probability distribution
+/// defined on the interval `[0, 1]`. It is the conjugate prior for the
+/// parameter `p` of the [`Binomial`][crate::Binomial] distribution.
+/// 
+/// It has two shape parameters `α` and `β` which control the shape of
+/// the distribution. The distribution is symmetric when `α = β`.
+/// 
+/// # Plot
+/// 
+/// The plot shows the Beta distribution with various combinations 
+/// of `α` and `β`.
+/// 
+/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/beta.svg"/>
 ///
 /// # Example
 ///
