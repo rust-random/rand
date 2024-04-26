@@ -11,6 +11,8 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ## [Unreleased]
 - Add `rand::distributions::WeightedIndex::{weight, weights, total_weight}` (#1420)
 - Bump the MSRV to 1.61.0
+- Introduce `Rng::random` as an identical alternative to `Rng::gen`, which is now deprecated due to conflicting with a
+  keyword in Rust 2024 (#1435)
 - Move all benchmarks to new `benches` crate (#1439)
 
 ## [0.9.0-alpha.1] - 2024-03-18
