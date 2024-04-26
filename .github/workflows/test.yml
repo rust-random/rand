@@ -79,7 +79,7 @@ jobs:
         run: |
           cargo test --target ${{ matrix.target }} --features=nightly
           cargo test --target ${{ matrix.target }} --all-features
-          cargo test --target ${{ matrix.target }} --manifest-path rand_benches/Cargo.toml --benches --features=small_rng,nightly
+          cargo test --target ${{ matrix.target }} --manifest-path rand_benches/Cargo.toml --benches
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --benches
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
       - name: Test rand
