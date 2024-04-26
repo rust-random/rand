@@ -189,7 +189,7 @@ where
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Mask<T, LANES> {
         // `MaskElement` must be a signed integer, so this is equivalent
         // to the scalar `i32 < 0` method
-        let var = rng.gen::<Simd<T, LANES>>();
+        let var = rng.random::<Simd<T, LANES>>();
         var.simd_lt(Simd::default())
     }
 }
@@ -208,7 +208,7 @@ macro_rules! tuple_impl {
                 let out = ($(
                     // use the $tyvar's to get the appropriate number of
                     // repeats (they're not actually needed)
-                    rng.gen::<$tyvar>()
+                    rng.random::<$tyvar>()
                 ,)*);
 
                 // Suppress the unused variable warning for empty tuple
@@ -247,7 +247,7 @@ where Standard: Distribution<T>
         let mut buff: [MaybeUninit<T>; N] = unsafe { MaybeUninit::uninit().assume_init() };
 
         for elem in &mut buff {
-            *elem = MaybeUninit::new(_rng.gen());
+            *elem = MaybeUninit::new(_rng.random());
         }
 
         unsafe { mem::transmute_copy::<_, _>(&buff) }
@@ -260,8 +260,8 @@ where Standard: Distribution<T>
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Option<T> {
         // UFCS is needed here: https://github.com/rust-lang/rust/issues/24066
-        if rng.gen::<bool>() {
-            Some(rng.gen())
+        if rng.random::<bool>() {
+            Some(rng.random())
         } else {
             None
         }
@@ -273,7 +273,7 @@ where Standard: Distribution<T>
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Wrapping<T> {
-        Wrapping(rng.gen())
+        Wrapping(rng.random())
     }
 }
 
@@ -300,7 +300,7 @@ mod tests {
         // Test by generating a relatively large number of chars, so we also
         // take the rejection sampling path.
         let word: String = iter::repeat(())
-            .map(|()| rng.gen::<char>())
+            .map(|()| rng.random::<char>())
             .take(1000)
             .collect();
         assert!(!word.is_empty());

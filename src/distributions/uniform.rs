@@ -515,12 +515,12 @@ macro_rules! uniform_int_impl {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 let range = self.range as $uty as $sample_ty;
                 if range == 0 {
-                    return rng.gen();
+                    return rng.random();
                 }
 
                 let thresh = self.thresh as $uty as $sample_ty;
                 let hi = loop {
-                    let (hi, lo) = rng.gen::<$sample_ty>().wmul(range);
+                    let (hi, lo) = rng.random::<$sample_ty>().wmul(range);
                     if lo >= thresh {
                         break hi;
                     }
@@ -563,16 +563,16 @@ macro_rules! uniform_int_impl {
                 let range = high.wrapping_sub(low).wrapping_add(1) as $uty as $sample_ty;
                 if range == 0 {
                     // Range is MAX+1 (unrepresentable), so we need a special case
-                    return Ok(rng.gen());
+                    return Ok(rng.random());
                 }
 
                 // generate a sample using a sensible integer type
-                let (mut result, lo_order) = rng.gen::<$sample_ty>().wmul(range);
+                let (mut result, lo_order) = rng.random::<$sample_ty>().wmul(range);
 
                 // if the sample is biased...
                 if lo_order > range.wrapping_neg() {
                     // ...generate a new sample to reduce bias...
-                    let (new_hi_order, _) = (rng.gen::<$sample_ty>()).wmul(range as $sample_ty);
+                    let (new_hi_order, _) = (rng.random::<$sample_ty>()).wmul(range as $sample_ty);
                     // ... incrementing result on overflow
                     let is_overflow = lo_order.checked_add(new_hi_order as $sample_ty).is_none();
                     result += is_overflow as $sample_ty;
@@ -602,11 +602,11 @@ macro_rules! uniform_int_impl {
                     return Ok(rng.gen());
                 }
 
-                let (mut result, mut lo) = rng.gen::<$sample_ty>().wmul(range);
+                let (mut result, mut lo) = rng.random::<$sample_ty>().wmul(range);
 
                 // In contrast to the biased sampler, we use a loop:
                 while lo > range.wrapping_neg() {
-                    let (new_hi, new_lo) = (rng.gen::<$sample_ty>()).wmul(range);
+                    let (new_hi, new_lo) = (rng.random::<$sample_ty>()).wmul(range);
                     match lo.checked_add(new_hi) {
                         Some(x) if x < $sample_ty::MAX => {
                             // Anything less than MAX: last term is 0
@@ -732,7 +732,7 @@ macro_rules! uniform_simd_int_impl {
                 // rejection. The replacement method does however add a little
                 // overhead. Benchmarking or calculating probabilities might
                 // reveal contexts where this replacement method is slower.
-                let mut v: Simd<$unsigned, LANES> = rng.gen();
+                let mut v: Simd<$unsigned, LANES> = rng.random();
                 loop {
                     let (hi, lo) = v.wmul(range);
                     let mask = lo.simd_ge(thresh);
@@ -747,7 +747,7 @@ macro_rules! uniform_simd_int_impl {
                         return range.simd_gt(Simd::splat(0)).select(result, v);
                     }
                     // Replace only the failing lanes
-                    v = mask.select(v, rng.gen());
+                    v = mask.select(v, rng.random());
                 }
             }
         }
@@ -970,7 +970,7 @@ macro_rules! uniform_float_impl {
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
                 // Generate a value in the range [1, 2)
-                let value1_2 = (rng.gen::<$uty>() >> $uty::splat($bits_to_discard)).into_float_with_exponent(0);
+                let value1_2 = (rng.random::<$uty>() >> $uty::splat($bits_to_discard)).into_float_with_exponent(0);
 
                 // Get a value in the range [0, 1) to avoid overflow when multiplying by scale
                 let value0_1 = value1_2 - <$ty>::splat(1.0);
@@ -1006,7 +1006,7 @@ macro_rules! uniform_float_impl {
                 loop {
                     // Generate a value in the range [1, 2)
                     let value1_2 =
-                        (rng.gen::<$uty>() >> $uty::splat($bits_to_discard)).into_float_with_exponent(0);
+                        (rng.random::<$uty>() >> $uty::splat($bits_to_discard)).into_float_with_exponent(0);
 
                     // Get a value in the range [0, 1) to avoid overflow when multiplying by scale
                     let value0_1 = value1_2 - <$ty>::splat(1.0);
@@ -1079,7 +1079,7 @@ macro_rules! uniform_float_impl {
 
                 // Generate a value in the range [1, 2)
                 let value1_2 =
-                    (rng.gen::<$uty>() >> $uty::splat($bits_to_discard)).into_float_with_exponent(0);
+                    (rng.random::<$uty>() >> $uty::splat($bits_to_discard)).into_float_with_exponent(0);
 
                 // Get a value in the range [0, 1) to avoid overflow when multiplying by scale
                 let value0_1 = value1_2 - <$ty>::splat(1.0);
