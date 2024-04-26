@@ -1,0 +1,32 @@
+[package]
+name = "rand_benches"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[dev-dependencies]
+rand = { path = "..", features = ["small_rng", "nightly"] }
+rand_pcg = { path = "../rand_pcg" }
+rand_chacha = { path = "../rand_chacha" }
+criterion = "0.5"
+
+[[bench]]
+name = "uniform"
+path = "benches/uniform.rs"
+harness = false
+
+[[bench]]
+name = "seq_choose"
+path = "benches/seq_choose.rs"
+harness = false
+
+[[bench]]
+name = "shuffle"
+path = "benches/shuffle.rs"
+harness = false
+
+[[bench]]
+name = "uniform_float"
+path = "benches/uniform_float.rs"
+harness = false
