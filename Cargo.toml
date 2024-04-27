@@ -76,5 +76,5 @@ zerocopy = { version = "=0.8.0-alpha.6", default-features = false, features = ["
 rand_pcg = { path = "rand_pcg", version = "=0.9.0-alpha.1" }
 # Only to test serde1
 bincode = "1.2.1"
-rayon = "=1.7"
-rayon-core = "=1.11"
+rayon = "1.7"
+rayon-core = "1.11"
