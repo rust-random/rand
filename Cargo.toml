@@ -58,7 +58,7 @@ unbiased = []
 
 [workspace]
 members = [
-    "rand_benches",
+    "benches",
     "rand_core",
     "rand_distr",
     "rand_chacha",
