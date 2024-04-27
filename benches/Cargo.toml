@@ -10,7 +10,14 @@ publish = false
 rand = { path = "..", features = ["small_rng", "nightly"] }
 rand_pcg = { path = "../rand_pcg" }
 rand_chacha = { path = "../rand_chacha" }
+rand_distr = { path = "../rand_distr" }
 criterion = "0.5"
+criterion-cycles-per-byte = "0.6"
+
+[[bench]]
+name = "distributions"
+path = "src/distributions.rs"
+harness = false
 
 [[bench]]
 name = "uniform"
