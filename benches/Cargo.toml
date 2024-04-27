@@ -14,20 +14,20 @@ criterion = "0.5"
 
 [[bench]]
 name = "uniform"
-path = "benches/uniform.rs"
+path = "src/uniform.rs"
 harness = false
 
 [[bench]]
 name = "seq_choose"
-path = "benches/seq_choose.rs"
+path = "src/seq_choose.rs"
 harness = false
 
 [[bench]]
 name = "shuffle"
-path = "benches/shuffle.rs"
+path = "src/shuffle.rs"
 harness = false
 
 [[bench]]
 name = "uniform_float"
-path = "benches/uniform_float.rs"
+path = "src/uniform_float.rs"
 harness = false
