@@ -104,7 +104,7 @@ jobs:
       - name: Test rand_pcg
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde1
       - name: Test rand_chacha
-        run: cargo test --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml
+        run: cargo test --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml --features=serde1
 
   test-cross:
     runs-on: ${{ matrix.os }}
