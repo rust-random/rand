@@ -11,6 +11,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ## [Unreleased]
 - Add `rand::distributions::WeightedIndex::{weight, weights, total_weight}` (#1420)
 - Bump the MSRV to 1.61.0
+- Move all benchmarks to new `benches` crate (#1439)
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
