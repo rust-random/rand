@@ -1,0 +1,40 @@
+[package]
+name = "benches"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+
+[dev-dependencies]
+rand = { path = "..", features = ["small_rng", "nightly"] }
+rand_pcg = { path = "../rand_pcg" }
+rand_chacha = { path = "../rand_chacha" }
+rand_distr = { path = "../rand_distr" }
+criterion = "0.5"
+criterion-cycles-per-byte = "0.6"
+
+[[bench]]
+name = "distributions"
+path = "src/distributions.rs"
+harness = false
+
+[[bench]]
+name = "uniform"
+path = "src/uniform.rs"
+harness = false
+
+[[bench]]
+name = "seq_choose"
+path = "src/seq_choose.rs"
+harness = false
+
+[[bench]]
+name = "shuffle"
+path = "src/shuffle.rs"
+harness = false
+
+[[bench]]
+name = "uniform_float"
+path = "src/uniform_float.rs"
+harness = false
