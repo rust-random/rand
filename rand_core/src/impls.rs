@@ -19,7 +19,7 @@
 
 use crate::RngCore;
 use core::cmp::min;
-use zerocopy::{IntoBytes, NoCell};
+use zerocopy::{IntoBytes, Immutable};
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
 pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
@@ -53,7 +53,7 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     }
 }
 
-trait Observable: IntoBytes + NoCell + Copy {
+trait Observable: IntoBytes + Immutable + Copy {
     fn to_le(self) -> Self;
 }
 impl Observable for u32 {
