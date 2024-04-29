@@ -156,10 +156,10 @@ impl Distribution<bool> for Standard {
 ///
 /// ```ignore
 /// // this may be faster...
-/// let x = unsafe { _mm_blendv_epi8(a.into(), b.into(), rng.gen::<__m128i>()) };
+/// let x = unsafe { _mm_blendv_epi8(a.into(), b.into(), rng.random::<__m128i>()) };
 ///
 /// // ...than this
-/// let x = rng.gen::<mask8x16>().select(b, a);
+/// let x = rng.random::<mask8x16>().select(b, a);
 /// ```
 ///
 /// Since most bits are unused you could also generate only as many bits as you need, i.e.:
@@ -169,7 +169,7 @@ impl Distribution<bool> for Standard {
 /// use rand::prelude::*;
 /// let mut rng = thread_rng();
 ///
-/// let x = u16x8::splat(rng.gen::<u8>() as u16);
+/// let x = u16x8::splat(rng.random::<u8>() as u16);
 /// let mask = u16x8::splat(1) << u16x8::from([0, 1, 2, 3, 4, 5, 6, 7]);
 /// let rand_mask = (x & mask).simd_eq(mask);
 /// ```
