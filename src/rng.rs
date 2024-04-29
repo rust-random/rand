@@ -9,11 +9,11 @@
 
 //! [`Rng`] trait
 
-use rand_core::{Error, RngCore};
 use crate::distributions::uniform::{SampleRange, SampleUniform};
 use crate::distributions::{self, Distribution, Standard};
 use core::num::Wrapping;
 use core::{mem, slice};
+use rand_core::{Error, RngCore};
 
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
@@ -124,10 +124,11 @@ pub trait Rng: RngCore {
     /// ```
     ///
     /// [`Uniform`]: distributions::uniform::Uniform
+    #[track_caller]
     fn gen_range<T, R>(&mut self, range: R) -> T
     where
         T: SampleUniform,
-        R: SampleRange<T>
+        R: SampleRange<T>,
     {
         assert!(!range.is_empty(), "cannot sample empty range");
         range.sample_single(self).unwrap()
@@ -236,8 +237,9 @@ pub trait Rng: RngCore {
     ///
     /// [`fill_bytes`]: RngCore::fill_bytes
     /// [`try_fill`]: Rng::try_fill
+    #[track_caller]
     fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
-        dest.try_fill(self).unwrap_or_else(|_| panic!("Rng::fill failed"))
+        dest.try_fill(self).expect("Rng::fill failed")
     }
 
     /// Fill any type implementing [`Fill`] with random data
@@ -288,9 +290,12 @@ pub trait Rng: RngCore {
     ///
     /// [`Bernoulli`]: distributions::Bernoulli
     #[inline]
+    #[track_caller]
     fn gen_bool(&mut self, p: f64) -> bool {
-        let d = distributions::Bernoulli::new(p).unwrap();
-        self.sample(d)
+        match distributions::Bernoulli::new(p) {
+            Ok(d) => self.sample(d),
+            Err(_) => panic!("p={:?} is outside range [0.0, 1.0]", p),
+        }
     }
 
     /// Return a bool with a probability of `numerator/denominator` of being
@@ -317,9 +322,15 @@ pub trait Rng: RngCore {
     ///
     /// [`Bernoulli`]: distributions::Bernoulli
     #[inline]
+    #[track_caller]
     fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
-        let d = distributions::Bernoulli::from_ratio(numerator, denominator).unwrap();
-        self.sample(d)
+        match distributions::Bernoulli::from_ratio(numerator, denominator) {
+            Ok(d) => self.sample(d),
+            Err(_) => panic!(
+                "p={}/{} is outside range [0.0, 1.0]",
+                numerator, denominator
+            ),
+        }
     }
 
     /// Alias for [`Rng::random`].
@@ -432,8 +443,8 @@ where [T]: Fill
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test::rng;
     use crate::rngs::mock::StepRng;
+    use crate::test::rng;
     #[cfg(feature = "alloc")] use alloc::boxed::Box;
 
     #[test]
