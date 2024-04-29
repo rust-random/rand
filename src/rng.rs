@@ -53,14 +53,6 @@ use core::{mem, slice};
 /// # let v = foo(&mut thread_rng());
 /// ```
 pub trait Rng: RngCore {
-    /// Alias for [`Rng::random`].
-    #[inline]
-    #[deprecated(since="0.9.0", note="This method conflicts with a keyword in Rust 2024. Use `Rng::random` instead.")]
-    fn gen<T>(&mut self) -> T
-    where Standard: Distribution<T> {
-        self.random()
-    }
-
     /// Return a random value via the [`Standard`] distribution.
     ///
     /// # Example
@@ -328,6 +320,14 @@ pub trait Rng: RngCore {
     fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
         let d = distributions::Bernoulli::from_ratio(numerator, denominator).unwrap();
         self.sample(d)
+    }
+
+    /// Alias for [`Rng::random`].
+    #[inline]
+    #[deprecated(since="0.9.0", note="Renamed to `random` to avoid conflict with the new `gen` keyword in Rust 2024.")]
+    fn gen<T>(&mut self) -> T
+        where Standard: Distribution<T> {
+        self.random()
     }
 }
 
