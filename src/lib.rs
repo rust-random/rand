@@ -29,7 +29,7 @@
 //! }
 //!
 //! let mut rng = rand::thread_rng();
-//! let y: f64 = rng.gen(); // generates a float between 0 and 1
+//! let y: f64 = rng.random(); // generates a float between 0 and 1
 //!
 //! let mut nums: Vec<i32> = (1..100).collect();
 //! nums.shuffle(&mut rng);
@@ -147,7 +147,7 @@ use crate::distributions::{Distribution, Standard};
 /// let mut rng = rand::thread_rng();
 ///
 /// for x in v.iter_mut() {
-///     *x = rng.gen();
+///     *x = rng.random();
 /// }
 /// ```
 ///
@@ -158,7 +158,7 @@ use crate::distributions::{Distribution, Standard};
 #[inline]
 pub fn random<T>() -> T
 where Standard: Distribution<T> {
-    thread_rng().gen()
+    thread_rng().random()
 }
 
 #[cfg(test)]

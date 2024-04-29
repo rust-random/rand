@@ -101,7 +101,7 @@ fn gen_1kb_u16_iter_repeat(b: &mut Bencher) {
     use core::iter;
     let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
-        let v: Vec<u16> = iter::repeat(()).map(|()| rng.gen()).take(512).collect();
+        let v: Vec<u16> = iter::repeat(()).map(|()| rng.random()).take(512).collect();
         v
     });
     b.bytes = 1024;
@@ -122,7 +122,7 @@ fn gen_1kb_u16_gen_array(b: &mut Bencher) {
     let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         // max supported array length is 32!
-        let v: [[u16; 32]; 16] = rng.gen();
+        let v: [[u16; 32]; 16] = rng.random();
         v
     });
     b.bytes = 1024;
@@ -144,7 +144,7 @@ fn gen_1kb_u64_iter_repeat(b: &mut Bencher) {
     use core::iter;
     let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
-        let v: Vec<u64> = iter::repeat(()).map(|()| rng.gen()).take(128).collect();
+        let v: Vec<u64> = iter::repeat(()).map(|()| rng.random()).take(128).collect();
         v
     });
     b.bytes = 1024;
@@ -165,7 +165,7 @@ fn gen_1kb_u64_gen_array(b: &mut Bencher) {
     let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         // max supported array length is 32!
-        let v: [[u64; 32]; 4] = rng.gen();
+        let v: [[u64; 32]; 4] = rng.random();
         v
     });
     b.bytes = 1024;
