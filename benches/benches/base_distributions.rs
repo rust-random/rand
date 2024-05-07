@@ -32,7 +32,7 @@ macro_rules! distr_int {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             b.iter(|| {
@@ -52,7 +52,7 @@ macro_rules! distr_nz_int {
     ($fnn:ident, $tynz:ty, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             b.iter(|| {
@@ -72,7 +72,7 @@ macro_rules! distr_float {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             b.iter(|| {
@@ -92,7 +92,7 @@ macro_rules! distr_duration {
     ($fnn:ident, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             b.iter(|| {
@@ -114,7 +114,7 @@ macro_rules! distr {
     ($fnn:ident, $ty:ty, $distr:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             b.iter(|| {
@@ -191,7 +191,7 @@ macro_rules! gen_range_int {
     ($fnn:ident, $ty:ident, $low:expr, $high:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
 
             b.iter(|| {
                 let mut high = $high;
@@ -230,7 +230,7 @@ macro_rules! gen_range_float {
     ($fnn:ident, $ty:ident, $low:expr, $high:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
 
             b.iter(|| {
                 let mut high = $high;
@@ -267,7 +267,7 @@ macro_rules! uniform_sample {
     ($fnn:ident, $type:ident, $low:expr, $high:expr, $count:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let low = black_box($low);
             let high = black_box($high);
             b.iter(|| {
@@ -286,7 +286,7 @@ macro_rules! uniform_inclusive {
     ($fnn:ident, $type:ident, $low:expr, $high:expr, $count:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let low = black_box($low);
             let high = black_box($high);
             b.iter(|| {
@@ -306,7 +306,7 @@ macro_rules! uniform_single {
     ($fnn:ident, $type:ident, $low:expr, $high:expr, $count:expr) => {
         #[bench]
         fn $fnn(b: &mut Bencher) {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let low = black_box($low);
             let high = black_box($high);
             b.iter(|| {
