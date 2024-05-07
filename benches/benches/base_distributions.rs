@@ -199,7 +199,7 @@ macro_rules! gen_range_int {
                 for _ in 0..RAND_BENCH_N {
                     accum = accum.wrapping_add(rng.gen_range($low..high));
                     // force recalculation of range each time
-                    high = high.wrapping_add(1) & core::$ty::MAX;
+                    high = high.wrapping_add(1) & $ty::MAX;
                 }
                 accum
             });
