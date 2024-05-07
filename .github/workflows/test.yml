@@ -79,8 +79,7 @@ jobs:
         run: |
           cargo test --target ${{ matrix.target }} --features=nightly
           cargo test --target ${{ matrix.target }} --all-features
-          cargo test --target ${{ matrix.target }} --benches --features=small_rng,nightly
-          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --benches
+          cargo test --target ${{ matrix.target }} --manifest-path benches/Cargo.toml --benches
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
       - name: Test rand
         run: |
@@ -104,7 +103,7 @@ jobs:
       - name: Test rand_pcg
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde1
       - name: Test rand_chacha
-        run: cargo test --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml
+        run: cargo test --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml --features=serde1
 
   test-cross:
     runs-on: ${{ matrix.os }}

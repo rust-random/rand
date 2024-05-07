@@ -414,6 +414,7 @@ pub trait SeedableRng: Sized {
     /// [`try_from_os_rng`]: SeedableRng::try_from_os_rng
     #[cfg(feature = "getrandom")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
+    #[track_caller]
     fn from_os_rng() -> Self {
         match Self::try_from_os_rng() {
             Ok(res) => res,

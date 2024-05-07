@@ -15,7 +15,7 @@
 //! ```
 //! use rand::prelude::*;
 //! # let mut r = StdRng::from_rng(thread_rng());
-//! # let _: f32 = r.gen();
+//! # let _: f32 = r.random();
 //! ```
 
 #[doc(no_inline)] pub use crate::distributions::Distribution;

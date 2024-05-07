@@ -37,7 +37,7 @@ use rand_core::RngCore;
 /// on references (including type-erased references). Unfortunately within the
 /// function `foo` it is not known whether `rng` is a reference type or not,
 /// hence many uses of `rng` require an extra reference, either explicitly
-/// (`distr.sample(&mut rng)`) or implicitly (`rng.gen()`); one may hope the
+/// (`distr.sample(&mut rng)`) or implicitly (`rng.random()`); one may hope the
 /// optimiser can remove redundant references later.
 ///
 /// Example:
@@ -47,7 +47,7 @@ use rand_core::RngCore;
 /// use rand::Rng;
 ///
 /// fn foo<R: Rng + ?Sized>(rng: &mut R) -> f32 {
-///     rng.gen()
+///     rng.random()
 /// }
 ///
 /// # let v = foo(&mut thread_rng());
@@ -61,14 +61,14 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
-    /// let x: u32 = rng.gen();
+    /// let x: u32 = rng.random();
     /// println!("{}", x);
-    /// println!("{:?}", rng.gen::<(f64, bool)>());
+    /// println!("{:?}", rng.random::<(f64, bool)>());
     /// ```
     ///
     /// # Arrays and tuples
     ///
-    /// The `rng.gen()` method is able to generate arrays
+    /// The `rng.random()` method is able to generate arrays
     /// and tuples (up to 12 elements), so long as all element types can be
     /// generated.
     ///
@@ -79,16 +79,16 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
-    /// let tuple: (u8, i32, char) = rng.gen(); // arbitrary tuple support
+    /// let tuple: (u8, i32, char) = rng.random(); // arbitrary tuple support
     ///
-    /// let arr1: [f32; 32] = rng.gen();        // array construction
+    /// let arr1: [f32; 32] = rng.random();        // array construction
     /// let mut arr2 = [0u8; 128];
     /// rng.fill(&mut arr2);                    // array fill
     /// ```
     ///
     /// [`Standard`]: distributions::Standard
     #[inline]
-    fn gen<T>(&mut self) -> T
+    fn random<T>(&mut self) -> T
     where Standard: Distribution<T> {
         Standard.sample(self)
     }
@@ -124,6 +124,7 @@ pub trait Rng: RngCore {
     /// ```
     ///
     /// [`Uniform`]: distributions::uniform::Uniform
+    #[track_caller]
     fn gen_range<T, R>(&mut self, range: R) -> T
     where
         T: SampleUniform,
@@ -233,6 +234,7 @@ pub trait Rng: RngCore {
     /// ```
     ///
     /// [`fill_bytes`]: RngCore::fill_bytes
+    #[track_caller]
     fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
         dest.fill(self)
     }
@@ -257,9 +259,12 @@ pub trait Rng: RngCore {
     ///
     /// [`Bernoulli`]: distributions::Bernoulli
     #[inline]
+    #[track_caller]
     fn gen_bool(&mut self, p: f64) -> bool {
-        let d = distributions::Bernoulli::new(p).unwrap();
-        self.sample(d)
+        match distributions::Bernoulli::new(p) {
+            Ok(d) => self.sample(d),
+            Err(_) => panic!("p={:?} is outside range [0.0, 1.0]", p),
+        }
     }
 
     /// Return a bool with a probability of `numerator/denominator` of being
@@ -286,9 +291,26 @@ pub trait Rng: RngCore {
     ///
     /// [`Bernoulli`]: distributions::Bernoulli
     #[inline]
+    #[track_caller]
     fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
-        let d = distributions::Bernoulli::from_ratio(numerator, denominator).unwrap();
-        self.sample(d)
+        match distributions::Bernoulli::from_ratio(numerator, denominator) {
+            Ok(d) => self.sample(d),
+            Err(_) => panic!(
+                "p={}/{} is outside range [0.0, 1.0]",
+                numerator, denominator
+            ),
+        }
+    }
+
+    /// Alias for [`Rng::random`].
+    #[inline]
+    #[deprecated(
+        since = "0.9.0",
+        note = "Renamed to `random` to avoid conflict with the new `gen` keyword in Rust 2024."
+    )]
+    fn gen<T>(&mut self) -> T
+    where Standard: Distribution<T> {
+        self.random()
     }
 }
 
@@ -312,7 +334,7 @@ macro_rules! impl_fill_each {
         impl Fill for [$t] {
             fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 for elt in self.iter_mut() {
-                    *elt = rng.gen();
+                    *elt = rng.random();
                 }
             }
         }
@@ -440,7 +462,7 @@ mod test {
         // Check equivalence for generated floats
         let mut array = [0f32; 2];
         rng.fill(&mut array);
-        let gen: [f32; 2] = rng.gen();
+        let gen: [f32; 2] = rng.random();
         assert_eq!(array, gen);
     }
 
@@ -530,7 +552,7 @@ mod test {
         let mut rng = rng(109);
         let mut r = &mut rng as &mut dyn RngCore;
         r.next_u32();
-        r.gen::<i32>();
+        r.random::<i32>();
         assert_eq!(r.gen_range(0..1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
@@ -542,7 +564,7 @@ mod test {
         let rng = rng(110);
         let mut r = Box::new(rng) as Box<dyn RngCore>;
         r.next_u32();
-        r.gen::<i32>();
+        r.random::<i32>();
         assert_eq!(r.gen_range(0..1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }

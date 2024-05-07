@@ -34,7 +34,7 @@ use rand_core::{impls, RngCore};
 /// use rand::rngs::mock::StepRng;
 ///
 /// let mut my_rng = StepRng::new(2, 1);
-/// let sample: [u64; 3] = my_rng.gen();
+/// let sample: [u64; 3] = my_rng.random();
 /// assert_eq!(sample, [2, 3, 4]);
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]

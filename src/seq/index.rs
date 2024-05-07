@@ -348,7 +348,7 @@ where
     while index < length {
         let weight = weight(index.as_usize()).into();
         if weight > 0.0 {
-            let key = rng.gen::<f64>().powf(1.0 / weight);
+            let key = rng.random::<f64>().powf(1.0 / weight);
             candidates.push(Element { index, key });
         } else if !(weight >= 0.0) {
             return Err(WeightError::InvalidWeight);

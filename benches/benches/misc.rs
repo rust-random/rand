@@ -23,7 +23,7 @@ fn misc_gen_bool_const(b: &mut Bencher) {
     let mut rng = Pcg32::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut accum = true;
-        for _ in 0..crate::RAND_BENCH_N {
+        for _ in 0..RAND_BENCH_N {
             accum ^= rng.gen_bool(0.18);
         }
         accum
@@ -36,7 +36,7 @@ fn misc_gen_bool_var(b: &mut Bencher) {
     b.iter(|| {
         let mut accum = true;
         let mut p = 0.18;
-        for _ in 0..crate::RAND_BENCH_N {
+        for _ in 0..RAND_BENCH_N {
             accum ^= rng.gen_bool(p);
             p += 0.0001;
         }
@@ -49,7 +49,7 @@ fn misc_gen_ratio_const(b: &mut Bencher) {
     let mut rng = Pcg32::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut accum = true;
-        for _ in 0..crate::RAND_BENCH_N {
+        for _ in 0..RAND_BENCH_N {
             accum ^= rng.gen_ratio(2, 3);
         }
         accum
@@ -61,7 +61,7 @@ fn misc_gen_ratio_var(b: &mut Bencher) {
     let mut rng = Pcg32::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         let mut accum = true;
-        for i in 2..(crate::RAND_BENCH_N as u32 + 2) {
+        for i in 2..(RAND_BENCH_N as u32 + 2) {
             accum ^= rng.gen_ratio(i, i + 1);
         }
         accum
@@ -72,9 +72,9 @@ fn misc_gen_ratio_var(b: &mut Bencher) {
 fn misc_bernoulli_const(b: &mut Bencher) {
     let mut rng = Pcg32::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
-        let d = rand::distributions::Bernoulli::new(0.18).unwrap();
+        let d = Bernoulli::new(0.18).unwrap();
         let mut accum = true;
-        for _ in 0..crate::RAND_BENCH_N {
+        for _ in 0..RAND_BENCH_N {
             accum ^= rng.sample(d);
         }
         accum
@@ -87,7 +87,7 @@ fn misc_bernoulli_var(b: &mut Bencher) {
     b.iter(|| {
         let mut accum = true;
         let mut p = 0.18;
-        for _ in 0..crate::RAND_BENCH_N {
+        for _ in 0..RAND_BENCH_N {
             let d = Bernoulli::new(p).unwrap();
             accum ^= rng.sample(d);
             p += 0.0001;
@@ -101,7 +101,7 @@ fn gen_1kb_u16_iter_repeat(b: &mut Bencher) {
     use core::iter;
     let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
-        let v: Vec<u16> = iter::repeat(()).map(|()| rng.gen()).take(512).collect();
+        let v: Vec<u16> = iter::repeat(()).map(|()| rng.random()).take(512).collect();
         v
     });
     b.bytes = 1024;
@@ -122,7 +122,7 @@ fn gen_1kb_u16_gen_array(b: &mut Bencher) {
     let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         // max supported array length is 32!
-        let v: [[u16; 32]; 16] = rng.gen();
+        let v: [[u16; 32]; 16] = rng.random();
         v
     });
     b.bytes = 1024;
@@ -144,7 +144,7 @@ fn gen_1kb_u64_iter_repeat(b: &mut Bencher) {
     use core::iter;
     let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
-        let v: Vec<u64> = iter::repeat(()).map(|()| rng.gen()).take(128).collect();
+        let v: Vec<u64> = iter::repeat(()).map(|()| rng.random()).take(128).collect();
         v
     });
     b.bytes = 1024;
@@ -165,7 +165,7 @@ fn gen_1kb_u64_gen_array(b: &mut Bencher) {
     let mut rng = Pcg64Mcg::from_rng(&mut thread_rng()).unwrap();
     b.iter(|| {
         // max supported array length is 32!
-        let v: [[u64; 32]; 4] = rng.gen();
+        let v: [[u64; 32]; 4] = rng.random();
         v
     });
     b.bytes = 1024;

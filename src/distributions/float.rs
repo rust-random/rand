@@ -115,7 +115,7 @@ macro_rules! float_impls {
                 let precision = $fraction_bits + 1;
                 let scale = 1.0 / ((1 as $u_scalar << precision) as $f_scalar);
 
-                let value: $uty = rng.gen();
+                let value: $uty = rng.random();
                 let value = value >> $uty::splat(float_size - precision);
                 $ty::splat(scale) * $ty::cast_from_int(value)
             }
@@ -132,7 +132,7 @@ macro_rules! float_impls {
                 let precision = $fraction_bits + 1;
                 let scale = 1.0 / ((1 as $u_scalar << precision) as $f_scalar);
 
-                let value: $uty = rng.gen();
+                let value: $uty = rng.random();
                 let value = value >> $uty::splat(float_size - precision);
                 // Add 1 to shift up; will not overflow because of right-shift:
                 $ty::splat(scale) * $ty::cast_from_int(value + $uty::splat(1))
@@ -149,7 +149,7 @@ macro_rules! float_impls {
                 use core::$f_scalar::EPSILON;
                 let float_size = mem::size_of::<$f_scalar>() as $u_scalar * 8;
 
-                let value: $uty = rng.gen();
+                let value: $uty = rng.random();
                 let fraction = value >> $uty::splat(float_size - $fraction_bits);
                 fraction.into_float_with_exponent(0) - $ty::splat(1.0 - EPSILON / 2.0)
             }
@@ -192,11 +192,11 @@ mod tests {
 
                 // Standard
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.gen::<$ty>(), $ZERO);
+                assert_eq!(zeros.random::<$ty>(), $ZERO);
                 let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
-                assert_eq!(one.gen::<$ty>(), $EPSILON / two);
+                assert_eq!(one.random::<$ty>(), $EPSILON / two);
                 let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.gen::<$ty>(), $ty::splat(1.0) - $EPSILON / two);
+                assert_eq!(max.random::<$ty>(), $ty::splat(1.0) - $EPSILON / two);
 
                 // OpenClosed01
                 let mut zeros = StepRng::new(0, 0);
@@ -234,11 +234,11 @@ mod tests {
 
                 // Standard
                 let mut zeros = StepRng::new(0, 0);
-                assert_eq!(zeros.gen::<$ty>(), $ZERO);
+                assert_eq!(zeros.random::<$ty>(), $ZERO);
                 let mut one = StepRng::new(1 << 11, 0);
-                assert_eq!(one.gen::<$ty>(), $EPSILON / two);
+                assert_eq!(one.random::<$ty>(), $EPSILON / two);
                 let mut max = StepRng::new(!0, 0);
-                assert_eq!(max.gen::<$ty>(), $ty::splat(1.0) - $EPSILON / two);
+                assert_eq!(max.random::<$ty>(), $ty::splat(1.0) - $EPSILON / two);
 
                 // OpenClosed01
                 let mut zeros = StepRng::new(0, 0);

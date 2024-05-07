@@ -62,10 +62,10 @@ use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 /// let prng = ChaCha20Core::from_os_rng();
 /// let mut reseeding_rng = ReseedingRng::new(prng, 0, OsRng);
 ///
-/// println!("{}", reseeding_rng.gen::<u64>());
+/// println!("{}", reseeding_rng.random::<u64>());
 ///
 /// let mut cloned_rng = reseeding_rng.clone();
-/// assert!(reseeding_rng.gen::<u64>() != cloned_rng.gen::<u64>());
+/// assert!(reseeding_rng.random::<u64>() != cloned_rng.random::<u64>());
 /// ```
 ///
 /// [`BlockRngCore`]: rand_core::block::BlockRngCore
@@ -247,9 +247,9 @@ where
 #[cfg(feature = "std_rng")]
 #[cfg(test)]
 mod test {
-    use crate::{Rng, SeedableRng};
     use crate::rngs::mock::StepRng;
     use crate::rngs::std::Core;
+    use crate::{Rng, SeedableRng};
 
     use super::ReseedingRng;
 
@@ -280,12 +280,12 @@ mod test {
         let rng = Core::from_rng(&mut zero);
         let mut rng1 = ReseedingRng::new(rng, 32 * 4, zero);
 
-        let first: u32 = rng1.gen();
+        let first: u32 = rng1.random();
         for _ in 0..10 {
-            let _ = rng1.gen::<u32>();
+            let _ = rng1.random::<u32>();
         }
 
         let mut rng2 = rng1.clone();
-        assert_eq!(first, rng2.gen::<u32>());
+        assert_eq!(first, rng2.random::<u32>());
     }
 }

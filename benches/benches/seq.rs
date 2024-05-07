@@ -47,7 +47,7 @@ fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
         }
         s
     });
-    b.bytes = size_of::<usize>() as u64 * crate::RAND_BENCH_N;
+    b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
 }
 
 macro_rules! seq_slice_choose_multiple {
