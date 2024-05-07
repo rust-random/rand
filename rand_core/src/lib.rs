@@ -385,7 +385,6 @@ pub trait SeedableRng: Sized {
     /// [`getrandom`]: https://docs.rs/getrandom
     #[cfg(feature = "getrandom")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
-    #[track_caller]
     fn from_entropy() -> Self {
         let mut seed = Self::Seed::default();
         if let Err(err) = getrandom::getrandom(seed.as_mut()) {

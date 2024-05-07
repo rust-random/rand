@@ -219,6 +219,7 @@ impl ExactSizeIterator for IndexVecIntoIter {}
 /// to adapt the internal `sample_floyd` implementation.
 ///
 /// Panics if `amount > length`.
+#[track_caller]
 pub fn sample<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
 where R: Rng + ?Sized {
     if amount > length {

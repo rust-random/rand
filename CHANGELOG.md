@@ -13,7 +13,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Bump the MSRV to 1.61.0
 - Rename `Rng::gen` to `Rng::random` to avoid conflict with the new `gen` keyword in Rust 2024 (#1435)
 - Move all benchmarks to new `benches` crate (#1439)
-- Annotate panicking methods with `#[track_caller]` (#1442)
+- Annotate panicking methods with `#[track_caller]` (#1442, #1447)
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)

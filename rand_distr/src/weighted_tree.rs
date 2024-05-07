@@ -290,6 +290,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
 impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight> Distribution<usize>
     for WeightedTreeIndex<W>
 {
+    #[track_caller]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
         self.try_sample(rng).unwrap()
     }
