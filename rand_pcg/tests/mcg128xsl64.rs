@@ -21,7 +21,7 @@ fn test_mcg128xsl64_construction() {
     let mut rng1 = Mcg128Xsl64::from_seed(seed);
     assert_eq!(rng1.next_u64(), 7071994460355047496);
 
-    let mut rng2 = Mcg128Xsl64::from_rng(&mut rng1).unwrap();
+    let mut rng2 = Mcg128Xsl64::from_rng(&mut rng1);
     assert_eq!(rng2.next_u64(), 12300796107712034932);
 
     let mut rng3 = Mcg128Xsl64::seed_from_u64(0);

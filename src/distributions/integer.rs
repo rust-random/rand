@@ -23,7 +23,6 @@ use core::num::{
     NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize,NonZeroI128
 };
 #[cfg(feature = "simd_support")] use core::simd::*;
-use core::mem;
 
 impl Distribution<u8> for Standard {
     #[inline]
@@ -123,6 +122,7 @@ impl_nzint!(NonZeroI64, NonZeroI64::new);
 impl_nzint!(NonZeroI128, NonZeroI128::new);
 impl_nzint!(NonZeroIsize, NonZeroIsize::new);
 
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 macro_rules! x86_intrinsic_impl {
     ($meta:meta, $($intrinsic:ident),+) => {$(
         #[cfg($meta)]
@@ -132,7 +132,7 @@ macro_rules! x86_intrinsic_impl {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $intrinsic {
                 // On proper hardware, this should compile to SIMD instructions
                 // Verified on x86 Haswell with __m128i, __m256i
-                let mut buf = [0_u8; mem::size_of::<$intrinsic>()];
+                let mut buf = [0_u8; core::mem::size_of::<$intrinsic>()];
                 rng.fill_bytes(&mut buf);
                 // x86 is little endian so no need for conversion
                 zerocopy::transmute!(buf)

@@ -9,11 +9,11 @@
 
 //! [`Rng`] trait
 
-use rand_core::{Error, RngCore};
 use crate::distributions::uniform::{SampleRange, SampleUniform};
 use crate::distributions::{self, Distribution, Standard};
 use core::num::Wrapping;
 use core::{mem, slice};
+use rand_core::RngCore;
 
 /// An automatically-implemented extension trait on [`RngCore`] providing high-level
 /// generic methods for sampling values and other convenience methods.
@@ -127,7 +127,7 @@ pub trait Rng: RngCore {
     fn gen_range<T, R>(&mut self, range: R) -> T
     where
         T: SampleUniform,
-        R: SampleRange<T>
+        R: SampleRange<T>,
     {
         assert!(!range.is_empty(), "cannot sample empty range");
         range.sample_single(self).unwrap()
@@ -223,8 +223,6 @@ pub trait Rng: RngCore {
     /// The distribution is expected to be uniform with portable results, but
     /// this cannot be guaranteed for third-party implementations.
     ///
-    /// This is identical to [`try_fill`] except that it panics on error.
-    ///
     /// # Example
     ///
     /// ```
@@ -235,37 +233,8 @@ pub trait Rng: RngCore {
     /// ```
     ///
     /// [`fill_bytes`]: RngCore::fill_bytes
-    /// [`try_fill`]: Rng::try_fill
     fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
-        dest.try_fill(self).unwrap_or_else(|_| panic!("Rng::fill failed"))
-    }
-
-    /// Fill any type implementing [`Fill`] with random data
-    ///
-    /// The distribution is expected to be uniform with portable results, but
-    /// this cannot be guaranteed for third-party implementations.
-    ///
-    /// This is identical to [`fill`] except that it forwards errors.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use rand::Error;
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// # fn try_inner() -> Result<(), Error> {
-    /// let mut arr = [0u64; 4];
-    /// thread_rng().try_fill(&mut arr[..])?;
-    /// # Ok(())
-    /// # }
-    ///
-    /// # try_inner().unwrap()
-    /// ```
-    ///
-    /// [`try_fill_bytes`]: RngCore::try_fill_bytes
-    /// [`fill`]: Rng::fill
-    fn try_fill<T: Fill + ?Sized>(&mut self, dest: &mut T) -> Result<(), Error> {
-        dest.try_fill(self)
+        dest.fill(self)
     }
 
     /// Return a bool with a probability `p` of being true.
@@ -334,18 +303,17 @@ impl<R: RngCore + ?Sized> Rng for R {}
 /// [Chapter on Portability](https://rust-random.github.io/book/portability.html)).
 pub trait Fill {
     /// Fill self with random data
-    fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error>;
+    fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R);
 }
 
 macro_rules! impl_fill_each {
     () => {};
     ($t:ty) => {
         impl Fill for [$t] {
-            fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
+            fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 for elt in self.iter_mut() {
                     *elt = rng.gen();
                 }
-                Ok(())
             }
         }
     };
@@ -358,8 +326,8 @@ macro_rules! impl_fill_each {
 impl_fill_each!(bool, char, f32, f64,);
 
 impl Fill for [u8] {
-    fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
-        rng.try_fill_bytes(self)
+    fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
+        rng.fill_bytes(self)
     }
 }
 
@@ -368,37 +336,35 @@ macro_rules! impl_fill {
     ($t:ty) => {
         impl Fill for [$t] {
             #[inline(never)] // in micro benchmarks, this improves performance
-            fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
+            fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
-                    rng.try_fill_bytes(unsafe {
+                    rng.fill_bytes(unsafe {
                         slice::from_raw_parts_mut(self.as_mut_ptr()
                             as *mut u8,
                             mem::size_of_val(self)
                         )
-                    })?;
+                    });
                     for x in self {
                         *x = x.to_le();
                     }
                 }
-                Ok(())
             }
         }
 
         impl Fill for [Wrapping<$t>] {
             #[inline(never)]
-            fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
+            fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
-                    rng.try_fill_bytes(unsafe {
+                    rng.fill_bytes(unsafe {
                         slice::from_raw_parts_mut(self.as_mut_ptr()
                             as *mut u8,
                             self.len() * mem::size_of::<$t>()
                         )
-                    })?;
+                    });
                     for x in self {
                     *x = Wrapping(x.0.to_le());
                     }
                 }
-                Ok(())
             }
         }
     };
@@ -416,16 +382,16 @@ impl_fill!(i8, i16, i32, i64, isize, i128,);
 impl<T, const N: usize> Fill for [T; N]
 where [T]: Fill
 {
-    fn try_fill<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<(), Error> {
-        self[..].try_fill(rng)
+    fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
+        <[T] as Fill>::fill(self, rng)
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test::rng;
     use crate::rngs::mock::StepRng;
+    use crate::test::rng;
     #[cfg(feature = "alloc")] use alloc::boxed::Box;
 
     #[test]
@@ -524,29 +490,38 @@ mod test {
 
     #[test]
     #[should_panic]
+    #[allow(clippy::reversed_empty_ranges)]
     fn test_gen_range_panic_int() {
-        #![allow(clippy::reversed_empty_ranges)]
         let mut r = rng(102);
         r.gen_range(5..-2);
     }
 
     #[test]
     #[should_panic]
+    #[allow(clippy::reversed_empty_ranges)]
     fn test_gen_range_panic_usize() {
-        #![allow(clippy::reversed_empty_ranges)]
         let mut r = rng(103);
         r.gen_range(5..2);
     }
 
     #[test]
+    #[allow(clippy::bool_assert_comparison)]
     fn test_gen_bool() {
-        #![allow(clippy::bool_assert_comparison)]
-
         let mut r = rng(105);
         for _ in 0..5 {
             assert_eq!(r.gen_bool(0.0), false);
             assert_eq!(r.gen_bool(1.0), true);
         }
+    }
+
+    #[test]
+    fn test_rng_mut_ref() {
+        fn use_rng(mut r: impl Rng) {
+            let _ = r.next_u32();
+        }
+
+        let mut rng = rng(109);
+        use_rng(&mut rng);
     }
 
     #[test]

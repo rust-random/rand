@@ -30,7 +30,7 @@ macro_rules! distr_int {
         $group.throughput(Throughput::Bytes(
             size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             c.iter(|| {
@@ -50,7 +50,7 @@ macro_rules! distr_float {
         $group.throughput(Throughput::Bytes(
             size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             c.iter(|| {
@@ -70,7 +70,7 @@ macro_rules! distr {
         $group.throughput(Throughput::Bytes(
             size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             c.iter(|| {
@@ -90,7 +90,7 @@ macro_rules! distr_arr {
         $group.throughput(Throughput::Bytes(
             size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             c.iter(|| {
@@ -127,7 +127,7 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     distr_float!(g, "log_normal", f64, LogNormal::new(-1.23, 4.56).unwrap());
     g.throughput(Throughput::Bytes(size_of::<f64>() as u64 * RAND_BENCH_N));
     g.bench_function("iter", |c| {
-        let mut rng = Pcg64Mcg::from_entropy();
+        let mut rng = Pcg64Mcg::from_os_rng();
         let distr = Normal::new(-2.71828, 3.14159).unwrap();
         let mut iter = distr.sample_iter(&mut rng);
 

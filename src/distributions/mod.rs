@@ -191,7 +191,7 @@ use crate::Rng;
 /// use rand::prelude::*;
 /// use rand::distributions::Standard;
 ///
-/// let val: f32 = StdRng::from_entropy().sample(Standard);
+/// let val: f32 = StdRng::from_os_rng().sample(Standard);
 /// println!("f32 from [0, 1): {}", val);
 /// ```
 ///

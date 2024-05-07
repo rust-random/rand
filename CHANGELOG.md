@@ -9,6 +9,7 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 ## [Unreleased]
+- Add `rand::distributions::WeightedIndex::{weight, weights, total_weight}` (#1420)
 - Bump the MSRV to 1.61.0
 
 ## [0.9.0-alpha.1] - 2024-03-18

@@ -10,9 +10,8 @@
 //! Distribution trait and associates
 
 use crate::Rng;
+#[cfg(feature = "alloc")] use alloc::string::String;
 use core::iter;
-#[cfg(feature = "alloc")]
-use alloc::string::String;
 
 /// Types (distributions) that can be used to create a random instance of `T`.
 ///
@@ -78,7 +77,7 @@ pub trait Distribution<T> {
         DistIter {
             distr: self,
             rng,
-            phantom: ::core::marker::PhantomData,
+            phantom: core::marker::PhantomData,
         }
     }
 
@@ -107,7 +106,7 @@ pub trait Distribution<T> {
         DistMap {
             distr: self,
             func,
-            phantom: ::core::marker::PhantomData,
+            phantom: core::marker::PhantomData,
         }
     }
 }
@@ -129,7 +128,7 @@ impl<'a, T, D: Distribution<T> + ?Sized> Distribution<T> for &'a D {
 pub struct DistIter<D, R, T> {
     distr: D,
     rng: R,
-    phantom: ::core::marker::PhantomData<T>,
+    phantom: core::marker::PhantomData<T>,
 }
 
 impl<D, R, T> Iterator for DistIter<D, R, T>
@@ -148,7 +147,7 @@ where
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (usize::max_value(), None)
+        (usize::MAX, None)
     }
 }
 
@@ -168,7 +167,7 @@ where
 pub struct DistMap<D, F, T, S> {
     distr: D,
     func: F,
-    phantom: ::core::marker::PhantomData<fn(T) -> S>,
+    phantom: core::marker::PhantomData<fn(T) -> S>,
 }
 
 impl<D, F, T, S> Distribution<S> for DistMap<D, F, T, S>
@@ -229,9 +228,7 @@ mod tests {
 
     #[test]
     fn test_make_an_iter() {
-        fn ten_dice_rolls_other_than_five<R: Rng>(
-            rng: &mut R,
-        ) -> impl Iterator<Item = i32> + '_ {
+        fn ten_dice_rolls_other_than_five<R: Rng>(rng: &mut R) -> impl Iterator<Item = i32> + '_ {
             Uniform::new_inclusive(1, 6)
                 .unwrap()
                 .sample_iter(rng)
@@ -251,8 +248,8 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn test_dist_string() {
-        use core::str;
         use crate::distributions::{Alphanumeric, DistString, Standard};
+        use core::str;
         let mut rng = crate::test::rng(213);
 
         let s1 = Alphanumeric.sample_string(&mut rng, 20);

@@ -74,7 +74,7 @@ impl Observable for u64 {
 /// unaltered.
 fn fill_via_chunks<T: Observable>(src: &mut [T], dest: &mut [u8]) -> (usize, usize) {
     let size = core::mem::size_of::<T>();
-    let byte_len = min(src.len() * size, dest.len());
+    let byte_len = min(core::mem::size_of_val(src), dest.len());
     let num_chunks = (byte_len + size - 1) / size;
 
     // Byte-swap for portability of results. This must happen before copying
@@ -158,6 +158,56 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
     let mut buf = [0; 8];
     rng.fill_bytes(&mut buf);
     u64::from_le_bytes(buf)
+}
+
+/// Implement [`TryRngCore`] for a type implementing [`RngCore`].
+///
+/// Ideally, `rand_core` would define blanket impls for this, but they conflict with blanket impls
+/// for `&mut R` and `Box<R>`, so until specialziation is stabilized, implementer crates
+/// have to implement `TryRngCore` directly.
+#[macro_export]
+macro_rules! impl_try_rng_from_rng_core {
+    ($t:ty) => {
+        impl $crate::TryRngCore for $t {
+            type Error = core::convert::Infallible;
+
+            #[inline]
+            fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+                Ok($crate::RngCore::next_u32(self))
+            }
+
+            #[inline]
+            fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+                Ok($crate::RngCore::next_u64(self))
+            }
+
+            #[inline]
+            fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<(), Self::Error> {
+                $crate::RngCore::fill_bytes(self, dst);
+                Ok(())
+            }
+        }
+    };
+}
+
+/// Implement [`TryCryptoRng`] and [`TryRngCore`] for a type implementing [`CryptoRng`].
+///
+/// Ideally, `rand_core` would define blanket impls for this, but they conflict with blanket impls
+/// for `&mut R` and `Box<R>`, so until specialziation is stabilized, implementer crates
+/// have to implement `TryRngCore` and `TryCryptoRng` directly.
+#[macro_export]
+macro_rules! impl_try_crypto_rng_from_crypto_rng {
+    ($t:ty) => {
+        $crate::impl_try_rng_from_rng_core!($t);
+        
+        impl $crate::TryCryptoRng for $t {}
+
+        /// Check at compile time that `$t` implements `CryptoRng`
+        const _: () = {
+            const fn check_crypto_rng_impl<T: $crate::CryptoRng>() {}
+            check_crypto_rng_impl::<$t>();
+        };
+    };
 }
 
 #[cfg(test)]

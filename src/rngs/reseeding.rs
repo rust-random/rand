@@ -13,7 +13,7 @@
 use core::mem::size_of_val;
 
 use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
-use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
+use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 
 /// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
 /// ability to reseed it.
@@ -59,7 +59,7 @@ use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 /// use rand::rngs::OsRng;
 /// use rand::rngs::ReseedingRng;
 ///
-/// let prng = ChaCha20Core::from_entropy();
+/// let prng = ChaCha20Core::from_os_rng();
 /// let mut reseeding_rng = ReseedingRng::new(prng, 0, OsRng);
 ///
 /// println!("{}", reseeding_rng.gen::<u64>());
@@ -75,12 +75,12 @@ use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 pub struct ReseedingRng<R, Rsdr>(BlockRng<ReseedingCore<R, Rsdr>>)
 where
     R: BlockRngCore + SeedableRng,
-    Rsdr: RngCore;
+    Rsdr: TryRngCore;
 
 impl<R, Rsdr> ReseedingRng<R, Rsdr>
 where
     R: BlockRngCore + SeedableRng,
-    Rsdr: RngCore,
+    Rsdr: TryRngCore,
 {
     /// Create a new `ReseedingRng` from an existing PRNG, combined with a RNG
     /// to use as reseeder.
@@ -95,7 +95,7 @@ where
     /// Immediately reseed the generator
     ///
     /// This discards any remaining random data in the cache.
-    pub fn reseed(&mut self) -> Result<(), Error> {
+    pub fn reseed(&mut self) -> Result<(), Rsdr::Error> {
         self.0.reset();
         self.0.core.reseed()
     }
@@ -103,9 +103,10 @@ where
 
 // TODO: this should be implemented for any type where the inner type
 // implements RngCore, but we can't specify that because ReseedingCore is private
-impl<R, Rsdr: RngCore> RngCore for ReseedingRng<R, Rsdr>
+impl<R, Rsdr> RngCore for ReseedingRng<R, Rsdr>
 where
     R: BlockRngCore<Item = u32> + SeedableRng,
+    Rsdr: TryRngCore,
 {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -120,16 +121,12 @@ where
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.0.fill_bytes(dest)
     }
-
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.0.try_fill_bytes(dest)
-    }
 }
 
 impl<R, Rsdr> Clone for ReseedingRng<R, Rsdr>
 where
     R: BlockRngCore + SeedableRng + Clone,
-    Rsdr: RngCore + Clone,
+    Rsdr: TryRngCore + Clone,
 {
     fn clone(&self) -> ReseedingRng<R, Rsdr> {
         // Recreating `BlockRng` seems easier than cloning it and resetting
@@ -141,7 +138,7 @@ where
 impl<R, Rsdr> CryptoRng for ReseedingRng<R, Rsdr>
 where
     R: BlockRngCore<Item = u32> + SeedableRng + CryptoBlockRng,
-    Rsdr: CryptoRng,
+    Rsdr: TryCryptoRng,
 {
 }
 
@@ -156,7 +153,7 @@ struct ReseedingCore<R, Rsdr> {
 impl<R, Rsdr> BlockRngCore for ReseedingCore<R, Rsdr>
 where
     R: BlockRngCore + SeedableRng,
-    Rsdr: RngCore,
+    Rsdr: TryRngCore,
 {
     type Item = <R as BlockRngCore>::Item;
     type Results = <R as BlockRngCore>::Results;
@@ -177,22 +174,20 @@ where
 impl<R, Rsdr> ReseedingCore<R, Rsdr>
 where
     R: BlockRngCore + SeedableRng,
-    Rsdr: RngCore,
+    Rsdr: TryRngCore,
 {
     /// Create a new `ReseedingCore`.
     fn new(rng: R, threshold: u64, reseeder: Rsdr) -> Self {
-        use ::core::i64::MAX;
-
         // Because generating more values than `i64::MAX` takes centuries on
         // current hardware, we just clamp to that value.
         // Also we set a threshold of 0, which indicates no limit, to that
         // value.
         let threshold = if threshold == 0 {
-            MAX
-        } else if threshold <= MAX as u64 {
+            i64::MAX
+        } else if threshold <= i64::MAX as u64 {
             threshold as i64
         } else {
-            MAX
+            i64::MAX
         };
 
         ReseedingCore {
@@ -204,8 +199,8 @@ where
     }
 
     /// Reseed the internal PRNG.
-    fn reseed(&mut self) -> Result<(), Error> {
-        R::from_rng(&mut self.reseeder).map(|result| {
+    fn reseed(&mut self) -> Result<(), Rsdr::Error> {
+        R::try_from_rng(&mut self.reseeder).map(|result| {
             self.bytes_until_reseed = self.threshold;
             self.inner = result
         })
@@ -230,7 +225,7 @@ where
 impl<R, Rsdr> Clone for ReseedingCore<R, Rsdr>
 where
     R: BlockRngCore + SeedableRng + Clone,
-    Rsdr: RngCore + Clone,
+    Rsdr: TryRngCore + Clone,
 {
     fn clone(&self) -> ReseedingCore<R, Rsdr> {
         ReseedingCore {
@@ -245,22 +240,23 @@ where
 impl<R, Rsdr> CryptoBlockRng for ReseedingCore<R, Rsdr>
 where
     R: BlockRngCore<Item = u32> + SeedableRng + CryptoBlockRng,
-    Rsdr: CryptoRng,
+    Rsdr: TryCryptoRng,
 {
 }
 
 #[cfg(feature = "std_rng")]
 #[cfg(test)]
 mod test {
-    use super::ReseedingRng;
+    use crate::{Rng, SeedableRng};
     use crate::rngs::mock::StepRng;
     use crate::rngs::std::Core;
-    use crate::{Rng, SeedableRng};
+
+    use super::ReseedingRng;
 
     #[test]
     fn test_reseeding() {
         let mut zero = StepRng::new(0, 0);
-        let rng = Core::from_rng(&mut zero).unwrap();
+        let rng = Core::from_rng(&mut zero);
         let thresh = 1; // reseed every time the buffer is exhausted
         let mut reseeding = ReseedingRng::new(rng, thresh, zero);
 
@@ -278,11 +274,10 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::redundant_clone)]
     fn test_clone_reseeding() {
-        #![allow(clippy::redundant_clone)]
-
         let mut zero = StepRng::new(0, 0);
-        let rng = Core::from_rng(&mut zero).unwrap();
+        let rng = Core::from_rng(&mut zero);
         let mut rng1 = ReseedingRng::new(rng, 32 * 4, zero);
 
         let first: u32 = rng1.gen();
