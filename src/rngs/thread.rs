@@ -9,14 +9,15 @@
 //! Thread-local random number generator
 
 use core::cell::UnsafeCell;
+use std::fmt;
 use std::rc::Rc;
 use std::thread_local;
-use std::fmt;
+
+use rand_core::{CryptoRng, RngCore, SeedableRng};
 
 use super::std::Core;
-use crate::rngs::ReseedingRng;
 use crate::rngs::OsRng;
-use crate::{CryptoRng, Error, RngCore, SeedableRng};
+use crate::rngs::ReseedingRng;
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
 //
@@ -76,7 +77,10 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 ///
 /// [`ReseedingRng`]: crate::rngs::ReseedingRng
 /// [`StdRng`]: crate::rngs::StdRng
-#[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))))]
+#[cfg_attr(
+    doc_cfg,
+    doc(cfg(all(feature = "std", feature = "std_rng", feature = "getrandom")))
+)]
 #[derive(Clone)]
 pub struct ThreadRng {
     // Rc is explicitly !Send and !Sync
@@ -87,7 +91,7 @@ impl ThreadRng {
     /// Immediately reseed the generator
     ///
     /// This discards any remaining random data in the cache.
-    pub fn reseed(&mut self) -> Result<(), Error> {
+    pub fn reseed(&mut self) -> Result<(), rand_core::getrandom::Error> {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
@@ -106,7 +110,7 @@ thread_local!(
     // We require Rc<..> to avoid premature freeing when thread_rng is used
     // within thread-local destructors. See #968.
     static THREAD_RNG_KEY: Rc<UnsafeCell<ReseedingRng<Core, OsRng>>> = {
-        let r = Core::from_rng(OsRng).unwrap_or_else(|err|
+        let r = Core::try_from_os_rng().unwrap_or_else(|err|
                 panic!("could not initialize thread_rng: {}", err));
         let rng = ReseedingRng::new(r,
                                     THREAD_RNG_RESEED_THRESHOLD,
@@ -132,7 +136,10 @@ thread_local!(
 /// println!("A simulated die roll: {}", rng.gen_range(1..=6));
 /// # }
 /// ```
-#[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))))]
+#[cfg_attr(
+    doc_cfg,
+    doc(cfg(all(feature = "std", feature = "std_rng", feature = "getrandom")))
+)]
 pub fn thread_rng() -> ThreadRng {
     let rng = THREAD_RNG_KEY.with(|t| t.clone());
     ThreadRng { rng }
@@ -161,23 +168,18 @@ impl RngCore for ThreadRng {
         rng.next_u64()
     }
 
+    #[inline(always)]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
         rng.fill_bytes(dest)
     }
-
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        // SAFETY: We must make sure to stop using `rng` before anyone else
-        // creates another mutable reference
-        let rng = unsafe { &mut *self.rng.get() };
-        rng.try_fill_bytes(dest)
-    }
 }
 
 impl CryptoRng for ThreadRng {}
 
+rand_core::impl_try_crypto_rng_from_crypto_rng!(ThreadRng);
 
 #[cfg(test)]
 mod test {
@@ -193,6 +195,9 @@ mod test {
     fn test_debug_output() {
         // We don't care about the exact output here, but it must not include
         // private CSPRNG state or the cache stored by BlockRng!
-        assert_eq!(std::format!("{:?}", crate::thread_rng()), "ThreadRng { .. }");
+        assert_eq!(
+            std::format!("{:?}", crate::thread_rng()),
+            "ThreadRng { .. }"
+        );
     }
 }

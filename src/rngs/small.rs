@@ -8,7 +8,7 @@
 
 //! A small fast RNG
 
-use rand_core::{Error, RngCore, SeedableRng};
+use rand_core::{RngCore, SeedableRng};
 
 #[cfg(target_pointer_width = "64")]
 type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
@@ -55,14 +55,11 @@ impl RngCore for SmallRng {
 
     #[inline(always)]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.0.fill_bytes(dest);
-    }
-
-    #[inline(always)]
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.0.try_fill_bytes(dest)
+        self.0.fill_bytes(dest)
     }
 }
+
+rand_core::impl_try_rng_from_rng_core!(SmallRng);
 
 impl SmallRng {
     /// Construct an instance seeded from another `Rng`
@@ -76,8 +73,8 @@ impl SmallRng {
     /// let rng = SmallRng::from_rng(rand::thread_rng());
     /// ```
     #[inline(always)]
-    pub fn from_rng<R: RngCore>(rng: R) -> Result<Self, Error> {
-        Rng::from_rng(rng).map(SmallRng)
+    pub fn from_rng<R: RngCore>(rng: R) -> Self {
+        Self(Rng::from_rng(rng))
     }
 
     /// Construct an instance seeded from the thread-local RNG

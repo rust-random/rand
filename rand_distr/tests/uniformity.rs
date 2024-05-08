@@ -23,7 +23,7 @@ fn unit_sphere() {
     let h = Histogram100::with_const_width(-1., 1.);
     let mut histograms = [h.clone(), h.clone(), h];
     let dist = rand_distr::UnitSphere;
-    let mut rng = rand_pcg::Pcg32::from_entropy();
+    let mut rng = rand_pcg::Pcg32::from_os_rng();
     for _ in 0..N_SAMPLES {
         let v: [f64; 3] = dist.sample(&mut rng);
         for i in 0..N_DIM {
@@ -51,7 +51,7 @@ fn unit_circle() {
     use core::f64::consts::PI;
     let mut h = Histogram100::with_const_width(-PI, PI);
     let dist = rand_distr::UnitCircle;
-    let mut rng = rand_pcg::Pcg32::from_entropy();
+    let mut rng = rand_pcg::Pcg32::from_os_rng();
     for _ in 0..N_SAMPLES {
         let v: [f64; 2] = dist.sample(&mut rng);
         h.add(v[0].atan2(v[1])).unwrap();

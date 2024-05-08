@@ -42,7 +42,7 @@
 //! -   `from_seed` accepts a type specific to the PRNG
 //! -   `from_rng` allows a PRNG to be seeded from any other RNG
 //! -   `seed_from_u64` allows any PRNG to be seeded from a `u64` insecurely
-//! -   `from_entropy` securely seeds a PRNG from fresh entropy
+//! -   `from_os_rng` securely seeds a PRNG from system randomness source
 //!
 //! Use the [`rand_core`] crate when implementing your own RNGs.
 //!
@@ -102,18 +102,21 @@ pub use reseeding::ReseedingRng;
 pub mod mock; // Public so we don't export `StepRng` directly, making it a bit
               // more clear it is intended for testing.
 
-#[cfg(all(feature = "small_rng", target_pointer_width = "64"))]
-mod xoshiro256plusplus;
+#[cfg(feature = "small_rng")] mod small;
 #[cfg(all(feature = "small_rng", not(target_pointer_width = "64")))]
 mod xoshiro128plusplus;
-#[cfg(feature = "small_rng")] mod small;
+#[cfg(all(feature = "small_rng", target_pointer_width = "64"))]
+mod xoshiro256plusplus;
 
 #[cfg(feature = "std_rng")] mod std;
-#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))] pub(crate) mod thread;
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+pub(crate) mod thread;
 
 #[cfg(feature = "small_rng")] pub use self::small::SmallRng;
 #[cfg(feature = "std_rng")] pub use self::std::StdRng;
-#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))] pub use self::thread::ThreadRng;
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+pub use self::thread::ThreadRng;
 
 #[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
-#[cfg(feature = "getrandom")] pub use rand_core::OsRng;
+#[cfg(feature = "getrandom")]
+pub use rand_core::OsRng;

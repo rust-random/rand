@@ -14,7 +14,7 @@
 //!
 //! ```
 //! use rand::prelude::*;
-//! # let mut r = StdRng::from_rng(thread_rng()).unwrap();
+//! # let mut r = StdRng::from_rng(thread_rng());
 //! # let _: f32 = r.random();
 //! ```
 
@@ -23,7 +23,8 @@
 #[doc(no_inline)]
 pub use crate::rngs::SmallRng;
 #[cfg(feature = "std_rng")]
-#[doc(no_inline)] pub use crate::rngs::StdRng;
+#[doc(no_inline)]
+pub use crate::rngs::StdRng;
 #[doc(no_inline)]
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 pub use crate::rngs::ThreadRng;

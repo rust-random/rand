@@ -57,8 +57,8 @@
     clippy::nonminimal_bool
 )]
 
-#[cfg(feature = "std")] extern crate std;
 #[cfg(feature = "alloc")] extern crate alloc;
+#[cfg(feature = "std")] extern crate std;
 
 #[allow(unused)]
 macro_rules! trace { ($($x:tt)*) => (
@@ -92,7 +92,7 @@ macro_rules! error { ($($x:tt)*) => (
 ) }
 
 // Re-exports from rand_core
-pub use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
+pub use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 
 // Public modules
 pub mod distributions;
@@ -154,7 +154,10 @@ use crate::distributions::{Distribution, Standard};
 /// [`Standard`]: distributions::Standard
 /// [`ThreadRng`]: rngs::ThreadRng
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-#[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))))]
+#[cfg_attr(
+    doc_cfg,
+    doc(cfg(all(feature = "std", feature = "std_rng", feature = "getrandom")))
+)]
 #[inline]
 pub fn random<T>() -> T
 where Standard: Distribution<T> {

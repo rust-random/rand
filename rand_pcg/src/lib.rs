@@ -47,7 +47,7 @@
 //! use rand::{Rng, SeedableRng};
 //! use rand_pcg::Pcg64Mcg;
 //!
-//! let mut rng = Pcg64Mcg::from_entropy();
+//! let mut rng = Pcg64Mcg::from_os_rng();
 //! let x: f64 = rng.gen();
 //! ```
 
