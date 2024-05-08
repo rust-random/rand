@@ -108,7 +108,11 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         X: Weight,
     {
         let mut iter = weights.into_iter();
-        let mut total_weight: X = iter.next().ok_or(WeightError::InvalidInput)?.borrow().clone();
+        let mut total_weight: X = iter
+            .next()
+            .ok_or(WeightError::InvalidInput)?
+            .borrow()
+            .clone();
 
         let zero = X::ZERO;
         if !(total_weight >= zero) {
@@ -252,9 +256,9 @@ pub struct WeightedIndexIter<'a, X: SampleUniform + PartialOrd> {
 }
 
 impl<'a, X> Debug for WeightedIndexIter<'a, X>
-    where
-        X: SampleUniform + PartialOrd + Debug,
-        X::Sampler: Debug,
+where
+    X: SampleUniform + PartialOrd + Debug,
+    X::Sampler: Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("WeightedIndexIter")
@@ -278,10 +282,7 @@ where
 
 impl<'a, X> Iterator for WeightedIndexIter<'a, X>
 where
-    X: for<'b> core::ops::SubAssign<&'b X>
-        + SampleUniform
-        + PartialOrd
-        + Clone,
+    X: for<'b> core::ops::SubAssign<&'b X> + SampleUniform + PartialOrd + Clone,
 {
     type Item = X;
 
@@ -315,15 +316,16 @@ impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
     /// ```
     pub fn weight(&self, index: usize) -> Option<X>
     where
-        X: for<'a> core::ops::SubAssign<&'a X>
+        X: for<'a> core::ops::SubAssign<&'a X>,
     {
-        let mut weight = if index < self.cumulative_weights.len() {
-            self.cumulative_weights[index].clone()
-        } else if index == self.cumulative_weights.len() {
-            self.total_weight.clone()
-        } else {
-            return None;
+        use core::cmp::Ordering::*;
+
+        let mut weight = match index.cmp(&self.cumulative_weights.len()) {
+            Less => self.cumulative_weights[index].clone(),
+            Equal => self.total_weight.clone(),
+            Greater => return None,
         };
+
         if index > 0 {
             weight -= &self.cumulative_weights[index - 1];
         }
@@ -348,7 +350,7 @@ impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
     /// ```
     pub fn weights(&self) -> WeightedIndexIter<'_, X>
     where
-        X: for<'a> core::ops::SubAssign<&'a X>
+        X: for<'a> core::ops::SubAssign<&'a X>,
     {
         WeightedIndexIter {
             weighted_index: self,
@@ -387,6 +389,7 @@ pub trait Weight: Clone {
     /// -   `Result::Err`: Returns an error when `Self` cannot represent the
     ///     result of `self + v` (i.e. overflow). The value of `self` should be
     ///     discarded.
+    #[allow(clippy::result_unit_err)]
     fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()>;
 }
 
@@ -417,6 +420,7 @@ macro_rules! impl_weight_float {
     ($t:ty) => {
         impl Weight for $t {
             const ZERO: Self = 0.0;
+
             fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()> {
                 // Floats have an explicit representation for overflow
                 *self += *v;
@@ -435,7 +439,7 @@ mod test {
     #[cfg(feature = "serde1")]
     #[test]
     fn test_weightedindex_serde1() {
-        let weighted_index = WeightedIndex::new(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).unwrap();
+        let weighted_index = WeightedIndex::new([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).unwrap();
 
         let ser_weighted_index = bincode::serialize(&weighted_index).unwrap();
         let de_weighted_index: WeightedIndex<i32> =
@@ -451,20 +455,20 @@ mod test {
     #[test]
     fn test_accepting_nan() {
         assert_eq!(
-            WeightedIndex::new(&[f32::NAN, 0.5]).unwrap_err(),
+            WeightedIndex::new([f32::NAN, 0.5]).unwrap_err(),
             WeightError::InvalidWeight,
         );
         assert_eq!(
-            WeightedIndex::new(&[f32::NAN]).unwrap_err(),
+            WeightedIndex::new([f32::NAN]).unwrap_err(),
             WeightError::InvalidWeight,
         );
         assert_eq!(
-            WeightedIndex::new(&[0.5, f32::NAN]).unwrap_err(),
+            WeightedIndex::new([0.5, f32::NAN]).unwrap_err(),
             WeightError::InvalidWeight,
         );
 
         assert_eq!(
-            WeightedIndex::new(&[0.5, 7.0])
+            WeightedIndex::new([0.5, 7.0])
                 .unwrap()
                 .update_weights(&[(0, &f32::NAN)])
                 .unwrap_err(),
@@ -516,10 +520,10 @@ mod test {
         verify(chosen);
 
         for _ in 0..5 {
-            assert_eq!(WeightedIndex::new(&[0, 1]).unwrap().sample(&mut r), 1);
-            assert_eq!(WeightedIndex::new(&[1, 0]).unwrap().sample(&mut r), 0);
+            assert_eq!(WeightedIndex::new([0, 1]).unwrap().sample(&mut r), 1);
+            assert_eq!(WeightedIndex::new([1, 0]).unwrap().sample(&mut r), 0);
             assert_eq!(
-                WeightedIndex::new(&[0, 0, 0, 0, 10, 0])
+                WeightedIndex::new([0, 0, 0, 0, 10, 0])
                     .unwrap()
                     .sample(&mut r),
                 4
@@ -531,19 +535,19 @@ mod test {
             WeightError::InvalidInput
         );
         assert_eq!(
-            WeightedIndex::new(&[0]).unwrap_err(),
+            WeightedIndex::new([0]).unwrap_err(),
             WeightError::InsufficientNonZero
         );
         assert_eq!(
-            WeightedIndex::new(&[10, 20, -1, 30]).unwrap_err(),
+            WeightedIndex::new([10, 20, -1, 30]).unwrap_err(),
             WeightError::InvalidWeight
         );
         assert_eq!(
-            WeightedIndex::new(&[-10, 20, 1, 30]).unwrap_err(),
+            WeightedIndex::new([-10, 20, 1, 30]).unwrap_err(),
             WeightError::InvalidWeight
         );
         assert_eq!(
-            WeightedIndex::new(&[-10]).unwrap_err(),
+            WeightedIndex::new([-10]).unwrap_err(),
             WeightError::InvalidWeight
         );
     }
@@ -649,7 +653,9 @@ mod test {
     #[test]
     fn value_stability() {
         fn test_samples<X: Weight + SampleUniform + PartialOrd, I>(
-            weights: I, buf: &mut [usize], expected: &[usize],
+            weights: I,
+            buf: &mut [usize],
+            expected: &[usize],
         ) where
             I: IntoIterator,
             I::Item: SampleBorrow<X>,
@@ -665,17 +671,17 @@ mod test {
 
         let mut buf = [0; 10];
         test_samples(
-            &[1i32, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1i32, 1, 1, 1, 1, 1, 1, 1, 1],
             &mut buf,
             &[0, 6, 2, 6, 3, 4, 7, 8, 2, 5],
         );
         test_samples(
-            &[0.7f32, 0.1, 0.1, 0.1],
+            [0.7f32, 0.1, 0.1, 0.1],
             &mut buf,
             &[0, 0, 0, 1, 0, 0, 2, 3, 0, 0],
         );
         test_samples(
-            &[1.0f64, 0.999, 0.998, 0.997],
+            [1.0f64, 0.999, 0.998, 0.997],
             &mut buf,
             &[2, 2, 1, 3, 2, 1, 3, 3, 2, 1],
         );
@@ -683,7 +689,7 @@ mod test {
 
     #[test]
     fn weighted_index_distributions_can_be_compared() {
-        assert_eq!(WeightedIndex::new(&[1, 2]), WeightedIndex::new(&[1, 2]));
+        assert_eq!(WeightedIndex::new([1, 2]), WeightedIndex::new([1, 2]));
     }
 
     #[test]

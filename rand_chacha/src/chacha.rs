@@ -8,8 +8,10 @@
 
 //! The ChaCha random number generator.
 
-#[cfg(not(feature = "std"))] use core;
-#[cfg(feature = "std")] use std as core;
+#[cfg(not(feature = "std"))]
+use core;
+#[cfg(feature = "std")]
+use std as core;
 
 use self::core::fmt;
 use crate::guts::ChaCha;
@@ -27,7 +29,8 @@ const BLOCK_WORDS: u8 = 16;
 #[repr(transparent)]
 pub struct Array64<T>([T; 64]);
 impl<T> Default for Array64<T>
-where T: Default
+where
+    T: Default,
 {
     #[rustfmt::skip]
     fn default() -> Self {
@@ -54,7 +57,8 @@ impl<T> AsMut<[T]> for Array64<T> {
     }
 }
 impl<T> Clone for Array64<T>
-where T: Copy + Default
+where
+    T: Copy + Default,
 {
     fn clone(&self) -> Self {
         let mut new = Self::default();
@@ -275,20 +279,25 @@ macro_rules! chacha_impl {
         #[cfg(feature = "serde1")]
         impl Serialize for $ChaChaXRng {
             fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-            where S: Serializer {
+            where
+                S: Serializer,
+            {
                 $abst::$ChaChaXRng::from(self).serialize(s)
             }
         }
         #[cfg(feature = "serde1")]
         impl<'de> Deserialize<'de> for $ChaChaXRng {
             fn deserialize<D>(d: D) -> Result<Self, D::Error>
-            where D: Deserializer<'de> {
+            where
+                D: Deserializer<'de>,
+            {
                 $abst::$ChaChaXRng::deserialize(d).map(|x| Self::from(&x))
             }
         }
 
         mod $abst {
-            #[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
+            #[cfg(feature = "serde1")]
+            use serde::{Deserialize, Serialize};
 
             // The abstract state of a ChaCha stream, independent of implementation choices. The
             // comparison and serialization of this object is considered a semver-covered part of
@@ -353,7 +362,8 @@ chacha_impl!(
 mod test {
     use rand_core::{RngCore, SeedableRng};
 
-    #[cfg(feature = "serde1")] use super::{ChaCha12Rng, ChaCha20Rng, ChaCha8Rng};
+    #[cfg(feature = "serde1")]
+    use super::{ChaCha12Rng, ChaCha20Rng, ChaCha8Rng};
 
     type ChaChaRng = super::ChaCha20Rng;
 

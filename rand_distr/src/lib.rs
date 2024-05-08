@@ -21,6 +21,7 @@
 )]
 #![allow(clippy::neg_cmp_op_on_partial_ord)] // suggested fix too verbose
 #![no_std]
+#![allow(unexpected_cfgs)]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 
 //! Generating random samples from probability distributions.
@@ -178,10 +179,14 @@ mod test {
     macro_rules! assert_almost_eq {
         ($a:expr, $b:expr, $prec:expr) => {
             let diff = ($a - $b).abs();
-            assert!(diff <= $prec,
+            assert!(
+                diff <= $prec,
                 "assertion failed: `abs(left - right) = {:.1e} < {:e}`, \
                     (left: `{}`, right: `{}`)",
-                diff, $prec, $a, $b
+                diff,
+                $prec,
+                $a,
+                $b
             );
         };
     }

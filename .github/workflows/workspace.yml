@@ -1,0 +1,33 @@
+name: Workspace
+
+on:
+  pull_request:
+    paths-ignore:
+      - README.md
+      - "benches/**"
+  push:
+    branches: master
+    paths-ignore:
+      - README.md
+      - "benches/**"
+
+jobs:
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.78.0
+          components: clippy
+      - run: cargo clippy --all --all-targets -- -D warnings
+
+  rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rustfmt
+      - run: cargo fmt --all -- --check

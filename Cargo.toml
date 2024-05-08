@@ -58,12 +58,12 @@ unbiased = []
 
 [workspace]
 members = [
-    "benches",
     "rand_core",
     "rand_distr",
     "rand_chacha",
     "rand_pcg",
 ]
+exclude = ["benches"]
 
 [dependencies]
 rand_core = { path = "rand_core", version = "=0.9.0-alpha.1", default-features = false }

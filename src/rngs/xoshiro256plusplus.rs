@@ -9,7 +9,8 @@
 use rand_core::impls::fill_bytes_via_next;
 use rand_core::le::read_u64_into;
 use rand_core::{RngCore, SeedableRng};
-#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde1")]
+use serde::{Deserialize, Serialize};
 
 /// A xoshiro256++ random number generator.
 ///

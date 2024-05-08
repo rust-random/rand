@@ -11,13 +11,13 @@
 
 use super::WeightError;
 use crate::{uniform::SampleUniform, Distribution, Uniform};
+use alloc::{boxed::Box, vec, vec::Vec};
 use core::fmt;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use rand::Rng;
-use alloc::{boxed::Box, vec, vec::Vec};
 #[cfg(feature = "serde1")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///
@@ -67,8 +67,14 @@ use serde::{Serialize, Deserialize};
 /// [`Uniform<W>::sample`]: Distribution::sample
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde1", serde(bound(serialize = "W: Serialize, W::Sampler: Serialize")))]
-#[cfg_attr(feature = "serde1", serde(bound(deserialize = "W: Deserialize<'de>, W::Sampler: Deserialize<'de>")))]
+#[cfg_attr(
+    feature = "serde1",
+    serde(bound(serialize = "W: Serialize, W::Sampler: Serialize"))
+)]
+#[cfg_attr(
+    feature = "serde1",
+    serde(bound(deserialize = "W: Deserialize<'de>, W::Sampler: Deserialize<'de>"))
+)]
 pub struct WeightedAliasIndex<W: AliasableWeight> {
     aliases: Box<[u32]>,
     no_alias_odds: Box<[W]>,
@@ -257,7 +263,8 @@ where
 }
 
 impl<W: AliasableWeight> Clone for WeightedAliasIndex<W>
-where Uniform<W>: Clone
+where
+    Uniform<W>: Clone,
 {
     fn clone(&self) -> Self {
         Self {
@@ -308,7 +315,7 @@ pub trait AliasableWeight:
 macro_rules! impl_weight_for_float {
     ($T: ident) => {
         impl AliasableWeight for $T {
-            const MAX: Self = ::core::$T::MAX;
+            const MAX: Self = $T::MAX;
             const ZERO: Self = 0.0;
 
             fn try_from_u32_lossy(n: u32) -> Option<Self> {
@@ -337,7 +344,7 @@ fn pairwise_sum<T: AliasableWeight>(values: &[T]) -> T {
 macro_rules! impl_weight_for_int {
     ($T: ident) => {
         impl AliasableWeight for $T {
-            const MAX: Self = ::core::$T::MAX;
+            const MAX: Self = $T::MAX;
             const ZERO: Self = 0;
 
             fn try_from_u32_lossy(n: u32) -> Option<Self> {
@@ -444,7 +451,9 @@ mod test {
     }
 
     fn test_weighted_index<W: AliasableWeight, F: Fn(W) -> f64>(w_to_f64: F)
-    where WeightedAliasIndex<W>: fmt::Debug {
+    where
+        WeightedAliasIndex<W>: fmt::Debug,
+    {
         const NUM_WEIGHTS: u32 = 10;
         const ZERO_WEIGHT_INDEX: u32 = 3;
         const NUM_SAMPLES: u32 = 15000;
@@ -455,7 +464,8 @@ mod test {
             let random_weight_distribution = Uniform::new_inclusive(
                 W::ZERO,
                 W::MAX / W::try_from_u32_lossy(NUM_WEIGHTS).unwrap(),
-            ).unwrap();
+            )
+            .unwrap();
             for _ in 0..NUM_WEIGHTS {
                 weights.push(rng.sample(&random_weight_distribution));
             }
@@ -497,7 +507,11 @@ mod test {
 
     #[test]
     fn value_stability() {
-        fn test_samples<W: AliasableWeight>(weights: Vec<W>, buf: &mut [usize], expected: &[usize]) {
+        fn test_samples<W: AliasableWeight>(
+            weights: Vec<W>,
+            buf: &mut [usize],
+            expected: &[usize],
+        ) {
             assert_eq!(buf.len(), expected.len());
             let distr = WeightedAliasIndex::new(weights).unwrap();
             let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
@@ -508,14 +522,20 @@ mod test {
         }
 
         let mut buf = [0; 10];
-        test_samples(vec![1i32, 1, 1, 1, 1, 1, 1, 1, 1], &mut buf, &[
-            6, 5, 7, 5, 8, 7, 6, 2, 3, 7,
-        ]);
-        test_samples(vec![0.7f32, 0.1, 0.1, 0.1], &mut buf, &[
-            2, 0, 0, 0, 0, 0, 0, 0, 1, 3,
-        ]);
-        test_samples(vec![1.0f64, 0.999, 0.998, 0.997], &mut buf, &[
-            2, 1, 2, 3, 2, 1, 3, 2, 1, 1,
-        ]);
+        test_samples(
+            vec![1i32, 1, 1, 1, 1, 1, 1, 1, 1],
+            &mut buf,
+            &[6, 5, 7, 5, 8, 7, 6, 2, 3, 7],
+        );
+        test_samples(
+            vec![0.7f32, 0.1, 0.1, 0.1],
+            &mut buf,
+            &[2, 0, 0, 0, 0, 0, 0, 0, 1, 3],
+        );
+        test_samples(
+            vec![1.0f64, 0.999, 0.998, 0.997],
+            &mut buf,
+            &[2, 1, 2, 3, 2, 1, 3, 2, 1, 1],
+        );
     }
 }

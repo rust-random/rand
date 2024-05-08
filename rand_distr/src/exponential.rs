@@ -10,10 +10,10 @@
 //! The exponential distribution.
 
 use crate::utils::ziggurat;
-use num_traits::Float;
 use crate::{ziggurat_tables, Distribution};
-use rand::Rng;
 use core::fmt;
+use num_traits::Float;
+use rand::Rng;
 
 /// Samples floating-point numbers according to the exponential distribution,
 /// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
@@ -61,7 +61,7 @@ impl Distribution<f64> for Exp1 {
         }
         #[inline]
         fn zero_case<R: Rng + ?Sized>(rng: &mut R, _u: f64) -> f64 {
-            ziggurat_tables::ZIG_EXP_R - rng.gen::<f64>().ln()
+            ziggurat_tables::ZIG_EXP_R - rng.random::<f64>().ln()
         }
 
         ziggurat(
@@ -94,7 +94,9 @@ impl Distribution<f64> for Exp1 {
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Exp<F>
-where F: Float, Exp1: Distribution<F>
+where
+    F: Float,
+    Exp1: Distribution<F>,
 {
     /// `lambda` stored as `1/lambda`, since this is what we scale by.
     lambda_inverse: F,
@@ -120,16 +122,18 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 impl<F: Float> Exp<F>
-where F: Float, Exp1: Distribution<F>
+where
+    F: Float,
+    Exp1: Distribution<F>,
 {
     /// Construct a new `Exp` with the given shape parameter
     /// `lambda`.
-    /// 
+    ///
     /// # Remarks
-    /// 
+    ///
     /// For custom types `N` implementing the [`Float`] trait,
     /// the case `lambda = 0` is handled as follows: each sample corresponds
-    /// to a sample from an `Exp1` multiplied by `1 / 0`. Primitive types 
+    /// to a sample from an `Exp1` multiplied by `1 / 0`. Primitive types
     /// yield infinity, since `1 / 0 = infinity`.
     #[inline]
     pub fn new(lambda: F) -> Result<Exp<F>, Error> {
@@ -143,7 +147,9 @@ where F: Float, Exp1: Distribution<F>
 }
 
 impl<F> Distribution<F> for Exp<F>
-where F: Float, Exp1: Distribution<F>
+where
+    F: Float,
+    Exp1: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         rng.sample(Exp1) * self.lambda_inverse

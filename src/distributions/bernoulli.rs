@@ -13,7 +13,7 @@ use crate::Rng;
 use core::fmt;
 
 #[cfg(feature = "serde1")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// The Bernoulli distribution.
 ///
@@ -151,7 +151,8 @@ mod test {
     #[cfg(feature = "serde1")]
     fn test_serializing_deserializing_bernoulli() {
         let coin_flip = Bernoulli::new(0.5).unwrap();
-        let de_coin_flip: Bernoulli = bincode::deserialize(&bincode::serialize(&coin_flip).unwrap()).unwrap();
+        let de_coin_flip: Bernoulli =
+            bincode::deserialize(&bincode::serialize(&coin_flip).unwrap()).unwrap();
 
         assert_eq!(coin_flip.p_int, de_coin_flip.p_int);
     }
@@ -208,9 +209,10 @@ mod test {
         for x in &mut buf {
             *x = rng.sample(distr);
         }
-        assert_eq!(buf, [
-            true, false, false, true, false, false, true, true, true, true
-        ]);
+        assert_eq!(
+            buf,
+            [true, false, false, true, false, false, true, true, true, true]
+        );
     }
 
     #[test]

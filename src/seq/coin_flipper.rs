@@ -10,7 +10,7 @@ use crate::RngCore;
 
 pub(crate) struct CoinFlipper<R: RngCore> {
     pub rng: R,
-    chunk: u32, //TODO(opt): this should depend on RNG word size
+    chunk: u32, // TODO(opt): this should depend on RNG word size
     chunk_remaining: u32,
 }
 
@@ -92,7 +92,7 @@ impl<R: RngCore> CoinFlipper<R> {
                 // If n * 2^c > `usize::MAX` we always return `true` anyway
                 n = n.saturating_mul(2_usize.pow(c));
             } else {
-                //At least one tail
+                // At least one tail
                 if c == 1 {
                     // Calculate 2n - d.
                     // We need to use wrapping as 2n might be greater than `usize::MAX`

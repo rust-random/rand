@@ -50,6 +50,7 @@
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![no_std]
 #![cfg_attr(feature = "simd_support", feature(portable_simd))]
+#![allow(unexpected_cfgs)]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(
     clippy::float_cmp,
@@ -57,8 +58,10 @@
     clippy::nonminimal_bool
 )]
 
-#[cfg(feature = "alloc")] extern crate alloc;
-#[cfg(feature = "std")] extern crate std;
+#[cfg(feature = "alloc")]
+extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
 
 #[allow(unused)]
 macro_rules! trace { ($($x:tt)*) => (
@@ -160,7 +163,9 @@ use crate::distributions::{Distribution, Standard};
 )]
 #[inline]
 pub fn random<T>() -> T
-where Standard: Distribution<T> {
+where
+    Standard: Distribution<T>,
+{
     thread_rng().random()
 }
 

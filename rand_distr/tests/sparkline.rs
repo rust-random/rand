@@ -16,7 +16,7 @@ pub fn render_u64(data: &[u64], buffer: &mut String) {
     match data.len() {
         0 => {
             return;
-        },
+        }
         1 => {
             if data[0] == 0 {
                 buffer.push(TICKS[0]);
@@ -24,8 +24,8 @@ pub fn render_u64(data: &[u64], buffer: &mut String) {
                 buffer.push(TICKS[N - 1]);
             }
             return;
-        },
-        _ => {},
+        }
+        _ => {}
     }
     let max = data.iter().max().unwrap();
     let min = data.iter().min().unwrap();
@@ -56,7 +56,7 @@ pub fn render_f64(data: &[f64], buffer: &mut String) {
     match data.len() {
         0 => {
             return;
-        },
+        }
         1 => {
             if data[0] == 0. {
                 buffer.push(TICKS[0]);
@@ -64,16 +64,14 @@ pub fn render_f64(data: &[f64], buffer: &mut String) {
                 buffer.push(TICKS[N - 1]);
             }
             return;
-        },
-        _ => {},
+        }
+        _ => {}
     }
     for x in data {
         assert!(x.is_finite(), "can only render finite values");
     }
-    let max = data.iter().fold(
-        f64::NEG_INFINITY, |a, &b| a.max(b));
-    let min = data.iter().fold(
-        f64::INFINITY, |a, &b| a.min(b));
+    let max = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let min = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
     let scale = ((N - 1) as f64) / (max - min);
     for x in data {
         let tick = ((x - min) * scale) as usize;

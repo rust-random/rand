@@ -44,7 +44,8 @@ use alloc::vec::Vec;
 
 #[cfg(feature = "alloc")]
 use crate::distributions::uniform::{SampleBorrow, SampleUniform};
-#[cfg(feature = "alloc")] use crate::distributions::Weight;
+#[cfg(feature = "alloc")]
+use crate::distributions::Weight;
 use crate::Rng;
 
 use self::coin_flipper::CoinFlipper;
@@ -167,7 +168,9 @@ pub trait IndexedRandom: Index<usize> {
     #[cfg(feature = "alloc")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_weighted<R, F, B, X>(
-        &self, rng: &mut R, weight: F,
+        &self,
+        rng: &mut R,
+        weight: F,
     ) -> Result<&Self::Output, WeightError>
     where
         R: Rng + ?Sized,
@@ -212,13 +215,15 @@ pub trait IndexedRandom: Index<usize> {
     /// println!("{:?}", choices.choose_multiple_weighted(&mut rng, 2, |item| item.1).unwrap().collect::<Vec<_>>());
     /// ```
     /// [`choose_multiple`]: IndexedRandom::choose_multiple
-    //
     // Note: this is feature-gated on std due to usage of f64::powf.
     // If necessary, we may use alloc+libm as an alternative (see PR #1089).
     #[cfg(feature = "std")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     fn choose_multiple_weighted<R, F, X>(
-        &self, rng: &mut R, amount: usize, weight: F,
+        &self,
+        rng: &mut R,
+        amount: usize,
+        weight: F,
     ) -> Result<SliceChooseIter<Self, Self::Output>, WeightError>
     where
         Self::Output: Sized,
@@ -285,7 +290,9 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
     #[cfg(feature = "alloc")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_weighted_mut<R, F, B, X>(
-        &mut self, rng: &mut R, weight: F,
+        &mut self,
+        rng: &mut R,
+        weight: F,
     ) -> Result<&mut Self::Output, WeightError>
     where
         R: Rng + ?Sized,
@@ -358,7 +365,9 @@ pub trait SliceRandom: IndexedMutRandom {
     ///
     /// For slices, complexity is `O(m)` where `m = amount`.
     fn partial_shuffle<R>(
-        &mut self, rng: &mut R, amount: usize,
+        &mut self,
+        rng: &mut R,
+        amount: usize,
     ) -> (&mut [Self::Output], &mut [Self::Output])
     where
         Self::Output: Sized,
@@ -624,9 +633,7 @@ impl<T> SliceRandom for [T] {
         self.partial_shuffle(rng, self.len());
     }
 
-    fn partial_shuffle<R>(
-        &mut self, rng: &mut R, amount: usize,
-    ) -> (&mut [T], &mut [T])
+    fn partial_shuffle<R>(&mut self, rng: &mut R, amount: usize) -> (&mut [T], &mut [T])
     where
         R: Rng + ?Sized,
     {
@@ -1294,7 +1301,10 @@ mod test {
         fn do_test<I: Clone + Iterator<Item = u32>>(iter: I, v: &[u32]) {
             let mut rng = crate::test::rng(412);
             let mut buf = [0u32; 8];
-            assert_eq!(iter.clone().choose_multiple_fill(&mut rng, &mut buf), v.len());
+            assert_eq!(
+                iter.clone().choose_multiple_fill(&mut rng, &mut buf),
+                v.len()
+            );
             assert_eq!(&buf[0..v.len()], v);
 
             #[cfg(feature = "alloc")]
