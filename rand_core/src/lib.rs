@@ -79,6 +79,10 @@ pub mod le;
 /// in this trait directly, then use the helper functions from the
 /// [`impls`] module to implement the other methods.
 ///
+/// Implementors of [`RngCore`] SHOULD also implement the [`TryRngCore`]
+/// trait with the `Error` associated type being equal to [`Infallible`].
+/// It can be done using the [`impl_try_rng_from_rng_core!`] macro.
+///
 /// It is recommended that implementations also implement:
 ///
 /// - `Debug` with a custom implementation which *does not* print any internal
@@ -117,12 +121,15 @@ pub mod le;
 ///         impls::fill_bytes_via_next(self, dst)
 ///     }
 /// }
+///
+/// rand_core::impl_try_rng_from_rng_core!(CountingRng);
 /// ```
 ///
 /// [`rand`]: https://docs.rs/rand
 /// [`fill_bytes`]: RngCore::fill_bytes
 /// [`next_u32`]: RngCore::next_u32
 /// [`next_u64`]: RngCore::next_u64
+/// [`Infallible`]: core::convert::Infallible
 pub trait RngCore {
     /// Return the next random `u32`.
     ///
@@ -154,6 +161,10 @@ pub trait RngCore {
 /// A marker trait used to indicate that an [`RngCore`] implementation is
 /// supposed to be cryptographically secure.
 ///
+/// Implementors of [`CryptoRng`] SHOULD also implement the [`TryCryptoRng`]
+/// trait with the `Error` associated type being equal to [`Infallible`].
+/// It can be done using the [`impl_try_crypto_rng_from_crypto_rng!`] macro.
+///
 /// *Cryptographically secure generators*, also known as *CSPRNGs*, should
 /// satisfy an additional properties over other generators: given the first
 /// *k* bits of an algorithm's output
@@ -173,9 +184,22 @@ pub trait RngCore {
 /// weaknesses such as seeding from a weak entropy source or leaking state.
 ///
 /// [`BlockRngCore`]: block::BlockRngCore
+/// [`Infallible`]: core::convert::Infallible
 pub trait CryptoRng: RngCore {}
 
-/// The potentially fallible core of a random number generator.
+/// A potentially fallible version of [`RngCore`].
+///
+/// This trait is primarily used for IO-based generators such as [`OsRng`].
+///
+/// Most of higher-level generic code in the `rand` crate is built on top
+/// of the the [`RngCore`] trait. Users can transform a fallible RNG
+/// (i.e. [`TryRngCore`] implementor) into an "infallible" (but potentially
+/// panicking) RNG (i.e. [`RngCore`] implementor) using the [`UnwrapErr`] wrapper.
+///
+/// [`RngCore`] implementors also usually implement [`TryRngCore`] with the `Error`
+/// associated type being equal to [`Infallible`][core::convert::Infallible].
+/// In other words, users can use [`TryRngCore`] to generalize over fallible and
+/// infallible RNGs.
 pub trait TryRngCore {
     /// The type returned in the event of a RNG error.
     type Error: fmt::Debug + fmt::Display;
@@ -201,13 +225,13 @@ pub trait TryRngCore {
     }
 }
 
-/// A marker trait used to indicate that an [`TryRngCore`] implementation is
+/// A marker trait used to indicate that a [`TryRngCore`] implementation is
 /// supposed to be cryptographically secure.
 ///
-/// See [`CryptoRng`] docs for more information.
+/// See [`CryptoRng`] docs for more information about cryptographically secure generators.
 pub trait TryCryptoRng: TryRngCore {}
 
-/// Wrapper around [`TryCryptoRng`] implementation which implements [`RngCore`]
+/// Wrapper around [`TryRngCore`] implementation which implements [`RngCore`]
 /// by panicking on potential errors.
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct UnwrapErr<R: TryRngCore>(pub R);
