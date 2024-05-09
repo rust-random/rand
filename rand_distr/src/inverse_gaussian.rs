@@ -1,7 +1,7 @@
 use crate::{Distribution, Standard, StandardNormal};
+use core::fmt;
 use num_traits::Float;
 use rand::Rng;
-use core::fmt;
 
 /// Error type returned from `InverseGaussian::new`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -68,7 +68,9 @@ where
 {
     #[allow(clippy::many_single_char_names)]
     fn sample<R>(&self, rng: &mut R) -> F
-    where R: Rng + ?Sized {
+    where
+        R: Rng + ?Sized,
+    {
         let mu = self.mean;
         let l = self.shape;
 
@@ -79,7 +81,7 @@ where
 
         let x = mu + mu_2l * (y - (F::from(4.).unwrap() * l * y + y * y).sqrt());
 
-        let u: F = rng.gen();
+        let u: F = rng.random();
 
         if u <= mu / (mu + x) {
             return x;
@@ -112,6 +114,9 @@ mod tests {
 
     #[test]
     fn inverse_gaussian_distributions_can_be_compared() {
-        assert_eq!(InverseGaussian::new(1.0, 2.0), InverseGaussian::new(1.0, 2.0));
+        assert_eq!(
+            InverseGaussian::new(1.0, 2.0),
+            InverseGaussian::new(1.0, 2.0)
+        );
     }
 }

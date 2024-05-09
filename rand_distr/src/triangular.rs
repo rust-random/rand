@@ -7,10 +7,10 @@
 // except according to those terms.
 //! The triangular distribution.
 
-use num_traits::Float;
 use crate::{Distribution, Standard};
-use rand::Rng;
 use core::fmt;
+use num_traits::Float;
+use rand::Rng;
 
 /// The triangular distribution.
 ///
@@ -34,7 +34,9 @@ use core::fmt;
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Triangular<F>
-where F: Float, Standard: Distribution<F>
+where
+    F: Float,
+    Standard: Distribution<F>,
 {
     min: F,
     max: F,
@@ -66,7 +68,9 @@ impl fmt::Display for TriangularError {
 impl std::error::Error for TriangularError {}
 
 impl<F> Triangular<F>
-where F: Float, Standard: Distribution<F>
+where
+    F: Float,
+    Standard: Distribution<F>,
 {
     /// Set up the Triangular distribution with defined `min`, `max` and `mode`.
     #[inline]
@@ -82,7 +86,9 @@ where F: Float, Standard: Distribution<F>
 }
 
 impl<F> Distribution<F> for Triangular<F>
-where F: Float, Standard: Distribution<F>
+where
+    F: Float,
+    Standard: Distribution<F>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
@@ -106,7 +112,7 @@ mod test {
     #[test]
     fn test_triangular() {
         let mut half_rng = mock::StepRng::new(0x8000_0000_0000_0000, 0);
-        assert_eq!(half_rng.gen::<f64>(), 0.5);
+        assert_eq!(half_rng.random::<f64>(), 0.5);
         for &(min, max, mode, median) in &[
             (-1., 1., 0., 0.),
             (1., 2., 1., 2. - 0.5f64.sqrt()),
@@ -122,17 +128,16 @@ mod test {
             assert_eq!(distr.sample(&mut half_rng), median);
         }
 
-        for &(min, max, mode) in &[
-            (-1., 1., 2.),
-            (-1., 1., -2.),
-            (2., 1., 1.),
-        ] {
+        for &(min, max, mode) in &[(-1., 1., 2.), (-1., 1., -2.), (2., 1., 1.)] {
             assert!(Triangular::new(min, max, mode).is_err());
         }
     }
 
     #[test]
     fn triangular_distributions_can_be_compared() {
-        assert_eq!(Triangular::new(1.0, 3.0, 2.0), Triangular::new(1.0, 3.0, 2.0));
+        assert_eq!(
+            Triangular::new(1.0, 3.0, 2.0),
+            Triangular::new(1.0, 3.0, 2.0)
+        );
     }
 }

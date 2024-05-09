@@ -1,4 +1,5 @@
-#[cfg(feature = "alloc")] use alloc::boxed::Box;
+#[cfg(feature = "alloc")]
+use alloc::boxed::Box;
 
 use crate::{CryptoRng, RngCore, TryCryptoRng, TryRngCore};
 

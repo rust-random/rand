@@ -15,7 +15,8 @@ const MULTIPLIER: u64 = 15750249268501108917;
 
 use core::fmt;
 use rand_core::{impls, le, RngCore, SeedableRng};
-#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde1")]
+use serde::{Deserialize, Serialize};
 
 /// A PCG random number generator (CM DXSM 128/64 (LCG) variant).
 ///

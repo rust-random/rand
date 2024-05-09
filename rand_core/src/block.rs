@@ -56,7 +56,8 @@
 use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 use crate::{CryptoRng, RngCore, SeedableRng, TryRngCore};
 use core::fmt;
-#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde1")]
+use serde::{Deserialize, Serialize};
 
 /// A trait for RNGs which do not generate random numbers individually, but in
 /// blocks (typically `[u32; N]`). This technique is commonly used by

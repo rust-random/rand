@@ -10,10 +10,10 @@
 //! The normal and derived distributions.
 
 use crate::utils::ziggurat;
-use num_traits::Float;
 use crate::{ziggurat_tables, Distribution, Open01};
-use rand::Rng;
 use core::fmt;
+use num_traits::Float;
+use rand::Rng;
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
@@ -115,7 +115,9 @@ impl Distribution<f64> for StandardNormal {
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Normal<F>
-where F: Float, StandardNormal: Distribution<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
 {
     mean: F,
     std_dev: F,
@@ -144,7 +146,9 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 impl<F> Normal<F>
-where F: Float, StandardNormal: Distribution<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
 {
     /// Construct, from mean and standard deviation
     ///
@@ -204,13 +208,14 @@ where F: Float, StandardNormal: Distribution<F>
 }
 
 impl<F> Distribution<F> for Normal<F>
-where F: Float, StandardNormal: Distribution<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         self.from_zscore(rng.sample(StandardNormal))
     }
 }
-
 
 /// The log-normal distribution `ln N(mean, std_dev**2)`.
 ///
@@ -230,13 +235,17 @@ where F: Float, StandardNormal: Distribution<F>
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct LogNormal<F>
-where F: Float, StandardNormal: Distribution<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
 {
     norm: Normal<F>,
 }
 
 impl<F> LogNormal<F>
-where F: Float, StandardNormal: Distribution<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
 {
     /// Construct, from (log-space) mean and standard deviation
     ///
@@ -307,7 +316,9 @@ where F: Float, StandardNormal: Distribution<F>
 }
 
 impl<F> Distribution<F> for LogNormal<F>
-where F: Float, StandardNormal: Distribution<F>
+where
+    F: Float,
+    StandardNormal: Distribution<F>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
@@ -348,7 +359,10 @@ mod tests {
     #[test]
     fn test_log_normal_cv() {
         let lnorm = LogNormal::from_mean_cv(0.0, 0.0).unwrap();
-        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (f64::NEG_INFINITY, 0.0));
+        assert_eq!(
+            (lnorm.norm.mean, lnorm.norm.std_dev),
+            (f64::NEG_INFINITY, 0.0)
+        );
 
         let lnorm = LogNormal::from_mean_cv(1.0, 0.0).unwrap();
         assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (0.0, 0.0));

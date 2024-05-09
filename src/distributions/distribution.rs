@@ -10,7 +10,8 @@
 //! Distribution trait and associates
 
 use crate::Rng;
-#[cfg(feature = "alloc")] use alloc::string::String;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 use core::iter;
 
 /// Types (distributions) that can be used to create a random instance of `T`.

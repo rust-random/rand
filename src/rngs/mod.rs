@@ -102,18 +102,22 @@ pub use reseeding::ReseedingRng;
 pub mod mock; // Public so we don't export `StepRng` directly, making it a bit
               // more clear it is intended for testing.
 
-#[cfg(feature = "small_rng")] mod small;
+#[cfg(feature = "small_rng")]
+mod small;
 #[cfg(all(feature = "small_rng", not(target_pointer_width = "64")))]
 mod xoshiro128plusplus;
 #[cfg(all(feature = "small_rng", target_pointer_width = "64"))]
 mod xoshiro256plusplus;
 
-#[cfg(feature = "std_rng")] mod std;
+#[cfg(feature = "std_rng")]
+mod std;
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 pub(crate) mod thread;
 
-#[cfg(feature = "small_rng")] pub use self::small::SmallRng;
-#[cfg(feature = "std_rng")] pub use self::std::StdRng;
+#[cfg(feature = "small_rng")]
+pub use self::small::SmallRng;
+#[cfg(feature = "std_rng")]
+pub use self::std::StdRng;
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 pub use self::thread::ThreadRng;
 

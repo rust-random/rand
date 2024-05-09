@@ -89,7 +89,9 @@ pub trait Rng: RngCore {
     /// [`Standard`]: distributions::Standard
     #[inline]
     fn random<T>(&mut self) -> T
-    where Standard: Distribution<T> {
+    where
+        Standard: Distribution<T>,
+    {
         Standard.sample(self)
     }
 
@@ -309,7 +311,9 @@ pub trait Rng: RngCore {
         note = "Renamed to `random` to avoid conflict with the new `gen` keyword in Rust 2024."
     )]
     fn gen<T>(&mut self) -> T
-    where Standard: Distribution<T> {
+    where
+        Standard: Distribution<T>,
+    {
         self.random()
     }
 }
@@ -402,7 +406,8 @@ impl_fill!(u16, u32, u64, usize, u128,);
 impl_fill!(i8, i16, i32, i64, isize, i128,);
 
 impl<T, const N: usize> Fill for [T; N]
-where [T]: Fill
+where
+    [T]: Fill,
 {
     fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
         <[T] as Fill>::fill(self, rng)
@@ -414,7 +419,8 @@ mod test {
     use super::*;
     use crate::rngs::mock::StepRng;
     use crate::test::rng;
-    #[cfg(feature = "alloc")] use alloc::boxed::Box;
+    #[cfg(feature = "alloc")]
+    use alloc::boxed::Box;
 
     #[test]
     fn test_fill_bytes_default() {

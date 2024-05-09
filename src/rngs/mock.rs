@@ -10,7 +10,8 @@
 
 use rand_core::{impls, RngCore};
 
-#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde1")]
+use serde::{Deserialize, Serialize};
 
 /// A mock generator yielding very predictable output
 ///
@@ -78,7 +79,8 @@ rand_core::impl_try_rng_from_rng_core!(StepRng);
 
 #[cfg(test)]
 mod tests {
-    #[cfg(any(feature = "alloc", feature = "serde1"))] use super::StepRng;
+    #[cfg(any(feature = "alloc", feature = "serde1"))]
+    use super::StepRng;
 
     #[test]
     #[cfg(feature = "serde1")]

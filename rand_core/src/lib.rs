@@ -32,11 +32,14 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
+#![allow(unexpected_cfgs)]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![no_std]
 
-#[cfg(feature = "alloc")] extern crate alloc;
-#[cfg(feature = "std")] extern crate std;
+#[cfg(feature = "alloc")]
+extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
 
 use core::fmt;
 
@@ -44,11 +47,13 @@ mod blanket_impls;
 pub mod block;
 pub mod impls;
 pub mod le;
-#[cfg(feature = "getrandom")] mod os;
+#[cfg(feature = "getrandom")]
+mod os;
 
-#[cfg(feature = "getrandom")] pub use getrandom;
-#[cfg(feature = "getrandom")] pub use os::OsRng;
-
+#[cfg(feature = "getrandom")]
+pub use getrandom;
+#[cfg(feature = "getrandom")]
+pub use os::OsRng;
 
 /// The core of a random number generator.
 ///
@@ -213,14 +218,18 @@ pub trait TryRngCore {
 
     /// Wrap RNG with the [`UnwrapErr`] wrapper.
     fn unwrap_err(self) -> UnwrapErr<Self>
-    where Self: Sized {
+    where
+        Self: Sized,
+    {
         UnwrapErr(self)
     }
 
     /// Convert an [`RngCore`] to a [`RngReadAdapter`].
     #[cfg(feature = "std")]
     fn read_adapter(&mut self) -> RngReadAdapter<'_, Self>
-    where Self: Sized {
+    where
+        Self: Sized,
+    {
         RngReadAdapter { inner: self }
     }
 }

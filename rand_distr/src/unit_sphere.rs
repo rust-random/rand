@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use num_traits::Float;
 use crate::{uniform::SampleUniform, Distribution, Uniform};
+use num_traits::Float;
 use rand::Rng;
 
 /// Samples uniformly from the surface of the unit sphere in three dimensions.
@@ -42,7 +42,11 @@ impl<F: Float + SampleUniform> Distribution<[F; 3]> for UnitSphere {
                 continue;
             }
             let factor = F::from(2.).unwrap() * (F::one() - sum).sqrt();
-            return [x1 * factor, x2 * factor, F::from(1.).unwrap() - F::from(2.).unwrap() * sum];
+            return [
+                x1 * factor,
+                x2 * factor,
+                F::from(1.).unwrap() - F::from(2.).unwrap() * sum,
+            ];
         }
     }
 }

@@ -13,7 +13,8 @@ use crate::{Beta, Distribution, Exp1, Gamma, Open01, StandardNormal};
 use core::fmt;
 use num_traits::{Float, NumCast};
 use rand::Rng;
-#[cfg(feature = "serde_with")] use serde_with::serde_as;
+#[cfg(feature = "serde_with")]
+use serde_with::serde_as;
 
 use alloc::{boxed::Box, vec, vec::Vec};
 

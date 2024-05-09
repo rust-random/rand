@@ -303,6 +303,7 @@ mod test {
     #[test]
     fn test_no_item_error() {
         let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
+        #[allow(clippy::needless_borrows_for_generic_args)]
         let tree = WeightedTreeIndex::<f64>::new(&[]).unwrap();
         assert_eq!(
             tree.try_sample(&mut rng).unwrap_err(),
@@ -313,10 +314,10 @@ mod test {
     #[test]
     fn test_overflow_error() {
         assert_eq!(
-            WeightedTreeIndex::new(&[i32::MAX, 2]),
+            WeightedTreeIndex::new([i32::MAX, 2]),
             Err(WeightError::Overflow)
         );
-        let mut tree = WeightedTreeIndex::new(&[i32::MAX - 2, 1]).unwrap();
+        let mut tree = WeightedTreeIndex::new([i32::MAX - 2, 1]).unwrap();
         assert_eq!(tree.push(3), Err(WeightError::Overflow));
         assert_eq!(tree.update(1, 4), Err(WeightError::Overflow));
         tree.update(1, 2).unwrap();
@@ -324,7 +325,7 @@ mod test {
 
     #[test]
     fn test_all_weights_zero_error() {
-        let tree = WeightedTreeIndex::<f64>::new(&[0.0, 0.0]).unwrap();
+        let tree = WeightedTreeIndex::<f64>::new([0.0, 0.0]).unwrap();
         let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
         assert_eq!(
             tree.try_sample(&mut rng).unwrap_err(),
@@ -335,37 +336,36 @@ mod test {
     #[test]
     fn test_invalid_weight_error() {
         assert_eq!(
-            WeightedTreeIndex::<i32>::new(&[1, -1]).unwrap_err(),
+            WeightedTreeIndex::<i32>::new([1, -1]).unwrap_err(),
             WeightError::InvalidWeight
         );
+        #[allow(clippy::needless_borrows_for_generic_args)]
         let mut tree = WeightedTreeIndex::<i32>::new(&[]).unwrap();
         assert_eq!(tree.push(-1).unwrap_err(), WeightError::InvalidWeight);
         tree.push(1).unwrap();
-        assert_eq!(
-            tree.update(0, -1).unwrap_err(),
-            WeightError::InvalidWeight
-        );
+        assert_eq!(tree.update(0, -1).unwrap_err(), WeightError::InvalidWeight);
     }
 
     #[test]
     fn test_tree_modifications() {
-        let mut tree = WeightedTreeIndex::new(&[9, 1, 2]).unwrap();
+        let mut tree = WeightedTreeIndex::new([9, 1, 2]).unwrap();
         tree.push(3).unwrap();
         tree.push(5).unwrap();
         tree.update(0, 0).unwrap();
         assert_eq!(tree.pop(), Some(5));
-        let expected = WeightedTreeIndex::new(&[0, 1, 2, 3]).unwrap();
+        let expected = WeightedTreeIndex::new([0, 1, 2, 3]).unwrap();
         assert_eq!(tree, expected);
     }
 
     #[test]
+    #[allow(clippy::needless_range_loop)]
     fn test_sample_counts_match_probabilities() {
         let start = 1;
         let end = 3;
         let samples = 20;
         let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
-        let weights: Vec<_> = (0..end).map(|_| rng.gen()).collect();
-        let mut tree = WeightedTreeIndex::new(&weights).unwrap();
+        let weights: Vec<f64> = (0..end).map(|_| rng.random()).collect();
+        let mut tree = WeightedTreeIndex::new(weights).unwrap();
         let mut total_weight = 0.0;
         let mut weights = alloc::vec![0.0; end];
         for i in 0..end {

@@ -8,10 +8,10 @@
 
 //! The Zeta and related distributions.
 
-use num_traits::Float;
 use crate::{Distribution, Standard};
-use rand::{Rng, distributions::OpenClosed01};
 use core::fmt;
+use num_traits::Float;
+use rand::{distributions::OpenClosed01, Rng};
 
 /// Samples integers according to the [zeta distribution].
 ///
@@ -48,7 +48,10 @@ use core::fmt;
 /// [Non-Uniform Random Variate Generation]: https://doi.org/10.1007/978-1-4613-8643-8
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Zeta<F>
-where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
+where
+    F: Float,
+    Standard: Distribution<F>,
+    OpenClosed01: Distribution<F>,
 {
     a_minus_1: F,
     b: F,
@@ -74,7 +77,10 @@ impl fmt::Display for ZetaError {
 impl std::error::Error for ZetaError {}
 
 impl<F> Zeta<F>
-where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
+where
+    F: Float,
+    Standard: Distribution<F>,
+    OpenClosed01: Distribution<F>,
 {
     /// Construct a new `Zeta` distribution with given `a` parameter.
     #[inline]
@@ -92,7 +98,10 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 }
 
 impl<F> Distribution<F> for Zeta<F>
-where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
+where
+    F: Float,
+    Standard: Distribution<F>,
+    OpenClosed01: Distribution<F>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
@@ -144,7 +153,10 @@ where F: Float, Standard: Distribution<F>, OpenClosed01: Distribution<F>
 /// [1]: https://jasoncrease.medium.com/rejection-sampling-the-zipf-distribution-6b359792cffa
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Zipf<F>
-where F: Float, Standard: Distribution<F> {
+where
+    F: Float,
+    Standard: Distribution<F>,
+{
     s: F,
     t: F,
     q: F,
@@ -173,7 +185,10 @@ impl fmt::Display for ZipfError {
 impl std::error::Error for ZipfError {}
 
 impl<F> Zipf<F>
-where F: Float, Standard: Distribution<F> {
+where
+    F: Float,
+    Standard: Distribution<F>,
+{
     /// Construct a new `Zipf` distribution for a set with `n` elements and a
     /// frequency rank exponent `s`.
     ///
@@ -186,7 +201,7 @@ where F: Float, Standard: Distribution<F> {
         if n < 1 {
             return Err(ZipfError::NTooSmall);
         }
-        let n = F::from(n).unwrap();  // This does not fail.
+        let n = F::from(n).unwrap(); // This does not fail.
         let q = if s != F::one() {
             // Make sure to calculate the division only once.
             F::one() / (F::one() - s)
@@ -200,9 +215,7 @@ where F: Float, Standard: Distribution<F> {
             F::one() + n.ln()
         };
         debug_assert!(t > F::zero());
-        Ok(Zipf {
-            s, t, q
-        })
+        Ok(Zipf { s, t, q })
     }
 
     /// Inverse cumulative density function
@@ -221,7 +234,9 @@ where F: Float, Standard: Distribution<F> {
 }
 
 impl<F> Distribution<F> for Zipf<F>
-where F: Float, Standard: Distribution<F>
+where
+    F: Float,
+    Standard: Distribution<F>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
@@ -246,9 +261,7 @@ where F: Float, Standard: Distribution<F>
 mod tests {
     use super::*;
 
-    fn test_samples<F: Float + fmt::Debug, D: Distribution<F>>(
-        distr: D, zero: F, expected: &[F],
-    ) {
+    fn test_samples<F: Float + fmt::Debug, D: Distribution<F>>(distr: D, zero: F, expected: &[F]) {
         let mut rng = crate::test::rng(213);
         let mut buf = [zero; 4];
         for x in &mut buf {
@@ -293,12 +306,8 @@ mod tests {
 
     #[test]
     fn zeta_value_stability() {
-        test_samples(Zeta::new(1.5).unwrap(), 0f32, &[
-            1.0, 2.0, 1.0, 1.0,
-        ]);
-        test_samples(Zeta::new(2.0).unwrap(), 0f64, &[
-            2.0, 1.0, 1.0, 1.0,
-        ]);
+        test_samples(Zeta::new(1.5).unwrap(), 0f32, &[1.0, 2.0, 1.0, 1.0]);
+        test_samples(Zeta::new(2.0).unwrap(), 0f64, &[2.0, 1.0, 1.0, 1.0]);
     }
 
     #[test]
@@ -363,12 +372,8 @@ mod tests {
 
     #[test]
     fn zipf_value_stability() {
-        test_samples(Zipf::new(10, 0.5).unwrap(), 0f32, &[
-            10.0, 2.0, 6.0, 7.0
-        ]);
-        test_samples(Zipf::new(10, 2.0).unwrap(), 0f64, &[
-            1.0, 2.0, 3.0, 2.0
-        ]);
+        test_samples(Zipf::new(10, 0.5).unwrap(), 0f32, &[10.0, 2.0, 6.0, 7.0]);
+        test_samples(Zipf::new(10, 2.0).unwrap(), 0f64, &[1.0, 2.0, 3.0, 2.0]);
     }
 
     #[test]

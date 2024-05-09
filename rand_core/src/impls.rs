@@ -199,7 +199,7 @@ macro_rules! impl_try_rng_from_rng_core {
 macro_rules! impl_try_crypto_rng_from_crypto_rng {
     ($t:ty) => {
         $crate::impl_try_rng_from_rng_core!($t);
-        
+
         impl $crate::TryCryptoRng for $t {}
 
         /// Check at compile time that `$t` implements `CryptoRng`

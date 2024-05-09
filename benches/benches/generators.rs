@@ -50,7 +50,6 @@ gen_bytes!(gen_bytes_chacha8, ChaCha8Rng::from_os_rng());
 gen_bytes!(gen_bytes_chacha12, ChaCha12Rng::from_os_rng());
 gen_bytes!(gen_bytes_chacha20, ChaCha20Rng::from_os_rng());
 gen_bytes!(gen_bytes_std, StdRng::from_os_rng());
-#[cfg(feature = "small_rng")]
 gen_bytes!(gen_bytes_small, SmallRng::from_thread_rng());
 gen_bytes!(gen_bytes_os, UnwrapErr(OsRng));
 gen_bytes!(gen_bytes_thread, thread_rng());
@@ -81,7 +80,6 @@ gen_uint!(gen_u32_chacha8, u32, ChaCha8Rng::from_os_rng());
 gen_uint!(gen_u32_chacha12, u32, ChaCha12Rng::from_os_rng());
 gen_uint!(gen_u32_chacha20, u32, ChaCha20Rng::from_os_rng());
 gen_uint!(gen_u32_std, u32, StdRng::from_os_rng());
-#[cfg(feature = "small_rng")]
 gen_uint!(gen_u32_small, u32, SmallRng::from_thread_rng());
 gen_uint!(gen_u32_os, u32, UnwrapErr(OsRng));
 gen_uint!(gen_u32_thread, u32, thread_rng());
@@ -95,7 +93,6 @@ gen_uint!(gen_u64_chacha8, u64, ChaCha8Rng::from_os_rng());
 gen_uint!(gen_u64_chacha12, u64, ChaCha12Rng::from_os_rng());
 gen_uint!(gen_u64_chacha20, u64, ChaCha20Rng::from_os_rng());
 gen_uint!(gen_u64_std, u64, StdRng::from_os_rng());
-#[cfg(feature = "small_rng")]
 gen_uint!(gen_u64_small, u64, SmallRng::from_thread_rng());
 gen_uint!(gen_u64_os, u64, UnwrapErr(OsRng));
 gen_uint!(gen_u64_thread, u64, thread_rng());

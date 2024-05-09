@@ -1,0 +1,23 @@
+name: Benches
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/benches.yml"
+      - "benches/**"
+
+jobs:
+  benches:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: clippy, rustfmt
+      - name: Rustfmt
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --all --all-targets -- -D warnings
+      - name: Build
+        run: RUSTFLAGS=-Dwarnings cargo build --all-targets

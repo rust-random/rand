@@ -1,17 +1,20 @@
 //! The hypergeometric distribution.
 
 use crate::Distribution;
-use rand::Rng;
-use rand::distributions::uniform::Uniform;
 use core::fmt;
 #[allow(unused_imports)]
 use num_traits::Float;
+use rand::distributions::uniform::Uniform;
+use rand::Rng;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 enum SamplingMethod {
-    InverseTransform{ initial_p: f64, initial_x: i64 },
-    RejectionAcceptance{
+    InverseTransform {
+        initial_p: f64,
+        initial_x: i64,
+    },
+    RejectionAcceptance {
         m: f64,
         a: f64,
         lambda_l: f64,
@@ -20,24 +23,24 @@ enum SamplingMethod {
         x_r: f64,
         p1: f64,
         p2: f64,
-        p3: f64
+        p3: f64,
     },
 }
 
 /// The hypergeometric distribution `Hypergeometric(N, K, n)`.
-/// 
+///
 /// This is the distribution of successes in samples of size `n` drawn without
 /// replacement from a population of size `N` containing `K` success states.
 /// It has the density function:
 /// `f(k) = binomial(K, k) * binomial(N-K, n-k) / binomial(N, n)`,
 /// where `binomial(a, b) = a! / (b! * (a - b)!)`.
-/// 
+///
 /// The [binomial distribution](crate::Binomial) is the analogous distribution
 /// for sampling with replacement. It is a good approximation when the population
 /// size is much larger than the sample size.
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use rand_distr::{Distribution, Hypergeometric};
 ///
@@ -70,9 +73,15 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            Error::PopulationTooLarge => "total_population_size is too large causing underflow in geometric distribution",
-            Error::ProbabilityTooLarge => "population_with_feature > total_population_size in geometric distribution",
-            Error::SampleSizeTooLarge => "sample_size > total_population_size in geometric distribution",
+            Error::PopulationTooLarge => {
+                "total_population_size is too large causing underflow in geometric distribution"
+            }
+            Error::ProbabilityTooLarge => {
+                "population_with_feature > total_population_size in geometric distribution"
+            }
+            Error::SampleSizeTooLarge => {
+                "sample_size > total_population_size in geometric distribution"
+            }
         })
     }
 }
@@ -97,20 +106,20 @@ fn fraction_of_products_of_factorials(numerator: (u64, u64), denominator: (u64, 
         if i <= min_top {
             result *= i as f64;
         }
-        
+
         if i <= min_bottom {
             result /= i as f64;
         }
-        
+
         if i <= max_top {
             result *= i as f64;
         }
-        
+
         if i <= max_bottom {
             result /= i as f64;
         }
     }
-    
+
     result
 }
 
@@ -126,7 +135,11 @@ impl Hypergeometric {
     /// `K = population_with_feature`,
     /// `n = sample_size`.
     #[allow(clippy::many_single_char_names)] // Same names as in the reference.
-    pub fn new(total_population_size: u64, population_with_feature: u64, sample_size: u64) -> Result<Self, Error> {
+    pub fn new(
+        total_population_size: u64,
+        population_with_feature: u64,
+        sample_size: u64,
+    ) -> Result<Self, Error> {
         if population_with_feature > total_population_size {
             return Err(Error::ProbabilityTooLarge);
         }
@@ -151,7 +164,7 @@ impl Hypergeometric {
         };
         // when sampling more than half the total population, take the smaller
         // group as sampled instead (we can then return n1-x instead).
-        // 
+        //
         // Note: the boundary condition given in the paper is `sample_size < n / 2`;
         // we're deviating here, because when n is even, it doesn't matter whether
         // we switch here or not, but when n is odd `n/2 < n - n/2`, so switching
@@ -167,7 +180,7 @@ impl Hypergeometric {
         // Algorithm H2PE has bounded runtime only if `M - max(0, k-n2) >= 10`,
         // where `M` is the mode of the distribution.
         // Use algorithm HIN for the remaining parameter space.
-        // 
+        //
         // Voratas Kachitvichyanukul and Bruce W. Schmeiser. 1985. Computer
         // generation of hypergeometric random variates.
         // J. Statist. Comput. Simul. Vol.22 (August 1985), 127-145
@@ -176,21 +189,30 @@ impl Hypergeometric {
         let m = ((k + 1) as f64 * (n1 + 1) as f64 / (n + 2) as f64).floor();
         let sampling_method = if m - f64::max(0.0, k as f64 - n2 as f64) < HIN_THRESHOLD {
             let (initial_p, initial_x) = if k < n2 {
-                (fraction_of_products_of_factorials((n2, n - k), (n, n2 - k)), 0)
+                (
+                    fraction_of_products_of_factorials((n2, n - k), (n, n2 - k)),
+                    0,
+                )
             } else {
-                (fraction_of_products_of_factorials((n1, k), (n, k - n2)), (k - n2) as i64)
+                (
+                    fraction_of_products_of_factorials((n1, k), (n, k - n2)),
+                    (k - n2) as i64,
+                )
             };
 
             if initial_p <= 0.0 || !initial_p.is_finite() {
                 return Err(Error::PopulationTooLarge);
             }
 
-            SamplingMethod::InverseTransform { initial_p, initial_x }
+            SamplingMethod::InverseTransform {
+                initial_p,
+                initial_x,
+            }
         } else {
-            let a = ln_of_factorial(m) +
-                ln_of_factorial(n1 as f64 - m) +
-                ln_of_factorial(k as f64 - m) +
-                ln_of_factorial((n2 - k) as f64 + m);
+            let a = ln_of_factorial(m)
+                + ln_of_factorial(n1 as f64 - m)
+                + ln_of_factorial(k as f64 - m)
+                + ln_of_factorial((n2 - k) as f64 + m);
 
             let numerator = (n - k) as f64 * k as f64 * n1 as f64 * n2 as f64;
             let denominator = (n - 1) as f64 * n as f64 * n as f64;
@@ -199,17 +221,19 @@ impl Hypergeometric {
             let x_l = m - d + 0.5;
             let x_r = m + d + 0.5;
 
-            let k_l = f64::exp(a -
-                ln_of_factorial(x_l) -
-                ln_of_factorial(n1 as f64 - x_l) -
-                ln_of_factorial(k as f64 - x_l) -
-                ln_of_factorial((n2 - k) as f64 + x_l));
-            let k_r = f64::exp(a -
-                ln_of_factorial(x_r - 1.0) -
-                ln_of_factorial(n1 as f64 - x_r + 1.0) -
-                ln_of_factorial(k as f64 - x_r + 1.0) -
-                ln_of_factorial((n2 - k) as f64 + x_r - 1.0));
-            
+            let k_l = f64::exp(
+                a - ln_of_factorial(x_l)
+                    - ln_of_factorial(n1 as f64 - x_l)
+                    - ln_of_factorial(k as f64 - x_l)
+                    - ln_of_factorial((n2 - k) as f64 + x_l),
+            );
+            let k_r = f64::exp(
+                a - ln_of_factorial(x_r - 1.0)
+                    - ln_of_factorial(n1 as f64 - x_r + 1.0)
+                    - ln_of_factorial(k as f64 - x_r + 1.0)
+                    - ln_of_factorial((n2 - k) as f64 + x_r - 1.0),
+            );
+
             let numerator = x_l * ((n2 - k) as f64 + x_l);
             let denominator = (n1 as f64 - x_l + 1.0) * (k as f64 - x_l + 1.0);
             let lambda_l = -((numerator / denominator).ln());
@@ -225,11 +249,26 @@ impl Hypergeometric {
             let p3 = p2 + k_r / lambda_r;
 
             SamplingMethod::RejectionAcceptance {
-                m, a, lambda_l, lambda_r, x_l, x_r, p1, p2, p3
+                m,
+                a,
+                lambda_l,
+                lambda_r,
+                x_l,
+                x_r,
+                p1,
+                p2,
+                p3,
             }
         };
 
-        Ok(Hypergeometric { n1, n2, k, offset_x, sign_x, sampling_method })
+        Ok(Hypergeometric {
+            n1,
+            n2,
+            k,
+            offset_x,
+            sign_x,
+            sampling_method,
+        })
     }
 }
 
@@ -238,25 +277,47 @@ impl Distribution<u64> for Hypergeometric {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         use SamplingMethod::*;
 
-        let Hypergeometric { n1, n2, k, sign_x, offset_x, sampling_method } = *self;
+        let Hypergeometric {
+            n1,
+            n2,
+            k,
+            sign_x,
+            offset_x,
+            sampling_method,
+        } = *self;
         let x = match sampling_method {
-            InverseTransform { initial_p: mut p, initial_x: mut x } => {
-                let mut u = rng.gen::<f64>();
-                while u > p && x < k as i64 { // the paper erroneously uses `until n < p`, which doesn't make any sense
+            InverseTransform {
+                initial_p: mut p,
+                initial_x: mut x,
+            } => {
+                let mut u = rng.random::<f64>();
+
+                // the paper erroneously uses `until n < p`, which doesn't make any sense
+                while u > p && x < k as i64 {
                     u -= p;
                     p *= ((n1 as i64 - x) * (k as i64 - x)) as f64;
                     p /= ((x + 1) * (n2 as i64 - k as i64 + 1 + x)) as f64;
                     x += 1;
                 }
                 x
-            },
-            RejectionAcceptance { m, a, lambda_l, lambda_r, x_l, x_r, p1, p2, p3 } => {
+            }
+            RejectionAcceptance {
+                m,
+                a,
+                lambda_l,
+                lambda_r,
+                x_l,
+                x_r,
+                p1,
+                p2,
+                p3,
+            } => {
                 let distr_region_select = Uniform::new(0.0, p3).unwrap();
                 loop {
                     let (y, v) = loop {
                         let u = distr_region_select.sample(rng);
-                        let v = rng.gen::<f64>(); // for the accept/reject decision
-            
+                        let v = rng.random::<f64>(); // for the accept/reject decision
+
                         if u <= p1 {
                             // Region 1, central bell
                             let y = (x_l + u).floor();
@@ -277,7 +338,7 @@ impl Distribution<u64> for Hypergeometric {
                             }
                         }
                     };
-        
+
                     // Step 4: Acceptance/Rejection Comparison
                     if m < 100.0 || y <= 50.0 {
                         // Step 4.1: evaluate f(y) via recursive relationship
@@ -293,8 +354,10 @@ impl Distribution<u64> for Hypergeometric {
                                 f /= (n1 - i) as f64 * (k - i) as f64;
                             }
                         }
-        
-                        if v <= f { break y as i64; }
+
+                        if v <= f {
+                            break y as i64;
+                        }
                     } else {
                         // Step 4.2: Squeezing
                         let y1 = y + 1.0;
@@ -307,24 +370,24 @@ impl Distribution<u64> for Hypergeometric {
                         let t = ym / yk;
                         let e = -ym / nk;
                         let g = yn * yk / (y1 * nk) - 1.0;
-                        let dg = if g < 0.0 {
-                            1.0 + g
-                        } else {
-                            1.0
-                        };
+                        let dg = if g < 0.0 { 1.0 + g } else { 1.0 };
                         let gu = g * (1.0 + g * (-0.5 + g / 3.0));
                         let gl = gu - g.powi(4) / (4.0 * dg);
                         let xm = m + 0.5;
                         let xn = n1 as f64 - m + 0.5;
                         let xk = k as f64 - m + 0.5;
                         let nm = n2 as f64 - k as f64 + xm;
-                        let ub = xm * r * (1.0 + r * (-0.5 + r / 3.0)) +
-                            xn * s * (1.0 + s * (-0.5 + s / 3.0)) +
-                            xk * t * (1.0 + t * (-0.5 + t / 3.0)) +
-                            nm * e * (1.0 + e * (-0.5 + e / 3.0)) +
-                            y * gu - m * gl + 0.0034;
+                        let ub = xm * r * (1.0 + r * (-0.5 + r / 3.0))
+                            + xn * s * (1.0 + s * (-0.5 + s / 3.0))
+                            + xk * t * (1.0 + t * (-0.5 + t / 3.0))
+                            + nm * e * (1.0 + e * (-0.5 + e / 3.0))
+                            + y * gu
+                            - m * gl
+                            + 0.0034;
                         let av = v.ln();
-                        if av > ub { continue; }
+                        if av > ub {
+                            continue;
+                        }
                         let dr = if r < 0.0 {
                             xm * r.powi(4) / (1.0 + r)
                         } else {
@@ -345,17 +408,17 @@ impl Distribution<u64> for Hypergeometric {
                         } else {
                             nm * e.powi(4)
                         };
-        
-                        if av < ub - 0.25*(dr + ds + dt + de) + (y + m)*(gl - gu) - 0.0078 {
+
+                        if av < ub - 0.25 * (dr + ds + dt + de) + (y + m) * (gl - gu) - 0.0078 {
                             break y as i64;
                         }
-        
+
                         // Step 4.3: Final Acceptance/Rejection Test
-                        let av_critical = a -
-                            ln_of_factorial(y) -
-                            ln_of_factorial(n1 as f64 - y) - 
-                            ln_of_factorial(k as f64 - y) - 
-                            ln_of_factorial((n2 - k) as f64 + y);
+                        let av_critical = a
+                            - ln_of_factorial(y)
+                            - ln_of_factorial(n1 as f64 - y)
+                            - ln_of_factorial(k as f64 - y)
+                            - ln_of_factorial((n2 - k) as f64 + y);
                         if v.ln() <= av_critical {
                             break y as i64;
                         }
@@ -380,8 +443,7 @@ mod test {
         assert!(Hypergeometric::new(100, 10, 5).is_ok());
     }
 
-    fn test_hypergeometric_mean_and_variance<R: Rng>(n: u64, k: u64, s: u64, rng: &mut R)
-    {
+    fn test_hypergeometric_mean_and_variance<R: Rng>(n: u64, k: u64, s: u64, rng: &mut R) {
         let distr = Hypergeometric::new(n, k, s).unwrap();
 
         let expected_mean = s as f64 * k as f64 / n as f64;

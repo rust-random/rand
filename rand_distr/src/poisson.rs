@@ -9,10 +9,10 @@
 
 //! The Poisson distribution.
 
-use num_traits::{Float, FloatConst};
 use crate::{Cauchy, Distribution, Standard};
-use rand::Rng;
 use core::fmt;
+use num_traits::{Float, FloatConst};
+use rand::Rng;
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///
@@ -31,7 +31,9 @@ use core::fmt;
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Poisson<F>
-where F: Float + FloatConst, Standard: Distribution<F>
+where
+    F: Float + FloatConst,
+    Standard: Distribution<F>,
 {
     lambda: F,
     // precalculated values
@@ -64,7 +66,9 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 impl<F> Poisson<F>
-where F: Float + FloatConst, Standard: Distribution<F>
+where
+    F: Float + FloatConst,
+    Standard: Distribution<F>,
 {
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
@@ -87,7 +91,9 @@ where F: Float + FloatConst, Standard: Distribution<F>
 }
 
 impl<F> Distribution<F> for Poisson<F>
-where F: Float + FloatConst, Standard: Distribution<F>
+where
+    F: Float + FloatConst,
+    Standard: Distribution<F>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
@@ -96,9 +102,9 @@ where F: Float + FloatConst, Standard: Distribution<F>
         // for low expected values use the Knuth method
         if self.lambda < F::from(12.0).unwrap() {
             let mut result = F::one();
-            let mut p = rng.gen::<F>();
+            let mut p = rng.random::<F>();
             while p > self.exp_lambda {
-                p = p*rng.gen::<F>();
+                p = p * rng.random::<F>();
                 result = result + F::one();
             }
             result - F::one()
@@ -139,7 +145,7 @@ where F: Float + FloatConst, Standard: Distribution<F>
                         .exp();
 
                 // check with uniform random value - if below the threshold, we are within the target distribution
-                if rng.gen::<F>() <= check {
+                if rng.random::<F>() <= check {
                     break;
                 }
             }
@@ -153,7 +159,8 @@ mod test {
     use super::*;
 
     fn test_poisson_avg_gen<F: Float + FloatConst>(lambda: F, tol: F)
-        where Standard: Distribution<F>
+    where
+        Standard: Distribution<F>,
     {
         let poisson = Poisson::new(lambda).unwrap();
         let mut rng = crate::test::rng(123);
@@ -173,7 +180,7 @@ mod test {
         test_poisson_avg_gen::<f32>(10.0, 0.1);
         test_poisson_avg_gen::<f32>(15.0, 0.1);
 
-        //Small lambda will use Knuth's method with exp_lambda == 1.0
+        // Small lambda will use Knuth's method with exp_lambda == 1.0
         test_poisson_avg_gen::<f32>(0.00000000000000005, 0.1);
         test_poisson_avg_gen::<f64>(0.00000000000000005, 0.1);
     }
