@@ -127,7 +127,6 @@ impl_nzint!(NonZeroIsize, NonZeroIsize::new);
 macro_rules! x86_intrinsic_impl {
     ($meta:meta, $($intrinsic:ident),+) => {$(
         #[cfg($meta)]
-        #[cfg_attr(doc_cfg, doc(cfg($meta)))]
         impl Distribution<$intrinsic> for Standard {
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $intrinsic {
@@ -149,8 +148,6 @@ macro_rules! simd_impl {
         ///
         /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
         #[cfg(feature = "simd_support")]
-        // TODO: as doc_cfg/doc_auto_cfg mature ensure they catch this
-        #[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))]
         impl<const LANES: usize> Distribution<Simd<$ty, LANES>> for Standard
         where
             LaneCount<LANES>: SupportedLaneCount,

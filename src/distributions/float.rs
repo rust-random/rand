@@ -104,8 +104,7 @@ macro_rules! float_impls {
             }
         }
 
-        $(#[cfg($meta)]
-        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
+        $(#[cfg($meta)])?
         impl Distribution<$ty> for Standard {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 // Multiply-based method; 24/53 random bits; [0, 1) interval.
@@ -121,8 +120,7 @@ macro_rules! float_impls {
             }
         }
 
-        $(#[cfg($meta)]
-        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
+        $(#[cfg($meta)])?
         impl Distribution<$ty> for OpenClosed01 {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 // Multiply-based method; 24/53 random bits; (0, 1] interval.
@@ -139,8 +137,7 @@ macro_rules! float_impls {
             }
         }
 
-        $(#[cfg($meta)]
-        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
+        $(#[cfg($meta)])?
         impl Distribution<$ty> for Open01 {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 // Transmute-based method; 23/52 random bits; (0, 1) interval.

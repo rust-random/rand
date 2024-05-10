@@ -26,7 +26,6 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}
 
 /// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution)

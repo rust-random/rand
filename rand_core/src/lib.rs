@@ -32,8 +32,7 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
-#![allow(unexpected_cfgs)]
-#![cfg_attr(doc_cfg, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![no_std]
 
 #[cfg(feature = "alloc")]
@@ -446,7 +445,6 @@ pub trait SeedableRng: Sized {
     /// [`getrandom`]: https://docs.rs/getrandom
     /// [`try_from_os_rng`]: SeedableRng::try_from_os_rng
     #[cfg(feature = "getrandom")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
     fn from_os_rng() -> Self {
         match Self::try_from_os_rng() {
             Ok(res) => res,
@@ -463,7 +461,6 @@ pub trait SeedableRng: Sized {
     ///
     /// [`getrandom`]: https://docs.rs/getrandom
     #[cfg(feature = "getrandom")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
     fn try_from_os_rng() -> Result<Self, getrandom::Error> {
         let mut seed = Self::Seed::default();
         getrandom::getrandom(seed.as_mut())?;

@@ -121,6 +121,5 @@ pub use self::std::StdRng;
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 pub use self::thread::ThreadRng;
 
-#[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
 #[cfg(feature = "getrandom")]
 pub use rand_core::OsRng;

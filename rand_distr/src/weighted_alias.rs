@@ -65,7 +65,6 @@ use serde::{Deserialize, Serialize};
 /// [`Vec<u32>`]: Vec
 /// [`Uniform<u32>::sample`]: Distribution::sample
 /// [`Uniform<W>::sample`]: Distribution::sample
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 #[cfg_attr(
     feature = "serde1",
@@ -279,7 +278,6 @@ where
 /// Trait that must be implemented for weights, that are used with
 /// [`WeightedAliasIndex`]. Currently no guarantees on the correctness of
 /// [`WeightedAliasIndex`] are given for custom implementations of this trait.
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub trait AliasableWeight:
     Sized
     + Copy
