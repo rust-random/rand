@@ -12,9 +12,9 @@ permissions:
 jobs:
   check-doc:
     name: Check doc
-    env:
-      RUSDOCTFLAGS: "-Dwarnings --cfg docsrs -Zunstable-options --generate-link-to-definition"
     runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: "-Dwarnings --cfg docsrs -Zunstable-options --generate-link-to-definition"
     steps:
       - uses: actions/checkout@v4
       - name: Install toolchain
