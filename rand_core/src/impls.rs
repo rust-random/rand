@@ -160,7 +160,7 @@ pub fn next_u64_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
     u64::from_le_bytes(buf)
 }
 
-/// Implement [`TryRngCore`] for a type implementing [`RngCore`].
+/// Implement [`TryRngCore`][crate::TryRngCore] for a type implementing [`RngCore`].
 ///
 /// Ideally, `rand_core` would define blanket impls for this, but they conflict with blanket impls
 /// for `&mut R` and `Box<R>`, so until specialziation is stabilized, implementer crates
