@@ -140,7 +140,6 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}
 
 #[cfg(feature = "serde1")]
@@ -676,7 +675,6 @@ macro_rules! uniform_simd_int_impl {
         // implement it manually.
 
         #[cfg(feature = "simd_support")]
-        #[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))]
         impl<const LANES: usize> SampleUniform for Simd<$ty, LANES>
         where
             LaneCount<LANES>: SupportedLaneCount,
@@ -688,7 +686,6 @@ macro_rules! uniform_simd_int_impl {
         }
 
         #[cfg(feature = "simd_support")]
-        #[cfg_attr(doc_cfg, doc(cfg(feature = "simd_support")))]
         impl<const LANES: usize> UniformSampler for UniformInt<Simd<$ty, LANES>>
         where
             LaneCount<LANES>: SupportedLaneCount,
@@ -864,7 +861,6 @@ impl UniformSampler for UniformChar {
 /// includes non ascii chars; optionally the user may call
 /// `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl super::DistString for Uniform<char> {
     fn append_string<R: Rng + ?Sized>(
         &self,
@@ -912,14 +908,12 @@ pub struct UniformFloat<X> {
 
 macro_rules! uniform_float_impl {
     ($($meta:meta)?, $ty:ty, $uty:ident, $f_scalar:ident, $u_scalar:ident, $bits_to_discard:expr) => {
-        $(#[cfg($meta)]
-        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
+        $(#[cfg($meta)])?
         impl SampleUniform for $ty {
             type Sampler = UniformFloat<$ty>;
         }
 
-        $(#[cfg($meta)]
-        #[cfg_attr(doc_cfg, doc(cfg($meta)))])?
+        $(#[cfg($meta)])?
         impl UniformSampler for UniformFloat<$ty> {
             type X = $ty;
 

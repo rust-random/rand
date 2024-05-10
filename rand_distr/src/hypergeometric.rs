@@ -87,7 +87,6 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}
 
 // evaluate fact(numerator.0)*fact(numerator.1) / fact(denominator.0)*fact(denominator.1)

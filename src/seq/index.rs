@@ -282,7 +282,6 @@ where
 ///
 /// This implementation uses `O(length + amount)` space and `O(length)` time.
 #[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 pub fn sample_weighted<R, F, X>(
     rng: &mut R,
     length: usize,

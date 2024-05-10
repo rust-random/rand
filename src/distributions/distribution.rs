@@ -186,7 +186,6 @@ where
 /// Sampling a `String` of random characters is not quite the same as collecting
 /// a sequence of chars. This trait contains some helpers.
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub trait DistString {
     /// Append `len` random chars to `string`
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize);

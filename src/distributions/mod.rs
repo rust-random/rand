@@ -111,7 +111,6 @@ pub mod uniform;
 
 pub use self::bernoulli::{Bernoulli, BernoulliError};
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use self::distribution::DistString;
 pub use self::distribution::{DistIter, DistMap, Distribution};
 pub use self::float::{Open01, OpenClosed01};

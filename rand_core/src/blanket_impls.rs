@@ -44,7 +44,6 @@ impl<'a, R: TryRngCore + ?Sized> TryRngCore for &'a mut R {
 impl<'a, R: TryCryptoRng + ?Sized> TryCryptoRng for &'a mut R {}
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl<R: RngCore + ?Sized> RngCore for Box<R> {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -63,11 +62,9 @@ impl<R: RngCore + ?Sized> RngCore for Box<R> {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl<R: CryptoRng + ?Sized> CryptoRng for Box<R> {}
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl<R: TryRngCore + ?Sized> TryRngCore for Box<R> {
     type Error = R::Error;
 
@@ -88,5 +85,4 @@ impl<R: TryRngCore + ?Sized> TryRngCore for Box<R> {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl<R: TryCryptoRng + ?Sized> TryCryptoRng for Box<R> {}

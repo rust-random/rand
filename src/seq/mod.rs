@@ -28,7 +28,6 @@
 
 mod coin_flipper;
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub mod index;
 
 mod increasing_uniform;
@@ -122,7 +121,6 @@ pub trait IndexedRandom: Index<usize> {
     /// }
     /// ```
     #[cfg(feature = "alloc")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Output>
     where
         Self::Output: Sized,
@@ -166,7 +164,6 @@ pub trait IndexedRandom: Index<usize> {
     /// [`choose_weighted_mut`]: IndexedMutRandom::choose_weighted_mut
     /// [`distributions::WeightedIndex`]: crate::distributions::WeightedIndex
     #[cfg(feature = "alloc")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_weighted<R, F, B, X>(
         &self,
         rng: &mut R,
@@ -218,7 +215,6 @@ pub trait IndexedRandom: Index<usize> {
     // Note: this is feature-gated on std due to usage of f64::powf.
     // If necessary, we may use alloc+libm as an alternative (see PR #1089).
     #[cfg(feature = "std")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     fn choose_multiple_weighted<R, F, X>(
         &self,
         rng: &mut R,
@@ -288,7 +284,6 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
     /// [`choose_weighted`]: IndexedRandom::choose_weighted
     /// [`distributions::WeightedIndex`]: crate::distributions::WeightedIndex
     #[cfg(feature = "alloc")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_weighted_mut<R, F, B, X>(
         &mut self,
         rng: &mut R,
@@ -585,7 +580,6 @@ pub trait IteratorRandom: Iterator + Sized {
     /// Complexity is `O(n)` where `n` is the length of the iterator.
     /// For slices, prefer [`IndexedRandom::choose_multiple`].
     #[cfg(feature = "alloc")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
     fn choose_multiple<R>(mut self, rng: &mut R, amount: usize) -> Vec<Self::Item>
     where
         R: Rng + ?Sized,
@@ -672,7 +666,6 @@ impl<I> IteratorRandom for I where I: Iterator + Sized {}
 /// This struct is created by
 /// [`IndexedRandom::choose_multiple`](trait.IndexedRandom.html#tymethod.choose_multiple).
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 #[derive(Debug)]
 pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
     slice: &'a S,
@@ -681,7 +674,6 @@ pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceChooseIter<'a, S, T> {
     type Item = &'a T;
 
@@ -696,7 +688,6 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceCho
 }
 
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
     for SliceChooseIter<'a, S, T>
 {
