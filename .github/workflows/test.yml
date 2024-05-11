@@ -13,16 +13,24 @@ jobs:
   check-doc:
     name: Check doc
     runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: "-Dwarnings --cfg docsrs -Zunstable-options --generate-link-to-definition"
     steps:
       - uses: actions/checkout@v4
       - name: Install toolchain
-        uses: dtolnay/rust-toolchain@nightly
-      - run: cargo install cargo-deadlinks
-      - name: doc (rand)
-        env:
-          RUSTDOCFLAGS: --cfg doc_cfg
-        # --all builds all crates, but with default features for other crates (okay in this case)
-        run: cargo deadlinks --ignore-fragments -- --all --features nightly,serde1,getrandom,small_rng
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+      - name: rand
+        run: cargo doc --all-features --no-deps
+      - name: rand_core
+        run: cargo doc --all-features --package rand_core --no-deps
+      - name: rand_distr
+        run: cargo doc --all-features --package rand_distr --no-deps
+      - name: rand_chacha
+        run: cargo doc --all-features --package rand_chacha --no-deps
+      - name: rand_pcg
+        run: cargo doc --all-features --package rand_pcg --no-deps
 
   test:
     runs-on: ${{ matrix.os }}
