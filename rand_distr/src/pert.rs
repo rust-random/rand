@@ -139,7 +139,24 @@ mod test {
     }
 
     #[test]
-    fn pert_distributions_can_be_compared() {
+    fn distributions_can_be_compared() {
         assert_eq!(Pert::new(1.0, 3.0, 2.0), Pert::new(1.0, 3.0, 2.0));
+    }
+
+    #[test]
+    fn mode_almost_half_range() {
+        assert!(Pert::new(0.0f32, 0.48258883, 0.24129441).is_ok());
+    }
+
+    #[test]
+    fn almost_symmetric_about_zero() {
+        let distr = Pert::new(-10f32, 10f32, f32::EPSILON);
+        assert!(distr.is_ok());
+    }
+
+    #[test]
+    fn almost_symmetric() {
+        let distr = Pert::new(0f32, 2f32, 1f32 + f32::EPSILON);
+        assert!(distr.is_ok());
     }
 }
