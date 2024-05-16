@@ -117,7 +117,7 @@ pub use self::normal_inverse_gaussian::{
     Error as NormalInverseGaussianError, NormalInverseGaussian,
 };
 pub use self::pareto::{Error as ParetoError, Pareto};
-pub use self::pert::{Pert, PertError};
+pub use self::pert::{Pert, PertBuilder, PertError};
 pub use self::poisson::{Error as PoissonError, Poisson};
 pub use self::skew_normal::{Error as SkewNormalError, SkewNormal};
 pub use self::triangular::{Triangular, TriangularError};

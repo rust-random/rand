@@ -250,7 +250,7 @@ fn pert_stability() {
     // mean = 4, var = 12/7
     test_samples(
         860,
-        Pert::new(2., 10., 3.).unwrap(),
+        Pert::new(2., 10.).with_mode(3.).unwrap(),
         &[
             4.908681667460367,
             4.014196196158352,
