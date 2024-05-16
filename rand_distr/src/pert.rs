@@ -97,13 +97,8 @@ where
         }
 
         let range = max - min;
-        let mu = (min + max + shape * mode) / (shape + F::from(2.).unwrap());
-        let v = if mu == mode {
-            shape * F::from(0.5).unwrap() + F::from(1.).unwrap()
-        } else {
-            (mu - min) * (F::from(2.).unwrap() * mode - min - max) / ((mode - mu) * (max - min))
-        };
-        let w = v * (max - mu) / (mu - min);
+        let v = F::from(1.0).unwrap() + shape * (mode - min) / range;
+        let w = F::from(1.0).unwrap() + shape * (max - mode) / range;
         let beta = Beta::new(v, w).map_err(|_| PertError::RangeTooSmall)?;
         Ok(Pert { min, range, beta })
     }
