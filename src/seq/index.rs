@@ -287,14 +287,12 @@ where
 
     // Floyd's algorithm
     let mut indices = [0; N];
-    let mut i = 0;
-    for j in len - N..len {
+    for (i, j) in (len - N..len).enumerate() {
         let t = rng.gen_range(0..=j);
         if let Some(pos) = indices[0..i].iter().position(|&x| x == t) {
             indices[pos] = j;
         }
         indices[i] = t;
-        i += 1;
     }
     Some(indices)
 }
