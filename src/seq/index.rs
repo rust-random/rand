@@ -554,9 +554,11 @@ where
     IndexVec::from(indices)
 }
 
+#[cfg(feature = "alloc")]
 #[cfg(test)]
 mod test {
     use super::*;
+    use alloc::vec;
 
     #[test]
     #[cfg(feature = "serde1")]
@@ -576,9 +578,6 @@ mod test {
             }
         }
     }
-
-    #[cfg(feature = "alloc")]
-    use alloc::vec;
 
     #[test]
     fn test_sample_boundaries() {
