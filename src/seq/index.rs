@@ -17,7 +17,6 @@ use super::WeightError;
 use crate::distributions::uniform::SampleUniform;
 #[cfg(feature = "alloc")]
 use crate::distributions::{Distribution, Uniform};
-#[cfg(feature = "alloc")]
 use crate::Rng;
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 use alloc::collections::BTreeSet;
@@ -269,6 +268,35 @@ where
             sample_rejection(rng, length, amount)
         }
     }
+}
+
+/// Randomly sample exactly `N` distinct indices from `0..len`, and
+/// return them in random order (fully shuffled).
+///
+/// This is implemented via Floyd's algorithm. Time complexity is `O(N^2)`
+/// and memory complexity is `O(N)`.
+///
+/// Returns `None` if (and only if) `N > len`.
+pub fn sample_array<R, const N: usize>(rng: &mut R, len: usize) -> Option<[usize; N]>
+where
+    R: Rng + ?Sized,
+{
+    if N > len {
+        return None;
+    }
+
+    // Floyd's algorithm
+    let mut indices = [0; N];
+    let mut i = 0;
+    for j in len - N..len {
+        let t = rng.gen_range(0..=j);
+        if let Some(pos) = indices[0..i].iter().position(|&x| x == t) {
+            indices[pos] = j;
+        }
+        indices[i] = t;
+        i += 1;
+    }
+    Some(indices)
 }
 
 /// Randomly sample exactly `amount` distinct indices from `0..length`, and

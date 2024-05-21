@@ -61,7 +61,7 @@ pub trait IndexedRandom: Index<usize> {
         }
     }
 
-    /// Uniformly sample `amount` distinct elements
+    /// Uniformly sample `amount` distinct elements from self
     ///
     /// Chooses `amount` elements from the slice at random, without repetition,
     /// and in random order. The returned iterator is appropriate both for
@@ -99,6 +99,31 @@ pub trait IndexedRandom: Index<usize> {
             _phantom: Default::default(),
             indices: index::sample(rng, self.len(), amount).into_iter(),
         }
+    }
+
+    /// Uniformly sample a fixed-size array of distinct elements from self
+    ///
+    /// Chooses `N` elements from the slice at random, without repetition,
+    /// and in random order.
+    ///
+    /// For slices, complexity is the same as [`index::sample_array`].
+    ///
+    /// # Example
+    /// ```
+    /// use rand::seq::IndexedRandom;
+    ///
+    /// let mut rng = &mut rand::thread_rng();
+    /// let sample = "Hello, audience!".as_bytes();
+    ///
+    /// let a: [u8; 3] = sample.choose_multiple_array(&mut rng).unwrap();
+    /// ```
+    fn choose_multiple_array<R, const N: usize>(&self, rng: &mut R) -> Option<[Self::Output; N]>
+    where
+        Self::Output: Clone + Sized,
+        R: Rng + ?Sized,
+    {
+        let indices = index::sample_array(rng, self.len())?;
+        Some(indices.map(|index| self[index].clone()))
     }
 
     /// Biased sampling for one element
