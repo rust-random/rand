@@ -7,7 +7,7 @@
 // except according to those terms.
 
 //! Low-level API for sampling indices
-use core::{cmp::Ordering, hash::Hash, ops::AddAssign};
+use core::{hash::Hash, ops::AddAssign};
 
 #[cfg(feature = "alloc")]
 use core::slice;
@@ -329,6 +329,8 @@ where
     N: UInt,
     IndexVec: From<Vec<N>>,
 {
+    use std::cmp::Ordering;
+
     if amount == N::zero() {
         return Ok(IndexVec::U32(Vec::new()));
     }
