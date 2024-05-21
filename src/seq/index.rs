@@ -7,35 +7,30 @@
 // except according to those terms.
 
 //! Low-level API for sampling indices
-use core::{hash::Hash, ops::AddAssign};
-
-#[cfg(feature = "alloc")]
-use core::slice;
-
 #[cfg(feature = "alloc")]
 use alloc::vec::{self, Vec};
+use core::slice;
+use core::{hash::Hash, ops::AddAssign};
 // BTreeMap is not as fast in tests, but better than nothing.
-#[cfg(all(feature = "alloc", not(feature = "std")))]
-use alloc::collections::BTreeSet;
-#[cfg(feature = "std")]
-use std::collections::HashSet;
-
 #[cfg(feature = "std")]
 use super::WeightError;
-
+use crate::distributions::uniform::SampleUniform;
 #[cfg(feature = "alloc")]
-use crate::{
-    distributions::{uniform::SampleUniform, Distribution, Uniform},
-    Rng,
-};
-
+use crate::distributions::{Distribution, Uniform};
+#[cfg(feature = "alloc")]
+use crate::Rng;
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use alloc::collections::BTreeSet;
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "std")]
+use std::collections::HashSet;
 
 /// A vector of indices.
 ///
 /// Multiple internal representations are possible.
 #[derive(Clone, Debug)]
+#[cfg(feature = "alloc")]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub enum IndexVec {
     #[doc(hidden)]
@@ -44,6 +39,7 @@ pub enum IndexVec {
     USize(Vec<usize>),
 }
 
+#[cfg(feature = "alloc")]
 impl IndexVec {
     /// Returns the number of indices
     #[inline]
@@ -94,6 +90,7 @@ impl IndexVec {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl IntoIterator for IndexVec {
     type IntoIter = IndexVecIntoIter;
     type Item = usize;
@@ -108,6 +105,7 @@ impl IntoIterator for IndexVec {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl PartialEq for IndexVec {
     fn eq(&self, other: &IndexVec) -> bool {
         use self::IndexVec::*;
@@ -124,6 +122,7 @@ impl PartialEq for IndexVec {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl From<Vec<u32>> for IndexVec {
     #[inline]
     fn from(v: Vec<u32>) -> Self {
@@ -131,6 +130,7 @@ impl From<Vec<u32>> for IndexVec {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl From<Vec<usize>> for IndexVec {
     #[inline]
     fn from(v: Vec<usize>) -> Self {
@@ -171,6 +171,7 @@ impl<'a> Iterator for IndexVecIter<'a> {
 impl<'a> ExactSizeIterator for IndexVecIter<'a> {}
 
 /// Return type of `IndexVec::into_iter`.
+#[cfg(feature = "alloc")]
 #[derive(Clone, Debug)]
 pub enum IndexVecIntoIter {
     #[doc(hidden)]
@@ -179,6 +180,7 @@ pub enum IndexVecIntoIter {
     USize(vec::IntoIter<usize>),
 }
 
+#[cfg(feature = "alloc")]
 impl Iterator for IndexVecIntoIter {
     type Item = usize;
 
@@ -201,6 +203,7 @@ impl Iterator for IndexVecIntoIter {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl ExactSizeIterator for IndexVecIntoIter {}
 
 /// Randomly sample exactly `amount` distinct indices from `0..length`, and
@@ -225,6 +228,7 @@ impl ExactSizeIterator for IndexVecIntoIter {}
 /// to adapt the internal `sample_floyd` implementation.
 ///
 /// Panics if `amount > length`.
+#[cfg(feature = "alloc")]
 #[track_caller]
 pub fn sample<R>(rng: &mut R, length: usize, amount: usize) -> IndexVec
 where
@@ -401,6 +405,7 @@ where
 /// The output values are fully shuffled. (Overhead is under 50%.)
 ///
 /// This implementation uses `O(amount)` memory and `O(amount^2)` time.
+#[cfg(feature = "alloc")]
 fn sample_floyd<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
 where
     R: Rng + ?Sized,
@@ -432,6 +437,7 @@ where
 /// performance in all cases).
 ///
 /// Set-up is `O(length)` time and memory and shuffling is `O(amount)` time.
+#[cfg(feature = "alloc")]
 fn sample_inplace<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
 where
     R: Rng + ?Sized,
@@ -497,6 +503,7 @@ impl UInt for usize {
 ///
 /// This function  is generic over X primarily so that results are value-stable
 /// over 32-bit and 64-bit platforms.
+#[cfg(feature = "alloc")]
 fn sample_rejection<X: UInt, R>(rng: &mut R, length: X, amount: X) -> IndexVec
 where
     R: Rng + ?Sized,

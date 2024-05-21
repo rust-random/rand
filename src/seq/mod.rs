@@ -31,7 +31,6 @@ mod increasing_uniform;
 mod iterator;
 mod slice;
 
-#[cfg(feature = "alloc")]
 pub mod index;
 
 #[cfg(feature = "alloc")]
