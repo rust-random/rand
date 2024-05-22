@@ -33,5 +33,4 @@ rand_core = { path = "../rand_core", version = "=0.9.0-alpha.1", features = ["ge
 default = ["std"]
 getrandom = ["rand_core/getrandom"]
 std = ["ppv-lite86/std", "rand_core/std"]
-simd = [] # deprecated
 serde1 = ["serde"]
