@@ -28,9 +28,9 @@ jobs:
       - name: rand_distr
         run: cargo doc --all-features --package rand_distr --no-deps
       - name: rand_chacha
-        run: cargo doc --all-features --package rand_chacha --no-deps --features rand_core/getrandom
+        run: cargo doc --all-features --package rand_chacha --no-deps --features getrandom
       - name: rand_pcg
-        run: cargo doc --all-features --package rand_pcg --no-deps --features rand_core/getrandom
+        run: cargo doc --all-features --package rand_pcg --no-deps --features getrandom
 
   test:
     runs-on: ${{ matrix.os }}

@@ -16,6 +16,7 @@ edition = "2021"
 rust-version = "1.61"
 
 [package.metadata.docs.rs]
+features = ["getrandom"]
 rustdoc-args = ["--generate-link-to-definition"]
 
 [dependencies]
@@ -30,6 +31,7 @@ rand_core = { path = "../rand_core", version = "=0.9.0-alpha.1", features = ["ge
 
 [features]
 default = ["std"]
+getrandom = ["rand_core/getrandom"]
 std = ["ppv-lite86/std", "rand_core/std"]
 simd = [] # deprecated
 serde1 = ["serde"]

@@ -16,10 +16,12 @@ edition = "2021"
 rust-version = "1.61"
 
 [package.metadata.docs.rs]
+features = ["getrandom"]
 rustdoc-args = ["--generate-link-to-definition"]
 
 [features]
 serde1 = ["serde"]
+getrandom = ["rand_core/getrandom"]
 
 [dependencies]
 rand_core = { path = "../rand_core", version = "=0.9.0-alpha.1" }
