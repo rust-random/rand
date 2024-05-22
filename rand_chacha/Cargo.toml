@@ -16,7 +16,7 @@ edition = "2021"
 rust-version = "1.61"
 
 [package.metadata.docs.rs]
-features = ["getrandom"]
+all-features = true
 rustdoc-args = ["--generate-link-to-definition"]
 
 [dependencies]
