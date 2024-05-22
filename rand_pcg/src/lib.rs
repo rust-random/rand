@@ -95,6 +95,8 @@ mod pcg128;
 mod pcg128cm;
 mod pcg64;
 
+pub use rand_core;
+
 pub use self::pcg128::{Lcg128Xsl64, Mcg128Xsl64, Pcg64, Pcg64Mcg};
 pub use self::pcg128cm::{Lcg128CmDxsm64, Pcg64Dxsm};
 pub use self::pcg64::{Lcg64Xsh32, Pcg32};
