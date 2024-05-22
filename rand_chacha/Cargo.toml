@@ -26,6 +26,7 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 [dev-dependencies]
 # Only to test serde1
 serde_json = "1.0"
+rand_core = { path = "../rand_core", features = ["getrandom"] }
 
 [features]
 default = ["std"]
