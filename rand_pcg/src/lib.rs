@@ -69,7 +69,7 @@
 //! ```
 //!
 //! It is often more convenient to use the [`rand::Rng`] trait, which provides
-//! further functionality. See also [Random Values] in the book.
+//! further functionality. See also the [Random Values] chapter in the book.
 //!
 //! [PCG generators]: https://www.pcg-random.org/
 //! [Reproducibility]: https://rust-random.github.io/book/crate-reprod.html

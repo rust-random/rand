@@ -26,7 +26,8 @@
 //! [`ChaCha12Rng`] or [`ChaCha20Rng`] and to seed via
 //! [`SeedableRng::from_os_rng`].
 //!
-//! See also [Security] in the book. No guarantees of security are provided.
+//! See also the [Security] chapter in the rand book. The crate is provided
+//! "as is", without any form of guarantee, and without a security audit.
 //!
 //! ## Seeding (construction)
 //!
@@ -62,7 +63,7 @@
 //! ```
 //!
 //! It is often more convenient to use the [`rand::Rng`] trait, which provides
-//! further functionality. See also [Random Values] in the book.
+//! further functionality. See also the [Random Values] chapter in the book.
 //!
 //! [ChaCha stream ciphers]: https://cr.yp.to/chacha.html
 //! [Reproducibility]: https://rust-random.github.io/book/crate-reprod.html
