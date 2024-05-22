@@ -12,6 +12,8 @@
 //! The primary goal of this crate is simple, minimal, well-tested code; in
 //! other words it is explicitly not a goal to re-implement all of PCG.
 //!
+//! ## Generators
+//!
 //! This crate provides:
 //!
 //! -   [`Pcg32`] aka [`Lcg64Xsh32`], officially known as `pcg32`, a general

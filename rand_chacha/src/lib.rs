@@ -11,6 +11,8 @@
 //! These are native Rust implementations of RNGs derived from the
 //! [ChaCha stream ciphers] by D J Bernstein.
 //!
+//! ## Generators
+//!
 //! This crate provides 8-, 12- and 20-round variants of generators via a "core"
 //! implementation (of [`BlockRngCore`]), each with an associated "RNG" type
 //! (implementing [`RngCore`]).
