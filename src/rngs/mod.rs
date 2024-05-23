@@ -52,7 +52,7 @@
 //!
 //! ## Traits and functionality
 //!
-//! All generators implements [`RngCore`] and thus also [`Rng`][crate::Rng].
+//! All generators implement [`RngCore`] and thus also [`Rng`][crate::Rng].
 //! See also the [Random Values] chapter in the book.
 //!
 //! Secure RNGs may additionally implement the [`CryptoRng`] trait.
