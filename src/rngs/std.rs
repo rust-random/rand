@@ -15,19 +15,48 @@ pub(crate) use rand_chacha::ChaCha12Core as Core;
 
 use rand_chacha::ChaCha12Rng as Rng;
 
-/// The standard RNG. The PRNG algorithm in `StdRng` is chosen to be efficient
-/// on the current platform, to be statistically strong and unpredictable
-/// (meaning a cryptographically secure PRNG).
+/// A strong, fast (amortized), non-portable RNG
+///
+/// This is the "standard" RNG, a generator with the following properties:
+///
+/// - Non-[portable]: any future library version may replace the algorithm
+///   and results may be platform-dependent.
+///   (For a portable version, use the [rand_chacha] crate directly.)
+/// - [CSPRNG]: statistically good quality of randomness and [unpredictable]
+/// - Fast ([amortized](https://en.wikipedia.org/wiki/Amortized_analysis)):
+///   the RNG is fast for bulk generation, but the cost of method calls is not
+///   consistent due to usage of an output buffer.
 ///
 /// The current algorithm used is the ChaCha block cipher with 12 rounds. Please
 /// see this relevant [rand issue] for the discussion. This may change as new
 /// evidence of cipher security and performance becomes available.
 ///
-/// The algorithm is deterministic but should not be considered reproducible
-/// due to dependence on configuration and possible replacement in future
-/// library versions. For a secure reproducible generator, we recommend use of
-/// the [rand_chacha] crate directly.
+/// ## Seeding (construction)
 ///
+/// This generator implements the [`SeedableRng`] trait. Any method may be used,
+/// but note that `seed_from_u64` is not suitable for usage where security is
+/// important. Also note that, even with a fixed seed, output is not [portable].
+///
+/// It is suggested to use a fresh seed **direct from the OS** as the most
+/// secure and convenient option:
+/// ```
+/// # use rand::{SeedableRng, rngs::StdRng};
+/// let rng = StdRng::from_os_rng();
+/// # let _: StdRng = rng;
+/// ```
+///
+/// See also [Seeding RNGs] in the book.
+///
+/// ## Generation
+///
+/// The generators implements [`RngCore`] and thus also [`Rng`][crate::Rng].
+/// See also the [Random Values] chapter in the book.
+///
+/// [portable]: https://rust-random.github.io/book/crate-reprod.html
+/// [Seeding RNGs]: https://rust-random.github.io/book/guide-seeding.html
+/// [unpredictable]: https://rust-random.github.io/book/guide-rngs.html#security
+/// [Random Values]: https://rust-random.github.io/book/guide-values.html
+/// [CSPRNG]: https://rust-random.github.io/book/guide-gen.html#cryptographically-secure-pseudo-random-number-generator
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
 /// [rand issue]: https://github.com/rust-random/rand/issues/932
 #[derive(Clone, Debug, PartialEq, Eq)]
