@@ -53,11 +53,11 @@ type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 ///     let rng = SmallRng::from_os_rng();
 ///     # let _: SmallRng = rng;
 ///     ```
-/// 3.  **From a master generator.** This could be [`thread_rng`][crate::thread_rng]
-///     (effectively a fresh seed without the need for a syscall on each usage)
-///     or a deterministic generator such as [`rand_chacha::ChaCha8Rng`].
-///     Beware that should a weak master generator be used, correlations may be
-///     detectable between the outputs of its child generators.
+/// 3.  Via [`SmallRng::from_thread_rng`]:
+///     ```
+///     # use rand::rngs::SmallRng;
+///     let rng = SmallRng::from_thread_rng();
+///     ```
 ///
 /// See also [Seeding RNGs] in the book.
 ///
@@ -76,6 +76,22 @@ type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 /// [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
+
+impl SeedableRng for SmallRng {
+    // Fix to 256 bits. Changing this is a breaking change!
+    type Seed = [u8; 32];
+
+    #[inline(always)]
+    fn from_seed(seed: Self::Seed) -> Self {
+        let seed = seed.first_chunk().unwrap();
+        SmallRng(Rng::from_seed(*seed))
+    }
+
+    #[inline(always)]
+    fn seed_from_u64(state: u64) -> Self {
+        SmallRng(Rng::seed_from_u64(state))
+    }
+}
 
 impl RngCore for SmallRng {
     #[inline(always)]
@@ -97,21 +113,6 @@ impl RngCore for SmallRng {
 rand_core::impl_try_rng_from_rng_core!(SmallRng);
 
 impl SmallRng {
-    /// Construct an instance seeded from another `Rng`
-    ///
-    /// We recommend that the source (master) RNG uses a different algorithm
-    /// (i.e. is not `SmallRng`) to avoid correlations between the child PRNGs.
-    ///
-    /// # Example
-    /// ```
-    /// # use rand::rngs::SmallRng;
-    /// let rng = SmallRng::from_rng(rand::thread_rng());
-    /// ```
-    #[inline(always)]
-    pub fn from_rng<R: RngCore>(rng: R) -> Self {
-        Self(Rng::from_rng(rng))
-    }
-
     /// Construct an instance seeded from the thread-local RNG
     ///
     /// # Panics
@@ -124,25 +125,5 @@ impl SmallRng {
         let mut seed = <Rng as SeedableRng>::Seed::default();
         crate::thread_rng().fill_bytes(seed.as_mut());
         SmallRng(Rng::from_seed(seed))
-    }
-
-    /// Construct an instance from a `u64` seed
-    ///
-    /// This provides a convenient method of seeding a `SmallRng` from a simple
-    /// number by use of another algorithm to mutate and expand the input.
-    /// This is suitable for use with low Hamming Weight numbers like 0 and 1.
-    ///
-    /// **Warning:** the implementation is deterministic but not portable:
-    /// output values may differ according to platform and may be changed by a
-    /// future version of the library.
-    ///
-    /// # Example
-    /// ```
-    /// # use rand::rngs::SmallRng;
-    /// let rng = SmallRng::seed_from_u64(1);
-    /// ```
-    #[inline(always)]
-    pub fn seed_from_u64(state: u64) -> Self {
-        SmallRng(Rng::seed_from_u64(state))
     }
 }
