@@ -15,29 +15,65 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 #[cfg(not(target_pointer_width = "64"))]
 type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 
-/// A small-state, fast non-crypto PRNG
+/// A small-state, fast, non-crypto, non-portable PRNG
 ///
-/// `SmallRng` may be a good choice when a PRNG with small state, cheap
-/// initialization, good statistical quality and good performance are required.
-/// Note that depending on the application, [`StdRng`] may be faster on many
-/// modern platforms while providing higher-quality randomness. Furthermore,
-/// `SmallRng` is **not** a good choice when:
+/// This is the "standard small" RNG, a generator with the following properties:
 ///
-/// - Portability is required. Its implementation is not fixed. Use a named
-///   generator from an external crate instead, for example [rand_xoshiro] or
-///   [rand_chacha]. Refer also to
-///   [The Book](https://rust-random.github.io/book/guide-rngs.html).
-/// - Security against prediction is important. Use [`StdRng`] instead.
+/// - Non-[portable]: any future library version may replace the algorithm
+///   and results may be platform-dependent.
+///   (For a small portable generator, use the [rand_pcg] or [rand_xoshiro] crate.)
+/// - Non-cryptographic: output is easy to predict (insecure)
+/// - [Quality]: statistically good quality
+/// - Fast: the RNG is fast for both bulk generation and single values, with
+///   consistent cost of method calls
+/// - Fast initialization
+/// - Small state: little memory usage (current state size is 16-32 bytes
+///   depending on platform)
 ///
-/// The PRNG algorithm in `SmallRng` is chosen to be efficient on the current
-/// platform, without consideration for cryptography or security. The size of
-/// its state is much smaller than [`StdRng`]. The current algorithm is
+/// The current algorithm is
 /// `Xoshiro256PlusPlus` on 64-bit platforms and `Xoshiro128PlusPlus` on 32-bit
 /// platforms. Both are also implemented by the [rand_xoshiro] crate.
 ///
+/// ## Seeding (construction)
+///
+/// This generator implements the [`SeedableRng`] trait. All methods are
+/// suitable for seeding, but note that, even with a fixed seed, output is not
+/// [portable]. Some suggestions:
+///
+/// 1.  Seed **from an integer** via `seed_from_u64`. This uses a hash function
+///     internally to yield a (typically) good seed from any input.
+///     ```
+///     # use rand::{SeedableRng, rngs::SmallRng};
+///     let rng = SmallRng::seed_from_u64(1);
+///     # let _: SmallRng = rng;
+///     ```
+/// 2.  With a fresh seed, **direct from the OS** (implies a syscall):
+///     ```
+///     # use rand::{SeedableRng, rngs::SmallRng};
+///     let rng = SmallRng::from_os_rng();
+///     # let _: SmallRng = rng;
+///     ```
+/// 3.  **From a master generator.** This could be [`thread_rng`][crate::thread_rng]
+///     (effectively a fresh seed without the need for a syscall on each usage)
+///     or a deterministic generator such as [`rand_chacha::ChaCha8Rng`].
+///     Beware that should a weak master generator be used, correlations may be
+///     detectable between the outputs of its child generators.
+///
+/// See also [Seeding RNGs] in the book.
+///
+/// ## Generation
+///
+/// The generators implements [`RngCore`] and thus also [`Rng`][crate::Rng].
+/// See also the [Random Values] chapter in the book.
+///
+/// [portable]: https://rust-random.github.io/book/crate-reprod.html
+/// [Seeding RNGs]: https://rust-random.github.io/book/guide-seeding.html
+/// [Random Values]: https://rust-random.github.io/book/guide-values.html
+/// [Quality]: https://rust-random.github.io/book/guide-rngs.html#quality
 /// [`StdRng`]: crate::rngs::StdRng
-/// [rand_chacha]: https://crates.io/crates/rand_chacha
+/// [rand_pcg]: https://crates.io/crates/rand_pcg
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
+/// [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
 
