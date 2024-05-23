@@ -15,31 +15,85 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 #[cfg(not(target_pointer_width = "64"))]
 type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 
-/// A small-state, fast non-crypto PRNG
+/// A small-state, fast, non-crypto, non-portable PRNG
 ///
-/// `SmallRng` may be a good choice when a PRNG with small state, cheap
-/// initialization, good statistical quality and good performance are required.
-/// Note that depending on the application, [`StdRng`] may be faster on many
-/// modern platforms while providing higher-quality randomness. Furthermore,
-/// `SmallRng` is **not** a good choice when:
+/// This is the "standard small" RNG, a generator with the following properties:
 ///
-/// - Portability is required. Its implementation is not fixed. Use a named
-///   generator from an external crate instead, for example [rand_xoshiro] or
-///   [rand_chacha]. Refer also to
-///   [The Book](https://rust-random.github.io/book/guide-rngs.html).
-/// - Security against prediction is important. Use [`StdRng`] instead.
+/// - Non-[portable]: any future library version may replace the algorithm
+///   and results may be platform-dependent.
+///   (For a small portable generator, use the [rand_pcg] or [rand_xoshiro] crate.)
+/// - Non-cryptographic: output is easy to predict (insecure)
+/// - [Quality]: statistically good quality
+/// - Fast: the RNG is fast for both bulk generation and single values, with
+///   consistent cost of method calls
+/// - Fast initialization
+/// - Small state: little memory usage (current state size is 16-32 bytes
+///   depending on platform)
 ///
-/// The PRNG algorithm in `SmallRng` is chosen to be efficient on the current
-/// platform, without consideration for cryptography or security. The size of
-/// its state is much smaller than [`StdRng`]. The current algorithm is
+/// The current algorithm is
 /// `Xoshiro256PlusPlus` on 64-bit platforms and `Xoshiro128PlusPlus` on 32-bit
 /// platforms. Both are also implemented by the [rand_xoshiro] crate.
 ///
+/// ## Seeding (construction)
+///
+/// This generator implements the [`SeedableRng`] trait. All methods are
+/// suitable for seeding, but note that, even with a fixed seed, output is not
+/// [portable]. Some suggestions:
+///
+/// 1.  Seed **from an integer** via `seed_from_u64`. This uses a hash function
+///     internally to yield a (typically) good seed from any input.
+///     ```
+///     # use rand::{SeedableRng, rngs::SmallRng};
+///     let rng = SmallRng::seed_from_u64(1);
+///     # let _: SmallRng = rng;
+///     ```
+/// 2.  With a fresh seed, **direct from the OS** (implies a syscall):
+///     ```
+///     # use rand::{SeedableRng, rngs::SmallRng};
+///     let rng = SmallRng::from_os_rng();
+///     # let _: SmallRng = rng;
+///     ```
+/// 3.  Via [`SmallRng::from_thread_rng`]:
+///     ```
+///     # use rand::rngs::SmallRng;
+///     let rng = SmallRng::from_thread_rng();
+///     ```
+///
+/// See also [Seeding RNGs] in the book.
+///
+/// ## Generation
+///
+/// The generators implements [`RngCore`] and thus also [`Rng`][crate::Rng].
+/// See also the [Random Values] chapter in the book.
+///
+/// [portable]: https://rust-random.github.io/book/crate-reprod.html
+/// [Seeding RNGs]: https://rust-random.github.io/book/guide-seeding.html
+/// [Random Values]: https://rust-random.github.io/book/guide-values.html
+/// [Quality]: https://rust-random.github.io/book/guide-rngs.html#quality
 /// [`StdRng`]: crate::rngs::StdRng
-/// [rand_chacha]: https://crates.io/crates/rand_chacha
+/// [rand_pcg]: https://crates.io/crates/rand_pcg
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
+/// [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
+
+impl SeedableRng for SmallRng {
+    // Fix to 256 bits. Changing this is a breaking change!
+    type Seed = [u8; 32];
+
+    #[inline(always)]
+    fn from_seed(seed: Self::Seed) -> Self {
+        // With MSRV >= 1.77: let seed = *seed.first_chunk().unwrap();
+        const LEN: usize = core::mem::size_of::<<Rng as SeedableRng>::Seed>();
+        let seed = (&seed[..LEN]).try_into().unwrap();
+        SmallRng(Rng::from_seed(seed))
+    }
+
+    #[inline(always)]
+    fn seed_from_u64(state: u64) -> Self {
+        SmallRng(Rng::seed_from_u64(state))
+    }
+}
 
 impl RngCore for SmallRng {
     #[inline(always)]
@@ -61,21 +115,6 @@ impl RngCore for SmallRng {
 rand_core::impl_try_rng_from_rng_core!(SmallRng);
 
 impl SmallRng {
-    /// Construct an instance seeded from another `Rng`
-    ///
-    /// We recommend that the source (master) RNG uses a different algorithm
-    /// (i.e. is not `SmallRng`) to avoid correlations between the child PRNGs.
-    ///
-    /// # Example
-    /// ```
-    /// # use rand::rngs::SmallRng;
-    /// let rng = SmallRng::from_rng(rand::thread_rng());
-    /// ```
-    #[inline(always)]
-    pub fn from_rng<R: RngCore>(rng: R) -> Self {
-        Self(Rng::from_rng(rng))
-    }
-
     /// Construct an instance seeded from the thread-local RNG
     ///
     /// # Panics
@@ -88,25 +127,5 @@ impl SmallRng {
         let mut seed = <Rng as SeedableRng>::Seed::default();
         crate::thread_rng().fill_bytes(seed.as_mut());
         SmallRng(Rng::from_seed(seed))
-    }
-
-    /// Construct an instance from a `u64` seed
-    ///
-    /// This provides a convenient method of seeding a `SmallRng` from a simple
-    /// number by use of another algorithm to mutate and expand the input.
-    /// This is suitable for use with low Hamming Weight numbers like 0 and 1.
-    ///
-    /// **Warning:** the implementation is deterministic but not portable:
-    /// output values may differ according to platform and may be changed by a
-    /// future version of the library.
-    ///
-    /// # Example
-    /// ```
-    /// # use rand::rngs::SmallRng;
-    /// let rng = SmallRng::seed_from_u64(1);
-    /// ```
-    #[inline(always)]
-    pub fn seed_from_u64(state: u64) -> Self {
-        SmallRng(Rng::seed_from_u64(state))
     }
 }
