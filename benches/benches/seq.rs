@@ -25,7 +25,7 @@ const RAND_BENCH_N: u64 = 1000;
 
 #[bench]
 fn seq_shuffle_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+    let mut rng = SmallRng::from_rng(thread_rng());
     let x: &mut [usize] = &mut [1; 100];
     b.iter(|| {
         x.shuffle(&mut rng);
@@ -35,7 +35,7 @@ fn seq_shuffle_100(b: &mut Bencher) {
 
 #[bench]
 fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+    let mut rng = SmallRng::from_rng(thread_rng());
     let x: &mut [usize] = &mut [1; 1000];
     for (i, r) in x.iter_mut().enumerate() {
         *r = i;
@@ -54,7 +54,7 @@ macro_rules! seq_slice_choose_multiple {
     ($name:ident, $amount:expr, $length:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
-            let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+            let mut rng = SmallRng::from_rng(thread_rng());
             let x: &[i32] = &[$amount; $length];
             let mut result = [0i32; $amount];
             b.iter(|| {
@@ -76,14 +76,14 @@ seq_slice_choose_multiple!(seq_slice_choose_multiple_90_of_100, 90, 100);
 
 #[bench]
 fn seq_iter_choose_multiple_10_of_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+    let mut rng = SmallRng::from_rng(thread_rng());
     let x: &[usize] = &[1; 100];
     b.iter(|| x.iter().cloned().choose_multiple(&mut rng, 10))
 }
 
 #[bench]
 fn seq_iter_choose_multiple_fill_10_of_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+    let mut rng = SmallRng::from_rng(thread_rng());
     let x: &[usize] = &[1; 100];
     let mut buf = [0; 10];
     b.iter(|| x.iter().cloned().choose_multiple_fill(&mut rng, &mut buf))
@@ -93,7 +93,7 @@ macro_rules! sample_indices {
     ($name:ident, $fn:ident, $amount:expr, $length:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
-            let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+            let mut rng = SmallRng::from_rng(thread_rng());
             b.iter(|| index::$fn(&mut rng, $length, $amount))
         }
     };
@@ -112,7 +112,7 @@ macro_rules! sample_indices_rand_weights {
     ($name:ident, $amount:expr, $length:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
-            let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
+            let mut rng = SmallRng::from_rng(thread_rng());
             b.iter(|| {
                 index::sample_weighted(&mut rng, $length, |idx| (1 + (idx % 100)) as u32, $amount)
             })

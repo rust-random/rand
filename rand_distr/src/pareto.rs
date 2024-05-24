@@ -8,10 +8,10 @@
 
 //! The Pareto distribution.
 
-use num_traits::Float;
 use crate::{Distribution, OpenClosed01};
-use rand::Rng;
 use core::fmt;
+use num_traits::Float;
+use rand::Rng;
 
 /// The Pareto distribution is a continuous probability distribution with
 /// parameters `scale` (α) and `shape` (x<sub>m</sub> or k).
@@ -33,7 +33,9 @@ use core::fmt;
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Pareto<F>
-where F: Float, OpenClosed01: Distribution<F>
+where
+    F: Float,
+    OpenClosed01: Distribution<F>,
 {
     scale: F,
     inv_neg_shape: F,
@@ -58,11 +60,12 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}
 
 impl<F> Pareto<F>
-where F: Float, OpenClosed01: Distribution<F>
+where
+    F: Float,
+    OpenClosed01: Distribution<F>,
 {
     /// Construct a new Pareto distribution with given `scale` and `shape`.
     ///
@@ -85,7 +88,9 @@ where F: Float, OpenClosed01: Distribution<F>
 }
 
 impl<F> Distribution<F> for Pareto<F>
-where F: Float, OpenClosed01: Distribution<F>
+where
+    F: Float,
+    OpenClosed01: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         let u: F = OpenClosed01.sample(rng);
@@ -119,7 +124,9 @@ mod tests {
     #[test]
     fn value_stability() {
         fn test_samples<F: Float + Debug + Display + LowerExp, D: Distribution<F>>(
-            distr: D, thresh: F, expected: &[F],
+            distr: D,
+            thresh: F,
+            expected: &[F],
         ) {
             let mut rng = crate::test::rng(213);
             for v in expected {
@@ -128,15 +135,21 @@ mod tests {
             }
         }
 
-        test_samples(Pareto::new(1f32, 1.0).unwrap(), 1e-6, &[
-            1.0423688, 2.1235929, 4.132709, 1.4679428,
-        ]);
-        test_samples(Pareto::new(2.0, 0.5).unwrap(), 1e-14, &[
-            9.019295276219136,
-            4.3097126018270595,
-            6.837815045397157,
-            105.8826669383772,
-        ]);
+        test_samples(
+            Pareto::new(1f32, 1.0).unwrap(),
+            1e-6,
+            &[1.0423688, 2.1235929, 4.132709, 1.4679428],
+        );
+        test_samples(
+            Pareto::new(2.0, 0.5).unwrap(),
+            1e-14,
+            &[
+                9.019295276219136,
+                4.3097126018270595,
+                6.837815045397157,
+                105.8826669383772,
+            ],
+        );
     }
 
     #[test]

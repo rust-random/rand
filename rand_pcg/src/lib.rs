@@ -8,48 +8,78 @@
 
 //! The PCG random number generators.
 //!
-//! This is a native Rust implementation of a small selection of PCG generators.
+//! This is a native Rust implementation of a small selection of [PCG generators].
 //! The primary goal of this crate is simple, minimal, well-tested code; in
 //! other words it is explicitly not a goal to re-implement all of PCG.
 //!
+//! ## Generators
+//!
 //! This crate provides:
 //!
-//! -   `Pcg32` aka `Lcg64Xsh32`, officially known as `pcg32`, a general
+//! -   [`Pcg32`] aka [`Lcg64Xsh32`], officially known as `pcg32`, a general
 //!     purpose RNG. This is a good choice on both 32-bit and 64-bit CPUs
 //!     (for 32-bit output).
-//! -   `Pcg64` aka `Lcg128Xsl64`, officially known as `pcg64`, a general
+//! -   [`Pcg64`] aka [`Lcg128Xsl64`], officially known as `pcg64`, a general
 //!     purpose RNG. This is a good choice on 64-bit CPUs.
-//! -   `Pcg64Mcg` aka `Mcg128Xsl64`, officially known as `pcg64_fast`,
+//! -   [`Pcg64Mcg`] aka [`Mcg128Xsl64`], officially known as `pcg64_fast`,
 //!     a general purpose RNG using 128-bit multiplications. This has poor
 //!     performance on 32-bit CPUs but is a good choice on 64-bit CPUs for
 //!     both 32-bit and 64-bit output.
 //!
-//! Both of these use 16 bytes of state and 128-bit seeds, and are considered
-//! value-stable (i.e. any change affecting the output given a fixed seed would
-//! be considered a breaking change to the crate).
+//! These generators are all deterministic and portable (see [Reproducibility]
+//! in the book), with testing against reference vectors.
 //!
-//! # Example
+//! ## Seeding (construction)
 //!
-//! To initialize a generator, use the [`SeedableRng`][rand_core::SeedableRng] trait:
+//! Generators implement the [`SeedableRng`] trait. All methods are suitable for
+//! seeding. Some suggestions:
 //!
+//! 1.  Seed **from an integer** via `seed_from_u64`. This uses a hash function
+//!     internally to yield a (typically) good seed from any input.
+//!     ```
+//!     # use {rand_core::SeedableRng, rand_pcg::Pcg64Mcg};
+//!     let rng = Pcg64Mcg::seed_from_u64(1);
+//!     # let _: Pcg64Mcg = rng;
+//!     ```
+//! 2.  With a fresh seed, **direct from the OS** (implies a syscall):
+//!     ```
+//!     # use {rand_core::SeedableRng, rand_pcg::Pcg64Mcg};
+//!     let rng = Pcg64Mcg::from_os_rng();
+//!     # let _: Pcg64Mcg = rng;
+//!     ```
+//! 3.  **From a master generator.** This could be [`rand::thread_rng`]
+//!     (effectively a fresh seed without the need for a syscall on each usage)
+//!     or a deterministic generator such as [`rand_chacha::ChaCha8Rng`].
+//!     Beware that should a weak master generator be used, correlations may be
+//!     detectable between the outputs of its child generators.
+//!
+//! See also [Seeding RNGs] in the book.
+//!
+//! ## Generation
+//!
+//! Generators implement [`RngCore`], whose methods may be used directly to
+//! generate unbounded integer or byte values.
 //! ```
 //! use rand_core::{SeedableRng, RngCore};
 //! use rand_pcg::Pcg64Mcg;
 //!
 //! let mut rng = Pcg64Mcg::seed_from_u64(0);
-//! let x: u32 = rng.next_u32();
+//! let x = rng.next_u64();
+//! assert_eq!(x, 0x5603f242407deca2);
 //! ```
 //!
-//! The functionality of this crate is implemented using traits from the `rand_core` crate, but you may use the `rand`
-//! crate for further functionality to initialize the generator from various sources and to generate random values:
+//! It is often more convenient to use the [`rand::Rng`] trait, which provides
+//! further functionality. See also the [Random Values] chapter in the book.
 //!
-//! ```ignore
-//! use rand::{Rng, SeedableRng};
-//! use rand_pcg::Pcg64Mcg;
-//!
-//! let mut rng = Pcg64Mcg::from_entropy();
-//! let x: f64 = rng.gen();
-//! ```
+//! [PCG generators]: https://www.pcg-random.org/
+//! [Reproducibility]: https://rust-random.github.io/book/crate-reprod.html
+//! [Seeding RNGs]: https://rust-random.github.io/book/guide-seeding.html
+//! [Random Values]: https://rust-random.github.io/book/guide-values.html
+//! [`RngCore`]: rand_core::RngCore
+//! [`SeedableRng`]: rand_core::SeedableRng
+//! [`rand::thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
+//! [`rand::Rng`]: https://docs.rs/rand/latest/rand/trait.Rng.html
+//! [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
 
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",
@@ -64,6 +94,8 @@
 mod pcg128;
 mod pcg128cm;
 mod pcg64;
+
+pub use rand_core;
 
 pub use self::pcg128::{Lcg128Xsl64, Mcg128Xsl64, Pcg64, Pcg64Mcg};
 pub use self::pcg128cm::{Lcg128CmDxsm64, Pcg64Dxsm};

@@ -14,8 +14,9 @@
 const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
 use core::fmt;
-use rand_core::{impls, le, Error, RngCore, SeedableRng};
-#[cfg(feature = "serde1")] use serde::{Deserialize, Serialize};
+use rand_core::{impls, le, RngCore, SeedableRng};
+#[cfg(feature = "serde1")]
+use serde::{Deserialize, Serialize};
 
 /// A PCG random number generator (XSL RR 128/64 (LCG) variant).
 ///
@@ -151,14 +152,7 @@ impl RngCore for Lcg128Xsl64 {
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         impls::fill_bytes_via_next(self, dest)
     }
-
-    #[inline]
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.fill_bytes(dest);
-        Ok(())
-    }
 }
-
 
 /// A PCG random number generator (XSL 128/64 (MCG) variant).
 ///
@@ -260,12 +254,6 @@ impl RngCore for Mcg128Xsl64 {
     #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         impls::fill_bytes_via_next(self, dest)
-    }
-
-    #[inline]
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.fill_bytes(dest);
-        Ok(())
     }
 }
 

@@ -129,7 +129,6 @@ impl std::error::Error for EmptySlice {}
 /// Note: the `String` is potentially left with excess capacity; optionally the
 /// user may call `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 impl<'a> super::DistString for Slice<'a, char> {
     fn append_string<R: crate::Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
         // Get the max char length to minimize extra space.
@@ -148,7 +147,11 @@ impl<'a> super::DistString for Slice<'a, char> {
 
         // Split the extension of string to reuse the unused capacities.
         // Skip the split for small length or only ascii slice.
-        let mut extend_len = if max_char_len == 1 || len < 100 { len } else { len / 4 };
+        let mut extend_len = if max_char_len == 1 || len < 100 {
+            len
+        } else {
+            len / 4
+        };
         let mut remain_len = len;
         while extend_len > 0 {
             string.reserve(max_char_len * extend_len);

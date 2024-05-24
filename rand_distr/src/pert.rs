@@ -7,10 +7,10 @@
 // except according to those terms.
 //! The PERT distribution.
 
-use num_traits::Float;
 use crate::{Beta, Distribution, Exp1, Open01, StandardNormal};
-use rand::Rng;
 use core::fmt;
+use num_traits::Float;
+use rand::Rng;
 
 /// The PERT distribution.
 ///
@@ -72,7 +72,6 @@ impl fmt::Display for PertError {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for PertError {}
 
 impl<F> Pert<F>
@@ -135,20 +134,12 @@ mod test {
 
     #[test]
     fn test_pert() {
-        for &(min, max, mode) in &[
-            (-1., 1., 0.),
-            (1., 2., 1.),
-            (5., 25., 25.),
-        ] {
+        for &(min, max, mode) in &[(-1., 1., 0.), (1., 2., 1.), (5., 25., 25.)] {
             let _distr = Pert::new(min, max, mode).unwrap();
             // TODO: test correctness
         }
 
-        for &(min, max, mode) in &[
-            (-1., 1., 2.),
-            (-1., 1., -2.),
-            (2., 1., 1.),
-        ] {
+        for &(min, max, mode) in &[(-1., 1., 2.), (-1., 1., -2.), (2., 1., 1.)] {
             assert!(Pert::new(min, max, mode).is_err());
         }
     }

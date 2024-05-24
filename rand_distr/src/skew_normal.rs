@@ -79,7 +79,6 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}
 
 impl<F> SkewNormal<F>
@@ -156,9 +155,7 @@ where
 mod tests {
     use super::*;
 
-    fn test_samples<F: Float + fmt::Debug, D: Distribution<F>>(
-        distr: D, zero: F, expected: &[F],
-    ) {
+    fn test_samples<F: Float + fmt::Debug, D: Distribution<F>>(distr: D, zero: F, expected: &[F]) {
         let mut rng = crate::test::rng(213);
         let mut buf = [zero; 4];
         for x in &mut buf {
@@ -228,12 +225,7 @@ mod tests {
         test_samples(
             SkewNormal::new(f64::INFINITY, 1.0, 0.0).unwrap(),
             0f64,
-            &[
-                f64::INFINITY,
-                f64::INFINITY,
-                f64::INFINITY,
-                f64::INFINITY,
-            ],
+            &[f64::INFINITY, f64::INFINITY, f64::INFINITY, f64::INFINITY],
         );
         test_samples(
             SkewNormal::new(f64::NEG_INFINITY, 1.0, 0.0).unwrap(),
@@ -262,6 +254,9 @@ mod tests {
 
     #[test]
     fn skew_normal_distributions_can_be_compared() {
-        assert_eq!(SkewNormal::new(1.0, 2.0, 3.0), SkewNormal::new(1.0, 2.0, 3.0));
+        assert_eq!(
+            SkewNormal::new(1.0, 2.0, 3.0),
+            SkewNormal::new(1.0, 2.0, 3.0)
+        );
     }
 }

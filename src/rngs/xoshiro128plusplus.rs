@@ -6,10 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
-use rand_core::impls::{next_u64_via_u32, fill_bytes_via_next};
+use rand_core::impls::{fill_bytes_via_next, next_u64_via_u32};
 use rand_core::le::read_u32_into;
-use rand_core::{SeedableRng, RngCore, Error};
+use rand_core::{RngCore, SeedableRng};
+#[cfg(feature = "serde1")]
+use serde::{Deserialize, Serialize};
 
 /// A xoshiro128++ random number generator.
 ///
@@ -20,7 +21,7 @@ use rand_core::{SeedableRng, RngCore, Error};
 /// reference source code](http://xoshiro.di.unimi.it/xoshiro128plusplus.c) by
 /// David Blackman and Sebastiano Vigna.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Xoshiro128PlusPlus {
     s: [u32; 4],
 }
@@ -61,7 +62,7 @@ impl SeedableRng for Xoshiro128PlusPlus {
 impl RngCore for Xoshiro128PlusPlus {
     #[inline]
     fn next_u32(&mut self) -> u32 {
-        let result_starstar = self.s[0]
+        let res = self.s[0]
             .wrapping_add(self.s[3])
             .rotate_left(7)
             .wrapping_add(self.s[0]);
@@ -77,7 +78,7 @@ impl RngCore for Xoshiro128PlusPlus {
 
         self.s[3] = self.s[3].rotate_left(11);
 
-        result_starstar
+        res
     }
 
     #[inline]
@@ -86,30 +87,27 @@ impl RngCore for Xoshiro128PlusPlus {
     }
 
     #[inline]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        fill_bytes_via_next(self, dest);
-    }
-
-    #[inline]
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.fill_bytes(dest);
-        Ok(())
+    fn fill_bytes(&mut self, dst: &mut [u8]) {
+        fill_bytes_via_next(self, dst)
     }
 }
 
+rand_core::impl_try_rng_from_rng_core!(Xoshiro128PlusPlus);
+
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::Xoshiro128PlusPlus;
+    use rand_core::{RngCore, SeedableRng};
 
     #[test]
     fn reference() {
-        let mut rng = Xoshiro128PlusPlus::from_seed(
-            [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0]);
+        let mut rng =
+            Xoshiro128PlusPlus::from_seed([1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0]);
         // These values were produced with the reference implementation:
         // http://xoshiro.di.unimi.it/xoshiro128plusplus.c
         let expected = [
-            641, 1573767, 3222811527, 3517856514, 836907274, 4247214768,
-            3867114732, 1355841295, 495546011, 621204420,
+            641, 1573767, 3222811527, 3517856514, 836907274, 4247214768, 3867114732, 1355841295,
+            495546011, 621204420,
         ];
         for &e in &expected {
             assert_eq!(rng.next_u32(), e);

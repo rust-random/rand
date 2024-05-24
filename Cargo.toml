@@ -19,16 +19,16 @@ include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
 [package.metadata.docs.rs]
 # To build locally:
-# RUSTDOCFLAGS="--cfg doc_cfg -Zunstable-options --generate-link-to-definition" cargo +nightly doc --all --all-features --no-deps --open
+# RUSTDOCFLAGS="--cfg docsrs -Zunstable-options --generate-link-to-definition" cargo +nightly doc --all --all-features --no-deps --open
 all-features = true
-rustdoc-args = ["--cfg", "doc_cfg", "-Zunstable-options", "--generate-link-to-definition"]
+rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
 
 [package.metadata.playground]
 features = ["small_rng", "serde1"]
 
 [features]
 # Meta-features:
-default = ["std", "std_rng", "getrandom"]
+default = ["std", "std_rng", "getrandom", "small_rng"]
 nightly = [] # some additions requiring nightly Rust
 serde1 = ["serde", "rand_core/serde1"]
 
@@ -63,37 +63,17 @@ members = [
     "rand_chacha",
     "rand_pcg",
 ]
+exclude = ["benches"]
 
 [dependencies]
 rand_core = { path = "rand_core", version = "=0.9.0-alpha.1", default-features = false }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 rand_chacha = { path = "rand_chacha", version = "=0.9.0-alpha.1", default-features = false, optional = true }
-zerocopy = { version = "=0.8.0-alpha.6", default-features = false, features = ["simd"] }
+zerocopy = { version = "0.7.33", default-features = false, features = ["simd"] }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "=0.9.0-alpha.1" }
 # Only to test serde1
 bincode = "1.2.1"
-rayon = "1.5.3"
-criterion = { version = "0.4" }
-
-[[bench]]
-name = "uniform"
-path = "benches/uniform.rs"
-harness = false
-
-[[bench]]
-name = "seq_choose"
-path = "benches/seq_choose.rs"
-harness = false
-
-[[bench]]
-name = "shuffle"
-path = "benches/shuffle.rs"
-harness = false
-
-[[bench]]
-name = "uniform_float"
-path = "benches/uniform_float.rs"
-harness = false
+rayon = "1.7"

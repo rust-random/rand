@@ -1,7 +1,7 @@
 use crate::{Distribution, InverseGaussian, Standard, StandardNormal};
+use core::fmt;
 use num_traits::Float;
 use rand::Rng;
-use core::fmt;
 
 /// Error type returned from `NormalInverseGaussian::new`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -15,14 +15,17 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            Error::AlphaNegativeOrNull => "alpha <= 0 or is NaN in normal inverse Gaussian distribution",
-            Error::AbsoluteBetaNotLessThanAlpha => "|beta| >= alpha or is NaN in normal inverse Gaussian distribution",
+            Error::AlphaNegativeOrNull => {
+                "alpha <= 0 or is NaN in normal inverse Gaussian distribution"
+            }
+            Error::AbsoluteBetaNotLessThanAlpha => {
+                "|beta| >= alpha or is NaN in normal inverse Gaussian distribution"
+            }
         })
     }
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 impl std::error::Error for Error {}
 
 /// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution)
@@ -94,7 +97,9 @@ where
     Standard: Distribution<F>,
 {
     fn sample<R>(&self, rng: &mut R) -> F
-    where R: Rng + ?Sized {
+    where
+        R: Rng + ?Sized,
+    {
         let inv_gauss = rng.sample(self.inverse_gaussian);
 
         self.beta * inv_gauss + inv_gauss.sqrt() * rng.sample(StandardNormal)
@@ -124,6 +129,9 @@ mod tests {
 
     #[test]
     fn normal_inverse_gaussian_distributions_can_be_compared() {
-        assert_eq!(NormalInverseGaussian::new(1.0, 2.0), NormalInverseGaussian::new(1.0, 2.0));
+        assert_eq!(
+            NormalInverseGaussian::new(1.0, 2.0),
+            NormalInverseGaussian::new(1.0, 2.0)
+        );
     }
 }

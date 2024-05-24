@@ -12,7 +12,12 @@
 //! useful functions available.
 
 /// Reads unsigned 32 bit integers from `src` into `dst`.
+///
+/// # Panics
+///
+/// If `dst` has insufficent space (`4*dst.len() < src.len()`).
 #[inline]
+#[track_caller]
 pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
     assert!(src.len() >= 4 * dst.len());
     for (out, chunk) in dst.iter_mut().zip(src.chunks_exact(4)) {
@@ -21,7 +26,12 @@ pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
 }
 
 /// Reads unsigned 64 bit integers from `src` into `dst`.
+///
+/// # Panics
+///
+/// If `dst` has insufficent space (`8*dst.len() < src.len()`).
 #[inline]
+#[track_caller]
 pub fn read_u64_into(src: &[u8], dst: &mut [u64]) {
     assert!(src.len() >= 8 * dst.len());
     for (out, chunk) in dst.iter_mut().zip(src.chunks_exact(8)) {

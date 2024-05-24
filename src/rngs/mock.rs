@@ -8,10 +8,10 @@
 
 //! Mock random number generator
 
-use rand_core::{impls, Error, RngCore};
+use rand_core::{impls, RngCore};
 
 #[cfg(feature = "serde1")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// A mock generator yielding very predictable output
 ///
@@ -35,7 +35,7 @@ use serde::{Serialize, Deserialize};
 /// use rand::rngs::mock::StepRng;
 ///
 /// let mut my_rng = StepRng::new(2, 1);
-/// let sample: [u64; 3] = my_rng.gen();
+/// let sample: [u64; 3] = my_rng.random();
 /// assert_eq!(sample, [2, 3, 4]);
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -64,22 +64,18 @@ impl RngCore for StepRng {
 
     #[inline]
     fn next_u64(&mut self) -> u64 {
-        let result = self.v;
+        let res = self.v;
         self.v = self.v.wrapping_add(self.a);
-        result
+        res
     }
 
     #[inline]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        impls::fill_bytes_via_next(self, dest);
-    }
-
-    #[inline]
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        self.fill_bytes(dest);
-        Ok(())
+    fn fill_bytes(&mut self, dst: &mut [u8]) {
+        impls::fill_bytes_via_next(self, dst)
     }
 }
+
+rand_core::impl_try_rng_from_rng_core!(StepRng);
 
 #[cfg(test)]
 mod tests {
@@ -94,18 +90,16 @@ mod tests {
             bincode::deserialize(&bincode::serialize(&some_rng).unwrap()).unwrap();
         assert_eq!(some_rng.v, de_some_rng.v);
         assert_eq!(some_rng.a, de_some_rng.a);
-
     }
 
     #[test]
     #[cfg(feature = "alloc")]
     fn test_bool() {
-        use crate::{Rng, distributions::Standard};
+        use crate::{distributions::Standard, Rng};
 
         // If this result ever changes, update doc on StepRng!
         let rng = StepRng::new(0, 1 << 31);
-        let result: alloc::vec::Vec<bool> =
-            rng.sample_iter(Standard).take(6).collect();
+        let result: alloc::vec::Vec<bool> = rng.sample_iter(Standard).take(6).collect();
         assert_eq!(&result, &[false, true, false, true, false, true]);
     }
 }

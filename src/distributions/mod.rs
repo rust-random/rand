@@ -11,7 +11,7 @@
 //!
 //! This module is the home of the [`Distribution`] trait and several of its
 //! implementations. It is the workhorse behind some of the convenient
-//! functionality of the [`Rng`] trait, e.g. [`Rng::gen`] and of course
+//! functionality of the [`Rng`] trait, e.g. [`Rng::random`] and of course
 //! [`Rng::sample`].
 //!
 //! Abstractly, a [probability distribution] describes the probability of
@@ -31,13 +31,13 @@
 //! # The `Standard` distribution
 //!
 //! The [`Standard`] distribution is important to mention. This is the
-//! distribution used by [`Rng::gen`] and represents the "default" way to
+//! distribution used by [`Rng::random`] and represents the "default" way to
 //! produce a random value for many different types, including most primitive
 //! types, tuples, arrays, and a few derived types. See the documentation of
 //! [`Standard`] for more details.
 //!
 //! Implementing `Distribution<T>` for [`Standard`] for user types `T` makes it
-//! possible to generate type `T` with [`Rng::gen`], and by extension also
+//! possible to generate type `T` with [`Rng::random`], and by extension also
 //! with the [`random`] function.
 //!
 //! ## Random characters
@@ -110,10 +110,9 @@ pub mod hidden_export {
 pub mod uniform;
 
 pub use self::bernoulli::{Bernoulli, BernoulliError};
-pub use self::distribution::{Distribution, DistIter, DistMap};
 #[cfg(feature = "alloc")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
 pub use self::distribution::DistString;
+pub use self::distribution::{DistIter, DistMap, Distribution};
 pub use self::float::{Open01, OpenClosed01};
 pub use self::other::Alphanumeric;
 pub use self::slice::Slice;
@@ -181,7 +180,7 @@ use crate::Rng;
 ///
 /// impl Distribution<MyF32> for Standard {
 ///     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> MyF32 {
-///         MyF32 { x: rng.gen() }
+///         MyF32 { x: rng.random() }
 ///     }
 /// }
 /// ```
@@ -191,7 +190,7 @@ use crate::Rng;
 /// use rand::prelude::*;
 /// use rand::distributions::Standard;
 ///
-/// let val: f32 = StdRng::from_entropy().sample(Standard);
+/// let val: f32 = StdRng::from_os_rng().sample(Standard);
 /// println!("f32 from [0, 1): {}", val);
 /// ```
 ///

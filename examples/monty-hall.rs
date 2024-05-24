@@ -45,7 +45,7 @@ fn simulate<R: Rng>(random_door: &Uniform<u32>, rng: &mut R) -> SimulationResult
     let open = game_host_open(car, choice, rng);
 
     // Shall we switch?
-    let switch = rng.gen();
+    let switch = rng.random();
     if switch {
         choice = switch_door(choice, open);
     }

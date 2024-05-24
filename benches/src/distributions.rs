@@ -30,7 +30,7 @@ macro_rules! distr_int {
         $group.throughput(Throughput::Bytes(
             size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             c.iter(|| {
@@ -50,7 +50,7 @@ macro_rules! distr_float {
         $group.throughput(Throughput::Bytes(
             size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             c.iter(|| {
@@ -70,7 +70,7 @@ macro_rules! distr {
         $group.throughput(Throughput::Bytes(
             size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             c.iter(|| {
@@ -90,7 +90,7 @@ macro_rules! distr_arr {
         $group.throughput(Throughput::Bytes(
             size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_entropy();
+            let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
             c.iter(|| {
@@ -127,8 +127,9 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     distr_float!(g, "log_normal", f64, LogNormal::new(-1.23, 4.56).unwrap());
     g.throughput(Throughput::Bytes(size_of::<f64>() as u64 * RAND_BENCH_N));
     g.bench_function("iter", |c| {
-        let mut rng = Pcg64Mcg::from_entropy();
-        let distr = Normal::new(-2.71828, 3.14159).unwrap();
+        use core::f64::consts::{E, PI};
+        let mut rng = Pcg64Mcg::from_os_rng();
+        let distr = Normal::new(-E, PI).unwrap();
         let mut iter = distr.sample_iter(&mut rng);
 
         c.iter(|| {
@@ -176,9 +177,9 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
 
     {
     let mut g = c.benchmark_group("weighted");
-    distr_int!(g, "weighted_i8", usize, WeightedIndex::new(&[1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "weighted_u32", usize, WeightedIndex::new(&[1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "weighted_f64", usize, WeightedIndex::new(&[1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
+    distr_int!(g, "weighted_i8", usize, WeightedIndex::new([1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+    distr_int!(g, "weighted_u32", usize, WeightedIndex::new([1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+    distr_int!(g, "weighted_f64", usize, WeightedIndex::new([1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
     distr_int!(g, "weighted_large_set", usize, WeightedIndex::new((0..10000).rev().chain(1..10001)).unwrap());
     distr_int!(g, "weighted_alias_method_i8", usize, WeightedAliasIndex::new(vec![1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
     distr_int!(g, "weighted_alias_method_u32", usize, WeightedAliasIndex::new(vec![1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
@@ -194,7 +195,7 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     sample_binomial!(g, "binomial_10", 10, 0.9);
     sample_binomial!(g, "binomial_100", 100, 0.99);
     sample_binomial!(g, "binomial_1000", 1000, 0.01);
-    sample_binomial!(g, "binomial_1e12", 1000_000_000_000, 0.2);
+    sample_binomial!(g, "binomial_1e12", 1_000_000_000_000, 0.2);
     }
 
     {

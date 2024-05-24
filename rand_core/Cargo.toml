@@ -17,9 +17,9 @@ rust-version = "1.61"
 
 [package.metadata.docs.rs]
 # To build locally:
-# RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --no-deps --open
+# RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --no-deps --open
 all-features = true
-rustdoc-args = ["--cfg", "doc_cfg", "--generate-link-to-definition"]
+rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
 
 [package.metadata.playground]
 all-features = true
@@ -32,4 +32,4 @@ serde1 = ["serde"] # enables serde for BlockRng wrapper
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }
 getrandom = { version = "0.2", optional = true }
-zerocopy = { version = "=0.8.0-alpha.6", default-features = false }
+zerocopy = { version = "0.7.33", default-features = false }

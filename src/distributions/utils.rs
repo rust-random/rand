@@ -8,9 +8,10 @@
 
 //! Math helper functions
 
-#[cfg(feature = "simd_support")] use core::simd::prelude::*;
-#[cfg(feature = "simd_support")] use core::simd::{LaneCount, SimdElement, SupportedLaneCount};
-
+#[cfg(feature = "simd_support")]
+use core::simd::prelude::*;
+#[cfg(feature = "simd_support")]
+use core::simd::{LaneCount, SimdElement, SupportedLaneCount};
 
 pub(crate) trait WideningMultiply<RHS = Self> {
     type Output;
@@ -146,8 +147,10 @@ wmul_impl_usize! { u64 }
 #[cfg(feature = "simd_support")]
 mod simd_wmul {
     use super::*;
-    #[cfg(target_arch = "x86")] use core::arch::x86::*;
-    #[cfg(target_arch = "x86_64")] use core::arch::x86_64::*;
+    #[cfg(target_arch = "x86")]
+    use core::arch::x86::*;
+    #[cfg(target_arch = "x86_64")]
+    use core::arch::x86_64::*;
 
     wmul_impl! {
         (u8x4, u16x4),
@@ -340,12 +343,12 @@ macro_rules! scalar_float_impl {
 scalar_float_impl!(f32, u32);
 scalar_float_impl!(f64, u64);
 
-
 #[cfg(feature = "simd_support")]
 macro_rules! simd_impl {
     ($fty:ident, $uty:ident) => {
         impl<const LANES: usize> FloatSIMDUtils for Simd<$fty, LANES>
-        where LaneCount<LANES>: SupportedLaneCount
+        where
+            LaneCount<LANES>: SupportedLaneCount,
         {
             type Mask = Mask<<$fty as SimdElement>::Mask, LANES>;
             type UInt = Simd<$uty, LANES>;

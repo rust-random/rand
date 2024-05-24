@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use num_traits::Float;
 use crate::{uniform::SampleUniform, Distribution, Uniform};
+use num_traits::Float;
 use rand::Rng;
 
 /// Samples uniformly from the unit ball (surface and interior) in three

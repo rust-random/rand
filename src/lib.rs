@@ -29,7 +29,7 @@
 //! }
 //!
 //! let mut rng = rand::thread_rng();
-//! let y: f64 = rng.gen(); // generates a float between 0 and 1
+//! let y: f64 = rng.random(); // generates a float between 0 and 1
 //!
 //! let mut nums: Vec<i32> = (1..100).collect();
 //! nums.shuffle(&mut rng);
@@ -50,15 +50,17 @@
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![no_std]
 #![cfg_attr(feature = "simd_support", feature(portable_simd))]
-#![cfg_attr(doc_cfg, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![allow(
     clippy::float_cmp,
     clippy::neg_cmp_op_on_partial_ord,
     clippy::nonminimal_bool
 )]
 
-#[cfg(feature = "std")] extern crate std;
-#[cfg(feature = "alloc")] extern crate alloc;
+#[cfg(feature = "alloc")]
+extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
 
 #[allow(unused)]
 macro_rules! trace { ($($x:tt)*) => (
@@ -92,7 +94,7 @@ macro_rules! error { ($($x:tt)*) => (
 ) }
 
 // Re-exports from rand_core
-pub use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
+pub use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 
 // Public modules
 pub mod distributions;
@@ -147,18 +149,19 @@ use crate::distributions::{Distribution, Standard};
 /// let mut rng = rand::thread_rng();
 ///
 /// for x in v.iter_mut() {
-///     *x = rng.gen();
+///     *x = rng.random();
 /// }
 /// ```
 ///
 /// [`Standard`]: distributions::Standard
 /// [`ThreadRng`]: rngs::ThreadRng
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-#[cfg_attr(doc_cfg, doc(cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))))]
 #[inline]
 pub fn random<T>() -> T
-where Standard: Distribution<T> {
-    thread_rng().gen()
+where
+    Standard: Distribution<T>,
+{
+    thread_rng().random()
 }
 
 #[cfg(test)]

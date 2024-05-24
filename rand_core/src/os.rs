@@ -8,7 +8,7 @@
 
 //! Interface to the random number generator of the operating system.
 
-use crate::{impls, CryptoRng, Error, RngCore};
+use crate::{TryCryptoRng, TryRngCore};
 use getrandom::getrandom;
 
 /// A random number generator that retrieves randomness from the
@@ -36,51 +36,52 @@ use getrandom::getrandom;
 ///
 /// # Usage example
 /// ```
-/// use rand_core::{RngCore, OsRng};
+/// use rand_core::{TryRngCore, OsRng};
 ///
 /// let mut key = [0u8; 16];
-/// OsRng.fill_bytes(&mut key);
-/// let random_u64 = OsRng.next_u64();
+/// OsRng.try_fill_bytes(&mut key).unwrap();
+/// let random_u64 = OsRng.try_next_u64().unwrap();
 /// ```
 ///
 /// [getrandom]: https://crates.io/crates/getrandom
-#[cfg_attr(doc_cfg, doc(cfg(feature = "getrandom")))]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct OsRng;
 
-impl CryptoRng for OsRng {}
+impl TryRngCore for OsRng {
+    type Error = getrandom::Error;
 
-impl RngCore for OsRng {
-    fn next_u32(&mut self) -> u32 {
-        impls::next_u32_via_fill(self)
+    #[inline]
+    fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+        let mut buf = [0u8; 4];
+        getrandom(&mut buf)?;
+        Ok(u32::from_ne_bytes(buf))
     }
 
-    fn next_u64(&mut self) -> u64 {
-        impls::next_u64_via_fill(self)
+    #[inline]
+    fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+        let mut buf = [0u8; 8];
+        getrandom(&mut buf)?;
+        Ok(u64::from_ne_bytes(buf))
     }
 
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        if let Err(e) = self.try_fill_bytes(dest) {
-            panic!("Error: {}", e);
-        }
-    }
-
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
+    #[inline]
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
         getrandom(dest)?;
         Ok(())
     }
 }
 
+impl TryCryptoRng for OsRng {}
+
 #[test]
 fn test_os_rng() {
-    let x = OsRng.next_u64();
-    let y = OsRng.next_u64();
+    let x = OsRng.try_next_u64().unwrap();
+    let y = OsRng.try_next_u64().unwrap();
     assert!(x != 0);
     assert!(x != y);
 }
 
 #[test]
 fn test_construction() {
-    let mut rng = OsRng::default();
-    assert!(rng.next_u64() != 0);
+    assert!(OsRng.try_next_u64().unwrap() != 0);
 }

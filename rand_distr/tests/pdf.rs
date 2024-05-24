@@ -9,7 +9,7 @@
 #![allow(clippy::float_cmp)]
 
 use average::Histogram;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
 use rand_distr::{Normal, SkewNormal};
 
 const HIST_LEN: usize = 100;
@@ -57,7 +57,7 @@ fn normal() {
 
     let mut diff = [0.; HIST_LEN];
     for (i, n) in hist.normalized_bins().enumerate() {
-        let bin = (n as f64) / (N_SAMPLES as f64);
+        let bin = n / (N_SAMPLES as f64);
         diff[i] = (bin - expected[i]).abs();
     }
 
@@ -140,7 +140,7 @@ fn skew_normal() {
 
     let mut diff = [0.; HIST_LEN];
     for (i, n) in hist.normalized_bins().enumerate() {
-        let bin = (n as f64) / (N_SAMPLES as f64);
+        let bin = n / (N_SAMPLES as f64);
         diff[i] = (bin - expected[i]).abs();
     }
 

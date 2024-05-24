@@ -21,7 +21,7 @@ fn test_lcg64xsh32_construction() {
     let mut rng1 = Lcg64Xsh32::from_seed(seed);
     assert_eq!(rng1.next_u64(), 1204678643940597513);
 
-    let mut rng2 = Lcg64Xsh32::from_rng(&mut rng1).unwrap();
+    let mut rng2 = Lcg64Xsh32::from_rng(&mut rng1);
     assert_eq!(rng2.next_u64(), 12384929573776311845);
 
     let mut rng3 = Lcg64Xsh32::seed_from_u64(0);

@@ -9,9 +9,9 @@
 //! Math helper functions
 
 use crate::ziggurat_tables;
+use num_traits::Float;
 use rand::distributions::hidden_export::IntoFloat;
 use rand::Rng;
-use num_traits::Float;
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma
 /// function) using the Lanczos approximation.
@@ -77,7 +77,7 @@ pub(crate) fn ziggurat<R: Rng + ?Sized, P, Z>(
     x_tab: ziggurat_tables::ZigTable,
     f_tab: ziggurat_tables::ZigTable,
     mut pdf: P,
-    mut zero_case: Z
+    mut zero_case: Z,
 ) -> f64
 where
     P: FnMut(f64) -> f64,
@@ -114,7 +114,7 @@ where
             return zero_case(rng, u);
         }
         // algebraically equivalent to f1 + DRanU()*(f0 - f1) < 1
-        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * rng.gen::<f64>() < pdf(x) {
+        if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * rng.random::<f64>() < pdf(x) {
             return x;
         }
     }
