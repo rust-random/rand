@@ -9,6 +9,9 @@ on:
 jobs:
   benches:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./benches
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
