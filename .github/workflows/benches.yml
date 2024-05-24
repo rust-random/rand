@@ -19,8 +19,8 @@ jobs:
           toolchain: nightly
           components: clippy, rustfmt
       - name: Rustfmt
-        run: cargo fmt --all -- --check
+        run: cargo fmt -- --check
       - name: Clippy
-        run: cargo clippy --all --all-targets -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
       - name: Build
         run: RUSTFLAGS=-Dwarnings cargo build --all-targets
