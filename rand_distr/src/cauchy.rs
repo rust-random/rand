@@ -33,7 +33,7 @@ use core::fmt;
 /// 
 /// The standard Cauchy distribution is the special case with `median = 0` and `scale = 1`.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/cauchy.svg"/>
+/// ![Cauchy distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/cauchy.svg)
 ///
 /// # Example
 ///

@@ -42,7 +42,7 @@ enum SamplingMethod {
 /// `k` successes in `n = 10` draws from a population of `N = 50` items, of which either `K = 12`
 /// or `K = 25` are successes.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/hypergeometric.svg"/>
+/// ![Hypergeometric distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/hypergeometric.svg)
 /// 
 /// # Example
 /// 

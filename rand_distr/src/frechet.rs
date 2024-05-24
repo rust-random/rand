@@ -28,7 +28,7 @@ use rand::Rng;
 /// and the shape parameter `α` changes the severity of the increase in density
 /// towards the lower bound.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/frechet.svg"/>
+/// ![Fréchet distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/frechet.svg)
 ///
 /// # Example
 /// ```

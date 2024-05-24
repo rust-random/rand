@@ -14,6 +14,11 @@ use rand::Rng;
 ///
 /// Implemented via a method by von Neumann[^1].
 ///
+/// # Plot
+///
+/// The following plot shows the unit circle.
+///
+/// ![Unit circle](https://raw.githubusercontent.com/rust-random/charts/main/charts/unit_circle.svg)
 ///
 /// # Example
 ///

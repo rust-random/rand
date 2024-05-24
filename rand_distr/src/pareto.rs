@@ -13,7 +13,14 @@ use crate::{Distribution, OpenClosed01};
 use rand::Rng;
 use core::fmt;
 
-/// Samples floating-point numbers according to the Pareto distribution
+/// The Pareto distribution is a continuous probability distribution with
+/// parameters `scale` (α) and `shape` (x<sub>m</sub> or k).
+///
+/// # Plot
+///
+/// The following plot shows the Pareto distribution with various parameters.
+///
+/// ![Pareto distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/pareto.svg)
 ///
 /// # Example
 /// ```

@@ -13,7 +13,14 @@ use crate::{Distribution, OpenClosed01};
 use rand::Rng;
 use core::fmt;
 
-/// Samples floating-point numbers according to the Weibull distribution
+/// Samples floating-point numbers according to the Weibull distribution.
+/// The Weibull distribution has two parameters, `scale` (`λ`) and `shape` (`k`).
+///
+/// # Plot
+///
+/// The following plot shows the Weibull distribution with various values of `λ` and `k`.
+///
+/// ![Weibull distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/weibull.svg)
 ///
 /// # Example
 /// ```

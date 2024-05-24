@@ -23,7 +23,7 @@ use num_traits::Float;
 /// The following plot illustrates the geometric distribution for various values of `p`.
 /// Note how the higher `p` is, the more likely it is to have a success early on.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/geometric.svg"/>
+/// ![Geometric distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/geometric.svg)
 ///
 /// # Example
 ///
@@ -157,7 +157,7 @@ impl Distribution<u64> for Geometric
 ///
 /// The following plot illustrates the standard geometric distribution.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/standard_geometric.svg"/>
+/// ![Standard Geometric distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/standard_geometric.svg)
 /// 
 /// # Example
 /// ```

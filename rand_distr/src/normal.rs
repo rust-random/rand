@@ -19,14 +19,15 @@ use core::fmt;
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
 /// `Normal::new(0.0, 1.0)` but faster.
 ///
-/// See `Normal` for the general normal distribution.
+/// See [`Normal`] for the general normal distribution.
 ///
 /// Implemented via the ZIGNOR variant[^1] of the Ziggurat method.
 ///
-/// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
-///       Generate Normal Random Samples*](
-///       https://www.doornik.com/research/ziggurat.pdf).
-///       Nuffield College, Oxford
+/// # Plot
+///
+/// The following diagram shows the standard normal distribution.
+///
+/// ![Standard normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/normal.svg)
 ///
 /// # Example
 /// ```
@@ -37,11 +38,10 @@ use core::fmt;
 /// println!("{}", val);
 /// ```
 ///
-/// # Diagram
-///
-/// The following diagram shows the standard normal distribution.
-///
-/// ![Standard normal distribution]()
+/// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
+///       Generate Normal Random Samples*](
+///       https://www.doornik.com/research/ziggurat.pdf).
+///       Nuffield College, Oxford
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct StandardNormal;
@@ -106,6 +106,13 @@ impl Distribution<f64> for StandardNormal {
 /// Note that [`StandardNormal`] is an optimised implementation for mean 0, and
 /// standard deviation 1.
 ///
+/// # Plot
+///
+/// The following diagram shows the normal distribution with various parameters.
+/// [`StandardNormal`] is illustrated with `μ = 0` and `σ = 1`.
+///
+/// ![Normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/normal.svg)
+///
 /// # Example
 ///
 /// ```
@@ -116,15 +123,6 @@ impl Distribution<f64> for StandardNormal {
 /// let v = normal.sample(&mut rand::thread_rng());
 /// println!("{} is from a N(2, 9) distribution", v)
 /// ```
-///
-/// # Diagram
-///
-/// The following diagram shows the normal distribution with various parameters.
-/// [`StandardNormal`] is illustrated in `μ = 0` and `σ = 1`.
-///
-/// ![Normal distribution]()
-///
-/// [`StandardNormal`]: crate::StandardNormal
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Normal<F>

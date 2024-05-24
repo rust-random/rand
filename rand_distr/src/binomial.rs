@@ -33,7 +33,7 @@ use num_traits::Float;
 /// probability of `k` successes out of `n = 10` trials with `p = 0.2` 
 /// and `p = 0.6` for `0 <= k <= n`.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/binomial.svg"/>
+/// ![Binomial distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/binomial.svg)
 ///
 /// # Example
 ///

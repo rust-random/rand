@@ -26,6 +26,25 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 /// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution)
+///
+/// This is a continuous probability distribution with two parameters, `alpha` and `beta`,
+/// defined for `(-∞, ∞)`.
+/// It is also known as the normal-Wald distribution.
+/// 
+/// # Plot
+/// 
+/// The following plot shows the normal-inverse Gaussian distribution with various parameters.
+/// 
+/// ![Normal-inverse Gaussian distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/normal_inverse_gaussian.svg)
+/// 
+/// # Example
+/// ```
+/// use rand_distr::{NormalInverseGaussian, Distribution};
+/// 
+/// let norm_inv_gauss = NormalInverseGaussian::new(2.0, 1.0).unwrap();
+/// let v = norm_inv_gauss.sample(&mut rand::thread_rng());
+/// println!("{} is from a normal-inverse Gaussian(2, 1) distribution", v);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct NormalInverseGaussian<F>

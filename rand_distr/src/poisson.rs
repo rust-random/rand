@@ -19,6 +19,12 @@ use core::fmt;
 /// This distribution has a density function:
 /// `f(k) = lambda^k * exp(-lambda) / k!` for `k >= 0`.
 ///
+/// # Plot
+///
+/// The following plot shows the Poisson distribution with various values of `lambda`.
+///
+/// ![Poisson distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/poisson.svg)
+///
 /// # Example
 ///
 /// ```

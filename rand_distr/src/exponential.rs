@@ -25,7 +25,7 @@ use core::fmt;
 ///
 /// The following plot illustrates the exponential distribution with `λ = 1`.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential_exp1.svg"/>
+/// ![Exponential distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential_exp1.svg)
 ///
 /// Implemented via the ZIGNOR variant[^1] of the Ziggurat method. The exact
 /// description in the paper was adjusted to use tables for the exponential
@@ -94,7 +94,7 @@ impl Distribution<f64> for Exp1 {
 /// various values of `lambda`.
 /// The `lambda` parameter controls the rate of decay as `x` approaches infinity.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential.svg"/>
+/// ![Exponential distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential.svg)
 ///
 /// # Example
 ///

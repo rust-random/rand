@@ -20,6 +20,12 @@ use core::fmt;
 /// The probability density function is triangular. For a similar distribution
 /// with a smooth PDF, see the [`Pert`] distribution.
 ///
+/// # Plot
+///
+/// The following plot shows the triangular distribution with various parameters.
+///
+/// ![Triangular distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/triangular.svg)
+///
 /// # Example
 ///
 /// ```rust

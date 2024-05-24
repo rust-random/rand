@@ -15,6 +15,11 @@ use rand::Rng;
 ///
 /// Implemented via rejection sampling.
 ///
+/// # Plot
+///
+/// The following plot shows the unit ball in three dimensions.
+///
+/// ![Unit ball](https://raw.githubusercontent.com/rust-random/charts/main/charts/unit_ball.svg)
 ///
 /// # Example
 ///

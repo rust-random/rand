@@ -22,6 +22,12 @@ use rand::Rng;
 /// `f(x) = 2 / scale * phi((x - location) / scale) * Phi(alpha * (x - location) / scale)`
 /// where `phi` and `Phi` are the density and distribution of a standard normal variable.
 ///
+/// # Plot
+///
+/// The following plot shows the skew normal distribution with various values of `alpha`.
+///
+/// ![Skew normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/skew_normal.svg)
+///
 /// # Example
 ///
 /// ```

@@ -19,6 +19,12 @@ use core::fmt;
 /// [`Triangular`] distribution, the probability density function of the PERT
 /// distribution is smooth, with a configurable weighting around the mode.
 ///
+/// # Plot
+///
+/// The following plot shows the PERT distribution with various parameters.
+///
+/// ![PERT distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/pert.svg)
+///
 /// # Example
 ///
 /// ```rust

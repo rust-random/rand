@@ -40,7 +40,7 @@ use serde::{Serialize, Deserialize};
 /// The following plot illustrates the Gamma distribution with
 /// various parameters.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/gamma.svg"/>
+/// ![Gamma distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/gamma.svg)
 ///
 /// The algorithm used is that described by Marsaglia & Tsang 2000[^1],
 /// falling back to directly sampling from an Exponential for `shape
@@ -283,7 +283,7 @@ where
 /// The plot shows the chi-squared distribution with varying degrees
 /// of freedom.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/chi_squared.svg"/>
+/// ![Chi-squared distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/chi_squared.svg)
 ///
 /// # Example
 ///
@@ -400,7 +400,7 @@ where
 ///
 /// The plot shows the F-distribution with various values of `m` and `n`.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/fisher_f.svg"/>
+/// ![F-distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/fisher_f.svg)
 ///
 /// # Example
 ///
@@ -502,7 +502,7 @@ where
 ///
 /// The plot shows the t-distribution with various degrees of freedom.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/student_t.svg"/>
+/// ![T-distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/student_t.svg)
 ///
 /// # Example
 ///
@@ -603,7 +603,7 @@ struct BC<N> {
 /// The plot shows the Beta distribution with various combinations 
 /// of `α` and `β`.
 /// 
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/beta.svg"/>
+/// ![Beta distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/beta.svg)
 ///
 /// # Example
 ///

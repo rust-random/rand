@@ -28,7 +28,7 @@ use rand::Rng;
 /// and the scale parameter `σ` changes the density around `μ`.
 /// Note also the asymptotic behavior of the distribution towards the right.
 ///
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/gumbel.svg"/>
+/// ![Gumbel distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/gumbel.svg)
 ///
 /// # Example
 /// ```

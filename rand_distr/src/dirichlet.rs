@@ -196,7 +196,7 @@ where
 /// 
 /// The following plot illustrates the Dirichlet distribution with various parameters.
 /// 
-/// <img src="https://raw.githubusercontent.com/rust-random/charts/main/charts/dirichlet.svg"/>
+/// ![Dirichlet distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/dirichlet.png)
 ///
 /// # Example
 ///

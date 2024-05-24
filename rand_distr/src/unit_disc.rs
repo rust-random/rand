@@ -14,6 +14,11 @@ use rand::Rng;
 ///
 /// Implemented via rejection sampling.
 ///
+/// # Plot
+///
+/// The following plot shows the unit disc.
+///
+/// ![Unit disc](https://raw.githubusercontent.com/rust-random/charts/main/charts/unit_disc.svg)
 ///
 /// # Example
 ///
