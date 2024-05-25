@@ -35,10 +35,10 @@ use serde::{Deserialize, Serialize};
 /// Time complexity of sampling from `WeightedIndex` is `O(log N)` where
 /// `N` is the number of weights. There are two alternative implementations with
 /// different runtimes characteristics:
-/// * [`rand_distr::weighted_alias`](https://docs.rs/rand_distr/*/rand_distr/weighted_alias/index.html)
-/// supports `O(1)` sampling, but with much higher initialisation cost.
-/// * [`rand_distr::weighted_tree`](https://docs.rs/rand_distr/*/rand_distr/weighted_tree/index.html)
-/// keeps the weights in a tree structure where sampling and updating is `O(log N)`.
+/// * [`rand_distr::weighted_alias`] supports `O(1)` sampling, but with much higher
+///   initialisation cost.
+/// * [`rand_distr::weighted_tree`] keeps the weights in a tree structure where sampling
+///   and updating is `O(log N)`.
 ///
 /// A `WeightedIndex<X>` contains a `Vec<X>` and a [`Uniform<X>`] and so its
 /// size is the sum of the size of those objects, possibly plus some alignment.
@@ -80,6 +80,8 @@ use serde::{Deserialize, Serialize};
 ///
 /// [`Uniform<X>`]: crate::distributions::Uniform
 /// [`RngCore`]: crate::RngCore
+/// [`rand_distr::weighted_alias`]: https://docs.rs/rand_distr/*/rand_distr/weighted_alias/index.html
+/// [`rand_distr::weighted_tree`]: https://docs.rs/rand_distr/*/rand_distr/weighted_tree/index.html
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
