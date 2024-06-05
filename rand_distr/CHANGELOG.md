@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+- Add `PertBuilder`, fix case where mode ≅ mean (#1452)
+
 ## [0.5.0-alpha.1] - 2024-03-18
 - Target `rand` version `0.9.0-alpha.1`
 
