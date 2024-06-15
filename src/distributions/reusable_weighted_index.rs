@@ -9,8 +9,8 @@
 //! Reusable weighted index sampling
 
 use crate::distributions::uniform::{SampleBorrow, SampleUniform, UniformSampler};
-use crate::distributions::{Distribution, Weight};
 use crate::distributions::weighted_index::WeightError;
+use crate::distributions::{Distribution, Weight};
 use crate::Rng;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
@@ -136,10 +136,7 @@ impl<X: SampleUniform + PartialOrd + Default> CumulativeWeightsWrapper<X> {
     /// if any weight is `< 0`, or if its total value is 0
     ///
     /// [`Uniform<X>`]: crate::distributions::uniform::Uniform
-    pub fn fill<I>(
-        &mut self,
-        weights: I,
-    ) -> Result<ReusableWeightedIndex<X>, WeightError>
+    pub fn fill<I>(&mut self, weights: I) -> Result<ReusableWeightedIndex<X>, WeightError>
     where
         I: IntoIterator,
         I::Item: SampleBorrow<X>,
@@ -147,7 +144,11 @@ impl<X: SampleUniform + PartialOrd + Default> CumulativeWeightsWrapper<X> {
     {
         self.cumulative_weights.clear();
         let mut iter = weights.into_iter();
-        let mut total_weight: X = iter.next().ok_or(WeightError::InvalidInput)?.borrow().clone();
+        let mut total_weight: X = iter
+            .next()
+            .ok_or(WeightError::InvalidInput)?
+            .borrow()
+            .clone();
         let zero = X::ZERO;
 
         if matches!(total_weight.partial_cmp(&zero), None | Some(Ordering::Less)) {
@@ -287,10 +288,7 @@ mod test {
             distr_w.fill([-10, 20, 1, 30]).unwrap_err(),
             WeightError::InvalidWeight
         );
-        assert_eq!(
-            distr_w.fill([-10]).unwrap_err(),
-            WeightError::InvalidWeight
-        );
+        assert_eq!(distr_w.fill([-10]).unwrap_err(), WeightError::InvalidWeight);
     }
 
     #[test]

@@ -98,12 +98,12 @@ mod distribution;
 mod float;
 mod integer;
 mod other;
+#[cfg(feature = "alloc")]
+mod reusable_weighted_index;
 mod slice;
 mod utils;
 #[cfg(feature = "alloc")]
 mod weighted_index;
-#[cfg(feature = "alloc")]
-mod reusable_weighted_index;
 
 #[doc(hidden)]
 pub mod hidden_export {
@@ -117,13 +117,13 @@ pub use self::distribution::DistString;
 pub use self::distribution::{DistIter, DistMap, Distribution};
 pub use self::float::{Open01, OpenClosed01};
 pub use self::other::Alphanumeric;
+#[cfg(feature = "alloc")]
+pub use self::reusable_weighted_index::{CumulativeWeightsWrapper, ReusableWeightedIndex};
 pub use self::slice::Slice;
 #[doc(inline)]
 pub use self::uniform::Uniform;
 #[cfg(feature = "alloc")]
 pub use self::weighted_index::{Weight, WeightError, WeightedIndex};
-#[cfg(feature = "alloc")]
-pub use self::reusable_weighted_index::{CumulativeWeightsWrapper, ReusableWeightedIndex};
 
 #[allow(unused)]
 use crate::Rng;
