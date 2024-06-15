@@ -158,8 +158,6 @@ impl<X: SampleUniform + PartialOrd + Default> CumulativeWeightsWrapper<X> {
         }
         self.cumulative_weights.reserve(iter.size_hint().0);
         for w in iter {
-            // Note that `!(w >= x)` is not equivalent to `w < x` for partially
-            // ordered types due to NaNs which are equal to nothing.
             if matches!(w.borrow().partial_cmp(&zero), None | Some(Ordering::Less)) {
                 self.cumulative_weights.clear();
                 return Err(WeightError::InvalidWeight);
