@@ -18,9 +18,6 @@ use alloc::vec::Vec;
 use core::cmp::Ordering;
 use core::fmt::Debug;
 
-#[cfg(feature = "serde1")]
-use serde::{Deserialize, Serialize};
-
 /// A distribution using weighted sampling of discrete items
 ///
 /// Sampling a `ReusableWeightedIndex` distribution returns the index of a randomly
