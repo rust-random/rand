@@ -15,8 +15,8 @@ use crate::Rng;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
 use alloc::vec::Vec;
+use core::cmp::Ordering;
 use core::fmt::Debug;
-use std::cmp::Ordering;
 
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
@@ -295,14 +295,13 @@ mod test {
 
     #[test]
     fn value_stability() {
-        fn test_samples<X: Weight + SampleUniform + PartialOrd, I>(
+        fn test_samples<X: Default + Weight + SampleUniform + PartialOrd, I>(
             weights: I,
             buf: &mut [usize],
             expected: &[usize],
         ) where
             I: IntoIterator,
             I::Item: SampleBorrow<X>,
-            X: for<'a> core::ops::AddAssign<&'a X> + Clone + Default + SampleUniform + PartialOrd,
         {
             assert_eq!(buf.len(), expected.len());
             let mut distr = CumulativeWeightsWrapper::new();
