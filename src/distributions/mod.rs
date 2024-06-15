@@ -102,6 +102,8 @@ mod slice;
 mod utils;
 #[cfg(feature = "alloc")]
 mod weighted_index;
+#[cfg(feature = "alloc")]
+mod reusable_weighted_index;
 
 #[doc(hidden)]
 pub mod hidden_export {
@@ -120,6 +122,8 @@ pub use self::slice::Slice;
 pub use self::uniform::Uniform;
 #[cfg(feature = "alloc")]
 pub use self::weighted_index::{Weight, WeightError, WeightedIndex};
+#[cfg(feature = "alloc")]
+pub use self::reusable_weighted_index::{CumulativeWeightsWrapper, ReusableWeightedIndex};
 
 #[allow(unused)]
 use crate::Rng;
