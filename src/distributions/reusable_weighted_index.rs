@@ -108,12 +108,14 @@ pub struct CumulativeWeightsWrapper<X> {
 }
 
 impl<X: SampleUniform + PartialOrd> CumulativeWeightsWrapper<X> {
+    /// Creates new instance of [`CumulativeWeightsWrapper`].
     pub fn new() -> Self {
         Self {
             cumulative_weights: Vec::new(),
         }
     }
 
+    /// Creates new instance of [`CumulativeWeightsWrapper`] with given `capacity` to reserve.
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             cumulative_weights: Vec::with_capacity(capacity),
@@ -173,7 +175,7 @@ impl<X: SampleUniform + PartialOrd + Default> CumulativeWeightsWrapper<X> {
             return Err(WeightError::InsufficientNonZero);
         }
 
-        let distr = X::Sampler::new(zero, total_weight.clone());
+        let distr = X::Sampler::new(zero, total_weight.clone()).unwrap();
 
         Ok(ReusableWeightedIndex {
             wrapper: self,
@@ -220,7 +222,7 @@ mod test {
 
     #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
-    fn test_weighted_index() {
+    fn test_weightedindex() {
         let mut r = crate::test::rng(700);
         const N_REPS: u32 = 5000;
         let weights = [1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7];
@@ -273,7 +275,7 @@ mod test {
 
         assert_eq!(
             distr_w.fill(&[10][0..0]).unwrap_err(),
-            WeightError::InvalidWeight
+            WeightError::InvalidInput
         );
         assert_eq!(
             distr_w.fill([0]).unwrap_err(),
@@ -293,8 +295,11 @@ mod test {
 
     #[test]
     fn value_stability() {
-        fn test_samples<X, I>(weights: I, buf: &mut [usize], expected: &[usize])
-        where
+        fn test_samples<X: Weight + SampleUniform + PartialOrd, I>(
+            weights: I,
+            buf: &mut [usize],
+            expected: &[usize],
+        ) where
             I: IntoIterator,
             I::Item: SampleBorrow<X>,
             X: for<'a> core::ops::AddAssign<&'a X> + Clone + Default + SampleUniform + PartialOrd,
