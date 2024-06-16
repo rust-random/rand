@@ -12,7 +12,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The triangular distribution.
+/// The triangular distribution `Triangular(min, max, mode)`.
 ///
 /// A continuous probability distribution parameterised by a range, and a mode
 /// (most likely value) within that range.
@@ -22,7 +22,8 @@ use rand::Rng;
 ///
 /// # Plot
 ///
-/// The following plot shows the triangular distribution with various parameters.
+/// The following plot shows the triangular distribution with various values of
+/// `min`, `max`, and `mode`.
 ///
 /// ![Triangular distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/triangular.svg)
 ///

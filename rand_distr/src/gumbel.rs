@@ -23,7 +23,7 @@ use rand::Rng;
 ///
 /// # Plot
 ///
-/// The following plot illustrates the Gumbel distribution with various parameters.
+/// The following plot illustrates the Gumbel distribution with various values of `μ` and `σ`.
 /// Note how the location parameter `μ` shifts the distribution along the x-axis,
 /// and the scale parameter `σ` changes the density around `μ`.
 /// Note also the asymptotic behavior of the distribution towards the right.

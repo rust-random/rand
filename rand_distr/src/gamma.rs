@@ -35,17 +35,19 @@ use serde::{Deserialize, Serialize};
 /// where `Γ` is the Gamma function, `k` is the shape and `θ` is the
 /// scale and both `k` and `θ` are strictly positive.
 ///
-/// # Plot
-///
-/// The following plot illustrates the Gamma distribution with
-/// various parameters.
-///
-/// ![Gamma distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/gamma.svg)
-///
 /// The algorithm used is that described by Marsaglia & Tsang 2000[^1],
 /// falling back to directly sampling from an Exponential for `shape
 /// == 1`, and using the boosting technique described in that paper for
 /// `shape < 1`.
+///
+/// # Plot
+///
+/// The following plot illustrates the Gamma distribution with
+/// various values of `k` and `θ`.
+/// Curves with `θ = 1` are more saturated, while corresponding 
+/// curves with `θ = 2` have a lighter color.
+///
+/// ![Gamma distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/gamma.svg)
 ///
 /// # Example
 ///

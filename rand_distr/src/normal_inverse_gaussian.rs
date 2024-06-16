@@ -28,15 +28,15 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-/// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution)
-///
+/// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution) `NIG(α, β)`
+/// 
 /// This is a continuous probability distribution with two parameters, `alpha` and `beta`,
-/// defined for `(-∞, ∞)`.
-/// It is also known as the normal-Wald distribution.
+/// defined in `(-∞, ∞)`.
+/// It is also known as the `normal-Wald` distribution.
 /// 
 /// # Plot
 /// 
-/// The following plot shows the normal-inverse Gaussian distribution with various parameters.
+/// The following plot shows the normal-inverse Gaussian distribution with various values of `α` and `β`.
 /// 
 /// ![Normal-inverse Gaussian distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/normal_inverse_gaussian.svg)
 /// 

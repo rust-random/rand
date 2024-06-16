@@ -13,10 +13,16 @@ use rand::Rng;
 /// Samples uniformly from the unit disc in two dimensions.
 ///
 /// Implemented via rejection sampling.
+/// 
+/// For a distribution that samples only from the circumference of the unit disc,
+/// see [`UnitCircle`](crate::UnitCircle).
+/// 
+/// For a similar distribution in three dimensions, see [`UnitBall`](crate::UnitBall).
 ///
 /// # Plot
 ///
 /// The following plot shows the unit disc.
+/// This distribution samples individual points from the entire area of the disc.
 ///
 /// ![Unit disc](https://raw.githubusercontent.com/rust-random/charts/main/charts/unit_disc.svg)
 ///

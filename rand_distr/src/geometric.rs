@@ -21,7 +21,8 @@ use rand::Rng;
 /// # Plot
 ///
 /// The following plot illustrates the geometric distribution for various values of `p`.
-/// Note how the higher `p` is, the more likely it is to have a success early on.
+/// Note how higher `p` values shift the distribution to the left, and the mean
+/// of the distribution is `1/p`.
 ///
 /// ![Geometric distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/geometric.svg)
 ///

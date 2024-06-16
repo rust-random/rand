@@ -22,11 +22,10 @@ use rand::Rng;
 ///
 /// # Plot
 ///
-/// The plot shows the Fréchet distribution with various parameters.
+/// The plot shows the Fréchet distribution with various values of `μ`, `σ`, and `α`.
 /// Note how the location parameter `μ` shifts the distribution along the x-axis,
 /// the scale parameter `σ` stretches or compresses the distribution along the x-axis,
-/// and the shape parameter `α` changes the severity of the increase in density
-/// towards the lower bound.
+/// and the shape parameter `α` changes the tail behavior.
 ///
 /// ![Fréchet distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/frechet.svg)
 ///

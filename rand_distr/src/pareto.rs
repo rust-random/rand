@@ -13,12 +13,17 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
+/// The Pareto distribution `Pareto(scale, shape)`.
+/// 
 /// The Pareto distribution is a continuous probability distribution with
-/// parameters `scale` (α) and `shape` (x<sub>m</sub> or k).
+/// parameters `scale` (`α`) and `shape` (`x`<sub>`m`</sub> or `k`).
 ///
 /// # Plot
 ///
-/// The following plot shows the Pareto distribution with various parameters.
+/// The following plot shows the Pareto distribution with various values of 
+/// `scale` and `shape`.
+/// Note how the scale parameter `α` corresponds to the height of the jump
+/// in density at `x = x`<sub>`m`</sub>, and to the rate of decay in the tail.
 ///
 /// ![Pareto distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/pareto.svg)
 ///

@@ -17,7 +17,7 @@ use rand::Rng;
 /// The Cauchy distribution `Cauchy(median, scale)`.
 ///
 /// The Cauchy distribution is a continuous probability distribution with
-/// parameters `median` and `scale`.
+/// parameters `median` (`x₀`) and `scale` (`γ`).
 ///
 /// This distribution has a density function:
 /// `f(x) = 1 / (pi * scale * (1 + ((x - median) / scale)^2))`
@@ -27,9 +27,9 @@ use rand::Rng;
 ///
 /// # Plot
 ///
-/// The plot illustrates the Cauchy distribution with various parameters.
-/// Note how the `median` parameter `x₀` shifts the distribution along the x-axis,
-/// and the `scale` parameter `γ` changes the density around the median.
+/// The plot illustrates the Cauchy distribution with various values of `x₀` and `γ`.
+/// Note how the median parameter `x₀` shifts the distribution along the x-axis, 
+/// and how the scale `γ` changes the density around the median.
 /// 
 /// The standard Cauchy distribution is the special case with `median = 0` and `scale = 1`.
 ///

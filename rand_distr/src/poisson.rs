@@ -15,13 +15,18 @@ use num_traits::{Float, FloatConst};
 use rand::Rng;
 
 /// The Poisson distribution `Poisson(lambda)`.
+/// 
+/// The Poisson distribution is a discrete probability distribution with
+/// rate parameter `λ`. It models the number of events occurring in a fixed
+/// interval of time or space.
 ///
 /// This distribution has a density function:
-/// `f(k) = lambda^k * exp(-lambda) / k!` for `k >= 0`.
+/// `f(k) = λ^k * exp(-λ) / k!` for `k >= 0`.
 ///
 /// # Plot
 ///
-/// The following plot shows the Poisson distribution with various values of `lambda`.
+/// The following plot shows the Poisson distribution with various values of `λ`.
+/// Note how a higher `λ` results in more expected events per unit interval.
 ///
 /// ![Poisson distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/poisson.svg)
 ///

@@ -24,15 +24,15 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-/// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution)
+/// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution) `IG(μ, λ)`
 /// 
-/// This is a continuous probability distribution with two parameters, `mean` and `shape`,
+/// This is a continuous probability distribution with two parameters, `mean` (`μ`) and `shape` (`λ`),
 /// defined for `x > 0`.
 /// It is also known as the Wald distribution.
 /// 
 /// # Plot
 /// 
-/// The following plot shows the inverse Gaussian distribution with various parameters.
+/// The following plot shows the inverse Gaussian distribution with various values of `μ` and `λ`.
 /// 
 /// ![Inverse Gaussian distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/inverse_gaussian.svg)
 /// 

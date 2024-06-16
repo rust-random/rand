@@ -143,7 +143,8 @@ where
 /// 
 /// # Plot
 /// 
-/// The following plot illustrates the Zipf distribution for various values of `s` and `n = 10`.
+/// The following plot illustrates the Zipf distribution for `n = 10` and 
+/// various values of `s`.
 ///
 /// ![Zipf distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/zipf.svg)
 ///

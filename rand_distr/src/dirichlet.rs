@@ -193,7 +193,7 @@ where
 /// 
 /// # Plot
 /// 
-/// The following plot illustrates the Dirichlet distribution with various parameters.
+/// The following plot illustrates the Dirichlet distribution with various `alpha`s.
 /// 
 /// ![Dirichlet distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/dirichlet.png)
 ///

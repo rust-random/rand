@@ -12,16 +12,18 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The PERT distribution.
+/// The PERT distribution `PERT(min, max, mode, shape)`.
 ///
 /// Similar to the [`Triangular`] distribution, the PERT distribution is
 /// parameterised by a range and a mode within that range. Unlike the
 /// [`Triangular`] distribution, the probability density function of the PERT
 /// distribution is smooth, with a configurable weighting around the mode.
+/// If left unspecified, the default value of `shape` is `4.0`.
 ///
 /// # Plot
 ///
-/// The following plot shows the PERT distribution with various parameters.
+/// The following plot shows the PERT distribution with various values of
+/// `min`, `max`, `mode`, and `shape`.
 ///
 /// ![PERT distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/pert.svg)
 ///

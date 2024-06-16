@@ -19,17 +19,17 @@ use rand::Rng;
 /// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
 /// sampling with `-rng.gen::<f64>().ln()`, but faster.
 ///
-/// See `Exp` for the general exponential distribution.
+/// See [`Exp`](crate::Exp) for the general exponential distribution.
+///
+/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method. The exact
+/// description in the paper was adjusted to use tables for the exponential
+/// distribution rather than normal.
 ///
 /// # Plot
 ///
 /// The following plot illustrates the exponential distribution with `λ = 1`.
 ///
 /// ![Exponential distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential_exp1.svg)
-///
-/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method. The exact
-/// description in the paper was adjusted to use tables for the exponential
-/// distribution rather than normal.
 ///
 /// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
 ///       Generate Normal Random Samples*](
@@ -83,16 +83,17 @@ impl Distribution<f64> for Exp1 {
 
 /// The exponential distribution `Exp(lambda)`.
 ///
-/// This distribution has density function: `f(x) = lambda * exp(-lambda * x)`
-/// for `x > 0`, when `lambda > 0`. For `lambda = 0`, all samples yield infinity.
+/// This distribution has density function: `f(x) = λ * exp(-λ * x)`
+/// for `x > 0`, when `λ > 0`. For `λ = 0`, all samples yield infinity.
 ///
-/// Note that [`Exp1`](crate::Exp1) is an optimised implementation for `lambda = 1`.
+/// Note that [`Exp1`](crate::Exp1) is an optimised implementation for `λ = 1`.
 ///
 /// # Plot
 ///
 /// The following plot illustrates the exponential distribution with 
-/// various values of `lambda`.
-/// The `lambda` parameter controls the rate of decay as `x` approaches infinity.
+/// various values of `λ`.
+/// The `λ` parameter controls the rate of decay as `x` approaches infinity,
+/// and the mean of the distribution is `1/λ`.
 ///
 /// ![Exponential distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential.svg)
 ///

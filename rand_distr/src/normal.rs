@@ -27,7 +27,7 @@ use rand::Rng;
 ///
 /// The following diagram shows the standard normal distribution.
 ///
-/// ![Standard normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/normal.svg)
+/// ![Standard normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/standard_normal.svg)
 ///
 /// # Example
 /// ```
@@ -108,8 +108,9 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// # Plot
 ///
-/// The following diagram shows the normal distribution with various parameters.
-/// [`StandardNormal`] is illustrated with `μ = 0` and `σ = 1`.
+/// The following diagram shows the normal distribution with various values of `μ`
+/// and `σ`.
+/// The blue curve is the [`StandardNormal`] distribution, `N(0, 1)`.
 ///
 /// ![Normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/normal.svg)
 ///
@@ -231,6 +232,13 @@ where
 ///
 /// If `X` is log-normal distributed, then `ln(X)` is `N(mean, std_dev**2)`
 /// distributed.
+/// 
+/// # Plot
+/// 
+/// The following diagram shows the log-normal distribution with various values
+/// of `μ` and `σ`.
+/// 
+/// ![Log-normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/log_normal.svg)
 ///
 /// # Example
 ///
