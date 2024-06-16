@@ -13,10 +13,10 @@ use rand::Rng;
 /// Samples uniformly from the unit disc in two dimensions.
 ///
 /// Implemented via rejection sampling.
-/// 
+///
 /// For a distribution that samples only from the circumference of the unit disc,
 /// see [`UnitCircle`](crate::UnitCircle).
-/// 
+///
 /// For a similar distribution in three dimensions, see [`UnitBall`](crate::UnitBall).
 ///
 /// # Plot

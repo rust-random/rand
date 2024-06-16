@@ -25,7 +25,7 @@ use rand::{distributions::OpenClosed01, Rng};
 /// # Plot
 ///
 /// The following plot illustrates the zeta distribution for various values of `a`.
-/// 
+///
 /// ![Zeta distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/zeta.svg)
 ///
 /// # Example
@@ -140,10 +140,10 @@ where
 /// For large `n`, this converges to the [`Zeta`] distribution.
 ///
 /// For `s = 0`, this becomes a uniform distribution.
-/// 
+///
 /// # Plot
-/// 
-/// The following plot illustrates the Zipf distribution for `n = 10` and 
+///
+/// The following plot illustrates the Zipf distribution for `n = 10` and
 /// various values of `s`.
 ///
 /// ![Zipf distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/zipf.svg)

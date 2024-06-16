@@ -13,10 +13,10 @@ use rand::Rng;
 /// Samples uniformly from the volume of the unit ball in three dimensions.
 ///
 /// Implemented via rejection sampling.
-/// 
+///
 /// For a distribution that samples only from the surface of the unit ball,
 /// see [`UnitSphere`](crate::UnitSphere).
-/// 
+///
 /// For a similar distribution in two dimensions, see [`UnitDisc`](crate::UnitDisc).
 ///
 /// # Plot

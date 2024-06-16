@@ -90,7 +90,7 @@ impl Distribution<f64> for Exp1 {
 ///
 /// # Plot
 ///
-/// The following plot illustrates the exponential distribution with 
+/// The following plot illustrates the exponential distribution with
 /// various values of `λ`.
 /// The `λ` parameter controls the rate of decay as `x` approaches infinity,
 /// and the mean of the distribution is `1/λ`.

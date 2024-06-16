@@ -44,7 +44,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// The following plot illustrates the Gamma distribution with
 /// various values of `k` and `θ`.
-/// Curves with `θ = 1` are more saturated, while corresponding 
+/// Curves with `θ = 1` are more saturated, while corresponding
 /// curves with `θ = 2` have a lighter color.
 ///
 /// ![Gamma distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/gamma.svg)
@@ -487,14 +487,14 @@ where
 
 /// The Student t-distribution, `t(nu)`, where `nu` is the degrees of
 /// freedom.
-/// 
+///
 /// This is a continuous probability distribution that arises when
 /// estimating the mean of a normally-distributed population in
 /// situations where the sample size is small and the population's
 /// standard deviation is unknown.
-/// 
+///
 /// For `nu = 1`, this is equivalent to the standard [`Cauchy`](crate::Cauchy) distribution,
-/// and as `nu` diverges to infinity, `t(nu)` converges to 
+/// and as `nu` diverges to infinity, `t(nu)` converges to
 /// [`StandardNormal`](crate::StandardNormal).
 ///
 /// # Plot
@@ -589,19 +589,19 @@ struct BC<N> {
 }
 
 /// The Beta distribution `Beta(alpha, beta)`.
-/// 
+///
 /// The Beta distribution is a continuous probability distribution
 /// defined on the interval `[0, 1]`. It is the conjugate prior for the
 /// parameter `p` of the [`Binomial`][crate::Binomial] distribution.
-/// 
+///
 /// It has two shape parameters `α` and `β` which control the shape of
 /// the distribution. The distribution is symmetric when `α = β`.
-/// 
+///
 /// # Plot
-/// 
-/// The plot shows the Beta distribution with various combinations 
+///
+/// The plot shows the Beta distribution with various combinations
 /// of `α` and `β`.
-/// 
+///
 /// ![Beta distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/beta.svg)
 ///
 /// # Example

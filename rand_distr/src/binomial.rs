@@ -17,11 +17,11 @@ use num_traits::Float;
 use rand::Rng;
 
 /// The binomial distribution `Binomial(n, p)`.
-/// 
+///
 /// The binomial distribution is a discrete probability distribution with
 /// parameters `n` (number of trials) and `p` (probability of success).
-/// Given some number of successes `k`, `Binomial(n, p)` describes the 
-/// probability of having `k` successes in `n` independent trials, 
+/// Given some number of successes `k`, `Binomial(n, p)` describes the
+/// probability of having `k` successes in `n` independent trials,
 /// each of which has probability `p` to succeed.
 ///
 /// This distribution follows the density function:
@@ -29,8 +29,8 @@ use rand::Rng;
 ///
 /// # Plot
 ///
-/// The following plot of the binomial distribution illustrates the 
-/// probability of `k` successes out of `n = 10` trials with `p = 0.2` 
+/// The following plot of the binomial distribution illustrates the
+/// probability of `k` successes out of `n = 10` trials with `p = 0.2`
 /// and `p = 0.6` for `0 <= k <= n`.
 ///
 /// ![Binomial distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/binomial.svg)

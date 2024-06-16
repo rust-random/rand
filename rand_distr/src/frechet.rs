@@ -17,7 +17,7 @@ use rand::Rng;
 ///
 /// This distribution has density function:
 /// `f(x) = [(x - μ) / σ]^(-1 - α) exp[-(x - μ) / σ]^(-α) α / σ`,
-/// where `μ` is the location parameter, `σ` the scale parameter, 
+/// where `μ` is the location parameter, `σ` the scale parameter,
 /// and `α` the shape parameter.
 ///
 /// # Plot

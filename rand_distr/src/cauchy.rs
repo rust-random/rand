@@ -28,9 +28,9 @@ use rand::Rng;
 /// # Plot
 ///
 /// The plot illustrates the Cauchy distribution with various values of `x₀` and `γ`.
-/// Note how the median parameter `x₀` shifts the distribution along the x-axis, 
+/// Note how the median parameter `x₀` shifts the distribution along the x-axis,
 /// and how the scale `γ` changes the density around the median.
-/// 
+///
 /// The standard Cauchy distribution is the special case with `median = 0` and `scale = 1`.
 ///
 /// ![Cauchy distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/cauchy.svg)

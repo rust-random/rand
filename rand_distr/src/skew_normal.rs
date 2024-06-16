@@ -17,8 +17,8 @@ use rand::Rng;
 ///
 /// The skew normal distribution is a generalization of the
 /// [`Normal`](crate::Normal) distribution to allow for non-zero skewness.
-/// 
-/// The `location` and `scale` parameters correspond to the 
+///
+/// The `location` and `scale` parameters correspond to the
 /// mean and standard deviation of the normal distribution,
 /// respectively. The `shape` parameter controls the skewness.
 ///
@@ -29,7 +29,7 @@ use rand::Rng;
 /// # Plot
 ///
 /// The following plot shows the skew normal distribution with `location = 0`, `scale = 1`
-/// (corresponding to the [`standard normal distribution`](crate::StandardNormal)), and 
+/// (corresponding to the [`standard normal distribution`](crate::StandardNormal)), and
 /// various values of `shape`.
 ///
 /// ![Skew normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/skew_normal.svg)

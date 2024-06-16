@@ -13,10 +13,10 @@ use rand::Rng;
 /// Samples uniformly from the circumference of the unit circle in two dimensions.
 ///
 /// Implemented via a method by von Neumann[^1].
-/// 
+///
 /// For a distribution that also samples from the interior of the unit circle,
 /// see [`UnitDisc`](crate::UnitDisc).
-/// 
+///
 /// For a similar distribution in three dimensions, see [`UnitSphere`](crate::UnitSphere).
 ///
 /// # Plot

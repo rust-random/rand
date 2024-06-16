@@ -14,7 +14,7 @@ use num_traits::Float;
 use rand::Rng;
 
 /// The Gumbel distribution `Gumbel(location, scale)`.
-/// 
+///
 /// The Gumbel distribution is a continuous probability distribution with
 /// location parameter `μ` and scale parameter `σ`.
 ///

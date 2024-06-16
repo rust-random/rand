@@ -15,7 +15,7 @@ use num_traits::{Float, FloatConst};
 use rand::Rng;
 
 /// The Poisson distribution `Poisson(lambda)`.
-/// 
+///
 /// The Poisson distribution is a discrete probability distribution with
 /// rate parameter `λ`. It models the number of events occurring in a fixed
 /// interval of time or space.

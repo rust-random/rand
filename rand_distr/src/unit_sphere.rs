@@ -13,10 +13,10 @@ use rand::Rng;
 /// Samples uniformly from the surface of the unit sphere in three dimensions.
 ///
 /// Implemented via a method by Marsaglia[^1].
-/// 
+///
 /// For a distribution that also samples from the interior of the sphere,
 /// see [`UnitBall`](crate::UnitBall).
-/// 
+///
 /// For a similar distribution in two dimensions, see [`UnitCircle`](crate::UnitCircle).
 ///
 /// # Plot

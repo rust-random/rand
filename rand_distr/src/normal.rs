@@ -232,12 +232,12 @@ where
 ///
 /// If `X` is log-normal distributed, then `ln(X)` is `N(mean, std_dev**2)`
 /// distributed.
-/// 
+///
 /// # Plot
-/// 
+///
 /// The following diagram shows the log-normal distribution with various values
 /// of `μ` and `σ`.
-/// 
+///
 /// ![Log-normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/log_normal.svg)
 ///
 /// # Example
