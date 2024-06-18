@@ -43,7 +43,7 @@ enum SamplingMethod {
 ///
 /// The following plot of the hypergeometric distribution illustrates the probability of drawing
 /// `k` successes in `n = 10` draws from a population of `N = 50` items, of which either `K = 12`
-/// or `K = 25` are successes.
+/// or `K = 35` are successes.
 ///
 /// ![Hypergeometric distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/hypergeometric.svg)
 ///

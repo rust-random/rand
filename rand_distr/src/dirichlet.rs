@@ -7,7 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The dirichlet distribution.
+//! The dirichlet distribution `Dirichlet(α₁, α₂, ..., αₙ)`.
+
 #![cfg(feature = "alloc")]
 use crate::{Beta, Distribution, Exp1, Gamma, Open01, StandardNormal};
 use core::fmt;
@@ -185,11 +186,19 @@ where
     FromBeta(DirichletFromBeta<F, N>),
 }
 
-/// The Dirichlet distribution `Dirichlet(alpha)`.
+/// The Dirichlet distribution `Dirichlet(α₁, α₂, ..., αₙ)`.
+/// 
+/// # Parameters
+/// 
+/// `α` (alpha): A vector of positive reals `[α₁, α₂, ..., αₙ]`.
+/// 
+/// # Description
 ///
 /// The Dirichlet distribution is a family of continuous multivariate
-/// probability distributions parameterized by a vector alpha of positive reals.
-/// It is a multivariate generalization of the beta distribution.
+/// probability distributions parameterized by a vector of positive 
+/// real numbers `α₁, α₂, ..., αₙ`, where `n` is the number of dimensions
+/// of the distribution.
+/// It is a multivariate generalization of the [`Beta`](crate::Beta) distribution.
 ///
 /// # Plot
 ///

@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The exponential distribution.
+//! The exponential distribution `Exp(λ)`.
 
 use crate::utils::ziggurat;
 use crate::{ziggurat_tables, Distribution};
@@ -15,26 +15,19 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
+/// The standard exponential distribution `Exp(1)`.
+/// 
 /// Samples floating-point numbers according to the exponential distribution,
 /// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
 /// sampling with `-rng.gen::<f64>().ln()`, but faster.
 ///
 /// See [`Exp`](crate::Exp) for the general exponential distribution.
 ///
-/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method. The exact
-/// description in the paper was adjusted to use tables for the exponential
-/// distribution rather than normal.
-///
 /// # Plot
 ///
 /// The following plot illustrates the exponential distribution with `λ = 1`.
 ///
 /// ![Exponential distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential_exp1.svg)
-///
-/// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
-///       Generate Normal Random Samples*](
-///       https://www.doornik.com/research/ziggurat.pdf).
-///       Nuffield College, Oxford
 ///
 /// # Example
 /// ```
@@ -44,6 +37,17 @@ use rand::Rng;
 /// let val: f64 = thread_rng().sample(Exp1);
 /// println!("{}", val);
 /// ```
+/// 
+/// # Notes
+///
+/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method. The exact
+/// description in the paper was adjusted to use tables for the exponential
+/// distribution rather than normal.
+///
+/// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
+///       Generate Normal Random Samples*](
+///       https://www.doornik.com/research/ziggurat.pdf).
+///       Nuffield College, Oxford
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Exp1;
@@ -81,12 +85,25 @@ impl Distribution<f64> for Exp1 {
     }
 }
 
-/// The exponential distribution `Exp(lambda)`.
+/// The exponential distribution `Exp(λ)`.
 ///
-/// This distribution has density function: `f(x) = λ * exp(-λ * x)`
-/// for `x > 0`, when `λ > 0`. For `λ = 0`, all samples yield infinity.
+/// # Parameters
 ///
-/// Note that [`Exp1`](crate::Exp1) is an optimised implementation for `λ = 1`.
+/// `λ` (lambda): the rate parameter.
+/// 
+/// # Description
+///
+/// The exponential distribution is a continuous probability distribution
+/// which describes the time between events in a [`Poisson`](crate::Poisson)
+/// process, i.e. a process in which events occur continuously and 
+/// independently at a constant average rate.
+///
+/// # Density function
+///
+/// `f(x) = λ * exp(-λ * x)` for `x > 0`, when `λ > 0`.
+/// 
+/// For `λ = 0`, all samples yield infinity (because a Poisson process
+/// with rate 0 has no events, and so the time between events is infinite).
 ///
 /// # Plot
 ///
@@ -106,6 +123,10 @@ impl Distribution<f64> for Exp1 {
 /// let v = exp.sample(&mut rand::thread_rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
+/// 
+/// # Notes
+///
+/// See [`Exp1`](crate::Exp1) for an optimised implementation for `λ = 1`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Exp<F>

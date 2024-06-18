@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The binomial distribution.
+//! The binomial distribution `Binomial(n, p)`.
 
 use crate::{Distribution, Uniform};
 use core::cmp::Ordering;
@@ -17,14 +17,23 @@ use num_traits::Float;
 use rand::Rng;
 
 /// The binomial distribution `Binomial(n, p)`.
+/// 
+/// # Parameters
+/// 
+/// `n`: Number of trials.
+/// 
+/// `p`: Probability of success.
+/// 
+/// # Description
 ///
 /// The binomial distribution is a discrete probability distribution with
 /// parameters `n` (number of trials) and `p` (probability of success).
 /// Given some number of successes `k`, `Binomial(n, p)` describes the
-/// probability of having `k` successes in `n` independent trials,
-/// each of which has probability `p` to succeed.
+/// probability of seeing `k` successes in `n` independent trials,
+/// each of which has success probability `p`.
 ///
-/// This distribution follows the density function:
+/// # Density function
+/// 
 /// `f(k) = n!/(k! (n-k)!) p^k (1-p)^(n-k)` for `k >= 0`.
 ///
 /// # Plot

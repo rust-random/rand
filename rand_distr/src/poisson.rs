@@ -20,13 +20,13 @@ use rand::Rng;
 /// rate parameter `λ`. It models the number of events occurring in a fixed
 /// interval of time or space.
 ///
-/// This distribution has a density function:
+/// This distribution has density function:
 /// `f(k) = λ^k * exp(-λ) / k!` for `k >= 0`.
 ///
 /// # Plot
 ///
 /// The following plot shows the Poisson distribution with various values of `λ`.
-/// Note how a higher `λ` results in more expected events per unit interval.
+/// Note how the expected number of events increases with `λ`.
 ///
 /// ![Poisson distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/poisson.svg)
 ///

@@ -18,7 +18,6 @@ use rand::Rng;
 /// parameterised by a range and a mode within that range. Unlike the
 /// [`Triangular`] distribution, the probability density function of the PERT
 /// distribution is smooth, with a configurable weighting around the mode.
-/// If left unspecified, the default value of `shape` is `4.0`.
 ///
 /// # Plot
 ///

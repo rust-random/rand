@@ -7,23 +7,34 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Cauchy distribution.
+//! The Cauchy distribution `Cauchy(x₀, γ)`.
 
 use crate::{Distribution, Standard};
 use core::fmt;
 use num_traits::{Float, FloatConst};
 use rand::Rng;
 
-/// The Cauchy distribution `Cauchy(median, scale)`.
+/// The Cauchy distribution `Cauchy(x₀, γ)`.
+/// 
+/// # Parameters
+/// 
+/// `x₀` (median): The location of the peak of the distribution.
+/// 
+/// `γ` (scale): The scale parameter.
+/// 
+/// # Description
 ///
 /// The Cauchy distribution is a continuous probability distribution with
-/// parameters `median` (`x₀`) and `scale` (`γ`).
-///
-/// This distribution has a density function:
-/// `f(x) = 1 / (pi * scale * (1 + ((x - median) / scale)^2))`
-///
-/// Note that at least for `f32`, results are not fully portable due to minor
-/// differences in the target system's *tan* implementation, `tanf`.
+/// parameters `x₀` (median) and `γ` (scale).
+/// It describes the distribution of the ratio of two independent
+/// normally distributed random variables with means `x₀` and scales `γ`.
+/// In other words, if `X` and `Y` are independent normally distributed
+/// random variables with means `x₀` and scales `γ`, respectively, then
+/// `X / Y` has a Cauchy distribution.
+/// 
+/// # Density function
+/// 
+/// `f(x) = 1 / (π * γ * (1 + ((x - x₀) / γ)²))`
 ///
 /// # Plot
 ///
@@ -31,7 +42,8 @@ use rand::Rng;
 /// Note how the median parameter `x₀` shifts the distribution along the x-axis,
 /// and how the scale `γ` changes the density around the median.
 ///
-/// The standard Cauchy distribution is the special case with `median = 0` and `scale = 1`.
+/// The `standard Cauchy distribution` is the special case with `x₀ = 0` and `γ = 1`,
+/// which corresponds to the ratio of two [`StandardNormal`](crate::StandardNormal) distributions.
 ///
 /// ![Cauchy distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/cauchy.svg)
 ///
@@ -44,6 +56,11 @@ use rand::Rng;
 /// let v = cau.sample(&mut rand::thread_rng());
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
+/// 
+/// # Notes
+/// 
+/// Note that at least for `f32`, results are not fully portable due to minor
+/// differences in the target system's *tan* implementation, `tanf`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Cauchy<F>

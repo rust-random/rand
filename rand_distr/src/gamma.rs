@@ -24,22 +24,26 @@ use rand::Rng;
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 
-/// The Gamma distribution `Gamma(shape, scale)`.
+/// The Gamma distribution `Gamma(k, θ)`.
+/// 
+/// # Parameters
+/// 
+/// `k`: the shape parameter (k > 0).
+/// `θ`: the scale parameter (θ > 0).
+/// 
+/// # Description
+/// 
+/// The Gamma distribution is a continuous probability distribution
+/// which describes the time until `k` events occur in a Poisson
+/// process with rate `θ`. It is the generalization of the
+/// Exponential distribution.
+/// 
+/// # Density function
 ///
-/// The density function of this distribution is
+/// `f(x) =  x^(k - 1) * exp(-x / θ) / (Γ(k) * θ^k)` for `x > 0`.
 ///
-/// ```text
-/// f(x) =  x^(k - 1) * exp(-x / θ) / (Γ(k) * θ^k)
-/// ```
-///
-/// where `Γ` is the Gamma function, `k` is the shape and `θ` is the
-/// scale and both `k` and `θ` are strictly positive.
-///
-/// The algorithm used is that described by Marsaglia & Tsang 2000[^1],
-/// falling back to directly sampling from an Exponential for `shape
-/// == 1`, and using the boosting technique described in that paper for
-/// `shape < 1`.
-///
+/// where `Γ` is the [gamma function](https://en.wikipedia.org/wiki/Gamma_function).
+/// 
 /// # Plot
 ///
 /// The following plot illustrates the Gamma distribution with
@@ -58,6 +62,13 @@ use serde::{Deserialize, Serialize};
 /// let v = gamma.sample(&mut rand::thread_rng());
 /// println!("{} is from a Gamma(2, 5) distribution", v);
 /// ```
+/// 
+/// # Notes
+///
+/// The algorithm used is that described by Marsaglia & Tsang 2000[^1],
+/// falling back to directly sampling from an Exponential for `shape
+/// == 1`, and using the boosting technique described in that paper for
+/// `shape < 1`.
 ///
 /// [^1]: George Marsaglia and Wai Wan Tsang. 2000. "A Simple Method for
 ///       Generating Gamma Variables" *ACM Trans. Math. Softw.* 26, 3
@@ -295,12 +306,6 @@ where
 /// let v = chi.sample(&mut rand::thread_rng());
 /// println!("{} is from a χ²(11) distribution", v)
 /// ```
-///
-/// # Diagram
-///
-/// The diagram shows the chi-squared distribution with varying degrees of freedom.
-///
-/// ![Chi-squared distribution]()
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct ChiSquared<F>
