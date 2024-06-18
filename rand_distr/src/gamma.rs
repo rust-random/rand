@@ -544,12 +544,12 @@ where
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
 {
-    /// Create a new Student t-distribution with `n` degrees of
-    /// freedom.
-    pub fn new(n: F) -> Result<StudentT<F>, ChiSquaredError> {
+    /// Create a new Student t-distribution with `ν` (nu)
+    /// degrees of freedom.
+    pub fn new(nu: F) -> Result<StudentT<F>, ChiSquaredError> {
         Ok(StudentT {
-            chi: ChiSquared::new(n)?,
-            dof: n,
+            chi: ChiSquared::new(nu)?,
+            dof: nu,
         })
     }
 }
