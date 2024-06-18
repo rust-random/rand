@@ -25,25 +25,25 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 /// The Gamma distribution `Gamma(k, θ)`.
-/// 
+///
 /// # Parameters
-/// 
+///
 /// `k`: the shape parameter (k > 0).
 /// `θ`: the scale parameter (θ > 0).
-/// 
+///
 /// # Description
-/// 
+///
 /// The Gamma distribution is a continuous probability distribution
 /// which describes the time until `k` events occur in a Poisson
 /// process with rate `θ`. It is the generalization of the
 /// Exponential distribution.
-/// 
+///
 /// # Density function
 ///
 /// `f(x) =  x^(k - 1) * exp(-x / θ) / (Γ(k) * θ^k)` for `x > 0`.
 ///
 /// where `Γ` is the [gamma function](https://en.wikipedia.org/wiki/Gamma_function).
-/// 
+///
 /// # Plot
 ///
 /// The following plot illustrates the Gamma distribution with
@@ -62,7 +62,7 @@ use serde::{Deserialize, Serialize};
 /// let v = gamma.sample(&mut rand::thread_rng());
 /// println!("{} is from a Gamma(2, 5) distribution", v);
 /// ```
-/// 
+///
 /// # Notes
 ///
 /// The algorithm used is that described by Marsaglia & Tsang 2000[^1],
@@ -490,16 +490,23 @@ where
     }
 }
 
-/// The Student t-distribution, `t(nu)`, where `nu` is the degrees of
-/// freedom.
+/// The Student t-distribution, `t(ν)`.
 ///
-/// This is a continuous probability distribution that arises when
-/// estimating the mean of a normally-distributed population in
-/// situations where the sample size is small and the population's
-/// standard deviation is unknown.
+/// # Parameters
 ///
-/// For `nu = 1`, this is equivalent to the standard [`Cauchy`](crate::Cauchy) distribution,
-/// and as `nu` diverges to infinity, `t(nu)` converges to
+/// `ν` (nu): the degrees of freedom.
+///
+/// # Description
+///
+/// The t-distribution is a continuous probability distribution
+/// that arises when estimating the mean of a normally-distributed
+/// population in situations where the sample size is small and
+/// the population's standard deviation is unknown.
+/// It is widely used in hypothesis testing.
+///
+/// For `ν = 1`, this is equivalent to the standard 
+/// [`Cauchy`](crate::Cauchy) distribution,
+/// and as `ν` diverges to infinity, `t(ν)` converges to
 /// [`StandardNormal`](crate::StandardNormal).
 ///
 /// # Plot
@@ -537,7 +544,7 @@ where
     Exp1: Distribution<F>,
     Open01: Distribution<F>,
 {
-    /// Create a new Student t distribution with `n` degrees of
+    /// Create a new Student t-distribution with `n` degrees of
     /// freedom.
     pub fn new(n: F) -> Result<StudentT<F>, ChiSquaredError> {
         Ok(StudentT {
