@@ -15,22 +15,14 @@ use num_traits::{Float, FloatConst};
 use rand::Rng;
 
 /// The Cauchy distribution `Cauchy(x₀, γ)`.
-/// 
-/// # Parameters
-/// 
-/// `x₀` (median): The location of the peak of the distribution.
-/// 
-/// `γ` (scale): The scale parameter.
-/// 
-/// # Description
 ///
 /// The Cauchy distribution is a continuous probability distribution with
-/// parameters `x₀` (median) and `γ` (scale).
+/// parameters `x₀` (`median`) and `γ` (`scale`).
 /// It describes the distribution of the ratio of two independent
 /// normally distributed random variables with means `x₀` and scales `γ`.
 /// In other words, if `X` and `Y` are independent normally distributed
 /// random variables with means `x₀` and scales `γ`, respectively, then
-/// `X / Y` has a Cauchy distribution.
+/// `X / Y` is `Cauchy(x₀, γ)` distributed.
 /// 
 /// # Density function
 /// 

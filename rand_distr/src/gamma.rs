@@ -26,17 +26,12 @@ use serde::{Deserialize, Serialize};
 
 /// The Gamma distribution `Gamma(k, θ)`.
 ///
-/// # Parameters
-///
-/// `k`: the shape parameter (k > 0).
-/// `θ`: the scale parameter (θ > 0).
-///
-/// # Description
-///
 /// The Gamma distribution is a continuous probability distribution
-/// which describes the time until `k` events occur in a Poisson
-/// process with rate `θ`. It is the generalization of the
-/// Exponential distribution.
+/// with shape parameter `k > 0` (number of events) and 
+/// scale parameter `θ > 0` (mean waiting time between events).
+/// It describes the time until `k` events occur in a Poisson
+/// process with rate `1/θ`. It is the generalization of the
+/// [`Exponential`](crate::Exp) distribution.
 ///
 /// # Density function
 ///
@@ -282,8 +277,10 @@ where
     }
 }
 
-/// The chi-squared distribution `χ²(k)`, where `k` is the degrees of
-/// freedom.
+/// The chi-squared distribution `χ²(k)`.
+/// 
+/// The chi-squared distribution is a continuous probability
+/// distribution with parameter `k > 0` degrees of freedom.
 ///
 /// For `k > 0` integral, this distribution is the sum of the squares
 /// of `k` independent standard normal random variables. For other
@@ -292,7 +289,7 @@ where
 ///
 /// # Plot
 ///
-/// The plot shows the chi-squared distribution with varying degrees
+/// The plot shows the chi-squared distribution with various degrees
 /// of freedom.
 ///
 /// ![Chi-squared distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/chi_squared.svg)

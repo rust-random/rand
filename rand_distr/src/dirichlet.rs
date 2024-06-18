@@ -186,23 +186,21 @@ where
     FromBeta(DirichletFromBeta<F, N>),
 }
 
-/// The Dirichlet distribution `Dirichlet(α₁, α₂, ..., αₙ)`.
-/// 
-/// # Parameters
-/// 
-/// `α` (alpha): A vector of positive reals `[α₁, α₂, ..., αₙ]`.
-/// 
-/// # Description
+/// The Dirichlet distribution `Dirichlet(α₁, α₂, ..., αₖ)`.
 ///
 /// The Dirichlet distribution is a family of continuous multivariate
 /// probability distributions parameterized by a vector of positive 
-/// real numbers `α₁, α₂, ..., αₙ`, where `n` is the number of dimensions
-/// of the distribution.
+/// real numbers `α₁, α₂, ..., αₖ`, where `k` is the number of dimensions
+/// of the distribution. The distribution is supported on the `k-1`-dimensional
+/// simplex, which is the set of points `x = [x₁, x₂, ..., xₖ]` such that
+/// `0 ≤ xᵢ ≤ 1` and `∑ xᵢ = 1`.
 /// It is a multivariate generalization of the [`Beta`](crate::Beta) distribution.
+/// The distribution is symmetric when all `αᵢ` are equal.
 ///
 /// # Plot
 ///
-/// The following plot illustrates the Dirichlet distribution with various `alpha`s.
+/// The following plot illustrates the 2-dimensional simplices for various
+/// 3-dimensional Dirichlet distributions.
 ///
 /// ![Dirichlet distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/dirichlet.png)
 ///

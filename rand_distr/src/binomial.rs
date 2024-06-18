@@ -17,20 +17,10 @@ use num_traits::Float;
 use rand::Rng;
 
 /// The binomial distribution `Binomial(n, p)`.
-/// 
-/// # Parameters
-/// 
-/// `n`: Number of trials.
-/// 
-/// `p`: Probability of success.
-/// 
-/// # Description
 ///
-/// The binomial distribution is a discrete probability distribution with
-/// parameters `n` (number of trials) and `p` (probability of success).
-/// Given some number of successes `k`, `Binomial(n, p)` describes the
-/// probability of seeing `k` successes in `n` independent trials,
-/// each of which has success probability `p`.
+/// The binomial distribution is a discrete probability distribution
+/// which describes the probability of seeing `k` successes in `n` 
+/// independent trials, each of which has success probability `p`.
 ///
 /// # Density function
 /// 

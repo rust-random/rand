@@ -17,9 +17,8 @@ use rand::Rng;
 
 /// The standard exponential distribution `Exp(1)`.
 /// 
-/// Samples floating-point numbers according to the exponential distribution,
-/// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
-/// sampling with `-rng.gen::<f64>().ln()`, but faster.
+/// This is equivalent to `Exp::new(1.0)` or sampling with
+/// `-rng.gen::<f64>().ln()`, but faster.
 ///
 /// See [`Exp`](crate::Exp) for the general exponential distribution.
 ///
@@ -87,23 +86,17 @@ impl Distribution<f64> for Exp1 {
 
 /// The exponential distribution `Exp(λ)`.
 ///
-/// # Parameters
-///
-/// `λ` (lambda): the rate parameter.
-/// 
-/// # Description
-///
 /// The exponential distribution is a continuous probability distribution
-/// which describes the time between events in a [`Poisson`](crate::Poisson)
-/// process, i.e. a process in which events occur continuously and 
-/// independently at a constant average rate.
+/// with rate parameter `λ` (`lambda`). It describes the time between events
+/// in a [`Poisson`](crate::Poisson) process, i.e. a process in which 
+/// events occur continuously and independently at a constant average rate.
 ///
 /// # Density function
 ///
 /// `f(x) = λ * exp(-λ * x)` for `x > 0`, when `λ > 0`.
 /// 
 /// For `λ = 0`, all samples yield infinity (because a Poisson process
-/// with rate 0 has no events, and so the time between events is infinite).
+/// with rate 0 has no events).
 ///
 /// # Plot
 ///

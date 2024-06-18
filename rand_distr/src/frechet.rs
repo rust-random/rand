@@ -15,18 +15,11 @@ use rand::Rng;
 
 /// The Fréchet distribution `Fréchet(α, μ, σ)`.
 /// 
-/// # Parameters
-/// 
-/// `α` (alpha): the shape parameter (α > 0).
-/// `μ` (mu): the location parameter.
-/// `σ` (sigma): the scale parameter (σ > 0).
-/// 
-/// # Description
-/// 
 /// The Fréchet distribution is a continuous probability distribution
-/// which describes the distribution of the maximum (or minimum) of a
-/// number of random variables. It is also known as the Type II
-/// extreme value distribution.
+/// with shape parameter `α` (`alpha`), location parameter `μ` (`mu`),
+/// and scale parameter `σ` (`sigma`). It describes the distribution
+/// of the maximum (or minimum) of a number of random variables.
+/// It is also known as the `Type II extreme value distribution`.
 /// 
 /// # Density function
 ///
