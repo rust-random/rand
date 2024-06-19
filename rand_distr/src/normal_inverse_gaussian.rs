@@ -32,7 +32,7 @@ impl std::error::Error for Error {}
 ///
 /// This is a continuous probability distribution with two parameters, `alpha` and `beta`,
 /// defined in `(-∞, ∞)`.
-/// It is also known as the `normal-Wald` distribution.
+/// It is also known as the normal-Wald distribution.
 ///
 /// # Plot
 ///

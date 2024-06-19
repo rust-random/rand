@@ -19,7 +19,7 @@ use rand::Rng;
 /// with shape parameter `α` (`alpha`), location parameter `μ` (`mu`),
 /// and scale parameter `σ` (`sigma`). It describes the distribution
 /// of the maximum (or minimum) of a number of random variables.
-/// It is also known as the `Type II extreme value distribution`.
+/// It is also known as the Type II extreme value distribution.
 /// 
 /// # Density function
 ///
@@ -35,6 +35,7 @@ use rand::Rng;
 /// ![Fréchet distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/frechet.svg)
 ///
 /// # Example
+/// 
 /// ```
 /// use rand::prelude::*;
 /// use rand_distr::Frechet;

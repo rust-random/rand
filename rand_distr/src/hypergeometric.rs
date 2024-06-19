@@ -1,4 +1,4 @@
-//! The hypergeometric distribution.
+//! The hypergeometric distribution `Hypergeometric(N, K, n)`.
 
 use crate::Distribution;
 use core::fmt;
@@ -31,13 +31,15 @@ enum SamplingMethod {
 ///
 /// This is the distribution of successes in samples of size `n` drawn without
 /// replacement from a population of size `N` containing `K` success states.
-/// It has the density function:
-/// `f(k) = binomial(K, k) * binomial(N-K, n-k) / binomial(N, n)`,
-/// where `binomial(a, b) = a! / (b! * (a - b)!)`.
 ///
-/// The [binomial distribution](crate::Binomial) is the analogous distribution
+/// See the [binomial distribution](crate::Binomial) for the analogous distribution
 /// for sampling with replacement. It is a good approximation when the population
 /// size is much larger than the sample size.
+/// 
+/// # Density function
+/// 
+/// `f(k) = binomial(K, k) * binomial(N-K, n-k) / binomial(N, n)`,
+/// where `binomial(a, b) = a! / (b! * (a - b)!)`.
 ///
 /// # Plot
 ///
@@ -48,7 +50,6 @@ enum SamplingMethod {
 /// ![Hypergeometric distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/hypergeometric.svg)
 ///
 /// # Example
-///
 /// ```
 /// use rand_distr::{Distribution, Hypergeometric};
 ///

@@ -6,19 +6,22 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Gumbel distribution.
+//! The Gumbel distribution `Gumbel(μ, σ)`.
 
 use crate::{Distribution, OpenClosed01};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The Gumbel distribution `Gumbel(location, scale)`.
+/// The Gumbel distribution `Gumbel(μ, σ)`.
 ///
-/// The Gumbel distribution is a continuous probability distribution with
-/// location parameter `μ` and scale parameter `σ`.
+/// The Gumbel distribution is a continuous probability distribution
+/// with location parameter `μ` and scale parameter `σ`.
+/// It is used to model the distribution of the maximum (or minimum)
+/// of a number of samples of various distributions.
+/// 
+/// # Density function
 ///
-/// This distribution has density function:
 /// `f(x) = exp(-(z + exp(-z))) / σ`, where `z = (x - μ) / σ`.
 ///
 /// # Plot

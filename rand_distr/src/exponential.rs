@@ -29,6 +29,7 @@ use rand::Rng;
 /// ![Exponential distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential_exp1.svg)
 ///
 /// # Example
+/// 
 /// ```
 /// use rand::prelude::*;
 /// use rand_distr::Exp1;
@@ -88,8 +89,10 @@ impl Distribution<f64> for Exp1 {
 ///
 /// The exponential distribution is a continuous probability distribution
 /// with rate parameter `λ` (`lambda`). It describes the time between events
-/// in a [`Poisson`](crate::Poisson) process, i.e. a process in which 
+/// in a [`Poisson`](crate::Poisson) process, i.e. a process in which
 /// events occur continuously and independently at a constant average rate.
+///
+/// See [`Exp1`](crate::Exp1) for an optimised implementation for `λ = 1`.
 ///
 /// # Density function
 ///
@@ -116,10 +119,6 @@ impl Distribution<f64> for Exp1 {
 /// let v = exp.sample(&mut rand::thread_rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
-/// 
-/// # Notes
-///
-/// See [`Exp1`](crate::Exp1) for an optimised implementation for `λ = 1`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Exp<F>

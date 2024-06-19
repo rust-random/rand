@@ -35,8 +35,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Density function
 ///
-/// `f(x) =  x^(k - 1) * exp(-x / θ) / (Γ(k) * θ^k)` for `x > 0`.
-///
+/// `f(x) =  x^(k - 1) * exp(-x / θ) / (Γ(k) * θ^k)` for `x > 0`,
 /// where `Γ` is the [gamma function](https://en.wikipedia.org/wiki/Gamma_function).
 ///
 /// # Plot
