@@ -28,9 +28,8 @@ impl std::error::Error for Error {}
 
 /// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution) `IG(μ, λ)`.
 ///
-/// This is a continuous probability distribution with 
-/// mean parameter `μ` (`mu`) and shape parameter `λ`
-/// (`lambda`), defined for `x > 0`.
+/// This is a continuous probability distribution with mean parameter `μ` (`mu`)
+/// and shape parameter `λ` (`lambda`), defined for `x > 0`.
 /// It is also known as the Wald distribution.
 ///
 /// # Plot

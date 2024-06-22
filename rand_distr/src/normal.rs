@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The normal and derived distributions.
+//! The Normal and derived distributions.
 
 use crate::utils::ziggurat;
 use crate::{ziggurat_tables, Distribution, Open01};
@@ -15,19 +15,17 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// Samples floating-point numbers according to the normal distribution
-/// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
-/// `Normal::new(0.0, 1.0)` but faster.
+/// The standard Normal distribution `N(0, 1)`.
+/// 
+/// This is equivalent to `Normal::new(0.0, 1.0)`, but faster.
 ///
-/// See [`Normal`] for the general normal distribution.
-///
-/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method.
+/// See [`Normal`](crate::Normal) for the general Normal distribution.
 ///
 /// # Plot
 ///
-/// The following diagram shows the standard normal distribution.
+/// The following diagram shows the standard Normal distribution.
 ///
-/// ![Standard normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/standard_normal.svg)
+/// ![Standard Normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/standard_normal.svg)
 ///
 /// # Example
 /// ```
@@ -38,6 +36,10 @@ use rand::Rng;
 /// println!("{}", val);
 /// ```
 ///
+/// # Notes
+///
+/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method.
+/// 
 /// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
 ///       Generate Normal Random Samples*](
 ///       https://www.doornik.com/research/ziggurat.pdf).
@@ -98,19 +100,26 @@ impl Distribution<f64> for StandardNormal {
     }
 }
 
-/// The normal distribution `N(mean, std_dev**2)`.
+/// The Normal distribution `N(μ, σ²)`.
+/// 
+/// The Normal distribution, also known as the Gaussian distribution or
+/// bell curve, is a continuous probability distribution with parameters
+/// `μ` (`mu`, mean) and `σ` (`sigma`, standard deviation).
+/// It is used to model continuous data that tend to cluster around a mean.
+/// The Normal distribution is symmetric and characterized by its bell-shaped curve.
 ///
-/// This uses the ZIGNOR variant of the Ziggurat method, see [`StandardNormal`]
-/// for more details.
-///
-/// Note that [`StandardNormal`] is an optimised implementation for mean 0, and
-/// standard deviation 1.
+/// See [`StandardNormal`](crate::StandardNormal) for an
+/// optimised implementation for `μ = 0` and `σ = 1`.
+/// 
+/// # Density function
+/// 
+/// `f(x) = (1 / sqrt(2π σ²)) * exp(-((x - μ)² / (2σ²)))`
 ///
 /// # Plot
 ///
-/// The following diagram shows the normal distribution with various values of `μ`
+/// The following diagram shows the Normal distribution with various values of `μ`
 /// and `σ`.
-/// The blue curve is the [`StandardNormal`] distribution, `N(0, 1)`.
+/// The blue curve is the [`StandardNormal`](crate::StandardNormal) distribution, `N(0, 1)`.
 ///
 /// ![Normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/normal.svg)
 ///
@@ -124,6 +133,15 @@ impl Distribution<f64> for StandardNormal {
 /// let v = normal.sample(&mut rand::thread_rng());
 /// println!("{} is from a N(2, 9) distribution", v)
 /// ```
+///
+/// # Notes
+///
+/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method.
+///
+/// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
+///       Generate Normal Random Samples*](
+///       https://www.doornik.com/research/ziggurat.pdf).
+///       Nuffield College, Oxford
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Normal<F>
