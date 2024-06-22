@@ -10,11 +10,22 @@ use crate::{uniform::SampleUniform, Distribution, Uniform};
 use num_traits::Float;
 use rand::Rng;
 
-/// Samples uniformly from the unit ball (surface and interior) in three
-/// dimensions.
+/// Samples uniformly from the volume of the unit ball in three dimensions.
 ///
 /// Implemented via rejection sampling.
 ///
+/// For a distribution that samples only from the surface of the unit ball,
+/// see [`UnitSphere`](crate::UnitSphere).
+///
+/// For a similar distribution in two dimensions, see [`UnitDisc`](crate::UnitDisc).
+///
+/// # Plot
+///
+/// The following plot shows the unit ball in three dimensions.
+/// This distribution samples individual points from the entire volume
+/// of the ball.
+///
+/// ![Unit ball](https://raw.githubusercontent.com/rust-random/charts/main/charts/unit_ball.svg)
 ///
 /// # Example
 ///

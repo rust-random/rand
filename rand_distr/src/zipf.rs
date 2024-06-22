@@ -13,14 +13,20 @@ use core::fmt;
 use num_traits::Float;
 use rand::{distributions::OpenClosed01, Rng};
 
-/// Samples integers according to the [zeta distribution].
+/// The Zeta distribution `Zeta(a)`.
 ///
-/// The zeta distribution is a limit of the [`Zipf`] distribution. Sometimes it
-/// is called one of the following: discrete Pareto, Riemann-Zeta, Zipf, or
-/// Zipf–Estoup distribution.
+/// The Zeta distribution is a discrete probability distribution with parameter
+/// `a`. It is a special case of the [`Zipf`] distribution with `n = ∞`.
+/// It is also known as the discrete Pareto, Riemann-Zeta, Zipf, or Zipf–Estoup distribution.
 ///
 /// It has the density function `f(k) = k^(-a) / C(a)` for `k >= 1`, where `a`
 /// is the parameter and `C(a)` is the Riemann zeta function.
+///
+/// # Plot
+///
+/// The following plot illustrates the zeta distribution for various values of `a`.
+///
+/// ![Zeta distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/zeta.svg)
 ///
 /// # Example
 /// ```
@@ -134,6 +140,13 @@ where
 /// For large `n`, this converges to the [`Zeta`] distribution.
 ///
 /// For `s = 0`, this becomes a uniform distribution.
+///
+/// # Plot
+///
+/// The following plot illustrates the Zipf distribution for `n = 10` and
+/// various values of `s`.
+///
+/// ![Zipf distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/zipf.svg)
 ///
 /// # Example
 /// ```

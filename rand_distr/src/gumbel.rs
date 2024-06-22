@@ -6,18 +6,32 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Gumbel distribution.
+//! The Gumbel distribution `Gumbel(μ, σ)`.
 
 use crate::{Distribution, OpenClosed01};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// Samples floating-point numbers according to the Gumbel distribution
+/// The Gumbel distribution `Gumbel(μ, σ)`.
 ///
-/// This distribution has density function:
-/// `f(x) = exp(-(z + exp(-z))) / σ`, where `z = (x - μ) / σ`,
-/// `μ` is the location parameter, and `σ` the scale parameter.
+/// The Gumbel distribution is a continuous probability distribution
+/// with location parameter `μ` and scale parameter `σ`.
+/// It is used to model the distribution of the maximum (or minimum)
+/// of a number of samples of various distributions.
+/// 
+/// # Density function
+///
+/// `f(x) = exp(-(z + exp(-z))) / σ`, where `z = (x - μ) / σ`.
+///
+/// # Plot
+///
+/// The following plot illustrates the Gumbel distribution with various values of `μ` and `σ`.
+/// Note how the location parameter `μ` shifts the distribution along the x-axis,
+/// and the scale parameter `σ` changes the density around `μ`.
+/// Note also the asymptotic behavior of the distribution towards the right.
+///
+/// ![Gumbel distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/gumbel.svg)
 ///
 /// # Example
 /// ```
