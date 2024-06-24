@@ -909,6 +909,33 @@ pub struct UniformFloat<X> {
 macro_rules! uniform_float_impl {
     ($($meta:meta)?, $ty:ty, $uty:ident, $f_scalar:ident, $u_scalar:ident, $bits_to_discard:expr) => {
         $(#[cfg($meta)])?
+        impl UniformFloat<$ty> {
+            /// Construct, reducing `scale` as required to ensure that rounding
+            /// can never yield values greater than `high`.
+            ///
+            /// Note: though it may be tempting to use a variant of this method
+            /// to ensure that samples from `[low, high)` are always strictly
+            /// less than `high`, this approach may be very slow where
+            /// `scale.abs()` is much smaller than `high.abs()`
+            /// (example: `low=0.99999999997819644, high=1.`).
+            fn new_bounded(low: $ty, high: $ty, mut scale: $ty) -> Self {
+                let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
+
+                loop {
+                    let mask = (scale * max_rand + low).gt_mask(high);
+                    if !mask.any() {
+                        break;
+                    }
+                    scale = scale.decrease_masked(mask);
+                }
+
+                debug_assert!(<$ty>::splat(0.0).all_le(scale));
+
+                UniformFloat { low, scale }
+            }
+        }
+
+        $(#[cfg($meta)])?
         impl SampleUniform for $ty {
             type Sampler = UniformFloat<$ty>;
         }
@@ -931,24 +958,13 @@ macro_rules! uniform_float_impl {
                 if !(low.all_lt(high)) {
                     return Err(Error::EmptyRange);
                 }
-                let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
 
-                let mut scale = high - low;
+                let scale = high - low;
                 if !(scale.all_finite()) {
                     return Err(Error::NonFinite);
                 }
 
-                loop {
-                    let mask = (scale * max_rand + low).gt_mask(high);
-                    if !mask.any() {
-                        break;
-                    }
-                    scale = scale.decrease_masked(mask);
-                }
-
-                debug_assert!(<$ty>::splat(0.0).all_le(scale));
-
-                Ok(UniformFloat { low, scale })
+                Ok(Self::new_bounded(low, high, scale))
             }
 
             fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
@@ -965,24 +981,14 @@ macro_rules! uniform_float_impl {
                 if !low.all_le(high) {
                     return Err(Error::EmptyRange);
                 }
-                let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
 
-                let mut scale = (high - low) / max_rand;
+                let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
+                let scale = (high - low) / max_rand;
                 if !scale.all_finite() {
                     return Err(Error::NonFinite);
                 }
 
-                loop {
-                    let mask = (scale * max_rand + low).gt_mask(high);
-                    if !mask.any() {
-                        break;
-                    }
-                    scale = scale.decrease_masked(mask);
-                }
-
-                debug_assert!(<$ty>::splat(0.0).all_le(scale));
-
-                Ok(UniformFloat { low, scale })
+                Ok(Self::new_bounded(low, high, scale))
             }
 
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
