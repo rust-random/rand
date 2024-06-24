@@ -218,9 +218,7 @@ pub(crate) trait FloatSIMDUtils {
     fn all_finite(self) -> bool;
 
     type Mask;
-    fn finite_mask(self) -> Self::Mask;
     fn gt_mask(self, other: Self) -> Self::Mask;
-    fn ge_mask(self, other: Self) -> Self::Mask;
 
     // Decrease all lanes where the mask is `true` to the next lower value
     // representable by the floating-point type. At least one of the lanes
@@ -293,18 +291,8 @@ macro_rules! scalar_float_impl {
             }
 
             #[inline(always)]
-            fn finite_mask(self) -> Self::Mask {
-                self.is_finite()
-            }
-
-            #[inline(always)]
             fn gt_mask(self, other: Self) -> Self::Mask {
                 self > other
-            }
-
-            #[inline(always)]
-            fn ge_mask(self, other: Self) -> Self::Mask {
-                self >= other
             }
 
             #[inline(always)]
@@ -369,18 +357,8 @@ macro_rules! simd_impl {
             }
 
             #[inline(always)]
-            fn finite_mask(self) -> Self::Mask {
-                self.is_finite()
-            }
-
-            #[inline(always)]
             fn gt_mask(self, other: Self) -> Self::Mask {
                 self.simd_gt(other)
-            }
-
-            #[inline(always)]
-            fn ge_mask(self, other: Self) -> Self::Mask {
-                self.simd_ge(other)
             }
 
             #[inline(always)]
