@@ -1592,10 +1592,9 @@ mod tests {
     #[cfg(all(feature = "std", panic = "unwind"))]
     fn test_float_assertions() {
         use super::SampleUniform;
-        use std::panic::catch_unwind;
-        fn range<T: SampleUniform>(low: T, high: T) {
+        fn range<T: SampleUniform>(low: T, high: T) -> Result<T, Error> {
             let mut rng = crate::test::rng(253);
-            T::Sampler::sample_single(low, high, &mut rng).unwrap();
+            T::Sampler::sample_single(low, high, &mut rng)
         }
 
         macro_rules! t {
@@ -1618,10 +1617,10 @@ mod tests {
                     for lane in 0..<$ty>::LEN {
                         let low = <$ty>::splat(0.0 as $f_scalar).replace(lane, low_scalar);
                         let high = <$ty>::splat(1.0 as $f_scalar).replace(lane, high_scalar);
-                        assert!(catch_unwind(|| range(low, high)).is_err());
+                        assert!(range(low, high).is_err());
                         assert!(Uniform::new(low, high).is_err());
                         assert!(Uniform::new_inclusive(low, high).is_err());
-                        assert!(catch_unwind(|| range(low, low)).is_err());
+                        assert!(range(low, low).is_err());
                         assert!(Uniform::new(low, low).is_err());
                     }
                 }
