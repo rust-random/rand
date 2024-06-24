@@ -1012,72 +1012,7 @@ macro_rules! uniform_float_impl {
                 B1: SampleBorrow<Self::X> + Sized,
                 B2: SampleBorrow<Self::X> + Sized,
             {
-                let low = *low_b.borrow();
-                let high = *high_b.borrow();
-                #[cfg(debug_assertions)]
-                if !low.all_finite() || !high.all_finite() {
-                    return Err(Error::NonFinite);
-                }
-                if !low.all_lt(high) {
-                    return Err(Error::EmptyRange);
-                }
-                let mut scale = high - low;
-                if !scale.all_finite() {
-                    return Err(Error::NonFinite);
-                }
-
-                loop {
-                    // Generate a value in the range [1, 2)
-                    let value1_2 =
-                        (rng.random::<$uty>() >> $uty::splat($bits_to_discard)).into_float_with_exponent(0);
-
-                    // Get a value in the range [0, 1) to avoid overflow when multiplying by scale
-                    let value0_1 = value1_2 - <$ty>::splat(1.0);
-
-                    // Doing multiply before addition allows some architectures
-                    // to use a single instruction.
-                    let res = value0_1 * scale + low;
-
-                    debug_assert!(low.all_le(res) || !scale.all_finite());
-                    if res.all_lt(high) {
-                        return Ok(res);
-                    }
-
-                    // This handles a number of edge cases.
-                    // * `low` or `high` is NaN. In this case `scale` and
-                    //   `res` are going to end up as NaN.
-                    // * `low` is negative infinity and `high` is finite.
-                    //   `scale` is going to be infinite and `res` will be
-                    //   NaN.
-                    // * `high` is positive infinity and `low` is finite.
-                    //   `scale` is going to be infinite and `res` will
-                    //   be infinite or NaN (if value0_1 is 0).
-                    // * `low` is negative infinity and `high` is positive
-                    //   infinity. `scale` will be infinite and `res` will
-                    //   be NaN.
-                    // * `low` and `high` are finite, but `high - low`
-                    //   overflows to infinite. `scale` will be infinite
-                    //   and `res` will be infinite or NaN (if value0_1 is 0).
-                    // So if `high` or `low` are non-finite, we are guaranteed
-                    // to fail the `res < high` check above and end up here.
-                    //
-                    // While we technically should check for non-finite `low`
-                    // and `high` before entering the loop, by doing the checks
-                    // here instead, we allow the common case to avoid these
-                    // checks. But we are still guaranteed that if `low` or
-                    // `high` are non-finite we'll end up here and can do the
-                    // appropriate checks.
-                    //
-                    // Likewise, `high - low` overflowing to infinity is also
-                    // rare, so handle it here after the common case.
-                    let mask = !scale.finite_mask();
-                    if mask.any() {
-                        if !(low.all_finite() && high.all_finite()) {
-                            return Err(Error::NonFinite);
-                        }
-                        scale = scale.decrease_masked(mask);
-                    }
-                }
+                Self::sample_single_inclusive(low_b, high_b, rng)
             }
 
             #[inline]
@@ -1620,7 +1555,6 @@ mod tests {
                         assert!(range(low, high).is_err());
                         assert!(Uniform::new(low, high).is_err());
                         assert!(Uniform::new_inclusive(low, high).is_err());
-                        assert!(range(low, low).is_err());
                         assert!(Uniform::new(low, low).is_err());
                     }
                 }
