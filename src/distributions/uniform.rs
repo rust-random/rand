@@ -931,9 +931,7 @@ macro_rules! uniform_float_impl {
                 if !(low.all_lt(high)) {
                     return Err(Error::EmptyRange);
                 }
-                let max_rand = <$ty>::splat(
-                    ($u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
-                );
+                let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
 
                 let mut scale = high - low;
                 if !(scale.all_finite()) {
@@ -967,9 +965,7 @@ macro_rules! uniform_float_impl {
                 if !low.all_le(high) {
                     return Err(Error::EmptyRange);
                 }
-                let max_rand = <$ty>::splat(
-                    ($u_scalar::MAX >> $bits_to_discard).into_float_with_exponent(0) - 1.0,
-                );
+                let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
 
                 let mut scale = (high - low) / max_rand;
                 if !scale.all_finite() {
