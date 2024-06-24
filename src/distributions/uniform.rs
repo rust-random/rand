@@ -939,7 +939,7 @@ macro_rules! uniform_float_impl {
                 }
 
                 loop {
-                    let mask = (scale * max_rand + low).ge_mask(high);
+                    let mask = (scale * max_rand + low).gt_mask(high);
                     if !mask.any() {
                         break;
                     }
@@ -1461,14 +1461,14 @@ mod tests {
                         let my_incl_uniform = Uniform::new_inclusive(low, high).unwrap();
                         for _ in 0..100 {
                             let v = rng.sample(my_uniform).extract(lane);
-                            assert!(low_scalar <= v && v < high_scalar);
+                            assert!(low_scalar <= v && v <= high_scalar);
                             let v = rng.sample(my_incl_uniform).extract(lane);
                             assert!(low_scalar <= v && v <= high_scalar);
                             let v =
                                 <$ty as SampleUniform>::Sampler::sample_single(low, high, &mut rng)
                                     .unwrap()
                                     .extract(lane);
-                            assert!(low_scalar <= v && v < high_scalar);
+                            assert!(low_scalar <= v && v <= high_scalar);
                             let v = <$ty as SampleUniform>::Sampler::sample_single_inclusive(
                                 low, high, &mut rng,
                             )
@@ -1506,12 +1506,12 @@ mod tests {
                             low_scalar
                         );
 
-                        assert!(max_rng.sample(my_uniform).extract(lane) < high_scalar);
+                        assert!(max_rng.sample(my_uniform).extract(lane) <= high_scalar);
                         assert!(max_rng.sample(my_incl_uniform).extract(lane) <= high_scalar);
                         // sample_single cannot cope with max_rng:
                         // assert!(<$ty as SampleUniform>::Sampler
                         //     ::sample_single(low, high, &mut max_rng).unwrap()
-                        //     .extract(lane) < high_scalar);
+                        //     .extract(lane) <= high_scalar);
                         assert!(
                             <$ty as SampleUniform>::Sampler::sample_single_inclusive(
                                 low,
@@ -1539,7 +1539,7 @@ mod tests {
                                 )
                                 .unwrap()
                                 .extract(lane)
-                                    < high_scalar
+                                    <= high_scalar
                             );
                         }
                     }
