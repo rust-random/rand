@@ -51,7 +51,8 @@
 //! Those methods should include an assertion to check the range is valid (i.e.
 //! `low < high`). The example below merely wraps another back-end.
 //!
-//! The `new`, `new_inclusive` and `sample_single` functions use arguments of
+//! The `new`, `new_inclusive`, `sample_single` and `sample_single_inclusive`
+//! functions use arguments of
 //! type `SampleBorrow<X>` to support passing in values by reference or
 //! by value. In the implementation of these functions, you can choose to
 //! simply use the reference returned by [`SampleBorrow::borrow`], or you can choose
@@ -207,6 +208,11 @@ impl<X: SampleUniform> Uniform<X> {
     /// Create a new `Uniform` instance, which samples uniformly from the half
     /// open range `[low, high)` (excluding `high`).
     ///
+    /// For discrete types (e.g. integers), samples will always be strictly less
+    /// than `high`. For (approximations of) continuous types (e.g. `f32`, `f64`),
+    /// samples may equal `high` due to loss of precision but may not be
+    /// greater than `high`.
+    ///
     /// Fails if `low >= high`, or if `low`, `high` or the range `high - low` is
     /// non-finite. In release mode, only the range is checked.
     pub fn new<B1, B2>(low: B1, high: B2) -> Result<Uniform<X>, Error>
@@ -265,6 +271,11 @@ pub trait UniformSampler: Sized {
 
     /// Construct self, with inclusive lower bound and exclusive upper bound `[low, high)`.
     ///
+    /// For discrete types (e.g. integers), samples will always be strictly less
+    /// than `high`. For (approximations of) continuous types (e.g. `f32`, `f64`),
+    /// samples may equal `high` due to loss of precision but may not be
+    /// greater than `high`.
+    ///
     /// Usually users should not call this directly but prefer to use
     /// [`Uniform::new`].
     fn new<B1, B2>(low: B1, high: B2) -> Result<Self, Error>
@@ -286,6 +297,11 @@ pub trait UniformSampler: Sized {
 
     /// Sample a single value uniformly from a range with inclusive lower bound
     /// and exclusive upper bound `[low, high)`.
+    ///
+    /// For discrete types (e.g. integers), samples will always be strictly less
+    /// than `high`. For (approximations of) continuous types (e.g. `f32`, `f64`),
+    /// samples may equal `high` due to loss of precision but may not be
+    /// greater than `high`.
     ///
     /// By default this is implemented using
     /// `UniformSampler::new(low, high).sample(rng)`. However, for some types
