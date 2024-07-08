@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Fréchet distribution `Fréchet(α, μ, σ)`.
+//! The Fréchet distribution `Fréchet(μ, σ, α)`.
 
 use crate::{Distribution, OpenClosed01};
 use core::fmt;
@@ -16,8 +16,8 @@ use rand::Rng;
 /// The [Fréchet distribution](https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution) `Fréchet(α, μ, σ)`.
 ///
 /// The Fréchet distribution is a continuous probability distribution
-/// with shape parameter `α` (`alpha`), location parameter `μ` (`mu`),
-/// and scale parameter `σ` (`sigma`). It describes the distribution
+/// with location parameter `μ` (`mu`), scale parameter `σ` (`sigma`),
+/// and shape parameter `α` (`alpha`). It describes the distribution
 /// of the maximum (or minimum) of a number of random variables.
 /// It is also known as the Type II extreme value distribution.
 ///
