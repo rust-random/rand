@@ -23,7 +23,7 @@ use rand::Rng;
 /// The `ξ` and `ω` parameters correspond to the mean `μ` and standard
 /// deviation `σ` of the normal distribution, respectively.
 /// The `α` parameter controls the skewness.
-/// 
+///
 /// # Density function
 ///
 /// It has the density function, for `scale > 0`,

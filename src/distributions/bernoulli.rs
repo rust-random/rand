@@ -18,14 +18,14 @@ use serde::{Deserialize, Serialize};
 /// The [Bernoulli distribution](https://en.wikipedia.org/wiki/Bernoulli_distribution) `Bernoulli(p)`.
 ///
 /// This distribution describes a single boolean random variable, which is true
-/// with probability `p` and false with probability `1 - p`. 
+/// with probability `p` and false with probability `1 - p`.
 /// It is a special case of the Binomial distribution with `n = 1`.
-/// 
+///
 /// # Plot
-/// 
+///
 /// The following plot shows the Bernoulli distribution with `p = 0.1`,
 /// `p = 0.5`, and `p = 0.9`.
-/// 
+///
 /// ![Bernoulli distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/bernoulli.svg)
 ///
 /// # Example

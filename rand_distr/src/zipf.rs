@@ -21,7 +21,7 @@ use rand::{distributions::OpenClosed01, Rng};
 /// It is also known as the discrete Pareto, Riemann-Zeta, Zipf, or Zipf–Estoup distribution.
 ///
 /// # Density function
-/// 
+///
 /// `f(k) = k^(-a) / ζ(a)` for `k >= 1`, where `ζ` is the
 /// [Riemann zeta function](https://en.wikipedia.org/wiki/Riemann_zeta_function).
 ///
@@ -50,7 +50,7 @@ use rand::{distributions::OpenClosed01, Rng};
 ///
 /// # Implementation details
 ///
-/// We are using the algorithm from 
+/// We are using the algorithm from
 /// [Non-Uniform Random Variate Generation](https://doi.org/10.1007/978-1-4613-8643-8),
 /// Section 6.1, page 551.
 #[derive(Clone, Copy, Debug, PartialEq)]

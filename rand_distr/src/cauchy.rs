@@ -23,9 +23,9 @@ use rand::Rng;
 /// In other words, if `X` and `Y` are independent normally distributed
 /// random variables with means `x₀` and scales `γ`, respectively, then
 /// `X / Y` is `Cauchy(x₀, γ)` distributed.
-/// 
+///
 /// # Density function
-/// 
+///
 /// `f(x) = 1 / (π * γ * (1 + ((x - x₀) / γ)²))`
 ///
 /// # Plot
@@ -48,9 +48,9 @@ use rand::Rng;
 /// let v = cau.sample(&mut rand::thread_rng());
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
-/// 
+///
 /// # Notes
-/// 
+///
 /// Note that at least for `f32`, results are not fully portable due to minor
 /// differences in the target system's *tan* implementation, `tanf`.
 #[derive(Clone, Copy, Debug, PartialEq)]

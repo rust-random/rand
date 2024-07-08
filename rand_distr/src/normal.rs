@@ -16,7 +16,7 @@ use num_traits::Float;
 use rand::Rng;
 
 /// The standard Normal distribution `N(0, 1)`.
-/// 
+///
 /// This is equivalent to `Normal::new(0.0, 1.0)`, but faster.
 ///
 /// See [`Normal`](crate::Normal) for the general Normal distribution.
@@ -39,7 +39,7 @@ use rand::Rng;
 /// # Notes
 ///
 /// Implemented via the ZIGNOR variant[^1] of the Ziggurat method.
-/// 
+///
 /// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
 ///       Generate Normal Random Samples*](
 ///       https://www.doornik.com/research/ziggurat.pdf).
@@ -101,7 +101,7 @@ impl Distribution<f64> for StandardNormal {
 }
 
 /// The [Normal distribution](https://en.wikipedia.org/wiki/Normal_distribution) `N(μ, σ²)`.
-/// 
+///
 /// The Normal distribution, also known as the Gaussian distribution or
 /// bell curve, is a continuous probability distribution with mean
 /// `μ` (`mu`) and standard deviation `σ` (`sigma`).
@@ -110,9 +110,9 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// See [`StandardNormal`](crate::StandardNormal) for an
 /// optimised implementation for `μ = 0` and `σ = 1`.
-/// 
+///
 /// # Density function
-/// 
+///
 /// `f(x) = (1 / sqrt(2π σ²)) * exp(-((x - μ)² / (2σ²)))`
 ///
 /// # Plot
@@ -247,7 +247,7 @@ where
 }
 
 /// The [log-normal distribution](https://en.wikipedia.org/wiki/Log-normal_distribution) `ln N(μ, σ²)`.
-/// 
+///
 /// This is the distribution of the random variable `X = exp(Y)` where `Y` is
 /// normally distributed with mean `μ` and variance `σ²`. In other words, if
 /// `X` is log-normal distributed, then `ln(X)` is `N(μ, σ²)` distributed.

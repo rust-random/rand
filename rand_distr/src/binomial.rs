@@ -19,11 +19,11 @@ use rand::Rng;
 /// The [binomial distribution](https://en.wikipedia.org/wiki/Binomial_distribution) `Binomial(n, p)`.
 ///
 /// The binomial distribution is a discrete probability distribution
-/// which describes the probability of seeing `k` successes in `n` 
+/// which describes the probability of seeing `k` successes in `n`
 /// independent trials, each of which has success probability `p`.
 ///
 /// # Density function
-/// 
+///
 /// `f(k) = n!/(k! (n-k)!) p^k (1-p)^(n-k)` for `k >= 0`.
 ///
 /// # Plot

@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 /// The [Gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution) `Gamma(k, θ)`.
 ///
 /// The Gamma distribution is a continuous probability distribution
-/// with shape parameter `k > 0` (number of events) and 
+/// with shape parameter `k > 0` (number of events) and
 /// scale parameter `θ > 0` (mean waiting time between events).
 /// It describes the time until `k` events occur in a Poisson
 /// process with rate `1/θ`. It is the generalization of the
@@ -277,7 +277,7 @@ where
 }
 
 /// The [chi-squared distribution](https://en.wikipedia.org/wiki/Chi-squared_distribution) `χ²(k)`.
-/// 
+///
 /// The chi-squared distribution is a continuous probability
 /// distribution with parameter `k > 0` degrees of freedom.
 ///
@@ -495,7 +495,7 @@ where
 /// the population's standard deviation is unknown.
 /// It is widely used in hypothesis testing.
 ///
-/// For `ν = 1`, this is equivalent to the standard 
+/// For `ν = 1`, this is equivalent to the standard
 /// [`Cauchy`](crate::Cauchy) distribution,
 /// and as `ν` diverges to infinity, `t(ν)` converges to
 /// [`StandardNormal`](crate::StandardNormal).
@@ -597,7 +597,7 @@ struct BC<N> {
 /// defined on the interval `[0, 1]`. It is the conjugate prior for the
 /// parameter `p` of the [`Binomial`][crate::Binomial] distribution.
 ///
-/// It has two shape parameters `α` (alpha) and `β` (beta) which control 
+/// It has two shape parameters `α` (alpha) and `β` (beta) which control
 /// the shape of the distribution. Both `a` and `β` must be greater than zero.
 /// The distribution is symmetric when `α = β`.
 ///

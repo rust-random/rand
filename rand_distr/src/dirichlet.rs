@@ -189,7 +189,7 @@ where
 /// The [Dirichlet distribution](https://en.wikipedia.org/wiki/Dirichlet_distribution) `Dirichlet(α₁, α₂, ..., αₖ)`.
 ///
 /// The Dirichlet distribution is a family of continuous multivariate
-/// probability distributions parameterized by a vector of positive 
+/// probability distributions parameterized by a vector of positive
 /// real numbers `α₁, α₂, ..., αₖ`, where `k` is the number of dimensions
 /// of the distribution. The distribution is supported on the `k-1`-dimensional
 /// simplex, which is the set of points `x = [x₁, x₂, ..., xₖ]` such that

@@ -17,13 +17,13 @@ use rand::Rng;
 ///
 /// See [`StandardGeometric`](crate::StandardGeometric) for an optimised
 /// implementation for `p = 0.5`.
-/// 
+///
 /// # Density function
-/// 
+///
 /// `f(k) = (1 - p)^k p` for `k >= 0`.
 ///
 /// # Plot
-/// 
+///
 /// The following plot illustrates the geometric distribution for various
 /// values of `p`. Note how higher `p` values shift the distribution to
 /// the left, and the mean of the distribution is `1/p`.
@@ -152,7 +152,7 @@ impl Distribution<u64> for Geometric {
 }
 
 /// The standard geometric distribution `Geometric(0.5)`.
-/// 
+///
 /// This is equivalent to `Geometric::new(0.5)`, but faster.
 ///
 /// See [`Geometric`](crate::Geometric) for the general geometric distribution.

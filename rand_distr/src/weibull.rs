@@ -15,7 +15,7 @@ use rand::Rng;
 
 /// The [Weibull distribution](https://en.wikipedia.org/wiki/Weibull_distribution) `Weibull(λ, k)`.
 ///
-/// This is a family of continuous probability distributions with 
+/// This is a family of continuous probability distributions with
 /// scale parameter `λ` (`lambda`) and shape parameter `k`. It is used
 /// to model reliability data, life data, and accelerated life testing data.
 ///

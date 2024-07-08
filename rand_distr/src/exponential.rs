@@ -16,7 +16,7 @@ use num_traits::Float;
 use rand::Rng;
 
 /// The standard exponential distribution `Exp(1)`.
-/// 
+///
 /// This is equivalent to `Exp::new(1.0)` or sampling with
 /// `-rng.gen::<f64>().ln()`, but faster.
 ///
@@ -29,7 +29,7 @@ use rand::Rng;
 /// ![Exponential distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential_exp1.svg)
 ///
 /// # Example
-/// 
+///
 /// ```
 /// use rand::prelude::*;
 /// use rand_distr::Exp1;
@@ -37,7 +37,7 @@ use rand::Rng;
 /// let val: f64 = thread_rng().sample(Exp1);
 /// println!("{}", val);
 /// ```
-/// 
+///
 /// # Notes
 ///
 /// Implemented via the ZIGNOR variant[^1] of the Ziggurat method. The exact
@@ -97,7 +97,7 @@ impl Distribution<f64> for Exp1 {
 /// # Density function
 ///
 /// `f(x) = λ * exp(-λ * x)` for `x > 0`, when `λ > 0`.
-/// 
+///
 /// For `λ = 0`, all samples yield infinity (because a Poisson process
 /// with rate 0 has no events).
 ///

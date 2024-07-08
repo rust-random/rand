@@ -35,9 +35,9 @@ enum SamplingMethod {
 /// See the [binomial distribution](crate::Binomial) for the analogous distribution
 /// for sampling with replacement. It is a good approximation when the population
 /// size is much larger than the sample size.
-/// 
+///
 /// # Density function
-/// 
+///
 /// `f(k) = binomial(K, k) * binomial(N-K, n-k) / binomial(N, n)`,
 /// where `binomial(a, b) = a! / (b! * (a - b)!)`.
 ///

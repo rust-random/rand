@@ -19,7 +19,7 @@ use rand::Rng;
 /// with location parameter `μ` (`mu`) and scale parameter `β` (`beta`).
 /// It is used to model the distribution of the maximum (or minimum)
 /// of a number of samples of various distributions.
-/// 
+///
 /// # Density function
 ///
 /// `f(x) = exp(-(z + exp(-z))) / β`, where `z = (x - μ) / β`.
