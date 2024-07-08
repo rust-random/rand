@@ -6,23 +6,23 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Pareto distribution `Pareto(α, xₘ)`.
+//! The Pareto distribution `Pareto(xₘ, α)`.
 
 use crate::{Distribution, OpenClosed01};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The [Pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution) `Pareto(α, xₘ)`.
+/// The [Pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution) `Pareto(xₘ, α)`.
 ///
 /// The Pareto distribution is a continuous probability distribution with
-/// scale parameter `α` and shape parameter `xₘ` ( or `k`).
+/// scale parameter `xₘ` ( or `k`) and shape parameter `α`.
 ///
 /// # Plot
 ///
 /// The following plot shows the Pareto distribution with various values of
-/// `α` and `xₘ`.
-/// Note how the scale parameter `α` corresponds to the height of the jump
+/// `xₘ` and `α`.
+/// Note how the shape parameter `α` corresponds to the height of the jump
 /// in density at `x = xₘ`, and to the rate of decay in the tail.
 ///
 /// ![Pareto distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/pareto.svg)
