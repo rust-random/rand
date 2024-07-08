@@ -13,7 +13,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The [skew normal distribution] `SN(ξ, ω, α)`.
+/// The [skew normal distribution](https://en.wikipedia.org/wiki/Skew_normal_distribution) `SN(ξ, ω, α)`.
 ///
 /// The skew normal distribution is a generalization of the
 /// [`Normal`](crate::Normal) distribution to allow for non-zero skewness.
