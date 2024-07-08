@@ -1,3 +1,5 @@
+//! The inverse Gaussian distribution `IG(μ, λ)`.
+
 use crate::{Distribution, Standard, StandardNormal};
 use core::fmt;
 use num_traits::Float;
@@ -24,7 +26,27 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-/// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution)
+/// The [inverse Gaussian distribution](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution) `IG(μ, λ)`.
+///
+/// This is a continuous probability distribution with mean parameter `μ` (`mu`)
+/// and shape parameter `λ` (`lambda`), defined for `x > 0`.
+/// It is also known as the Wald distribution.
+///
+/// # Plot
+///
+/// The following plot shows the inverse Gaussian distribution
+/// with various values of `μ` and `λ`.
+///
+/// ![Inverse Gaussian distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/inverse_gaussian.svg)
+///
+/// # Example
+/// ```
+/// use rand_distr::{InverseGaussian, Distribution};
+///
+/// let inv_gauss = InverseGaussian::new(1.0, 2.0).unwrap();
+/// let v = inv_gauss.sample(&mut rand::thread_rng());
+/// println!("{} is from a inverse Gaussian(1, 2) distribution", v);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct InverseGaussian<F>

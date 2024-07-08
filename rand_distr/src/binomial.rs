@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The binomial distribution.
+//! The binomial distribution `Binomial(n, p)`.
 
 use crate::{Distribution, Uniform};
 use core::cmp::Ordering;
@@ -16,10 +16,23 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The binomial distribution `Binomial(n, p)`.
+/// The [binomial distribution](https://en.wikipedia.org/wiki/Binomial_distribution) `Binomial(n, p)`.
 ///
-/// This distribution has density function:
+/// The binomial distribution is a discrete probability distribution
+/// which describes the probability of seeing `k` successes in `n`
+/// independent trials, each of which has success probability `p`.
+///
+/// # Density function
+///
 /// `f(k) = n!/(k! (n-k)!) p^k (1-p)^(n-k)` for `k >= 0`.
+///
+/// # Plot
+///
+/// The following plot of the binomial distribution illustrates the
+/// probability of `k` successes out of `n = 10` trials with `p = 0.2`
+/// and `p = 0.6` for `0 <= k <= n`.
+///
+/// ![Binomial distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/binomial.svg)
 ///
 /// # Example
 ///

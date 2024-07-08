@@ -6,20 +6,36 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Fréchet distribution.
+//! The Fréchet distribution `Fréchet(μ, σ, α)`.
 
 use crate::{Distribution, OpenClosed01};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// Samples floating-point numbers according to the Fréchet distribution
+/// The [Fréchet distribution](https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution) `Fréchet(α, μ, σ)`.
 ///
-/// This distribution has density function:
-/// `f(x) = [(x - μ) / σ]^(-1 - α) exp[-(x - μ) / σ]^(-α) α / σ`,
-/// where `μ` is the location parameter, `σ` the scale parameter, and `α` the shape parameter.
+/// The Fréchet distribution is a continuous probability distribution
+/// with location parameter `μ` (`mu`), scale parameter `σ` (`sigma`),
+/// and shape parameter `α` (`alpha`). It describes the distribution
+/// of the maximum (or minimum) of a number of random variables.
+/// It is also known as the Type II extreme value distribution.
+///
+/// # Density function
+///
+/// `f(x) = [(x - μ) / σ]^(-1 - α) exp[-(x - μ) / σ]^(-α) α / σ`
+///
+/// # Plot
+///
+/// The plot shows the Fréchet distribution with various values of `μ`, `σ`, and `α`.
+/// Note how the location parameter `μ` shifts the distribution along the x-axis,
+/// the scale parameter `σ` stretches or compresses the distribution along the x-axis,
+/// and the shape parameter `α` changes the tail behavior.
+///
+/// ![Fréchet distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/frechet.svg)
 ///
 /// # Example
+///
 /// ```
 /// use rand::prelude::*;
 /// use rand_distr::Frechet;

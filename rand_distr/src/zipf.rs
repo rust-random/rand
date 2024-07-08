@@ -13,14 +13,23 @@ use core::fmt;
 use num_traits::Float;
 use rand::{distributions::OpenClosed01, Rng};
 
-/// Samples integers according to the [zeta distribution].
+/// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution) `Zeta(a)`.
 ///
-/// The zeta distribution is a limit of the [`Zipf`] distribution. Sometimes it
-/// is called one of the following: discrete Pareto, Riemann-Zeta, Zipf, or
-/// Zipf–Estoup distribution.
+/// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution)
+/// is a discrete probability distribution with parameter `a`.
+/// It is a special case of the [`Zipf`] distribution with `n = ∞`.
+/// It is also known as the discrete Pareto, Riemann-Zeta, Zipf, or Zipf–Estoup distribution.
 ///
-/// It has the density function `f(k) = k^(-a) / C(a)` for `k >= 1`, where `a`
-/// is the parameter and `C(a)` is the Riemann zeta function.
+/// # Density function
+///
+/// `f(k) = k^(-a) / ζ(a)` for `k >= 1`, where `ζ` is the
+/// [Riemann zeta function](https://en.wikipedia.org/wiki/Riemann_zeta_function).
+///
+/// # Plot
+///
+/// The following plot illustrates the zeta distribution for various values of `a`.
+///
+/// ![Zeta distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/zeta.svg)
 ///
 /// # Example
 /// ```
@@ -31,7 +40,7 @@ use rand::{distributions::OpenClosed01, Rng};
 /// println!("{}", val);
 /// ```
 ///
-/// # Remarks
+/// # Notes
 ///
 /// The zeta distribution has no upper limit. Sampled values may be infinite.
 /// In particular, a value of infinity might be returned for the following
@@ -41,11 +50,9 @@ use rand::{distributions::OpenClosed01, Rng};
 ///
 /// # Implementation details
 ///
-/// We are using the algorithm from [Non-Uniform Random Variate Generation],
+/// We are using the algorithm from
+/// [Non-Uniform Random Variate Generation](https://doi.org/10.1007/978-1-4613-8643-8),
 /// Section 6.1, page 551.
-///
-/// [zeta distribution]: https://en.wikipedia.org/wiki/Zeta_distribution
-/// [Non-Uniform Random Variate Generation]: https://doi.org/10.1007/978-1-4613-8643-8
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Zeta<F>
 where
@@ -125,15 +132,22 @@ where
     }
 }
 
-/// Samples integers according to the Zipf distribution.
+/// The Zipf (Zipfian) distribution `Zipf(n, s)`.
 ///
-/// The samples follow Zipf's law: The frequency of each sample from a finite
-/// set of size `n` is inversely proportional to a power of its frequency rank
-/// (with exponent `s`).
+/// The samples follow [Zipf's law](https://en.wikipedia.org/wiki/Zipf%27s_law):
+/// The frequency of each sample from a finite set of size `n` is inversely
+/// proportional to a power of its frequency rank (with exponent `s`).
 ///
-/// For large `n`, this converges to the [`Zeta`] distribution.
+/// For large `n`, this converges to the [`Zeta`](crate::Zeta) distribution.
 ///
-/// For `s = 0`, this becomes a uniform distribution.
+/// For `s = 0`, this becomes a [`uniform`](crate::Uniform) distribution.
+///
+/// # Plot
+///
+/// The following plot illustrates the Zipf distribution for `n = 10` and
+/// various values of `s`.
+///
+/// ![Zipf distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/zipf.svg)
 ///
 /// # Example
 /// ```

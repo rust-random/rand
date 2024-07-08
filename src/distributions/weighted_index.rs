@@ -20,7 +20,7 @@ use core::fmt::Debug;
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 
-/// A distribution using weighted sampling of discrete items
+/// A distribution using weighted sampling of discrete items.
 ///
 /// Sampling a `WeightedIndex` distribution returns the index of a randomly
 /// selected element from the iterator used when the `WeightedIndex` was
