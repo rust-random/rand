@@ -12,7 +12,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The triangular distribution `Triangular(min, max, mode)`.
+/// The [triangular distribution](https://en.wikipedia.org/wiki/Triangular_distribution) `Triangular(min, max, mode)`.
 ///
 /// A continuous probability distribution parameterised by a range, and a mode
 /// (most likely value) within that range.

@@ -13,7 +13,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The Pareto distribution `Pareto(α, xₘ)`.
+/// The [Pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution) `Pareto(α, xₘ)`.
 ///
 /// The Pareto distribution is a continuous probability distribution with
 /// parameters `scale` (`α`) and `shape` (`xₘ` or `k`).

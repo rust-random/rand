@@ -13,7 +13,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The Fréchet distribution `Fréchet(α, μ, σ)`.
+/// The [Fréchet distribution](https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution) `Fréchet(α, μ, σ)`.
 /// 
 /// The Fréchet distribution is a continuous probability distribution
 /// with shape parameter `α` (`alpha`), location parameter `μ` (`mu`),

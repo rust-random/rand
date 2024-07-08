@@ -24,7 +24,7 @@ use rand::Rng;
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 
-/// The Gamma distribution `Gamma(k, θ)`.
+/// The [Gamma distribution](https://en.wikipedia.org/wiki/Gamma_distribution) `Gamma(k, θ)`.
 ///
 /// The Gamma distribution is a continuous probability distribution
 /// with shape parameter `k > 0` (number of events) and 
@@ -276,7 +276,7 @@ where
     }
 }
 
-/// The chi-squared distribution `χ²(k)`.
+/// The [chi-squared distribution](https://en.wikipedia.org/wiki/Chi-squared_distribution) `χ²(k)`.
 /// 
 /// The chi-squared distribution is a continuous probability
 /// distribution with parameter `k > 0` degrees of freedom.
@@ -391,7 +391,7 @@ where
     }
 }
 
-/// The Fisher F-distribution `F(m, n)`.
+/// The [Fisher F-distribution](https://en.wikipedia.org/wiki/F-distribution) `F(m, n)`.
 ///
 /// This distribution is equivalent to the ratio of two normalised
 /// chi-squared distributions, that is, `F(m,n) = (χ²(m)/m) /
@@ -486,16 +486,11 @@ where
     }
 }
 
-/// The Student t-distribution, `t(ν)`.
-///
-/// # Parameters
-///
-/// `ν` (nu): the degrees of freedom.
-///
-/// # Description
+/// The [Student t-distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution) `t(ν)`.
 ///
 /// The t-distribution is a continuous probability distribution
-/// that arises when estimating the mean of a normally-distributed
+/// parameterized by `ν` (`nu`), the degrees of freedom, which
+/// arises when estimating the mean of a normally-distributed
 /// population in situations where the sample size is small and
 /// the population's standard deviation is unknown.
 /// It is widely used in hypothesis testing.
@@ -596,14 +591,15 @@ struct BC<N> {
     kappa2: N,
 }
 
-/// The Beta distribution `Beta(alpha, beta)`.
+/// The [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) `Beta(α, β)`.
 ///
 /// The Beta distribution is a continuous probability distribution
 /// defined on the interval `[0, 1]`. It is the conjugate prior for the
 /// parameter `p` of the [`Binomial`][crate::Binomial] distribution.
 ///
-/// It has two shape parameters `α` and `β` which control the shape of
-/// the distribution. The distribution is symmetric when `α = β`.
+/// It has two shape parameters `α` (alpha) and `β` (beta) which control 
+/// the shape of the distribution. Both `a` and `β` must be greater than zero.
+/// The distribution is symmetric when `α = β`.
 ///
 /// # Plot
 ///

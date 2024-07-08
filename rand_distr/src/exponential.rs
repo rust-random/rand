@@ -85,7 +85,7 @@ impl Distribution<f64> for Exp1 {
     }
 }
 
-/// The exponential distribution `Exp(λ)`.
+/// The [exponential distribution](https://en.wikipedia.org/wiki/Exponential_distribution) `Exp(λ)`.
 ///
 /// The exponential distribution is a continuous probability distribution
 /// with rate parameter `λ` (`lambda`). It describes the time between events

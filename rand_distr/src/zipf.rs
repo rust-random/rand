@@ -13,7 +13,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::{distributions::OpenClosed01, Rng};
 
-/// The Zeta distribution `Zeta(a)`.
+/// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution) `Zeta(a)`.
 ///
 /// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution)
 /// is a discrete probability distribution with parameter `a`.
@@ -132,11 +132,11 @@ where
     }
 }
 
-/// The Zipf distribution `Zipf(n, s)`.
+/// The Zipf (Zipfian) distribution `Zipf(n, s)`.
 ///
-/// The samples follow Zipf's law: The frequency of each sample from a finite
-/// set of size `n` is inversely proportional to a power of its frequency rank
-/// (with exponent `s`).
+/// The samples follow [Zipf's law](https://en.wikipedia.org/wiki/Zipf%27s_law):
+/// The frequency of each sample from a finite set of size `n` is inversely
+/// proportional to a power of its frequency rank (with exponent `s`).
 ///
 /// For large `n`, this converges to the [`Zeta`](crate::Zeta) distribution.
 ///

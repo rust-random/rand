@@ -100,7 +100,7 @@ impl Distribution<f64> for StandardNormal {
     }
 }
 
-/// The Normal distribution `N(μ, σ²)`.
+/// The [Normal distribution](https://en.wikipedia.org/wiki/Normal_distribution) `N(μ, σ²)`.
 /// 
 /// The Normal distribution, also known as the Gaussian distribution or
 /// bell curve, is a continuous probability distribution with parameters
@@ -246,10 +246,11 @@ where
     }
 }
 
-/// The log-normal distribution `ln N(mean, std_dev**2)`.
-///
-/// If `X` is log-normal distributed, then `ln(X)` is `N(mean, std_dev**2)`
-/// distributed.
+/// The [log-normal distribution](https://en.wikipedia.org/wiki/Log-normal_distribution) `ln N(μ, σ²)`.
+/// 
+/// This is the distribution of the random variable `X = exp(Y)` where `Y` is
+/// normally distributed with mean `μ` and variance `σ²`. In other words, if
+/// `X` is log-normal distributed, then `ln(X)` is `N(μ, σ²)` distributed.
 ///
 /// # Plot
 ///

@@ -186,7 +186,7 @@ where
     FromBeta(DirichletFromBeta<F, N>),
 }
 
-/// The Dirichlet distribution `Dirichlet(α₁, α₂, ..., αₖ)`.
+/// The [Dirichlet distribution](https://en.wikipedia.org/wiki/Dirichlet_distribution) `Dirichlet(α₁, α₂, ..., αₖ)`.
 ///
 /// The Dirichlet distribution is a family of continuous multivariate
 /// probability distributions parameterized by a vector of positive 

@@ -12,7 +12,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The PERT distribution `PERT(min, max, mode, shape)`.
+/// The [PERT distribution](https://en.wikipedia.org/wiki/PERT_distribution) `PERT(min, max, mode, shape)`.
 ///
 /// Similar to the [`Triangular`] distribution, the PERT distribution is
 /// parameterised by a range and a mode within that range. Unlike the

@@ -14,7 +14,7 @@ use core::fmt;
 use num_traits::{Float, FloatConst};
 use rand::Rng;
 
-/// The Cauchy distribution `Cauchy(x₀, γ)`.
+/// The [Cauchy distribution](https://en.wikipedia.org/wiki/Cauchy_distribution) `Cauchy(x₀, γ)`.
 ///
 /// The Cauchy distribution is a continuous probability distribution with
 /// parameters `x₀` (`median`) and `γ` (`scale`).

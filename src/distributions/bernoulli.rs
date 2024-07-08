@@ -15,17 +15,11 @@ use core::fmt;
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 
-/// The Bernoulli distribution `Bernoulli(p)`.
-/// 
-/// # Parameters
-/// 
-/// `p`: Probability of success.
-/// 
-/// # Description
+/// The [Bernoulli distribution](https://en.wikipedia.org/wiki/Bernoulli_distribution) `Bernoulli(p)`.
 ///
-/// This is a special case of the Binomial distribution where `n = 1`,
-/// e.g. a single trial with probability `p` of success and probability
-/// `1 - p` of failure.
+/// This distribution describes a single boolean random variable, which is true
+/// with probability `p` and false with probability `1 - p`. 
+/// It is a special case of the Binomial distribution with `n = 1`.
 /// 
 /// # Plot
 /// 

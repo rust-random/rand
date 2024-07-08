@@ -27,7 +27,7 @@ enum SamplingMethod {
     },
 }
 
-/// The hypergeometric distribution `Hypergeometric(N, K, n)`.
+/// The [hypergeometric distribution](https://en.wikipedia.org/wiki/Hypergeometric_distribution) `Hypergeometric(N, K, n)`.
 ///
 /// This is the distribution of successes in samples of size `n` drawn without
 /// replacement from a population of size `N` containing `K` success states.

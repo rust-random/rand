@@ -6,7 +6,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The geometric distribution `Geometric(p)`.
+/// The [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution) `Geometric(p)`.
 ///
 /// This is the probability distribution of the number of failures
 /// (bounded to `[0, u64::MAX]`) before the first success in a

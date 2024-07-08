@@ -16,7 +16,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The binomial distribution `Binomial(n, p)`.
+/// The [binomial distribution](https://en.wikipedia.org/wiki/Binomial_distribution) `Binomial(n, p)`.
 ///
 /// The binomial distribution is a discrete probability distribution
 /// which describes the probability of seeing `k` successes in `n` 
