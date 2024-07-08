@@ -489,7 +489,7 @@ where
 /// The [Student t-distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution) `t(ν)`.
 ///
 /// The t-distribution is a continuous probability distribution
-/// parameterized by `ν` (`nu`), the degrees of freedom, which
+/// parameterized by degrees of freedom `ν` (`nu`), which
 /// arises when estimating the mean of a normally-distributed
 /// population in situations where the sample size is small and
 /// the population's standard deviation is unknown.

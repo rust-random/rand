@@ -30,8 +30,8 @@ impl std::error::Error for Error {}
 
 /// The [normal-inverse Gaussian distribution](https://en.wikipedia.org/wiki/Normal-inverse_Gaussian_distribution) `NIG(α, β)`.
 ///
-/// This is a continuous probability distribution with two parameters, `alpha` and `beta`,
-/// defined in `(-∞, ∞)`.
+/// This is a continuous probability distribution with two parameters, 
+/// `α` (`alpha`) and `β` (`beta`), defined in `(-∞, ∞)`.
 /// It is also known as the normal-Wald distribution.
 ///
 /// # Plot

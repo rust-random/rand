@@ -140,7 +140,7 @@ where
 ///
 /// For large `n`, this converges to the [`Zeta`](crate::Zeta) distribution.
 ///
-/// For `s = 0`, this becomes a uniform distribution.
+/// For `s = 0`, this becomes a [`uniform`](crate::Uniform) distribution.
 ///
 /// # Plot
 ///

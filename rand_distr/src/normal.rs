@@ -103,8 +103,8 @@ impl Distribution<f64> for StandardNormal {
 /// The [Normal distribution](https://en.wikipedia.org/wiki/Normal_distribution) `N(μ, σ²)`.
 /// 
 /// The Normal distribution, also known as the Gaussian distribution or
-/// bell curve, is a continuous probability distribution with parameters
-/// `μ` (`mu`, mean) and `σ` (`sigma`, standard deviation).
+/// bell curve, is a continuous probability distribution with mean
+/// `μ` (`mu`) and standard deviation `σ` (`sigma`).
 /// It is used to model continuous data that tend to cluster around a mean.
 /// The Normal distribution is symmetric and characterized by its bell-shaped curve.
 ///

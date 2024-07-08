@@ -17,8 +17,8 @@ use rand::Rng;
 ///
 /// The skew normal distribution is a generalization of the
 /// [`Normal`](crate::Normal) distribution to allow for non-zero skewness.
-/// It has parameters `location` (`ξ`, zeta), `scale` (`ω`, omega), and
-/// `shape` (`α`, alpha).
+/// It has location parameter `ξ` (`zeta`), scale parameter `ω` (`omega`),
+/// and shape parameter `α` (`alpha`).
 ///
 /// The `ξ` and `ω` parameters correspond to the mean `μ` and standard
 /// deviation `σ` of the normal distribution, respectively.

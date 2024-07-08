@@ -17,7 +17,7 @@ use rand::Rng;
 /// The [Cauchy distribution](https://en.wikipedia.org/wiki/Cauchy_distribution) `Cauchy(x₀, γ)`.
 ///
 /// The Cauchy distribution is a continuous probability distribution with
-/// parameters `x₀` (`median`) and `γ` (`scale`).
+/// parameters `x₀` (median) and `γ` (scale).
 /// It describes the distribution of the ratio of two independent
 /// normally distributed random variables with means `x₀` and scales `γ`.
 /// In other words, if `X` and `Y` are independent normally distributed
@@ -34,7 +34,7 @@ use rand::Rng;
 /// Note how the median parameter `x₀` shifts the distribution along the x-axis,
 /// and how the scale `γ` changes the density around the median.
 ///
-/// The `standard Cauchy distribution` is the special case with `x₀ = 0` and `γ = 1`,
+/// The standard Cauchy distribution is the special case with `x₀ = 0` and `γ = 1`,
 /// which corresponds to the ratio of two [`StandardNormal`](crate::StandardNormal) distributions.
 ///
 /// ![Cauchy distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/cauchy.svg)

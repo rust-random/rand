@@ -17,7 +17,7 @@ use rand::Rng;
 /// The [Poisson distribution](https://en.wikipedia.org/wiki/Poisson_distribution) `Poisson(λ)`.
 ///
 /// The Poisson distribution is a discrete probability distribution with
-/// rate parameter `λ` (lambda). It models the number of events occurring in a fixed
+/// rate parameter `λ` (`lambda`). It models the number of events occurring in a fixed
 /// interval of time or space.
 ///
 /// This distribution has density function:

@@ -21,8 +21,8 @@ use rand::Rng;
 ///
 /// # Plot
 ///
-/// The following plot shows the PERT distribution with various values of
-/// `min`, `max`, `mode`, and `shape`.
+/// The following plot shows the PERT distribution with `min = -1`, `max = 1`,
+/// and various values of `mode` and `shape`.
 ///
 /// ![PERT distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/pert.svg)
 ///

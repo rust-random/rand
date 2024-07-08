@@ -16,12 +16,12 @@ use rand::Rng;
 /// The [Pareto distribution](https://en.wikipedia.org/wiki/Pareto_distribution) `Pareto(α, xₘ)`.
 ///
 /// The Pareto distribution is a continuous probability distribution with
-/// parameters `scale` (`α`) and `shape` (`xₘ` or `k`).
+/// scale parameter `α` and shape parameter `xₘ` ( or `k`).
 ///
 /// # Plot
 ///
 /// The following plot shows the Pareto distribution with various values of
-/// `scale` and `shape`.
+/// `α` and `xₘ`.
 /// Note how the scale parameter `α` corresponds to the height of the jump
 /// in density at `x = xₘ`, and to the rate of decay in the tail.
 ///
