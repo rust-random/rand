@@ -6,21 +6,25 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Skew Normal distribution.
+//! The Skew Normal distribution `SN(ξ, ω, α)`.
 
 use crate::{Distribution, StandardNormal};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The [skew normal distribution] `SN(location, scale, shape)`.
+/// The [skew normal distribution] `SN(ξ, ω, α)`.
 ///
 /// The skew normal distribution is a generalization of the
 /// [`Normal`](crate::Normal) distribution to allow for non-zero skewness.
+/// It has parameters `location` (`ξ`, zeta), `scale` (`ω`, omega), and
+/// `shape` (`α`, alpha).
 ///
-/// The `location` and `scale` parameters correspond to the
-/// mean and standard deviation of the normal distribution,
-/// respectively. The `shape` parameter controls the skewness.
+/// The `ξ` and `ω` parameters correspond to the mean `μ` and standard
+/// deviation `σ` of the normal distribution, respectively.
+/// The `α` parameter controls the skewness.
+/// 
+/// # Density function
 ///
 /// It has the density function, for `scale > 0`,
 /// `f(x) = 2 / scale * phi((x - location) / scale) * Phi(alpha * (x - location) / scale)`

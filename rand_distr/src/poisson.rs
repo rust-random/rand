@@ -7,17 +7,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Poisson distribution.
+//! The Poisson distribution `Poisson(λ)`.
 
 use crate::{Cauchy, Distribution, Standard};
 use core::fmt;
 use num_traits::{Float, FloatConst};
 use rand::Rng;
 
-/// The Poisson distribution `Poisson(lambda)`.
+/// The Poisson distribution `Poisson(λ)`.
 ///
 /// The Poisson distribution is a discrete probability distribution with
-/// rate parameter `λ`. It models the number of events occurring in a fixed
+/// rate parameter `λ` (lambda). It models the number of events occurring in a fixed
 /// interval of time or space.
 ///
 /// This distribution has density function:
