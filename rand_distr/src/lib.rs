@@ -105,7 +105,7 @@ pub use self::chi_squared::{ChiSquared, Error as ChiSquaredError};
 #[cfg(feature = "alloc")]
 pub use self::dirichlet::{Dirichlet, Error as DirichletError};
 pub use self::exponential::{Error as ExpError, Exp, Exp1};
-pub use self::fisher_f::{FisherF, Error as FisherFError};
+pub use self::fisher_f::{Error as FisherFError, FisherF};
 pub use self::frechet::{Error as FrechetError, Frechet};
 pub use self::gamma::{Error as GammaError, Gamma};
 pub use self::geometric::{Error as GeoError, Geometric, StandardGeometric};
@@ -126,7 +126,8 @@ pub use self::unit_circle::UnitCircle;
 pub use self::unit_disc::UnitDisc;
 pub use self::unit_sphere::UnitSphere;
 pub use self::weibull::{Error as WeibullError, Weibull};
-pub use self::zipf::{Zeta, ZetaError, Zipf, ZipfError};
+pub use self::zeta::{Error as ZetaError, Zeta};
+pub use self::zipf::{Error as ZipfError, Zipf};
 #[cfg(feature = "alloc")]
 pub use rand::distributions::{WeightError, WeightedIndex};
 pub use student_t::StudentT;
@@ -220,5 +221,6 @@ mod unit_disc;
 mod unit_sphere;
 mod utils;
 mod weibull;
+mod zeta;
 mod ziggurat_tables;
 mod zipf;
