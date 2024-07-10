@@ -56,7 +56,7 @@ where
     repr: ChiSquaredRepr<F>,
 }
 
-/// Error type returned from `ChiSquared::new` and `StudentT::new`.
+/// Error type returned from [`ChiSquared::new`] and [`StudentT::new`](crate::StudentT::new).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub enum Error {

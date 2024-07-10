@@ -153,7 +153,7 @@ where
     std_dev: F,
 }
 
-/// Error type returned from `Normal::new` and `LogNormal::new`.
+/// Error type returned from [`Normal::new`] and [`LogNormal::new`](crate::LogNormal::new).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// The mean value is too small (log-normal samples must be positive)

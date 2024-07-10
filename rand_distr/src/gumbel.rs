@@ -52,7 +52,7 @@ where
     scale: F,
 }
 
-/// Error type returned from `Gumbel::new`.
+/// Error type returned from [`Gumbel::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// location is infinite or NaN

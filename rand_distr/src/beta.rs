@@ -89,7 +89,7 @@ where
     algorithm: BetaAlgorithm<F>,
 }
 
-/// Error type returned from `Beta::new`.
+/// Error type returned from [`Beta::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub enum Error {

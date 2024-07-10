@@ -46,7 +46,7 @@ where
     inv_neg_shape: F,
 }
 
-/// Error type returned from `Pareto::new`.
+/// Error type returned from [`Pareto::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `scale <= 0` or `nan`.

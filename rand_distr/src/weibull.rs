@@ -44,7 +44,7 @@ where
     scale: F,
 }
 
-/// Error type returned from `Weibull::new`.
+/// Error type returned from [`Weibull::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `scale <= 0` or `nan`.

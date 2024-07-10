@@ -55,7 +55,7 @@ where
     shape: F,
 }
 
-/// Error type returned from `Frechet::new`.
+/// Error type returned from [`Frechet::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// location is infinite or NaN

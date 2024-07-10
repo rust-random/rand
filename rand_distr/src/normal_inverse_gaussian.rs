@@ -3,7 +3,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// Error type returned from `NormalInverseGaussian::new`
+/// Error type returned from [`NormalInverseGaussian::new`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Error {
     /// `alpha <= 0` or `nan`.

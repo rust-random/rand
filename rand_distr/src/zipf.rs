@@ -56,7 +56,7 @@ where
     q: F,
 }
 
-/// Error type returned from `Zipf::new`.
+/// Error type returned from [`Zipf::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `s < 0` or `nan`.

@@ -74,7 +74,7 @@ where
     repr: GammaRepr<F>,
 }
 
-/// Error type returned from `Gamma::new`.
+/// Error type returned from [`Gamma::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `shape <= 0` or `nan`.

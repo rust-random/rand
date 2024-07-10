@@ -54,7 +54,7 @@ where
     magic_val: F,
 }
 
-/// Error type returned from `Poisson::new`.
+/// Error type returned from [`Poisson::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `lambda <= 0`

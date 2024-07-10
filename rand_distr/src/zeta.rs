@@ -17,7 +17,7 @@ use rand::{distributions::OpenClosed01, Rng};
 ///
 /// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution)
 /// is a discrete probability distribution with parameter `s`.
-/// It is a special case of the [`Zipf`] distribution with `n = ∞`.
+/// It is a special case of the [`Zipf`](crate::Zipf) distribution with `n = ∞`.
 /// It is also known as the discrete Pareto, Riemann-Zeta, Zipf, or Zipf–Estoup distribution.
 ///
 /// # Density function
@@ -64,7 +64,7 @@ where
     b: F,
 }
 
-/// Error type returned from `Zeta::new`.
+/// Error type returned from [`Zeta::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `s <= 1` or `nan`.
