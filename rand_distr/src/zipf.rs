@@ -13,21 +13,21 @@ use core::fmt;
 use num_traits::Float;
 use rand::{distributions::OpenClosed01, Rng};
 
-/// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution) `Zeta(a)`.
+/// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution) `Zeta(s)`.
 ///
 /// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution)
-/// is a discrete probability distribution with parameter `a`.
+/// is a discrete probability distribution with parameter `s`.
 /// It is a special case of the [`Zipf`] distribution with `n = ∞`.
 /// It is also known as the discrete Pareto, Riemann-Zeta, Zipf, or Zipf–Estoup distribution.
 ///
 /// # Density function
 ///
-/// `f(k) = k^(-a) / ζ(a)` for `k >= 1`, where `ζ` is the
+/// `f(k) = k^(-s) / ζ(s)` for `k >= 1`, where `ζ` is the
 /// [Riemann zeta function](https://en.wikipedia.org/wiki/Riemann_zeta_function).
 ///
 /// # Plot
 ///
-/// The following plot illustrates the zeta distribution for various values of `a`.
+/// The following plot illustrates the zeta distribution for various values of `s`.
 ///
 /// ![Zeta distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/zeta.svg)
 ///
@@ -46,7 +46,7 @@ use rand::{distributions::OpenClosed01, Rng};
 /// In particular, a value of infinity might be returned for the following
 /// reasons:
 /// 1. it is the best representation in the type `F` of the actual sample.
-/// 2. to prevent infinite loops for very small `a`.
+/// 2. to prevent infinite loops for very small `s`.
 ///
 /// # Implementation details
 ///
@@ -60,21 +60,21 @@ where
     Standard: Distribution<F>,
     OpenClosed01: Distribution<F>,
 {
-    a_minus_1: F,
+    s_minus_1: F,
     b: F,
 }
 
 /// Error type returned from `Zeta::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ZetaError {
-    /// `a <= 1` or `nan`.
-    ATooSmall,
+    /// `s <= 1` or `nan`.
+    STooSmall,
 }
 
 impl fmt::Display for ZetaError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            ZetaError::ATooSmall => "a <= 1 or is NaN in Zeta distribution",
+            ZetaError::STooSmall => "s <= 1 or is NaN in Zeta distribution",
         })
     }
 }
@@ -88,17 +88,17 @@ where
     Standard: Distribution<F>,
     OpenClosed01: Distribution<F>,
 {
-    /// Construct a new `Zeta` distribution with given `a` parameter.
+    /// Construct a new `Zeta` distribution with given `s` parameter.
     #[inline]
-    pub fn new(a: F) -> Result<Zeta<F>, ZetaError> {
-        if !(a > F::one()) {
-            return Err(ZetaError::ATooSmall);
+    pub fn new(s: F) -> Result<Zeta<F>, ZetaError> {
+        if !(s > F::one()) {
+            return Err(ZetaError::STooSmall);
         }
-        let a_minus_1 = a - F::one();
+        let s_minus_1 = s - F::one();
         let two = F::one() + F::one();
         Ok(Zeta {
-            a_minus_1,
-            b: two.powf(a_minus_1),
+            s_minus_1,
+            b: two.powf(s_minus_1),
         })
     }
 }
@@ -113,16 +113,16 @@ where
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         loop {
             let u = rng.sample(OpenClosed01);
-            let x = u.powf(-F::one() / self.a_minus_1).floor();
+            let x = u.powf(-F::one() / self.s_minus_1).floor();
             debug_assert!(x >= F::one());
             if x.is_infinite() {
-                // For sufficiently small `a`, `x` will always be infinite,
+                // For sufficiently small `s`, `x` will always be infinite,
                 // which is rejected, resulting in an infinite loop. We avoid
                 // this by always returning infinity instead.
                 return x;
             }
 
-            let t = (F::one() + F::one() / x).powf(self.a_minus_1);
+            let t = (F::one() + F::one() / x).powf(self.s_minus_1);
 
             let v = rng.sample(Standard);
             if v * x * (t - F::one()) * self.b <= t * (self.b - F::one()) {
