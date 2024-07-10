@@ -59,15 +59,15 @@ where
 /// Error type returned from `ChiSquared::new` and `StudentT::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
-pub enum ChiSquaredError {
+pub enum Error {
     /// `0.5 * k <= 0` or `nan`.
     DoFTooSmall,
 }
 
-impl fmt::Display for ChiSquaredError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            ChiSquaredError::DoFTooSmall => {
+            Error::DoFTooSmall => {
                 "degrees-of-freedom k is not positive in chi-squared distribution"
             }
         })
@@ -75,7 +75,7 @@ impl fmt::Display for ChiSquaredError {
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for ChiSquaredError {}
+impl std::error::Error for Error {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
@@ -102,12 +102,12 @@ where
 {
     /// Create a new chi-squared distribution with degrees-of-freedom
     /// `k`.
-    pub fn new(k: F) -> Result<ChiSquared<F>, ChiSquaredError> {
+    pub fn new(k: F) -> Result<ChiSquared<F>, Error> {
         let repr = if k == F::one() {
             DoFExactlyOne
         } else {
             if !(F::from(0.5).unwrap() * k > F::zero()) {
-                return Err(ChiSquaredError::DoFTooSmall);
+                return Err(Error::DoFTooSmall);
             }
             DoFAnythingElse(Gamma::new(F::from(0.5).unwrap() * k, F::from(2.0).unwrap()).unwrap())
         };

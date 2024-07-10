@@ -98,14 +98,14 @@ pub use rand::distributions::{
     Standard, Uniform,
 };
 
-pub use self::beta::{Beta, BetaError};
+pub use self::beta::{Beta, Error as BetaError};
 pub use self::binomial::{Binomial, Error as BinomialError};
 pub use self::cauchy::{Cauchy, Error as CauchyError};
-pub use self::chi_squared::{ChiSquared, ChiSquaredError};
+pub use self::chi_squared::{ChiSquared, Error as ChiSquaredError};
 #[cfg(feature = "alloc")]
 pub use self::dirichlet::{Dirichlet, Error as DirichletError};
 pub use self::exponential::{Error as ExpError, Exp, Exp1};
-pub use self::fisher_f::{FisherF, FisherFError};
+pub use self::fisher_f::{FisherF, Error as FisherFError};
 pub use self::frechet::{Error as FrechetError, Frechet};
 pub use self::gamma::{Error as GammaError, Gamma};
 pub use self::geometric::{Error as GeoError, Geometric, StandardGeometric};

@@ -56,24 +56,24 @@ where
 /// Error type returned from `FisherF::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
-pub enum FisherFError {
+pub enum Error {
     /// `m <= 0` or `nan`.
     MTooSmall,
     /// `n <= 0` or `nan`.
     NTooSmall,
 }
 
-impl fmt::Display for FisherFError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            FisherFError::MTooSmall => "m is not positive in Fisher F distribution",
-            FisherFError::NTooSmall => "n is not positive in Fisher F distribution",
+            Error::MTooSmall => "m is not positive in Fisher F distribution",
+            Error::NTooSmall => "n is not positive in Fisher F distribution",
         })
     }
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for FisherFError {}
+impl std::error::Error for Error {}
 
 impl<F> FisherF<F>
 where
@@ -83,13 +83,13 @@ where
     Open01: Distribution<F>,
 {
     /// Create a new `FisherF` distribution, with the given parameter.
-    pub fn new(m: F, n: F) -> Result<FisherF<F>, FisherFError> {
+    pub fn new(m: F, n: F) -> Result<FisherF<F>, Error> {
         let zero = F::zero();
         if !(m > zero) {
-            return Err(FisherFError::MTooSmall);
+            return Err(Error::MTooSmall);
         }
         if !(n > zero) {
-            return Err(FisherFError::NTooSmall);
+            return Err(Error::NTooSmall);
         }
 
         Ok(FisherF {

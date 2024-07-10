@@ -92,24 +92,24 @@ where
 /// Error type returned from `Beta::new`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
-pub enum BetaError {
+pub enum Error {
     /// `alpha <= 0` or `nan`.
     AlphaTooSmall,
     /// `beta <= 0` or `nan`.
     BetaTooSmall,
 }
 
-impl fmt::Display for BetaError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            BetaError::AlphaTooSmall => "alpha is not positive in beta distribution",
-            BetaError::BetaTooSmall => "beta is not positive in beta distribution",
+            Error::AlphaTooSmall => "alpha is not positive in beta distribution",
+            Error::BetaTooSmall => "beta is not positive in beta distribution",
         })
     }
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for BetaError {}
+impl std::error::Error for Error {}
 
 impl<F> Beta<F>
 where
@@ -118,12 +118,12 @@ where
 {
     /// Construct an object representing the `Beta(alpha, beta)`
     /// distribution.
-    pub fn new(alpha: F, beta: F) -> Result<Beta<F>, BetaError> {
+    pub fn new(alpha: F, beta: F) -> Result<Beta<F>, Error> {
         if !(alpha > F::zero()) {
-            return Err(BetaError::AlphaTooSmall);
+            return Err(Error::AlphaTooSmall);
         }
         if !(beta > F::zero()) {
-            return Err(BetaError::BetaTooSmall);
+            return Err(Error::BetaTooSmall);
         }
         // From now on, we use the notation from the reference,
         // i.e. `alpha` and `beta` are renamed to `a0` and `b0`.
