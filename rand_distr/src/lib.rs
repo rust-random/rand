@@ -106,7 +106,7 @@ pub use self::dirichlet::{Dirichlet, Error as DirichletError};
 pub use self::exponential::{Error as ExpError, Exp, Exp1};
 pub use self::frechet::{Error as FrechetError, Frechet};
 pub use self::gamma::{
-    ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError, Gamma, StudentT,
+    ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError, Gamma,
 };
 pub use self::geometric::{Error as GeoError, Geometric, StandardGeometric};
 pub use self::gumbel::{Error as GumbelError, Gumbel};
@@ -129,6 +129,7 @@ pub use self::weibull::{Error as WeibullError, Weibull};
 pub use self::zipf::{Zeta, ZetaError, Zipf, ZipfError};
 #[cfg(feature = "alloc")]
 pub use rand::distributions::{WeightError, WeightedIndex};
+pub use student_t::StudentT;
 #[cfg(feature = "alloc")]
 pub use weighted_alias::WeightedAliasIndex;
 #[cfg(feature = "alloc")]
@@ -209,6 +210,7 @@ mod pareto;
 mod pert;
 mod poisson;
 mod skew_normal;
+mod student_t;
 mod triangular;
 mod unit_ball;
 mod unit_circle;
