@@ -98,6 +98,7 @@ pub use rand::distributions::{
     Standard, Uniform,
 };
 
+pub use self::beta::{Beta, BetaError};
 pub use self::binomial::{Binomial, Error as BinomialError};
 pub use self::cauchy::{Cauchy, Error as CauchyError};
 #[cfg(feature = "alloc")]
@@ -105,8 +106,7 @@ pub use self::dirichlet::{Dirichlet, Error as DirichletError};
 pub use self::exponential::{Error as ExpError, Exp, Exp1};
 pub use self::frechet::{Error as FrechetError, Frechet};
 pub use self::gamma::{
-    Beta, BetaError, ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError,
-    Gamma, StudentT,
+    ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError, Gamma, StudentT,
 };
 pub use self::geometric::{Error as GeoError, Geometric, StandardGeometric};
 pub use self::gumbel::{Error as GumbelError, Gumbel};
@@ -192,6 +192,7 @@ pub mod weighted_alias;
 #[cfg(feature = "alloc")]
 pub mod weighted_tree;
 
+mod beta;
 mod binomial;
 mod cauchy;
 mod dirichlet;
