@@ -104,10 +104,9 @@ pub use self::cauchy::{Cauchy, Error as CauchyError};
 #[cfg(feature = "alloc")]
 pub use self::dirichlet::{Dirichlet, Error as DirichletError};
 pub use self::exponential::{Error as ExpError, Exp, Exp1};
+pub use self::fisher_f::{FisherF, FisherFError};
 pub use self::frechet::{Error as FrechetError, Frechet};
-pub use self::gamma::{
-    ChiSquared, ChiSquaredError, Error as GammaError, FisherF, FisherFError, Gamma,
-};
+pub use self::gamma::{ChiSquared, ChiSquaredError, Error as GammaError, Gamma};
 pub use self::geometric::{Error as GeoError, Geometric, StandardGeometric};
 pub use self::gumbel::{Error as GumbelError, Gumbel};
 pub use self::hypergeometric::{Error as HyperGeoError, Hypergeometric};
@@ -198,6 +197,7 @@ mod binomial;
 mod cauchy;
 mod dirichlet;
 mod exponential;
+mod fisher_f;
 mod frechet;
 mod gamma;
 mod geometric;
