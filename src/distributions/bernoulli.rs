@@ -75,7 +75,7 @@ const ALWAYS_TRUE: u64 = u64::MAX;
 // in `no_std` mode.
 const SCALE: f64 = 2.0 * (1u64 << 63) as f64;
 
-/// Error type returned from `Bernoulli::new`.
+/// Error type returned from [`Bernoulli::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BernoulliError {
     /// `p < 0` or `p > 1`.

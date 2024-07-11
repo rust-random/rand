@@ -46,7 +46,7 @@ pub struct Geometric {
     k: u64,
 }
 
-/// Error type returned from `Geometric::new`.
+/// Error type returned from [`Geometric::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `p < 0 || p > 1` or `nan`

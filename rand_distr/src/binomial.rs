@@ -52,7 +52,7 @@ pub struct Binomial {
     p: f64,
 }
 
-/// Error type returned from `Binomial::new`.
+/// Error type returned from [`Binomial::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `p < 0` or `nan`.

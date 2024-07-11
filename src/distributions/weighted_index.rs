@@ -702,7 +702,7 @@ mod test {
     }
 }
 
-/// Errors returned by weighted distributions
+/// Errors returned by [`WeightedIndex::new`], [`WeightedIndex::update_weights`] and other weighted distributions
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WeightError {
     /// The input weight sequence is empty, too long, or wrongly ordered

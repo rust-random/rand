@@ -130,7 +130,7 @@ where
     lambda_inverse: F,
 }
 
-/// Error type returned from `Exp::new`.
+/// Error type returned from [`Exp::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `lambda < 0` or `nan`.

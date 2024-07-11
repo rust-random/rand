@@ -6,131 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Zeta and related distributions.
+//! The Zipf distribution.
 
 use crate::{Distribution, Standard};
 use core::fmt;
 use num_traits::Float;
-use rand::{distributions::OpenClosed01, Rng};
-
-/// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution) `Zeta(s)`.
-///
-/// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution)
-/// is a discrete probability distribution with parameter `s`.
-/// It is a special case of the [`Zipf`] distribution with `n = ∞`.
-/// It is also known as the discrete Pareto, Riemann-Zeta, Zipf, or Zipf–Estoup distribution.
-///
-/// # Density function
-///
-/// `f(k) = k^(-s) / ζ(s)` for `k >= 1`, where `ζ` is the
-/// [Riemann zeta function](https://en.wikipedia.org/wiki/Riemann_zeta_function).
-///
-/// # Plot
-///
-/// The following plot illustrates the zeta distribution for various values of `s`.
-///
-/// ![Zeta distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/zeta.svg)
-///
-/// # Example
-/// ```
-/// use rand::prelude::*;
-/// use rand_distr::Zeta;
-///
-/// let val: f64 = thread_rng().sample(Zeta::new(1.5).unwrap());
-/// println!("{}", val);
-/// ```
-///
-/// # Notes
-///
-/// The zeta distribution has no upper limit. Sampled values may be infinite.
-/// In particular, a value of infinity might be returned for the following
-/// reasons:
-/// 1. it is the best representation in the type `F` of the actual sample.
-/// 2. to prevent infinite loops for very small `s`.
-///
-/// # Implementation details
-///
-/// We are using the algorithm from
-/// [Non-Uniform Random Variate Generation](https://doi.org/10.1007/978-1-4613-8643-8),
-/// Section 6.1, page 551.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Zeta<F>
-where
-    F: Float,
-    Standard: Distribution<F>,
-    OpenClosed01: Distribution<F>,
-{
-    s_minus_1: F,
-    b: F,
-}
-
-/// Error type returned from `Zeta::new`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ZetaError {
-    /// `s <= 1` or `nan`.
-    STooSmall,
-}
-
-impl fmt::Display for ZetaError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            ZetaError::STooSmall => "s <= 1 or is NaN in Zeta distribution",
-        })
-    }
-}
-
-#[cfg(feature = "std")]
-impl std::error::Error for ZetaError {}
-
-impl<F> Zeta<F>
-where
-    F: Float,
-    Standard: Distribution<F>,
-    OpenClosed01: Distribution<F>,
-{
-    /// Construct a new `Zeta` distribution with given `s` parameter.
-    #[inline]
-    pub fn new(s: F) -> Result<Zeta<F>, ZetaError> {
-        if !(s > F::one()) {
-            return Err(ZetaError::STooSmall);
-        }
-        let s_minus_1 = s - F::one();
-        let two = F::one() + F::one();
-        Ok(Zeta {
-            s_minus_1,
-            b: two.powf(s_minus_1),
-        })
-    }
-}
-
-impl<F> Distribution<F> for Zeta<F>
-where
-    F: Float,
-    Standard: Distribution<F>,
-    OpenClosed01: Distribution<F>,
-{
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
-        loop {
-            let u = rng.sample(OpenClosed01);
-            let x = u.powf(-F::one() / self.s_minus_1).floor();
-            debug_assert!(x >= F::one());
-            if x.is_infinite() {
-                // For sufficiently small `s`, `x` will always be infinite,
-                // which is rejected, resulting in an infinite loop. We avoid
-                // this by always returning infinity instead.
-                return x;
-            }
-
-            let t = (F::one() + F::one() / x).powf(self.s_minus_1);
-
-            let v = rng.sample(Standard);
-            if v * x * (t - F::one()) * self.b <= t * (self.b - F::one()) {
-                return x;
-            }
-        }
-    }
-}
+use rand::Rng;
 
 /// The Zipf (Zipfian) distribution `Zipf(n, s)`.
 ///
@@ -175,26 +56,26 @@ where
     q: F,
 }
 
-/// Error type returned from `Zipf::new`.
+/// Error type returned from [`Zipf::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ZipfError {
+pub enum Error {
     /// `s < 0` or `nan`.
     STooSmall,
     /// `n < 1`.
     NTooSmall,
 }
 
-impl fmt::Display for ZipfError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            ZipfError::STooSmall => "s < 0 or is NaN in Zipf distribution",
-            ZipfError::NTooSmall => "n < 1 in Zipf distribution",
+            Error::STooSmall => "s < 0 or is NaN in Zipf distribution",
+            Error::NTooSmall => "n < 1 in Zipf distribution",
         })
     }
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for ZipfError {}
+impl std::error::Error for Error {}
 
 impl<F> Zipf<F>
 where
@@ -206,12 +87,12 @@ where
     ///
     /// For large `n`, rounding may occur to fit the number into the float type.
     #[inline]
-    pub fn new(n: u64, s: F) -> Result<Zipf<F>, ZipfError> {
+    pub fn new(n: u64, s: F) -> Result<Zipf<F>, Error> {
         if !(s >= F::zero()) {
-            return Err(ZipfError::STooSmall);
+            return Err(Error::STooSmall);
         }
         if n < 1 {
-            return Err(ZipfError::NTooSmall);
+            return Err(Error::NTooSmall);
         }
         let n = F::from(n).unwrap(); // This does not fail.
         let q = if s != F::one() {
@@ -284,46 +165,6 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn zeta_invalid() {
-        Zeta::new(1.).unwrap();
-    }
-
-    #[test]
-    #[should_panic]
-    fn zeta_nan() {
-        Zeta::new(f64::NAN).unwrap();
-    }
-
-    #[test]
-    fn zeta_sample() {
-        let a = 2.0;
-        let d = Zeta::new(a).unwrap();
-        let mut rng = crate::test::rng(1);
-        for _ in 0..1000 {
-            let r = d.sample(&mut rng);
-            assert!(r >= 1.);
-        }
-    }
-
-    #[test]
-    fn zeta_small_a() {
-        let a = 1. + 1e-15;
-        let d = Zeta::new(a).unwrap();
-        let mut rng = crate::test::rng(2);
-        for _ in 0..1000 {
-            let r = d.sample(&mut rng);
-            assert!(r >= 1.);
-        }
-    }
-
-    #[test]
-    fn zeta_value_stability() {
-        test_samples(Zeta::new(1.5).unwrap(), 0f32, &[1.0, 2.0, 1.0, 1.0]);
-        test_samples(Zeta::new(2.0).unwrap(), 0f64, &[2.0, 1.0, 1.0, 1.0]);
-    }
-
-    #[test]
-    #[should_panic]
     fn zipf_s_too_small() {
         Zipf::new(10, -1.).unwrap();
     }
@@ -391,10 +232,5 @@ mod tests {
     #[test]
     fn zipf_distributions_can_be_compared() {
         assert_eq!(Zipf::new(1, 2.0), Zipf::new(1, 2.0));
-    }
-
-    #[test]
-    fn zeta_distributions_can_be_compared() {
-        assert_eq!(Zeta::new(1.0), Zeta::new(1.0));
     }
 }

@@ -5,7 +5,7 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// Error type returned from `InverseGaussian::new`
+/// Error type returned from [`InverseGaussian::new`]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Error {
     /// `mean <= 0` or `nan`.

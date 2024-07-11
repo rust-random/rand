@@ -64,7 +64,7 @@ where
     scale: F,
 }
 
-/// Error type returned from `Cauchy::new`.
+/// Error type returned from [`Cauchy::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `scale <= 0` or `nan`.

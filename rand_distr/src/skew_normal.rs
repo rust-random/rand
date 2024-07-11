@@ -68,7 +68,7 @@ where
     shape: F,
 }
 
-/// Error type returned from `SkewNormal::new`.
+/// Error type returned from [`SkewNormal::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// The scale parameter is not finite or it is less or equal to zero.
