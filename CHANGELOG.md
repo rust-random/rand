@@ -16,6 +16,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Move all benchmarks to new `benches` crate (#1439)
 - Annotate panicking methods with `#[track_caller]` (#1442, #1447)
 - Enable feature `small_rng` by default (#1455)
+- Add `rand::distributions::ReusableWeightedIndex` (#1460)
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
