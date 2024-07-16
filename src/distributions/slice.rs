@@ -9,8 +9,38 @@
 use core::num::NonZeroUsize;
 
 use crate::distributions::{Distribution, Uniform};
+use crate::Rng;
 #[cfg(feature = "alloc")]
 use alloc::string::String;
+
+#[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
+const _: () = assert!(false, "unsupported pointer width");
+
+#[derive(Debug, Clone, Copy)]
+enum UniformUsize {
+    U32(Uniform<u32>),
+    #[cfg(target_pointer_width = "64")]
+    U64(Uniform<u64>),
+}
+
+impl UniformUsize {
+    pub fn new(ubound: usize) -> Result<Self, super::uniform::Error> {
+        #[cfg(target_pointer_width = "64")]
+        if ubound > (u32::MAX as usize) {
+            return Uniform::new(0, ubound as u64).map(UniformUsize::U64);
+        }
+
+        Uniform::new(0, ubound as u32).map(UniformUsize::U32)
+    }
+
+    pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
+        match self {
+            UniformUsize::U32(uu) => uu.sample(rng) as usize,
+            #[cfg(target_pointer_width = "64")]
+            UniformUsize::U64(uu) => uu.sample(rng) as usize,
+        }
+    }
+}
 
 /// A distribution to sample items uniformly from a slice.
 ///
@@ -68,7 +98,7 @@ use alloc::string::String;
 #[derive(Debug, Clone, Copy)]
 pub struct Slice<'a, T> {
     slice: &'a [T],
-    range: Uniform<usize>,
+    range: UniformUsize,
     num_choices: NonZeroUsize,
 }
 
@@ -80,7 +110,7 @@ impl<'a, T> Slice<'a, T> {
 
         Ok(Self {
             slice,
-            range: Uniform::new(0, num_choices.get()).unwrap(),
+            range: UniformUsize::new(num_choices.get()).unwrap(),
             num_choices,
         })
     }
@@ -159,5 +189,18 @@ impl<'a> super::DistString for Slice<'a, char> {
             remain_len -= extend_len;
             extend_len = extend_len.min(remain_len);
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn value_stability() {
+        let rng = crate::test::rng(651);
+        let slice = Slice::new(b"escaped emus explore extensively").unwrap();
+        let expected = b"eaxee";
+        assert!(std::iter::zip(slice.sample_iter(rng), expected).all(|(a, b)| a == b));
     }
 }
