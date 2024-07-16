@@ -87,6 +87,7 @@ where
     ///     .unwrap();
     /// # let _unused: Pert<f64> = pert_dist;
     /// ```
+    #[allow(clippy::new_ret_no_self)]
     #[inline]
     pub fn new(min: F, max: F) -> PertBuilder<F> {
         let shape = F::from(4.0).unwrap();
