@@ -75,7 +75,7 @@ type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
 /// [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature="serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct SmallRng(Rng);
 
 impl SeedableRng for SmallRng {
