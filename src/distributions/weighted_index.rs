@@ -36,9 +36,9 @@ use serde::{Deserialize, Serialize};
 /// `N` is the number of weights. There are two alternative implementations with
 /// different runtimes characteristics:
 /// * [`rand_distr::weighted_alias`](https://docs.rs/rand_distr/*/rand_distr/weighted_alias/index.html)
-/// supports `O(1)` sampling, but with much higher initialisation cost.
+///   supports `O(1)` sampling, but with much higher initialisation cost.
 /// * [`rand_distr::weighted_tree`](https://docs.rs/rand_distr/*/rand_distr/weighted_tree/index.html)
-/// keeps the weights in a tree structure where sampling and updating is `O(log N)`.
+///   keeps the weights in a tree structure where sampling and updating is `O(log N)`.
 ///
 /// A `WeightedIndex<X>` contains a `Vec<X>` and a [`Uniform<X>`] and so its
 /// size is the sum of the size of those objects, possibly plus some alignment.

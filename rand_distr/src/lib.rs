@@ -35,7 +35,7 @@
 //!
 //! - The [`Distribution`] trait and [`DistIter`] helper type
 //! - The [`Standard`], [`Alphanumeric`], [`Uniform`], [`OpenClosed01`],
-//! [`Open01`], [`Bernoulli`], and [`WeightedIndex`] distributions
+//!   [`Open01`], [`Bernoulli`], and [`WeightedIndex`] distributions
 //!
 //! ## Distributions
 //!
