@@ -504,10 +504,15 @@ mod test {
             &['f', 'i', 'd', 'b', 'c', 'm', 'j', 'k']
         );
 
+        assert_eq!(
+            &chars.choose_multiple_array(&mut r),
+            &Some(['h', 'm', 'd', 'b', 'c', 'e', 'n', 'f'])
+        );
+
         #[cfg(feature = "alloc")]
-        assert_eq!(chars.choose_weighted(&mut r, |_| 1), Ok(&'l'));
+        assert_eq!(chars.choose_weighted(&mut r, |_| 1), Ok(&'i'));
         #[cfg(feature = "alloc")]
-        assert_eq!(nums.choose_weighted_mut(&mut r, |_| 1), Ok(&mut 8));
+        assert_eq!(nums.choose_weighted_mut(&mut r, |_| 1), Ok(&mut 2));
 
         let mut r = crate::test::rng(414);
         nums.shuffle(&mut r);

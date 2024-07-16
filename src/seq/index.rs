@@ -7,6 +7,7 @@
 // except according to those terms.
 
 //! Low-level API for sampling indices
+use super::gen_index;
 #[cfg(feature = "alloc")]
 use alloc::vec::{self, Vec};
 use core::slice;
@@ -288,7 +289,7 @@ where
     // Floyd's algorithm
     let mut indices = [0; N];
     for (i, j) in (len - N..len).enumerate() {
-        let t = rng.gen_range(0..=j);
+        let t = gen_index(rng, j + 1);
         if let Some(pos) = indices[0..i].iter().position(|&x| x == t) {
             indices[pos] = j;
         }
