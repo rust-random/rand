@@ -1,4 +1,4 @@
-//! The geometric distribution.
+//! The geometric distribution `Geometric(p)`.
 
 use crate::Distribution;
 use core::fmt;
@@ -6,20 +6,31 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The geometric distribution `Geometric(p)` bounded to `[0, u64::MAX]`.
+/// The [geometric distribution](https://en.wikipedia.org/wiki/Geometric_distribution) `Geometric(p)`.
 ///
-/// This is the probability distribution of the number of failures before the
-/// first success in a series of Bernoulli trials. It has the density function
-/// `f(k) = (1 - p)^k p` for `k >= 0`, where `p` is the probability of success
-/// on each trial.
+/// This is the probability distribution of the number of failures
+/// (bounded to `[0, u64::MAX]`) before the first success in a
+/// series of [`Bernoulli`](crate::Bernoulli) trials, where the
+/// probability of success on each trial is `p`.
 ///
 /// This is the discrete analogue of the [exponential distribution](crate::Exp).
 ///
-/// Note that [`StandardGeometric`](crate::StandardGeometric) is an optimised
+/// See [`StandardGeometric`](crate::StandardGeometric) for an optimised
 /// implementation for `p = 0.5`.
 ///
-/// # Example
+/// # Density function
 ///
+/// `f(k) = (1 - p)^k p` for `k >= 0`.
+///
+/// # Plot
+///
+/// The following plot illustrates the geometric distribution for various
+/// values of `p`. Note how higher `p` values shift the distribution to
+/// the left, and the mean of the distribution is `1/p`.
+///
+/// ![Geometric distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/geometric.svg)
+///
+/// # Example
 /// ```
 /// use rand_distr::{Geometric, Distribution};
 ///
@@ -35,7 +46,7 @@ pub struct Geometric {
     k: u64,
 }
 
-/// Error type returned from `Geometric::new`.
+/// Error type returned from [`Geometric::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `p < 0 || p > 1` or `nan`
@@ -140,14 +151,17 @@ impl Distribution<u64> for Geometric {
     }
 }
 
-/// Samples integers according to the geometric distribution with success
-/// probability `p = 0.5`. This is equivalent to `Geometeric::new(0.5)`,
-/// but faster.
+/// The standard geometric distribution `Geometric(0.5)`.
+///
+/// This is equivalent to `Geometric::new(0.5)`, but faster.
 ///
 /// See [`Geometric`](crate::Geometric) for the general geometric distribution.
 ///
-/// Implemented via iterated
-/// [`Rng::gen::<u64>().leading_zeros()`](Rng::gen::<u64>().leading_zeros()).
+/// # Plot
+///
+/// The following plot illustrates the standard geometric distribution.
+///
+/// ![Standard Geometric distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/standard_geometric.svg)
 ///
 /// # Example
 /// ```
@@ -157,6 +171,10 @@ impl Distribution<u64> for Geometric {
 /// let v = StandardGeometric.sample(&mut thread_rng());
 /// println!("{} is from a Geometric(0.5) distribution", v);
 /// ```
+///
+/// # Notes
+/// Implemented via iterated
+/// [`Rng::gen::<u64>().leading_zeros()`](Rng::gen::<u64>().leading_zeros()).
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct StandardGeometric;

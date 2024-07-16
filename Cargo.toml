@@ -28,7 +28,7 @@ features = ["small_rng", "serde1"]
 
 [features]
 # Meta-features:
-default = ["std", "std_rng", "getrandom"]
+default = ["std", "std_rng", "getrandom", "small_rng"]
 nightly = [] # some additions requiring nightly Rust
 serde1 = ["serde", "rand_core/serde1"]
 

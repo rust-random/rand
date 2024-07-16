@@ -6,21 +6,37 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Skew Normal distribution.
+//! The Skew Normal distribution `SN(ξ, ω, α)`.
 
 use crate::{Distribution, StandardNormal};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// The [skew normal distribution] `SN(location, scale, shape)`.
+/// The [skew normal distribution](https://en.wikipedia.org/wiki/Skew_normal_distribution) `SN(ξ, ω, α)`.
 ///
 /// The skew normal distribution is a generalization of the
-/// [`Normal`] distribution to allow for non-zero skewness.
+/// [`Normal`](crate::Normal) distribution to allow for non-zero skewness.
+/// It has location parameter `ξ` (`xi`), scale parameter `ω` (`omega`),
+/// and shape parameter `α` (`alpha`).
+///
+/// The `ξ` and `ω` parameters correspond to the mean `μ` and standard
+/// deviation `σ` of the normal distribution, respectively.
+/// The `α` parameter controls the skewness.
+///
+/// # Density function
 ///
 /// It has the density function, for `scale > 0`,
 /// `f(x) = 2 / scale * phi((x - location) / scale) * Phi(alpha * (x - location) / scale)`
 /// where `phi` and `Phi` are the density and distribution of a standard normal variable.
+///
+/// # Plot
+///
+/// The following plot shows the skew normal distribution with `location = 0`, `scale = 1`
+/// (corresponding to the [`standard normal distribution`](crate::StandardNormal)), and
+/// various values of `shape`.
+///
+/// ![Skew normal distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/skew_normal.svg)
 ///
 /// # Example
 ///
@@ -52,7 +68,7 @@ where
     shape: F,
 }
 
-/// Error type returned from `SkewNormal::new`.
+/// Error type returned from [`SkewNormal::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// The scale parameter is not finite or it is less or equal to zero.

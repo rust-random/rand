@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Bernoulli distribution.
+//! The Bernoulli distribution `Bernoulli(p)`.
 
 use crate::distributions::Distribution;
 use crate::Rng;
@@ -15,9 +15,18 @@ use core::fmt;
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 
-/// The Bernoulli distribution.
+/// The [Bernoulli distribution](https://en.wikipedia.org/wiki/Bernoulli_distribution) `Bernoulli(p)`.
 ///
-/// This is a special case of the Binomial distribution where `n = 1`.
+/// This distribution describes a single boolean random variable, which is true
+/// with probability `p` and false with probability `1 - p`.
+/// It is a special case of the Binomial distribution with `n = 1`.
+///
+/// # Plot
+///
+/// The following plot shows the Bernoulli distribution with `p = 0.1`,
+/// `p = 0.5`, and `p = 0.9`.
+///
+/// ![Bernoulli distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/bernoulli.svg)
 ///
 /// # Example
 ///
@@ -66,7 +75,7 @@ const ALWAYS_TRUE: u64 = u64::MAX;
 // in `no_std` mode.
 const SCALE: f64 = 2.0 * (1u64 << 63) as f64;
 
-/// Error type returned from `Bernoulli::new`.
+/// Error type returned from [`Bernoulli::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BernoulliError {
     /// `p < 0` or `p > 1`.

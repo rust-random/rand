@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The exponential distribution.
+//! The exponential distribution `Exp(λ)`.
 
 use crate::utils::ziggurat;
 use crate::{ziggurat_tables, Distribution};
@@ -15,11 +15,30 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// Samples floating-point numbers according to the exponential distribution,
-/// with rate parameter `λ = 1`. This is equivalent to `Exp::new(1.0)` or
-/// sampling with `-rng.gen::<f64>().ln()`, but faster.
+/// The standard exponential distribution `Exp(1)`.
 ///
-/// See `Exp` for the general exponential distribution.
+/// This is equivalent to `Exp::new(1.0)` or sampling with
+/// `-rng.gen::<f64>().ln()`, but faster.
+///
+/// See [`Exp`](crate::Exp) for the general exponential distribution.
+///
+/// # Plot
+///
+/// The following plot illustrates the exponential distribution with `λ = 1`.
+///
+/// ![Exponential distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential_exp1.svg)
+///
+/// # Example
+///
+/// ```
+/// use rand::prelude::*;
+/// use rand_distr::Exp1;
+///
+/// let val: f64 = thread_rng().sample(Exp1);
+/// println!("{}", val);
+/// ```
+///
+/// # Notes
 ///
 /// Implemented via the ZIGNOR variant[^1] of the Ziggurat method. The exact
 /// description in the paper was adjusted to use tables for the exponential
@@ -29,15 +48,6 @@ use rand::Rng;
 ///       Generate Normal Random Samples*](
 ///       https://www.doornik.com/research/ziggurat.pdf).
 ///       Nuffield College, Oxford
-///
-/// # Example
-/// ```
-/// use rand::prelude::*;
-/// use rand_distr::Exp1;
-///
-/// let val: f64 = thread_rng().sample(Exp1);
-/// println!("{}", val);
-/// ```
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Exp1;
@@ -75,12 +85,30 @@ impl Distribution<f64> for Exp1 {
     }
 }
 
-/// The exponential distribution `Exp(lambda)`.
+/// The [exponential distribution](https://en.wikipedia.org/wiki/Exponential_distribution) `Exp(λ)`.
 ///
-/// This distribution has density function: `f(x) = lambda * exp(-lambda * x)`
-/// for `x > 0`, when `lambda > 0`. For `lambda = 0`, all samples yield infinity.
+/// The exponential distribution is a continuous probability distribution
+/// with rate parameter `λ` (`lambda`). It describes the time between events
+/// in a [`Poisson`](crate::Poisson) process, i.e. a process in which
+/// events occur continuously and independently at a constant average rate.
 ///
-/// Note that [`Exp1`](crate::Exp1) is an optimised implementation for `lambda = 1`.
+/// See [`Exp1`](crate::Exp1) for an optimised implementation for `λ = 1`.
+///
+/// # Density function
+///
+/// `f(x) = λ * exp(-λ * x)` for `x > 0`, when `λ > 0`.
+///
+/// For `λ = 0`, all samples yield infinity (because a Poisson process
+/// with rate 0 has no events).
+///
+/// # Plot
+///
+/// The following plot illustrates the exponential distribution with
+/// various values of `λ`.
+/// The `λ` parameter controls the rate of decay as `x` approaches infinity,
+/// and the mean of the distribution is `1/λ`.
+///
+/// ![Exponential distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/exponential.svg)
 ///
 /// # Example
 ///
@@ -102,7 +130,7 @@ where
     lambda_inverse: F,
 }
 
-/// Error type returned from `Exp::new`.
+/// Error type returned from [`Exp::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `lambda < 0` or `nan`.

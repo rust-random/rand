@@ -20,7 +20,7 @@ use core::fmt::Debug;
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
 
-/// A distribution using weighted sampling of discrete items
+/// A distribution using weighted sampling of discrete items.
 ///
 /// Sampling a `WeightedIndex` distribution returns the index of a randomly
 /// selected element from the iterator used when the `WeightedIndex` was
@@ -35,10 +35,10 @@ use serde::{Deserialize, Serialize};
 /// Time complexity of sampling from `WeightedIndex` is `O(log N)` where
 /// `N` is the number of weights. There are two alternative implementations with
 /// different runtimes characteristics:
-/// * [`rand_distr::weighted_alias`](https://docs.rs/rand_distr/*/rand_distr/weighted_alias/index.html)
-///   supports `O(1)` sampling, but with much higher initialisation cost.
-/// * [`rand_distr::weighted_tree`](https://docs.rs/rand_distr/*/rand_distr/weighted_tree/index.html)
-///   keeps the weights in a tree structure where sampling and updating is `O(log N)`.
+/// * [`rand_distr::weighted_alias`] supports `O(1)` sampling, but with much higher
+///   initialisation cost.
+/// * [`rand_distr::weighted_tree`] keeps the weights in a tree structure where sampling
+///   and updating is `O(log N)`.
 ///
 /// A `WeightedIndex<X>` contains a `Vec<X>` and a [`Uniform<X>`] and so its
 /// size is the sum of the size of those objects, possibly plus some alignment.
@@ -80,6 +80,8 @@ use serde::{Deserialize, Serialize};
 ///
 /// [`Uniform<X>`]: crate::distributions::Uniform
 /// [`RngCore`]: crate::RngCore
+/// [`rand_distr::weighted_alias`]: https://docs.rs/rand_distr/*/rand_distr/weighted_alias/index.html
+/// [`rand_distr::weighted_tree`]: https://docs.rs/rand_distr/*/rand_distr/weighted_tree/index.html
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
@@ -700,7 +702,7 @@ mod test {
     }
 }
 
-/// Errors returned by weighted distributions
+/// Errors returned by [`WeightedIndex::new`], [`WeightedIndex::update_weights`] and other weighted distributions
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WeightError {
     /// The input weight sequence is empty, too long, or wrongly ordered

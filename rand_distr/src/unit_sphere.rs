@@ -14,6 +14,18 @@ use rand::Rng;
 ///
 /// Implemented via a method by Marsaglia[^1].
 ///
+/// For a distribution that also samples from the interior of the sphere,
+/// see [`UnitBall`](crate::UnitBall).
+///
+/// For a similar distribution in two dimensions, see [`UnitCircle`](crate::UnitCircle).
+///
+/// # Plot
+///
+/// The following plot shows the unit sphere as a wireframe.
+/// The wireframe is meant to illustrate that this distribution samples
+/// from the surface of the sphere only, not from the interior.
+///
+/// ![Unit sphere](https://raw.githubusercontent.com/rust-random/charts/main/charts/unit_sphere.svg)
 ///
 /// # Example
 ///

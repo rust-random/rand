@@ -6,14 +6,24 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The Weibull distribution.
+//! The Weibull distribution `Weibull(λ, k)`
 
 use crate::{Distribution, OpenClosed01};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-/// Samples floating-point numbers according to the Weibull distribution
+/// The [Weibull distribution](https://en.wikipedia.org/wiki/Weibull_distribution) `Weibull(λ, k)`.
+///
+/// This is a family of continuous probability distributions with
+/// scale parameter `λ` (`lambda`) and shape parameter `k`. It is used
+/// to model reliability data, life data, and accelerated life testing data.
+///
+/// # Plot
+///
+/// The following plot shows the Weibull distribution with various values of `λ` and `k`.
+///
+/// ![Weibull distribution](https://raw.githubusercontent.com/rust-random/charts/main/charts/weibull.svg)
 ///
 /// # Example
 /// ```
@@ -34,7 +44,7 @@ where
     scale: F,
 }
 
-/// Error type returned from `Weibull::new`.
+/// Error type returned from [`Weibull::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Error {
     /// `scale <= 0` or `nan`.
