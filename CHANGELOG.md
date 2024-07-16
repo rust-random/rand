@@ -17,6 +17,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Annotate panicking methods with `#[track_caller]` (#1442, #1447)
 - Enable feature `small_rng` by default (#1455)
 - Allow `UniformFloat::new` samples and `UniformFloat::sample_single` to yield `high` (#1462)
+- Added a `serde1` feature and added Serialize/Deserialize to `SmallRng` ()
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
