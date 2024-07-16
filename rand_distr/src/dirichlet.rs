@@ -333,20 +333,13 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use alloc::vec::Vec;
 
     #[test]
     fn test_dirichlet() {
         let d = Dirichlet::new([1.0, 2.0, 3.0]).unwrap();
         let mut rng = crate::test::rng(221);
         let samples = d.sample(&mut rng);
-        let _: Vec<f64> = samples
-            .into_iter()
-            .map(|x| {
-                assert!(x > 0.0);
-                x
-            })
-            .collect();
+        assert!(samples.into_iter().all(|x: f64| x > 0.0));
     }
 
     #[test]
