@@ -8,7 +8,7 @@
 
 use core::num::NonZeroUsize;
 
-use crate::distributions::{Distribution, Uniform};
+use crate::distr::{Distribution, Uniform};
 use crate::Rng;
 #[cfg(feature = "alloc")]
 use alloc::string::String;
@@ -63,7 +63,7 @@ impl UniformUsize {
 ///
 /// ```
 /// use rand::Rng;
-/// use rand::distributions::Slice;
+/// use rand::distr::Slice;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
 /// let vowels_dist = Slice::new(&vowels).unwrap();
@@ -146,10 +146,7 @@ pub struct EmptySlice;
 
 impl core::fmt::Display for EmptySlice {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(
-            f,
-            "Tried to create a `distributions::Slice` with an empty slice"
-        )
+        write!(f, "Tried to create a `distr::Slice` with an empty slice")
     }
 }
 

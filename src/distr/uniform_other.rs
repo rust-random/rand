@@ -10,7 +10,7 @@
 //! `UniformChar`, `UniformDuration` implementations
 
 use super::{Error, SampleBorrow, SampleUniform, Uniform, UniformInt, UniformSampler};
-use crate::distributions::Distribution;
+use crate::distr::Distribution;
 use crate::Rng;
 use core::time::Duration;
 
@@ -94,7 +94,7 @@ impl UniformSampler for UniformChar {
 /// includes non ascii chars; optionally the user may call
 /// `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
-impl crate::distributions::DistString for Uniform<char> {
+impl crate::distr::DistString for Uniform<char> {
     fn append_string<R: Rng + ?Sized>(
         &self,
         rng: &mut R,
@@ -281,7 +281,7 @@ mod tests {
         }
         #[cfg(feature = "alloc")]
         {
-            use crate::distributions::DistString;
+            use crate::distr::DistString;
             let string1 = d.sample_string(&mut rng, 100);
             assert_eq!(string1.capacity(), 300);
             let string2 = Uniform::new(

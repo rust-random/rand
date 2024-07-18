@@ -8,8 +8,8 @@
 
 //! Basic floating-point number distributions
 
-use crate::distributions::utils::{FloatAsSIMD, FloatSIMDUtils, IntAsSIMD};
-use crate::distributions::{Distribution, Standard};
+use crate::distr::utils::{FloatAsSIMD, FloatSIMDUtils, IntAsSIMD};
+use crate::distr::{Distribution, Standard};
 use crate::Rng;
 use core::mem;
 #[cfg(feature = "simd_support")]
@@ -33,15 +33,15 @@ use serde::{Deserialize, Serialize};
 /// # Example
 /// ```
 /// use rand::{thread_rng, Rng};
-/// use rand::distributions::OpenClosed01;
+/// use rand::distr::OpenClosed01;
 ///
 /// let val: f32 = thread_rng().sample(OpenClosed01);
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
-/// [`Standard`]: crate::distributions::Standard
-/// [`Open01`]: crate::distributions::Open01
-/// [`Uniform`]: crate::distributions::uniform::Uniform
+/// [`Standard`]: crate::distr::Standard
+/// [`Open01`]: crate::distr::Open01
+/// [`Uniform`]: crate::distr::uniform::Uniform
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct OpenClosed01;
@@ -60,15 +60,15 @@ pub struct OpenClosed01;
 /// # Example
 /// ```
 /// use rand::{thread_rng, Rng};
-/// use rand::distributions::Open01;
+/// use rand::distr::Open01;
 ///
 /// let val: f32 = thread_rng().sample(Open01);
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
-/// [`Standard`]: crate::distributions::Standard
-/// [`OpenClosed01`]: crate::distributions::OpenClosed01
-/// [`Uniform`]: crate::distributions::uniform::Uniform
+/// [`Standard`]: crate::distr::Standard
+/// [`OpenClosed01`]: crate::distr::OpenClosed01
+/// [`Uniform`]: crate::distr::uniform::Uniform
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct Open01;

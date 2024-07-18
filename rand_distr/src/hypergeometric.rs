@@ -4,7 +4,7 @@ use crate::Distribution;
 use core::fmt;
 #[allow(unused_imports)]
 use num_traits::Float;
-use rand::distributions::uniform::Uniform;
+use rand::distr::uniform::Uniform;
 use rand::Rng;
 
 #[derive(Clone, Copy, Debug, PartialEq)]

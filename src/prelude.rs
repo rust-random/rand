@@ -19,7 +19,7 @@
 //! ```
 
 #[doc(no_inline)]
-pub use crate::distributions::Distribution;
+pub use crate::distr::Distribution;
 #[cfg(feature = "small_rng")]
 #[doc(no_inline)]
 pub use crate::rngs::SmallRng;

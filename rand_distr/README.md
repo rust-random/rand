@@ -8,7 +8,7 @@
 
 Implements a full suite of random number distribution sampling routines.
 
-This crate is a superset of the [rand::distributions] module, including support
+This crate is a superset of the [rand::distr] module, including support
 for sampling from Beta, Binomial, Cauchy, ChiSquared, Dirichlet, Exponential,
 FisherF, Gamma, Geometric, Hypergeometric, InverseGaussian, LogNormal, Normal,
 Pareto, PERT, Poisson, StudentT, Triangular and Weibull distributions.  Sampling
@@ -46,7 +46,7 @@ can be enabled. (Note that any other crate depending on `num-traits` with the
 
 
 [statrs]: https://github.com/boxtown/statrs
-[rand::distributions]: https://rust-random.github.io/rand/rand/distributions/index.html
+[rand::distr]: https://rust-random.github.io/rand/rand/distr/index.html
 
 ## License
 

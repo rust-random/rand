@@ -10,7 +10,7 @@
 # except according to those terms.
 
 # This creates the tables used for distributions implemented using the
-# ziggurat algorithm in `rand::distributions;`. They are
+# ziggurat algorithm in `rand::distr;`. They are
 # (basically) the tables as used in the ZIGNOR variant (Doornik 2005).
 # They are changed rarely, so the generated file should be checked in
 # to git.

@@ -27,8 +27,8 @@
 //!
 //! ## Re-exports
 //!
-//! This crate is a super-set of the [`rand::distributions`] module. See the
-//! [`rand::distributions`] module documentation for an overview of the core
+//! This crate is a super-set of the [`rand::distr`] module. See the
+//! [`rand::distr`] module documentation for an overview of the core
 //! [`Distribution`] trait and implementations.
 //!
 //! The following are re-exported:
@@ -93,7 +93,7 @@ extern crate std;
 #[allow(unused)]
 use rand::Rng;
 
-pub use rand::distributions::{
+pub use rand::distr::{
     uniform, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01, OpenClosed01,
     Standard, Uniform,
 };
@@ -129,7 +129,7 @@ pub use self::weibull::{Error as WeibullError, Weibull};
 pub use self::zeta::{Error as ZetaError, Zeta};
 pub use self::zipf::{Error as ZipfError, Zipf};
 #[cfg(feature = "alloc")]
-pub use rand::distributions::{WeightError, WeightedIndex};
+pub use rand::distr::{WeightError, WeightedIndex};
 pub use student_t::StudentT;
 #[cfg(feature = "alloc")]
 pub use weighted_alias::WeightedAliasIndex;

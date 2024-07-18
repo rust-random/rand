@@ -27,7 +27,7 @@
 //!
 //! ```
 //! use rand::{Rng, thread_rng};
-//! use rand::distributions::Uniform;
+//! use rand::distr::Uniform;
 //!
 //! let mut rng = thread_rng();
 //! let side = Uniform::new(-10.0, 10.0).unwrap();
@@ -60,7 +60,7 @@
 //!
 //! ```
 //! use rand::prelude::*;
-//! use rand::distributions::uniform::{Uniform, SampleUniform,
+//! use rand::distr::uniform::{Uniform, SampleUniform,
 //!         UniformSampler, UniformFloat, SampleBorrow, Error};
 //!
 //! struct MyF32(f32);
@@ -97,12 +97,12 @@
 //! let x = uniform.sample(&mut thread_rng());
 //! ```
 //!
-//! [`SampleUniform`]: crate::distributions::uniform::SampleUniform
-//! [`UniformSampler`]: crate::distributions::uniform::UniformSampler
-//! [`UniformInt`]: crate::distributions::uniform::UniformInt
-//! [`UniformFloat`]: crate::distributions::uniform::UniformFloat
-//! [`UniformDuration`]: crate::distributions::uniform::UniformDuration
-//! [`SampleBorrow::borrow`]: crate::distributions::uniform::SampleBorrow::borrow
+//! [`SampleUniform`]: crate::distr::uniform::SampleUniform
+//! [`UniformSampler`]: crate::distr::uniform::UniformSampler
+//! [`UniformInt`]: crate::distr::uniform::UniformInt
+//! [`UniformFloat`]: crate::distr::uniform::UniformFloat
+//! [`UniformDuration`]: crate::distr::uniform::UniformDuration
+//! [`SampleBorrow::borrow`]: crate::distr::uniform::SampleBorrow::borrow
 
 #[path = "uniform_float.rs"]
 mod float;
@@ -122,7 +122,7 @@ pub use other::{UniformChar, UniformDuration};
 use core::fmt;
 use core::ops::{Range, RangeInclusive};
 
-use crate::distributions::Distribution;
+use crate::distr::Distribution;
 use crate::{Rng, RngCore};
 
 /// Error type returned from [`Uniform::new`] and `new_inclusive`.
@@ -175,7 +175,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use rand::distributions::{Distribution, Uniform};
+/// use rand::distr::{Distribution, Uniform};
 ///
 /// let between = Uniform::try_from(10..10000).unwrap();
 /// let mut rng = rand::thread_rng();
@@ -252,7 +252,7 @@ impl<X: SampleUniform> Distribution<X> for Uniform<X> {
 /// See the [module documentation] on how to implement [`Uniform`] range
 /// sampling for a custom type.
 ///
-/// [module documentation]: crate::distributions::uniform
+/// [module documentation]: crate::distr::uniform
 pub trait SampleUniform: Sized {
     /// The `UniformSampler` implementation supporting type `X`.
     type Sampler: UniformSampler<X = Self>;
@@ -266,7 +266,7 @@ pub trait SampleUniform: Sized {
 /// Implementation of [`sample_single`] is optional, and is only useful when
 /// the implementation can be faster than `Self::new(low, high).sample(rng)`.
 ///
-/// [module documentation]: crate::distributions::uniform
+/// [module documentation]: crate::distr::uniform
 /// [`sample_single`]: UniformSampler::sample_single
 pub trait UniformSampler: Sized {
     /// The type sampled by this implementation.
@@ -315,7 +315,7 @@ pub trait UniformSampler: Sized {
     /// Note that to use this method in a generic context, the type needs to be
     /// retrieved via `SampleUniform::Sampler` as follows:
     /// ```
-    /// use rand::{thread_rng, distributions::uniform::{SampleUniform, UniformSampler}};
+    /// use rand::{thread_rng, distr::uniform::{SampleUniform, UniformSampler}};
     /// # #[allow(unused)]
     /// fn sample_from_range<T: SampleUniform>(lb: T, ub: T) -> T {
     ///     let mut rng = thread_rng();
@@ -460,9 +460,7 @@ mod tests {
 
     #[test]
     fn test_custom_uniform() {
-        use crate::distributions::uniform::{
-            SampleBorrow, SampleUniform, UniformFloat, UniformSampler,
-        };
+        use crate::distr::uniform::{SampleBorrow, SampleUniform, UniformFloat, UniformSampler};
         #[derive(Clone, Copy, PartialEq, PartialOrd)]
         struct MyF32 {
             x: f32,

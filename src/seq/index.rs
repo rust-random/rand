@@ -13,8 +13,8 @@ use core::{hash::Hash, ops::AddAssign};
 // BTreeMap is not as fast in tests, but better than nothing.
 #[cfg(feature = "std")]
 use super::WeightError;
-use crate::distributions::uniform::SampleUniform;
-use crate::distributions::{Distribution, Uniform};
+use crate::distr::uniform::SampleUniform;
+use crate::distr::{Distribution, Uniform};
 use crate::Rng;
 #[cfg(not(feature = "std"))]
 use alloc::collections::BTreeSet;

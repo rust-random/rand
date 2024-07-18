@@ -11,7 +11,7 @@
 use crate::{Distribution, Standard};
 use core::fmt;
 use num_traits::Float;
-use rand::{distributions::OpenClosed01, Rng};
+use rand::{distr::OpenClosed01, Rng};
 
 /// The [Zeta distribution](https://en.wikipedia.org/wiki/Zeta_distribution) `Zeta(s)`.
 ///

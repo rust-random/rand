@@ -10,8 +10,8 @@
 //! `UniformFloat` implementation
 
 use super::{Error, SampleBorrow, SampleUniform, UniformSampler};
-use crate::distributions::float::IntoFloat;
-use crate::distributions::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAsSIMD};
+use crate::distr::float::IntoFloat;
+use crate::distr::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAsSIMD};
 use crate::Rng;
 
 #[cfg(feature = "simd_support")]
@@ -40,7 +40,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// [`new`]: UniformSampler::new
 /// [`new_inclusive`]: UniformSampler::new_inclusive
-/// [`Standard`]: crate::distributions::Standard
+/// [`Standard`]: crate::distr::Standard
 /// [`Uniform`]: super::Uniform
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
@@ -215,7 +215,7 @@ uniform_float_impl! { feature = "simd_support", f64x8, u64x8, f64, u64, 64 - 52 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::distributions::{utils::FloatSIMDScalarUtils, Uniform};
+    use crate::distr::{utils::FloatSIMDScalarUtils, Uniform};
     use crate::rngs::mock::StepRng;
 
     #[test]

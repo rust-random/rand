@@ -10,9 +10,9 @@
 //! `UniformInt` implementation
 
 use super::{Error, SampleBorrow, SampleUniform, UniformSampler};
-use crate::distributions::utils::WideningMultiply;
+use crate::distr::utils::WideningMultiply;
 #[cfg(feature = "simd_support")]
-use crate::distributions::{Distribution, Standard};
+use crate::distr::{Distribution, Standard};
 use crate::Rng;
 
 #[cfg(feature = "simd_support")]
@@ -388,7 +388,7 @@ uniform_simd_int_impl! { (u8, i8), (u16, i16), (u32, i32), (u64, i64) }
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::distributions::Uniform;
+    use crate::distr::Uniform;
 
     #[test]
     fn test_uniform_bad_limits_equal_int() {

@@ -19,7 +19,7 @@
 //!
 //! Also see:
 //!
-//! *   [`crate::distributions::WeightedIndex`] distribution which provides
+//! *   [`crate::distr::WeightedIndex`] distribution which provides
 //!     weighted index sampling.
 //!
 //! In order to make results reproducible across 32-64 bit architectures, all
@@ -37,7 +37,7 @@ mod index_;
 
 #[cfg(feature = "alloc")]
 #[doc(no_inline)]
-pub use crate::distributions::WeightError;
+pub use crate::distr::WeightError;
 pub use iterator::IteratorRandom;
 #[cfg(feature = "alloc")]
 pub use slice::SliceChooseIter;
