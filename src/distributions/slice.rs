@@ -195,12 +195,13 @@ impl<'a> super::DistString for Slice<'a, char> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use core::iter;
 
     #[test]
     fn value_stability() {
         let rng = crate::test::rng(651);
         let slice = Slice::new(b"escaped emus explore extensively").unwrap();
         let expected = b"eaxee";
-        assert!(std::iter::zip(slice.sample_iter(rng), expected).all(|(a, b)| a == b));
+        assert!(iter::zip(slice.sample_iter(rng), expected).all(|(a, b)| a == b));
     }
 }

@@ -495,18 +495,18 @@ mod test {
         assert_eq!(chars.choose(&mut r), Some(&'l'));
         assert_eq!(nums.choose_mut(&mut r), Some(&mut 3));
 
+        assert_eq!(
+            &chars.choose_multiple_array(&mut r),
+            &Some(['f', 'i', 'd', 'b', 'c', 'm', 'j', 'k'])
+        );
+
         #[cfg(feature = "alloc")]
         assert_eq!(
             &chars
                 .choose_multiple(&mut r, 8)
                 .cloned()
                 .collect::<Vec<char>>(),
-            &['f', 'i', 'd', 'b', 'c', 'm', 'j', 'k']
-        );
-
-        assert_eq!(
-            &chars.choose_multiple_array(&mut r),
-            &Some(['h', 'm', 'd', 'b', 'c', 'e', 'n', 'f'])
+            &['h', 'm', 'd', 'b', 'c', 'e', 'n', 'f']
         );
 
         #[cfg(feature = "alloc")]
