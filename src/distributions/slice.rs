@@ -14,7 +14,7 @@ use crate::Rng;
 use alloc::string::String;
 
 #[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
-const _: () = assert!(false, "unsupported pointer width");
+compile_error!("unsupported pointer width");
 
 #[derive(Debug, Clone, Copy)]
 enum UniformUsize {
