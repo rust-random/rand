@@ -23,6 +23,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "std")]
 use std::collections::HashSet;
 
+#[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
+compile_error!("unsupported pointer width");
+
 /// A vector of indices.
 ///
 /// Multiple internal representations are possible.
@@ -31,6 +34,7 @@ use std::collections::HashSet;
 pub enum IndexVec {
     #[doc(hidden)]
     U32(Vec<u32>),
+    #[cfg(target_pointer_width = "64")]
     #[doc(hidden)]
     USize(Vec<usize>),
 }
@@ -41,6 +45,7 @@ impl IndexVec {
     pub fn len(&self) -> usize {
         match *self {
             IndexVec::U32(ref v) => v.len(),
+            #[cfg(target_pointer_width = "64")]
             IndexVec::USize(ref v) => v.len(),
         }
     }
@@ -50,6 +55,7 @@ impl IndexVec {
     pub fn is_empty(&self) -> bool {
         match *self {
             IndexVec::U32(ref v) => v.is_empty(),
+            #[cfg(target_pointer_width = "64")]
             IndexVec::USize(ref v) => v.is_empty(),
         }
     }
@@ -62,6 +68,7 @@ impl IndexVec {
     pub fn index(&self, index: usize) -> usize {
         match *self {
             IndexVec::U32(ref v) => v[index] as usize,
+            #[cfg(target_pointer_width = "64")]
             IndexVec::USize(ref v) => v[index],
         }
     }
@@ -71,6 +78,7 @@ impl IndexVec {
     pub fn into_vec(self) -> Vec<usize> {
         match self {
             IndexVec::U32(v) => v.into_iter().map(|i| i as usize).collect(),
+            #[cfg(target_pointer_width = "64")]
             IndexVec::USize(v) => v,
         }
     }
@@ -80,6 +88,7 @@ impl IndexVec {
     pub fn iter(&self) -> IndexVecIter<'_> {
         match *self {
             IndexVec::U32(ref v) => IndexVecIter::U32(v.iter()),
+            #[cfg(target_pointer_width = "64")]
             IndexVec::USize(ref v) => IndexVecIter::USize(v.iter()),
         }
     }
@@ -94,6 +103,7 @@ impl IntoIterator for IndexVec {
     fn into_iter(self) -> IndexVecIntoIter {
         match self {
             IndexVec::U32(v) => IndexVecIntoIter::U32(v.into_iter()),
+            #[cfg(target_pointer_width = "64")]
             IndexVec::USize(v) => IndexVecIntoIter::USize(v.into_iter()),
         }
     }
@@ -104,10 +114,13 @@ impl PartialEq for IndexVec {
         use self::IndexVec::*;
         match (self, other) {
             (U32(v1), U32(v2)) => v1 == v2,
+            #[cfg(target_pointer_width = "64")]
             (USize(v1), USize(v2)) => v1 == v2,
+            #[cfg(target_pointer_width = "64")]
             (U32(v1), USize(v2)) => {
                 (v1.len() == v2.len()) && (v1.iter().zip(v2.iter()).all(|(x, y)| *x as usize == *y))
             }
+            #[cfg(target_pointer_width = "64")]
             (USize(v1), U32(v2)) => {
                 (v1.len() == v2.len()) && (v1.iter().zip(v2.iter()).all(|(x, y)| *x == *y as usize))
             }
@@ -122,6 +135,7 @@ impl From<Vec<u32>> for IndexVec {
     }
 }
 
+#[cfg(target_pointer_width = "64")]
 impl From<Vec<usize>> for IndexVec {
     #[inline]
     fn from(v: Vec<usize>) -> Self {
@@ -225,8 +239,12 @@ where
         panic!("`amount` of samples must be less than or equal to `length`");
     }
     if length > (u32::MAX as usize) {
+        #[cfg(target_pointer_width = "32")]
+        unreachable!();
+
         // We never want to use inplace here, but could use floyd's alg
         // Lazy version: always use the cache alg.
+        #[cfg(target_pointer_width = "64")]
         return sample_rejection(rng, length, amount);
     }
     let amount = amount as u32;
@@ -285,6 +303,10 @@ where
     X: Into<f64>,
 {
     if length > (u32::MAX as usize) {
+        #[cfg(target_pointer_width = "32")]
+        unreachable!();
+
+        #[cfg(target_pointer_width = "64")]
         sample_efraimidis_spirakis(rng, length, weight, amount)
     } else {
         assert!(amount <= u32::MAX as usize);
@@ -463,6 +485,7 @@ impl UInt for u32 {
     }
 }
 
+#[cfg(target_pointer_width = "64")]
 impl UInt for usize {
     #[inline]
     fn zero() -> Self {
@@ -521,20 +544,10 @@ mod test {
     #[test]
     #[cfg(feature = "serde")]
     fn test_serialization_index_vec() {
-        let some_index_vec = IndexVec::from(vec![254_usize, 234, 2, 1]);
+        let some_index_vec = IndexVec::from(vec![254_u32, 234, 2, 1]);
         let de_some_index_vec: IndexVec =
             bincode::deserialize(&bincode::serialize(&some_index_vec).unwrap()).unwrap();
-        match (some_index_vec, de_some_index_vec) {
-            (IndexVec::U32(a), IndexVec::U32(b)) => {
-                assert_eq!(a, b);
-            }
-            (IndexVec::USize(a), IndexVec::USize(b)) => {
-                assert_eq!(a, b);
-            }
-            _ => {
-                panic!("failed to seralize/deserialize `IndexVec`")
-            }
-        }
+        assert_eq!(some_index_vec, de_some_index_vec);
     }
 
     #[test]
@@ -610,7 +623,7 @@ mod test {
                         assert!((i as usize) < len);
                     }
                 }
-                IndexVec::USize(_) => panic!("expected `IndexVec::U32`"),
+                _ => panic!("expected `IndexVec::U32`"),
             }
         }
 
