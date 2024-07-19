@@ -53,7 +53,11 @@ fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
     if ubound <= (u32::MAX as usize) {
         rng.gen_range(0..ubound as u32) as usize
     } else {
-        rng.gen_range(0..ubound)
+        #[cfg(target_pointer_width = "32")]
+        unreachable!();
+
+        #[cfg(target_pointer_width = "64")]
+        return rng.gen_range(0..ubound as u64) as usize;
     }
 }
 
