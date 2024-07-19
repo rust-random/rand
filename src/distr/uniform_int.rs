@@ -258,12 +258,10 @@ uniform_int_impl! { i16, u16, u32 }
 uniform_int_impl! { i32, u32, u32 }
 uniform_int_impl! { i64, u64, u64 }
 uniform_int_impl! { i128, u128, u128 }
-uniform_int_impl! { isize, usize, usize }
 uniform_int_impl! { u8, u8, u32 }
 uniform_int_impl! { u16, u16, u32 }
 uniform_int_impl! { u32, u32, u32 }
 uniform_int_impl! { u64, u64, u64 }
-uniform_int_impl! { usize, usize, usize }
 uniform_int_impl! { u128, u128, u128 }
 
 #[cfg(feature = "simd_support")]
@@ -476,7 +474,7 @@ mod tests {
                 );)*
             }};
         }
-        t!(i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, i128, u128);
+        t!(i8, i16, i32, i64, u8, u16, u32, u64, i128, u128);
 
         #[cfg(feature = "simd_support")]
         {
