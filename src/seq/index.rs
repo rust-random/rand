@@ -36,7 +36,7 @@ pub enum IndexVec {
     U32(Vec<u32>),
     #[cfg(target_pointer_width = "64")]
     #[doc(hidden)]
-    USize(Vec<usize>),
+    U64(Vec<u64>),
 }
 
 impl IndexVec {
@@ -46,7 +46,7 @@ impl IndexVec {
         match *self {
             IndexVec::U32(ref v) => v.len(),
             #[cfg(target_pointer_width = "64")]
-            IndexVec::USize(ref v) => v.len(),
+            IndexVec::U64(ref v) => v.len(),
         }
     }
 
@@ -56,7 +56,7 @@ impl IndexVec {
         match *self {
             IndexVec::U32(ref v) => v.is_empty(),
             #[cfg(target_pointer_width = "64")]
-            IndexVec::USize(ref v) => v.is_empty(),
+            IndexVec::U64(ref v) => v.is_empty(),
         }
     }
 
@@ -69,7 +69,7 @@ impl IndexVec {
         match *self {
             IndexVec::U32(ref v) => v[index] as usize,
             #[cfg(target_pointer_width = "64")]
-            IndexVec::USize(ref v) => v[index],
+            IndexVec::U64(ref v) => v[index] as usize,
         }
     }
 
@@ -79,7 +79,7 @@ impl IndexVec {
         match self {
             IndexVec::U32(v) => v.into_iter().map(|i| i as usize).collect(),
             #[cfg(target_pointer_width = "64")]
-            IndexVec::USize(v) => v,
+            IndexVec::U64(v) => v.into_iter().map(|i| i as usize).collect(),
         }
     }
 
@@ -89,7 +89,7 @@ impl IndexVec {
         match *self {
             IndexVec::U32(ref v) => IndexVecIter::U32(v.iter()),
             #[cfg(target_pointer_width = "64")]
-            IndexVec::USize(ref v) => IndexVecIter::USize(v.iter()),
+            IndexVec::U64(ref v) => IndexVecIter::U64(v.iter()),
         }
     }
 }
@@ -104,7 +104,7 @@ impl IntoIterator for IndexVec {
         match self {
             IndexVec::U32(v) => IndexVecIntoIter::U32(v.into_iter()),
             #[cfg(target_pointer_width = "64")]
-            IndexVec::USize(v) => IndexVecIntoIter::USize(v.into_iter()),
+            IndexVec::U64(v) => IndexVecIntoIter::U64(v.into_iter()),
         }
     }
 }
@@ -115,14 +115,14 @@ impl PartialEq for IndexVec {
         match (self, other) {
             (U32(v1), U32(v2)) => v1 == v2,
             #[cfg(target_pointer_width = "64")]
-            (USize(v1), USize(v2)) => v1 == v2,
+            (U64(v1), U64(v2)) => v1 == v2,
             #[cfg(target_pointer_width = "64")]
-            (U32(v1), USize(v2)) => {
-                (v1.len() == v2.len()) && (v1.iter().zip(v2.iter()).all(|(x, y)| *x as usize == *y))
+            (U32(v1), U64(v2)) => {
+                (v1.len() == v2.len()) && (v1.iter().zip(v2.iter()).all(|(x, y)| *x as u64 == *y))
             }
             #[cfg(target_pointer_width = "64")]
-            (USize(v1), U32(v2)) => {
-                (v1.len() == v2.len()) && (v1.iter().zip(v2.iter()).all(|(x, y)| *x == *y as usize))
+            (U64(v1), U32(v2)) => {
+                (v1.len() == v2.len()) && (v1.iter().zip(v2.iter()).all(|(x, y)| *x == *y as u64))
             }
         }
     }
@@ -136,10 +136,10 @@ impl From<Vec<u32>> for IndexVec {
 }
 
 #[cfg(target_pointer_width = "64")]
-impl From<Vec<usize>> for IndexVec {
+impl From<Vec<u64>> for IndexVec {
     #[inline]
-    fn from(v: Vec<usize>) -> Self {
-        IndexVec::USize(v)
+    fn from(v: Vec<u64>) -> Self {
+        IndexVec::U64(v)
     }
 }
 
@@ -149,7 +149,7 @@ pub enum IndexVecIter<'a> {
     #[doc(hidden)]
     U32(slice::Iter<'a, u32>),
     #[doc(hidden)]
-    USize(slice::Iter<'a, usize>),
+    U64(slice::Iter<'a, u64>),
 }
 
 impl<'a> Iterator for IndexVecIter<'a> {
@@ -160,7 +160,7 @@ impl<'a> Iterator for IndexVecIter<'a> {
         use self::IndexVecIter::*;
         match *self {
             U32(ref mut iter) => iter.next().map(|i| *i as usize),
-            USize(ref mut iter) => iter.next().cloned(),
+            U64(ref mut iter) => iter.next().map(|i| *i as usize),
         }
     }
 
@@ -168,7 +168,7 @@ impl<'a> Iterator for IndexVecIter<'a> {
     fn size_hint(&self) -> (usize, Option<usize>) {
         match *self {
             IndexVecIter::U32(ref v) => v.size_hint(),
-            IndexVecIter::USize(ref v) => v.size_hint(),
+            IndexVecIter::U64(ref v) => v.size_hint(),
         }
     }
 }
@@ -181,7 +181,7 @@ pub enum IndexVecIntoIter {
     #[doc(hidden)]
     U32(vec::IntoIter<u32>),
     #[doc(hidden)]
-    USize(vec::IntoIter<usize>),
+    U64(vec::IntoIter<u64>),
 }
 
 impl Iterator for IndexVecIntoIter {
@@ -192,7 +192,7 @@ impl Iterator for IndexVecIntoIter {
         use self::IndexVecIntoIter::*;
         match *self {
             U32(ref mut v) => v.next().map(|i| i as usize),
-            USize(ref mut v) => v.next(),
+            U64(ref mut v) => v.next().map(|i| i as usize),
         }
     }
 
@@ -201,7 +201,7 @@ impl Iterator for IndexVecIntoIter {
         use self::IndexVecIntoIter::*;
         match *self {
             U32(ref v) => v.size_hint(),
-            USize(ref v) => v.size_hint(),
+            U64(ref v) => v.size_hint(),
         }
     }
 }
@@ -245,7 +245,7 @@ where
         // We never want to use inplace here, but could use floyd's alg
         // Lazy version: always use the cache alg.
         #[cfg(target_pointer_width = "64")]
-        return sample_rejection(rng, length, amount);
+        return sample_rejection(rng, length as u64, amount as u64);
     }
     let amount = amount as u32;
     let length = length as u32;
@@ -307,7 +307,11 @@ where
         unreachable!();
 
         #[cfg(target_pointer_width = "64")]
-        sample_efraimidis_spirakis(rng, length, weight, amount)
+        {
+            let amount = amount as u64;
+            let length = length as u64;
+            sample_efraimidis_spirakis(rng, length, weight, amount)
+        }
     } else {
         assert!(amount <= u32::MAX as usize);
         let amount = amount as u32;
@@ -486,7 +490,7 @@ impl UInt for u32 {
 }
 
 #[cfg(target_pointer_width = "64")]
-impl UInt for usize {
+impl UInt for u64 {
     #[inline]
     fn zero() -> Self {
         0
@@ -499,7 +503,7 @@ impl UInt for usize {
 
     #[inline]
     fn as_usize(self) -> usize {
-        self
+        self as usize
     }
 }
 
