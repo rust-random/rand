@@ -419,7 +419,7 @@ pub trait SeedableRng: Sized {
 
     /// Create a new PRNG seeded from a potentially fallible `Rng`.
     ///
-    /// See [`from_rng`][SeedableRng::from_rng] docs for more infromation.
+    /// See [`from_rng`][SeedableRng::from_rng] docs for more information.
     fn try_from_rng<R: TryRngCore>(mut rng: R) -> Result<Self, R::Error> {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;

@@ -15,7 +15,7 @@
 ///
 /// # Panics
 ///
-/// If `dst` has insufficent space (`4*dst.len() < src.len()`).
+/// If `dst` has insufficient space (`4*dst.len() < src.len()`).
 #[inline]
 #[track_caller]
 pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
@@ -29,7 +29,7 @@ pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
 ///
 /// # Panics
 ///
-/// If `dst` has insufficent space (`8*dst.len() < src.len()`).
+/// If `dst` has insufficient space (`8*dst.len() < src.len()`).
 #[inline]
 #[track_caller]
 pub fn read_u64_into(src: &[u8], dst: &mut [u64]) {
