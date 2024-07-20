@@ -189,7 +189,7 @@ where
     }
 }
 
-/// Implement `Distribution<(A, B, C, ...)> for Standard, using the list of
+/// Implement `Distribution<(A, B, C, ...)> for Standard`, using the list of
 /// identifiers
 macro_rules! tuple_impl {
     ($($tyvar:ident)*) => {

@@ -276,7 +276,7 @@ impl<R: CryptoBlockRng + BlockRngCore<Item = u32>> CryptoRng for BlockRng<R> {}
 /// then the other half is then consumed, however both [`next_u64`] and
 /// [`fill_bytes`] discard the rest of any half-consumed `u64`s when called.
 ///
-/// [`fill_bytes`] `] consume a whole number of `u64` values. If the requested length
+/// [`fill_bytes`] consumes a whole number of `u64` values. If the requested length
 /// is not a multiple of 8, some bytes will be discarded.
 ///
 /// [`next_u32`]: RngCore::next_u32

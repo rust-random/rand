@@ -371,8 +371,8 @@ impl<X: SampleUniform> TryFrom<RangeInclusive<X>> for Uniform<X> {
 }
 
 /// Helper trait similar to [`Borrow`] but implemented
-/// only for SampleUniform and references to SampleUniform in
-/// order to resolve ambiguity issues.
+/// only for [`SampleUniform`] and references to [`SampleUniform`]
+/// in order to resolve ambiguity issues.
 ///
 /// [`Borrow`]: std::borrow::Borrow
 pub trait SampleBorrow<Borrowed> {

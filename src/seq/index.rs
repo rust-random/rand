@@ -339,7 +339,7 @@ where
 /// which will be called once for each index.
 ///
 /// This implementation uses the algorithm described by Efraimidis and Spirakis
-/// in this paper: https://doi.org/10.1016/j.ipl.2005.11.003
+/// in this paper: <https://doi.org/10.1016/j.ipl.2005.11.003>
 /// It uses `O(length + amount)` space and `O(length)` time.
 ///
 /// Error cases:
