@@ -17,7 +17,7 @@
 //! To get you started quickly, the easiest and highest-level way to get
 //! a random value is to use [`random()`]; alternatively you can use
 //! [`thread_rng()`]. The [`Rng`] trait provides a useful API on all RNGs, while
-//! the [`distributions`] and [`seq`] modules provide further
+//! the [`distr`] and [`seq`] modules provide further
 //! functionality on top of RNGs.
 //!
 //! ```
@@ -97,7 +97,7 @@ macro_rules! error { ($($x:tt)*) => (
 pub use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 
 // Public modules
-pub mod distributions;
+pub mod distr;
 pub mod prelude;
 mod rng;
 pub mod rngs;
@@ -109,7 +109,7 @@ pub use crate::rngs::thread::thread_rng;
 pub use rng::{Fill, Rng};
 
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-use crate::distributions::{Distribution, Standard};
+use crate::distr::{Distribution, Standard};
 
 /// Generates a random value using the thread-local random number generator.
 ///
@@ -153,7 +153,7 @@ use crate::distributions::{Distribution, Standard};
 /// }
 /// ```
 ///
-/// [`Standard`]: distributions::Standard
+/// [`Standard`]: distr::Standard
 /// [`ThreadRng`]: rngs::ThreadRng
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 #[inline]

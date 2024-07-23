@@ -49,7 +49,7 @@ pub trait Distribution<T> {
     ///
     /// ```
     /// use rand::thread_rng;
-    /// use rand::distributions::{Distribution, Alphanumeric, Uniform, Standard};
+    /// use rand::distr::{Distribution, Alphanumeric, Uniform, Standard};
     ///
     /// let mut rng = thread_rng();
     ///
@@ -89,7 +89,7 @@ pub trait Distribution<T> {
     ///
     /// ```
     /// use rand::thread_rng;
-    /// use rand::distributions::{Distribution, Uniform};
+    /// use rand::distr::{Distribution, Uniform};
     ///
     /// let mut rng = thread_rng();
     ///
@@ -201,12 +201,12 @@ pub trait DistString {
 
 #[cfg(test)]
 mod tests {
-    use crate::distributions::{Distribution, Uniform};
+    use crate::distr::{Distribution, Uniform};
     use crate::Rng;
 
     #[test]
     fn test_distributions_iter() {
-        use crate::distributions::Open01;
+        use crate::distr::Open01;
         let mut rng = crate::test::rng(210);
         let distr = Open01;
         let mut iter = Distribution::<f32>::sample_iter(distr, &mut rng);
@@ -248,7 +248,7 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn test_dist_string() {
-        use crate::distributions::{Alphanumeric, DistString, Standard};
+        use crate::distr::{Alphanumeric, DistString, Standard};
         use core::str;
         let mut rng = crate::test::rng(213);
 

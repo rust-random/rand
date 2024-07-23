@@ -10,7 +10,7 @@
 
 use crate::ziggurat_tables;
 use num_traits::Float;
-use rand::distributions::hidden_export::IntoFloat;
+use rand::distr::hidden_export::IntoFloat;
 use rand::Rng;
 
 /// Calculates ln(gamma(x)) (natural logarithm of the gamma

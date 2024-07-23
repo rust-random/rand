@@ -14,8 +14,8 @@ use core::char;
 use core::num::Wrapping;
 
 #[cfg(feature = "alloc")]
-use crate::distributions::DistString;
-use crate::distributions::{Distribution, Standard, Uniform};
+use crate::distr::DistString;
+use crate::distr::{Distribution, Standard, Uniform};
 use crate::Rng;
 
 use core::mem::{self, MaybeUninit};
@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ```
 /// use rand::{Rng, thread_rng};
-/// use rand::distributions::Alphanumeric;
+/// use rand::distr::Alphanumeric;
 ///
 /// let mut rng = thread_rng();
 /// let chars: String = (0..7).map(|_| rng.sample(Alphanumeric) as char).collect();
@@ -45,7 +45,7 @@ use serde::{Deserialize, Serialize};
 /// The [`DistString`] trait provides an easier method of generating
 /// a random `String`, and offers more efficient allocation:
 /// ```
-/// use rand::distributions::{Alphanumeric, DistString};
+/// use rand::distr::{Alphanumeric, DistString};
 /// let string = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
 /// println!("Random string: {}", string);
 /// ```

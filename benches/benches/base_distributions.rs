@@ -16,8 +16,8 @@ extern crate test;
 
 const RAND_BENCH_N: u64 = 1000;
 
-use rand::distributions::{Alphanumeric, Open01, OpenClosed01, Standard, Uniform};
-use rand::distributions::uniform::{UniformInt, UniformSampler};
+use rand::distr::{Alphanumeric, Open01, OpenClosed01, Standard, Uniform};
+use rand::distr::uniform::{UniformInt, UniformSampler};
 use core::mem::size_of;
 use core::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
 use core::time::Duration;
@@ -253,7 +253,7 @@ gen_range_float!(gen_range_f32, f32, -20000.0f32, 100000.0);
 gen_range_float!(gen_range_f64, f64, 123.456f64, 7890.12);
 
 
-// In src/distributions/uniform.rs, we say:
+// In src/distr/uniform.rs, we say:
 // Implementation of [`uniform_single`] is optional, and is only useful when
 // the implementation can be faster than `Self::new(low, high).sample(rng)`.
 

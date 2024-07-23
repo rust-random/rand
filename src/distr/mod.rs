@@ -172,7 +172,7 @@ use crate::Rng;
 /// ```
 /// # #![allow(dead_code)]
 /// use rand::Rng;
-/// use rand::distributions::{Distribution, Standard};
+/// use rand::distr::{Distribution, Standard};
 ///
 /// struct MyF32 {
 ///     x: f32,
@@ -188,7 +188,7 @@ use crate::Rng;
 /// ## Example usage
 /// ```
 /// use rand::prelude::*;
-/// use rand::distributions::Standard;
+/// use rand::distr::Standard;
 ///
 /// let val: f32 = StdRng::from_os_rng().sample(Standard);
 /// println!("f32 from [0, 1): {}", val);

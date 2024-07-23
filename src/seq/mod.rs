@@ -19,7 +19,7 @@
 //!
 //! Also see:
 //!
-//! *   [`crate::distributions::WeightedIndex`] distribution which provides
+//! *   [`crate::distr::WeightedIndex`] distribution which provides
 //!     weighted index sampling.
 //!
 //! In order to make results reproducible across 32-64 bit architectures, all
@@ -31,11 +31,13 @@ mod increasing_uniform;
 mod iterator;
 mod slice;
 
-pub mod index;
+#[cfg(feature = "alloc")]
+#[path = "index.rs"]
+mod index_;
 
 #[cfg(feature = "alloc")]
 #[doc(no_inline)]
-pub use crate::distributions::WeightError;
+pub use crate::distr::WeightError;
 pub use iterator::IteratorRandom;
 #[cfg(feature = "alloc")]
 pub use slice::SliceChooseIter;
@@ -52,5 +54,42 @@ fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
         rng.gen_range(0..ubound as u32) as usize
     } else {
         rng.gen_range(0..ubound)
+    }
+}
+
+/// Low-level API for sampling indices
+pub mod index {
+    use super::gen_index;
+    use crate::Rng;
+
+    #[cfg(feature = "alloc")]
+    #[doc(inline)]
+    pub use super::index_::*;
+
+    /// Randomly sample exactly `N` distinct indices from `0..len`, and
+    /// return them in random order (fully shuffled).
+    ///
+    /// This is implemented via Floyd's algorithm. Time complexity is `O(N^2)`
+    /// and memory complexity is `O(N)`.
+    ///
+    /// Returns `None` if (and only if) `N > len`.
+    pub fn sample_array<R, const N: usize>(rng: &mut R, len: usize) -> Option<[usize; N]>
+    where
+        R: Rng + ?Sized,
+    {
+        if N > len {
+            return None;
+        }
+
+        // Floyd's algorithm
+        let mut indices = [0; N];
+        for (i, j) in (len - N..len).enumerate() {
+            let t = gen_index(rng, j + 1);
+            if let Some(pos) = indices[0..i].iter().position(|&x| x == t) {
+                indices[pos] = j;
+            }
+            indices[i] = t;
+        }
+        Some(indices)
     }
 }

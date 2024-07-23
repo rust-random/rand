@@ -38,7 +38,7 @@
 //! over BATCH_SIZE trials. Manually batching also turns out to be faster
 //! for the nondeterministic version of this program as well.
 
-use rand::distributions::{Distribution, Uniform};
+use rand::distr::{Distribution, Uniform};
 use rand_chacha::{rand_core::SeedableRng, ChaCha8Rng};
 use rayon::prelude::*;
 

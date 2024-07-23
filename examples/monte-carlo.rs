@@ -23,7 +23,7 @@
 //! We can use the above fact to estimate the value of π: pick many points in
 //! the square at random, calculate the fraction that fall within the circle,
 //! and multiply this fraction by 4.
-use rand::distributions::{Distribution, Uniform};
+use rand::distr::{Distribution, Uniform};
 
 fn main() {
     let range = Uniform::new(-1.0f64, 1.0).unwrap();

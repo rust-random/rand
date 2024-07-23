@@ -17,7 +17,7 @@ A Rust library for random number generation, featuring:
     ([see the book](https://rust-random.github.io/book/crates.html))
 -   Fast implementations of the best-in-class [cryptographic](https://rust-random.github.io/book/guide-rngs.html#cryptographically-secure-pseudo-random-number-generators-csprngs) and
     [non-cryptographic](https://rust-random.github.io/book/guide-rngs.html#basic-pseudo-random-number-generators-prngs) generators
--   A flexible [`distributions`](https://docs.rs/rand/*/rand/distributions/index.html) module
+-   A flexible [`distributions`](https://docs.rs/rand/*/rand/distr/index.html) module
 -   Samplers for a large number of random number distributions via our own
     [`rand_distr`](https://docs.rs/rand_distr) and via
     the [`statrs`](https://docs.rs/statrs/0.13.0/statrs/)

@@ -14,8 +14,8 @@ use core::ops::SubAssign;
 use super::WeightError;
 use crate::Distribution;
 use alloc::vec::Vec;
-use rand::distributions::uniform::{SampleBorrow, SampleUniform};
-use rand::distributions::Weight;
+use rand::distr::uniform::{SampleBorrow, SampleUniform};
+use rand::distr::Weight;
 use rand::Rng;
 #[cfg(feature = "serde1")]
 use serde::{Deserialize, Serialize};
@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Key differences
 ///
-/// The main distinction between [`WeightedTreeIndex<W>`] and [`rand::distributions::WeightedIndex<W>`]
+/// The main distinction between [`WeightedTreeIndex<W>`] and [`rand::distr::WeightedIndex<W>`]
 /// lies in the internal representation of weights. In [`WeightedTreeIndex<W>`],
 /// weights are structured as a tree, which is optimized for frequent updates of the weights.
 ///

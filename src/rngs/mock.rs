@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 /// Other integer types (64-bit and smaller) are produced via cast from `u64`.
 ///
 /// Other types are produced via their implementation of [`Rng`](crate::Rng) or
-/// [`Distribution`](crate::distributions::Distribution).
+/// [`Distribution`](crate::distr::Distribution).
 /// Output values may not be intuitive and may change in future releases but
 /// are considered
 /// [portable](https://rust-random.github.io/book/portability.html).
@@ -95,7 +95,7 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn test_bool() {
-        use crate::{distributions::Standard, Rng};
+        use crate::{distr::Standard, Rng};
 
         // If this result ever changes, update doc on StepRng!
         let rng = StepRng::new(0, 1 << 31);

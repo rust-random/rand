@@ -10,7 +10,7 @@
 
 extern crate test;
 
-use rand::distributions::WeightedIndex;
+use rand::distr::WeightedIndex;
 use rand::Rng;
 use test::Bencher;
 

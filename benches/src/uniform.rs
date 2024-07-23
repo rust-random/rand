@@ -10,7 +10,7 @@
 
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use rand::distributions::uniform::{SampleRange, Uniform};
+use rand::distr::uniform::{SampleRange, Uniform};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use rand_pcg::{Pcg32, Pcg64};
