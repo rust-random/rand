@@ -10,10 +10,10 @@
 
 use rand_core::{RngCore, SeedableRng};
 
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "16"))]
+type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 #[cfg(target_pointer_width = "64")]
 type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
-#[cfg(not(target_pointer_width = "64"))]
-type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
 
 /// A small-state, fast, non-crypto, non-portable PRNG
 ///
