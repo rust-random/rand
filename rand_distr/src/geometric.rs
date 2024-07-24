@@ -39,7 +39,7 @@ use rand::Rng;
 /// println!("{} is from a Geometric(0.25) distribution", v);
 /// ```
 #[derive(Copy, Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Geometric {
     p: f64,
     pi: f64,
@@ -176,7 +176,7 @@ impl Distribution<u64> for Geometric {
 /// Implemented via iterated
 /// [`Rng::gen::<u64>().leading_zeros()`](Rng::gen::<u64>().leading_zeros()).
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StandardGeometric;
 
 impl Distribution<u64> for StandardGeometric {

@@ -19,7 +19,7 @@ use core::simd::prelude::*;
 // #[cfg(feature = "simd_support")]
 // use core::simd::{LaneCount, SupportedLaneCount};
 
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// The back-end implementing [`UniformSampler`] for floating-point types.
@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 /// [`Standard`]: crate::distr::Standard
 /// [`Uniform`]: super::Uniform
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UniformFloat<X> {
     low: X,
     scale: X,

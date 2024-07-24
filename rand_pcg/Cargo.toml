@@ -20,7 +20,7 @@ all-features = true
 rustdoc-args = ["--generate-link-to-definition"]
 
 [features]
-serde1 = ["serde"]
+serde = ["dep:serde"]
 getrandom = ["rand_core/getrandom"]
 
 [dependencies]

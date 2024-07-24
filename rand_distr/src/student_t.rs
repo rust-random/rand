@@ -13,7 +13,7 @@ use crate::{ChiSquared, ChiSquaredError};
 use crate::{Distribution, Exp1, Open01, StandardNormal};
 use num_traits::Float;
 use rand::Rng;
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// The [Student t-distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution) `t(ν)`.
@@ -46,7 +46,7 @@ use serde::{Deserialize, Serialize};
 /// println!("{} is from a t(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct StudentT<F>
 where
     F: Float,

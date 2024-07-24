@@ -67,7 +67,7 @@ problems where one crate implicitly requires `rand_core` with `std` support and
 another crate requires `rand` *without* `std` support. However, the `rand` crate
 continues to enable `std` support by default, both for itself and `rand_core`.
 
-The `serde1` feature can be used to derive `Serialize` and `Deserialize` for RNG
+The `serde` feature can be used to derive `Serialize` and `Deserialize` for RNG
 implementations that use the `BlockRng` or `BlockRng64` wrappers.
 
 

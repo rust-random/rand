@@ -35,7 +35,7 @@ use rand::Rng;
 /// println!("{:?} is from the unit Disc.", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnitDisc;
 
 impl<F: Float + SampleUniform> Distribution<[F; 2]> for UnitDisc {

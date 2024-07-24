@@ -9,7 +9,7 @@
 use rand_core::impls::{fill_bytes_via_next, next_u64_via_u32};
 use rand_core::le::read_u32_into;
 use rand_core::{RngCore, SeedableRng};
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// A xoshiro128++ random number generator.
@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 /// reference source code](http://xoshiro.di.unimi.it/xoshiro128plusplus.c) by
 /// David Blackman and Sebastiano Vigna.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Xoshiro128PlusPlus {
     s: [u32; 4],
 }

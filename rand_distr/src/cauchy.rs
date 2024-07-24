@@ -54,7 +54,7 @@ use rand::Rng;
 /// Note that at least for `f32`, results are not fully portable due to minor
 /// differences in the target system's *tan* implementation, `tanf`.
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Cauchy<F>
 where
     F: Float + FloatConst,

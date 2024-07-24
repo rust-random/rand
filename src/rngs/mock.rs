@@ -10,7 +10,7 @@
 
 use rand_core::{impls, RngCore};
 
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// A mock generator yielding very predictable output
@@ -39,7 +39,7 @@ use serde::{Deserialize, Serialize};
 /// assert_eq!(sample, [2, 3, 4]);
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct StepRng {
     v: u64,
     a: u64,
@@ -79,11 +79,11 @@ rand_core::impl_try_rng_from_rng_core!(StepRng);
 
 #[cfg(test)]
 mod tests {
-    #[cfg(any(feature = "alloc", feature = "serde1"))]
+    #[cfg(any(feature = "alloc", feature = "serde"))]
     use super::StepRng;
 
     #[test]
-    #[cfg(feature = "serde1")]
+    #[cfg(feature = "serde")]
     fn test_serialization_step_rng() {
         let some_rng = StepRng::new(42, 7);
         let de_some_rng: StepRng =

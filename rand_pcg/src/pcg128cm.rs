@@ -15,7 +15,7 @@ const MULTIPLIER: u64 = 15750249268501108917;
 
 use core::fmt;
 use rand_core::{impls, le, RngCore, SeedableRng};
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// A PCG random number generator (CM DXSM 128/64 (LCG) variant).
@@ -37,7 +37,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// [upgrading-pcg64]: https://numpy.org/doc/stable/reference/random/upgrading-pcg64.html
 #[derive(Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Lcg128CmDxsm64 {
     state: u128,
     increment: u128,

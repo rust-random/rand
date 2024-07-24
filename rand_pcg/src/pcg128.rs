@@ -15,7 +15,7 @@ const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
 use core::fmt;
 use rand_core::{impls, le, RngCore, SeedableRng};
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// A PCG random number generator (XSL RR 128/64 (LCG) variant).
@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 /// Note that two generators with different stream parameters may be closely
 /// correlated.
 #[derive(Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Lcg128Xsl64 {
     state: u128,
     increment: u128,
@@ -166,7 +166,7 @@ impl RngCore for Lcg128Xsl64 {
 /// output function), this RNG is faster, also has a long cycle, and still has
 /// good performance on statistical tests.
 #[derive(Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Mcg128Xsl64 {
     state: u128,
 }
