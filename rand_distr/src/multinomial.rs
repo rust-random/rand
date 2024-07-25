@@ -9,8 +9,6 @@
 
 //! The multinomial distribution.
 
-use core::usize;
-
 use crate::{Binomial, Distribution};
 use num_traits::AsPrimitive;
 use rand::Rng;
@@ -73,11 +71,11 @@ impl Multinomial {
             return Err(Error::SumZero);
         }
 
-        return Ok(MultinomialConst::<K, I> {
+        Ok(MultinomialConst::<K, I> {
             n,
-            weights: weights,
+            weights,
             sum,
-        });
+        })
     }
 
     #[cfg(feature = "alloc")]
@@ -105,11 +103,11 @@ impl Multinomial {
             return Err(Error::SumZero);
         }
 
-        return Ok(MultinomialDyn::<I> {
+        Ok(MultinomialDyn::<I> {
             n,
-            weights: weights,
+            weights,
             sum,
-        });
+        })
     }
 }
 /// Multinomial Distribution with compile time known number of categories.
@@ -138,7 +136,7 @@ pub struct MultinomialDyn<'a, I> {
 }
 
 /// sum has to be the sum of the weights, this is a performance optimization
-fn sample<R: Rng + ?Sized, I: Copy + 'static>(
+fn sample<R: Rng + ?Sized, I>(
     rng: &mut R,
     n: I,
     weights: &[f64],
