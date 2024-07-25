@@ -71,11 +71,7 @@ impl Multinomial {
             return Err(Error::SumZero);
         }
 
-        Ok(MultinomialConst::<K, I> {
-            n,
-            weights,
-            sum,
-        })
+        Ok(MultinomialConst::<K, I> { n, weights, sum })
     }
 
     #[cfg(feature = "alloc")]
@@ -103,11 +99,7 @@ impl Multinomial {
             return Err(Error::SumZero);
         }
 
-        Ok(MultinomialDyn::<I> {
-            n,
-            weights,
-            sum,
-        })
+        Ok(MultinomialDyn::<I> { n, weights, sum })
     }
 }
 /// Multinomial Distribution with compile time known number of categories.
@@ -136,13 +128,8 @@ pub struct MultinomialDyn<'a, I> {
 }
 
 /// sum has to be the sum of the weights, this is a performance optimization
-fn sample<R: Rng + ?Sized, I>(
-    rng: &mut R,
-    n: I,
-    weights: &[f64],
-    sum: f64,
-    result: &mut [I],
-) where
+fn sample<R: Rng + ?Sized, I>(rng: &mut R, n: I, weights: &[f64], sum: f64, result: &mut [I])
+where
     I: num_traits::PrimInt,
     u64: num_traits::AsPrimitive<I>,
     I: num_traits::AsPrimitive<u64>,
