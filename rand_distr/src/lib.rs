@@ -48,6 +48,7 @@
 //!   - [`Cauchy`] distribution
 //! - Related to Bernoulli trials (yes/no events, with a given probability):
 //!   - [`Binomial`] distribution
+//!   - [`Multinomial`] distribution
 //!   - [`Geometric`] distribution
 //!   - [`Hypergeometric`] distribution
 //! - Related to positive real-valued quantities that grow exponentially
@@ -116,6 +117,7 @@ pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal};
 pub use self::normal_inverse_gaussian::{
     Error as NormalInverseGaussianError, NormalInverseGaussian,
 };
+pub use self::multinomial::{Multinomial, MultinomialConst, MultinomialDyn, Error as MultinomialError};
 pub use self::pareto::{Error as ParetoError, Pareto};
 pub use self::pert::{Pert, PertBuilder, PertError};
 pub use self::poisson::{Error as PoissonError, Poisson};
@@ -207,6 +209,7 @@ mod geometric;
 mod gumbel;
 mod hypergeometric;
 mod inverse_gaussian;
+mod multinomial;
 mod normal;
 mod normal_inverse_gaussian;
 mod pareto;
