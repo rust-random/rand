@@ -113,11 +113,13 @@ pub use self::geometric::{Error as GeoError, Geometric, StandardGeometric};
 pub use self::gumbel::{Error as GumbelError, Gumbel};
 pub use self::hypergeometric::{Error as HyperGeoError, Hypergeometric};
 pub use self::inverse_gaussian::{Error as InverseGaussianError, InverseGaussian};
+#[cfg(feature = "alloc")]
+pub use self::multinomial::MultinomialDyn;
+pub use self::multinomial::{Error as MultinomialError, Multinomial, MultinomialConst};
 pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal};
 pub use self::normal_inverse_gaussian::{
     Error as NormalInverseGaussianError, NormalInverseGaussian,
 };
-pub use self::multinomial::{Multinomial, MultinomialConst, MultinomialDyn, Error as MultinomialError};
 pub use self::pareto::{Error as ParetoError, Pareto};
 pub use self::pert::{Pert, PertBuilder, PertError};
 pub use self::poisson::{Error as PoissonError, Poisson};

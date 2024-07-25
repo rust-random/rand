@@ -24,8 +24,8 @@ pub enum Error {
     SumZero,
 }
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str(match self {
             Error::ProbabilityNegative => "One of the weights is negative or Nan",
             Error::SumOverflow => "Sum of weights overflows to inf",
