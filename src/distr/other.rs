@@ -23,7 +23,7 @@ use core::mem::{self, MaybeUninit};
 use core::simd::prelude::*;
 #[cfg(feature = "simd_support")]
 use core::simd::{LaneCount, MaskElement, SupportedLaneCount};
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 // ----- Sampling distributions -----
@@ -67,7 +67,7 @@ use serde::{Deserialize, Serialize};
 /// - [Wikipedia article on Password Strength](https://en.wikipedia.org/wiki/Password_strength)
 /// - [Diceware for generating memorable passwords](https://en.wikipedia.org/wiki/Diceware)
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Alphanumeric;
 
 // ----- Implementations of distributions -----

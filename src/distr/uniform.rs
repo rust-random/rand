@@ -146,7 +146,7 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// Sample values uniformly between two bounds.
@@ -199,10 +199,10 @@ use serde::{Deserialize, Serialize};
 /// [`new_inclusive`]: Uniform::new_inclusive
 /// [`Rng::gen_range`]: Rng::gen_range
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde1", serde(bound(serialize = "X::Sampler: Serialize")))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(bound(serialize = "X::Sampler: Serialize")))]
 #[cfg_attr(
-    feature = "serde1",
+    feature = "serde",
     serde(bound(deserialize = "X::Sampler: Deserialize<'de>"))
 )]
 pub struct Uniform<X: SampleUniform>(X::Sampler);
@@ -445,7 +445,7 @@ mod tests {
     use core::time::Duration;
 
     #[test]
-    #[cfg(feature = "serde1")]
+    #[cfg(feature = "serde")]
     fn test_uniform_serialization() {
         let unit_box: Uniform<i32> = Uniform::new(-1, 1).unwrap();
         let de_unit_box: Uniform<i32> =

@@ -49,7 +49,7 @@ impl std::error::Error for Error {}
 /// println!("{} is from a normal-inverse Gaussian(2, 1) distribution", v);
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NormalInverseGaussian<F>
 where
     F: Float,

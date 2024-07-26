@@ -54,7 +54,7 @@ fn test_lcg128xsl64_reference() {
     assert_eq!(results, expected);
 }
 
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 #[test]
 fn test_lcg128xsl64_serde() {
     use bincode;

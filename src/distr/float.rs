@@ -15,7 +15,7 @@ use core::mem;
 #[cfg(feature = "simd_support")]
 use core::simd::prelude::*;
 
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// A distribution to sample floating point numbers uniformly in the half-open
@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 /// [`Open01`]: crate::distr::Open01
 /// [`Uniform`]: crate::distr::uniform::Uniform
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct OpenClosed01;
 
 /// A distribution to sample floating point numbers uniformly in the open
@@ -70,7 +70,7 @@ pub struct OpenClosed01;
 /// [`OpenClosed01`]: crate::distr::OpenClosed01
 /// [`Uniform`]: crate::distr::uniform::Uniform
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Open01;
 
 // This trait is needed by both this lib and rand_distr hence is a hidden export

@@ -15,7 +15,7 @@ use crate::{Distribution, Exp1, Gamma, Open01, StandardNormal};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// The [chi-squared distribution](https://en.wikipedia.org/wiki/Chi-squared_distribution) `χ²(k)`.
@@ -45,7 +45,7 @@ use serde::{Deserialize, Serialize};
 /// println!("{} is from a χ²(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ChiSquared<F>
 where
     F: Float,
@@ -58,7 +58,7 @@ where
 
 /// Error type returned from [`ChiSquared::new`] and [`StudentT::new`](crate::StudentT::new).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Error {
     /// `0.5 * k <= 0` or `nan`.
     DoFTooSmall,
@@ -78,7 +78,7 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 enum ChiSquaredRepr<F>
 where
     F: Float,

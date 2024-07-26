@@ -39,7 +39,7 @@ use rand::Rng;
 ///
 /// [`Pert`]: crate::Pert
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Triangular<F>
 where
     F: Float,

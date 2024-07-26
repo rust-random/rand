@@ -24,13 +24,13 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
 
 [package.metadata.playground]
-features = ["small_rng", "serde1"]
+features = ["small_rng", "serde"]
 
 [features]
 # Meta-features:
 default = ["std", "std_rng", "getrandom", "small_rng"]
 nightly = [] # some additions requiring nightly Rust
-serde1 = ["serde", "rand_core/serde1"]
+serde = ["dep:serde", "rand_core/serde"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
 # enables functionality expected to be available on a standard platform.
@@ -74,6 +74,6 @@ zerocopy = { version = "0.7.33", default-features = false, features = ["simd"] }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "=0.9.0-alpha.1" }
-# Only to test serde1
+# Only to test serde
 bincode = "1.2.1"
 rayon = "1.7"
