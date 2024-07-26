@@ -5,7 +5,7 @@ use rand::Rng;
 
 #[test]
 fn sample_index() {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rngs::mock::StepRng::new(0, 579682777108047081);
     assert!(rng.gen_index(..4) < 4);
     assert_eq!(rng.gen_index(..=0), 0);
     assert_eq!(rng.gen_index(0..1), 0);
