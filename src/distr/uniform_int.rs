@@ -383,6 +383,142 @@ macro_rules! uniform_simd_int_impl {
 #[cfg(feature = "simd_support")]
 uniform_simd_int_impl! { (u8, i8), (u16, i16), (u32, i32), (u64, i64) }
 
+/// The back-end implementing [`UniformSampler`] for `usize`.
+///
+/// # Implementation notes
+///
+/// Sampling a `usize` value is usually used in relation to the length of an
+/// array or other memory structure, thus it is reasonable to assume that the
+/// vast majority of use-cases will have a maximum size under [`u32::MAX`].
+/// In part to optimise for this use-case, but mostly to ensure that results
+/// are portable across 32-bit and 64-bit architectures (as far as is possible),
+/// this implementation will use 32-bit sampling when possible.
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UniformUsize(UniformUsizeImpl);
+
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl SampleUniform for usize {
+    type Sampler = UniformUsize;
+}
+
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UniformUsizeImpl {
+    U32(UniformInt<u32>),
+    #[cfg(target_pointer_width = "64")]
+    U64(UniformInt<u64>),
+}
+
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl UniformSampler for UniformUsize {
+    type X = usize;
+
+    #[inline] // if the range is constant, this helps LLVM to do the
+              // calculations at compile-time.
+    fn new<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        if !(low < high) {
+            return Err(Error::EmptyRange);
+        }
+
+        #[cfg(target_pointer_width = "64")]
+        if high > (u32::MAX as usize) {
+            return UniformInt::new(low as u64, high as u64)
+                .map(|ui| UniformUsize(UniformUsizeImpl::U64(ui)));
+        }
+
+        UniformInt::new(low as u32, high as u32).map(|ui| UniformUsize(UniformUsizeImpl::U32(ui)))
+    }
+
+    #[inline] // if the range is constant, this helps LLVM to do the
+              // calculations at compile-time.
+    fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        if !(low <= high) {
+            return Err(Error::EmptyRange);
+        }
+
+        #[cfg(target_pointer_width = "64")]
+        if high > (u32::MAX as usize) {
+            return UniformInt::new_inclusive(low as u64, high as u64)
+                .map(|ui| UniformUsize(UniformUsizeImpl::U64(ui)));
+        }
+
+        UniformInt::new_inclusive(low as u32, high as u32)
+            .map(|ui| UniformUsize(UniformUsizeImpl::U32(ui)))
+    }
+
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
+        match self.0 {
+            UniformUsizeImpl::U32(uu) => uu.sample(rng) as usize,
+            #[cfg(target_pointer_width = "64")]
+            UniformUsizeImpl::U64(uu) => uu.sample(rng) as usize,
+        }
+    }
+
+    #[inline]
+    fn sample_single<R: Rng + ?Sized, B1, B2>(
+        low_b: B1,
+        high_b: B2,
+        rng: &mut R,
+    ) -> Result<Self::X, Error>
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        if !(low < high) {
+            return Err(Error::EmptyRange);
+        }
+
+        #[cfg(target_pointer_width = "64")]
+        if high > (u32::MAX as usize) {
+            return UniformInt::<u64>::sample_single(low as u64, high as u64, rng)
+                .map(|x| x as usize);
+        }
+
+        UniformInt::<u32>::sample_single(low as u32, high as u32, rng).map(|x| x as usize)
+    }
+
+    #[inline]
+    fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(
+        low_b: B1,
+        high_b: B2,
+        rng: &mut R,
+    ) -> Result<Self::X, Error>
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        if !(low <= high) {
+            return Err(Error::EmptyRange);
+        }
+
+        #[cfg(target_pointer_width = "64")]
+        if high > (u32::MAX as usize) {
+            return UniformInt::<u64>::sample_single_inclusive(low as u64, high as u64, rng)
+                .map(|x| x as usize);
+        }
+
+        UniformInt::<u32>::sample_single_inclusive(low as u32, high as u32, rng).map(|x| x as usize)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

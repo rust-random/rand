@@ -19,7 +19,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Allow `UniformFloat::new` samples and `UniformFloat::sample_single` to yield `high` (#1462)
 - Fix portability of `rand::distributions::Slice` (#1469)
 - Rename `rand::distributions` to `rand::distr` (#1470)
-- Add `Rng::gen_index` (#1471)
+- Add `Rng::gen_index` and `UniformUsize` (#1471)
 - Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` and `Fill` and usage as a `WeightedAliasIndex` weight (#1471)
 
 ## [0.9.0-alpha.1] - 2024-03-18
