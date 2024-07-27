@@ -14,7 +14,7 @@ use crate::distr::Distribution;
 use crate::Rng;
 use core::time::Duration;
 
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 impl SampleUniform for char {
@@ -31,7 +31,7 @@ impl SampleUniform for char {
 /// valid Unicode code points. We must therefore avoid sampling values in this
 /// range.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UniformChar {
     sampler: UniformInt<u32>,
 }
@@ -118,14 +118,14 @@ impl crate::distr::DistString for Uniform<char> {
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UniformDuration {
     mode: UniformDurationMode,
     offset: u32,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 enum UniformDurationMode {
     Small {
         secs: u64,
@@ -251,7 +251,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg(feature = "serde1")]
+    #[cfg(feature = "serde")]
     fn test_serialization_uniform_duration() {
         let distr = UniformDuration::new(Duration::from_secs(10), Duration::from_secs(60)).unwrap();
         let de_distr: UniformDuration =

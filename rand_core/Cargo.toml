@@ -27,7 +27,7 @@ all-features = true
 [features]
 std = ["alloc", "getrandom?/std"]
 alloc = []  # enables Vec and Box support without std
-serde1 = ["serde"] # enables serde for BlockRng wrapper
+serde = ["dep:serde"] # enables serde for BlockRng wrapper
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }

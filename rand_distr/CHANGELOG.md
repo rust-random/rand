@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+- The `serde1` feature has been renamed `serde` (#1477)
+
 ### Added
 - Add plots for `rand_distr` distributions to documentation (#1434)
 - Add `PertBuilder`, fix case where mode ≅ mean (#1452)

@@ -18,7 +18,7 @@ use crate::distr::{Distribution, Uniform};
 use crate::Rng;
 #[cfg(not(feature = "std"))]
 use alloc::collections::BTreeSet;
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "std")]
 use std::collections::HashSet;
@@ -30,7 +30,7 @@ compile_error!("unsupported pointer width");
 ///
 /// Multiple internal representations are possible.
 #[derive(Clone, Debug)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum IndexVec {
     #[doc(hidden)]
     U32(Vec<u32>),
@@ -546,7 +546,7 @@ mod test {
     use alloc::vec;
 
     #[test]
-    #[cfg(feature = "serde1")]
+    #[cfg(feature = "serde")]
     fn test_serialization_index_vec() {
         let some_index_vec = IndexVec::from(vec![254_u32, 234, 2, 1]);
         let de_some_index_vec: IndexVec =

@@ -44,7 +44,7 @@ use rand::Rng;
 /// println!("{} is from a binomial distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Binomial {
     /// Number of trials.
     n: u64,

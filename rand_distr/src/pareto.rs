@@ -36,7 +36,7 @@ use rand::Rng;
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Pareto<F>
 where
     F: Float,

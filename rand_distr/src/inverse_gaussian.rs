@@ -48,7 +48,7 @@ impl std::error::Error for Error {}
 /// println!("{} is from a inverse Gaussian(1, 2) distribution", v);
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct InverseGaussian<F>
 where
     F: Float,

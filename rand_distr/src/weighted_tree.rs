@@ -17,7 +17,7 @@ use alloc::vec::Vec;
 use rand::distr::uniform::{SampleBorrow, SampleUniform};
 use rand::distr::Weight;
 use rand::Rng;
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// A distribution using weighted sampling to pick a discretely selected item.
@@ -77,13 +77,13 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// [`WeightedTreeIndex<W>`]: WeightedTreeIndex
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(
-    feature = "serde1",
+    feature = "serde",
     serde(bound(serialize = "W: Serialize, W::Sampler: Serialize"))
 )]
 #[cfg_attr(
-    feature = "serde1",
+    feature = "serde",
     serde(bound(deserialize = "W: Deserialize<'de>, W::Sampler: Deserialize<'de>"))
 )]
 #[derive(Clone, Default, Debug, PartialEq)]

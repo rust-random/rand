@@ -49,7 +49,7 @@ use rand::Rng;
 ///       https://www.doornik.com/research/ziggurat.pdf).
 ///       Nuffield College, Oxford
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Exp1;
 
 impl Distribution<f32> for Exp1 {
@@ -120,7 +120,7 @@ impl Distribution<f64> for Exp1 {
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Exp<F>
 where
     F: Float,

@@ -17,7 +17,7 @@ use core::fmt;
 use alloc::vec::Vec;
 use core::fmt::Debug;
 
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// A distribution using weighted sampling of discrete items.
@@ -83,7 +83,7 @@ use serde::{Deserialize, Serialize};
 /// [`rand_distr::weighted_alias`]: https://docs.rs/rand_distr/*/rand_distr/weighted_alias/index.html
 /// [`rand_distr::weighted_tree`]: https://docs.rs/rand_distr/*/rand_distr/weighted_tree/index.html
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
     cumulative_weights: Vec<X>,
     total_weight: X,
@@ -437,9 +437,9 @@ impl_weight_float!(f64);
 mod test {
     use super::*;
 
-    #[cfg(feature = "serde1")]
+    #[cfg(feature = "serde")]
     #[test]
-    fn test_weightedindex_serde1() {
+    fn test_weightedindex_serde() {
         let weighted_index = WeightedIndex::new([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).unwrap();
 
         let ser_weighted_index = bincode::serialize(&weighted_index).unwrap();

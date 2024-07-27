@@ -218,5 +218,5 @@ use crate::Rng;
 /// [`mask32x4`]: std::simd::mask32x4
 /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "serde1", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Standard;

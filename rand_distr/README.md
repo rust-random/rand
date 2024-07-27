@@ -35,7 +35,7 @@ can be enabled. (Note that any other crate depending on `num-traits` with the
 -   `alloc` (enabled by default): required for some distributions when not using
     `std` (in particular, `Dirichlet` and `WeightedAliasIndex`).
 -   `std_math`: see above on portability and libm
--   `serde1`: implement (de)seriaialization using `serde`
+-   `serde`: implement (de)seriaialization using `serde`
 
 ## Links
 

@@ -13,7 +13,7 @@ use crate::{ChiSquared, Distribution, Exp1, Open01, StandardNormal};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// The [Fisher F-distribution](https://en.wikipedia.org/wiki/F-distribution) `F(m, n)`.
@@ -38,7 +38,7 @@ use serde::{Deserialize, Serialize};
 /// println!("{} is from an F(2, 32) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FisherF<F>
 where
     F: Float,
@@ -55,7 +55,7 @@ where
 
 /// Error type returned from [`FisherF::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Error {
     /// `m <= 0` or `nan`.
     MTooSmall,

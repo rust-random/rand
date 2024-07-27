@@ -56,7 +56,7 @@
 use crate::impls::{fill_via_u32_chunks, fill_via_u64_chunks};
 use crate::{CryptoRng, RngCore, SeedableRng, TryRngCore};
 use core::fmt;
-#[cfg(feature = "serde1")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// A trait for RNGs which do not generate random numbers individually, but in
@@ -116,9 +116,9 @@ pub trait CryptoBlockRng: BlockRngCore {}
 /// [`next_u64`]: RngCore::next_u64
 /// [`fill_bytes`]: RngCore::fill_bytes
 #[derive(Clone)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(
-    feature = "serde1",
+    feature = "serde",
     serde(
         bound = "for<'x> R: Serialize + Deserialize<'x> + Sized, for<'x> R::Results: Serialize + Deserialize<'x>"
     )
@@ -283,7 +283,7 @@ impl<R: CryptoBlockRng + BlockRngCore<Item = u32>> CryptoRng for BlockRng<R> {}
 /// [`next_u64`]: RngCore::next_u64
 /// [`fill_bytes`]: RngCore::fill_bytes
 #[derive(Clone)]
-#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BlockRng64<R: BlockRngCore + ?Sized> {
     results: R::Results,
     index: usize,
