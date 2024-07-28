@@ -23,6 +23,10 @@ use rand::Rng;
 /// This distribution has density function:
 /// `f(k) = λ^k * exp(-λ) / k!` for `k >= 0`.
 ///
+/// # Known issues
+///
+/// See documentation of [`Poisson::new`].
+///
 /// # Plot
 ///
 /// The following plot shows the Poisson distribution with various values of `λ`.
@@ -82,6 +86,15 @@ where
 {
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
+    ///
+    /// # Known issues
+    ///
+    /// Although this method should return an [`Error`] on invalid parameters,
+    /// some (extreme) values of `lambda` are known to return a [`Poisson`]
+    /// object which hangs when [sampled](Distribution::sample).
+    /// Large (less extreme) values of `lambda` may result in successful
+    /// sampling but with reduced precision.
+    /// See [#1312](https://github.com/rust-random/rand/issues/1312).
     pub fn new(lambda: F) -> Result<Poisson<F>, Error> {
         if !lambda.is_finite() {
             return Err(Error::NonFinite);

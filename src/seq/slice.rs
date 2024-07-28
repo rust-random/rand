@@ -189,6 +189,12 @@ pub trait IndexedRandom: Index<usize> {
     /// if the "nightly" feature is enabled, or `O(length)` space and
     /// `O(length + amount * log length)` time otherwise.
     ///
+    /// # Known issues
+    ///
+    /// The algorithm currently used to implement this method loses accuracy
+    /// when small values are used for weights.
+    /// See [#1476](https://github.com/rust-random/rand/issues/1476).
+    ///
     /// # Example
     ///
     /// ```
