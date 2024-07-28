@@ -73,7 +73,8 @@ pub trait Rng: RngCore {
     /// generated.
     ///
     /// For arrays of integers, especially for those with small element types
-    /// (< 64 bit), it will likely be faster to instead use [`Rng::fill`].
+    /// (< 64 bit), it will likely be faster to instead use [`Rng::fill`],
+    /// though note that generated values will differ.
     ///
     /// ```
     /// use rand::{thread_rng, Rng};
@@ -222,6 +223,10 @@ pub trait Rng: RngCore {
     }
 
     /// Fill any type implementing [`Fill`] with random data
+    ///
+    /// This method is implemented for types which may be safely reinterpreted
+    /// as an (aligned) `[u8]` slice then filled with random data. It is often
+    /// faster than using [`Rng::random`] but not value-equivalent.
     ///
     /// The distribution is expected to be uniform with portable results, but
     /// this cannot be guaranteed for third-party implementations.
