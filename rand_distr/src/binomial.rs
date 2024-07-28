@@ -26,6 +26,10 @@ use rand::Rng;
 ///
 /// `f(k) = n!/(k! (n-k)!) p^k (1-p)^(n-k)` for `k >= 0`.
 ///
+/// # Known issues
+///
+/// See documentation of [`Binomial::new`].
+///
 /// # Plot
 ///
 /// The following plot of the binomial distribution illustrates the
@@ -54,6 +58,8 @@ pub struct Binomial {
 
 /// Error type returned from [`Binomial::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// Marked non_exhaustive to allow a new error code in the solution to #1378.
+#[non_exhaustive]
 pub enum Error {
     /// `p < 0` or `nan`.
     ProbabilityTooSmall,
@@ -76,6 +82,13 @@ impl std::error::Error for Error {}
 impl Binomial {
     /// Construct a new `Binomial` with the given shape parameters `n` (number
     /// of trials) and `p` (probability of success).
+    ///
+    /// # Known issues
+    ///
+    /// Although this method should return an [`Error`] on invalid parameters,
+    /// some (extreme) parameter combinations are known to return a [`Binomial`]
+    /// object which panics when [sampled](Distribution::sample).
+    /// See [#1378](https://github.com/rust-random/rand/issues/1378).
     pub fn new(n: u64, p: f64) -> Result<Binomial, Error> {
         if !(p >= 0.0) {
             return Err(Error::ProbabilityTooSmall);
