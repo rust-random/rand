@@ -58,6 +58,8 @@ pub struct Binomial {
 
 /// Error type returned from [`Binomial::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// Marked non_exhaustive to allow a new error code in the solution to #1378.
+#[non_exhaustive]
 pub enum Error {
     /// `p < 0` or `nan`.
     ProbabilityTooSmall,

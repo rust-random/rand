@@ -60,6 +60,8 @@ where
 
 /// Error type returned from [`Poisson::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// Marked non_exhaustive to allow a new error code in the solution to #1312.
+#[non_exhaustive]
 pub enum Error {
     /// `lambda <= 0`
     ShapeTooSmall,
