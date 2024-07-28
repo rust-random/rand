@@ -8,39 +8,10 @@
 
 use core::num::NonZeroUsize;
 
-use crate::distr::{Distribution, Uniform};
-use crate::Rng;
+use crate::distr::uniform::{UniformSampler, UniformUsize};
+use crate::distr::Distribution;
 #[cfg(feature = "alloc")]
 use alloc::string::String;
-
-#[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
-compile_error!("unsupported pointer width");
-
-#[derive(Debug, Clone, Copy)]
-enum UniformUsize {
-    U32(Uniform<u32>),
-    #[cfg(target_pointer_width = "64")]
-    U64(Uniform<u64>),
-}
-
-impl UniformUsize {
-    pub fn new(ubound: usize) -> Result<Self, super::uniform::Error> {
-        #[cfg(target_pointer_width = "64")]
-        if ubound > (u32::MAX as usize) {
-            return Uniform::new(0, ubound as u64).map(UniformUsize::U64);
-        }
-
-        Uniform::new(0, ubound as u32).map(UniformUsize::U32)
-    }
-
-    pub fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        match self {
-            UniformUsize::U32(uu) => uu.sample(rng) as usize,
-            #[cfg(target_pointer_width = "64")]
-            UniformUsize::U64(uu) => uu.sample(rng) as usize,
-        }
-    }
-}
 
 /// A distribution to sample items uniformly from a slice.
 ///
@@ -110,7 +81,7 @@ impl<'a, T> Slice<'a, T> {
 
         Ok(Self {
             slice,
-            range: UniformUsize::new(num_choices.get()).unwrap(),
+            range: UniformUsize::new(0, num_choices.get()).unwrap(),
             num_choices,
         })
     }

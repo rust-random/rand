@@ -9,7 +9,7 @@
 //! `IndexedRandom`, `IndexedMutRandom`, `SliceRandom`
 
 use super::increasing_uniform::IncreasingUniform;
-use super::{gen_index, index};
+use super::index;
 #[cfg(feature = "alloc")]
 use crate::distr::uniform::{SampleBorrow, SampleUniform};
 #[cfg(feature = "alloc")]
@@ -57,7 +57,7 @@ pub trait IndexedRandom: Index<usize> {
         if self.is_empty() {
             None
         } else {
-            Some(&self[gen_index(rng, self.len())])
+            Some(&self[rng.gen_index(..self.len())])
         }
     }
 
@@ -253,7 +253,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
             None
         } else {
             let len = self.len();
-            Some(&mut self[gen_index(rng, len)])
+            Some(&mut self[rng.gen_index(..len)])
         }
     }
 
@@ -404,7 +404,7 @@ impl<T> SliceRandom for [T] {
             }
         } else {
             for i in m..self.len() {
-                let index = gen_index(rng, i + 1);
+                let index = rng.gen_index(..i + 1);
                 self.swap(i, index);
             }
         }

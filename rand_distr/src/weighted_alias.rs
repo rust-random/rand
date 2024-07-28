@@ -359,13 +359,11 @@ macro_rules! impl_weight_for_int {
 
 impl_weight_for_float!(f64);
 impl_weight_for_float!(f32);
-impl_weight_for_int!(usize);
 impl_weight_for_int!(u128);
 impl_weight_for_int!(u64);
 impl_weight_for_int!(u32);
 impl_weight_for_int!(u16);
 impl_weight_for_int!(u8);
-impl_weight_for_int!(isize);
 impl_weight_for_int!(i128);
 impl_weight_for_int!(i64);
 impl_weight_for_int!(i32);

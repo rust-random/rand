@@ -696,7 +696,7 @@ mod test {
     #[test]
     fn overflow() {
         assert_eq!(
-            WeightedIndex::new([2, usize::MAX]),
+            WeightedIndex::new([2, u32::MAX]),
             Err(WeightError::Overflow)
         );
     }

@@ -137,6 +137,37 @@ pub trait Rng: RngCore {
         range.sample_single(self).unwrap()
     }
 
+    /// Generate a random `usize` value in the given range.
+    ///
+    /// This differs from [`Rng::gen_range`] in that the result is expected to
+    /// be portable across 32-bit and 64-bit targets. This is achieved by using
+    /// 32-bit sampling whenever possible (this also improves performance in
+    /// some benchmarks, depending on the generator).
+    ///
+    /// The `SampleIndex` trait is *intentionally* private (it not intended to
+    /// support generics externally). The trait supports types
+    /// [`RangeTo`](core::ops::RangeTo), [`Range`](core::ops::Range),
+    /// [`RangeInclusive`](core::ops::RangeInclusive) and
+    /// [`RangeToInclusive`](core::ops::RangeToInclusive) with
+    /// type parameter `Idx = usize`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    ///
+    /// let arr = ["a", "b", "c"];
+    /// println!("{}", arr[rng.gen_index(..arr.len())]);
+    ///
+    /// let _ = rng.gen_index(..=9);
+    /// ```
+    #[inline]
+    fn gen_index(&mut self, range: impl private::SampleIndex) -> usize {
+        range.sample_index(self)
+    }
+
     /// Generate values via an iterator
     ///
     /// This is a just a wrapper over [`Rng::sample_iter`] using
@@ -325,6 +356,59 @@ pub trait Rng: RngCore {
 
 impl<R: RngCore + ?Sized> Rng for R {}
 
+mod private {
+    use super::Rng;
+    use crate::distr::uniform::{UniformInt, UniformSampler};
+    use core::ops::{Range, RangeInclusive, RangeTo, RangeToInclusive};
+    pub trait SampleIndex {
+        fn sample_index<R: Rng + ?Sized>(self, rng: &mut R) -> usize;
+    }
+
+    impl SampleIndex for RangeTo<usize> {
+        #[inline]
+        fn sample_index<R: Rng + ?Sized>(self, rng: &mut R) -> usize {
+            let RangeTo { end } = self;
+            (0..end).sample_index(rng)
+        }
+    }
+
+    impl SampleIndex for Range<usize> {
+        #[inline]
+        fn sample_index<R: Rng + ?Sized>(self, rng: &mut R) -> usize {
+            let Range { start, end } = self;
+            assert!(end != 0, "cannot sample empty range");
+            (start..=end - 1).sample_index(rng)
+        }
+    }
+
+    impl SampleIndex for RangeToInclusive<usize> {
+        #[inline]
+        fn sample_index<R: Rng + ?Sized>(self, rng: &mut R) -> usize {
+            let RangeToInclusive { end } = self;
+            (0..=end).sample_index(rng)
+        }
+    }
+
+    impl SampleIndex for RangeInclusive<usize> {
+        #[inline]
+        fn sample_index<R: Rng + ?Sized>(self, rng: &mut R) -> usize {
+            let (start, end) = self.into_inner();
+            assert!(start <= end);
+            if end <= (u32::MAX as usize) {
+                UniformInt::<u32>::sample_single_inclusive(start as u32, end as u32, rng).unwrap()
+                    as usize
+            } else {
+                #[cfg(not(target_pointer_width = "64"))]
+                unreachable!();
+
+                #[cfg(target_pointer_width = "64")]
+                return UniformInt::<u64>::sample_single_inclusive(start as u64, end as u64, rng)
+                    .unwrap() as usize;
+            }
+        }
+    }
+}
+
 /// Types which may be filled with random data
 ///
 /// This trait allows arrays to be efficiently filled with random data.
@@ -407,8 +491,8 @@ macro_rules! impl_fill {
     }
 }
 
-impl_fill!(u16, u32, u64, usize, u128,);
-impl_fill!(i8, i16, i32, i64, isize, i128,);
+impl_fill!(u16, u32, u64, u128,);
+impl_fill!(i8, i16, i32, i64, i128,);
 
 impl<T, const N: usize> Fill for [T; N]
 where

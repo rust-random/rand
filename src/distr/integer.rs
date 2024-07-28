@@ -19,8 +19,8 @@ use core::arch::x86_64::__m512i;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::{__m128i, __m256i};
 use core::num::{
-    NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU128,
-    NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize,
+    NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroU128, NonZeroU16,
+    NonZeroU32, NonZeroU64, NonZeroU8,
 };
 #[cfg(feature = "simd_support")]
 use core::simd::*;
@@ -63,20 +63,6 @@ impl Distribution<u128> for Standard {
     }
 }
 
-impl Distribution<usize> for Standard {
-    #[inline]
-    #[cfg(any(target_pointer_width = "32", target_pointer_width = "16"))]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        rng.next_u32() as usize
-    }
-
-    #[inline]
-    #[cfg(target_pointer_width = "64")]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
-        rng.next_u64() as usize
-    }
-}
-
 macro_rules! impl_int_from_uint {
     ($ty:ty, $uty:ty) => {
         impl Distribution<$ty> for Standard {
@@ -93,7 +79,6 @@ impl_int_from_uint! { i16, u16 }
 impl_int_from_uint! { i32, u32 }
 impl_int_from_uint! { i64, u64 }
 impl_int_from_uint! { i128, u128 }
-impl_int_from_uint! { isize, usize }
 
 macro_rules! impl_nzint {
     ($ty:ty, $new:path) => {
@@ -114,14 +99,12 @@ impl_nzint!(NonZeroU16, NonZeroU16::new);
 impl_nzint!(NonZeroU32, NonZeroU32::new);
 impl_nzint!(NonZeroU64, NonZeroU64::new);
 impl_nzint!(NonZeroU128, NonZeroU128::new);
-impl_nzint!(NonZeroUsize, NonZeroUsize::new);
 
 impl_nzint!(NonZeroI8, NonZeroI8::new);
 impl_nzint!(NonZeroI16, NonZeroI16::new);
 impl_nzint!(NonZeroI32, NonZeroI32::new);
 impl_nzint!(NonZeroI64, NonZeroI64::new);
 impl_nzint!(NonZeroI128, NonZeroI128::new);
-impl_nzint!(NonZeroIsize, NonZeroIsize::new);
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 macro_rules! x86_intrinsic_impl {
@@ -163,7 +146,7 @@ macro_rules! simd_impl {
 }
 
 #[cfg(feature = "simd_support")]
-simd_impl!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
+simd_impl!(u8, i8, u16, i16, u32, i32, u64, i64);
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 x86_intrinsic_impl!(
@@ -191,14 +174,12 @@ mod tests {
     fn test_integers() {
         let mut rng = crate::test::rng(806);
 
-        rng.sample::<isize, _>(Standard);
         rng.sample::<i8, _>(Standard);
         rng.sample::<i16, _>(Standard);
         rng.sample::<i32, _>(Standard);
         rng.sample::<i64, _>(Standard);
         rng.sample::<i128, _>(Standard);
 
-        rng.sample::<usize, _>(Standard);
         rng.sample::<u8, _>(Standard);
         rng.sample::<u16, _>(Standard);
         rng.sample::<u32, _>(Standard);
@@ -237,17 +218,6 @@ mod tests {
                 296930161868957086625409848350820761097,
                 145644820879247630242265036535529306392,
                 111087889832015897993126088499035356354,
-            ],
-        );
-        #[cfg(any(target_pointer_width = "32", target_pointer_width = "16"))]
-        test_samples(0usize, &[2220326409, 2575017975, 2018088303]);
-        #[cfg(target_pointer_width = "64")]
-        test_samples(
-            0usize,
-            &[
-                11059617991457472009,
-                16096616328739788143,
-                1487364411147516184,
             ],
         );
 

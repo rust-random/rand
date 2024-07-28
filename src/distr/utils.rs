@@ -124,26 +124,6 @@ macro_rules! wmul_impl_large {
 }
 wmul_impl_large! { u128, 64 }
 
-macro_rules! wmul_impl_usize {
-    ($ty:ty) => {
-        impl WideningMultiply for usize {
-            type Output = (usize, usize);
-
-            #[inline(always)]
-            fn wmul(self, x: usize) -> Self::Output {
-                let (high, low) = (self as $ty).wmul(x as $ty);
-                (high as usize, low as usize)
-            }
-        }
-    };
-}
-#[cfg(target_pointer_width = "16")]
-wmul_impl_usize! { u16 }
-#[cfg(target_pointer_width = "32")]
-wmul_impl_usize! { u32 }
-#[cfg(target_pointer_width = "64")]
-wmul_impl_usize! { u64 }
-
 #[cfg(feature = "simd_support")]
 mod simd_wmul {
     use super::*;

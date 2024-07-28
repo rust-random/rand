@@ -112,7 +112,7 @@ pub use float::UniformFloat;
 #[path = "uniform_int.rs"]
 mod int;
 #[doc(inline)]
-pub use int::UniformInt;
+pub use int::{UniformInt, UniformUsize};
 
 #[path = "uniform_other.rs"]
 mod other;
