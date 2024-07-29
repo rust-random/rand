@@ -50,7 +50,8 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand = "0.8.5"
+rand = "=0.9.0-alpha.2"
+rand_distr = "=0.5.0-alpha.2"
 ```
 
 To get started using Rand, see [The Book](https://rust-random.github.io/book).

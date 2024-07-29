@@ -8,7 +8,7 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [Unreleased]
+## [0.9.0-alpha.2] - 2024-07-29
 - Add `rand::distributions::WeightedIndex::{weight, weights, total_weight}` (#1420)
 - Add `IndexedRandom::choose_multiple_array`, `index::sample_array` (#1453, #1469)
 - Bump the MSRV to 1.61.0
