@@ -704,6 +704,8 @@ mod test {
 
 /// Errors returned by [`WeightedIndex::new`], [`WeightedIndex::update_weights`] and other weighted distributions
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// Marked non_exhaustive to allow a new error code in the solution to #1476.
+#[non_exhaustive]
 pub enum WeightError {
     /// The input weight sequence is empty, too long, or wrongly ordered
     InvalidInput,

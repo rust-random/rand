@@ -22,6 +22,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - The `serde1` feature has been renamed `serde` (#1477)
 - Add `Rng::gen_index` and `UniformUsize` (#1471)
 - Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` and `Fill` and usage as a `WeightedAliasIndex` weight (#1471)
+- Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480).
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
