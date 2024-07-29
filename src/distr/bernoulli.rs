@@ -136,6 +136,16 @@ impl Bernoulli {
         let p_int = ((f64::from(numerator) / f64::from(denominator)) * SCALE) as u64;
         Ok(Bernoulli { p_int })
     }
+
+    #[inline]
+    /// Returns the probability (`p`) of the distribution.
+    pub fn p(&self) -> f64 {
+        if self.p_int == ALWAYS_TRUE {
+            1.0
+        } else {
+            f64::from(self.p_int) / SCALE
+        }
+    }
 }
 
 impl Distribution<bool> for Bernoulli {
