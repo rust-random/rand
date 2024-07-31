@@ -20,6 +20,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Fix portability of `rand::distributions::Slice` (#1469)
 - Rename `rand::distributions` to `rand::distr` (#1470)
 - The `serde1` feature has been renamed `serde` (#1477)
+- Improve SmallRng initialization performance
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)

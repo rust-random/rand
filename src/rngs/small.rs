@@ -83,9 +83,6 @@ impl SeedableRng for SmallRng {
 
     #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
-        // With MSRV >= 1.77: let seed = *seed.first_chunk().unwrap();
-        const LEN: usize = core::mem::size_of::<<Rng as SeedableRng>::Seed>();
-        let seed = (&seed[..LEN]).try_into().unwrap();
         SmallRng(Rng::from_seed(seed))
     }
 

@@ -115,6 +115,49 @@ init_gen!(init_pcg64, Pcg64);
 init_gen!(init_pcg64mcg, Pcg64Mcg);
 init_gen!(init_pcg64dxsm, Pcg64Dxsm);
 init_gen!(init_chacha, ChaCha20Rng);
+init_gen!(init_smallrng, SmallRng);
+
+macro_rules! init_gen_from_u64 {
+    ($fnn:ident, $gen:ident) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = Pcg32::from_os_rng();
+            let seed = rng.random();
+            b.iter(|| {
+                let r2 = $gen::seed_from_u64(black_box(seed));
+                r2
+            });
+        }
+    };
+}
+
+init_gen_from_u64!(init_from_u64_pcg32, Pcg32);
+init_gen_from_u64!(init_from_u64_pcg64, Pcg64);
+init_gen_from_u64!(init_from_u64_pcg64mcg, Pcg64Mcg);
+init_gen_from_u64!(init_from_u64_pcg64dxsm, Pcg64Dxsm);
+init_gen_from_u64!(init_from_u64_chacha, ChaCha20Rng);
+init_gen_from_u64!(init_from_u64_smallrng, SmallRng);
+
+macro_rules! init_gen_from_seed {
+    ($fnn:ident, $gen:ident) => {
+        #[bench]
+        fn $fnn(b: &mut Bencher) {
+            let mut rng = Pcg32::from_os_rng();
+            let seed = rng.random();
+            b.iter(|| {
+                let r2 = $gen::from_seed(black_box(seed));
+                r2
+            });
+        }
+    };
+}
+
+init_gen_from_seed!(init_from_seed_pcg32, Pcg32);
+init_gen_from_seed!(init_from_seed_pcg64, Pcg64);
+init_gen_from_seed!(init_from_seed_pcg64mcg, Pcg64Mcg);
+init_gen_from_seed!(init_from_seed_pcg64dxsm, Pcg64Dxsm);
+init_gen_from_seed!(init_from_seed_chacha, ChaCha20Rng);
+init_gen_from_seed!(init_from_seed_smallrng, SmallRng);
 
 const RESEEDING_BYTES_LEN: usize = 1024 * 1024;
 const RESEEDING_BENCH_N: u64 = 16;
