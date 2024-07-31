@@ -1,6 +1,6 @@
 [package]
 name = "rand_distr"
-version = "0.5.0-alpha.2"
+version = "0.5.0-alpha.3"
 authors = ["The Rand Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -17,7 +17,7 @@ rust-version = "1.61"
 include = ["/src", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg docsrs", "--generate-link-to-definition"]
+rustdoc-args = ["--generate-link-to-definition"]
 
 [features]
 default = ["std"]

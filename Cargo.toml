@@ -21,7 +21,7 @@ include = ["/src", "/tests", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGH
 # To build locally:
 # RUSTDOCFLAGS="--cfg docsrs -Zunstable-options --generate-link-to-definition" cargo +nightly doc --all --all-features --no-deps --open
 all-features = true
-rustdoc-args = ["--cfg", "docsrs", "--generate-link-to-definition"]
+rustdoc-args = ["--generate-link-to-definition"]
 
 [package.metadata.playground]
 features = ["small_rng", "serde"]
