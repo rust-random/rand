@@ -33,29 +33,35 @@ impl SeedableRng for Xoshiro256PlusPlus {
     /// mapped to a different seed.
     #[inline]
     fn from_seed(seed: [u8; 32]) -> Xoshiro256PlusPlus {
-        if seed.iter().all(|&x| x == 0) {
-            return Self::seed_from_u64(0);
-        }
         let mut state = [0; 4];
         read_u64_into(&seed, &mut state);
+        // Check for zero on aligned integers for better code generation.
+        // Furtermore, seed_from_u64(0) will expand to a constant when optimized.
+        if state.iter().all(|&x| x == 0) {
+            return Self::seed_from_u64(0);
+        }
         Xoshiro256PlusPlus { s: state }
     }
 
     /// Create a new `Xoshiro256PlusPlus` from a `u64` seed.
     ///
     /// This uses the SplitMix64 generator internally.
+    #[inline]
     fn seed_from_u64(mut state: u64) -> Self {
         const PHI: u64 = 0x9e3779b97f4a7c15;
-        let mut seed = Self::Seed::default();
-        for chunk in seed.as_mut().chunks_mut(8) {
+        let mut s = [0; 4];
+        for i in s.iter_mut() {
             state = state.wrapping_add(PHI);
             let mut z = state;
             z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
             z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
             z = z ^ (z >> 31);
-            chunk.copy_from_slice(&z.to_le_bytes());
+            *i = z.to_le();
         }
-        Self::from_seed(seed)
+        // By using a non-zero PHI we are guaranteed to generate a non-zero state
+        // Thus preventing a recursion between from_seed and seed_from_u64.
+        debug_assert_ne!(s, [0; 4]);
+        Xoshiro256PlusPlus { s }
     }
 }
 
