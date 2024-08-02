@@ -243,9 +243,9 @@ mod test {
         use super::*;
 
         let n = 1000;
-        let weights = [0.1, 0.2, 0.3, 0.4];
+        let weights = alloc::vec![0.1, 0.2, 0.3, 0.4];
         let mut rng = crate::test::rng(123);
-        let multinomial = MultinomialDyn::new(n, &weights).unwrap();
+        let multinomial = MultinomialDyn::new(n, weights).unwrap();
         let sample = multinomial.sample(&mut rng);
         assert_eq!(sample.iter().sum::<u64>(), n);
     }
