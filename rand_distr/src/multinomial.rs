@@ -93,6 +93,7 @@ pub struct MultinomialDyn<I> {
     sum: f64,
 }
 
+#[cfg(feature = "alloc")]
 impl<I> MultinomialDyn<I> {
     /// Constructs a new `MultinomialDyn` distribution which samples from `K` different categories.
     ///
