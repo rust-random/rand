@@ -129,13 +129,13 @@ impl Distribution<u64> for Binomial {
         // When n*p < 10, so is n*p*q which is the variance, so a result > 110 would be 100 / sqrt(10) = 31 standard deviations away.
         const BINV_MAX_X: u64 = 110;
 
-        if (self.n as f64) * p < BINV_THRESHOLD && self.n <= (i32::MAX as u64) {
+        if (self.n as f64) * p < BINV_THRESHOLD {
             // Use the BINV algorithm.
             let s = p / q;
-            let a = ((self.n + 1) as f64) * s;
+            let a = (self.n as f64 + 1.0) * s;
 
             result = 'outer: loop {
-                let mut r = q.powi(self.n as i32);
+                let mut r = q.powf(self.n as f64);
                 let mut u: f64 = rng.random();
                 let mut x = 0;
 
@@ -358,6 +358,7 @@ mod test {
         test_binomial_mean_and_variance(40, 0.5, &mut rng);
         test_binomial_mean_and_variance(20, 0.7, &mut rng);
         test_binomial_mean_and_variance(20, 0.5, &mut rng);
+        test_binomial_mean_and_variance(1 << 61, 1e-17, &mut rng);
     }
 
     #[test]
