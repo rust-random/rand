@@ -9,7 +9,7 @@
 
 //! The binomial distribution `Binomial(n, p)`.
 
-use crate::{Distribution, Uniform};
+use crate::{Distribution, Poisson, Uniform};
 use core::cmp::Ordering;
 use core::fmt;
 #[allow(unused_imports)]
@@ -131,23 +131,29 @@ impl Distribution<u64> for Binomial {
 
         if (self.n as f64) * p < BINV_THRESHOLD {
             // Use the BINV algorithm.
-            let s = p / q;
-            let a = (self.n as f64 + 1.0) * s;
 
-            result = 'outer: loop {
-                let mut r = q.powf(self.n as f64);
-                let mut u: f64 = rng.random();
-                let mut x = 0;
+            if q == 1.0 {
+                // p was to small for BINV, we use the Poisson approximation which is very precise for this case
+                result = Poisson::new(self.n as f64 * p).unwrap().sample(rng) as u64;
+            } else {
+                let s = p / q;
+                let a = (self.n as f64 + 1.0) * s;
 
-                while u > r {
-                    u -= r;
-                    x += 1;
-                    if x > BINV_MAX_X {
-                        continue 'outer;
+                result = 'outer: loop {
+                    let mut r = q.powf(self.n as f64);
+                    let mut u: f64 = rng.random();
+                    let mut x = 0;
+
+                    while u > r {
+                        u -= r;
+                        x += 1;
+                        if x > BINV_MAX_X {
+                            continue 'outer;
+                        }
+                        r *= a / (x as f64) - s;
                     }
-                    r *= a / (x as f64) - s;
+                    break x;
                 }
-                break x;
             }
         } else {
             // Use the BTPE algorithm.
@@ -359,6 +365,7 @@ mod test {
         test_binomial_mean_and_variance(20, 0.7, &mut rng);
         test_binomial_mean_and_variance(20, 0.5, &mut rng);
         test_binomial_mean_and_variance(1 << 61, 1e-17, &mut rng);
+        test_binomial_mean_and_variance(u64::MAX, 1e-19, &mut rng);
     }
 
     #[test]
