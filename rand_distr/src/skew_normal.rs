@@ -220,7 +220,7 @@ mod tests {
         test_samples(
             SkewNormal::new(0.0, 1.0, 0.0).unwrap(),
             0f32,
-            &[-0.11844189, 0.781378, 0.06563994, -1.1932899],
+            &[1.8696455, -0.1461722, -1.1125228, 0.20563208],
         );
         test_samples(
             SkewNormal::new(0.0, 1.0, 0.0).unwrap(),
