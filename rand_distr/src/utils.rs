@@ -85,7 +85,7 @@ where
 {
     loop {
         // As an optimisation we re-implement the conversion to a f64.
-        // From the remaining 12 most significant bits we use 8 to construct `i`.
+        // From the 12 least significant bits we use 8 to construct `i`.
         // This saves us generating a whole extra random number, while the added
         // precision of using 64 bits for f64 does not buy us much.
         let bits = rng.next_u64();
@@ -115,6 +115,60 @@ where
         }
         // algebraically equivalent to f1 + DRanU()*(f0 - f1) < 1
         if f_tab[i + 1] + (f_tab[i] - f_tab[i + 1]) * rng.random::<f64>() < pdf(x) {
+            return x;
+        }
+    }
+}
+
+/// Same as `ziggurat` but optimized for f32.
+/// We use the same tables as f64 to save space.
+#[inline(always)]
+pub(crate) fn ziggurat32<R: Rng + ?Sized, P, Z>(
+    rng: &mut R,
+    symmetric: bool,
+    x_tab: ziggurat_tables::ZigTable,
+    f_tab: ziggurat_tables::ZigTable,
+    mut pdf: P,
+    mut zero_case: Z,
+) -> f32
+where
+    P: FnMut(f32) -> f32,
+    Z: FnMut(&mut R, f32) -> f32,
+{
+    loop {
+        // As an optimisation we re-implement the conversion to a f32.
+        // From the 9 least significant bits we use 8 to construct `i`.
+        // This saves us generating a whole extra random number, while the added
+        // precision of using 32 bits for f32 does not buy us much.
+        let bits = rng.next_u32();
+        let i = bits as usize & 0xff;
+
+        let u = if symmetric {
+            // Convert to a value in the range [2,4) and subtract to get [-1,1)
+            // We can't convert to an open range directly, that would require
+            // subtracting `3.0 - EPSILON`, which is not representable.
+            // It is possible with an extra step, but an open range does not
+            // seem necessary for the ziggurat algorithm anyway.
+            (bits >> 9).into_float_with_exponent(1) - 3.0
+        } else {
+            // Convert to a value in the range [1,2) and subtract to get (0,1)
+            (bits >> 9).into_float_with_exponent(0) - (1.0f32 - f32::EPSILON / 2.0f32)
+        };
+        let x = u * (x_tab[i] as f32);
+
+        let test_x = if symmetric { x.abs() } else { x };
+
+        // algebraically equivalent to |u| < x_tab[i+1]/x_tab[i] (or u < x_tab[i+1]/x_tab[i])
+        if test_x < x_tab[i + 1] as f32 {
+            return x;
+        }
+        if i == 0 {
+            return zero_case(rng, u);
+        }
+        // algebraically equivalent to f1 + DRanU()*(f0 - f1) < 1
+        if f_tab[i + 1] as f32 + (f_tab[i] as f32 - f_tab[i + 1] as f32) * rng.random::<f32>()
+            < pdf(x)
+        {
             return x;
         }
     }
