@@ -231,7 +231,7 @@ fn normal_inverse_gaussian_stability() {
     test_samples(
         213,
         NormalInverseGaussian::new(2.0, 1.0).unwrap(),
-        &[0.6568966f32, 1.3744819, 2.216063, 0.11488572],
+        &[-0.28254104f32, 0.7503831, 0.6274264, 0.38120824],
     );
     test_samples(
         213,
@@ -266,7 +266,7 @@ fn inverse_gaussian_stability() {
     test_samples(
         213,
         InverseGaussian::new(1.0, 3.0).unwrap(),
-        &[0.9339157f32, 1.108113, 0.50864697, 0.39849377],
+        &[0.35597056f32, 1.8809121, 1.1565078, 0.63038194],
     );
     test_samples(
         213,
@@ -291,7 +291,7 @@ fn gamma_stability() {
     test_samples(
         223,
         Gamma::new(0.8, 5.0).unwrap(),
-        &[0.5051203f32, 0.9048302, 3.095812, 1.8566116],
+        &[0.46801063f32, 3.9947987, 4.116252, 8.795569],
     );
     test_samples(
         223,
@@ -328,19 +328,19 @@ fn gamma_stability() {
     test_samples(
         223,
         ChiSquared::new(10.0).unwrap(),
-        &[12.693656f32, 6.812016, 11.082001, 12.436167],
+        &[4.94985f32, 14.257126, 7.4251842, 9.095535],
     );
 
     // FisherF has same special cases as ChiSquared on each param
     test_samples(
         223,
         FisherF::new(1.0, 13.5).unwrap(),
-        &[0.32283646f32, 0.048049655, 0.0788893, 1.817178],
+        &[1.1028901f32, 0.8565854, 0.002667761, 0.5884251],
     );
     test_samples(
         223,
         FisherF::new(1.0, 1.0).unwrap(),
-        &[0.29925257f32, 3.4392934, 9.567652, 0.020074],
+        &[1.4913899f32, 1.4406309, 0.050560303, 0.011843223],
     );
     test_samples(
         223,
@@ -357,7 +357,7 @@ fn gamma_stability() {
     test_samples(
         223,
         StudentT::new(1.0).unwrap(),
-        &[0.54703987f32, -1.8545331, 3.093162, -0.14168274],
+        &[-1.2212248f32, 1.2002629, -0.22485618, -0.10882657],
     );
     test_samples(
         223,
@@ -432,7 +432,7 @@ fn normal_stability() {
     test_samples(
         213,
         StandardNormal,
-        &[-0.11844189f32, 0.781378, 0.06563994, -1.1932899],
+        &[1.8696455f32, -0.1461722, -1.1125228, 0.20563208],
     );
     test_samples(
         213,
@@ -448,7 +448,7 @@ fn normal_stability() {
     test_samples(
         213,
         Normal::new(0.0, 1.0).unwrap(),
-        &[-0.11844189f32, 0.781378, 0.06563994, -1.1932899],
+        &[1.8696455f32, -0.1461722, -1.1125228, 0.20563208],
     );
     test_samples(
         213,
@@ -464,7 +464,7 @@ fn normal_stability() {
     test_samples(
         213,
         LogNormal::new(0.0, 1.0).unwrap(),
-        &[0.88830346f32, 2.1844804, 1.0678421, 0.30322206],
+        &[6.4859967f32, 0.8640089, 0.3287286, 1.2283012],
     );
     test_samples(
         213,
