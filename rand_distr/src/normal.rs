@@ -9,7 +9,7 @@
 
 //! The Normal and derived distributions.
 
-use crate::utils::ziggurat;
+use crate::utils::{ziggurat, ziggurat32};
 use crate::{ziggurat_tables, Distribution, Open01};
 use core::fmt;
 use num_traits::Float;
@@ -51,9 +51,44 @@ pub struct StandardNormal;
 impl Distribution<f32> for StandardNormal {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f32 {
-        // TODO: use optimal 32-bit implementation
-        let x: f64 = self.sample(rng);
-        x as f32
+        #[inline]
+        fn pdf(x: f32) -> f32 {
+            (-x * x / 2.0).exp()
+        }
+        #[inline]
+        fn zero_case<R: Rng + ?Sized>(rng: &mut R, u: f32) -> f32 {
+            // compute a random number in the tail by hand
+
+            // strange initial conditions, because the loop is not
+            // do-while, so the condition should be true on the first
+            // run, they get overwritten anyway (0 < 1, so these are
+            // good).
+            let mut x = 1.0f32;
+            let mut y = 0.0f32;
+
+            while -2.0 * y < x * x {
+                let x_: f32 = rng.sample(Open01);
+                let y_: f32 = rng.sample(Open01);
+
+                x = x_.ln() / ziggurat_tables::ZIG_NORM_R as f32;
+                y = y_.ln();
+            }
+
+            if u < 0.0 {
+                x - ziggurat_tables::ZIG_NORM_R as f32
+            } else {
+                ziggurat_tables::ZIG_NORM_R as f32 - x
+            }
+        }
+
+        ziggurat32(
+            rng,
+            true, // this is symmetric
+            &ziggurat_tables::ZIG_NORM_X,
+            &ziggurat_tables::ZIG_NORM_F,
+            pdf,
+            zero_case,
+        )
     }
 }
 
@@ -376,13 +411,24 @@ mod tests {
         }
     }
     #[test]
+    fn test_normal32() {
+        let norm = Normal::new(10.0f32, 10.0f32).unwrap();
+        let mut rng = crate::test::rng(210);
+        for _ in 0..1000 {
+            norm.sample(&mut rng);
+        }
+    }
+    #[test]
     fn test_normal_cv() {
         let norm = Normal::from_mean_cv(1024.0, 1.0 / 256.0).unwrap();
         assert_eq!((norm.mean, norm.std_dev), (1024.0, 4.0));
+        let norm = Normal::from_mean_cv(1024.0f32, 1.0f32 / 256.0f32).unwrap();
+        assert_eq!((norm.mean, norm.std_dev), (1024.0f32, 4.0f32));
     }
     #[test]
     fn test_normal_invalid_sd() {
         assert!(Normal::from_mean_cv(10.0, -1.0).is_err());
+        assert!(Normal::from_mean_cv(10.0f32, -1.0f32).is_err());
     }
 
     #[test]
@@ -393,6 +439,15 @@ mod tests {
             lnorm.sample(&mut rng);
         }
     }
+    #[test]
+    fn test_log_normal32() {
+        let lnorm = LogNormal::new(10.0f32, 10.0f32).unwrap();
+        let mut rng = crate::test::rng(211);
+        for _ in 0..1000 {
+            lnorm.sample(&mut rng);
+        }
+    }
+
     #[test]
     fn test_log_normal_cv() {
         let lnorm = LogNormal::from_mean_cv(0.0, 0.0).unwrap();
@@ -414,19 +469,48 @@ mod tests {
         assert_eq!(lnorm.norm.std_dev, 1.0);
     }
     #[test]
+    fn test_log_normal_cv32() {
+        let lnorm = LogNormal::from_mean_cv(0.0f32, 0.0f32).unwrap();
+        assert_eq!(
+            (lnorm.norm.mean, lnorm.norm.std_dev),
+            (f32::NEG_INFINITY, 0.0)
+        );
+
+        let lnorm = LogNormal::from_mean_cv(1.0f32, 0.0f32).unwrap();
+        assert_eq!((lnorm.norm.mean, lnorm.norm.std_dev), (0.0, 0.0));
+
+        let e = core::f32::consts::E;
+        let lnorm = LogNormal::from_mean_cv(e.sqrt(), (e - 1.0).sqrt()).unwrap();
+        assert_almost_eq!(lnorm.norm.mean, 0.0, 2e-16);
+        assert_almost_eq!(lnorm.norm.std_dev, 1.0, 2e-16);
+
+        let lnorm = LogNormal::from_mean_cv(e.powf(1.5), (e - 1.0).sqrt()).unwrap();
+        assert_almost_eq!(lnorm.norm.mean, 1.0, 1e-15);
+        assert_eq!(lnorm.norm.std_dev, 1.0);
+    }
+
+    #[test]
     fn test_log_normal_invalid_sd() {
         assert!(LogNormal::from_mean_cv(-1.0, 1.0).is_err());
         assert!(LogNormal::from_mean_cv(0.0, 1.0).is_err());
         assert!(LogNormal::from_mean_cv(1.0, -1.0).is_err());
+        assert!(LogNormal::from_mean_cv(-1.0f32, 1.0f32).is_err());
+        assert!(LogNormal::from_mean_cv(0.0f32, 1.0f32).is_err());
+        assert!(LogNormal::from_mean_cv(1.0f32, -1.0f32).is_err());
     }
 
     #[test]
     fn normal_distributions_can_be_compared() {
         assert_eq!(Normal::new(1.0, 2.0), Normal::new(1.0, 2.0));
+        assert_eq!(Normal::new(1.0f32, 2.0f32), Normal::new(1.0f32, 2.0f32));
     }
 
     #[test]
     fn log_normal_distributions_can_be_compared() {
         assert_eq!(LogNormal::new(1.0, 2.0), LogNormal::new(1.0, 2.0));
+        assert_eq!(
+            LogNormal::new(1.0f32, 2.0f32),
+            LogNormal::new(1.0f32, 2.0f32)
+        );
     }
 }
