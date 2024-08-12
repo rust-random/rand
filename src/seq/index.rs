@@ -148,6 +148,7 @@ impl From<Vec<u64>> for IndexVec {
 pub enum IndexVecIter<'a> {
     #[doc(hidden)]
     U32(slice::Iter<'a, u32>),
+    #[cfg(target_pointer_width = "64")]
     #[doc(hidden)]
     U64(slice::Iter<'a, u64>),
 }
@@ -160,6 +161,7 @@ impl<'a> Iterator for IndexVecIter<'a> {
         use self::IndexVecIter::*;
         match self {
             U32(iter) => iter.next().map(|i| *i as usize),
+            #[cfg(target_pointer_width = "64")]
             U64(iter) => iter.next().map(|i| *i as usize),
         }
     }
@@ -168,6 +170,7 @@ impl<'a> Iterator for IndexVecIter<'a> {
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self {
             IndexVecIter::U32(v) => v.size_hint(),
+            #[cfg(target_pointer_width = "64")]
             IndexVecIter::U64(v) => v.size_hint(),
         }
     }
@@ -180,6 +183,7 @@ impl<'a> ExactSizeIterator for IndexVecIter<'a> {}
 pub enum IndexVecIntoIter {
     #[doc(hidden)]
     U32(vec::IntoIter<u32>),
+    #[cfg(target_pointer_width = "64")]
     #[doc(hidden)]
     U64(vec::IntoIter<u64>),
 }
@@ -192,6 +196,7 @@ impl Iterator for IndexVecIntoIter {
         use self::IndexVecIntoIter::*;
         match self {
             U32(v) => v.next().map(|i| i as usize),
+            #[cfg(target_pointer_width = "64")]
             U64(v) => v.next().map(|i| i as usize),
         }
     }
@@ -201,6 +206,7 @@ impl Iterator for IndexVecIntoIter {
         use self::IndexVecIntoIter::*;
         match self {
             U32(v) => v.size_hint(),
+            #[cfg(target_pointer_width = "64")]
             U64(v) => v.size_hint(),
         }
     }
