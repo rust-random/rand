@@ -16,6 +16,8 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
+use std::println;
+
 /// The [binomial distribution](https://en.wikipedia.org/wiki/Binomial_distribution) `Binomial(n, p)`.
 ///
 /// The binomial distribution is a discrete probability distribution
@@ -90,7 +92,8 @@ impl Binomial {
 /// Convert a `f64` to an `i64`, panicking on overflow.
 fn f64_to_i64(x: f64) -> i64 {
     assert!(x < (i64::MAX as f64));
-    x as i64
+    x.floor() as i64
+    //x as i64
 }
 
 impl Distribution<u64> for Binomial {
@@ -129,13 +132,11 @@ impl Distribution<u64> for Binomial {
         // When n*p < 10, so is n*p*q which is the variance, so a result > 110 would be 100 / sqrt(10) = 31 standard deviations away.
         const BINV_MAX_X: u64 = 110;
 
-        if (self.n as f64) * p < BINV_THRESHOLD && self.n <= (i32::MAX as u64) {
+        if (self.n as f64) * p < BINV_THRESHOLD {
             // Use the BINV algorithm.
-            let s = p / q;
-            let a = ((self.n + 1) as f64) * s;
 
             result = 'outer: loop {
-                let mut r = q.powi(self.n as i32);
+                let mut r = (q.ln() * (self.n as f64)).exp();
                 let mut u: f64 = rng.random();
                 let mut x = 0;
 
@@ -145,7 +146,7 @@ impl Distribution<u64> for Binomial {
                     if x > BINV_MAX_X {
                         continue 'outer;
                     }
-                    r *= a / (x as f64) - s;
+                    r = (((self.n - x + 1) as f64) * p * r) / (x as f64 * q);
                 }
                 break x;
             }
