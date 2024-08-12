@@ -16,8 +16,6 @@ use core::fmt;
 use num_traits::Float;
 use rand::Rng;
 
-use std::println;
-
 /// The [binomial distribution](https://en.wikipedia.org/wiki/Binomial_distribution) `Binomial(n, p)`.
 ///
 /// The binomial distribution is a discrete probability distribution
@@ -92,8 +90,7 @@ impl Binomial {
 /// Convert a `f64` to an `i64`, panicking on overflow.
 fn f64_to_i64(x: f64) -> i64 {
     assert!(x < (i64::MAX as f64));
-    x.floor() as i64
-    //x as i64
+    x as i64
 }
 
 impl Distribution<u64> for Binomial {
