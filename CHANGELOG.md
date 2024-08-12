@@ -21,6 +21,8 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Rename `rand::distributions` to `rand::distr` (#1470)
 - The `serde1` feature has been renamed `serde` (#1477)
 - Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480).
+- Add `UniformUsize` and use to make `Uniform` for `usize` portable (#1487)
+- Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` and `Fill` and usage as a `WeightedAliasIndex` weight (#1487)
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
