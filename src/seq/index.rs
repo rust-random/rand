@@ -43,20 +43,20 @@ impl IndexVec {
     /// Returns the number of indices
     #[inline]
     pub fn len(&self) -> usize {
-        match *self {
-            IndexVec::U32(ref v) => v.len(),
+        match self {
+            IndexVec::U32(v) => v.len(),
             #[cfg(target_pointer_width = "64")]
-            IndexVec::U64(ref v) => v.len(),
+            IndexVec::U64(v) => v.len(),
         }
     }
 
     /// Returns `true` if the length is 0.
     #[inline]
     pub fn is_empty(&self) -> bool {
-        match *self {
-            IndexVec::U32(ref v) => v.is_empty(),
+        match self {
+            IndexVec::U32(v) => v.is_empty(),
             #[cfg(target_pointer_width = "64")]
-            IndexVec::U64(ref v) => v.is_empty(),
+            IndexVec::U64(v) => v.is_empty(),
         }
     }
 
@@ -66,10 +66,10 @@ impl IndexVec {
     /// restrictions.)
     #[inline]
     pub fn index(&self, index: usize) -> usize {
-        match *self {
-            IndexVec::U32(ref v) => v[index] as usize,
+        match self {
+            IndexVec::U32(v) => v[index] as usize,
             #[cfg(target_pointer_width = "64")]
-            IndexVec::U64(ref v) => v[index] as usize,
+            IndexVec::U64(v) => v[index] as usize,
         }
     }
 
@@ -86,10 +86,10 @@ impl IndexVec {
     /// Iterate over the indices as a sequence of `usize` values
     #[inline]
     pub fn iter(&self) -> IndexVecIter<'_> {
-        match *self {
-            IndexVec::U32(ref v) => IndexVecIter::U32(v.iter()),
+        match self {
+            IndexVec::U32(v) => IndexVecIter::U32(v.iter()),
             #[cfg(target_pointer_width = "64")]
-            IndexVec::U64(ref v) => IndexVecIter::U64(v.iter()),
+            IndexVec::U64(v) => IndexVecIter::U64(v.iter()),
         }
     }
 }
@@ -158,17 +158,17 @@ impl<'a> Iterator for IndexVecIter<'a> {
     #[inline]
     fn next(&mut self) -> Option<usize> {
         use self::IndexVecIter::*;
-        match *self {
-            U32(ref mut iter) => iter.next().map(|i| *i as usize),
-            U64(ref mut iter) => iter.next().map(|i| *i as usize),
+        match self {
+            U32(iter) => iter.next().map(|i| *i as usize),
+            U64(iter) => iter.next().map(|i| *i as usize),
         }
     }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        match *self {
-            IndexVecIter::U32(ref v) => v.size_hint(),
-            IndexVecIter::U64(ref v) => v.size_hint(),
+        match self {
+            IndexVecIter::U32(v) => v.size_hint(),
+            IndexVecIter::U64(v) => v.size_hint(),
         }
     }
 }
@@ -190,18 +190,18 @@ impl Iterator for IndexVecIntoIter {
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         use self::IndexVecIntoIter::*;
-        match *self {
-            U32(ref mut v) => v.next().map(|i| i as usize),
-            U64(ref mut v) => v.next().map(|i| i as usize),
+        match self {
+            U32(v) => v.next().map(|i| i as usize),
+            U64(v) => v.next().map(|i| i as usize),
         }
     }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         use self::IndexVecIntoIter::*;
-        match *self {
-            U32(ref v) => v.size_hint(),
-            U64(ref v) => v.size_hint(),
+        match self {
+            U32(v) => v.size_hint(),
+            U64(v) => v.size_hint(),
         }
     }
 }
@@ -627,6 +627,7 @@ mod test {
                         assert!((i as usize) < len);
                     }
                 }
+                #[cfg(target_pointer_width = "64")]
                 _ => panic!("expected `IndexVec::U32`"),
             }
         }
