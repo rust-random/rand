@@ -110,6 +110,8 @@ impl Distribution<u64> for Binomial {
 
         let result;
         let q = 1. - p;
+        let np = (self.n as f64) * p;
+
 
         // For small n * min(p, 1 - p), the BINV algorithm based on the inverse
         // transformation of the binomial distribution is efficient. Otherwise,
@@ -123,17 +125,25 @@ impl Distribution<u64> for Binomial {
         // Ranlib uses 30, and GSL uses 14.
         const BINV_THRESHOLD: f64 = 10.;
 
+        // This threshold is when powi outperforms the .exp() .ln() method.
+        // However it's constrained by i32::MAX from powi and performs worse above this threshold.
+        // This value can likely be more finely optimized, but should be done across multiple hardware and in a more controlled setting.
+        // It's also such an edge case that very few people are likely to benefit from it.
+        const SMALL_NP_THRESHOLD: f64 = 1e-10;
+
         // Same value as in GSL.
         // It is possible for BINV to get stuck, so we break if x > BINV_MAX_X and try again.
         // It would be safer to set BINV_MAX_X to self.n, but it is extremely unlikely to be relevant.
         // When n*p < 10, so is n*p*q which is the variance, so a result > 110 would be 100 / sqrt(10) = 31 standard deviations away.
-        const BINV_MAX_X: u64 = 110;
-
-        if (self.n as f64) * p < BINV_THRESHOLD {
-            // Use the BINV algorithm.
+        const BINV_MAX_X: u64 = 110;        
+        
+        let mut r: f64;
+        if self.n == 1 {
+            // Use the BINV algorithm for special case n = 1 (simplify r calculations).
+            let s: f64 = p/q;
 
             result = 'outer: loop {
-                let mut r = (q.ln() * (self.n as f64)).exp();
+                r = q;
                 let mut u: f64 = rng.random();
                 let mut x = 0;
 
@@ -143,7 +153,49 @@ impl Distribution<u64> for Binomial {
                     if x > BINV_MAX_X {
                         continue 'outer;
                     }
-                    r = (((self.n - x + 1) as f64) * p * r) / (x as f64 * q);
+                    r *= (((2 - x) as f64) * s) / (x as f64);
+                }
+                break x;
+            }
+        }
+        else if np < SMALL_NP_THRESHOLD && self.n <= (i32::MAX as u64) {
+            // For very small n*p the powi is superior.
+            // Use the BINV algorithm.
+            let s: f64 = p/q;
+
+            result = 'outer: loop {
+                r = q.powi(self.n as i32);
+                let mut u: f64 = rng.random();
+                let mut x = 0;
+
+                while u > r {
+                    u -= r;
+                    x += 1;
+                    if x > BINV_MAX_X {
+                        continue 'outer;
+                    }
+                    r *= (((self.n - x + 1) as f64) * s) / (x as f64);
+                }
+                break x;
+            }
+        }
+        else if np < BINV_THRESHOLD {
+            // For everything else r = (q.ln() * (self.n as f64)).exp() is superior.
+            // Use the BINV algorithm.
+            let s: f64 = p/q;
+
+            result = 'outer: loop {
+                r = (q.ln() * (self.n as f64)).exp();
+                let mut u: f64 = rng.random();
+                let mut x = 0;
+
+                while u > r {
+                    u -= r;
+                    x += 1;
+                    if x > BINV_MAX_X {
+                        continue 'outer;
+                    }
+                    r *= (((self.n - x + 1) as f64) * s) / (x as f64);
                 }
                 break x;
             }
