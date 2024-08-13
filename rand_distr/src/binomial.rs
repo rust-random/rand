@@ -125,7 +125,6 @@ impl Distribution<u64> for Binomial {
         let q = 1. - p;
         let np = (self.n as f64) * p;
 
-
         // For small n * min(p, 1 - p), the BINV algorithm based on the inverse
         // transformation of the binomial distribution is efficient. Otherwise,
         // the BTPE algorithm is used.
@@ -148,12 +147,12 @@ impl Distribution<u64> for Binomial {
         // It is possible for BINV to get stuck, so we break if x > BINV_MAX_X and try again.
         // It would be safer to set BINV_MAX_X to self.n, but it is extremely unlikely to be relevant.
         // When n*p < 10, so is n*p*q which is the variance, so a result > 110 would be 100 / sqrt(10) = 31 standard deviations away.
-        const BINV_MAX_X: u64 = 110;        
-        
+        const BINV_MAX_X: u64 = 110;
+
         let mut r: f64;
         if self.n == 1 {
             // Use the BINV algorithm for special case n = 1 (simplify r calculations).
-            let s: f64 = p/q;
+            let s: f64 = p / q;
 
             result = 'outer: loop {
                 r = q;
@@ -170,11 +169,10 @@ impl Distribution<u64> for Binomial {
                 }
                 break x;
             }
-        }
-        else if np < SMALL_NP_THRESHOLD && self.n <= (i32::MAX as u64) {
+        } else if np < SMALL_NP_THRESHOLD && self.n <= (i32::MAX as u64) {
             // For very small n*p the powi is superior.
             // Use the BINV algorithm.
-            let s: f64 = p/q;
+            let s: f64 = p / q;
 
             result = 'outer: loop {
                 r = q.powi(self.n as i32);
@@ -191,11 +189,10 @@ impl Distribution<u64> for Binomial {
                 }
                 break x;
             }
-        }
-        else if np < BINV_THRESHOLD {
+        } else if np < BINV_THRESHOLD {
             // For everything else r = (q.ln() * (self.n as f64)).exp() is superior.
             // Use the BINV algorithm.
-            let s: f64 = p/q;
+            let s: f64 = p / q;
 
             result = 'outer: loop {
                 r = (q.ln() * (self.n as f64)).exp();
