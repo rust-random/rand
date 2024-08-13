@@ -20,7 +20,8 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Fix portability of `rand::distributions::Slice` (#1469)
 - Rename `rand::distributions` to `rand::distr` (#1470)
 - The `serde1` feature has been renamed `serde` (#1477)
-- Refactor inverse `Binomial` algorithm to permit for n > i32::MAX values.
+- Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480).
+- Refactor inverse `Binomial` algorithm to permit for n > i32::MAX values (#1486).
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
