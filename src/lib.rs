@@ -208,6 +208,27 @@ where
     thread_rng().gen_range(range)
 }
 
+/// Shuffle a mutable slice in place using the thread-local random number generator.
+///
+/// This function is a shortcut for [`slice.shuffle(&mut thread_rng())`](seq::SliceRandom::shuffle):
+///
+/// For slices of length `n`, complexity is `O(n)`.
+/// The resulting permutation is picked uniformly from the set of all possible permutations.
+///
+/// # Example
+///
+/// ```
+/// let mut y = [1, 2, 3, 4, 5];
+/// println!("Unshuffled: {:?}", y);
+/// rand::shuffle(&mut y);
+/// println!("Shuffled:   {:?}", y);
+/// ```
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+pub fn shuffle<T>(slice: &mut [T]) {
+    seq::SliceRandom::shuffle(slice, &mut thread_rng());
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -240,5 +261,23 @@ mod test {
     fn test_range() {
         let _n: usize = range(42..=43);
         let _f: f32 = range(42.0..43.0);
+    }
+
+    #[test]
+    #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+    fn test_shuffle() {
+        let mut array1 = [0; 100];
+        for i in 0..array1.len() {
+            array1[i] = i;
+        }
+        let mut array2 = array1;
+        assert_eq!(array1, array2);
+        shuffle(&mut array1);
+        assert_ne!(array1, array2); // practically impossible without an RNG bug
+        shuffle(&mut array2);
+        assert_ne!(array1, array2); // same
+        array1.sort();
+        array2.sort();
+        assert_eq!(array1, array2);
     }
 }
