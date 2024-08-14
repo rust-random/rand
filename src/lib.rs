@@ -267,8 +267,8 @@ mod test {
     #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
     fn test_shuffle() {
         let mut array1 = [0; 100];
-        for i in 0..array1.len() {
-            array1[i] = i;
+        for (i, x) in array1.iter_mut().enumerate() {
+            *x = i;
         }
         let mut array2 = array1;
         assert_eq!(array1, array2);
