@@ -52,6 +52,7 @@ pub struct Binomial {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum Inner {
     Binv(Binv),
     Btpe(Btpe),
@@ -60,6 +61,7 @@ enum Inner {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 struct Binv {
     r: f64,
     s: f64,
@@ -67,6 +69,7 @@ struct Binv {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 struct Btpe {
     n: u64,
     p: f64,
