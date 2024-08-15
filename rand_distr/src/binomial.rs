@@ -46,10 +46,31 @@ use rand::Rng;
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Binomial {
-    /// Number of trials.
+    inner: Inner,
+    flipped: bool,
     n: u64,
-    /// Probability of success.
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Inner {
+    Binv(Binv),
+    Btpe(Btpe),
+    Poisson(Poisson<f64>),
+    Constant(u64),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Binv {
+    r: f64,
+    s: f64,
+    a: f64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Btpe {
+    n: u64,
     p: f64,
+    // TODO precompute the other constants
 }
 
 /// Error type returned from [`Binomial::new`].
@@ -83,33 +104,26 @@ impl Binomial {
         if !(p <= 1.0) {
             return Err(Error::ProbabilityTooLarge);
         }
-        Ok(Binomial { n, p })
-    }
-}
 
-/// Convert a `f64` to an `i64`, panicking on overflow.
-fn f64_to_i64(x: f64) -> i64 {
-    assert!(x < (i64::MAX as f64));
-    x as i64
-}
-
-impl Distribution<u64> for Binomial {
-    #[allow(clippy::many_single_char_names)] // Same names as in the reference.
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
-        // Handle these values directly.
-        if self.p == 0.0 {
-            return 0;
-        } else if self.p == 1.0 {
-            return self.n;
+        if p == 0.0 {
+            return Ok(Binomial {
+                inner: Inner::Constant(0),
+                flipped: false,
+                n,
+            });
         }
 
-        // The binomial distribution is symmetrical with respect to p -> 1-p,
-        // k -> n-k switch p so that it is less than 0.5 - this allows for lower
-        // expected values we will just invert the result at the end
-        let p = if self.p <= 0.5 { self.p } else { 1.0 - self.p };
+        if p == 1.0 {
+            return Ok(Binomial {
+                inner: Inner::Constant(n),
+                flipped: false,
+                n,
+            });
+        }
 
-        let result;
-        let q = 1. - p;
+        // The binomial distribution is symmetrical with respect to p -> 1-p
+        let flipped = p > 0.5;
+        let p = if flipped { 1.0 - p } else { p };
 
         // For small n * min(p, 1 - p), the BINV algorithm based on the inverse
         // transformation of the binomial distribution is efficient. Otherwise,
@@ -123,207 +137,234 @@ impl Distribution<u64> for Binomial {
         // Ranlib uses 30, and GSL uses 14.
         const BINV_THRESHOLD: f64 = 10.;
 
-        // Same value as in GSL.
-        // It is possible for BINV to get stuck, so we break if x > BINV_MAX_X and try again.
-        // It would be safer to set BINV_MAX_X to self.n, but it is extremely unlikely to be relevant.
-        // When n*p < 10, so is n*p*q which is the variance, so a result > 110 would be 100 / sqrt(10) = 31 standard deviations away.
-        const BINV_MAX_X: u64 = 110;
-
-        if (self.n as f64) * p < BINV_THRESHOLD {
-            // Use the BINV algorithm.
-
+        let np = n as f64 * p;
+        let inner = if np < BINV_THRESHOLD {
+            let q = 1.0 - p;
             if q == 1.0 {
-                // p was to small for BINV, we use the Poisson approximation which is very precise for this case
-                result = Poisson::new(self.n as f64 * p).unwrap().sample(rng) as u64;
+                Inner::Poisson(Poisson::new(np).unwrap())
             } else {
                 let s = p / q;
-                let a = (self.n as f64 + 1.0) * s;
-
-                result = 'outer: loop {
-                    let mut r = q.powf(self.n as f64);
-                    let mut u: f64 = rng.random();
-                    let mut x = 0;
-
-                    while u > r {
-                        u -= r;
-                        x += 1;
-                        if x > BINV_MAX_X {
-                            continue 'outer;
-                        }
-                        r *= a / (x as f64) - s;
-                    }
-                    break x;
-                }
+                Inner::Binv(Binv {
+                    r: q.powf(n as f64),
+                    s,
+                    a: (n as f64 + 1.0) * s,
+                })
             }
         } else {
-            // Use the BTPE algorithm.
+            Inner::Btpe(Btpe { n, p })
+        };
+        Ok(Binomial { flipped, inner, n })
+    }
+}
 
-            // Threshold for using the squeeze algorithm. This can be freely
-            // chosen based on performance. Ranlib and GSL use 20.
-            const SQUEEZE_THRESHOLD: i64 = 20;
+/// Convert a `f64` to an `i64`, panicking on overflow.
+fn f64_to_i64(x: f64) -> i64 {
+    assert!(x < (i64::MAX as f64));
+    x as i64
+}
 
-            // Step 0: Calculate constants as functions of `n` and `p`.
-            let n = self.n as f64;
-            let np = n * p;
-            let npq = np * q;
-            let f_m = np + p;
-            let m = f64_to_i64(f_m);
-            // radius of triangle region, since height=1 also area of region
-            let p1 = (2.195 * npq.sqrt() - 4.6 * q).floor() + 0.5;
-            // tip of triangle
-            let x_m = (m as f64) + 0.5;
-            // left edge of triangle
-            let x_l = x_m - p1;
-            // right edge of triangle
-            let x_r = x_m + p1;
-            let c = 0.134 + 20.5 / (15.3 + (m as f64));
-            // p1 + area of parallelogram region
-            let p2 = p1 * (1. + 2. * c);
+fn binv<R: Rng + ?Sized>(binv: Binv, rng: &mut R) -> u64 {
+    // Same value as in GSL.
+    // It is possible for BINV to get stuck, so we break if x > BINV_MAX_X and try again.
+    // It would be safer to set BINV_MAX_X to self.n, but it is extremely unlikely to be relevant.
+    // When n*p < 10, so is n*p*q which is the variance, so a result > 110 would be 100 / sqrt(10) = 31 standard deviations away.
+    const BINV_MAX_X: u64 = 110;
 
-            fn lambda(a: f64) -> f64 {
-                a * (1. + 0.5 * a)
+    'outer: loop {
+        let mut r = binv.r;
+        let mut u: f64 = rng.random();
+        let mut x = 0;
+
+        while u > r {
+            u -= r;
+            x += 1;
+            if x > BINV_MAX_X {
+                continue 'outer;
             }
+            r *= binv.a / (x as f64) - binv.s;
+        }
+        break x;
+    }
+}
 
-            let lambda_l = lambda((f_m - x_l) / (f_m - x_l * p));
-            let lambda_r = lambda((x_r - f_m) / (x_r * q));
-            // p1 + area of left tail
-            let p3 = p2 + c / lambda_l;
-            // p1 + area of right tail
-            let p4 = p3 + c / lambda_r;
+#[allow(clippy::many_single_char_names)] // Same names as in the reference.
+fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
+    // Threshold for using the squeeze algorithm. This can be freely
+    // chosen based on performance. Ranlib and GSL use 20.
+    const SQUEEZE_THRESHOLD: i64 = 20;
 
-            // return value
-            let mut y: i64;
+    // Step 0: Calculate constants as functions of `n` and `p`.
+    let n = btpe.n as f64;
+    let np = n * btpe.p;
+    let q = 1. - btpe.p;
+    let npq = np * q;
+    let f_m = np + btpe.p;
+    let m = f64_to_i64(f_m);
+    // radius of triangle region, since height=1 also area of region
+    let p1 = (2.195 * npq.sqrt() - 4.6 * q).floor() + 0.5;
+    // tip of triangle
+    let x_m = (m as f64) + 0.5;
+    // left edge of triangle
+    let x_l = x_m - p1;
+    // right edge of triangle
+    let x_r = x_m + p1;
+    let c = 0.134 + 20.5 / (15.3 + (m as f64));
+    // p1 + area of parallelogram region
+    let p2 = p1 * (1. + 2. * c);
 
-            let gen_u = Uniform::new(0., p4).unwrap();
-            let gen_v = Uniform::new(0., 1.).unwrap();
+    fn lambda(a: f64) -> f64 {
+        a * (1. + 0.5 * a)
+    }
 
-            loop {
-                // Step 1: Generate `u` for selecting the region. If region 1 is
-                // selected, generate a triangularly distributed variate.
-                let u = gen_u.sample(rng);
-                let mut v = gen_v.sample(rng);
-                if !(u > p1) {
-                    y = f64_to_i64(x_m - p1 * v + u);
-                    break;
-                }
+    let lambda_l = lambda((f_m - x_l) / (f_m - x_l * btpe.p));
+    let lambda_r = lambda((x_r - f_m) / (x_r * q));
+    // p1 + area of left tail
+    let p3 = p2 + c / lambda_l;
+    // p1 + area of right tail
+    let p4 = p3 + c / lambda_r;
 
-                if !(u > p2) {
-                    // Step 2: Region 2, parallelograms. Check if region 2 is
-                    // used. If so, generate `y`.
-                    let x = x_l + (u - p1) / c;
-                    v = v * c + 1.0 - (x - x_m).abs() / p1;
-                    if v > 1. {
-                        continue;
-                    } else {
-                        y = f64_to_i64(x);
-                    }
-                } else if !(u > p3) {
-                    // Step 3: Region 3, left exponential tail.
-                    y = f64_to_i64(x_l + v.ln() / lambda_l);
-                    if y < 0 {
-                        continue;
-                    } else {
-                        v *= (u - p2) * lambda_l;
-                    }
-                } else {
-                    // Step 4: Region 4, right exponential tail.
-                    y = f64_to_i64(x_r - v.ln() / lambda_r);
-                    if y > 0 && (y as u64) > self.n {
-                        continue;
-                    } else {
-                        v *= (u - p3) * lambda_r;
-                    }
-                }
+    // return value
+    let mut y: i64;
 
-                // Step 5: Acceptance/rejection comparison.
+    let gen_u = Uniform::new(0., p4).unwrap();
+    let gen_v = Uniform::new(0., 1.).unwrap();
 
-                // Step 5.0: Test for appropriate method of evaluating f(y).
-                let k = (y - m).abs();
-                if !(k > SQUEEZE_THRESHOLD && (k as f64) < 0.5 * npq - 1.) {
-                    // Step 5.1: Evaluate f(y) via the recursive relationship. Start the
-                    // search from the mode.
-                    let s = p / q;
-                    let a = s * (n + 1.);
-                    let mut f = 1.0;
-                    match m.cmp(&y) {
-                        Ordering::Less => {
-                            let mut i = m;
-                            loop {
-                                i += 1;
-                                f *= a / (i as f64) - s;
-                                if i == y {
-                                    break;
-                                }
-                            }
-                        }
-                        Ordering::Greater => {
-                            let mut i = y;
-                            loop {
-                                i += 1;
-                                f /= a / (i as f64) - s;
-                                if i == m {
-                                    break;
-                                }
-                            }
-                        }
-                        Ordering::Equal => {}
-                    }
-                    if v > f {
-                        continue;
-                    } else {
-                        break;
-                    }
-                }
-
-                // Step 5.2: Squeezing. Check the value of ln(v) against upper and
-                // lower bound of ln(f(y)).
-                let k = k as f64;
-                let rho = (k / npq) * ((k * (k / 3. + 0.625) + 1. / 6.) / npq + 0.5);
-                let t = -0.5 * k * k / npq;
-                let alpha = v.ln();
-                if alpha < t - rho {
-                    break;
-                }
-                if alpha > t + rho {
-                    continue;
-                }
-
-                // Step 5.3: Final acceptance/rejection test.
-                let x1 = (y + 1) as f64;
-                let f1 = (m + 1) as f64;
-                let z = (f64_to_i64(n) + 1 - m) as f64;
-                let w = (f64_to_i64(n) - y + 1) as f64;
-
-                fn stirling(a: f64) -> f64 {
-                    let a2 = a * a;
-                    (13860. - (462. - (132. - (99. - 140. / a2) / a2) / a2) / a2) / a / 166320.
-                }
-
-                if alpha
-                    > x_m * (f1 / x1).ln()
-                        + (n - (m as f64) + 0.5) * (z / w).ln()
-                        + ((y - m) as f64) * (w * p / (x1 * q)).ln()
-                        // We use the signs from the GSL implementation, which are
-                        // different than the ones in the reference. According to
-                        // the GSL authors, the new signs were verified to be
-                        // correct by one of the original designers of the
-                        // algorithm.
-                        + stirling(f1)
-                        + stirling(z)
-                        - stirling(x1)
-                        - stirling(w)
-                {
-                    continue;
-                }
-
-                break;
-            }
-            assert!(y >= 0);
-            result = y as u64;
+    loop {
+        // Step 1: Generate `u` for selecting the region. If region 1 is
+        // selected, generate a triangularly distributed variate.
+        let u = gen_u.sample(rng);
+        let mut v = gen_v.sample(rng);
+        if !(u > p1) {
+            y = f64_to_i64(x_m - p1 * v + u);
+            break;
         }
 
-        // Invert the result for p < 0.5.
-        if p != self.p {
+        if !(u > p2) {
+            // Step 2: Region 2, parallelograms. Check if region 2 is
+            // used. If so, generate `y`.
+            let x = x_l + (u - p1) / c;
+            v = v * c + 1.0 - (x - x_m).abs() / p1;
+            if v > 1. {
+                continue;
+            } else {
+                y = f64_to_i64(x);
+            }
+        } else if !(u > p3) {
+            // Step 3: Region 3, left exponential tail.
+            y = f64_to_i64(x_l + v.ln() / lambda_l);
+            if y < 0 {
+                continue;
+            } else {
+                v *= (u - p2) * lambda_l;
+            }
+        } else {
+            // Step 4: Region 4, right exponential tail.
+            y = f64_to_i64(x_r - v.ln() / lambda_r);
+            if y > 0 && (y as u64) > btpe.n {
+                continue;
+            } else {
+                v *= (u - p3) * lambda_r;
+            }
+        }
+
+        // Step 5: Acceptance/rejection comparison.
+
+        // Step 5.0: Test for appropriate method of evaluating f(y).
+        let k = (y - m).abs();
+        if !(k > SQUEEZE_THRESHOLD && (k as f64) < 0.5 * npq - 1.) {
+            // Step 5.1: Evaluate f(y) via the recursive relationship. Start the
+            // search from the mode.
+            let s = btpe.p / q;
+            let a = s * (n + 1.);
+            let mut f = 1.0;
+            match m.cmp(&y) {
+                Ordering::Less => {
+                    let mut i = m;
+                    loop {
+                        i += 1;
+                        f *= a / (i as f64) - s;
+                        if i == y {
+                            break;
+                        }
+                    }
+                }
+                Ordering::Greater => {
+                    let mut i = y;
+                    loop {
+                        i += 1;
+                        f /= a / (i as f64) - s;
+                        if i == m {
+                            break;
+                        }
+                    }
+                }
+                Ordering::Equal => {}
+            }
+            if v > f {
+                continue;
+            } else {
+                break;
+            }
+        }
+
+        // Step 5.2: Squeezing. Check the value of ln(v) against upper and
+        // lower bound of ln(f(y)).
+        let k = k as f64;
+        let rho = (k / npq) * ((k * (k / 3. + 0.625) + 1. / 6.) / npq + 0.5);
+        let t = -0.5 * k * k / npq;
+        let alpha = v.ln();
+        if alpha < t - rho {
+            break;
+        }
+        if alpha > t + rho {
+            continue;
+        }
+
+        // Step 5.3: Final acceptance/rejection test.
+        let x1 = (y + 1) as f64;
+        let f1 = (m + 1) as f64;
+        let z = (f64_to_i64(n) + 1 - m) as f64;
+        let w = (f64_to_i64(n) - y + 1) as f64;
+
+        fn stirling(a: f64) -> f64 {
+            let a2 = a * a;
+            (13860. - (462. - (132. - (99. - 140. / a2) / a2) / a2) / a2) / a / 166320.
+        }
+
+        if alpha
+            > x_m * (f1 / x1).ln()
+                + (n - (m as f64) + 0.5) * (z / w).ln()
+                + ((y - m) as f64) * (w * btpe.p / (x1 * q)).ln()
+                // We use the signs from the GSL implementation, which are
+                // different than the ones in the reference. According to
+                // the GSL authors, the new signs were verified to be
+                // correct by one of the original designers of the
+                // algorithm.
+                + stirling(f1)
+                + stirling(z)
+                - stirling(x1)
+                - stirling(w)
+        {
+            continue;
+        }
+
+        break;
+    }
+    assert!(y >= 0);
+    y as u64
+}
+
+impl Distribution<u64> for Binomial {
+    #[allow(clippy::many_single_char_names)] // Same names as in the reference.
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
+        let result = match self.inner {
+            Inner::Binv(binv_para) => binv(binv_para, rng),
+            Inner::Btpe(btpe_para) => btpe(btpe_para, rng),
+            Inner::Poisson(poisson) => poisson.sample(rng) as u64,
+            Inner::Constant(c) => c,
+        };
+
+        if self.flipped {
             self.n - result
         } else {
             result
