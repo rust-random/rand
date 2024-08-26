@@ -522,7 +522,9 @@ impl UniformSampler for UniformUsize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::distr::Uniform;
+    use crate::distr::{Distribution, Uniform};
+    use core::fmt::Debug;
+    use core::ops::Add;
 
     #[test]
     fn test_uniform_bad_limits_equal_int() {
@@ -651,5 +653,96 @@ mod tests {
         #![allow(clippy::reversed_empty_ranges)]
         assert!(Uniform::try_from(100..=10).is_err());
         assert!(Uniform::try_from(100..=99).is_err());
+    }
+
+    #[test]
+    fn value_stability() {
+        fn test_samples<T: SampleUniform + Copy + Debug + PartialEq + Add<T>>(
+            lb: T,
+            ub: T,
+            ub_excl: T,
+            expected: &[T],
+        ) where
+            Uniform<T>: Distribution<T>,
+        {
+            let mut rng = crate::test::rng(897);
+            let mut buf = [lb; 6];
+
+            for x in &mut buf[0..3] {
+                *x = T::Sampler::sample_single_inclusive(lb, ub, &mut rng).unwrap();
+            }
+
+            let distr = Uniform::new_inclusive(lb, ub).unwrap();
+            for x in &mut buf[3..6] {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(&buf, expected);
+
+            let mut rng = crate::test::rng(897);
+
+            for x in &mut buf[0..3] {
+                *x = T::Sampler::sample_single(lb, ub_excl, &mut rng).unwrap();
+            }
+
+            let distr = Uniform::new(lb, ub_excl).unwrap();
+            for x in &mut buf[3..6] {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(&buf, expected);
+        }
+
+        test_samples(-105i8, 111, 112, &[-99, -48, 107, 72, -19, 56]);
+        test_samples(2i16, 1352, 1353, &[43, 361, 1325, 1109, 539, 1005]);
+        test_samples(
+            -313853i32,
+            13513,
+            13514,
+            &[-303803, -226673, 6912, -45605, -183505, -70668],
+        );
+        test_samples(
+            131521i64,
+            6542165,
+            6542166,
+            &[1838724, 5384489, 4893692, 3712948, 3951509, 4094926],
+        );
+        test_samples(
+            -0x8000_0000_0000_0000_0000_0000_0000_0000i128,
+            -1,
+            0,
+            &[
+                -30725222750250982319765550926688025855,
+                -75088619368053423329503924805178012357,
+                -64950748766625548510467638647674468829,
+                -41794017901603587121582892414659436495,
+                -63623852319608406524605295913876414006,
+                -17404679390297612013597359206379189023,
+            ],
+        );
+        test_samples(11u8, 218, 219, &[17, 66, 214, 181, 93, 165]);
+        test_samples(11u16, 218, 219, &[17, 66, 214, 181, 93, 165]);
+        test_samples(11u32, 218, 219, &[17, 66, 214, 181, 93, 165]);
+        test_samples(11u64, 218, 219, &[66, 181, 165, 127, 134, 139]);
+        test_samples(11u128, 218, 219, &[181, 127, 139, 167, 141, 197]);
+        test_samples(11usize, 218, 219, &[17, 66, 214, 181, 93, 165]);
+
+        #[cfg(feature = "simd_support")]
+        {
+            let lb = Simd::from([11u8, 0, 128, 127]);
+            let ub = Simd::from([218, 254, 254, 254]);
+            let ub_excl = ub + Simd::splat(1);
+            test_samples(
+                lb,
+                ub,
+                ub_excl,
+                &[
+                    Simd::from([13, 5, 237, 130]),
+                    Simd::from([126, 186, 149, 161]),
+                    Simd::from([103, 86, 234, 252]),
+                    Simd::from([35, 18, 225, 231]),
+                    Simd::from([106, 153, 246, 177]),
+                    Simd::from([195, 168, 149, 222]),
+                ],
+            );
+        }
     }
 }

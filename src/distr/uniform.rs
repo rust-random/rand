@@ -530,12 +530,6 @@ mod tests {
             assert_eq!(&buf, expected_multiple);
         }
 
-        // We test on a sub-set of types; possibly we should do more.
-        // TODO: SIMD types
-
-        test_samples(11u8, 219, &[17, 66, 214], &[181, 93, 165]);
-        test_samples(11u32, 219, &[17, 66, 214], &[181, 93, 165]);
-
         test_samples(
             0f32,
             1e-2f32,
