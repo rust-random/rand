@@ -434,7 +434,7 @@ where
     debug_assert!(amount <= length);
     let mut indices = Vec::with_capacity(amount as usize);
     for j in length - amount..length {
-        let t = rng.gen_range(0..=j);
+        let t = rng.gen_range(..=j);
         if let Some(pos) = indices.iter().position(|&x| x == t) {
             indices[pos] = j;
         }

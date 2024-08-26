@@ -57,7 +57,7 @@ pub trait IndexedRandom: Index<usize> {
         if self.is_empty() {
             None
         } else {
-            Some(&self[rng.gen_range(0..self.len())])
+            Some(&self[rng.gen_range(..self.len())])
         }
     }
 
@@ -259,7 +259,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
             None
         } else {
             let len = self.len();
-            Some(&mut self[rng.gen_range(0..len)])
+            Some(&mut self[rng.gen_range(..len)])
         }
     }
 
@@ -410,7 +410,7 @@ impl<T> SliceRandom for [T] {
             }
         } else {
             for i in m..self.len() {
-                let index = rng.gen_range(0..i + 1);
+                let index = rng.gen_range(..i + 1);
                 self.swap(i, index);
             }
         }
