@@ -8,7 +8,7 @@
 
 //! Generating/filling arrays and iterators of output
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use rand::distr::Bernoulli;
 use rand::prelude::*;
 use rand_pcg::Pcg32;
@@ -20,78 +20,50 @@ criterion_group!(
 );
 criterion_main!(benches);
 
-const RAND_BENCH_N: u64 = 1000;
-
 pub fn bench(c: &mut Criterion) {
-    c.bench_function("gen_bool_const", |b| {
+    let mut g = c.benchmark_group("gen_bool");
+    g.sample_size(1000);
+    g.warm_up_time(core::time::Duration::from_millis(500));
+    g.measurement_time(core::time::Duration::from_millis(1000));
+
+    g.bench_function("standard", |b| {
         let mut rng = Pcg32::from_rng(&mut thread_rng());
-        b.iter(|| {
-            let mut accum = true;
-            for _ in 0..RAND_BENCH_N {
-                accum ^= rng.gen_bool(0.18);
-            }
-            accum
-        })
+        b.iter(|| rng.sample::<bool, _>(rand::distr::Standard))
     });
 
-    c.bench_function("gen_bool_var", |b| {
+    g.bench_function("const", |b| {
         let mut rng = Pcg32::from_rng(&mut thread_rng());
-        b.iter(|| {
-            let mut accum = true;
-            let mut p = black_box(0.18);
-            for _ in 0..RAND_BENCH_N {
-                accum ^= rng.gen_bool(p);
-                p += 0.0001;
-            }
-            accum
-        })
+        b.iter(|| rng.gen_bool(0.18))
     });
 
-    c.bench_function("gen_bool_ratio_const", |b| {
+    g.bench_function("var", |b| {
         let mut rng = Pcg32::from_rng(&mut thread_rng());
-        b.iter(|| {
-            let mut accum = true;
-            for _ in 0..RAND_BENCH_N {
-                accum ^= rng.gen_ratio(2, 3);
-            }
-            accum
-        })
+        let p = rng.random();
+        b.iter(|| rng.gen_bool(p))
     });
 
-    c.bench_function("gen_bool_ratio_var", |b| {
+    g.bench_function("ratio_const", |b| {
         let mut rng = Pcg32::from_rng(&mut thread_rng());
-        b.iter(|| {
-            let mut accum = true;
-            for i in 2..(RAND_BENCH_N as u32 + 2) {
-                accum ^= rng.gen_ratio(i, i + 1);
-            }
-            accum
-        })
+        b.iter(|| rng.gen_ratio(2, 3))
     });
 
-    c.bench_function("gen_bool_bernoulli_const", |b| {
+    g.bench_function("ratio_var", |b| {
         let mut rng = Pcg32::from_rng(&mut thread_rng());
-        b.iter(|| {
-            let d = Bernoulli::new(0.18).unwrap();
-            let mut accum = true;
-            for _ in 0..RAND_BENCH_N {
-                accum ^= rng.sample(d);
-            }
-            accum
-        })
+        let d = rng.gen_range(1..=100);
+        let n = rng.gen_range(0..=d);
+        b.iter(|| rng.gen_ratio(n, d));
     });
 
-    c.bench_function("gen_bool_bernoulli_var", |b| {
+    g.bench_function("bernoulli_const", |b| {
         let mut rng = Pcg32::from_rng(&mut thread_rng());
-        b.iter(|| {
-            let mut accum = true;
-            let mut p = black_box(0.18);
-            for _ in 0..RAND_BENCH_N {
-                let d = Bernoulli::new(p).unwrap();
-                accum ^= rng.sample(d);
-                p += 0.0001;
-            }
-            accum
-        })
+        let d = Bernoulli::new(0.18).unwrap();
+        b.iter(|| rng.sample(d))
+    });
+
+    g.bench_function("bernoulli_var", |b| {
+        let mut rng = Pcg32::from_rng(&mut thread_rng());
+        let p = rng.random();
+        let d = Bernoulli::new(p).unwrap();
+        b.iter(|| rng.sample(d))
     });
 }
