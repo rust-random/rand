@@ -49,14 +49,12 @@ pub fn bench(c: &mut Criterion) {
         (1000, 1_000_000, "1M"),
     ];
     for (amount, length, len_name) in lens {
-        c.bench_function(
-            format!("weighted_sample_indices_{}_of_{}", amount, len_name).as_str(),
-            |b| {
-                let length = black_box(length);
-                let amount = black_box(amount);
-                let mut rng = SmallRng::from_rng(thread_rng());
-                b.iter(|| sample_weighted(&mut rng, length, |idx| (1 + (idx % 100)) as u32, amount))
-            },
-        );
+        let name = format!("weighted_sample_indices_{}_of_{}", amount, len_name);
+        c.bench_function(name.as_str(), |b| {
+            let length = black_box(length);
+            let amount = black_box(amount);
+            let mut rng = SmallRng::from_rng(thread_rng());
+            b.iter(|| sample_weighted(&mut rng, length, |idx| (1 + (idx % 100)) as u32, amount))
+        });
     }
 }

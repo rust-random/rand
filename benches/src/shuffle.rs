@@ -47,17 +47,15 @@ fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static s
         });
 
         if length >= 10 {
-            c.bench_function(
-                format!("partial_shuffle_{length}_{rng_name}").as_str(),
-                |b| {
-                    let mut rng = Rng::seed_from_u64(123);
-                    let mut vec: Vec<usize> = (0..length).collect();
-                    b.iter(|| {
-                        vec.partial_shuffle(&mut rng, length / 2);
-                        vec[0]
-                    })
-                },
-            );
+            let name = format!("partial_shuffle_{length}_{rng_name}");
+            c.bench_function(name.as_str(), |b| {
+                let mut rng = Rng::seed_from_u64(123);
+                let mut vec: Vec<usize> = (0..length).collect();
+                b.iter(|| {
+                    vec.partial_shuffle(&mut rng, length / 2);
+                    vec[0]
+                })
+            });
         }
     }
 }

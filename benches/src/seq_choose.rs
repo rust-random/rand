@@ -76,37 +76,29 @@ pub fn bench(c: &mut Criterion) {
 
 fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
     for length in [1, 2, 3, 10, 100, 1000].map(black_box) {
-        c.bench_function(
-            format!("choose_size-hinted_from_{length}_{rng_name}").as_str(),
-            |b| {
-                let mut rng = Rng::seed_from_u64(123);
-                b.iter(|| choose_size_hinted(length, &mut rng))
-            },
-        );
+        let name = format!("choose_size-hinted_from_{length}_{rng_name}");
+        c.bench_function(name.as_str(), |b| {
+            let mut rng = Rng::seed_from_u64(123);
+            b.iter(|| choose_size_hinted(length, &mut rng))
+        });
 
-        c.bench_function(
-            format!("choose_stable_from_{length}_{rng_name}").as_str(),
-            |b| {
-                let mut rng = Rng::seed_from_u64(123);
-                b.iter(|| choose_stable(length, &mut rng))
-            },
-        );
+        let name = format!("choose_stable_from_{length}_{rng_name}");
+        c.bench_function(name.as_str(), |b| {
+            let mut rng = Rng::seed_from_u64(123);
+            b.iter(|| choose_stable(length, &mut rng))
+        });
 
-        c.bench_function(
-            format!("choose_unhinted_from_{length}_{rng_name}").as_str(),
-            |b| {
-                let mut rng = Rng::seed_from_u64(123);
-                b.iter(|| choose_unhinted(length, &mut rng))
-            },
-        );
+        let name = format!("choose_unhinted_from_{length}_{rng_name}");
+        c.bench_function(name.as_str(), |b| {
+            let mut rng = Rng::seed_from_u64(123);
+            b.iter(|| choose_unhinted(length, &mut rng))
+        });
 
-        c.bench_function(
-            format!("choose_windowed_from_{length}_{rng_name}").as_str(),
-            |b| {
-                let mut rng = Rng::seed_from_u64(123);
-                b.iter(|| choose_windowed(length, 7, &mut rng))
-            },
-        );
+        let name = format!("choose_windowed_from_{length}_{rng_name}");
+        c.bench_function(name.as_str(), |b| {
+            let mut rng = Rng::seed_from_u64(123);
+            b.iter(|| choose_windowed(length, 7, &mut rng))
+        });
     }
 }
 
