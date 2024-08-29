@@ -30,6 +30,11 @@ path = "src/distr.rs"
 harness = false
 
 [[bench]]
+name = "generators"
+path = "src/generators.rs"
+harness = false
+
+[[bench]]
 name = "uniform"
 path = "src/uniform.rs"
 harness = false
