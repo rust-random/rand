@@ -20,6 +20,11 @@ path = "src/array.rs"
 harness = false
 
 [[bench]]
+name = "bool"
+path = "src/bool.rs"
+harness = false
+
+[[bench]]
 name = "distr"
 path = "src/distr.rs"
 harness = false
