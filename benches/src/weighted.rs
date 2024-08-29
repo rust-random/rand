@@ -19,7 +19,7 @@ criterion_group!(
 criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
-    c.bench_function(format!("weighted_index_creation").as_str(), |b| {
+    c.bench_function("weighted_index_creation", |b| {
         let mut rng = rand::thread_rng();
         let weights = black_box([1u32, 2, 4, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 7]);
         b.iter(|| {
@@ -28,7 +28,7 @@ pub fn bench(c: &mut Criterion) {
         })
     });
 
-    c.bench_function(format!("weighted_index_modification").as_str(), |b| {
+    c.bench_function("weighted_index_modification", |b| {
         let mut rng = rand::thread_rng();
         let weights = black_box([1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7]);
         let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
