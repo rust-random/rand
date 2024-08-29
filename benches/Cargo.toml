@@ -35,11 +35,6 @@ path = "src/generators.rs"
 harness = false
 
 [[bench]]
-name = "uniform"
-path = "src/uniform.rs"
-harness = false
-
-[[bench]]
 name = "seq_choose"
 path = "src/seq_choose.rs"
 harness = false
@@ -47,6 +42,16 @@ harness = false
 [[bench]]
 name = "shuffle"
 path = "src/shuffle.rs"
+harness = false
+
+[[bench]]
+name = "standard"
+path = "src/standard.rs"
+harness = false
+
+[[bench]]
+name = "uniform"
+path = "src/uniform.rs"
 harness = false
 
 [[bench]]
