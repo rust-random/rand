@@ -9,6 +9,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::prelude::*;
 use rand::SeedableRng;
+use rand_pcg::Pcg32;
 
 criterion_group!(
     name = benches;
@@ -18,6 +19,15 @@ criterion_group!(
 criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
+    c.bench_function("seq_slice_choose_1_of_1000", |b| {
+        let mut rng = Pcg32::from_rng(thread_rng());
+        let mut buf = [0i32; 100];
+        rng.fill(&mut buf);
+        let x = black_box(&mut buf);
+
+        b.iter(|| x.choose(&mut rng).unwrap());
+    });
+
     bench_rng::<rand_chacha::ChaCha20Rng>(c, "ChaCha20");
     bench_rng::<rand_pcg::Pcg32>(c, "Pcg32");
     bench_rng::<rand_pcg::Pcg64>(c, "Pcg64");

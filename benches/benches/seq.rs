@@ -13,31 +13,11 @@ extern crate test;
 
 use test::Bencher;
 
-use core::mem::size_of;
 use rand::prelude::*;
 
 // We force use of 32-bit RNG since seq code is optimised for use with 32-bit
 // generators on all platforms.
 use rand_pcg::Pcg32 as SmallRng;
-
-const RAND_BENCH_N: u64 = 1000;
-
-#[bench]
-fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng());
-    let x: &mut [usize] = &mut [1; 1000];
-    for (i, r) in x.iter_mut().enumerate() {
-        *r = i;
-    }
-    b.iter(|| {
-        let mut s = 0;
-        for _ in 0..RAND_BENCH_N {
-            s += x.choose(&mut rng).unwrap();
-        }
-        s
-    });
-    b.bytes = size_of::<usize>() as u64 * RAND_BENCH_N;
-}
 
 macro_rules! seq_slice_choose_multiple {
     ($name:ident, $amount:expr, $length:expr) => {
