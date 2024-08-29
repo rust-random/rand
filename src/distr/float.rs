@@ -42,7 +42,7 @@ use serde::{Deserialize, Serialize};
 /// [`Standard`]: crate::distr::Standard
 /// [`Open01`]: crate::distr::Open01
 /// [`Uniform`]: crate::distr::uniform::Uniform
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct OpenClosed01;
 
@@ -69,7 +69,7 @@ pub struct OpenClosed01;
 /// [`Standard`]: crate::distr::Standard
 /// [`OpenClosed01`]: crate::distr::OpenClosed01
 /// [`Uniform`]: crate::distr::uniform::Uniform
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Open01;
 
