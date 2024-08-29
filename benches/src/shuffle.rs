@@ -5,14 +5,15 @@
 // <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::prelude::*;
 use rand::SeedableRng;
 
 criterion_group!(
-name = benches;
-config = Criterion::default();
-targets = bench
+    name = benches;
+    config = Criterion::default();
+    targets = bench
 );
 criterion_main!(benches);
 
