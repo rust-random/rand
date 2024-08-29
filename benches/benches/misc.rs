@@ -14,9 +14,9 @@ const RAND_BENCH_N: u64 = 1000;
 
 use test::Bencher;
 
-use rand::distr::{Bernoulli, Distribution, Standard};
+use rand::distr::Bernoulli;
 use rand::prelude::*;
-use rand_pcg::{Pcg32, Pcg64Mcg};
+use rand_pcg::Pcg32;
 
 #[bench]
 fn misc_gen_bool_const(b: &mut Bencher) {
@@ -94,90 +94,4 @@ fn misc_bernoulli_var(b: &mut Bencher) {
         }
         accum
     })
-}
-
-#[bench]
-fn gen_1kb_u16_iter_repeat(b: &mut Bencher) {
-    use core::iter;
-    let mut rng = Pcg64Mcg::from_rng(&mut thread_rng());
-    b.iter(|| {
-        let v: Vec<u16> = iter::repeat(()).map(|()| rng.random()).take(512).collect();
-        v
-    });
-    b.bytes = 1024;
-}
-
-#[bench]
-fn gen_1kb_u16_sample_iter(b: &mut Bencher) {
-    let mut rng = Pcg64Mcg::from_rng(&mut thread_rng());
-    b.iter(|| {
-        let v: Vec<u16> = Standard.sample_iter(&mut rng).take(512).collect();
-        v
-    });
-    b.bytes = 1024;
-}
-
-#[bench]
-fn gen_1kb_u16_gen_array(b: &mut Bencher) {
-    let mut rng = Pcg64Mcg::from_rng(&mut thread_rng());
-    b.iter(|| {
-        // max supported array length is 32!
-        let v: [[u16; 32]; 16] = rng.random();
-        v
-    });
-    b.bytes = 1024;
-}
-
-#[bench]
-fn gen_1kb_u16_fill(b: &mut Bencher) {
-    let mut rng = Pcg64Mcg::from_rng(&mut thread_rng());
-    let mut buf = [0u16; 512];
-    b.iter(|| {
-        rng.fill(&mut buf[..]);
-        buf
-    });
-    b.bytes = 1024;
-}
-
-#[bench]
-fn gen_1kb_u64_iter_repeat(b: &mut Bencher) {
-    use core::iter;
-    let mut rng = Pcg64Mcg::from_rng(&mut thread_rng());
-    b.iter(|| {
-        let v: Vec<u64> = iter::repeat(()).map(|()| rng.random()).take(128).collect();
-        v
-    });
-    b.bytes = 1024;
-}
-
-#[bench]
-fn gen_1kb_u64_sample_iter(b: &mut Bencher) {
-    let mut rng = Pcg64Mcg::from_rng(&mut thread_rng());
-    b.iter(|| {
-        let v: Vec<u64> = Standard.sample_iter(&mut rng).take(128).collect();
-        v
-    });
-    b.bytes = 1024;
-}
-
-#[bench]
-fn gen_1kb_u64_gen_array(b: &mut Bencher) {
-    let mut rng = Pcg64Mcg::from_rng(&mut thread_rng());
-    b.iter(|| {
-        // max supported array length is 32!
-        let v: [[u64; 32]; 4] = rng.random();
-        v
-    });
-    b.bytes = 1024;
-}
-
-#[bench]
-fn gen_1kb_u64_fill(b: &mut Bencher) {
-    let mut rng = Pcg64Mcg::from_rng(&mut thread_rng());
-    let mut buf = [0u64; 128];
-    b.iter(|| {
-        rng.fill(&mut buf[..]);
-        buf
-    });
-    b.bytes = 1024;
 }

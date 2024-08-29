@@ -15,6 +15,11 @@ criterion = "0.5"
 criterion-cycles-per-byte = "0.6"
 
 [[bench]]
+name = "array"
+path = "src/array.rs"
+harness = false
+
+[[bench]]
 name = "distr"
 path = "src/distr.rs"
 harness = false
