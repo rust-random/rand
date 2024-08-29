@@ -15,7 +15,6 @@ use test::Bencher;
 
 use core::mem::size_of;
 use rand::prelude::*;
-use rand::seq::*;
 
 // We force use of 32-bit RNG since seq code is optimised for use with 32-bit
 // generators on all platforms.
@@ -88,43 +87,3 @@ fn seq_iter_choose_multiple_fill_10_of_100(b: &mut Bencher) {
     let mut buf = [0; 10];
     b.iter(|| x.iter().cloned().choose_multiple_fill(&mut rng, &mut buf))
 }
-
-macro_rules! sample_indices {
-    ($name:ident, $fn:ident, $amount:expr, $length:expr) => {
-        #[bench]
-        fn $name(b: &mut Bencher) {
-            let mut rng = SmallRng::from_rng(thread_rng());
-            b.iter(|| index::$fn(&mut rng, $length, $amount))
-        }
-    };
-}
-
-sample_indices!(misc_sample_indices_1_of_1k, sample, 1, 1000);
-sample_indices!(misc_sample_indices_10_of_1k, sample, 10, 1000);
-sample_indices!(misc_sample_indices_100_of_1k, sample, 100, 1000);
-sample_indices!(misc_sample_indices_100_of_1M, sample, 100, 1_000_000);
-sample_indices!(misc_sample_indices_100_of_1G, sample, 100, 1_000_000_000);
-sample_indices!(misc_sample_indices_200_of_1G, sample, 200, 1_000_000_000);
-sample_indices!(misc_sample_indices_400_of_1G, sample, 400, 1_000_000_000);
-sample_indices!(misc_sample_indices_600_of_1G, sample, 600, 1_000_000_000);
-
-macro_rules! sample_indices_rand_weights {
-    ($name:ident, $amount:expr, $length:expr) => {
-        #[bench]
-        fn $name(b: &mut Bencher) {
-            let mut rng = SmallRng::from_rng(thread_rng());
-            b.iter(|| {
-                index::sample_weighted(&mut rng, $length, |idx| (1 + (idx % 100)) as u32, $amount)
-            })
-        }
-    };
-}
-
-sample_indices_rand_weights!(misc_sample_weighted_indices_1_of_1k, 1, 1000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_10_of_1k, 10, 1000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_100_of_1k, 100, 1000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_100_of_1M, 100, 1_000_000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_200_of_1M, 200, 1_000_000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_400_of_1M, 400, 1_000_000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_600_of_1M, 600, 1_000_000);
-sample_indices_rand_weights!(misc_sample_weighted_indices_1k_of_1M, 1000, 1_000_000);

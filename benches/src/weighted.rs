@@ -8,7 +8,8 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::distr::WeightedIndex;
-use rand::Rng;
+use rand::prelude::*;
+use rand::seq::index::sample_weighted;
 
 criterion_group!(
     name = benches;
@@ -36,4 +37,26 @@ pub fn bench(c: &mut Criterion) {
             rng.sample(&distr)
         })
     });
+
+    let lens = [
+        (1, 1000, "1k"),
+        (10, 1000, "1k"),
+        (100, 1000, "1k"),
+        (100, 1_000_000, "1M"),
+        (200, 1_000_000, "1M"),
+        (400, 1_000_000, "1M"),
+        (600, 1_000_000, "1M"),
+        (1000, 1_000_000, "1M"),
+    ];
+    for (amount, length, len_name) in lens {
+        c.bench_function(
+            format!("weighted_sample_indices_{}_of_{}", amount, len_name).as_str(),
+            |b| {
+                let length = black_box(length);
+                let amount = black_box(amount);
+                let mut rng = SmallRng::from_rng(thread_rng());
+                b.iter(|| sample_weighted(&mut rng, length, |idx| (1 + (idx % 100)) as u32, amount))
+            },
+        );
+    }
 }
