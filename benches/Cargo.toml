@@ -38,3 +38,8 @@ harness = false
 name = "uniform_float"
 path = "src/uniform_float.rs"
 harness = false
+
+[[bench]]
+name = "weighted"
+path = "src/weighted.rs"
+harness = false
