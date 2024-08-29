@@ -23,16 +23,6 @@ use rand_pcg::Pcg32 as SmallRng;
 const RAND_BENCH_N: u64 = 1000;
 
 #[bench]
-fn seq_shuffle_100(b: &mut Bencher) {
-    let mut rng = SmallRng::from_rng(thread_rng());
-    let x: &mut [usize] = &mut [1; 100];
-    b.iter(|| {
-        x.shuffle(&mut rng);
-        x[0]
-    })
-}
-
-#[bench]
 fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng());
     let x: &mut [usize] = &mut [1; 1000];
