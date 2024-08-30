@@ -289,6 +289,7 @@ pub trait SeedableRng: Sized {
     /// use rand_core::SeedableRng;
     ///
     /// const N: usize = 64;
+    /// #[derive(Clone)]
     /// pub struct MyRngSeed(pub [u8; N]);
     /// # #[allow(dead_code)]
     /// pub struct MyRng(MyRngSeed);
@@ -313,7 +314,7 @@ pub trait SeedableRng: Sized {
     ///     }
     /// }
     /// ```
-    type Seed: Sized + Default + AsMut<[u8]>;
+    type Seed: Clone + Default + AsMut<[u8]>;
 
     /// Create a new PRNG using the given seed.
     ///
