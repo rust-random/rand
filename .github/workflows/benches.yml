@@ -23,4 +23,4 @@ jobs:
       - name: Clippy
         run: cargo clippy --all-targets -- -D warnings
       - name: Build
-        run: RUSTFLAGS=-Dwarnings cargo build --all-targets
+        run: RUSTFLAGS=-Dwarnings cargo test --benches
