@@ -13,8 +13,7 @@
 
 const RAND_BENCH_N: u64 = 1000;
 
-use criterion::{criterion_group, criterion_main, Criterion,
-    Throughput};
+use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use criterion_cycles_per_byte::CyclesPerByte;
 
 use core::mem::size_of;

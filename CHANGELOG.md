@@ -13,7 +13,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Add `IndexedRandom::choose_multiple_array`, `index::sample_array` (#1453, #1469)
 - Bump the MSRV to 1.61.0
 - Rename `Rng::gen` to `Rng::random` to avoid conflict with the new `gen` keyword in Rust 2024 (#1435)
-- Move all benchmarks to new `benches` crate (#1439)
+- Move all benchmarks to new `benches` crate (#1439) and migrate to Criterion (#1490)
 - Annotate panicking methods with `#[track_caller]` (#1442, #1447)
 - Enable feature `small_rng` by default (#1455)
 - Allow `UniformFloat::new` samples and `UniformFloat::sample_single` to yield `high` (#1462)

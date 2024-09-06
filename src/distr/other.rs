@@ -66,7 +66,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// - [Wikipedia article on Password Strength](https://en.wikipedia.org/wiki/Password_strength)
 /// - [Diceware for generating memorable passwords](https://en.wikipedia.org/wiki/Diceware)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Alphanumeric;
 
