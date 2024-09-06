@@ -16,50 +16,40 @@ criterion-cycles-per-byte = "0.6"
 
 [[bench]]
 name = "array"
-path = "src/array.rs"
 harness = false
 
 [[bench]]
 name = "bool"
-path = "src/bool.rs"
 harness = false
 
 [[bench]]
 name = "distr"
-path = "src/distr.rs"
 harness = false
 
 [[bench]]
 name = "generators"
-path = "src/generators.rs"
 harness = false
 
 [[bench]]
 name = "seq_choose"
-path = "src/seq_choose.rs"
 harness = false
 
 [[bench]]
 name = "shuffle"
-path = "src/shuffle.rs"
 harness = false
 
 [[bench]]
 name = "standard"
-path = "src/standard.rs"
 harness = false
 
 [[bench]]
 name = "uniform"
-path = "src/uniform.rs"
 harness = false
 
 [[bench]]
 name = "uniform_float"
-path = "src/uniform_float.rs"
 harness = false
 
 [[bench]]
 name = "weighted"
-path = "src/weighted.rs"
 harness = false
