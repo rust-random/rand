@@ -6,11 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![feature(test)]
-#![allow(non_snake_case)]
-
-extern crate test;
-
 use core::time::Duration;
 use criterion::measurement::WallTime;
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkGroup, Criterion};
