@@ -49,7 +49,7 @@ pub fn bench(c: &mut Criterion) {
         };
     }
 
-    do_ty!(i8, i16, i32, i64, i128, isize);
+    do_ty!(i8, i16, i32, i64, i128);
     do_ty!(f32, f64);
     do_ty!(char);
 
