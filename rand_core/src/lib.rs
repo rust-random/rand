@@ -279,16 +279,15 @@ pub trait SeedableRng: Sized {
     ///
     /// # Implementing `SeedableRng` for RNGs with large seeds
     ///
-    /// Note that the required traits `core::default::Default` and
-    /// `core::convert::AsMut<u8>` are not implemented for large arrays
-    /// `[u8; N]` with `N` > 32. To be able to implement the traits required by
-    /// `SeedableRng` for RNGs with such large seeds, the newtype pattern can be
-    /// used:
+    /// Note that [`Default`] is not implemented for large arrays `[u8; N]` with
+    /// `N` > 32. To be able to implement the traits required by `SeedableRng`
+    /// for RNGs with such large seeds, the newtype pattern can be used:
     ///
     /// ```
     /// use rand_core::SeedableRng;
     ///
     /// const N: usize = 64;
+    /// #[derive(Clone)]
     /// pub struct MyRngSeed(pub [u8; N]);
     /// # #[allow(dead_code)]
     /// pub struct MyRng(MyRngSeed);
@@ -296,6 +295,12 @@ pub trait SeedableRng: Sized {
     /// impl Default for MyRngSeed {
     ///     fn default() -> MyRngSeed {
     ///         MyRngSeed([0; N])
+    ///     }
+    /// }
+    ///
+    /// impl AsRef<[u8]> for MyRngSeed {
+    ///     fn as_ref(&self) -> &[u8] {
+    ///         &self.0
     ///     }
     /// }
     ///
@@ -313,7 +318,7 @@ pub trait SeedableRng: Sized {
     ///     }
     /// }
     /// ```
-    type Seed: Sized + Default + AsMut<[u8]>;
+    type Seed: Clone + Default + AsRef<[u8]> + AsMut<[u8]>;
 
     /// Create a new PRNG using the given seed.
     ///
