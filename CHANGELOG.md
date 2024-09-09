@@ -21,7 +21,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Rename `rand::distributions` to `rand::distr` (#1470)
 - The `serde1` feature has been renamed `serde` (#1477)
 - Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480).
-- Require `Clone` bound for `SeedableRng::Seed`. (#1491)
+- Require `Clone` and `AsRef` bound for `SeedableRng::Seed`. (#1491)
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
