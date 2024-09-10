@@ -19,7 +19,7 @@ criterion_group!(
 criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
-    c.bench_function("seq_slice_choose_1_of_1000", |b| {
+    c.bench_function("seq_slice_choose_1_of_100", |b| {
         let mut rng = Pcg32::from_rng(thread_rng());
         let mut buf = [0i32; 100];
         rng.fill(&mut buf);
