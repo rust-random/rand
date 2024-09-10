@@ -138,13 +138,13 @@ pub trait Rng: RngCore {
         range.sample_single(self).unwrap()
     }
 
-    /// Generate values via an iterator
+    /// Return an iterator over [`random`](Self::random) variates
     ///
     /// This is a just a wrapper over [`Rng::sample_iter`] using
     /// [`distr::Standard`].
     ///
     /// Note: this method consumes its argument. Use
-    /// `(&mut rng).gen_iter()` to avoid consuming the RNG.
+    /// `(&mut rng).random_iter()` to avoid consuming the RNG.
     ///
     /// # Example
     ///
@@ -152,11 +152,11 @@ pub trait Rng: RngCore {
     /// use rand::{rngs::mock::StepRng, Rng};
     ///
     /// let rng = StepRng::new(1, 1);
-    /// let v: Vec<i32> = rng.gen_iter().take(5).collect();
+    /// let v: Vec<i32> = rng.random_iter().take(5).collect();
     /// assert_eq!(&v, &[1, 2, 3, 4, 5]);
     /// ```
     #[inline]
-    fn gen_iter<T>(self) -> distr::DistIter<Standard, Self, T>
+    fn random_iter<T>(self) -> distr::DistIter<Standard, Self, T>
     where
         Self: Sized,
         Standard: Distribution<T>,
