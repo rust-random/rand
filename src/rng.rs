@@ -96,48 +96,6 @@ pub trait Rng: RngCore {
         Standard.sample(self)
     }
 
-    /// Generate a random value in the given range.
-    ///
-    /// This function is optimised for the case that only a single sample is
-    /// made from the given range. See also the [`Uniform`] distribution
-    /// type which may be faster if sampling from the same range repeatedly.
-    ///
-    /// All types support `low..high_exclusive` and `low..=high` range syntax.
-    /// Unsigned integer types also support `..high_exclusive` and `..=high` syntax.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the range is empty, or if `high - low` overflows for floats.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
-    ///
-    /// // Exclusive range
-    /// let n: u32 = rng.gen_range(..10);
-    /// println!("{}", n);
-    /// let m: f64 = rng.gen_range(-40.0..1.3e5);
-    /// println!("{}", m);
-    ///
-    /// // Inclusive range
-    /// let n: u32 = rng.gen_range(..=10);
-    /// println!("{}", n);
-    /// ```
-    ///
-    /// [`Uniform`]: distr::uniform::Uniform
-    #[track_caller]
-    fn gen_range<T, R>(&mut self, range: R) -> T
-    where
-        T: SampleUniform,
-        R: SampleRange<T>,
-    {
-        assert!(!range.is_empty(), "cannot sample empty range");
-        range.sample_single(self).unwrap()
-    }
-
     /// Return an iterator over [`random`](Self::random) variates
     ///
     /// This is a just a wrapper over [`Rng::sample_iter`] using
@@ -245,6 +203,48 @@ pub trait Rng: RngCore {
     #[track_caller]
     fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
         dest.fill(self)
+    }
+
+    /// Generate a random value in the given range.
+    ///
+    /// This function is optimised for the case that only a single sample is
+    /// made from the given range. See also the [`Uniform`] distribution
+    /// type which may be faster if sampling from the same range repeatedly.
+    ///
+    /// All types support `low..high_exclusive` and `low..=high` range syntax.
+    /// Unsigned integer types also support `..high_exclusive` and `..=high` syntax.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the range is empty, or if `high - low` overflows for floats.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    ///
+    /// // Exclusive range
+    /// let n: u32 = rng.gen_range(..10);
+    /// println!("{}", n);
+    /// let m: f64 = rng.gen_range(-40.0..1.3e5);
+    /// println!("{}", m);
+    ///
+    /// // Inclusive range
+    /// let n: u32 = rng.gen_range(..=10);
+    /// println!("{}", n);
+    /// ```
+    ///
+    /// [`Uniform`]: distr::uniform::Uniform
+    #[track_caller]
+    fn gen_range<T, R>(&mut self, range: R) -> T
+    where
+        T: SampleUniform,
+        R: SampleRange<T>,
+    {
+        assert!(!range.is_empty(), "cannot sample empty range");
+        range.sample_single(self).unwrap()
     }
 
     /// Return a bool with a probability `p` of being true.
