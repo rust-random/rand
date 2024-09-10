@@ -129,3 +129,5 @@ impl SmallRng {
         SmallRng(Rng::from_seed(seed))
     }
 }
+
+impl_rng_methods_as_inherent!(SmallRng, crate, rand::rngs::SmallRng::from_thread_rng());

@@ -26,10 +26,9 @@
 //! # Example usage
 //!
 //! ```
-//! use rand::{Rng, thread_rng};
 //! use rand::distr::Uniform;
 //!
-//! let mut rng = thread_rng();
+//! let mut rng = rand::thread_rng();
 //! let side = Uniform::new(-10.0, 10.0).unwrap();
 //!
 //! // sample between 1 and 10 points
@@ -189,8 +188,6 @@ use serde::{Deserialize, Serialize};
 /// For a single sample, [`Rng::gen_range`] may be preferred:
 ///
 /// ```
-/// use rand::Rng;
-///
 /// let mut rng = rand::thread_rng();
 /// println!("{}", rng.gen_range(0..10));
 /// ```

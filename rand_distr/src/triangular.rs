@@ -113,7 +113,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use rand::{rngs::mock, Rng};
+    use rand::rngs::mock;
 
     #[test]
     fn test_triangular() {

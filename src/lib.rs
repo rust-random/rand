@@ -98,6 +98,7 @@ pub use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 // Public modules
 pub mod distr;
 pub mod prelude;
+#[macro_use]
 mod rng;
 pub mod rngs;
 pub mod seq;
@@ -135,8 +136,6 @@ use crate::distr::{Distribution, Standard};
 /// following example can increase performance.
 ///
 /// ```
-/// use rand::Rng;
-///
 /// let mut v = vec![1, 2, 3];
 ///
 /// for x in v.iter_mut() {

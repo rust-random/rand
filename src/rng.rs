@@ -62,9 +62,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::thread_rng();
     /// let x: u32 = rng.random();
     /// println!("{}", x);
     /// println!("{:?}", rng.random::<(f64, bool)>());
@@ -81,9 +79,7 @@ pub trait Rng: RngCore {
     /// though note that generated values will differ.
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::thread_rng();
     /// let tuple: (u8, i32, char) = rng.random(); // arbitrary tuple support
     ///
     /// let arr1: [f32; 32] = rng.random();        // array construction
@@ -111,9 +107,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{rngs::mock::StepRng, Rng};
-    ///
-    /// let rng = StepRng::new(1, 1);
+    /// let rng = rand::rngs::mock::StepRng::new(1, 1);
     /// let v: Vec<i32> = rng.random_iter().take(5).collect();
     /// assert_eq!(&v, &[1, 2, 3, 4, 5]);
     /// ```
@@ -131,10 +125,9 @@ pub trait Rng: RngCore {
     /// ### Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
     /// use rand::distr::Uniform;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::thread_rng();
     /// let x = rng.sample(Uniform::new(10u32, 15).unwrap());
     /// // Type annotation requires two types, the type and distribution; the
     /// // distribution can be inferred.
@@ -197,10 +190,8 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
     /// let mut arr = [0i8; 20];
-    /// thread_rng().fill(&mut arr[..]);
+    /// rand::thread_rng().fill(&mut arr[..]);
     /// ```
     ///
     /// [`fill_bytes`]: RngCore::fill_bytes
@@ -225,9 +216,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::thread_rng();
     ///
     /// // Exclusive range
     /// let n: u32 = rng.gen_range(..10);
@@ -259,9 +248,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::thread_rng();
     /// println!("{}", rng.gen_bool(1.0 / 3.0));
     /// ```
     ///
@@ -295,9 +282,7 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::thread_rng();
     /// println!("{}", rng.gen_ratio(2, 3));
     /// ```
     ///
@@ -329,6 +314,114 @@ pub trait Rng: RngCore {
 }
 
 impl<R: RngCore + ?Sized> Rng for R {}
+
+/// Implement [`Rng`] methods on `$target` as inherent methods
+///
+/// Parameters:
+///
+/// -   `$target` is the type to implement for (no support for generics)
+/// -   `$rand` is `rand` (or `crate` within `rand`, or whatever `rand` is renamed to)
+/// -   `$rng` is a constructor for the RNG (used in doc examples)
+macro_rules! impl_rng_methods_as_inherent {
+    ($target:ty, $rand:path, $rng:expr) => {
+        #[doc = concat!("Implement [`rand::Rng`](", stringify!($rand), "::Rng) methods as inherent methods")]
+        ///
+        /// # Example
+        ///
+        /// ```
+        /// use rand::distr::{Alphanumeric, Bernoulli};
+        #[doc = concat!("let mut rng = ", stringify!($rng), ";")]
+        ///
+        /// let x: u32 = rng.random();
+        /// let y = rng.gen_range(1..=6);
+        /// let z: usize = rng.gen_range(..50);
+        /// println!("{x}, {y}, {z}");
+        ///
+        /// let _ = rng.sample(Alphanumeric);
+        ///
+        /// // Simulate a Poisson process:
+        /// let b = Bernoulli::new(0.2).unwrap();
+        #[doc = concat!("let n = ", stringify!($rng))]
+        ///     .sample_iter(b)
+        ///     .take(50)
+        ///     .filter(|r| *r)
+        ///     .count();
+        /// assert!(n <= 50);
+        ///
+        /// let mut arr = [0i8; 20];
+        /// rng.fill(&mut arr[..]);
+        /// ```
+        impl $target {
+            #[doc = concat!("Return a random variate from the [`rand::distr::Standard`](", stringify!($rand), "::distr::Standard) distribution")]
+            #[inline]
+            pub fn random<T>(&mut self) -> T
+            where
+                $crate::distr::Standard: $crate::distr::Distribution<T>,
+            {
+                use $crate::distr::Distribution;
+                $crate::distr::Standard.sample(self)
+            }
+
+            /// Return an iterator over [`random`](Self::random) variates
+            #[inline]
+            pub fn random_iter<T>(self) -> $crate::distr::DistIter<$crate::distr::Standard, Self, T>
+            where
+                Self: Sized,
+                $crate::distr::Standard: $crate::distr::Distribution<T>,
+            {
+                use $crate::distr::Distribution;
+                $crate::distr::Standard.sample_iter(self)
+            }
+
+            /// Sample a new value, using the given distribution.
+            #[inline]
+            pub fn sample<T, D: $crate::distr::Distribution<T>>(&mut self, distr: D) -> T {
+                distr.sample(self)
+            }
+
+            /// Create an iterator that generates values using the given distribution.
+            #[inline]
+            pub fn sample_iter<T, D>(self, distr: D) -> $crate::distr::DistIter<D, Self, T>
+            where
+                D: $crate::distr::Distribution<T>,
+                Self: Sized,
+            {
+                distr.sample_iter(self)
+            }
+
+            #[doc = concat!("Fill any type implementing [`rand::Fill`](", stringify!($rand), "::Fill) with random data")]
+            #[track_caller]
+            pub fn fill<T: $crate::Fill + ?Sized>(&mut self, dest: &mut T) {
+                dest.fill(self)
+            }
+
+            /// Generate a random value in the given range.
+            #[track_caller]
+            pub fn gen_range<T, R>(&mut self, range: R) -> T
+            where
+                T: $crate::distr::uniform::SampleUniform,
+                R: $crate::distr::uniform::SampleRange<T>,
+            {
+                assert!(!range.is_empty(), "cannot sample empty range");
+                range.sample_single(self).unwrap()
+            }
+
+            /// Return a bool with a probability `p` of being true.
+            #[inline]
+            #[track_caller]
+            pub fn gen_bool(&mut self, p: f64) -> bool {
+                <Self as $crate::Rng>::gen_bool(self, p)
+            }
+
+            /// Return a bool with a probability of `numerator/denominator` of being true.
+            #[inline]
+            #[track_caller]
+            pub fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
+                <Self as $crate::Rng>::gen_ratio(self, numerator, denominator)
+            }
+        }
+    };
+}
 
 /// Types which may be filled with random data
 ///

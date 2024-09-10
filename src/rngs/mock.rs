@@ -31,10 +31,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use rand::Rng;
-/// use rand::rngs::mock::StepRng;
-///
-/// let mut my_rng = StepRng::new(2, 1);
+/// let mut my_rng = rand::rngs::mock::StepRng::new(2, 1);
 /// let sample: [u64; 3] = my_rng.random();
 /// assert_eq!(sample, [2, 3, 4]);
 /// ```
@@ -77,6 +74,8 @@ impl RngCore for StepRng {
 
 rand_core::impl_try_rng_from_rng_core!(StepRng);
 
+impl_rng_methods_as_inherent!(StepRng, crate, rand::rngs::mock::StepRng::new(1, 1));
+
 #[cfg(test)]
 mod tests {
     #[cfg(any(feature = "alloc", feature = "serde"))]
@@ -95,7 +94,7 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn test_bool() {
-        use crate::{distr::Standard, Rng};
+        use crate::distr::Standard;
 
         // If this result ever changes, update doc on StepRng!
         let rng = StepRng::new(0, 1 << 31);

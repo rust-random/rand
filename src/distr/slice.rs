@@ -33,7 +33,6 @@ use alloc::string::String;
 /// # Example
 ///
 /// ```
-/// use rand::Rng;
 /// use rand::distr::Slice;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];

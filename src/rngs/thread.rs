@@ -121,8 +121,6 @@ thread_local!(
 ///
 /// Example usage:
 /// ```
-/// use rand::Rng;
-///
 /// # fn main() {
 /// // rand::random() may be used instead of rand::thread_rng().gen():
 /// println!("A random boolean: {}", rand::random::<bool>());
@@ -172,11 +170,12 @@ impl CryptoRng for ThreadRng {}
 
 rand_core::impl_try_crypto_rng_from_crypto_rng!(ThreadRng);
 
+impl_rng_methods_as_inherent!(ThreadRng, crate, rand::thread_rng());
+
 #[cfg(test)]
 mod test {
     #[test]
     fn test_thread_rng() {
-        use crate::Rng;
         let mut r = crate::thread_rng();
         r.random::<i32>();
         assert_eq!(r.gen_range(0..1), 0);

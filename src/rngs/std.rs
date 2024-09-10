@@ -93,6 +93,12 @@ impl CryptoRng for StdRng {}
 
 rand_core::impl_try_crypto_rng_from_crypto_rng!(StdRng);
 
+impl_rng_methods_as_inherent!(
+    StdRng,
+    crate,
+    <rand::rngs::StdRng as rand::SeedableRng>::from_os_rng()
+);
+
 #[cfg(test)]
 mod test {
     use crate::rngs::StdRng;
