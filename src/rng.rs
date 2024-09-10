@@ -316,7 +316,7 @@ pub trait Rng: RngCore {
         since = "0.9.0",
         note = "Renamed to `random` to avoid conflict with the new `gen` keyword in Rust 2024."
     )]
-    fn gen<T>(&mut self) -> T
+    fn r#gen<T>(&mut self) -> T
     where
         Standard: Distribution<T>,
     {
@@ -474,8 +474,8 @@ mod test {
         // Check equivalence for generated floats
         let mut array = [0f32; 2];
         rng.fill(&mut array);
-        let gen: [f32; 2] = rng.random();
-        assert_eq!(array, gen);
+        let arr2: [f32; 2] = rng.random();
+        assert_eq!(array, arr2);
     }
 
     #[test]
