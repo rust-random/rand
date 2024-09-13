@@ -51,11 +51,7 @@ where
     Standard: Distribution<F>,
 {
     lambda: F,
-    // precalculated values
-    exp_lambda: F,
-    log_lambda: F,
-    sqrt_2lambda: F,
-    magic_val: F,
+    method: Method<F>,
 }
 
 /// Error type returned from [`Poisson::new`].
@@ -81,6 +77,22 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct KnuthMethod<F> {
+    exp_lambda: F,
+}
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct RejectionMethod<F> {
+    log_lambda: F,
+    sqrt_2lambda: F,
+    magic_val: F,
+}
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Method<F> {
+    Knuth(KnuthMethod<F>),
+    Rejection(RejectionMethod<F>),
+}
+
 impl<F> Poisson<F>
 where
     F: Float + FloatConst,
@@ -104,17 +116,91 @@ where
         if !(lambda > F::zero()) {
             return Err(Error::ShapeTooSmall);
         }
-        let log_lambda = lambda.ln();
-        Ok(Poisson {
-            lambda,
-            exp_lambda: (-lambda).exp(),
-            log_lambda,
-            sqrt_2lambda: (F::from(2.0).unwrap() * lambda).sqrt(),
-            magic_val: lambda * log_lambda - crate::utils::log_gamma(F::one() + lambda),
-        })
+
+        // Use the Knuth method only for low expected values
+        let method = if lambda < F::from(12.0).unwrap() {
+            Method::Knuth(KnuthMethod {
+                exp_lambda: (-lambda).exp(),
+            })
+        } else {
+            let log_lambda = lambda.ln();
+            let sqrt_2lambda = (F::from(2.0).unwrap() * lambda).sqrt();
+            let magic_val = lambda * log_lambda - crate::utils::log_gamma(F::one() + lambda);
+            Method::Rejection(RejectionMethod {
+                log_lambda,
+                sqrt_2lambda,
+                magic_val,
+            })
+        };
+
+        Ok(Poisson { lambda, method })
     }
 }
 
+impl<F> Distribution<F> for KnuthMethod<F>
+where
+    F: Float + FloatConst,
+    Standard: Distribution<F>,
+{
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
+        let mut result = F::one();
+        let mut p = rng.random::<F>();
+        while p > self.exp_lambda {
+            p = p * rng.random::<F>();
+            result = result + F::one();
+        }
+        result - F::one()
+    }
+}
+impl<F> RejectionMethod<F>
+where
+    F: Float + FloatConst,
+    Standard: Distribution<F>,
+{
+    fn sample<R: Rng + ?Sized>(&self, lambda: F, rng: &mut R) -> F {
+        // The algorithm from Numerical Recipes in C
+
+        // we use the Cauchy distribution as the comparison distribution
+        // f(x) ~ 1/(1+x^2)
+        let cauchy = Cauchy::new(F::zero(), F::one()).unwrap();
+        let mut result;
+
+        loop {
+            let mut comp_dev;
+
+            loop {
+                // draw from the Cauchy distribution
+                comp_dev = rng.sample(cauchy);
+                // shift the peak of the comparison distribution
+                result = self.sqrt_2lambda * comp_dev + lambda;
+                // repeat the drawing until we are in the range of possible values
+                if result >= F::zero() {
+                    break;
+                }
+            }
+            // now the result is a random variable greater than 0 with Cauchy distribution
+            // the result should be an integer value
+            result = result.floor();
+
+            // this is the ratio of the Poisson distribution to the comparison distribution
+            // the magic value scales the distribution function to a range of approximately 0-1
+            // since it is not exact, we multiply the ratio by 0.9 to avoid ratios greater than 1
+            // this doesn't change the resulting distribution, only increases the rate of failed drawings
+            let check = F::from(0.9).unwrap()
+                * (F::one() + comp_dev * comp_dev)
+                * (result * self.log_lambda
+                    - crate::utils::log_gamma(F::one() + result)
+                    - self.magic_val)
+                    .exp();
+
+            // check with uniform random value - if below the threshold, we are within the target distribution
+            if rng.random::<F>() <= check {
+                break;
+            }
+        }
+        result
+    }
+}
 impl<F> Distribution<F> for Poisson<F>
 where
     F: Float + FloatConst,
@@ -122,59 +208,9 @@ where
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
-        // using the algorithm from Numerical Recipes in C
-
-        // for low expected values use the Knuth method
-        if self.lambda < F::from(12.0).unwrap() {
-            let mut result = F::one();
-            let mut p = rng.random::<F>();
-            while p > self.exp_lambda {
-                p = p * rng.random::<F>();
-                result = result + F::one();
-            }
-            result - F::one()
-        }
-        // high expected values - rejection method
-        else {
-            // we use the Cauchy distribution as the comparison distribution
-            // f(x) ~ 1/(1+x^2)
-            let cauchy = Cauchy::new(F::zero(), F::one()).unwrap();
-            let mut result;
-
-            loop {
-                let mut comp_dev;
-
-                loop {
-                    // draw from the Cauchy distribution
-                    comp_dev = rng.sample(cauchy);
-                    // shift the peak of the comparison distribution
-                    result = self.sqrt_2lambda * comp_dev + self.lambda;
-                    // repeat the drawing until we are in the range of possible values
-                    if result >= F::zero() {
-                        break;
-                    }
-                }
-                // now the result is a random variable greater than 0 with Cauchy distribution
-                // the result should be an integer value
-                result = result.floor();
-
-                // this is the ratio of the Poisson distribution to the comparison distribution
-                // the magic value scales the distribution function to a range of approximately 0-1
-                // since it is not exact, we multiply the ratio by 0.9 to avoid ratios greater than 1
-                // this doesn't change the resulting distribution, only increases the rate of failed drawings
-                let check = F::from(0.9).unwrap()
-                    * (F::one() + comp_dev * comp_dev)
-                    * (result * self.log_lambda
-                        - crate::utils::log_gamma(F::one() + result)
-                        - self.magic_val)
-                        .exp();
-
-                // check with uniform random value - if below the threshold, we are within the target distribution
-                if rng.random::<F>() <= check {
-                    break;
-                }
-            }
-            result
+        match &self.method {
+            Method::Knuth(method) => method.sample(rng),
+            Method::Rejection(method) => method.sample(self.lambda, rng),
         }
     }
 }
