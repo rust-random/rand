@@ -146,12 +146,15 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     g.finish();
 
     let mut g = c.benchmark_group("gamma");
-    distr_float!(g, "gamma_large_shape", f64, Gamma::new(10., 1.0).unwrap());
-    distr_float!(g, "gamma_small_shape", f64, Gamma::new(0.1, 1.0).unwrap());
-    distr_float!(g, "beta_small_param", f64, Beta::new(0.1, 0.1).unwrap());
-    distr_float!(g, "beta_large_param_similar", f64, Beta::new(101., 95.).unwrap());
-    distr_float!(g, "beta_large_param_different", f64, Beta::new(10., 1000.).unwrap());
-    distr_float!(g, "beta_mixed_param", f64, Beta::new(0.5, 100.).unwrap());
+    distr_float!(g, "large_shape", f64, Gamma::new(10., 1.0).unwrap());
+    distr_float!(g, "small_shape", f64, Gamma::new(0.1, 1.0).unwrap());
+    g.finish();
+
+    let mut g = c.benchmark_group("beta");
+    distr_float!(g, "small_param", f64, Beta::new(0.1, 0.1).unwrap());
+    distr_float!(g, "large_param_similar", f64, Beta::new(101., 95.).unwrap());
+    distr_float!(g, "large_param_different", f64, Beta::new(10., 1000.).unwrap());
+    distr_float!(g, "mixed_param", f64, Beta::new(0.5, 100.).unwrap());
     g.finish();
 
     let mut g = c.benchmark_group("cauchy");
@@ -168,24 +171,23 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     g.finish();
 
     let mut g = c.benchmark_group("weighted");
-    distr_int!(g, "weighted_i8", usize, WeightedIndex::new([1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "weighted_u32", usize, WeightedIndex::new([1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "weighted_f64", usize, WeightedIndex::new([1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
-    distr_int!(g, "weighted_large_set", usize, WeightedIndex::new((0..10000).rev().chain(1..10001)).unwrap());
-    distr_int!(g, "weighted_alias_method_i8", usize, WeightedAliasIndex::new(vec![1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "weighted_alias_method_u32", usize, WeightedAliasIndex::new(vec![1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "weighted_alias_method_f64", usize, WeightedAliasIndex::new(vec![1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
-    distr_int!(g, "weighted_alias_method_large_set", usize, WeightedAliasIndex::new((0..10000).rev().chain(1..10001).collect()).unwrap());
+    distr_int!(g, "i8", usize, WeightedIndex::new([1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+    distr_int!(g, "u32", usize, WeightedIndex::new([1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+    distr_int!(g, "f64", usize, WeightedIndex::new([1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
+    distr_int!(g, "large_set", usize, WeightedIndex::new((0..10000).rev().chain(1..10001)).unwrap());
+    distr_int!(g, "alias_method_i8", usize, WeightedAliasIndex::new(vec![1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+    distr_int!(g, "alias_method_u32", usize, WeightedAliasIndex::new(vec![1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+    distr_int!(g, "alias_method_f64", usize, WeightedAliasIndex::new(vec![1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
+    distr_int!(g, "alias_method_large_set", usize, WeightedAliasIndex::new((0..10000).rev().chain(1..10001).collect()).unwrap());
     g.finish();
 
     let mut g = c.benchmark_group("binomial");
-    sample_binomial!(g, "binomial", 20, 0.7);
-    sample_binomial!(g, "binomial_small", 1_000_000, 1e-30);
-    sample_binomial!(g, "binomial_1", 1, 0.9);
-    sample_binomial!(g, "binomial_10", 10, 0.9);
-    sample_binomial!(g, "binomial_100", 100, 0.99);
-    sample_binomial!(g, "binomial_1000", 1000, 0.01);
-    sample_binomial!(g, "binomial_1e12", 1_000_000_000_000, 0.2);
+    sample_binomial!(g, "small", 1_000_000, 1e-30);
+    sample_binomial!(g, "1", 1, 0.9);
+    sample_binomial!(g, "10", 10, 0.9);
+    sample_binomial!(g, "100", 100, 0.99);
+    sample_binomial!(g, "1000", 1000, 0.01);
+    sample_binomial!(g, "1e12", 1_000_000_000_000, 0.2);
     g.finish();
 
     let mut g = c.benchmark_group("poisson");
@@ -201,11 +203,8 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     distr!(g, "bernoulli", bool, Bernoulli::new(0.18).unwrap());
     g.finish();
 
-    let mut g = c.benchmark_group("circle");
+    let mut g = c.benchmark_group("unit");
     distr_arr!(g, "circle", [f64; 2], UnitCircle);
-    g.finish();
-
-    let mut g = c.benchmark_group("sphere");
     distr_arr!(g, "sphere", [f64; 3], UnitSphere);
     g.finish();
 }
