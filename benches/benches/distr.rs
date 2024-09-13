@@ -211,7 +211,9 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
 
 criterion_group!(
     name = benches;
-    config = Criterion::default().with_measurement(CyclesPerByte);
+    config = Criterion::default().with_measurement(CyclesPerByte)
+        .warm_up_time(core::time::Duration::from_secs(1))
+        .measurement_time(core::time::Duration::from_secs(2));
     targets = bench
 );
 criterion_main!(benches);
