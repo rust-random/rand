@@ -146,6 +146,7 @@ impl Binomial {
         let inner = if np < BINV_THRESHOLD {
             let q = 1.0 - p;
             if q == 1.0 {
+                // p is so small that this is extremly close to a Poisson distribution.
                 assert!(np <= 12.0, "This is required for Knuth method");
                 Method::Poisson(crate::poisson::KnuthMethod::new(np))
             } else {
@@ -228,9 +229,9 @@ fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
 
     let lambda_l = lambda((f_m - x_l) / (f_m - x_l * btpe.p));
     let lambda_r = lambda((x_r - f_m) / (x_r * q));
-    // p1 + area of left tail
+    
     let p3 = p2 + c / lambda_l;
-    // p1 + area of right tail
+    
     let p4 = p3 + c / lambda_r;
 
     // return value
@@ -365,7 +366,7 @@ fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
 }
 
 impl Distribution<u64> for Binomial {
-    #[allow(clippy::many_single_char_names)] // Same names as in the reference.
+    #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         let result = match self.method {
             Method::Binv(binv_para) => binv(binv_para, rng),
