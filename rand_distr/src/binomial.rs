@@ -229,9 +229,9 @@ fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
 
     let lambda_l = lambda((f_m - x_l) / (f_m - x_l * btpe.p));
     let lambda_r = lambda((x_r - f_m) / (x_r * q));
-    
+
     let p3 = p2 + c / lambda_l;
-    
+
     let p4 = p3 + c / lambda_r;
 
     // return value
