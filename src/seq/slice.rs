@@ -9,7 +9,7 @@
 //! `IndexedRandom`, `IndexedMutRandom`, `SliceRandom`
 
 use super::increasing_uniform::IncreasingUniform;
-use super::{gen_index, index};
+use super::index;
 #[cfg(feature = "alloc")]
 use crate::distr::uniform::{SampleBorrow, SampleUniform};
 #[cfg(feature = "alloc")]
@@ -57,7 +57,7 @@ pub trait IndexedRandom: Index<usize> {
         if self.is_empty() {
             None
         } else {
-            Some(&self[gen_index(rng, self.len())])
+            Some(&self[rng.gen_range(..self.len())])
         }
     }
 
@@ -189,6 +189,12 @@ pub trait IndexedRandom: Index<usize> {
     /// if the "nightly" feature is enabled, or `O(length)` space and
     /// `O(length + amount * log length)` time otherwise.
     ///
+    /// # Known issues
+    ///
+    /// The algorithm currently used to implement this method loses accuracy
+    /// when small values are used for weights.
+    /// See [#1476](https://github.com/rust-random/rand/issues/1476).
+    ///
     /// # Example
     ///
     /// ```
@@ -253,7 +259,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
             None
         } else {
             let len = self.len();
-            Some(&mut self[gen_index(rng, len)])
+            Some(&mut self[rng.gen_range(..len)])
         }
     }
 
@@ -393,7 +399,7 @@ impl<T> SliceRandom for [T] {
         // It ensures that the last `amount` elements of the slice
         // are randomly selected from the whole slice.
 
-        // `IncreasingUniform::next_index()` is faster than `gen_index`
+        // `IncreasingUniform::next_index()` is faster than `Rng::gen_range`
         // but only works for 32 bit integers
         // So we must use the slow method if the slice is longer than that.
         if self.len() < (u32::MAX as usize) {
@@ -404,7 +410,7 @@ impl<T> SliceRandom for [T] {
             }
         } else {
             for i in m..self.len() {
-                let index = gen_index(rng, i + 1);
+                let index = rng.gen_range(..i + 1);
                 self.swap(i, index);
             }
         }

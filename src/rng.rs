@@ -102,7 +102,8 @@ pub trait Rng: RngCore {
     /// made from the given range. See also the [`Uniform`] distribution
     /// type which may be faster if sampling from the same range repeatedly.
     ///
-    /// Only `gen_range(low..high)` and `gen_range(low..=high)` are supported.
+    /// All types support `low..high_exclusive` and `low..=high` range syntax.
+    /// Unsigned integer types also support `..high_exclusive` and `..=high` syntax.
     ///
     /// # Panics
     ///
@@ -116,13 +117,13 @@ pub trait Rng: RngCore {
     /// let mut rng = thread_rng();
     ///
     /// // Exclusive range
-    /// let n: u32 = rng.gen_range(0..10);
+    /// let n: u32 = rng.gen_range(..10);
     /// println!("{}", n);
     /// let m: f64 = rng.gen_range(-40.0..1.3e5);
     /// println!("{}", m);
     ///
     /// // Inclusive range
-    /// let n: u32 = rng.gen_range(0..=10);
+    /// let n: u32 = rng.gen_range(..=10);
     /// println!("{}", n);
     /// ```
     ///
@@ -407,8 +408,8 @@ macro_rules! impl_fill {
     }
 }
 
-impl_fill!(u16, u32, u64, usize, u128,);
-impl_fill!(i8, i16, i32, i64, isize, i128,);
+impl_fill!(u16, u32, u64, u128,);
+impl_fill!(i8, i16, i32, i64, i128,);
 
 impl<T, const N: usize> Fill for [T; N]
 where
@@ -500,7 +501,7 @@ mod test {
             let a: u32 = r.gen_range(12..=24);
             assert!((12..=24).contains(&a));
 
-            assert_eq!(r.gen_range(0u32..1), 0u32);
+            assert_eq!(r.gen_range(..1u32), 0u32);
             assert_eq!(r.gen_range(-12i64..-11), -12i64);
             assert_eq!(r.gen_range(3_000_000..3_000_001), 3_000_000);
         }
