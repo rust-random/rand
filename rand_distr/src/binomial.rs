@@ -73,7 +73,7 @@ struct Binv {
 struct Btpe {
     n: u64,
     p: f64,
-    // TODO precompute the other constants
+    // TODO consider precomputing more constants, there is a size/speed tradeoff to make here.
 }
 
 /// Error type returned from [`Binomial::new`].
@@ -159,7 +159,11 @@ impl Binomial {
         } else {
             Method::Btpe(Btpe { n, p })
         };
-        Ok(Binomial { flipped, method: inner, n })
+        Ok(Binomial {
+            flipped,
+            method: inner,
+            n,
+        })
     }
 }
 
