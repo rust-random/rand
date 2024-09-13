@@ -50,14 +50,14 @@ use rand::Rng;
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Binomial {
-    inner: Inner,
+    method: Method,
     flipped: bool,
     n: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-enum Inner {
+enum Method {
     Binv(Binv),
     Btpe(Btpe),
     Poisson(crate::poisson::KnuthMethod<f64>),
@@ -123,7 +123,7 @@ impl Binomial {
 
         if p == 0.0 {
             return Ok(Binomial {
-                inner: Inner::Constant(0),
+                method: Method::Constant(0),
                 flipped: false,
                 n,
             });
@@ -131,7 +131,7 @@ impl Binomial {
 
         if p == 1.0 {
             return Ok(Binomial {
-                inner: Inner::Constant(n),
+                method: Method::Constant(n),
                 flipped: false,
                 n,
             });
@@ -158,19 +158,19 @@ impl Binomial {
             let q = 1.0 - p;
             if q == 1.0 {
                 assert!(np <= 12.0, "This is required for Knuth method");
-                Inner::Poisson(crate::poisson::KnuthMethod::new(np))
+                Method::Poisson(crate::poisson::KnuthMethod::new(np))
             } else {
                 let s = p / q;
-                Inner::Binv(Binv {
+                Method::Binv(Binv {
                     r: q.powf(n as f64),
                     s,
                     a: (n as f64 + 1.0) * s,
                 })
             }
         } else {
-            Inner::Btpe(Btpe { n, p })
+            Method::Btpe(Btpe { n, p })
         };
-        Ok(Binomial { flipped, inner, n })
+        Ok(Binomial { flipped, method: inner, n })
     }
 }
 
@@ -374,11 +374,11 @@ fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
 impl Distribution<u64> for Binomial {
     #[allow(clippy::many_single_char_names)] // Same names as in the reference.
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
-        let result = match self.inner {
-            Inner::Binv(binv_para) => binv(binv_para, rng),
-            Inner::Btpe(btpe_para) => btpe(btpe_para, rng),
-            Inner::Poisson(poisson) => poisson.sample(rng) as u64,
-            Inner::Constant(c) => c,
+        let result = match self.method {
+            Method::Binv(binv_para) => binv(binv_para, rng),
+            Method::Btpe(btpe_para) => btpe(btpe_para, rng),
+            Method::Poisson(poisson) => poisson.sample(rng) as u64,
+            Method::Constant(c) => c,
         };
 
         if self.flipped {
