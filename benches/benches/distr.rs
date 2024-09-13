@@ -139,7 +139,23 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     g.finish();
 
     let mut g = c.benchmark_group("poisson");
-    distr_float!(g, "poisson", f64, Poisson::new(4.0).unwrap());
+    for lambda in [1f64, 4.0, 10.0, 100.0].into_iter() {
+        let name = format!("{lambda}");
+        distr_float!(g, name, f64, Poisson::new(lambda).unwrap());
+    }
+    g.throughput(Throughput::Elements(ITER_ELTS));
+    g.bench_function("variable", |c| {
+        let mut rng = Pcg64Mcg::from_os_rng();
+        let ldistr = Uniform::new(0.1, 10.0).unwrap();
+
+        c.iter(|| {
+            let l = rng.sample(ldistr);
+            let distr = Poisson::new(l * l).unwrap();
+            Distribution::<f64>::sample_iter(&distr, &mut rng)
+                .take(ITER_ELTS as usize)
+                .fold(0.0, |a, r| a + r)
+        })
+    });
     g.finish();
 
     let mut g = c.benchmark_group("zipf");
