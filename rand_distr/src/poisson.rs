@@ -78,6 +78,7 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub(crate) struct KnuthMethod<F> {
     exp_lambda: F,
 }
@@ -90,12 +91,14 @@ impl<F: Float> KnuthMethod<F> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 struct RejectionMethod<F> {
     log_lambda: F,
     sqrt_2lambda: F,
     magic_val: F,
 }
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum Method<F> {
     Knuth(KnuthMethod<F>),
     Rejection(RejectionMethod<F>),
