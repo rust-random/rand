@@ -78,9 +78,17 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct KnuthMethod<F> {
+pub(crate) struct KnuthMethod<F> {
     exp_lambda: F,
 }
+impl<F: Float> KnuthMethod<F> {
+    pub(crate) fn new(lambda: F) -> Self {
+        KnuthMethod {
+            exp_lambda: (-lambda).exp(),
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct RejectionMethod<F> {
     log_lambda: F,
@@ -119,9 +127,7 @@ where
 
         // Use the Knuth method only for low expected values
         let method = if lambda < F::from(12.0).unwrap() {
-            Method::Knuth(KnuthMethod {
-                exp_lambda: (-lambda).exp(),
-            })
+            Method::Knuth(KnuthMethod::new(lambda))
         } else {
             let log_lambda = lambda.ln();
             let sqrt_2lambda = (F::from(2.0).unwrap() * lambda).sqrt();
