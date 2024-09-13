@@ -9,7 +9,7 @@
 
 //! The binomial distribution `Binomial(n, p)`.
 
-use crate::{Distribution, Poisson, Uniform};
+use crate::{Distribution, Uniform};
 use core::cmp::Ordering;
 use core::fmt;
 #[allow(unused_imports)]
@@ -60,7 +60,7 @@ pub struct Binomial {
 enum Inner {
     Binv(Binv),
     Btpe(Btpe),
-    Poisson(Poisson<f64>),
+    Poisson(crate::poisson::KnuthMethod<f64>),
     Constant(u64),
 }
 
@@ -157,7 +157,8 @@ impl Binomial {
         let inner = if np < BINV_THRESHOLD {
             let q = 1.0 - p;
             if q == 1.0 {
-                Inner::Poisson(Poisson::new(np).unwrap())
+                assert!(np <= 12.0, "This is required for Knuth method");
+                Inner::Poisson(crate::poisson::KnuthMethod::new(np))
             } else {
                 let s = p / q;
                 Inner::Binv(Binv {
