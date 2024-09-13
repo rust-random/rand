@@ -11,12 +11,8 @@
 // Rustfmt splits macro invocations to shorten lines; in this case longer-lines are more readable
 #![rustfmt::skip]
 
-const RAND_BENCH_N: u64 = 1000;
-
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use criterion_cycles_per_byte::CyclesPerByte;
-
-use core::mem::size_of;
 
 use rand::prelude::*;
 use rand_distr::*;
@@ -24,82 +20,48 @@ use rand_distr::*;
 // At this time, distributions are optimised for 64-bit platforms.
 use rand_pcg::Pcg64Mcg;
 
+const ITER_ELTS: u64 = 100;
+
 macro_rules! distr_int {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
-        $group.throughput(Throughput::Bytes(
-            size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
             let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
-            c.iter(|| {
-                let mut accum: $ty = 0;
-                for _ in 0..RAND_BENCH_N {
-                    let x: $ty = distr.sample(&mut rng);
-                    accum = accum.wrapping_add(x);
-                }
-                accum
-            });
+            c.iter(|| distr.sample(&mut rng));
         });
     };
 }
 
 macro_rules! distr_float {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
-        $group.throughput(Throughput::Bytes(
-            size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
             let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
-            c.iter(|| {
-                let mut accum = 0.;
-                for _ in 0..RAND_BENCH_N {
-                    let x: $ty = distr.sample(&mut rng);
-                    accum += x;
-                }
-                accum
-            });
+            c.iter(|| Distribution::<$ty>::sample(&distr, &mut rng));
         });
     };
 }
 
 macro_rules! distr {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
-        $group.throughput(Throughput::Bytes(
-            size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
             let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
-            c.iter(|| {
-                let mut accum: u32 = 0;
-                for _ in 0..RAND_BENCH_N {
-                    let x: $ty = distr.sample(&mut rng);
-                    accum = accum.wrapping_add(x as u32);
-                }
-                accum
-            });
+            c.iter(|| distr.sample(&mut rng));
         });
     };
 }
 
 macro_rules! distr_arr {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
-        $group.throughput(Throughput::Bytes(
-            size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
             let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
-            c.iter(|| {
-                let mut accum: u32 = 0;
-                for _ in 0..RAND_BENCH_N {
-                    let x: $ty = distr.sample(&mut rng);
-                    accum = accum.wrapping_add(x[0] as u32);
-                }
-                accum
-            });
+            c.iter(|| Distribution::<$ty>::sample(&distr, &mut rng));
         });
     };
 }
@@ -122,19 +84,16 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     distr_float!(g, "standardnormal_specialized", f64, StandardNormal);
     distr_float!(g, "standardnormal_general", f64, Normal::new(0., 1.).unwrap());
     distr_float!(g, "log_normal", f64, LogNormal::new(-1.23, 4.56).unwrap());
-    g.throughput(Throughput::Bytes(size_of::<f64>() as u64 * RAND_BENCH_N));
+    g.throughput(Throughput::Elements(ITER_ELTS));
     g.bench_function("iter", |c| {
         use core::f64::consts::{E, PI};
         let mut rng = Pcg64Mcg::from_os_rng();
         let distr = Normal::new(-E, PI).unwrap();
-        let mut iter = distr.sample_iter(&mut rng);
 
         c.iter(|| {
-            let mut accum = 0.0;
-            for _ in 0..RAND_BENCH_N {
-                accum += iter.next().unwrap();
-            }
-            accum
+            distr.sample_iter(&mut rng)
+                .take(ITER_ELTS as usize)
+                .fold(0.0, |a, r| a + r)
         });
     });
     g.finish();
