@@ -44,17 +44,6 @@ macro_rules! distr_float {
     };
 }
 
-macro_rules! distr {
-    ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
-        $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_os_rng();
-            let distr = $distr;
-
-            c.iter(|| distr.sample(&mut rng));
-        });
-    };
-}
-
 macro_rules! distr_arr {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
         $group.bench_function($fnn, |c| {
@@ -159,7 +148,11 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     g.finish();
 
     let mut g = c.benchmark_group("bernoulli");
-    distr!(g, "bernoulli", bool, Bernoulli::new(0.18).unwrap());
+    g.bench_function("bernoulli", |c| {
+        let mut rng = Pcg64Mcg::from_os_rng();
+        let distr = Bernoulli::new(0.18).unwrap();
+        c.iter(|| distr.sample(&mut rng))
+    });
     g.finish();
 
     let mut g = c.benchmark_group("unit");
