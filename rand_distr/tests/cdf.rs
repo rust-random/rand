@@ -77,24 +77,37 @@ fn kolmo_smirnov_statistic_discrete(ecdf: ECDF, cdf: impl Fn(i64) -> f64) -> f64
     }
     max_diff
 }
-#[test]
-fn normal() {
-    const N_SAMPLES: u64 = 1_000_000;
-    const MEAN: f64 = 2.;
-    const STD_DEV: f64 = 50.0;
 
-    let dist = Normal::new(MEAN, STD_DEV).unwrap();
+#[cfg(test)]
+fn test_continious(dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
+    const N_SAMPLES: u64 = 1_000_000;
     let mut rng = rand::rngs::SmallRng::seed_from_u64(1);
     let samples = (0..N_SAMPLES).map(|_| dist.sample(&mut rng)).collect();
     let ecdf = ECDF::new(samples);
 
-    let cdf = |x| {
-        statrs::distribution::Normal::new(MEAN, STD_DEV)
-            .unwrap()
-            .cdf(x)
-    };
+    let ks_statistic = kolmo_smirnov_statistic_continuous(ecdf, |x| cdf(x));
 
-    let ks_statistic = kolmo_smirnov_statistic_continuous(ecdf, cdf);
+    // It is a heuristic value, we want to prove that the distributions match, so p values don't help us
+    let critical_value = 1.36 / (N_SAMPLES as f64).sqrt();
+
+    println!("KS statistic: {}", ks_statistic);
+    println!("Critical value: {}", critical_value);
+    assert!(ks_statistic < critical_value);
+}
+
+#[cfg(test)]
+fn test_discrete<I: TryInto<i64>>(dist: impl Distribution<I>, cdf: impl Fn(i64) -> f64)
+where
+    <I as TryInto<i64>>::Error: std::fmt::Debug,
+{
+    const N_SAMPLES: u64 = 1_000_000;
+    let mut rng = rand::rngs::SmallRng::seed_from_u64(1);
+    let samples = (0..N_SAMPLES)
+        .map(|_| dist.sample(&mut rng).try_into().unwrap() as f64)
+        .collect();
+    let ecdf = ECDF::new(samples);
+
+    let ks_statistic = kolmo_smirnov_statistic_discrete(ecdf, |x| cdf(x));
 
     let critical_value = 1.36 / (N_SAMPLES as f64).sqrt();
 
@@ -104,29 +117,17 @@ fn normal() {
 }
 
 #[test]
+fn normal() {
+    test_continious(Normal::new(0.0, 1.0).unwrap(), |x| {
+        statrs::distribution::Normal::new(0.0, 1.0).unwrap().cdf(x)
+    });
+}
+
+#[test]
 fn binomial() {
-    const N_SAMPLES: u64 = 10_000_000;
-    const N: u64 = 10000000;
-    const P: f64 = 0.001;
-
-    let dist = rand_distr::Binomial::new(N, P).unwrap();
-    let mut rng = rand::rngs::SmallRng::seed_from_u64(1);
-    let samples = (0..N_SAMPLES)
-        .map(|_| dist.sample(&mut rng) as f64)
-        .collect();
-    let ecdf = ECDF::new(samples);
-
-    let cdf = |x| {
-        statrs::distribution::Binomial::new(P, N)
+    test_discrete(rand_distr::Binomial::new(10, 0.5).unwrap(), |x| {
+        statrs::distribution::Binomial::new(0.5, 10)
             .unwrap()
             .cdf(x as u64)
-    };
-
-    let ks_statistic = kolmo_smirnov_statistic_discrete(ecdf, cdf);
-
-    let critical_value = 1.36 / (N_SAMPLES as f64).sqrt();
-
-    println!("KS statistic: {}", ks_statistic);
-    println!("Critical value: {}", critical_value);
-    assert!(ks_statistic < critical_value);
+    });
 }
