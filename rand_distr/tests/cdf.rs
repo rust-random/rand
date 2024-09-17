@@ -12,11 +12,11 @@ use statrs::distribution::ContinuousCDF;
 use statrs::distribution::DiscreteCDF;
 
 /// Empirical Cumulative Distribution Function (ECDF)
-struct ECDF {
+struct Ecdf {
     sorted_samples: Vec<f64>,
 }
 
-impl ECDF {
+impl Ecdf {
     fn new(mut samples: Vec<f64>) -> Self {
         samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
         Self {
@@ -45,7 +45,7 @@ impl ECDF {
     }
 }
 
-fn kolmo_smirnov_statistic_continuous(ecdf: ECDF, cdf: impl Fn(f64) -> f64) -> f64 {
+fn kolmo_smirnov_statistic_continuous(ecdf: Ecdf, cdf: impl Fn(f64) -> f64) -> f64 {
     let mut max_diff = 0.;
     // The maximum will always be at a step point, because the cdf is continious monotonic increasing
     let step_points = ecdf.step_points();
@@ -62,15 +62,14 @@ fn kolmo_smirnov_statistic_continuous(ecdf: ECDF, cdf: impl Fn(f64) -> f64) -> f
     max_diff
 }
 
-fn kolmo_smirnov_statistic_discrete(ecdf: ECDF, cdf: impl Fn(i64) -> f64) -> f64 {
+fn kolmo_smirnov_statistic_discrete(ecdf: Ecdf, cdf: impl Fn(i64) -> f64) -> f64 {
     let mut max_diff = 0.;
 
     // The maximum will always be at a step point, but we have to be careful because the cdf is not continious
     // It is actually easier because both are right continious step functions
     let step_points = ecdf.step_points();
-    for i in 1..step_points.len() {
-        let x = step_points[i].0;
-        let diff = (step_points[i].1 - cdf(x as i64)).abs();
+    for (x, y) in step_points[1..].iter() {
+        let diff = (*y - cdf(*x as i64)).abs();
         if diff > max_diff {
             max_diff = diff;
         }
@@ -83,9 +82,9 @@ fn test_continious(dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
     const N_SAMPLES: u64 = 1_000_000;
     let mut rng = rand::rngs::SmallRng::seed_from_u64(1);
     let samples = (0..N_SAMPLES).map(|_| dist.sample(&mut rng)).collect();
-    let ecdf = ECDF::new(samples);
+    let ecdf = Ecdf::new(samples);
 
-    let ks_statistic = kolmo_smirnov_statistic_continuous(ecdf, |x| cdf(x));
+    let ks_statistic = kolmo_smirnov_statistic_continuous(ecdf, cdf);
 
     // It is a heuristic value, we want to prove that the distributions match, so p values don't help us
     let critical_value = 1.36 / (N_SAMPLES as f64).sqrt();
@@ -105,9 +104,9 @@ where
     let samples = (0..N_SAMPLES)
         .map(|_| dist.sample(&mut rng).try_into().unwrap() as f64)
         .collect();
-    let ecdf = ECDF::new(samples);
+    let ecdf = Ecdf::new(samples);
 
-    let ks_statistic = kolmo_smirnov_statistic_discrete(ecdf, |x| cdf(x));
+    let ks_statistic = kolmo_smirnov_statistic_discrete(ecdf, cdf);
 
     let critical_value = 1.36 / (N_SAMPLES as f64).sqrt();
 
