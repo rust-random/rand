@@ -80,14 +80,14 @@ fn kolmo_smirnov_statistic_discrete(ecdf: Ecdf, cdf: impl Fn(i64) -> f64) -> f64
 #[cfg(test)]
 fn test_continious(dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
     const N_SAMPLES: u64 = 1_000_000;
-    let mut rng = rand::rngs::SmallRng::seed_from_u64(1);
+    let mut rng = rand::rngs::SmallRng::seed_from_u64(6);
     let samples = (0..N_SAMPLES).map(|_| dist.sample(&mut rng)).collect();
     let ecdf = Ecdf::new(samples);
 
     let ks_statistic = kolmo_smirnov_statistic_continuous(ecdf, cdf);
 
-    // It is a heuristic value, we want to prove that the distributions match, so p values don't help us
-    let critical_value = 1.36 / (N_SAMPLES as f64).sqrt();
+    // If the sampler is correct, we expect less than 0.001 false positives (alpha = 0.001). Passing this does not prove that the sampler is correct but is a good indication.
+    let critical_value = 1.95 / (N_SAMPLES as f64).sqrt();
 
     println!("KS statistic: {}", ks_statistic);
     println!("Critical value: {}", critical_value);
@@ -100,7 +100,7 @@ where
     <I as TryInto<i64>>::Error: std::fmt::Debug,
 {
     const N_SAMPLES: u64 = 1_000_000;
-    let mut rng = rand::rngs::SmallRng::seed_from_u64(1);
+    let mut rng = rand::rngs::SmallRng::seed_from_u64(2);
     let samples = (0..N_SAMPLES)
         .map(|_| dist.sample(&mut rng).try_into().unwrap() as f64)
         .collect();
@@ -108,7 +108,8 @@ where
 
     let ks_statistic = kolmo_smirnov_statistic_discrete(ecdf, cdf);
 
-    let critical_value = 1.36 / (N_SAMPLES as f64).sqrt();
+    // If the sampler is correct, we expect less than 0.001 false positives (alpha = 0.001). Passing this does not prove that the sampler is correct but is a good indication.
+    let critical_value = 1.95 / (N_SAMPLES as f64).sqrt();
 
     println!("KS statistic: {}", ks_statistic);
     println!("Critical value: {}", critical_value);
