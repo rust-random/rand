@@ -112,7 +112,7 @@ pub use self::geometric::{Error as GeoError, Geometric, StandardGeometric};
 pub use self::gumbel::{Error as GumbelError, Gumbel};
 pub use self::hypergeometric::{Error as HyperGeoError, Hypergeometric};
 pub use self::inverse_gaussian::{Error as InverseGaussianError, InverseGaussian};
-pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal};
+pub use self::normal::{Error as NormalError, LogNormal, Normal, StandardNormal, TruncatedNormal};
 pub use self::normal_inverse_gaussian::{
     Error as NormalInverseGaussianError, NormalInverseGaussian,
 };
