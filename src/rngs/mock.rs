@@ -8,10 +8,11 @@
 
 //! Mock random number generator
 
-use rand_core::{impls, RngCore};
+use rand_core::{impls, RngCore, SeedableRng};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use zerocopy::transmute;
 
 /// A mock generator yielding very predictable output
 ///
@@ -72,6 +73,18 @@ impl RngCore for StepRng {
     #[inline]
     fn fill_bytes(&mut self, dst: &mut [u8]) {
         impls::fill_bytes_via_next(self, dst)
+    }
+}
+
+impl SeedableRng for StepRng {
+    type Seed = [u8; 16];
+
+    fn from_seed(seed: Self::Seed) -> Self {
+        let seed_u64: [u64; 2] = transmute!(seed);
+        StepRng {
+            v: seed_u64[0],
+            a: seed_u64[1],
+        }
     }
 }
 
