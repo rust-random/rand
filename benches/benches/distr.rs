@@ -11,12 +11,8 @@
 // Rustfmt splits macro invocations to shorten lines; in this case longer-lines are more readable
 #![rustfmt::skip]
 
-const RAND_BENCH_N: u64 = 1000;
-
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use criterion_cycles_per_byte::CyclesPerByte;
-
-use core::mem::size_of;
 
 use rand::prelude::*;
 use rand_distr::*;
@@ -24,82 +20,37 @@ use rand_distr::*;
 // At this time, distributions are optimised for 64-bit platforms.
 use rand_pcg::Pcg64Mcg;
 
+const ITER_ELTS: u64 = 100;
+
 macro_rules! distr_int {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
-        $group.throughput(Throughput::Bytes(
-            size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
             let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
-            c.iter(|| {
-                let mut accum: $ty = 0;
-                for _ in 0..RAND_BENCH_N {
-                    let x: $ty = distr.sample(&mut rng);
-                    accum = accum.wrapping_add(x);
-                }
-                accum
-            });
+            c.iter(|| distr.sample(&mut rng));
         });
     };
 }
 
 macro_rules! distr_float {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
-        $group.throughput(Throughput::Bytes(
-            size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
             let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
-            c.iter(|| {
-                let mut accum = 0.;
-                for _ in 0..RAND_BENCH_N {
-                    let x: $ty = distr.sample(&mut rng);
-                    accum += x;
-                }
-                accum
-            });
-        });
-    };
-}
-
-macro_rules! distr {
-    ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
-        $group.throughput(Throughput::Bytes(
-            size_of::<$ty>() as u64 * RAND_BENCH_N));
-        $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_os_rng();
-            let distr = $distr;
-
-            c.iter(|| {
-                let mut accum: u32 = 0;
-                for _ in 0..RAND_BENCH_N {
-                    let x: $ty = distr.sample(&mut rng);
-                    accum = accum.wrapping_add(x as u32);
-                }
-                accum
-            });
+            c.iter(|| Distribution::<$ty>::sample(&distr, &mut rng));
         });
     };
 }
 
 macro_rules! distr_arr {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
-        $group.throughput(Throughput::Bytes(
-            size_of::<$ty>() as u64 * RAND_BENCH_N));
         $group.bench_function($fnn, |c| {
             let mut rng = Pcg64Mcg::from_os_rng();
             let distr = $distr;
 
-            c.iter(|| {
-                let mut accum: u32 = 0;
-                for _ in 0..RAND_BENCH_N {
-                    let x: $ty = distr.sample(&mut rng);
-                    accum = accum.wrapping_add(x[0] as u32);
-                }
-                accum
-            });
+            c.iter(|| Distribution::<$ty>::sample(&distr, &mut rng));
         });
     };
 }
@@ -111,122 +62,126 @@ macro_rules! sample_binomial {
 }
 
 fn bench(c: &mut Criterion<CyclesPerByte>) {
-    {
     let mut g = c.benchmark_group("exp");
     distr_float!(g, "exp", f64, Exp::new(1.23 * 4.56).unwrap());
     distr_float!(g, "exp1_specialized", f64, Exp1);
     distr_float!(g, "exp1_general", f64, Exp::new(1.).unwrap());
-    }
+    g.finish();
 
-    {
     let mut g = c.benchmark_group("normal");
     distr_float!(g, "normal", f64, Normal::new(-1.23, 4.56).unwrap());
     distr_float!(g, "standardnormal_specialized", f64, StandardNormal);
     distr_float!(g, "standardnormal_general", f64, Normal::new(0., 1.).unwrap());
     distr_float!(g, "log_normal", f64, LogNormal::new(-1.23, 4.56).unwrap());
-    g.throughput(Throughput::Bytes(size_of::<f64>() as u64 * RAND_BENCH_N));
+    g.throughput(Throughput::Elements(ITER_ELTS));
     g.bench_function("iter", |c| {
         use core::f64::consts::{E, PI};
         let mut rng = Pcg64Mcg::from_os_rng();
         let distr = Normal::new(-E, PI).unwrap();
-        let mut iter = distr.sample_iter(&mut rng);
 
         c.iter(|| {
-            let mut accum = 0.0;
-            for _ in 0..RAND_BENCH_N {
-                accum += iter.next().unwrap();
-            }
-            accum
+            distr.sample_iter(&mut rng)
+                .take(ITER_ELTS as usize)
+                .fold(0.0, |a, r| a + r)
         });
     });
-    }
+    g.finish();
 
-    {
     let mut g = c.benchmark_group("skew_normal");
     distr_float!(g, "shape_zero", f64, SkewNormal::new(0.0, 1.0, 0.0).unwrap());
     distr_float!(g, "shape_positive", f64, SkewNormal::new(0.0, 1.0, 100.0).unwrap());
     distr_float!(g, "shape_negative", f64, SkewNormal::new(0.0, 1.0, -100.0).unwrap());
-    }
+    g.finish();
 
-    {
     let mut g = c.benchmark_group("gamma");
-    distr_float!(g, "gamma_large_shape", f64, Gamma::new(10., 1.0).unwrap());
-    distr_float!(g, "gamma_small_shape", f64, Gamma::new(0.1, 1.0).unwrap());
-    distr_float!(g, "beta_small_param", f64, Beta::new(0.1, 0.1).unwrap());
-    distr_float!(g, "beta_large_param_similar", f64, Beta::new(101., 95.).unwrap());
-    distr_float!(g, "beta_large_param_different", f64, Beta::new(10., 1000.).unwrap());
-    distr_float!(g, "beta_mixed_param", f64, Beta::new(0.5, 100.).unwrap());
-    }
+    distr_float!(g, "large_shape", f64, Gamma::new(10., 1.0).unwrap());
+    distr_float!(g, "small_shape", f64, Gamma::new(0.1, 1.0).unwrap());
+    g.finish();
 
-    {
+    let mut g = c.benchmark_group("beta");
+    distr_float!(g, "small_param", f64, Beta::new(0.1, 0.1).unwrap());
+    distr_float!(g, "large_param_similar", f64, Beta::new(101., 95.).unwrap());
+    distr_float!(g, "large_param_different", f64, Beta::new(10., 1000.).unwrap());
+    distr_float!(g, "mixed_param", f64, Beta::new(0.5, 100.).unwrap());
+    g.finish();
+
     let mut g = c.benchmark_group("cauchy");
     distr_float!(g, "cauchy", f64, Cauchy::new(4.2, 6.9).unwrap());
-    }
+    g.finish();
 
-    {
     let mut g = c.benchmark_group("triangular");
     distr_float!(g, "triangular", f64, Triangular::new(0., 1., 0.9).unwrap());
-    }
+    g.finish();
 
-    {
     let mut g = c.benchmark_group("geometric");
     distr_int!(g, "geometric", u64, Geometric::new(0.5).unwrap());
     distr_int!(g, "standard_geometric", u64, StandardGeometric);
-    }
+    g.finish();
 
-    {
     let mut g = c.benchmark_group("weighted");
-    distr_int!(g, "weighted_i8", usize, WeightedIndex::new([1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "weighted_u32", usize, WeightedIndex::new([1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "weighted_f64", usize, WeightedIndex::new([1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
-    distr_int!(g, "weighted_large_set", usize, WeightedIndex::new((0..10000).rev().chain(1..10001)).unwrap());
-    distr_int!(g, "weighted_alias_method_i8", usize, WeightedAliasIndex::new(vec![1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "weighted_alias_method_u32", usize, WeightedAliasIndex::new(vec![1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "weighted_alias_method_f64", usize, WeightedAliasIndex::new(vec![1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
-    distr_int!(g, "weighted_alias_method_large_set", usize, WeightedAliasIndex::new((0..10000).rev().chain(1..10001).collect()).unwrap());
-    }
+    distr_int!(g, "i8", usize, WeightedIndex::new([1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+    distr_int!(g, "u32", usize, WeightedIndex::new([1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+    distr_int!(g, "f64", usize, WeightedIndex::new([1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
+    distr_int!(g, "large_set", usize, WeightedIndex::new((0..10000).rev().chain(1..10001)).unwrap());
+    distr_int!(g, "alias_method_i8", usize, WeightedAliasIndex::new(vec![1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+    distr_int!(g, "alias_method_u32", usize, WeightedAliasIndex::new(vec![1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
+    distr_int!(g, "alias_method_f64", usize, WeightedAliasIndex::new(vec![1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
+    distr_int!(g, "alias_method_large_set", usize, WeightedAliasIndex::new((0..10000).rev().chain(1..10001).collect()).unwrap());
+    g.finish();
 
-    {
     let mut g = c.benchmark_group("binomial");
-    sample_binomial!(g, "binomial", 20, 0.7);
-    sample_binomial!(g, "binomial_small", 1_000_000, 1e-30);
-    sample_binomial!(g, "binomial_1", 1, 0.9);
-    sample_binomial!(g, "binomial_10", 10, 0.9);
-    sample_binomial!(g, "binomial_100", 100, 0.99);
-    sample_binomial!(g, "binomial_1000", 1000, 0.01);
-    sample_binomial!(g, "binomial_1e12", 1_000_000_000_000, 0.2);
-    }
+    sample_binomial!(g, "small", 1_000_000, 1e-30);
+    sample_binomial!(g, "1", 1, 0.9);
+    sample_binomial!(g, "10", 10, 0.9);
+    sample_binomial!(g, "100", 100, 0.99);
+    sample_binomial!(g, "1000", 1000, 0.01);
+    sample_binomial!(g, "1e12", 1_000_000_000_000, 0.2);
+    g.finish();
 
-    {
     let mut g = c.benchmark_group("poisson");
-    distr_float!(g, "poisson", f64, Poisson::new(4.0).unwrap());
+    for lambda in [1f64, 4.0, 10.0, 100.0].into_iter() {
+        let name = format!("{lambda}");
+        distr_float!(g, name, f64, Poisson::new(lambda).unwrap());
     }
+    g.throughput(Throughput::Elements(ITER_ELTS));
+    g.bench_function("variable", |c| {
+        let mut rng = Pcg64Mcg::from_os_rng();
+        let ldistr = Uniform::new(0.1, 10.0).unwrap();
 
-    {
+        c.iter(|| {
+            let l = rng.sample(ldistr);
+            let distr = Poisson::new(l * l).unwrap();
+            Distribution::<f64>::sample_iter(&distr, &mut rng)
+                .take(ITER_ELTS as usize)
+                .fold(0.0, |a, r| a + r)
+        })
+    });
+    g.finish();
+
     let mut g = c.benchmark_group("zipf");
     distr_float!(g, "zipf", f64, Zipf::new(10, 1.5).unwrap());
     distr_float!(g, "zeta", f64, Zeta::new(1.5).unwrap());
-    }
+    g.finish();
 
-    {
     let mut g = c.benchmark_group("bernoulli");
-    distr!(g, "bernoulli", bool, Bernoulli::new(0.18).unwrap());
-    }
+    g.bench_function("bernoulli", |c| {
+        let mut rng = Pcg64Mcg::from_os_rng();
+        let distr = Bernoulli::new(0.18).unwrap();
+        c.iter(|| distr.sample(&mut rng))
+    });
+    g.finish();
 
-    {
-    let mut g = c.benchmark_group("circle");
+    let mut g = c.benchmark_group("unit");
     distr_arr!(g, "circle", [f64; 2], UnitCircle);
-    }
-
-    {
-    let mut g = c.benchmark_group("sphere");
     distr_arr!(g, "sphere", [f64; 3], UnitSphere);
-    }
+    g.finish();
 }
 
 criterion_group!(
     name = benches;
-    config = Criterion::default().with_measurement(CyclesPerByte);
+    config = Criterion::default().with_measurement(CyclesPerByte)
+        .warm_up_time(core::time::Duration::from_secs(1))
+        .measurement_time(core::time::Duration::from_secs(2));
     targets = bench
 );
 criterion_main!(benches);
