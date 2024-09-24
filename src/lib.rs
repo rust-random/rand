@@ -15,10 +15,6 @@
 //! # Quick Start
 //!
 //! ```
-//! // The prelude import enables methods we use below, specifically
-//! // Rng::random, Rng::sample, SliceRandom::shuffle and IndexedRandom::choose.
-//! use rand::prelude::*;
-//!
 //! // Get an RNG:
 //! let mut rng = rand::thread_rng();
 //!
@@ -26,6 +22,9 @@
 //! println!("char: '{}'", rng.random::<char>());
 //! // Try printing a random alphanumeric value instead!
 //! println!("alpha: '{}'", rng.sample(rand::distr::Alphanumeric) as char);
+//!
+//! // The prelude makes choose and shuffle available on sequences:
+//! use rand::prelude::*;
 //!
 //! // Generate and shuffle a sequence:
 //! let mut nums: Vec<i32> = (1..100).collect();

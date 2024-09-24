@@ -22,7 +22,11 @@ use rand_core::RngCore;
 /// RNGs. It is implemented automatically for any `R: RngCore`.
 ///
 /// This trait must usually be brought into scope via `use rand::Rng;` or
-/// `use rand::prelude::*;`.
+/// `use rand::prelude::*;`. This is not necessary for
+/// [`ThreadRng`](crate::rngs::ThreadRng), [`StdRng`](crate::rngs::StdRng),
+/// [`SmallRng`](crate::rngs::SmallRng) and
+/// [`StepRng`](crate::rngs::mock::StepRng)
+/// which implement `Rng` methods as inherent methods.
 ///
 /// # Generic usage
 ///
