@@ -15,10 +15,14 @@ use core::num::Wrapping;
 use core::{mem, slice};
 use rand_core::RngCore;
 
-/// An automatically-implemented extension trait on [`RngCore`] providing high-level
-/// generic methods for sampling values and other convenience methods.
+/// User-level interface for RNGs
 ///
-/// This is the primary trait to use when generating random values.
+/// [`RngCore`] is the `dyn`-safe implementation-level interface for Random
+/// (Number) Generators. This trait, `Rng`, provides a user-level interface on
+/// RNGs. It is implemented automatically for any `R: RngCore`.
+///
+/// This trait must usually be brought into scope via `use rand::Rng;` or
+/// `use rand::prelude::*;`.
 ///
 /// # Generic usage
 ///
