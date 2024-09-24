@@ -366,7 +366,6 @@ fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
 }
 
 impl Distribution<u64> for Binomial {
-    #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         let result = match self.method {
             Method::Binv(binv_para) => binv(binv_para, rng),
