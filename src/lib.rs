@@ -15,7 +15,7 @@
 //! # Quick Start
 //!
 //! To get you started quickly, the easiest and highest-level way to get
-//! a random value is to use [`random()`]; alternatively you can use
+//! a random value is to use [`random()`] or [`range()`]; alternatively you can use
 //! [`thread_rng()`]. The [`Rng`] trait provides a useful API on all RNGs, while
 //! the [`distr`] and [`seq`] modules provide further
 //! functionality on top of RNGs.
@@ -111,9 +111,9 @@ pub use rng::{Fill, Rng};
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 use crate::distr::{Distribution, Standard};
 
-/// Generates a random value using the thread-local random number generator.
+/// Generate a random value using the thread-local random number generator.
 ///
-/// This function is simply a shortcut for `thread_rng().gen()`:
+/// This function is a shortcut for [`thread_rng().random()`](Rng::random):
 ///
 /// -   See [`ThreadRng`] for documentation of the generator and security
 /// -   See [`Standard`] for documentation of supported types and distributions
@@ -164,6 +164,71 @@ where
     thread_rng().random()
 }
 
+/// Generate a random value in the given range using the thread-local random number generator.
+///
+/// This function is a shortcut for [`thread_rng().gen_range(range)`](Rng::gen_range).
+///
+/// # Examples
+///
+/// ```
+/// let x = rand::range(1u8..=100);
+/// println!("{}", x);
+///
+/// let y = rand::range(0f32..=1e9);
+/// println!("{}", y);
+/// ```
+///
+/// If you're calling `range()` in a loop, caching the generator as in the
+/// following example can increase performance.
+///
+/// ```
+/// use rand::Rng;
+///
+/// let mut v = vec![1, 2, 3];
+///
+/// for x in v.iter_mut() {
+///     *x = rand::range(1..=3)
+/// }
+///
+/// // can be made faster by caching thread_rng
+///
+/// let mut rng = rand::thread_rng();
+///
+/// for x in v.iter_mut() {
+///     *x = rng.gen_range(1..=3)
+/// }
+/// ```
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+pub fn range<T, R>(range: R) -> T
+where
+    T: distr::uniform::SampleUniform,
+    R: distr::uniform::SampleRange<T>,
+{
+    thread_rng().gen_range(range)
+}
+
+/// Shuffle a mutable slice in place using the thread-local random number generator.
+///
+/// This function is a shortcut for [`slice.shuffle(&mut thread_rng())`](seq::SliceRandom::shuffle):
+///
+/// For slices of length `n`, complexity is `O(n)`.
+/// The resulting permutation is picked uniformly from the set of all possible permutations.
+///
+/// # Example
+///
+/// ```
+/// let mut y = [1, 2, 3, 4, 5];
+/// println!("Unshuffled: {:?}", y);
+/// rand::shuffle(&mut y);
+/// println!("Shuffled:   {:?}", y);
+/// ```
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+pub fn shuffle<T>(slice: &mut [T]) {
+    seq::SliceRandom::shuffle(slice, &mut thread_rng());
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -189,5 +254,30 @@ mod test {
             (u8, i8, u16, i16, u32, i32, u64, i64),
             (f32, (f64, (f64,))),
         ) = random();
+    }
+
+    #[test]
+    #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+    fn test_range() {
+        let _n: usize = range(42..=43);
+        let _f: f32 = range(42.0..43.0);
+    }
+
+    #[test]
+    #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+    fn test_shuffle() {
+        let mut array1 = [0; 100];
+        for (i, x) in array1.iter_mut().enumerate() {
+            *x = i;
+        }
+        let mut array2 = array1;
+        assert_eq!(array1, array2);
+        shuffle(&mut array1);
+        assert_ne!(array1, array2); // practically impossible without an RNG bug
+        shuffle(&mut array2);
+        assert_ne!(array1, array2); // same
+        array1.sort();
+        array2.sort();
+        assert_eq!(array1, array2);
     }
 }
