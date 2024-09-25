@@ -78,15 +78,16 @@ fn kolmo_smirnov_statistic_discrete(ecdf: Ecdf, cdf: impl Fn(i64) -> f64) -> f64
 }
 
 #[cfg(test)]
-fn test_continious(dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
+fn test_continious(seed: u64, dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
     const N_SAMPLES: u64 = 1_000_000;
-    let mut rng = rand::rngs::SmallRng::seed_from_u64(6);
+    let mut rng = rand::rngs::SmallRng::seed_from_u64(seed);
     let samples = (0..N_SAMPLES).map(|_| dist.sample(&mut rng)).collect();
     let ecdf = Ecdf::new(samples);
 
     let ks_statistic = kolmo_smirnov_statistic_continuous(ecdf, cdf);
 
-    // If the sampler is correct, we expect less than 0.001 false positives (alpha = 0.001). Passing this does not prove that the sampler is correct but is a good indication.
+    // If the sampler is correct, we expect less than 0.001 false positives (alpha = 0.001).
+    // Passing this does not prove that the sampler is correct but is a good indication.
     let critical_value = 1.95 / (N_SAMPLES as f64).sqrt();
 
     println!("KS statistic: {}", ks_statistic);
@@ -95,12 +96,12 @@ fn test_continious(dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
 }
 
 #[cfg(test)]
-fn test_discrete<I: TryInto<i64>>(dist: impl Distribution<I>, cdf: impl Fn(i64) -> f64)
+fn test_discrete<I: TryInto<i64>>(seed: u64, dist: impl Distribution<I>, cdf: impl Fn(i64) -> f64)
 where
     <I as TryInto<i64>>::Error: std::fmt::Debug,
 {
     const N_SAMPLES: u64 = 1_000_000;
-    let mut rng = rand::rngs::SmallRng::seed_from_u64(2);
+    let mut rng = rand::rngs::SmallRng::seed_from_u64(seed);
     let samples = (0..N_SAMPLES)
         .map(|_| dist.sample(&mut rng).try_into().unwrap() as f64)
         .collect();
@@ -118,16 +119,20 @@ where
 
 #[test]
 fn normal() {
-    test_continious(Normal::new(0.0, 1.0).unwrap(), |x| {
-        statrs::distribution::Normal::new(0.0, 1.0).unwrap().cdf(x)
-    });
+    for seed in 1..20 {
+        test_continious(seed, Normal::new(0.0, 1.0).unwrap(), |x| {
+            statrs::distribution::Normal::new(0.0, 1.0).unwrap().cdf(x)
+        });
+    }
 }
 
 #[test]
 fn binomial() {
-    test_discrete(rand_distr::Binomial::new(10, 0.5).unwrap(), |x| {
-        statrs::distribution::Binomial::new(0.5, 10)
-            .unwrap()
-            .cdf(x as u64)
-    });
+    for seed in 1..20 {
+        test_discrete(seed, rand_distr::Binomial::new(10, 0.5).unwrap(), |x| {
+            statrs::distribution::Binomial::new(0.5, 10)
+                .unwrap()
+                .cdf(x as u64)
+        });
+    }
 }
