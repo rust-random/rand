@@ -60,7 +60,7 @@ pub enum Error {
     /// `lambda = ∞` or `lambda = nan`
     NonFinite,
     /// `lambda` is too large, we disallo
-    ShapeTooLarge
+    ShapeTooLarge,
 }
 
 impl fmt::Display for Error {
@@ -68,7 +68,9 @@ impl fmt::Display for Error {
         f.write_str(match self {
             Error::ShapeTooSmall => "lambda is not positive in Poisson distribution",
             Error::NonFinite => "lambda is infinite or nan in Poisson distribution",
-            Error::ShapeTooLarge => "lambda is too large in Poisson distribution, see Poisson::MAX_LAMBDA_POISSON",
+            Error::ShapeTooLarge => {
+                "lambda is too large in Poisson distribution, see Poisson::MAX_LAMBDA_POISSON"
+            }
         })
     }
 }
@@ -127,7 +129,7 @@ where
 {
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
-    /// 
+    ///
     /// The maximum allowed lambda is [MAX_LAMBDA_POISSON](Self::MAX_LAMBDA_POISSON).
     pub fn new(lambda: F) -> Result<Poisson<F>, Error> {
         if !lambda.is_finite() {
@@ -149,14 +151,13 @@ where
 
         Ok(Poisson(method))
     }
-    
+
     /// Maximum value for `lambda` in the Poisson distribution.
     /// This will make sure the samples will fit in a `u64`.
     /// It also makes sure we do not run into numerical problems with very large `lambda`.
     /// `1.844e19 + 1_000_000 * sqrt(1.844e19) < 2^64 - 1`,
     /// so the probability of getting a value larger than `u64::MAX` is << 1e-1000.
     pub const MAX_LAMBDA_POISSON: f64 = 1.844e19;
-
 }
 
 impl<F> Distribution<F> for KnuthMethod<F>
@@ -239,11 +240,10 @@ where
     }
 }
 
-impl Distribution<u64> for Poisson<f64>
-{
+impl Distribution<u64> for Poisson<f64> {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
-        <Poisson<f64> as Distribution<f64>>::sample(self,rng) as u64
+        <Poisson<f64> as Distribution<f64>>::sample(self, rng) as u64
     }
 }
 
