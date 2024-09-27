@@ -163,12 +163,17 @@ impl<T: DerefMut> RngCore for T
 where
     T::Target: RngCore,
 {
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         self.deref_mut().next_u32()
     }
+
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         self.deref_mut().next_u64()
     }
+
+    #[inline]
     fn fill_bytes(&mut self, dst: &mut [u8]) {
         self.deref_mut().fill_bytes(dst);
     }
@@ -283,14 +288,17 @@ impl<R: CryptoRng> TryCryptoRng for R {}
 pub struct UnwrapErr<R: TryRngCore>(pub R);
 
 impl<R: TryRngCore> RngCore for UnwrapErr<R> {
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         self.0.try_next_u32().unwrap()
     }
 
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         self.0.try_next_u64().unwrap()
     }
 
+    #[inline]
     fn fill_bytes(&mut self, dst: &mut [u8]) {
         self.0.try_fill_bytes(dst).unwrap()
     }
@@ -530,6 +538,7 @@ pub struct RngReadAdapter<'a, R: TryRngCore + ?Sized> {
 
 #[cfg(feature = "std")]
 impl<R: TryRngCore + ?Sized> std::io::Read for RngReadAdapter<'_, R> {
+    #[inline]
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         self.inner.try_fill_bytes(buf).map_err(|err| {
             std::io::Error::new(std::io::ErrorKind::Other, std::format!("RNG error: {err}"))
