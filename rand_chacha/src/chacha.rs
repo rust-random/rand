@@ -257,8 +257,6 @@ macro_rules! chacha_impl {
 
         impl CryptoRng for $ChaChaXRng {}
 
-        rand_core::impl_try_crypto_rng_from_crypto_rng!($ChaChaXRng);
-
         impl From<$ChaChaXCore> for $ChaChaXRng {
             fn from(core: $ChaChaXCore) -> Self {
                 $ChaChaXRng {

@@ -250,12 +250,12 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
     }
 
     #[inline(always)]
-    fn from_rng(rng: impl RngCore) -> Self {
+    fn from_rng(rng: &mut impl RngCore) -> Self {
         Self::new(R::from_rng(rng))
     }
 
     #[inline(always)]
-    fn try_from_rng<S: TryRngCore>(rng: S) -> Result<Self, S::Error> {
+    fn try_from_rng<S: TryRngCore>(rng: &mut S) -> Result<Self, S::Error> {
         R::try_from_rng(rng).map(Self::new)
     }
 }
@@ -415,12 +415,12 @@ impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng64<R> {
     }
 
     #[inline(always)]
-    fn from_rng(rng: impl RngCore) -> Self {
+    fn from_rng(rng: &mut impl RngCore) -> Self {
         Self::new(R::from_rng(rng))
     }
 
     #[inline(always)]
-    fn try_from_rng<S: TryRngCore>(rng: S) -> Result<Self, S::Error> {
+    fn try_from_rng<S: TryRngCore>(rng: &mut S) -> Result<Self, S::Error> {
         R::try_from_rng(rng).map(Self::new)
     }
 }

@@ -95,8 +95,6 @@ impl RngCore for Xoshiro256PlusPlus {
     }
 }
 
-rand_core::impl_try_rng_from_rng_core!(Xoshiro256PlusPlus);
-
 #[cfg(test)]
 mod tests {
     use super::Xoshiro256PlusPlus;

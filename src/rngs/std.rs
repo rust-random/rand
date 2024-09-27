@@ -91,8 +91,6 @@ impl SeedableRng for StdRng {
 
 impl CryptoRng for StdRng {}
 
-rand_core::impl_try_crypto_rng_from_crypto_rng!(StdRng);
-
 #[cfg(test)]
 mod test {
     use crate::rngs::StdRng;

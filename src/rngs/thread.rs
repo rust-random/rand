@@ -170,8 +170,6 @@ impl RngCore for ThreadRng {
 
 impl CryptoRng for ThreadRng {}
 
-rand_core::impl_try_crypto_rng_from_crypto_rng!(ThreadRng);
-
 #[cfg(test)]
 mod test {
     #[test]

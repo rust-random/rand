@@ -550,7 +550,7 @@ mod test {
 
     #[test]
     fn test_rng_mut_ref() {
-        fn use_rng(mut r: impl Rng) {
+        fn use_rng(r: &mut impl Rng) {
             let _ = r.next_u32();
         }
 
@@ -566,7 +566,7 @@ mod test {
         r.next_u32();
         r.random::<i32>();
         assert_eq!(r.gen_range(0..1), 0);
-        let _c: u8 = Standard.sample(&mut r);
+        let _c: u8 = Standard.sample(r);
     }
 
     #[test]
