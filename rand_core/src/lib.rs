@@ -124,8 +124,6 @@ pub use os::OsRng;
 ///         impls::fill_bytes_via_next(self, dst)
 ///     }
 /// }
-///
-/// rand_core::impl_try_rng_from_rng_core!(CountingRng);
 /// ```
 ///
 /// [`rand`]: https://docs.rs/rand
