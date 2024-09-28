@@ -23,10 +23,6 @@ use rand::Rng;
 /// This distribution has density function:
 /// `f(k) = λ^k * exp(-λ) / k!` for `k >= 0`.
 ///
-/// # Known issues
-///
-/// See documentation of [`Poisson::new`].
-///
 /// # Plot
 ///
 /// The following plot shows the Poisson distribution with various values of `λ`.
