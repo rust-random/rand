@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use num_traits::AsPrimitive;
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};
 use statrs::distribution::ContinuousCDF;
@@ -83,40 +84,46 @@ fn kolmogorov_smirnov_statistic_discrete(ecdf: Ecdf, cdf: impl Fn(i64) -> f64) -
     max_diff
 }
 
-#[cfg(test)]
-fn test_continuous(seed: u64, dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
-    const N_SAMPLES: u64 = 1_000_000;
-    let mut rng = rand::rngs::SmallRng::seed_from_u64(seed);
-    let samples = (0..N_SAMPLES).map(|_| dist.sample(&mut rng)).collect();
-    let ecdf = Ecdf::new(samples);
+const SAMPLE_SIZE: u64 = 1_000_000;
 
-    let ks_statistic = kolmogorov_smirnov_statistic_continuous(ecdf, cdf);
-
+fn critical_value() -> f64 {
     // If the sampler is correct, we expect less than 0.001 false positives (alpha = 0.001).
     // Passing this does not prove that the sampler is correct but is a good indication.
-    let critical_value = 1.95 / (N_SAMPLES as f64).sqrt();
+    1.95 / (SAMPLE_SIZE as f64).sqrt()
+}
+
+fn sample_ecdf<T>(seed: u64, dist: impl Distribution<T>) -> Ecdf
+where
+    T: AsPrimitive<f64>,
+{
+    let mut rng = rand::rngs::SmallRng::seed_from_u64(seed);
+    let samples = (0..SAMPLE_SIZE)
+        .map(|_| dist.sample(&mut rng).as_())
+        .collect();
+    Ecdf::new(samples)
+}
+
+fn test_continuous(seed: u64, dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
+    let ecdf = sample_ecdf(seed, dist);
+    let ks_statistic = kolmogorov_smirnov_statistic_continuous(ecdf, cdf);
+
+    let critical_value = critical_value();
 
     println!("KS statistic: {}", ks_statistic);
     println!("Critical value: {}", critical_value);
     assert!(ks_statistic < critical_value);
 }
 
-#[cfg(test)]
-fn test_discrete<I: TryInto<i64>>(seed: u64, dist: impl Distribution<I>, cdf: impl Fn(i64) -> f64)
-where
-    <I as TryInto<i64>>::Error: std::fmt::Debug,
-{
-    const N_SAMPLES: u64 = 1_000_000;
-    let mut rng = rand::rngs::SmallRng::seed_from_u64(seed);
-    let samples = (0..N_SAMPLES)
-        .map(|_| dist.sample(&mut rng).try_into().unwrap() as f64)
-        .collect();
-    let ecdf = Ecdf::new(samples);
-
+fn test_discrete<I: AsPrimitive<f64>>(
+    seed: u64,
+    dist: impl Distribution<I>,
+    cdf: impl Fn(i64) -> f64,
+) {
+    let ecdf = sample_ecdf(seed, dist);
     let ks_statistic = kolmogorov_smirnov_statistic_discrete(ecdf, cdf);
 
-    // If the sampler is correct, we expect less than 0.001 false positives (alpha = 0.001). Passing this does not prove that the sampler is correct but is a good indication.
-    let critical_value = 1.95 / (N_SAMPLES as f64).sqrt();
+    // This critical value is bigger than it could be for discrete distributions, but because of large sample sizes this should not matter too much
+    let critical_value = critical_value();
 
     println!("KS statistic: {}", ks_statistic);
     println!("Critical value: {}", critical_value);
@@ -125,21 +132,41 @@ where
 
 #[test]
 fn normal() {
-    for seed in 1..20 {
-        test_continuous(seed, Normal::new(0.0, 1.0).unwrap(), |x| {
-            statrs::distribution::Normal::new(0.0, 1.0).unwrap().cdf(x)
+    let parameters = [
+        (0.0, 1.0),
+        (0.0, 0.1),
+        (1.0, 10.0),
+        (1.0, 100.0),
+        (-1.0, 0.00001),
+        (-1.0, 0.0000001),
+    ];
+
+    for (seed, (mean, std_dev)) in parameters.into_iter().enumerate() {
+        test_continuous(seed as u64, Normal::new(mean, std_dev).unwrap(), |x| {
+            statrs::distribution::Normal::new(mean, std_dev)
+                .unwrap()
+                .cdf(x)
         });
     }
 }
 
 #[test]
 fn binomial() {
-    for seed in 1..20 {
-        test_discrete(seed, rand_distr::Binomial::new(10, 0.5).unwrap(), |x| {
+    let parameters = [
+        (0.5, 10),
+        (0.5, 100),
+        (0.1, 10),
+        (0.0000001, 1000000),
+        (0.0000001, 10),
+        (0.9999, 2),
+    ];
+
+    for (seed, (p, n)) in parameters.into_iter().enumerate() {
+        test_discrete(seed as u64, rand_distr::Binomial::new(n, p).unwrap(), |x| {
             if x < 0 {
                 0.0
             } else {
-                statrs::distribution::Binomial::new(0.5, 10)
+                statrs::distribution::Binomial::new(p, n)
                     .unwrap()
                     .cdf(x as u64)
             }
