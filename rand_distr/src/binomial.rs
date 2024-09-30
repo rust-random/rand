@@ -47,8 +47,6 @@ use rand::Rng;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Binomial {
     method: Method,
-    flipped: bool,
-    n: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -66,6 +64,8 @@ struct Binv {
     r: f64,
     s: f64,
     a: f64,
+    n: u64,
+    flipped: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -73,7 +73,10 @@ struct Binv {
 struct Btpe {
     n: u64,
     p: f64,
-    // TODO consider precomputing more constants, there is a size/speed tradeoff to make here.
+    npq: f64,
+    p1: f64,
+    flipped: bool,
+    // This has the same size as `Binv` one could consider precomputing more.
 }
 
 /// Error type returned from [`Binomial::new`].
@@ -113,16 +116,12 @@ impl Binomial {
         if p == 0.0 {
             return Ok(Binomial {
                 method: Method::Constant(0),
-                flipped: false,
-                n,
             });
         }
 
         if p == 1.0 {
             return Ok(Binomial {
                 method: Method::Constant(n),
-                flipped: false,
-                n,
             });
         }
 
@@ -143,11 +142,10 @@ impl Binomial {
         const BINV_THRESHOLD: f64 = 10.;
 
         let np = n as f64 * p;
-        let inner = if np < BINV_THRESHOLD {
+        let method = if np < BINV_THRESHOLD {
             let q = 1.0 - p;
             if q == 1.0 {
-                // p is so small that this is extremly close to a Poisson distribution.
-                assert!(np <= 12.0, "This is required for Knuth method");
+                assert!(!flipped);
                 Method::Poisson(crate::poisson::KnuthMethod::new(np))
             } else {
                 let s = p / q;
@@ -155,16 +153,23 @@ impl Binomial {
                     r: q.powf(n as f64),
                     s,
                     a: (n as f64 + 1.0) * s,
+                    n,
+                    flipped,
                 })
             }
         } else {
-            Method::Btpe(Btpe { n, p })
+            let q = 1.0 - p;
+            let npq = np * q;
+            let p1 = (2.195 * npq.sqrt() - 4.6 * q).floor() + 0.5;
+            Method::Btpe(Btpe {
+                n,
+                p,
+                npq,
+                p1,
+                flipped,
+            })
         };
-        Ok(Binomial {
-            flipped,
-            method: inner,
-            n,
-        })
+        Ok(Binomial { method })
     }
 }
 
@@ -181,7 +186,7 @@ fn binv<R: Rng + ?Sized>(binv: Binv, rng: &mut R) -> u64 {
     // When n*p < 10, so is n*p*q which is the variance, so a result > 110 would be 100 / sqrt(10) = 31 standard deviations away.
     const BINV_MAX_X: u64 = 110;
 
-    'outer: loop {
+    let sample = 'outer: loop {
         let mut r = binv.r;
         let mut u: f64 = rng.random();
         let mut x = 0;
@@ -195,6 +200,12 @@ fn binv<R: Rng + ?Sized>(binv: Binv, rng: &mut R) -> u64 {
             r *= binv.a / (x as f64) - binv.s;
         }
         break x;
+    };
+
+    if binv.flipped {
+        binv.n - sample
+    } else {
+        sample
     }
 }
 
@@ -208,11 +219,11 @@ fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
     let n = btpe.n as f64;
     let np = n * btpe.p;
     let q = 1. - btpe.p;
-    let npq = np * q;
+    let npq = btpe.npq;
     let f_m = np + btpe.p;
     let m = f64_to_i64(f_m);
     // radius of triangle region, since height=1 also area of region
-    let p1 = (2.195 * npq.sqrt() - 4.6 * q).floor() + 0.5;
+    let p1 = btpe.p1;
     // tip of triangle
     let x_m = (m as f64) + 0.5;
     // left edge of triangle
@@ -362,22 +373,22 @@ fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
         break;
     }
     assert!(y >= 0);
-    y as u64
+    let y = y as u64;
+
+    if btpe.flipped {
+        btpe.n - y
+    } else {
+        y
+    }
 }
 
 impl Distribution<u64> for Binomial {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
-        let result = match self.method {
+        match self.method {
             Method::Binv(binv_para) => binv(binv_para, rng),
             Method::Btpe(btpe_para) => btpe(btpe_para, rng),
             Method::Poisson(poisson) => poisson.sample(rng) as u64,
             Method::Constant(c) => c,
-        };
-
-        if self.flipped {
-            self.n - result
-        } else {
-            result
         }
     }
 }
