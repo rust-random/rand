@@ -11,6 +11,10 @@ use rand_distr::{Distribution, Normal};
 use statrs::distribution::ContinuousCDF;
 use statrs::distribution::DiscreteCDF;
 
+// [1] Nonparametric Goodness-of-Fit Tests for Discrete Null Distributions
+//     by Taylor B. Arnold and John W. Emerson
+//     http://www.stat.yale.edu/~jay/EmersonMaterials/DiscreteGOF.pdf
+
 /// Empirical Cumulative Distribution Function (ECDF)
 struct Ecdf {
     sorted_samples: Vec<f64>,
@@ -26,7 +30,7 @@ impl Ecdf {
 
     /// Returns the step points of the ECDF
     /// The ECDF is a step function that increases by 1/n at each sample point
-    /// The function is continoius from the right, so we give the bigger value at the step points
+    /// The function is continuous from the right, so we give the bigger value at the step points
     /// First point is (-inf, 0.0), last point is (max(samples), 1.0)
     fn step_points(&self) -> Vec<(f64, f64)> {
         let mut points = Vec::with_capacity(self.sorted_samples.len() + 1);
@@ -45,46 +49,48 @@ impl Ecdf {
     }
 }
 
-fn kolmo_smirnov_statistic_continuous(ecdf: Ecdf, cdf: impl Fn(f64) -> f64) -> f64 {
-    let mut max_diff = 0.;
-    // The maximum will always be at a step point, because the cdf is continious monotonic increasing
-    let step_points = ecdf.step_points();
-    for i in 0..step_points.len() - 1 {
-        // This shift is because we want the value of the ecdf at (x_{i + 1} - epsilon) = ecdf(x_i) and comare it to cdf(x_{i + 1})
-        // cdf(x_{i + 1} - epsilon) = cdf(x_{i+1}) because cdf is continious
-        let x = step_points[i + 1].0;
-        let diff = (step_points[i].1 - cdf(x)).abs();
+fn kolmogorov_smirnov_statistic_continuous(ecdf: Ecdf, cdf: impl Fn(f64) -> f64) -> f64 {
+    // We implement equation (3) from [1]
 
-        if diff > max_diff {
-            max_diff = diff;
-        }
+    let mut max_diff: f64 = 0.;
+
+    let step_points = ecdf.step_points(); // x_i in the paper
+    for i in 1..step_points.len() {
+        let (x_i, f_i) = step_points[i];
+        let (_, f_i_1) = step_points[i - 1];
+        let max_1 = (cdf(x_i) - f_i).abs();
+        let max_2 = (cdf(x_i) - f_i_1).abs();
+
+        max_diff = max_diff.max(max_1).max(max_2);
     }
     max_diff
 }
 
-fn kolmo_smirnov_statistic_discrete(ecdf: Ecdf, cdf: impl Fn(i64) -> f64) -> f64 {
-    let mut max_diff = 0.;
+fn kolmogorov_smirnov_statistic_discrete(ecdf: Ecdf, cdf: impl Fn(i64) -> f64) -> f64 {
+    // We implement equation (4) from [1]
+    
+    let mut max_diff: f64 = 0.;
 
-    // The maximum will always be at a step point, but we have to be careful because the cdf is not continious
-    // It is actually easier because both are right continious step functions
-    let step_points = ecdf.step_points();
-    for (x, y) in step_points[1..].iter() {
-        let diff = (*y - cdf(*x as i64)).abs();
-        if diff > max_diff {
-            max_diff = diff;
-        }
+    let step_points = ecdf.step_points(); // x_i in the paper
+    for i in 1..step_points.len() {
+        let (x_i, f_i) = step_points[i];
+        let (_, f_i_1) = step_points[i - 1];
+        let max_1 = (cdf(x_i as i64) - f_i).abs();
+        let max_2 = (cdf(x_i as i64 - 1) - f_i_1).abs(); // -1 is the same as -epsilon, because we have integer support
+
+        max_diff = max_diff.max(max_1).max(max_2);
     }
     max_diff
 }
 
 #[cfg(test)]
-fn test_continious(seed: u64, dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
+fn test_continuous(seed: u64, dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
     const N_SAMPLES: u64 = 1_000_000;
     let mut rng = rand::rngs::SmallRng::seed_from_u64(seed);
     let samples = (0..N_SAMPLES).map(|_| dist.sample(&mut rng)).collect();
     let ecdf = Ecdf::new(samples);
 
-    let ks_statistic = kolmo_smirnov_statistic_continuous(ecdf, cdf);
+    let ks_statistic = kolmogorov_smirnov_statistic_continuous(ecdf, cdf);
 
     // If the sampler is correct, we expect less than 0.001 false positives (alpha = 0.001).
     // Passing this does not prove that the sampler is correct but is a good indication.
@@ -107,7 +113,7 @@ where
         .collect();
     let ecdf = Ecdf::new(samples);
 
-    let ks_statistic = kolmo_smirnov_statistic_discrete(ecdf, cdf);
+    let ks_statistic = kolmogorov_smirnov_statistic_discrete(ecdf, cdf);
 
     // If the sampler is correct, we expect less than 0.001 false positives (alpha = 0.001). Passing this does not prove that the sampler is correct but is a good indication.
     let critical_value = 1.95 / (N_SAMPLES as f64).sqrt();
@@ -120,7 +126,7 @@ where
 #[test]
 fn normal() {
     for seed in 1..20 {
-        test_continious(seed, Normal::new(0.0, 1.0).unwrap(), |x| {
+        test_continuous(seed, Normal::new(0.0, 1.0).unwrap(), |x| {
             statrs::distribution::Normal::new(0.0, 1.0).unwrap().cdf(x)
         });
     }
