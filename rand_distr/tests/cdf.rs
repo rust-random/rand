@@ -68,7 +68,7 @@ fn kolmogorov_smirnov_statistic_continuous(ecdf: Ecdf, cdf: impl Fn(f64) -> f64)
 
 fn kolmogorov_smirnov_statistic_discrete(ecdf: Ecdf, cdf: impl Fn(i64) -> f64) -> f64 {
     // We implement equation (4) from [1]
-    
+
     let mut max_diff: f64 = 0.;
 
     let step_points = ecdf.step_points(); // x_i in the paper
@@ -136,9 +136,13 @@ fn normal() {
 fn binomial() {
     for seed in 1..20 {
         test_discrete(seed, rand_distr::Binomial::new(10, 0.5).unwrap(), |x| {
-            statrs::distribution::Binomial::new(0.5, 10)
-                .unwrap()
-                .cdf(x as u64)
+            if x < 0 {
+                0.0
+            } else {
+                statrs::distribution::Binomial::new(0.5, 10)
+                    .unwrap()
+                    .cdf(x as u64)
+            }
         });
     }
 }
