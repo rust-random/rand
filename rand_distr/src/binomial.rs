@@ -52,8 +52,8 @@ pub struct Binomial {
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum Method {
-    Binv(Binv),
-    Btpe(Btpe),
+    Binv(Binv, bool),
+    Btpe(Btpe, bool),
     Poisson(crate::poisson::KnuthMethod<f64>),
     Constant(u64),
 }
@@ -65,7 +65,6 @@ struct Binv {
     s: f64,
     a: f64,
     n: u64,
-    flipped: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -75,8 +74,6 @@ struct Btpe {
     p: f64,
     npq: f64,
     p1: f64,
-    flipped: bool,
-    // This has the same size as `Binv` one could consider precomputing more.
 }
 
 /// Error type returned from [`Binomial::new`].
@@ -145,29 +142,26 @@ impl Binomial {
         let method = if np < BINV_THRESHOLD {
             let q = 1.0 - p;
             if q == 1.0 {
-                assert!(!flipped);
+                // p is so small that this is extremely close to a Poisson distribution.
+                // The flipped case cannot occur here.
                 Method::Poisson(crate::poisson::KnuthMethod::new(np))
             } else {
                 let s = p / q;
-                Method::Binv(Binv {
-                    r: q.powf(n as f64),
-                    s,
-                    a: (n as f64 + 1.0) * s,
-                    n,
+                Method::Binv(
+                    Binv {
+                        r: q.powf(n as f64),
+                        s,
+                        a: (n as f64 + 1.0) * s,
+                        n,
+                    },
                     flipped,
-                })
+                )
             }
         } else {
             let q = 1.0 - p;
             let npq = np * q;
             let p1 = (2.195 * npq.sqrt() - 4.6 * q).floor() + 0.5;
-            Method::Btpe(Btpe {
-                n,
-                p,
-                npq,
-                p1,
-                flipped,
-            })
+            Method::Btpe(Btpe { n, p, npq, p1 }, flipped)
         };
         Ok(Binomial { method })
     }
@@ -179,7 +173,7 @@ fn f64_to_i64(x: f64) -> i64 {
     x as i64
 }
 
-fn binv<R: Rng + ?Sized>(binv: Binv, rng: &mut R) -> u64 {
+fn binv<R: Rng + ?Sized>(binv: Binv, flipped: bool, rng: &mut R) -> u64 {
     // Same value as in GSL.
     // It is possible for BINV to get stuck, so we break if x > BINV_MAX_X and try again.
     // It would be safer to set BINV_MAX_X to self.n, but it is extremely unlikely to be relevant.
@@ -202,7 +196,7 @@ fn binv<R: Rng + ?Sized>(binv: Binv, rng: &mut R) -> u64 {
         break x;
     };
 
-    if binv.flipped {
+    if flipped {
         binv.n - sample
     } else {
         sample
@@ -210,7 +204,7 @@ fn binv<R: Rng + ?Sized>(binv: Binv, rng: &mut R) -> u64 {
 }
 
 #[allow(clippy::many_single_char_names)] // Same names as in the reference.
-fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
+fn btpe<R: Rng + ?Sized>(btpe: Btpe, flipped: bool, rng: &mut R) -> u64 {
     // Threshold for using the squeeze algorithm. This can be freely
     // chosen based on performance. Ranlib and GSL use 20.
     const SQUEEZE_THRESHOLD: i64 = 20;
@@ -375,7 +369,7 @@ fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
     assert!(y >= 0);
     let y = y as u64;
 
-    if btpe.flipped {
+    if flipped {
         btpe.n - y
     } else {
         y
@@ -385,8 +379,8 @@ fn btpe<R: Rng + ?Sized>(btpe: Btpe, rng: &mut R) -> u64 {
 impl Distribution<u64> for Binomial {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         match self.method {
-            Method::Binv(binv_para) => binv(binv_para, rng),
-            Method::Btpe(btpe_para) => btpe(btpe_para, rng),
+            Method::Binv(binv_para, flipped) => binv(binv_para, flipped, rng),
+            Method::Btpe(btpe_para, flipped) => btpe(btpe_para, flipped, rng),
             Method::Poisson(poisson) => poisson.sample(rng) as u64,
             Method::Constant(c) => c,
         }
