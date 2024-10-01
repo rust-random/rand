@@ -23,10 +23,6 @@ use rand::Rng;
 /// This distribution has density function:
 /// `f(k) = λ^k * exp(-λ) / k!` for `k >= 0`.
 ///
-/// # Known issues
-///
-/// See documentation of [`Poisson::new`].
-///
 /// # Plot
 ///
 /// The following plot shows the Poisson distribution with various values of `λ`.
@@ -40,7 +36,7 @@ use rand::Rng;
 /// use rand_distr::{Poisson, Distribution};
 ///
 /// let poi = Poisson::new(2.0).unwrap();
-/// let v = poi.sample(&mut rand::thread_rng());
+/// let v: f64 = poi.sample(&mut rand::thread_rng());
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -52,13 +48,13 @@ where
 
 /// Error type returned from [`Poisson::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-// Marked non_exhaustive to allow a new error code in the solution to #1312.
-#[non_exhaustive]
 pub enum Error {
     /// `lambda <= 0`
     ShapeTooSmall,
     /// `lambda = ∞` or `lambda = nan`
     NonFinite,
+    /// `lambda` is too large, see [Poisson::MAX_LAMBDA]
+    ShapeTooLarge,
 }
 
 impl fmt::Display for Error {
@@ -66,6 +62,9 @@ impl fmt::Display for Error {
         f.write_str(match self {
             Error::ShapeTooSmall => "lambda is not positive in Poisson distribution",
             Error::NonFinite => "lambda is infinite or nan in Poisson distribution",
+            Error::ShapeTooLarge => {
+                "lambda is too large in Poisson distribution, see Poisson::MAX_LAMBDA"
+            }
         })
     }
 }
@@ -125,14 +124,7 @@ where
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
     ///
-    /// # Known issues
-    ///
-    /// Although this method should return an [`Error`] on invalid parameters,
-    /// some (extreme) values of `lambda` are known to return a [`Poisson`]
-    /// object which hangs when [sampled](Distribution::sample).
-    /// Large (less extreme) values of `lambda` may result in successful
-    /// sampling but with reduced precision.
-    /// See [#1312](https://github.com/rust-random/rand/issues/1312).
+    /// The maximum allowed lambda is [MAX_LAMBDA](Self::MAX_LAMBDA).
     pub fn new(lambda: F) -> Result<Poisson<F>, Error> {
         if !lambda.is_finite() {
             return Err(Error::NonFinite);
@@ -145,11 +137,25 @@ where
         let method = if lambda < F::from(12.0).unwrap() {
             Method::Knuth(KnuthMethod::new(lambda))
         } else {
+            if lambda > F::from(Self::MAX_LAMBDA).unwrap() {
+                return Err(Error::ShapeTooLarge);
+            }
             Method::Rejection(RejectionMethod::new(lambda))
         };
 
         Ok(Poisson(method))
     }
+
+    /// The maximum supported value of `lambda`
+    ///
+    /// This value was selected such that
+    /// `MAX_LAMBDA + 1e6 * sqrt(MAX_LAMBDA) < 2^64 - 1`,
+    /// thus ensuring that the probability of sampling a value larger than
+    /// `u64::MAX` is less than 1e-1000.
+    ///
+    /// Applying this limit also solves
+    /// [#1312](https://github.com/rust-random/rand/issues/1312).
+    pub const MAX_LAMBDA: f64 = 1.844e19;
 }
 
 impl<F> Distribution<F> for KnuthMethod<F>
@@ -229,6 +235,14 @@ where
             Method::Knuth(method) => method.sample(rng),
             Method::Rejection(method) => method.sample(rng),
         }
+    }
+}
+
+impl Distribution<u64> for Poisson<f64> {
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
+        // `as` from float to int saturates
+        <Poisson<f64> as Distribution<f64>>::sample(self, rng) as u64
     }
 }
 

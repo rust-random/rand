@@ -24,6 +24,8 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Add `UniformUsize` and use to make `Uniform` for `usize` portable (#1487)
 - Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` and `Fill` and usage as a `WeightedAliasIndex` weight (#1487)
 - Require `Clone` and `AsRef` bound for `SeedableRng::Seed`. (#1491)
+- Implement `Distribution<u64>` for `Poisson<f64>` (#1498)
+- Limit the maximal acceptable lambda for `Poisson` to solve (#1312) (#1498)
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
