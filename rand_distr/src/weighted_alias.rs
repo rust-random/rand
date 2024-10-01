@@ -275,9 +275,10 @@ where
     }
 }
 
-/// Trait that must be implemented for weights, that are used with
-/// [`WeightedAliasIndex`]. Currently no guarantees on the correctness of
-/// [`WeightedAliasIndex`] are given for custom implementations of this trait.
+/// Weight bound for [`WeightedAliasIndex`]
+///
+/// Currently no guarantees on the correctness of [`WeightedAliasIndex`] are
+/// given for custom implementations of this trait.
 pub trait AliasableWeight:
     Sized
     + Copy
