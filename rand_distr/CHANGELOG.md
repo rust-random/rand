@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 - The `serde1` feature has been renamed `serde` (#1477)
+- Add Kolmogorov Smirnov test for sampling of `Normal` and `Binomial` (#1494)
 
 ### Added
 - Add plots for `rand_distr` distributions to documentation (#1434)

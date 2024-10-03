@@ -6,11 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use core::f64;
+
 use num_traits::AsPrimitive;
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};
-use statrs::distribution::ContinuousCDF;
-use statrs::distribution::DiscreteCDF;
+use special::Beta;
+use special::Primitive;
 
 // [1] Nonparametric Goodness-of-Fit Tests for Discrete Null Distributions
 //     by Taylor B. Arnold and John W. Emerson
@@ -130,6 +132,10 @@ fn test_discrete<I: AsPrimitive<f64>>(
     assert!(ks_statistic < critical_value);
 }
 
+fn normal_cdf(x: f64, mean: f64, std_dev: f64) -> f64 {
+    0.5 * (1.0 + ((x - mean) / (std_dev * f64::consts::SQRT_2)).erf())
+}
+
 #[test]
 fn normal() {
     let parameters = [
@@ -143,12 +149,30 @@ fn normal() {
 
     for (seed, (mean, std_dev)) in parameters.into_iter().enumerate() {
         test_continuous(seed as u64, Normal::new(mean, std_dev).unwrap(), |x| {
-            statrs::distribution::Normal::new(mean, std_dev)
-                .unwrap()
-                .cdf(x)
+            normal_cdf(x, mean, std_dev)
         });
     }
 }
+
+fn binomial_cdf(k: i64, p: f64, n: u64) -> f64 {
+    if k < 0 {
+        return 0.0;
+    }
+    if k >= n as i64 {
+        return 1.0;
+    }
+
+    let a = n as f64 - k as f64;
+    let b = k as f64 + 1.0;
+
+    let q = 1.0 - p;
+
+    let ln_beta_ab = a.ln_beta(b);
+    
+    let reg_incomplete_beta = q.inc_beta(a, b, ln_beta_ab);
+
+    return reg_incomplete_beta;
+}    
 
 #[test]
 fn binomial() {
@@ -162,14 +186,8 @@ fn binomial() {
     ];
 
     for (seed, (p, n)) in parameters.into_iter().enumerate() {
-        test_discrete(seed as u64, rand_distr::Binomial::new(n, p).unwrap(), |x| {
-            if x < 0 {
-                0.0
-            } else {
-                statrs::distribution::Binomial::new(p, n)
-                    .unwrap()
-                    .cdf(x as u64)
-            }
+        test_discrete(seed as u64, rand_distr::Binomial::new(n, p).unwrap(), |k| {
+            binomial_cdf(k, p, n)
         });
     }
 }
