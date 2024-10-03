@@ -72,7 +72,7 @@ struct Binv {
 struct Btpe {
     n: u64,
     p: f64,
-    npq: f64,
+    m: i64,
     p1: f64,
 }
 
@@ -161,7 +161,9 @@ impl Binomial {
             let q = 1.0 - p;
             let npq = np * q;
             let p1 = (2.195 * npq.sqrt() - 4.6 * q).floor() + 0.5;
-            Method::Btpe(Btpe { n, p, npq, p1 }, flipped)
+            let f_m = np + p;
+            let m = f64_to_i64(f_m);
+            Method::Btpe(Btpe { n, p, m, p1 }, flipped)
         };
         Ok(Binomial { method })
     }
@@ -213,9 +215,9 @@ fn btpe<R: Rng + ?Sized>(btpe: Btpe, flipped: bool, rng: &mut R) -> u64 {
     let n = btpe.n as f64;
     let np = n * btpe.p;
     let q = 1. - btpe.p;
-    let npq = btpe.npq;
+    let npq = np * q;
     let f_m = np + btpe.p;
-    let m = f64_to_i64(f_m);
+    let m = btpe.m;
     // radius of triangle region, since height=1 also area of region
     let p1 = btpe.p1;
     // tip of triangle
