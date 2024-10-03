@@ -168,11 +168,9 @@ fn binomial_cdf(k: i64, p: f64, n: u64) -> f64 {
     let q = 1.0 - p;
 
     let ln_beta_ab = a.ln_beta(b);
-    
-    let reg_incomplete_beta = q.inc_beta(a, b, ln_beta_ab);
 
-    return reg_incomplete_beta;
-}    
+    q.inc_beta(a, b, ln_beta_ab)
+}
 
 #[test]
 fn binomial() {
