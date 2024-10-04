@@ -282,10 +282,12 @@ where
     }
 }
 
-/// Randomly sample exactly `amount` distinct indices from `0..length`, and
-/// return them in an arbitrary order (there is no guarantee of shuffling or
-/// ordering). The weights are to be provided by the input function `weights`,
-/// which will be called once for each index.
+/// Randomly sample exactly `amount` distinct indices from `0..length`
+///
+/// Results are in arbitrary order (there is no guarantee of shuffling or
+/// ordering).
+///
+/// Function `weight` is called once for each index to provide weights.
 ///
 /// This method is used internally by the slice sampling methods, but it can
 /// sometimes be useful to have the indices themselves so this is provided as

@@ -15,10 +15,14 @@ use core::num::Wrapping;
 use core::{mem, slice};
 use rand_core::RngCore;
 
-/// An automatically-implemented extension trait on [`RngCore`] providing high-level
-/// generic methods for sampling values and other convenience methods.
+/// User-level interface for RNGs
 ///
-/// This is the primary trait to use when generating random values.
+/// [`RngCore`] is the `dyn`-safe implementation-level interface for Random
+/// (Number) Generators. This trait, `Rng`, provides a user-level interface on
+/// RNGs. It is implemented automatically for any `R: RngCore`.
+///
+/// This trait must usually be brought into scope via `use rand::Rng;` or
+/// `use rand::prelude::*;`.
 ///
 /// # Generic usage
 ///
@@ -96,55 +100,13 @@ pub trait Rng: RngCore {
         Standard.sample(self)
     }
 
-    /// Generate a random value in the given range.
-    ///
-    /// This function is optimised for the case that only a single sample is
-    /// made from the given range. See also the [`Uniform`] distribution
-    /// type which may be faster if sampling from the same range repeatedly.
-    ///
-    /// All types support `low..high_exclusive` and `low..=high` range syntax.
-    /// Unsigned integer types also support `..high_exclusive` and `..=high` syntax.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the range is empty, or if `high - low` overflows for floats.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
-    ///
-    /// // Exclusive range
-    /// let n: u32 = rng.gen_range(..10);
-    /// println!("{}", n);
-    /// let m: f64 = rng.gen_range(-40.0..1.3e5);
-    /// println!("{}", m);
-    ///
-    /// // Inclusive range
-    /// let n: u32 = rng.gen_range(..=10);
-    /// println!("{}", n);
-    /// ```
-    ///
-    /// [`Uniform`]: distr::uniform::Uniform
-    #[track_caller]
-    fn gen_range<T, R>(&mut self, range: R) -> T
-    where
-        T: SampleUniform,
-        R: SampleRange<T>,
-    {
-        assert!(!range.is_empty(), "cannot sample empty range");
-        range.sample_single(self).unwrap()
-    }
-
-    /// Generate values via an iterator
+    /// Return an iterator over [`random`](Self::random) variates
     ///
     /// This is a just a wrapper over [`Rng::sample_iter`] using
     /// [`distr::Standard`].
     ///
     /// Note: this method consumes its argument. Use
-    /// `(&mut rng).gen_iter()` to avoid consuming the RNG.
+    /// `(&mut rng).random_iter()` to avoid consuming the RNG.
     ///
     /// # Example
     ///
@@ -152,11 +114,11 @@ pub trait Rng: RngCore {
     /// use rand::{rngs::mock::StepRng, Rng};
     ///
     /// let rng = StepRng::new(1, 1);
-    /// let v: Vec<i32> = rng.gen_iter().take(5).collect();
+    /// let v: Vec<i32> = rng.random_iter().take(5).collect();
     /// assert_eq!(&v, &[1, 2, 3, 4, 5]);
     /// ```
     #[inline]
-    fn gen_iter<T>(self) -> distr::DistIter<Standard, Self, T>
+    fn random_iter<T>(self) -> distr::DistIter<Standard, Self, T>
     where
         Self: Sized,
         Standard: Distribution<T>,
@@ -247,6 +209,48 @@ pub trait Rng: RngCore {
         dest.fill(self)
     }
 
+    /// Generate a random value in the given range.
+    ///
+    /// This function is optimised for the case that only a single sample is
+    /// made from the given range. See also the [`Uniform`] distribution
+    /// type which may be faster if sampling from the same range repeatedly.
+    ///
+    /// All types support `low..high_exclusive` and `low..=high` range syntax.
+    /// Unsigned integer types also support `..high_exclusive` and `..=high` syntax.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the range is empty, or if `high - low` overflows for floats.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{thread_rng, Rng};
+    ///
+    /// let mut rng = thread_rng();
+    ///
+    /// // Exclusive range
+    /// let n: u32 = rng.gen_range(..10);
+    /// println!("{}", n);
+    /// let m: f64 = rng.gen_range(-40.0..1.3e5);
+    /// println!("{}", m);
+    ///
+    /// // Inclusive range
+    /// let n: u32 = rng.gen_range(..=10);
+    /// println!("{}", n);
+    /// ```
+    ///
+    /// [`Uniform`]: distr::uniform::Uniform
+    #[track_caller]
+    fn gen_range<T, R>(&mut self, range: R) -> T
+    where
+        T: SampleUniform,
+        R: SampleRange<T>,
+    {
+        assert!(!range.is_empty(), "cannot sample empty range");
+        range.sample_single(self).unwrap()
+    }
+
     /// Return a bool with a probability `p` of being true.
     ///
     /// See also the [`Bernoulli`] distribution, which may be faster if
@@ -316,7 +320,7 @@ pub trait Rng: RngCore {
         since = "0.9.0",
         note = "Renamed to `random` to avoid conflict with the new `gen` keyword in Rust 2024."
     )]
-    fn gen<T>(&mut self) -> T
+    fn r#gen<T>(&mut self) -> T
     where
         Standard: Distribution<T>,
     {
@@ -474,8 +478,8 @@ mod test {
         // Check equivalence for generated floats
         let mut array = [0f32; 2];
         rng.fill(&mut array);
-        let gen: [f32; 2] = rng.random();
-        assert_eq!(array, gen);
+        let arr2: [f32; 2] = rng.random();
+        assert_eq!(array, arr2);
     }
 
     #[test]

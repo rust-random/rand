@@ -14,25 +14,24 @@
 //!
 //! # Quick Start
 //!
-//! To get you started quickly, the easiest and highest-level way to get
-//! a random value is to use [`random()`]; alternatively you can use
-//! [`thread_rng()`]. The [`Rng`] trait provides a useful API on all RNGs, while
-//! the [`distr`] and [`seq`] modules provide further
-//! functionality on top of RNGs.
-//!
 //! ```
+//! // The prelude import enables methods we use below, specifically
+//! // Rng::random, Rng::sample, SliceRandom::shuffle and IndexedRandom::choose.
 //! use rand::prelude::*;
 //!
-//! if rand::random() { // generates a boolean
-//!     // Try printing a random unicode code point (probably a bad idea)!
-//!     println!("char: {}", rand::random::<char>());
-//! }
-//!
+//! // Get an RNG:
 //! let mut rng = rand::thread_rng();
-//! let y: f64 = rng.random(); // generates a float between 0 and 1
 //!
+//! // Try printing a random unicode code point (probably a bad idea)!
+//! println!("char: '{}'", rng.random::<char>());
+//! // Try printing a random alphanumeric value instead!
+//! println!("alpha: '{}'", rng.sample(rand::distr::Alphanumeric) as char);
+//!
+//! // Generate and shuffle a sequence:
 //! let mut nums: Vec<i32> = (1..100).collect();
 //! nums.shuffle(&mut rng);
+//! // And take a random pick (yes, we didn't need to shuffle first!):
+//! let _ = nums.choose(&mut rng);
 //! ```
 //!
 //! # The Book
