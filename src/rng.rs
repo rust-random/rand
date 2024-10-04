@@ -12,8 +12,8 @@
 use crate::distr::uniform::{SampleRange, SampleUniform};
 use crate::distr::{self, Distribution, Standard};
 use core::num::Wrapping;
-use core::{mem, slice};
 use rand_core::RngCore;
+use zerocopy::IntoBytes;
 
 /// User-level interface for RNGs
 ///
@@ -374,12 +374,7 @@ macro_rules! impl_fill {
             #[inline(never)] // in micro benchmarks, this improves performance
             fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
-                    rng.fill_bytes(unsafe {
-                        slice::from_raw_parts_mut(self.as_mut_ptr()
-                            as *mut u8,
-                            mem::size_of_val(self)
-                        )
-                    });
+                    rng.fill_bytes(self.as_mut_bytes());
                     for x in self {
                         *x = x.to_le();
                     }
@@ -391,12 +386,7 @@ macro_rules! impl_fill {
             #[inline(never)]
             fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
-                    rng.fill_bytes(unsafe {
-                        slice::from_raw_parts_mut(self.as_mut_ptr()
-                            as *mut u8,
-                            self.len() * mem::size_of::<$t>()
-                        )
-                    });
+                    rng.fill_bytes(self.as_mut_bytes());
                     for x in self {
                     *x = Wrapping(x.0.to_le());
                     }
