@@ -56,7 +56,7 @@ impl SeedableRng for Xoshiro256PlusPlus {
             z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
             z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
             z = z ^ (z >> 31);
-            *i = z.to_le();
+            *i = z;
         }
         // By using a non-zero PHI we are guaranteed to generate a non-zero state
         // Thus preventing a recursion between from_seed and seed_from_u64.
