@@ -61,8 +61,9 @@ fn kolmogorov_smirnov_statistic_continuous(ecdf: Ecdf, cdf: impl Fn(f64) -> f64)
     for i in 1..step_points.len() {
         let (x_i, f_i) = step_points[i];
         let (_, f_i_1) = step_points[i - 1];
-        let max_1 = (cdf(x_i) - f_i).abs();
-        let max_2 = (cdf(x_i) - f_i_1).abs();
+        let cdf_i = cdf(x_i);
+        let max_1 = (cdf_i - f_i).abs();
+        let max_2 = (cdf_i - f_i_1).abs();
 
         max_diff = max_diff.max(max_1).max(max_2);
     }
@@ -105,7 +106,9 @@ where
     Ecdf::new(samples)
 }
 
-fn test_continuous(seed: u64, dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
+/// Tests a distribution against an analytical CDF.
+/// The cdf has to be continuous.
+pub fn test_continuous(seed: u64, dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
     let ecdf = sample_ecdf(seed, dist);
     let ks_statistic = kolmogorov_smirnov_statistic_continuous(ecdf, cdf);
 
@@ -116,7 +119,9 @@ fn test_continuous(seed: u64, dist: impl Distribution<f64>, cdf: impl Fn(f64) ->
     assert!(ks_statistic < critical_value);
 }
 
-fn test_discrete<I: AsPrimitive<f64>>(
+/// Tests a distribution over integers against an analytical CDF.
+/// The analytical CDF must not have jump points which are not integers.
+pub fn test_discrete<I: AsPrimitive<f64>>(
     seed: u64,
     dist: impl Distribution<I>,
     cdf: impl Fn(i64) -> f64,
