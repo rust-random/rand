@@ -19,7 +19,7 @@ use rand_pcg::{Pcg32, Pcg64, Pcg64Dxsm, Pcg64Mcg};
 criterion_group!(
     name = benches;
     config = Criterion::default();
-    targets = gen_bytes, gen_u32, gen_u64, init_gen, reseeding_bytes
+    targets = gen_bytes, gen_u32, gen_u64, init_gen, init_from_u64, init_from_seed, reseeding_bytes
 );
 criterion_main!(benches);
 
@@ -133,6 +133,62 @@ pub fn init_gen(c: &mut Criterion) {
     bench::<ChaCha12Rng>(&mut g, "chacha12");
     bench::<ChaCha20Rng>(&mut g, "chacha20");
     bench::<StdRng>(&mut g, "std");
+    bench::<SmallRng>(&mut g, "small");
+
+    g.finish()
+}
+
+pub fn init_from_u64(c: &mut Criterion) {
+    let mut g = c.benchmark_group("init_from_u64");
+    g.warm_up_time(Duration::from_millis(500));
+    g.measurement_time(Duration::from_millis(1000));
+
+    fn bench<R: SeedableRng>(g: &mut BenchmarkGroup<WallTime>, name: &str) {
+        g.bench_function(name, |b| {
+            let mut rng = Pcg32::from_os_rng();
+            let seed = rng.random();
+            b.iter(|| R::seed_from_u64(black_box(seed)));
+        });
+    }
+
+    bench::<Pcg32>(&mut g, "pcg32");
+    bench::<Pcg64>(&mut g, "pcg64");
+    bench::<Pcg64Mcg>(&mut g, "pcg64mcg");
+    bench::<Pcg64Dxsm>(&mut g, "pcg64dxsm");
+    bench::<ChaCha8Rng>(&mut g, "chacha8");
+    bench::<ChaCha12Rng>(&mut g, "chacha12");
+    bench::<ChaCha20Rng>(&mut g, "chacha20");
+    bench::<StdRng>(&mut g, "std");
+    bench::<SmallRng>(&mut g, "small");
+
+    g.finish()
+}
+
+pub fn init_from_seed(c: &mut Criterion) {
+    let mut g = c.benchmark_group("init_from_seed");
+    g.warm_up_time(Duration::from_millis(500));
+    g.measurement_time(Duration::from_millis(1000));
+
+    fn bench<R: SeedableRng>(g: &mut BenchmarkGroup<WallTime>, name: &str)
+    where
+        rand::distr::Standard: Distribution<<R as SeedableRng>::Seed>,
+    {
+        g.bench_function(name, |b| {
+            let mut rng = Pcg32::from_os_rng();
+            let seed = rng.random();
+            b.iter(|| R::from_seed(black_box(seed.clone())));
+        });
+    }
+
+    bench::<Pcg32>(&mut g, "pcg32");
+    bench::<Pcg64>(&mut g, "pcg64");
+    bench::<Pcg64Mcg>(&mut g, "pcg64mcg");
+    bench::<Pcg64Dxsm>(&mut g, "pcg64dxsm");
+    bench::<ChaCha8Rng>(&mut g, "chacha8");
+    bench::<ChaCha12Rng>(&mut g, "chacha12");
+    bench::<ChaCha20Rng>(&mut g, "chacha20");
+    bench::<StdRng>(&mut g, "std");
+    bench::<SmallRng>(&mut g, "small");
 
     g.finish()
 }

@@ -54,11 +54,11 @@ pub use getrandom;
 #[cfg(feature = "getrandom")]
 pub use os::OsRng;
 
-/// The core of a random number generator.
+/// Implementation-level interface for RNGs
 ///
 /// This trait encapsulates the low-level functionality common to all
 /// generators, and is the "back end", to be implemented by generators.
-/// End users should normally use the `Rng` trait from the [`rand`] crate,
+/// End users should normally use the [`rand::Rng`] trait
 /// which is automatically implemented for every type implementing `RngCore`.
 ///
 /// Three different methods for generating random data are provided since the
@@ -129,7 +129,7 @@ pub use os::OsRng;
 /// rand_core::impl_try_rng_from_rng_core!(CountingRng);
 /// ```
 ///
-/// [`rand`]: https://docs.rs/rand
+/// [`rand::Rng`]: https://docs.rs/rand/latest/rand/trait.Rng.html
 /// [`fill_bytes`]: RngCore::fill_bytes
 /// [`next_u32`]: RngCore::next_u32
 /// [`next_u64`]: RngCore::next_u64
