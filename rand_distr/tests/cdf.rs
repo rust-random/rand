@@ -107,7 +107,7 @@ where
 }
 
 /// Tests a distribution against an analytical CDF.
-/// The cdf has to be continuous.
+/// The CDF has to be continuous.
 pub fn test_continuous(seed: u64, dist: impl Distribution<f64>, cdf: impl Fn(f64) -> f64) {
     let ecdf = sample_ecdf(seed, dist);
     let ks_statistic = kolmogorov_smirnov_statistic_continuous(ecdf, cdf);
