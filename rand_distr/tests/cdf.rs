@@ -11,8 +11,7 @@ use core::f64;
 use num_traits::AsPrimitive;
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};
-use special::Beta;
-use special::Primitive;
+use special::{Beta, Gamma, Primitive};
 
 // [1] Nonparametric Goodness-of-Fit Tests for Discrete Null Distributions
 //     by Taylor B. Arnold and John W. Emerson
@@ -159,6 +158,103 @@ fn normal() {
     }
 }
 
+#[test]
+fn uniform() {
+    fn cdf(x: f64, a: f64, b: f64) -> f64 {
+        if x < a {
+            0.0
+        } else if x < b {
+            (x - a) / (b - a)
+        } else {
+            1.0
+        }
+    }
+
+    let parameters = [(0.0, 1.0), (-1.0, 1.0), (0.0, 100.0), (-100.0, 100.0)];
+
+    for (seed, (a, b)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Uniform::new(a, b).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, a, b));
+    }
+}
+
+#[test]
+fn exp() {
+    fn cdf(x: f64, lambda: f64) -> f64 {
+        1.0 - (-lambda * x).exp()
+    }
+
+    let parameters = [0.5, 1.0, 7.5, 32.0, 100.0];
+
+    for (seed, lambda) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Exp::new(lambda).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, lambda));
+    }
+}
+
+#[test]
+fn gamma() {
+    fn cdf(x: f64, shape: f64, scale: f64) -> f64 {
+        if x < 0.0 {
+            return 0.0;
+        }
+
+        (x / scale).inc_gamma(shape)
+    }
+
+    let parameters = [
+        (0.5, 2.0),
+        (1.0, 1.0),
+        (10.0, 0.1),
+        (100.0, 0.0001),
+        (0.9999, 2.0),
+    ];
+
+    for (seed, (shape, scale)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Gamma::new(shape, scale).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, shape, scale));
+    }
+}
+
+#[test]
+fn chi_squared() {
+    fn cdf(x: f64, k: f64) -> f64 {
+        if x < 0.0 {
+            return 0.0;
+        }
+
+        (x / 2.0).inc_gamma(k / 2.0)
+    }
+
+    let parameters = [1.0, 2.0, 10.0, 100.0, 1000.0];
+
+    for (seed, k) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::ChiSquared::new(k).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, k));
+    }
+}
+
+#[test]
+fn beta() {
+    fn cdf(x: f64, alpha: f64, beta: f64) -> f64 {
+        if x < 0.0 {
+            return 0.0;
+        }
+        if x > 1.0 {
+            return 1.0;
+        }
+        let ln_beta_ab = alpha.ln_beta(beta);
+        x.inc_beta(alpha, beta, ln_beta_ab)
+    }
+
+    let parameters = [(0.5, 0.5), (2.0, 3.5), (10.0, 1.0), (100.0, 50.0)];
+
+    for (seed, (alpha, beta)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Beta::new(alpha, beta).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, alpha, beta));
+    }
+}
+
 fn binomial_cdf(k: i64, p: f64, n: u64) -> f64 {
     if k < 0 {
         return 0.0;
@@ -216,7 +312,7 @@ fn geometric() {
 
 #[test]
 fn hypergeometric() {
-    fn cdf(n: u64, k: u64, n_: u64, x: i64) -> f64 {
+    fn cdf(x: i64, n: u64, k: u64, n_: u64) -> f64 {
         let min = if n_ + k > n { n_ + k - n } else { 0 };
         let max = k.min(n_);
         if x < min as i64 {
@@ -234,14 +330,13 @@ fn hypergeometric() {
 
     for (seed, (n, k, n_)) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Hypergeometric::new(n, k, n_).unwrap();
-        test_discrete(seed as u64, dist, |x| cdf(n, k, n_, x));
+        test_discrete(seed as u64, dist, |x| cdf(x, n, k, n_));
     }
 }
 
 #[test]
 fn poisson() {
-    fn cdf(lambda: f64, k: i64) -> f64 {
-        use special::Gamma;
+    fn cdf(k: i64, lambda: f64) -> f64 {
         if k < 0 || lambda <= 0.0 {
             return 0.0;
         }
@@ -253,13 +348,11 @@ fn poisson() {
 
     for (seed, lambda) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Poisson::new(lambda).unwrap();
-        test_discrete::<u64>(seed as u64, dist, |k| cdf(lambda, k));
+        test_discrete::<u64>(seed as u64, dist, |k| cdf(k, lambda));
     }
 }
 
 fn ln_factorial(n: u64) -> f64 {
-    use special::Primitive;
-
     (n as f64 + 1.0).lgamma().0
 }
 
