@@ -159,6 +159,27 @@ fn normal() {
 }
 
 #[test]
+fn cauchy() {
+    fn cdf(x: f64, median: f64, scale: f64) -> f64 {
+        (1.0 / f64::consts::PI) * ((x - median) / scale).atan() + 0.5
+    }
+
+    let parameters = [
+        (0.0, 1.0),
+        (0.0, 0.1),
+        (1.0, 10.0),
+        (1.0, 100.0),
+        (-1.0, 0.00001),
+        (-1.0, 0.0000001),
+    ];
+
+    for (seed, (median, scale)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Cauchy::new(median, scale).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, median, scale));
+    }
+}
+
+#[test]
 fn uniform() {
     fn cdf(x: f64, a: f64, b: f64) -> f64 {
         if x < a {
@@ -179,6 +200,33 @@ fn uniform() {
 }
 
 #[test]
+fn log_normal() {
+    fn cdf(x: f64, mean: f64, std_dev: f64) -> f64 {
+        if x <= 0.0 {
+            0.0
+        } else if x.is_infinite() {
+            1.0
+        } else {
+            0.5 * (mean - x.ln() / (std_dev * f64::consts::SQRT_2)).erfc()
+        }
+    }
+
+    let parameters = [
+        (0.0, 1.0),
+        (0.0, 0.1),
+        (1.0, 10.0),
+        (1.0, 100.0),
+        (-1.0, 0.00001),
+        (-1.0, 0.0000001),
+    ];
+
+    for (seed, (mean, std_dev)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::LogNormal::new(mean, std_dev).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, mean, std_dev));
+    }
+}
+
+#[test]
 fn exp() {
     fn cdf(x: f64, lambda: f64) -> f64 {
         1.0 - (-lambda * x).exp()
@@ -189,6 +237,31 @@ fn exp() {
     for (seed, lambda) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Exp::new(lambda).unwrap();
         test_continuous(seed as u64, dist, |x| cdf(x, lambda));
+    }
+}
+
+#[test]
+fn weibull() {
+    fn cdf(x: f64, lambda: f64, k: f64) -> f64 {
+        if x < 0.0 {
+            return 0.0;
+        }
+
+        1.0 - (-(x / lambda).powf(k)).exp()
+    }
+
+    let parameters = [
+        (0.5, 1.0),
+        (1.0, 1.0),
+        (10.0, 0.1),
+        (0.1, 10.0),
+        (15.0, 20.0),
+        (1000.0, 1.0),
+    ];
+
+    for (seed, (lambda, k)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Weibull::new(lambda, k).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, lambda, k));
     }
 }
 
