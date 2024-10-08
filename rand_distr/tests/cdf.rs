@@ -195,3 +195,74 @@ fn binomial() {
         });
     }
 }
+
+#[test]
+fn geometric() {
+    fn cdf(k: i64, p: f64) -> f64 {
+        if k < 0 {
+            0.0
+        } else {
+            1.0 - (1.0 - p).powi(1 + k as i32)
+        }
+    }
+
+    let parameters = [0.3, 0.5, 0.7, 0.0000001, 0.9999];
+
+    for (seed, p) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Geometric::new(p).unwrap();
+        test_discrete(seed as u64, dist, |k| cdf(k, p));
+    }
+}
+
+#[test]
+fn hypergeometric() {
+    fn cdf(n: u64, k: u64, n_: u64, x: i64) -> f64 {
+        let min = if n_ + k > n { n_ + k - n } else { 0 };
+        let max = k.min(n_);
+        if x < min as i64 {
+            return 0.0;
+        } else if x >= max as i64 {
+            return 1.0;
+        }
+
+        (min..x as u64 + 1).fold(0.0, |acc, k_| {
+            acc + (ln_binomial(k, k_) + ln_binomial(n - k, n_ - k_) - ln_binomial(n, n_)).exp()
+        })
+    }
+
+    let parameters = [(15, 13, 10), (25, 15, 5), (60, 10, 7), (70, 20, 50)];
+
+    for (seed, (n, k, n_)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Hypergeometric::new(n, k, n_).unwrap();
+        test_discrete(seed as u64, dist, |x| cdf(n, k, n_, x));
+    }
+}
+
+#[test]
+fn poisson() {
+    fn cdf(lambda: f64, k: i64) -> f64 {
+        use special::Gamma;
+        if k < 0 || lambda <= 0.0 {
+            return 0.0;
+        }
+
+        1.0 - lambda.inc_gamma(k as f64 + 1.0)
+    }
+
+    let parameters = [0.5, 1.0, 7.5, 32.0, 100.0];
+
+    for (seed, lambda) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Poisson::new(lambda).unwrap();
+        test_discrete::<u64>(seed as u64, dist, |k| cdf(lambda, k));
+    }
+}
+
+fn ln_factorial(n: u64) -> f64 {
+    use special::Primitive;
+
+    (n as f64 + 1.0).lgamma().0
+}
+
+fn ln_binomial(n: u64, k: u64) -> f64 {
+    ln_factorial(n) - ln_factorial(k) - ln_factorial(n - k)
+}
