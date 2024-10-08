@@ -138,7 +138,7 @@ pub fn test_discrete<I: AsPrimitive<f64>>(
 }
 
 fn normal_cdf(x: f64, mean: f64, std_dev: f64) -> f64 {
-    0.5 * (1.0 + ((x - mean) / (std_dev * f64::consts::SQRT_2)).erf())
+    0.5 * ((mean - x) / (std_dev * f64::consts::SQRT_2)).erfc()
 }
 
 #[test]
@@ -163,11 +163,12 @@ fn binomial_cdf(k: i64, p: f64, n: u64) -> f64 {
     if k < 0 {
         return 0.0;
     }
-    if k >= n as i64 {
+    let k = k as u64;
+    if k >= n {
         return 1.0;
     }
 
-    let a = n as f64 - k as f64;
+    let a = (n - k) as f64;
     let b = k as f64 + 1.0;
 
     let q = 1.0 - p;
