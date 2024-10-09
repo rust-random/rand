@@ -163,7 +163,7 @@ impl Distribution<bool> for Standard {
 /// #![feature(portable_simd)]
 /// use std::simd::prelude::*;
 /// use rand::prelude::*;
-/// let mut rng = thread_rng();
+/// let mut rng = rand::rng();
 ///
 /// let x = u16x8::splat(rng.random::<u8>() as u16);
 /// let mask = u16x8::splat(1) << u16x8::from([0, 1, 2, 3, 4, 5, 6, 7]);

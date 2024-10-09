@@ -94,7 +94,7 @@
 //!
 //! let (low, high) = (MyF32(17.0f32), MyF32(22.0f32));
 //! let uniform = Uniform::new(low, high).unwrap();
-//! let x = uniform.sample(&mut thread_rng());
+//! let x = uniform.sample(&mut rand::rng());
 //! ```
 //!
 //! [`SampleUniform`]: crate::distr::uniform::SampleUniform

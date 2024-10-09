@@ -147,7 +147,7 @@ pub trait IndexedRandom: Index<usize> {
     /// use rand::prelude::*;
     ///
     /// let choices = [('a', 2), ('b', 1), ('c', 1), ('d', 0)];
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c',
     /// // and 'd' will never be printed
     /// println!("{:?}", choices.choose_weighted(&mut rng, |item| item.1).unwrap().0);
@@ -201,7 +201,7 @@ pub trait IndexedRandom: Index<usize> {
     /// use rand::prelude::*;
     ///
     /// let choices = [('a', 2), ('b', 1), ('c', 1)];
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// // First Draw * Second Draw = total odds
     /// // -----------------------
     /// // (50% * 50%) + (25% * 67%) = 41.7% chance that the output is `['a', 'b']` in some order.
