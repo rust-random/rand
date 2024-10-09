@@ -41,7 +41,7 @@ impl<R: RngCore> IncreasingUniform<R> {
         let next_n = self.n + 1;
 
         // There's room for further optimisation here:
-        // gen_range uses rejection sampling (or other method; see #1196) to avoid bias.
+        // random_range uses rejection sampling (or other method; see #1196) to avoid bias.
         // When the initial sample is biased for range 0..bound
         // it may still be viable to use for a smaller bound
         // (especially if small biases are considered acceptable).
@@ -50,7 +50,7 @@ impl<R: RngCore> IncreasingUniform<R> {
             // If the chunk is empty, generate a new chunk
             let (bound, remaining) = calculate_bound_u32(next_n);
             // bound = (n + 1) * (n + 2) *..* (n + remaining)
-            self.chunk = self.rng.gen_range(0..bound);
+            self.chunk = self.rng.random_range(..bound);
             // Chunk is a random number in
             // [0, (n + 1) * (n + 2) *..* (n + remaining) )
 

@@ -364,7 +364,7 @@ mod tests {
     #[should_panic]
     fn test_float_overflow_single() {
         let mut rng = crate::test::rng(252);
-        rng.gen_range(f64::MIN..f64::MAX);
+        rng.random_range(f64::MIN..f64::MAX);
     }
 
     #[test]

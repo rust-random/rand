@@ -230,19 +230,19 @@ pub trait Rng: RngCore {
     /// let mut rng = thread_rng();
     ///
     /// // Exclusive range
-    /// let n: u32 = rng.gen_range(..10);
+    /// let n: u32 = rng.random_range(..10);
     /// println!("{}", n);
-    /// let m: f64 = rng.gen_range(-40.0..1.3e5);
+    /// let m: f64 = rng.random_range(-40.0..1.3e5);
     /// println!("{}", m);
     ///
     /// // Inclusive range
-    /// let n: u32 = rng.gen_range(..=10);
+    /// let n: u32 = rng.random_range(..=10);
     /// println!("{}", n);
     /// ```
     ///
     /// [`Uniform`]: distr::uniform::Uniform
     #[track_caller]
-    fn gen_range<T, R>(&mut self, range: R) -> T
+    fn random_range<T, R>(&mut self, range: R) -> T
     where
         T: SampleUniform,
         R: SampleRange<T>,
@@ -262,7 +262,7 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
-    /// println!("{}", rng.gen_bool(1.0 / 3.0));
+    /// println!("{}", rng.random_bool(1.0 / 3.0));
     /// ```
     ///
     /// # Panics
@@ -272,7 +272,7 @@ pub trait Rng: RngCore {
     /// [`Bernoulli`]: distr::Bernoulli
     #[inline]
     #[track_caller]
-    fn gen_bool(&mut self, p: f64) -> bool {
+    fn random_bool(&mut self, p: f64) -> bool {
         match distr::Bernoulli::new(p) {
             Ok(d) => self.sample(d),
             Err(_) => panic!("p={:?} is outside range [0.0, 1.0]", p),
@@ -280,7 +280,7 @@ pub trait Rng: RngCore {
     }
 
     /// Return a bool with a probability of `numerator/denominator` of being
-    /// true. I.e. `gen_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
+    /// true. I.e. `random_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
     /// returning true. If `numerator == denominator`, then the returned value
     /// is guaranteed to be `true`. If `numerator == 0`, then the returned
     /// value is guaranteed to be `false`.
@@ -298,13 +298,13 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
-    /// println!("{}", rng.gen_ratio(2, 3));
+    /// println!("{}", rng.random_ratio(2, 3));
     /// ```
     ///
     /// [`Bernoulli`]: distr::Bernoulli
     #[inline]
     #[track_caller]
-    fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
+    fn random_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
         match distr::Bernoulli::from_ratio(numerator, denominator) {
             Ok(d) => self.sample(d),
             Err(_) => panic!(
@@ -481,64 +481,64 @@ mod test {
     }
 
     #[test]
-    fn test_gen_range_int() {
+    fn test_random_range_int() {
         let mut r = rng(101);
         for _ in 0..1000 {
-            let a = r.gen_range(-4711..17);
+            let a = r.random_range(-4711..17);
             assert!((-4711..17).contains(&a));
-            let a: i8 = r.gen_range(-3..42);
+            let a: i8 = r.random_range(-3..42);
             assert!((-3..42).contains(&a));
-            let a: u16 = r.gen_range(10..99);
+            let a: u16 = r.random_range(10..99);
             assert!((10..99).contains(&a));
-            let a: i32 = r.gen_range(-100..2000);
+            let a: i32 = r.random_range(-100..2000);
             assert!((-100..2000).contains(&a));
-            let a: u32 = r.gen_range(12..=24);
+            let a: u32 = r.random_range(12..=24);
             assert!((12..=24).contains(&a));
 
-            assert_eq!(r.gen_range(..1u32), 0u32);
-            assert_eq!(r.gen_range(-12i64..-11), -12i64);
-            assert_eq!(r.gen_range(3_000_000..3_000_001), 3_000_000);
+            assert_eq!(r.random_range(..1u32), 0u32);
+            assert_eq!(r.random_range(-12i64..-11), -12i64);
+            assert_eq!(r.random_range(3_000_000..3_000_001), 3_000_000);
         }
     }
 
     #[test]
-    fn test_gen_range_float() {
+    fn test_random_range_float() {
         let mut r = rng(101);
         for _ in 0..1000 {
-            let a = r.gen_range(-4.5..1.7);
+            let a = r.random_range(-4.5..1.7);
             assert!((-4.5..1.7).contains(&a));
-            let a = r.gen_range(-1.1..=-0.3);
+            let a = r.random_range(-1.1..=-0.3);
             assert!((-1.1..=-0.3).contains(&a));
 
-            assert_eq!(r.gen_range(0.0f32..=0.0), 0.);
-            assert_eq!(r.gen_range(-11.0..=-11.0), -11.);
-            assert_eq!(r.gen_range(3_000_000.0..=3_000_000.0), 3_000_000.);
+            assert_eq!(r.random_range(0.0f32..=0.0), 0.);
+            assert_eq!(r.random_range(-11.0..=-11.0), -11.);
+            assert_eq!(r.random_range(3_000_000.0..=3_000_000.0), 3_000_000.);
         }
     }
 
     #[test]
     #[should_panic]
     #[allow(clippy::reversed_empty_ranges)]
-    fn test_gen_range_panic_int() {
+    fn test_random_range_panic_int() {
         let mut r = rng(102);
-        r.gen_range(5..-2);
+        r.random_range(5..-2);
     }
 
     #[test]
     #[should_panic]
     #[allow(clippy::reversed_empty_ranges)]
-    fn test_gen_range_panic_usize() {
+    fn test_random_range_panic_usize() {
         let mut r = rng(103);
-        r.gen_range(5..2);
+        r.random_range(5..2);
     }
 
     #[test]
     #[allow(clippy::bool_assert_comparison)]
-    fn test_gen_bool() {
+    fn test_random_bool() {
         let mut r = rng(105);
         for _ in 0..5 {
-            assert_eq!(r.gen_bool(0.0), false);
-            assert_eq!(r.gen_bool(1.0), true);
+            assert_eq!(r.random_bool(0.0), false);
+            assert_eq!(r.random_bool(1.0), true);
         }
     }
 
@@ -559,7 +559,7 @@ mod test {
         let mut r = &mut rng as &mut dyn RngCore;
         r.next_u32();
         r.random::<i32>();
-        assert_eq!(r.gen_range(0..1), 0);
+        assert_eq!(r.random_range(0..1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
 
@@ -571,7 +571,7 @@ mod test {
         let mut r = Box::new(rng) as Box<dyn RngCore>;
         r.next_u32();
         r.random::<i32>();
-        assert_eq!(r.gen_range(0..1), 0);
+        assert_eq!(r.random_range(0..1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
 
@@ -585,7 +585,7 @@ mod test {
         let mut sum: u32 = 0;
         let mut rng = rng(111);
         for _ in 0..N {
-            if rng.gen_ratio(NUM, DENOM) {
+            if rng.random_ratio(NUM, DENOM) {
                 sum += 1;
             }
         }

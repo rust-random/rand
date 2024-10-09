@@ -265,7 +265,7 @@ mod tests {
         let mut rng = crate::test::rng(891);
         let mut max = core::char::from_u32(0).unwrap();
         for _ in 0..100 {
-            let c = rng.gen_range('A'..='Z');
+            let c = rng.random_range('A'..='Z');
             assert!(c.is_ascii_uppercase());
             max = max.max(c);
         }

@@ -128,7 +128,7 @@ thread_local!(
 /// println!("A random boolean: {}", rand::random::<bool>());
 ///
 /// let mut rng = rand::thread_rng();
-/// println!("A simulated die roll: {}", rng.gen_range(1..=6));
+/// println!("A simulated die roll: {}", rng.random_range(1..=6));
 /// # }
 /// ```
 pub fn thread_rng() -> ThreadRng {
@@ -177,7 +177,7 @@ mod test {
         use crate::Rng;
         let mut r = crate::thread_rng();
         r.random::<i32>();
-        assert_eq!(r.gen_range(0..1), 0);
+        assert_eq!(r.random_range(0..1), 0);
     }
 
     #[test]

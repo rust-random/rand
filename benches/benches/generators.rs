@@ -19,12 +19,12 @@ use rand_pcg::{Pcg32, Pcg64, Pcg64Dxsm, Pcg64Mcg};
 criterion_group!(
     name = benches;
     config = Criterion::default();
-    targets = gen_bytes, gen_u32, gen_u64, init_gen, init_from_u64, init_from_seed, reseeding_bytes
+    targets = random_bytes, random_u32, random_u64, init_gen, init_from_u64, init_from_seed, reseeding_bytes
 );
 criterion_main!(benches);
 
-pub fn gen_bytes(c: &mut Criterion) {
-    let mut g = c.benchmark_group("gen_bytes");
+pub fn random_bytes(c: &mut Criterion) {
+    let mut g = c.benchmark_group("random_bytes");
     g.warm_up_time(Duration::from_millis(500));
     g.measurement_time(Duration::from_millis(1000));
     g.throughput(criterion::Throughput::Bytes(1024));
@@ -55,8 +55,8 @@ pub fn gen_bytes(c: &mut Criterion) {
     g.finish()
 }
 
-pub fn gen_u32(c: &mut Criterion) {
-    let mut g = c.benchmark_group("gen_u32");
+pub fn random_u32(c: &mut Criterion) {
+    let mut g = c.benchmark_group("random_u32");
     g.sample_size(1000);
     g.warm_up_time(Duration::from_millis(500));
     g.measurement_time(Duration::from_millis(1000));
@@ -84,8 +84,8 @@ pub fn gen_u32(c: &mut Criterion) {
     g.finish()
 }
 
-pub fn gen_u64(c: &mut Criterion) {
-    let mut g = c.benchmark_group("gen_u64");
+pub fn random_u64(c: &mut Criterion) {
+    let mut g = c.benchmark_group("random_u64");
     g.sample_size(1000);
     g.warm_up_time(Duration::from_millis(500));
     g.measurement_time(Duration::from_millis(1000));
