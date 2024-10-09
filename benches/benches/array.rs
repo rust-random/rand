@@ -21,7 +21,7 @@ criterion_group!(
 criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
-    let mut g = c.benchmark_group("gen_1kb");
+    let mut g = c.benchmark_group("random_1kb");
     g.throughput(criterion::Throughput::Bytes(1024));
 
     g.bench_function("u16_iter_repeat", |b| {
