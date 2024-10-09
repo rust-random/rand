@@ -211,7 +211,7 @@ where
 /// use rand_distr::Dirichlet;
 ///
 /// let dirichlet = Dirichlet::new([1.0, 2.0, 3.0]).unwrap();
-/// let samples = dirichlet.sample(&mut rand::thread_rng());
+/// let samples = dirichlet.sample(&mut rand::rng());
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
 #[cfg_attr(feature = "serde_with", serde_as)]

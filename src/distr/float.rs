@@ -32,10 +32,10 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Example
 /// ```
-/// use rand::{thread_rng, Rng};
+/// use rand::Rng;
 /// use rand::distr::OpenClosed01;
 ///
-/// let val: f32 = thread_rng().sample(OpenClosed01);
+/// let val: f32 = rand::rng().sample(OpenClosed01);
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
@@ -59,10 +59,10 @@ pub struct OpenClosed01;
 ///
 /// # Example
 /// ```
-/// use rand::{thread_rng, Rng};
+/// use rand::Rng;
 /// use rand::distr::Open01;
 ///
-/// let val: f32 = thread_rng().sample(Open01);
+/// let val: f32 = rand::rng().sample(Open01);
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///

@@ -34,10 +34,10 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use rand::{Rng, thread_rng};
+/// use rand::Rng;
 /// use rand::distr::Alphanumeric;
 ///
-/// let mut rng = thread_rng();
+/// let mut rng = rand::rng();
 /// let chars: String = (0..7).map(|_| rng.sample(Alphanumeric) as char).collect();
 /// println!("Random chars: {}", chars);
 /// ```
@@ -46,7 +46,7 @@ use serde::{Deserialize, Serialize};
 /// a random `String`, and offers more efficient allocation:
 /// ```
 /// use rand::distr::{Alphanumeric, DistString};
-/// let string = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
+/// let string = Alphanumeric.sample_string(&mut rand::rng(), 16);
 /// println!("Random string: {}", string);
 /// ```
 ///
