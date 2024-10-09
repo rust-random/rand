@@ -29,6 +29,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Limit the maximal acceptable lambda for `Poisson` to solve (#1312) (#1498)
 - Rename `Rng::gen_iter` to `random_iter` (#1500)
 - Rename `Rng::gen_range` to `random_range`
+- Rename `Rng::gen_bool` to `random_bool`
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)

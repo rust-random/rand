@@ -262,7 +262,7 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
-    /// println!("{}", rng.gen_bool(1.0 / 3.0));
+    /// println!("{}", rng.random_bool(1.0 / 3.0));
     /// ```
     ///
     /// # Panics
@@ -272,7 +272,7 @@ pub trait Rng: RngCore {
     /// [`Bernoulli`]: distr::Bernoulli
     #[inline]
     #[track_caller]
-    fn gen_bool(&mut self, p: f64) -> bool {
+    fn random_bool(&mut self, p: f64) -> bool {
         match distr::Bernoulli::new(p) {
             Ok(d) => self.sample(d),
             Err(_) => panic!("p={:?} is outside range [0.0, 1.0]", p),
@@ -534,11 +534,11 @@ mod test {
 
     #[test]
     #[allow(clippy::bool_assert_comparison)]
-    fn test_gen_bool() {
+    fn test_random_bool() {
         let mut r = rng(105);
         for _ in 0..5 {
-            assert_eq!(r.gen_bool(0.0), false);
-            assert_eq!(r.gen_bool(1.0), true);
+            assert_eq!(r.random_bool(0.0), false);
+            assert_eq!(r.random_bool(1.0), true);
         }
     }
 

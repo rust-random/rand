@@ -21,7 +21,7 @@ criterion_group!(
 criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
-    let mut g = c.benchmark_group("gen_bool");
+    let mut g = c.benchmark_group("random_bool");
     g.sample_size(1000);
     g.warm_up_time(core::time::Duration::from_millis(500));
     g.measurement_time(core::time::Duration::from_millis(1000));
@@ -33,13 +33,13 @@ pub fn bench(c: &mut Criterion) {
 
     g.bench_function("const", |b| {
         let mut rng = Pcg32::from_rng(&mut thread_rng());
-        b.iter(|| rng.gen_bool(0.18))
+        b.iter(|| rng.random_bool(0.18))
     });
 
     g.bench_function("var", |b| {
         let mut rng = Pcg32::from_rng(&mut thread_rng());
         let p = rng.random();
-        b.iter(|| rng.gen_bool(p))
+        b.iter(|| rng.random_bool(p))
     });
 
     g.bench_function("ratio_const", |b| {

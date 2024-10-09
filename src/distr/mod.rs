@@ -76,7 +76,7 @@
 //! # Non-uniform sampling
 //!
 //! Sampling a simple true/false outcome with a given probability has a name:
-//! the [`Bernoulli`] distribution (this is used by [`Rng::gen_bool`]).
+//! the [`Bernoulli`] distribution (this is used by [`Rng::random_bool`]).
 //!
 //! For weighted sampling from a sequence of discrete values, use the
 //! [`WeightedIndex`] distribution.
