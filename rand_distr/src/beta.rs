@@ -73,7 +73,7 @@ struct BC<N> {
 /// use rand_distr::{Distribution, Beta};
 ///
 /// let beta = Beta::new(2.0, 5.0).unwrap();
-/// let v = beta.sample(&mut rand::thread_rng());
+/// let v = beta.sample(&mut rand::rng());
 /// println!("{} is from a Beta(2, 5) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]

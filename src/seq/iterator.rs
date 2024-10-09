@@ -24,10 +24,8 @@ use alloc::vec::Vec;
 /// ```
 /// use rand::seq::IteratorRandom;
 ///
-/// let mut rng = rand::thread_rng();
-///
 /// let faces = "😀😎😐😕😠😢";
-/// println!("I am {}!", faces.chars().choose(&mut rng).unwrap());
+/// println!("I am {}!", faces.chars().choose(&mut rand::rng()).unwrap());
 /// ```
 /// Example output (non-deterministic):
 /// ```none

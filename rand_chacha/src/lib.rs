@@ -41,7 +41,7 @@
 //!     let rng = ChaCha12Rng::from_os_rng();
 //!     # let _: ChaCha12Rng = rng;
 //!     ```
-//! 2.  **From a master generator.** This could be [`rand::thread_rng`]
+//! 2.  **From a master generator.** This could be [`rand::rng`]
 //!     (effectively a fresh seed without the need for a syscall on each usage)
 //!     or a deterministic generator such as [`ChaCha20Rng`].
 //!     Beware that should a weak master generator be used, correlations may be
@@ -74,7 +74,7 @@
 //! [`RngCore`]: rand_core::RngCore
 //! [`SeedableRng`]: rand_core::SeedableRng
 //! [`SeedableRng::from_os_rng`]: rand_core::SeedableRng::from_os_rng
-//! [`rand::thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
+//! [`rand::rng`]: https://docs.rs/rand/latest/rand/fn.rng.html
 //! [`rand::Rng`]: https://docs.rs/rand/latest/rand/trait.Rng.html
 
 #![doc(

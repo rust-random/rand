@@ -47,7 +47,7 @@
 //!     let rng = Pcg64Mcg::from_os_rng();
 //!     # let _: Pcg64Mcg = rng;
 //!     ```
-//! 3.  **From a master generator.** This could be [`rand::thread_rng`]
+//! 3.  **From a master generator.** This could be [`rand::rng`]
 //!     (effectively a fresh seed without the need for a syscall on each usage)
 //!     or a deterministic generator such as [`rand_chacha::ChaCha8Rng`].
 //!     Beware that should a weak master generator be used, correlations may be
@@ -77,7 +77,7 @@
 //! [Random Values]: https://rust-random.github.io/book/guide-values.html
 //! [`RngCore`]: rand_core::RngCore
 //! [`SeedableRng`]: rand_core::SeedableRng
-//! [`rand::thread_rng`]: https://docs.rs/rand/latest/rand/fn.thread_rng.html
+//! [`rand::rng`]: https://docs.rs/rand/latest/rand/fn.rng.html
 //! [`rand::Rng`]: https://docs.rs/rand/latest/rand/trait.Rng.html
 //! [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
 

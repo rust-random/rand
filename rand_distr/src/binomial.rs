@@ -40,7 +40,7 @@ use rand::Rng;
 /// use rand_distr::{Binomial, Distribution};
 ///
 /// let bin = Binomial::new(20, 0.3).unwrap();
-/// let v = bin.sample(&mut rand::thread_rng());
+/// let v = bin.sample(&mut rand::rng());
 /// println!("{} is from a binomial distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]

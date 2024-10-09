@@ -27,7 +27,7 @@ use rand::distr::{Distribution, Uniform};
 
 fn main() {
     let range = Uniform::new(-1.0f64, 1.0).unwrap();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let total = 1_000_000;
     let mut in_circle = 0;

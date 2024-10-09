@@ -50,7 +50,7 @@ pub fn gen_bytes(c: &mut Criterion) {
     bench(&mut g, "std", StdRng::from_os_rng());
     bench(&mut g, "small", SmallRng::from_thread_rng());
     bench(&mut g, "os", UnwrapErr(OsRng));
-    bench(&mut g, "thread", thread_rng());
+    bench(&mut g, "thread", rand::rng());
 
     g.finish()
 }
@@ -79,7 +79,7 @@ pub fn gen_u32(c: &mut Criterion) {
     bench(&mut g, "std", StdRng::from_os_rng());
     bench(&mut g, "small", SmallRng::from_thread_rng());
     bench(&mut g, "os", UnwrapErr(OsRng));
-    bench(&mut g, "thread", thread_rng());
+    bench(&mut g, "thread", rand::rng());
 
     g.finish()
 }
@@ -108,7 +108,7 @@ pub fn gen_u64(c: &mut Criterion) {
     bench(&mut g, "std", StdRng::from_os_rng());
     bench(&mut g, "small", SmallRng::from_thread_rng());
     bench(&mut g, "os", UnwrapErr(OsRng));
-    bench(&mut g, "thread", thread_rng());
+    bench(&mut g, "thread", rand::rng());
 
     g.finish()
 }

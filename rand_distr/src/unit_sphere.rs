@@ -32,7 +32,7 @@ use rand::Rng;
 /// ```
 /// use rand_distr::{UnitSphere, Distribution};
 ///
-/// let v: [f64; 3] = UnitSphere.sample(&mut rand::thread_rng());
+/// let v: [f64; 3] = UnitSphere.sample(&mut rand::rng());
 /// println!("{:?} is from the unit sphere surface.", v)
 /// ```
 ///

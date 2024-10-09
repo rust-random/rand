@@ -45,7 +45,7 @@ use rand::Rng;
 /// use rand_distr::{Cauchy, Distribution};
 ///
 /// let cau = Cauchy::new(2.0, 5.0).unwrap();
-/// let v = cau.sample(&mut rand::thread_rng());
+/// let v = cau.sample(&mut rand::rng());
 /// println!("{} is from a Cauchy(2, 5) distribution", v);
 /// ```
 ///

@@ -38,7 +38,7 @@ use rand::Rng;
 /// use rand::prelude::*;
 /// use rand_distr::Gumbel;
 ///
-/// let val: f64 = thread_rng().sample(Gumbel::new(0.0, 1.0).unwrap());
+/// let val: f64 = rand::rng().sample(Gumbel::new(0.0, 1.0).unwrap());
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]

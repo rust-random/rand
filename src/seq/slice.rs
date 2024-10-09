@@ -42,11 +42,10 @@ pub trait IndexedRandom: Index<usize> {
     /// # Example
     ///
     /// ```
-    /// use rand::thread_rng;
     /// use rand::seq::IndexedRandom;
     ///
     /// let choices = [1, 2, 4, 8, 16, 32];
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// println!("{:?}", choices.choose(&mut rng));
     /// assert_eq!(choices[..0].choose(&mut rng), None);
     /// ```
@@ -75,7 +74,7 @@ pub trait IndexedRandom: Index<usize> {
     /// ```
     /// use rand::seq::IndexedRandom;
     ///
-    /// let mut rng = &mut rand::thread_rng();
+    /// let mut rng = &mut rand::rng();
     /// let sample = "Hello, audience!".as_bytes();
     ///
     /// // collect the results into a vector:
@@ -112,7 +111,7 @@ pub trait IndexedRandom: Index<usize> {
     /// ```
     /// use rand::seq::IndexedRandom;
     ///
-    /// let mut rng = &mut rand::thread_rng();
+    /// let mut rng = &mut rand::rng();
     /// let sample = "Hello, audience!".as_bytes();
     ///
     /// let a: [u8; 3] = sample.choose_multiple_array(&mut rng).unwrap();
@@ -147,7 +146,7 @@ pub trait IndexedRandom: Index<usize> {
     /// use rand::prelude::*;
     ///
     /// let choices = [('a', 2), ('b', 1), ('c', 1), ('d', 0)];
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c',
     /// // and 'd' will never be printed
     /// println!("{:?}", choices.choose_weighted(&mut rng, |item| item.1).unwrap().0);
@@ -201,7 +200,7 @@ pub trait IndexedRandom: Index<usize> {
     /// use rand::prelude::*;
     ///
     /// let choices = [('a', 2), ('b', 1), ('c', 1)];
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// // First Draw * Second Draw = total odds
     /// // -----------------------
     /// // (50% * 50%) + (25% * 67%) = 41.7% chance that the output is `['a', 'b']` in some order.
@@ -308,7 +307,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
 /// ```
 /// use rand::seq::SliceRandom;
 ///
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let mut bytes = "Hello, random!".to_string().into_bytes();
 /// bytes.shuffle(&mut rng);
 /// let str = String::from_utf8(bytes).unwrap();
@@ -328,9 +327,8 @@ pub trait SliceRandom: IndexedMutRandom {
     ///
     /// ```
     /// use rand::seq::SliceRandom;
-    /// use rand::thread_rng;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// let mut y = [1, 2, 3, 4, 5];
     /// println!("Unshuffled: {:?}", y);
     /// y.shuffle(&mut rng);

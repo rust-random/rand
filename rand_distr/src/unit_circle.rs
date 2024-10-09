@@ -30,7 +30,7 @@ use rand::Rng;
 /// ```
 /// use rand_distr::{UnitCircle, Distribution};
 ///
-/// let v: [f64; 2] = UnitCircle.sample(&mut rand::thread_rng());
+/// let v: [f64; 2] = UnitCircle.sample(&mut rand::rng());
 /// println!("{:?} is from the unit circle.", v)
 /// ```
 ///

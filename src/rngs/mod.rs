@@ -17,7 +17,7 @@
 //!
 //! -   [`OsRng`] is a stateless interface over the operating system's random number
 //!     source. This is typically secure with some form of periodic re-seeding.
-//! -   [`ThreadRng`], provided by the [`thread_rng`] function, is a handle to a
+//! -   [`ThreadRng`], provided by [`crate::rng()`], is a handle to a
 //!     thread-local generator with periodic seeding from [`OsRng`]. Because this
 //!     is local, it is typically much faster than [`OsRng`]. It should be
 //!     secure, but see documentation on [`ThreadRng`].
@@ -67,7 +67,6 @@
 //! [`RngCore`]: crate::RngCore
 //! [`CryptoRng`]: crate::CryptoRng
 //! [`SeedableRng`]: crate::SeedableRng
-//! [`thread_rng`]: crate::thread_rng
 //! [`rdrand`]: https://crates.io/crates/rdrand
 //! [`rand_jitter`]: https://crates.io/crates/rand_jitter
 //! [`rand_chacha`]: https://crates.io/crates/rand_chacha

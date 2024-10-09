@@ -34,7 +34,7 @@ use rand::Rng;
 /// use rand::prelude::*;
 /// use rand_distr::Exp1;
 ///
-/// let val: f64 = thread_rng().sample(Exp1);
+/// let val: f64 = rand::rng().sample(Exp1);
 /// println!("{}", val);
 /// ```
 ///
@@ -116,7 +116,7 @@ impl Distribution<f64> for Exp1 {
 /// use rand_distr::{Exp, Distribution};
 ///
 /// let exp = Exp::new(2.0).unwrap();
-/// let v = exp.sample(&mut rand::thread_rng());
+/// let v = exp.sample(&mut rand::rng());
 /// println!("{} is from a Exp(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]

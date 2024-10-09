@@ -52,12 +52,12 @@ Explanation of exceptions:
 -   Jitter: `JitterRng` is used as an entropy source when the primary source
     fails; this source may not be secure against side-channel attacks, see #699.
 -   ISAAC: the [ISAAC](https://burtleburtle.net/bob/rand/isaacafa.html) RNG used
-    to implement `thread_rng` is difficult to analyse and thus cannot provide
+    to implement `ThreadRng` is difficult to analyse and thus cannot provide
     strong assertions of security.
 
 ## Known issues
 
-In `rand` version 0.3 (0.3.18 and later), if `OsRng` fails, `thread_rng` is
+In `rand` version 0.3 (0.3.18 and later), if `OsRng` fails, `ThreadRng` is
 seeded from the system time in an insecure manner.
 
 ## Reporting a Vulnerability

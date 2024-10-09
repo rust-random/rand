@@ -36,7 +36,7 @@ use rand::{distr::OpenClosed01, Rng};
 /// use rand::prelude::*;
 /// use rand_distr::Zeta;
 ///
-/// let val: f64 = thread_rng().sample(Zeta::new(1.5).unwrap());
+/// let val: f64 = rand::rng().sample(Zeta::new(1.5).unwrap());
 /// println!("{}", val);
 /// ```
 ///

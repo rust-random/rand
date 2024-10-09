@@ -64,7 +64,7 @@ use serde::{Deserialize, Serialize};
 /// let choices = ['a', 'b', 'c'];
 /// let weights = [2,   1,   1];
 /// let dist = WeightedIndex::new(&weights).unwrap();
-/// let mut rng = thread_rng();
+/// let mut rng = rand::rng();
 /// for _ in 0..100 {
 ///     // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
 ///     println!("{}", choices[dist.sample(&mut rng)]);

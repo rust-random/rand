@@ -20,7 +20,7 @@
 //! use rand::prelude::*;
 //!
 //! // Get an RNG:
-//! let mut rng = rand::thread_rng();
+//! let mut rng = rand::rng();
 //!
 //! // Try printing a random unicode code point (probably a bad idea)!
 //! println!("char: '{}'", rng.random::<char>());
@@ -104,7 +104,18 @@ pub mod seq;
 
 // Public exports
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-pub use crate::rngs::thread::thread_rng;
+pub use crate::rngs::thread::rng;
+
+/// Access the thread-local generator
+///
+/// Use [`rand::rng()`](rng()) instead.
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[deprecated(since = "0.9.0", note = "renamed to `rng`")]
+#[inline]
+pub fn thread_rng() -> crate::rngs::ThreadRng {
+    rng()
+}
+
 pub use rng::{Fill, Rng};
 
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
@@ -112,7 +123,7 @@ use crate::distr::{Distribution, Standard};
 
 /// Generates a random value using the thread-local random number generator.
 ///
-/// This function is simply a shortcut for `thread_rng().gen()`:
+/// This function is simply a shortcut for `rand::rng().gen()`:
 ///
 /// -   See [`ThreadRng`] for documentation of the generator and security
 /// -   See [`Standard`] for documentation of supported types and distributions
@@ -143,9 +154,9 @@ use crate::distr::{Distribution, Standard};
 ///     *x = rand::random()
 /// }
 ///
-/// // can be made faster by caching thread_rng
+/// // can be made faster by caching rand::rng
 ///
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 ///
 /// for x in v.iter_mut() {
 ///     *x = rng.random();
@@ -160,7 +171,7 @@ pub fn random<T>() -> T
 where
     Standard: Distribution<T>,
 {
-    thread_rng().random()
+    rng().random()
 }
 
 #[cfg(test)]

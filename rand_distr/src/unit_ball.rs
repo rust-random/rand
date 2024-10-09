@@ -32,7 +32,7 @@ use rand::Rng;
 /// ```
 /// use rand_distr::{UnitBall, Distribution};
 ///
-/// let v: [f64; 3] = UnitBall.sample(&mut rand::thread_rng());
+/// let v: [f64; 3] = UnitBall.sample(&mut rand::rng());
 /// println!("{:?} is from the unit ball.", v)
 /// ```
 #[derive(Clone, Copy, Debug)]

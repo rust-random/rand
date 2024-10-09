@@ -35,7 +35,7 @@ use rand::Rng;
 /// use rand_distr::{Geometric, Distribution};
 ///
 /// let geo = Geometric::new(0.25).unwrap();
-/// let v = geo.sample(&mut rand::thread_rng());
+/// let v = geo.sample(&mut rand::rng());
 /// println!("{} is from a Geometric(0.25) distribution", v);
 /// ```
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -168,7 +168,7 @@ impl Distribution<u64> for Geometric {
 /// use rand::prelude::*;
 /// use rand_distr::StandardGeometric;
 ///
-/// let v = StandardGeometric.sample(&mut thread_rng());
+/// let v = StandardGeometric.sample(&mut rand::rng());
 /// println!("{} is from a Geometric(0.5) distribution", v);
 /// ```
 ///

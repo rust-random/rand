@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 /// use rand_distr::{FisherF, Distribution};
 ///
 /// let f = FisherF::new(2.0, 32.0).unwrap();
-/// let v = f.sample(&mut rand::thread_rng());
+/// let v = f.sample(&mut rand::rng());
 /// println!("{} is from an F(2, 32) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]

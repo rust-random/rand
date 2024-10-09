@@ -77,7 +77,7 @@ fn main() {
     // The estimation will be more accurate with more simulations
     let num_simulations = 10000;
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let random_door = Uniform::new(0u32, 3).unwrap();
 
     let (mut switch_wins, mut switch_losses) = (0, 0);

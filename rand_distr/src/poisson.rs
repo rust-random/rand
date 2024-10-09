@@ -36,7 +36,7 @@ use rand::Rng;
 /// use rand_distr::{Poisson, Distribution};
 ///
 /// let poi = Poisson::new(2.0).unwrap();
-/// let v: f64 = poi.sample(&mut rand::thread_rng());
+/// let v: f64 = poi.sample(&mut rand::rng());
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]

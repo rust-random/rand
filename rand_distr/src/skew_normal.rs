@@ -45,7 +45,7 @@ use rand::Rng;
 ///
 /// // location 2, scale 3, shape 1
 /// let skew_normal = SkewNormal::new(2.0, 3.0, 1.0).unwrap();
-/// let v = skew_normal.sample(&mut rand::thread_rng());
+/// let v = skew_normal.sample(&mut rand::rng());
 /// println!("{} is from a SN(2, 3, 1) distribution", v)
 /// ```
 ///

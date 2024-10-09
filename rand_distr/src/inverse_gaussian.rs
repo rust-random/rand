@@ -44,7 +44,7 @@ impl std::error::Error for Error {}
 /// use rand_distr::{InverseGaussian, Distribution};
 ///
 /// let inv_gauss = InverseGaussian::new(1.0, 2.0).unwrap();
-/// let v = inv_gauss.sample(&mut rand::thread_rng());
+/// let v = inv_gauss.sample(&mut rand::rng());
 /// println!("{} is from a inverse Gaussian(1, 2) distribution", v);
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq)]

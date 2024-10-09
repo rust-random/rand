@@ -41,7 +41,7 @@ use serde::{Deserialize, Serialize};
 /// use rand_distr::{ChiSquared, Distribution};
 ///
 /// let chi = ChiSquared::new(11.0).unwrap();
-/// let v = chi.sample(&mut rand::thread_rng());
+/// let v = chi.sample(&mut rand::rng());
 /// println!("{} is from a χ²(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]

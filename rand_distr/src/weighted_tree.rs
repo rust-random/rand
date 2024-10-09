@@ -66,7 +66,7 @@ use serde::{Deserialize, Serialize};
 /// let mut dist = WeightedTreeIndex::new(&weights).unwrap();
 /// dist.push(1).unwrap();
 /// dist.update(1, 1).unwrap();
-/// let mut rng = thread_rng();
+/// let mut rng = rand::rng();
 /// let mut samples = [0; 3];
 /// for _ in 0..100 {
 ///     // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'

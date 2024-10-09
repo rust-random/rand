@@ -30,7 +30,7 @@ use rand::Rng;
 /// use rand::prelude::*;
 /// use rand_distr::Weibull;
 ///
-/// let val: f64 = thread_rng().sample(Weibull::new(1., 10.).unwrap());
+/// let val: f64 = rand::rng().sample(Weibull::new(1., 10.).unwrap());
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
