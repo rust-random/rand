@@ -257,7 +257,7 @@ fn weibull() {
         (10.0, 0.1),
         (0.1, 10.0),
         (15.0, 20.0),
-        (1000.0, 1.0),
+        (1000.0, 0.001), // Fail case
     ];
 
     for (seed, (lambda, k)) in parameters.into_iter().enumerate() {
@@ -300,7 +300,10 @@ fn chi_squared() {
         (x / 2.0).inc_gamma(k / 2.0)
     }
 
-    let parameters = [1.0, 2.0, 10.0, 100.0, 1000.0];
+    let parameters = [
+        0.01, // Fail case
+        0.1, 1.0, 2.0, 10.0, 100.0, 1000.0,
+    ];
 
     for (seed, k) in parameters.into_iter().enumerate() {
         let dist = rand_distr::ChiSquared::new(k).unwrap();
@@ -321,7 +324,13 @@ fn beta() {
         x.inc_beta(alpha, beta, ln_beta_ab)
     }
 
-    let parameters = [(0.5, 0.5), (2.0, 3.5), (10.0, 1.0), (100.0, 50.0)];
+    let parameters = [
+        (0.5, 0.5),
+        (2.0, 3.5),
+        (10.0, 1.0),
+        (100.0, 50.0),
+        // (10.0, 0.1), // Fail case
+    ];
 
     for (seed, (alpha, beta)) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Beta::new(alpha, beta).unwrap();
@@ -400,7 +409,14 @@ fn hypergeometric() {
         })
     }
 
-    let parameters = [(15, 13, 10), (25, 15, 5), (60, 10, 7), (70, 20, 50)];
+    let parameters = [
+        (15, 13, 10),
+        (25, 15, 5),
+        (60, 10, 7),
+        (70, 20, 50),
+        (100, 50, 10),
+        // (100, 50, 49), // Fail case
+    ];
 
     for (seed, (n, k, n_)) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Hypergeometric::new(n, k, n_).unwrap();
