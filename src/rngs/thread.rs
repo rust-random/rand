@@ -114,6 +114,35 @@ thread_local!(
     }
 );
 
+/// Access a local, pre-initialized generator
+///
+/// This is a reasonably fast unpredictable thread-local instance of [`ThreadRng`].
+///
+/// See also [`rand::rngs`] for alternatives.
+///
+/// # Example
+///
+/// ```
+/// use rand::prelude::*;
+///
+/// # fn main() {
+///
+/// let mut numbers = [1, 2, 3, 4, 5];
+/// numbers.shuffle(&mut rand::rng());
+/// println!("Numbers: {numbers:?}");
+///
+/// // Using a local binding avoids an initialization-check on each usage:
+/// let mut rng = rand::rng();
+///
+/// println!("True or false: {}", rng.random::<bool>());
+/// println!("A simulated die roll: {}", rng.gen_range(1..=6));
+/// # }
+/// ```
+pub fn rng() -> ThreadRng {
+    let rng = THREAD_RNG_KEY.with(|t| t.clone());
+    ThreadRng { rng }
+}
+
 /// Access the thread-local generator
 ///
 /// Returns a reference to the local [`ThreadRng`], initializing the generator
