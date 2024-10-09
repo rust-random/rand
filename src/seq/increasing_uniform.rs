@@ -50,7 +50,7 @@ impl<R: RngCore> IncreasingUniform<R> {
             // If the chunk is empty, generate a new chunk
             let (bound, remaining) = calculate_bound_u32(next_n);
             // bound = (n + 1) * (n + 2) *..* (n + remaining)
-            self.chunk = self.rng.random_range(0..bound);
+            self.chunk = self.rng.random_range(..bound);
             // Chunk is a random number in
             // [0, (n + 1) * (n + 2) *..* (n + remaining) )
 
