@@ -105,8 +105,17 @@ pub mod seq;
 // Public exports
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 pub use crate::rngs::thread::rng;
+
+/// Access the thread-local generator
+///
+/// Use [`rand::rng()`](rng()) instead.
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-pub use crate::rngs::thread::thread_rng;
+#[deprecated(since = "0.9.0", note = "renamed to `rng`")]
+#[inline]
+pub fn thread_rng() -> crate::rngs::ThreadRng {
+    rng()
+}
+
 pub use rng::{Fill, Rng};
 
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]

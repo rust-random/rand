@@ -144,28 +144,6 @@ pub fn rng() -> ThreadRng {
     ThreadRng { rng }
 }
 
-/// Access the thread-local generator
-///
-/// Returns a reference to the local [`ThreadRng`], initializing the generator
-/// on the first call on each thread.
-///
-/// Example usage:
-/// ```
-/// use rand::Rng;
-///
-/// # fn main() {
-/// // rand::random() may be used instead of rand::thread_rng().gen():
-/// println!("A random boolean: {}", rand::random::<bool>());
-///
-/// let mut rng = rand::thread_rng();
-/// println!("A simulated die roll: {}", rng.gen_range(1..=6));
-/// # }
-/// ```
-pub fn thread_rng() -> ThreadRng {
-    let rng = THREAD_RNG_KEY.with(|t| t.clone());
-    ThreadRng { rng }
-}
-
 impl Default for ThreadRng {
     fn default() -> ThreadRng {
         rng()
