@@ -280,7 +280,7 @@ pub trait Rng: RngCore {
     }
 
     /// Return a bool with a probability of `numerator/denominator` of being
-    /// true. I.e. `gen_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
+    /// true. I.e. `random_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
     /// returning true. If `numerator == denominator`, then the returned value
     /// is guaranteed to be `true`. If `numerator == 0`, then the returned
     /// value is guaranteed to be `false`.
@@ -298,13 +298,13 @@ pub trait Rng: RngCore {
     /// use rand::{thread_rng, Rng};
     ///
     /// let mut rng = thread_rng();
-    /// println!("{}", rng.gen_ratio(2, 3));
+    /// println!("{}", rng.random_ratio(2, 3));
     /// ```
     ///
     /// [`Bernoulli`]: distr::Bernoulli
     #[inline]
     #[track_caller]
-    fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
+    fn random_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
         match distr::Bernoulli::from_ratio(numerator, denominator) {
             Ok(d) => self.sample(d),
             Err(_) => panic!(
@@ -585,7 +585,7 @@ mod test {
         let mut sum: u32 = 0;
         let mut rng = rng(111);
         for _ in 0..N {
-            if rng.gen_ratio(NUM, DENOM) {
+            if rng.random_ratio(NUM, DENOM) {
                 sum += 1;
             }
         }
