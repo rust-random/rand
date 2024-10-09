@@ -118,7 +118,7 @@ impl SmallRng {
     ///
     /// # Panics
     ///
-    /// This method panics only if [`rand::rng`] fails to
+    /// This method panics only if [`crate::rng()`] fails to
     /// initialize.
     #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
     #[inline(always)]
