@@ -434,11 +434,14 @@ fn poisson() {
         1.0 - lambda.inc_gamma(k as f64 + 1.0)
     }
 
-    let parameters = [0.5, 1.0, 7.5, 32.0, 100.0];
+    let parameters = [
+        0.1_f32, 1.0, 7.5,
+        // 1.844E+19,  // fail case
+    ];
 
     for (seed, lambda) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Poisson::new(lambda).unwrap();
-        // test_discrete::<u64>(seed as u64, dist, |k| cdf(k, lambda));
+        test_discrete(seed as u64, dist, |k| cdf(k, lambda as f64));
     }
 }
 
