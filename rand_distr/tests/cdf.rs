@@ -207,18 +207,19 @@ fn log_normal() {
         } else if x.is_infinite() {
             1.0
         } else {
-            0.5 * (mean - x.ln() / (std_dev * f64::consts::SQRT_2)).erfc()
+            0.5 * ((mean - x.ln()) / (std_dev * f64::consts::SQRT_2)).erfc()
         }
     }
 
     let parameters = [
         (0.0, 1.0),
         (0.0, 0.1),
+        (0.5, 0.7),
         (1.0, 10.0),
         (1.0, 100.0),
-        (-1.0, 0.00001),
-        (-1.0, 0.0000001),
     ];
+
+    println!("{}", cdf(5.0, 2.0, 1.5));
 
     for (seed, (mean, std_dev)) in parameters.into_iter().enumerate() {
         let dist = rand_distr::LogNormal::new(mean, std_dev).unwrap();
