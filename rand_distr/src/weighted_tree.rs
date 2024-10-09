@@ -251,7 +251,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
         if total_weight == W::ZERO {
             return Err(WeightError::InsufficientNonZero);
         }
-        let mut target_weight = rng.gen_range(W::ZERO..total_weight);
+        let mut target_weight = rng.random_range(W::ZERO..total_weight);
         let mut index = 0;
         loop {
             // Maybe descend into the left sub tree.

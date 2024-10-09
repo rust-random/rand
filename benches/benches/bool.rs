@@ -49,8 +49,8 @@ pub fn bench(c: &mut Criterion) {
 
     g.bench_function("ratio_var", |b| {
         let mut rng = Pcg32::from_rng(&mut thread_rng());
-        let d = rng.gen_range(1..=100);
-        let n = rng.gen_range(0..=d);
+        let d = rng.random_range(1..=100);
+        let n = rng.random_range(0..=d);
         b.iter(|| rng.gen_ratio(n, d));
     });
 

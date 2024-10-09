@@ -70,7 +70,7 @@ pub trait IteratorRandom: Iterator + Sized {
             return match lower {
                 0 => None,
                 1 => self.next(),
-                _ => self.nth(rng.gen_range(..lower)),
+                _ => self.nth(rng.random_range(..lower)),
             };
         }
 
@@ -80,7 +80,7 @@ pub trait IteratorRandom: Iterator + Sized {
         // Continue until the iterator is exhausted
         loop {
             if lower > 1 {
-                let ix = coin_flipper.rng.gen_range(..lower + consumed);
+                let ix = coin_flipper.rng.random_range(..lower + consumed);
                 let skip = if ix < lower {
                     result = self.nth(ix);
                     lower - (ix + 1)
@@ -203,7 +203,7 @@ pub trait IteratorRandom: Iterator + Sized {
 
         // Continue, since the iterator was not exhausted
         for (i, elem) in self.enumerate() {
-            let k = rng.gen_range(..i + 1 + amount);
+            let k = rng.random_range(..i + 1 + amount);
             if let Some(slot) = buf.get_mut(k) {
                 *slot = elem;
             }
@@ -239,7 +239,7 @@ pub trait IteratorRandom: Iterator + Sized {
         // If the iterator stops once, then so do we.
         if reservoir.len() == amount {
             for (i, elem) in self.enumerate() {
-                let k = rng.gen_range(..i + 1 + amount);
+                let k = rng.random_range(..i + 1 + amount);
                 if let Some(slot) = reservoir.get_mut(k) {
                     *slot = elem;
                 }

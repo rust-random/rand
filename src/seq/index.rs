@@ -430,13 +430,13 @@ fn sample_floyd<R>(rng: &mut R, length: u32, amount: u32) -> IndexVec
 where
     R: Rng + ?Sized,
 {
-    // Note that the values returned by `rng.gen_range()` can be
+    // Note that the values returned by `rng.random_range()` can be
     // inferred from the returned vector by working backwards from
     // the last entry. This bijection proves the algorithm fair.
     debug_assert!(amount <= length);
     let mut indices = Vec::with_capacity(amount as usize);
     for j in length - amount..length {
-        let t = rng.gen_range(..=j);
+        let t = rng.random_range(..=j);
         if let Some(pos) = indices.iter().position(|&x| x == t) {
             indices[pos] = j;
         }
@@ -465,7 +465,7 @@ where
     let mut indices: Vec<u32> = Vec::with_capacity(length as usize);
     indices.extend(0..length);
     for i in 0..amount {
-        let j: u32 = rng.gen_range(i..length);
+        let j: u32 = rng.random_range(i..length);
         indices.swap(i as usize, j as usize);
     }
     indices.truncate(amount as usize);

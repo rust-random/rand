@@ -69,7 +69,7 @@ pub mod index {
         // Floyd's algorithm
         let mut indices = [0; N];
         for (i, j) in (len - N..len).enumerate() {
-            let t = rng.gen_range(..j + 1);
+            let t = rng.random_range(..j + 1);
             if let Some(pos) = indices[0..i].iter().position(|&x| x == t) {
                 indices[pos] = j;
             }
