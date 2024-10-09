@@ -14,7 +14,7 @@
 //!
 //! ```
 //! use rand::prelude::*;
-//! # let mut r = StdRng::from_rng(thread_rng());
+//! # let mut r = StdRng::from_rng(&mut thread_rng());
 //! # let _: f32 = r.random();
 //! ```
 

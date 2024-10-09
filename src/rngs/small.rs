@@ -113,8 +113,6 @@ impl RngCore for SmallRng {
     }
 }
 
-rand_core::impl_try_rng_from_rng_core!(SmallRng);
-
 impl SmallRng {
     /// Construct an instance seeded from the thread-local RNG
     ///
