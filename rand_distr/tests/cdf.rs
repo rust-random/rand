@@ -338,6 +338,34 @@ fn beta() {
     }
 }
 
+#[test]
+fn triangular() {
+    fn cdf(x: f64, a: f64, b: f64, c: f64) -> f64 {
+        if x <= a {
+            0.0
+        } else if a < x && x <= c {
+            (x - a).powi(2) / ((b - a) * (c - a))
+        } else if c < x && x < b {
+            1.0 - (b - x).powi(2) / ((b - a) * (b - c))
+        } else {
+            1.0
+        }
+    }
+
+    let parameters = [
+        (0.0, 1.0, 0.0001),
+        (0.0, 1.0, 0.9999),
+        (0.0, 1.0, 0.5),
+        (0.0, 100.0, 50.0),
+        (-100.0, 100.0, 0.0),
+    ];
+
+    for (seed, (a, b, c)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Triangular::new(a, b, c).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, a, b, c));
+    }
+}
+
 fn binomial_cdf(k: i64, p: f64, n: u64) -> f64 {
     if k < 0 {
         return 0.0;
