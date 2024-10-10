@@ -459,11 +459,11 @@ fn poisson() {
             return 0.0;
         }
 
-        1.0 - lambda.inc_gamma(k as f64 + 1.0)
+        1.0 - gamma_lr(k as f64 + 1.0, lambda)
     }
-
     let parameters = [
-        0.1_f32, 1.0, 7.5,
+        0.1_f32, 1.0, 7.5, 2e4,
+        // 1e9,
         // 1.844E+19,  // fail case
     ];
 
@@ -479,4 +479,77 @@ fn ln_factorial(n: u64) -> f64 {
 
 fn ln_binomial(n: u64, k: u64) -> f64 {
     ln_factorial(n) - ln_factorial(k) - ln_factorial(n - k)
+}
+
+/// https://docs.rs/statrs/latest/src/statrs/function/gamma.rs.html#260-347
+fn gamma_lr(a: f64, x: f64) -> f64 {
+    let eps = 0.000000000000001;
+    let big = 4503599627370496.0;
+    let big_inv = 2.22044604925031308085e-16;
+
+    let ax = a * x.ln() - x - a.lgamma().0;
+    if ax < -709.78271289338399 {
+        if a < x {
+            return 1.0;
+        }
+        return 0.0;
+    }
+    if x <= 1.0 || x <= a {
+        let mut r2 = a;
+        let mut c2 = 1.0;
+        let mut ans2 = 1.0;
+        loop {
+            r2 += 1.0;
+            c2 *= x / r2;
+            ans2 += c2;
+
+            if c2 / ans2 <= eps {
+                break;
+            }
+        }
+        return ax.exp() * ans2 / a;
+    }
+
+    let mut y = 1.0 - a;
+    let mut z = x + y + 1.0;
+    let mut c = 0;
+
+    let mut p3 = 1.0;
+    let mut q3 = x;
+    let mut p2 = x + 1.0;
+    let mut q2 = z * x;
+    let mut ans = p2 / q2;
+
+    loop {
+        y += 1.0;
+        z += 2.0;
+        c += 1;
+        let yc = y * f64::from(c);
+
+        let p = p2 * z - p3 * yc;
+        let q = q2 * z - q3 * yc;
+
+        p3 = p2;
+        p2 = p;
+        q3 = q2;
+        q2 = q;
+
+        if p.abs() > big {
+            p3 *= big_inv;
+            p2 *= big_inv;
+            q3 *= big_inv;
+            q2 *= big_inv;
+        }
+
+        if q != 0.0 {
+            let nextans = p / q;
+            let error = ((ans - nextans) / nextans).abs();
+            ans = nextans;
+
+            if error <= eps {
+                break;
+            }
+        }
+    }
+    1.0 - ax.exp() * ans
 }
