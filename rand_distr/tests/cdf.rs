@@ -228,6 +228,32 @@ fn log_normal() {
 }
 
 #[test]
+fn pareto() {
+    fn cdf(x: f64, scale: f64, alpha: f64) -> f64 {
+        if x <= scale {
+            0.0
+        } else {
+            1.0 - (scale / x).powf(alpha)
+        }
+    }
+
+    let parameters = [
+        (1.0, 1.0),
+        (1.0, 0.1),
+        (1.0, 10.0),
+        (1.0, 100.0),
+        (0.1, 1.0),
+        (10.0, 1.0),
+        (100.0, 1.0),
+    ];
+
+    for (seed, (scale, alpha)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Pareto::new(scale, alpha).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, scale, alpha));
+    }
+}
+
+#[test]
 fn exp() {
     fn cdf(x: f64, lambda: f64) -> f64 {
         1.0 - (-lambda * x).exp()
