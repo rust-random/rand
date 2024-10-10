@@ -293,6 +293,26 @@ fn weibull() {
 }
 
 #[test]
+fn gumbel() {
+    fn cdf(x: f64, mu: f64, beta: f64) -> f64 {
+        (-(-(x - mu) / beta).exp()).exp()
+    }
+
+    let parameters = [
+        (0.0, 1.0),
+        (1.0, 2.0),
+        (-1.0, 0.5),
+        (10.0, 0.1),
+        (100.0, 0.0001),
+    ];
+
+    for (seed, (mu, beta)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Gumbel::new(mu, beta).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, mu, beta));
+    }
+}
+
+#[test]
 fn gamma() {
     fn cdf(x: f64, shape: f64, scale: f64) -> f64 {
         if x < 0.0 {
