@@ -403,10 +403,8 @@ fn studend_t() {
 #[test]
 fn fisher_f() {
     fn cdf(x: f64, m: f64, n: f64) -> f64 {
-        if m == 1.0 && x <= 0.0 {
-            return 0.0;
-        } else if x < 0.0 {
-            return 0.0;
+        if (m == 1.0 && x <= 0.0) || x < 0.0 {
+            0.0
         } else {
             let k = m * x / (m * x + n);
             let d1 = m / 2.0;
@@ -597,10 +595,10 @@ fn ln_binomial(n: u64, k: u64) -> f64 {
 fn gamma_lr(a: f64, x: f64) -> f64 {
     let eps = 0.000000000000001;
     let big = 4503599627370496.0;
-    let big_inv = 2.22044604925031308085e-16;
+    let big_inv = 2.220_446_049_250_313e-16;
 
     let ax = a * x.ln() - x - a.lgamma().0;
-    if ax < -709.78271289338399 {
+    if ax < -709.782_712_893_384 {
         if a < x {
             return 1.0;
         }
