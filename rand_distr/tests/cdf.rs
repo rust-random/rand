@@ -313,6 +313,30 @@ fn gumbel() {
 }
 
 #[test]
+fn frechet() {
+    fn cdf(x: f64, alpha: f64, s: f64, m: f64) -> f64 {
+        if x < m {
+            return 0.0;
+        }
+
+        (-((x - m) / s).powf(-alpha)).exp()
+    }
+
+    let parameters = [
+        (0.5, 2.0, 1.0),
+        (1.0, 1.0, 1.0),
+        (10.0, 0.1, 1.0),
+        (100.0, 0.0001, 1.0),
+        (0.9999, 2.0, 1.0),
+    ];
+
+    for (seed, (alpha, s, m)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Frechet::new(m, s, alpha).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, alpha, s, m));
+    }
+}
+
+#[test]
 fn gamma() {
     fn cdf(x: f64, shape: f64, scale: f64) -> f64 {
         if x < 0.0 {
@@ -354,6 +378,48 @@ fn chi_squared() {
     for (seed, k) in parameters.into_iter().enumerate() {
         let dist = rand_distr::ChiSquared::new(k).unwrap();
         test_continuous(seed as u64, dist, |x| cdf(x, k));
+    }
+}
+#[test]
+fn studend_t() {
+    fn cdf(x: f64, df: f64) -> f64 {
+        let h = df / (df + x.powi(2));
+        let ib = 0.5 * h.inc_beta(df / 2.0, 0.5, 0.5.ln_beta(df / 2.0));
+        if x < 0.0 {
+            ib
+        } else {
+            1.0 - ib
+        }
+    }
+
+    let parameters = [1.0, 10.0, 50.0];
+
+    for (seed, df) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::StudentT::new(df).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, df));
+    }
+}
+
+#[test]
+fn fisher_f() {
+    fn cdf(x: f64, m: f64, n: f64) -> f64 {
+        if m == 1.0 && x <= 0.0 {
+            return 0.0;
+        } else if x < 0.0 {
+            return 0.0;
+        } else {
+            let k = m * x / (m * x + n);
+            let d1 = m / 2.0;
+            let d2 = n / 2.0;
+            k.inc_beta(d1, d2, d1.ln_beta(d2))
+        }
+    }
+
+    let parameters = [(1.0, 1.0), (1.0, 2.0), (2.0, 1.0), (50.0, 1.0)];
+
+    for (seed, (m, n)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::FisherF::new(m, n).unwrap();
+        test_continuous(seed as u64, dist, |x| cdf(x, m, n));
     }
 }
 
