@@ -339,16 +339,14 @@ fn frechet() {
 #[test]
 fn zeta() {
     fn cdf(k: i64, s: f64) -> f64 {
-        if k <= 1 {
+        if k < 1 {
             return 0.0;
         }
 
         gen_harmonic(k as u64, s) / zeta_func(s)
     }
 
-    let parameters = [
-        // 2.0, 3.7, 5.0, 100.0, // all fail
-    ];
+    let parameters = [2.0, 3.7, 5.0, 100.0];
 
     for (seed, s) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Zeta::new(s).unwrap();
