@@ -325,6 +325,31 @@ pub trait Rng: RngCore {
     {
         self.random()
     }
+
+    /// Alias for [`Rng::random_range`].
+    #[inline]
+    #[deprecated(since = "0.9.0", note = "Renamed to `random_range`")]
+    fn gen_range<T, R>(&mut self, range: R) -> T
+    where
+        T: SampleUniform,
+        R: SampleRange<T>,
+    {
+        self.random_range(range)
+    }
+
+    /// Alias for [`Rng::random_bool`].
+    #[inline]
+    #[deprecated(since = "0.9.0", note = "Renamed to `random_bool`")]
+    fn gen_bool(&mut self, p: f64) -> bool {
+        self.random_bool(p)
+    }
+
+    /// Alias for [`Rng::random_ratio`].
+    #[inline]
+    #[deprecated(since = "0.9.0", note = "Renamed to `random_ratio`")]
+    fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
+        self.random_ratio(numerator, denominator)
+    }
 }
 
 impl<R: RngCore + ?Sized> Rng for R {}
