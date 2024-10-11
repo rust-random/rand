@@ -487,7 +487,7 @@ pub trait SeedableRng: Sized {
     ///
     /// In case the overhead of using [`getrandom`] to seed *many* PRNGs is an
     /// issue, one may prefer to seed from a local PRNG, e.g.
-    /// `from_rng(thread_rng()).unwrap()`.
+    /// `from_rng(rand::rng()).unwrap()`.
     ///
     /// # Panics
     ///
@@ -508,7 +508,7 @@ pub trait SeedableRng: Sized {
     ///
     /// In case the overhead of using [`getrandom`] to seed *many* PRNGs is an
     /// issue, one may prefer to seed from a local PRNG, e.g.
-    /// `from_rng(&mut thread_rng()).unwrap()`.
+    /// `from_rng(&mut rand::rng()).unwrap()`.
     ///
     /// [`getrandom`]: https://docs.rs/getrandom
     #[cfg(feature = "getrandom")]

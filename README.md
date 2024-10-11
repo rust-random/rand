@@ -11,7 +11,7 @@ Rand is a Rust library supporting random generators:
 -   A standard RNG trait: [`rand_core::RngCore`](https://docs.rs/rand_core/latest/rand_core/trait.RngCore.html)
 -   Fast implementations of the best-in-class [cryptographic](https://rust-random.github.io/book/guide-rngs.html#cryptographically-secure-pseudo-random-number-generators-csprngs) and
     [non-cryptographic](https://rust-random.github.io/book/guide-rngs.html#basic-pseudo-random-number-generators-prngs) generators: [`rand::rngs`](https://docs.rs/rand/latest/rand/rngs/index.html), and more RNGs: [`rand_chacha`](https://docs.rs/rand_chacha), [`rand_xoshiro`](https://docs.rs/rand_xoshiro/), [`rand_pcg`](https://docs.rs/rand_pcg/), [rngs repo](https://github.com/rust-random/rngs/)
--   [`rand::thread_rng`](https://docs.rs/rand/latest/rand/fn.thread_rng.html) is an asymtotically-fast, reasonably secure generator available on all `std` targets
+-   [`rand::rng`](https://docs.rs/rand/latest/rand/fn.rng.html) is an asymtotically-fast, reasonably secure generator available on all `std` targets
 -   Secure seeding via the [`getrandom` crate](https://crates.io/crates/getrandom)
 
 Supporting random value generation and random processes:
@@ -78,7 +78,7 @@ Rand is built with these features enabled by default:
 -   `alloc` (implied by `std`) enables functionality requiring an allocator
 -   `getrandom` (implied by `std`) is an optional dependency providing the code
     behind `rngs::OsRng`
--   `std_rng` enables inclusion of `StdRng`, `thread_rng`
+-   `std_rng` enables inclusion of `StdRng`, `ThreadRng`
 
 Optionally, the following dependencies can be enabled:
 
@@ -98,7 +98,7 @@ experimental `simd_support` feature.
 Rand supports limited functionality in `no_std` mode (enabled via
 `default-features = false`). In this case, `OsRng` and `from_os_rng` are
 unavailable (unless `getrandom` is enabled), large parts of `seq` are
-unavailable (unless `alloc` is enabled), and `thread_rng` is unavailable.
+unavailable (unless `alloc` is enabled), and `ThreadRng` is unavailable.
 
 ## Portability and platform support
 

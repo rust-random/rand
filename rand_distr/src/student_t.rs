@@ -42,7 +42,7 @@ use serde::{Deserialize, Serialize};
 /// use rand_distr::{StudentT, Distribution};
 ///
 /// let t = StudentT::new(11.0).unwrap();
-/// let v = t.sample(&mut rand::thread_rng());
+/// let v = t.sample(&mut rand::rng());
 /// println!("{} is from a t(11) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]

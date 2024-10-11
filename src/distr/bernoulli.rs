@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 /// use rand::distr::{Bernoulli, Distribution};
 ///
 /// let d = Bernoulli::new(0.3).unwrap();
-/// let v = d.sample(&mut rand::thread_rng());
+/// let v = d.sample(&mut rand::rng());
 /// println!("{} is from a Bernoulli distribution", v);
 /// ```
 ///

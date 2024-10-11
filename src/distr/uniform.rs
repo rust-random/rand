@@ -26,10 +26,10 @@
 //! # Example usage
 //!
 //! ```
-//! use rand::{Rng, thread_rng};
+//! use rand::Rng;
 //! use rand::distr::Uniform;
 //!
-//! let mut rng = thread_rng();
+//! let mut rng = rand::rng();
 //! let side = Uniform::new(-10.0, 10.0).unwrap();
 //!
 //! // sample between 1 and 10 points
@@ -94,7 +94,7 @@
 //!
 //! let (low, high) = (MyF32(17.0f32), MyF32(22.0f32));
 //! let uniform = Uniform::new(low, high).unwrap();
-//! let x = uniform.sample(&mut thread_rng());
+//! let x = uniform.sample(&mut rand::rng());
 //! ```
 //!
 //! [`SampleUniform`]: crate::distr::uniform::SampleUniform
@@ -178,7 +178,7 @@ use serde::{Deserialize, Serialize};
 /// use rand::distr::{Distribution, Uniform};
 ///
 /// let between = Uniform::try_from(10..10000).unwrap();
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let mut sum = 0;
 /// for _ in 0..1000 {
 ///     sum += between.sample(&mut rng);
@@ -191,7 +191,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 /// use rand::Rng;
 ///
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// println!("{}", rng.gen_range(0..10));
 /// ```
 ///
@@ -315,10 +315,10 @@ pub trait UniformSampler: Sized {
     /// Note that to use this method in a generic context, the type needs to be
     /// retrieved via `SampleUniform::Sampler` as follows:
     /// ```
-    /// use rand::{thread_rng, distr::uniform::{SampleUniform, UniformSampler}};
+    /// use rand::distr::uniform::{SampleUniform, UniformSampler};
     /// # #[allow(unused)]
     /// fn sample_from_range<T: SampleUniform>(lb: T, ub: T) -> T {
-    ///     let mut rng = thread_rng();
+    ///     let mut rng = rand::rng();
     ///     <T as SampleUniform>::Sampler::sample_single(lb, ub, &mut rng).unwrap()
     /// }
     /// ```
