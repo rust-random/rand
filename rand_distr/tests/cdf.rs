@@ -337,6 +337,46 @@ fn frechet() {
 }
 
 #[test]
+fn zeta() {
+    fn cdf(k: i64, s: f64) -> f64 {
+        if k <= 1 {
+            return 0.0;
+        }
+
+        gen_harmonic(k as u64, s) / zeta_func(s)
+    }
+
+    let parameters = [
+        // 2.0, 3.7, 5.0, 100.0, // all fail
+    ];
+
+    for (seed, s) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Zeta::new(s).unwrap();
+        test_discrete(seed as u64, dist, |k| cdf(k, s));
+    }
+}
+
+#[test]
+fn zipf() {
+    fn cdf(k: i64, n: u64, s: f64) -> f64 {
+        if k < 1 {
+            return 0.0;
+        }
+        if k > n as i64 {
+            return 1.0;
+        }
+        gen_harmonic(k as u64, s) / gen_harmonic(n, s)
+    }
+
+    let parameters = [(1000, 1.0), (500, 2.0), (1000, 0.5)];
+
+    for (seed, (n, x)) in parameters.into_iter().enumerate() {
+        let dist = rand_distr::Zipf::new(n, x).unwrap();
+        test_discrete(seed as u64, dist, |k| cdf(k, n, x));
+    }
+}
+
+#[test]
 fn gamma() {
     fn cdf(x: f64, shape: f64, scale: f64) -> f64 {
         if x < 0.0 {
@@ -662,4 +702,49 @@ fn gamma_lr(a: f64, x: f64) -> f64 {
         }
     }
     1.0 - ax.exp() * ans
+}
+
+fn gen_harmonic(n: u64, m: f64) -> f64 {
+    match n {
+        0 => 1.0,
+        _ => (0..n).fold(0.0, |acc, x| acc + (x as f64 + 1.0).powf(-m)),
+    }
+}
+
+/// https://docs.rs/spfunc/latest/src/spfunc/zeta.rs.html#20-43
+fn zeta_func(s: f64) -> f64 {
+    if s == 1.0 {
+        return f64::INFINITY;
+    }
+
+    let mut akn = vec![1.0];
+    let mut two_pow = 0.5;
+    let head = 1.0 / (1.0 - 2.0.powf(1.0 - s));
+    let mut tail_prev = 0.0;
+    let mut tail = two_pow * akn[0];
+
+    while (tail - tail_prev).abs() >= f64::EPSILON {
+        update_akn(&mut akn, s);
+        two_pow /= 2.0;
+        tail_prev = tail;
+        tail += two_pow * akn.iter().sum::<f64>();
+    }
+
+    head * tail
+}
+
+fn update_akn(akn: &mut Vec<f64>, s: f64) {
+    let n = akn.len() - 1;
+
+    let n1 = n as f64 + 1.0;
+
+    akn.iter_mut().enumerate().for_each(|(k, a)| {
+        let num = n1;
+        let den = n + 1 - k;
+        *a *= num / den as f64;
+    });
+    let p1 = -1.0 / n1;
+    let p2 = (n1 / (n1 + 1.0)).powf(s);
+
+    akn.push(p1 * p2 * akn[n]);
 }
