@@ -30,8 +30,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Rename `Rng::gen_iter` to `random_iter` (#1500)
 - Rename `rand::thread_rng()` to `rand::rng()`, and remove from the prelude (#1506)
 - Remove `rand::random()` from the prelude (#1506)
-- Rename `Rng::gen_range` to `random_range`
-- Rename `Rng::gen_bool` to `random_bool`
+- Rename `Rng::gen_range` to `random_range`, `gen_bool` to `random_bool`, `gen_ratio` to `random_ratio` (#1505)
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
