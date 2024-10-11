@@ -125,89 +125,6 @@ pub trait Rng: RngCore {
         Standard.sample_iter(self)
     }
 
-    /// Sample a new value, using the given distribution.
-    ///
-    /// ### Example
-    ///
-    /// ```
-    /// use rand::Rng;
-    /// use rand::distr::Uniform;
-    ///
-    /// let mut rng = rand::rng();
-    /// let x = rng.sample(Uniform::new(10u32, 15).unwrap());
-    /// // Type annotation requires two types, the type and distribution; the
-    /// // distribution can be inferred.
-    /// let y = rng.sample::<u16, _>(Uniform::new(10, 15).unwrap());
-    /// ```
-    fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
-        distr.sample(self)
-    }
-
-    /// Create an iterator that generates values using the given distribution.
-    ///
-    /// Note: this method consumes its arguments. Use
-    /// `(&mut rng).sample_iter(..)` to avoid consuming the RNG.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use rand::Rng;
-    /// use rand::distr::{Alphanumeric, Uniform, Standard};
-    ///
-    /// let mut rng = rand::rng();
-    ///
-    /// // Vec of 16 x f32:
-    /// let v: Vec<f32> = (&mut rng).sample_iter(Standard).take(16).collect();
-    ///
-    /// // String:
-    /// let s: String = (&mut rng).sample_iter(Alphanumeric)
-    ///     .take(7)
-    ///     .map(char::from)
-    ///     .collect();
-    ///
-    /// // Combined values
-    /// println!("{:?}", (&mut rng).sample_iter(Standard).take(5)
-    ///                              .collect::<Vec<(f64, bool)>>());
-    ///
-    /// // Dice-rolling:
-    /// let die_range = Uniform::new_inclusive(1, 6).unwrap();
-    /// let mut roll_die = (&mut rng).sample_iter(die_range);
-    /// while roll_die.next().unwrap() != 6 {
-    ///     println!("Not a 6; rolling again!");
-    /// }
-    /// ```
-    fn sample_iter<T, D>(self, distr: D) -> distr::DistIter<D, Self, T>
-    where
-        D: Distribution<T>,
-        Self: Sized,
-    {
-        distr.sample_iter(self)
-    }
-
-    /// Fill any type implementing [`Fill`] with random data
-    ///
-    /// This method is implemented for types which may be safely reinterpreted
-    /// as an (aligned) `[u8]` slice then filled with random data. It is often
-    /// faster than using [`Rng::random`] but not value-equivalent.
-    ///
-    /// The distribution is expected to be uniform with portable results, but
-    /// this cannot be guaranteed for third-party implementations.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use rand::Rng;
-    ///
-    /// let mut arr = [0i8; 20];
-    /// rand::rng().fill(&mut arr[..]);
-    /// ```
-    ///
-    /// [`fill_bytes`]: RngCore::fill_bytes
-    #[track_caller]
-    fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
-        dest.fill(self)
-    }
-
     /// Generate a random value in the given range.
     ///
     /// This function is optimised for the case that only a single sample is
@@ -311,6 +228,89 @@ pub trait Rng: RngCore {
                 numerator, denominator
             ),
         }
+    }
+
+    /// Sample a new value, using the given distribution.
+    ///
+    /// ### Example
+    ///
+    /// ```
+    /// use rand::Rng;
+    /// use rand::distr::Uniform;
+    ///
+    /// let mut rng = rand::rng();
+    /// let x = rng.sample(Uniform::new(10u32, 15).unwrap());
+    /// // Type annotation requires two types, the type and distribution; the
+    /// // distribution can be inferred.
+    /// let y = rng.sample::<u16, _>(Uniform::new(10, 15).unwrap());
+    /// ```
+    fn sample<T, D: Distribution<T>>(&mut self, distr: D) -> T {
+        distr.sample(self)
+    }
+
+    /// Create an iterator that generates values using the given distribution.
+    ///
+    /// Note: this method consumes its arguments. Use
+    /// `(&mut rng).sample_iter(..)` to avoid consuming the RNG.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::Rng;
+    /// use rand::distr::{Alphanumeric, Uniform, Standard};
+    ///
+    /// let mut rng = rand::rng();
+    ///
+    /// // Vec of 16 x f32:
+    /// let v: Vec<f32> = (&mut rng).sample_iter(Standard).take(16).collect();
+    ///
+    /// // String:
+    /// let s: String = (&mut rng).sample_iter(Alphanumeric)
+    ///     .take(7)
+    ///     .map(char::from)
+    ///     .collect();
+    ///
+    /// // Combined values
+    /// println!("{:?}", (&mut rng).sample_iter(Standard).take(5)
+    ///                              .collect::<Vec<(f64, bool)>>());
+    ///
+    /// // Dice-rolling:
+    /// let die_range = Uniform::new_inclusive(1, 6).unwrap();
+    /// let mut roll_die = (&mut rng).sample_iter(die_range);
+    /// while roll_die.next().unwrap() != 6 {
+    ///     println!("Not a 6; rolling again!");
+    /// }
+    /// ```
+    fn sample_iter<T, D>(self, distr: D) -> distr::DistIter<D, Self, T>
+    where
+        D: Distribution<T>,
+        Self: Sized,
+    {
+        distr.sample_iter(self)
+    }
+
+    /// Fill any type implementing [`Fill`] with random data
+    ///
+    /// This method is implemented for types which may be safely reinterpreted
+    /// as an (aligned) `[u8]` slice then filled with random data. It is often
+    /// faster than using [`Rng::random`] but not value-equivalent.
+    ///
+    /// The distribution is expected to be uniform with portable results, but
+    /// this cannot be guaranteed for third-party implementations.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::Rng;
+    ///
+    /// let mut arr = [0i8; 20];
+    /// rand::rng().fill(&mut arr[..]);
+    /// ```
+    ///
+    /// [`fill_bytes`]: RngCore::fill_bytes
+    #[track_caller]
+    fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
+        dest.fill(self)
     }
 
     /// Alias for [`Rng::random`].
