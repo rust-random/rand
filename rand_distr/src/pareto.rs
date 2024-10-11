@@ -32,7 +32,7 @@ use rand::Rng;
 /// use rand::prelude::*;
 /// use rand_distr::Pareto;
 ///
-/// let val: f64 = thread_rng().sample(Pareto::new(1., 2.).unwrap());
+/// let val: f64 = rand::rng().sample(Pareto::new(1., 2.).unwrap());
 /// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]

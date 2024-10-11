@@ -33,7 +33,7 @@ use rand::Rng;
 /// use rand_distr::{Triangular, Distribution};
 ///
 /// let d = Triangular::new(0., 5., 2.5).unwrap();
-/// let v = d.sample(&mut rand::thread_rng());
+/// let v = d.sample(&mut rand::rng());
 /// println!("{} is from a triangular distribution", v);
 /// ```
 ///

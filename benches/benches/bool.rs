@@ -27,41 +27,41 @@ pub fn bench(c: &mut Criterion) {
     g.measurement_time(core::time::Duration::from_millis(1000));
 
     g.bench_function("standard", |b| {
-        let mut rng = Pcg32::from_rng(&mut thread_rng());
+        let mut rng = Pcg32::from_rng(&mut rand::rng());
         b.iter(|| rng.sample::<bool, _>(rand::distr::Standard))
     });
 
     g.bench_function("const", |b| {
-        let mut rng = Pcg32::from_rng(&mut thread_rng());
+        let mut rng = Pcg32::from_rng(&mut rand::rng());
         b.iter(|| rng.random_bool(0.18))
     });
 
     g.bench_function("var", |b| {
-        let mut rng = Pcg32::from_rng(&mut thread_rng());
+        let mut rng = Pcg32::from_rng(&mut rand::rng());
         let p = rng.random();
         b.iter(|| rng.random_bool(p))
     });
 
     g.bench_function("ratio_const", |b| {
-        let mut rng = Pcg32::from_rng(&mut thread_rng());
+        let mut rng = Pcg32::from_rng(&mut rand::rng());
         b.iter(|| rng.random_ratio(2, 3))
     });
 
     g.bench_function("ratio_var", |b| {
-        let mut rng = Pcg32::from_rng(&mut thread_rng());
+        let mut rng = Pcg32::from_rng(&mut rand::rng());
         let d = rng.random_range(1..=100);
         let n = rng.random_range(0..=d);
         b.iter(|| rng.random_ratio(n, d));
     });
 
     g.bench_function("bernoulli_const", |b| {
-        let mut rng = Pcg32::from_rng(&mut thread_rng());
+        let mut rng = Pcg32::from_rng(&mut rand::rng());
         let d = Bernoulli::new(0.18).unwrap();
         b.iter(|| rng.sample(d))
     });
 
     g.bench_function("bernoulli_var", |b| {
-        let mut rng = Pcg32::from_rng(&mut thread_rng());
+        let mut rng = Pcg32::from_rng(&mut rand::rng());
         let p = rng.random();
         let d = Bernoulli::new(p).unwrap();
         b.iter(|| rng.sample(d))

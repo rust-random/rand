@@ -28,6 +28,8 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Implement `Distribution<u64>` for `Poisson<f64>` (#1498)
 - Limit the maximal acceptable lambda for `Poisson` to solve (#1312) (#1498)
 - Rename `Rng::gen_iter` to `random_iter` (#1500)
+- Rename `rand::thread_rng()` to `rand::rng()`, and remove from the prelude (#1506)
+- Remove `rand::random()` from the prelude (#1506)
 - Rename `Rng::gen_range` to `random_range`
 - Rename `Rng::gen_bool` to `random_bool`
 

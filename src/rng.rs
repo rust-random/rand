@@ -37,7 +37,7 @@ use zerocopy::IntoBytes;
 ///
 /// An alternative pattern is possible: `fn foo<R: Rng>(rng: R)`. This has some
 /// trade-offs. It allows the argument to be consumed directly without a `&mut`
-/// (which is how `from_rng(thread_rng())` works); also it still works directly
+/// (which is how `from_rng(rand::rng())` works); also it still works directly
 /// on references (including type-erased references). Unfortunately within the
 /// function `foo` it is not known whether `rng` is a reference type or not,
 /// hence many uses of `rng` require an extra reference, either explicitly
@@ -47,14 +47,13 @@ use zerocopy::IntoBytes;
 /// Example:
 ///
 /// ```
-/// # use rand::thread_rng;
 /// use rand::Rng;
 ///
 /// fn foo<R: Rng + ?Sized>(rng: &mut R) -> f32 {
 ///     rng.random()
 /// }
 ///
-/// # let v = foo(&mut thread_rng());
+/// # let v = foo(&mut rand::rng());
 /// ```
 pub trait Rng: RngCore {
     /// Return a random value via the [`Standard`] distribution.
@@ -62,9 +61,9 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// let x: u32 = rng.random();
     /// println!("{}", x);
     /// println!("{:?}", rng.random::<(f64, bool)>());
@@ -81,9 +80,9 @@ pub trait Rng: RngCore {
     /// though note that generated values will differ.
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// let tuple: (u8, i32, char) = rng.random(); // arbitrary tuple support
     ///
     /// let arr1: [f32; 32] = rng.random();        // array construction
@@ -131,10 +130,10 @@ pub trait Rng: RngCore {
     /// ### Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     /// use rand::distr::Uniform;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// let x = rng.sample(Uniform::new(10u32, 15).unwrap());
     /// // Type annotation requires two types, the type and distribution; the
     /// // distribution can be inferred.
@@ -152,10 +151,10 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     /// use rand::distr::{Alphanumeric, Uniform, Standard};
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     ///
     /// // Vec of 16 x f32:
     /// let v: Vec<f32> = (&mut rng).sample_iter(Standard).take(16).collect();
@@ -197,10 +196,10 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     ///
     /// let mut arr = [0i8; 20];
-    /// thread_rng().fill(&mut arr[..]);
+    /// rand::rng().fill(&mut arr[..]);
     /// ```
     ///
     /// [`fill_bytes`]: RngCore::fill_bytes
@@ -225,9 +224,9 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     ///
     /// // Exclusive range
     /// let n: u32 = rng.random_range(..10);
@@ -259,9 +258,9 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// println!("{}", rng.random_bool(1.0 / 3.0));
     /// ```
     ///
@@ -295,9 +294,9 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// println!("{}", rng.random_ratio(2, 3));
     /// ```
     ///
