@@ -762,7 +762,6 @@ fn update_akn(akn: &mut Vec<f64>, s: f64) {
     akn.push(p1 * p2 * akn[n]);
 }
 
-
 /// [1] FAST AND ACCURATE CALCULATION OF OWEN’S T-FUNCTION
 ///     by Mike Patefield and David Tandy
 ///     http://www.jstatsoft.org/v05/i05/paper
