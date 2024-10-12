@@ -359,7 +359,7 @@ impl Distribution<u64> for Hypergeometric {
                         } else {
                             for i in (y as u64 + 1)..=(m as u64) {
                                 f *= i as f64 * (n2 - k + i) as f64;
-                                f /= (n1 - i) as f64 * (k - i) as f64;
+                                f /= (n1 - i + 1) as f64 * (k - i + 1) as f64;
                             }
                         }
 
