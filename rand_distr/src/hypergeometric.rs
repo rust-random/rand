@@ -506,12 +506,11 @@ mod test {
 
     #[test]
     fn stirling() {
-        use special::Gamma;
-        let test = vec![0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+        let test = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         for &v in test.iter() {
             let ln_fac = ln_of_factorial(v);
             dbg!(ln_fac);
-            assert!((ln_fac - (v + 1.0).ln_gamma().0).abs() < 1e-4);
+            assert!((special::Gamma::ln_gamma(v + 1.0).0 - ln_fac).abs() < 1e-4);
         }
     }
 }
