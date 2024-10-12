@@ -136,7 +136,12 @@ const LOGSQRT2PI: f64 = 0.91893853320467274178; // log(sqrt(2)*pi)
 fn ln_of_factorial(v: f64) -> f64 {
     // the paper calls for ln(v!), but also wants to pass in fractions,
     // so we need to use Stirling's approximation to fill in the gaps:
-    (v + 0.5) * v.ln() - v + LOGSQRT2PI + 1.0 / (12.0 * v)
+
+    // shift v by 3, because Stirling is bad for small values
+    let v_3 = v + 3.0;
+    let ln_fac = (v_3 + 0.5) * v_3.ln() - v_3 + LOGSQRT2PI + 1.0 / (12.0 * v_3);
+    // make the correction for the shift
+    ln_fac - ((v + 3.0) * (v + 2.0) * (v + 1.0)).ln()
 }
 
 impl Hypergeometric {
@@ -443,6 +448,8 @@ impl Distribution<u64> for Hypergeometric {
 
 #[cfg(test)]
 mod test {
+    use std::{dbg, vec};
+
     use super::*;
 
     #[test]
@@ -495,5 +502,16 @@ mod test {
     #[test]
     fn hypergeometric_distributions_can_be_compared() {
         assert_eq!(Hypergeometric::new(1, 2, 3), Hypergeometric::new(1, 2, 3));
+    }
+
+    #[test]
+    fn stirling() {
+        use special::Gamma;
+        let test = vec![0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+        for &v in test.iter() {
+            let ln_fac = ln_of_factorial(v);
+            dbg!(ln_fac);
+            assert!((ln_fac - (v + 1.0).ln_gamma().0).abs() < 1e-4);
+        }
     }
 }
