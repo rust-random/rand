@@ -120,7 +120,7 @@ pub trait CryptoBlockRng: BlockRngCore {}
 #[cfg_attr(
     feature = "serde",
     serde(
-        bound = "for<'x> R: Serialize + Deserialize<'x> + Sized, for<'x> R::Results: Serialize + Deserialize<'x>"
+        bound = "for<'x> R: Serialize + Deserialize<'x>, for<'x> R::Results: Serialize + Deserialize<'x>"
     )
 )]
 pub struct BlockRng<R: BlockRngCore> {
