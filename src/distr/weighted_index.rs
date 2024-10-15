@@ -256,7 +256,7 @@ pub struct WeightedIndexIter<'a, X: SampleUniform + PartialOrd> {
     index: usize,
 }
 
-impl<'a, X> Debug for WeightedIndexIter<'a, X>
+impl<X> Debug for WeightedIndexIter<'_, X>
 where
     X: SampleUniform + PartialOrd + Debug,
     X::Sampler: Debug,
@@ -269,7 +269,7 @@ where
     }
 }
 
-impl<'a, X> Clone for WeightedIndexIter<'a, X>
+impl<X> Clone for WeightedIndexIter<'_, X>
 where
     X: SampleUniform + PartialOrd,
 {
@@ -281,7 +281,7 @@ where
     }
 }
 
-impl<'a, X> Iterator for WeightedIndexIter<'a, X>
+impl<X> Iterator for WeightedIndexIter<'_, X>
 where
     X: for<'b> core::ops::SubAssign<&'b X> + SampleUniform + PartialOrd + Clone,
 {

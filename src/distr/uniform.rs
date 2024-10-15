@@ -393,7 +393,7 @@ where
         self
     }
 }
-impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed
+impl<Borrowed> SampleBorrow<Borrowed> for &Borrowed
 where
     Borrowed: SampleUniform,
 {

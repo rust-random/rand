@@ -110,7 +110,7 @@ pub trait Distribution<T> {
     }
 }
 
-impl<'a, T, D: Distribution<T> + ?Sized> Distribution<T> for &'a D {
+impl<T, D: Distribution<T> + ?Sized> Distribution<T> for &D {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
         (*self).sample(rng)
     }
