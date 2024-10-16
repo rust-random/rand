@@ -6,20 +6,20 @@
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
 
-Rand is a Rust library supporting random generators:
+Rand is a set of crates supporting (pseudo-)random generators:
 
--   A standard RNG trait: [`rand_core::RngCore`](https://docs.rs/rand_core/latest/rand_core/trait.RngCore.html)
--   Fast implementations of the best-in-class [cryptographic](https://rust-random.github.io/book/guide-rngs.html#cryptographically-secure-pseudo-random-number-generators-csprngs) and
-    [non-cryptographic](https://rust-random.github.io/book/guide-rngs.html#basic-pseudo-random-number-generators-prngs) generators: [`rand::rngs`](https://docs.rs/rand/latest/rand/rngs/index.html), and more RNGs: [`rand_chacha`](https://docs.rs/rand_chacha), [`rand_xoshiro`](https://docs.rs/rand_xoshiro/), [`rand_pcg`](https://docs.rs/rand_pcg/), [rngs repo](https://github.com/rust-random/rngs/)
--   [`rand::rng`](https://docs.rs/rand/latest/rand/fn.rng.html) is an asymtotically-fast, reasonably secure generator available on all `std` targets
--   Secure seeding via the [`getrandom` crate](https://crates.io/crates/getrandom)
+-   Built over a standard RNG trait: [`rand_core::RngCore`](https://docs.rs/rand_core/latest/rand_core/trait.RngCore.html)
+-   With fast implementations of both [strong](https://rust-random.github.io/book/guide-rngs.html#cryptographically-secure-pseudo-random-number-generators-csprngs) and
+    [small](https://rust-random.github.io/book/guide-rngs.html#basic-pseudo-random-number-generators-prngs) generators: [`rand::rngs`](https://docs.rs/rand/latest/rand/rngs/index.html), and more RNGs: [`rand_chacha`](https://docs.rs/rand_chacha), [`rand_xoshiro`](https://docs.rs/rand_xoshiro/), [`rand_pcg`](https://docs.rs/rand_pcg/), [rngs repo](https://github.com/rust-random/rngs/)
+-   [`rand::rng`](https://docs.rs/rand/latest/rand/fn.rng.html) is an asymtotically-fast, automatically-seeded and reasonably strong generator available on all `std` targets
+-   Direct support for seeding generators from the [`getrandom` crate](https://crates.io/crates/getrandom)
 
-Supporting random value generation and random processes:
+With broad support for random value generation and random processes:
 
--   [`Standard`](https://docs.rs/rand/latest/rand/distributions/struct.Standard.html) random value generation
--   Ranged [`Uniform`](https://docs.rs/rand/latest/rand/distributions/struct.Uniform.html) number generation for many types
--   A flexible [`distributions`](https://docs.rs/rand/*/rand/distr/index.html) module
--   Samplers for a large number of random number distributions via our own
+-   [`Standard`](https://docs.rs/rand/latest/rand/distributions/struct.Standard.html) random value sampling,
+    [`Uniform`](https://docs.rs/rand/latest/rand/distributions/struct.Uniform.html)-ranged value sampling
+    and [more](https://docs.rs/rand/latest/rand/distr/index.html)
+-   Samplers for a large number of non-uniform random number distributions via our own
     [`rand_distr`](https://docs.rs/rand_distr) and via
     the [`statrs`](https://docs.rs/statrs/0.13.0/statrs/)
 -   Random processes (mostly choose and shuffle) via [`rand::seq`](https://docs.rs/rand/latest/rand/seq/index.html) traits
@@ -41,6 +41,20 @@ It's also worth pointing out what Rand *is not*:
 -   Slow. We take performance seriously, with considerations also for set-up
     time of new distributions, commonly-used parameters, and parameters of the
     current sampler.
+
+Rand is not a cryptographic library.
+While it is our aim that some sub-sets of the library
+([`rand::rng()`](https://docs.rs/rand/latest/rand/fn.rng.html),
+[`rand::rngs::StdRng`](https://docs.rs/rand/latest/rand/rngs/struct.StdRng.html))
+are (when used correctly) unpredictable,
+we cannot guarantee this. We keep copies of
+[some outputs](https://docs.rs/rand_core/latest/rand_core/block/struct.BlockRng.html)
+in memory longer than necessary and do not
+[`zeroize`](https://crates.io/crates/zeroize) used buffers and generators.
+We do not automatically reseed on fork (see
+[`ThreadRng`](https://docs.rs/rand/latest/rand/rngs/struct.ThreadRng.html)).
+Rand cannot provide any guarantees of the security.
+
 
 Documentation:
 
