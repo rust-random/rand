@@ -52,6 +52,8 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// `ThreadRng` is automatically seeded from [`OsRng`] with periodic reseeding
 /// (every 64 kiB — see [`ReseedingRng`] documentation for details).
 ///
+/// # Fork
+///
 /// `ThreadRng` is not automatically reseeded on fork. It is recommended to
 /// explicitly call [`ThreadRng::reseed`] immediately after a fork, for example:
 /// ```ignore
@@ -68,12 +70,18 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// from an interrupt (e.g. a fork handler) unless it can be guaranteed that no
 /// other method on the same `ThreadRng` is currently executing.
 ///
+/// # Security
+///
 /// Security must be considered relative to a threat model and validation
 /// requirements. `ThreadRng` attempts to meet basic security considerations
 /// for producing unpredictable random numbers: use a CSPRNG, use a
 /// recommended platform-specific seed ([`OsRng`]), and avoid
 /// leaking internal secrets e.g. via [`Debug`] implementation or serialization.
-/// Memory is not zeroized on drop.
+/// `ThreadRng` stores its key and the most recently generated block of outputs
+/// in memory and does not zeroize its memory on drop.
+/// `ThreadRng` is not *automatically* reseeded on fork (see [above](#fork)).
+///
+/// For a more secure alternative, see [`OsRng`].
 ///
 /// [`ReseedingRng`]: crate::rngs::ReseedingRng
 /// [`StdRng`]: crate::rngs::StdRng
@@ -139,6 +147,19 @@ thread_local!(
 /// println!("A simulated die roll: {}", rng.random_range(1..=6));
 /// # }
 /// ```
+///
+/// # Security
+///
+/// Security must be considered relative to a threat model and validation
+/// requirements. `ThreadRng` attempts to meet basic security considerations
+/// for producing unpredictable random numbers: use a CSPRNG, use a
+/// recommended platform-specific seed ([`OsRng`]), and avoid
+/// leaking internal secrets e.g. via [`Debug`] implementation or serialization.
+/// `ThreadRng` stores its key and the most recently generated block of outputs
+/// in memory and does not zeroize its memory on drop.
+/// `ThreadRng` is not *automatically* reseeded on fork (see [`ThreadRng#fork`]).
+///
+/// For a more secure alternative, see [`OsRng`].
 pub fn rng() -> ThreadRng {
     let rng = THREAD_RNG_KEY.with(|t| t.clone());
     ThreadRng { rng }
