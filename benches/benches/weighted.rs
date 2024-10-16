@@ -20,7 +20,7 @@ criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
     c.bench_function("weighted_index_creation", |b| {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let weights = black_box([1u32, 2, 4, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 7]);
         b.iter(|| {
             let distr = WeightedIndex::new(weights.to_vec()).unwrap();
@@ -29,7 +29,7 @@ pub fn bench(c: &mut Criterion) {
     });
 
     c.bench_function("weighted_index_modification", |b| {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let weights = black_box([1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7]);
         let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
         b.iter(|| {
@@ -53,7 +53,7 @@ pub fn bench(c: &mut Criterion) {
         c.bench_function(name.as_str(), |b| {
             let length = black_box(length);
             let amount = black_box(amount);
-            let mut rng = SmallRng::from_rng(thread_rng());
+            let mut rng = SmallRng::from_rng(&mut rand::rng());
             b.iter(|| sample_weighted(&mut rng, length, |idx| (1 + (idx % 100)) as u32, amount))
         });
     }

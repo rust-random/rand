@@ -38,7 +38,7 @@ use alloc::string::String;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
 /// let vowels_dist = Slice::new(&vowels).unwrap();
-/// let rng = rand::thread_rng();
+/// let rng = rand::rng();
 ///
 /// // build a string of 10 vowels
 /// let vowel_string: String = rng
@@ -58,7 +58,7 @@ use alloc::string::String;
 /// use rand::seq::IndexedRandom;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 ///
 /// println!("{}", vowels.choose(&mut rng).unwrap())
 /// ```
@@ -127,7 +127,7 @@ impl std::error::Error for EmptySlice {}
 /// Note: the `String` is potentially left with excess capacity; optionally the
 /// user may call `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
-impl<'a> super::DistString for Slice<'a, char> {
+impl super::DistString for Slice<'_, char> {
     fn append_string<R: crate::Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
         // Get the max char length to minimize extra space.
         // Limit this check to avoid searching for long slice.

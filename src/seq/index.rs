@@ -153,7 +153,7 @@ pub enum IndexVecIter<'a> {
     U64(slice::Iter<'a, u64>),
 }
 
-impl<'a> Iterator for IndexVecIter<'a> {
+impl Iterator for IndexVecIter<'_> {
     type Item = usize;
 
     #[inline]
@@ -176,7 +176,7 @@ impl<'a> Iterator for IndexVecIter<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for IndexVecIter<'a> {}
+impl ExactSizeIterator for IndexVecIter<'_> {}
 
 /// Return type of `IndexVec::into_iter`.
 #[derive(Clone, Debug)]

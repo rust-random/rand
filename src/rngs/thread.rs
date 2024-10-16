@@ -41,7 +41,8 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// A reference to the thread-local generator
 ///
 /// This type is a reference to a lazily-initialized thread-local generator.
-/// An instance can be obtained via [`thread_rng`] or via `ThreadRng::default()`.
+/// An instance can be obtained via [`rand::rng()`][crate::rng())] or via
+/// `ThreadRng::default()`.
 /// The handle cannot be passed between threads (is not `Send` or `Sync`).
 ///
 /// `ThreadRng` uses the same CSPRNG as [`StdRng`], ChaCha12. As with
@@ -58,7 +59,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 ///     let pid = unsafe { libc::fork() };
 ///     if pid == 0 {
 ///         // Reseed ThreadRng in child processes:
-///         rand::thread_rng().reseed();
+///         rand::rng().reseed();
 ///     }
 /// }
 /// ```
@@ -102,11 +103,11 @@ impl fmt::Debug for ThreadRng {
 }
 
 thread_local!(
-    // We require Rc<..> to avoid premature freeing when thread_rng is used
+    // We require Rc<..> to avoid premature freeing when ThreadRng is used
     // within thread-local destructors. See #968.
     static THREAD_RNG_KEY: Rc<UnsafeCell<ReseedingRng<Core, OsRng>>> = {
         let r = Core::try_from_os_rng().unwrap_or_else(|err|
-                panic!("could not initialize thread_rng: {}", err));
+                panic!("could not initialize ThreadRng: {}", err));
         let rng = ReseedingRng::new(r,
                                     THREAD_RNG_RESEED_THRESHOLD,
                                     OsRng);
@@ -114,31 +115,38 @@ thread_local!(
     }
 );
 
-/// Access the thread-local generator
+/// Access a local, pre-initialized generator
 ///
-/// Returns a reference to the local [`ThreadRng`], initializing the generator
-/// on the first call on each thread.
+/// This is a reasonably fast unpredictable thread-local instance of [`ThreadRng`].
 ///
-/// Example usage:
+/// See also [`crate::rngs`] for alternatives.
+///
+/// # Example
+///
 /// ```
-/// use rand::Rng;
+/// use rand::prelude::*;
 ///
 /// # fn main() {
-/// // rand::random() may be used instead of rand::thread_rng().gen():
-/// println!("A random boolean: {}", rand::random::<bool>());
 ///
-/// let mut rng = rand::thread_rng();
+/// let mut numbers = [1, 2, 3, 4, 5];
+/// numbers.shuffle(&mut rand::rng());
+/// println!("Numbers: {numbers:?}");
+///
+/// // Using a local binding avoids an initialization-check on each usage:
+/// let mut rng = rand::rng();
+///
+/// println!("True or false: {}", rng.random::<bool>());
 /// println!("A simulated die roll: {}", rng.gen_range(1..=6));
 /// # }
 /// ```
-pub fn thread_rng() -> ThreadRng {
+pub fn rng() -> ThreadRng {
     let rng = THREAD_RNG_KEY.with(|t| t.clone());
     ThreadRng { rng }
 }
 
 impl Default for ThreadRng {
     fn default() -> ThreadRng {
-        thread_rng()
+        rng()
     }
 }
 
@@ -170,14 +178,12 @@ impl RngCore for ThreadRng {
 
 impl CryptoRng for ThreadRng {}
 
-rand_core::impl_try_crypto_rng_from_crypto_rng!(ThreadRng);
-
 #[cfg(test)]
 mod test {
     #[test]
     fn test_thread_rng() {
         use crate::Rng;
-        let mut r = crate::thread_rng();
+        let mut r = crate::rng();
         r.random::<i32>();
         assert_eq!(r.gen_range(0..1), 0);
     }
@@ -186,9 +192,6 @@ mod test {
     fn test_debug_output() {
         // We don't care about the exact output here, but it must not include
         // private CSPRNG state or the cache stored by BlockRng!
-        assert_eq!(
-            std::format!("{:?}", crate::thread_rng()),
-            "ThreadRng { .. }"
-        );
+        assert_eq!(std::format!("{:?}", crate::rng()), "ThreadRng { .. }");
     }
 }

@@ -64,7 +64,7 @@ use serde::{Deserialize, Serialize};
 /// let choices = ['a', 'b', 'c'];
 /// let weights = [2,   1,   1];
 /// let dist = WeightedIndex::new(&weights).unwrap();
-/// let mut rng = thread_rng();
+/// let mut rng = rand::rng();
 /// for _ in 0..100 {
 ///     // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
 ///     println!("{}", choices[dist.sample(&mut rng)]);
@@ -256,7 +256,7 @@ pub struct WeightedIndexIter<'a, X: SampleUniform + PartialOrd> {
     index: usize,
 }
 
-impl<'a, X> Debug for WeightedIndexIter<'a, X>
+impl<X> Debug for WeightedIndexIter<'_, X>
 where
     X: SampleUniform + PartialOrd + Debug,
     X::Sampler: Debug,
@@ -269,7 +269,7 @@ where
     }
 }
 
-impl<'a, X> Clone for WeightedIndexIter<'a, X>
+impl<X> Clone for WeightedIndexIter<'_, X>
 where
     X: SampleUniform + PartialOrd,
 {
@@ -281,7 +281,7 @@ where
     }
 }
 
-impl<'a, X> Iterator for WeightedIndexIter<'a, X>
+impl<X> Iterator for WeightedIndexIter<'_, X>
 where
     X: for<'b> core::ops::SubAssign<&'b X> + SampleUniform + PartialOrd + Clone,
 {
