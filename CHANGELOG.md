@@ -11,7 +11,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ## [Unreleased]
 - Add `rand::distributions::WeightedIndex::{weight, weights, total_weight}` (#1420)
 - Add `IndexedRandom::choose_multiple_array`, `index::sample_array` (#1453, #1469)
-- Bump the MSRV to 1.61.0
+- Bump the MSRV to ~~1.61.0~~ 1.60.0 (#1416, #1513)
 - Rename `Rng::gen` to `Rng::random` to avoid conflict with the new `gen` keyword in Rust 2024 (#1435)
 - Move all benchmarks to new `benches` crate (#1439) and migrate to Criterion (#1490)
 - Annotate panicking methods with `#[track_caller]` (#1442, #1447)
