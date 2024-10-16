@@ -41,8 +41,8 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// A reference to the thread-local generator
 ///
 /// This type is a reference to a lazily-initialized thread-local generator.
-/// An instance can be obtained via [`rand::rng()`][crate::rng())] or via
-/// `ThreadRng::default()`.
+/// An instance can be obtained via [`rand::rng()`][crate::rng()] or via
+/// [`ThreadRng::default()`].
 /// The handle cannot be passed between threads (is not `Send` or `Sync`).
 ///
 /// `ThreadRng` uses the same CSPRNG as [`StdRng`], ChaCha12. As with
