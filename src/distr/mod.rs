@@ -76,7 +76,7 @@
 //! # Non-uniform sampling
 //!
 //! Sampling a simple true/false outcome with a given probability has a name:
-//! the [`Bernoulli`] distribution (this is used by [`Rng::gen_bool`]).
+//! the [`Bernoulli`] distribution (this is used by [`Rng::random_bool`]).
 //!
 //! For weighted sampling from a sequence of discrete values, use the
 //! [`WeightedIndex`] distribution.
@@ -204,7 +204,7 @@ use crate::Rng;
 /// multiplicative method: `(rng.gen::<$uty>() >> N) as $ty * (ε/2)`.
 ///
 /// See also: [`Open01`] which samples from `(0, 1)`, [`OpenClosed01`] which
-/// samples from `(0, 1]` and `Rng::gen_range(0..1)` which also samples from
+/// samples from `(0, 1]` and `Rng::random_range(0..1)` which also samples from
 /// `[0, 1)`. Note that `Open01` uses transmute-based methods which yield 1 bit
 /// less precision but may perform faster on some architectures (on modern Intel
 /// CPUs all methods have approximately equal performance).

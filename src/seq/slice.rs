@@ -56,7 +56,7 @@ pub trait IndexedRandom: Index<usize> {
         if self.is_empty() {
             None
         } else {
-            Some(&self[rng.gen_range(..self.len())])
+            Some(&self[rng.random_range(..self.len())])
         }
     }
 
@@ -258,7 +258,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
             None
         } else {
             let len = self.len();
-            Some(&mut self[rng.gen_range(..len)])
+            Some(&mut self[rng.random_range(..len)])
         }
     }
 
@@ -397,7 +397,7 @@ impl<T> SliceRandom for [T] {
         // It ensures that the last `amount` elements of the slice
         // are randomly selected from the whole slice.
 
-        // `IncreasingUniform::next_index()` is faster than `Rng::gen_range`
+        // `IncreasingUniform::next_index()` is faster than `Rng::random_range`
         // but only works for 32 bit integers
         // So we must use the slow method if the slice is longer than that.
         if self.len() < (u32::MAX as usize) {
@@ -408,7 +408,7 @@ impl<T> SliceRandom for [T] {
             }
         } else {
             for i in m..self.len() {
-                let index = rng.gen_range(..i + 1);
+                let index = rng.random_range(..i + 1);
                 self.swap(i, index);
             }
         }

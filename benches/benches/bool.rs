@@ -21,7 +21,7 @@ criterion_group!(
 criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
-    let mut g = c.benchmark_group("gen_bool");
+    let mut g = c.benchmark_group("random_bool");
     g.sample_size(1000);
     g.warm_up_time(core::time::Duration::from_millis(500));
     g.measurement_time(core::time::Duration::from_millis(1000));
@@ -33,25 +33,25 @@ pub fn bench(c: &mut Criterion) {
 
     g.bench_function("const", |b| {
         let mut rng = Pcg32::from_rng(&mut rand::rng());
-        b.iter(|| rng.gen_bool(0.18))
+        b.iter(|| rng.random_bool(0.18))
     });
 
     g.bench_function("var", |b| {
         let mut rng = Pcg32::from_rng(&mut rand::rng());
         let p = rng.random();
-        b.iter(|| rng.gen_bool(p))
+        b.iter(|| rng.random_bool(p))
     });
 
     g.bench_function("ratio_const", |b| {
         let mut rng = Pcg32::from_rng(&mut rand::rng());
-        b.iter(|| rng.gen_ratio(2, 3))
+        b.iter(|| rng.random_ratio(2, 3))
     });
 
     g.bench_function("ratio_var", |b| {
         let mut rng = Pcg32::from_rng(&mut rand::rng());
-        let d = rng.gen_range(1..=100);
-        let n = rng.gen_range(0..=d);
-        b.iter(|| rng.gen_ratio(n, d));
+        let d = rng.random_range(1..=100);
+        let n = rng.random_range(0..=d);
+        b.iter(|| rng.random_ratio(n, d));
     });
 
     g.bench_function("bernoulli_const", |b| {

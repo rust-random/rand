@@ -11,7 +11,7 @@
 //!
 //! [`Uniform`] is the standard distribution to sample uniformly from a range;
 //! e.g. `Uniform::new_inclusive(1, 6).unwrap()` can sample integers from 1 to 6, like a
-//! standard die. [`Rng::gen_range`] supports any type supported by [`Uniform`].
+//! standard die. [`Rng::random_range`] supports any type supported by [`Uniform`].
 //!
 //! This distribution is provided with support for several primitive types
 //! (all integer and floating-point types) as well as [`std::time::Duration`],
@@ -33,7 +33,7 @@
 //! let side = Uniform::new(-10.0, 10.0).unwrap();
 //!
 //! // sample between 1 and 10 points
-//! for _ in 0..rng.gen_range(1..=10) {
+//! for _ in 0..rng.random_range(1..=10) {
 //!     // sample a point from the square with sides -10 - 10 in two dimensions
 //!     let (x, y) = (rng.sample(side), rng.sample(side));
 //!     println!("Point: {}, {}", x, y);
@@ -154,7 +154,7 @@ use serde::{Deserialize, Serialize};
 /// [`Uniform::new`] and [`Uniform::new_inclusive`] construct a uniform
 /// distribution sampling from the given range; these functions may do extra
 /// work up front to make sampling of multiple values faster. If only one sample
-/// from the range is required, [`Rng::gen_range`] can be more efficient.
+/// from the range is required, [`Rng::random_range`] can be more efficient.
 ///
 /// When sampling from a constant range, many calculations can happen at
 /// compile-time and all methods should be fast; for floating-point ranges and
@@ -186,18 +186,18 @@ use serde::{Deserialize, Serialize};
 /// println!("{}", sum);
 /// ```
 ///
-/// For a single sample, [`Rng::gen_range`] may be preferred:
+/// For a single sample, [`Rng::random_range`] may be preferred:
 ///
 /// ```
 /// use rand::Rng;
 ///
 /// let mut rng = rand::rng();
-/// println!("{}", rng.gen_range(0..10));
+/// println!("{}", rng.random_range(0..10));
 /// ```
 ///
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
-/// [`Rng::gen_range`]: Rng::gen_range
+/// [`Rng::random_range`]: Rng::random_range
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(bound(serialize = "X::Sampler: Serialize")))]
@@ -406,7 +406,7 @@ where
 /// Range that supports generating a single sample efficiently.
 ///
 /// Any type implementing this trait can be used to specify the sampled range
-/// for `Rng::gen_range`.
+/// for `Rng::random_range`.
 pub trait SampleRange<T> {
     /// Generate a sample from the given range.
     fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error>;
