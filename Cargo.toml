@@ -46,7 +46,7 @@ getrandom = ["rand_core/getrandom"]
 simd_support = ["zerocopy/simd-nightly"]
 
 # Option (enabled by default): enable StdRng
-std_rng = ["rand_chacha"]
+std_rng = ["dep:rand_chacha"]
 
 # Option: enable SmallRng
 small_rng = []
@@ -55,6 +55,9 @@ small_rng = []
 # By default, bias affecting no more than one in  2^48 samples is accepted.
 # Note: enabling this option is expected to affect reproducibility of results.
 unbiased = []
+
+# Option: enable logging
+log = ["dep:log"]
 
 [workspace]
 members = [
