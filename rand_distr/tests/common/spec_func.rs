@@ -24,6 +24,27 @@
 use special::Primitive;
 
 pub fn gamma_lr(a: f64, x: f64) -> f64 {
+    if a.is_nan() || x.is_nan() {
+        return f64::NAN;
+    }
+
+    if a <= 0.0 || a == f64::INFINITY {
+        panic!("a must be positive and finite");
+    }
+    if x <= 0.0 || x == f64::INFINITY {
+        panic!("x must be positive and finite");
+    }
+
+    const ACC: f64 = 0.0000000000000011102230246251565;
+
+    if a.abs() < ACC {
+        return 1.0;
+    }
+
+    if x.abs() < ACC {
+        return 0.0;
+    }
+
     let eps = 0.000000000000001;
     let big = 4503599627370496.0;
     let big_inv = 2.220_446_049_250_313e-16;
