@@ -6,139 +6,216 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![feature(test)]
-#![allow(non_snake_case)]
-
-extern crate test;
-
-const RAND_BENCH_N: u64 = 1000;
-const BYTES_LEN: usize = 1024;
-
-use core::mem::size_of;
-use rand_chacha::rand_core::UnwrapErr;
-use test::{black_box, Bencher};
-
+use core::time::Duration;
+use criterion::measurement::WallTime;
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkGroup, Criterion};
 use rand::prelude::*;
 use rand::rngs::ReseedingRng;
 use rand::rngs::{mock::StepRng, OsRng};
+use rand_chacha::rand_core::UnwrapErr;
 use rand_chacha::{ChaCha12Rng, ChaCha20Core, ChaCha20Rng, ChaCha8Rng};
 use rand_pcg::{Pcg32, Pcg64, Pcg64Dxsm, Pcg64Mcg};
 
-macro_rules! gen_bytes {
-    ($fnn:ident, $gen:expr) => {
-        #[bench]
-        fn $fnn(b: &mut Bencher) {
-            let mut rng = $gen;
-            let mut buf = [0u8; BYTES_LEN];
+criterion_group!(
+    name = benches;
+    config = Criterion::default();
+    targets = random_bytes, random_u32, random_u64, init_gen, init_from_u64, init_from_seed, reseeding_bytes
+);
+criterion_main!(benches);
+
+pub fn random_bytes(c: &mut Criterion) {
+    let mut g = c.benchmark_group("random_bytes");
+    g.warm_up_time(Duration::from_millis(500));
+    g.measurement_time(Duration::from_millis(1000));
+    g.throughput(criterion::Throughput::Bytes(1024));
+
+    fn bench(g: &mut BenchmarkGroup<WallTime>, name: &str, mut rng: impl Rng) {
+        g.bench_function(name, |b| {
+            let mut buf = [0u8; 1024];
             b.iter(|| {
-                for _ in 0..RAND_BENCH_N {
-                    rng.fill_bytes(&mut buf);
-                    black_box(buf);
-                }
+                rng.fill_bytes(&mut buf);
+                black_box(buf);
             });
-            b.bytes = BYTES_LEN as u64 * RAND_BENCH_N;
-        }
-    };
+        });
+    }
+
+    bench(&mut g, "step", StepRng::new(0, 1));
+    bench(&mut g, "pcg32", Pcg32::from_os_rng());
+    bench(&mut g, "pcg64", Pcg64::from_os_rng());
+    bench(&mut g, "pcg64mcg", Pcg64Mcg::from_os_rng());
+    bench(&mut g, "pcg64dxsm", Pcg64Dxsm::from_os_rng());
+    bench(&mut g, "chacha8", ChaCha8Rng::from_os_rng());
+    bench(&mut g, "chacha12", ChaCha12Rng::from_os_rng());
+    bench(&mut g, "chacha20", ChaCha20Rng::from_os_rng());
+    bench(&mut g, "std", StdRng::from_os_rng());
+    bench(&mut g, "small", SmallRng::from_thread_rng());
+    bench(&mut g, "os", UnwrapErr(OsRng));
+    bench(&mut g, "thread", rand::rng());
+
+    g.finish()
 }
 
-gen_bytes!(gen_bytes_step, StepRng::new(0, 1));
-gen_bytes!(gen_bytes_pcg32, Pcg32::from_os_rng());
-gen_bytes!(gen_bytes_pcg64, Pcg64::from_os_rng());
-gen_bytes!(gen_bytes_pcg64mcg, Pcg64Mcg::from_os_rng());
-gen_bytes!(gen_bytes_pcg64dxsm, Pcg64Dxsm::from_os_rng());
-gen_bytes!(gen_bytes_chacha8, ChaCha8Rng::from_os_rng());
-gen_bytes!(gen_bytes_chacha12, ChaCha12Rng::from_os_rng());
-gen_bytes!(gen_bytes_chacha20, ChaCha20Rng::from_os_rng());
-gen_bytes!(gen_bytes_std, StdRng::from_os_rng());
-gen_bytes!(gen_bytes_small, SmallRng::from_thread_rng());
-gen_bytes!(gen_bytes_os, UnwrapErr(OsRng));
-gen_bytes!(gen_bytes_thread, thread_rng());
+pub fn random_u32(c: &mut Criterion) {
+    let mut g = c.benchmark_group("random_u32");
+    g.sample_size(1000);
+    g.warm_up_time(Duration::from_millis(500));
+    g.measurement_time(Duration::from_millis(1000));
+    g.throughput(criterion::Throughput::Bytes(4));
 
-macro_rules! gen_uint {
-    ($fnn:ident, $ty:ty, $gen:expr) => {
-        #[bench]
-        fn $fnn(b: &mut Bencher) {
-            let mut rng = $gen;
-            b.iter(|| {
-                let mut accum: $ty = 0;
-                for _ in 0..RAND_BENCH_N {
-                    accum = accum.wrapping_add(rng.random::<$ty>());
-                }
-                accum
-            });
-            b.bytes = size_of::<$ty>() as u64 * RAND_BENCH_N;
-        }
-    };
+    fn bench(g: &mut BenchmarkGroup<WallTime>, name: &str, mut rng: impl Rng) {
+        g.bench_function(name, |b| {
+            b.iter(|| rng.random::<u32>());
+        });
+    }
+
+    bench(&mut g, "step", StepRng::new(0, 1));
+    bench(&mut g, "pcg32", Pcg32::from_os_rng());
+    bench(&mut g, "pcg64", Pcg64::from_os_rng());
+    bench(&mut g, "pcg64mcg", Pcg64Mcg::from_os_rng());
+    bench(&mut g, "pcg64dxsm", Pcg64Dxsm::from_os_rng());
+    bench(&mut g, "chacha8", ChaCha8Rng::from_os_rng());
+    bench(&mut g, "chacha12", ChaCha12Rng::from_os_rng());
+    bench(&mut g, "chacha20", ChaCha20Rng::from_os_rng());
+    bench(&mut g, "std", StdRng::from_os_rng());
+    bench(&mut g, "small", SmallRng::from_thread_rng());
+    bench(&mut g, "os", UnwrapErr(OsRng));
+    bench(&mut g, "thread", rand::rng());
+
+    g.finish()
 }
 
-gen_uint!(gen_u32_step, u32, StepRng::new(0, 1));
-gen_uint!(gen_u32_pcg32, u32, Pcg32::from_os_rng());
-gen_uint!(gen_u32_pcg64, u32, Pcg64::from_os_rng());
-gen_uint!(gen_u32_pcg64mcg, u32, Pcg64Mcg::from_os_rng());
-gen_uint!(gen_u32_pcg64dxsm, u32, Pcg64Dxsm::from_os_rng());
-gen_uint!(gen_u32_chacha8, u32, ChaCha8Rng::from_os_rng());
-gen_uint!(gen_u32_chacha12, u32, ChaCha12Rng::from_os_rng());
-gen_uint!(gen_u32_chacha20, u32, ChaCha20Rng::from_os_rng());
-gen_uint!(gen_u32_std, u32, StdRng::from_os_rng());
-gen_uint!(gen_u32_small, u32, SmallRng::from_thread_rng());
-gen_uint!(gen_u32_os, u32, UnwrapErr(OsRng));
-gen_uint!(gen_u32_thread, u32, thread_rng());
+pub fn random_u64(c: &mut Criterion) {
+    let mut g = c.benchmark_group("random_u64");
+    g.sample_size(1000);
+    g.warm_up_time(Duration::from_millis(500));
+    g.measurement_time(Duration::from_millis(1000));
+    g.throughput(criterion::Throughput::Bytes(8));
 
-gen_uint!(gen_u64_step, u64, StepRng::new(0, 1));
-gen_uint!(gen_u64_pcg32, u64, Pcg32::from_os_rng());
-gen_uint!(gen_u64_pcg64, u64, Pcg64::from_os_rng());
-gen_uint!(gen_u64_pcg64mcg, u64, Pcg64Mcg::from_os_rng());
-gen_uint!(gen_u64_pcg64dxsm, u64, Pcg64Dxsm::from_os_rng());
-gen_uint!(gen_u64_chacha8, u64, ChaCha8Rng::from_os_rng());
-gen_uint!(gen_u64_chacha12, u64, ChaCha12Rng::from_os_rng());
-gen_uint!(gen_u64_chacha20, u64, ChaCha20Rng::from_os_rng());
-gen_uint!(gen_u64_std, u64, StdRng::from_os_rng());
-gen_uint!(gen_u64_small, u64, SmallRng::from_thread_rng());
-gen_uint!(gen_u64_os, u64, UnwrapErr(OsRng));
-gen_uint!(gen_u64_thread, u64, thread_rng());
+    fn bench(g: &mut BenchmarkGroup<WallTime>, name: &str, mut rng: impl Rng) {
+        g.bench_function(name, |b| {
+            b.iter(|| rng.random::<u64>());
+        });
+    }
 
-macro_rules! init_gen {
-    ($fnn:ident, $gen:ident) => {
-        #[bench]
-        fn $fnn(b: &mut Bencher) {
+    bench(&mut g, "step", StepRng::new(0, 1));
+    bench(&mut g, "pcg32", Pcg32::from_os_rng());
+    bench(&mut g, "pcg64", Pcg64::from_os_rng());
+    bench(&mut g, "pcg64mcg", Pcg64Mcg::from_os_rng());
+    bench(&mut g, "pcg64dxsm", Pcg64Dxsm::from_os_rng());
+    bench(&mut g, "chacha8", ChaCha8Rng::from_os_rng());
+    bench(&mut g, "chacha12", ChaCha12Rng::from_os_rng());
+    bench(&mut g, "chacha20", ChaCha20Rng::from_os_rng());
+    bench(&mut g, "std", StdRng::from_os_rng());
+    bench(&mut g, "small", SmallRng::from_thread_rng());
+    bench(&mut g, "os", UnwrapErr(OsRng));
+    bench(&mut g, "thread", rand::rng());
+
+    g.finish()
+}
+
+pub fn init_gen(c: &mut Criterion) {
+    let mut g = c.benchmark_group("init_gen");
+    g.warm_up_time(Duration::from_millis(500));
+    g.measurement_time(Duration::from_millis(1000));
+
+    fn bench<R: SeedableRng>(g: &mut BenchmarkGroup<WallTime>, name: &str) {
+        g.bench_function(name, |b| {
             let mut rng = Pcg32::from_os_rng();
-            b.iter(|| {
-                let r2 = $gen::from_rng(&mut rng);
-                r2
-            });
-        }
-    };
+            b.iter(|| R::from_rng(&mut rng));
+        });
+    }
+
+    bench::<Pcg32>(&mut g, "pcg32");
+    bench::<Pcg64>(&mut g, "pcg64");
+    bench::<Pcg64Mcg>(&mut g, "pcg64mcg");
+    bench::<Pcg64Dxsm>(&mut g, "pcg64dxsm");
+    bench::<ChaCha8Rng>(&mut g, "chacha8");
+    bench::<ChaCha12Rng>(&mut g, "chacha12");
+    bench::<ChaCha20Rng>(&mut g, "chacha20");
+    bench::<StdRng>(&mut g, "std");
+    bench::<SmallRng>(&mut g, "small");
+
+    g.finish()
 }
 
-init_gen!(init_pcg32, Pcg32);
-init_gen!(init_pcg64, Pcg64);
-init_gen!(init_pcg64mcg, Pcg64Mcg);
-init_gen!(init_pcg64dxsm, Pcg64Dxsm);
-init_gen!(init_chacha, ChaCha20Rng);
+pub fn init_from_u64(c: &mut Criterion) {
+    let mut g = c.benchmark_group("init_from_u64");
+    g.warm_up_time(Duration::from_millis(500));
+    g.measurement_time(Duration::from_millis(1000));
 
-const RESEEDING_BYTES_LEN: usize = 1024 * 1024;
-const RESEEDING_BENCH_N: u64 = 16;
+    fn bench<R: SeedableRng>(g: &mut BenchmarkGroup<WallTime>, name: &str) {
+        g.bench_function(name, |b| {
+            let mut rng = Pcg32::from_os_rng();
+            let seed = rng.random();
+            b.iter(|| R::seed_from_u64(black_box(seed)));
+        });
+    }
 
-macro_rules! reseeding_bytes {
-    ($fnn:ident, $thresh:expr) => {
-        #[bench]
-        fn $fnn(b: &mut Bencher) {
-            let mut rng = ReseedingRng::new(ChaCha20Core::from_os_rng(), $thresh * 1024, OsRng);
-            let mut buf = [0u8; RESEEDING_BYTES_LEN];
-            b.iter(|| {
-                for _ in 0..RESEEDING_BENCH_N {
-                    rng.fill_bytes(&mut buf);
-                    black_box(&buf);
-                }
-            });
-            b.bytes = RESEEDING_BYTES_LEN as u64 * RESEEDING_BENCH_N;
-        }
-    };
+    bench::<Pcg32>(&mut g, "pcg32");
+    bench::<Pcg64>(&mut g, "pcg64");
+    bench::<Pcg64Mcg>(&mut g, "pcg64mcg");
+    bench::<Pcg64Dxsm>(&mut g, "pcg64dxsm");
+    bench::<ChaCha8Rng>(&mut g, "chacha8");
+    bench::<ChaCha12Rng>(&mut g, "chacha12");
+    bench::<ChaCha20Rng>(&mut g, "chacha20");
+    bench::<StdRng>(&mut g, "std");
+    bench::<SmallRng>(&mut g, "small");
+
+    g.finish()
 }
 
-reseeding_bytes!(reseeding_chacha20_4k, 4);
-reseeding_bytes!(reseeding_chacha20_16k, 16);
-reseeding_bytes!(reseeding_chacha20_32k, 32);
-reseeding_bytes!(reseeding_chacha20_64k, 64);
-reseeding_bytes!(reseeding_chacha20_256k, 256);
-reseeding_bytes!(reseeding_chacha20_1M, 1024);
+pub fn init_from_seed(c: &mut Criterion) {
+    let mut g = c.benchmark_group("init_from_seed");
+    g.warm_up_time(Duration::from_millis(500));
+    g.measurement_time(Duration::from_millis(1000));
+
+    fn bench<R: SeedableRng>(g: &mut BenchmarkGroup<WallTime>, name: &str)
+    where
+        rand::distr::Standard: Distribution<<R as SeedableRng>::Seed>,
+    {
+        g.bench_function(name, |b| {
+            let mut rng = Pcg32::from_os_rng();
+            let seed = rng.random();
+            b.iter(|| R::from_seed(black_box(seed.clone())));
+        });
+    }
+
+    bench::<Pcg32>(&mut g, "pcg32");
+    bench::<Pcg64>(&mut g, "pcg64");
+    bench::<Pcg64Mcg>(&mut g, "pcg64mcg");
+    bench::<Pcg64Dxsm>(&mut g, "pcg64dxsm");
+    bench::<ChaCha8Rng>(&mut g, "chacha8");
+    bench::<ChaCha12Rng>(&mut g, "chacha12");
+    bench::<ChaCha20Rng>(&mut g, "chacha20");
+    bench::<StdRng>(&mut g, "std");
+    bench::<SmallRng>(&mut g, "small");
+
+    g.finish()
+}
+
+pub fn reseeding_bytes(c: &mut Criterion) {
+    let mut g = c.benchmark_group("reseeding_bytes");
+    g.warm_up_time(Duration::from_millis(500));
+    g.throughput(criterion::Throughput::Bytes(1024 * 1024));
+
+    fn bench(g: &mut BenchmarkGroup<WallTime>, thresh: u64) {
+        let name = format!("chacha20_{}k", thresh);
+        g.bench_function(name.as_str(), |b| {
+            let mut rng = ReseedingRng::new(ChaCha20Core::from_os_rng(), thresh * 1024, OsRng);
+            let mut buf = [0u8; 1024 * 1024];
+            b.iter(|| {
+                rng.fill_bytes(&mut buf);
+                black_box(&buf);
+            });
+        });
+    }
+
+    bench(&mut g, 4);
+    bench(&mut g, 16);
+    bench(&mut g, 32);
+    bench(&mut g, 64);
+    bench(&mut g, 256);
+    bench(&mut g, 1024);
+
+    g.finish()
+}

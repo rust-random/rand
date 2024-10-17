@@ -32,7 +32,7 @@ use rand::Rng;
 /// use rand_distr::{Pert, Distribution};
 ///
 /// let d = Pert::new(0., 5.).with_mode(2.5).unwrap();
-/// let v = d.sample(&mut rand::thread_rng());
+/// let v = d.sample(&mut rand::rng());
 /// println!("{} is from a PERT distribution", v);
 /// ```
 ///

@@ -258,12 +258,10 @@ uniform_int_impl! { i16, u16, u32 }
 uniform_int_impl! { i32, u32, u32 }
 uniform_int_impl! { i64, u64, u64 }
 uniform_int_impl! { i128, u128, u128 }
-uniform_int_impl! { isize, usize, usize }
 uniform_int_impl! { u8, u8, u32 }
 uniform_int_impl! { u16, u16, u32 }
 uniform_int_impl! { u32, u32, u32 }
 uniform_int_impl! { u64, u64, u64 }
-uniform_int_impl! { usize, usize, usize }
 uniform_int_impl! { u128, u128, u128 }
 
 #[cfg(feature = "simd_support")]
@@ -385,10 +383,189 @@ macro_rules! uniform_simd_int_impl {
 #[cfg(feature = "simd_support")]
 uniform_simd_int_impl! { (u8, i8), (u16, i16), (u32, i32), (u64, i64) }
 
+/// The back-end implementing [`UniformSampler`] for `usize`.
+///
+/// # Implementation notes
+///
+/// Sampling a `usize` value is usually used in relation to the length of an
+/// array or other memory structure, thus it is reasonable to assume that the
+/// vast majority of use-cases will have a maximum size under [`u32::MAX`].
+/// In part to optimise for this use-case, but mostly to ensure that results
+/// are portable across 32-bit and 64-bit architectures (as far as is possible),
+/// this implementation will use 32-bit sampling when possible.
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UniformUsize {
+    low: usize,
+    range: usize,
+    thresh: usize,
+    #[cfg(target_pointer_width = "64")]
+    mode64: bool,
+}
+
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl SampleUniform for usize {
+    type Sampler = UniformUsize;
+}
+
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl UniformSampler for UniformUsize {
+    type X = usize;
+
+    #[inline] // if the range is constant, this helps LLVM to do the
+              // calculations at compile-time.
+    fn new<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        if !(low < high) {
+            return Err(Error::EmptyRange);
+        }
+
+        UniformSampler::new_inclusive(low, high - 1)
+    }
+
+    #[inline] // if the range is constant, this helps LLVM to do the
+              // calculations at compile-time.
+    fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        if !(low <= high) {
+            return Err(Error::EmptyRange);
+        }
+
+        #[cfg(target_pointer_width = "64")]
+        let mode64 = high > (u32::MAX as usize);
+        #[cfg(target_pointer_width = "32")]
+        let mode64 = false;
+
+        let (range, thresh);
+        if cfg!(target_pointer_width = "64") && !mode64 {
+            let range32 = (high as u32).wrapping_sub(low as u32).wrapping_add(1);
+            range = range32 as usize;
+            thresh = if range32 > 0 {
+                (range32.wrapping_neg() % range32) as usize
+            } else {
+                0
+            };
+        } else {
+            range = high.wrapping_sub(low).wrapping_add(1);
+            thresh = if range > 0 {
+                range.wrapping_neg() % range
+            } else {
+                0
+            };
+        }
+
+        Ok(UniformUsize {
+            low,
+            range,
+            thresh,
+            #[cfg(target_pointer_width = "64")]
+            mode64,
+        })
+    }
+
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
+        #[cfg(target_pointer_width = "32")]
+        let mode32 = true;
+        #[cfg(target_pointer_width = "64")]
+        let mode32 = !self.mode64;
+
+        if mode32 {
+            let range = self.range as u32;
+            if range == 0 {
+                return rng.random::<u32>() as usize;
+            }
+
+            let thresh = self.thresh as u32;
+            let hi = loop {
+                let (hi, lo) = rng.random::<u32>().wmul(range);
+                if lo >= thresh {
+                    break hi;
+                }
+            };
+            self.low.wrapping_add(hi as usize)
+        } else {
+            let range = self.range as u64;
+            if range == 0 {
+                return rng.random::<u64>() as usize;
+            }
+
+            let thresh = self.thresh as u64;
+            let hi = loop {
+                let (hi, lo) = rng.random::<u64>().wmul(range);
+                if lo >= thresh {
+                    break hi;
+                }
+            };
+            self.low.wrapping_add(hi as usize)
+        }
+    }
+
+    #[inline]
+    fn sample_single<R: Rng + ?Sized, B1, B2>(
+        low_b: B1,
+        high_b: B2,
+        rng: &mut R,
+    ) -> Result<Self::X, Error>
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        if !(low < high) {
+            return Err(Error::EmptyRange);
+        }
+
+        if cfg!(target_pointer_width = "64") && high > (u32::MAX as usize) {
+            return UniformInt::<u64>::sample_single(low as u64, high as u64, rng)
+                .map(|x| x as usize);
+        }
+
+        UniformInt::<u32>::sample_single(low as u32, high as u32, rng).map(|x| x as usize)
+    }
+
+    #[inline]
+    fn sample_single_inclusive<R: Rng + ?Sized, B1, B2>(
+        low_b: B1,
+        high_b: B2,
+        rng: &mut R,
+    ) -> Result<Self::X, Error>
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        let low = *low_b.borrow();
+        let high = *high_b.borrow();
+        if !(low <= high) {
+            return Err(Error::EmptyRange);
+        }
+
+        if cfg!(target_pointer_width = "64") && high > (u32::MAX as usize) {
+            return UniformInt::<u64>::sample_single_inclusive(low as u64, high as u64, rng)
+                .map(|x| x as usize);
+        }
+
+        UniformInt::<u32>::sample_single_inclusive(low as u32, high as u32, rng).map(|x| x as usize)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::distr::Uniform;
+    use crate::distr::{Distribution, Uniform};
+    use core::fmt::Debug;
+    use core::ops::Add;
 
     #[test]
     fn test_uniform_bad_limits_equal_int() {
@@ -476,7 +653,7 @@ mod tests {
                 );)*
             }};
         }
-        t!(i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, i128, u128);
+        t!(i8, i16, i32, i64, i128, u8, u16, u32, u64, usize, u128);
 
         #[cfg(feature = "simd_support")]
         {
@@ -517,5 +694,96 @@ mod tests {
         #![allow(clippy::reversed_empty_ranges)]
         assert!(Uniform::try_from(100..=10).is_err());
         assert!(Uniform::try_from(100..=99).is_err());
+    }
+
+    #[test]
+    fn value_stability() {
+        fn test_samples<T: SampleUniform + Copy + Debug + PartialEq + Add<T>>(
+            lb: T,
+            ub: T,
+            ub_excl: T,
+            expected: &[T],
+        ) where
+            Uniform<T>: Distribution<T>,
+        {
+            let mut rng = crate::test::rng(897);
+            let mut buf = [lb; 6];
+
+            for x in &mut buf[0..3] {
+                *x = T::Sampler::sample_single_inclusive(lb, ub, &mut rng).unwrap();
+            }
+
+            let distr = Uniform::new_inclusive(lb, ub).unwrap();
+            for x in &mut buf[3..6] {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(&buf, expected);
+
+            let mut rng = crate::test::rng(897);
+
+            for x in &mut buf[0..3] {
+                *x = T::Sampler::sample_single(lb, ub_excl, &mut rng).unwrap();
+            }
+
+            let distr = Uniform::new(lb, ub_excl).unwrap();
+            for x in &mut buf[3..6] {
+                *x = rng.sample(&distr);
+            }
+            assert_eq!(&buf, expected);
+        }
+
+        test_samples(-105i8, 111, 112, &[-99, -48, 107, 72, -19, 56]);
+        test_samples(2i16, 1352, 1353, &[43, 361, 1325, 1109, 539, 1005]);
+        test_samples(
+            -313853i32,
+            13513,
+            13514,
+            &[-303803, -226673, 6912, -45605, -183505, -70668],
+        );
+        test_samples(
+            131521i64,
+            6542165,
+            6542166,
+            &[1838724, 5384489, 4893692, 3712948, 3951509, 4094926],
+        );
+        test_samples(
+            -0x8000_0000_0000_0000_0000_0000_0000_0000i128,
+            -1,
+            0,
+            &[
+                -30725222750250982319765550926688025855,
+                -75088619368053423329503924805178012357,
+                -64950748766625548510467638647674468829,
+                -41794017901603587121582892414659436495,
+                -63623852319608406524605295913876414006,
+                -17404679390297612013597359206379189023,
+            ],
+        );
+        test_samples(11u8, 218, 219, &[17, 66, 214, 181, 93, 165]);
+        test_samples(11u16, 218, 219, &[17, 66, 214, 181, 93, 165]);
+        test_samples(11u32, 218, 219, &[17, 66, 214, 181, 93, 165]);
+        test_samples(11u64, 218, 219, &[66, 181, 165, 127, 134, 139]);
+        test_samples(11u128, 218, 219, &[181, 127, 139, 167, 141, 197]);
+        test_samples(11usize, 218, 219, &[17, 66, 214, 181, 93, 165]);
+
+        #[cfg(feature = "simd_support")]
+        {
+            let lb = Simd::from([11u8, 0, 128, 127]);
+            let ub = Simd::from([218, 254, 254, 254]);
+            let ub_excl = ub + Simd::splat(1);
+            test_samples(
+                lb,
+                ub,
+                ub_excl,
+                &[
+                    Simd::from([13, 5, 237, 130]),
+                    Simd::from([126, 186, 149, 161]),
+                    Simd::from([103, 86, 234, 252]),
+                    Simd::from([35, 18, 225, 231]),
+                    Simd::from([106, 153, 246, 177]),
+                    Simd::from([195, 168, 149, 222]),
+                ],
+            );
+        }
     }
 }

@@ -32,7 +32,7 @@ use rand::Rng;
 /// use rand::prelude::*;
 /// use rand_distr::StandardNormal;
 ///
-/// let val: f64 = thread_rng().sample(StandardNormal);
+/// let val: f64 = rand::rng().sample(StandardNormal);
 /// println!("{}", val);
 /// ```
 ///
@@ -130,7 +130,7 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// // mean 2, standard deviation 3
 /// let normal = Normal::new(2.0, 3.0).unwrap();
-/// let v = normal.sample(&mut rand::thread_rng());
+/// let v = normal.sample(&mut rand::rng());
 /// println!("{} is from a N(2, 9) distribution", v)
 /// ```
 ///
@@ -215,7 +215,7 @@ where
     /// ```
     /// # use rand::prelude::*;
     /// # use rand_distr::{Normal, StandardNormal};
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// let z = StandardNormal.sample(&mut rng);
     /// let x1 = Normal::new(0.0, 1.0).unwrap().from_zscore(z);
     /// let x2 = Normal::new(2.0, -3.0).unwrap().from_zscore(z);
@@ -266,7 +266,7 @@ where
 ///
 /// // mean 2, standard deviation 3
 /// let log_normal = LogNormal::new(2.0, 3.0).unwrap();
-/// let v = log_normal.sample(&mut rand::thread_rng());
+/// let v = log_normal.sample(&mut rand::rng());
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -341,7 +341,7 @@ where
     /// ```
     /// # use rand::prelude::*;
     /// # use rand_distr::{LogNormal, StandardNormal};
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// let z = StandardNormal.sample(&mut rng);
     /// let x1 = LogNormal::from_mean_cv(3.0, 1.0).unwrap().from_zscore(z);
     /// let x2 = LogNormal::from_mean_cv(2.0, 4.0).unwrap().from_zscore(z);

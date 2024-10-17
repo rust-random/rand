@@ -11,7 +11,7 @@
 //!
 //! [`Uniform`] is the standard distribution to sample uniformly from a range;
 //! e.g. `Uniform::new_inclusive(1, 6).unwrap()` can sample integers from 1 to 6, like a
-//! standard die. [`Rng::gen_range`] supports any type supported by [`Uniform`].
+//! standard die. [`Rng::random_range`] supports any type supported by [`Uniform`].
 //!
 //! This distribution is provided with support for several primitive types
 //! (all integer and floating-point types) as well as [`std::time::Duration`],
@@ -26,14 +26,14 @@
 //! # Example usage
 //!
 //! ```
-//! use rand::{Rng, thread_rng};
+//! use rand::Rng;
 //! use rand::distr::Uniform;
 //!
-//! let mut rng = thread_rng();
+//! let mut rng = rand::rng();
 //! let side = Uniform::new(-10.0, 10.0).unwrap();
 //!
 //! // sample between 1 and 10 points
-//! for _ in 0..rng.gen_range(1..=10) {
+//! for _ in 0..rng.random_range(1..=10) {
 //!     // sample a point from the square with sides -10 - 10 in two dimensions
 //!     let (x, y) = (rng.sample(side), rng.sample(side));
 //!     println!("Point: {}, {}", x, y);
@@ -94,7 +94,7 @@
 //!
 //! let (low, high) = (MyF32(17.0f32), MyF32(22.0f32));
 //! let uniform = Uniform::new(low, high).unwrap();
-//! let x = uniform.sample(&mut thread_rng());
+//! let x = uniform.sample(&mut rand::rng());
 //! ```
 //!
 //! [`SampleUniform`]: crate::distr::uniform::SampleUniform
@@ -112,7 +112,7 @@ pub use float::UniformFloat;
 #[path = "uniform_int.rs"]
 mod int;
 #[doc(inline)]
-pub use int::UniformInt;
+pub use int::{UniformInt, UniformUsize};
 
 #[path = "uniform_other.rs"]
 mod other;
@@ -120,7 +120,7 @@ mod other;
 pub use other::{UniformChar, UniformDuration};
 
 use core::fmt;
-use core::ops::{Range, RangeInclusive};
+use core::ops::{Range, RangeInclusive, RangeTo, RangeToInclusive};
 
 use crate::distr::Distribution;
 use crate::{Rng, RngCore};
@@ -154,7 +154,7 @@ use serde::{Deserialize, Serialize};
 /// [`Uniform::new`] and [`Uniform::new_inclusive`] construct a uniform
 /// distribution sampling from the given range; these functions may do extra
 /// work up front to make sampling of multiple values faster. If only one sample
-/// from the range is required, [`Rng::gen_range`] can be more efficient.
+/// from the range is required, [`Rng::random_range`] can be more efficient.
 ///
 /// When sampling from a constant range, many calculations can happen at
 /// compile-time and all methods should be fast; for floating-point ranges and
@@ -178,7 +178,7 @@ use serde::{Deserialize, Serialize};
 /// use rand::distr::{Distribution, Uniform};
 ///
 /// let between = Uniform::try_from(10..10000).unwrap();
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let mut sum = 0;
 /// for _ in 0..1000 {
 ///     sum += between.sample(&mut rng);
@@ -186,18 +186,18 @@ use serde::{Deserialize, Serialize};
 /// println!("{}", sum);
 /// ```
 ///
-/// For a single sample, [`Rng::gen_range`] may be preferred:
+/// For a single sample, [`Rng::random_range`] may be preferred:
 ///
 /// ```
 /// use rand::Rng;
 ///
-/// let mut rng = rand::thread_rng();
-/// println!("{}", rng.gen_range(0..10));
+/// let mut rng = rand::rng();
+/// println!("{}", rng.random_range(0..10));
 /// ```
 ///
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
-/// [`Rng::gen_range`]: Rng::gen_range
+/// [`Rng::random_range`]: Rng::random_range
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(bound(serialize = "X::Sampler: Serialize")))]
@@ -315,10 +315,10 @@ pub trait UniformSampler: Sized {
     /// Note that to use this method in a generic context, the type needs to be
     /// retrieved via `SampleUniform::Sampler` as follows:
     /// ```
-    /// use rand::{thread_rng, distr::uniform::{SampleUniform, UniformSampler}};
+    /// use rand::distr::uniform::{SampleUniform, UniformSampler};
     /// # #[allow(unused)]
     /// fn sample_from_range<T: SampleUniform>(lb: T, ub: T) -> T {
-    ///     let mut rng = thread_rng();
+    ///     let mut rng = rand::rng();
     ///     <T as SampleUniform>::Sampler::sample_single(lb, ub, &mut rng).unwrap()
     /// }
     /// ```
@@ -393,7 +393,7 @@ where
         self
     }
 }
-impl<'a, Borrowed> SampleBorrow<Borrowed> for &'a Borrowed
+impl<Borrowed> SampleBorrow<Borrowed> for &Borrowed
 where
     Borrowed: SampleUniform,
 {
@@ -406,7 +406,7 @@ where
 /// Range that supports generating a single sample efficiently.
 ///
 /// Any type implementing this trait can be used to specify the sampled range
-/// for `Rng::gen_range`.
+/// for `Rng::random_range`.
 pub trait SampleRange<T> {
     /// Generate a sample from the given range.
     fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error>;
@@ -438,6 +438,41 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
         !(self.start() <= self.end())
     }
 }
+
+macro_rules! impl_sample_range_u {
+    ($t:ty) => {
+        impl SampleRange<$t> for RangeTo<$t> {
+            #[inline]
+            fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
+                <$t as SampleUniform>::Sampler::sample_single(0, self.end, rng)
+            }
+
+            #[inline]
+            fn is_empty(&self) -> bool {
+                0 == self.end
+            }
+        }
+
+        impl SampleRange<$t> for RangeToInclusive<$t> {
+            #[inline]
+            fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
+                <$t as SampleUniform>::Sampler::sample_single_inclusive(0, self.end, rng)
+            }
+
+            #[inline]
+            fn is_empty(&self) -> bool {
+                false
+            }
+        }
+    };
+}
+
+impl_sample_range_u!(u8);
+impl_sample_range_u!(u16);
+impl_sample_range_u!(u32);
+impl_sample_range_u!(u64);
+impl_sample_range_u!(u128);
+impl_sample_range_u!(usize);
 
 #[cfg(test)]
 mod tests {
@@ -529,12 +564,6 @@ mod tests {
             }
             assert_eq!(&buf, expected_multiple);
         }
-
-        // We test on a sub-set of types; possibly we should do more.
-        // TODO: SIMD types
-
-        test_samples(11u8, 219, &[17, 66, 214], &[181, 93, 165]);
-        test_samples(11u32, 219, &[17, 66, 214], &[181, 93, 165]);
 
         test_samples(
             0f32,

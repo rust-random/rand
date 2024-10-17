@@ -35,7 +35,7 @@ use rand::Rng;
 /// use rand::prelude::*;
 /// use rand_distr::Zipf;
 ///
-/// let val: f64 = thread_rng().sample(Zipf::new(10, 1.5).unwrap());
+/// let val: f64 = rand::rng().sample(Zipf::new(10, 1.5).unwrap());
 /// println!("{}", val);
 /// ```
 ///

@@ -75,8 +75,6 @@ impl RngCore for StepRng {
     }
 }
 
-rand_core::impl_try_rng_from_rng_core!(StepRng);
-
 #[cfg(test)]
 mod tests {
     #[cfg(any(feature = "alloc", feature = "serde"))]

@@ -14,7 +14,7 @@
 //!
 //! ```
 //! use rand::prelude::*;
-//! # let mut r = StdRng::from_rng(thread_rng());
+//! # let mut r = StdRng::from_rng(&mut rand::rng());
 //! # let _: f32 = r.random();
 //! ```
 
@@ -31,8 +31,5 @@ pub use crate::rngs::StdRng;
 pub use crate::rngs::ThreadRng;
 #[doc(no_inline)]
 pub use crate::seq::{IndexedMutRandom, IndexedRandom, IteratorRandom, SliceRandom};
-#[doc(no_inline)]
-#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-pub use crate::{random, thread_rng};
 #[doc(no_inline)]
 pub use crate::{CryptoRng, Rng, RngCore, SeedableRng};

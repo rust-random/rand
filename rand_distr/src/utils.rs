@@ -67,10 +67,7 @@ pub(crate) fn log_gamma<F: Float>(x: F) -> F {
 /// * `pdf`: the probability density function
 /// * `zero_case`: manual sampling from the tail when we chose the
 ///    bottom box (i.e. i == 0)
-
-// the perf improvement (25-50%) is definitely worth the extra code
-// size from force-inlining.
-#[inline(always)]
+#[inline(always)] // Forced inlining improves the perf by 25-50%
 pub(crate) fn ziggurat<R: Rng + ?Sized, P, Z>(
     rng: &mut R,
     symmetric: bool,
