@@ -139,11 +139,13 @@ impl Bernoulli {
 
     #[inline]
     /// Returns the probability (`p`) of the distribution.
+    ///
+    /// This value may differ slightly from the input due to loss of precision.
     pub fn p(&self) -> f64 {
         if self.p_int == ALWAYS_TRUE {
             1.0
         } else {
-            f64::from(self.p_int) / SCALE
+            (self.p_int as f64) / SCALE
         }
     }
 }
