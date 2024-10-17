@@ -11,7 +11,7 @@ Rand is a set of crates supporting (pseudo-)random generators:
 -   Built over a standard RNG trait: [`rand_core::RngCore`](https://docs.rs/rand_core/latest/rand_core/trait.RngCore.html)
 -   With fast implementations of both [strong](https://rust-random.github.io/book/guide-rngs.html#cryptographically-secure-pseudo-random-number-generators-csprngs) and
     [small](https://rust-random.github.io/book/guide-rngs.html#basic-pseudo-random-number-generators-prngs) generators: [`rand::rngs`](https://docs.rs/rand/latest/rand/rngs/index.html), and more RNGs: [`rand_chacha`](https://docs.rs/rand_chacha), [`rand_xoshiro`](https://docs.rs/rand_xoshiro/), [`rand_pcg`](https://docs.rs/rand_pcg/), [rngs repo](https://github.com/rust-random/rngs/)
--   [`rand::rng`](https://docs.rs/rand/latest/rand/fn.rng.html) is an asymtotically-fast, automatically-seeded and reasonably strong generator available on all `std` targets
+-   [`rand::rng`](https://docs.rs/rand/latest/rand/fn.rng.html) is an asymptotically-fast, automatically-seeded and reasonably strong generator available on all `std` targets
 -   Direct support for seeding generators from the [`getrandom` crate](https://crates.io/crates/getrandom)
 
 With broad support for random value generation and random processes:
