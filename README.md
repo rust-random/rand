@@ -53,7 +53,7 @@ in memory longer than necessary and do not
 [`zeroize`](https://crates.io/crates/zeroize) used buffers and generators.
 We do not automatically reseed on fork (see
 [`ThreadRng`](https://docs.rs/rand/latest/rand/rngs/struct.ThreadRng.html)).
-Rand cannot provide any guarantees of the security.
+Rand cannot provide any guarantees of security.
 
 
 Documentation:
