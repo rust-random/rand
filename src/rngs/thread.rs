@@ -45,12 +45,30 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// [`ThreadRng::default()`].
 /// The handle cannot be passed between threads (is not `Send` or `Sync`).
 ///
-/// `ThreadRng` uses the same CSPRNG as [`StdRng`], ChaCha12. As with
-/// [`StdRng`], the algorithm may be changed, subject to reasonable expectations
-/// of security and performance.
+/// # Security
 ///
-/// `ThreadRng` is automatically seeded from [`OsRng`] with periodic reseeding
-/// (every 64 kiB — see [`ReseedingRng`] documentation for details).
+/// Security must be considered relative to a threat model and validation
+/// requirements. The Rand project can provide no guarantee of fitness for
+/// purpose. The design criteria for `ThreadRng` are as follows:
+///
+/// - Automatic seeding via [`OsRng`] and periodically thereafter (see
+///   ([`ReseedingRng`] documentation). Limitation: there is no automatic
+///   reseeding on process fork (see [below](#fork)).
+/// - A rigorusly analyzed, unpredictable (cryptographic) pseudo-random generator
+///   (see [the book on security](https://rust-random.github.io/book/guide-rngs.html#security)).
+///   The currently selected algorithm is ChaCha (12-rounds).
+///   See also [`StdRng`] documentation.
+/// - Not to leak internal state through [`Debug`] or serialization
+///   implementations.
+/// - No further protections exist to in-memory state. In particular, the
+///   implementation is not required to zero memory on exit (of the process or
+///   thread). (This may change in the future.)
+/// - Be fast enough for general-purpose usage. Note in particular that
+///   `ThreadRng` is designed to be a "fast, reasonably secure generator"
+///   (where "reasonably secure" implies the above criteria).
+///
+/// We leave it to the user to determine whether this generator meets their
+/// security requirements. For an alternative, see [`OsRng`].
 ///
 /// # Fork
 ///
@@ -69,19 +87,6 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// Methods on `ThreadRng` are not reentrant-safe and thus should not be called
 /// from an interrupt (e.g. a fork handler) unless it can be guaranteed that no
 /// other method on the same `ThreadRng` is currently executing.
-///
-/// # Security
-///
-/// Security must be considered relative to a threat model and validation
-/// requirements. `ThreadRng` attempts to meet basic security considerations
-/// for producing unpredictable random numbers: use a CSPRNG, use a
-/// recommended platform-specific seed ([`OsRng`]), and avoid
-/// leaking internal secrets e.g. via [`Debug`] implementation or serialization.
-/// `ThreadRng` stores its key and the most recently generated block of outputs
-/// in memory and does not zeroize its memory on drop.
-/// `ThreadRng` is not *automatically* reseeded on fork (see [above](#fork)).
-///
-/// For a more secure alternative, see [`OsRng`].
 ///
 /// [`ReseedingRng`]: crate::rngs::ReseedingRng
 /// [`StdRng`]: crate::rngs::StdRng
@@ -123,9 +128,9 @@ thread_local!(
     }
 );
 
-/// Access a local, pre-initialized generator
+/// Access a fast, pre-initialized generator
 ///
-/// This is a reasonably fast unpredictable thread-local instance of [`ThreadRng`].
+/// This is a handle to the local [`ThreadRng`].
 ///
 /// See also [`crate::rngs`] for alternatives.
 ///
@@ -150,16 +155,7 @@ thread_local!(
 ///
 /// # Security
 ///
-/// Security must be considered relative to a threat model and validation
-/// requirements. `ThreadRng` attempts to meet basic security considerations
-/// for producing unpredictable random numbers: use a CSPRNG, use a
-/// recommended platform-specific seed ([`OsRng`]), and avoid
-/// leaking internal secrets e.g. via [`Debug`] implementation or serialization.
-/// `ThreadRng` stores its key and the most recently generated block of outputs
-/// in memory and does not zeroize its memory on drop.
-/// `ThreadRng` is not *automatically* reseeded on fork (see [`ThreadRng#fork`]).
-///
-/// For a more secure alternative, see [`OsRng`].
+/// Refer to [`ThreadRng#Security`].
 pub fn rng() -> ThreadRng {
     let rng = THREAD_RNG_KEY.with(|t| t.clone());
     ThreadRng { rng }
