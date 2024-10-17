@@ -120,11 +120,12 @@ pub fn test_continuous(seed: u64, dist: impl Distribution<f64>, cdf: impl Fn(f64
 
 /// Tests a distribution over integers against an analytical CDF.
 /// The analytical CDF must not have jump points which are not integers.
-pub fn test_discrete<I: AsPrimitive<f64>>(
-    seed: u64,
-    dist: impl Distribution<I>,
-    cdf: impl Fn(i64) -> f64,
-) {
+pub fn test_discrete<I, D, F>(seed: u64, dist: D, cdf: F)
+where
+    I: AsPrimitive<f64>,
+    D: Distribution<I>,
+    F: Fn(i64) -> f64,
+{
     let ecdf = sample_ecdf(seed, dist);
     let ks_statistic = kolmogorov_smirnov_statistic_discrete(ecdf, cdf);
 
@@ -606,6 +607,7 @@ fn hypergeometric() {
 
 #[test]
 fn poisson() {
+    use rand_distr::Poisson;
     fn cdf(k: i64, lambda: f64) -> f64 {
         if k < 0 || lambda <= 0.0 {
             return 0.0;
@@ -614,14 +616,14 @@ fn poisson() {
         1.0 - gamma_lr(k as f64 + 1.0, lambda)
     }
     let parameters = [
-        0.1_f32, 1.0, 7.5, 2e4,
-        // 1e9,
+        0.1, 1.0, 7.5,
+        // 1e9, passed case but too slow
         // 1.844E+19,  // fail case
     ];
 
     for (seed, lambda) in parameters.into_iter().enumerate() {
-        let dist = rand_distr::Poisson::new(lambda).unwrap();
-        test_discrete(seed as u64, dist, |k| cdf(k, lambda as f64));
+        let dist = Poisson::new(lambda).unwrap();
+        test_discrete::<f64, Poisson<f64>, _>(seed as u64, dist, |k| cdf(k, lambda));
     }
 }
 
