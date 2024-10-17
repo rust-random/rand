@@ -45,7 +45,7 @@ impl std::error::Error for Error {}
 /// use rand_distr::{NormalInverseGaussian, Distribution};
 ///
 /// let norm_inv_gauss = NormalInverseGaussian::new(2.0, 1.0).unwrap();
-/// let v = norm_inv_gauss.sample(&mut rand::thread_rng());
+/// let v = norm_inv_gauss.sample(&mut rand::rng());
 /// println!("{} is from a normal-inverse Gaussian(2, 1) distribution", v);
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq)]

@@ -31,7 +31,7 @@ use rand::Rng;
 /// ```
 /// use rand_distr::{UnitDisc, Distribution};
 ///
-/// let v: [f64; 2] = UnitDisc.sample(&mut rand::thread_rng());
+/// let v: [f64; 2] = UnitDisc.sample(&mut rand::rng());
 /// println!("{:?} is from the unit Disc.", v)
 /// ```
 #[derive(Clone, Copy, Debug)]

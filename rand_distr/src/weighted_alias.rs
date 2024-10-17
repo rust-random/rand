@@ -47,7 +47,7 @@ use serde::{Deserialize, Serialize};
 /// let choices = vec!['a', 'b', 'c'];
 /// let weights = vec![2, 1, 1];
 /// let dist = WeightedAliasIndex::new(weights).unwrap();
-/// let mut rng = thread_rng();
+/// let mut rng = rand::rng();
 /// for _ in 0..100 {
 ///     // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c'
 ///     println!("{}", choices[dist.sample(&mut rng)]);
@@ -275,9 +275,10 @@ where
     }
 }
 
-/// Trait that must be implemented for weights, that are used with
-/// [`WeightedAliasIndex`]. Currently no guarantees on the correctness of
-/// [`WeightedAliasIndex`] are given for custom implementations of this trait.
+/// Weight bound for [`WeightedAliasIndex`]
+///
+/// Currently no guarantees on the correctness of [`WeightedAliasIndex`] are
+/// given for custom implementations of this trait.
 pub trait AliasableWeight:
     Sized
     + Copy
@@ -365,7 +366,6 @@ impl_weight_for_int!(u64);
 impl_weight_for_int!(u32);
 impl_weight_for_int!(u16);
 impl_weight_for_int!(u8);
-impl_weight_for_int!(isize);
 impl_weight_for_int!(i128);
 impl_weight_for_int!(i64);
 impl_weight_for_int!(i32);

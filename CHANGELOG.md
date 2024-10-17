@@ -13,14 +13,25 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Add `IndexedRandom::choose_multiple_array`, `index::sample_array` (#1453, #1469)
 - Bump the MSRV to 1.61.0
 - Rename `Rng::gen` to `Rng::random` to avoid conflict with the new `gen` keyword in Rust 2024 (#1435)
-- Move all benchmarks to new `benches` crate (#1439)
+- Move all benchmarks to new `benches` crate (#1439) and migrate to Criterion (#1490)
 - Annotate panicking methods with `#[track_caller]` (#1442, #1447)
 - Enable feature `small_rng` by default (#1455)
 - Allow `UniformFloat::new` samples and `UniformFloat::sample_single` to yield `high` (#1462)
 - Fix portability of `rand::distributions::Slice` (#1469)
 - Rename `rand::distributions` to `rand::distr` (#1470)
 - The `serde1` feature has been renamed `serde` (#1477)
-- Add `p()` for `Bernoulli` to access probability.
+- Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480).
+- Add `p()` for `Bernoulli` to access probability (#1481)
+- Add `UniformUsize` and use to make `Uniform` for `usize` portable (#1487)
+- Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` and `Fill` and usage as a `WeightedAliasIndex` weight (#1487)
+- Require `Clone` and `AsRef` bound for `SeedableRng::Seed`. (#1491)
+- Improve SmallRng initialization performance (#1482)
+- Implement `Distribution<u64>` for `Poisson<f64>` (#1498)
+- Limit the maximal acceptable lambda for `Poisson` to solve (#1312) (#1498)
+- Rename `Rng::gen_iter` to `random_iter` (#1500)
+- Rename `rand::thread_rng()` to `rand::rng()`, and remove from the prelude (#1506)
+- Remove `rand::random()` from the prelude (#1506)
+- Rename `Rng::gen_range` to `random_range`, `gen_bool` to `random_bool`, `gen_ratio` to `random_ratio` (#1505)
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)

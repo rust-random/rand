@@ -9,7 +9,7 @@
 //! `IndexedRandom`, `IndexedMutRandom`, `SliceRandom`
 
 use super::increasing_uniform::IncreasingUniform;
-use super::{gen_index, index};
+use super::index;
 #[cfg(feature = "alloc")]
 use crate::distr::uniform::{SampleBorrow, SampleUniform};
 #[cfg(feature = "alloc")]
@@ -42,11 +42,10 @@ pub trait IndexedRandom: Index<usize> {
     /// # Example
     ///
     /// ```
-    /// use rand::thread_rng;
     /// use rand::seq::IndexedRandom;
     ///
     /// let choices = [1, 2, 4, 8, 16, 32];
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// println!("{:?}", choices.choose(&mut rng));
     /// assert_eq!(choices[..0].choose(&mut rng), None);
     /// ```
@@ -57,7 +56,7 @@ pub trait IndexedRandom: Index<usize> {
         if self.is_empty() {
             None
         } else {
-            Some(&self[gen_index(rng, self.len())])
+            Some(&self[rng.random_range(..self.len())])
         }
     }
 
@@ -75,7 +74,7 @@ pub trait IndexedRandom: Index<usize> {
     /// ```
     /// use rand::seq::IndexedRandom;
     ///
-    /// let mut rng = &mut rand::thread_rng();
+    /// let mut rng = &mut rand::rng();
     /// let sample = "Hello, audience!".as_bytes();
     ///
     /// // collect the results into a vector:
@@ -112,7 +111,7 @@ pub trait IndexedRandom: Index<usize> {
     /// ```
     /// use rand::seq::IndexedRandom;
     ///
-    /// let mut rng = &mut rand::thread_rng();
+    /// let mut rng = &mut rand::rng();
     /// let sample = "Hello, audience!".as_bytes();
     ///
     /// let a: [u8; 3] = sample.choose_multiple_array(&mut rng).unwrap();
@@ -147,7 +146,7 @@ pub trait IndexedRandom: Index<usize> {
     /// use rand::prelude::*;
     ///
     /// let choices = [('a', 2), ('b', 1), ('c', 1), ('d', 0)];
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c',
     /// // and 'd' will never be printed
     /// println!("{:?}", choices.choose_weighted(&mut rng, |item| item.1).unwrap().0);
@@ -189,13 +188,19 @@ pub trait IndexedRandom: Index<usize> {
     /// if the "nightly" feature is enabled, or `O(length)` space and
     /// `O(length + amount * log length)` time otherwise.
     ///
+    /// # Known issues
+    ///
+    /// The algorithm currently used to implement this method loses accuracy
+    /// when small values are used for weights.
+    /// See [#1476](https://github.com/rust-random/rand/issues/1476).
+    ///
     /// # Example
     ///
     /// ```
     /// use rand::prelude::*;
     ///
     /// let choices = [('a', 2), ('b', 1), ('c', 1)];
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// // First Draw * Second Draw = total odds
     /// // -----------------------
     /// // (50% * 50%) + (25% * 67%) = 41.7% chance that the output is `['a', 'b']` in some order.
@@ -253,7 +258,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
             None
         } else {
             let len = self.len();
-            Some(&mut self[gen_index(rng, len)])
+            Some(&mut self[rng.random_range(..len)])
         }
     }
 
@@ -302,7 +307,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
 /// ```
 /// use rand::seq::SliceRandom;
 ///
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let mut bytes = "Hello, random!".to_string().into_bytes();
 /// bytes.shuffle(&mut rng);
 /// let str = String::from_utf8(bytes).unwrap();
@@ -322,9 +327,8 @@ pub trait SliceRandom: IndexedMutRandom {
     ///
     /// ```
     /// use rand::seq::SliceRandom;
-    /// use rand::thread_rng;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// let mut y = [1, 2, 3, 4, 5];
     /// println!("Unshuffled: {:?}", y);
     /// y.shuffle(&mut rng);
@@ -393,7 +397,7 @@ impl<T> SliceRandom for [T] {
         // It ensures that the last `amount` elements of the slice
         // are randomly selected from the whole slice.
 
-        // `IncreasingUniform::next_index()` is faster than `gen_index`
+        // `IncreasingUniform::next_index()` is faster than `Rng::random_range`
         // but only works for 32 bit integers
         // So we must use the slow method if the slice is longer than that.
         if self.len() < (u32::MAX as usize) {
@@ -404,7 +408,7 @@ impl<T> SliceRandom for [T] {
             }
         } else {
             for i in m..self.len() {
-                let index = gen_index(rng, i + 1);
+                let index = rng.random_range(..i + 1);
                 self.swap(i, index);
             }
         }

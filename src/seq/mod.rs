@@ -43,23 +43,8 @@ pub use iterator::IteratorRandom;
 pub use slice::SliceChooseIter;
 pub use slice::{IndexedMutRandom, IndexedRandom, SliceRandom};
 
-use crate::Rng;
-
-// Sample a number uniformly between 0 and `ubound`. Uses 32-bit sampling where
-// possible, primarily in order to produce the same output on 32-bit and 64-bit
-// platforms.
-#[inline]
-fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
-    if ubound <= (u32::MAX as usize) {
-        rng.gen_range(0..ubound as u32) as usize
-    } else {
-        rng.gen_range(0..ubound)
-    }
-}
-
 /// Low-level API for sampling indices
 pub mod index {
-    use super::gen_index;
     use crate::Rng;
 
     #[cfg(feature = "alloc")]
@@ -84,7 +69,7 @@ pub mod index {
         // Floyd's algorithm
         let mut indices = [0; N];
         for (i, j) in (len - N..len).enumerate() {
-            let t = gen_index(rng, j + 1);
+            let t = rng.random_range(..j + 1);
             if let Some(pos) = indices[0..i].iter().position(|&x| x == t) {
                 indices[pos] = j;
             }

@@ -14,25 +14,24 @@
 //!
 //! # Quick Start
 //!
-//! To get you started quickly, the easiest and highest-level way to get
-//! a random value is to use [`random()`]; alternatively you can use
-//! [`thread_rng()`]. The [`Rng`] trait provides a useful API on all RNGs, while
-//! the [`distr`] and [`seq`] modules provide further
-//! functionality on top of RNGs.
-//!
 //! ```
+//! // The prelude import enables methods we use below, specifically
+//! // Rng::random, Rng::sample, SliceRandom::shuffle and IndexedRandom::choose.
 //! use rand::prelude::*;
 //!
-//! if rand::random() { // generates a boolean
-//!     // Try printing a random unicode code point (probably a bad idea)!
-//!     println!("char: {}", rand::random::<char>());
-//! }
+//! // Get an RNG:
+//! let mut rng = rand::rng();
 //!
-//! let mut rng = rand::thread_rng();
-//! let y: f64 = rng.random(); // generates a float between 0 and 1
+//! // Try printing a random unicode code point (probably a bad idea)!
+//! println!("char: '{}'", rng.random::<char>());
+//! // Try printing a random alphanumeric value instead!
+//! println!("alpha: '{}'", rng.sample(rand::distr::Alphanumeric) as char);
 //!
+//! // Generate and shuffle a sequence:
 //! let mut nums: Vec<i32> = (1..100).collect();
 //! nums.shuffle(&mut rng);
+//! // And take a random pick (yes, we didn't need to shuffle first!):
+//! let _ = nums.choose(&mut rng);
 //! ```
 //!
 //! # The Book
@@ -105,7 +104,18 @@ pub mod seq;
 
 // Public exports
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-pub use crate::rngs::thread::thread_rng;
+pub use crate::rngs::thread::rng;
+
+/// Access the thread-local generator
+///
+/// Use [`rand::rng()`](rng()) instead.
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[deprecated(since = "0.9.0", note = "renamed to `rng`")]
+#[inline]
+pub fn thread_rng() -> crate::rngs::ThreadRng {
+    rng()
+}
+
 pub use rng::{Fill, Rng};
 
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
@@ -113,7 +123,7 @@ use crate::distr::{Distribution, Standard};
 
 /// Generates a random value using the thread-local random number generator.
 ///
-/// This function is simply a shortcut for `thread_rng().gen()`:
+/// This function is simply a shortcut for `rand::rng().gen()`:
 ///
 /// -   See [`ThreadRng`] for documentation of the generator and security
 /// -   See [`Standard`] for documentation of supported types and distributions
@@ -144,9 +154,9 @@ use crate::distr::{Distribution, Standard};
 ///     *x = rand::random()
 /// }
 ///
-/// // can be made faster by caching thread_rng
+/// // can be made faster by caching rand::rng
 ///
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 ///
 /// for x in v.iter_mut() {
 ///     *x = rng.random();
@@ -161,7 +171,7 @@ pub fn random<T>() -> T
 where
     Standard: Distribution<T>,
 {
-    thread_rng().random()
+    rng().random()
 }
 
 #[cfg(test)]
@@ -179,13 +189,13 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
     fn test_random() {
-        let _n: usize = random();
+        let _n: u64 = random();
         let _f: f32 = random();
         let _o: Option<Option<i8>> = random();
         #[allow(clippy::type_complexity)]
         let _many: (
             (),
-            (usize, isize, Option<(u32, (bool,))>),
+            Option<(u32, (bool,))>,
             (u8, i8, u16, i16, u32, i32, u64, i64),
             (f32, (f64, (f64,))),
         ) = random();

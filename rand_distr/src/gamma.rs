@@ -47,7 +47,7 @@ use serde::{Deserialize, Serialize};
 /// use rand_distr::{Distribution, Gamma};
 ///
 /// let gamma = Gamma::new(2.0, 5.0).unwrap();
-/// let v = gamma.sample(&mut rand::thread_rng());
+/// let v = gamma.sample(&mut rand::rng());
 /// println!("{} is from a Gamma(2, 5) distribution", v);
 /// ```
 ///

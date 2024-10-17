@@ -34,10 +34,10 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use rand::{Rng, thread_rng};
+/// use rand::Rng;
 /// use rand::distr::Alphanumeric;
 ///
-/// let mut rng = thread_rng();
+/// let mut rng = rand::rng();
 /// let chars: String = (0..7).map(|_| rng.sample(Alphanumeric) as char).collect();
 /// println!("Random chars: {}", chars);
 /// ```
@@ -46,7 +46,7 @@ use serde::{Deserialize, Serialize};
 /// a random `String`, and offers more efficient allocation:
 /// ```
 /// use rand::distr::{Alphanumeric, DistString};
-/// let string = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
+/// let string = Alphanumeric.sample_string(&mut rand::rng(), 16);
 /// println!("Random string: {}", string);
 /// ```
 ///
@@ -66,7 +66,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// - [Wikipedia article on Password Strength](https://en.wikipedia.org/wiki/Password_strength)
 /// - [Diceware for generating memorable passwords](https://en.wikipedia.org/wiki/Diceware)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Alphanumeric;
 
@@ -163,7 +163,7 @@ impl Distribution<bool> for Standard {
 /// #![feature(portable_simd)]
 /// use std::simd::prelude::*;
 /// use rand::prelude::*;
-/// let mut rng = thread_rng();
+/// let mut rng = rand::rng();
 ///
 /// let x = u16x8::splat(rng.random::<u8>() as u16);
 /// let mask = u16x8::splat(1) << u16x8::from([0, 1, 2, 3, 4, 5, 6, 7]);

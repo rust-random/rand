@@ -15,26 +15,41 @@ criterion = "0.5"
 criterion-cycles-per-byte = "0.6"
 
 [[bench]]
-name = "distr"
-path = "src/distr.rs"
+name = "array"
 harness = false
 
 [[bench]]
-name = "uniform"
-path = "src/uniform.rs"
+name = "bool"
+harness = false
+
+[[bench]]
+name = "distr"
+harness = false
+
+[[bench]]
+name = "generators"
 harness = false
 
 [[bench]]
 name = "seq_choose"
-path = "src/seq_choose.rs"
 harness = false
 
 [[bench]]
 name = "shuffle"
-path = "src/shuffle.rs"
+harness = false
+
+[[bench]]
+name = "standard"
+harness = false
+
+[[bench]]
+name = "uniform"
 harness = false
 
 [[bench]]
 name = "uniform_float"
-path = "src/uniform_float.rs"
+harness = false
+
+[[bench]]
+name = "weighted"
 harness = false

@@ -33,29 +33,35 @@ impl SeedableRng for Xoshiro256PlusPlus {
     /// mapped to a different seed.
     #[inline]
     fn from_seed(seed: [u8; 32]) -> Xoshiro256PlusPlus {
-        if seed.iter().all(|&x| x == 0) {
-            return Self::seed_from_u64(0);
-        }
         let mut state = [0; 4];
         read_u64_into(&seed, &mut state);
+        // Check for zero on aligned integers for better code generation.
+        // Furtermore, seed_from_u64(0) will expand to a constant when optimized.
+        if state.iter().all(|&x| x == 0) {
+            return Self::seed_from_u64(0);
+        }
         Xoshiro256PlusPlus { s: state }
     }
 
     /// Create a new `Xoshiro256PlusPlus` from a `u64` seed.
     ///
     /// This uses the SplitMix64 generator internally.
+    #[inline]
     fn seed_from_u64(mut state: u64) -> Self {
         const PHI: u64 = 0x9e3779b97f4a7c15;
-        let mut seed = Self::Seed::default();
-        for chunk in seed.as_mut().chunks_mut(8) {
+        let mut s = [0; 4];
+        for i in s.iter_mut() {
             state = state.wrapping_add(PHI);
             let mut z = state;
             z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
             z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
             z = z ^ (z >> 31);
-            chunk.copy_from_slice(&z.to_le_bytes());
+            *i = z;
         }
-        Self::from_seed(seed)
+        // By using a non-zero PHI we are guaranteed to generate a non-zero state
+        // Thus preventing a recursion between from_seed and seed_from_u64.
+        debug_assert_ne!(s, [0; 4]);
+        Xoshiro256PlusPlus { s }
     }
 }
 
@@ -95,8 +101,6 @@ impl RngCore for Xoshiro256PlusPlus {
     }
 }
 
-rand_core::impl_try_rng_from_rng_core!(Xoshiro256PlusPlus);
-
 #[cfg(test)]
 mod tests {
     use super::Xoshiro256PlusPlus;
@@ -121,6 +125,28 @@ mod tests {
             12406186145184390807,
             15849039046786891736,
             10450023813501588000,
+        ];
+        for &e in &expected {
+            assert_eq!(rng.next_u64(), e);
+        }
+    }
+
+    #[test]
+    fn stable_seed_from_u64() {
+        // We don't guarantee value-stability for SmallRng but this
+        // could influence keeping stability whenever possible (e.g. after optimizations).
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let expected = [
+            5987356902031041503,
+            7051070477665621255,
+            6633766593972829180,
+            211316841551650330,
+            9136120204379184874,
+            379361710973160858,
+            15813423377499357806,
+            15596884590815070553,
+            5439680534584881407,
+            1369371744833522710,
         ];
         for &e in &expected {
             assert_eq!(rng.next_u64(), e);

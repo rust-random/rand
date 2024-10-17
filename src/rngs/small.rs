@@ -83,7 +83,8 @@ impl SeedableRng for SmallRng {
 
     #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
-        // With MSRV >= 1.77: let seed = *seed.first_chunk().unwrap();
+        // This is for compatibility with 32-bit platforms where Rng::Seed has a different seed size
+        // With MSRV >= 1.77: let seed = *seed.first_chunk().unwrap()
         const LEN: usize = core::mem::size_of::<<Rng as SeedableRng>::Seed>();
         let seed = (&seed[..LEN]).try_into().unwrap();
         SmallRng(Rng::from_seed(seed))
@@ -112,20 +113,18 @@ impl RngCore for SmallRng {
     }
 }
 
-rand_core::impl_try_rng_from_rng_core!(SmallRng);
-
 impl SmallRng {
-    /// Construct an instance seeded from the thread-local RNG
+    /// Construct an instance seeded from `rand::rng`
     ///
     /// # Panics
     ///
-    /// This method panics only if [`thread_rng`](crate::thread_rng) fails to
+    /// This method panics only if [`crate::rng()`] fails to
     /// initialize.
     #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
     #[inline(always)]
     pub fn from_thread_rng() -> Self {
         let mut seed = <Rng as SeedableRng>::Seed::default();
-        crate::thread_rng().fill_bytes(seed.as_mut());
+        crate::rng().fill_bytes(seed.as_mut());
         SmallRng(Rng::from_seed(seed))
     }
 }

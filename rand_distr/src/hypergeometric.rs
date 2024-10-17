@@ -54,7 +54,7 @@ enum SamplingMethod {
 /// use rand_distr::{Distribution, Hypergeometric};
 ///
 /// let hypergeo = Hypergeometric::new(60, 24, 7).unwrap();
-/// let v = hypergeo.sample(&mut rand::thread_rng());
+/// let v = hypergeo.sample(&mut rand::rng());
 /// println!("{} is from a hypergeometric distribution", v);
 /// ```
 #[derive(Copy, Clone, Debug, PartialEq)]

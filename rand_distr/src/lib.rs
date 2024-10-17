@@ -211,7 +211,7 @@ mod normal;
 mod normal_inverse_gaussian;
 mod pareto;
 mod pert;
-mod poisson;
+pub(crate) mod poisson;
 mod skew_normal;
 mod student_t;
 mod triangular;
