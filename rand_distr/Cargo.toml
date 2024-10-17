@@ -44,4 +44,4 @@ rand = { path = "..", version = "=0.9.0-alpha.1", features = ["small_rng"] }
 # Histogram implementation for testing uniformity
 average = { version = "0.15", features = [ "std" ] }
 # Special functions for testing distributions
-special = "0.10.3"
+special = "0.11.0"
