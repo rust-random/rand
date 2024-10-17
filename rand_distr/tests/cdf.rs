@@ -234,8 +234,6 @@ fn log_normal() {
         (1.0, 100.0),
     ];
 
-    println!("{}", cdf(5.0, 2.0, 1.5));
-
     for (seed, (mean, std_dev)) in parameters.into_iter().enumerate() {
         let dist = rand_distr::LogNormal::new(mean, std_dev).unwrap();
         test_continuous(seed as u64, dist, |x| cdf(x, mean, std_dev));
@@ -298,7 +296,7 @@ fn weibull() {
         (10.0, 0.1),
         (0.1, 10.0),
         (15.0, 20.0),
-        // (1000.0, 0.001), // Fail case
+        (1000.0, 0.01),
     ];
 
     for (seed, (lambda, k)) in parameters.into_iter().enumerate() {
@@ -423,10 +421,7 @@ fn chi_squared() {
         (x / 2.0).inc_gamma(k / 2.0)
     }
 
-    let parameters = [
-        // 0.01, // Fail case
-        0.1, 1.0, 2.0, 10.0, 100.0, 1000.0,
-    ];
+    let parameters = [0.1, 1.0, 2.0, 10.0, 100.0, 1000.0];
 
     for (seed, k) in parameters.into_iter().enumerate() {
         let dist = rand_distr::ChiSquared::new(k).unwrap();
@@ -487,13 +482,7 @@ fn beta() {
         x.inc_beta(alpha, beta, ln_beta_ab)
     }
 
-    let parameters = [
-        (0.5, 0.5),
-        (2.0, 3.5),
-        (10.0, 1.0),
-        (100.0, 50.0),
-        // (10.0, 0.1), // Fail case
-    ];
+    let parameters = [(0.5, 0.5), (2.0, 3.5), (10.0, 1.0), (100.0, 50.0)];
 
     for (seed, (alpha, beta)) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Beta::new(alpha, beta).unwrap();
