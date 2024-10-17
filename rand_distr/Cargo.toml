@@ -29,13 +29,13 @@ alloc = ["rand/alloc"]
 # feature (default-enabled) will have the same effect.
 std_math = ["num-traits/std"]
 
-serde = ["dep:serde", "rand/serde"]
+serde = ["dep:serde", "dep:serde_with", "rand/serde"]
 
 [dependencies]
 rand = { path = "..", version = "=0.9.0-alpha.1", default-features = false }
 num-traits = { version = "0.2", default-features = false, features = ["libm"] }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
-serde_with = { version = "3.6.1", optional = true }
+serde_with = { version = ">= 3.0, <= 3.11", optional = true }
 
 [dev-dependencies]
 rand_pcg = { version = "=0.9.0-alpha.1", path = "../rand_pcg" }
@@ -44,4 +44,4 @@ rand = { path = "..", version = "=0.9.0-alpha.1", features = ["small_rng"] }
 # Histogram implementation for testing uniformity
 average = { version = "0.15", features = [ "std" ] }
 # Special functions for testing distributions
-special = "0.10.3"
+special = "0.11.0"

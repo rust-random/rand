@@ -20,7 +20,9 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Fix portability of `rand::distributions::Slice` (#1469)
 - Rename `rand::distributions` to `rand::distr` (#1470)
 - The `serde1` feature has been renamed `serde` (#1477)
+- The implicit feature `rand_chacha` has been removed. This is enabled by `std_rng`. (#1473)
 - Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480).
+- Add `p()` for `Bernoulli` to access probability (#1481)
 - Add `UniformUsize` and use to make `Uniform` for `usize` portable (#1487)
 - Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` and `Fill` and usage as a `WeightedAliasIndex` weight (#1487)
 - Require `Clone` and `AsRef` bound for `SeedableRng::Seed`. (#1491)
