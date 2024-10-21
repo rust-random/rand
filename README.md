@@ -42,18 +42,19 @@ It's also worth pointing out what Rand *is not*:
     time of new distributions, commonly-used parameters, and parameters of the
     current sampler.
 
-Rand is not a cryptographic library.
+Rand is not a cryptographic library and cannot provide guarantees of security.
 While it is our aim that some sub-sets of the library
 ([`rand::rng()`](https://docs.rs/rand/latest/rand/fn.rng.html),
 [`rand::rngs::StdRng`](https://docs.rs/rand/latest/rand/rngs/struct.StdRng.html))
-are (when used correctly) unpredictable,
-we cannot guarantee this. We keep copies of
+are (when used correctly) unpredictable, we cannot guarantee this. We keep copies of
 [some outputs](https://docs.rs/rand_core/latest/rand_core/block/struct.BlockRng.html)
 in memory longer than necessary and do not
 [`zeroize`](https://crates.io/crates/zeroize) used buffers and generators.
 We do not automatically reseed on fork (see
 [`ThreadRng`](https://docs.rs/rand/latest/rand/rngs/struct.ThreadRng.html)).
 Rand cannot provide any guarantees of security.
+which retrieves random data from (operating) system sources without a local
+memory buffer.
 
 
 Documentation:
