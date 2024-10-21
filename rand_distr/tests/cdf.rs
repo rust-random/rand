@@ -366,7 +366,8 @@ fn zeta() {
 
     for (seed, s) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Zeta::new(s).unwrap();
-        test_discrete(seed as u64, dist, |k| cdf(k, s));
+        test_discrete::<f64, _, _>(seed as u64, dist, |k| cdf(k, s));
+        test_discrete::<u64, _, _>(seed as u64, dist, |k| cdf(k, s));
     }
 }
 
@@ -386,7 +387,8 @@ fn zipf() {
 
     for (seed, (n, x)) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Zipf::new(n, x).unwrap();
-        test_discrete(seed as u64, dist, |k| cdf(k, n, x));
+        test_discrete::<f64, _, _>(seed as u64, dist, |k| cdf(k, n, x));
+        test_discrete::<u64, _, _>(seed as u64, dist, |k| cdf(k, n, x));
     }
 }
 

@@ -150,6 +150,14 @@ where
     }
 }
 
+impl Distribution<u64> for Zipf<f64> {
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
+        // `as` from float to int saturates
+        <Zipf<f64> as Distribution<f64>>::sample(self, rng) as u64
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -186,7 +194,7 @@ mod tests {
         let d = Zipf::new(10, 0.5).unwrap();
         let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
-            let r = d.sample(&mut rng);
+            let r: f64 = d.sample(&mut rng);
             assert!(r >= 1.);
         }
     }
@@ -196,7 +204,7 @@ mod tests {
         let d = Zipf::new(10, 1.).unwrap();
         let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
-            let r = d.sample(&mut rng);
+            let r: f64 = d.sample(&mut rng);
             assert!(r >= 1.);
         }
     }
@@ -206,7 +214,7 @@ mod tests {
         let d = Zipf::new(10, 0.).unwrap();
         let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
-            let r = d.sample(&mut rng);
+            let r: f64 = d.sample(&mut rng);
             assert!(r >= 1.);
         }
         // TODO: verify that this is a uniform distribution
@@ -217,7 +225,7 @@ mod tests {
         let d = Zipf::new(u64::MAX, 1.5).unwrap();
         let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
-            let r = d.sample(&mut rng);
+            let r: f64 = d.sample(&mut rng);
             assert!(r >= 1.);
         }
         // TODO: verify that this is a zeta distribution

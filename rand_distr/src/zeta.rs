@@ -132,6 +132,14 @@ where
     }
 }
 
+impl Distribution<u64> for Zeta<f64> {
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
+        // `as` from float to int saturates
+        <Zeta<f64> as Distribution<f64>>::sample(self, rng) as u64
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -163,7 +171,7 @@ mod tests {
         let d = Zeta::new(a).unwrap();
         let mut rng = crate::test::rng(1);
         for _ in 0..1000 {
-            let r = d.sample(&mut rng);
+            let r: f64 = d.sample(&mut rng);
             assert!(r >= 1.);
         }
     }
@@ -174,7 +182,7 @@ mod tests {
         let d = Zeta::new(a).unwrap();
         let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
-            let r = d.sample(&mut rng);
+            let r: f64 = d.sample(&mut rng);
             assert!(r >= 1.);
         }
     }
