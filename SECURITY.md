@@ -7,25 +7,40 @@ No binding guarantees can be provided.
 
 ## Security premises
 
-Rand provides the trait `rand_core::CryptoRng` aka `rand::CryptoRng` as a marker
-trait. Generators implementing `RngCore` *and* `CryptoRng`, and given the
-additional constraints that:
+### Marker traits
+
+Rand provides the marker traits `CryptoRng`, `TryCryptoRng` and
+`CryptoBlockRng`. Generators implementing one of these traits and used in a way
+which meets the following additional constraints:
 
 -   Instances of seedable RNGs (those implementing `SeedableRng`) are
     constructed with cryptographically secure seed values
--   The state (memory) of the RNG and its seed value are not be exposed
+-   The state (memory) of the RNG and its seed value are not exposed
 
 are expected to provide the following:
 
--   An attacker can gain no advantage over chance (50% for each bit) in
-    predicting the RNG output, even with full knowledge of all prior outputs.
+-   An attacker cannot predict the output with more accuracy than what would be
+    expected through pure chance since each possible output value of any method
+    under the above traits which generates output bytes (including
+    `RngCore::next_u32`, `RngCore::next_u64`, `RngCore::fill_bytes`,
+    `TryRngCore::try_next_u32`, `TryRngCore::try_next_u64`,
+    `TryRngCore::try_fill_bytes` and `BlockRngCore::generate`) should be equally
+    likely
+-   Knowledge of prior outputs from the generator does not aid an attacker in
+    predicting future outputs
 
-For some RNGs, notably `OsRng`, `ThreadRng` and those wrapped by `ReseedingRng`,
-we provide limited mitigations against side-channel attacks:
+### Specific generators
 
--   After the state (memory) of an RNG is leaked, there is an upper-bound on the
-    number of bits of output by the RNG before prediction of output by an
-    observer again becomes computationally-infeasible
+`OsRng` is a stateless "generator" implemented via [getrandom]. As such, it has
+no possible state to leak and cannot be improperly seeded.
+
+`ThreadRng` will periodically reseed itself, thus placing an upper bound on the
+number of bits of output from an instance before any advantage an attacker may
+have gained through state-compromising side-channel attacks is lost.
+
+[getrandom]: https://crates.io/crates/getrandom
+
+### Distributions
 
 Additionally, derivations from such an RNG (including the `Rng` trait,
 implementations of the `Distribution` trait, and `seq` algorithms) should not
