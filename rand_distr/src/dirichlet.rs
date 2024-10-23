@@ -14,13 +14,13 @@ use crate::{Beta, Distribution, Exp1, Gamma, Open01, StandardNormal};
 use core::fmt;
 use num_traits::{Float, NumCast};
 use rand::Rng;
-#[cfg(feature = "serde_with")]
+#[cfg(feature = "serde")]
 use serde_with::serde_as;
 
 use alloc::{boxed::Box, vec, vec::Vec};
 
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde_with", serde_as)]
+#[cfg_attr(feature = "serde", serde_as)]
 struct DirichletFromGamma<F, const N: usize>
 where
     F: Float,
@@ -171,7 +171,7 @@ where
 }
 
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde_with", serde_as)]
+#[cfg_attr(feature = "serde", serde_as)]
 enum DirichletRepr<F, const N: usize>
 where
     F: Float,
@@ -211,10 +211,10 @@ where
 /// use rand_distr::Dirichlet;
 ///
 /// let dirichlet = Dirichlet::new([1.0, 2.0, 3.0]).unwrap();
-/// let samples = dirichlet.sample(&mut rand::thread_rng());
+/// let samples = dirichlet.sample(&mut rand::rng());
 /// println!("{:?} is from a Dirichlet([1.0, 2.0, 3.0]) distribution", samples);
 /// ```
-#[cfg_attr(feature = "serde_with", serde_as)]
+#[cfg_attr(feature = "serde", serde_as)]
 #[derive(Clone, Debug, PartialEq)]
 pub struct Dirichlet<F, const N: usize>
 where

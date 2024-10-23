@@ -12,13 +12,17 @@
 use crate::distr::uniform::{SampleRange, SampleUniform};
 use crate::distr::{self, Distribution, Standard};
 use core::num::Wrapping;
-use core::{mem, slice};
 use rand_core::RngCore;
+use zerocopy::IntoBytes;
 
-/// An automatically-implemented extension trait on [`RngCore`] providing high-level
-/// generic methods for sampling values and other convenience methods.
+/// User-level interface for RNGs
 ///
-/// This is the primary trait to use when generating random values.
+/// [`RngCore`] is the `dyn`-safe implementation-level interface for Random
+/// (Number) Generators. This trait, `Rng`, provides a user-level interface on
+/// RNGs. It is implemented automatically for any `R: RngCore`.
+///
+/// This trait must usually be brought into scope via `use rand::Rng;` or
+/// `use rand::prelude::*;`.
 ///
 /// # Generic usage
 ///
@@ -33,7 +37,7 @@ use rand_core::RngCore;
 ///
 /// An alternative pattern is possible: `fn foo<R: Rng>(rng: R)`. This has some
 /// trade-offs. It allows the argument to be consumed directly without a `&mut`
-/// (which is how `from_rng(thread_rng())` works); also it still works directly
+/// (which is how `from_rng(rand::rng())` works); also it still works directly
 /// on references (including type-erased references). Unfortunately within the
 /// function `foo` it is not known whether `rng` is a reference type or not,
 /// hence many uses of `rng` require an extra reference, either explicitly
@@ -43,14 +47,13 @@ use rand_core::RngCore;
 /// Example:
 ///
 /// ```
-/// # use rand::thread_rng;
 /// use rand::Rng;
 ///
 /// fn foo<R: Rng + ?Sized>(rng: &mut R) -> f32 {
 ///     rng.random()
 /// }
 ///
-/// # let v = foo(&mut thread_rng());
+/// # let v = foo(&mut rand::rng());
 /// ```
 pub trait Rng: RngCore {
     /// Return a random value via the [`Standard`] distribution.
@@ -58,9 +61,9 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// let x: u32 = rng.random();
     /// println!("{}", x);
     /// println!("{:?}", rng.random::<(f64, bool)>());
@@ -77,9 +80,9 @@ pub trait Rng: RngCore {
     /// though note that generated values will differ.
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// let tuple: (u8, i32, char) = rng.random(); // arbitrary tuple support
     ///
     /// let arr1: [f32; 32] = rng.random();        // array construction
@@ -96,13 +99,40 @@ pub trait Rng: RngCore {
         Standard.sample(self)
     }
 
+    /// Return an iterator over [`random`](Self::random) variates
+    ///
+    /// This is a just a wrapper over [`Rng::sample_iter`] using
+    /// [`distr::Standard`].
+    ///
+    /// Note: this method consumes its argument. Use
+    /// `(&mut rng).random_iter()` to avoid consuming the RNG.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::{rngs::mock::StepRng, Rng};
+    ///
+    /// let rng = StepRng::new(1, 1);
+    /// let v: Vec<i32> = rng.random_iter().take(5).collect();
+    /// assert_eq!(&v, &[1, 2, 3, 4, 5]);
+    /// ```
+    #[inline]
+    fn random_iter<T>(self) -> distr::DistIter<Standard, Self, T>
+    where
+        Self: Sized,
+        Standard: Distribution<T>,
+    {
+        Standard.sample_iter(self)
+    }
+
     /// Generate a random value in the given range.
     ///
     /// This function is optimised for the case that only a single sample is
     /// made from the given range. See also the [`Uniform`] distribution
     /// type which may be faster if sampling from the same range repeatedly.
     ///
-    /// Only `gen_range(low..high)` and `gen_range(low..=high)` are supported.
+    /// All types support `low..high_exclusive` and `low..=high` range syntax.
+    /// Unsigned integer types also support `..high_exclusive` and `..=high` syntax.
     ///
     /// # Panics
     ///
@@ -111,24 +141,24 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     ///
     /// // Exclusive range
-    /// let n: u32 = rng.gen_range(0..10);
+    /// let n: u32 = rng.random_range(..10);
     /// println!("{}", n);
-    /// let m: f64 = rng.gen_range(-40.0..1.3e5);
+    /// let m: f64 = rng.random_range(-40.0..1.3e5);
     /// println!("{}", m);
     ///
     /// // Inclusive range
-    /// let n: u32 = rng.gen_range(0..=10);
+    /// let n: u32 = rng.random_range(..=10);
     /// println!("{}", n);
     /// ```
     ///
     /// [`Uniform`]: distr::uniform::Uniform
     #[track_caller]
-    fn gen_range<T, R>(&mut self, range: R) -> T
+    fn random_range<T, R>(&mut self, range: R) -> T
     where
         T: SampleUniform,
         R: SampleRange<T>,
@@ -137,30 +167,67 @@ pub trait Rng: RngCore {
         range.sample_single(self).unwrap()
     }
 
-    /// Generate values via an iterator
+    /// Return a bool with a probability `p` of being true.
     ///
-    /// This is a just a wrapper over [`Rng::sample_iter`] using
-    /// [`distr::Standard`].
-    ///
-    /// Note: this method consumes its argument. Use
-    /// `(&mut rng).gen_iter()` to avoid consuming the RNG.
+    /// See also the [`Bernoulli`] distribution, which may be faster if
+    /// sampling from the same probability repeatedly.
     ///
     /// # Example
     ///
     /// ```
-    /// use rand::{rngs::mock::StepRng, Rng};
+    /// use rand::Rng;
     ///
-    /// let rng = StepRng::new(1, 1);
-    /// let v: Vec<i32> = rng.gen_iter().take(5).collect();
-    /// assert_eq!(&v, &[1, 2, 3, 4, 5]);
+    /// let mut rng = rand::rng();
+    /// println!("{}", rng.random_bool(1.0 / 3.0));
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// If `p < 0` or `p > 1`.
+    ///
+    /// [`Bernoulli`]: distr::Bernoulli
     #[inline]
-    fn gen_iter<T>(self) -> distr::DistIter<Standard, Self, T>
-    where
-        Self: Sized,
-        Standard: Distribution<T>,
-    {
-        Standard.sample_iter(self)
+    #[track_caller]
+    fn random_bool(&mut self, p: f64) -> bool {
+        match distr::Bernoulli::new(p) {
+            Ok(d) => self.sample(d),
+            Err(_) => panic!("p={:?} is outside range [0.0, 1.0]", p),
+        }
+    }
+
+    /// Return a bool with a probability of `numerator/denominator` of being
+    /// true. I.e. `random_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
+    /// returning true. If `numerator == denominator`, then the returned value
+    /// is guaranteed to be `true`. If `numerator == 0`, then the returned
+    /// value is guaranteed to be `false`.
+    ///
+    /// See also the [`Bernoulli`] distribution, which may be faster if
+    /// sampling from the same `numerator` and `denominator` repeatedly.
+    ///
+    /// # Panics
+    ///
+    /// If `denominator == 0` or `numerator > denominator`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::Rng;
+    ///
+    /// let mut rng = rand::rng();
+    /// println!("{}", rng.random_ratio(2, 3));
+    /// ```
+    ///
+    /// [`Bernoulli`]: distr::Bernoulli
+    #[inline]
+    #[track_caller]
+    fn random_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
+        match distr::Bernoulli::from_ratio(numerator, denominator) {
+            Ok(d) => self.sample(d),
+            Err(_) => panic!(
+                "p={}/{} is outside range [0.0, 1.0]",
+                numerator, denominator
+            ),
+        }
     }
 
     /// Sample a new value, using the given distribution.
@@ -168,10 +235,10 @@ pub trait Rng: RngCore {
     /// ### Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     /// use rand::distr::Uniform;
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     /// let x = rng.sample(Uniform::new(10u32, 15).unwrap());
     /// // Type annotation requires two types, the type and distribution; the
     /// // distribution can be inferred.
@@ -189,10 +256,10 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     /// use rand::distr::{Alphanumeric, Uniform, Standard};
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     ///
     /// // Vec of 16 x f32:
     /// let v: Vec<f32> = (&mut rng).sample_iter(Standard).take(16).collect();
@@ -234,10 +301,10 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{thread_rng, Rng};
+    /// use rand::Rng;
     ///
     /// let mut arr = [0i8; 20];
-    /// thread_rng().fill(&mut arr[..]);
+    /// rand::rng().fill(&mut arr[..]);
     /// ```
     ///
     /// [`fill_bytes`]: RngCore::fill_bytes
@@ -246,80 +313,42 @@ pub trait Rng: RngCore {
         dest.fill(self)
     }
 
-    /// Return a bool with a probability `p` of being true.
-    ///
-    /// See also the [`Bernoulli`] distribution, which may be faster if
-    /// sampling from the same probability repeatedly.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
-    /// println!("{}", rng.gen_bool(1.0 / 3.0));
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// If `p < 0` or `p > 1`.
-    ///
-    /// [`Bernoulli`]: distr::Bernoulli
-    #[inline]
-    #[track_caller]
-    fn gen_bool(&mut self, p: f64) -> bool {
-        match distr::Bernoulli::new(p) {
-            Ok(d) => self.sample(d),
-            Err(_) => panic!("p={:?} is outside range [0.0, 1.0]", p),
-        }
-    }
-
-    /// Return a bool with a probability of `numerator/denominator` of being
-    /// true. I.e. `gen_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
-    /// returning true. If `numerator == denominator`, then the returned value
-    /// is guaranteed to be `true`. If `numerator == 0`, then the returned
-    /// value is guaranteed to be `false`.
-    ///
-    /// See also the [`Bernoulli`] distribution, which may be faster if
-    /// sampling from the same `numerator` and `denominator` repeatedly.
-    ///
-    /// # Panics
-    ///
-    /// If `denominator == 0` or `numerator > denominator`.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use rand::{thread_rng, Rng};
-    ///
-    /// let mut rng = thread_rng();
-    /// println!("{}", rng.gen_ratio(2, 3));
-    /// ```
-    ///
-    /// [`Bernoulli`]: distr::Bernoulli
-    #[inline]
-    #[track_caller]
-    fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
-        match distr::Bernoulli::from_ratio(numerator, denominator) {
-            Ok(d) => self.sample(d),
-            Err(_) => panic!(
-                "p={}/{} is outside range [0.0, 1.0]",
-                numerator, denominator
-            ),
-        }
-    }
-
     /// Alias for [`Rng::random`].
     #[inline]
     #[deprecated(
         since = "0.9.0",
         note = "Renamed to `random` to avoid conflict with the new `gen` keyword in Rust 2024."
     )]
-    fn gen<T>(&mut self) -> T
+    fn r#gen<T>(&mut self) -> T
     where
         Standard: Distribution<T>,
     {
         self.random()
+    }
+
+    /// Alias for [`Rng::random_range`].
+    #[inline]
+    #[deprecated(since = "0.9.0", note = "Renamed to `random_range`")]
+    fn gen_range<T, R>(&mut self, range: R) -> T
+    where
+        T: SampleUniform,
+        R: SampleRange<T>,
+    {
+        self.random_range(range)
+    }
+
+    /// Alias for [`Rng::random_bool`].
+    #[inline]
+    #[deprecated(since = "0.9.0", note = "Renamed to `random_bool`")]
+    fn gen_bool(&mut self, p: f64) -> bool {
+        self.random_bool(p)
+    }
+
+    /// Alias for [`Rng::random_ratio`].
+    #[inline]
+    #[deprecated(since = "0.9.0", note = "Renamed to `random_ratio`")]
+    fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
+        self.random_ratio(numerator, denominator)
     }
 }
 
@@ -369,12 +398,7 @@ macro_rules! impl_fill {
             #[inline(never)] // in micro benchmarks, this improves performance
             fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
-                    rng.fill_bytes(unsafe {
-                        slice::from_raw_parts_mut(self.as_mut_ptr()
-                            as *mut u8,
-                            mem::size_of_val(self)
-                        )
-                    });
+                    rng.fill_bytes(self.as_mut_bytes());
                     for x in self {
                         *x = x.to_le();
                     }
@@ -386,12 +410,7 @@ macro_rules! impl_fill {
             #[inline(never)]
             fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
-                    rng.fill_bytes(unsafe {
-                        slice::from_raw_parts_mut(self.as_mut_ptr()
-                            as *mut u8,
-                            self.len() * mem::size_of::<$t>()
-                        )
-                    });
+                    rng.fill_bytes(self.as_mut_bytes());
                     for x in self {
                     *x = Wrapping(x.0.to_le());
                     }
@@ -407,8 +426,8 @@ macro_rules! impl_fill {
     }
 }
 
-impl_fill!(u16, u32, u64, usize, u128,);
-impl_fill!(i8, i16, i32, i64, isize, i128,);
+impl_fill!(u16, u32, u64, u128,);
+impl_fill!(i8, i16, i32, i64, i128,);
 
 impl<T, const N: usize> Fill for [T; N]
 where
@@ -473,8 +492,8 @@ mod test {
         // Check equivalence for generated floats
         let mut array = [0f32; 2];
         rng.fill(&mut array);
-        let gen: [f32; 2] = rng.random();
-        assert_eq!(array, gen);
+        let arr2: [f32; 2] = rng.random();
+        assert_eq!(array, arr2);
     }
 
     #[test]
@@ -486,64 +505,64 @@ mod test {
     }
 
     #[test]
-    fn test_gen_range_int() {
+    fn test_random_range_int() {
         let mut r = rng(101);
         for _ in 0..1000 {
-            let a = r.gen_range(-4711..17);
+            let a = r.random_range(-4711..17);
             assert!((-4711..17).contains(&a));
-            let a: i8 = r.gen_range(-3..42);
+            let a: i8 = r.random_range(-3..42);
             assert!((-3..42).contains(&a));
-            let a: u16 = r.gen_range(10..99);
+            let a: u16 = r.random_range(10..99);
             assert!((10..99).contains(&a));
-            let a: i32 = r.gen_range(-100..2000);
+            let a: i32 = r.random_range(-100..2000);
             assert!((-100..2000).contains(&a));
-            let a: u32 = r.gen_range(12..=24);
+            let a: u32 = r.random_range(12..=24);
             assert!((12..=24).contains(&a));
 
-            assert_eq!(r.gen_range(0u32..1), 0u32);
-            assert_eq!(r.gen_range(-12i64..-11), -12i64);
-            assert_eq!(r.gen_range(3_000_000..3_000_001), 3_000_000);
+            assert_eq!(r.random_range(..1u32), 0u32);
+            assert_eq!(r.random_range(-12i64..-11), -12i64);
+            assert_eq!(r.random_range(3_000_000..3_000_001), 3_000_000);
         }
     }
 
     #[test]
-    fn test_gen_range_float() {
+    fn test_random_range_float() {
         let mut r = rng(101);
         for _ in 0..1000 {
-            let a = r.gen_range(-4.5..1.7);
+            let a = r.random_range(-4.5..1.7);
             assert!((-4.5..1.7).contains(&a));
-            let a = r.gen_range(-1.1..=-0.3);
+            let a = r.random_range(-1.1..=-0.3);
             assert!((-1.1..=-0.3).contains(&a));
 
-            assert_eq!(r.gen_range(0.0f32..=0.0), 0.);
-            assert_eq!(r.gen_range(-11.0..=-11.0), -11.);
-            assert_eq!(r.gen_range(3_000_000.0..=3_000_000.0), 3_000_000.);
+            assert_eq!(r.random_range(0.0f32..=0.0), 0.);
+            assert_eq!(r.random_range(-11.0..=-11.0), -11.);
+            assert_eq!(r.random_range(3_000_000.0..=3_000_000.0), 3_000_000.);
         }
     }
 
     #[test]
     #[should_panic]
     #[allow(clippy::reversed_empty_ranges)]
-    fn test_gen_range_panic_int() {
+    fn test_random_range_panic_int() {
         let mut r = rng(102);
-        r.gen_range(5..-2);
+        r.random_range(5..-2);
     }
 
     #[test]
     #[should_panic]
     #[allow(clippy::reversed_empty_ranges)]
-    fn test_gen_range_panic_usize() {
+    fn test_random_range_panic_usize() {
         let mut r = rng(103);
-        r.gen_range(5..2);
+        r.random_range(5..2);
     }
 
     #[test]
     #[allow(clippy::bool_assert_comparison)]
-    fn test_gen_bool() {
+    fn test_random_bool() {
         let mut r = rng(105);
         for _ in 0..5 {
-            assert_eq!(r.gen_bool(0.0), false);
-            assert_eq!(r.gen_bool(1.0), true);
+            assert_eq!(r.random_bool(0.0), false);
+            assert_eq!(r.random_bool(1.0), true);
         }
     }
 
@@ -564,7 +583,7 @@ mod test {
         let mut r = &mut rng as &mut dyn RngCore;
         r.next_u32();
         r.random::<i32>();
-        assert_eq!(r.gen_range(0..1), 0);
+        assert_eq!(r.random_range(0..1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
 
@@ -576,7 +595,7 @@ mod test {
         let mut r = Box::new(rng) as Box<dyn RngCore>;
         r.next_u32();
         r.random::<i32>();
-        assert_eq!(r.gen_range(0..1), 0);
+        assert_eq!(r.random_range(0..1), 0);
         let _c: u8 = Standard.sample(&mut r);
     }
 
@@ -590,7 +609,7 @@ mod test {
         let mut sum: u32 = 0;
         let mut rng = rng(111);
         for _ in 0..N {
-            if rng.gen_ratio(NUM, DENOM) {
+            if rng.random_ratio(NUM, DENOM) {
                 sum += 1;
             }
         }

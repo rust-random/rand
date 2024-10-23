@@ -23,7 +23,7 @@ const N_RESAMPLES: usize = 10_000;
 macro_rules! sample {
     ($R:ty, $T:ty, $U:ty, $g:expr) => {
         $g.bench_function(BenchmarkId::new(stringify!($R), "single"), |b| {
-            let mut rng = <$R>::from_rng(thread_rng());
+            let mut rng = <$R>::from_rng(&mut rand::rng());
             let x = rng.random::<$U>();
             let bits = (<$T>::BITS / 2);
             let mask = (1 as $U).wrapping_neg() >> bits;
@@ -35,7 +35,7 @@ macro_rules! sample {
         });
 
         $g.bench_function(BenchmarkId::new(stringify!($R), "distr"), |b| {
-            let mut rng = <$R>::from_rng(thread_rng());
+            let mut rng = <$R>::from_rng(&mut rand::rng());
             let x = rng.random::<$U>();
             let bits = (<$T>::BITS / 2);
             let mask = (1 as $U).wrapping_neg() >> bits;

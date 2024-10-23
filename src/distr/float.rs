@@ -32,17 +32,17 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Example
 /// ```
-/// use rand::{thread_rng, Rng};
+/// use rand::Rng;
 /// use rand::distr::OpenClosed01;
 ///
-/// let val: f32 = thread_rng().sample(OpenClosed01);
+/// let val: f32 = rand::rng().sample(OpenClosed01);
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
 /// [`Standard`]: crate::distr::Standard
 /// [`Open01`]: crate::distr::Open01
 /// [`Uniform`]: crate::distr::uniform::Uniform
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct OpenClosed01;
 
@@ -59,17 +59,17 @@ pub struct OpenClosed01;
 ///
 /// # Example
 /// ```
-/// use rand::{thread_rng, Rng};
+/// use rand::Rng;
 /// use rand::distr::Open01;
 ///
-/// let val: f32 = thread_rng().sample(Open01);
+/// let val: f32 = rand::rng().sample(Open01);
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
 /// [`Standard`]: crate::distr::Standard
 /// [`OpenClosed01`]: crate::distr::OpenClosed01
 /// [`Uniform`]: crate::distr::uniform::Uniform
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Open01;
 

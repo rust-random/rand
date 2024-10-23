@@ -19,6 +19,10 @@ use rand::Rng;
 /// scale parameter `λ` (`lambda`) and shape parameter `k`. It is used
 /// to model reliability data, life data, and accelerated life testing data.
 ///
+/// # Density function
+///
+/// `f(x; λ, k) = (k / λ) * (x / λ)^(k - 1) * exp(-(x / λ)^k)` for `x >= 0`.
+///
 /// # Plot
 ///
 /// The following plot shows the Weibull distribution with various values of `λ` and `k`.
@@ -30,9 +34,14 @@ use rand::Rng;
 /// use rand::prelude::*;
 /// use rand_distr::Weibull;
 ///
-/// let val: f64 = thread_rng().sample(Weibull::new(1., 10.).unwrap());
+/// let val: f64 = rand::rng().sample(Weibull::new(1., 10.).unwrap());
 /// println!("{}", val);
 /// ```
+///
+/// # Numerics
+///
+/// For small `k` like `< 0.005`, even with `f64` a significant number of samples will be so small that they underflow to `0.0`
+/// or so big they overflow to `inf`. This is a limitation of the floating point representation and not specific to this implementation.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Weibull<F>

@@ -48,10 +48,9 @@ pub trait Distribution<T> {
     /// # Example
     ///
     /// ```
-    /// use rand::thread_rng;
     /// use rand::distr::{Distribution, Alphanumeric, Uniform, Standard};
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     ///
     /// // Vec of 16 x f32:
     /// let v: Vec<f32> = Standard.sample_iter(&mut rng).take(16).collect();
@@ -88,10 +87,9 @@ pub trait Distribution<T> {
     /// # Example
     ///
     /// ```
-    /// use rand::thread_rng;
     /// use rand::distr::{Distribution, Uniform};
     ///
-    /// let mut rng = thread_rng();
+    /// let mut rng = rand::rng();
     ///
     /// let die = Uniform::new_inclusive(1, 6).unwrap();
     /// let even_number = die.map(|num| num % 2 == 0);
@@ -112,7 +110,7 @@ pub trait Distribution<T> {
     }
 }
 
-impl<'a, T, D: Distribution<T> + ?Sized> Distribution<T> for &'a D {
+impl<T, D: Distribution<T> + ?Sized> Distribution<T> for &D {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> T {
         (*self).sample(rng)
     }
