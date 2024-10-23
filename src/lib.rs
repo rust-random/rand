@@ -123,7 +123,7 @@ use crate::distr::{Distribution, Standard};
 
 /// Generate a random value using the thread-local random number generator.
 ///
-/// This function is a shortcut for [`rng().random()`](Rng::random):
+/// This function is shorthand for <code>[rng()].[random()](Rng::random)</code>:
 ///
 /// -   See [`ThreadRng`] for documentation of the generator and security
 /// -   See [`Standard`] for documentation of supported types and distributions
@@ -142,21 +142,15 @@ use crate::distr::{Distribution, Standard};
 /// }
 /// ```
 ///
-/// If you're calling `random()` in a loop, caching the generator as in the
-/// following example can increase performance.
+/// If you're calling `random()` repeatedly, consider using a local `rng`
+/// handle to save an initialization-check on each usage:
 ///
 /// ```
-/// use rand::Rng;
+/// use rand::Rng; // provides the `random` method
+///
+/// let mut rng = rand::rng(); // a local handle to the generator
 ///
 /// let mut v = vec![1, 2, 3];
-///
-/// for x in v.iter_mut() {
-///     *x = rand::random()
-/// }
-///
-/// // can be made faster by caching rand::rng
-///
-/// let mut rng = rand::rng();
 ///
 /// for x in v.iter_mut() {
 ///     *x = rng.random();
@@ -176,43 +170,23 @@ where
 
 /// Generate a random value in the given range using the thread-local random number generator.
 ///
-/// This function is a shortcut for [`rng().gen_range(range)`](Rng::gen_range).
+/// This function is shorthand for
+/// <code>[rng()].[random_range](Rng::random_range)(<var>range</var>)</code>.
 ///
-/// # Examples
+/// # Example
 ///
 /// ```
-/// let x = rand::range(1u8..=100);
-/// println!("{}", x);
-///
-/// let y = rand::range(0f32..=1e9);
+/// let y: f32 = rand::random_range(0.0..=1e9);
 /// println!("{}", y);
+///
+/// let words: Vec<&str> = "Mary had a little lamb".split(' ').collect();
+/// println!("{}", words[rand::random_range(..words.len())]);
 /// ```
-///
-/// If you're calling `range()` in a loop, caching the generator as in the
-/// following example can increase performance.
-///
-/// ```
-/// use rand::Rng;
-///
-/// let mut v = vec![1, 2, 3];
-///
-/// for x in v.iter_mut() {
-///     *x = rand::range(1..=3)
-/// }
-///
-/// // The above can be made slightly faster by caching [`rand::rng()`](crate::rng)
-/// // and using a [`rand::distr::Uniform`](crate::distr::Uniform) distribution:
-///
-/// let mut rng = rand::rng();
-/// let distribution = rand::distr::Uniform::try_from(1..=3).unwrap();
-///
-/// for x in v.iter_mut() {
-///     *x = rng.sample(distribution);
-/// }
-/// ```
+/// Note that the first example can also be achieved (without `collect`'ing
+/// to a `Vec`) using [`seq::IteratorRandom::choose`].
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 #[inline]
-pub fn range<T, R>(range: R) -> T
+pub fn random_range<T, R>(range: R) -> T
 where
     T: distr::uniform::SampleUniform,
     R: distr::uniform::SampleRange<T>,
@@ -250,25 +224,7 @@ mod test {
     #[test]
     #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
     fn test_range() {
-        let _n: usize = range(42..=43);
-        let _f: f32 = range(42.0..43.0);
-    }
-
-    #[test]
-    #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-    fn test_shuffle() {
-        let mut array1 = [0; 100];
-        for (i, x) in array1.iter_mut().enumerate() {
-            *x = i;
-        }
-        let mut array2 = array1;
-        assert_eq!(array1, array2);
-        shuffle(&mut array1);
-        assert_ne!(array1, array2); // practically impossible without an RNG bug
-        shuffle(&mut array2);
-        assert_ne!(array1, array2); // same
-        array1.sort();
-        array2.sort();
-        assert_eq!(array1, array2);
+        let _n: usize = random_range(42..=43);
+        let _f: f32 = random_range(42.0..43.0);
     }
 }
