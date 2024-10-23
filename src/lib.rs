@@ -121,9 +121,9 @@ pub use rng::{Fill, Rng};
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 use crate::distr::{Distribution, Standard};
 
-/// Generates a random value using the thread-local random number generator.
+/// Generate a random value using the thread-local random number generator.
 ///
-/// This function is simply a shortcut for `rand::rng().gen()`:
+/// This function is shorthand for <code>[rng()].[random()](Rng::random)</code>:
 ///
 /// -   See [`ThreadRng`] for documentation of the generator and security
 /// -   See [`Standard`] for documentation of supported types and distributions
@@ -142,21 +142,15 @@ use crate::distr::{Distribution, Standard};
 /// }
 /// ```
 ///
-/// If you're calling `random()` in a loop, caching the generator as in the
-/// following example can increase performance.
+/// If you're calling `random()` repeatedly, consider using a local `rng`
+/// handle to save an initialization-check on each usage:
 ///
 /// ```
-/// use rand::Rng;
+/// use rand::Rng; // provides the `random` method
+///
+/// let mut rng = rand::rng(); // a local handle to the generator
 ///
 /// let mut v = vec![1, 2, 3];
-///
-/// for x in v.iter_mut() {
-///     *x = rand::random()
-/// }
-///
-/// // can be made faster by caching rand::rng
-///
-/// let mut rng = rand::rng();
 ///
 /// for x in v.iter_mut() {
 ///     *x = rng.random();
@@ -172,6 +166,127 @@ where
     Standard: Distribution<T>,
 {
     rng().random()
+}
+
+/// Return an iterator over [`random()`] variates
+///
+/// This function is shorthand for
+/// <code>[rng()].[random_iter](Rng::random_iter)()</code>.
+///
+/// # Example
+///
+/// ```
+/// let v: Vec<i32> = rand::random_iter().take(5).collect();
+/// println!("{v:?}");
+/// ```
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+pub fn random_iter<T>() -> distr::DistIter<Standard, rngs::ThreadRng, T>
+where
+    Standard: Distribution<T>,
+{
+    rng().random_iter()
+}
+
+/// Generate a random value in the given range using the thread-local random number generator.
+///
+/// This function is shorthand for
+/// <code>[rng()].[random_range](Rng::random_range)(<var>range</var>)</code>.
+///
+/// # Example
+///
+/// ```
+/// let y: f32 = rand::random_range(0.0..=1e9);
+/// println!("{}", y);
+///
+/// let words: Vec<&str> = "Mary had a little lamb".split(' ').collect();
+/// println!("{}", words[rand::random_range(..words.len())]);
+/// ```
+/// Note that the first example can also be achieved (without `collect`'ing
+/// to a `Vec`) using [`seq::IteratorRandom::choose`].
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+pub fn random_range<T, R>(range: R) -> T
+where
+    T: distr::uniform::SampleUniform,
+    R: distr::uniform::SampleRange<T>,
+{
+    rng().random_range(range)
+}
+
+/// Return a bool with a probability `p` of being true.
+///
+/// This function is shorthand for
+/// <code>[rng()].[random_bool](Rng::random_bool)(<var>p</var>)</code>.
+///
+/// # Example
+///
+/// ```
+/// println!("{}", rand::random_bool(1.0 / 3.0));
+/// ```
+///
+/// # Panics
+///
+/// If `p < 0` or `p > 1`.
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+#[track_caller]
+pub fn random_bool(p: f64) -> bool {
+    rng().random_bool(p)
+}
+
+/// Return a bool with a probability of `numerator/denominator` of being
+/// true.
+///
+/// That is, `random_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
+/// returning true. If `numerator == denominator`, then the returned value
+/// is guaranteed to be `true`. If `numerator == 0`, then the returned
+/// value is guaranteed to be `false`.
+///
+/// See also the [`Bernoulli`] distribution, which may be faster if
+/// sampling from the same `numerator` and `denominator` repeatedly.
+///
+/// This function is shorthand for
+/// <code>[rng()].[random_ratio](Rng::random_ratio)(<var>numerator</var>, <var>denominator</var>)</code>.
+///
+/// # Panics
+///
+/// If `denominator == 0` or `numerator > denominator`.
+///
+/// # Example
+///
+/// ```
+/// println!("{}", rand::random_ratio(2, 3));
+/// ```
+///
+/// [`Bernoulli`]: distr::Bernoulli
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+#[track_caller]
+pub fn random_ratio(numerator: u32, denominator: u32) -> bool {
+    rng().random_ratio(numerator, denominator)
+}
+
+/// Fill any type implementing [`Fill`] with random data
+///
+/// This function is shorthand for
+/// <code>[rng()].[fill](Rng::fill)(<var>dest</var>)</code>.
+///
+/// # Example
+///
+/// ```
+/// let mut arr = [0i8; 20];
+/// rand::fill(&mut arr[..]);
+/// ```
+///
+/// Note that you can instead use [`random()`] to generate an array of random
+/// data, though this is slower for small elements (smaller than the RNG word
+/// size).
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+#[track_caller]
+pub fn fill<T: Fill + ?Sized>(dest: &mut T) {
+    dest.fill(&mut rng())
 }
 
 #[cfg(test)]
@@ -199,5 +314,12 @@ mod test {
             (u8, i8, u16, i16, u32, i32, u64, i64),
             (f32, (f64, (f64,))),
         ) = random();
+    }
+
+    #[test]
+    #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+    fn test_range() {
+        let _n: usize = random_range(42..=43);
+        let _f: f32 = random_range(42.0..43.0);
     }
 }

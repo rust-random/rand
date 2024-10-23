@@ -54,6 +54,15 @@ pub trait IteratorRandom: Iterator + Sized {
     /// Consider instead using [`IteratorRandom::choose_stable`] to avoid
     /// [`Iterator`] combinators which only change size hints from affecting the
     /// results.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::seq::IteratorRandom;
+    ///
+    /// let words = "Mary had a little lamb".split(' ');
+    /// println!("{}", words.choose(&mut rand::rng()).unwrap());
+    /// ```
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
     where
         R: Rng + ?Sized,
