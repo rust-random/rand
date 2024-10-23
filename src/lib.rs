@@ -220,27 +220,6 @@ where
     rng().random_range(range)
 }
 
-/// Shuffle a mutable slice in place using the thread-local random number generator.
-///
-/// This function is a shortcut for [`slice.shuffle(&mut rng())`](seq::SliceRandom::shuffle):
-///
-/// For slices of length `n`, complexity is `O(n)`.
-/// The resulting permutation is picked uniformly from the set of all possible permutations.
-///
-/// # Example
-///
-/// ```
-/// let mut y = [1, 2, 3, 4, 5];
-/// println!("Unshuffled: {:?}", y);
-/// rand::shuffle(&mut y);
-/// println!("Shuffled:   {:?}", y);
-/// ```
-#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-#[inline]
-pub fn shuffle<T>(slice: &mut [T]) {
-    seq::SliceRandom::shuffle(slice, &mut rng());
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
