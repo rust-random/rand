@@ -214,6 +214,59 @@ where
     rng().random_range(range)
 }
 
+/// Return a bool with a probability `p` of being true.
+///
+/// This function is shorthand for
+/// <code>[rng()].[random_bool](Rng::random_bool)(<var>p</var>)</code>.
+///
+/// # Example
+///
+/// ```
+/// println!("{}", rand::random_bool(1.0 / 3.0));
+/// ```
+///
+/// # Panics
+///
+/// If `p < 0` or `p > 1`.
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+#[track_caller]
+pub fn random_bool(p: f64) -> bool {
+    rng().random_bool(p)
+}
+
+/// Return a bool with a probability of `numerator/denominator` of being
+/// true.
+///
+/// That is, `random_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
+/// returning true. If `numerator == denominator`, then the returned value
+/// is guaranteed to be `true`. If `numerator == 0`, then the returned
+/// value is guaranteed to be `false`.
+///
+/// See also the [`Bernoulli`] distribution, which may be faster if
+/// sampling from the same `numerator` and `denominator` repeatedly.
+///
+/// This function is shorthand for
+/// <code>[rng()].[random_ratio](Rng::random_ratio)(<var>numerator</var>, <var>denominator</var>)</code>.
+///
+/// # Panics
+///
+/// If `denominator == 0` or `numerator > denominator`.
+///
+/// # Example
+///
+/// ```
+/// println!("{}", rand::random_ratio(2, 3));
+/// ```
+///
+/// [`Bernoulli`]: distr::Bernoulli
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+#[track_caller]
+pub fn random_ratio(numerator: u32, denominator: u32) -> bool {
+    rng().random_ratio(numerator, denominator)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
