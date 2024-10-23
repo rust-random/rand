@@ -123,7 +123,7 @@ use crate::distr::{Distribution, Standard};
 
 /// Generate a random value using the thread-local random number generator.
 ///
-/// This function is a shortcut for [`thread_rng().random()`](Rng::random):
+/// This function is a shortcut for [`rng().random()`](Rng::random):
 ///
 /// -   See [`ThreadRng`] for documentation of the generator and security
 /// -   See [`Standard`] for documentation of supported types and distributions
@@ -176,7 +176,7 @@ where
 
 /// Generate a random value in the given range using the thread-local random number generator.
 ///
-/// This function is a shortcut for [`thread_rng().gen_range(range)`](Rng::gen_range).
+/// This function is a shortcut for [`rng().gen_range(range)`](Rng::gen_range).
 ///
 /// # Examples
 ///
@@ -200,12 +200,14 @@ where
 ///     *x = rand::range(1..=3)
 /// }
 ///
-/// // can be made faster by caching thread_rng
+/// // The above can be made slightly faster by caching [`rand::rng()`](crate::rng)
+/// // and using a [`rand::distr::Uniform`](crate::distr::Uniform) distribution:
 ///
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
+/// let distribution = rand::distr::Uniform::try_from(1..=3).unwrap();
 ///
 /// for x in v.iter_mut() {
-///     *x = rng.gen_range(1..=3)
+///     *x = rng.sample(distribution);
 /// }
 /// ```
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
@@ -215,12 +217,12 @@ where
     T: distr::uniform::SampleUniform,
     R: distr::uniform::SampleRange<T>,
 {
-    thread_rng().gen_range(range)
+    rng().random_range(range)
 }
 
 /// Shuffle a mutable slice in place using the thread-local random number generator.
 ///
-/// This function is a shortcut for [`slice.shuffle(&mut thread_rng())`](seq::SliceRandom::shuffle):
+/// This function is a shortcut for [`slice.shuffle(&mut rng())`](seq::SliceRandom::shuffle):
 ///
 /// For slices of length `n`, complexity is `O(n)`.
 /// The resulting permutation is picked uniformly from the set of all possible permutations.
@@ -236,7 +238,7 @@ where
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 #[inline]
 pub fn shuffle<T>(slice: &mut [T]) {
-    seq::SliceRandom::shuffle(slice, &mut thread_rng());
+    seq::SliceRandom::shuffle(slice, &mut rng());
 }
 
 #[cfg(test)]
