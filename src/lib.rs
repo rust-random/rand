@@ -168,6 +168,26 @@ where
     rng().random()
 }
 
+/// Return an iterator over [`random()`] variates
+///
+/// This function is shorthand for
+/// <code>[rng()].[random_iter](Rng::random_iter)()</code>.
+///
+/// # Example
+///
+/// ```
+/// let v: Vec<i32> = rand::random_iter().take(5).collect();
+/// println!("{v:?}");
+/// ```
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+pub fn random_iter<T>() -> distr::DistIter<Standard, rngs::ThreadRng, T>
+where
+    Standard: Distribution<T>,
+{
+    rng().random_iter()
+}
+
 /// Generate a random value in the given range using the thread-local random number generator.
 ///
 /// This function is shorthand for
