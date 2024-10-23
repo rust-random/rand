@@ -267,6 +267,28 @@ pub fn random_ratio(numerator: u32, denominator: u32) -> bool {
     rng().random_ratio(numerator, denominator)
 }
 
+/// Fill any type implementing [`Fill`] with random data
+///
+/// This function is shorthand for
+/// <code>[rng()].[fill](Rng::fill)(<var>dest</var>)</code>.
+///
+/// # Example
+///
+/// ```
+/// let mut arr = [0i8; 20];
+/// rand::fill(&mut arr[..]);
+/// ```
+///
+/// Note that you can instead use [`random()`] to generate an array of random
+/// data, though this is slower for small elements (smaller than the RNG word
+/// size).
+#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[inline]
+#[track_caller]
+pub fn fill<T: Fill + ?Sized>(dest: &mut T) {
+    dest.fill(&mut rng())
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
