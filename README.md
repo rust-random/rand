@@ -28,34 +28,23 @@ All with:
 
 -   [Portably reproducible output](https://rust-random.github.io/book/portability.html)
 -   `#[no_std]` compatibility (partial)
--   *Many* performance optimisations
+-   *Many* performance optimisations thanks to contributions from the wide
+    user-base
 
-It's also worth pointing out what Rand *is not*:
+Rand **is not**:
 
--   Small. Most low-level crates are small, but the higher-level `rand` and
-    `rand_distr` each contain a lot of functionality.
+-   Small (LOC). Most low-level crates are small, but the higher-level `rand`
+    and `rand_distr` each contain a lot of functionality.
 -   Simple (implementation). We have a strong focus on correctness, speed and flexibility, but
     not simplicity. If you prefer a small-and-simple library, there are
     alternatives including [fastrand](https://crates.io/crates/fastrand)
     and [oorandom](https://crates.io/crates/oorandom).
--   Slow. We take performance seriously, with considerations also for set-up
-    time of new distributions, commonly-used parameters, and parameters of the
-    current sampler.
+-   A cryptography library. Rand provides functionality for generating
+    unpredictable random data (potentially applicable depending on requirements)
+    but does not provide high-level cryptography functionality.
 
-Rand is not a cryptographic library and cannot provide guarantees of security.
-While it is our aim that some sub-sets of the library
-([`rand::rng()`](https://docs.rs/rand/latest/rand/fn.rng.html),
-[`rand::rngs::StdRng`](https://docs.rs/rand/latest/rand/rngs/struct.StdRng.html))
-are (when used correctly) unpredictable, we cannot guarantee this. We keep copies of
-[some outputs](https://docs.rs/rand_core/latest/rand_core/block/struct.BlockRng.html)
-in memory longer than necessary and do not
-[`zeroize`](https://crates.io/crates/zeroize) used buffers and generators.
-We do not automatically reseed on fork (see
-[`ThreadRng`](https://docs.rs/rand/latest/rand/rngs/struct.ThreadRng.html)).
-Rand cannot provide any guarantees of security.
-which retrieves random data from (operating) system sources without a local
-memory buffer.
-
+Rand is a community project and cannot provide legally-binding guarantees of
+security.
 
 Documentation:
 

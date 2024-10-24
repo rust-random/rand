@@ -1,9 +1,9 @@
 # Security Policy
 
-## No guarantees
+## Disclaimer
 
-Support is provided on a best-effort bases only.
-No binding guarantees can be provided.
+Rand is a community project and cannot provide legally-binding guarantees of
+security.
 
 ## Security premises
 
