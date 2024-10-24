@@ -372,22 +372,21 @@ fn zeta() {
 
 #[test]
 fn zipf() {
-    fn cdf(k: f64, n: f64, s: f64) -> f64 {
-        debug_assert!(k.fract() == 0.0 && k < u64::MAX as f64);
-        if k < 1.0 {
+    fn cdf(k: i64, n: u64, s: f64) -> f64 {
+        if k < 1 {
             return 0.0;
         }
-        if k > n {
+        if k > n as i64 {
             return 1.0;
         }
-        gen_harmonic(k as u64, s) / gen_harmonic(n as u64, s)
+        gen_harmonic(k as u64, s) / gen_harmonic(n, s)
     }
 
-    let parameters = [(1000.0, 1.0), (500.0, 2.0), (1000.0, 0.5)];
+    let parameters = [(1000, 1.0), (500, 2.0), (1000, 0.5)];
 
     for (seed, (n, x)) in parameters.into_iter().enumerate() {
-        let dist = rand_distr::Zipf::new(n, x).unwrap();
-        test_continuous(seed as u64, dist, |k| cdf(k, n, x));
+        let dist = rand_distr::Zipf::new(n as f64, x).unwrap();
+        test_discrete(seed as u64, dist, |k| cdf(k, n, x));
     }
 }
 
