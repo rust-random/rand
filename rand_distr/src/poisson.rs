@@ -249,14 +249,6 @@ where
     }
 }
 
-impl Distribution<u64> for Poisson<f64> {
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
-        // `as` from float to int saturates
-        <Poisson<f64> as Distribution<f64>>::sample(self, rng) as u64
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
