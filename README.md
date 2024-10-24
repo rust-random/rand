@@ -6,20 +6,20 @@
 [![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
 
-Rand is a Rust library supporting random generators:
+Rand is a set of crates supporting (pseudo-)random generators:
 
--   A standard RNG trait: [`rand_core::RngCore`](https://docs.rs/rand_core/latest/rand_core/trait.RngCore.html)
--   Fast implementations of the best-in-class [cryptographic](https://rust-random.github.io/book/guide-rngs.html#cryptographically-secure-pseudo-random-number-generators-csprngs) and
-    [non-cryptographic](https://rust-random.github.io/book/guide-rngs.html#basic-pseudo-random-number-generators-prngs) generators: [`rand::rngs`](https://docs.rs/rand/latest/rand/rngs/index.html), and more RNGs: [`rand_chacha`](https://docs.rs/rand_chacha), [`rand_xoshiro`](https://docs.rs/rand_xoshiro/), [`rand_pcg`](https://docs.rs/rand_pcg/), [rngs repo](https://github.com/rust-random/rngs/)
--   [`rand::rng`](https://docs.rs/rand/latest/rand/fn.rng.html) is an asymtotically-fast, reasonably secure generator available on all `std` targets
--   Secure seeding via the [`getrandom` crate](https://crates.io/crates/getrandom)
+-   Built over a standard RNG trait: [`rand_core::RngCore`](https://docs.rs/rand_core/latest/rand_core/trait.RngCore.html)
+-   With fast implementations of both [strong](https://rust-random.github.io/book/guide-rngs.html#cryptographically-secure-pseudo-random-number-generators-csprngs) and
+    [small](https://rust-random.github.io/book/guide-rngs.html#basic-pseudo-random-number-generators-prngs) generators: [`rand::rngs`](https://docs.rs/rand/latest/rand/rngs/index.html), and more RNGs: [`rand_chacha`](https://docs.rs/rand_chacha), [`rand_xoshiro`](https://docs.rs/rand_xoshiro/), [`rand_pcg`](https://docs.rs/rand_pcg/), [rngs repo](https://github.com/rust-random/rngs/)
+-   [`rand::rng`](https://docs.rs/rand/latest/rand/fn.rng.html) is an asymptotically-fast, automatically-seeded and reasonably strong generator available on all `std` targets
+-   Direct support for seeding generators from the [`getrandom` crate](https://crates.io/crates/getrandom)
 
-Supporting random value generation and random processes:
+With broad support for random value generation and random processes:
 
--   [`Standard`](https://docs.rs/rand/latest/rand/distributions/struct.Standard.html) random value generation
--   Ranged [`Uniform`](https://docs.rs/rand/latest/rand/distributions/struct.Uniform.html) number generation for many types
--   A flexible [`distributions`](https://docs.rs/rand/*/rand/distr/index.html) module
--   Samplers for a large number of random number distributions via our own
+-   [`Standard`](https://docs.rs/rand/latest/rand/distributions/struct.Standard.html) random value sampling,
+    [`Uniform`](https://docs.rs/rand/latest/rand/distributions/struct.Uniform.html)-ranged value sampling
+    and [more](https://docs.rs/rand/latest/rand/distr/index.html)
+-   Samplers for a large number of non-uniform random number distributions via our own
     [`rand_distr`](https://docs.rs/rand_distr) and via
     the [`statrs`](https://docs.rs/statrs/0.13.0/statrs/)
 -   Random processes (mostly choose and shuffle) via [`rand::seq`](https://docs.rs/rand/latest/rand/seq/index.html) traits
@@ -28,19 +28,23 @@ All with:
 
 -   [Portably reproducible output](https://rust-random.github.io/book/portability.html)
 -   `#[no_std]` compatibility (partial)
--   *Many* performance optimisations
+-   *Many* performance optimisations thanks to contributions from the wide
+    user-base
 
-It's also worth pointing out what Rand *is not*:
+Rand **is not**:
 
--   Small. Most low-level crates are small, but the higher-level `rand` and
-    `rand_distr` each contain a lot of functionality.
+-   Small (LOC). Most low-level crates are small, but the higher-level `rand`
+    and `rand_distr` each contain a lot of functionality.
 -   Simple (implementation). We have a strong focus on correctness, speed and flexibility, but
     not simplicity. If you prefer a small-and-simple library, there are
     alternatives including [fastrand](https://crates.io/crates/fastrand)
     and [oorandom](https://crates.io/crates/oorandom).
--   Slow. We take performance seriously, with considerations also for set-up
-    time of new distributions, commonly-used parameters, and parameters of the
-    current sampler.
+-   A cryptography library. Rand provides functionality for generating
+    unpredictable random data (potentially applicable depending on requirements)
+    but does not provide high-level cryptography functionality.
+
+Rand is a community project and cannot provide legally-binding guarantees of
+security.
 
 Documentation:
 

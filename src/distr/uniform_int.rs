@@ -58,6 +58,13 @@ use serde::{Deserialize, Serialize};
 /// multiply by `range`, the result is in the high word. Then comparing the low
 /// word against `zone` makes sure our distribution is uniform.
 ///
+/// # Bias
+///
+/// Unless the `unbiased` feature flag is used, outputs may have a small bias.
+/// In the worst case, bias affects 1 in `2^n` samples where n is
+/// 56 (`i8` and `u8`), 48 (`i16` and `u16`), 96 (`i32` and `u32`), 64 (`i64`
+/// and `u64`), 128 (`i128` and `u128`).
+///
 /// [`Uniform`]: super::Uniform
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
