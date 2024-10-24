@@ -41,14 +41,10 @@ use rand::Rng;
 ///
 /// # Integer vs FP return type
 ///
-/// This implementation uses floating-point (FP) logic internally, which can
-/// potentially generate very large samples (exceeding e.g. `u64::MAX`).
-///
-/// It is *safe* to cast such results to an integer type using `as`
-/// (e.g. `distr.sample(&mut rng) as u64`), since such casts are saturating
-/// (e.g. `2f64.powi(64) as u64 == u64::MAX`). It is up to the user to
-/// determine whether this potential loss of accuracy is acceptable
-/// (this determination may depend on the distribution's parameters).
+/// This implementation uses floating-point (FP) logic internally. It may be
+/// expected that the samples are no greater than `n`, thus it is reasonable to
+/// cast generated samples to any integer type which can also represent `n`
+/// (e.g. `distr.sample(&mut rng) as u64`).
 ///
 /// # Implementation details
 ///

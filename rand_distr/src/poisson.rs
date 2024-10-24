@@ -42,14 +42,14 @@ use rand::Rng;
 ///
 /// # Integer vs FP return type
 ///
-/// This implementation uses floating-point (FP) logic internally, which can
-/// potentially generate very large samples (exceeding e.g. `u64::MAX`).
+/// This implementation uses floating-point (FP) logic internally.
 ///
-/// It is *safe* to cast such results to an integer type using `as`
-/// (e.g. `distr.sample(&mut rng) as u64`), since such casts are saturating
-/// (e.g. `2f64.powi(64) as u64 == u64::MAX`). It is up to the user to
-/// determine whether this potential loss of accuracy is acceptable
-/// (this determination may depend on the distribution's parameters).
+/// Due to the parameter limit <code>λ < [Self::MAX_LAMBDA]</code>, it
+/// statistically impossible to sample a value larger [`u64::MAX`]. As such, it
+/// is reasonable to cast generated samples to `u64` using `as`:
+/// `distr.sample(&mut rng) as u64` (and memory safe since Rust 1.45).
+/// Similarly, when `λ < 4.2e9` it can be safely assumed that samples are less
+/// than `u32::MAX`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Poisson<F>(Method<F>)
