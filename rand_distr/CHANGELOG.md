@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move some of the computations in Binomial from `sample` to `new` (#1484)
 - Add Kolmogorov Smirnov test for sampling of `Normal` and `Binomial` (#1494)
 - Add Kolmogorov Smirnov test for more distributions (#1504)
+- Change parameter type of `Zipf::new`: `n` is now floating-point (#1518)
 
 ### Added
 - Add plots for `rand_distr` distributions to documentation (#1434)
