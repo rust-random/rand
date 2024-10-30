@@ -23,6 +23,8 @@ jobs:
           toolchain: nightly
       - name: rand
         run: cargo doc --all-features --no-deps
+      - name: thread_rng
+        run: cargo doc --all-features --package rand_trng --no-deps
       - name: rand_core
         run: cargo doc --all-features --package rand_core --no-deps
       - name: rand_distr
@@ -95,7 +97,10 @@ jobs:
           cargo test --target ${{ matrix.target }} --examples
       - name: Test rand (all stable features)
         run: |
-          cargo test --target ${{ matrix.target }} --features=serde,log,small_rng
+          cargo test --target ${{ matrix.target }} --features=serde,log,small_rng,thread_rng
+      - name: Test thread_rng
+        run: |
+          cargo test --target ${{ matrix.target }} --manifest-path rand_trng/Cargo.toml
       - name: Test rand_core
         run: |
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
@@ -140,6 +145,7 @@ jobs:
           # all stable features:
           cross test --no-fail-fast --target ${{ matrix.target }} --features=serde,log,small_rng
           cross test --no-fail-fast --target ${{ matrix.target }} --examples
+          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_trng/Cargo.toml
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --features=serde
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
@@ -157,7 +163,8 @@ jobs:
       - name: Test rand
         run: |
           cargo miri test --no-default-features --lib --tests
-          cargo miri test --features=log,small_rng
+          cargo miri test --features=log,small_rng,thread_rng
+          cargo miri test --manifest-path rand_trng/Cargo.toml
           cargo miri test --manifest-path rand_core/Cargo.toml
           cargo miri test --manifest-path rand_core/Cargo.toml --features=serde
           cargo miri test --manifest-path rand_core/Cargo.toml --no-default-features

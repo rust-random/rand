@@ -10,7 +10,7 @@
 
 use rand_core::{CryptoRng, RngCore, SeedableRng};
 
-#[cfg(any(test, feature = "getrandom"))]
+#[cfg(test)]
 pub(crate) use rand_chacha::ChaCha12Core as Core;
 
 use rand_chacha::ChaCha12Rng as Rng;

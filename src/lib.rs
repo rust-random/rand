@@ -102,14 +102,45 @@ mod rng;
 pub mod rngs;
 pub mod seq;
 
-// Public exports
-#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-pub use crate::rngs::thread::rng;
+/// Access a fast, pre-initialized generator
+///
+/// This is a handle to the local [`ThreadRng`].
+///
+/// See also [`crate::rngs`] for alternatives.
+///
+/// # Example
+///
+/// ```
+/// use rand::prelude::*;
+///
+/// # fn main() {
+///
+/// let mut numbers = [1, 2, 3, 4, 5];
+/// numbers.shuffle(&mut rand::rng());
+/// println!("Numbers: {numbers:?}");
+///
+/// // Using a local binding avoids an initialization-check on each usage:
+/// let mut rng = rand::rng();
+///
+/// println!("True or false: {}", rng.random::<bool>());
+/// println!("A simulated die roll: {}", rng.random_range(1..=6));
+/// # }
+/// ```
+///
+/// # Security
+///
+/// Refer to the [`ThreadRng`] docs.
+///
+/// [`ThreadRng`]: rand_trng::ThreadRng
+#[cfg(feature = "thread_rng")]
+pub fn rng() -> rand_trng::ThreadRng {
+    Default::default()
+}
 
 /// Access the thread-local generator
 ///
 /// Use [`rand::rng()`](rng()) instead.
-#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[cfg(feature = "thread_rng")]
 #[deprecated(since = "0.9.0", note = "renamed to `rng`")]
 #[inline]
 pub fn thread_rng() -> crate::rngs::ThreadRng {
@@ -165,7 +196,7 @@ use crate::distr::{Distribution, Standard};
 ///
 /// [`Standard`]: distr::Standard
 /// [`ThreadRng`]: rngs::ThreadRng
-#[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
+#[cfg(feature = "thread_rng")]
 #[inline]
 pub fn random<T>() -> T
 where
