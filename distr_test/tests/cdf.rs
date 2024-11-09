@@ -6,13 +6,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-mod common;
 use core::f64;
 
 use num_traits::AsPrimitive;
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};
 use special::{Beta, Gamma, Primitive};
+use statrs::distribution::ContinuousCDF;
+use statrs::distribution::DiscreteCDF;
 
 // [1] Nonparametric Goodness-of-Fit Tests for Discrete Null Distributions
 //     by Taylor B. Arnold and John W. Emerson
@@ -138,10 +139,6 @@ where
     assert!(ks_statistic < critical_value);
 }
 
-fn normal_cdf(x: f64, mean: f64, std_dev: f64) -> f64 {
-    0.5 * ((mean - x) / (std_dev * f64::consts::SQRT_2)).erfc()
-}
-
 #[test]
 fn normal() {
     let parameters = [
@@ -155,7 +152,9 @@ fn normal() {
 
     for (seed, (mean, std_dev)) in parameters.into_iter().enumerate() {
         test_continuous(seed as u64, Normal::new(mean, std_dev).unwrap(), |x| {
-            normal_cdf(x, mean, std_dev)
+            statrs::distribution::Normal::new(mean, std_dev)
+                .unwrap()
+                .cdf(x)
         });
     }
 }
@@ -177,10 +176,6 @@ fn skew_normal() {
 
 #[test]
 fn cauchy() {
-    fn cdf(x: f64, median: f64, scale: f64) -> f64 {
-        (1.0 / f64::consts::PI) * ((x - median) / scale).atan() + 0.5
-    }
-
     let parameters = [
         (0.0, 1.0),
         (0.0, 0.1),
@@ -192,7 +187,11 @@ fn cauchy() {
 
     for (seed, (median, scale)) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Cauchy::new(median, scale).unwrap();
-        test_continuous(seed as u64, dist, |x| cdf(x, median, scale));
+        test_continuous(seed as u64, dist, |x| {
+            statrs::distribution::Cauchy::new(median, scale)
+                .unwrap()
+                .cdf(x)
+        });
     }
 }
 
@@ -218,16 +217,6 @@ fn uniform() {
 
 #[test]
 fn log_normal() {
-    fn cdf(x: f64, mean: f64, std_dev: f64) -> f64 {
-        if x <= 0.0 {
-            0.0
-        } else if x.is_infinite() {
-            1.0
-        } else {
-            0.5 * ((mean - x.ln()) / (std_dev * f64::consts::SQRT_2)).erfc()
-        }
-    }
-
     let parameters = [
         (0.0, 1.0),
         (0.0, 0.1),
@@ -238,20 +227,16 @@ fn log_normal() {
 
     for (seed, (mean, std_dev)) in parameters.into_iter().enumerate() {
         let dist = rand_distr::LogNormal::new(mean, std_dev).unwrap();
-        test_continuous(seed as u64, dist, |x| cdf(x, mean, std_dev));
+        test_continuous(seed as u64, dist, |x| {
+            statrs::distribution::LogNormal::new(mean, std_dev)
+                .unwrap()
+                .cdf(x)
+        });
     }
 }
 
 #[test]
 fn pareto() {
-    fn cdf(x: f64, scale: f64, alpha: f64) -> f64 {
-        if x <= scale {
-            0.0
-        } else {
-            1.0 - (scale / x).powf(alpha)
-        }
-    }
-
     let parameters = [
         (1.0, 1.0),
         (1.0, 0.1),
@@ -264,7 +249,11 @@ fn pareto() {
 
     for (seed, (scale, alpha)) in parameters.into_iter().enumerate() {
         let dist = rand_distr::Pareto::new(scale, alpha).unwrap();
-        test_continuous(seed as u64, dist, |x| cdf(x, scale, alpha));
+        test_continuous(seed as u64, dist, |x| {
+            statrs::distribution::Pareto::new(scale, alpha)
+                .unwrap()
+                .cdf(x)
+        });
     }
 }
 
@@ -354,7 +343,7 @@ fn frechet() {
 #[test]
 fn zeta() {
     fn cdf(k: i64, s: f64) -> f64 {
-        use common::spec_func::zeta_func;
+        use spfunc::zeta::zeta as zeta_func;
         if k < 1 {
             return 0.0;
         }
@@ -610,24 +599,22 @@ fn hypergeometric() {
 #[test]
 fn poisson() {
     use rand_distr::Poisson;
-    fn cdf(k: i64, lambda: f64) -> f64 {
-        use common::spec_func::gamma_lr;
-
-        if k < 0 || lambda <= 0.0 {
-            return 0.0;
-        }
-
-        1.0 - gamma_lr(k as f64 + 1.0, lambda)
-    }
     let parameters = [
-        0.1, 1.0, 7.5,
+        0.1, 1.0, 7.5, 45.0
         // 1e9, passed case but too slow
         // 1.844E+19,  // fail case
     ];
 
     for (seed, lambda) in parameters.into_iter().enumerate() {
         let dist = Poisson::new(lambda).unwrap();
-        test_discrete::<f64, Poisson<f64>, _>(seed as u64, dist, |k| cdf(k, lambda));
+        let analytic = statrs::distribution::Poisson::new(lambda).unwrap();
+        test_discrete::<f64, Poisson<f64>, _>(seed as u64, dist, |k| {
+            if k < 0 {
+                0.0
+            } else {
+                analytic.cdf(k as u64)
+            }
+        });
     }
 }
 
@@ -875,6 +862,10 @@ fn owen_t(h: f64, a: f64) -> f64 {
     }
 
     t
+}
+
+fn normal_cdf(x: f64, mean: f64, std_dev: f64) -> f64 {
+    0.5 * ((mean - x) / (std_dev * f64::consts::SQRT_2)).erfc()
 }
 
 /// standard normal cdf
