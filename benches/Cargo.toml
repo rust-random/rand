@@ -53,3 +53,7 @@ harness = false
 [[bench]]
 name = "weighted"
 harness = false
+
+[[bench]]
+name = "truncnorm"
+harness = false
