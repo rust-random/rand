@@ -154,7 +154,7 @@ use serde::{Deserialize, Serialize};
 /// When sampling from a constant range, many calculations can happen at
 /// compile-time and all methods should be fast; for floating-point ranges and
 /// the full range of integer types, this should have comparable performance to
-/// the `StandardUniform` distribution.
+/// the [`StandardUniform`](super::StandardUniform) distribution.
 ///
 /// # Provided implementations
 ///

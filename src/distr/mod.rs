@@ -28,7 +28,7 @@
 //! [`Uniform`] allows specification of its sample space as a range within `T`).
 //!
 //!
-//! # The `StandardUniform` distribution
+//! # The Standard Uniform distribution
 //!
 //! The [`StandardUniform`] distribution is important to mention. This is the
 //! distribution used by [`Rng::random`] and represents the "default" way to
@@ -36,42 +36,33 @@
 //! types, tuples, arrays, and a few derived types. See the documentation of
 //! [`StandardUniform`] for more details.
 //!
-//! Implementing `Distribution<T>` for [`StandardUniform`] for user types `T` makes it
+//! Implementing [`Distribution<T>`] for [`StandardUniform`] for user types `T` makes it
 //! possible to generate type `T` with [`Rng::random`], and by extension also
 //! with the [`random`] function.
 //!
-//! ## Random characters
+//! ## Other standard uniform distributions
 //!
 //! [`Alphanumeric`] is a simple distribution to sample random letters and
 //! numbers of the `char` type; in contrast [`StandardUniform`] may sample any valid
 //! `char`.
 //!
+//! For floats (`f32`, `f64`), [`StandardUniform`] samples from `[0, 1)`. Also
+//! provided are [`Open01`] (samples from `(0, 1)`) and [`OpenClosed01`]
+//! (samples from `(0, 1]`). No option is provided to sample from `[0, 1]`; it
+//! is suggested to use one of the above half-open ranges since the failure to
+//! sample a value which would have a low chance of being sampled anyway is
+//! rarely an issue in practice.
 //!
-//! # Uniform numeric ranges
+//! # Parameterized Uniform distributions
 //!
-//! The [`Uniform`] distribution is more flexible than [`StandardUniform`], but also
-//! more specialised: it supports fewer target types, but allows the sample
-//! space to be specified as an arbitrary range within its target type `T`.
-//! Both [`StandardUniform`] and [`Uniform`] are in some sense uniform distributions.
+//! The [`Uniform`] distribution provides uniform sampling over a specified
+//! range on a subset of the types supported by the above distributions.
 //!
-//! Values may be sampled from this distribution using [`Rng::sample(Range)`] or
-//! by creating a distribution object with [`Uniform::new`],
-//! [`Uniform::new_inclusive`] or `From<Range>`. When the range limits are not
-//! known at compile time it is typically faster to reuse an existing
-//! `Uniform` object than to call [`Rng::sample(Range)`].
-//!
-//! User types `T` may also implement `Distribution<T>` for [`Uniform`],
-//! although this is less straightforward than for [`StandardUniform`] (see the
-//! documentation in the [`uniform`] module). Doing so enables generation of
-//! values of type `T` with  [`Rng::sample(Range)`].
-//!
-//! ## Open and half-open ranges
-//!
-//! There are surprisingly many ways to uniformly generate random floats. A
-//! range between 0 and 1 is standard, but the exact bounds (open vs closed)
-//! and accuracy differ. In addition to the [`StandardUniform`] distribution Rand offers
-//! [`Open01`] and [`OpenClosed01`]. See "Floating point implementation" section of
-//! [`StandardUniform`] documentation for more details.
+//! Implementations support single-value-sampling via
+//! [`Rng::random_range(Range)`](Rng::random_range).
+//! Where a fixed (non-`const`) range will be sampled many times, it is likely
+//! faster to pre-construct a [`Distribution`] object using
+//! [`Uniform::new`], [`Uniform::new_inclusive`] or `From<Range>`.
 //!
 //! # Non-uniform sampling
 //!
@@ -124,28 +115,29 @@ pub use self::weighted_index::{Weight, WeightError, WeightedIndex};
 #[allow(unused)]
 use crate::Rng;
 
-/// A generic random value distribution, implemented for many primitive types.
-/// Usually generates values with a numerically uniform distribution, and with a
-/// range appropriate to the type.
+/// The Standard Uniform distribution
 ///
-/// ## Provided implementations
+/// This [`Distribution`] is the *standard* parameterization of [`Uniform`]. Bounds
+/// are selected according to the output type.
 ///
 /// Assuming the provided `Rng` is well-behaved, these implementations
 /// generate values with the following ranges and distributions:
 ///
-/// * Integers (`i32`, `u32`, `isize`, `usize`, etc.): Uniformly distributed
-///   over all values of the type.
-/// * `char`: Uniformly distributed over all Unicode scalar values, i.e. all
+/// * Integers (`i8`, `i32`, `u64`, etc.) are uniformly distributed
+///   over the whole range of the type (thus each possible value may be sampled
+///   with equal probability).
+/// * `char` is uniformly distributed over all Unicode scalar values, i.e. all
 ///   code points in the range `0...0x10_FFFF`, except for the range
 ///   `0xD800...0xDFFF` (the surrogate code points). This includes
 ///   unassigned/reserved code points.
-/// * `bool`: Generates `false` or `true`, each with probability 0.5.
-/// * Floating point types (`f32` and `f64`): Uniformly distributed in the
-///   half-open range `[0, 1)`. See notes below.
+///   For some uses, the [`Alphanumeric`] distribution will be more appropriate.
+/// * `bool` samples `false` or `true`, each with probability 0.5.
+/// * Floating point types (`f32` and `f64`) are uniformly distributed in the
+///   half-open range `[0, 1)`. See also the [notes below](#floating-point-implementation).
 /// * Wrapping integers ([`Wrapping<T>`]), besides the type identical to their
 ///   normal integer variants.
 /// * Non-zero integers ([`NonZeroU8`]), which are like their normal integer
-///   variants but cannot produce zero.
+///   variants but cannot sample zero.
 /// * SIMD types like x86's [`__m128i`], `std::simd`'s [`u32x4`]/[`f32x4`]/
 ///   [`mask32x4`] (requires [`simd_support`]), where each lane is distributed
 ///   like their scalar `StandardUniform` variants. See the list of `StandardUniform`
@@ -155,13 +147,10 @@ use crate::Rng;
 /// compound types where all component types are supported:
 ///
 /// *   Tuples (up to 12 elements): each element is generated sequentially.
-/// *   Arrays: each element is generated sequentially;
-///     see also [`Rng::fill`] which supports arbitrary array length for integer
-///     and float types and tends to be faster for `u32` and smaller types.
-///     Note that [`Rng::fill`] and `StandardUniform`'s array support are *not* equivalent:
-///     the former is optimised for integer types (using fewer RNG calls for
-///     element types smaller than the RNG word size), while the latter supports
-///     any element type supported by `StandardUniform`.
+/// *   Arrays `[T; n]` where `T` is supported. Each element is generated
+///     sequentially which is sub-optimal where `T` is small; it may be faster
+///     to [`Rng::fill`] an existing array (but note that the two methods do not
+///     necessarily yield the same values).
 ///
 /// ## Custom implementations
 ///
