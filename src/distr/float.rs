@@ -9,7 +9,7 @@
 //! Basic floating-point number distributions
 
 use crate::distr::utils::{FloatAsSIMD, FloatSIMDUtils, IntAsSIMD};
-use crate::distr::{Distribution, Standard};
+use crate::distr::{Distribution, StandardUniform};
 use crate::Rng;
 use core::mem;
 #[cfg(feature = "simd_support")]
@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 /// 53 most significant bits of a `u64` are used. The conversion uses the
 /// multiplicative method.
 ///
-/// See also: [`Standard`] which samples from `[0, 1)`, [`Open01`]
+/// See also: [`StandardUniform`] which samples from `[0, 1)`, [`Open01`]
 /// which samples from `(0, 1)` and [`Uniform`] which samples from arbitrary
 /// ranges.
 ///
@@ -39,7 +39,7 @@ use serde::{Deserialize, Serialize};
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
-/// [`Standard`]: crate::distr::Standard
+/// [`StandardUniform`]: crate::distr::StandardUniform
 /// [`Open01`]: crate::distr::Open01
 /// [`Uniform`]: crate::distr::uniform::Uniform
 #[derive(Clone, Copy, Debug, Default)]
@@ -53,7 +53,7 @@ pub struct OpenClosed01;
 /// the 23 most significant random bits of an `u32` are used, for `f64` 52 from
 /// an `u64`. The conversion uses a transmute-based method.
 ///
-/// See also: [`Standard`] which samples from `[0, 1)`, [`OpenClosed01`]
+/// See also: [`StandardUniform`] which samples from `[0, 1)`, [`OpenClosed01`]
 /// which samples from `(0, 1]` and [`Uniform`] which samples from arbitrary
 /// ranges.
 ///
@@ -66,7 +66,7 @@ pub struct OpenClosed01;
 /// println!("f32 from (0, 1): {}", val);
 /// ```
 ///
-/// [`Standard`]: crate::distr::Standard
+/// [`StandardUniform`]: crate::distr::StandardUniform
 /// [`OpenClosed01`]: crate::distr::OpenClosed01
 /// [`Uniform`]: crate::distr::uniform::Uniform
 #[derive(Clone, Copy, Debug, Default)]
@@ -105,7 +105,7 @@ macro_rules! float_impls {
         }
 
         $(#[cfg($meta)])?
-        impl Distribution<$ty> for Standard {
+        impl Distribution<$ty> for StandardUniform {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 // Multiply-based method; 24/53 random bits; [0, 1) interval.
                 // We use the most significant bits because for simple RNGs
@@ -186,7 +186,7 @@ mod tests {
             fn $fnn() {
                 let two = $ty::splat(2.0);
 
-                // Standard
+                // StandardUniform
                 let mut zeros = StepRng::new(0, 0);
                 assert_eq!(zeros.random::<$ty>(), $ZERO);
                 let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
@@ -234,7 +234,7 @@ mod tests {
             fn $fnn() {
                 let two = $ty::splat(2.0);
 
-                // Standard
+                // StandardUniform
                 let mut zeros = StepRng::new(0, 0);
                 assert_eq!(zeros.random::<$ty>(), $ZERO);
                 let mut one = StepRng::new(1 << 11, 0);
@@ -289,9 +289,13 @@ mod tests {
             assert_eq!(&buf, expected);
         }
 
-        test_samples(&Standard, 0f32, &[0.0035963655, 0.7346052, 0.09778172]);
         test_samples(
-            &Standard,
+            &StandardUniform,
+            0f32,
+            &[0.0035963655, 0.7346052, 0.09778172],
+        );
+        test_samples(
+            &StandardUniform,
             0f64,
             &[0.7346051961657583, 0.20298547462974248, 0.8166436635290655],
         );
@@ -317,7 +321,7 @@ mod tests {
             // SIMD types.
 
             test_samples(
-                &Standard,
+                &StandardUniform,
                 f32x2::from([0.0, 0.0]),
                 &[
                     f32x2::from([0.0035963655, 0.7346052]),
@@ -327,7 +331,7 @@ mod tests {
             );
 
             test_samples(
-                &Standard,
+                &StandardUniform,
                 f64x2::from([0.0, 0.0]),
                 &[
                     f64x2::from([0.7346051961657583, 0.20298547462974248]),

@@ -1,6 +1,6 @@
 //! The inverse Gaussian distribution `IG(μ, λ)`.
 
-use crate::{Distribution, Standard, StandardNormal};
+use crate::{Distribution, StandardNormal, StandardUniform};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
@@ -53,7 +53,7 @@ pub struct InverseGaussian<F>
 where
     F: Float,
     StandardNormal: Distribution<F>,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     mean: F,
     shape: F,
@@ -63,7 +63,7 @@ impl<F> InverseGaussian<F>
 where
     F: Float,
     StandardNormal: Distribution<F>,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     /// Construct a new `InverseGaussian` distribution with the given mean and
     /// shape.
@@ -85,7 +85,7 @@ impl<F> Distribution<F> for InverseGaussian<F>
 where
     F: Float,
     StandardNormal: Distribution<F>,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     #[allow(clippy::many_single_char_names)]
     fn sample<R>(&self, rng: &mut R) -> F

@@ -9,7 +9,7 @@
 use core::time::Duration;
 use criterion::measurement::WallTime;
 use criterion::{criterion_group, criterion_main, BenchmarkGroup, Criterion};
-use rand::distr::{Alphanumeric, Standard};
+use rand::distr::{Alphanumeric, StandardUniform};
 use rand::prelude::*;
 use rand_distr::{Open01, OpenClosed01};
 use rand_pcg::Pcg64Mcg;
@@ -34,14 +34,14 @@ where
 }
 
 pub fn bench(c: &mut Criterion) {
-    let mut g = c.benchmark_group("Standard");
+    let mut g = c.benchmark_group("StandardUniform");
     g.sample_size(1000);
     g.warm_up_time(Duration::from_millis(500));
     g.measurement_time(Duration::from_millis(1000));
 
     macro_rules! do_ty {
         ($t:ty) => {
-            bench_ty::<$t, Standard>(&mut g, stringify!($t));
+            bench_ty::<$t, StandardUniform>(&mut g, stringify!($t));
         };
         ($t:ty, $($tt:ty),*) => {
             do_ty!($t);

@@ -8,7 +8,7 @@
 
 //! The Zipf distribution.
 
-use crate::{Distribution, Standard};
+use crate::{Distribution, StandardUniform};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
@@ -56,7 +56,7 @@ use rand::Rng;
 pub struct Zipf<F>
 where
     F: Float,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     s: F,
     t: F,
@@ -87,7 +87,7 @@ impl std::error::Error for Error {}
 impl<F> Zipf<F>
 where
     F: Float,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     /// Construct a new `Zipf` distribution for a set with `n` elements and a
     /// frequency rank exponent `s`.
@@ -137,20 +137,20 @@ where
 impl<F> Distribution<F> for Zipf<F>
 where
     F: Float,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         let one = F::one();
         loop {
-            let inv_b = self.inv_cdf(rng.sample(Standard));
+            let inv_b = self.inv_cdf(rng.sample(StandardUniform));
             let x = (inv_b + one).floor();
             let mut ratio = x.powf(-self.s);
             if x > one {
                 ratio = ratio * inv_b.powf(self.s)
             };
 
-            let y = rng.sample(Standard);
+            let y = rng.sample(StandardUniform);
             if y < ratio {
                 return x;
             }

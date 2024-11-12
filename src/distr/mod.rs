@@ -28,31 +28,31 @@
 //! [`Uniform`] allows specification of its sample space as a range within `T`).
 //!
 //!
-//! # The `Standard` distribution
+//! # The `StandardUniform` distribution
 //!
-//! The [`Standard`] distribution is important to mention. This is the
+//! The [`StandardUniform`] distribution is important to mention. This is the
 //! distribution used by [`Rng::random`] and represents the "default" way to
 //! produce a random value for many different types, including most primitive
 //! types, tuples, arrays, and a few derived types. See the documentation of
-//! [`Standard`] for more details.
+//! [`StandardUniform`] for more details.
 //!
-//! Implementing `Distribution<T>` for [`Standard`] for user types `T` makes it
+//! Implementing `Distribution<T>` for [`StandardUniform`] for user types `T` makes it
 //! possible to generate type `T` with [`Rng::random`], and by extension also
 //! with the [`random`] function.
 //!
 //! ## Random characters
 //!
 //! [`Alphanumeric`] is a simple distribution to sample random letters and
-//! numbers of the `char` type; in contrast [`Standard`] may sample any valid
+//! numbers of the `char` type; in contrast [`StandardUniform`] may sample any valid
 //! `char`.
 //!
 //!
 //! # Uniform numeric ranges
 //!
-//! The [`Uniform`] distribution is more flexible than [`Standard`], but also
+//! The [`Uniform`] distribution is more flexible than [`StandardUniform`], but also
 //! more specialised: it supports fewer target types, but allows the sample
 //! space to be specified as an arbitrary range within its target type `T`.
-//! Both [`Standard`] and [`Uniform`] are in some sense uniform distributions.
+//! Both [`StandardUniform`] and [`Uniform`] are in some sense uniform distributions.
 //!
 //! Values may be sampled from this distribution using [`Rng::sample(Range)`] or
 //! by creating a distribution object with [`Uniform::new`],
@@ -61,7 +61,7 @@
 //! `Uniform` object than to call [`Rng::sample(Range)`].
 //!
 //! User types `T` may also implement `Distribution<T>` for [`Uniform`],
-//! although this is less straightforward than for [`Standard`] (see the
+//! although this is less straightforward than for [`StandardUniform`] (see the
 //! documentation in the [`uniform`] module). Doing so enables generation of
 //! values of type `T` with  [`Rng::sample(Range)`].
 //!
@@ -69,9 +69,9 @@
 //!
 //! There are surprisingly many ways to uniformly generate random floats. A
 //! range between 0 and 1 is standard, but the exact bounds (open vs closed)
-//! and accuracy differ. In addition to the [`Standard`] distribution Rand offers
+//! and accuracy differ. In addition to the [`StandardUniform`] distribution Rand offers
 //! [`Open01`] and [`OpenClosed01`]. See "Floating point implementation" section of
-//! [`Standard`] documentation for more details.
+//! [`StandardUniform`] documentation for more details.
 //!
 //! # Non-uniform sampling
 //!
@@ -148,37 +148,37 @@ use crate::Rng;
 ///   variants but cannot produce zero.
 /// * SIMD types like x86's [`__m128i`], `std::simd`'s [`u32x4`]/[`f32x4`]/
 ///   [`mask32x4`] (requires [`simd_support`]), where each lane is distributed
-///   like their scalar `Standard` variants. See the list of `Standard`
+///   like their scalar `StandardUniform` variants. See the list of `StandardUniform`
 ///   implementations for more.
 ///
-/// The `Standard` distribution also supports generation of the following
+/// The `StandardUniform` distribution also supports generation of the following
 /// compound types where all component types are supported:
 ///
 /// *   Tuples (up to 12 elements): each element is generated sequentially.
 /// *   Arrays: each element is generated sequentially;
 ///     see also [`Rng::fill`] which supports arbitrary array length for integer
 ///     and float types and tends to be faster for `u32` and smaller types.
-///     Note that [`Rng::fill`] and `Standard`'s array support are *not* equivalent:
+///     Note that [`Rng::fill`] and `StandardUniform`'s array support are *not* equivalent:
 ///     the former is optimised for integer types (using fewer RNG calls for
 ///     element types smaller than the RNG word size), while the latter supports
-///     any element type supported by `Standard`.
+///     any element type supported by `StandardUniform`.
 /// *   `Option<T>` first generates a `bool`, and if true generates and returns
 ///     `Some(value)` where `value: T`, otherwise returning `None`.
 ///
 /// ## Custom implementations
 ///
-/// The [`Standard`] distribution may be implemented for user types as follows:
+/// The [`StandardUniform`] distribution may be implemented for user types as follows:
 ///
 /// ```
 /// # #![allow(dead_code)]
 /// use rand::Rng;
-/// use rand::distr::{Distribution, Standard};
+/// use rand::distr::{Distribution, StandardUniform};
 ///
 /// struct MyF32 {
 ///     x: f32,
 /// }
 ///
-/// impl Distribution<MyF32> for Standard {
+/// impl Distribution<MyF32> for StandardUniform {
 ///     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> MyF32 {
 ///         MyF32 { x: rng.random() }
 ///     }
@@ -188,14 +188,14 @@ use crate::Rng;
 /// ## Example usage
 /// ```
 /// use rand::prelude::*;
-/// use rand::distr::Standard;
+/// use rand::distr::StandardUniform;
 ///
-/// let val: f32 = StdRng::from_os_rng().sample(Standard);
+/// let val: f32 = StdRng::from_os_rng().sample(StandardUniform);
 /// println!("f32 from [0, 1): {}", val);
 /// ```
 ///
 /// # Floating point implementation
-/// The floating point implementations for `Standard` generate a random value in
+/// The floating point implementations for `StandardUniform` generate a random value in
 /// the half-open interval `[0, 1)`, i.e. including 0 but not 1.
 ///
 /// All values that can be generated are of the form `n * ε/2`. For `f32`
@@ -219,4 +219,4 @@ use crate::Rng;
 /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
 #[derive(Clone, Copy, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Standard;
+pub struct StandardUniform;

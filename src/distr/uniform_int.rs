@@ -12,7 +12,7 @@
 use super::{Error, SampleBorrow, SampleUniform, UniformSampler};
 use crate::distr::utils::WideningMultiply;
 #[cfg(feature = "simd_support")]
-use crate::distr::{Distribution, Standard};
+use crate::distr::{Distribution, StandardUniform};
 use crate::Rng;
 
 #[cfg(feature = "simd_support")]
@@ -286,7 +286,7 @@ macro_rules! uniform_simd_int_impl {
             LaneCount<LANES>: SupportedLaneCount,
             Simd<$unsigned, LANES>:
                 WideningMultiply<Output = (Simd<$unsigned, LANES>, Simd<$unsigned, LANES>)>,
-            Standard: Distribution<Simd<$unsigned, LANES>>,
+            StandardUniform: Distribution<Simd<$unsigned, LANES>>,
         {
             type Sampler = UniformInt<Simd<$ty, LANES>>;
         }
@@ -297,7 +297,7 @@ macro_rules! uniform_simd_int_impl {
             LaneCount<LANES>: SupportedLaneCount,
             Simd<$unsigned, LANES>:
                 WideningMultiply<Output = (Simd<$unsigned, LANES>, Simd<$unsigned, LANES>)>,
-            Standard: Distribution<Simd<$unsigned, LANES>>,
+            StandardUniform: Distribution<Simd<$unsigned, LANES>>,
         {
             type X = Simd<$ty, LANES>;
 

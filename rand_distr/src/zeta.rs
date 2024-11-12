@@ -8,7 +8,7 @@
 
 //! The Zeta distribution.
 
-use crate::{Distribution, Standard};
+use crate::{Distribution, StandardUniform};
 use core::fmt;
 use num_traits::Float;
 use rand::{distr::OpenClosed01, Rng};
@@ -68,7 +68,7 @@ use rand::{distr::OpenClosed01, Rng};
 pub struct Zeta<F>
 where
     F: Float,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
     OpenClosed01: Distribution<F>,
 {
     s_minus_1: F,
@@ -96,7 +96,7 @@ impl std::error::Error for Error {}
 impl<F> Zeta<F>
 where
     F: Float,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
     OpenClosed01: Distribution<F>,
 {
     /// Construct a new `Zeta` distribution with given `s` parameter.
@@ -117,7 +117,7 @@ where
 impl<F> Distribution<F> for Zeta<F>
 where
     F: Float,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
     OpenClosed01: Distribution<F>,
 {
     #[inline]
@@ -135,7 +135,7 @@ where
 
             let t = (F::one() + F::one() / x).powf(self.s_minus_1);
 
-            let v = rng.sample(Standard);
+            let v = rng.sample(StandardUniform);
             if v * x * (t - F::one()) * self.b <= t * (self.b - F::one()) {
                 return x;
             }

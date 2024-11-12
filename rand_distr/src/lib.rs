@@ -34,7 +34,7 @@
 //! The following are re-exported:
 //!
 //! - The [`Distribution`] trait and [`DistIter`] helper type
-//! - The [`Standard`], [`Alphanumeric`], [`Uniform`], [`OpenClosed01`],
+//! - The [`StandardUniform`], [`Alphanumeric`], [`Uniform`], [`OpenClosed01`],
 //!   [`Open01`], [`Bernoulli`], and [`WeightedIndex`] distributions
 //!
 //! ## Distributions
@@ -95,7 +95,7 @@ use rand::Rng;
 
 pub use rand::distr::{
     uniform, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01, OpenClosed01,
-    Standard, Uniform,
+    StandardUniform, Uniform,
 };
 
 pub use self::beta::{Beta, Error as BetaError};

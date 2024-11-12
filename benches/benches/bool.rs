@@ -28,7 +28,7 @@ pub fn bench(c: &mut Criterion) {
 
     g.bench_function("standard", |b| {
         let mut rng = Pcg32::from_rng(&mut rand::rng());
-        b.iter(|| rng.sample::<bool, _>(rand::distr::Standard))
+        b.iter(|| rng.sample::<bool, _>(rand::distr::StandardUniform))
     });
 
     g.bench_function("const", |b| {

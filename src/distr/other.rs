@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The implementations of the `Standard` distribution for other built-in types.
+//! The implementations of the `StandardUniform` distribution for other built-in types.
 
 #[cfg(feature = "alloc")]
 use alloc::string::String;
@@ -15,7 +15,7 @@ use core::num::Wrapping;
 
 #[cfg(feature = "alloc")]
 use crate::distr::DistString;
-use crate::distr::{Distribution, Standard, Uniform};
+use crate::distr::{Distribution, StandardUniform, Uniform};
 use crate::Rng;
 
 use core::mem::{self, MaybeUninit};
@@ -72,7 +72,7 @@ pub struct Alphanumeric;
 
 // ----- Implementations of distributions -----
 
-impl Distribution<char> for Standard {
+impl Distribution<char> for StandardUniform {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> char {
         // A valid `char` is either in the interval `[0, 0xD800)` or
@@ -96,7 +96,7 @@ impl Distribution<char> for Standard {
 /// Note: the `String` is potentially left with excess capacity; optionally the
 /// user may call `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
-impl DistString for Standard {
+impl DistString for StandardUniform {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, s: &mut String, len: usize) {
         // A char is encoded with at most four bytes, thus this reservation is
         // guaranteed to be sufficient. We do not shrink_to_fit afterwards so
@@ -135,7 +135,7 @@ impl DistString for Alphanumeric {
     }
 }
 
-impl Distribution<bool> for Standard {
+impl Distribution<bool> for StandardUniform {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
         // We can compare against an arbitrary bit of an u32 to get a bool.
@@ -173,11 +173,11 @@ impl Distribution<bool> for Standard {
 /// [`_mm_blendv_epi8`]: https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_blendv_epi8&ig_expand=514/
 /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
 #[cfg(feature = "simd_support")]
-impl<T, const LANES: usize> Distribution<Mask<T, LANES>> for Standard
+impl<T, const LANES: usize> Distribution<Mask<T, LANES>> for StandardUniform
 where
     T: MaskElement + Default,
     LaneCount<LANES>: SupportedLaneCount,
-    Standard: Distribution<Simd<T, LANES>>,
+    StandardUniform: Distribution<Simd<T, LANES>>,
     Simd<T, LANES>: SimdPartialOrd<Mask = Mask<T, LANES>>,
 {
     #[inline]
@@ -189,13 +189,13 @@ where
     }
 }
 
-/// Implement `Distribution<(A, B, C, ...)> for Standard`, using the list of
+/// Implement `Distribution<(A, B, C, ...)> for StandardUniform`, using the list of
 /// identifiers
 macro_rules! tuple_impl {
     ($($tyvar:ident)*) => {
-        impl< $($tyvar,)* > Distribution<($($tyvar,)*)> for Standard
+        impl< $($tyvar,)* > Distribution<($($tyvar,)*)> for StandardUniform
         where $(
-            Standard: Distribution< $tyvar >,
+            StandardUniform: Distribution< $tyvar >,
         )*
         {
             #[inline]
@@ -234,9 +234,9 @@ macro_rules! tuple_impls {
 
 tuple_impls! {A B C D E F G H I J K L}
 
-impl<T, const N: usize> Distribution<[T; N]> for Standard
+impl<T, const N: usize> Distribution<[T; N]> for StandardUniform
 where
-    Standard: Distribution<T>,
+    StandardUniform: Distribution<T>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; N] {
@@ -250,9 +250,9 @@ where
     }
 }
 
-impl<T> Distribution<Option<T>> for Standard
+impl<T> Distribution<Option<T>> for StandardUniform
 where
-    Standard: Distribution<T>,
+    StandardUniform: Distribution<T>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Option<T> {
@@ -265,9 +265,9 @@ where
     }
 }
 
-impl<T> Distribution<Wrapping<T>> for Standard
+impl<T> Distribution<Wrapping<T>> for StandardUniform
 where
-    Standard: Distribution<T>,
+    StandardUniform: Distribution<T>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Wrapping<T> {
@@ -284,8 +284,8 @@ mod tests {
     fn test_misc() {
         let rng: &mut dyn RngCore = &mut crate::test::rng(820);
 
-        rng.sample::<char, _>(Standard);
-        rng.sample::<bool, _>(Standard);
+        rng.sample::<char, _>(StandardUniform);
+        rng.sample::<bool, _>(StandardUniform);
     }
 
     #[cfg(feature = "alloc")]
@@ -333,7 +333,7 @@ mod tests {
         }
 
         test_samples(
-            &Standard,
+            &StandardUniform,
             'a',
             &[
                 '\u{8cdac}',
@@ -344,14 +344,14 @@ mod tests {
             ],
         );
         test_samples(&Alphanumeric, 0, &[104, 109, 101, 51, 77]);
-        test_samples(&Standard, false, &[true, true, false, true, false]);
+        test_samples(&StandardUniform, false, &[true, true, false, true, false]);
         test_samples(
-            &Standard,
+            &StandardUniform,
             None as Option<bool>,
             &[Some(true), None, Some(false), None, Some(false)],
         );
         test_samples(
-            &Standard,
+            &StandardUniform,
             Wrapping(0i32),
             &[
                 Wrapping(-2074640887),
@@ -363,14 +363,14 @@ mod tests {
         );
 
         // We test only sub-sets of tuple and array impls
-        test_samples(&Standard, (), &[(), (), (), (), ()]);
+        test_samples(&StandardUniform, (), &[(), (), (), (), ()]);
         test_samples(
-            &Standard,
+            &StandardUniform,
             (false,),
             &[(true,), (true,), (false,), (true,), (false,)],
         );
         test_samples(
-            &Standard,
+            &StandardUniform,
             (false, false),
             &[
                 (true, true),
@@ -381,9 +381,9 @@ mod tests {
             ],
         );
 
-        test_samples(&Standard, [0u8; 0], &[[], [], [], [], []]);
+        test_samples(&StandardUniform, [0u8; 0], &[[], [], [], [], []]);
         test_samples(
-            &Standard,
+            &StandardUniform,
             [0u8; 3],
             &[
                 [9, 247, 111],
