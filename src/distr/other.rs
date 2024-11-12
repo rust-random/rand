@@ -250,21 +250,6 @@ where
     }
 }
 
-impl<T> Distribution<Option<T>> for StandardUniform
-where
-    StandardUniform: Distribution<T>,
-{
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Option<T> {
-        // UFCS is needed here: https://github.com/rust-lang/rust/issues/24066
-        if rng.random::<bool>() {
-            Some(rng.random())
-        } else {
-            None
-        }
-    }
-}
-
 impl<T> Distribution<Wrapping<T>> for StandardUniform
 where
     StandardUniform: Distribution<T>,
@@ -345,11 +330,6 @@ mod tests {
         );
         test_samples(&Alphanumeric, 0, &[104, 109, 101, 51, 77]);
         test_samples(&StandardUniform, false, &[true, true, false, true, false]);
-        test_samples(
-            &StandardUniform,
-            None as Option<bool>,
-            &[Some(true), None, Some(false), None, Some(false)],
-        );
         test_samples(
             &StandardUniform,
             Wrapping(0i32),

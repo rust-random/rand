@@ -162,8 +162,6 @@ use crate::Rng;
 ///     the former is optimised for integer types (using fewer RNG calls for
 ///     element types smaller than the RNG word size), while the latter supports
 ///     any element type supported by `StandardUniform`.
-/// *   `Option<T>` first generates a `bool`, and if true generates and returns
-///     `Some(value)` where `value: T`, otherwise returning `None`.
 ///
 /// ## Custom implementations
 ///
