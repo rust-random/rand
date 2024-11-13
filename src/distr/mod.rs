@@ -138,19 +138,24 @@ use crate::Rng;
 ///   normal integer variants.
 /// * Non-zero integers ([`NonZeroU8`]), which are like their normal integer
 ///   variants but cannot sample zero.
-/// * SIMD types like x86's [`__m128i`], `std::simd`'s [`u32x4`]/[`f32x4`]/
-///   [`mask32x4`] (requires [`simd_support`]), where each lane is distributed
-///   like their scalar `StandardUniform` variants. See the list of `StandardUniform`
-///   implementations for more.
 ///
 /// The `StandardUniform` distribution also supports generation of the following
 /// compound types where all component types are supported:
 ///
-/// *   Tuples (up to 12 elements): each element is generated sequentially.
-/// *   Arrays `[T; n]` where `T` is supported. Each element is generated
-///     sequentially which is sub-optimal where `T` is small; it may be faster
-///     to [`Rng::fill`] an existing array (but note that the two methods do not
-///     necessarily yield the same values).
+/// * Tuples (up to 12 elements): each element is sampled sequentially and
+///   independently (thus, assuming a well-behaved RNG, there is no correlation
+///   between elements).
+/// * Arrays `[T; n]` where `T` is supported. Each element is sampled
+///   sequentially and independently. Note that for small `T` this usually
+///   results in the RNG discarding random bits; see also [`Rng::fill`] which
+///   offers a more efficient approach to filling an array of integer types
+///   with random data.
+/// * SIMD types (requires [`simd_support`] feature) like x86's [`__m128i`]
+///   and `std::simd`'s [`u32x4`], [`f32x4`] and [`mask32x4`] types are
+///   effectively arrays of integer or floating-point types. Each lane is
+///   sampled independently, potentially with more efficient random-bit-usage
+///   (and a different resulting value) than would be achieved with sequential
+///   sampling (as with the array types above).
 ///
 /// ## Custom implementations
 ///
