@@ -131,7 +131,7 @@ fn fraction_of_products_of_factorials(numerator: (u64, u64), denominator: (u64, 
     result
 }
 
-const LOGSQRT2PI: f64 = 0.91893853320467274178; // log(sqrt(2)*pi)
+const LOGSQRT2PI: f64 = 0.91893853320467274178; // log(sqrt(2*pi))
 
 fn ln_of_factorial(v: f64) -> f64 {
     // the paper calls for ln(v!), but also wants to pass in fractions,
