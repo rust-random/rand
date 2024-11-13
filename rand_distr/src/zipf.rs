@@ -35,9 +35,16 @@ use rand::Rng;
 /// use rand::prelude::*;
 /// use rand_distr::Zipf;
 ///
-/// let val: f64 = rand::rng().sample(Zipf::new(10, 1.5).unwrap());
+/// let val: f64 = rand::rng().sample(Zipf::new(10.0, 1.5).unwrap());
 /// println!("{}", val);
 /// ```
+///
+/// # Integer vs FP return type
+///
+/// This implementation uses floating-point (FP) logic internally. It may be
+/// expected that the samples are no greater than `n`, thus it is reasonable to
+/// cast generated samples to any integer type which can also represent `n`
+/// (e.g. `distr.sample(&mut rng) as u64`).
 ///
 /// # Implementation details
 ///
@@ -85,16 +92,17 @@ where
     /// Construct a new `Zipf` distribution for a set with `n` elements and a
     /// frequency rank exponent `s`.
     ///
-    /// For large `n`, rounding may occur to fit the number into the float type.
+    /// The parameter `n` is typically integral, however we use type
+    /// <pre><code>F: [Float]</code></pre> in order to permit very large values
+    /// and since our implementation requires a floating-point type.
     #[inline]
-    pub fn new(n: u64, s: F) -> Result<Zipf<F>, Error> {
+    pub fn new(n: F, s: F) -> Result<Zipf<F>, Error> {
         if !(s >= F::zero()) {
             return Err(Error::STooSmall);
         }
-        if n < 1 {
+        if n < F::one() {
             return Err(Error::NTooSmall);
         }
-        let n = F::from(n).unwrap(); // This does not fail.
         let q = if s != F::one() {
             // Make sure to calculate the division only once.
             F::one() / (F::one() - s)
@@ -166,24 +174,24 @@ mod tests {
     #[test]
     #[should_panic]
     fn zipf_s_too_small() {
-        Zipf::new(10, -1.).unwrap();
+        Zipf::new(10., -1.).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn zipf_n_too_small() {
-        Zipf::new(0, 1.).unwrap();
+        Zipf::new(0., 1.).unwrap();
     }
 
     #[test]
     #[should_panic]
     fn zipf_nan() {
-        Zipf::new(10, f64::NAN).unwrap();
+        Zipf::new(10., f64::NAN).unwrap();
     }
 
     #[test]
     fn zipf_sample() {
-        let d = Zipf::new(10, 0.5).unwrap();
+        let d = Zipf::new(10., 0.5).unwrap();
         let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);
@@ -193,7 +201,7 @@ mod tests {
 
     #[test]
     fn zipf_sample_s_1() {
-        let d = Zipf::new(10, 1.).unwrap();
+        let d = Zipf::new(10., 1.).unwrap();
         let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);
@@ -203,7 +211,7 @@ mod tests {
 
     #[test]
     fn zipf_sample_s_0() {
-        let d = Zipf::new(10, 0.).unwrap();
+        let d = Zipf::new(10., 0.).unwrap();
         let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);
@@ -214,7 +222,7 @@ mod tests {
 
     #[test]
     fn zipf_sample_large_n() {
-        let d = Zipf::new(u64::MAX, 1.5).unwrap();
+        let d = Zipf::new(f64::MAX, 1.5).unwrap();
         let mut rng = crate::test::rng(2);
         for _ in 0..1000 {
             let r = d.sample(&mut rng);
@@ -225,12 +233,12 @@ mod tests {
 
     #[test]
     fn zipf_value_stability() {
-        test_samples(Zipf::new(10, 0.5).unwrap(), 0f32, &[10.0, 2.0, 6.0, 7.0]);
-        test_samples(Zipf::new(10, 2.0).unwrap(), 0f64, &[1.0, 2.0, 3.0, 2.0]);
+        test_samples(Zipf::new(10., 0.5).unwrap(), 0f32, &[10.0, 2.0, 6.0, 7.0]);
+        test_samples(Zipf::new(10., 2.0).unwrap(), 0f64, &[1.0, 2.0, 3.0, 2.0]);
     }
 
     #[test]
     fn zipf_distributions_can_be_compared() {
-        assert_eq!(Zipf::new(1, 2.0), Zipf::new(1, 2.0));
+        assert_eq!(Zipf::new(1.0, 2.0), Zipf::new(1.0, 2.0));
     }
 }

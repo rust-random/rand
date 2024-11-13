@@ -29,14 +29,17 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Implementation notes
 ///
-/// Instead of generating a float in the `[0, 1)` range using [`Standard`], the
-/// `UniformFloat` implementation converts the output of an PRNG itself. This
-/// way one or two steps can be optimized out.
+/// `UniformFloat` implementations convert RNG output to a float in the range
+/// `[1, 2)` via transmutation, map this to `[0, 1)`, then scale and translate
+/// to the desired range. Values produced this way have what equals 23 bits of
+/// random digits for an `f32` and 52 for an `f64`.
 ///
-/// The floats are first converted to a value in the `[1, 2)` interval using a
-/// transmute-based method, and then mapped to the expected range with a
-/// multiply and addition. Values produced this way have what equals 23 bits of
-/// random digits for an `f32`, and 52 for an `f64`.
+/// # Bias and range errors
+///
+/// Bias may be expected within the least-significant bit of the significand.
+/// It is not guaranteed that exclusive limits of a range are respected; i.e.
+/// when sampling the range `[a, b)` it is not guaranteed that `b` is never
+/// sampled.
 ///
 /// [`new`]: UniformSampler::new
 /// [`new_inclusive`]: UniformSampler::new_inclusive

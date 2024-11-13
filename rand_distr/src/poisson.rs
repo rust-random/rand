@@ -39,6 +39,17 @@ use rand::Rng;
 /// let v: f64 = poi.sample(&mut rand::rng());
 /// println!("{} is from a Poisson(2) distribution", v);
 /// ```
+///
+/// # Integer vs FP return type
+///
+/// This implementation uses floating-point (FP) logic internally.
+///
+/// Due to the parameter limit <code>λ < [Self::MAX_LAMBDA]</code>, it
+/// statistically impossible to sample a value larger [`u64::MAX`]. As such, it
+/// is reasonable to cast generated samples to `u64` using `as`:
+/// `distr.sample(&mut rng) as u64` (and memory safe since Rust 1.45).
+/// Similarly, when `λ < 4.2e9` it can be safely assumed that samples are less
+/// than `u32::MAX`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Poisson<F>(Method<F>)
@@ -235,14 +246,6 @@ where
             Method::Knuth(method) => method.sample(rng),
             Method::Rejection(method) => method.sample(rng),
         }
-    }
-}
-
-impl Distribution<u64> for Poisson<f64> {
-    #[inline]
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
-        // `as` from float to int saturates
-        <Poisson<f64> as Distribution<f64>>::sample(self, rng) as u64
     }
 }
 
