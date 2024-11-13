@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480).
 - Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` and `Fill` and usage as a `WeightedAliasIndex` weight (#1487)
 - Limit the maximal acceptable lambda for `Poisson` to solve (#1312) (#1498)
+- Fix bug in `Hypergeometric`, this is a Value-breaking change (#1510)
 - Change parameter type of `Zipf::new`: `n` is now floating-point (#1518)
 
 ### Added

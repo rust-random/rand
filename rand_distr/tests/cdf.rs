@@ -598,7 +598,7 @@ fn hypergeometric() {
         (60, 10, 7),
         (70, 20, 50),
         (100, 50, 10),
-        // (100, 50, 49), // Fail case
+        (100, 50, 49),
     ];
 
     for (seed, (n, k, n_)) in parameters.into_iter().enumerate() {

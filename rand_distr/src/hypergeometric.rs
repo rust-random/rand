@@ -131,10 +131,17 @@ fn fraction_of_products_of_factorials(numerator: (u64, u64), denominator: (u64, 
     result
 }
 
+const LOGSQRT2PI: f64 = 0.91893853320467274178; // log(sqrt(2*pi))
+
 fn ln_of_factorial(v: f64) -> f64 {
     // the paper calls for ln(v!), but also wants to pass in fractions,
     // so we need to use Stirling's approximation to fill in the gaps:
-    v * v.ln() - v
+
+    // shift v by 3, because Stirling is bad for small values
+    let v_3 = v + 3.0;
+    let ln_fac = (v_3 + 0.5) * v_3.ln() - v_3 + LOGSQRT2PI + 1.0 / (12.0 * v_3);
+    // make the correction for the shift
+    ln_fac - ((v + 3.0) * (v + 2.0) * (v + 1.0)).ln()
 }
 
 impl Hypergeometric {
@@ -359,7 +366,7 @@ impl Distribution<u64> for Hypergeometric {
                         } else {
                             for i in (y as u64 + 1)..=(m as u64) {
                                 f *= i as f64 * (n2 - k + i) as f64;
-                                f /= (n1 - i) as f64 * (k - i) as f64;
+                                f /= (n1 - i + 1) as f64 * (k - i + 1) as f64;
                             }
                         }
 
@@ -441,6 +448,7 @@ impl Distribution<u64> for Hypergeometric {
 
 #[cfg(test)]
 mod test {
+
     use super::*;
 
     #[test]
@@ -493,5 +501,14 @@ mod test {
     #[test]
     fn hypergeometric_distributions_can_be_compared() {
         assert_eq!(Hypergeometric::new(1, 2, 3), Hypergeometric::new(1, 2, 3));
+    }
+
+    #[test]
+    fn stirling() {
+        let test = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+        for &v in test.iter() {
+            let ln_fac = ln_of_factorial(v);
+            assert!((special::Gamma::ln_gamma(v + 1.0).0 - ln_fac).abs() < 1e-4);
+        }
     }
 }

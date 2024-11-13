@@ -105,7 +105,7 @@ fn hypergeometric_stability() {
     test_samples(
         7221,
         Hypergeometric::new(100, 50, 50).unwrap(),
-        &[23, 27, 26, 27, 22, 24, 31, 22],
+        &[23, 27, 26, 27, 22, 25, 31, 25],
     ); // Algorithm H2PE
 }
 
