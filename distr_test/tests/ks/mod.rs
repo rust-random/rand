@@ -11,6 +11,8 @@
 //     by Taylor B. Arnold and John W. Emerson
 //     http://www.stat.yale.edu/~jay/EmersonMaterials/DiscreteGOF.pdf
 
+#![allow(dead_code)]
+
 use num_traits::AsPrimitive;
 use rand::SeedableRng;
 use rand_distr::Distribution;
