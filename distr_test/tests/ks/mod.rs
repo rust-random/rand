@@ -6,7 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-
 // [1] Nonparametric Goodness-of-Fit Tests for Discrete Null Distributions
 //     by Taylor B. Arnold and John W. Emerson
 //     http://www.stat.yale.edu/~jay/EmersonMaterials/DiscreteGOF.pdf

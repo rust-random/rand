@@ -28,14 +28,17 @@ fn normal() {
     ];
 
     for (seed, (mean, std_dev)) in parameters.into_iter().enumerate() {
-        test_continuous(seed as u64, rand_distr::Normal::new(mean, std_dev).unwrap(), |x| {
-            statrs::distribution::Normal::new(mean, std_dev)
-                .unwrap()
-                .cdf(x)
-        });
+        test_continuous(
+            seed as u64,
+            rand_distr::Normal::new(mean, std_dev).unwrap(),
+            |x| {
+                statrs::distribution::Normal::new(mean, std_dev)
+                    .unwrap()
+                    .cdf(x)
+            },
+        );
     }
 }
-
 
 #[test]
 fn cauchy() {
@@ -424,9 +427,9 @@ fn hypergeometric() {
 fn poisson() {
     use rand_distr::Poisson;
     let parameters = [
-        0.1, 1.0, 7.5, 45.0
-        // 1e9, passed case but too slow
-        // 1.844E+19,  // fail case
+        0.1, 1.0, 7.5,
+        45.0, // 1e9, passed case but too slow
+             // 1.844E+19,  // fail case
     ];
 
     for (seed, lambda) in parameters.into_iter().enumerate() {
@@ -449,5 +452,3 @@ fn ln_factorial(n: u64) -> f64 {
 fn ln_binomial(n: u64, k: u64) -> f64 {
     ln_factorial(n) - ln_factorial(k) - ln_factorial(n - k)
 }
-
-

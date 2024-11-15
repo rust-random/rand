@@ -1,4 +1,4 @@
-name: Benches
+name: distr_test
 
 on:
   pull_request:
