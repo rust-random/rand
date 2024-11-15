@@ -44,7 +44,7 @@ fn zipf() {
     let parameters = [(1000, 1.0), (500, 2.0), (1000, 0.5)];
 
     for (seed, (n, x)) in parameters.into_iter().enumerate() {
-        let dist = rand_distr::Zipf::new(n, x).unwrap();
+        let dist = rand_distr::Zipf::new(n as f64, x).unwrap();
         test_discrete(seed as u64, dist, |k| cdf(k, n, x));
     }
 }

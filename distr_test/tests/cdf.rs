@@ -204,45 +204,6 @@ fn frechet() {
 }
 
 #[test]
-fn zeta() {
-    fn cdf(k: i64, s: f64) -> f64 {
-        use spfunc::zeta::zeta as zeta_func;
-        if k < 1 {
-            return 0.0;
-        }
-
-        gen_harmonic(k as u64, s) / zeta_func(s)
-    }
-
-    let parameters = [2.0, 3.7, 5.0, 100.0];
-
-    for (seed, s) in parameters.into_iter().enumerate() {
-        let dist = rand_distr::Zeta::new(s).unwrap();
-        test_discrete(seed as u64, dist, |k| cdf(k, s));
-    }
-}
-
-#[test]
-fn zipf() {
-    fn cdf(k: i64, n: u64, s: f64) -> f64 {
-        if k < 1 {
-            return 0.0;
-        }
-        if k > n as i64 {
-            return 1.0;
-        }
-        gen_harmonic(k as u64, s) / gen_harmonic(n, s)
-    }
-
-    let parameters = [(1000, 1.0), (500, 2.0), (1000, 0.5)];
-
-    for (seed, (n, x)) in parameters.into_iter().enumerate() {
-        let dist = rand_distr::Zipf::new(n as f64, x).unwrap();
-        test_discrete(seed as u64, dist, |k| cdf(k, n, x));
-    }
-}
-
-#[test]
 fn gamma() {
     fn cdf(x: f64, shape: f64, scale: f64) -> f64 {
         if x < 0.0 {
