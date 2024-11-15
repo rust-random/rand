@@ -8,6 +8,8 @@ publish = false
 rand_distr = { path = "../rand_distr", version = "=0.5.0-alpha.1", default-features = false }
 rand = { path = "..", version = "=0.9.0-alpha.1", features = ["small_rng"] }
 num-traits = "0.2.19"
+# Make 1.61 compatible
+libm = {version = ">=0.2, < 0.2.10"}
 # Special functions for testing distributions
 special = "0.11.0"
 spfunc = "0.1.0"

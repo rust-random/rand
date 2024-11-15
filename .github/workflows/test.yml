@@ -101,12 +101,12 @@ jobs:
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc,getrandom
-          cargo test --target ${{ matrix.target }} --manifest-path distr_test/Cargo.toml --release
       - name: Test rand_distr
         run: |
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --features=serde
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --no-default-features
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --no-default-features --features=std,std_math
+          cargo test --target ${{ matrix.target }} --manifest-path distr_test/Cargo.toml --release
       - name: Test rand_pcg
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
       - name: Test rand_chacha
