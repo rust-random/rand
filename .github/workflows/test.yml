@@ -69,7 +69,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: MSRV
         if: ${{ matrix.variant == 'MSRV' }}
-        run: cp Cargo.lock.msrv Cargo.lock
+        run: |
+          cp Cargo.lock.msrv Cargo.lock
+          cp distr_test/Cargo.lock.msrv distr_test/Cargo.lock
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@master
         with:
