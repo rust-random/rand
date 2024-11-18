@@ -69,9 +69,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: MSRV
         if: ${{ matrix.variant == 'MSRV' }}
-        run: |
-          cp Cargo.lock.msrv Cargo.lock
-          cp distr_test/Cargo.lock.msrv distr_test/Cargo.lock
+        run: cp Cargo.lock.msrv Cargo.lock
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@master
         with:
@@ -108,11 +106,21 @@ jobs:
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --features=serde
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --no-default-features
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --no-default-features --features=std,std_math
-          cargo test --target ${{ matrix.target }} --manifest-path distr_test/Cargo.toml --release
       - name: Test rand_pcg
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
       - name: Test rand_chacha
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml --features=serde
+
+  test-ks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+            target: x86_64-unknown-linux-gnu
+      - name: Test Komogorov Smirnov
+        run: cargo test --target ${{ matrix.target }} --manifest-path distr_test/Cargo.toml --release
 
   test-cross:
     runs-on: ${{ matrix.os }}
