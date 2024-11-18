@@ -9,7 +9,7 @@
 mod ks;
 use ks::test_discrete;
 use rand::distr::{Distribution, WeightedIndex};
-use rand::seq::IndexedRandom;
+use rand::seq::{IndexedRandom, IteratorRandom};
 use rand_distr::{WeightedAliasIndex, WeightedTreeIndex};
 
 fn make_cdf(num: usize, f: impl Fn(i64) -> f64) -> impl Fn(i64) -> f64 {
@@ -168,4 +168,17 @@ fn choose_two_weighted_indexed() {
     // test_weights(100, |i| i as f64);
     // test_weights(100, |i| (i as f64).powi(3));
     // test_weights(100, |i| 1.0 / ((i + 1) as f64));
+}
+
+#[test]
+fn choose_iterator() {
+    struct Adapter<I>(I);
+    impl<I: Clone + Iterator<Item = i64>> Distribution<i64> for Adapter<I> {
+        fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> i64 {
+            IteratorRandom::choose(self.0.clone(), rng).unwrap()
+        }
+    }
+
+    let distr = Adapter((0..100).map(|i| i as i64));
+    test_discrete(0, distr, make_cdf(100, |_| 1.0));
 }
