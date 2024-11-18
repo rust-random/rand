@@ -120,7 +120,7 @@ jobs:
         with:
             target: x86_64-unknown-linux-gnu
       - name: Test Komogorov Smirnov
-        run: cargo test --target ${{ matrix.target }} --manifest-path distr_test/Cargo.toml --release
+        run: cargo test --manifest-path distr_test/Cargo.toml --release
 
   test-cross:
     runs-on: ${{ matrix.os }}
