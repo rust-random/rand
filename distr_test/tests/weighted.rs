@@ -121,3 +121,51 @@ fn choose_one_weighted_indexed() {
     test_weights(100, |i| (i as f64).powi(3));
     test_weights(100, |i| 1.0 / ((i + 1) as f64));
 }
+
+#[test]
+fn choose_two_weighted_indexed() {
+    struct Adapter<F: Fn(i64) -> f64>(Vec<i64>, F);
+    impl<F: Fn(i64) -> f64> Distribution<i64> for Adapter<F> {
+        fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> i64 {
+            let mut iter =
+                IndexedRandom::choose_multiple_weighted(&self.0[..], rng, 2, |i| (self.1)(*i))
+                    .unwrap();
+            let a = *iter.next().unwrap();
+            let b = *iter.next().unwrap();
+            assert!(iter.next().is_none());
+            a * self.0.len() as i64 + b
+        }
+    }
+
+    fn test_weights(num: usize, weight: impl Fn(i64) -> f64) {
+        let distr = Adapter((0..num).map(|i| i as i64).collect(), &weight);
+
+        let pmf1 = (0..num).map(|i| weight(i as i64)).collect::<Vec<f64>>();
+        let total: f64 = pmf1.iter().sum();
+        let mut ac = 0.0;
+        let frac = total.powi(-2);
+        let mut cdf = Vec::with_capacity(num * num);
+        for a in 0..num {
+            for b in 0..num {
+                ac += pmf1[a] * pmf1[b];
+                cdf.push(ac * frac);
+            }
+        }
+
+        let cdf = |i| {
+            if i < 0 {
+                0.0
+            } else {
+                cdf[i as usize]
+            }
+        };
+
+        test_discrete(0, distr, cdf);
+    }
+
+    test_weights(100, |_| 1.0);
+    test_weights(100, |i| ((i + 1) as f64).ln());
+    // test_weights(100, |i| i as f64);
+    // test_weights(100, |i| (i as f64).powi(3));
+    // test_weights(100, |i| 1.0 / ((i + 1) as f64));
+}
