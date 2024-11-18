@@ -9,7 +9,7 @@
 
 //! The Cauchy distribution `Cauchy(x₀, γ)`.
 
-use crate::{Distribution, Standard};
+use crate::{Distribution, StandardUniform};
 use core::fmt;
 use num_traits::{Float, FloatConst};
 use rand::Rng;
@@ -58,7 +58,7 @@ use rand::Rng;
 pub struct Cauchy<F>
 where
     F: Float + FloatConst,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     median: F,
     scale: F,
@@ -85,7 +85,7 @@ impl std::error::Error for Error {}
 impl<F> Cauchy<F>
 where
     F: Float + FloatConst,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     /// Construct a new `Cauchy` with the given shape parameters
     /// `median` the peak location and `scale` the scale factor.
@@ -100,11 +100,11 @@ where
 impl<F> Distribution<F> for Cauchy<F>
 where
     F: Float + FloatConst,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         // sample from [0, 1)
-        let x = Standard.sample(rng);
+        let x = StandardUniform.sample(rng);
         // get standard cauchy random number
         // note that π/2 is not exactly representable, even if x=0.5 the result is finite
         let comp_dev = (F::PI() * x).tan();
@@ -166,7 +166,7 @@ mod test {
     fn value_stability() {
         fn gen_samples<F: Float + FloatConst + fmt::Debug>(m: F, s: F, buf: &mut [F])
         where
-            Standard: Distribution<F>,
+            StandardUniform: Distribution<F>,
         {
             let distr = Cauchy::new(m, s).unwrap();
             let mut rng = crate::test::rng(353);

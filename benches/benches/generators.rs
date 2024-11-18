@@ -171,7 +171,7 @@ pub fn init_from_seed(c: &mut Criterion) {
 
     fn bench<R: SeedableRng>(g: &mut BenchmarkGroup<WallTime>, name: &str)
     where
-        rand::distr::Standard: Distribution<<R as SeedableRng>::Seed>,
+        rand::distr::StandardUniform: Distribution<<R as SeedableRng>::Seed>,
     {
         g.bench_function(name, |b| {
             let mut rng = Pcg32::from_os_rng();

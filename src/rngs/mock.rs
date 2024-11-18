@@ -93,11 +93,11 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn test_bool() {
-        use crate::{distr::Standard, Rng};
+        use crate::{distr::StandardUniform, Rng};
 
         // If this result ever changes, update doc on StepRng!
         let rng = StepRng::new(0, 1 << 31);
-        let result: alloc::vec::Vec<bool> = rng.sample_iter(Standard).take(6).collect();
+        let result: alloc::vec::Vec<bool> = rng.sample_iter(StandardUniform).take(6).collect();
         assert_eq!(&result, &[false, true, false, true, false, true]);
     }
 }

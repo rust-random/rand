@@ -48,12 +48,12 @@ pub trait Distribution<T> {
     /// # Example
     ///
     /// ```
-    /// use rand::distr::{Distribution, Alphanumeric, Uniform, Standard};
+    /// use rand::distr::{Distribution, Alphanumeric, Uniform, StandardUniform};
     ///
     /// let mut rng = rand::rng();
     ///
     /// // Vec of 16 x f32:
-    /// let v: Vec<f32> = Standard.sample_iter(&mut rng).take(16).collect();
+    /// let v: Vec<f32> = StandardUniform.sample_iter(&mut rng).take(16).collect();
     ///
     /// // String:
     /// let s: String = Alphanumeric
@@ -246,7 +246,7 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn test_dist_string() {
-        use crate::distr::{Alphanumeric, DistString, Standard};
+        use crate::distr::{Alphanumeric, DistString, StandardUniform};
         use core::str;
         let mut rng = crate::test::rng(213);
 
@@ -254,7 +254,7 @@ mod tests {
         assert_eq!(s1.len(), 20);
         assert_eq!(str::from_utf8(s1.as_bytes()), Ok(s1.as_str()));
 
-        let s2 = Standard.sample_string(&mut rng, 20);
+        let s2 = StandardUniform.sample_string(&mut rng, 20);
         assert_eq!(s2.chars().count(), 20);
         assert_eq!(str::from_utf8(s2.as_bytes()), Ok(s2.as_str()));
     }

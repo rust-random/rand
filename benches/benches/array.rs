@@ -9,7 +9,7 @@
 //! Generating/filling arrays and iterators of output
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use rand::distr::Standard;
+use rand::distr::StandardUniform;
 use rand::prelude::*;
 use rand_pcg::Pcg64Mcg;
 
@@ -36,7 +36,7 @@ pub fn bench(c: &mut Criterion) {
     g.bench_function("u16_sample_iter", |b| {
         let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
         b.iter(|| {
-            let v: Vec<u16> = Standard.sample_iter(&mut rng).take(512).collect();
+            let v: Vec<u16> = StandardUniform.sample_iter(&mut rng).take(512).collect();
             v
         });
     });
@@ -70,7 +70,7 @@ pub fn bench(c: &mut Criterion) {
     g.bench_function("u64_sample_iter", |b| {
         let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
         b.iter(|| {
-            let v: Vec<u64> = Standard.sample_iter(&mut rng).take(128).collect();
+            let v: Vec<u64> = StandardUniform.sample_iter(&mut rng).take(128).collect();
             v
         });
     });

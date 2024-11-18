@@ -9,7 +9,7 @@
 
 //! The Poisson distribution `Poisson(λ)`.
 
-use crate::{Cauchy, Distribution, Standard};
+use crate::{Cauchy, Distribution, StandardUniform};
 use core::fmt;
 use num_traits::{Float, FloatConst};
 use rand::Rng;
@@ -55,7 +55,7 @@ use rand::Rng;
 pub struct Poisson<F>(Method<F>)
 where
     F: Float + FloatConst,
-    Standard: Distribution<F>;
+    StandardUniform: Distribution<F>;
 
 /// Error type returned from [`Poisson::new`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -130,7 +130,7 @@ enum Method<F> {
 impl<F> Poisson<F>
 where
     F: Float + FloatConst,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     /// Construct a new `Poisson` with the given shape parameter
     /// `lambda`.
@@ -172,7 +172,7 @@ where
 impl<F> Distribution<F> for KnuthMethod<F>
 where
     F: Float + FloatConst,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         let mut result = F::one();
@@ -188,7 +188,7 @@ where
 impl<F> Distribution<F> for RejectionMethod<F>
 where
     F: Float + FloatConst,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
         // The algorithm from Numerical Recipes in C
@@ -238,7 +238,7 @@ where
 impl<F> Distribution<F> for Poisson<F>
 where
     F: Float + FloatConst,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
@@ -255,7 +255,7 @@ mod test {
 
     fn test_poisson_avg_gen<F: Float + FloatConst>(lambda: F, tol: F)
     where
-        Standard: Distribution<F>,
+        StandardUniform: Distribution<F>,
     {
         let poisson = Poisson::new(lambda).unwrap();
         let mut rng = crate::test::rng(123);

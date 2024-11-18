@@ -7,7 +7,7 @@
 // except according to those terms.
 //! The triangular distribution.
 
-use crate::{Distribution, Standard};
+use crate::{Distribution, StandardUniform};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
@@ -43,7 +43,7 @@ use rand::Rng;
 pub struct Triangular<F>
 where
     F: Float,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     min: F,
     max: F,
@@ -76,7 +76,7 @@ impl std::error::Error for TriangularError {}
 impl<F> Triangular<F>
 where
     F: Float,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     /// Set up the Triangular distribution with defined `min`, `max` and `mode`.
     #[inline]
@@ -94,11 +94,11 @@ where
 impl<F> Distribution<F> for Triangular<F>
 where
     F: Float,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> F {
-        let f: F = rng.sample(Standard);
+        let f: F = rng.sample(StandardUniform);
         let diff_mode_min = self.mode - self.min;
         let range = self.max - self.min;
         let f_range = f * range;

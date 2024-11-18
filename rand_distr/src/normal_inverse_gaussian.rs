@@ -1,4 +1,4 @@
-use crate::{Distribution, InverseGaussian, Standard, StandardNormal};
+use crate::{Distribution, InverseGaussian, StandardNormal, StandardUniform};
 use core::fmt;
 use num_traits::Float;
 use rand::Rng;
@@ -54,7 +54,7 @@ pub struct NormalInverseGaussian<F>
 where
     F: Float,
     StandardNormal: Distribution<F>,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     beta: F,
     inverse_gaussian: InverseGaussian<F>,
@@ -64,7 +64,7 @@ impl<F> NormalInverseGaussian<F>
 where
     F: Float,
     StandardNormal: Distribution<F>,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     /// Construct a new `NormalInverseGaussian` distribution with the given alpha (tail heaviness) and
     /// beta (asymmetry) parameters.
@@ -94,7 +94,7 @@ impl<F> Distribution<F> for NormalInverseGaussian<F>
 where
     F: Float,
     StandardNormal: Distribution<F>,
-    Standard: Distribution<F>,
+    StandardUniform: Distribution<F>,
 {
     fn sample<R>(&self, rng: &mut R) -> F
     where

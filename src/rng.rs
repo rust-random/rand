@@ -10,7 +10,7 @@
 //! [`Rng`] trait
 
 use crate::distr::uniform::{SampleRange, SampleUniform};
-use crate::distr::{self, Distribution, Standard};
+use crate::distr::{self, Distribution, StandardUniform};
 use core::num::Wrapping;
 use rand_core::RngCore;
 use zerocopy::IntoBytes;
@@ -56,7 +56,7 @@ use zerocopy::IntoBytes;
 /// # let v = foo(&mut rand::rng());
 /// ```
 pub trait Rng: RngCore {
-    /// Return a random value via the [`Standard`] distribution.
+    /// Return a random value via the [`StandardUniform`] distribution.
     ///
     /// # Example
     ///
@@ -90,19 +90,19 @@ pub trait Rng: RngCore {
     /// rng.fill(&mut arr2);                    // array fill
     /// ```
     ///
-    /// [`Standard`]: distr::Standard
+    /// [`StandardUniform`]: distr::StandardUniform
     #[inline]
     fn random<T>(&mut self) -> T
     where
-        Standard: Distribution<T>,
+        StandardUniform: Distribution<T>,
     {
-        Standard.sample(self)
+        StandardUniform.sample(self)
     }
 
     /// Return an iterator over [`random`](Self::random) variates
     ///
     /// This is a just a wrapper over [`Rng::sample_iter`] using
-    /// [`distr::Standard`].
+    /// [`distr::StandardUniform`].
     ///
     /// Note: this method consumes its argument. Use
     /// `(&mut rng).random_iter()` to avoid consuming the RNG.
@@ -117,12 +117,12 @@ pub trait Rng: RngCore {
     /// assert_eq!(&v, &[1, 2, 3, 4, 5]);
     /// ```
     #[inline]
-    fn random_iter<T>(self) -> distr::DistIter<Standard, Self, T>
+    fn random_iter<T>(self) -> distr::DistIter<StandardUniform, Self, T>
     where
         Self: Sized,
-        Standard: Distribution<T>,
+        StandardUniform: Distribution<T>,
     {
-        Standard.sample_iter(self)
+        StandardUniform.sample_iter(self)
     }
 
     /// Generate a random value in the given range.
@@ -259,12 +259,12 @@ pub trait Rng: RngCore {
     ///
     /// ```
     /// use rand::Rng;
-    /// use rand::distr::{Alphanumeric, Uniform, Standard};
+    /// use rand::distr::{Alphanumeric, Uniform, StandardUniform};
     ///
     /// let mut rng = rand::rng();
     ///
     /// // Vec of 16 x f32:
-    /// let v: Vec<f32> = (&mut rng).sample_iter(Standard).take(16).collect();
+    /// let v: Vec<f32> = (&mut rng).sample_iter(StandardUniform).take(16).collect();
     ///
     /// // String:
     /// let s: String = (&mut rng).sample_iter(Alphanumeric)
@@ -273,7 +273,7 @@ pub trait Rng: RngCore {
     ///     .collect();
     ///
     /// // Combined values
-    /// println!("{:?}", (&mut rng).sample_iter(Standard).take(5)
+    /// println!("{:?}", (&mut rng).sample_iter(StandardUniform).take(5)
     ///                              .collect::<Vec<(f64, bool)>>());
     ///
     /// // Dice-rolling:
@@ -323,7 +323,7 @@ pub trait Rng: RngCore {
     )]
     fn r#gen<T>(&mut self) -> T
     where
-        Standard: Distribution<T>,
+        StandardUniform: Distribution<T>,
     {
         self.random()
     }
@@ -580,25 +580,25 @@ mod test {
 
     #[test]
     fn test_rng_trait_object() {
-        use crate::distr::{Distribution, Standard};
+        use crate::distr::{Distribution, StandardUniform};
         let mut rng = rng(109);
         let mut r = &mut rng as &mut dyn RngCore;
         r.next_u32();
         r.random::<i32>();
         assert_eq!(r.random_range(0..1), 0);
-        let _c: u8 = Standard.sample(&mut r);
+        let _c: u8 = StandardUniform.sample(&mut r);
     }
 
     #[test]
     #[cfg(feature = "alloc")]
     fn test_rng_boxed_trait() {
-        use crate::distr::{Distribution, Standard};
+        use crate::distr::{Distribution, StandardUniform};
         let rng = rng(110);
         let mut r = Box::new(rng) as Box<dyn RngCore>;
         r.next_u32();
         r.random::<i32>();
         assert_eq!(r.random_range(0..1), 0);
-        let _c: u8 = Standard.sample(&mut r);
+        let _c: u8 = StandardUniform.sample(&mut r);
     }
 
     #[test]

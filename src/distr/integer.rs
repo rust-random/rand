@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! The implementations of the `Standard` distribution for integer types.
+//! The implementations of the `StandardUniform` distribution for integer types.
 
-use crate::distr::{Distribution, Standard};
+use crate::distr::{Distribution, StandardUniform};
 use crate::Rng;
 #[cfg(all(target_arch = "x86", feature = "simd_support"))]
 use core::arch::x86::__m512i;
@@ -25,35 +25,35 @@ use core::num::{
 #[cfg(feature = "simd_support")]
 use core::simd::*;
 
-impl Distribution<u8> for Standard {
+impl Distribution<u8> for StandardUniform {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u8 {
         rng.next_u32() as u8
     }
 }
 
-impl Distribution<u16> for Standard {
+impl Distribution<u16> for StandardUniform {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u16 {
         rng.next_u32() as u16
     }
 }
 
-impl Distribution<u32> for Standard {
+impl Distribution<u32> for StandardUniform {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u32 {
         rng.next_u32()
     }
 }
 
-impl Distribution<u64> for Standard {
+impl Distribution<u64> for StandardUniform {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u64 {
         rng.next_u64()
     }
 }
 
-impl Distribution<u128> for Standard {
+impl Distribution<u128> for StandardUniform {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u128 {
         // Use LE; we explicitly generate one value before the next.
@@ -65,7 +65,7 @@ impl Distribution<u128> for Standard {
 
 macro_rules! impl_int_from_uint {
     ($ty:ty, $uty:ty) => {
-        impl Distribution<$ty> for Standard {
+        impl Distribution<$ty> for StandardUniform {
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 rng.random::<$uty>() as $ty
@@ -82,7 +82,7 @@ impl_int_from_uint! { i128, u128 }
 
 macro_rules! impl_nzint {
     ($ty:ty, $new:path) => {
-        impl Distribution<$ty> for Standard {
+        impl Distribution<$ty> for StandardUniform {
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $ty {
                 loop {
                     if let Some(nz) = $new(rng.random()) {
@@ -110,7 +110,7 @@ impl_nzint!(NonZeroI128, NonZeroI128::new);
 macro_rules! x86_intrinsic_impl {
     ($meta:meta, $($intrinsic:ident),+) => {$(
         #[cfg($meta)]
-        impl Distribution<$intrinsic> for Standard {
+        impl Distribution<$intrinsic> for StandardUniform {
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> $intrinsic {
                 // On proper hardware, this should compile to SIMD instructions
@@ -131,7 +131,7 @@ macro_rules! simd_impl {
         ///
         /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
         #[cfg(feature = "simd_support")]
-        impl<const LANES: usize> Distribution<Simd<$ty, LANES>> for Standard
+        impl<const LANES: usize> Distribution<Simd<$ty, LANES>> for StandardUniform
         where
             LaneCount<LANES>: SupportedLaneCount,
         {
@@ -174,29 +174,29 @@ mod tests {
     fn test_integers() {
         let mut rng = crate::test::rng(806);
 
-        rng.sample::<i8, _>(Standard);
-        rng.sample::<i16, _>(Standard);
-        rng.sample::<i32, _>(Standard);
-        rng.sample::<i64, _>(Standard);
-        rng.sample::<i128, _>(Standard);
+        rng.sample::<i8, _>(StandardUniform);
+        rng.sample::<i16, _>(StandardUniform);
+        rng.sample::<i32, _>(StandardUniform);
+        rng.sample::<i64, _>(StandardUniform);
+        rng.sample::<i128, _>(StandardUniform);
 
-        rng.sample::<u8, _>(Standard);
-        rng.sample::<u16, _>(Standard);
-        rng.sample::<u32, _>(Standard);
-        rng.sample::<u64, _>(Standard);
-        rng.sample::<u128, _>(Standard);
+        rng.sample::<u8, _>(StandardUniform);
+        rng.sample::<u16, _>(StandardUniform);
+        rng.sample::<u32, _>(StandardUniform);
+        rng.sample::<u64, _>(StandardUniform);
+        rng.sample::<u128, _>(StandardUniform);
     }
 
     #[test]
     fn value_stability() {
         fn test_samples<T: Copy + core::fmt::Debug + PartialEq>(zero: T, expected: &[T])
         where
-            Standard: Distribution<T>,
+            StandardUniform: Distribution<T>,
         {
             let mut rng = crate::test::rng(807);
             let mut buf = [zero; 3];
             for x in &mut buf {
-                *x = rng.sample(Standard);
+                *x = rng.sample(StandardUniform);
             }
             assert_eq!(&buf, expected);
         }

@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// [`new`]: UniformSampler::new
 /// [`new_inclusive`]: UniformSampler::new_inclusive
-/// [`Standard`]: crate::distr::Standard
+/// [`StandardUniform`]: crate::distr::StandardUniform
 /// [`Uniform`]: super::Uniform
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

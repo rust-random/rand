@@ -119,14 +119,14 @@ pub fn thread_rng() -> crate::rngs::ThreadRng {
 pub use rng::{Fill, Rng};
 
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-use crate::distr::{Distribution, Standard};
+use crate::distr::{Distribution, StandardUniform};
 
 /// Generate a random value using the thread-local random number generator.
 ///
 /// This function is shorthand for <code>[rng()].[random()](Rng::random)</code>:
 ///
 /// -   See [`ThreadRng`] for documentation of the generator and security
-/// -   See [`Standard`] for documentation of supported types and distributions
+/// -   See [`StandardUniform`] for documentation of supported types and distributions
 ///
 /// # Examples
 ///
@@ -157,13 +157,13 @@ use crate::distr::{Distribution, Standard};
 /// }
 /// ```
 ///
-/// [`Standard`]: distr::Standard
+/// [`StandardUniform`]: distr::StandardUniform
 /// [`ThreadRng`]: rngs::ThreadRng
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 #[inline]
 pub fn random<T>() -> T
 where
-    Standard: Distribution<T>,
+    StandardUniform: Distribution<T>,
 {
     rng().random()
 }
@@ -181,9 +181,9 @@ where
 /// ```
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 #[inline]
-pub fn random_iter<T>() -> distr::DistIter<Standard, rngs::ThreadRng, T>
+pub fn random_iter<T>() -> distr::DistIter<StandardUniform, rngs::ThreadRng, T>
 where
-    Standard: Distribution<T>,
+    StandardUniform: Distribution<T>,
 {
     rng().random_iter()
 }
@@ -306,11 +306,10 @@ mod test {
     fn test_random() {
         let _n: u64 = random();
         let _f: f32 = random();
-        let _o: Option<Option<i8>> = random();
         #[allow(clippy::type_complexity)]
         let _many: (
             (),
-            Option<(u32, (bool,))>,
+            [(u32, bool); 3],
             (u8, i8, u16, i16, u32, i32, u64, i64),
             (f32, (f64, (f64,))),
         ) = random();

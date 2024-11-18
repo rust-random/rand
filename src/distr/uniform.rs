@@ -154,7 +154,7 @@ use serde::{Deserialize, Serialize};
 /// When sampling from a constant range, many calculations can happen at
 /// compile-time and all methods should be fast; for floating-point ranges and
 /// the full range of integer types, this should have comparable performance to
-/// the `Standard` distribution.
+/// the [`StandardUniform`](super::StandardUniform) distribution.
 ///
 /// # Provided implementations
 ///
@@ -173,6 +173,11 @@ use serde::{Deserialize, Serialize};
 ///   64-bit CPU architectures.
 /// - `Duration` ([`UniformDuration`]): samples a range over the implementation
 ///   for `u32` or `u64`
+/// - SIMD types (requires [`simd_support`] feature) like x86's [`__m128i`]
+///   and `std::simd`'s [`u32x4`], [`f32x4`] and [`mask32x4`] types are
+///   effectively arrays of integer or floating-point types. Each lane is
+///   sampled independently from its own range, potentially with more efficient
+///   random-bit-usage than would be achieved with sequential sampling.
 ///
 /// # Example
 ///
@@ -200,6 +205,11 @@ use serde::{Deserialize, Serialize};
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
 /// [`Rng::random_range`]: Rng::random_range
+/// [`__m128i`]: https://doc.rust-lang.org/core/arch/x86/struct.__m128i.html
+/// [`u32x4`]: std::simd::u32x4
+/// [`f32x4`]: std::simd::f32x4
+/// [`mask32x4`]: std::simd::mask32x4
+/// [`simd_support`]: https://github.com/rust-random/rand#crate-features
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(bound(serialize = "X::Sampler: Serialize")))]
