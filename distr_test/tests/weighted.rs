@@ -130,9 +130,12 @@ fn choose_two_weighted_indexed() {
             let mut iter =
                 IndexedRandom::choose_multiple_weighted(&self.0[..], rng, 2, |i| (self.1)(*i))
                     .unwrap();
-            let a = *iter.next().unwrap();
-            let b = *iter.next().unwrap();
+            let mut a = *iter.next().unwrap();
+            let mut b = *iter.next().unwrap();
             assert!(iter.next().is_none());
+            if b < a {
+                std::mem::swap(&mut a, &mut b);
+            }
             a * self.0.len() as i64 + b
         }
     }
@@ -141,16 +144,21 @@ fn choose_two_weighted_indexed() {
         let distr = Adapter((0..num).map(|i| i as i64).collect(), &weight);
 
         let pmf1 = (0..num).map(|i| weight(i as i64)).collect::<Vec<f64>>();
-        let total: f64 = pmf1.iter().sum();
+        let sum: f64 = pmf1.iter().sum();
+        let sum_sq: f64 = pmf1.iter().map(|x| x * x).sum();
+        let frac = 2.0 / (sum * sum - sum_sq);
+
         let mut ac = 0.0;
-        let frac = total.powi(-2);
         let mut cdf = Vec::with_capacity(num * num);
         for a in 0..num {
             for b in 0..num {
-                ac += pmf1[a] * pmf1[b];
+                if a < b {
+                    ac += pmf1[a] * pmf1[b];
+                }
                 cdf.push(ac * frac);
             }
         }
+        assert!((ac * frac - 1.0).abs() < 1e-9);
 
         let cdf = |i| {
             if i < 0 {
