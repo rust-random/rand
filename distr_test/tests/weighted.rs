@@ -195,3 +195,26 @@ fn choose_stable_iterator() {
     let distr = Adapter((0..100).map(|i| i as i64));
     test_discrete(0, distr, make_cdf(100, |_| 1.0));
 }
+
+#[test]
+fn choose_two_iterator() {
+    struct Adapter<I>(I);
+    impl<I: Clone + Iterator<Item = i64>> Distribution<i64> for Adapter<I> {
+        fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> i64 {
+            let mut buf = [0; 2];
+            IteratorRandom::choose_multiple_fill(self.0.clone(), rng, &mut buf);
+            buf.sort_unstable();
+            assert!(buf[0] < 99 && buf[1] >= 1);
+            let a = buf[0];
+            4950 - (99 - a) * (100 - a) / 2 + buf[1] - a - 1
+        }
+    }
+
+    let distr = Adapter((0..100).map(|i| i as i64));
+
+    test_discrete(
+        0,
+        distr,
+        |i| if i < 0 { 0.0 } else { (i + 1) as f64 / 4950.0 },
+    );
+}
