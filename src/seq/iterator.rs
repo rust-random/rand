@@ -107,7 +107,7 @@ pub trait IteratorRandom: Iterator + Sized {
                     return result;
                 }
                 consumed += 1;
-                if coin_flipper.random_ratio_one_over(consumed) {
+                if coin_flipper.random_probability_one_over(consumed) {
                     result = elem;
                 }
             }
@@ -152,7 +152,7 @@ pub trait IteratorRandom: Iterator + Sized {
             let (lower, _) = self.size_hint();
             if lower >= 2 {
                 let highest_selected = (0..lower)
-                    .filter(|ix| coin_flipper.random_ratio_one_over(consumed + ix + 1))
+                    .filter(|ix| coin_flipper.random_probability_one_over(consumed + ix + 1))
                     .last();
 
                 consumed += lower;
@@ -170,7 +170,7 @@ pub trait IteratorRandom: Iterator + Sized {
                 return result;
             }
 
-            if coin_flipper.random_ratio_one_over(consumed + 1) {
+            if coin_flipper.random_probability_one_over(consumed + 1) {
                 result = elem;
             }
             consumed += 1;

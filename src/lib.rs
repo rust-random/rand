@@ -217,12 +217,12 @@ where
 /// Return a bool with a probability `p` of being true.
 ///
 /// This function is shorthand for
-/// <code>[rng()].[random_bool](Rng::random_bool)(<var>p</var>)</code>.
+/// <code>[rng()].[random_probability_f64](Rng::random_probability_f64)(<var>p</var>)</code>.
 ///
 /// # Example
 ///
 /// ```
-/// println!("{}", rand::random_bool(1.0 / 3.0));
+/// println!("{}", rand::random_probability_f64(1.0 / 3.0));
 /// ```
 ///
 /// # Panics
@@ -231,14 +231,14 @@ where
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 #[inline]
 #[track_caller]
-pub fn random_bool(p: f64) -> bool {
-    rng().random_bool(p)
+pub fn random_probability_f64(p: f64) -> bool {
+    rng().random_probability_f64(p)
 }
 
 /// Return a bool with a probability of `numerator/denominator` of being
 /// true.
 ///
-/// That is, `random_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
+/// That is, `random_probability(2, 3)` has chance of 2 in 3, or about 67%, of
 /// returning true. If `numerator == denominator`, then the returned value
 /// is guaranteed to be `true`. If `numerator == 0`, then the returned
 /// value is guaranteed to be `false`.
@@ -247,7 +247,7 @@ pub fn random_bool(p: f64) -> bool {
 /// sampling from the same `numerator` and `denominator` repeatedly.
 ///
 /// This function is shorthand for
-/// <code>[rng()].[random_ratio](Rng::random_ratio)(<var>numerator</var>, <var>denominator</var>)</code>.
+/// <code>[rng()].[random_probability](Rng::random_probability)(<var>numerator</var>, <var>denominator</var>)</code>.
 ///
 /// # Panics
 ///
@@ -256,15 +256,15 @@ pub fn random_bool(p: f64) -> bool {
 /// # Example
 ///
 /// ```
-/// println!("{}", rand::random_ratio(2, 3));
+/// println!("{}", rand::random_probability(2, 3));
 /// ```
 ///
 /// [`Bernoulli`]: distr::Bernoulli
 #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
 #[inline]
 #[track_caller]
-pub fn random_ratio(numerator: u32, denominator: u32) -> bool {
-    rng().random_ratio(numerator, denominator)
+pub fn random_probability(numerator: u32, denominator: u32) -> bool {
+    rng().random_probability(numerator, denominator)
 }
 
 /// Fill any type implementing [`Fill`] with random data

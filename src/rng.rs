@@ -178,7 +178,7 @@ pub trait Rng: RngCore {
     /// use rand::Rng;
     ///
     /// let mut rng = rand::rng();
-    /// println!("{}", rng.random_bool(1.0 / 3.0));
+    /// println!("{}", rng.random_probability_f64(1.0 / 3.0));
     /// ```
     ///
     /// # Panics
@@ -188,7 +188,7 @@ pub trait Rng: RngCore {
     /// [`Bernoulli`]: distr::Bernoulli
     #[inline]
     #[track_caller]
-    fn random_bool(&mut self, p: f64) -> bool {
+    fn random_probability_f64(&mut self, p: f64) -> bool {
         match distr::Bernoulli::new(p) {
             Ok(d) => self.sample(d),
             Err(_) => panic!("p={:?} is outside range [0.0, 1.0]", p),
@@ -198,7 +198,7 @@ pub trait Rng: RngCore {
     /// Return a bool with a probability of `numerator/denominator` of being
     /// true.
     ///
-    /// That is, `random_ratio(2, 3)` has chance of 2 in 3, or about 67%, of
+    /// That is, `random_probability(2, 3)` has chance of 2 in 3, or about 67%, of
     /// returning true. If `numerator == denominator`, then the returned value
     /// is guaranteed to be `true`. If `numerator == 0`, then the returned
     /// value is guaranteed to be `false`.
@@ -216,13 +216,13 @@ pub trait Rng: RngCore {
     /// use rand::Rng;
     ///
     /// let mut rng = rand::rng();
-    /// println!("{}", rng.random_ratio(2, 3));
+    /// println!("{}", rng.random_probability(2, 3));
     /// ```
     ///
     /// [`Bernoulli`]: distr::Bernoulli
     #[inline]
     #[track_caller]
-    fn random_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
+    fn random_probability(&mut self, numerator: u32, denominator: u32) -> bool {
         match distr::Bernoulli::from_ratio(numerator, denominator) {
             Ok(d) => self.sample(d),
             Err(_) => panic!(
@@ -339,18 +339,18 @@ pub trait Rng: RngCore {
         self.random_range(range)
     }
 
-    /// Alias for [`Rng::random_bool`].
+    /// Alias for [`Rng::random_probability_f64`].
     #[inline]
-    #[deprecated(since = "0.9.0", note = "Renamed to `random_bool`")]
+    #[deprecated(since = "0.9.0", note = "Renamed to `random_probability_f64`")]
     fn gen_bool(&mut self, p: f64) -> bool {
-        self.random_bool(p)
+        self.random_probability_f64(p)
     }
 
-    /// Alias for [`Rng::random_ratio`].
+    /// Alias for [`Rng::random_probability`].
     #[inline]
-    #[deprecated(since = "0.9.0", note = "Renamed to `random_ratio`")]
+    #[deprecated(since = "0.9.0", note = "Renamed to `random_probability`")]
     fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
-        self.random_ratio(numerator, denominator)
+        self.random_probability(numerator, denominator)
     }
 }
 
@@ -560,11 +560,11 @@ mod test {
 
     #[test]
     #[allow(clippy::bool_assert_comparison)]
-    fn test_random_bool() {
+    fn test_random_probability_f64() {
         let mut r = rng(105);
         for _ in 0..5 {
-            assert_eq!(r.random_bool(0.0), false);
-            assert_eq!(r.random_bool(1.0), true);
+            assert_eq!(r.random_probability_f64(0.0), false);
+            assert_eq!(r.random_probability_f64(1.0), true);
         }
     }
 
@@ -611,7 +611,7 @@ mod test {
         let mut sum: u32 = 0;
         let mut rng = rng(111);
         for _ in 0..N {
-            if rng.random_ratio(NUM, DENOM) {
+            if rng.random_probability(NUM, DENOM) {
                 sum += 1;
             }
         }
