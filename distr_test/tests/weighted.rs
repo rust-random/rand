@@ -97,3 +97,27 @@ fn choose_weighted_indexed() {
     test_weights(100, |i| (i as f64).powi(3));
     test_weights(100, |i| 1.0 / ((i + 1) as f64));
 }
+
+#[test]
+fn choose_one_weighted_indexed() {
+    struct Adapter<F: Fn(i64) -> f64>(Vec<i64>, F);
+    impl<F: Fn(i64) -> f64> Distribution<i64> for Adapter<F> {
+        fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> i64 {
+            *IndexedRandom::choose_multiple_weighted(&self.0[..], rng, 1, |i| (self.1)(*i))
+                .unwrap()
+                .next()
+                .unwrap()
+        }
+    }
+
+    fn test_weights(num: usize, weight: impl Fn(i64) -> f64) {
+        let distr = Adapter((0..num).map(|i| i as i64).collect(), &weight);
+        test_discrete(0, distr, make_cdf(num, |i| weight(i)));
+    }
+
+    test_weights(100, |_| 1.0);
+    test_weights(100, |i| ((i + 1) as f64).ln());
+    test_weights(100, |i| i as f64);
+    test_weights(100, |i| (i as f64).powi(3));
+    test_weights(100, |i| 1.0 / ((i + 1) as f64));
+}
