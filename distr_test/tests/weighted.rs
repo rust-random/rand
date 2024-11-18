@@ -182,3 +182,16 @@ fn choose_iterator() {
     let distr = Adapter((0..100).map(|i| i as i64));
     test_discrete(0, distr, make_cdf(100, |_| 1.0));
 }
+
+#[test]
+fn choose_stable_iterator() {
+    struct Adapter<I>(I);
+    impl<I: Clone + Iterator<Item = i64>> Distribution<i64> for Adapter<I> {
+        fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> i64 {
+            IteratorRandom::choose_stable(self.0.clone(), rng).unwrap()
+        }
+    }
+
+    let distr = Adapter((0..100).map(|i| i as i64));
+    test_discrete(0, distr, make_cdf(100, |_| 1.0));
+}
