@@ -111,6 +111,17 @@ jobs:
       - name: Test rand_chacha
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml --features=serde
 
+  test-ks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+            target: x86_64-unknown-linux-gnu
+      - name: Test Komogorov Smirnov
+        run: cargo test --manifest-path distr_test/Cargo.toml --release
+
   test-cross:
     runs-on: ${{ matrix.os }}
     strategy:

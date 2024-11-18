@@ -1,0 +1,24 @@
+name: distr_test
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/distr_test.yml"
+      - "distr_test/**"
+
+jobs:
+  distr_test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./distr_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: clippy, rustfmt
+      - name: Rustfmt
+        run: cargo fmt -- --check
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
