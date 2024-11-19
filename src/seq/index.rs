@@ -389,26 +389,42 @@ where
 
     let mut candidates = Vec::with_capacity(amount.as_usize());
     let mut index = N::zero();
-    while index < length {
+    while index < length && candidates.len() < amount.as_usize() {
         let weight = weight(index.as_usize()).into();
         if weight > 0.0 {
             let key = rng.random::<f64>().ln() / weight;
-            if candidates.len() < amount.as_usize() {
-                candidates.push(Element { index, key });
-            } else if key > candidates[0].key {
-                candidates[0] = Element { index, key };
-            }
-            candidates.sort_unstable();
+            // let key = rng.random::<f64>().powf(1.0 / weight);
+            candidates.push(Element { index, key });
         } else if !(weight >= 0.0) {
             return Err(WeightError::InvalidWeight);
         }
 
         index += N::one();
     }
+    candidates.sort_unstable();
 
-    let avail = candidates.len();
-    if avail < amount.as_usize() {
+    if candidates.len() < amount.as_usize() {
         return Err(WeightError::InsufficientNonZero);
+    }
+
+    let mut x = rng.random::<f64>().ln() / candidates[0].key;
+    while index < length {
+        let weight = weight(index.as_usize()).into();
+        if weight > 0.0 {
+            x -= weight;
+            if x <= 0.0 {
+                let t = core::f64::consts::E.powf(candidates[0].key * weight);
+                let key = rng.random_range(t..1.0).ln() / weight;
+                candidates[0] = Element { index, key };
+                candidates.sort_unstable();
+
+                x = rng.random::<f64>().ln() / candidates[0].key;
+            }
+        } else if !(weight >= 0.0) {
+            return Err(WeightError::InvalidWeight);
+        }
+
+        index += N::one();
     }
 
     Ok(IndexVec::from(candidates.iter().map(|elt| elt.index).collect()))
