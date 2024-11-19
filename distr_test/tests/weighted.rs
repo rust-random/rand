@@ -22,7 +22,7 @@ fn make_cdf(num: usize, f: impl Fn(i64) -> f64) -> impl Fn(i64) -> f64 {
 
     let frac = 1.0 / ac;
     for x in &mut cdf {
-        *x = *x * frac;
+        *x *= frac;
     }
 
     move |i| {
@@ -88,7 +88,7 @@ fn choose_weighted_indexed() {
 
     fn test_weights(num: usize, weight: impl Fn(i64) -> f64) {
         let distr = Adapter((0..num).map(|i| i as i64).collect(), &weight);
-        test_discrete(0, distr, make_cdf(num, |i| weight(i)));
+        test_discrete(0, distr, make_cdf(num, &weight));
     }
 
     test_weights(100, |_| 1.0);
@@ -112,7 +112,7 @@ fn choose_one_weighted_indexed() {
 
     fn test_weights(num: usize, weight: impl Fn(i64) -> f64) {
         let distr = Adapter((0..num).map(|i| i as i64).collect(), &weight);
-        test_discrete(0, distr, make_cdf(num, |i| weight(i)));
+        test_discrete(0, distr, make_cdf(num, &weight));
     }
 
     test_weights(100, |_| 1.0);
