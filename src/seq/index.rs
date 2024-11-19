@@ -387,13 +387,18 @@ where
 
     impl<N> Eq for Element<N> {}
 
-    let mut candidates = Vec::with_capacity(length.as_usize());
+    let mut candidates = Vec::with_capacity(amount.as_usize());
     let mut index = N::zero();
     while index < length {
         let weight = weight(index.as_usize()).into();
         if weight > 0.0 {
             let key = rng.random::<f64>().ln() / weight;
-            candidates.push(Element { index, key });
+            if candidates.len() < amount.as_usize() {
+                candidates.push(Element { index, key });
+            } else if key > candidates[0].key {
+                candidates[0] = Element { index, key };
+            }
+            candidates.sort_unstable();
         } else if !(weight >= 0.0) {
             return Err(WeightError::InvalidWeight);
         }
@@ -406,18 +411,7 @@ where
         return Err(WeightError::InsufficientNonZero);
     }
 
-    // Partially sort the array to find the `amount` elements with the greatest
-    // keys. Do this by using `select_nth_unstable` to put the elements with
-    // the *smallest* keys at the beginning of the list in `O(n)` time, which
-    // provides equivalent information about the elements with the *greatest* keys.
-    let (_, mid, greater) = candidates.select_nth_unstable(avail - amount.as_usize());
-
-    let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
-    result.push(mid.index);
-    for element in greater {
-        result.push(element.index);
-    }
-    Ok(IndexVec::from(result))
+    Ok(IndexVec::from(candidates.iter().map(|elt| elt.index).collect()))
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using Floyd's
