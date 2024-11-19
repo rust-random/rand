@@ -181,6 +181,7 @@ fn choose_two_weighted_indexed() {
     test_weights(100, |i| i as f64);
     test_weights(100, |i| (i as f64).powi(3));
     test_weights(100, |i| 1.0 / ((i + 1) as f64));
+    test_weights(10, |i| ((i + 1) as f64).powi(-8));
 }
 
 #[test]
