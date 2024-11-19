@@ -732,17 +732,17 @@ mod test {
         use super::*;
 
         // The theoretical probabilities of the different outcomes are:
-        // AB: 0.5  * 0.5  = 0.250
-        // AC: 0.5  * 0.5  = 0.250
-        // BA: 0.25 * 0.67 = 0.167
-        // BC: 0.25 * 0.33 = 0.082
-        // CA: 0.25 * 0.67 = 0.167
-        // CB: 0.25 * 0.33 = 0.082
-        let choices = [('a', 2), ('b', 1), ('c', 1)];
+        // AB: 0.5   * 0.667 = 0.3333
+        // AC: 0.5   * 0.333 = 0.1667
+        // BA: 0.333 * 0.75  = 0.25
+        // BC: 0.333 * 0.25  = 0.0833
+        // CA: 0.167 * 0.6   = 0.1
+        // CB: 0.167 * 0.4   = 0.0667
+        let choices = [('a', 3), ('b', 2), ('c', 1)];
         let mut rng = crate::test::rng(414);
 
         let mut results = [0i32; 3];
-        let expected_results = [4167, 4167, 1666];
+        let expected_results = [5833, 2667, 1500];
         for _ in 0..10000 {
             let result = choices
                 .choose_multiple_weighted(&mut rng, 2, |item| item.1)
