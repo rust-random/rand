@@ -427,7 +427,9 @@ where
         index += N::one();
     }
 
-    Ok(IndexVec::from(candidates.iter().map(|elt| elt.index).collect()))
+    Ok(IndexVec::from(
+        candidates.iter().map(|elt| elt.index).collect(),
+    ))
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using Floyd's
