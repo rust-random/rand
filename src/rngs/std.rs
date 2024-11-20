@@ -37,15 +37,22 @@ use rand_chacha::ChaCha12Rng as Rng;
 /// but note that `seed_from_u64` is not suitable for usage where security is
 /// important. Also note that, even with a fixed seed, output is not [portable].
 ///
-/// It is suggested to use a fresh seed **direct from the OS** as the most
-/// secure and convenient option:
+/// Using a fresh seed **direct from the OS** is the most secure option:
 /// ```
 /// # use rand::{SeedableRng, rngs::StdRng};
 /// let rng = StdRng::from_os_rng();
 /// # let _: StdRng = rng;
 /// ```
 ///
-/// See also [Seeding RNGs] in the book.
+/// Seeding via [`rand::rng`] may be faster:
+/// ```
+/// # use rand::{SeedableRng, rngs::StdRng};
+/// let rng = StdRng::from_rng(&mut rand::rng());
+/// # let _: StdRng = rng;
+/// ```
+///
+/// Any [`SeedableRng`] method may be used, but note that `seed_from_u64` is not
+/// suitable where security is required. See also [Seeding RNGs] in the book.
 ///
 /// ## Generation
 ///
