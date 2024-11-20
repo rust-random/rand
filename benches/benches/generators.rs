@@ -48,7 +48,7 @@ pub fn random_bytes(c: &mut Criterion) {
     bench(&mut g, "chacha12", ChaCha12Rng::from_os_rng());
     bench(&mut g, "chacha20", ChaCha20Rng::from_os_rng());
     bench(&mut g, "std", StdRng::from_os_rng());
-    bench(&mut g, "small", SmallRng::from_thread_rng());
+    bench(&mut g, "small", SmallRng::from_rng(&mut rand::rng()));
     bench(&mut g, "os", UnwrapErr(OsRng));
     bench(&mut g, "thread", rand::rng());
 
@@ -77,7 +77,7 @@ pub fn random_u32(c: &mut Criterion) {
     bench(&mut g, "chacha12", ChaCha12Rng::from_os_rng());
     bench(&mut g, "chacha20", ChaCha20Rng::from_os_rng());
     bench(&mut g, "std", StdRng::from_os_rng());
-    bench(&mut g, "small", SmallRng::from_thread_rng());
+    bench(&mut g, "small", SmallRng::from_rng(&mut rand::rng()));
     bench(&mut g, "os", UnwrapErr(OsRng));
     bench(&mut g, "thread", rand::rng());
 
@@ -106,7 +106,7 @@ pub fn random_u64(c: &mut Criterion) {
     bench(&mut g, "chacha12", ChaCha12Rng::from_os_rng());
     bench(&mut g, "chacha20", ChaCha20Rng::from_os_rng());
     bench(&mut g, "std", StdRng::from_os_rng());
-    bench(&mut g, "small", SmallRng::from_thread_rng());
+    bench(&mut g, "small", SmallRng::from_rng(&mut rand::rng()));
     bench(&mut g, "os", UnwrapErr(OsRng));
     bench(&mut g, "thread", rand::rng());
 

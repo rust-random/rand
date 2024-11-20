@@ -40,10 +40,12 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// suitable for seeding, but note that, even with a fixed seed, output is not
 /// [portable]. Some suggestions:
 ///
-/// 1.  To automatically seed with a unique seed, use [`SmallRng::from_thread_rng`]:
+/// 1.  To automatically seed with a unique seed, use [`SeedableRng::from_rng`]:
 ///     ```
-///     # use rand::rngs::SmallRng;
-///     let rng = SmallRng::from_thread_rng();
+///     use rand::SeedableRng;
+///     use rand::rngs::SmallRng;
+///     let rng = SmallRng::from_rng(&mut rand::rng());
+///     # let _: SmallRng = rng;
 ///     ```
 /// 2.  To use a deterministic integral seed, use `seed_from_u64`. This uses a
 ///     hash function internally to yield a (typically) good seed from any
@@ -107,21 +109,5 @@ impl RngCore for SmallRng {
     #[inline(always)]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.0.fill_bytes(dest)
-    }
-}
-
-impl SmallRng {
-    /// Construct an instance seeded from `rand::rng`
-    ///
-    /// # Panics
-    ///
-    /// This method panics only if [`crate::rng()`] fails to
-    /// initialize.
-    #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-    #[inline(always)]
-    pub fn from_thread_rng() -> Self {
-        let mut seed = <Rng as SeedableRng>::Seed::default();
-        crate::rng().fill_bytes(seed.as_mut());
-        SmallRng(Rng::from_seed(seed))
     }
 }
