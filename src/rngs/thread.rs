@@ -13,7 +13,7 @@ use std::fmt;
 use std::rc::Rc;
 use std::thread_local;
 
-use rand_core::{CryptoRng, RngCore, SeedableRng};
+use rand_core::{CryptoRng, RngCore};
 
 use super::std::Core;
 use crate::rngs::OsRng;
@@ -119,11 +119,9 @@ thread_local!(
     // We require Rc<..> to avoid premature freeing when ThreadRng is used
     // within thread-local destructors. See #968.
     static THREAD_RNG_KEY: Rc<UnsafeCell<ReseedingRng<Core, OsRng>>> = {
-        let r = Core::try_from_os_rng().unwrap_or_else(|err|
+        let rng = ReseedingRng::new(THREAD_RNG_RESEED_THRESHOLD,
+                                    OsRng).unwrap_or_else(|err|
                 panic!("could not initialize ThreadRng: {}", err));
-        let rng = ReseedingRng::new(r,
-                                    THREAD_RNG_RESEED_THRESHOLD,
-                                    OsRng);
         Rc::new(UnsafeCell::new(rng))
     }
 );

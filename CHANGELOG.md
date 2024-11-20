@@ -32,6 +32,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Rename `Rng::gen_range` to `random_range`, `gen_bool` to `random_bool`, `gen_ratio` to `random_ratio` (#1505)
 - Rename `Standard` to `StandardUniform` (#1526)
 - Remove impl of `Distribution<Option<T>>` for `Standard` (#1526)
+- Remove first parameter (`rng`) of `ReseedingRng::new` (#1533)
 
 ## [0.9.0-alpha.1] - 2024-03-18
 - Add the `Slice::num_choices` method to the Slice distribution (#1402)
