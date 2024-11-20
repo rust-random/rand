@@ -40,24 +40,20 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// suitable for seeding, but note that, even with a fixed seed, output is not
 /// [portable]. Some suggestions:
 ///
-/// 1.  Seed **from an integer** via `seed_from_u64`. This uses a hash function
-///     internally to yield a (typically) good seed from any input.
+/// 1.  To automatically seed with a unique seed, use [`SmallRng::from_rand_rng`]:
+///     ```
+///     # use rand::rngs::SmallRng;
+///     let rng = SmallRng::from_rand_rng();
+///     ```
+/// 2.  To use a deterministic integral seed, use `seed_from_u64`. This uses a
+///     hash function internally to yield a (typically) good seed from any
+///     input.
 ///     ```
 ///     # use rand::{SeedableRng, rngs::SmallRng};
 ///     let rng = SmallRng::seed_from_u64(1);
 ///     # let _: SmallRng = rng;
 ///     ```
-/// 2.  With a fresh seed, **direct from the OS** (implies a syscall):
-///     ```
-///     # use rand::{SeedableRng, rngs::SmallRng};
-///     let rng = SmallRng::from_os_rng();
-///     # let _: SmallRng = rng;
-///     ```
-/// 3.  Via [`SmallRng::from_rand_rng`]:
-///     ```
-///     # use rand::rngs::SmallRng;
-///     let rng = SmallRng::from_rand_rng();
-///     ```
+/// 3.  To seed deterministically from text or other input, use [`rand_seeder`].
 ///
 /// See also [Seeding RNGs] in the book.
 ///
@@ -74,6 +70,7 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// [rand_pcg]: https://crates.io/crates/rand_pcg
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
 /// [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
+/// [`rand_seeder`]: https://docs.rs/rand_seeder/latest/rand_seeder/
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
 
