@@ -114,12 +114,13 @@ impl RngCore for SmallRng {
 }
 
 impl SmallRng {
-    /// Construct an instance seeded from `rand::rng`
+    /// Construct an instance seeded from [`rand::rng`]
     ///
     /// # Panics
     ///
-    /// This method panics only if [`crate::rng()`] fails to
-    /// initialize.
+    /// This method panics only if [`rand::rng`] fails to initialize.
+    ///
+    /// [`rand::rng`]: crate::rng()
     #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
     #[inline(always)]
     pub fn from_thread_rng() -> Self {
