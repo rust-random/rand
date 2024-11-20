@@ -25,7 +25,7 @@ const ITER_ELTS: u64 = 100;
 macro_rules! distr_int {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_os_rng();
+            let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
             let distr = $distr;
 
             c.iter(|| distr.sample(&mut rng));
@@ -36,7 +36,7 @@ macro_rules! distr_int {
 macro_rules! distr_float {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_os_rng();
+            let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
             let distr = $distr;
 
             c.iter(|| Distribution::<$ty>::sample(&distr, &mut rng));
@@ -47,7 +47,7 @@ macro_rules! distr_float {
 macro_rules! distr_arr {
     ($group:ident, $fnn:expr, $ty:ty, $distr:expr) => {
         $group.bench_function($fnn, |c| {
-            let mut rng = Pcg64Mcg::from_os_rng();
+            let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
             let distr = $distr;
 
             c.iter(|| Distribution::<$ty>::sample(&distr, &mut rng));
@@ -76,7 +76,7 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     g.throughput(Throughput::Elements(ITER_ELTS));
     g.bench_function("iter", |c| {
         use core::f64::consts::{E, PI};
-        let mut rng = Pcg64Mcg::from_os_rng();
+        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
         let distr = Normal::new(-E, PI).unwrap();
 
         c.iter(|| {
@@ -145,7 +145,7 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     }
     g.throughput(Throughput::Elements(ITER_ELTS));
     g.bench_function("variable", |c| {
-        let mut rng = Pcg64Mcg::from_os_rng();
+        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
         let ldistr = Uniform::new(0.1, 10.0).unwrap();
 
         c.iter(|| {
@@ -165,7 +165,7 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
 
     let mut g = c.benchmark_group("bernoulli");
     g.bench_function("bernoulli", |c| {
-        let mut rng = Pcg64Mcg::from_os_rng();
+        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
         let distr = Bernoulli::new(0.18).unwrap();
         c.iter(|| distr.sample(&mut rng))
     });
