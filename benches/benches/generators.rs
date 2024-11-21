@@ -201,7 +201,7 @@ pub fn reseeding_bytes(c: &mut Criterion) {
     fn bench(g: &mut BenchmarkGroup<WallTime>, thresh: u64) {
         let name = format!("chacha20_{}k", thresh);
         g.bench_function(name.as_str(), |b| {
-            let mut rng = ReseedingRng::new(ChaCha20Core::from_os_rng(), thresh * 1024, OsRng);
+            let mut rng = ReseedingRng::<ChaCha20Core, _>::new(thresh * 1024, OsRng).unwrap();
             let mut buf = [0u8; 1024 * 1024];
             b.iter(|| {
                 rng.fill_bytes(&mut buf);
