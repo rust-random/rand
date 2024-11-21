@@ -44,7 +44,7 @@ use rand_chacha::ChaCha12Rng as Rng;
 /// # let _: StdRng = rng;
 /// ```
 ///
-/// Seeding via [`rand::rng`] may be faster:
+/// Seeding via [`rand::rng()`](crate::rng()) may be faster:
 /// ```
 /// # use rand::{SeedableRng, rngs::StdRng};
 /// let rng = StdRng::from_rng(&mut rand::rng());
