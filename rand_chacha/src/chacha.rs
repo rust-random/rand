@@ -8,13 +8,8 @@
 
 //! The ChaCha random number generator.
 
-#[cfg(not(feature = "std"))]
-use core;
-#[cfg(feature = "std")]
-use std as core;
-
-use self::core::fmt;
 use crate::guts::ChaCha;
+use core::fmt;
 use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
 use rand_core::{CryptoRng, RngCore, SeedableRng};
 
