@@ -46,6 +46,9 @@
 //!     or a deterministic generator such as [`ChaCha20Rng`].
 //!     Beware that should a weak master generator be used, correlations may be
 //!     detectable between the outputs of its child generators.
+//!     ```ignore
+//!     let rng = ChaCha12Rng::from_rng(&mut rand::rng());
+//!     ```
 //!
 //! See also [Seeding RNGs] in the book.
 //!

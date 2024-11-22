@@ -27,7 +27,7 @@ where
 {
     g.throughput(criterion::Throughput::Bytes(size_of::<T>() as u64));
     g.bench_function(name, |b| {
-        let mut rng = Pcg64Mcg::from_os_rng();
+        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
 
         b.iter(|| rng.sample::<T, _>(D::default()));
     });

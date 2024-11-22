@@ -40,24 +40,29 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// suitable for seeding, but note that, even with a fixed seed, output is not
 /// [portable]. Some suggestions:
 ///
-/// 1.  Seed **from an integer** via `seed_from_u64`. This uses a hash function
-///     internally to yield a (typically) good seed from any input.
+/// 1.  To automatically seed with a unique seed, use [`SeedableRng::from_rng`]:
+///     ```
+///     use rand::SeedableRng;
+///     use rand::rngs::SmallRng;
+///     let rng = SmallRng::from_rng(&mut rand::rng());
+///     # let _: SmallRng = rng;
+///     ```
+///     or [`SeedableRng::from_os_rng`]:
+///     ```
+///     # use rand::SeedableRng;
+///     # use rand::rngs::SmallRng;
+///     let rng = SmallRng::from_os_rng();
+///     # let _: SmallRng = rng;
+///     ```
+/// 2.  To use a deterministic integral seed, use `seed_from_u64`. This uses a
+///     hash function internally to yield a (typically) good seed from any
+///     input.
 ///     ```
 ///     # use rand::{SeedableRng, rngs::SmallRng};
 ///     let rng = SmallRng::seed_from_u64(1);
 ///     # let _: SmallRng = rng;
 ///     ```
-/// 2.  With a fresh seed, **direct from the OS** (implies a syscall):
-///     ```
-///     # use rand::{SeedableRng, rngs::SmallRng};
-///     let rng = SmallRng::from_os_rng();
-///     # let _: SmallRng = rng;
-///     ```
-/// 3.  Via [`SmallRng::from_thread_rng`]:
-///     ```
-///     # use rand::rngs::SmallRng;
-///     let rng = SmallRng::from_thread_rng();
-///     ```
+/// 3.  To seed deterministically from text or other input, use [`rand_seeder`].
 ///
 /// See also [Seeding RNGs] in the book.
 ///
@@ -74,6 +79,7 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// [rand_pcg]: https://crates.io/crates/rand_pcg
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
 /// [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
+/// [`rand_seeder`]: https://docs.rs/rand_seeder/latest/rand_seeder/
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
 
@@ -110,21 +116,5 @@ impl RngCore for SmallRng {
     #[inline(always)]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.0.fill_bytes(dest)
-    }
-}
-
-impl SmallRng {
-    /// Construct an instance seeded from `rand::rng`
-    ///
-    /// # Panics
-    ///
-    /// This method panics only if [`crate::rng()`] fails to
-    /// initialize.
-    #[cfg(all(feature = "std", feature = "std_rng", feature = "getrandom"))]
-    #[inline(always)]
-    pub fn from_thread_rng() -> Self {
-        let mut seed = <Rng as SeedableRng>::Seed::default();
-        crate::rng().fill_bytes(seed.as_mut());
-        SmallRng(Rng::from_seed(seed))
     }
 }

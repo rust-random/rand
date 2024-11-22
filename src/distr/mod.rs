@@ -182,7 +182,7 @@ use crate::Rng;
 /// use rand::prelude::*;
 /// use rand::distr::StandardUniform;
 ///
-/// let val: f32 = StdRng::from_os_rng().sample(StandardUniform);
+/// let val: f32 = rand::rng().sample(StandardUniform);
 /// println!("f32 from [0, 1): {}", val);
 /// ```
 ///

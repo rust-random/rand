@@ -34,24 +34,21 @@
 //! Generators implement the [`SeedableRng`] trait. All methods are suitable for
 //! seeding. Some suggestions:
 //!
-//! 1.  Seed **from an integer** via `seed_from_u64`. This uses a hash function
+//! 1.  To automatically seed with a unique seed, use [`SeedableRng::from_rng`]
+//!     with a master generator (here [`rand::rng()`](https://docs.rs/rand/latest/rand/fn.rng.html)):
+//!     ```ignore
+//!     use rand_core::SeedableRng;
+//!     use rand_pcg::Pcg64Mcg;
+//!     let rng = Pcg64Mcg::from_rng(&mut rand::rng());
+//!     # let _: Pcg64Mcg = rng;
+//!     ```
+//! 2.  Seed **from an integer** via `seed_from_u64`. This uses a hash function
 //!     internally to yield a (typically) good seed from any input.
 //!     ```
 //!     # use {rand_core::SeedableRng, rand_pcg::Pcg64Mcg};
 //!     let rng = Pcg64Mcg::seed_from_u64(1);
 //!     # let _: Pcg64Mcg = rng;
 //!     ```
-//! 2.  With a fresh seed, **direct from the OS** (implies a syscall):
-//!     ```
-//!     # use {rand_core::SeedableRng, rand_pcg::Pcg64Mcg};
-//!     let rng = Pcg64Mcg::from_os_rng();
-//!     # let _: Pcg64Mcg = rng;
-//!     ```
-//! 3.  **From a master generator.** This could be [`rand::rng`]
-//!     (effectively a fresh seed without the need for a syscall on each usage)
-//!     or a deterministic generator such as [`rand_chacha::ChaCha8Rng`].
-//!     Beware that should a weak master generator be used, correlations may be
-//!     detectable between the outputs of its child generators.
 //!
 //! See also [Seeding RNGs] in the book.
 //!
@@ -77,6 +74,7 @@
 //! [Random Values]: https://rust-random.github.io/book/guide-values.html
 //! [`RngCore`]: rand_core::RngCore
 //! [`SeedableRng`]: rand_core::SeedableRng
+//! [`SeedableRng::from_rng`]: rand_core::SeedableRng#method.from_rng
 //! [`rand::rng`]: https://docs.rs/rand/latest/rand/fn.rng.html
 //! [`rand::Rng`]: https://docs.rs/rand/latest/rand/trait.Rng.html
 //! [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
