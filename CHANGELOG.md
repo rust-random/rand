@@ -8,83 +8,84 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [Unreleased]
-- Add fns `rand::distributions::WeightedIndex::{weight, weights, total_weight}` (#1420)
-- Add `IndexedRandom::choose_multiple_array`, `index::sample_array` (#1453, #1469)
-- Bump the MSRV to 1.61.0 (#1416); note that 1.60.0 may still work for dependents when using `--ignore-rust-version`
-- Rename `Rng::gen` to `Rng::random` to avoid conflict with the new `gen` keyword in Rust 2024 (#1435)
-- Move all benchmarks to new `benches` crate (#1329, #1439) and migrate to Criterion (#1490)
-- Annotate panicking methods with `#[track_caller]` (#1442, #1447)
-- Enable feature `small_rng` by default (#1455)
-- Allow `UniformFloat::new` samples and `UniformFloat::sample_single` to yield `high` (#1462)
-- Fix portability of `rand::distributions::Slice` (#1469)
-- Rename `rand::distributions` to `rand::distr` (#1470)
+## [0.9.0-beta.0] - 2024-11-25
+This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` to prevent automatic updates (which can be expected to include breaking changes).
+
+### Security and unsafe
+- Policy: "rand is not a crypto library" (#1514)
+- Remove fork-protection from `ReseedingRng` and `ThreadRng`. Instead, it is recommended to call `ThreadRng::reseed` on fork. (#1379)
+- Use `zerocopy` to replace some `unsafe` code (#1349, #1393, #1446, #1502)
+
+### Compilation options
+- Bump the MSRV to 1.61.0 (#1207, #1246, #1269, #1341, #1416); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
+- Support `std` feature without `getrandom` or `rand_chacha` (#1354)
+- Improve `thread_rng` related docs (#1257)
 - The `serde1` feature has been renamed `serde` (#1477)
 - The implicit feature `rand_chacha` has been removed. This is enabled by `std_rng`. (#1473)
-- Mark `WeightError` as `#[non_exhaustive]` (#1480).
-- Add `p()` for `Bernoulli` to access probability (#1481)
-- Add `UniformUsize` and use to make `Uniform` for `usize` portable (#1487)
-- Require `Clone` and `AsRef` bound for `SeedableRng::Seed`. (#1491)
-- Improve SmallRng initialization performance (#1482)
-- Rename `Rng::gen_iter` to `random_iter` (#1500)
-- Rename `rand::thread_rng()` to `rand::rng()`, and remove from the prelude (#1506)
-- Remove `rand::random()` from the prelude (#1506)
-- Rename fn `Rng::gen` to `random` (#1438)
-- Rename fns `Rng::gen_range` to `random_range`, `gen_bool` to `random_bool`, `gen_ratio` to `random_ratio` (#1505)
-- Rename struct `Standard` to `StandardUniform` (#1526)
-- Remove impl of `Distribution<Option<T>>` for `Standard` (#1526)
-- Remove `SmallRng::from_thread_rng` (#1532)
-- Remove first parameter (`rng`) of `ReseedingRng::new` (#1533)
-- Reformat with `rustfmt` and enforce (#1448)
-- Apply Clippy suggestions and enforce (#1448, #1474)
-- Better doc of crate features, use `doc_auto_cfg` (#1411, #1450)
-- Revise crate doc for `rand_pcg`, `rand_chacha` (#1454)
-- Policy: "rand is not a crypto library" (#1514)
+- Enable feature `small_rng` by default (#1455)
+
+### Inherited changes from `rand_core`
+- Add fn `RngCore::read_adapter` implementing `std::io::Read` (#1267)
+- Add trait `CryptoBlockRng: BlockRngCore`; make `trait CryptoRng: RngCore` (#1273)
+- Add traits `TryRngCore`, `TryCryptoRng` (#1424, #1499)
+- Add bounds `Clone` and `AsRef` to associated type `SeedableRng::Seed` (#1491)
+
+### Rng trait and top-level fns
+- Rename fn `rand::thread_rng()` to `rand::rng()`, and remove from the prelude (#1506)
 - Add top-level fns `random_iter`, `random_range`, `random_bool`, `random_ratio`, `fill` (#1488)
+- Remove fn `rand::random()` from the prelude (#1506)
+- Re-introduce fn `Rng::gen_iter` as `random_iter` (#1305, #1500)
+- Rename fn `Rng::gen` to `random` to avoid conflict with the new `gen` keyword in Rust 2024 (#1438)
+- Rename fns `Rng::gen_range` to `random_range`, `gen_bool` to `random_bool`, `gen_ratio` to `random_ratio` (#1505)
+- Annotate panicking methods with `#[track_caller]` (#1442, #1447)
 
-## [0.9.0-alpha.1] - 2024-03-18
-- Add fn `Slice::num_choices` (#1402)
-
-### Generators
-- `ReseedingRng::reseed` also resets the random data cache.
-- Remove fork-protection from `ReseedingRng` and `ThreadRng`. Instead, it is recommended to call `ThreadRng::reseed` on fork. (#1379)
-
-## [0.9.0-alpha.0] - 2024-02-18
-### Generators
-- Change `SmallRng::seed_from_u64` implementation (#1203)
-- Replace `SeedableRng` impl for `SmallRng` with inherent methods, excluding `fn from_seed` (#1368)
+### RNGs
+- Make `ReseedingRng::reseed` discard remaining data from the last block generated (#1379)
+- Change fn `SmallRng::seed_from_u64` implementation (#1203)
+- Fix `<SmallRng as SeedableRng>::Seed` size to 256 bits (#1455)
+- Remove first parameter (`rng`) of `ReseedingRng::new` (#1533)
+- Improve SmallRng initialization performance (#1482)
 
 ### Sequences
-- Simpler and faster implementation of Floyd's F2 (#1277). This
-  changes some outputs from `rand::seq::index::sample` and
-  `rand::seq::SliceRandom::choose_multiple`.
+- Optimize fn `sample_floyd`, affecting output of `rand::seq::index::sample` and `rand::seq::SliceRandom::choose_multiple` (#1277)
 - New, faster algorithms for `IteratorRandom::choose` and `choose_stable` (#1268)
 - New, faster algorithms for `SliceRandom::shuffle` and `partial_shuffle` (#1272)
-- Re-introduce `Rng::gen_iter` (#1305)
 - Split trait `SliceRandom` into `IndexedRandom`, `IndexedMutRandom`, `SliceRandom` (#1382)
+- Add `IndexedRandom::choose_multiple_array`, `index::sample_array` (#1453, #1469)
 
 ### Distributions
-- `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking) (#1229)
-- `Uniform` implements `TryFrom` instead of `From` for ranges (#1229)
-- `Uniform` now uses Canon's method (single sampling) / Lemire's method (distribution sampling) for faster sampling (breaks value stability; #1287)
+- Rename module `rand::distributions` to `rand::distr` (#1470)
 - Relax `Sized` bound on `Distribution<T> for &D` (#1278)
-- Explicit impl of `sample_single_inclusive` (+~20% perf) (#1289)
-- Impl `DistString` for `Slice<char>` and `Uniform<char>` (#1315)
-- Let `Standard` support all `NonZero*` types (#1332)
-- Add `trait Weight`, allowing `WeightedIndex` to trap overflow (#1353)
-- Rename `WeightedError` to `WeightError`, revising variants (#1382)
+- Rename distribution `Standard` to `StandardUniform` (#1526)
+- Remove impl of `Distribution<Option<T>>` for `StandardUniform` (#1526)
+- Let distribution `StandardUniform` support all `NonZero*` types (#1332)
+- Fns `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking) (#1229)
+- Distribution `Uniform` implements `TryFrom` instead of `From` for ranges (#1229)
+- Optimize distribution `Uniform`: use Canon's method (single sampling) / Lemire's method (distribution sampling) for faster sampling (breaks value stability; #1287)
+- Add `UniformUsize` and use to make `Uniform` for `usize` portable (#1487)
+- Optimize fn `sample_single_inclusive` for floats (+~20% perf) (#1289)
+- Allow `UniformFloat::new` samples and `UniformFloat::sample_single` to yield `high` (#1462)
+- Add impl `DistString` for distributions `Slice<char>` and `Uniform<char>` (#1315)
+- Add fn `Slice::num_choices` (#1402)
+- Fix portability of distribution `Slice` (#1469)
+- Add trait `Weight`, allowing `WeightedIndex` to trap overflow (#1353)
+- Add fns `weight, weights, total_weight` to distribution `WeightedIndex` (#1420)
+- Rename enum `WeightedError` to `WeightError`, revising variants (#1382) and mark as `#[non_exhaustive]` (#1480)
+- Add fn `p()` for distribution `Bernoulli` to access probability (#1481)
 
 ### SIMD
 - Switch to `std::simd`, expand SIMD & docs (#1239)
 - Optimise SIMD widening multiply (#1247)
 
-### Other
-- Bump MSRV to 1.60.0 (#1207, #1246, #1269, #1341)
-- Improve `thread_rng` related docs (#1257)
+### Documentation
 - Add `Cargo.lock.msrv` file (#1275)
 - Docs: enable experimental `--generate-link-to-definition` feature (#1327)
-- Use `zerocopy` to replace some `unsafe` code (#1349, #1446, #1502)
-- Support `std` feature without `getrandom` or `rand_chacha` (#1354)
+- Better doc of crate features, use `doc_auto_cfg` (#1411, #1450)
+
+### Other
+- Reformat with `rustfmt` and enforce (#1448)
+- Apply Clippy suggestions and enforce (#1448, #1474)
+- Move all benchmarks to new `benches` crate (#1329, #1439) and migrate to Criterion (#1490)
 
 ## [0.8.5] - 2021-08-20
 ### Fixes

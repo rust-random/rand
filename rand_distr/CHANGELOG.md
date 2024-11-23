@@ -4,21 +4,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.5.0-beta.0] - 2024-11-25
+This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` to prevent automatic updates (which can be expected to include breaking changes).
+
+### Compilation options
+- Bump the MSRV to 1.61.0 (#1207, #1246, #1269, #1341, #1416); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
 - The `serde1` feature has been renamed `serde` (#1477)
-- Fix panic in Binomial (#1484)
-- Move some of the computations in Binomial from `sample` to `new` (#1484)
+
+### Testing
 - Add Kolmogorov Smirnov tests for distributions (#1494, #1504, #1525)
-- Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480).
-- Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` and `Fill` and usage as a `WeightedAliasIndex` weight (#1487)
+
+### Fixes
+- Fix panic in Binomial (#1484)
 - Limit the maximal acceptable lambda for `Poisson` to solve (#1312) (#1498)
 - Fix bug in `Hypergeometric`, this is a Value-breaking change (#1510)
-- Change parameter type of `Zipf::new`: `n` is now floating-point (#1518)
-- Rename `Zeta`'s parameter `a` to `s` (#1466)
 
-### Added
-- Add plots for `rand_distr` distributions to documentation (#1434)
+### API changes
 - Add `PertBuilder`, fix case where mode ≅ mean (#1452)
+- Rename `Zeta`'s parameter `a` to `s` (#1466)
+- Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480)
+- Remove support for usage of `isize` as a `WeightedAliasIndex` weight (#1487)
+- Change parameter type of `Zipf::new`: `n` is now floating-point (#1518)
+
+### Optimizations
+- Move some of the computations in Binomial from `sample` to `new` (#1484)
+
+### Documentation
+- Add plots for `rand_distr` distributions to documentation (#1434)
 
 ## [0.5.0-alpha.1] - 2024-03-18
 - Target `rand` version `0.9.0-alpha.1`
