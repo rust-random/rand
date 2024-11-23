@@ -9,11 +9,11 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 ## [Unreleased]
-- Add `rand::distributions::WeightedIndex::{weight, weights, total_weight}` (#1420)
+- Add fns `rand::distributions::WeightedIndex::{weight, weights, total_weight}` (#1420)
 - Add `IndexedRandom::choose_multiple_array`, `index::sample_array` (#1453, #1469)
-- Bump the MSRV to 1.61.0
+- Bump the MSRV to 1.61.0 (#1416); note that 1.60.0 may still work for dependents when using `--ignore-rust-version`
 - Rename `Rng::gen` to `Rng::random` to avoid conflict with the new `gen` keyword in Rust 2024 (#1435)
-- Move all benchmarks to new `benches` crate (#1439) and migrate to Criterion (#1490)
+- Move all benchmarks to new `benches` crate (#1329, #1439) and migrate to Criterion (#1490)
 - Annotate panicking methods with `#[track_caller]` (#1442, #1447)
 - Enable feature `small_rng` by default (#1455)
 - Allow `UniformFloat::new` samples and `UniformFloat::sample_single` to yield `high` (#1462)
@@ -29,22 +29,27 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Rename `Rng::gen_iter` to `random_iter` (#1500)
 - Rename `rand::thread_rng()` to `rand::rng()`, and remove from the prelude (#1506)
 - Remove `rand::random()` from the prelude (#1506)
-- Rename `Rng::gen_range` to `random_range`, `gen_bool` to `random_bool`, `gen_ratio` to `random_ratio` (#1505)
-- Rename `Standard` to `StandardUniform` (#1526)
+- Rename fn `Rng::gen` to `random` (#1438)
+- Rename fns `Rng::gen_range` to `random_range`, `gen_bool` to `random_bool`, `gen_ratio` to `random_ratio` (#1505)
+- Rename struct `Standard` to `StandardUniform` (#1526)
 - Remove impl of `Distribution<Option<T>>` for `Standard` (#1526)
 - Remove `SmallRng::from_thread_rng` (#1532)
 - Remove first parameter (`rng`) of `ReseedingRng::new` (#1533)
+- Reformat with `rustfmt` and enforce (#1448)
+- Apply Clippy suggestions and enforce (#1448, #1474)
+- Better doc of crate features, use `doc_auto_cfg` (#1411, #1450)
+- Revise crate doc for `rand_pcg`, `rand_chacha` (#1454)
+- Policy: "rand is not a crypto library" (#1514)
+- Add top-level fns `random_iter`, `random_range`, `random_bool`, `random_ratio`, `fill` (#1488)
 
 ## [0.9.0-alpha.1] - 2024-03-18
-- Add the `Slice::num_choices` method to the Slice distribution (#1402)
+- Add fn `Slice::num_choices` (#1402)
 
 ### Generators
 - `ReseedingRng::reseed` also resets the random data cache.
-- Remove fork-protection from `ReseedingRng` and `ThreadRng`. Instead, it is recommended to call `ThreadRng::reseed` on fork.
+- Remove fork-protection from `ReseedingRng` and `ThreadRng`. Instead, it is recommended to call `ThreadRng::reseed` on fork. (#1379)
 
 ## [0.9.0-alpha.0] - 2024-02-18
-This is a pre-release. To depend on this version, use `rand = "=0.9.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
-
 ### Generators
 - Change `SmallRng::seed_from_u64` implementation (#1203)
 - Replace `SeedableRng` impl for `SmallRng` with inherent methods, excluding `fn from_seed` (#1368)
@@ -78,7 +83,7 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-alpha.0"` 
 - Improve `thread_rng` related docs (#1257)
 - Add `Cargo.lock.msrv` file (#1275)
 - Docs: enable experimental `--generate-link-to-definition` feature (#1327)
-- Use `zerocopy` to replace some `unsafe` code (#1349)
+- Use `zerocopy` to replace some `unsafe` code (#1349, #1446, #1502)
 - Support `std` feature without `getrandom` or `rand_chacha` (#1354)
 
 ## [0.8.5] - 2021-08-20

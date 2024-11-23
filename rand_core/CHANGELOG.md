@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Bump the MSRV to 1.61.0
 - The `serde1` feature has been renamed `serde` (#1477)
+- Add traits `TryRngCore`, `TryCryptoRng` (#1424, #1499)
 
 ## [0.9.0-alpha.1] - 2024-03-18
 

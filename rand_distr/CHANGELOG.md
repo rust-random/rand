@@ -8,13 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `serde1` feature has been renamed `serde` (#1477)
 - Fix panic in Binomial (#1484)
 - Move some of the computations in Binomial from `sample` to `new` (#1484)
-- Add Kolmogorov Smirnov test for sampling of `Normal` and `Binomial` (#1494)
-- Add Kolmogorov Smirnov test for more distributions (#1504)
+- Add Kolmogorov Smirnov tests for distributions (#1494, #1504, #1525)
 - Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480).
 - Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` and `Fill` and usage as a `WeightedAliasIndex` weight (#1487)
 - Limit the maximal acceptable lambda for `Poisson` to solve (#1312) (#1498)
 - Fix bug in `Hypergeometric`, this is a Value-breaking change (#1510)
 - Change parameter type of `Zipf::new`: `n` is now floating-point (#1518)
+- Rename `Zeta`'s parameter `a` to `s` (#1466)
 
 ### Added
 - Add plots for `rand_distr` distributions to documentation (#1434)
@@ -28,7 +28,7 @@ This is a pre-release. To depend on this version, use `rand_distr = "=0.5.0-alph
 
 ### Additions
 - Make distributions comparable with `PartialEq` (#1218)
-- Add `WeightedIndexTree` (#1372)
+- Add `WeightedIndexTree` (#1372, #1444)
 
 ### Changes
 - Target `rand` version `0.9.0-alpha.0`
