@@ -58,10 +58,12 @@ impl core::fmt::Display for OsError {
     }
 }
 
+// NOTE: this should not require std; see getrandom#545
+#[cfg(feature = "std")]
 impl core::error::Error for OsError {
     #[inline]
     fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
-        self.0.source()
+        core::error::Error::source(&self.0)
     }
 }
 
