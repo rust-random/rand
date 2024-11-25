@@ -58,12 +58,12 @@ impl core::fmt::Display for OsError {
     }
 }
 
-// NOTE: this should not require std; see getrandom#545
+// NOTE: this can use core::error::Error from rustc 1.81.0
 #[cfg(feature = "std")]
 impl std::error::Error for OsError {
     #[inline]
-    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
-        core::error::Error::source(&self.0)
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        std::error::Error::source(&self.0)
     }
 }
 
