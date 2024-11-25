@@ -19,7 +19,7 @@ use getrandom::getrandom;
 /// [getrandom] documentation for details.
 ///
 /// This struct is available as `rand_core::OsRng` and as `rand::rngs::OsRng`.
-/// In both cases, this requires the crate feature `getrandom` or `std`
+/// In both cases, this requires the crate feature `os_rng` or `std`
 /// (enabled by default in `rand` but not in `rand_core`).
 ///
 /// # Blocking and error handling

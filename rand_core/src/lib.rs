@@ -45,10 +45,10 @@ use core::{fmt, ops::DerefMut};
 pub mod block;
 pub mod impls;
 pub mod le;
-#[cfg(feature = "getrandom")]
+#[cfg(feature = "os_rng")]
 mod os;
 
-#[cfg(feature = "getrandom")]
+#[cfg(feature = "os_rng")]
 pub use os::{OsError, OsRng};
 
 /// Implementation-level interface for RNGs
@@ -493,7 +493,7 @@ pub trait SeedableRng: Sized {
     ///
     /// [`getrandom`]: https://docs.rs/getrandom
     /// [`try_from_os_rng`]: SeedableRng::try_from_os_rng
-    #[cfg(feature = "getrandom")]
+    #[cfg(feature = "os_rng")]
     fn from_os_rng() -> Self {
         match Self::try_from_os_rng() {
             Ok(res) => res,
@@ -509,7 +509,7 @@ pub trait SeedableRng: Sized {
     /// `from_rng(&mut rand::rng()).unwrap()`.
     ///
     /// [`getrandom`]: https://docs.rs/getrandom
-    #[cfg(feature = "getrandom")]
+    #[cfg(feature = "os_rng")]
     fn try_from_os_rng() -> Result<Self, getrandom::Error> {
         let mut seed = Self::Seed::default();
         getrandom::getrandom(seed.as_mut())?;

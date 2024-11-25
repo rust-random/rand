@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - The `serde1` feature has been renamed `serde` (#1477)
+- Rename feature `getrandom` to `os_rng`
 
 ## [0.9.0-alpha.1] - 2024-03-18
 
