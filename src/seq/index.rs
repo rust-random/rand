@@ -333,8 +333,8 @@ where
 /// ordering). The weights are to be provided by the input function `weights`,
 /// which will be called once for each index.
 ///
-/// This implementation uses the algorithm described by Efraimidis and Spirakis
-/// in this paper: <https://doi.org/10.1016/j.ipl.2005.11.003>
+/// This implementation is based on the algorithm A-ExpJ as found in
+/// [Efraimidis and Spirakis, 2005](https://doi.org/10.1016/j.ipl.2005.11.003).
 /// It uses `O(length + amount)` space and `O(length)` time.
 ///
 /// Error cases:
@@ -392,8 +392,9 @@ where
     while index < length && candidates.len() < amount.as_usize() {
         let weight = weight(index.as_usize()).into();
         if weight > 0.0 {
+            // We use the log of the key used in A-ExpJ to improve precision
+            // for small weights:
             let key = rng.random::<f64>().ln() / weight;
-            // let key = rng.random::<f64>().powf(1.0 / weight);
             candidates.push(Element { index, key });
         } else if !(weight >= 0.0) {
             return Err(WeightError::InvalidWeight);
@@ -413,9 +414,11 @@ where
         if weight > 0.0 {
             x -= weight;
             if x <= 0.0 {
-                let t = core::f64::consts::E.powf(candidates[0].key * weight);
+                let t = (candidates[0].key * weight).exp();
                 let key = rng.random_range(t..1.0).ln() / weight;
                 candidates[0] = Element { index, key };
+                // TODO: consider using a binary tree instead of sorting at each
+                // step. This should be faster for some THRESHOLD < amount.
                 candidates.sort_unstable();
 
                 x = rng.random::<f64>().ln() / candidates[0].key;

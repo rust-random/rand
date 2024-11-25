@@ -12,6 +12,7 @@ use rand::distr::{Distribution, WeightedIndex};
 use rand::seq::{IndexedRandom, IteratorRandom};
 use rand_distr::{WeightedAliasIndex, WeightedTreeIndex};
 
+/// Takes the unnormalized pdf and creates the cdf of a discrete distribution
 fn make_cdf(num: usize, f: impl Fn(i64) -> f64) -> impl Fn(i64) -> f64 {
     let mut cdf = Vec::with_capacity(num);
     let mut ac = 0.0;
