@@ -81,7 +81,7 @@ impl OsError {
     /// Extract the bare error code.
     ///
     /// This code can either come from the underlying OS, or be a custom error.
-    /// Use [`Error::raw_os_error()`] to disambiguate.
+    /// Use [`OsError::raw_os_error()`] to disambiguate.
     #[inline]
     pub const fn code(self) -> core::num::NonZeroU32 {
         self.0.code()
