@@ -47,26 +47,44 @@ use getrandom::getrandom;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct OsRng;
 
+/// Error type of [`OsRng`]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OsError(getrandom::Error);
+
+impl core::fmt::Display for OsError {
+    #[inline]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl core::error::Error for OsError {
+    #[inline]
+    fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
+        self.0.source()
+    }
+}
+
 impl TryRngCore for OsRng {
-    type Error = getrandom::Error;
+    type Error = OsError;
 
     #[inline]
     fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
         let mut buf = [0u8; 4];
-        getrandom(&mut buf)?;
+        getrandom(&mut buf).map_err(OsError)?;
         Ok(u32::from_ne_bytes(buf))
     }
 
     #[inline]
     fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
         let mut buf = [0u8; 8];
-        getrandom(&mut buf)?;
+        getrandom(&mut buf).map_err(OsError)?;
         Ok(u64::from_ne_bytes(buf))
     }
 
     #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
-        getrandom(dest)?;
+        getrandom(dest).map_err(OsError)?;
         Ok(())
     }
 }

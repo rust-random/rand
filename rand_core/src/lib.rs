@@ -51,7 +51,7 @@ mod os;
 #[cfg(feature = "getrandom")]
 pub use getrandom;
 #[cfg(feature = "getrandom")]
-pub use os::OsRng;
+pub use os::{OsError, OsRng};
 
 /// Implementation-level interface for RNGs
 ///
