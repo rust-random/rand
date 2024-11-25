@@ -65,6 +65,29 @@ impl core::error::Error for OsError {
     }
 }
 
+impl OsError {
+    /// Extract the raw OS error code (if this error came from the OS)
+    ///
+    /// This method is identical to [`std::io::Error::raw_os_error()`][1], except
+    /// that it works in `no_std` contexts. If this method returns `None`, the
+    /// error value can still be formatted via the `Display` implementation.
+    ///
+    /// [1]: https://doc.rust-lang.org/std/io/struct.Error.html#method.raw_os_error
+    #[inline]
+    pub fn raw_os_error(self) -> Option<i32> {
+        self.0.raw_os_error()
+    }
+
+    /// Extract the bare error code.
+    ///
+    /// This code can either come from the underlying OS, or be a custom error.
+    /// Use [`Error::raw_os_error()`] to disambiguate.
+    #[inline]
+    pub const fn code(self) -> core::num::NonZeroU32 {
+        self.0.code()
+    }
+}
+
 impl TryRngCore for OsRng {
     type Error = OsError;
 
