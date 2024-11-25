@@ -30,7 +30,7 @@ jobs:
           RUSTDOCFLAGS: --cfg doc_cfg
         # --all builds all crates, but with default features for other crates (okay in this case)
         run: |
-          cargo doc --all --features nightly,serde,os_rng,small_rng
+          cargo doc --all --all-features --no-deps
           cp utils/redirect.html target/doc/index.html
           rm target/doc/.lock
 
