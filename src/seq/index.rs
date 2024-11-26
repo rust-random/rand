@@ -333,8 +333,8 @@ where
 /// ordering). The weights are to be provided by the input function `weights`,
 /// which will be called once for each index.
 ///
-/// This implementation uses the algorithm described by Efraimidis and Spirakis
-/// in this paper: <https://doi.org/10.1016/j.ipl.2005.11.003>
+/// This implementation is based on the algorithm A-ExpJ as found in
+/// [Efraimidis and Spirakis, 2005](https://doi.org/10.1016/j.ipl.2005.11.003).
 /// It uses `O(length + amount)` space and `O(length)` time.
 ///
 /// Error cases:
@@ -354,7 +354,7 @@ where
     N: UInt,
     IndexVec: From<Vec<N>>,
 {
-    use std::cmp::Ordering;
+    use std::{cmp::Ordering, collections::BinaryHeap};
 
     if amount == N::zero() {
         return Ok(IndexVec::U32(Vec::new()));
@@ -373,9 +373,9 @@ where
 
     impl<N> Ord for Element<N> {
         fn cmp(&self, other: &Self) -> Ordering {
-            // partial_cmp will always produce a value,
-            // because we check that the weights are not nan
-            self.key.partial_cmp(&other.key).unwrap()
+            // unwrap() should not panic since weights should not be NaN
+            // We reverse so that BinaryHeap::peek shows the smallest item
+            self.key.partial_cmp(&other.key).unwrap().reverse()
         }
     }
 
@@ -387,12 +387,14 @@ where
 
     impl<N> Eq for Element<N> {}
 
-    let mut candidates = Vec::with_capacity(length.as_usize());
+    let mut candidates = BinaryHeap::with_capacity(amount.as_usize());
     let mut index = N::zero();
-    while index < length {
+    while index < length && candidates.len() < amount.as_usize() {
         let weight = weight(index.as_usize()).into();
         if weight > 0.0 {
-            let key = rng.random::<f64>().powf(1.0 / weight);
+            // We use the log of the key used in A-ExpJ to improve precision
+            // for small weights:
+            let key = rng.random::<f64>().ln() / weight;
             candidates.push(Element { index, key });
         } else if !(weight >= 0.0) {
             return Err(WeightError::InvalidWeight);
@@ -401,23 +403,33 @@ where
         index += N::one();
     }
 
-    let avail = candidates.len();
-    if avail < amount.as_usize() {
+    if candidates.len() < amount.as_usize() {
         return Err(WeightError::InsufficientNonZero);
     }
 
-    // Partially sort the array to find the `amount` elements with the greatest
-    // keys. Do this by using `select_nth_unstable` to put the elements with
-    // the *smallest* keys at the beginning of the list in `O(n)` time, which
-    // provides equivalent information about the elements with the *greatest* keys.
-    let (_, mid, greater) = candidates.select_nth_unstable(avail - amount.as_usize());
+    let mut x = rng.random::<f64>().ln() / candidates.peek().unwrap().key;
+    while index < length {
+        let weight = weight(index.as_usize()).into();
+        if weight > 0.0 {
+            x -= weight;
+            if x <= 0.0 {
+                let min_candidate = candidates.pop().unwrap();
+                let t = (min_candidate.key * weight).exp();
+                let key = rng.random_range(t..1.0).ln() / weight;
+                candidates.push(Element { index, key });
 
-    let mut result: Vec<N> = Vec::with_capacity(amount.as_usize());
-    result.push(mid.index);
-    for element in greater {
-        result.push(element.index);
+                x = rng.random::<f64>().ln() / candidates.peek().unwrap().key;
+            }
+        } else if !(weight >= 0.0) {
+            return Err(WeightError::InvalidWeight);
+        }
+
+        index += N::one();
     }
-    Ok(IndexVec::from(result))
+
+    Ok(IndexVec::from(
+        candidates.iter().map(|elt| elt.index).collect(),
+    ))
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using Floyd's
