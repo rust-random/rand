@@ -377,7 +377,7 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.9.0-alpha.1"
+version = "0.9.0-beta.0"
 dependencies = [
  "bincode",
  "log",
@@ -391,7 +391,7 @@ dependencies = [
 
 [[package]]
 name = "rand_chacha"
-version = "0.9.0-alpha.1"
+version = "0.9.0-beta.0"
 dependencies = [
  "ppv-lite86",
  "rand_core",
@@ -401,7 +401,7 @@ dependencies = [
 
 [[package]]
 name = "rand_core"
-version = "0.9.0-alpha.1"
+version = "0.9.0-beta.0"
 dependencies = [
  "getrandom",
  "serde",
@@ -410,7 +410,7 @@ dependencies = [
 
 [[package]]
 name = "rand_distr"
-version = "0.5.0-alpha.1"
+version = "0.5.0-beta.0"
 dependencies = [
  "average",
  "num-traits",
@@ -423,7 +423,7 @@ dependencies = [
 
 [[package]]
 name = "rand_pcg"
-version = "0.9.0-alpha.1"
+version = "0.9.0-beta.0"
 dependencies = [
  "bincode",
  "rand_core",

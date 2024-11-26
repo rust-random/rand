@@ -187,6 +187,17 @@ mod tests {
         rng.sample::<u128, _>(StandardUniform);
     }
 
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    #[test]
+    fn x86_integers() {
+        let mut rng = crate::test::rng(807);
+
+        rng.sample::<__m128i, _>(StandardUniform);
+        rng.sample::<__m256i, _>(StandardUniform);
+        #[cfg(feature = "simd_support")]
+        rng.sample::<__m512i, _>(StandardUniform);
+    }
+
     #[test]
     fn value_stability() {
         fn test_samples<T: Copy + core::fmt::Debug + PartialEq>(zero: T, expected: &[T])

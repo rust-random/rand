@@ -4,21 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-- Bump the MSRV to 1.63.0
+## [0.9.0-beta.0] - 2024-11-25
+This is a pre-release. To depend on this version, use `rand_core = "=0.9.0-beta.0"` to prevent automatic updates (which can be expected to include breaking changes).
+
+### Compilation options and unsafe
+- Bump the MSRV to 1.63.0 (#1207, #1246, #1269, #1341, #1416, #1536); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
 - The `serde1` feature has been renamed `serde` (#1477)
-- Rename feature `getrandom` to `os_rng`
+- Use `zerocopy` to replace some `unsafe` code (#1349, #1393, #1446, #1502)
 
-## [0.9.0-alpha.1] - 2024-03-18
-
-## [0.9.0-alpha.0] - 2024-02-18
-This is a pre-release. To depend on this version, use `rand_core = "=0.9.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
-
-- Bump MSRV to 1.60.0 (#1207, #1246, #1269, #1341)
+### Other
 - Allow `rand_core::impls::fill_via_u*_chunks` to mutate source (#1182)
-- Add `fn RngCore::read_adapter` implementing `std::io::Read` (#1267)
-- Add `trait CryptoBlockRng: BlockRngCore`; make `trait CryptoRng: RngCore` (#1273)
-- Use `zerocopy` to replace some `unsafe` code (#1349, #1393)
+- Add fn `RngCore::read_adapter` implementing `std::io::Read` (#1267)
+- Add trait `CryptoBlockRng: BlockRngCore`; make `trait CryptoRng: RngCore` (#1273)
+- Add traits `TryRngCore`, `TryCryptoRng` (#1424, #1499)
+- Add bounds `Clone` and `AsRef` to associated type `SeedableRng::Seed` (#1491)
+- Rename feature `getrandom` to `os_rng` (#1537)
 
 ## [0.6.4] - 2022-09-15
 - Fix unsoundness in `<BlockRng64 as RngCore>::next_u32` (#1160)
