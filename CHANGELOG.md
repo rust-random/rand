@@ -53,6 +53,7 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` t
 - New, faster algorithms for `SliceRandom::shuffle` and `partial_shuffle` (#1272)
 - Split trait `SliceRandom` into `IndexedRandom`, `IndexedMutRandom`, `SliceRandom` (#1382)
 - Add `IndexedRandom::choose_multiple_array`, `index::sample_array` (#1453, #1469)
+- Fix `IndexdRandom::choose_multiple_weighted` for very small seeds and optimize for large input length / low memory (#1530)
 
 ### Distributions
 - Rename module `rand::distributions` to `rand::distr` (#1470)

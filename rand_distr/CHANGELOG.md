@@ -13,7 +13,7 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` t
 - The `serde1` feature has been renamed `serde` (#1477)
 
 ### Testing
-- Add Kolmogorov Smirnov tests for distributions (#1494, #1504, #1525)
+- Add Kolmogorov Smirnov tests for distributions (#1494, #1504, #1525, #1530)
 
 ### Fixes
 - Fix Knuth's method so `Poisson` doesn't return -1.0 for small lambda (#1284)
