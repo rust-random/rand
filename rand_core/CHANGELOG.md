@@ -6,7 +6,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.0-beta.0] - 2024-11-25
 This is a pre-release. To depend on this version, use `rand_core = "=0.9.0-beta.0"` to prevent automatic updates (which can be expected to include breaking changes).
-- Rename feature `getrandom` to `os_rng`
 
 ### Compilation options and unsafe
 - Bump the MSRV to 1.63.0 (#1207, #1246, #1269, #1341, #1416, #1536); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
@@ -19,6 +18,7 @@ This is a pre-release. To depend on this version, use `rand_core = "=0.9.0-beta.
 - Add trait `CryptoBlockRng: BlockRngCore`; make `trait CryptoRng: RngCore` (#1273)
 - Add traits `TryRngCore`, `TryCryptoRng` (#1424, #1499)
 - Add bounds `Clone` and `AsRef` to associated type `SeedableRng::Seed` (#1491)
+- Rename feature `getrandom` to `os_rng` (#1537)
 
 ## [0.6.4] - 2022-09-15
 - Fix unsoundness in `<BlockRng64 as RngCore>::next_u32` (#1160)

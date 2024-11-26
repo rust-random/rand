@@ -23,7 +23,7 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` t
 - The `serde1` feature has been renamed `serde` (#1477)
 - The implicit feature `rand_chacha` has been removed. This is enabled by `std_rng`. (#1473)
 - Enable feature `small_rng` by default (#1455)
-- Rename feature `getrandom` to `os_rng`
+- Rename feature `getrandom` to `os_rng` (#1537)
 
 ### Inherited changes from `rand_core`
 - Add fn `RngCore::read_adapter` implementing `std::io::Read` (#1267)
