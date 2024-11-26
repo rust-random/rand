@@ -14,7 +14,7 @@ keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 autobenches = true
 edition = "2021"
-rust-version = "1.61"
+rust-version = "1.63"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
 
 [package.metadata.docs.rs]
@@ -28,7 +28,7 @@ features = ["small_rng", "serde"]
 
 [features]
 # Meta-features:
-default = ["std", "std_rng", "getrandom", "small_rng"]
+default = ["std", "std_rng", "os_rng", "small_rng"]
 nightly = [] # some additions requiring nightly Rust
 serde = ["dep:serde", "rand_core/serde"]
 
@@ -39,8 +39,8 @@ std = ["rand_core/std", "rand_chacha?/std", "alloc"]
 # Option: "alloc" enables support for Vec and Box when not using "std"
 alloc = ["rand_core/alloc"]
 
-# Option: use getrandom package for seeding
-getrandom = ["rand_core/getrandom"]
+# Option: enable OsRng
+os_rng = ["rand_core/os_rng"]
 
 # Option (requires nightly Rust): experimental SIMD support
 simd_support = ["zerocopy/simd-nightly"]

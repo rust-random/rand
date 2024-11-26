@@ -17,12 +17,13 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` t
 - Use `zerocopy` to replace some `unsafe` code (#1349, #1393, #1446, #1502)
 
 ### Compilation options
-- Bump the MSRV to 1.61.0 (#1207, #1246, #1269, #1341, #1416); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
+- Bump the MSRV to 1.63.0 (#1207, #1246, #1269, #1341, #1416, #1536); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
 - Support `std` feature without `getrandom` or `rand_chacha` (#1354)
 - Improve `thread_rng` related docs (#1257)
 - The `serde1` feature has been renamed `serde` (#1477)
 - The implicit feature `rand_chacha` has been removed. This is enabled by `std_rng`. (#1473)
 - Enable feature `small_rng` by default (#1455)
+- Rename feature `getrandom` to `os_rng`
 
 ### Inherited changes from `rand_core`
 - Add fn `RngCore::read_adapter` implementing `std::io::Read` (#1267)

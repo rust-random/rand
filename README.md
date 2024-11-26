@@ -12,7 +12,7 @@ Rand is a set of crates supporting (pseudo-)random generators:
 -   With fast implementations of both [strong](https://rust-random.github.io/book/guide-rngs.html#cryptographically-secure-pseudo-random-number-generators-csprngs) and
     [small](https://rust-random.github.io/book/guide-rngs.html#basic-pseudo-random-number-generators-prngs) generators: [`rand::rngs`](https://docs.rs/rand/latest/rand/rngs/index.html), and more RNGs: [`rand_chacha`](https://docs.rs/rand_chacha), [`rand_xoshiro`](https://docs.rs/rand_xoshiro/), [`rand_pcg`](https://docs.rs/rand_pcg/), [rngs repo](https://github.com/rust-random/rngs/)
 -   [`rand::rng`](https://docs.rs/rand/latest/rand/fn.rng.html) is an asymptotically-fast, automatically-seeded and reasonably strong generator available on all `std` targets
--   Direct support for seeding generators from the [`getrandom` crate](https://crates.io/crates/getrandom)
+-   Direct support for seeding generators from the [getrandom] crate
 
 With broad support for random value generation and random processes:
 
@@ -85,8 +85,7 @@ Rand is built with these features enabled by default:
 
 -   `std` enables functionality dependent on the `std` lib
 -   `alloc` (implied by `std`) enables functionality requiring an allocator
--   `getrandom` (implied by `std`) is an optional dependency providing the code
-    behind `rngs::OsRng`
+-   `os_rng` (implied by `std`) enables `rngs::OsRng`, using the [getrandom] crate
 -   `std_rng` enables inclusion of `StdRng`, `ThreadRng`
 
 Optionally, the following dependencies can be enabled:
@@ -106,23 +105,23 @@ experimental `simd_support` feature.
 
 Rand supports limited functionality in `no_std` mode (enabled via
 `default-features = false`). In this case, `OsRng` and `from_os_rng` are
-unavailable (unless `getrandom` is enabled), large parts of `seq` are
+unavailable (unless `os_rng` is enabled), large parts of `seq` are
 unavailable (unless `alloc` is enabled), and `ThreadRng` is unavailable.
 
 ## Portability and platform support
 
 Many (but not all) algorithms are intended to have reproducible output. Read more in the book: [Portability](https://rust-random.github.io/book/portability.html).
 
-The Rand library supports a variety of CPU architectures. Platform integration is outsourced to [getrandom](https://docs.rs/getrandom/latest/getrandom/).
+The Rand library supports a variety of CPU architectures. Platform integration is outsourced to [getrandom].
 
 ### WASM support
 
 Seeding entropy from OS on WASM target `wasm32-unknown-unknown` is not
 *automatically* supported by `rand` or `getrandom`. If you are fine with
-seeding the generator manually, you can disable the `getrandom` feature
+seeding the generator manually, you can disable the `os_rng` feature
 and use the methods on the `SeedableRng` trait. To enable seeding from OS,
 either use a different target such as `wasm32-wasi` or add a direct
-dependency on `getrandom` with the `js` feature (if the target supports
+dependency on [getrandom] with the `js` feature (if the target supports
 JavaScript). See
 [getrandom#WebAssembly support](https://docs.rs/getrandom/latest/getrandom/#webassembly-support).
 
@@ -133,3 +132,5 @@ Apache License (Version 2.0).
 
 See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT), and
 [COPYRIGHT](COPYRIGHT) for details.
+
+[getrandom]: https://crates.io/crates/getrandom

@@ -19,7 +19,7 @@ use getrandom::getrandom;
 /// [getrandom] documentation for details.
 ///
 /// This struct is available as `rand_core::OsRng` and as `rand::rngs::OsRng`.
-/// In both cases, this requires the crate feature `getrandom` or `std`
+/// In both cases, this requires the crate feature `os_rng` or `std`
 /// (enabled by default in `rand` but not in `rand_core`).
 ///
 /// # Blocking and error handling
@@ -47,26 +47,69 @@ use getrandom::getrandom;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct OsRng;
 
+/// Error type of [`OsRng`]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OsError(getrandom::Error);
+
+impl core::fmt::Display for OsError {
+    #[inline]
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+// NOTE: this can use core::error::Error from rustc 1.81.0
+#[cfg(feature = "std")]
+impl std::error::Error for OsError {
+    #[inline]
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        std::error::Error::source(&self.0)
+    }
+}
+
+impl OsError {
+    /// Extract the raw OS error code (if this error came from the OS)
+    ///
+    /// This method is identical to [`std::io::Error::raw_os_error()`][1], except
+    /// that it works in `no_std` contexts. If this method returns `None`, the
+    /// error value can still be formatted via the `Display` implementation.
+    ///
+    /// [1]: https://doc.rust-lang.org/std/io/struct.Error.html#method.raw_os_error
+    #[inline]
+    pub fn raw_os_error(self) -> Option<i32> {
+        self.0.raw_os_error()
+    }
+
+    /// Extract the bare error code.
+    ///
+    /// This code can either come from the underlying OS, or be a custom error.
+    /// Use [`OsError::raw_os_error()`] to disambiguate.
+    #[inline]
+    pub const fn code(self) -> core::num::NonZeroU32 {
+        self.0.code()
+    }
+}
+
 impl TryRngCore for OsRng {
-    type Error = getrandom::Error;
+    type Error = OsError;
 
     #[inline]
     fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
         let mut buf = [0u8; 4];
-        getrandom(&mut buf)?;
+        getrandom(&mut buf).map_err(OsError)?;
         Ok(u32::from_ne_bytes(buf))
     }
 
     #[inline]
     fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
         let mut buf = [0u8; 8];
-        getrandom(&mut buf)?;
+        getrandom(&mut buf).map_err(OsError)?;
         Ok(u64::from_ne_bytes(buf))
     }
 
     #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
-        getrandom(dest)?;
+        getrandom(dest).map_err(OsError)?;
         Ok(())
     }
 }

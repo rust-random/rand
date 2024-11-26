@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.0-beta.0] - 2024-11-25
 This is a pre-release. To depend on this version, use `rand_chacha = "=0.9.0-beta.0"` to prevent automatic updates (which can be expected to include breaking changes).
+- Rename feature `getrandom` to `os_rng`
 
 - The `serde1` feature has been renamed `serde` (#1477)
 - Add `Lcg128CmDxsm64` generator compatible with NumPy's `PCG64DXSM` (#1202)

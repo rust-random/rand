@@ -13,7 +13,7 @@ Core random number generator traits and tools for implementation.
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 edition = "2021"
-rust-version = "1.61"
+rust-version = "1.63"
 
 [package.metadata.docs.rs]
 # To build locally:
@@ -27,7 +27,7 @@ all-features = true
 [features]
 std = ["alloc", "getrandom?/std"]
 alloc = []  # enables Vec and Box support without std
-getrandom = ["dep:getrandom"]
+os_rng = ["dep:getrandom"]
 serde = ["dep:serde"] # enables serde for BlockRng wrapper
 
 [dependencies]
