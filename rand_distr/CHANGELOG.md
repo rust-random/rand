@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` to prevent automatic updates (which can be expected to include breaking changes).
 
 ### Compilation options
+- Target `rand` version `0.9.0-beta.0`
 - Bump the MSRV to 1.61.0 (#1207, #1246, #1269, #1341, #1416); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
 - The `serde1` feature has been renamed `serde` (#1477)
 
@@ -15,11 +16,24 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` t
 - Add Kolmogorov Smirnov tests for distributions (#1494, #1504, #1525)
 
 ### Fixes
+- Fix Knuth's method so `Poisson` doesn't return -1.0 for small lambda (#1284)
+- Fix `Poisson` distribution instantiation so it return an error if lambda is infinite (#1291)
+- Fix Dirichlet sample for small alpha values to avoid NaN samples (#1209)
+- Fix infinite loop in `Binomial` distribution (#1325)
 - Fix panic in Binomial (#1484)
 - Limit the maximal acceptable lambda for `Poisson` to solve (#1312) (#1498)
 - Fix bug in `Hypergeometric`, this is a Value-breaking change (#1510)
 
-### API changes
+### Additions
+- Make distributions comparable with `PartialEq` (#1218)
+- Add `WeightedIndexTree` (#1372, #1444)
+
+### Changes
+### Other changes
+- Remove unused fields from `Gamma`, `NormalInverseGaussian` and `Zipf` distributions (#1184)
+  This breaks serialization compatibility with older versions.
+- `Dirichlet` now uses `const` generics, which means that its size is required at compile time (#1292)
+- The `Dirichlet::new_with_size` constructor was removed (#1292)
 - Add `PertBuilder`, fix case where mode ≅ mean (#1452)
 - Rename `Zeta`'s parameter `a` to `s` (#1466)
 - Mark `WeightError`, `PoissonError`, `BinomialError` as `#[non_exhaustive]` (#1480)
@@ -31,29 +45,6 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` t
 
 ### Documentation
 - Add plots for `rand_distr` distributions to documentation (#1434)
-
-## [0.5.0-alpha.1] - 2024-03-18
-- Target `rand` version `0.9.0-alpha.1`
-
-## [0.5.0-alpha.0] - 2024-02-18
-This is a pre-release. To depend on this version, use `rand_distr = "=0.5.0-alpha.0"` to prevent automatic updates (which can be expected to include breaking changes).
-
-### Additions
-- Make distributions comparable with `PartialEq` (#1218)
-- Add `WeightedIndexTree` (#1372, #1444)
-
-### Changes
-- Target `rand` version `0.9.0-alpha.0`
-- Remove unused fields from `Gamma`, `NormalInverseGaussian` and `Zipf` distributions (#1184)
-  This breaks serialization compatibility with older versions.
-- `Dirichlet` now uses `const` generics, which means that its size is required at compile time (#1292)
-- The `Dirichlet::new_with_size` constructor was removed (#1292)
-
-### Fixes
-- Fix Knuth's method so `Poisson` doesn't return -1.0 for small lambda (#1284)
-- Fix `Poisson` distribution instantiation so it return an error if lambda is infinite (#1291)
-- Fix Dirichlet sample for small alpha values to avoid NaN samples (#1209)
-- Fix infinite loop in `Binomial` distribution (#1325)
 
 ## [0.4.3] - 2021-12-30
 - Fix `no_std` build (#1208)
