@@ -1,15 +1,37 @@
-name: Tests
+name: Main tests
 
 on:
   push:
     branches: [ master, '0.[0-9]+' ]
+    paths-ignore:
+      - "**.md"
+      - "benches/**"
+      - "distr_test/**"
   pull_request:
     branches: [ master, '0.[0-9]+' ]
+    paths-ignore:
+      - "**.md"
+      - "benches/**"
+      - "distr_test/**"
 
 permissions:
   contents: read #  to fetch code (actions/checkout)
 
 jobs:
+  clippy-fmt:
+    name: Check Clippy and rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+      - name: Check Clippy
+        run: cargo clippy --all --all-targets -- -D warnings
+      - name: Check rustfmt
+        run: cargo fmt --all -- --check
+
   check-doc:
     name: Check doc
     runs-on: ubuntu-latest
@@ -85,7 +107,6 @@ jobs:
         run: |
           cargo test --target ${{ matrix.target }} --features=nightly
           cargo test --target ${{ matrix.target }} --all-features
-          cargo test --target ${{ matrix.target }} --manifest-path benches/Cargo.toml --benches
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
       - name: Test rand
         run: |
@@ -110,17 +131,6 @@ jobs:
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
       - name: Test rand_chacha
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml --features=serde
-
-  test-ks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install toolchain
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-            target: x86_64-unknown-linux-gnu
-      - name: Test Komogorov Smirnov
-        run: cargo test --manifest-path distr_test/Cargo.toml --release
 
   test-cross:
     runs-on: ${{ matrix.os }}

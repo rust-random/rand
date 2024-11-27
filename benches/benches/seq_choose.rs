@@ -68,9 +68,7 @@ pub fn bench(c: &mut Criterion) {
             b.iter(|| {
                 // Collect full result to prevent unwanted shortcuts getting
                 // first element (in case sample_indices returns an iterator).
-                let samples_iter = x
-                    .choose_multiple_weighted(&mut rng, amount, |_| 1.0)
-                    .unwrap();
+                let samples_iter = x.choose_multiple_weighted(&mut rng, amount, |_| 1.0).unwrap();
                 for (slot, sample) in y.iter_mut().zip(samples_iter) {
                     *slot = *sample;
                 }
