@@ -1,10 +1,18 @@
-name: Tests
+name: Main tests
 
 on:
   push:
     branches: [ master, '0.[0-9]+' ]
+    paths-ignore:
+      - "**.md"
+      - "benches/**"
+      - "distr_test/**"
   pull_request:
     branches: [ master, '0.[0-9]+' ]
+    paths-ignore:
+      - "**.md"
+      - "benches/**"
+      - "distr_test/**"
 
 permissions:
   contents: read #  to fetch code (actions/checkout)
