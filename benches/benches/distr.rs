@@ -6,11 +6,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![feature(custom_inner_attributes)]
-
-// Rustfmt splits macro invocations to shorten lines; in this case longer-lines are more readable
-#![rustfmt::skip]
-
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use criterion_cycles_per_byte::CyclesPerByte;
 
@@ -80,7 +75,8 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
         let distr = Normal::new(-E, PI).unwrap();
 
         c.iter(|| {
-            distr.sample_iter(&mut rng)
+            distr
+                .sample_iter(&mut rng)
                 .take(ITER_ELTS as usize)
                 .fold(0.0, |a, r| a + r)
         });
@@ -121,12 +117,22 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
     let mut g = c.benchmark_group("weighted");
     distr_int!(g, "i8", usize, WeightedIndex::new([1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
     distr_int!(g, "u32", usize, WeightedIndex::new([1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "f64", usize, WeightedIndex::new([1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
+    distr_int!(g, "f64", usize, WeightedIndex::new([1.0f64, 0.001, 1.0 / 3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
     distr_int!(g, "large_set", usize, WeightedIndex::new((0..10000).rev().chain(1..10001)).unwrap());
     distr_int!(g, "alias_method_i8", usize, WeightedAliasIndex::new(vec![1i8, 2, 3, 4, 12, 0, 2, 1]).unwrap());
     distr_int!(g, "alias_method_u32", usize, WeightedAliasIndex::new(vec![1u32, 2, 3, 4, 12, 0, 2, 1]).unwrap());
-    distr_int!(g, "alias_method_f64", usize, WeightedAliasIndex::new(vec![1.0f64, 0.001, 1.0/3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap());
-    distr_int!(g, "alias_method_large_set", usize, WeightedAliasIndex::new((0..10000).rev().chain(1..10001).collect()).unwrap());
+    distr_int!(
+        g,
+        "alias_method_f64",
+        usize,
+        WeightedAliasIndex::new(vec![1.0f64, 0.001, 1.0 / 3.0, 4.01, 0.0, 3.3, 22.0, 0.001]).unwrap()
+    );
+    distr_int!(
+        g,
+        "alias_method_large_set",
+        usize,
+        WeightedAliasIndex::new((0..10000).rev().chain(1..10001).collect()).unwrap()
+    );
     g.finish();
 
     let mut g = c.benchmark_group("binomial");
