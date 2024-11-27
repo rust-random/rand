@@ -32,14 +32,12 @@ jobs:
         run: cargo fmt -- --check
       - name: Clippy
         run: cargo clippy --all-targets -- -D warnings
-
-  test-ks:
+  ks-tests:
+    name: Run Komogorov Smirnov tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install toolchain
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
-      - name: Test Komogorov Smirnov
-        run: cargo test --release
+      - run: cargo test --release

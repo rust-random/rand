@@ -40,6 +40,5 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
-          components: clippy, rustfmt
       - name: Test
         run: RUSTFLAGS=-Dwarnings cargo test --benches
