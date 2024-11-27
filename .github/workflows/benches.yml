@@ -1,26 +1,45 @@
 name: Benches
 
 on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - "**.md"
+      - "distr_test/**"
+      - "examples/**"
   pull_request:
-    paths:
-      - ".github/workflows/benches.yml"
-      - "benches/**"
+    branches: [ master ]
+    paths-ignore:
+      - "**.md"
+      - "distr_test/**"
+      - "examples/**"
+
+defaults:
+  run:
+    working-directory: ./benches
 
 jobs:
-  benches:
+  clippy-fmt:
+    name: Check Clippy and rustfmt
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./benches
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+      - name: Rustfmt
+        run: cargo fmt -- --check
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+  benches:
+    name: Test benchmarks
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
           components: clippy, rustfmt
-      - name: Rustfmt
-        run: cargo fmt -- --check
-      - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
-      - name: Build
+      - name: Test
         run: RUSTFLAGS=-Dwarnings cargo test --benches
