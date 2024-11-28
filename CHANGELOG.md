@@ -65,6 +65,7 @@ This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` t
 - Distribution `Uniform` implements `TryFrom` instead of `From` for ranges (#1229)
 - Optimize distribution `Uniform`: use Canon's method (single sampling) / Lemire's method (distribution sampling) for faster sampling (breaks value stability; #1287)
 - Add `UniformUsize` and use to make `Uniform` for `usize` portable (#1487)
+- Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` (except via `UniformUsize`) and `Fill` and usage as a `WeightedAliasIndex` weight (#1487)
 - Optimize fn `sample_single_inclusive` for floats (+~20% perf) (#1289)
 - Allow `UniformFloat::new` samples and `UniformFloat::sample_single` to yield `high` (#1462)
 - Add impl `DistString` for distributions `Slice<char>` and `Uniform<char>` (#1315)
