@@ -79,15 +79,6 @@ impl OsError {
     pub fn raw_os_error(self) -> Option<i32> {
         self.0.raw_os_error()
     }
-
-    /// Extract the bare error code.
-    ///
-    /// This code can either come from the underlying OS, or be a custom error.
-    /// Use [`OsError::raw_os_error()`] to disambiguate.
-    #[inline]
-    pub const fn code(self) -> core::num::NonZeroU32 {
-        self.0.code()
-    }
 }
 
 impl TryRngCore for OsRng {
