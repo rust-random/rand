@@ -64,7 +64,7 @@ rand = "0.8.5"
 Or, to try the 0.9.0 beta release:
 ```toml
 [dependencies]
-rand = "=0.9.0-beta.0"
+rand = "=0.9.0-beta.1"
 ```
 
 To get started using Rand, see [The Book](https://rust-random.github.io/book).
