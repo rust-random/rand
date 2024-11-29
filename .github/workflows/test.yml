@@ -121,7 +121,7 @@ jobs:
         run: |
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features
-          cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features --features=alloc,os_rng
+          cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features --features=os_rng
       - name: Test rand_distr
         run: |
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --features=serde
