@@ -512,7 +512,7 @@ pub trait SeedableRng: Sized {
     #[cfg(feature = "os_rng")]
     fn try_from_os_rng() -> Result<Self, getrandom::Error> {
         let mut seed = Self::Seed::default();
-        getrandom::getrandom(seed.as_mut())?;
+        getrandom::fill(seed.as_mut())?;
         let res = Self::from_seed(seed);
         Ok(res)
     }

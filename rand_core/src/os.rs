@@ -9,7 +9,6 @@
 //! Interface to the random number generator of the operating system.
 
 use crate::{TryCryptoRng, TryRngCore};
-use getrandom::getrandom;
 
 /// An interface over the operating-system's random data source
 ///
@@ -87,20 +86,20 @@ impl TryRngCore for OsRng {
     #[inline]
     fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
         let mut buf = [0u8; 4];
-        getrandom(&mut buf).map_err(OsError)?;
+        getrandom::fill(&mut buf).map_err(OsError)?;
         Ok(u32::from_ne_bytes(buf))
     }
 
     #[inline]
     fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
         let mut buf = [0u8; 8];
-        getrandom(&mut buf).map_err(OsError)?;
+        getrandom::fill(&mut buf).map_err(OsError)?;
         Ok(u64::from_ne_bytes(buf))
     }
 
     #[inline]
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Self::Error> {
-        getrandom(dest).map_err(OsError)?;
+        getrandom::fill(dest).map_err(OsError)?;
         Ok(())
     }
 }
