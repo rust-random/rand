@@ -37,7 +37,7 @@ serde = ["dep:serde", "rand_core/serde"]
 std = ["rand_core/std", "rand_chacha?/std", "alloc"]
 
 # Option: "alloc" enables support for Vec and Box when not using "std"
-alloc = ["rand_core/alloc"]
+alloc = []
 
 # Option: enable OsRng
 os_rng = ["rand_core/os_rng"]

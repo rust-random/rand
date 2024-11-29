@@ -25,8 +25,7 @@ rustdoc-args = ["--generate-link-to-definition"]
 all-features = true
 
 [features]
-std = ["alloc", "getrandom?/std"]
-alloc = []  # enables Vec and Box support without std
+std = ["getrandom?/std"]
 os_rng = ["dep:getrandom"]
 serde = ["dep:serde"] # enables serde for BlockRng wrapper
 
