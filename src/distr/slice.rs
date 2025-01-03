@@ -6,6 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+//! Distributions over slices
+
 use core::num::NonZeroUsize;
 
 use crate::distr::uniform::{UniformSampler, UniformUsize};
@@ -34,7 +36,7 @@ use alloc::string::String;
 ///
 /// ```
 /// use rand::Rng;
-/// use rand::distr::Slice;
+/// use rand::distr::slice::Slice;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
 /// let vowels_dist = Slice::new(&vowels).unwrap();

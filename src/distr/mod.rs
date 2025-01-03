@@ -89,7 +89,6 @@ mod distribution;
 mod float;
 mod integer;
 mod other;
-mod slice;
 mod utils;
 #[cfg(feature = "alloc")]
 mod weighted_index;
@@ -98,6 +97,7 @@ mod weighted_index;
 pub mod hidden_export {
     pub use super::float::IntoFloat; // used by rand_distr
 }
+pub mod slice;
 pub mod uniform;
 
 pub use self::bernoulli::{Bernoulli, BernoulliError};
@@ -106,7 +106,6 @@ pub use self::distribution::DistString;
 pub use self::distribution::{DistIter, DistMap, Distribution};
 pub use self::float::{Open01, OpenClosed01};
 pub use self::other::Alphanumeric;
-pub use self::slice::Slice;
 #[doc(inline)]
 pub use self::uniform::Uniform;
 #[cfg(feature = "alloc")]
