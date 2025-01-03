@@ -28,7 +28,7 @@ features = ["small_rng", "serde"]
 
 [features]
 # Meta-features:
-default = ["std", "std_rng", "os_rng", "small_rng"]
+default = ["std", "std_rng", "os_rng", "small_rng", "thread_rng"]
 nightly = [] # some additions requiring nightly Rust
 serde = ["dep:serde", "rand_core/serde"]
 
@@ -50,6 +50,9 @@ std_rng = ["dep:rand_chacha"]
 
 # Option: enable SmallRng
 small_rng = []
+
+# Option: enable ThreadRng and rng()
+thread_rng = ["std", "std_rng", "os_rng"]
 
 # Option: use unbiased sampling for algorithms supporting this option: Uniform distribution.
 # By default, bias affecting no more than one in  2^48 samples is accepted.
