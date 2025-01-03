@@ -15,36 +15,26 @@ use crate::distr::Distribution;
 #[cfg(feature = "alloc")]
 use alloc::string::String;
 
-/// A distribution to sample items uniformly from a slice.
+/// A distribution to uniformly sample elements of a slice
 ///
-/// [`Choose::new`] constructs a distribution referencing a slice and uniformly
-/// samples references from the items in the slice. It may do extra work up
-/// front to make sampling of multiple values faster; if only one sample from
-/// the slice is required, [`IndexedRandom::choose`] can be more efficient.
+/// Like [`IndexedRandom::choose`], this uniformly samples elements of a slice
+/// without modification of the slice (so called "sampling with replacement").
+/// This distribution object may be a little faster for repeated sampling (but
+/// slower for small numbers of samples).
 ///
-/// Steps are taken to avoid bias which might be present in naive
-/// implementations; for example `slice[rng.gen() % slice.len()]` samples from
-/// the slice, but may be more likely to select numbers in the low range than
-/// other values.
+/// ## Examples
 ///
-/// This distribution samples with replacement; each sample is independent.
-/// Sampling without replacement requires state to be retained, and therefore
-/// cannot be handled by a distribution; you should instead consider methods
-/// on [`IndexedRandom`], such as [`IndexedRandom::choose_multiple`].
-///
-/// # Example
-///
+/// Since this is a distribution, [`Rng::sample_iter`] and
+/// [`Distribution::sample_iter`] may be used, for example:
 /// ```
-/// use rand::Rng;
-/// use rand::distr::slice::Choose;
+/// use rand::distr::{Distribution, slice::Choose};
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
 /// let vowels_dist = Choose::new(&vowels).unwrap();
-/// let rng = rand::rng();
 ///
 /// // build a string of 10 vowels
-/// let vowel_string: String = rng
-///     .sample_iter(&vowels_dist)
+/// let vowel_string: String = vowels_dist
+///     .sample_iter(&mut rand::rng())
 ///     .take(10)
 ///     .collect();
 ///
@@ -53,21 +43,18 @@ use alloc::string::String;
 /// assert!(vowel_string.chars().all(|c| vowels.contains(&c)));
 /// ```
 ///
-/// For a single sample, [`IndexedRandom::choose`][crate::seq::IndexedRandom::choose]
-/// may be preferred:
-///
+/// For a single sample, [`IndexedRandom::choose`] may be preferred:
 /// ```
 /// use rand::seq::IndexedRandom;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
 /// let mut rng = rand::rng();
 ///
-/// println!("{}", vowels.choose(&mut rng).unwrap())
+/// println!("{}", vowels.choose(&mut rng).unwrap());
 /// ```
 ///
-/// [`IndexedRandom`]: crate::seq::IndexedRandom
 /// [`IndexedRandom::choose`]: crate::seq::IndexedRandom::choose
-/// [`IndexedRandom::choose_multiple`]: crate::seq::IndexedRandom::choose_multiple
+/// [`Rng::sample_iter`]: crate::Rng::sample_iter
 #[derive(Debug, Clone, Copy)]
 pub struct Choose<'a, T> {
     slice: &'a [T],
@@ -77,7 +64,8 @@ pub struct Choose<'a, T> {
 
 impl<'a, T> Choose<'a, T> {
     /// Create a new `Choose` instance which samples uniformly from the slice.
-    /// Returns `Err` if the slice is empty.
+    ///
+    /// Returns error [`Empty`] if the slice is empty.
     pub fn new(slice: &'a [T]) -> Result<Self, Empty> {
         let num_choices = NonZeroUsize::new(slice.len()).ok_or(Empty)?;
 
@@ -112,8 +100,9 @@ impl<'a, T> Distribution<&'a T> for Choose<'a, T> {
     }
 }
 
-/// Error type indicating that a [`Choose`] distribution was improperly
-/// constructed with an empty slice.
+/// Error: empty slice
+///
+/// This error is returned when [`Choose::new`] is given an empty slice.
 #[derive(Debug, Clone, Copy)]
 pub struct Empty;
 
