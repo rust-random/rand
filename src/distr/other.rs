@@ -14,7 +14,7 @@ use core::char;
 use core::num::Wrapping;
 
 #[cfg(feature = "alloc")]
-use crate::distr::DistString;
+use crate::distr::SampleString;
 use crate::distr::{Distribution, StandardUniform, Uniform};
 use crate::Rng;
 
@@ -42,10 +42,10 @@ use serde::{Deserialize, Serialize};
 /// println!("Random chars: {}", chars);
 /// ```
 ///
-/// The [`DistString`] trait provides an easier method of generating
-/// a random `String`, and offers more efficient allocation:
+/// The [`SampleString`] trait provides an easier method of generating
+/// a random [`String`], and offers more efficient allocation:
 /// ```
-/// use rand::distr::{Alphanumeric, DistString};
+/// use rand::distr::{Alphanumeric, SampleString};
 /// let string = Alphanumeric.sample_string(&mut rand::rng(), 16);
 /// println!("Random string: {}", string);
 /// ```
@@ -96,7 +96,7 @@ impl Distribution<char> for StandardUniform {
 /// Note: the `String` is potentially left with excess capacity; optionally the
 /// user may call `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
-impl DistString for StandardUniform {
+impl SampleString for StandardUniform {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, s: &mut String, len: usize) {
         // A char is encoded with at most four bytes, thus this reservation is
         // guaranteed to be sufficient. We do not shrink_to_fit afterwards so
@@ -126,7 +126,7 @@ impl Distribution<u8> for Alphanumeric {
 }
 
 #[cfg(feature = "alloc")]
-impl DistString for Alphanumeric {
+impl SampleString for Alphanumeric {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
         unsafe {
             let v = string.as_mut_vec();

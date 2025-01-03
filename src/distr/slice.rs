@@ -121,7 +121,7 @@ impl std::error::Error for Empty {}
 /// Note: the `String` is potentially left with excess capacity; optionally the
 /// user may call `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
-impl super::DistString for Choose<'_, char> {
+impl super::SampleString for Choose<'_, char> {
     fn append_string<R: crate::Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
         // Get the max char length to minimize extra space.
         // Limit this check to avoid searching for long slice.

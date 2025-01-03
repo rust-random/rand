@@ -179,16 +179,15 @@ where
     }
 }
 
-/// `String` sampler
+/// Sample or extend a [`String`]
 ///
-/// Sampling a `String` of random characters is not quite the same as collecting
-/// a sequence of chars. This trait contains some helpers.
+/// Helper methods to extend a [`String`] or sample a new [`String`].
 #[cfg(feature = "alloc")]
-pub trait DistString {
+pub trait SampleString {
     /// Append `len` random chars to `string`
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize);
 
-    /// Generate a `String` of `len` random chars
+    /// Generate a [`String`] of `len` random chars
     #[inline]
     fn sample_string<R: Rng + ?Sized>(&self, rng: &mut R, len: usize) -> String {
         let mut s = String::new();
@@ -246,7 +245,7 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn test_dist_string() {
-        use crate::distr::{Alphanumeric, DistString, StandardUniform};
+        use crate::distr::{Alphanumeric, SampleString, StandardUniform};
         use core::str;
         let mut rng = crate::test::rng(213);
 
