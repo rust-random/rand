@@ -6,16 +6,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Weighted index sampling
-
+use super::{Error, Weight};
 use crate::distr::uniform::{SampleBorrow, SampleUniform, UniformSampler};
 use crate::distr::Distribution;
 use crate::Rng;
-use core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
 use alloc::vec::Vec;
-use core::fmt::Debug;
+use core::fmt::{self, Debug};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -33,12 +31,9 @@ use serde::{Deserialize, Serialize};
 /// # Performance
 ///
 /// Time complexity of sampling from `WeightedIndex` is `O(log N)` where
-/// `N` is the number of weights. There are two alternative implementations with
-/// different runtimes characteristics:
-/// * [`rand_distr::weighted_alias`] supports `O(1)` sampling, but with much higher
-///   initialisation cost.
-/// * [`rand_distr::weighted_tree`] keeps the weights in a tree structure where sampling
-///   and updating is `O(log N)`.
+/// `N` is the number of weights.
+/// See also [`rand_distr::weighted`] for alternative implementations supporting
+/// potentially-faster sampling or a more easily modifiable tree structure.
 ///
 /// A `WeightedIndex<X>` contains a `Vec<X>` and a [`Uniform<X>`] and so its
 /// size is the sum of the size of those objects, possibly plus some alignment.
@@ -80,8 +75,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// [`Uniform<X>`]: crate::distr::Uniform
 /// [`RngCore`]: crate::RngCore
-/// [`rand_distr::weighted_alias`]: https://docs.rs/rand_distr/*/rand_distr/weighted_alias/index.html
-/// [`rand_distr::weighted_tree`]: https://docs.rs/rand_distr/*/rand_distr/weighted_tree/index.html
+/// [`rand_distr::weighted`]: https://docs.rs/rand_distr/latest/rand_distr/weighted/index.html
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WeightedIndex<X: SampleUniform + PartialOrd> {
@@ -373,62 +367,6 @@ where
     }
 }
 
-/// Bounds on a weight
-///
-/// See usage in [`WeightedIndex`].
-pub trait Weight: Clone {
-    /// Representation of 0
-    const ZERO: Self;
-
-    /// Checked addition
-    ///
-    /// -   `Result::Ok`: On success, `v` is added to `self`
-    /// -   `Result::Err`: Returns an error when `Self` cannot represent the
-    ///     result of `self + v` (i.e. overflow). The value of `self` should be
-    ///     discarded.
-    #[allow(clippy::result_unit_err)]
-    fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()>;
-}
-
-macro_rules! impl_weight_int {
-    ($t:ty) => {
-        impl Weight for $t {
-            const ZERO: Self = 0;
-            fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()> {
-                match self.checked_add(*v) {
-                    Some(sum) => {
-                        *self = sum;
-                        Ok(())
-                    }
-                    None => Err(()),
-                }
-            }
-        }
-    };
-    ($t:ty, $($tt:ty),*) => {
-        impl_weight_int!($t);
-        impl_weight_int!($($tt),*);
-    }
-}
-impl_weight_int!(i8, i16, i32, i64, i128, isize);
-impl_weight_int!(u8, u16, u32, u64, u128, usize);
-
-macro_rules! impl_weight_float {
-    ($t:ty) => {
-        impl Weight for $t {
-            const ZERO: Self = 0.0;
-
-            fn checked_add_assign(&mut self, v: &Self) -> Result<(), ()> {
-                // Floats have an explicit representation for overflow
-                *self += *v;
-                Ok(())
-            }
-        }
-    };
-}
-impl_weight_float!(f32);
-impl_weight_float!(f64);
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -689,44 +627,5 @@ mod test {
     #[test]
     fn overflow() {
         assert_eq!(WeightedIndex::new([2, usize::MAX]), Err(Error::Overflow));
-    }
-}
-
-/// Invalid weight errors
-///
-/// This type represents errors from [`WeightedIndex::new`],
-/// [`WeightedIndex::update_weights`] and other weighted distributions.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-// Marked non_exhaustive to allow a new error code in the solution to #1476.
-#[non_exhaustive]
-pub enum Error {
-    /// The input weight sequence is empty, too long, or wrongly ordered
-    InvalidInput,
-
-    /// A weight is negative, too large for the distribution, or not a valid number
-    InvalidWeight,
-
-    /// Not enough non-zero weights are available to sample values
-    ///
-    /// When attempting to sample a single value this implies that all weights
-    /// are zero. When attempting to sample `amount` values this implies that
-    /// less than `amount` weights are greater than zero.
-    InsufficientNonZero,
-
-    /// Overflow when calculating the sum of weights
-    Overflow,
-}
-
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(match *self {
-            Error::InvalidInput => "Weights sequence is empty/too long/unordered",
-            Error::InvalidWeight => "A weight is negative, too large or not a valid number",
-            Error::InsufficientNonZero => "Not enough weights > zero",
-            Error::Overflow => "Overflow when summing weights",
-        })
     }
 }
