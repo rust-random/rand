@@ -90,9 +90,6 @@ impl UniformSampler for UniformChar {
     }
 }
 
-/// Note: the `String` is potentially left with excess capacity if the range
-/// includes non ascii chars; optionally the user may call
-/// `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
 impl crate::distr::SampleString for Uniform<char> {
     fn append_string<R: Rng + ?Sized>(

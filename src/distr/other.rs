@@ -93,8 +93,6 @@ impl Distribution<char> for StandardUniform {
     }
 }
 
-/// Note: the `String` is potentially left with excess capacity; optionally the
-/// user may call `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
 impl SampleString for StandardUniform {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, s: &mut String, len: usize) {

@@ -118,8 +118,6 @@ impl core::fmt::Display for Empty {
 #[cfg(feature = "std")]
 impl std::error::Error for Empty {}
 
-/// Note: the `String` is potentially left with excess capacity; optionally the
-/// user may call `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
 impl super::SampleString for Choose<'_, char> {
     fn append_string<R: crate::Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {

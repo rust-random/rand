@@ -185,9 +185,17 @@ where
 #[cfg(feature = "alloc")]
 pub trait SampleString {
     /// Append `len` random chars to `string`
+    ///
+    /// Note: implementations may leave `string` with excess capacity. If this
+    /// is undesirable, consider calling [`String::shrink_to_fit`] after this
+    /// method.
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize);
 
     /// Generate a [`String`] of `len` random chars
+    ///
+    /// Note: implementations may leave the string with excess capacity. If this
+    /// is undesirable, consider calling [`String::shrink_to_fit`] after this
+    /// method.
     #[inline]
     fn sample_string<R: Rng + ?Sized>(&self, rng: &mut R, len: usize) -> String {
         let mut s = String::new();
