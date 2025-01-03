@@ -81,28 +81,25 @@ pub trait Distribution<T> {
         }
     }
 
-    /// Create a distribution of values of 'S' by mapping the output of `Self`
-    /// through the closure `F`
+    /// Map sampled values to type `S`
     ///
     /// # Example
     ///
     /// ```
     /// use rand::distr::{Distribution, Uniform};
     ///
-    /// let mut rng = rand::rng();
-    ///
     /// let die = Uniform::new_inclusive(1, 6).unwrap();
     /// let even_number = die.map(|num| num % 2 == 0);
-    /// while !even_number.sample(&mut rng) {
+    /// while !even_number.sample(&mut rand::rng()) {
     ///     println!("Still odd; rolling again!");
     /// }
     /// ```
-    fn map<F, S>(self, func: F) -> DistMap<Self, F, T, S>
+    fn map<F, S>(self, func: F) -> Map<Self, F, T, S>
     where
         F: Fn(T) -> S,
         Self: Sized,
     {
-        DistMap {
+        Map {
             distr: self,
             func,
             phantom: core::marker::PhantomData,
@@ -158,19 +155,18 @@ where
 {
 }
 
-/// A distribution of values of type `S` derived from the distribution `D`
-/// by mapping its output of type `T` through the closure `F`.
+/// A [`Distribution`] which maps sampled values to type `S`
 ///
 /// This `struct` is created by the [`Distribution::map`] method.
 /// See its documentation for more.
 #[derive(Debug)]
-pub struct DistMap<D, F, T, S> {
+pub struct Map<D, F, T, S> {
     distr: D,
     func: F,
     phantom: core::marker::PhantomData<fn(T) -> S>,
 }
 
-impl<D, F, T, S> Distribution<S> for DistMap<D, F, T, S>
+impl<D, F, T, S> Distribution<S> for Map<D, F, T, S>
 where
     D: Distribution<T>,
     F: Fn(T) -> S,
