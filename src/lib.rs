@@ -103,13 +103,13 @@ pub mod rngs;
 pub mod seq;
 
 // Public exports
-#[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+#[cfg(feature = "thread_rng")]
 pub use crate::rngs::thread::rng;
 
 /// Access the thread-local generator
 ///
 /// Use [`rand::rng()`](rng()) instead.
-#[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+#[cfg(feature = "thread_rng")]
 #[deprecated(since = "0.9.0", note = "renamed to `rng`")]
 #[inline]
 pub fn thread_rng() -> crate::rngs::ThreadRng {
@@ -118,7 +118,7 @@ pub fn thread_rng() -> crate::rngs::ThreadRng {
 
 pub use rng::{Fill, Rng};
 
-#[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+#[cfg(feature = "thread_rng")]
 use crate::distr::{Distribution, StandardUniform};
 
 /// Generate a random value using the thread-local random number generator.
@@ -159,7 +159,7 @@ use crate::distr::{Distribution, StandardUniform};
 ///
 /// [`StandardUniform`]: distr::StandardUniform
 /// [`ThreadRng`]: rngs::ThreadRng
-#[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+#[cfg(feature = "thread_rng")]
 #[inline]
 pub fn random<T>() -> T
 where
@@ -179,7 +179,7 @@ where
 /// let v: Vec<i32> = rand::random_iter().take(5).collect();
 /// println!("{v:?}");
 /// ```
-#[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+#[cfg(feature = "thread_rng")]
 #[inline]
 pub fn random_iter<T>() -> distr::DistIter<StandardUniform, rngs::ThreadRng, T>
 where
@@ -204,7 +204,7 @@ where
 /// ```
 /// Note that the first example can also be achieved (without `collect`'ing
 /// to a `Vec`) using [`seq::IteratorRandom::choose`].
-#[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+#[cfg(feature = "thread_rng")]
 #[inline]
 pub fn random_range<T, R>(range: R) -> T
 where
@@ -228,7 +228,7 @@ where
 /// # Panics
 ///
 /// If `p < 0` or `p > 1`.
-#[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+#[cfg(feature = "thread_rng")]
 #[inline]
 #[track_caller]
 pub fn random_bool(p: f64) -> bool {
@@ -260,7 +260,7 @@ pub fn random_bool(p: f64) -> bool {
 /// ```
 ///
 /// [`Bernoulli`]: distr::Bernoulli
-#[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+#[cfg(feature = "thread_rng")]
 #[inline]
 #[track_caller]
 pub fn random_ratio(numerator: u32, denominator: u32) -> bool {
@@ -282,7 +282,7 @@ pub fn random_ratio(numerator: u32, denominator: u32) -> bool {
 /// Note that you can instead use [`random()`] to generate an array of random
 /// data, though this is slower for small elements (smaller than the RNG word
 /// size).
-#[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+#[cfg(feature = "thread_rng")]
 #[inline]
 #[track_caller]
 pub fn fill<T: Fill + ?Sized>(dest: &mut T) {
@@ -302,7 +302,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+    #[cfg(feature = "thread_rng")]
     fn test_random() {
         let _n: u64 = random();
         let _f: f32 = random();
@@ -316,7 +316,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(all(feature = "std", feature = "std_rng", feature = "os_rng"))]
+    #[cfg(feature = "thread_rng")]
     fn test_range() {
         let _n: usize = random_range(42..=43);
         let _f: f32 = random_range(42.0..43.0);

@@ -8,6 +8,9 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.9.0-beta.3] - 2025-01-03
+- Add feature `thread_rng` (#1547)
+
 ## [0.9.0-beta.1] - 2024-11-30
 - Bump `rand_core` version
 
