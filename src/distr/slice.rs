@@ -17,7 +17,7 @@ use alloc::string::String;
 
 /// A distribution to sample items uniformly from a slice.
 ///
-/// [`Slice::new`] constructs a distribution referencing a slice and uniformly
+/// [`Choose::new`] constructs a distribution referencing a slice and uniformly
 /// samples references from the items in the slice. It may do extra work up
 /// front to make sampling of multiple values faster; if only one sample from
 /// the slice is required, [`IndexedRandom::choose`] can be more efficient.
@@ -36,10 +36,10 @@ use alloc::string::String;
 ///
 /// ```
 /// use rand::Rng;
-/// use rand::distr::slice::Slice;
+/// use rand::distr::slice::Choose;
 ///
 /// let vowels = ['a', 'e', 'i', 'o', 'u'];
-/// let vowels_dist = Slice::new(&vowels).unwrap();
+/// let vowels_dist = Choose::new(&vowels).unwrap();
 /// let rng = rand::rng();
 ///
 /// // build a string of 10 vowels
@@ -69,17 +69,17 @@ use alloc::string::String;
 /// [`IndexedRandom::choose`]: crate::seq::IndexedRandom::choose
 /// [`IndexedRandom::choose_multiple`]: crate::seq::IndexedRandom::choose_multiple
 #[derive(Debug, Clone, Copy)]
-pub struct Slice<'a, T> {
+pub struct Choose<'a, T> {
     slice: &'a [T],
     range: UniformUsize,
     num_choices: NonZeroUsize,
 }
 
-impl<'a, T> Slice<'a, T> {
-    /// Create a new `Slice` instance which samples uniformly from the slice.
+impl<'a, T> Choose<'a, T> {
+    /// Create a new `Choose` instance which samples uniformly from the slice.
     /// Returns `Err` if the slice is empty.
-    pub fn new(slice: &'a [T]) -> Result<Self, EmptySlice> {
-        let num_choices = NonZeroUsize::new(slice.len()).ok_or(EmptySlice)?;
+    pub fn new(slice: &'a [T]) -> Result<Self, Empty> {
+        let num_choices = NonZeroUsize::new(slice.len()).ok_or(Empty)?;
 
         Ok(Self {
             slice,
@@ -94,7 +94,7 @@ impl<'a, T> Slice<'a, T> {
     }
 }
 
-impl<'a, T> Distribution<&'a T> for Slice<'a, T> {
+impl<'a, T> Distribution<&'a T> for Choose<'a, T> {
     fn sample<R: crate::Rng + ?Sized>(&self, rng: &mut R) -> &'a T {
         let idx = self.range.sample(rng);
 
@@ -112,24 +112,27 @@ impl<'a, T> Distribution<&'a T> for Slice<'a, T> {
     }
 }
 
-/// Error type indicating that a [`Slice`] distribution was improperly
+/// Error type indicating that a [`Choose`] distribution was improperly
 /// constructed with an empty slice.
 #[derive(Debug, Clone, Copy)]
-pub struct EmptySlice;
+pub struct Empty;
 
-impl core::fmt::Display for EmptySlice {
+impl core::fmt::Display for Empty {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "Tried to create a `distr::Slice` with an empty slice")
+        write!(
+            f,
+            "Tried to create a `rand::distr::slice::Choose` with an empty slice"
+        )
     }
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for EmptySlice {}
+impl std::error::Error for Empty {}
 
 /// Note: the `String` is potentially left with excess capacity; optionally the
 /// user may call `string.shrink_to_fit()` afterwards.
 #[cfg(feature = "alloc")]
-impl super::DistString for Slice<'_, char> {
+impl super::DistString for Choose<'_, char> {
     fn append_string<R: crate::Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
         // Get the max char length to minimize extra space.
         // Limit this check to avoid searching for long slice.
@@ -170,7 +173,7 @@ mod test {
     #[test]
     fn value_stability() {
         let rng = crate::test::rng(651);
-        let slice = Slice::new(b"escaped emus explore extensively").unwrap();
+        let slice = Choose::new(b"escaped emus explore extensively").unwrap();
         let expected = b"eaxee";
         assert!(iter::zip(slice.sample_iter(rng), expected).all(|(a, b)| a == b));
     }
