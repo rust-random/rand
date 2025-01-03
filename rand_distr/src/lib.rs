@@ -35,7 +35,8 @@
 //!
 //! - The [`Distribution`] trait and [`Iter`] helper type
 //! - The [`StandardUniform`], [`Alphanumeric`], [`Uniform`], [`OpenClosed01`],
-//!   [`Open01`], [`Bernoulli`], and [`WeightedIndex`] distributions
+//!   [`Open01`], [`Bernoulli`] distributions
+//! - The [`weighted`] module
 //!
 //! ## Distributions
 //!
@@ -129,7 +130,7 @@ pub use self::weibull::{Error as WeibullError, Weibull};
 pub use self::zeta::{Error as ZetaError, Zeta};
 pub use self::zipf::{Error as ZipfError, Zipf};
 #[cfg(feature = "alloc")]
-pub use rand::distr::{WeightError, WeightedIndex};
+pub use rand::distr::weighted;
 pub use student_t::StudentT;
 #[cfg(feature = "alloc")]
 pub use weighted_alias::WeightedAliasIndex;

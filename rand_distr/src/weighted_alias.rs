@@ -9,7 +9,7 @@
 //! This module contains an implementation of alias method for sampling random
 //! indices with probabilities proportional to a collection of weights.
 
-use super::WeightError;
+use super::weighted::WeightError;
 use crate::{uniform::SampleUniform, Distribution, Uniform};
 use alloc::{boxed::Box, vec, vec::Vec};
 use core::fmt;

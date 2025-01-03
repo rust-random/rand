@@ -59,7 +59,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ```
 /// use rand::prelude::*;
-/// use rand::distr::WeightedIndex;
+/// use rand::distr::weighted::WeightedIndex;
 ///
 /// let choices = ['a', 'b', 'c'];
 /// let weights = [2,   1,   1];
@@ -306,7 +306,7 @@ impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
     /// # Example
     ///
     /// ```
-    /// use rand::distr::WeightedIndex;
+    /// use rand::distr::weighted::WeightedIndex;
     ///
     /// let weights = [0, 1, 2];
     /// let dist = WeightedIndex::new(&weights).unwrap();
@@ -341,7 +341,7 @@ impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
     /// # Example
     ///
     /// ```
-    /// use rand::distr::WeightedIndex;
+    /// use rand::distr::weighted::WeightedIndex;
     ///
     /// let weights = [1, 2, 3];
     /// let mut dist = WeightedIndex::new(&weights).unwrap();
