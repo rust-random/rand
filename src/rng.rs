@@ -117,7 +117,7 @@ pub trait Rng: RngCore {
     /// assert_eq!(&v, &[1, 2, 3, 4, 5]);
     /// ```
     #[inline]
-    fn random_iter<T>(self) -> distr::DistIter<StandardUniform, Self, T>
+    fn random_iter<T>(self) -> distr::Iter<StandardUniform, Self, T>
     where
         Self: Sized,
         StandardUniform: Distribution<T>,
@@ -283,7 +283,7 @@ pub trait Rng: RngCore {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    fn sample_iter<T, D>(self, distr: D) -> distr::DistIter<D, Self, T>
+    fn sample_iter<T, D>(self, distr: D) -> distr::Iter<D, Self, T>
     where
         D: Distribution<T>,
         Self: Sized,

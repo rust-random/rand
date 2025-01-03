@@ -103,7 +103,7 @@ pub mod uniform;
 pub use self::bernoulli::{Bernoulli, BernoulliError};
 #[cfg(feature = "alloc")]
 pub use self::distribution::SampleString;
-pub use self::distribution::{DistIter, DistMap, Distribution};
+pub use self::distribution::{DistMap, Distribution, Iter};
 pub use self::float::{Open01, OpenClosed01};
 pub use self::other::Alphanumeric;
 #[doc(inline)]

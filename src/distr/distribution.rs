@@ -69,12 +69,12 @@ pub trait Distribution<T> {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    fn sample_iter<R>(self, rng: R) -> DistIter<Self, R, T>
+    fn sample_iter<R>(self, rng: R) -> Iter<Self, R, T>
     where
         R: Rng,
         Self: Sized,
     {
-        DistIter {
+        Iter {
             distr: self,
             rng,
             phantom: core::marker::PhantomData,
@@ -116,21 +116,22 @@ impl<T, D: Distribution<T> + ?Sized> Distribution<T> for &D {
     }
 }
 
-/// An iterator that generates random values of `T` with distribution `D`,
-/// using `R` as the source of randomness.
+/// An iterator over a [`Distribution`]
 ///
-/// This `struct` is created by the [`sample_iter`] method on [`Distribution`].
-/// See its documentation for more.
+/// This iterator yields random values of type `T` with distribution `D`
+/// from a random generator of type `R`.
 ///
-/// [`sample_iter`]: Distribution::sample_iter
+/// Construct this `struct` using [`Distribution::sample_iter`] or
+/// [`Rng::sample_iter`]. It is also used by [`Rng::random_iter`] and
+/// [`crate::random_iter`].
 #[derive(Debug)]
-pub struct DistIter<D, R, T> {
+pub struct Iter<D, R, T> {
     distr: D,
     rng: R,
     phantom: core::marker::PhantomData<T>,
 }
 
-impl<D, R, T> Iterator for DistIter<D, R, T>
+impl<D, R, T> Iterator for Iter<D, R, T>
 where
     D: Distribution<T>,
     R: Rng,
@@ -150,7 +151,7 @@ where
     }
 }
 
-impl<D, R, T> iter::FusedIterator for DistIter<D, R, T>
+impl<D, R, T> iter::FusedIterator for Iter<D, R, T>
 where
     D: Distribution<T>,
     R: Rng,

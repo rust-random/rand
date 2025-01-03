@@ -33,7 +33,7 @@
 //!
 //! The following are re-exported:
 //!
-//! - The [`Distribution`] trait and [`DistIter`] helper type
+//! - The [`Distribution`] trait and [`Iter`] helper type
 //! - The [`StandardUniform`], [`Alphanumeric`], [`Uniform`], [`OpenClosed01`],
 //!   [`Open01`], [`Bernoulli`], and [`WeightedIndex`] distributions
 //!
@@ -94,7 +94,7 @@ extern crate std;
 use rand::Rng;
 
 pub use rand::distr::{
-    uniform, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01, OpenClosed01,
+    uniform, Alphanumeric, Bernoulli, BernoulliError, Distribution, Iter, Open01, OpenClosed01,
     StandardUniform, Uniform,
 };
 

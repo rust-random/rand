@@ -181,7 +181,7 @@ where
 /// ```
 #[cfg(feature = "thread_rng")]
 #[inline]
-pub fn random_iter<T>() -> distr::DistIter<StandardUniform, rngs::ThreadRng, T>
+pub fn random_iter<T>() -> distr::Iter<StandardUniform, rngs::ThreadRng, T>
 where
     StandardUniform: Distribution<T>,
 {
