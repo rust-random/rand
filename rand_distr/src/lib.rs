@@ -77,9 +77,6 @@
 //!   - [`UnitBall`] distribution
 //!   - [`UnitCircle`] distribution
 //!   - [`UnitDisc`] distribution
-//! - Alternative implementations for weighted index sampling
-//!   - [`WeightedAliasIndex`] distribution
-//!   - [`WeightedTreeIndex`] distribution
 //! - Misc. distributions
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
@@ -129,15 +126,12 @@ pub use self::unit_sphere::UnitSphere;
 pub use self::weibull::{Error as WeibullError, Weibull};
 pub use self::zeta::{Error as ZetaError, Zeta};
 pub use self::zipf::{Error as ZipfError, Zipf};
-#[cfg(feature = "alloc")]
-pub use rand::distr::weighted;
 pub use student_t::StudentT;
-#[cfg(feature = "alloc")]
-pub use weighted_alias::WeightedAliasIndex;
-#[cfg(feature = "alloc")]
-pub use weighted_tree::WeightedTreeIndex;
 
 pub use num_traits;
+
+#[cfg(feature = "alloc")]
+pub mod weighted;
 
 #[cfg(test)]
 #[macro_use]
@@ -189,11 +183,6 @@ mod test {
         };
     }
 }
-
-#[cfg(feature = "alloc")]
-pub mod weighted_alias;
-#[cfg(feature = "alloc")]
-pub mod weighted_tree;
 
 mod beta;
 mod binomial;

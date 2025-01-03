@@ -11,10 +11,10 @@
 
 use core::ops::SubAssign;
 
+use super::{Error, Weight};
 use crate::Distribution;
 use alloc::vec::Vec;
 use rand::distr::uniform::{SampleBorrow, SampleUniform};
-use rand::distr::weighted::{Error, Weight};
 use rand::Rng;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -57,7 +57,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use rand_distr::WeightedTreeIndex;
+/// use rand_distr::weighted::WeightedTreeIndex;
 /// use rand::prelude::*;
 ///
 /// let choices = vec!['a', 'b', 'c'];
@@ -76,7 +76,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// [`WeightedTreeIndex<W>`]: WeightedTreeIndex
-/// [`WeightedIndex<W>`]: super::weighted::WeightedIndex
+/// [`WeightedIndex<W>`]: super::WeightedIndex
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(
     feature = "serde",

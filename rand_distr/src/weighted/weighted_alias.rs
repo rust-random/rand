@@ -9,7 +9,7 @@
 //! This module contains an implementation of alias method for sampling random
 //! indices with probabilities proportional to a collection of weights.
 
-use super::weighted::Error;
+use super::Error;
 use crate::{uniform::SampleUniform, Distribution, Uniform};
 use alloc::{boxed::Box, vec, vec::Vec};
 use core::fmt;
@@ -41,7 +41,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use rand_distr::WeightedAliasIndex;
+/// use rand_distr::weighted::WeightedAliasIndex;
 /// use rand::prelude::*;
 ///
 /// let choices = vec!['a', 'b', 'c'];
