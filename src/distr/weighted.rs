@@ -96,28 +96,24 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// implementation of [`Uniform<X>`] exists.
     ///
     /// Error cases:
-    /// -   [`WeightError::InvalidInput`] when the iterator `weights` is empty.
-    /// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
-    /// -   [`WeightError::InsufficientNonZero`] when the sum of all weights is zero.
-    /// -   [`WeightError::Overflow`] when the sum of all weights overflows.
+    /// -   [`Error::InvalidInput`] when the iterator `weights` is empty.
+    /// -   [`Error::InvalidWeight`] when a weight is not-a-number or negative.
+    /// -   [`Error::InsufficientNonZero`] when the sum of all weights is zero.
+    /// -   [`Error::Overflow`] when the sum of all weights overflows.
     ///
     /// [`Uniform<X>`]: crate::distr::uniform::Uniform
-    pub fn new<I>(weights: I) -> Result<WeightedIndex<X>, WeightError>
+    pub fn new<I>(weights: I) -> Result<WeightedIndex<X>, Error>
     where
         I: IntoIterator,
         I::Item: SampleBorrow<X>,
         X: Weight,
     {
         let mut iter = weights.into_iter();
-        let mut total_weight: X = iter
-            .next()
-            .ok_or(WeightError::InvalidInput)?
-            .borrow()
-            .clone();
+        let mut total_weight: X = iter.next().ok_or(Error::InvalidInput)?.borrow().clone();
 
         let zero = X::ZERO;
         if !(total_weight >= zero) {
-            return Err(WeightError::InvalidWeight);
+            return Err(Error::InvalidWeight);
         }
 
         let mut weights = Vec::<X>::with_capacity(iter.size_hint().0);
@@ -125,17 +121,17 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
             // Note that `!(w >= x)` is not equivalent to `w < x` for partially
             // ordered types due to NaNs which are equal to nothing.
             if !(w.borrow() >= &zero) {
-                return Err(WeightError::InvalidWeight);
+                return Err(Error::InvalidWeight);
             }
             weights.push(total_weight.clone());
 
             if let Err(()) = total_weight.checked_add_assign(w.borrow()) {
-                return Err(WeightError::Overflow);
+                return Err(Error::Overflow);
             }
         }
 
         if total_weight == zero {
-            return Err(WeightError::InsufficientNonZero);
+            return Err(Error::InsufficientNonZero);
         }
         let distr = X::Sampler::new(zero, total_weight.clone()).unwrap();
 
@@ -155,10 +151,10 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// allocation internally.
     ///
     /// In case of error, `self` is not modified. Error cases:
-    /// -   [`WeightError::InvalidInput`] when `new_weights` are not ordered by
+    /// -   [`Error::InvalidInput`] when `new_weights` are not ordered by
     ///     index or an index is too large.
-    /// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
-    /// -   [`WeightError::InsufficientNonZero`] when the sum of all weights is zero.
+    /// -   [`Error::InvalidWeight`] when a weight is not-a-number or negative.
+    /// -   [`Error::InsufficientNonZero`] when the sum of all weights is zero.
     ///     Note that due to floating-point loss of precision, this case is not
     ///     always correctly detected; usage of a fixed-point weight type may be
     ///     preferred.
@@ -166,7 +162,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     /// Updates take `O(N)` time. If you need to frequently update weights, consider
     /// [`rand_distr::weighted_tree`](https://docs.rs/rand_distr/*/rand_distr/weighted_tree/index.html)
     /// as an alternative where an update is `O(log N)`.
-    pub fn update_weights(&mut self, new_weights: &[(usize, &X)]) -> Result<(), WeightError>
+    pub fn update_weights(&mut self, new_weights: &[(usize, &X)]) -> Result<(), Error>
     where
         X: for<'a> core::ops::AddAssign<&'a X>
             + for<'a> core::ops::SubAssign<&'a X>
@@ -187,14 +183,14 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         for &(i, w) in new_weights {
             if let Some(old_i) = prev_i {
                 if old_i >= i {
-                    return Err(WeightError::InvalidInput);
+                    return Err(Error::InvalidInput);
                 }
             }
             if !(*w >= zero) {
-                return Err(WeightError::InvalidWeight);
+                return Err(Error::InvalidWeight);
             }
             if i > self.cumulative_weights.len() {
-                return Err(WeightError::InvalidInput);
+                return Err(Error::InvalidInput);
             }
 
             let mut old_w = if i < self.cumulative_weights.len() {
@@ -211,7 +207,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
             prev_i = Some(i);
         }
         if total_weight <= zero {
-            return Err(WeightError::InsufficientNonZero);
+            return Err(Error::InsufficientNonZero);
         }
 
         // Update the weights. Because we checked all the preconditions in the
@@ -457,15 +453,15 @@ mod test {
     fn test_accepting_nan() {
         assert_eq!(
             WeightedIndex::new([f32::NAN, 0.5]).unwrap_err(),
-            WeightError::InvalidWeight,
+            Error::InvalidWeight,
         );
         assert_eq!(
             WeightedIndex::new([f32::NAN]).unwrap_err(),
-            WeightError::InvalidWeight,
+            Error::InvalidWeight,
         );
         assert_eq!(
             WeightedIndex::new([0.5, f32::NAN]).unwrap_err(),
-            WeightError::InvalidWeight,
+            Error::InvalidWeight,
         );
 
         assert_eq!(
@@ -473,7 +469,7 @@ mod test {
                 .unwrap()
                 .update_weights(&[(0, &f32::NAN)])
                 .unwrap_err(),
-            WeightError::InvalidWeight,
+            Error::InvalidWeight,
         )
     }
 
@@ -533,24 +529,21 @@ mod test {
 
         assert_eq!(
             WeightedIndex::new(&[10][0..0]).unwrap_err(),
-            WeightError::InvalidInput
+            Error::InvalidInput
         );
         assert_eq!(
             WeightedIndex::new([0]).unwrap_err(),
-            WeightError::InsufficientNonZero
+            Error::InsufficientNonZero
         );
         assert_eq!(
             WeightedIndex::new([10, 20, -1, 30]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
         assert_eq!(
             WeightedIndex::new([-10, 20, 1, 30]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
-        assert_eq!(
-            WeightedIndex::new([-10]).unwrap_err(),
-            WeightError::InvalidWeight
-        );
+        assert_eq!(WeightedIndex::new([-10]).unwrap_err(), Error::InvalidWeight);
     }
 
     #[test]
@@ -588,22 +581,22 @@ mod test {
             (
                 &[1i32, 0, 0][..],
                 &[(0, &0)][..],
-                WeightError::InsufficientNonZero,
+                Error::InsufficientNonZero,
             ),
             (
                 &[10, 10, 10, 10][..],
                 &[(1, &-11)][..],
-                WeightError::InvalidWeight, // A weight is negative
+                Error::InvalidWeight, // A weight is negative
             ),
             (
                 &[1, 2, 3, 4, 5][..],
                 &[(1, &5), (0, &5)][..], // Wrong order
-                WeightError::InvalidInput,
+                Error::InvalidInput,
             ),
             (
                 &[1][..],
                 &[(1, &1)][..], // Index too large
-                WeightError::InvalidInput,
+                Error::InvalidInput,
             ),
         ];
 
@@ -695,18 +688,18 @@ mod test {
 
     #[test]
     fn overflow() {
-        assert_eq!(
-            WeightedIndex::new([2, usize::MAX]),
-            Err(WeightError::Overflow)
-        );
+        assert_eq!(WeightedIndex::new([2, usize::MAX]), Err(Error::Overflow));
     }
 }
 
-/// Errors returned by [`WeightedIndex::new`], [`WeightedIndex::update_weights`] and other weighted distributions
+/// Invalid weight errors
+///
+/// This type represents errors from [`WeightedIndex::new`],
+/// [`WeightedIndex::update_weights`] and other weighted distributions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 // Marked non_exhaustive to allow a new error code in the solution to #1476.
 #[non_exhaustive]
-pub enum WeightError {
+pub enum Error {
     /// The input weight sequence is empty, too long, or wrongly ordered
     InvalidInput,
 
@@ -725,15 +718,15 @@ pub enum WeightError {
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for WeightError {}
+impl std::error::Error for Error {}
 
-impl fmt::Display for WeightError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(match *self {
-            WeightError::InvalidInput => "Weights sequence is empty/too long/unordered",
-            WeightError::InvalidWeight => "A weight is negative, too large or not a valid number",
-            WeightError::InsufficientNonZero => "Not enough weights > zero",
-            WeightError::Overflow => "Overflow when summing weights",
+            Error::InvalidInput => "Weights sequence is empty/too long/unordered",
+            Error::InvalidWeight => "A weight is negative, too large or not a valid number",
+            Error::InsufficientNonZero => "Not enough weights > zero",
+            Error::Overflow => "Overflow when summing weights",
         })
     }
 }

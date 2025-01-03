@@ -13,7 +13,7 @@ use super::index;
 #[cfg(feature = "alloc")]
 use crate::distr::uniform::{SampleBorrow, SampleUniform};
 #[cfg(feature = "alloc")]
-use crate::distr::weighted::{Weight, WeightError};
+use crate::distr::weighted::{Error as WeightError, Weight};
 use crate::Rng;
 use core::ops::{Index, IndexMut};
 

@@ -37,7 +37,7 @@ mod index_;
 
 #[cfg(feature = "alloc")]
 #[doc(no_inline)]
-pub use crate::distr::weighted::WeightError;
+pub use crate::distr::weighted::Error as WeightError;
 pub use iterator::IteratorRandom;
 #[cfg(feature = "alloc")]
 pub use slice::SliceChooseIter;

@@ -9,7 +9,7 @@
 //! This module contains an implementation of alias method for sampling random
 //! indices with probabilities proportional to a collection of weights.
 
-use super::weighted::WeightError;
+use super::weighted::Error;
 use crate::{uniform::SampleUniform, Distribution, Uniform};
 use alloc::{boxed::Box, vec, vec::Vec};
 use core::fmt;
@@ -85,14 +85,14 @@ impl<W: AliasableWeight> WeightedAliasIndex<W> {
     /// Creates a new [`WeightedAliasIndex`].
     ///
     /// Error cases:
-    /// -   [`WeightError::InvalidInput`] when `weights.len()` is zero or greater than `u32::MAX`.
-    /// -   [`WeightError::InvalidWeight`] when a weight is not-a-number,
+    /// -   [`Error::InvalidInput`] when `weights.len()` is zero or greater than `u32::MAX`.
+    /// -   [`Error::InvalidWeight`] when a weight is not-a-number,
     ///     negative or greater than `max = W::MAX / weights.len()`.
-    /// -   [`WeightError::InsufficientNonZero`] when the sum of all weights is zero.
-    pub fn new(weights: Vec<W>) -> Result<Self, WeightError> {
+    /// -   [`Error::InsufficientNonZero`] when the sum of all weights is zero.
+    pub fn new(weights: Vec<W>) -> Result<Self, Error> {
         let n = weights.len();
         if n == 0 || n > u32::MAX as usize {
-            return Err(WeightError::InvalidInput);
+            return Err(Error::InvalidInput);
         }
         let n = n as u32;
 
@@ -103,7 +103,7 @@ impl<W: AliasableWeight> WeightedAliasIndex<W> {
             .iter()
             .all(|&w| W::ZERO <= w && w <= max_weight_size)
         {
-            return Err(WeightError::InvalidWeight);
+            return Err(Error::InvalidWeight);
         }
 
         // The sum of weights will represent 100% of no alias odds.
@@ -115,7 +115,7 @@ impl<W: AliasableWeight> WeightedAliasIndex<W> {
             weight_sum
         };
         if weight_sum == W::ZERO {
-            return Err(WeightError::InsufficientNonZero);
+            return Err(Error::InsufficientNonZero);
         }
 
         // `weight_sum` would have been zero if `try_from_lossy` causes an error here.
@@ -384,23 +384,23 @@ mod test {
         // Floating point special cases
         assert_eq!(
             WeightedAliasIndex::new(vec![f32::INFINITY]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
         assert_eq!(
             WeightedAliasIndex::new(vec![-0_f32]).unwrap_err(),
-            WeightError::InsufficientNonZero
+            Error::InsufficientNonZero
         );
         assert_eq!(
             WeightedAliasIndex::new(vec![-1_f32]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
         assert_eq!(
             WeightedAliasIndex::new(vec![f32::NEG_INFINITY]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
         assert_eq!(
             WeightedAliasIndex::new(vec![f32::NAN]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
     }
 
@@ -418,11 +418,11 @@ mod test {
         // Signed integer special cases
         assert_eq!(
             WeightedAliasIndex::new(vec![-1_i128]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
         assert_eq!(
             WeightedAliasIndex::new(vec![i128::MIN]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
     }
 
@@ -440,11 +440,11 @@ mod test {
         // Signed integer special cases
         assert_eq!(
             WeightedAliasIndex::new(vec![-1_i8]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
         assert_eq!(
             WeightedAliasIndex::new(vec![i8::MIN]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
     }
 
@@ -491,15 +491,15 @@ mod test {
 
         assert_eq!(
             WeightedAliasIndex::<W>::new(vec![]).unwrap_err(),
-            WeightError::InvalidInput
+            Error::InvalidInput
         );
         assert_eq!(
             WeightedAliasIndex::new(vec![W::ZERO]).unwrap_err(),
-            WeightError::InsufficientNonZero
+            Error::InsufficientNonZero
         );
         assert_eq!(
             WeightedAliasIndex::new(vec![W::MAX, W::MAX]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
     }
 
