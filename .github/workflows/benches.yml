@@ -31,7 +31,7 @@ jobs:
       - name: Rustfmt
         run: cargo fmt -- --check
       - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --workspace -- -D warnings
   benches:
     name: Test benchmarks
     runs-on: ubuntu-latest
