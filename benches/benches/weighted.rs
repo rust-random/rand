@@ -7,7 +7,7 @@
 // except according to those terms.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rand::distr::WeightedIndex;
+use rand::distr::weighted::WeightedIndex;
 use rand::prelude::*;
 use rand::seq::index::sample_weighted;
 
