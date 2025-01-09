@@ -10,8 +10,8 @@ use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use criterion_cycles_per_byte::CyclesPerByte;
 
 use rand::prelude::*;
-use rand_distr::*;
 use rand_distr::weighted::*;
+use rand_distr::*;
 
 // At this time, distributions are optimised for 64-bit platforms.
 use rand_pcg::Pcg64Mcg;
