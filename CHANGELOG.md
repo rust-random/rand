@@ -10,6 +10,10 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ## [0.9.0-beta.3] - 2025-01-03
 - Add feature `thread_rng` (#1547)
+- Move `distr::Slice` -> `distr::slice::Choose`, `distr::EmptySlice` -> `distr::slice::Empty` (#1548)
+- Rename trait `distr::DistString` -> `distr::SampleString` (#1548)
+- Rename `distr::DistIter` -> `distr::Iter`, `distr::DistMap` -> `distr::Map` (#1548)
+- Move `distr::{Weight, WeightError, WeightedIndex}` -> `distr::weighted::{Weight, Error, WeightedIndex}` (#1548)
 
 ## [0.9.0-beta.1] - 2024-11-30
 - Bump `rand_core` version

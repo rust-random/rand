@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0-beta.3] - 2025-01-03
 - Bump `rand` version (#1547)
+- Move `Slice` -> `slice::Choose`, `EmptySlice` -> `slice::Empty` (#1548)
+- Rename trait `DistString` -> `SampleString` (#1548)
+- Rename `DistIter` -> `Iter`, `DistMap` -> `Map` (#1548)
+- Move `{Weight, WeightError, WeightedIndex}` -> `weighted::{Weight, Error, WeightedIndex}` (#1548)
+- Move `weighted_alias::{AliasableWeight, WeightedAliasIndex}` -> `weighted::{..}` (#1548)
+- Move `weighted_tree::WeightedTreeIndex` -> `weighted::WeightedTreeIndex` (#1548)
 
 ## [0.5.0-beta.2] - 2024-11-30
 - Bump `rand` version
