@@ -31,7 +31,7 @@ jobs:
       - name: Rustfmt
         run: cargo fmt -- --check
       - name: Clippy
-        run: cargo clippy --workspace -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
   ks-tests:
     name: "distr_test: Run Komogorov Smirnov tests"
     runs-on: ubuntu-latest
