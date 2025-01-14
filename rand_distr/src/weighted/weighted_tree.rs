@@ -11,11 +11,10 @@
 
 use core::ops::SubAssign;
 
-use super::WeightError;
+use super::{Error, Weight};
 use crate::Distribution;
 use alloc::vec::Vec;
 use rand::distr::uniform::{SampleBorrow, SampleUniform};
-use rand::distr::Weight;
 use rand::Rng;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -30,7 +29,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Key differences
 ///
-/// The main distinction between [`WeightedTreeIndex<W>`] and [`rand::distr::WeightedIndex<W>`]
+/// The main distinction between [`WeightedTreeIndex<W>`] and [`WeightedIndex<W>`]
 /// lies in the internal representation of weights. In [`WeightedTreeIndex<W>`],
 /// weights are structured as a tree, which is optimized for frequent updates of the weights.
 ///
@@ -58,7 +57,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
-/// use rand_distr::WeightedTreeIndex;
+/// use rand_distr::weighted::WeightedTreeIndex;
 /// use rand::prelude::*;
 ///
 /// let choices = vec!['a', 'b', 'c'];
@@ -77,6 +76,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// [`WeightedTreeIndex<W>`]: WeightedTreeIndex
+/// [`WeightedIndex<W>`]: super::WeightedIndex
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(
     feature = "serde",
@@ -99,9 +99,9 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
     /// Creates a new [`WeightedTreeIndex`] from a slice of weights.
     ///
     /// Error cases:
-    /// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
-    /// -   [`WeightError::Overflow`] when the sum of all weights overflows.
-    pub fn new<I>(weights: I) -> Result<Self, WeightError>
+    /// -   [`Error::InvalidWeight`] when a weight is not-a-number or negative.
+    /// -   [`Error::Overflow`] when the sum of all weights overflows.
+    pub fn new<I>(weights: I) -> Result<Self, Error>
     where
         I: IntoIterator,
         I::Item: SampleBorrow<W>,
@@ -109,7 +109,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
         let mut subtotals: Vec<W> = weights.into_iter().map(|x| x.borrow().clone()).collect();
         for weight in subtotals.iter() {
             if !(*weight >= W::ZERO) {
-                return Err(WeightError::InvalidWeight);
+                return Err(Error::InvalidWeight);
             }
         }
         let n = subtotals.len();
@@ -118,7 +118,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
             let parent = (i - 1) / 2;
             subtotals[parent]
                 .checked_add_assign(&w)
-                .map_err(|()| WeightError::Overflow)?;
+                .map_err(|()| Error::Overflow)?;
         }
         Ok(Self { subtotals })
     }
@@ -169,16 +169,16 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
     /// Appends a new weight at the end.
     ///
     /// Error cases:
-    /// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
-    /// -   [`WeightError::Overflow`] when the sum of all weights overflows.
-    pub fn push(&mut self, weight: W) -> Result<(), WeightError> {
+    /// -   [`Error::InvalidWeight`] when a weight is not-a-number or negative.
+    /// -   [`Error::Overflow`] when the sum of all weights overflows.
+    pub fn push(&mut self, weight: W) -> Result<(), Error> {
         if !(weight >= W::ZERO) {
-            return Err(WeightError::InvalidWeight);
+            return Err(Error::InvalidWeight);
         }
         if let Some(total) = self.subtotals.first() {
             let mut total = total.clone();
             if total.checked_add_assign(&weight).is_err() {
-                return Err(WeightError::Overflow);
+                return Err(Error::Overflow);
             }
         }
         let mut index = self.len();
@@ -193,11 +193,11 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
     /// Updates the weight at an index.
     ///
     /// Error cases:
-    /// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
-    /// -   [`WeightError::Overflow`] when the sum of all weights overflows.
-    pub fn update(&mut self, mut index: usize, weight: W) -> Result<(), WeightError> {
+    /// -   [`Error::InvalidWeight`] when a weight is not-a-number or negative.
+    /// -   [`Error::Overflow`] when the sum of all weights overflows.
+    pub fn update(&mut self, mut index: usize, weight: W) -> Result<(), Error> {
         if !(weight >= W::ZERO) {
-            return Err(WeightError::InvalidWeight);
+            return Err(Error::InvalidWeight);
         }
         let old_weight = self.get(index);
         if weight > old_weight {
@@ -206,7 +206,7 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
             if let Some(total) = self.subtotals.first() {
                 let mut total = total.clone();
                 if total.checked_add_assign(&difference).is_err() {
-                    return Err(WeightError::Overflow);
+                    return Err(Error::Overflow);
                 }
             }
             self.subtotals[index]
@@ -246,10 +246,10 @@ impl<W: Clone + PartialEq + PartialOrd + SampleUniform + SubAssign<W> + Weight>
     ///
     /// Returns an error if there are no elements or all weights are zero. This
     /// is unlike [`Distribution::sample`], which panics in those cases.
-    pub fn try_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<usize, WeightError> {
+    pub fn try_sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Result<usize, Error> {
         let total_weight = self.subtotals.first().cloned().unwrap_or(W::ZERO);
         if total_weight == W::ZERO {
-            return Err(WeightError::InsufficientNonZero);
+            return Err(Error::InsufficientNonZero);
         }
         let mut target_weight = rng.random_range(W::ZERO..total_weight);
         let mut index = 0;
@@ -306,19 +306,16 @@ mod test {
         let tree = WeightedTreeIndex::<f64>::new(&[]).unwrap();
         assert_eq!(
             tree.try_sample(&mut rng).unwrap_err(),
-            WeightError::InsufficientNonZero
+            Error::InsufficientNonZero
         );
     }
 
     #[test]
     fn test_overflow_error() {
-        assert_eq!(
-            WeightedTreeIndex::new([i32::MAX, 2]),
-            Err(WeightError::Overflow)
-        );
+        assert_eq!(WeightedTreeIndex::new([i32::MAX, 2]), Err(Error::Overflow));
         let mut tree = WeightedTreeIndex::new([i32::MAX - 2, 1]).unwrap();
-        assert_eq!(tree.push(3), Err(WeightError::Overflow));
-        assert_eq!(tree.update(1, 4), Err(WeightError::Overflow));
+        assert_eq!(tree.push(3), Err(Error::Overflow));
+        assert_eq!(tree.update(1, 4), Err(Error::Overflow));
         tree.update(1, 2).unwrap();
     }
 
@@ -328,7 +325,7 @@ mod test {
         let mut rng = crate::test::rng(0x9c9fa0b0580a7031);
         assert_eq!(
             tree.try_sample(&mut rng).unwrap_err(),
-            WeightError::InsufficientNonZero
+            Error::InsufficientNonZero
         );
     }
 
@@ -336,13 +333,13 @@ mod test {
     fn test_invalid_weight_error() {
         assert_eq!(
             WeightedTreeIndex::<i32>::new([1, -1]).unwrap_err(),
-            WeightError::InvalidWeight
+            Error::InvalidWeight
         );
         #[allow(clippy::needless_borrows_for_generic_args)]
         let mut tree = WeightedTreeIndex::<i32>::new(&[]).unwrap();
-        assert_eq!(tree.push(-1).unwrap_err(), WeightError::InvalidWeight);
+        assert_eq!(tree.push(-1).unwrap_err(), Error::InvalidWeight);
         tree.push(1).unwrap();
-        assert_eq!(tree.update(0, -1).unwrap_err(), WeightError::InvalidWeight);
+        assert_eq!(tree.update(0, -1).unwrap_err(), Error::InvalidWeight);
     }
 
     #[test]

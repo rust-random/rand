@@ -69,8 +69,7 @@
 //! Sampling a simple true/false outcome with a given probability has a name:
 //! the [`Bernoulli`] distribution (this is used by [`Rng::random_bool`]).
 //!
-//! For weighted sampling from a sequence of discrete values, use the
-//! [`WeightedIndex`] distribution.
+//! For weighted sampling of discrete values see the [`weighted`] module.
 //!
 //! This crate no longer includes other non-uniform distributions; instead
 //! it is recommended that you use either [`rand_distr`] or [`statrs`].
@@ -89,28 +88,25 @@ mod distribution;
 mod float;
 mod integer;
 mod other;
-mod slice;
 mod utils;
-#[cfg(feature = "alloc")]
-mod weighted_index;
 
 #[doc(hidden)]
 pub mod hidden_export {
     pub use super::float::IntoFloat; // used by rand_distr
 }
+pub mod slice;
 pub mod uniform;
+#[cfg(feature = "alloc")]
+pub mod weighted;
 
 pub use self::bernoulli::{Bernoulli, BernoulliError};
 #[cfg(feature = "alloc")]
-pub use self::distribution::DistString;
-pub use self::distribution::{DistIter, DistMap, Distribution};
+pub use self::distribution::SampleString;
+pub use self::distribution::{Distribution, Iter, Map};
 pub use self::float::{Open01, OpenClosed01};
 pub use self::other::Alphanumeric;
-pub use self::slice::Slice;
 #[doc(inline)]
 pub use self::uniform::Uniform;
-#[cfg(feature = "alloc")]
-pub use self::weighted_index::{Weight, WeightError, WeightedIndex};
 
 #[allow(unused)]
 use crate::Rng;

@@ -8,9 +8,9 @@
 
 mod ks;
 use ks::test_discrete;
-use rand::distr::{Distribution, WeightedIndex};
+use rand::distr::Distribution;
 use rand::seq::{IndexedRandom, IteratorRandom};
-use rand_distr::{WeightedAliasIndex, WeightedTreeIndex};
+use rand_distr::weighted::*;
 
 /// Takes the unnormalized pdf and creates the cdf of a discrete distribution
 fn make_cdf(num: usize, f: impl Fn(i64) -> f64) -> impl Fn(i64) -> f64 {

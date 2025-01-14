@@ -69,40 +69,37 @@ pub trait Distribution<T> {
     ///     println!("Not a 6; rolling again!");
     /// }
     /// ```
-    fn sample_iter<R>(self, rng: R) -> DistIter<Self, R, T>
+    fn sample_iter<R>(self, rng: R) -> Iter<Self, R, T>
     where
         R: Rng,
         Self: Sized,
     {
-        DistIter {
+        Iter {
             distr: self,
             rng,
             phantom: core::marker::PhantomData,
         }
     }
 
-    /// Create a distribution of values of 'S' by mapping the output of `Self`
-    /// through the closure `F`
+    /// Map sampled values to type `S`
     ///
     /// # Example
     ///
     /// ```
     /// use rand::distr::{Distribution, Uniform};
     ///
-    /// let mut rng = rand::rng();
-    ///
     /// let die = Uniform::new_inclusive(1, 6).unwrap();
     /// let even_number = die.map(|num| num % 2 == 0);
-    /// while !even_number.sample(&mut rng) {
+    /// while !even_number.sample(&mut rand::rng()) {
     ///     println!("Still odd; rolling again!");
     /// }
     /// ```
-    fn map<F, S>(self, func: F) -> DistMap<Self, F, T, S>
+    fn map<F, S>(self, func: F) -> Map<Self, F, T, S>
     where
         F: Fn(T) -> S,
         Self: Sized,
     {
-        DistMap {
+        Map {
             distr: self,
             func,
             phantom: core::marker::PhantomData,
@@ -116,21 +113,22 @@ impl<T, D: Distribution<T> + ?Sized> Distribution<T> for &D {
     }
 }
 
-/// An iterator that generates random values of `T` with distribution `D`,
-/// using `R` as the source of randomness.
+/// An iterator over a [`Distribution`]
 ///
-/// This `struct` is created by the [`sample_iter`] method on [`Distribution`].
-/// See its documentation for more.
+/// This iterator yields random values of type `T` with distribution `D`
+/// from a random generator of type `R`.
 ///
-/// [`sample_iter`]: Distribution::sample_iter
+/// Construct this `struct` using [`Distribution::sample_iter`] or
+/// [`Rng::sample_iter`]. It is also used by [`Rng::random_iter`] and
+/// [`crate::random_iter`].
 #[derive(Debug)]
-pub struct DistIter<D, R, T> {
+pub struct Iter<D, R, T> {
     distr: D,
     rng: R,
     phantom: core::marker::PhantomData<T>,
 }
 
-impl<D, R, T> Iterator for DistIter<D, R, T>
+impl<D, R, T> Iterator for Iter<D, R, T>
 where
     D: Distribution<T>,
     R: Rng,
@@ -150,26 +148,25 @@ where
     }
 }
 
-impl<D, R, T> iter::FusedIterator for DistIter<D, R, T>
+impl<D, R, T> iter::FusedIterator for Iter<D, R, T>
 where
     D: Distribution<T>,
     R: Rng,
 {
 }
 
-/// A distribution of values of type `S` derived from the distribution `D`
-/// by mapping its output of type `T` through the closure `F`.
+/// A [`Distribution`] which maps sampled values to type `S`
 ///
 /// This `struct` is created by the [`Distribution::map`] method.
 /// See its documentation for more.
 #[derive(Debug)]
-pub struct DistMap<D, F, T, S> {
+pub struct Map<D, F, T, S> {
     distr: D,
     func: F,
     phantom: core::marker::PhantomData<fn(T) -> S>,
 }
 
-impl<D, F, T, S> Distribution<S> for DistMap<D, F, T, S>
+impl<D, F, T, S> Distribution<S> for Map<D, F, T, S>
 where
     D: Distribution<T>,
     F: Fn(T) -> S,
@@ -179,16 +176,23 @@ where
     }
 }
 
-/// `String` sampler
+/// Sample or extend a [`String`]
 ///
-/// Sampling a `String` of random characters is not quite the same as collecting
-/// a sequence of chars. This trait contains some helpers.
+/// Helper methods to extend a [`String`] or sample a new [`String`].
 #[cfg(feature = "alloc")]
-pub trait DistString {
+pub trait SampleString {
     /// Append `len` random chars to `string`
+    ///
+    /// Note: implementations may leave `string` with excess capacity. If this
+    /// is undesirable, consider calling [`String::shrink_to_fit`] after this
+    /// method.
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize);
 
-    /// Generate a `String` of `len` random chars
+    /// Generate a [`String`] of `len` random chars
+    ///
+    /// Note: implementations may leave the string with excess capacity. If this
+    /// is undesirable, consider calling [`String::shrink_to_fit`] after this
+    /// method.
     #[inline]
     fn sample_string<R: Rng + ?Sized>(&self, rng: &mut R, len: usize) -> String {
         let mut s = String::new();
@@ -246,7 +250,7 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn test_dist_string() {
-        use crate::distr::{Alphanumeric, DistString, StandardUniform};
+        use crate::distr::{Alphanumeric, SampleString, StandardUniform};
         use core::str;
         let mut rng = crate::test::rng(213);
 

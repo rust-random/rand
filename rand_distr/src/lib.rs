@@ -33,9 +33,10 @@
 //!
 //! The following are re-exported:
 //!
-//! - The [`Distribution`] trait and [`DistIter`] helper type
+//! - The [`Distribution`] trait and [`Iter`] helper type
 //! - The [`StandardUniform`], [`Alphanumeric`], [`Uniform`], [`OpenClosed01`],
-//!   [`Open01`], [`Bernoulli`], and [`WeightedIndex`] distributions
+//!   [`Open01`], [`Bernoulli`] distributions
+//! - The [`weighted`] module
 //!
 //! ## Distributions
 //!
@@ -76,9 +77,6 @@
 //!   - [`UnitBall`] distribution
 //!   - [`UnitCircle`] distribution
 //!   - [`UnitDisc`] distribution
-//! - Alternative implementations for weighted index sampling
-//!   - [`WeightedAliasIndex`] distribution
-//!   - [`WeightedTreeIndex`] distribution
 //! - Misc. distributions
 //!   - [`InverseGaussian`] distribution
 //!   - [`NormalInverseGaussian`] distribution
@@ -94,7 +92,7 @@ extern crate std;
 use rand::Rng;
 
 pub use rand::distr::{
-    uniform, Alphanumeric, Bernoulli, BernoulliError, DistIter, Distribution, Open01, OpenClosed01,
+    uniform, Alphanumeric, Bernoulli, BernoulliError, Distribution, Iter, Open01, OpenClosed01,
     StandardUniform, Uniform,
 };
 
@@ -128,15 +126,12 @@ pub use self::unit_sphere::UnitSphere;
 pub use self::weibull::{Error as WeibullError, Weibull};
 pub use self::zeta::{Error as ZetaError, Zeta};
 pub use self::zipf::{Error as ZipfError, Zipf};
-#[cfg(feature = "alloc")]
-pub use rand::distr::{WeightError, WeightedIndex};
 pub use student_t::StudentT;
-#[cfg(feature = "alloc")]
-pub use weighted_alias::WeightedAliasIndex;
-#[cfg(feature = "alloc")]
-pub use weighted_tree::WeightedTreeIndex;
 
 pub use num_traits;
+
+#[cfg(feature = "alloc")]
+pub mod weighted;
 
 #[cfg(test)]
 #[macro_use]
@@ -188,11 +183,6 @@ mod test {
         };
     }
 }
-
-#[cfg(feature = "alloc")]
-pub mod weighted_alias;
-#[cfg(feature = "alloc")]
-pub mod weighted_tree;
 
 mod beta;
 mod binomial;
