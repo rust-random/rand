@@ -21,53 +21,59 @@ const SAMPLE_SIZE: usize = 100_000;
 const N_RESAMPLES: usize = 10_000;
 
 macro_rules! sample {
-    ($R:ty, $T:ty, $U:ty, $g:expr) => {
+    (@range $T:ty, $U:ty, 1, $rng:ident) => {{
+        assert_eq!(<$T>::BITS, <$U>::BITS);
+        let bits = (<$T>::BITS / 2);
+        let mask = (1 as $U).wrapping_neg() >> bits;
+        let x = $rng.random::<$U>();
+        ((x >> bits) * (x & mask)) as $T
+    }};
+
+    ($R:ty, $T:ty, $U:ty, $len:tt, $g:expr) => {
         $g.bench_function(BenchmarkId::new(stringify!($R), "single"), |b| {
             let mut rng = <$R>::from_rng(&mut rand::rng());
-            let x = rng.random::<$U>();
-            let bits = (<$T>::BITS / 2);
-            let mask = (1 as $U).wrapping_neg() >> bits;
-            let range = (x >> bits) * (x & mask);
+            let range = sample!(@range $T, $U, $len, rng);
             let low = <$T>::MIN;
-            let high = low.wrapping_add(range as $T);
+            let high = low.wrapping_add(range);
 
             b.iter(|| (low..=high).sample_single(&mut rng));
         });
 
         $g.bench_function(BenchmarkId::new(stringify!($R), "distr"), |b| {
             let mut rng = <$R>::from_rng(&mut rand::rng());
-            let x = rng.random::<$U>();
-            let bits = (<$T>::BITS / 2);
-            let mask = (1 as $U).wrapping_neg() >> bits;
-            let range = (x >> bits) * (x & mask);
+            let range = sample!(@range $T, $U, $len, rng);
             let low = <$T>::MIN;
-            let high = low.wrapping_add(range as $T);
+            let high = low.wrapping_add(range);
             let dist = Uniform::<$T>::new_inclusive(<$T>::MIN, high).unwrap();
 
             b.iter(|| dist.sample(&mut rng));
         });
     };
 
-    ($c:expr, $T:ty, $U:ty) => {{
-        let mut g = $c.benchmark_group(concat!("sample", stringify!($T)));
+    // Entrypoint:
+    // $T is the output type (integer)
+    // $U is the unsigned version of the output type
+    // $len is the width for SIMD or 1 for non-SIMD
+    ($c:expr, $T:ty, $U:ty, $len:tt) => {{
+        let mut g = $c.benchmark_group(concat!("sample_", stringify!($T), "x", stringify!($len)));
         g.sample_size(SAMPLE_SIZE);
         g.warm_up_time(WARM_UP_TIME);
         g.measurement_time(MEASUREMENT_TIME);
         g.nresamples(N_RESAMPLES);
-        sample!(SmallRng, $T, $U, g);
-        sample!(ChaCha8Rng, $T, $U, g);
-        sample!(Pcg32, $T, $U, g);
-        sample!(Pcg64, $T, $U, g);
+        sample!(SmallRng, $T, $U, $len, g);
+        sample!(ChaCha8Rng, $T, $U, $len, g);
+        sample!(Pcg32, $T, $U, $len, g);
+        sample!(Pcg64, $T, $U, $len, g);
         g.finish();
     }};
 }
 
 fn sample(c: &mut Criterion) {
-    sample!(c, i8, u8);
-    sample!(c, i16, u16);
-    sample!(c, i32, u32);
-    sample!(c, i64, u64);
-    sample!(c, i128, u128);
+    sample!(c, i8, u8, 1);
+    sample!(c, i16, u16, 1);
+    sample!(c, i32, u32, 1);
+    sample!(c, i64, u64, 1);
+    sample!(c, i128, u128, 1);
 }
 
 criterion_group! {
