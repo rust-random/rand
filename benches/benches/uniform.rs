@@ -8,12 +8,16 @@
 
 //! Implement benchmarks for uniform distributions over integer types
 
+#![cfg_attr(feature = "simd_support", feature(portable_simd))]
+
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::distr::uniform::{SampleRange, Uniform};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use rand_pcg::{Pcg32, Pcg64};
+#[cfg(feature = "simd_support")]
+use std::simd::{num::SimdUint, Simd};
 
 const WARM_UP_TIME: Duration = Duration::from_millis(1000);
 const MEASUREMENT_TIME: Duration = Duration::from_secs(3);
@@ -29,12 +33,36 @@ macro_rules! sample {
         ((x >> bits) * (x & mask)) as $T
     }};
 
+    (@range $T:ty, $U:ty, $len:tt, $rng:ident) => {{
+        let bits = (<$T>::BITS / 2);
+        let mask = Simd::splat((1 as $U).wrapping_neg() >> bits);
+        let bits = Simd::splat(bits as $U);
+        let x = $rng.random::<Simd<$U, $len>>();
+        ((x >> bits) * (x & mask)).cast()
+    }};
+
+    (@MIN $T:ty, 1) => {
+        <$T>::MIN
+    };
+
+    (@MIN $T:ty, $len:tt) => {
+        Simd::<$T, $len>::splat(<$T>::MIN)
+    };
+
+    (@wrapping_add $lhs:expr, $rhs:expr, 1) => {
+        $lhs.wrapping_add($rhs)
+    };
+
+    (@wrapping_add $lhs:expr, $rhs:expr, $len:tt) => {
+        ($lhs + $rhs)
+    };
+
     ($R:ty, $T:ty, $U:ty, $len:tt, $g:expr) => {
         $g.bench_function(BenchmarkId::new(stringify!($R), "single"), |b| {
             let mut rng = <$R>::from_rng(&mut rand::rng());
             let range = sample!(@range $T, $U, $len, rng);
-            let low = <$T>::MIN;
-            let high = low.wrapping_add(range);
+            let low = sample!(@MIN $T, $len);
+            let high = sample!(@wrapping_add low, range, $len);
 
             b.iter(|| (low..=high).sample_single(&mut rng));
         });
@@ -42,9 +70,9 @@ macro_rules! sample {
         $g.bench_function(BenchmarkId::new(stringify!($R), "distr"), |b| {
             let mut rng = <$R>::from_rng(&mut rand::rng());
             let range = sample!(@range $T, $U, $len, rng);
-            let low = <$T>::MIN;
-            let high = low.wrapping_add(range);
-            let dist = Uniform::<$T>::new_inclusive(<$T>::MIN, high).unwrap();
+            let low = sample!(@MIN $T, $len);
+            let high = sample!(@wrapping_add low, range, $len);
+            let dist = Uniform::new_inclusive(low, high).unwrap();
 
             b.iter(|| dist.sample(&mut rng));
         });
@@ -74,6 +102,20 @@ fn sample(c: &mut Criterion) {
     sample!(c, i32, u32, 1);
     sample!(c, i64, u64, 1);
     sample!(c, i128, u128, 1);
+    #[cfg(feature = "simd_support")]
+    sample!(c, u8, u8, 8);
+    #[cfg(feature = "simd_support")]
+    sample!(c, u8, u8, 16);
+    #[cfg(feature = "simd_support")]
+    sample!(c, u8, u8, 32);
+    #[cfg(feature = "simd_support")]
+    sample!(c, u8, u8, 64);
+    #[cfg(feature = "simd_support")]
+    sample!(c, i16, u16, 8);
+    #[cfg(feature = "simd_support")]
+    sample!(c, i16, u16, 16);
+    #[cfg(feature = "simd_support")]
+    sample!(c, i16, u16, 32);
 }
 
 criterion_group! {
