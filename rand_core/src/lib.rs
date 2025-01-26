@@ -205,19 +205,18 @@ pub trait CryptoRng: RngCore {}
 
 impl<T: DerefMut> CryptoRng for T where T::Target: CryptoRng {}
 
-/// A potentially fallible version of [`RngCore`].
+/// A potentially fallible variant of [`RngCore`]
 ///
-/// This trait is primarily used for IO-based generators such as [`OsRng`].
+/// This trait is a generalization of [`RngCore`] to support potentially-
+/// fallible IO-based generators such as [`OsRng`].
 ///
-/// Most of higher-level generic code in the `rand` crate is built on top
-/// of the the [`RngCore`] trait. Users can transform a fallible RNG
-/// (i.e. [`TryRngCore`] implementor) into an "infallible" (but potentially
-/// panicking) RNG (i.e. [`RngCore`] implementor) using the [`UnwrapErr`] wrapper.
+/// All implementations of [`RngCore`] automatically support this `TryRngCore`
+/// trait, using [`Infallible`][core::convert::Infallible] as the associated
+/// `Error` type.
 ///
-/// [`RngCore`] implementors also usually implement [`TryRngCore`] with the `Error`
-/// associated type being equal to [`Infallible`][core::convert::Infallible].
-/// In other words, users can use [`TryRngCore`] to generalize over fallible and
-/// infallible RNGs.
+/// An implementation of this trait may be made compatible with code requiring
+/// an [`RngCore`] through [`TryRngCore::unwrap_err`]. The resulting RNG will
+/// panic in case the underlying fallible RNG yields an error.
 pub trait TryRngCore {
     /// The type returned in the event of a RNG error.
     type Error: fmt::Debug + fmt::Display;
