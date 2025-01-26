@@ -30,6 +30,8 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Add fn `RngCore::read_adapter` implementing `std::io::Read` (#1267)
 - Add trait `CryptoBlockRng: BlockRngCore`; make `trait CryptoRng: RngCore` (#1273)
 - Add traits `TryRngCore`, `TryCryptoRng` (#1424, #1499)
+- Rename `fn SeedableRng::from_rng` -> `try_from_rng` and add infallible variant `fn from_rng` (#1424)
+- Rename `fn SeedableRng::from_entropy` -> `from_os_rng` and add fallible variant `fn try_from_os_rng` (#1424)
 - Add bounds `Clone` and `AsRef` to associated type `SeedableRng::Seed` (#1491)
 
 ### API changes: Rng trait and top-level fns
