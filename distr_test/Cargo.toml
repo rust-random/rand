@@ -5,8 +5,8 @@ edition = "2021"
 publish = false
 
 [dev-dependencies]
-rand_distr = { path = "../rand_distr", version = "=0.5.0-beta.3", default-features = false, features = ["alloc"] }
-rand = { path = "..", version = "=0.9.0-beta.3", features = ["small_rng"] }
+rand_distr = { path = "../rand_distr", version = "0.5.0", default-features = false, features = ["alloc"] }
+rand = { path = "..", version = "0.9.0", features = ["small_rng"] }
 num-traits = "0.2.19"
 # Special functions for testing distributions
 special = "0.11.0"
