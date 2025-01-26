@@ -74,7 +74,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Add `pub` module `rand::distr::weighted`, moving `WeightedIndex` there (#1548)
 - Add trait `weighted::Weight`, allowing `WeightedIndex` to trap overflow (#1353)
 - Add fns `weight, weights, total_weight` to distribution `WeightedIndex` (#1420)
-- Rename enum `WeightedError` to `weighted::WeightError`, revising variants (#1382) and mark as `#[non_exhaustive]` (#1480)
+- Rename enum `WeightedError` to `weighted::Error`, revising variants (#1382) and mark as `#[non_exhaustive]` (#1480)
 
 ### API changes: SIMD
 - Switch to `std::simd`, expand SIMD & docs (#1239)
