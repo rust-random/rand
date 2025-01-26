@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.0] - 2025-01-27
 ### Dependencies and features
 - Bump the MSRV to 1.63.0 (#1207, #1246, #1269, #1341, #1416, #1536); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
-- Update to `getrandom` v0.3.0 (#1554)
+- Update to `getrandom` v0.3.0 (#1558)
 - Use `zerocopy` to replace some `unsafe` code (#1349, #1393, #1446, #1502)
 - Rename feature `serde1` to `serde` (#1477)
 - Rename feature `getrandom` to `os_rng` (#1537)

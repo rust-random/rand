@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.0] - 2025-01-27
 ### Dependencies and features
-- Update to `rand_core` v0.9.0 (#1554)
+- Update to `rand_core` v0.9.0 (#1558)
 - Feature `std` now implies feature `rand_core/std` (#1153)
 - Rename feature `serde1` to `serde` (#1477)
 - Rename feature `getrandom` to `os_rng` (#1537)

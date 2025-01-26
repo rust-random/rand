@@ -16,7 +16,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ### Dependencies
 - Bump the MSRV to 1.63.0 (#1207, #1246, #1269, #1341, #1416, #1536); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
-- Update to `rand_core` v0.9.0 (#1554)
+- Update to `rand_core` v0.9.0 (#1558)
 
 ### Features
 - Support `std` feature without `getrandom` or `rand_chacha` (#1354)

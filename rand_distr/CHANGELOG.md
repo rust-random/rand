@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Dependencies and features
 - Bump the MSRV to 1.61.0 (#1207, #1246, #1269, #1341, #1416); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
-- Update to `rand` v0.9.0 (#1554)
+- Update to `rand` v0.9.0 (#1558)
 - Rename feature `serde1` to `serde` (#1477)
 
 ### API changes
