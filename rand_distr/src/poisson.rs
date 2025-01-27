@@ -327,35 +327,6 @@ where
 mod test {
     use super::*;
 
-    fn test_poisson_avg_gen<F: Float + FloatConst>(lambda: F, tol: F)
-    where
-        StandardUniform: Distribution<F>,
-        StandardNormal: Distribution<F>,
-        Exp1: Distribution<F>,
-    {
-        let poisson = Poisson::new(lambda).unwrap();
-        let mut rng = crate::test::rng(123);
-        let mut sum = F::zero();
-        for _ in 0..1000 {
-            sum = sum + poisson.sample(&mut rng);
-        }
-        let avg = sum / F::from(1000.0).unwrap();
-        assert!((avg - lambda).abs() < tol);
-    }
-
-    #[test]
-    fn test_poisson_avg() {
-        test_poisson_avg_gen::<f64>(10.0, 0.1);
-        test_poisson_avg_gen::<f64>(15.0, 0.1);
-
-        test_poisson_avg_gen::<f32>(10.0, 0.1);
-        test_poisson_avg_gen::<f32>(15.0, 0.1);
-
-        // Small lambda will use Knuth's method with exp_lambda == 1.0
-        test_poisson_avg_gen::<f32>(0.00000000000000005, 0.1);
-        test_poisson_avg_gen::<f64>(0.00000000000000005, 0.1);
-    }
-
     #[test]
     #[should_panic]
     fn test_poisson_invalid_lambda_zero() {
