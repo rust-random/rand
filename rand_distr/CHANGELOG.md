@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix panic in Binomial (#1484)
 - Limit the maximal acceptable lambda for `Poisson` to solve (#1312) (#1498)
 - Fix bug in `Hypergeometric`, this is a Value-breaking change (#1510)
+- Reimplement `Poisson`'s rejection method to improve performance (#1560)
 
 ### Other changes
 - Remove unused fields from `Gamma`, `NormalInverseGaussian` and `Zipf` distributions (#1184)
