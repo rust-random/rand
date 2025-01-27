@@ -33,7 +33,7 @@ All with:
 
 Rand **is not**:
 
--   Small (LOC). Most low-level crates are small, but the higher-level `rand`
+-   Small (LoC). Most low-level crates are small, but the higher-level `rand`
     and `rand_distr` each contain a lot of functionality.
 -   Simple (implementation). We have a strong focus on correctness, speed and flexibility, but
     not simplicity. If you prefer a small-and-simple library, there are
@@ -53,29 +53,12 @@ Documentation:
 -   [API reference (docs.rs)](https://docs.rs/rand)
 
 
-## Usage
-
-Add this to your `Cargo.toml`:
-```toml
-[dependencies]
-rand = "0.8.5"
-```
-
-Or, to try the 0.9.0 beta release:
-```toml
-[dependencies]
-rand = "=0.9.0-beta.3"
-```
-
-To get started using Rand, see [The Book](https://rust-random.github.io/book).
-
 ## Versions
 
 Rand is *mature* (suitable for general usage, with infrequent breaking releases
 which minimise breakage) but not yet at 1.0. Current versions are:
 
--   Version 0.8 was released in December 2020 with many small changes.
--   Version 0.9 is in development with many small changes.
+-   Version 0.9 was released in January 2025.
 
 See the [CHANGELOG](CHANGELOG.md) or [Upgrade Guide](https://rust-random.github.io/book/update.html) for more details.
 

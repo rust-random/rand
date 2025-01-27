@@ -8,97 +8,106 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [0.9.0-beta.3] - 2025-01-03
-- Add feature `thread_rng` (#1547)
-- Move `distr::Slice` -> `distr::slice::Choose`, `distr::EmptySlice` -> `distr::slice::Empty` (#1548)
-- Rename trait `distr::DistString` -> `distr::SampleString` (#1548)
-- Rename `distr::DistIter` -> `distr::Iter`, `distr::DistMap` -> `distr::Map` (#1548)
-- Move `distr::{Weight, WeightError, WeightedIndex}` -> `distr::weighted::{Weight, Error, WeightedIndex}` (#1548)
-
-## [0.9.0-beta.1] - 2024-11-30
-- Bump `rand_core` version
-
-## [0.9.0-beta.0] - 2024-11-25
-This is a pre-release. To depend on this version, use `rand = "=0.9.0-beta.0"` to prevent automatic updates (which can be expected to include breaking changes).
-
+## [0.9.0] - 2025-01-27
 ### Security and unsafe
 - Policy: "rand is not a crypto library" (#1514)
 - Remove fork-protection from `ReseedingRng` and `ThreadRng`. Instead, it is recommended to call `ThreadRng::reseed` on fork. (#1379)
 - Use `zerocopy` to replace some `unsafe` code (#1349, #1393, #1446, #1502)
 
-### Compilation options
+### Dependencies
 - Bump the MSRV to 1.63.0 (#1207, #1246, #1269, #1341, #1416, #1536); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
-- Support `std` feature without `getrandom` or `rand_chacha` (#1354)
-- Improve `thread_rng` related docs (#1257)
-- The `serde1` feature has been renamed `serde` (#1477)
-- The implicit feature `rand_chacha` has been removed. This is enabled by `std_rng`. (#1473)
-- Enable feature `small_rng` by default (#1455)
-- Rename feature `getrandom` to `os_rng` (#1537)
+- Update to `rand_core` v0.9.0 (#1558)
 
-### Inherited changes from `rand_core`
+### Features
+- Support `std` feature without `getrandom` or `rand_chacha` (#1354)
+- Enable feature `small_rng` by default (#1455)
+- Remove implicit feature `rand_chacha`; use `std_rng` instead. (#1473)
+- Rename feature `serde1` to `serde` (#1477)
+- Rename feature `getrandom` to `os_rng` (#1537)
+- Add feature `thread_rng` (#1547)
+
+### API changes: rand_core traits
 - Add fn `RngCore::read_adapter` implementing `std::io::Read` (#1267)
 - Add trait `CryptoBlockRng: BlockRngCore`; make `trait CryptoRng: RngCore` (#1273)
 - Add traits `TryRngCore`, `TryCryptoRng` (#1424, #1499)
+- Rename `fn SeedableRng::from_rng` -> `try_from_rng` and add infallible variant `fn from_rng` (#1424)
+- Rename `fn SeedableRng::from_entropy` -> `from_os_rng` and add fallible variant `fn try_from_os_rng` (#1424)
 - Add bounds `Clone` and `AsRef` to associated type `SeedableRng::Seed` (#1491)
 
-### Rng trait and top-level fns
-- Rename fn `rand::thread_rng()` to `rand::rng()`, and remove from the prelude (#1506)
-- Add top-level fns `random_iter`, `random_range`, `random_bool`, `random_ratio`, `fill` (#1488)
+### API changes: Rng trait and top-level fns
+- Rename fn `rand::thread_rng()` to `rand::rng()` and remove from the prelude (#1506)
 - Remove fn `rand::random()` from the prelude (#1506)
+- Add top-level fns `random_iter`, `random_range`, `random_bool`, `random_ratio`, `fill` (#1488)
 - Re-introduce fn `Rng::gen_iter` as `random_iter` (#1305, #1500)
 - Rename fn `Rng::gen` to `random` to avoid conflict with the new `gen` keyword in Rust 2024 (#1438)
 - Rename fns `Rng::gen_range` to `random_range`, `gen_bool` to `random_bool`, `gen_ratio` to `random_ratio` (#1505)
 - Annotate panicking methods with `#[track_caller]` (#1442, #1447)
 
-### RNGs
-- Make `ReseedingRng::reseed` discard remaining data from the last block generated (#1379)
-- Change fn `SmallRng::seed_from_u64` implementation (#1203)
+### API changes: RNGs
 - Fix `<SmallRng as SeedableRng>::Seed` size to 256 bits (#1455)
 - Remove first parameter (`rng`) of `ReseedingRng::new` (#1533)
-- Improve SmallRng initialization performance (#1482)
 
-### Sequences
-- Optimize fn `sample_floyd`, affecting output of `rand::seq::index::sample` and `rand::seq::SliceRandom::choose_multiple` (#1277)
-- New, faster algorithms for `IteratorRandom::choose` and `choose_stable` (#1268)
-- New, faster algorithms for `SliceRandom::shuffle` and `partial_shuffle` (#1272)
+### API changes: Sequences
 - Split trait `SliceRandom` into `IndexedRandom`, `IndexedMutRandom`, `SliceRandom` (#1382)
 - Add `IndexedRandom::choose_multiple_array`, `index::sample_array` (#1453, #1469)
-- Fix `IndexdRandom::choose_multiple_weighted` for very small seeds and optimize for large input length / low memory (#1530)
 
-### Distributions
+### API changes: Distributions: renames
 - Rename module `rand::distributions` to `rand::distr` (#1470)
-- Relax `Sized` bound on `Distribution<T> for &D` (#1278)
 - Rename distribution `Standard` to `StandardUniform` (#1526)
+- Move `distr::Slice` -> `distr::slice::Choose`, `distr::EmptySlice` -> `distr::slice::Empty` (#1548)
+- Rename trait `distr::DistString` -> `distr::SampleString` (#1548)
+- Rename `distr::DistIter` -> `distr::Iter`, `distr::DistMap` -> `distr::Map` (#1548)
+
+### API changes: Distributions
+- Relax `Sized` bound on `Distribution<T> for &D` (#1278)
 - Remove impl of `Distribution<Option<T>>` for `StandardUniform` (#1526)
 - Let distribution `StandardUniform` support all `NonZero*` types (#1332)
 - Fns `{Uniform, UniformSampler}::{new, new_inclusive}` return a `Result` (instead of potentially panicking) (#1229)
 - Distribution `Uniform` implements `TryFrom` instead of `From` for ranges (#1229)
-- Optimize distribution `Uniform`: use Canon's method (single sampling) / Lemire's method (distribution sampling) for faster sampling (breaks value stability; #1287)
-- Add `UniformUsize` and use to make `Uniform` for `usize` portable (#1487)
-- Remove support for generating `isize` and `usize` values with `Standard`, `Uniform` (except via `UniformUsize`) and `Fill` and usage as a `WeightedAliasIndex` weight (#1487)
-- Optimize fn `sample_single_inclusive` for floats (+~20% perf) (#1289)
-- Allow `UniformFloat::new` samples and `UniformFloat::sample_single` to yield `high` (#1462)
+- Add `UniformUsize` (#1487)
+- Remove support for generating `isize` and `usize` values with `StandardUniform`, `Uniform` (except via `UniformUsize`) and `Fill` and usage as a `WeightedAliasIndex` weight (#1487)
 - Add impl `DistString` for distributions `Slice<char>` and `Uniform<char>` (#1315)
 - Add fn `Slice::num_choices` (#1402)
-- Fix portability of distribution `Slice` (#1469)
-- Add trait `Weight`, allowing `WeightedIndex` to trap overflow (#1353)
-- Add fns `weight, weights, total_weight` to distribution `WeightedIndex` (#1420)
-- Rename enum `WeightedError` to `WeightError`, revising variants (#1382) and mark as `#[non_exhaustive]` (#1480)
 - Add fn `p()` for distribution `Bernoulli` to access probability (#1481)
 
-### SIMD
+### API changes: Weighted distributions
+- Add `pub` module `rand::distr::weighted`, moving `WeightedIndex` there (#1548)
+- Add trait `weighted::Weight`, allowing `WeightedIndex` to trap overflow (#1353)
+- Add fns `weight, weights, total_weight` to distribution `WeightedIndex` (#1420)
+- Rename enum `WeightedError` to `weighted::Error`, revising variants (#1382) and mark as `#[non_exhaustive]` (#1480)
+
+### API changes: SIMD
 - Switch to `std::simd`, expand SIMD & docs (#1239)
+
+### Reproducibility-breaking changes
+- Make `ReseedingRng::reseed` discard remaining data from the last block generated (#1379)
+- Change fn `SmallRng::seed_from_u64` implementation (#1203)
+- Allow `UniformFloat::new` samples and `UniformFloat::sample_single` to yield `high` (#1462)
+- Fix portability of distribution `Slice` (#1469)
+- Make `Uniform` for `usize` portable via `UniformUsize` (#1487)
+- Fix `IndexdRandom::choose_multiple_weighted` for very small seeds and optimize for large input length / low memory (#1530)
+
+### Reproducibility-breaking optimisations
+- Optimize fn `sample_floyd`, affecting output of `rand::seq::index::sample` and `rand::seq::SliceRandom::choose_multiple` (#1277)
+- New, faster algorithms for `IteratorRandom::choose` and `choose_stable` (#1268)
+- New, faster algorithms for `SliceRandom::shuffle` and `partial_shuffle` (#1272)
+- Optimize distribution `Uniform`: use Canon's method (single sampling) / Lemire's method (distribution sampling) for faster sampling (breaks value stability; #1287)
+- Optimize fn `sample_single_inclusive` for floats (+~20% perf) (#1289)
+
+### Other optimisations
+- Improve `SmallRng` initialization performance (#1482)
 - Optimise SIMD widening multiply (#1247)
 
-### Documentation
-- Add `Cargo.lock.msrv` file (#1275)
-- Docs: enable experimental `--generate-link-to-definition` feature (#1327)
-- Better doc of crate features, use `doc_auto_cfg` (#1411, #1450)
-
 ### Other
+- Add `Cargo.lock.msrv` file (#1275)
 - Reformat with `rustfmt` and enforce (#1448)
 - Apply Clippy suggestions and enforce (#1448, #1474)
 - Move all benchmarks to new `benches` crate (#1329, #1439) and migrate to Criterion (#1490)
+
+### Documentation
+- Improve `ThreadRng` related docs (#1257)
+- Docs: enable experimental `--generate-link-to-definition` feature (#1327)
+- Better doc of crate features, use `doc_auto_cfg` (#1411, #1450)
 
 ## [0.8.5] - 2021-08-20
 ### Fixes
