@@ -9,7 +9,7 @@
 
 //! The Poisson distribution `Poisson(λ)`.
 
-use crate::{Cauchy, Distribution, Exp1, Normal, StandardNormal, StandardUniform};
+use crate::{Distribution, Exp1, Normal, StandardNormal, StandardUniform};
 use core::fmt;
 use num_traits::{Float, FloatConst};
 use rand::Rng;
@@ -233,8 +233,7 @@ where
             ]; // coefficients from Table 1
             let (px, py) = if k < F::from(10.0).unwrap() {
                 let px = -self.lambda;
-                let py = self.lambda.powf(k)
-                    / F::from(FACT[k.to_usize().unwrap()]).unwrap();
+                let py = self.lambda.powf(k) / F::from(FACT[k.to_usize().unwrap()]).unwrap();
 
                 (px, py)
             } else {
