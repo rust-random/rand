@@ -9,51 +9,8 @@
 //! Math helper functions
 
 use crate::ziggurat_tables;
-use num_traits::Float;
 use rand::distr::hidden_export::IntoFloat;
 use rand::Rng;
-
-/// Calculates ln(gamma(x)) (natural logarithm of the gamma
-/// function) using the Lanczos approximation.
-///
-/// The approximation expresses the gamma function as:
-/// `gamma(z+1) = sqrt(2*pi)*(z+g+0.5)^(z+0.5)*exp(-z-g-0.5)*Ag(z)`
-/// `g` is an arbitrary constant; we use the approximation with `g=5`.
-///
-/// Noting that `gamma(z+1) = z*gamma(z)` and applying `ln` to both sides:
-/// `ln(gamma(z)) = (z+0.5)*ln(z+g+0.5)-(z+g+0.5) + ln(sqrt(2*pi)*Ag(z)/z)`
-///
-/// `Ag(z)` is an infinite series with coefficients that can be calculated
-/// ahead of time - we use just the first 6 terms, which is good enough
-/// for most purposes.
-pub(crate) fn log_gamma<F: Float>(x: F) -> F {
-    // precalculated 6 coefficients for the first 6 terms of the series
-    let coefficients: [F; 6] = [
-        F::from(76.18009172947146).unwrap(),
-        F::from(-86.50532032941677).unwrap(),
-        F::from(24.01409824083091).unwrap(),
-        F::from(-1.231739572450155).unwrap(),
-        F::from(0.1208650973866179e-2).unwrap(),
-        F::from(-0.5395239384953e-5).unwrap(),
-    ];
-
-    // (x+0.5)*ln(x+g+0.5)-(x+g+0.5)
-    let tmp = x + F::from(5.5).unwrap();
-    let log = (x + F::from(0.5).unwrap()) * tmp.ln() - tmp;
-
-    // the first few terms of the series for Ag(x)
-    let mut a = F::from(1.000000000190015).unwrap();
-    let mut denom = x;
-    for &coeff in &coefficients {
-        denom = denom + F::one();
-        a = a + (coeff / denom);
-    }
-
-    // get everything together
-    // a is Ag(x)
-    // 2.5066... is sqrt(2pi)
-    log + (F::from(2.5066282746310005).unwrap() * a / x).ln()
-}
 
 /// Sample a random number using the Ziggurat method (specifically the
 /// ZIGNOR variant from Doornik 2005). Most of the arguments are

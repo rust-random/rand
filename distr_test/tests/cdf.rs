@@ -427,9 +427,9 @@ fn hypergeometric() {
 fn poisson() {
     use rand_distr::Poisson;
     let parameters = [
-        0.1, 1.0, 7.5,
-        45.0, // 1e9, passed case but too slow
-             // 1.844E+19,  // fail case
+        0.1, 1.0, 7.5, 15.0, 45.0, 98.0, 230.0, 4567.5,
+        4.4541e7, // 1e10, //passed case but too slow
+                 // 1.844E+19,  // fail case
     ];
 
     for (seed, lambda) in parameters.into_iter().enumerate() {
