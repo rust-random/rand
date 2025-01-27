@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   This breaks serialization compatibility with older versions.
 - Add plots for `rand_distr` distributions to documentation (#1434)
 - Move some of the computations in Binomial from `sample` to `new` (#1484)
-- Reimplement `Poisson`'s rejection method to improve performance (#1560)
+- Reimplement `Poisson`'s rejection method to improve performance and correct sampling inaccuracies for large lambda values, this is a Value-breaking change (#1560)
 
 ## [0.4.3] - 2021-12-30
 - Fix `no_std` build (#1208)
