@@ -207,7 +207,7 @@ fn poisson_stability() {
     test_samples(
         223,
         Poisson::new(27.0).unwrap(),
-        &[28.0f32, 32.0, 36.0, 36.0],
+        &[30.0f32, 33.0, 23.0, 25.0],
     );
 }
 
