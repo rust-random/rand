@@ -39,12 +39,11 @@ Rand **is not**:
     not simplicity. If you prefer a small-and-simple library, there are
     alternatives including [fastrand](https://crates.io/crates/fastrand)
     and [oorandom](https://crates.io/crates/oorandom).
--   A cryptography library. Rand provides functionality for generating
-    unpredictable random data (potentially applicable depending on requirements)
-    but does not provide high-level cryptography functionality.
-
-Rand is a community project and cannot provide legally-binding guarantees of
-security.
+-   A cryptography library. `rand` is a community project and cannot provide
+    legally-binding guarantees of security. `rand` does not provide high-level
+    cryptographic functionality. Users are expected to determine for themselves
+    whether `rand`'s functionality meets their own security requirements.
+    For more, see [SECURITY.md](SECURITY.md).
 
 Documentation:
 
