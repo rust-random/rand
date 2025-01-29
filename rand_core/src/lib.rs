@@ -306,12 +306,7 @@ impl<R: TryCryptoRng> CryptoRng for UnwrapErr<R> {}
 /// This trait encapsulates the low-level functionality common to all
 /// pseudo-random number generators (PRNGs, or algorithmic generators).
 ///
-/// Note that this trait does not imply
-/// [reproducibility](https://rust-random.github.io/book/crate-reprod.html)
-/// of results; this is an optional property which RNGs should mention in their
-/// documentation.
-///
-/// [`rand`]: https://docs.rs/rand
+/// This trait does not imply reproducibility; see [`ReproducibleRng`].
 pub trait SeedableRng: Sized {
     /// Seed type, which is restricted to types mutably-dereferenceable as `u8`
     /// arrays (we recommend `[u8; N]` for some `N`).
@@ -519,6 +514,13 @@ pub trait SeedableRng: Sized {
         Ok(res)
     }
 }
+
+/// A reproducible random number generator
+///
+/// This is a marker trait indicating that the implementation commits to
+/// [reproducibility](https://rust-random.github.io/book/crate-reprod.html)
+/// of results across platforms and at least patch versions.
+pub trait ReproducibleRng: SeedableRng {}
 
 /// Adapter that enables reading through a [`io::Read`](std::io::Read) from a [`RngCore`].
 ///
