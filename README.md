@@ -96,16 +96,13 @@ Many (but not all) algorithms are intended to have reproducible output. Read mor
 
 The Rand library supports a variety of CPU architectures. Platform integration is outsourced to [getrandom].
 
-### WASM support
+### WebAssembly support
 
-Seeding entropy from OS on WASM target `wasm32-unknown-unknown` is not
-*automatically* supported by `rand` or `getrandom`. If you are fine with
-seeding the generator manually, you can disable the `os_rng` feature
-and use the methods on the `SeedableRng` trait. To enable seeding from OS,
-either use a different target such as `wasm32-wasi` or add a direct
-dependency on [getrandom] with the `js` feature (if the target supports
-JavaScript). See
-[getrandom#WebAssembly support](https://docs.rs/getrandom/latest/getrandom/#webassembly-support).
+The [WASI](https://github.com/WebAssembly/WASI/tree/main) and Emscripten
+targets are directly supported. The `wasm32-unknown-unknown` target is not
+*automatically* supported. To enable support for this target, refer to the
+[`getrandom` documentation for WebAssembly](https://docs.rs/getrandom/latest/getrandom/#webassembly-support).
+Alternatively, the `os_rng` feature may be disabled.
 
 # License
 
