@@ -306,6 +306,13 @@ impl<R: TryCryptoRng> CryptoRng for UnwrapErr<R> {}
 /// This trait encapsulates the low-level functionality common to all
 /// pseudo-random number generators (PRNGs, or algorithmic generators).
 ///
+/// A generator implementing `SeedableRng` will usually be deterministic, but
+/// beware that portability and reproducibility of results **is not implied**.
+/// Refer to documentation of the generator, noting that generators named after
+/// a specific algorithm are usually tested for reproducibility against a
+/// reference vector, while `SmallRng` and `StdRng` specifically opt out of
+/// reproducibility guarantees.
+///
 /// [`rand`]: https://docs.rs/rand
 pub trait SeedableRng: Sized {
     /// Seed type, which is restricted to types mutably-dereferenceable as `u8`
