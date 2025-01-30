@@ -16,8 +16,8 @@ Rand is a set of crates supporting (pseudo-)random generators:
 
 With broad support for random value generation and random processes:
 
--   [`StandardUniform`](https://docs.rs/rand/latest/rand/distributions/struct.StandardUniform.html) random value sampling,
-    [`Uniform`](https://docs.rs/rand/latest/rand/distributions/struct.Uniform.html)-ranged value sampling
+-   [`StandardUniform`](https://docs.rs/rand/latest/rand/distr/struct.StandardUniform.html) random value sampling,
+    [`Uniform`](https://docs.rs/rand/latest/rand/distr/struct.Uniform.html)-ranged value sampling
     and [more](https://docs.rs/rand/latest/rand/distr/index.html)
 -   Samplers for a large number of non-uniform random number distributions via our own
     [`rand_distr`](https://docs.rs/rand_distr) and via
