@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
+[features]
+# Option (requires nightly Rust): experimental SIMD support
+simd_support = ["rand/simd_support"]
+
+
 [dependencies]
 
 [dev-dependencies]
