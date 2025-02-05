@@ -9,9 +9,8 @@
 use core::time::Duration;
 use criterion::measurement::WallTime;
 use criterion::{criterion_group, criterion_main, BenchmarkGroup, Criterion};
-use rand::distr::{Alphanumeric, StandardUniform};
+use rand::distr::{Alphanumeric, Open01, OpenClosed01, StandardUniform};
 use rand::prelude::*;
-use rand::distr::{Open01, OpenClosed01};
 use rand_pcg::Pcg64Mcg;
 
 criterion_group!(
