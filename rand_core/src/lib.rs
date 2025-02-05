@@ -192,16 +192,15 @@ where
 /// (like [`OsRng`]) or if the `default()` instance uses a strong, fresh seed.
 ///
 /// Formally, a CSPRNG (Cryptographically Secure Pseudo-Random Number Generator)
-/// should satisfy an additional properties over other generators: assuming that
+/// should satisfy an additional property over other generators: assuming that
 /// the generator has been appropriately seeded and has unknown state, then
 /// given the first *k* bits of an algorithm's output
 /// sequence, it should not be possible using polynomial-time algorithms to
 /// predict the next bit with probability significantly greater than 50%.
 ///
-/// Some generators may satisfy an additional property, however this is not
-/// required by this trait: if the CSPRNG's state is revealed, it should not be
-/// computationally-feasible to reconstruct output prior to this. Some other
-/// generators allow backwards-computation and are considered *reversible*.
+/// An optional property of CSPRNGs is backtracking resistance: if the CSPRNG's
+/// state is revealed, it will not be computationally-feasible to reconstruct
+/// prior output values. This property is not required by `CryptoRng`.
 pub trait CryptoRng: RngCore {}
 
 impl<T: DerefMut> CryptoRng for T where T::Target: CryptoRng {}
