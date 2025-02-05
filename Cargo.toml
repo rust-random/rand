@@ -65,7 +65,6 @@ log = ["dep:log"]
 [workspace]
 members = [
     "rand_core",
-    "rand_distr",
     "rand_chacha",
     "rand_pcg",
 ]

@@ -23,10 +23,6 @@ name = "bool"
 harness = false
 
 [[bench]]
-name = "distr"
-harness = false
-
-[[bench]]
 name = "generators"
 harness = false
 
@@ -48,8 +44,4 @@ harness = false
 
 [[bench]]
 name = "uniform_float"
-harness = false
-
-[[bench]]
-name = "weighted"
 harness = false
