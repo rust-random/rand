@@ -13,12 +13,21 @@ Rand provides the marker traits `CryptoRng`, `TryCryptoRng` and
 `CryptoBlockRng`. Generators (RNGs) implementing one of these traits which are
 used according to these additional constraints:
 
--   If the RNG implements `Default`, it may be default-constructed
--   If the RNG implements `SeedableRng`, it may be constructed and seeded using
-    `SeedableRng::from_seed` with a cryptographically secure seed value
--   If the RNG implements `SeedableRng`, it may be constructed and seeded from
-    another RNG which is itself cryptographically secure
--   The state (memory) of the RNG and its seed value are not exposed
+-   The generator may be constructed using `std::default::Default` where the
+    generator supports this trait. Note that generators should *only* support
+    `Default` where the `default()` instance is appropriately seeded: for
+    example `OsRng` has no state and thus has a trivial `default()` instance
+    while `ThreadRng::default()` returns a handle to a thread-local instance
+    seeded using `OsRng`.
+-   The generator may be constructed using `rand_core::SeedableRng` in any of
+    the following ways where the generator supports this trait:
+
+    -   Via `SeedableRng::from_seed` using a cryptographically secure seed value
+    -   Via `SeedableRng::from_rng` or `try_from_rng` using a cryptographically
+        secure source `rng`
+    -   Via `SeedableRng::from_os_rng` or `try_from_os_rng`
+-   The state (memory) of the generator and its seed value (or source `rng`) are
+    not exposed
 
 are expected to provide the following:
 
