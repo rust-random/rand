@@ -11,7 +11,7 @@ use criterion::measurement::WallTime;
 use criterion::{criterion_group, criterion_main, BenchmarkGroup, Criterion};
 use rand::distr::{Alphanumeric, StandardUniform};
 use rand::prelude::*;
-use rand_distr::{Open01, OpenClosed01};
+use rand::distr::{Open01, OpenClosed01};
 use rand_pcg::Pcg64Mcg;
 
 criterion_group!(
@@ -25,7 +25,7 @@ fn bench_ty<T, D>(g: &mut BenchmarkGroup<WallTime>, name: &str)
 where
     D: Distribution<T> + Default,
 {
-    g.throughput(criterion::Throughput::Bytes(size_of::<T>() as u64));
+    g.throughput(criterion::Throughput::Bytes(core::mem::size_of::<T>() as u64));
     g.bench_function(name, |b| {
         let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
 
