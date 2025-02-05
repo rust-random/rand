@@ -44,3 +44,7 @@ harness = false
 [[bench]]
 name = "uniform_float"
 harness = false
+
+[[bench]]
+name = "weighted"
+harness = false
