@@ -175,32 +175,32 @@ where
     }
 }
 
-/// A marker trait used to indicate that an [`RngCore`] implementation is
-/// supposed to be cryptographically secure.
+/// A marker trait over [`RngCore`] for securely unpredictable RNGs
 ///
-/// *Cryptographically secure generators*, also known as *CSPRNGs*, should
-/// satisfy an additional properties over other generators: given the first
-/// *k* bits of an algorithm's output
+/// This marker trait indicates that the implementing generator is intended,
+/// when correctly seeded and protected from side-channel attacks such as a
+/// leaking of state, to be a cryptographically secure generator. This trait is
+/// provided as a tool to aid review of cryptographic code, but does not by
+/// itself guarantee suitability for cryptographic applications.
+///
+/// Implementors of `CryptoRng` automatically implement the [`TryCryptoRng`]
+/// trait.
+///
+/// Implementors of `CryptoRng` should only implement [`Default`] if the
+/// `default()` instances are themselves secure generators: for example if the
+/// implementing type is a stateless interface over a secure external generator
+/// (like [`OsRng`]) or if the `default()` instance uses a strong, fresh seed.
+///
+/// Formally, a CSPRNG (Cryptographically Secure Pseudo-Random Number Generator)
+/// should satisfy an additional property over other generators: assuming that
+/// the generator has been appropriately seeded and has unknown state, then
+/// given the first *k* bits of an algorithm's output
 /// sequence, it should not be possible using polynomial-time algorithms to
 /// predict the next bit with probability significantly greater than 50%.
 ///
-/// Some generators may satisfy an additional property, however this is not
-/// required by this trait: if the CSPRNG's state is revealed, it should not be
-/// computationally-feasible to reconstruct output prior to this. Some other
-/// generators allow backwards-computation and are considered *reversible*.
-///
-/// Note that this trait is provided for guidance only and cannot guarantee
-/// suitability for cryptographic applications. In general it should only be
-/// implemented for well-reviewed code implementing well-regarded algorithms.
-///
-/// Note also that use of a `CryptoRng` does not protect against other
-/// weaknesses such as seeding from a weak entropy source or leaking state.
-///
-/// Note that implementors of [`CryptoRng`] also automatically implement
-/// the [`TryCryptoRng`] trait.
-///
-/// [`BlockRngCore`]: block::BlockRngCore
-/// [`Infallible`]: core::convert::Infallible
+/// An optional property of CSPRNGs is backtracking resistance: if the CSPRNG's
+/// state is revealed, it will not be computationally-feasible to reconstruct
+/// prior output values. This property is not required by `CryptoRng`.
 pub trait CryptoRng: RngCore {}
 
 impl<T: DerefMut> CryptoRng for T where T::Target: CryptoRng {}
@@ -269,10 +269,20 @@ impl<R: RngCore> TryRngCore for R {
     }
 }
 
-/// A marker trait used to indicate that a [`TryRngCore`] implementation is
-/// supposed to be cryptographically secure.
+/// A marker trait over [`TryRngCore`] for securely unpredictable RNGs
 ///
-/// See [`CryptoRng`] docs for more information about cryptographically secure generators.
+/// This trait is like [`CryptoRng`] but for the trait [`TryRngCore`].
+///
+/// This marker trait indicates that the implementing generator is intended,
+/// when correctly seeded and protected from side-channel attacks such as a
+/// leaking of state, to be a cryptographically secure generator. This trait is
+/// provided as a tool to aid review of cryptographic code, but does not by
+/// itself guarantee suitability for cryptographic applications.
+///
+/// Implementors of `TryCryptoRng` should only implement [`Default`] if the
+/// `default()` instances are themselves secure generators: for example if the
+/// implementing type is a stateless interface over a secure external generator
+/// (like [`OsRng`]) or if the `default()` instance uses a strong, fresh seed.
 pub trait TryCryptoRng: TryRngCore {}
 
 impl<R: CryptoRng> TryCryptoRng for R {}
