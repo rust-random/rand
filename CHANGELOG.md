@@ -9,6 +9,7 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
 ## [Unreleased]
+- Remove `zerocopy` dependency (#1579)
 - Fix feature `simd_support` for recent nightly rust (#1586)
 - Add `Alphabetic` distribution. (#1587)
 - Re-export `rand_core` (#1602)
