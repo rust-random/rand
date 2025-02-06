@@ -6,13 +6,11 @@ on:
     paths-ignore:
       - "**.md"
       - "benches/**"
-      - "distr_test/**"
   pull_request:
     branches: [ master, '0.[0-9]+' ]
     paths-ignore:
       - "**.md"
       - "benches/**"
-      - "distr_test/**"
 
 permissions:
   contents: read #  to fetch code (actions/checkout)
@@ -47,8 +45,6 @@ jobs:
         run: cargo doc --all-features --no-deps
       - name: rand_core
         run: cargo doc --all-features --package rand_core --no-deps
-      - name: rand_distr
-        run: cargo doc --all-features --package rand_distr --no-deps
       - name: rand_chacha
         run: cargo doc --all-features --package rand_chacha --no-deps
       - name: rand_pcg
@@ -122,11 +118,6 @@ jobs:
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features
           cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features --features=os_rng
-      - name: Test rand_distr
-        run: |
-          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --features=serde
-          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --no-default-features
-          cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --no-default-features --features=std,std_math
       - name: Test rand_pcg
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
       - name: Test rand_chacha
@@ -162,7 +153,6 @@ jobs:
           cross test --no-fail-fast --target ${{ matrix.target }} --features=serde,log,small_rng
           cross test --no-fail-fast --target ${{ matrix.target }} --examples
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
-          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --features=serde
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml
 
@@ -182,7 +172,6 @@ jobs:
           cargo miri test --manifest-path rand_core/Cargo.toml
           cargo miri test --manifest-path rand_core/Cargo.toml --features=serde
           cargo miri test --manifest-path rand_core/Cargo.toml --no-default-features
-          #cargo miri test --manifest-path rand_distr/Cargo.toml # no unsafe and lots of slow tests
           cargo miri test --manifest-path rand_pcg/Cargo.toml --features=serde
           cargo miri test --manifest-path rand_chacha/Cargo.toml --no-default-features
 
