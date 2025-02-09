@@ -10,6 +10,7 @@
 
 #[cfg(feature = "alloc")]
 use alloc::string::String;
+use core::array;
 use core::char;
 use core::num::Wrapping;
 
@@ -18,7 +19,6 @@ use crate::distr::SampleString;
 use crate::distr::{Distribution, StandardUniform, Uniform};
 use crate::Rng;
 
-use core::mem::{self, MaybeUninit};
 #[cfg(feature = "simd_support")]
 use core::simd::prelude::*;
 #[cfg(feature = "simd_support")]
@@ -238,13 +238,7 @@ where
 {
     #[inline]
     fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; N] {
-        let mut buff: [MaybeUninit<T>; N] = unsafe { MaybeUninit::uninit().assume_init() };
-
-        for elem in &mut buff {
-            *elem = MaybeUninit::new(_rng.random());
-        }
-
-        unsafe { mem::transmute_copy::<_, _>(&buff) }
+        array::from_fn(|_| _rng.random())
     }
 }
 
