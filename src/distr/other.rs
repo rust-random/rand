@@ -237,8 +237,8 @@ where
     StandardUniform: Distribution<T>,
 {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; N] {
-        array::from_fn(|_| _rng.random())
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [T; N] {
+        array::from_fn(|_| rng.random())
     }
 }
 
