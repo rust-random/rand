@@ -236,7 +236,7 @@ pub(crate) trait FloatSIMDScalarUtils: FloatSIMDUtils {
     type Scalar;
 
     fn replace(self, index: usize, new_value: Self::Scalar) -> Self;
-    fn extract(self, index: usize) -> Self::Scalar;
+    fn extract_lane(self, index: usize) -> Self::Scalar;
 }
 
 /// Implement functions on f32/f64 to give them APIs similar to SIMD types
@@ -320,7 +320,7 @@ macro_rules! scalar_float_impl {
             }
 
             #[inline]
-            fn extract(self, index: usize) -> Self::Scalar {
+            fn extract_lane(self, index: usize) -> Self::Scalar {
                 debug_assert_eq!(index, 0);
                 self
             }
@@ -395,7 +395,7 @@ macro_rules! simd_impl {
             }
 
             #[inline]
-            fn extract(self, index: usize) -> Self::Scalar {
+            fn extract_lane(self, index: usize) -> Self::Scalar {
                 self.as_array()[index]
             }
         }
