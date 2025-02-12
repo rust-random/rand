@@ -272,7 +272,10 @@ mod tests {
                         );
 
                         assert_eq!(zero_rng.sample(my_uniform).extract_lane(lane), low_scalar);
-                        assert_eq!(zero_rng.sample(my_incl_uniform).extract_lane(lane), low_scalar);
+                        assert_eq!(
+                            zero_rng.sample(my_incl_uniform).extract_lane(lane),
+                            low_scalar
+                        );
                         assert_eq!(
                             <$ty as SampleUniform>::Sampler::sample_single(
                                 low,
