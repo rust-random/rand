@@ -250,7 +250,7 @@ mod tests {
     #[test]
     #[cfg(feature = "alloc")]
     fn test_dist_string() {
-        use crate::distr::{Alphanumeric, SampleString, StandardUniform};
+        use crate::distr::{Alphabetic, Alphanumeric, SampleString, StandardUniform};
         use core::str;
         let mut rng = crate::test::rng(213);
 
@@ -261,5 +261,9 @@ mod tests {
         let s2 = StandardUniform.sample_string(&mut rng, 20);
         assert_eq!(s2.chars().count(), 20);
         assert_eq!(str::from_utf8(s2.as_bytes()), Ok(s2.as_str()));
+
+        let s3 = Alphabetic.sample_string(&mut rng, 20);
+        assert_eq!(s3.len(), 20);
+        assert_eq!(str::from_utf8(s3.as_bytes()), Ok(s3.as_str()));
     }
 }
