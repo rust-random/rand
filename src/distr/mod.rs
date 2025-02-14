@@ -46,6 +46,9 @@
 //! numbers of the `char` type; in contrast [`StandardUniform`] may sample any valid
 //! `char`.
 //!
+//! There's also an [`Alphabetic`] distribution which acts similarly to [`Alphanumeric`] but
+//! doesn't include digits.
+//!
 //! For floats (`f32`, `f64`), [`StandardUniform`] samples from `[0, 1)`. Also
 //! provided are [`Open01`] (samples from `(0, 1)`) and [`OpenClosed01`]
 //! (samples from `(0, 1]`). No option is provided to sample from `[0, 1]`; it
