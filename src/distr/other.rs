@@ -127,6 +127,16 @@ impl Distribution<u8> for Alphanumeric {
     }
 }
 
+impl Distribution<u8> for Alphabetic {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u8 {
+        const RANGE: u32 = 26 + 26;
+        const GEN_ASCII_STR_CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                abcdefghijklmnopqrstuvwxyz";
+
+        GEN_ASCII_STR_CHARSET[rng.random_range(0..RANGE as usize)]
+    }
+}
+
 #[cfg(feature = "alloc")]
 impl SampleString for Alphanumeric {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
