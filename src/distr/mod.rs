@@ -104,7 +104,7 @@ pub use self::bernoulli::{Bernoulli, BernoulliError};
 pub use self::distribution::SampleString;
 pub use self::distribution::{Distribution, Iter, Map};
 pub use self::float::{Open01, OpenClosed01};
-pub use self::other::Alphanumeric;
+pub use self::other::{Alphabetic, Alphanumeric};
 #[doc(inline)]
 pub use self::uniform::Uniform;
 
