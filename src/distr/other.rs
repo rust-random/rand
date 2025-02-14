@@ -155,10 +155,11 @@ impl Distribution<u8> for Alphanumeric {
 impl Distribution<u8> for Alphabetic {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u8 {
         const RANGE: u8 = 26 + 26;
-        const GEN_ASCII_STR_CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                abcdefghijklmnopqrstuvwxyz";
 
-        GEN_ASCII_STR_CHARSET[rng.random_range(0..RANGE) as usize]
+        let offset = rng.random_range(0..RANGE) + b'A';
+
+        // Account for upper-cases
+        offset + (offset > b'Z') as u8 * (b'a' - b'Z' - 1)
     }
 }
 
