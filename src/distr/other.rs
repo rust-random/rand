@@ -78,21 +78,16 @@ pub struct Alphanumeric;
 /// You're able to generate random Alphabetic characters via mapping or via the
 /// [`SampleString::sample_string`] method like so:
 ///
-/// ## Manual mapping
-///
 /// ```
 /// use rand::Rng;
-/// use rand::distr::Alphabetic;
+/// use rand::distr::{Alphabetic, SampleString};
 ///
+/// // Manual mapping
 /// let mut rng = rand::rng();
 /// let chars: String = (0..7).map(|_| rng.sample(Alphabetic) as char).collect();
 /// println!("Random chars: {}", chars);
-/// ```
 ///
-/// ## Using [`SampleString::sample_string`]
-///
-/// ```
-/// use rand::distr::{Alphabetic, SampleString};
+/// // Using [`SampleString::sample_string`]
 /// let string = Alphabetic.sample_string(&mut rand::rng(), 16);
 /// println!("Random string: {}", string);
 /// ```
