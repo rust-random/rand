@@ -70,6 +70,38 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Alphanumeric;
 
+/// Sample a [`u8`], uniformly distributed over ASCII letters:
+/// a-z and A-Z.
+///
+/// If you want to sample alphanumeric characters then refer to [`Alphanumeric`].
+///
+/// # Example
+///
+/// You're able to generate random Alphabetic characters via mapping or via the
+/// [`SampleString::sample_string`] method like so:
+///
+/// ## Manual mapping
+///
+/// ```
+/// use rand::Rng;
+/// use rand::distr::Alphabetic;
+///
+/// let mut rng = rand::rng();
+/// let chars: String = (0..7).map(|_| rng.sample(Alphabetic) as char).collect();
+/// println!("Random chars: {}", chars);
+/// ```
+///
+/// ## Using [`SampleString::sample_string`]
+///
+/// ```
+/// use rand::distr::{Alphabetic, SampleString};
+/// let string = Alphabetic.sample_string(&mut rand::rng(), 16);
+/// println!("Random string: {}", string);
+/// ```
+///
+/// # Passwords
+///
+/// Refer to [`Alphanumeric#Passwords`].
 #[derive(Debug, Clone, Copy, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Alphabetic;
