@@ -319,6 +319,20 @@ mod tests {
     }
 
     #[test]
+    fn test_alphabetic() {
+        let mut rng = crate::test::rng(806);
+
+        // Test by generating a relatively large number of chars, so we also
+        // take the rejection sampling path.
+        let mut incorrect = false;
+        for _ in 0..100 {
+            let c: char = rng.sample(Alphabetic).into();
+            incorrect |= !c.is_ascii_alphabetic();
+        }
+        assert!(!incorrect);
+    }
+
+    #[test]
     fn value_stability() {
         fn test_samples<T: Copy + core::fmt::Debug + PartialEq, D: Distribution<T>>(
             distr: &D,
@@ -345,6 +359,7 @@ mod tests {
             ],
         );
         test_samples(&Alphanumeric, 0, &[104, 109, 101, 51, 77]);
+        test_samples(&Alphabetic, 0, &[97, 102, 89, 116, 75]);
         test_samples(&StandardUniform, false, &[true, true, false, true, false]);
         test_samples(
             &StandardUniform,
