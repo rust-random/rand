@@ -73,8 +73,6 @@ pub struct Alphanumeric;
 /// Sample a [`u8`], uniformly distributed over letters:
 /// a-z and A-Z.
 ///
-/// If you want to sample alphanumeric characters then refer to [`Alphanumeric`].
-///
 /// # Example
 ///
 /// You're able to generate random Alphabetic characters via mapping or via the
