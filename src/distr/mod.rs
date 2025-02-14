@@ -129,7 +129,8 @@ use crate::Rng;
 ///   code points in the range `0...0x10_FFFF`, except for the range
 ///   `0xD800...0xDFFF` (the surrogate code points). This includes
 ///   unassigned/reserved code points.
-///   For some uses, the [`Alphanumeric`] distribution will be more appropriate.
+///   For some uses, the [`Alphanumeric`] or [`Alphabetic`] distribution will be more
+///   appropriate.
 /// * `bool` samples `false` or `true`, each with probability 0.5.
 /// * Floating point types (`f32` and `f64`) are uniformly distributed in the
 ///   half-open range `[0, 1)`. See also the [notes below](#floating-point-implementation).
