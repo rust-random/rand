@@ -70,7 +70,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Alphanumeric;
 
-/// Sample a [`u8`], uniformly distributed over ASCII letters:
+/// Sample a [`u8`], uniformly distributed over letters:
 /// a-z and A-Z.
 ///
 /// If you want to sample alphanumeric characters then refer to [`Alphanumeric`].
