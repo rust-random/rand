@@ -9,7 +9,7 @@
 use core::time::Duration;
 use criterion::measurement::WallTime;
 use criterion::{criterion_group, criterion_main, BenchmarkGroup, Criterion};
-use rand::distr::{Alphanumeric, Open01, OpenClosed01, StandardUniform};
+use rand::distr::{Alphabetic, Alphanumeric, Open01, OpenClosed01, StandardUniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64Mcg;
 
@@ -52,6 +52,7 @@ pub fn bench(c: &mut Criterion) {
     do_ty!(f32, f64);
     do_ty!(char);
 
+    bench_ty::<u8, Alphabetic>(&mut g, "Alphabetic");
     bench_ty::<u8, Alphanumeric>(&mut g, "Alphanumeric");
 
     bench_ty::<f32, Open01>(&mut g, "Open01/f32");
