@@ -4,10 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
-
+## [0.9.1] - 2025-02-16
 ### API changes
-- Add `TryRngCore::unwrap_ref` to only take a mutable reference of the rng (#1589)
+- Add `TryRngCore::unwrap_mut`, providing an impl of `RngCore` over `&mut rng` (#1589)
 
 ## [0.9.0] - 2025-01-27
 ### Dependencies and features
