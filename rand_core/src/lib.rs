@@ -236,6 +236,11 @@ pub trait TryRngCore {
         UnwrapErr(self)
     }
 
+    /// Wrap RNG with the [`UnwrapMut`] wrapper.
+    fn unwrap_mut(&mut self) -> UnwrapMut<'_, Self> {
+        UnwrapMut(self)
+    }
+
     /// Convert an [`RngCore`] to a [`RngReadAdapter`].
     #[cfg(feature = "std")]
     fn read_adapter(&mut self) -> RngReadAdapter<'_, Self>
@@ -310,6 +315,30 @@ impl<R: TryRngCore> RngCore for UnwrapErr<R> {
 }
 
 impl<R: TryCryptoRng> CryptoRng for UnwrapErr<R> {}
+
+/// Wrapper around [`TryRngCore`] implementation which implements [`RngCore`]
+/// by panicking on potential errors.
+#[derive(Debug, Eq, PartialEq, Hash)]
+pub struct UnwrapMut<'r, R: TryRngCore + ?Sized>(pub &'r mut R);
+
+impl<R: TryRngCore> RngCore for UnwrapMut<'_, R> {
+    #[inline]
+    fn next_u32(&mut self) -> u32 {
+        self.0.try_next_u32().unwrap()
+    }
+
+    #[inline]
+    fn next_u64(&mut self) -> u64 {
+        self.0.try_next_u64().unwrap()
+    }
+
+    #[inline]
+    fn fill_bytes(&mut self, dst: &mut [u8]) {
+        self.0.try_fill_bytes(dst).unwrap()
+    }
+}
+
+impl<R: TryCryptoRng> CryptoRng for UnwrapMut<'_, R> {}
 
 /// A random number generator that can be explicitly seeded.
 ///
