@@ -254,7 +254,7 @@ pub trait TryRngCore {
 // Note that, unfortunately, this blanket impl prevents us from implementing
 // `TryRngCore` for types which can be dereferenced to `TryRngCore`, i.e. `TryRngCore`
 // will not be automatically implemented for `&mut R`, `Box<R>`, etc.
-impl<R: RngCore> TryRngCore for R {
+impl<R: RngCore + ?Sized> TryRngCore for R {
     type Error = core::convert::Infallible;
 
     #[inline]
@@ -290,7 +290,7 @@ impl<R: RngCore> TryRngCore for R {
 /// (like [`OsRng`]) or if the `default()` instance uses a strong, fresh seed.
 pub trait TryCryptoRng: TryRngCore {}
 
-impl<R: CryptoRng> TryCryptoRng for R {}
+impl<R: CryptoRng + ?Sized> TryCryptoRng for R {}
 
 /// Wrapper around [`TryRngCore`] implementation which implements [`RngCore`]
 /// by panicking on potential errors.
@@ -321,7 +321,7 @@ impl<R: TryCryptoRng> CryptoRng for UnwrapErr<R> {}
 #[derive(Debug, Eq, PartialEq, Hash)]
 pub struct UnwrapMut<'r, R: TryRngCore + ?Sized>(pub &'r mut R);
 
-impl<R: TryRngCore> RngCore for UnwrapMut<'_, R> {
+impl<R: TryRngCore + ?Sized> RngCore for UnwrapMut<'_, R> {
     #[inline]
     fn next_u32(&mut self) -> u32 {
         self.0.try_next_u32().unwrap()
@@ -338,7 +338,7 @@ impl<R: TryRngCore> RngCore for UnwrapMut<'_, R> {
     }
 }
 
-impl<R: TryCryptoRng> CryptoRng for UnwrapMut<'_, R> {}
+impl<R: TryCryptoRng + ?Sized> CryptoRng for UnwrapMut<'_, R> {}
 
 /// A random number generator that can be explicitly seeded.
 ///
