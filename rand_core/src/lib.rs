@@ -321,6 +321,21 @@ impl<R: TryCryptoRng> CryptoRng for UnwrapErr<R> {}
 #[derive(Debug, Eq, PartialEq, Hash)]
 pub struct UnwrapMut<'r, R: TryRngCore + ?Sized>(pub &'r mut R);
 
+impl<'r, R: TryRngCore + ?Sized> UnwrapMut<'r, R> {
+    /// Reborrow with a new lifetime
+    ///
+    /// Rust allows references like `&T` or `&mut T` to be "reborrowed" through
+    /// coercion: essentially, the pointer is copied under a new, shorter, lifetime.
+    /// Until rfcs#1403 lands, reborrows on user types require a method call.
+    #[inline(always)]
+    pub fn re<'b>(&'b mut self) -> UnwrapMut<'b, R>
+    where
+        'r: 'b,
+    {
+        UnwrapMut(self.0)
+    }
+}
+
 impl<R: TryRngCore + ?Sized> RngCore for UnwrapMut<'_, R> {
     #[inline]
     fn next_u32(&mut self) -> u32 {
@@ -725,5 +740,32 @@ mod test {
         }
 
         assert!(my_api(&mut SomeRng));
+    }
+
+    #[test]
+    fn reborrow_unwrap_mut() {
+        struct FourRng;
+
+        impl TryRngCore for FourRng {
+            type Error = core::convert::Infallible;
+            fn try_next_u32(&mut self) -> Result<u32, Self::Error> {
+                Ok(4)
+            }
+            fn try_next_u64(&mut self) -> Result<u64, Self::Error> {
+                unimplemented!()
+            }
+            fn try_fill_bytes(&mut self, _: &mut [u8]) -> Result<(), Self::Error> {
+                unimplemented!()
+            }
+        }
+
+        let mut rng = FourRng;
+        let mut rng = rng.unwrap_mut();
+
+        assert_eq!(rng.next_u32(), 4);
+        let mut rng2 = rng.re();
+        assert_eq!(rng2.next_u32(), 4);
+        drop(rng2);
+        assert_eq!(rng.next_u32(), 4);
     }
 }

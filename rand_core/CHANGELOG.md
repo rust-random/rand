@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### API changes
 - Relax `Sized` bound on impls of `TryRngCore`, `TryCryptoRng` and `UnwrapMut` (#1593)
+- Add `UnwrapMut::re` to reborrow the inner rng with a tighter lifetime (#1595)
 
 ## [0.9.1] - 2025-02-16
 ### API changes
