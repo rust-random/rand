@@ -254,7 +254,7 @@ pub trait TryRngCore {
 // Note that, unfortunately, this blanket impl prevents us from implementing
 // `TryRngCore` for types which can be dereferenced to `TryRngCore`, i.e. `TryRngCore`
 // will not be automatically implemented for `&mut R`, `Box<R>`, etc.
-impl<R: RngCore> TryRngCore for R {
+impl<R: RngCore + ?Sized> TryRngCore for R {
     type Error = core::convert::Infallible;
 
     #[inline]
@@ -290,7 +290,7 @@ impl<R: RngCore> TryRngCore for R {
 /// (like [`OsRng`]) or if the `default()` instance uses a strong, fresh seed.
 pub trait TryCryptoRng: TryRngCore {}
 
-impl<R: CryptoRng> TryCryptoRng for R {}
+impl<R: CryptoRng + ?Sized> TryCryptoRng for R {}
 
 /// Wrapper around [`TryRngCore`] implementation which implements [`RngCore`]
 /// by panicking on potential errors.
