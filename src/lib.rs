@@ -97,7 +97,9 @@ macro_rules! error { ($($x:tt)*) => (
 ) }
 
 // Re-exports from rand_core
-pub use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
+pub use rand_core::{
+    CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore, UnwrapErr, UnwrapMut,
+};
 
 // Public modules
 pub mod distr;
