@@ -639,4 +639,91 @@ mod test {
         // value-breakage test:
         assert_eq!(results[0], 5029875928683246316);
     }
+
+    // A stub RNG.
+    struct SomeRng;
+
+    impl RngCore for SomeRng {
+        fn next_u32(&mut self) -> u32 {
+            unimplemented!()
+        }
+        fn next_u64(&mut self) -> u64 {
+            unimplemented!()
+        }
+        fn fill_bytes(&mut self, _: &mut [u8]) {
+            unimplemented!()
+        }
+    }
+
+    impl CryptoRng for SomeRng {}
+
+    #[test]
+    fn dyn_rngcore_to_tryrngcore() {
+        // Illustrates the need for `+ ?Sized` bound in `impl<R: RngCore> TryRngCore for R`.
+
+        // A method in another crate taking a fallible RNG
+        fn third_party_api(_rng: &mut (impl TryRngCore + ?Sized)) -> bool {
+            true
+        }
+
+        // A method in our crate requiring an infallible RNG
+        fn my_api(rng: &mut dyn RngCore) -> bool {
+            // We want to call the method above
+            third_party_api(rng)
+        }
+
+        assert!(my_api(&mut SomeRng));
+    }
+
+    #[test]
+    fn dyn_cryptorng_to_trycryptorng() {
+        // Illustrates the need for `+ ?Sized` bound in `impl<R: CryptoRng> TryCryptoRng for R`.
+
+        // A method in another crate taking a fallible RNG
+        fn third_party_api(_rng: &mut (impl TryCryptoRng + ?Sized)) -> bool {
+            true
+        }
+
+        // A method in our crate requiring an infallible RNG
+        fn my_api(rng: &mut dyn CryptoRng) -> bool {
+            // We want to call the method above
+            third_party_api(rng)
+        }
+
+        assert!(my_api(&mut SomeRng));
+    }
+
+    #[test]
+    fn dyn_unwrap_mut_tryrngcore() {
+        // Illustrates the need for `+ ?Sized` bound in
+        // `impl<R: TryRngCore> RngCore for UnwrapMut<'_, R>`.
+
+        fn third_party_api(_rng: &mut impl RngCore) -> bool {
+            true
+        }
+
+        fn my_api(rng: &mut (impl TryRngCore + ?Sized)) -> bool {
+            let mut infallible_rng = rng.unwrap_mut();
+            third_party_api(&mut infallible_rng)
+        }
+
+        assert!(my_api(&mut SomeRng));
+    }
+
+    #[test]
+    fn dyn_unwrap_mut_trycryptorng() {
+        // Illustrates the need for `+ ?Sized` bound in
+        // `impl<R: TryCryptoRng> CryptoRng for UnwrapMut<'_, R>`.
+
+        fn third_party_api(_rng: &mut impl CryptoRng) -> bool {
+            true
+        }
+
+        fn my_api(rng: &mut (impl TryCryptoRng + ?Sized)) -> bool {
+            let mut infallible_rng = rng.unwrap_mut();
+            third_party_api(&mut infallible_rng)
+        }
+
+        assert!(my_api(&mut SomeRng));
+    }
 }
