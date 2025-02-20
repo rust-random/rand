@@ -271,6 +271,8 @@ uniform_int_impl! { u32, u32, u32 }
 uniform_int_impl! { u64, u64, u64 }
 uniform_int_impl! { u128, u128, u128 }
 
+uniform_int_impl! { isize, usize, usize }
+
 #[cfg(feature = "simd_support")]
 macro_rules! uniform_simd_int_impl {
     ($ty:ident, $unsigned:ident) => {
