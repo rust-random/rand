@@ -197,7 +197,7 @@ impl<R: BlockRngCore<Item = u32>> RngCore for BlockRng<R> {
     fn next_u64(&mut self) -> u64 {
         let read_u64 = |results: &[u32], index| {
             let data = &results[index..=index + 1];
-            u64::from(data[1]) << 32 | u64::from(data[0])
+            (u64::from(data[1]) << 32) | u64::from(data[0])
         };
 
         let len = self.results.as_ref().len();
