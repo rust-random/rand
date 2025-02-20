@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### API changes
+- Relax `Sized` bound on impls of `TryRngCore`, `TryCryptoRng` and `UnwrapMut` (#1593)
+
 ## [0.9.1] - 2025-02-16
 ### API changes
 - Add `TryRngCore::unwrap_mut`, providing an impl of `RngCore` over `&mut rng` (#1589)
