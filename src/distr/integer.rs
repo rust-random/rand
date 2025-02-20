@@ -63,6 +63,17 @@ impl Distribution<u128> for StandardUniform {
     }
 }
 
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl Distribution<usize> for StandardUniform {
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
+        #[cfg(target_pointer_width = "32")]
+        return rng.next_u32() as usize;
+        #[cfg(target_pointer_width = "64")]
+        return rng.next_u64() as usize;
+    }
+}
+
 macro_rules! impl_int_from_uint {
     ($ty:ty, $uty:ty) => {
         impl Distribution<$ty> for StandardUniform {
@@ -79,6 +90,7 @@ impl_int_from_uint! { i16, u16 }
 impl_int_from_uint! { i32, u32 }
 impl_int_from_uint! { i64, u64 }
 impl_int_from_uint! { i128, u128 }
+impl_int_from_uint! { isize, usize }
 
 macro_rules! impl_nzint {
     ($ty:ty, $new:path) => {
