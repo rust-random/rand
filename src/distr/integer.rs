@@ -80,6 +80,13 @@ impl_int_from_uint! { i32, u32 }
 impl_int_from_uint! { i64, u64 }
 impl_int_from_uint! { i128, u128 }
 
+#[cfg(target_pointer_width = "16")]
+impl_int_from_uint! { usize, u16 }
+#[cfg(target_pointer_width = "32")]
+impl_int_from_uint! { usize, u32 }
+#[cfg(target_pointer_width = "64")]
+impl_int_from_uint! { usize, u64 }
+
 macro_rules! impl_nzint {
     ($ty:ty, $new:path) => {
         impl Distribution<$ty> for StandardUniform {
@@ -185,6 +192,7 @@ mod tests {
         rng.sample::<u32, _>(StandardUniform);
         rng.sample::<u64, _>(StandardUniform);
         rng.sample::<u128, _>(StandardUniform);
+        rng.sample::<usize, _>(StandardUniform);
     }
 
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
