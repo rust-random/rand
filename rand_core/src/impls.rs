@@ -88,13 +88,16 @@ fn fill_via_chunks<T: Observable>(src: &[T], dest: &mut [u8]) -> (usize, usize) 
     zipped.for_each(|(dest, src)| dest.copy_from_slice(src.to_le_bytes().as_ref()));
 
     let byte_len = num_chunks * size;
-    if let (dest_tail @ [_, ..], Some(src)) = (dest.into_remainder(), src.next()) {
-        let n = dest_tail.len();
-        dest_tail.copy_from_slice(&src.to_le_bytes().as_ref()[..n]);
-        (num_chunks + 1, byte_len + n)
-    } else {
-        (num_chunks, byte_len)
+    if let Some(src) = src.next() {
+        // We have consumed all full chunks of dest, but not src.
+        let dest = dest.into_remainder();
+        let n = dest.len();
+        if n > 0 {
+            dest.copy_from_slice(&src.to_le_bytes().as_ref()[..n]);
+            return (num_chunks + 1, byte_len + n);
+        }
     }
+    (num_chunks, byte_len)
 }
 
 /// Implement `fill_bytes` by reading chunks from the output buffer of a block
