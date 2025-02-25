@@ -51,7 +51,7 @@ pub fn fill_bytes_via_next<R: RngCore + ?Sized>(rng: &mut R, dest: &mut [u8]) {
     }
 }
 
-trait Observable: Copy {
+pub(crate) trait Observable: Copy {
     type Bytes: Sized + AsRef<[u8]>;
     fn to_le_bytes(self) -> Self::Bytes;
 }
@@ -72,10 +72,10 @@ impl Observable for u64 {
 
 /// Fill dest from src
 ///
-/// Returns `(n, byte_len)`. `src[..n]` is consumed (and possibly mutated),
+/// Returns `(n, byte_len)`. `src[..n]` is consumed,
 /// `dest[..byte_len]` is filled. `src[n..]` and `dest[byte_len..]` are left
 /// unaltered.
-fn fill_via_chunks<T: Observable>(src: &[T], dest: &mut [u8]) -> (usize, usize) {
+pub(crate) fn fill_via_chunks<T: Observable>(src: &[T], dest: &mut [u8]) -> (usize, usize) {
     let size = core::mem::size_of::<T>();
 
     // Always use little endian for portability of results.
@@ -133,8 +133,8 @@ fn fill_via_chunks<T: Observable>(src: &[T], dest: &mut [u8]) -> (usize, usize) 
 ///     }
 /// }
 /// ```
+#[deprecated(since = "0.9.3", note = "use BlockRng instead")]
 pub fn fill_via_u32_chunks(src: &mut [u32], dest: &mut [u8]) -> (usize, usize) {
-    // TODO(SemVer): src: `&[u32]` as we don't mutate it.
     fill_via_chunks(src, dest)
 }
 
@@ -152,8 +152,8 @@ pub fn fill_via_u32_chunks(src: &mut [u32], dest: &mut [u8]) -> (usize, usize) {
 /// as `filled_u8 / 8` rounded up.
 ///
 /// See `fill_via_u32_chunks` for an example.
+#[deprecated(since = "0.9.3", note = "use BlockRng64 instead")]
 pub fn fill_via_u64_chunks(src: &mut [u64], dest: &mut [u8]) -> (usize, usize) {
-    // TODO(SemVer): src: `&[u64]` as we don't mutate it.
     fill_via_chunks(src, dest)
 }
 
@@ -177,41 +177,41 @@ mod test {
 
     #[test]
     fn test_fill_via_u32_chunks() {
-        let src_orig = [1, 2, 3];
+        let src_orig = [1u32, 2, 3];
 
         let mut src = src_orig;
         let mut dst = [0u8; 11];
-        assert_eq!(fill_via_u32_chunks(&mut src, &mut dst), (3, 11));
+        assert_eq!(fill_via_chunks(&mut src, &mut dst), (3, 11));
         assert_eq!(dst, [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0]);
 
         let mut src = src_orig;
         let mut dst = [0u8; 13];
-        assert_eq!(fill_via_u32_chunks(&mut src, &mut dst), (3, 12));
+        assert_eq!(fill_via_chunks(&mut src, &mut dst), (3, 12));
         assert_eq!(dst, [1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 0]);
 
         let mut src = src_orig;
         let mut dst = [0u8; 5];
-        assert_eq!(fill_via_u32_chunks(&mut src, &mut dst), (2, 5));
+        assert_eq!(fill_via_chunks(&mut src, &mut dst), (2, 5));
         assert_eq!(dst, [1, 0, 0, 0, 2]);
     }
 
     #[test]
     fn test_fill_via_u64_chunks() {
-        let src_orig = [1, 2];
+        let src_orig = [1u64, 2];
 
         let mut src = src_orig;
         let mut dst = [0u8; 11];
-        assert_eq!(fill_via_u64_chunks(&mut src, &mut dst), (2, 11));
+        assert_eq!(fill_via_chunks(&mut src, &mut dst), (2, 11));
         assert_eq!(dst, [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0]);
 
         let mut src = src_orig;
         let mut dst = [0u8; 17];
-        assert_eq!(fill_via_u64_chunks(&mut src, &mut dst), (2, 16));
+        assert_eq!(fill_via_chunks(&mut src, &mut dst), (2, 16));
         assert_eq!(dst, [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0]);
 
         let mut src = src_orig;
         let mut dst = [0u8; 5];
-        assert_eq!(fill_via_u64_chunks(&mut src, &mut dst), (1, 5));
+        assert_eq!(fill_via_chunks(&mut src, &mut dst), (1, 5));
         assert_eq!(dst, [1, 0, 0, 0, 0]);
     }
 }
