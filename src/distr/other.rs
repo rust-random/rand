@@ -10,6 +10,7 @@
 
 #[cfg(feature = "alloc")]
 use alloc::string::String;
+use core::array;
 use core::char;
 use core::num::Wrapping;
 
@@ -18,7 +19,6 @@ use crate::distr::SampleString;
 use crate::distr::{Distribution, StandardUniform, Uniform};
 use crate::Rng;
 
-use core::mem::{self, MaybeUninit};
 #[cfg(feature = "simd_support")]
 use core::simd::prelude::*;
 #[cfg(feature = "simd_support")]
@@ -69,6 +69,35 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Alphanumeric;
+
+/// Sample a [`u8`], uniformly distributed over letters:
+/// a-z and A-Z.
+///
+/// # Example
+///
+/// You're able to generate random Alphabetic characters via mapping or via the
+/// [`SampleString::sample_string`] method like so:
+///
+/// ```
+/// use rand::Rng;
+/// use rand::distr::{Alphabetic, SampleString};
+///
+/// // Manual mapping
+/// let mut rng = rand::rng();
+/// let chars: String = (0..7).map(|_| rng.sample(Alphabetic) as char).collect();
+/// println!("Random chars: {}", chars);
+///
+/// // Using [`SampleString::sample_string`]
+/// let string = Alphabetic.sample_string(&mut rand::rng(), 16);
+/// println!("Random string: {}", string);
+/// ```
+///
+/// # Passwords
+///
+/// Refer to [`Alphanumeric#Passwords`].
+#[derive(Debug, Clone, Copy, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Alphabetic;
 
 // ----- Implementations of distributions -----
 
@@ -123,11 +152,36 @@ impl Distribution<u8> for Alphanumeric {
     }
 }
 
+impl Distribution<u8> for Alphabetic {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u8 {
+        const RANGE: u8 = 26 + 26;
+
+        let offset = rng.random_range(0..RANGE) + b'A';
+
+        // Account for upper-cases
+        offset + (offset > b'Z') as u8 * (b'a' - b'Z' - 1)
+    }
+}
+
 #[cfg(feature = "alloc")]
 impl SampleString for Alphanumeric {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
         unsafe {
             let v = string.as_mut_vec();
+            v.extend(self.sample_iter(rng).take(len));
+        }
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl SampleString for Alphabetic {
+    fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
+        // SAFETY: With this distribution we guarantee that we're working with valid ASCII
+        // characters.
+        // See [#1590](https://github.com/rust-random/rand/issues/1590).
+        unsafe {
+            let v = string.as_mut_vec();
+            v.reserve_exact(len);
             v.extend(self.sample_iter(rng).take(len));
         }
     }
@@ -237,14 +291,8 @@ where
     StandardUniform: Distribution<T>,
 {
     #[inline]
-    fn sample<R: Rng + ?Sized>(&self, _rng: &mut R) -> [T; N] {
-        let mut buff: [MaybeUninit<T>; N] = unsafe { MaybeUninit::uninit().assume_init() };
-
-        for elem in &mut buff {
-            *elem = MaybeUninit::new(_rng.random());
-        }
-
-        unsafe { mem::transmute_copy::<_, _>(&buff) }
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> [T; N] {
+        array::from_fn(|_| rng.random())
     }
 }
 
@@ -301,6 +349,20 @@ mod tests {
     }
 
     #[test]
+    fn test_alphabetic() {
+        let mut rng = crate::test::rng(806);
+
+        // Test by generating a relatively large number of chars, so we also
+        // take the rejection sampling path.
+        let mut incorrect = false;
+        for _ in 0..100 {
+            let c: char = rng.sample(Alphabetic).into();
+            incorrect |= !c.is_ascii_alphabetic();
+        }
+        assert!(!incorrect);
+    }
+
+    #[test]
     fn value_stability() {
         fn test_samples<T: Copy + core::fmt::Debug + PartialEq, D: Distribution<T>>(
             distr: &D,
@@ -327,6 +389,7 @@ mod tests {
             ],
         );
         test_samples(&Alphanumeric, 0, &[104, 109, 101, 51, 77]);
+        test_samples(&Alphabetic, 0, &[97, 102, 89, 116, 75]);
         test_samples(&StandardUniform, false, &[true, true, false, true, false]);
         test_samples(
             &StandardUniform,

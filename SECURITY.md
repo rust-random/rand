@@ -10,12 +10,24 @@ security.
 ### Marker traits
 
 Rand provides the marker traits `CryptoRng`, `TryCryptoRng` and
-`CryptoBlockRng`. Generators implementing one of these traits and used in a way
-which meets the following additional constraints:
+`CryptoBlockRng`. Generators (RNGs) implementing one of these traits which are
+used according to these additional constraints:
 
--   Instances of seedable RNGs (those implementing `SeedableRng`) are
-    constructed with cryptographically secure seed values
--   The state (memory) of the RNG and its seed value are not exposed
+-   The generator may be constructed using `std::default::Default` where the
+    generator supports this trait. Note that generators should *only* support
+    `Default` where the `default()` instance is appropriately seeded: for
+    example `OsRng` has no state and thus has a trivial `default()` instance
+    while `ThreadRng::default()` returns a handle to a thread-local instance
+    seeded using `OsRng`.
+-   The generator may be constructed using `rand_core::SeedableRng` in any of
+    the following ways where the generator supports this trait:
+
+    -   Via `SeedableRng::from_seed` using a cryptographically secure seed value
+    -   Via `SeedableRng::from_rng` or `try_from_rng` using a cryptographically
+        secure source `rng`
+    -   Via `SeedableRng::from_os_rng` or `try_from_os_rng`
+-   The state (memory) of the generator and its seed value (or source `rng`) are
+    not exposed
 
 are expected to provide the following:
 
@@ -34,48 +46,44 @@ are expected to provide the following:
 `OsRng` is a stateless "generator" implemented via [getrandom]. As such, it has
 no possible state to leak and cannot be improperly seeded.
 
-`ThreadRng` will periodically reseed itself, thus placing an upper bound on the
-number of bits of output from an instance before any advantage an attacker may
-have gained through state-compromising side-channel attacks is lost.
+`StdRng` is a `CryptoRng` and `SeedableRng` using a pseudo-random algorithm
+selected for good security and performance qualities. Since it does not offer
+reproducibility of output, its algorithm may be changed in any release version.
+
+`ChaCha12Rng` and `ChaCha20Rng` are selected pseudo-random generators
+distributed by the `rand` project which meet the requirements of the `CryptoRng`
+trait and implement `SeedableRng` with a commitment to reproducibility of
+results.
+
+`ThreadRng` is a conveniently-packaged generator over `StdRng` offering
+automatic seeding from `OsRng`, periodic reseeding and thread locality.
+This random source is intended to offer a good compromise between cryptographic
+security, fast generation with reasonably low memory and initialization cost
+overheads, and robustness against misuse.
 
 [getrandom]: https://crates.io/crates/getrandom
 
 ### Distributions
 
-Additionally, derivations from such an RNG (including the `Rng` trait,
-implementations of the `Distribution` trait, and `seq` algorithms) should not
-introduce significant bias other than that expected from the operation in
-question (e.g. bias from a weighted distribution).
+Methods of the `Rng` trait, functionality of the `rand::seq` module and
+implementators of the `Distribution` trait are expected, while using a
+cryptographically secure `CryptoRng` instance meeting the above constraints,
+to not introduce significant bias to their operation beyond what would be
+expected of the operation. Note that the usage of 'significant' here permits
+some bias, as noted for example in the documentation of the `Uniform`
+distribution.
 
 ## Supported Versions
 
-We will attempt to uphold these premises in the following crate versions,
-provided that only the latest patch version is used, and with potential
-exceptions for theoretical issues without a known exploit:
-
-| Crate | Versions | Exceptions |
-| ----- | -------- | ---------- |
-| `rand` | 0.8 |  |
-| `rand` | 0.7 |  |
-| `rand` | 0.5, 0.6 | Jitter |
-| `rand` | 0.4 | Jitter, ISAAC |
-| `rand_core` | 0.2 - 0.6 | |
-| `rand_chacha` | 0.1 - 0.3 | |
-
-Explanation of exceptions:
-
--   Jitter: `JitterRng` is used as an entropy source when the primary source
-    fails; this source may not be secure against side-channel attacks, see #699.
--   ISAAC: the [ISAAC](https://burtleburtle.net/bob/rand/isaacafa.html) RNG used
-    to implement `ThreadRng` is difficult to analyse and thus cannot provide
-    strong assertions of security.
-
-## Known issues
-
-In `rand` version 0.3 (0.3.18 and later), if `OsRng` fails, `ThreadRng` is
-seeded from the system time in an insecure manner.
+We aim to provide security fixes in the form of a new patch version for the
+latest release version of `rand` and its dependencies `rand_core` and
+`rand_chacha`, as well as for prior major and minor releases which were, at some
+time during the previous 12 months, the latest release version.
 
 ## Reporting a Vulnerability
 
-To report a vulnerability, [open a new issue](https://github.com/rust-random/rand/issues/new).
-Once the issue is resolved, the vulnerability should be [reported to RustSec](https://github.com/RustSec/advisory-db/blob/master/CONTRIBUTING.md).
+If you have discovered a security vulnerability in this project, please report it privately. **Do not disclose it as a public issue.** This gives us time to work with you to fix the issue before public exposure, reducing the chance that the exploit will be used before a patch is released.
+
+Please disclose it at [security advisory](https://github.com/rust-random/rand/security/advisories/new).
+
+This project is maintained by a team of volunteers on a reasonable-effort basis. As such, please give us at least 90 days to work on a fix before public exposure.

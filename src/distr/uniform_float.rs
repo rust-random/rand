@@ -248,31 +248,34 @@ mod tests {
                         let my_uniform = Uniform::new(low, high).unwrap();
                         let my_incl_uniform = Uniform::new_inclusive(low, high).unwrap();
                         for _ in 0..100 {
-                            let v = rng.sample(my_uniform).extract(lane);
+                            let v = rng.sample(my_uniform).extract_lane(lane);
                             assert!(low_scalar <= v && v <= high_scalar);
-                            let v = rng.sample(my_incl_uniform).extract(lane);
+                            let v = rng.sample(my_incl_uniform).extract_lane(lane);
                             assert!(low_scalar <= v && v <= high_scalar);
                             let v =
                                 <$ty as SampleUniform>::Sampler::sample_single(low, high, &mut rng)
                                     .unwrap()
-                                    .extract(lane);
+                                    .extract_lane(lane);
                             assert!(low_scalar <= v && v <= high_scalar);
                             let v = <$ty as SampleUniform>::Sampler::sample_single_inclusive(
                                 low, high, &mut rng,
                             )
                             .unwrap()
-                            .extract(lane);
+                            .extract_lane(lane);
                             assert!(low_scalar <= v && v <= high_scalar);
                         }
 
                         assert_eq!(
                             rng.sample(Uniform::new_inclusive(low, low).unwrap())
-                                .extract(lane),
+                                .extract_lane(lane),
                             low_scalar
                         );
 
-                        assert_eq!(zero_rng.sample(my_uniform).extract(lane), low_scalar);
-                        assert_eq!(zero_rng.sample(my_incl_uniform).extract(lane), low_scalar);
+                        assert_eq!(zero_rng.sample(my_uniform).extract_lane(lane), low_scalar);
+                        assert_eq!(
+                            zero_rng.sample(my_incl_uniform).extract_lane(lane),
+                            low_scalar
+                        );
                         assert_eq!(
                             <$ty as SampleUniform>::Sampler::sample_single(
                                 low,
@@ -280,7 +283,7 @@ mod tests {
                                 &mut zero_rng
                             )
                             .unwrap()
-                            .extract(lane),
+                            .extract_lane(lane),
                             low_scalar
                         );
                         assert_eq!(
@@ -290,12 +293,12 @@ mod tests {
                                 &mut zero_rng
                             )
                             .unwrap()
-                            .extract(lane),
+                            .extract_lane(lane),
                             low_scalar
                         );
 
-                        assert!(max_rng.sample(my_uniform).extract(lane) <= high_scalar);
-                        assert!(max_rng.sample(my_incl_uniform).extract(lane) <= high_scalar);
+                        assert!(max_rng.sample(my_uniform).extract_lane(lane) <= high_scalar);
+                        assert!(max_rng.sample(my_incl_uniform).extract_lane(lane) <= high_scalar);
                         // sample_single cannot cope with max_rng:
                         // assert!(<$ty as SampleUniform>::Sampler
                         //     ::sample_single(low, high, &mut max_rng).unwrap()
@@ -307,7 +310,7 @@ mod tests {
                                 &mut max_rng
                             )
                             .unwrap()
-                            .extract(lane)
+                            .extract_lane(lane)
                                 <= high_scalar
                         );
 
@@ -326,7 +329,7 @@ mod tests {
                                     &mut lowering_max_rng
                                 )
                                 .unwrap()
-                                .extract(lane)
+                                .extract_lane(lane)
                                     <= high_scalar
                             );
                         }

@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Other
+- Remove `zerocopy` dependency (#1607)
+
+## [0.9.2] - 2025-02-22
+### API changes
+- Relax `Sized` bound on impls of `TryRngCore`, `TryCryptoRng` and `UnwrapMut` (#1593)
+- Add `UnwrapMut::re` to reborrow the inner rng with a tighter lifetime (#1595)
+
+## [0.9.1] - 2025-02-16
+### API changes
+- Add `TryRngCore::unwrap_mut`, providing an impl of `RngCore` over `&mut rng` (#1589)
+
 ## [0.9.0] - 2025-01-27
 ### Dependencies and features
 - Bump the MSRV to 1.63.0 (#1207, #1246, #1269, #1341, #1416, #1536); note that 1.60.0 may work for dependents when using `--ignore-rust-version`
