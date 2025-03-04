@@ -12,6 +12,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Fix feature `simd_support` for recent nightly rust (#1586)
 - Add `Alphabetic` distribution. (#1587)
 - Re-export `rand_core` (#1602)
+- Add `Cargo.lock` to version control (#1609)
 
 ## [0.9.0] - 2025-01-27
 ### Security and unsafe
