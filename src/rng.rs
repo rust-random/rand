@@ -393,20 +393,26 @@ impl Fill for [u8] {
     }
 }
 
-// This macro is unsafe to call: target types must support transmute from
-// random bits (i.e. all bit representations are valid).
+/// Implement `Fill` for given type `T`.
+///
+/// # Safety
+/// All representations of `[u8; size_of::<T>()]` are also representations of `T`.
 macro_rules! unsafe_impl_fill {
     () => {};
     ($t:ty) => {
         impl Fill for [$t] {
             fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
-                    rng.fill_bytes(unsafe {
-                        slice::from_raw_parts_mut(self.as_mut_ptr()
-                            as *mut u8,
-                            mem::size_of_val(self)
-                        )
-                    });
+                    let size = mem::size_of_val(self);
+                    rng.fill_bytes(
+                        // SAFETY: `self` is not borrowed and all byte sequences are representations of `T`.
+                        unsafe {
+                            slice::from_raw_parts_mut(self.as_mut_ptr()
+                                as *mut u8,
+                                size
+                            )
+                        }
+                    );
                     for x in self {
                         *x = x.to_le();
                     }
@@ -417,12 +423,16 @@ macro_rules! unsafe_impl_fill {
         impl Fill for [Wrapping<$t>] {
             fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
-                    rng.fill_bytes(unsafe {
-                        slice::from_raw_parts_mut(self.as_mut_ptr()
-                            as *mut u8,
-                            self.len() * mem::size_of::<$t>()
-                        )
-                    });
+                    let size = self.len() * mem::size_of::<$t>();
+                    rng.fill_bytes(
+                        // SAFETY: `self` is not borrowed and all byte sequences are representations of `T`.
+                        unsafe {
+                            slice::from_raw_parts_mut(self.as_mut_ptr()
+                                as *mut u8,
+                                size
+                            )
+                        }
+                    );
                     for x in self {
                         *x = Wrapping(x.0.to_le());
                     }
@@ -438,7 +448,9 @@ macro_rules! unsafe_impl_fill {
     }
 }
 
+// SAFETY: All representations of `[u8; size_of::<u*>()]` are representations of `u*`.
 unsafe_impl_fill!(u16, u32, u64, u128,);
+// SAFETY: All representations of `[u8; size_of::<i*>()]` are representations of `i*`.
 unsafe_impl_fill!(i8, i16, i32, i64, i128,);
 
 impl<T, const N: usize> Fill for [T; N]
