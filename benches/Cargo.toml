@@ -5,15 +5,10 @@ edition = "2021"
 publish = false
 
 [features]
-<<<<<<< HEAD
 # Option (requires nightly Rust): experimental SIMD support
 simd_support = ["rand/simd_support"]
 
 
-=======
-simd_support = ["rand/simd_support"]
-
->>>>>>> 8fab52202f (Add simd benchmark)
 [dependencies]
 
 [dev-dependencies]
