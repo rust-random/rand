@@ -69,6 +69,7 @@ Rand is built with these features enabled by default:
 -   `alloc` (implied by `std`) enables functionality requiring an allocator
 -   `os_rng` (implied by `std`) enables `rngs::OsRng`, using the [getrandom] crate
 -   `std_rng` enables inclusion of `StdRng`, `ThreadRng`
+-   `small_rng` enables inclusion of the `SmallRng` PRNG
 
 Optionally, the following dependencies can be enabled:
 
@@ -76,7 +77,6 @@ Optionally, the following dependencies can be enabled:
 
 Additionally, these features configure Rand:
 
--   `small_rng` enables inclusion of the `SmallRng` PRNG
 -   `nightly` includes some additions requiring nightly Rust
 -   `simd_support` (experimental) enables sampling of SIMD values
     (uniformly random SIMD integers and floats), requiring nightly Rust
