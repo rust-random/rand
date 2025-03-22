@@ -12,8 +12,8 @@
 use crate::distr::uniform::{SampleRange, SampleUniform};
 use crate::distr::{self, Distribution, StandardUniform};
 use core::num::Wrapping;
+use core::{mem, slice};
 use rand_core::RngCore;
-use zerocopy::IntoBytes;
 
 /// User-level interface for RNGs
 ///
@@ -393,14 +393,26 @@ impl Fill for [u8] {
     }
 }
 
-macro_rules! impl_fill {
+/// Implement `Fill` for given type `T`.
+///
+/// # Safety
+/// All representations of `[u8; size_of::<T>()]` are also representations of `T`.
+macro_rules! unsafe_impl_fill {
     () => {};
     ($t:ty) => {
         impl Fill for [$t] {
-            #[inline(never)] // in micro benchmarks, this improves performance
             fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
-                    rng.fill_bytes(self.as_mut_bytes());
+                    let size = mem::size_of_val(self);
+                    rng.fill_bytes(
+                        // SAFETY: `self` is not borrowed and all byte sequences are representations of `T`.
+                        unsafe {
+                            slice::from_raw_parts_mut(self.as_mut_ptr()
+                                as *mut u8,
+                                size
+                            )
+                        }
+                    );
                     for x in self {
                         *x = x.to_le();
                     }
@@ -409,27 +421,37 @@ macro_rules! impl_fill {
         }
 
         impl Fill for [Wrapping<$t>] {
-            #[inline(never)]
             fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
-                    rng.fill_bytes(self.as_mut_bytes());
+                    let size = self.len() * mem::size_of::<$t>();
+                    rng.fill_bytes(
+                        // SAFETY: `self` is not borrowed and all byte sequences are representations of `T`.
+                        unsafe {
+                            slice::from_raw_parts_mut(self.as_mut_ptr()
+                                as *mut u8,
+                                size
+                            )
+                        }
+                    );
                     for x in self {
-                    *x = Wrapping(x.0.to_le());
+                        *x = Wrapping(x.0.to_le());
                     }
                 }
             }
         }
     };
     ($t:ty, $($tt:ty,)*) => {
-        impl_fill!($t);
+        unsafe_impl_fill!($t);
         // TODO: this could replace above impl once Rust #32463 is fixed
-        // impl_fill!(Wrapping<$t>);
-        impl_fill!($($tt,)*);
+        // unsafe_impl_fill!(Wrapping<$t>);
+        unsafe_impl_fill!($($tt,)*);
     }
 }
 
-impl_fill!(u16, u32, u64, u128,);
-impl_fill!(i8, i16, i32, i64, i128,);
+// SAFETY: All representations of `[u8; size_of::<u*>()]` are representations of `u*`.
+unsafe_impl_fill!(u16, u32, u64, u128,);
+// SAFETY: All representations of `[u8; size_of::<i*>()]` are representations of `i*`.
+unsafe_impl_fill!(i8, i16, i32, i64, i128,);
 
 impl<T, const N: usize> Fill for [T; N]
 where

@@ -118,6 +118,7 @@ impl Distribution<char> for StandardUniform {
         if n <= 0xDFFF {
             n -= GAP_SIZE;
         }
+        // SAFETY: The representation of `n` is a valid representation of `u32`.
         unsafe { char::from_u32_unchecked(n) }
     }
 }
@@ -166,6 +167,7 @@ impl Distribution<u8> for Alphabetic {
 #[cfg(feature = "alloc")]
 impl SampleString for Alphanumeric {
     fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
+        // SAFETY: `self` only samples alphanumeric characters, which are valid UTF-8.
         unsafe {
             let v = string.as_mut_vec();
             v.extend(self.sample_iter(rng).take(len));
