@@ -8,6 +8,7 @@
 
 //! Low-level API for sampling indices
 use alloc::vec::{self, Vec};
+use core::ptr;
 use core::slice;
 use core::{hash::Hash, ops::AddAssign};
 // BTreeMap is not as fast in tests, but better than nothing.
@@ -447,12 +448,19 @@ where
     // the last entry. This bijection proves the algorithm fair.
     debug_assert!(amount <= length);
     let mut indices = Vec::with_capacity(amount as usize);
-    for j in length - amount..length {
-        let t = rng.random_range(..=j);
-        if let Some(pos) = indices.iter().position(|&x| x == t) {
-            indices[pos] = j;
+    let mut len = 0;
+    let ptr = indices.as_mut_ptr();
+    // safety: the index is bounded by the length of indices
+    unsafe {
+        for j in length - amount..length {
+            let t = rng.random_range(..=j);
+            if let Some(pos) = indices.iter().position(|&x| x == t) {
+                *indices.get_unchecked_mut(pos) = j;
+            }
+            ptr::write(ptr.add(len), t);
+            len += 1;
         }
-        indices.push(t);
+        indices.set_len(len);
     }
     IndexVec::from(indices)
 }
