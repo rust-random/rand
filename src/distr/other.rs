@@ -118,7 +118,7 @@ impl Distribution<char> for StandardUniform {
         if n <= 0xDFFF {
             n -= GAP_SIZE;
         }
-        // SAFETY: The representation of `n` is a valid representation of `u32`.
+        // SAFETY: We ensure above that `n` represents a `char`.
         unsafe { char::from_u32_unchecked(n) }
     }
 }

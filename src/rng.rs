@@ -396,7 +396,7 @@ impl Fill for [u8] {
 /// Implement `Fill` for given type `T`.
 ///
 /// # Safety
-/// All representations of `[u8; size_of::<T>()]` are also representations of `T`.
+/// All bit patterns of `[u8; size_of::<T>()]` represent values of `T`.
 macro_rules! unsafe_impl_fill {
     () => {};
     ($t:ty) => {
@@ -405,7 +405,7 @@ macro_rules! unsafe_impl_fill {
                 if self.len() > 0 {
                     let size = mem::size_of_val(self);
                     rng.fill_bytes(
-                        // SAFETY: `self` is not borrowed and all byte sequences are representations of `T`.
+                        // SAFETY: `self` is not borrowed and all byte sequences represent values of `T`.
                         unsafe {
                             slice::from_raw_parts_mut(self.as_mut_ptr()
                                 as *mut u8,
@@ -425,7 +425,7 @@ macro_rules! unsafe_impl_fill {
                 if self.len() > 0 {
                     let size = self.len() * mem::size_of::<$t>();
                     rng.fill_bytes(
-                        // SAFETY: `self` is not borrowed and all byte sequences are representations of `T`.
+                        // SAFETY: `self` is not borrowed and all byte sequences represent values of `T`.
                         unsafe {
                             slice::from_raw_parts_mut(self.as_mut_ptr()
                                 as *mut u8,
@@ -448,9 +448,9 @@ macro_rules! unsafe_impl_fill {
     }
 }
 
-// SAFETY: All representations of `[u8; size_of::<u*>()]` are representations of `u*`.
+// SAFETY: All bit patterns of `[u8; size_of::<T>()]` represent values of `u*`.
 unsafe_impl_fill!(u16, u32, u64, u128,);
-// SAFETY: All representations of `[u8; size_of::<i*>()]` are representations of `i*`.
+// SAFETY: All bit patterns of `[u8; size_of::<T>()]` represent values of `i*`.
 unsafe_impl_fill!(i8, i16, i32, i64, i128,);
 
 impl<T, const N: usize> Fill for [T; N]
