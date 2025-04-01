@@ -39,6 +39,10 @@ name = "shuffle"
 harness = false
 
 [[bench]]
+name = "simd"
+harness = false
+
+[[bench]]
 name = "standard"
 harness = false
 
