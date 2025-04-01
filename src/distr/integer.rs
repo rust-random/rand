@@ -119,7 +119,7 @@ impl Distribution<__m128i> for StandardUniform {
         rng.fill_bytes(&mut buf);
         // x86 is little endian so no need for conversion
 
-        // SAFETY: All representations of the source are also representations of the target.
+        // SAFETY: All byte sequences of `buf` represent values of the output type.
         unsafe { core::mem::transmute(buf) }
     }
 }
@@ -132,7 +132,7 @@ impl Distribution<__m256i> for StandardUniform {
         rng.fill_bytes(&mut buf);
         // x86 is little endian so no need for conversion
 
-        // SAFETY: All representations of the source are also representations of the target.
+        // SAFETY: All byte sequences of `buf` represent values of the output type.
         unsafe { core::mem::transmute(buf) }
     }
 }
@@ -148,7 +148,7 @@ impl Distribution<__m512i> for StandardUniform {
         rng.fill_bytes(&mut buf);
         // x86 is little endian so no need for conversion
 
-        // SAFETY: All representations of the source are also representations of the target.
+        // SAFETY: All byte sequences of `buf` represent values of the output type.
         unsafe { core::mem::transmute(buf) }
     }
 }
