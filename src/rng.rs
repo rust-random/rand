@@ -393,10 +393,10 @@ impl Fill for [u8] {
     }
 }
 
-/// Implement `Fill` for given type `T`.
+/// Implement `Fill` for given type `$t`.
 ///
 /// # Safety
-/// All bit patterns of `[u8; size_of::<T>()]` represent values of `T`.
+/// All bit patterns of `[u8; size_of::<$t>()]` must represent values of `$t`.
 macro_rules! unsafe_impl_fill {
     () => {};
     ($t:ty) => {
@@ -405,7 +405,11 @@ macro_rules! unsafe_impl_fill {
                 if self.len() > 0 {
                     let size = mem::size_of_val(self);
                     rng.fill_bytes(
-                        // SAFETY: `self` is not borrowed and all byte sequences represent values of `T`.
+                        // SAFETY: `self` non-null and valid for reads and writes within its `size`
+                        // bytes. `self` meets the alignment requirements of `&mut [u8]`.
+                        // The contents of `self` are initialized. Both `[u8]` and `[$t]` are valid
+                        // for all bit-patterns of their contents (note that the SAFETY requirement
+                        // on callers of this macro). `self` is not borrowed.
                         unsafe {
                             slice::from_raw_parts_mut(self.as_mut_ptr()
                                 as *mut u8,
@@ -425,7 +429,11 @@ macro_rules! unsafe_impl_fill {
                 if self.len() > 0 {
                     let size = self.len() * mem::size_of::<$t>();
                     rng.fill_bytes(
-                        // SAFETY: `self` is not borrowed and all byte sequences represent values of `T`.
+                        // SAFETY: `self` non-null and valid for reads and writes within its `size`
+                        // bytes. `self` meets the alignment requirements of `&mut [u8]`.
+                        // The contents of `self` are initialized. Both `[u8]` and `[$t]` are valid
+                        // for all bit-patterns of their contents (note that the SAFETY requirement
+                        // on callers of this macro). `self` is not borrowed.
                         unsafe {
                             slice::from_raw_parts_mut(self.as_mut_ptr()
                                 as *mut u8,
@@ -448,9 +456,9 @@ macro_rules! unsafe_impl_fill {
     }
 }
 
-// SAFETY: All bit patterns of `[u8; size_of::<T>()]` represent values of `u*`.
+// SAFETY: All bit patterns of `[u8; size_of::<$t>()]` represent values of `u*`.
 unsafe_impl_fill!(u16, u32, u64, u128,);
-// SAFETY: All bit patterns of `[u8; size_of::<T>()]` represent values of `i*`.
+// SAFETY: All bit patterns of `[u8; size_of::<$t>()]` represent values of `i*`.
 unsafe_impl_fill!(i8, i16, i32, i64, i128,);
 
 impl<T, const N: usize> Fill for [T; N]
