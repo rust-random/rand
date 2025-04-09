@@ -183,15 +183,8 @@ pub trait IndexedRandom: Index<usize> {
     /// likelihood `weight(x)`. The probability of each item being selected is
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
     ///
-    /// This implementation uses `O(length + amount)` space and `O(length)` time
-    /// if the "nightly" feature is enabled, or `O(length)` space and
-    /// `O(length + amount * log length)` time otherwise.
-    ///
-    /// # Known issues
-    ///
-    /// The algorithm currently used to implement this method loses accuracy
-    /// when small values are used for weights.
-    /// See [#1476](https://github.com/rust-random/rand/issues/1476).
+    /// This implementation uses `O(length + amount)` space and `O(length)` time.
+    /// See [`index::sample_weighted`] for details.
     ///
     /// # Example
     ///
