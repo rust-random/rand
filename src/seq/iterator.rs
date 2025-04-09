@@ -134,6 +134,10 @@ pub trait IteratorRandom: Iterator + Sized {
     /// force every element to be created regardless call `.inspect(|e| ())`.
     ///
     /// [`choose`]: IteratorRandom::choose
+    //
+    // Clippy is wrong here: we need to iterate over all entries with the RNG to
+    // ensure that choosing is *stable*.
+    #[allow(clippy::double_ended_iterator_last)]
     fn choose_stable<R>(mut self, rng: &mut R) -> Option<Self::Item>
     where
         R: Rng + ?Sized,
