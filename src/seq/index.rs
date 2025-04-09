@@ -282,10 +282,11 @@ where
     }
 }
 
-/// Randomly sample exactly `amount` distinct indices from `0..length`
+/// Randomly sample `amount` distinct indices from `0..length`
 ///
-/// Results are in arbitrary order (there is no guarantee of shuffling or
-/// ordering).
+/// The result may contain less than `amount` indices if insufficient non-zero
+/// weights are available. Results are returned in an arbitrary order (there is
+/// no guarantee of shuffling or ordering).
 ///
 /// Function `weight` is called once for each index to provide weights.
 ///
@@ -295,7 +296,6 @@ where
 ///
 /// Error cases:
 /// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
-/// -   [`WeightError::InsufficientNonZero`] when fewer than `amount` weights are positive.
 ///
 /// This implementation uses `O(length + amount)` space and `O(length)` time.
 #[cfg(feature = "std")]
@@ -328,10 +328,13 @@ where
     }
 }
 
-/// Randomly sample exactly `amount` distinct indices from `0..length`, and
-/// return them in an arbitrary order (there is no guarantee of shuffling or
-/// ordering). The weights are to be provided by the input function `weights`,
-/// which will be called once for each index.
+/// Randomly sample `amount` distinct indices from `0..length`
+///
+/// The result may contain less than `amount` indices if insufficient non-zero
+/// weights are available. Results are returned in an arbitrary order (there is
+/// no guarantee of shuffling or ordering).
+///
+/// Function `weight` is called once for each index to provide weights.
 ///
 /// This implementation is based on the algorithm A-ExpJ as found in
 /// [Efraimidis and Spirakis, 2005](https://doi.org/10.1016/j.ipl.2005.11.003).
@@ -339,7 +342,6 @@ where
 ///
 /// Error cases:
 /// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
-/// -   [`WeightError::InsufficientNonZero`] when fewer than `amount` weights are positive.
 #[cfg(feature = "std")]
 fn sample_efraimidis_spirakis<R, F, X, N>(
     rng: &mut R,
@@ -403,28 +405,26 @@ where
         index += N::one();
     }
 
-    if candidates.len() < amount.as_usize() {
-        return Err(WeightError::InsufficientNonZero);
-    }
+    if index < length {
+        let mut x = rng.random::<f64>().ln() / candidates.peek().unwrap().key;
+        while index < length {
+            let weight = weight(index.as_usize()).into();
+            if weight > 0.0 {
+                x -= weight;
+                if x <= 0.0 {
+                    let min_candidate = candidates.pop().unwrap();
+                    let t = (min_candidate.key * weight).exp();
+                    let key = rng.random_range(t..1.0).ln() / weight;
+                    candidates.push(Element { index, key });
 
-    let mut x = rng.random::<f64>().ln() / candidates.peek().unwrap().key;
-    while index < length {
-        let weight = weight(index.as_usize()).into();
-        if weight > 0.0 {
-            x -= weight;
-            if x <= 0.0 {
-                let min_candidate = candidates.pop().unwrap();
-                let t = (min_candidate.key * weight).exp();
-                let key = rng.random_range(t..1.0).ln() / weight;
-                candidates.push(Element { index, key });
-
-                x = rng.random::<f64>().ln() / candidates.peek().unwrap().key;
+                    x = rng.random::<f64>().ln() / candidates.peek().unwrap().key;
+                }
+            } else if !(weight >= 0.0) {
+                return Err(WeightError::InvalidWeight);
             }
-        } else if !(weight >= 0.0) {
-            return Err(WeightError::InvalidWeight);
-        }
 
-        index += N::one();
+            index += N::one();
+        }
     }
 
     Ok(IndexVec::from(
@@ -653,7 +653,7 @@ mod test {
         }
 
         let r = sample_weighted(&mut seed_rng(423), 10, |i| i as f64, 10);
-        assert_eq!(r.unwrap_err(), WeightError::InsufficientNonZero);
+        assert_eq!(r.unwrap().len(), 9);
     }
 
     #[test]
