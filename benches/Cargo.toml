@@ -8,7 +8,6 @@ publish = false
 # Option (requires nightly Rust): experimental SIMD support
 simd_support = ["rand/simd_support"]
 
-
 [dependencies]
 
 [dev-dependencies]
@@ -36,6 +35,10 @@ harness = false
 
 [[bench]]
 name = "shuffle"
+harness = false
+
+[[bench]]
+name = "simd"
 harness = false
 
 [[bench]]
