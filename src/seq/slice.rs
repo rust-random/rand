@@ -173,26 +173,18 @@ pub trait IndexedRandom: Index<usize> {
 
     /// Biased sampling of `amount` distinct elements
     ///
-    /// Similar to [`choose_multiple`], but where the likelihood of each element's
-    /// inclusion in the output may be specified. The elements are returned in an
-    /// arbitrary, unspecified order.
+    /// Similar to [`choose_multiple`], but where the likelihood of each
+    /// element's inclusion in the output may be specified. Zero-weighted
+    /// elements are never returned; the result may therefore contain fewer
+    /// elements than `amount` even when `self.len() >= amount`. The elements
+    /// are returned in an arbitrary, unspecified order.
     ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
     ///
-    /// If all of the weights are equal, even if they are all zero, each element has
-    /// an equal likelihood of being selected.
-    ///
-    /// This implementation uses `O(length + amount)` space and `O(length)` time
-    /// if the "nightly" feature is enabled, or `O(length)` space and
-    /// `O(length + amount * log length)` time otherwise.
-    ///
-    /// # Known issues
-    ///
-    /// The algorithm currently used to implement this method loses accuracy
-    /// when small values are used for weights.
-    /// See [#1476](https://github.com/rust-random/rand/issues/1476).
+    /// This implementation uses `O(length + amount)` space and `O(length)` time.
+    /// See [`index::sample_weighted`] for details.
     ///
     /// # Example
     ///
@@ -687,7 +679,7 @@ mod test {
         // Case 2: All of the weights are 0
         let choices = [('a', 0), ('b', 0), ('c', 0)];
         let r = choices.choose_multiple_weighted(&mut rng, 2, |item| item.1);
-        assert_eq!(r.unwrap_err(), WeightError::InsufficientNonZero);
+        assert_eq!(r.unwrap().len(), 0);
 
         // Case 3: Negative weights
         let choices = [('a', -1), ('b', 1), ('c', 1)];

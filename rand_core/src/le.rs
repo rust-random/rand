@@ -11,11 +11,14 @@
 //! Little-Endian order has been chosen for internal usage; this makes some
 //! useful functions available.
 
-/// Reads unsigned 32 bit integers from `src` into `dst`.
+/// Fills `dst: &mut [u32]` from `src`
+///
+/// Reads use Little-Endian byte order, allowing portable reproduction of `dst`
+/// from a byte slice.
 ///
 /// # Panics
 ///
-/// If `dst` has insufficient space (`4*dst.len() < src.len()`).
+/// If `src` has insufficient length (if `src.len() < 4*dst.len()`).
 #[inline]
 #[track_caller]
 pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
@@ -25,11 +28,11 @@ pub fn read_u32_into(src: &[u8], dst: &mut [u32]) {
     }
 }
 
-/// Reads unsigned 64 bit integers from `src` into `dst`.
+/// Fills `dst: &mut [u64]` from `src`
 ///
 /// # Panics
 ///
-/// If `dst` has insufficient space (`8*dst.len() < src.len()`).
+/// If `src` has insufficient length (if `src.len() < 8*dst.len()`).
 #[inline]
 #[track_caller]
 pub fn read_u64_into(src: &[u8], dst: &mut [u64]) {
