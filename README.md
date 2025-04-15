@@ -41,7 +41,7 @@ Rand **is not**:
     and [oorandom](https://crates.io/crates/oorandom).
 -   Primarily a cryptographic library. `rand` does provide some generators which
     aim to support unpredictable value generation under certain constraints;
-    see [SECURITY.md](SECURITY.md) for details.
+    see [SECURITY.md](https://github.com/rust-random/rand/blob/master/SECURITY.md) for details.
     Users are expected to determine for themselves
     whether `rand`'s functionality meets their own security requirements.
 
@@ -59,7 +59,7 @@ which minimise breakage) but not yet at 1.0. Current versions are:
 
 -   Version 0.9 was released in January 2025.
 
-See the [CHANGELOG](CHANGELOG.md) or [Upgrade Guide](https://rust-random.github.io/book/update.html) for more details.
+See the [CHANGELOG](https://github.com/rust-random/rand/blob/master/CHANGELOG.md) or [Upgrade Guide](https://rust-random.github.io/book/update.html) for more details.
 
 ## Crate Features
 
@@ -114,7 +114,7 @@ Alternatively, the `os_rng` feature may be disabled.
 Rand is distributed under the terms of both the MIT license and the
 Apache License (Version 2.0).
 
-See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT), and
-[COPYRIGHT](COPYRIGHT) for details.
+See [LICENSE-APACHE](https://github.com/rust-random/rand/blob/master/LICENSE-APACHE) and [LICENSE-MIT](https://github.com/rust-random/rand/blob/master/LICENSE-MIT), and
+[COPYRIGHT](https://github.com/rust-random/rand/blob/master/COPYRIGHT) for details.
 
 [getrandom]: https://crates.io/crates/getrandom
