@@ -393,13 +393,19 @@ impl Fill for [u8] {
     }
 }
 
+/// Call target for unsafe macros
+const unsafe fn __unsafe() {}
+
 /// Implement `Fill` for given type `$t`.
 ///
 /// # Safety
 /// All bit patterns of `[u8; size_of::<$t>()]` must represent values of `$t`.
-macro_rules! unsafe_impl_fill {
+macro_rules! impl_fill {
     () => {};
-    ($t:ty) => {
+    ($t:ty) => {{
+        // Force caller to wrap with an `unsafe` block
+        __unsafe();
+
         impl Fill for [$t] {
             fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
                 if self.len() > 0 {
@@ -446,20 +452,20 @@ macro_rules! unsafe_impl_fill {
                     }
                 }
             }
-        }
+        }}
     };
-    ($t:ty, $($tt:ty,)*) => {
-        unsafe_impl_fill!($t);
+    ($t:ty, $($tt:ty,)*) => {{
+        impl_fill!($t);
         // TODO: this could replace above impl once Rust #32463 is fixed
-        // unsafe_impl_fill!(Wrapping<$t>);
-        unsafe_impl_fill!($($tt,)*);
-    }
+        // impl_fill!(Wrapping<$t>);
+        impl_fill!($($tt,)*);
+    }}
 }
 
 // SAFETY: All bit patterns of `[u8; size_of::<$t>()]` represent values of `u*`.
-unsafe_impl_fill!(u16, u32, u64, u128,);
+const _: () = unsafe { impl_fill!(u16, u32, u64, u128,) };
 // SAFETY: All bit patterns of `[u8; size_of::<$t>()]` represent values of `i*`.
-unsafe_impl_fill!(i8, i16, i32, i64, i128,);
+const _: () = unsafe { impl_fill!(i8, i16, i32, i64, i128,) };
 
 impl<T, const N: usize> Fill for [T; N]
 where
