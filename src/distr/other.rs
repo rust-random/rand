@@ -170,7 +170,11 @@ impl SampleString for Alphanumeric {
         // SAFETY: `self` only samples alphanumeric characters, which are valid UTF-8.
         unsafe {
             let v = string.as_mut_vec();
-            v.extend(self.sample_iter(rng).take(len));
+            v.extend(
+                self.sample_iter(rng)
+                    .take(len)
+                    .inspect(|b| debug_assert!(b.is_ascii_alphanumeric())),
+            );
         }
     }
 }
