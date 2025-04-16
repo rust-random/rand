@@ -59,6 +59,7 @@
     clippy::neg_cmp_op_on_partial_ord,
     clippy::nonminimal_bool
 )]
+#![deny(clippy::undocumented_unsafe_blocks)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
