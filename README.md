@@ -55,7 +55,7 @@ Documentation:
 ## Versions
 
 Rand is *mature* (suitable for general usage, with infrequent breaking releases
-which minimise breakage) but not yet at 1.0. Current versions are:
+which minimise breakage) but not yet at 1.0. Current `MAJOR.MINOR` versions are:
 
 -   Version 0.9 was released in January 2025.
 
