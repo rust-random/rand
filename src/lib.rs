@@ -61,11 +61,6 @@
 )]
 #![deny(clippy::undocumented_unsafe_blocks)]
 
-#[cfg(feature = "alloc")]
-extern crate alloc;
-#[cfg(feature = "std")]
-extern crate std;
-
 #[allow(unused)]
 macro_rules! trace { ($($x:tt)*) => (
     #[cfg(feature = "log")] {
