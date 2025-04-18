@@ -21,7 +21,7 @@ With broad support for random value generation and random processes:
     and [more](https://docs.rs/rand/latest/rand/distr/index.html)
 -   Samplers for a large number of non-uniform random number distributions via our own
     [`rand_distr`](https://docs.rs/rand_distr) and via
-    the [`statrs`](https://docs.rs/statrs/0.13.0/statrs/)
+    the [`statrs`](https://docs.rs/statrs)
 -   Random processes (mostly choose and shuffle) via [`rand::seq`](https://docs.rs/rand/latest/rand/seq/index.html) traits
 
 All with:
