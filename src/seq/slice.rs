@@ -60,6 +60,29 @@ pub trait IndexedRandom: Index<usize> {
         }
     }
 
+    /// Return an iterator which samples from `self` with replacement
+    ///
+    /// Returns `None` if and only if `self.is_empty()`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::seq::IndexedRandom;
+    ///
+    /// let choices = [1, 2, 4, 8, 16, 32];
+    /// let mut rng = rand::rng();
+    /// for choice in choices.choose_iter(&mut rng).unwrap().take(3) {
+    ///     println!("{:?}", choice);
+    /// }
+    /// ```
+    fn choose_iter<R>(&self, rng: &mut R) -> Option<impl Iterator<Item = &Self::Output>>
+    where
+        R: Rng + ?Sized,
+    {
+        let distr = crate::distr::Uniform::new(0, self.len()).ok()?;
+        Some(rng.sample_iter(distr).map(|i| &self[i]))
+    }
+
     /// Uniformly sample `amount` distinct elements from self
     ///
     /// Chooses `amount` elements from the slice at random, without repetition,
@@ -128,7 +151,7 @@ pub trait IndexedRandom: Index<usize> {
     /// Biased sampling for one element
     ///
     /// Returns a reference to one element of the slice, sampled according
-    /// to the provided weights. Returns `None` only if the slice is empty.
+    /// to the provided weights. Returns `None` if and only if `self.is_empty()`.
     ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is
@@ -166,9 +189,33 @@ pub trait IndexedRandom: Index<usize> {
         B: SampleBorrow<X>,
         X: SampleUniform + Weight + PartialOrd<X>,
     {
-        use crate::distr::{Distribution, weighted::WeightedIndex};
+        use crate::distr::weighted::WeightedIndex;
         let distr = WeightedIndex::new((0..self.len()).map(|idx| weight(&self[idx])))?;
-        Ok(&self[distr.sample(rng)])
+        Ok(&self[rng.sample(distr)])
+    }
+
+    /// Biased sampling with replacement
+    ///
+    /// Returns an iterator which samples elements from `self` according to the
+    /// given weights with replacement (i.e. elements may be repeated).
+    /// Returns `None` if and only if `self.is_empty()`.
+    ///
+    /// See also doc for [`Self::choose_weighted`].
+    #[cfg(feature = "alloc")]
+    fn choose_weighted_iter<R, F, B, X>(
+        &self,
+        rng: &mut R,
+        weight: F,
+    ) -> Result<impl Iterator<Item = &Self::Output>, WeightError>
+    where
+        R: Rng + ?Sized,
+        F: Fn(&Self::Output) -> B,
+        B: SampleBorrow<X>,
+        X: SampleUniform + Weight + PartialOrd<X>,
+    {
+        use crate::distr::weighted::WeightedIndex;
+        let distr = WeightedIndex::new((0..self.len()).map(|idx| weight(&self[idx])))?;
+        Ok(rng.sample_iter(distr).map(|i| &self[i]))
     }
 
     /// Biased sampling of `amount` distinct elements
