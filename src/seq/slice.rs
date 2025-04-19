@@ -229,6 +229,49 @@ pub trait IndexedRandom: Index<usize> {
             .into_iter(),
         })
     }
+
+    /// Deprecated: use [`Self::sample`] instead
+    #[cfg(feature = "alloc")]
+    #[deprecated(since = "0.9.2", note = "Renamed to `sample`")]
+    fn choose_multiple<R>(
+        &self,
+        rng: &mut R,
+        amount: usize,
+    ) -> SliceChooseIter<'_, Self, Self::Output>
+    where
+        Self::Output: Sized,
+        R: Rng + ?Sized,
+    {
+        self.sample(rng, amount)
+    }
+
+    /// Deprecated: use [`Self::sample_array`] instead
+    #[deprecated(since = "0.9.2", note = "Renamed to `sample_array`")]
+    fn choose_multiple_array<R, const N: usize>(&self, rng: &mut R) -> Option<[Self::Output; N]>
+    where
+        Self::Output: Clone + Sized,
+        R: Rng + ?Sized,
+    {
+        self.sample_array(rng)
+    }
+
+    /// Deprecated: use [`Self::sample_weighted`] instead
+    #[cfg(feature = "std")]
+    #[deprecated(since = "0.9.2", note = "Renamed to `sample_weighted`")]
+    fn choose_multiple_weighted<R, F, X>(
+        &self,
+        rng: &mut R,
+        amount: usize,
+        weight: F,
+    ) -> Result<SliceChooseIter<'_, Self, Self::Output>, WeightError>
+    where
+        Self::Output: Sized,
+        R: Rng + ?Sized,
+        F: Fn(&Self::Output) -> X,
+        X: Into<f64>,
+    {
+        self.sample_weighted(rng, amount, weight)
+    }
 }
 
 /// Extension trait on indexable lists, providing random sampling methods.
