@@ -87,13 +87,13 @@ pub trait IndexedRandom: Index<usize> {
     /// }
     /// ```
     #[cfg(feature = "alloc")]
-    fn sample<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<'_, Self, Self::Output>
+    fn sample<R>(&self, rng: &mut R, amount: usize) -> IndexedSamples<'_, Self, Self::Output>
     where
         Self::Output: Sized,
         R: Rng + ?Sized,
     {
         let amount = core::cmp::min(amount, self.len());
-        SliceChooseIter {
+        IndexedSamples {
             slice: self,
             _phantom: Default::default(),
             indices: index::sample(rng, self.len(), amount).into_iter(),
@@ -209,7 +209,7 @@ pub trait IndexedRandom: Index<usize> {
         rng: &mut R,
         amount: usize,
         weight: F,
-    ) -> Result<SliceChooseIter<'_, Self, Self::Output>, WeightError>
+    ) -> Result<IndexedSamples<'_, Self, Self::Output>, WeightError>
     where
         Self::Output: Sized,
         R: Rng + ?Sized,
@@ -217,7 +217,7 @@ pub trait IndexedRandom: Index<usize> {
         X: Into<f64>,
     {
         let amount = core::cmp::min(amount, self.len());
-        Ok(SliceChooseIter {
+        Ok(IndexedSamples {
             slice: self,
             _phantom: Default::default(),
             indices: index::sample_weighted(
@@ -237,7 +237,7 @@ pub trait IndexedRandom: Index<usize> {
         &self,
         rng: &mut R,
         amount: usize,
-    ) -> SliceChooseIter<'_, Self, Self::Output>
+    ) -> IndexedSamples<'_, Self, Self::Output>
     where
         Self::Output: Sized,
         R: Rng + ?Sized,
@@ -263,7 +263,7 @@ pub trait IndexedRandom: Index<usize> {
         rng: &mut R,
         amount: usize,
         weight: F,
-    ) -> Result<SliceChooseIter<'_, Self, Self::Output>, WeightError>
+    ) -> Result<IndexedSamples<'_, Self, Self::Output>, WeightError>
     where
         Self::Output: Sized,
         R: Rng + ?Sized,
@@ -458,14 +458,14 @@ impl<T> SliceRandom for [T] {
 /// [`IndexedRandom::sample`](trait.IndexedRandom.html#tymethod.sample).
 #[cfg(feature = "alloc")]
 #[derive(Debug)]
-pub struct SliceChooseIter<'a, S: ?Sized + 'a, T: 'a> {
+pub struct IndexedSamples<'a, S: ?Sized + 'a, T: 'a> {
     slice: &'a S,
     _phantom: core::marker::PhantomData<T>,
     indices: index::IndexVecIntoIter,
 }
 
 #[cfg(feature = "alloc")]
-impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceChooseIter<'a, S, T> {
+impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for IndexedSamples<'a, S, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -480,12 +480,17 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> Iterator for SliceCho
 
 #[cfg(feature = "alloc")]
 impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
-    for SliceChooseIter<'a, S, T>
+    for IndexedSamples<'a, S, T>
 {
     fn len(&self) -> usize {
         self.indices.len()
     }
 }
+
+/// Deprecated: renamed to [`IndexedSamples`]
+#[cfg(feature = "alloc")]
+#[deprecated(since = "0.9.2", note = "Renamed to `IndexedSamples`")]
+pub type SliceChooseIter<'a, S, T> = IndexedSamples<'a, S, T>;
 
 #[cfg(test)]
 mod test {

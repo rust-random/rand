@@ -40,6 +40,9 @@ mod index_;
 pub use crate::distr::weighted::Error as WeightError;
 pub use iterator::IteratorRandom;
 #[cfg(feature = "alloc")]
+pub use slice::IndexedSamples;
+#[allow(deprecated)]
+#[cfg(feature = "alloc")]
 pub use slice::SliceChooseIter;
 pub use slice::{IndexedMutRandom, IndexedRandom, SliceRandom};
 
