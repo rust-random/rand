@@ -10,10 +10,12 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ## [0.10.0 — Unreleased]
 ### Changes
+- Rename fns `IndexedRandom::choose_multiple` -> `sample`, `choose_multiple_array` -> `sample_array`, `choose_multiple_weighted` -> `sample_weighted`, struct `SliceChooseIter` -> `IndexedSamples` and fns `IteratorRandom::choose_multiple` -> `sample`, `choose_multiple_fill` -> `sample_fill` (#1632)
 - Use Edition 2024 and MSRV 1.85 (#1653)
 - Let `Fill` be implemented for element types, not sliceable types (#1652)
 
 ### Additions
+- Add fns `IndexedRandom::choose_iter`, `choose_weighted_iter` (#1632)
 - Pub export `Xoshiro128PlusPlus`, `Xoshiro256PlusPlus` prngs (#1649)
 
 ## [0.9.2 — 2025-07-20]
