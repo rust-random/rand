@@ -110,11 +110,11 @@ pub trait Rng: RngCore {
     /// # Example
     ///
     /// ```
-    /// use rand::{rngs::mock::StepRng, Rng};
+    /// use rand::{rngs::SmallRng, Rng, SeedableRng};
     ///
-    /// let rng = StepRng::new(1, 1);
+    /// let rng = SmallRng::seed_from_u64(0);
     /// let v: Vec<i32> = rng.random_iter().take(5).collect();
-    /// assert_eq!(&v, &[1, 2, 3, 4, 5]);
+    /// assert_eq!(v.len(), 5);
     /// ```
     #[inline]
     fn random_iter<T>(self) -> distr::Iter<StandardUniform, Self, T>

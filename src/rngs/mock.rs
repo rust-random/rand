@@ -8,6 +8,8 @@
 
 //! Mock random number generator
 
+#![allow(deprecated)]
+
 use rand_core::{impls, RngCore};
 
 #[cfg(feature = "serde")]
@@ -31,6 +33,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use rand::Rng;
 /// use rand::rngs::mock::StepRng;
 ///
@@ -40,6 +43,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[deprecated(since = "0.9.2", note = "Deprecated without replacement")]
 pub struct StepRng {
     v: u64,
     a: u64,
