@@ -253,15 +253,15 @@ where
 #[cfg(feature = "std_rng")]
 #[cfg(test)]
 mod test {
-    use crate::rngs::mock::StepRng;
     use crate::rngs::std::Core;
+    use crate::test::const_rng;
     use crate::Rng;
 
     use super::ReseedingRng;
 
     #[test]
     fn test_reseeding() {
-        let zero = StepRng::new(0, 0);
+        let zero = const_rng(0);
         let thresh = 1; // reseed every time the buffer is exhausted
         let mut reseeding = ReseedingRng::<Core, _>::new(thresh, zero).unwrap();
 
@@ -281,7 +281,7 @@ mod test {
     #[test]
     #[allow(clippy::redundant_clone)]
     fn test_clone_reseeding() {
-        let zero = StepRng::new(0, 0);
+        let zero = const_rng(0);
         let mut rng1 = ReseedingRng::<Core, _>::new(32 * 4, zero).unwrap();
 
         let first: u32 = rng1.random();

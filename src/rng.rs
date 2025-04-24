@@ -479,14 +479,13 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::rngs::mock::StepRng;
-    use crate::test::rng;
+    use crate::test::{const_rng, rng};
     #[cfg(feature = "alloc")]
     use alloc::boxed::Box;
 
     #[test]
     fn test_fill_bytes_default() {
-        let mut r = StepRng::new(0x11_22_33_44_55_66_77_88, 0);
+        let mut r = const_rng(0x11_22_33_44_55_66_77_88);
 
         // check every remainder mod 8, both in small and big vectors.
         let lengths = [0, 1, 2, 3, 4, 5, 6, 7, 80, 81, 82, 83, 84, 85, 86, 87];
@@ -507,7 +506,7 @@ mod test {
     #[test]
     fn test_fill() {
         let x = 9041086907909331047; // a random u64
-        let mut rng = StepRng::new(x, 0);
+        let mut rng = const_rng(x);
 
         // Convert to byte sequence and back to u64; byte-swap twice if BE.
         let mut array = [0u64; 2];
@@ -537,7 +536,7 @@ mod test {
     #[test]
     fn test_fill_empty() {
         let mut array = [0u32; 0];
-        let mut rng = StepRng::new(0, 1);
+        let mut rng = rng(1);
         rng.fill(&mut array);
         rng.fill(&mut array[..]);
     }

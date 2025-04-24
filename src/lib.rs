@@ -309,6 +309,34 @@ mod test {
         rand_pcg::Pcg32::new(seed, INC)
     }
 
+    /// Construct a generator yielding a constant value
+    pub fn const_rng(x: u64) -> StepRng {
+        StepRng(x, 0)
+    }
+
+    /// Construct a generator yielding an arithmetic sequence
+    pub fn step_rng(x: u64, increment: u64) -> StepRng {
+        StepRng(x, increment)
+    }
+
+    #[derive(Clone)]
+    pub struct StepRng(u64, u64);
+    impl RngCore for StepRng {
+        fn next_u32(&mut self) -> u32 {
+            self.next_u64() as u32
+        }
+
+        fn next_u64(&mut self) -> u64 {
+            let res = self.0;
+            self.0 = self.0.wrapping_add(self.1);
+            res
+        }
+
+        fn fill_bytes(&mut self, dst: &mut [u8]) {
+            rand_core::impls::fill_bytes_via_next(self, dst)
+        }
+    }
+
     #[test]
     #[cfg(feature = "thread_rng")]
     fn test_random() {
