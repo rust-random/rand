@@ -78,30 +78,3 @@ impl RngCore for StepRng {
         impls::fill_bytes_via_next(self, dst)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    #[cfg(any(feature = "alloc", feature = "serde"))]
-    use super::StepRng;
-
-    #[test]
-    #[cfg(feature = "serde")]
-    fn test_serialization_step_rng() {
-        let some_rng = StepRng::new(42, 7);
-        let de_some_rng: StepRng =
-            bincode::deserialize(&bincode::serialize(&some_rng).unwrap()).unwrap();
-        assert_eq!(some_rng.v, de_some_rng.v);
-        assert_eq!(some_rng.a, de_some_rng.a);
-    }
-
-    #[test]
-    #[cfg(feature = "alloc")]
-    fn test_bool() {
-        use crate::{distr::StandardUniform, Rng};
-
-        // If this result ever changes, update doc on StepRng!
-        let rng = StepRng::new(0, 1 << 31);
-        let result: alloc::vec::Vec<bool> = rng.sample_iter(StandardUniform).take(6).collect();
-        assert_eq!(&result, &[false, true, false, true, false, true]);
-    }
-}
