@@ -80,6 +80,7 @@
 mod reseeding;
 pub use reseeding::ReseedingRng;
 
+#[deprecated(since = "0.9.2")]
 pub mod mock; // Public so we don't export `StepRng` directly, making it a bit
               // more clear it is intended for testing.
 

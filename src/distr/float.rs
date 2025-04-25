@@ -175,7 +175,7 @@ float_impls! { feature = "simd_support", f64x8, u64x8, f64, u64, 52, 1023 }
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rngs::mock::StepRng;
+    use crate::test::const_rng;
 
     const EPSILON32: f32 = f32::EPSILON;
     const EPSILON64: f64 = f64::EPSILON;
@@ -187,30 +187,30 @@ mod tests {
                 let two = $ty::splat(2.0);
 
                 // StandardUniform
-                let mut zeros = StepRng::new(0, 0);
+                let mut zeros = const_rng(0);
                 assert_eq!(zeros.random::<$ty>(), $ZERO);
-                let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
+                let mut one = const_rng(1 << 8 | 1 << (8 + 32));
                 assert_eq!(one.random::<$ty>(), $EPSILON / two);
-                let mut max = StepRng::new(!0, 0);
+                let mut max = const_rng(!0);
                 assert_eq!(max.random::<$ty>(), $ty::splat(1.0) - $EPSILON / two);
 
                 // OpenClosed01
-                let mut zeros = StepRng::new(0, 0);
+                let mut zeros = const_rng(0);
                 assert_eq!(zeros.sample::<$ty, _>(OpenClosed01), $ZERO + $EPSILON / two);
-                let mut one = StepRng::new(1 << 8 | 1 << (8 + 32), 0);
+                let mut one = const_rng(1 << 8 | 1 << (8 + 32));
                 assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
-                let mut max = StepRng::new(!0, 0);
+                let mut max = const_rng(!0);
                 assert_eq!(max.sample::<$ty, _>(OpenClosed01), $ZERO + $ty::splat(1.0));
 
                 // Open01
-                let mut zeros = StepRng::new(0, 0);
+                let mut zeros = const_rng(0);
                 assert_eq!(zeros.sample::<$ty, _>(Open01), $ZERO + $EPSILON / two);
-                let mut one = StepRng::new(1 << 9 | 1 << (9 + 32), 0);
+                let mut one = const_rng(1 << 9 | 1 << (9 + 32));
                 assert_eq!(
                     one.sample::<$ty, _>(Open01),
                     $EPSILON / two * $ty::splat(3.0)
                 );
-                let mut max = StepRng::new(!0, 0);
+                let mut max = const_rng(!0);
                 assert_eq!(
                     max.sample::<$ty, _>(Open01),
                     $ty::splat(1.0) - $EPSILON / two
@@ -235,30 +235,30 @@ mod tests {
                 let two = $ty::splat(2.0);
 
                 // StandardUniform
-                let mut zeros = StepRng::new(0, 0);
+                let mut zeros = const_rng(0);
                 assert_eq!(zeros.random::<$ty>(), $ZERO);
-                let mut one = StepRng::new(1 << 11, 0);
+                let mut one = const_rng(1 << 11);
                 assert_eq!(one.random::<$ty>(), $EPSILON / two);
-                let mut max = StepRng::new(!0, 0);
+                let mut max = const_rng(!0);
                 assert_eq!(max.random::<$ty>(), $ty::splat(1.0) - $EPSILON / two);
 
                 // OpenClosed01
-                let mut zeros = StepRng::new(0, 0);
+                let mut zeros = const_rng(0);
                 assert_eq!(zeros.sample::<$ty, _>(OpenClosed01), $ZERO + $EPSILON / two);
-                let mut one = StepRng::new(1 << 11, 0);
+                let mut one = const_rng(1 << 11);
                 assert_eq!(one.sample::<$ty, _>(OpenClosed01), $EPSILON);
-                let mut max = StepRng::new(!0, 0);
+                let mut max = const_rng(!0);
                 assert_eq!(max.sample::<$ty, _>(OpenClosed01), $ZERO + $ty::splat(1.0));
 
                 // Open01
-                let mut zeros = StepRng::new(0, 0);
+                let mut zeros = const_rng(0);
                 assert_eq!(zeros.sample::<$ty, _>(Open01), $ZERO + $EPSILON / two);
-                let mut one = StepRng::new(1 << 12, 0);
+                let mut one = const_rng(1 << 12);
                 assert_eq!(
                     one.sample::<$ty, _>(Open01),
                     $EPSILON / two * $ty::splat(3.0)
                 );
-                let mut max = StepRng::new(!0, 0);
+                let mut max = const_rng(!0);
                 assert_eq!(
                     max.sample::<$ty, _>(Open01),
                     $ty::splat(1.0) - $EPSILON / two
