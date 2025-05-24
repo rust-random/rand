@@ -243,7 +243,6 @@ mod test {
 
     #[test]
     fn bernoulli_p() {
-        use super::SCALE;
         assert_eq!(Bernoulli::new(0.0).unwrap().p(), 0.0);
         assert_eq!(Bernoulli::new(0.5).unwrap().p(), 0.5);
         assert_eq!(Bernoulli::new(1.0).unwrap().p(), 1.0);
