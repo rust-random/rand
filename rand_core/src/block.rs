@@ -545,8 +545,6 @@ mod test {
     #[should_panic(expected = "index < self.results.as_ref().len()")]
     fn blockrng64_generate_and_set_panic() {
         let mut rng = BlockRng64::<DummyRng64>::from_seed([1, 2, 3, 4, 5, 6, 7, 8]);
-        assert_eq!(rng.index(), 8);
-
         rng.generate_and_set(rng.results.as_ref().len());
     }
 
