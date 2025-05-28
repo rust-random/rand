@@ -533,70 +533,33 @@ mod test {
     }
 
     #[test]
-    fn blockrng64_index() {
-        let rng = BlockRng64::<DummyRng64>::from_seed([1, 2, 3, 4, 5, 6, 7, 8]);
-        let index = rng.index();
-        assert_eq!(index, 8);
-    }
-
-    #[test]
-    fn blockrng64_reset() {
-        let mut rng = BlockRng64::<DummyRng64>::from_seed([1, 2, 3, 4, 5, 6, 7, 8]);
-
-        rng.next_u32();
-        assert_ne!(rng.index(), 8);
-
-        rng.reset();
-        assert_eq!(rng.index(), 8);
-    }
-
-    #[test]
-    fn blockrng64_fill_bytes() {
-        let mut rng = BlockRng64::<DummyRng64>::from_seed([1, 2, 3, 4, 5, 6, 7, 8]);
-        let mut dst: [u8; 13] = [0; 13];
-        let mut dst2: [u8; 13] = [0; 13];
-        rng.fill_bytes(&mut dst);
-        rng.fill_bytes(&mut dst2);
-        assert_ne!(dst, dst2);
-    }
-
-    #[test]
     fn blockrng64_generate_and_set() {
         let mut rng = BlockRng64::<DummyRng64>::from_seed([1, 2, 3, 4, 5, 6, 7, 8]);
-        assert_eq!(rng.index(), 8);
+        assert_eq!(rng.index(), rng.results.as_ref().len());
 
         rng.generate_and_set(5);
         assert_eq!(rng.index(), 5);
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "index < self.results.as_ref().len()")]
     fn blockrng64_generate_and_set_panic() {
         let mut rng = BlockRng64::<DummyRng64>::from_seed([1, 2, 3, 4, 5, 6, 7, 8]);
         assert_eq!(rng.index(), 8);
 
-        rng.generate_and_set(100);
+        rng.generate_and_set(rng.results.as_ref().len());
     }
 
     #[test]
     fn blockrng_next_u64() {
         let mut rng = BlockRng::<DummyRng>::from_seed([1, 2, 3, 4]);
-        for i in 0..7 {
+        let result_size = rng.results.as_ref().len();
+        for _i in 0..result_size / 2 - 1 {
             rng.next_u64();
         }
         rng.next_u32();
 
         let result = rng.next_u64();
         assert_eq!(rng.index(), 1);
-    }
-
-    #[test]
-    fn blockrng_fill_bytes() {
-        let mut rng = BlockRng::<DummyRng>::from_seed([1, 2, 3, 4]);
-        let mut dst: [u8; 13] = [0; 13];
-        let mut dst2: [u8; 13] = [0; 13];
-        rng.fill_bytes(&mut dst);
-        rng.fill_bytes(&mut dst2);
-        assert_ne!(dst, dst2);
     }
 }

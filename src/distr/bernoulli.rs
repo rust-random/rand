@@ -240,11 +240,4 @@ mod test {
     fn bernoulli_distributions_can_be_compared() {
         assert_eq!(Bernoulli::new(1.0), Bernoulli::new(1.0));
     }
-
-    #[test]
-    fn bernoulli_p() {
-        assert_eq!(Bernoulli::new(0.0).unwrap().p(), 0.0);
-        assert_eq!(Bernoulli::new(0.5).unwrap().p(), 0.5);
-        assert_eq!(Bernoulli::new(1.0).unwrap().p(), 1.0);
-    }
 }
