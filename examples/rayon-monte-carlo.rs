@@ -38,8 +38,9 @@
 //! over BATCH_SIZE trials. Manually batching also turns out to be faster
 //! for the nondeterministic version of this program as well.
 
+use chacha20::ChaCha8Rng;
 use rand::distr::{Distribution, Uniform};
-use rand_chacha::{ChaCha8Rng, rand_core::SeedableRng};
+use rand_core::SeedableRng;
 use rayon::prelude::*;
 
 static SEED: u64 = 0;
@@ -56,7 +57,7 @@ fn main() {
             // We chose ChaCha because it's fast, has suitable statistical properties for simulation,
             // and because it supports this set_stream() api, which lets us choose a different stream
             // per work item. ChaCha supports 2^64 independent streams.
-            rng.set_stream(i);
+            rng.set_stream(u128::from(i));
             let mut count = 0;
             for _ in 0..BATCH_SIZE {
                 let a = range.sample(&mut rng);
