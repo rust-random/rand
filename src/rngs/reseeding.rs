@@ -53,9 +53,9 @@ use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 /// # Example
 ///
 /// ```
+/// use chacha20::ChaCha20Core; // Internal part of ChaChaRng that
+///                             // implements BlockRngCore
 /// use rand::prelude::*;
-/// use rand_chacha::ChaCha20Core; // Internal part of ChaChaRng that
-///                              // implements BlockRngCore
 /// use rand::rngs::OsRng;
 /// use rand::rngs::ReseedingRng;
 ///
