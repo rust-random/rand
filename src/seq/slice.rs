@@ -87,7 +87,11 @@ pub trait IndexedRandom: Index<usize> {
     /// }
     /// ```
     #[cfg(feature = "alloc")]
-    fn choose_multiple<R>(&self, rng: &mut R, amount: usize) -> SliceChooseIter<Self, Self::Output>
+    fn choose_multiple<R>(
+        &self,
+        rng: &mut R,
+        amount: usize,
+    ) -> SliceChooseIter<'_, Self, Self::Output>
     where
         Self::Output: Sized,
         R: Rng + ?Sized,
@@ -209,7 +213,7 @@ pub trait IndexedRandom: Index<usize> {
         rng: &mut R,
         amount: usize,
         weight: F,
-    ) -> Result<SliceChooseIter<Self, Self::Output>, WeightError>
+    ) -> Result<SliceChooseIter<'_, Self, Self::Output>, WeightError>
     where
         Self::Output: Sized,
         R: Rng + ?Sized,
