@@ -123,7 +123,7 @@ mod test {
     }
 
     #[test]
-    fn test_chacha_true_values_a() {
+    fn test_chacha12_tv1_tv2() {
         // Test vectors 1 and 2 from
         // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
         // but the expected values are replaced with the ones produced
@@ -131,10 +131,7 @@ mod test {
         let seed = [0u8; 32];
         let mut rng = StdRng::from_seed(seed);
 
-        let mut results = [0u32; 16];
-        for i in results.iter_mut() {
-            *i = rng.next_u32();
-        }
+        let results: [u32; 16] = core::array::from_fn(|_| rng.next_u32());
         let expected = [
             1788540059, 1408849159, 315498369, 3582142047, 3150129412, 343203913, 2777219198,
             1595256366, 2046321669, 3236133586, 875096108, 2039282348, 748642874, 426368672,
@@ -142,9 +139,7 @@ mod test {
         ];
         assert_eq!(results, expected);
 
-        for i in results.iter_mut() {
-            *i = rng.next_u32();
-        }
+        let results = core::array::from_fn(|_| rng.next_u32());
         let expected = [
             1099486475, 4269030944, 863108230, 1024974988, 3085641926, 3435904281, 562369813,
             3028926540, 3448579394, 301026465, 2545418950, 1137216539, 3393593065, 3226554768,
@@ -154,7 +149,7 @@ mod test {
     }
 
     #[test]
-    fn test_chacha_true_values_b() {
+    fn test_chacha12_tv3() {
         // Test vector 3 from
         // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
         // but the expected values are replaced with the ones produced
@@ -170,10 +165,7 @@ mod test {
             rng.next_u32();
         }
 
-        let mut results = [0u32; 16];
-        for i in results.iter_mut() {
-            *i = rng.next_u32();
-        }
+        let results: [u32; 16] = core::array::from_fn(|_| rng.next_u32());
         let expected = [
             1149489484, 1453872210, 205606722, 2561053166, 4209612569, 2282920975, 2059979989,
             3051314295, 4135011526, 3904759261, 3697107527, 2431012387, 1801979597, 1269452364,
@@ -183,7 +175,7 @@ mod test {
     }
 
     #[test]
-    fn test_chacha_true_values_c() {
+    fn test_chacha12_tv4() {
         // Test vector 4 from
         // https://tools.ietf.org/html/draft-nir-cfrg-chacha20-poly1305-04
         // but the expected values are replaced with the ones produced
@@ -192,22 +184,18 @@ mod test {
             0, 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0,
         ];
+
+        // Test block 2 by skipping block 0 and 1
+        let mut rng = StdRng::from_seed(seed);
+        for _ in 0..32 {
+            rng.next_u32();
+        }
+        let results: [u32; 16] = core::array::from_fn(|_| rng.next_u32());
         let expected = [
             1614024310, 613097064, 193455541, 494774344, 2671734178, 1658534307, 1449802595,
             1853279994, 129091709, 2135285029, 2884964524, 3629948889, 2335941772, 2471549797,
             887756884, 3388159322,
         ];
-        let expected_end = 3 * 16;
-        let mut results = [0u32; 16];
-
-        // Test block 2 by skipping block 0 and 1
-        let mut rng1 = StdRng::from_seed(seed);
-        for _ in 0..32 {
-            rng1.next_u32();
-        }
-        for i in results.iter_mut() {
-            *i = rng1.next_u32();
-        }
         assert_eq!(results, expected);
     }
 }
