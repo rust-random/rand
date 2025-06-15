@@ -11,6 +11,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ## [Unreleased]
 ### Changed
 - The dependency on `rand_chacha` has been replaced with a dependency on `chacha20`. This changes the implementation behind `StdRng`, but the output remains the same. There may be some API breakage when using the ChaCha-types directly as these are now the ones in `chacha20` instead of `rand_chacha`.
+- Changed MSRV to 1.85 (required by `chacha20`).
 
 ### Deprecated
 - Deprecate `rand::rngs::mock` module and `StepRng` generator (#1634)
