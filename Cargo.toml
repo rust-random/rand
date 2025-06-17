@@ -1,21 +1,35 @@
+[workspace]
+members = [
+    "rand_core",
+    "rand_chacha",
+    "rand_pcg",
+]
+exclude = ["benches", "distr_test"]
+
+[workspace.package]
+repository = "https://github.com/rust-random/rand"
+homepage = "https://rust-random.github.io/book"
+rust-version = "1.63"
+edition = "2021"
+
 [package]
 name = "rand"
 version = "0.9.1"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/rust-random/rand"
 documentation = "https://docs.rs/rand"
-homepage = "https://rust-random.github.io/book"
 description = """
 Random number generators and other randomness functionality.
 """
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
 autobenches = true
-edition = "2021"
-rust-version = "1.63"
 include = ["src/", "LICENSE-*", "README.md", "CHANGELOG.md", "COPYRIGHT"]
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+edition.workspace = true
 
 [package.metadata.docs.rs]
 # To build locally:
@@ -61,14 +75,6 @@ unbiased = []
 
 # Option: enable logging
 log = ["dep:log"]
-
-[workspace]
-members = [
-    "rand_core",
-    "rand_chacha",
-    "rand_pcg",
-]
-exclude = ["benches", "distr_test"]
 
 [dependencies]
 rand_core = { path = "rand_core", version = "0.9.0", default-features = false }

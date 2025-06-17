@@ -4,16 +4,16 @@ version = "0.9.0"
 authors = ["The Rand Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/rust-random/rand"
 documentation = "https://docs.rs/rand_pcg"
-homepage = "https://rust-random.github.io/book"
 description = """
 Selected PCG random number generators
 """
 keywords = ["random", "rng", "pcg"]
 categories = ["algorithms", "no-std"]
-edition = "2021"
-rust-version = "1.63"
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+edition.workspace = true
 
 [package.metadata.docs.rs]
 all-features = true

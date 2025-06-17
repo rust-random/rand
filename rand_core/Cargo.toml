@@ -4,16 +4,16 @@ version = "0.9.3"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/rust-random/rand"
 documentation = "https://docs.rs/rand_core"
-homepage = "https://rust-random.github.io/book"
 description = """
 Core random number generator traits and tools for implementation.
 """
 keywords = ["random", "rng"]
 categories = ["algorithms", "no-std"]
-edition = "2021"
-rust-version = "1.63"
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+edition.workspace = true
 
 [package.metadata.docs.rs]
 # To build locally:

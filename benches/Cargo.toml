@@ -1,8 +1,9 @@
 [package]
 name = "benches"
 version = "0.1.0"
-edition = "2021"
 publish = false
+rust-version.workspace = true
+edition.workspace = true
 
 [features]
 # Option (requires nightly Rust): experimental SIMD support
