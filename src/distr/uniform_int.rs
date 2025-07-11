@@ -402,11 +402,24 @@ uniform_simd_int_impl! { (u8, i8), (u16, i16), (u32, i32), (u64, i64) }
 /// this implementation will use 32-bit sampling when possible.
 #[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(all(feature = "serde"), derive(Serialize))]
+// To be able to deserialize on 32-bit we need to replace this with a custom
+// implementation of the Deserialize trait, to be able to:
+// - panic when `mode64` is `true` on 32-bit,
+// - assign the default value to `mode64` when it's missing on 64-bit,
+// - panic when the `usize` fields are greater than `u32::MAX` on 32-bit.
+#[cfg_attr(
+    all(feature = "serde", target_pointer_width = "64"),
+    derive(Deserialize)
+)]
 pub struct UniformUsize {
     low: usize,
     range: usize,
     thresh: usize,
     #[cfg(target_pointer_width = "64")]
+    // Handle missing field when deserializing on 64-bit an object serialized
+    // on 32-bit. Can be removed when switching to a custom deserializer.
+    #[cfg_attr(feature = "serde", serde(default))]
     mode64: bool,
 }
 
