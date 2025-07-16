@@ -49,7 +49,7 @@ pub fn bench(c: &mut Criterion) {
         (1000, 1_000_000, "1M"),
     ];
     for (amount, length, len_name) in lens {
-        let name = format!("weighted_sample_indices_{}_of_{}", amount, len_name);
+        let name = format!("weighted_sample_indices_{amount}_of_{len_name}");
         c.bench_function(name.as_str(), |b| {
             let length = black_box(length);
             let amount = black_box(amount);

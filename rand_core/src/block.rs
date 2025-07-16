@@ -557,7 +557,7 @@ mod test {
         }
         rng.next_u32();
 
-        let result = rng.next_u64();
+        let _ = rng.next_u64();
         assert_eq!(rng.index(), 1);
     }
 }
