@@ -764,9 +764,11 @@ mod test {
         let mut rng = rng.unwrap_mut();
 
         assert_eq!(rng.next_u32(), 4);
-        let mut rng2 = rng.re();
-        assert_eq!(rng2.next_u32(), 4);
-        drop(rng2);
+        {
+            let mut rng2 = rng.re();
+            assert_eq!(rng2.next_u32(), 4);
+            // Make sure rng2 is dropped.
+        }
         assert_eq!(rng.next_u32(), 4);
     }
 }

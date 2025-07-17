@@ -402,11 +402,28 @@ uniform_simd_int_impl! { (u8, i8), (u16, i16), (u32, i32), (u64, i64) }
 /// this implementation will use 32-bit sampling when possible.
 #[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(all(feature = "serde"), derive(Serialize))]
+// To be able to deserialize on 32-bit we need to replace this with a custom
+// implementation of the Deserialize trait, to be able to:
+// - panic when `mode64` is `true` on 32-bit,
+// - assign the default value to `mode64` when it's missing on 64-bit,
+// - panic when the `usize` fields are greater than `u32::MAX` on 32-bit.
+#[cfg_attr(
+    all(feature = "serde", target_pointer_width = "64"),
+    derive(Deserialize)
+)]
 pub struct UniformUsize {
+    /// The lowest possible value.
     low: usize,
+    /// The number of possible values. `0` has a special meaning: all.
     range: usize,
+    /// Threshold used when sampling to obtain a uniform distribution.
     thresh: usize,
+    /// Whether the largest possible value is greater than `u32::MAX`.
     #[cfg(target_pointer_width = "64")]
+    // Handle missing field when deserializing on 64-bit an object serialized
+    // on 32-bit. Can be removed when switching to a custom deserializer.
+    #[cfg_attr(feature = "serde", serde(default))]
     mode64: bool,
 }
 
@@ -792,5 +809,95 @@ mod tests {
                 ],
             );
         }
+    }
+
+    #[test]
+    fn test_uniform_usize_empty_range() {
+        assert_eq!(UniformUsize::new(10, 10), Err(Error::EmptyRange));
+        assert!(UniformUsize::new(10, 11).is_ok());
+
+        assert_eq!(UniformUsize::new_inclusive(10, 9), Err(Error::EmptyRange));
+        assert!(UniformUsize::new_inclusive(10, 10).is_ok());
+    }
+
+    #[test]
+    fn test_uniform_usize_constructors() {
+        assert_eq!(
+            UniformUsize::new_inclusive(u32::MAX as usize, u32::MAX as usize),
+            Ok(UniformUsize {
+                low: u32::MAX as usize,
+                range: 1,
+                thresh: 0,
+                #[cfg(target_pointer_width = "64")]
+                mode64: false
+            })
+        );
+        assert_eq!(
+            UniformUsize::new_inclusive(0, u32::MAX as usize),
+            Ok(UniformUsize {
+                low: 0,
+                range: 0,
+                thresh: 0,
+                #[cfg(target_pointer_width = "64")]
+                mode64: false
+            })
+        );
+        #[cfg(target_pointer_width = "64")]
+        assert_eq!(
+            UniformUsize::new_inclusive(0, u32::MAX as usize + 1),
+            Ok(UniformUsize {
+                low: 0,
+                range: u32::MAX as usize + 2,
+                thresh: 1,
+                mode64: true
+            })
+        );
+        #[cfg(target_pointer_width = "64")]
+        assert_eq!(
+            UniformUsize::new_inclusive(u32::MAX as usize, u64::MAX as usize),
+            Ok(UniformUsize {
+                low: u32::MAX as usize,
+                range: u64::MAX as usize - u32::MAX as usize + 1,
+                thresh: u32::MAX as usize,
+                mode64: true
+            })
+        );
+    }
+
+    // This could be run also on 32-bit when deserialization is implemented.
+    #[cfg(all(feature = "serde", target_pointer_width = "64"))]
+    #[test]
+    fn test_uniform_usize_deserialization() {
+        use serde_json;
+        let original = UniformUsize::new_inclusive(10, 100).expect("creation");
+        let serialized = serde_json::to_string(&original).expect("serialization");
+        let deserialized: UniformUsize =
+            serde_json::from_str(&serialized).expect("deserialization");
+        assert_eq!(deserialized, original);
+    }
+
+    #[cfg(all(feature = "serde", target_pointer_width = "64"))]
+    #[test]
+    fn test_uniform_usize_deserialization_from_32bit() {
+        use serde_json;
+        let serialized_on_32bit = r#"{"low":10,"range":91,"thresh":74}"#;
+        let deserialized: UniformUsize =
+            serde_json::from_str(&serialized_on_32bit).expect("deserialization");
+        assert_eq!(
+            deserialized,
+            UniformUsize::new_inclusive(10, 100).expect("creation")
+        );
+    }
+
+    #[cfg(all(feature = "serde", target_pointer_width = "64"))]
+    #[test]
+    fn test_uniform_usize_deserialization_64bit() {
+        use serde_json;
+        let original = UniformUsize::new_inclusive(1, u64::MAX as usize - 1).expect("creation");
+        assert!(original.mode64);
+        let serialized = serde_json::to_string(&original).expect("serialization");
+        let deserialized: UniformUsize =
+            serde_json::from_str(&serialized).expect("deserialization");
+        assert_eq!(deserialized, original);
     }
 }

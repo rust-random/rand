@@ -30,7 +30,7 @@ pub fn bench(c: &mut Criterion) {
 
     let lens = [(1, 1000), (950, 1000), (10, 100), (90, 100)];
     for (amount, len) in lens {
-        let name = format!("seq_slice_choose_multiple_{}_of_{}", amount, len);
+        let name = format!("seq_slice_choose_multiple_{amount}_of_{len}");
         c.bench_function(name.as_str(), |b| {
             let mut rng = Pcg32::from_rng(&mut rand::rng());
             let mut buf = [0i32; 1000];
@@ -54,7 +54,7 @@ pub fn bench(c: &mut Criterion) {
 
     let lens = [(1, 1000), (950, 1000), (10, 100), (90, 100)];
     for (amount, len) in lens {
-        let name = format!("seq_slice_choose_multiple_weighted_{}_of_{}", amount, len);
+        let name = format!("seq_slice_choose_multiple_weighted_{amount}_of_{len}");
         c.bench_function(name.as_str(), |b| {
             let mut rng = Pcg32::from_rng(&mut rand::rng());
             let mut buf = [0i32; 1000];

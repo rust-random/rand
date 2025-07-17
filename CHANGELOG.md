@@ -12,6 +12,9 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ### Deprecated
 - Deprecate `rand::rngs::mock` module and `StepRng` generator (#1634)
 
+### Additions
+- Enable `WeightedIndex<usize>` (de)serialization (#1646)
+
 ## [0.9.1] - 2025-04-17
 ### Security and unsafe
 - Revise "not a crypto library" policy again (#1565)

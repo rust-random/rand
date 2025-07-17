@@ -137,6 +137,10 @@ pub trait IteratorRandom: Iterator + Sized {
     //
     // Clippy is wrong here: we need to iterate over all entries with the RNG to
     // ensure that choosing is *stable*.
+    // "allow(unknown_lints)" can be removed when switching to at least
+    // rust-version 1.86.0, see:
+    // https://rust-lang.github.io/rust-clippy/master/index.html#double_ended_iterator_last
+    #[allow(unknown_lints)]
     #[allow(clippy::double_ended_iterator_last)]
     fn choose_stable<R>(mut self, rng: &mut R) -> Option<Self::Item>
     where
