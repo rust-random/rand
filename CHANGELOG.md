@@ -8,7 +8,7 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [Unreleased]
+## [0.9.2 — 2025-07-20]
 ### Deprecated
 - Deprecate `rand::rngs::mock` module and `StepRng` generator (#1634)
 
