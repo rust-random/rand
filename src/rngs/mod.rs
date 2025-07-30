@@ -8,12 +8,12 @@
 
 //! Random number generators and adapters
 //!
-//! This crate provides a small selection of non-[portable] generators.
-//! See also [Types of generators] and [Our RNGs] in the book.
-//!
 //! ## Generators
 //!
-//! This crate provides a small selection of non-[portable] random number generators:
+//! This crate provides a small selection of generators.
+//! See also [Types of generators] and [Our RNGs] in the book.
+//!
+//! ##### Non-deterministic generators
 //!
 //! -   [`OsRng`] is a stateless interface over the operating system's random number
 //!     source. This is typically secure with some form of periodic re-seeding.
@@ -21,6 +21,13 @@
 //!     thread-local generator with periodic seeding from [`OsRng`]. Because this
 //!     is local, it is typically much faster than [`OsRng`]. It should be
 //!     secure, but see documentation on [`ThreadRng`].
+//!
+//! ##### Standard generators
+//!
+//! These use selected best-in-class algorithms. They are deterministic but not
+//! portable: the algorithms may be changed in any release and may be
+//! platform-dependent.
+//!
 //! -   [`StdRng`] is a CSPRNG chosen for good performance and trust of security
 //!     (based on reviews, maturity and usage). The current algorithm is ChaCha12,
 //!     which is well established and rigorously analysed.
@@ -28,11 +35,18 @@
 //!     without the periodic reseeding or thread-local management.
 //! -   [`SmallRng`] is a relatively simple, insecure generator designed to be
 //!     fast, use little memory, and pass various statistical tests of
-//!     randomness quality.
+//!     randomness quality. The current algorithm is one of the Xoshiro
+//!     generators below, depending on the target's pointer size.
 //!
-//! The algorithms selected for [`StdRng`] and [`SmallRng`] may change in any
-//! release and may be platform-dependent, therefore they are not
-//! [reproducible][portable].
+//! ##### Named portable generators
+//!
+//! These are similar to the [standard generators](#standard-generators), but
+//! with the additional [guarantees of reproducibility]:
+//!
+//! -   [`Xoshiro256PlusPlus`] is a very fast 64-bit insecure generator using
+//!     256 bits of state with good performance in statistical tests of quality
+//! -   [`Xoshiro128PlusPlus`] is a very fast 32-bit insecure generator using
+//!     128 bits of state with good performance in statistical tests of quality
 //!
 //! ### Additional generators
 //!
@@ -41,11 +55,11 @@
 //! -   The [`rand_jitter`] crate provides a user-space implementation of
 //!     entropy harvesting from CPU timer jitter, but is very slow and has
 //!     [security issues](https://github.com/rust-random/rand/issues/699).
-//! -   The [`rand_chacha`] crate provides [portable] implementations of
+//! -   The [`rand_chacha`] crate provides portable implementations of
 //!     generators derived from the [ChaCha] family of stream ciphers
-//! -   The [`rand_pcg`] crate provides [portable] implementations of a subset
+//! -   The [`rand_pcg`] crate provides portable implementations of a subset
 //!     of the [PCG] family of small, insecure generators
-//! -   The [`rand_xoshiro`] crate provides [portable] implementations of the
+//! -   The [`rand_xoshiro`] crate provides portable implementations of the
 //!     [xoshiro] family of small, insecure generators
 //!
 //! For more, search [crates with the `rng` tag].
@@ -59,7 +73,7 @@
 //!
 //! Use the [`rand_core`] crate when implementing your own RNGs.
 //!
-//! [portable]: https://rust-random.github.io/book/crate-reprod.html
+//! [guarantees of reproducibility]: https://rust-random.github.io/book/crate-reprod.html
 //! [Types of generators]: https://rust-random.github.io/book/guide-gen.html
 //! [Our RNGs]: https://rust-random.github.io/book/guide-rngs.html
 //! [Random Values]: https://rust-random.github.io/book/guide-values.html
@@ -86,12 +100,9 @@ pub mod mock; // Public so we don't export `StepRng` directly, making it a bit
 
 #[cfg(feature = "small_rng")]
 mod small;
-#[cfg(all(
-    feature = "small_rng",
-    any(target_pointer_width = "32", target_pointer_width = "16")
-))]
+#[cfg(feature = "small_rng")]
 mod xoshiro128plusplus;
-#[cfg(all(feature = "small_rng", target_pointer_width = "64"))]
+#[cfg(feature = "small_rng")]
 mod xoshiro256plusplus;
 
 #[cfg(feature = "std_rng")]
@@ -101,6 +112,11 @@ pub(crate) mod thread;
 
 #[cfg(feature = "small_rng")]
 pub use self::small::SmallRng;
+#[cfg(feature = "small_rng")]
+pub use xoshiro128plusplus::Xoshiro128PlusPlus;
+#[cfg(feature = "small_rng")]
+pub use xoshiro256plusplus::Xoshiro256PlusPlus;
+
 #[cfg(feature = "std_rng")]
 pub use self::std::StdRng;
 #[cfg(feature = "thread_rng")]
