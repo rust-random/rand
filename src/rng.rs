@@ -311,8 +311,8 @@ pub trait Rng: RngCore {
     ///
     /// [`fill_bytes`]: RngCore::fill_bytes
     #[track_caller]
-    fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
-        dest.fill(self)
+    fn fill<T: Fill>(&mut self, dest: &mut [T]) {
+        Fill::fill(dest, self)
     }
 
     /// Alias for [`Rng::random`].
@@ -356,21 +356,24 @@ pub trait Rng: RngCore {
 
 impl<R: RngCore + ?Sized> Rng for R {}
 
-/// Types which may be filled with random data
+/// Support filling a slice with random data
 ///
-/// This trait allows arrays to be efficiently filled with random data.
+/// This trait allows slices of "plain data" types to be efficiently filled
+/// with random data.
 ///
 /// Implementations are expected to be portable across machines unless
 /// clearly documented otherwise (see the
 /// [Chapter on Portability](https://rust-random.github.io/book/portability.html)).
-pub trait Fill {
-    /// Fill self with random data
-    fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R);
+/// The implementations provided achieve this by byte-swapping on big-endian
+/// machines.
+pub trait Fill: Sized {
+    /// Fill this with random data
+    fn fill<R: Rng + ?Sized>(this: &mut [Self], rng: &mut R);
 }
 
-impl Fill for [u8] {
-    fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
-        rng.fill_bytes(self)
+impl Fill for u8 {
+    fn fill<R: Rng + ?Sized>(this: &mut [Self], rng: &mut R) {
+        rng.fill_bytes(this)
     }
 }
 
@@ -387,48 +390,48 @@ macro_rules! impl_fill {
         // Force caller to wrap with an `unsafe` block
         __unsafe();
 
-        impl Fill for [$t] {
-            fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
-                if self.len() > 0 {
-                    let size = mem::size_of_val(self);
+        impl Fill for $t {
+            fn fill<R: Rng + ?Sized>(this: &mut [Self], rng: &mut R) {
+                if this.len() > 0 {
+                    let size = mem::size_of_val(this);
                     rng.fill_bytes(
-                        // SAFETY: `self` non-null and valid for reads and writes within its `size`
-                        // bytes. `self` meets the alignment requirements of `&mut [u8]`.
-                        // The contents of `self` are initialized. Both `[u8]` and `[$t]` are valid
+                        // SAFETY: `this` non-null and valid for reads and writes within its `size`
+                        // bytes. `this` meets the alignment requirements of `&mut [u8]`.
+                        // The contents of `this` are initialized. Both `[u8]` and `[$t]` are valid
                         // for all bit-patterns of their contents (note that the SAFETY requirement
-                        // on callers of this macro). `self` is not borrowed.
+                        // on callers of this macro). `this` is not borrowed.
                         unsafe {
-                            slice::from_raw_parts_mut(self.as_mut_ptr()
+                            slice::from_raw_parts_mut(this.as_mut_ptr()
                                 as *mut u8,
                                 size
                             )
                         }
                     );
-                    for x in self {
+                    for x in this {
                         *x = x.to_le();
                     }
                 }
             }
         }
 
-        impl Fill for [Wrapping<$t>] {
-            fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
-                if self.len() > 0 {
-                    let size = self.len() * mem::size_of::<$t>();
+        impl Fill for Wrapping<$t> {
+            fn fill<R: Rng + ?Sized>(this: &mut [Self], rng: &mut R) {
+                if this.len() > 0 {
+                    let size = this.len() * mem::size_of::<$t>();
                     rng.fill_bytes(
-                        // SAFETY: `self` non-null and valid for reads and writes within its `size`
-                        // bytes. `self` meets the alignment requirements of `&mut [u8]`.
-                        // The contents of `self` are initialized. Both `[u8]` and `[$t]` are valid
+                        // SAFETY: `this` non-null and valid for reads and writes within its `size`
+                        // bytes. `this` meets the alignment requirements of `&mut [u8]`.
+                        // The contents of `this` are initialized. Both `[u8]` and `[$t]` are valid
                         // for all bit-patterns of their contents (note that the SAFETY requirement
-                        // on callers of this macro). `self` is not borrowed.
+                        // on callers of this macro). `this` is not borrowed.
                         unsafe {
-                            slice::from_raw_parts_mut(self.as_mut_ptr()
+                            slice::from_raw_parts_mut(this.as_mut_ptr()
                                 as *mut u8,
                                 size
                             )
                         }
                     );
-                    for x in self {
+                    for x in this {
                         *x = Wrapping(x.0.to_le());
                     }
                 }
@@ -447,15 +450,6 @@ macro_rules! impl_fill {
 const _: () = unsafe { impl_fill!(u16, u32, u64, u128,) };
 // SAFETY: All bit patterns of `[u8; size_of::<$t>()]` represent values of `i*`.
 const _: () = unsafe { impl_fill!(i8, i16, i32, i64, i128,) };
-
-impl<T, const N: usize> Fill for [T; N]
-where
-    [T]: Fill,
-{
-    fn fill<R: Rng + ?Sized>(&mut self, rng: &mut R) {
-        <[T] as Fill>::fill(self, rng)
-    }
-}
 
 #[cfg(test)]
 mod test {
@@ -491,19 +485,19 @@ mod test {
 
         // Convert to byte sequence and back to u64; byte-swap twice if BE.
         let mut array = [0u64; 2];
-        rng.fill(&mut array[..]);
+        rng.fill(&mut array);
         assert_eq!(array, [x, x]);
         assert_eq!(rng.next_u64(), x);
 
         // Convert to bytes then u32 in LE order
         let mut array = [0u32; 2];
-        rng.fill(&mut array[..]);
+        rng.fill(&mut array);
         assert_eq!(array, [x as u32, (x >> 32) as u32]);
         assert_eq!(rng.next_u32(), x as u32);
 
         // Check equivalence using wrapped arrays
         let mut warray = [Wrapping(0u32); 2];
-        rng.fill(&mut warray[..]);
+        rng.fill(&mut warray);
         assert_eq!(array[0], warray[0].0);
         assert_eq!(array[1], warray[1].0);
     }
