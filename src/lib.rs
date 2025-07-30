@@ -101,7 +101,7 @@ macro_rules! error { ($($x:tt)*) => (
 pub use rand_core;
 
 // Re-exports from rand_core
-pub use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
+pub use rand_core::{CryptoRng, Fill, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 
 // Public modules
 pub mod distr;
@@ -124,7 +124,7 @@ pub fn thread_rng() -> crate::rngs::ThreadRng {
     rng()
 }
 
-pub use rng::{Fill, Rng};
+pub use rng::Rng;
 
 #[cfg(feature = "thread_rng")]
 use crate::distr::{Distribution, StandardUniform};

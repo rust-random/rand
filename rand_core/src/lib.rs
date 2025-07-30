@@ -42,11 +42,13 @@ extern crate std;
 use core::{fmt, ops::DerefMut};
 
 pub mod block;
+mod fill;
 pub mod impls;
 pub mod le;
 #[cfg(feature = "os_rng")]
 mod os;
 
+pub use fill::Fill;
 #[cfg(feature = "os_rng")]
 pub use os::{OsError, OsRng};
 
