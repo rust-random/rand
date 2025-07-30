@@ -293,7 +293,7 @@ pub fn random_ratio(numerator: u32, denominator: u32) -> bool {
 #[cfg(feature = "thread_rng")]
 #[inline]
 #[track_caller]
-pub fn fill<T: Fill>(dest: &mut [T]) {
+pub fn fill<T: Fill<rngs::ThreadRng>>(dest: &mut [T]) {
     Fill::fill_slice(dest, &mut rng())
 }
 

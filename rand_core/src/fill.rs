@@ -22,13 +22,13 @@ use core::{mem, slice};
 /// [Chapter on Portability](https://rust-random.github.io/book/portability.html)).
 /// The implementations provided achieve this by byte-swapping on big-endian
 /// machines.
-pub trait Fill: Sized {
+pub trait Fill<R: RngCore + ?Sized>: Sized {
     /// Fill this with random data
-    fn fill_slice<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R);
+    fn fill_slice(this: &mut [Self], rng: &mut R);
 }
 
-impl Fill for u8 {
-    fn fill_slice<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R) {
+impl<R: RngCore + ?Sized> Fill<R> for u8 {
+    fn fill_slice(this: &mut [Self], rng: &mut R) {
         rng.fill_bytes(this)
     }
 }
@@ -46,8 +46,8 @@ macro_rules! impl_fill {
         // Force caller to wrap with an `unsafe` block
         __unsafe();
 
-        impl Fill for $t {
-            fn fill_slice<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R) {
+        impl<R: RngCore + ?Sized> Fill<R> for $t {
+            fn fill_slice(this: &mut [Self], rng: &mut R) {
                 if this.len() > 0 {
                     let size = mem::size_of_val(this);
                     rng.fill_bytes(
@@ -70,8 +70,8 @@ macro_rules! impl_fill {
             }
         }
 
-        impl Fill for Wrapping<$t> {
-            fn fill_slice<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R) {
+        impl<R: RngCore + ?Sized> Fill<R> for Wrapping<$t> {
+            fn fill_slice(this: &mut [Self], rng: &mut R) {
                 if this.len() > 0 {
                     let size = this.len() * mem::size_of::<$t>();
                     rng.fill_bytes(

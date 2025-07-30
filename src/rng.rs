@@ -309,7 +309,7 @@ pub trait Rng: RngCore {
     ///
     /// [`fill_bytes`]: RngCore::fill_bytes
     #[track_caller]
-    fn fill<T: Fill>(&mut self, dest: &mut [T]) {
+    fn fill<T: Fill<Self>>(&mut self, dest: &mut [T]) {
         Fill::fill_slice(dest, self)
     }
 
