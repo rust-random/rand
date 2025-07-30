@@ -44,7 +44,7 @@ jobs:
       - name: rand
         run: cargo doc --all-features --no-deps
       - name: rand_core
-        run: cargo doc --all-features --package rand_core --no-deps
+        run: cargo doc --features std,os_rng,serde --package rand_core --no-deps
       - name: rand_chacha
         run: cargo doc --all-features --package rand_chacha --no-deps
       - name: rand_pcg

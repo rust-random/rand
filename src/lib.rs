@@ -101,7 +101,7 @@ macro_rules! error { ($($x:tt)*) => (
 pub use rand_core;
 
 // Re-exports from rand_core
-pub use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
+pub use rand_core::{CryptoRng, Fill, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 
 // Public modules
 pub mod distr;
@@ -124,7 +124,7 @@ pub fn thread_rng() -> crate::rngs::ThreadRng {
     rng()
 }
 
-pub use rng::{Fill, Rng};
+pub use rng::Rng;
 
 #[cfg(feature = "thread_rng")]
 use crate::distr::{Distribution, StandardUniform};
@@ -293,8 +293,8 @@ pub fn random_ratio(numerator: u32, denominator: u32) -> bool {
 #[cfg(feature = "thread_rng")]
 #[inline]
 #[track_caller]
-pub fn fill<T: Fill + ?Sized>(dest: &mut T) {
-    dest.fill(&mut rng())
+pub fn fill<T: Fill<rngs::ThreadRng>>(dest: &mut [T]) {
+    Fill::fill_slice(dest, &mut rng())
 }
 
 #[cfg(test)]

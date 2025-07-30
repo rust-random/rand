@@ -17,8 +17,8 @@ rust-version = "1.63"
 
 [package.metadata.docs.rs]
 # To build locally:
-# RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --no-deps --open
-all-features = true
+# RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --features std,os_rng,serde --no-deps --open
+features = ["std", "os_rng", "serde"]
 rustdoc-args = ["--generate-link-to-definition"]
 
 [package.metadata.playground]
@@ -27,7 +27,16 @@ all-features = true
 [features]
 std = ["getrandom?/std"]
 os_rng = ["dep:getrandom"]
-serde = ["dep:serde"] # enables serde for BlockRng wrapper
+
+# Enable serde for BlockRng wrapper
+serde = ["dep:serde"]
+
+# Enable specialization of Fill for RNGs
+# This is an unstable feature!
+min_specialization = []
+# Enable specialized Fill impls for BlockRng
+# This requires an even less stable feature!
+specialization = ["min_specialization"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }

@@ -35,6 +35,11 @@
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![no_std]
+#![cfg_attr(feature = "specialization", feature(specialization))]
+#![cfg_attr(
+    all(feature = "min_specialization", not(feature = "specialization")),
+    feature(min_specialization)
+)]
 
 #[cfg(feature = "std")]
 extern crate std;
@@ -42,11 +47,13 @@ extern crate std;
 use core::{fmt, ops::DerefMut};
 
 pub mod block;
+mod fill;
 pub mod impls;
 pub mod le;
 #[cfg(feature = "os_rng")]
 mod os;
 
+pub use fill::Fill;
 #[cfg(feature = "os_rng")]
 pub use os::{OsError, OsRng};
 
