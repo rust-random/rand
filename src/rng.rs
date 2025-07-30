@@ -310,7 +310,7 @@ pub trait Rng: RngCore {
     /// [`fill_bytes`]: RngCore::fill_bytes
     #[track_caller]
     fn fill<T: Fill>(&mut self, dest: &mut [T]) {
-        Fill::fill(dest, self)
+        Fill::fill_slice(dest, self)
     }
 
     /// Alias for [`Rng::random`].

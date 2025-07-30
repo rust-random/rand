@@ -24,11 +24,11 @@ use core::{mem, slice};
 /// machines.
 pub trait Fill: Sized {
     /// Fill this with random data
-    fn fill<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R);
+    fn fill_slice<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R);
 }
 
 impl Fill for u8 {
-    fn fill<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R) {
+    fn fill_slice<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R) {
         rng.fill_bytes(this)
     }
 }
@@ -47,7 +47,7 @@ macro_rules! impl_fill {
         __unsafe();
 
         impl Fill for $t {
-            fn fill<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R) {
+            fn fill_slice<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R) {
                 if this.len() > 0 {
                     let size = mem::size_of_val(this);
                     rng.fill_bytes(
@@ -71,7 +71,7 @@ macro_rules! impl_fill {
         }
 
         impl Fill for Wrapping<$t> {
-            fn fill<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R) {
+            fn fill_slice<R: RngCore + ?Sized>(this: &mut [Self], rng: &mut R) {
                 if this.len() > 0 {
                     let size = this.len() * mem::size_of::<$t>();
                     rng.fill_bytes(

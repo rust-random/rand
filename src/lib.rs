@@ -294,7 +294,7 @@ pub fn random_ratio(numerator: u32, denominator: u32) -> bool {
 #[inline]
 #[track_caller]
 pub fn fill<T: Fill>(dest: &mut [T]) {
-    Fill::fill(dest, &mut rng())
+    Fill::fill_slice(dest, &mut rng())
 }
 
 #[cfg(test)]
