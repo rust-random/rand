@@ -28,6 +28,12 @@ pub trait Fill<R: RngCore + ?Sized>: Sized {
 }
 
 impl<R: RngCore + ?Sized> Fill<R> for u8 {
+    #[cfg(feature = "min_specialization")]
+    default fn fill_slice(this: &mut [Self], rng: &mut R) {
+        rng.fill_bytes(this)
+    }
+
+    #[cfg(not(feature = "min_specialization"))]
     fn fill_slice(this: &mut [Self], rng: &mut R) {
         rng.fill_bytes(this)
     }
@@ -48,8 +54,8 @@ macro_rules! impl_fill {
     (to_le! wrapping $x:ident) => {
         Wrapping($x.0.to_le())
     };
-    (fill_slice! $t:ty, $to_le:tt) => {
-        fn fill_slice(this: &mut [Self], rng: &mut R) {
+    (fill_slice! $t:ty, $to_le:tt $($maybe_default:tt)?) => {
+        $($maybe_default)? fn fill_slice(this: &mut [Self], rng: &mut R) {
             if this.len() > 0 {
                 let size = mem::size_of_val(this);
                 rng.fill_bytes(
@@ -76,10 +82,16 @@ macro_rules! impl_fill {
         __unsafe();
 
         impl<R: RngCore + ?Sized> Fill<R> for $t {
+            #[cfg(feature = "min_specialization")]
+            impl_fill!(fill_slice! $t, plain default);
+            #[cfg(not(feature = "min_specialization"))]
             impl_fill!(fill_slice! $t, plain);
         }
 
         impl<R: RngCore + ?Sized> Fill<R> for Wrapping<$t> {
+            #[cfg(feature = "min_specialization")]
+            impl_fill!(fill_slice! $t, wrapping default);
+            #[cfg(not(feature = "min_specialization"))]
             impl_fill!(fill_slice! $t, wrapping);
         }}
     };

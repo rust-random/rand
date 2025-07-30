@@ -27,7 +27,13 @@ all-features = true
 [features]
 std = ["getrandom?/std"]
 os_rng = ["dep:getrandom"]
-serde = ["dep:serde"] # enables serde for BlockRng wrapper
+
+# Enable serde for BlockRng wrapper
+serde = ["dep:serde"]
+
+# Enable specialization of Fill for RNGs
+# This is an unstable feature!
+min_specialization = []
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }

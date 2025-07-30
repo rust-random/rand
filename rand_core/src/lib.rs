@@ -35,6 +35,7 @@
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![no_std]
+#![cfg_attr(feature = "min_specialization", feature(min_specialization))]
 
 #[cfg(feature = "std")]
 extern crate std;
