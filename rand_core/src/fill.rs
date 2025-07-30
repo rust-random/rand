@@ -82,16 +82,16 @@ macro_rules! impl_fill {
         __unsafe();
 
         impl<R: RngCore + ?Sized> Fill<R> for $t {
-            #[cfg(feature = "min_specialization")]
+            #[cfg(any(feature = "min_specialization", feature = "specialization"))]
             impl_fill!(fill_slice! $t, plain default);
-            #[cfg(not(feature = "min_specialization"))]
+            #[cfg(not(any(feature = "min_specialization", feature = "specialization")))]
             impl_fill!(fill_slice! $t, plain);
         }
 
         impl<R: RngCore + ?Sized> Fill<R> for Wrapping<$t> {
-            #[cfg(feature = "min_specialization")]
+            #[cfg(any(feature = "min_specialization", feature = "specialization"))]
             impl_fill!(fill_slice! $t, wrapping default);
-            #[cfg(not(feature = "min_specialization"))]
+            #[cfg(not(any(feature = "min_specialization", feature = "specialization")))]
             impl_fill!(fill_slice! $t, wrapping);
         }}
     };

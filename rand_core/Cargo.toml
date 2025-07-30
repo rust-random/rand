@@ -34,6 +34,9 @@ serde = ["dep:serde"]
 # Enable specialization of Fill for RNGs
 # This is an unstable feature!
 min_specialization = []
+# Enable specialized Fill impls for BlockRng
+# This requires an even less stable feature!
+specialization = ["min_specialization"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }

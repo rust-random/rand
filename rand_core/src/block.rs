@@ -234,6 +234,24 @@ impl<R: BlockRngCore<Item = u32>> RngCore for BlockRng<R> {
     }
 }
 
+#[cfg(feature = "specialization")]
+impl<R: BlockRngCore<Item = u32>> crate::Fill<BlockRng<R>> for u32 {
+    fn fill_slice(mut this: &mut [Self], rng: &mut BlockRng<R>) {
+        while !this.is_empty() {
+            if rng.index >= rng.results.as_ref().len() {
+                rng.generate_and_set(0);
+            }
+
+            let len = core::cmp::min(this.len(), rng.results.as_ref().len() - rng.index);
+            let next_index = rng.index + len;
+            this[..len].copy_from_slice(&rng.results.as_ref()[rng.index..next_index]);
+
+            rng.index = next_index;
+            this = &mut this[len..];
+        }
+    }
+}
+
 impl<R: BlockRngCore + SeedableRng> SeedableRng for BlockRng<R> {
     type Seed = R::Seed;
 
@@ -393,6 +411,24 @@ impl<R: BlockRngCore<Item = u64>> RngCore for BlockRng64<R> {
 
             self.index += consumed_u64;
             read_len += filled_u8;
+        }
+    }
+}
+
+#[cfg(feature = "specialization")]
+impl<R: BlockRngCore<Item = u64>> crate::Fill<BlockRng64<R>> for u64 {
+    fn fill_slice(mut this: &mut [Self], rng: &mut BlockRng64<R>) {
+        while !this.is_empty() {
+            if rng.index >= rng.results.as_ref().len() {
+                rng.generate_and_set(0);
+            }
+
+            let len = core::cmp::min(this.len(), rng.results.as_ref().len() - rng.index);
+            let next_index = rng.index + len;
+            this[..len].copy_from_slice(&rng.results.as_ref()[rng.index..next_index]);
+
+            rng.index = next_index;
+            this = &mut this[len..];
         }
     }
 }
