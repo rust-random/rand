@@ -17,8 +17,8 @@ rust-version = "1.63"
 
 [package.metadata.docs.rs]
 # To build locally:
-# RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --no-deps --open
-all-features = true
+# RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --features std,os_rng,serde --no-deps --open
+features = ["std", "os_rng", "serde"]
 rustdoc-args = ["--generate-link-to-definition"]
 
 [package.metadata.playground]
