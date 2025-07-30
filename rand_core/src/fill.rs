@@ -42,56 +42,45 @@ const unsafe fn __unsafe() {}
 /// All bit patterns of `[u8; size_of::<$t>()]` must represent values of `$t`.
 macro_rules! impl_fill {
     () => {};
+    (to_le! plain $x:ident) => {
+        $x.to_le()
+    };
+    (to_le! wrapping $x:ident) => {
+        Wrapping($x.0.to_le())
+    };
+    (fill_slice! $t:ty, $to_le:tt) => {
+        fn fill_slice(this: &mut [Self], rng: &mut R) {
+            if this.len() > 0 {
+                let size = mem::size_of_val(this);
+                rng.fill_bytes(
+                    // SAFETY: `this` non-null and valid for reads and writes within its `size`
+                    // bytes. `this` meets the alignment requirements of `&mut [u8]`.
+                    // The contents of `this` are initialized. Both `[u8]` and `[$t]` are valid
+                    // for all bit-patterns of their contents (note that the SAFETY requirement
+                    // on callers of this macro). `this` is not borrowed.
+                    unsafe {
+                        slice::from_raw_parts_mut(this.as_mut_ptr()
+                            as *mut u8,
+                            size
+                        )
+                    }
+                );
+                for x in this {
+                    *x = impl_fill!(to_le! $to_le x);
+                }
+            }
+        }
+    };
     ($t:ty) => {{
         // Force caller to wrap with an `unsafe` block
         __unsafe();
 
         impl<R: RngCore + ?Sized> Fill<R> for $t {
-            fn fill_slice(this: &mut [Self], rng: &mut R) {
-                if this.len() > 0 {
-                    let size = mem::size_of_val(this);
-                    rng.fill_bytes(
-                        // SAFETY: `this` non-null and valid for reads and writes within its `size`
-                        // bytes. `this` meets the alignment requirements of `&mut [u8]`.
-                        // The contents of `this` are initialized. Both `[u8]` and `[$t]` are valid
-                        // for all bit-patterns of their contents (note that the SAFETY requirement
-                        // on callers of this macro). `this` is not borrowed.
-                        unsafe {
-                            slice::from_raw_parts_mut(this.as_mut_ptr()
-                                as *mut u8,
-                                size
-                            )
-                        }
-                    );
-                    for x in this {
-                        *x = x.to_le();
-                    }
-                }
-            }
+            impl_fill!(fill_slice! $t, plain);
         }
 
         impl<R: RngCore + ?Sized> Fill<R> for Wrapping<$t> {
-            fn fill_slice(this: &mut [Self], rng: &mut R) {
-                if this.len() > 0 {
-                    let size = this.len() * mem::size_of::<$t>();
-                    rng.fill_bytes(
-                        // SAFETY: `this` non-null and valid for reads and writes within its `size`
-                        // bytes. `this` meets the alignment requirements of `&mut [u8]`.
-                        // The contents of `this` are initialized. Both `[u8]` and `[$t]` are valid
-                        // for all bit-patterns of their contents (note that the SAFETY requirement
-                        // on callers of this macro). `this` is not borrowed.
-                        unsafe {
-                            slice::from_raw_parts_mut(this.as_mut_ptr()
-                                as *mut u8,
-                                size
-                            )
-                        }
-                    );
-                    for x in this {
-                        *x = Wrapping(x.0.to_le());
-                    }
-                }
-            }
+            impl_fill!(fill_slice! $t, wrapping);
         }}
     };
     ($t:ty, $($tt:ty,)*) => {{
