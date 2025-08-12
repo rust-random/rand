@@ -10,11 +10,11 @@
 
 use super::increasing_uniform::IncreasingUniform;
 use super::index;
+use crate::Rng;
 #[cfg(feature = "alloc")]
 use crate::distr::uniform::{SampleBorrow, SampleUniform};
 #[cfg(feature = "alloc")]
 use crate::distr::weighted::{Error as WeightError, Weight};
-use crate::Rng;
 use core::ops::{Index, IndexMut};
 
 /// Extension trait on indexable lists, providing random sampling methods.
@@ -170,7 +170,7 @@ pub trait IndexedRandom: Index<usize> {
         B: SampleBorrow<X>,
         X: SampleUniform + Weight + PartialOrd<X>,
     {
-        use crate::distr::{weighted::WeightedIndex, Distribution};
+        use crate::distr::{Distribution, weighted::WeightedIndex};
         let distr = WeightedIndex::new((0..self.len()).map(|idx| weight(&self[idx])))?;
         Ok(&self[distr.sample(rng)])
     }
@@ -288,7 +288,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
         B: SampleBorrow<X>,
         X: SampleUniform + Weight + PartialOrd<X>,
     {
-        use crate::distr::{weighted::WeightedIndex, Distribution};
+        use crate::distr::{Distribution, weighted::WeightedIndex};
         let distr = WeightedIndex::new((0..self.len()).map(|idx| weight(&self[idx])))?;
         let index = distr.sample(rng);
         Ok(&mut self[index])

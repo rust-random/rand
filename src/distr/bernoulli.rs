@@ -8,8 +8,8 @@
 
 //! The Bernoulli distribution `Bernoulli(p)`.
 
-use crate::distr::Distribution;
 use crate::Rng;
+use crate::distr::Distribution;
 use core::fmt;
 
 #[cfg(feature = "serde")]
@@ -165,8 +165,8 @@ impl Distribution<bool> for Bernoulli {
 #[cfg(test)]
 mod test {
     use super::Bernoulli;
-    use crate::distr::Distribution;
     use crate::Rng;
+    use crate::distr::Distribution;
 
     #[test]
     #[cfg(feature = "serde")]
@@ -232,7 +232,9 @@ mod test {
         }
         assert_eq!(
             buf,
-            [true, false, false, true, false, false, true, true, true, true]
+            [
+                true, false, false, true, false, false, true, true, true, true
+            ]
         );
     }
 

@@ -10,8 +10,8 @@
 //! `UniformChar`, `UniformDuration` implementations
 
 use super::{Error, SampleBorrow, SampleUniform, Uniform, UniformInt, UniformSampler};
-use crate::distr::Distribution;
 use crate::Rng;
+use crate::distr::Distribution;
 use core::time::Duration;
 
 #[cfg(feature = "serde")]
@@ -53,7 +53,7 @@ impl UniformSampler for UniformChar {
     type X = char;
 
     #[inline] // if the range is constant, this helps LLVM to do the
-              // calculations at compile-time.
+    // calculations at compile-time.
     fn new<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
     where
         B1: SampleBorrow<Self::X> + Sized,
@@ -66,7 +66,7 @@ impl UniformSampler for UniformChar {
     }
 
     #[inline] // if the range is constant, this helps LLVM to do the
-              // calculations at compile-time.
+    // calculations at compile-time.
     fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
     where
         B1: SampleBorrow<Self::X> + Sized,

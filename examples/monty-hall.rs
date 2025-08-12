@@ -26,8 +26,8 @@
 //!
 //! [Monty Hall Problem]: https://en.wikipedia.org/wiki/Monty_Hall_problem
 
-use rand::distr::{Distribution, Uniform};
 use rand::Rng;
+use rand::distr::{Distribution, Uniform};
 
 struct SimulationResult {
     win: bool,

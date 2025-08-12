@@ -10,10 +10,10 @@
 //! `UniformInt` implementation
 
 use super::{Error, SampleBorrow, SampleUniform, UniformSampler};
+use crate::Rng;
 use crate::distr::utils::WideningMultiply;
 #[cfg(feature = "simd_support")]
 use crate::distr::{Distribution, StandardUniform};
-use crate::Rng;
 
 #[cfg(feature = "simd_support")]
 use core::simd::prelude::*;
@@ -89,7 +89,7 @@ macro_rules! uniform_int_impl {
             type X = $ty;
 
             #[inline] // if the range is constant, this helps LLVM to do the
-                      // calculations at compile-time.
+            // calculations at compile-time.
             fn new<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
             where
                 B1: SampleBorrow<Self::X> + Sized,
@@ -104,7 +104,7 @@ macro_rules! uniform_int_impl {
             }
 
             #[inline] // if the range is constant, this helps LLVM to do the
-                      // calculations at compile-time.
+            // calculations at compile-time.
             fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
             where
                 B1: SampleBorrow<Self::X> + Sized,
@@ -437,7 +437,7 @@ impl UniformSampler for UniformUsize {
     type X = usize;
 
     #[inline] // if the range is constant, this helps LLVM to do the
-              // calculations at compile-time.
+    // calculations at compile-time.
     fn new<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
     where
         B1: SampleBorrow<Self::X> + Sized,
@@ -453,7 +453,7 @@ impl UniformSampler for UniformUsize {
     }
 
     #[inline] // if the range is constant, this helps LLVM to do the
-              // calculations at compile-time.
+    // calculations at compile-time.
     fn new_inclusive<B1, B2>(low_b: B1, high_b: B2) -> Result<Self, Error>
     where
         B1: SampleBorrow<Self::X> + Sized,
