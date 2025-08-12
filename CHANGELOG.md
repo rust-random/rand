@@ -8,12 +8,13 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [Unreleased]
+## [0.10.0 — Unreleased]
+### Changes
+- Bump the MSRV to 1.85 (#1653)
+- Let `Fill` be implemented for element types, not sliceable types (#1652)
+
 ### Additions
 - Pub export `Xoshiro128PlusPlus`, `Xoshiro256PlusPlus` prngs (#1649)
-
-### Changes
-- Let `Fill` be implemented for element types, not sliceable types (#1652)
 
 ## [0.9.2 — 2025-07-20]
 ### Deprecated
