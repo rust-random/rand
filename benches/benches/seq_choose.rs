@@ -30,7 +30,7 @@ pub fn bench(c: &mut Criterion) {
 
     let lens = [(1, 1000), (950, 1000), (10, 100), (90, 100)];
     for (amount, len) in lens {
-        let name = format!("seq_slice_choose_multiple_{amount}_of_{len}");
+        let name = format!("seq_slice_sample_{amount}_of_{len}");
         c.bench_function(name.as_str(), |b| {
             let mut rng = Pcg32::from_rng(&mut rand::rng());
             let mut buf = [0i32; 1000];
@@ -44,7 +44,7 @@ pub fn bench(c: &mut Criterion) {
             b.iter(|| {
                 // Collect full result to prevent unwanted shortcuts getting
                 // first element (in case sample_indices returns an iterator).
-                for (slot, sample) in y.iter_mut().zip(x.choose_multiple(&mut rng, amount)) {
+                for (slot, sample) in y.iter_mut().zip(x.sample(&mut rng, amount)) {
                     *slot = *sample;
                 }
                 y[amount - 1]
@@ -54,7 +54,7 @@ pub fn bench(c: &mut Criterion) {
 
     let lens = [(1, 1000), (950, 1000), (10, 100), (90, 100)];
     for (amount, len) in lens {
-        let name = format!("seq_slice_choose_multiple_weighted_{amount}_of_{len}");
+        let name = format!("seq_slice_sample_weighted_{amount}_of_{len}");
         c.bench_function(name.as_str(), |b| {
             let mut rng = Pcg32::from_rng(&mut rand::rng());
             let mut buf = [0i32; 1000];
@@ -68,7 +68,7 @@ pub fn bench(c: &mut Criterion) {
             b.iter(|| {
                 // Collect full result to prevent unwanted shortcuts getting
                 // first element (in case sample_indices returns an iterator).
-                let samples_iter = x.choose_multiple_weighted(&mut rng, amount, |_| 1.0).unwrap();
+                let samples_iter = x.sample_weighted(&mut rng, amount, |_| 1.0).unwrap();
                 for (slot, sample) in y.iter_mut().zip(samples_iter) {
                     *slot = *sample;
                 }
@@ -77,21 +77,21 @@ pub fn bench(c: &mut Criterion) {
         });
     }
 
-    c.bench_function("seq_iter_choose_multiple_10_of_100", |b| {
+    c.bench_function("seq_iter_sample_10_of_100", |b| {
         let mut rng = Pcg32::from_rng(&mut rand::rng());
         let mut buf = [0i32; 100];
         rng.fill(&mut buf);
         let x = black_box(&buf);
-        b.iter(|| x.iter().cloned().choose_multiple(&mut rng, 10))
+        b.iter(|| x.iter().cloned().sample(&mut rng, 10))
     });
 
-    c.bench_function("seq_iter_choose_multiple_fill_10_of_100", |b| {
+    c.bench_function("seq_iter_sample_fill_10_of_100", |b| {
         let mut rng = Pcg32::from_rng(&mut rand::rng());
         let mut buf = [0i32; 100];
         rng.fill(&mut buf);
         let x = black_box(&buf);
         let mut buf = [0; 10];
-        b.iter(|| x.iter().cloned().choose_multiple_fill(&mut rng, &mut buf))
+        b.iter(|| x.iter().cloned().sample_fill(&mut rng, &mut buf))
     });
 
     bench_rng::<rand_chacha::ChaCha20Rng>(c, "ChaCha20");
