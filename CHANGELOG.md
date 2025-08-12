@@ -10,7 +10,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ## [0.10.0 — Unreleased]
 ### Changes
-- Bump the MSRV to 1.85 (#1653)
+- Use Edition 2024 and MSRV 1.85 (#1653)
 - Let `Fill` be implemented for element types, not sliceable types (#1652)
 
 ### Additions

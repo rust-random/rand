@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.10.0 — Unreleased]
 ### Changes
-- Bump the MSRV to 1.85 (#1653)
+- Use Edition 2024 and MSRV 1.85 (#1653)
 
 ## [0.9.0] - 2025-01-27
 ### Dependencies and features

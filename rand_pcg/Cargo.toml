@@ -12,7 +12,7 @@ Selected PCG random number generators
 """
 keywords = ["random", "rng", "pcg"]
 categories = ["algorithms", "no-std"]
-edition = "2021"
+edition = "2024"
 rust-version = "1.85"
 
 [package.metadata.docs.rs]
