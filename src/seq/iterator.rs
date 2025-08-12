@@ -8,9 +8,9 @@
 
 //! `IteratorRandom`
 
-use super::coin_flipper::CoinFlipper;
 #[allow(unused)]
 use super::IndexedRandom;
+use super::coin_flipper::CoinFlipper;
 use crate::Rng;
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
@@ -550,9 +550,11 @@ mod test {
         // no randomization happens when amount >= len
         assert_eq!(large_sample, vals.iter().collect::<Vec<_>>());
 
-        assert!(small_sample
-            .iter()
-            .all(|e| { **e >= min_val && **e <= max_val }));
+        assert!(
+            small_sample
+                .iter()
+                .all(|e| { **e >= min_val && **e <= max_val })
+        );
     }
 
     #[test]

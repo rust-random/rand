@@ -10,7 +10,7 @@
 
 #![allow(deprecated)]
 
-use rand_core::{impls, RngCore};
+use rand_core::{RngCore, impls};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};

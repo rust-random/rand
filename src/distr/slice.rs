@@ -10,8 +10,8 @@
 
 use core::num::NonZeroUsize;
 
-use crate::distr::uniform::{UniformSampler, UniformUsize};
 use crate::distr::Distribution;
+use crate::distr::uniform::{UniformSampler, UniformUsize};
 #[cfg(feature = "alloc")]
 use alloc::string::String;
 

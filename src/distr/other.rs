@@ -14,10 +14,10 @@ use core::array;
 use core::char;
 use core::num::Wrapping;
 
+use crate::Rng;
 #[cfg(feature = "alloc")]
 use crate::distr::SampleString;
 use crate::distr::{Distribution, StandardUniform, Uniform};
-use crate::Rng;
 
 #[cfg(feature = "simd_support")]
 use core::simd::prelude::*;

@@ -10,7 +10,7 @@
 
 #![cfg_attr(feature = "simd_support", feature(portable_simd))]
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 
 criterion_group!(
     name = benches;

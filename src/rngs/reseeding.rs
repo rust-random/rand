@@ -253,9 +253,9 @@ where
 #[cfg(feature = "std_rng")]
 #[cfg(test)]
 mod test {
+    use crate::Rng;
     use crate::rngs::std::Core;
     use crate::test::const_rng;
-    use crate::Rng;
 
     use super::ReseedingRng;
 

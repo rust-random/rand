@@ -13,7 +13,7 @@
 //! -   sample: current method: (x12 - 1.0) * (b - a) + a
 
 use core::time::Duration;
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use rand::distr::uniform::{SampleUniform, Uniform, UniformSampler};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;

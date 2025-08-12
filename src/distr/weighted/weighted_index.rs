@@ -7,9 +7,9 @@
 // except according to those terms.
 
 use super::{Error, Weight};
-use crate::distr::uniform::{SampleBorrow, SampleUniform, UniformSampler};
-use crate::distr::Distribution;
 use crate::Rng;
+use crate::distr::Distribution;
+use crate::distr::uniform::{SampleBorrow, SampleUniform, UniformSampler};
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
 use alloc::vec::Vec;

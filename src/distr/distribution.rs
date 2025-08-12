@@ -203,8 +203,8 @@ pub trait SampleString {
 
 #[cfg(test)]
 mod tests {
-    use crate::distr::{Distribution, Uniform};
     use crate::Rng;
+    use crate::distr::{Distribution, Uniform};
 
     #[test]
     fn test_distributions_iter() {

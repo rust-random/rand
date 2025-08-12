@@ -4,8 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
-### API changes
+## [0.10.0 — Unreleased]
+### Changes
+- Bump the MSRV to 1.85 (#1653)
 - Relax `Sized` bound on impls of `SeedableRng` (#1641)
 
 ## [0.9.3] — 2025-02-29

@@ -11,7 +11,7 @@
 //! PCG random number generators
 
 use core::fmt;
-use rand_core::{impls, le, RngCore, SeedableRng};
+use rand_core::{RngCore, SeedableRng, impls, le};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 

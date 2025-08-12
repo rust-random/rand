@@ -11,13 +11,13 @@
 #![cfg_attr(feature = "simd_support", feature(portable_simd))]
 
 use core::time::Duration;
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use rand::distr::uniform::{SampleRange, Uniform};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use rand_pcg::{Pcg32, Pcg64};
 #[cfg(feature = "simd_support")]
-use std::simd::{num::SimdUint, Simd};
+use std::simd::{Simd, num::SimdUint};
 
 const WARM_UP_TIME: Duration = Duration::from_millis(1000);
 const MEASUREMENT_TIME: Duration = Duration::from_secs(3);

@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rand::prelude::*;
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use rand::SeedableRng;
+use rand::prelude::*;
 use rand_pcg::Pcg32;
 
 criterion_group!(
