@@ -103,6 +103,24 @@ mod test {
     use crate::rngs::StdRng;
     use crate::{RngCore, SeedableRng};
 
+    // Get ChaCha state, omitting the constants
+    fn rng_state(rng: &StdRng) -> &[u32; 12] {
+        use core::mem::{size_of, transmute};
+
+        // Experimentally this matches the size and layout of rand_core::ChaCha12Rng
+        struct State {
+            _results: [u32; 64],
+            _index: usize,
+            #[cfg(target_pointer_width = "64")]
+            _pad: usize,
+            state: [u32; 12],
+        }
+        assert_eq!(size_of::<StdRng>(), size_of::<State>());
+
+        let state: &State = unsafe { transmute(rng) };
+        &state.state
+    }
+
     #[test]
     fn test_stdrng_construction() {
         // Test value-stability of StdRng. This is expected to break any time
@@ -114,10 +132,20 @@ mod test {
         let target = [10719222850664546238, 14064965282130556830];
 
         let mut rng0 = StdRng::from_seed(seed);
+
+        let expected = [1, 23, 456, 7890, 0, 0, 0, 0, 0, 0, 0, 0];
+        assert_eq!(rng_state(&rng0), &expected);
+
         let x0 = rng0.next_u64();
 
         let mut rng1 = StdRng::from_rng(&mut rng0);
         let x1 = rng1.next_u64();
+
+        let expected = [
+            0x98c064cf, 0x42da2de, 0xb7949e00, 0xf46bfbdb, 0x7e3b786e, 0xaaddd44f, 0xf7a37c04,
+            0x8255c7e9, 4, 0, 0, 0,
+        ];
+        assert_eq!(rng_state(&rng1), &expected);
 
         assert_eq!([x0, x1], target);
     }
