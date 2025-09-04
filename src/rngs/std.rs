@@ -239,6 +239,9 @@ mod test {
     #[test]
     fn test_chacha_counter() {
         // Source: rand_chacha implementation
+        // We test six blocks: counter=u32::MAX, four blocks from 2^32 (backends
+        // which yield four blocks at a time may need to handle this specially)
+        // and the first block after this wrap-logic completes.
         // Test: all zero key and IV, block set to u32::MAX, rounds 12, 256-bit key
 
         let seed = [0u8; 32];
@@ -247,7 +250,7 @@ mod test {
         let words_per_block = 16;
         rng.0.set_word_pos((block as u128) * words_per_block);
 
-        let mut results = [0u128; 8];
+        let mut results = [0u128; 4 * 6];
         rng.fill(&mut results);
         let expected = [
             0xf106e2fcbb524248292ac9f150afa6d7,
@@ -258,9 +261,25 @@ mod test {
             0x18a6a6cbdc1f823fb1231280056740af,
             0xabdae0a44b1f45edbccc83dcd3f8638a,
             0xad6b649f12f70de567cc39740dbb8a22,
+            0x37512785327825dc30ecfaf37a38f5a0,
+            0x5af852d2df0dc286c2dd19af39b54e39,
+            0xb04dc185c27497ac9f4a4f6769d1b5d,
+            0x816492be66439cecd2498c9865284377,
+            0x724fe95e0b6cbb8a55b707c06166147f,
+            0xe3e7cda19d92b5318024abb34aa31329,
+            0x1a3594d7283c077017cd511144bf3db3,
+            0x99ab26cf14f38b11d78e413bdce6424c,
+            0x553deaed89d3bf630de05408c0f655e8,
+            0x86c46a5676fef18f0dc0dff3ee16507c,
+            0xd33d6cf5ade97b000b29e3ce614faf51,
+            0x5b62dcc48c0fc60326afc5783c40d40c,
+            0x44eedc777ed030f43d382d4921eba244,
+            0xa2d66a5893ade34a0d17c706e8d89dba,
+            0xd229d1f3a07526e47cabd035135012fd,
+            0xefae0722059b654dea6945547e535052,
         ];
         assert_eq!(results, expected);
 
-        assert_eq!(rng.0.get_word_pos(), (block as u128) * words_per_block + 32);
+        assert_eq!(rng.0.get_word_pos(), (block as u128) * words_per_block + 96);
     }
 }
