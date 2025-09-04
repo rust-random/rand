@@ -39,7 +39,7 @@
 //! for the nondeterministic version of this program as well.
 
 use rand::distr::{Distribution, Uniform};
-use rand_chacha::{rand_core::SeedableRng, ChaCha8Rng};
+use rand_chacha::{ChaCha8Rng, rand_core::SeedableRng};
 use rayon::prelude::*;
 
 static SEED: u64 = 0;

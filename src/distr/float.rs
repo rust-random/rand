@@ -8,9 +8,9 @@
 
 //! Basic floating-point number distributions
 
+use crate::Rng;
 use crate::distr::utils::{FloatAsSIMD, FloatSIMDUtils, IntAsSIMD};
 use crate::distr::{Distribution, StandardUniform};
-use crate::Rng;
 use core::mem;
 #[cfg(feature = "simd_support")]
 use core::simd::prelude::*;

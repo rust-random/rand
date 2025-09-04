@@ -14,7 +14,7 @@
 const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
 use core::fmt;
-use rand_core::{impls, le, RngCore, SeedableRng};
+use rand_core::{RngCore, SeedableRng, impls, le};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 

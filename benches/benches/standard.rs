@@ -8,7 +8,7 @@
 
 use core::time::Duration;
 use criterion::measurement::WallTime;
-use criterion::{criterion_group, criterion_main, BenchmarkGroup, Criterion};
+use criterion::{BenchmarkGroup, Criterion, criterion_group, criterion_main};
 use rand::distr::{Alphabetic, Alphanumeric, Open01, OpenClosed01, StandardUniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64Mcg;

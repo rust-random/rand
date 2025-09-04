@@ -8,8 +8,8 @@
 
 //! The implementations of the `StandardUniform` distribution for integer types.
 
-use crate::distr::{Distribution, StandardUniform};
 use crate::Rng;
+use crate::distr::{Distribution, StandardUniform};
 #[cfg(all(target_arch = "x86", feature = "simd_support"))]
 use core::arch::x86::__m512i;
 #[cfg(target_arch = "x86")]
@@ -19,8 +19,8 @@ use core::arch::x86_64::__m512i;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::{__m128i, __m256i};
 use core::num::{
-    NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroU128, NonZeroU16,
-    NonZeroU32, NonZeroU64, NonZeroU8,
+    NonZeroI8, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI128, NonZeroU8, NonZeroU16, NonZeroU32,
+    NonZeroU64, NonZeroU128,
 };
 #[cfg(feature = "simd_support")]
 use core::simd::*;
