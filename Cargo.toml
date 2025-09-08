@@ -79,7 +79,7 @@ rand_core = { path = "rand_core" }
 rand_core = { path = "rand_core", version = "0.9.0", default-features = false }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
-chacha20 = { version = "=0.10.0-rc.0", default-features = false, features = ["rng"], optional = true }
+chacha20 = { version = "=0.10.0-rc.1", default-features = false, features = ["rng", "legacy"], optional = true }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "0.9.0" }

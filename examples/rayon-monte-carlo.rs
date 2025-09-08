@@ -57,7 +57,7 @@ fn main() {
             // We chose ChaCha because it's fast, has suitable statistical properties for simulation,
             // and because it supports this set_stream() api, which lets us choose a different stream
             // per work item. ChaCha supports 2^64 independent streams.
-            rng.set_stream(u128::from(i));
+            rng.set_stream(u64::from(i));
             let mut count = 0;
             for _ in 0..BATCH_SIZE {
                 let a = range.sample(&mut rng);

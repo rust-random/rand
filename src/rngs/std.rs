@@ -217,7 +217,7 @@ mod test {
         ];
         let iv = [0x1a, 0xda, 0x31, 0xd5, 0xcf, 0x68, 0x82, 0x21];
         let mut rng = StdRng::from_seed(seed);
-        rng.0.set_stream(u128::from(u64::from_le_bytes(iv)));
+        rng.0.set_stream(u64::from_le_bytes(iv));
 
         let mut results = [0u128; 8];
         rng.fill(&mut results);
@@ -248,7 +248,7 @@ mod test {
         let mut rng = StdRng::from_seed(seed);
         let block = u32::MAX;
         let words_per_block = 16;
-        rng.0.set_word_pos((block as u64) * words_per_block);
+        rng.0.set_word_pos((block as u128) * words_per_block);
 
         let mut results = [0u128; 4 * 6];
         rng.fill(&mut results);
@@ -280,6 +280,6 @@ mod test {
         ];
         assert_eq!(results, expected);
 
-        assert_eq!(rng.0.get_word_pos(), (block as u64) * words_per_block + 96);
+        assert_eq!(rng.0.get_word_pos(), (block as u128) * words_per_block + 96);
     }
 }
