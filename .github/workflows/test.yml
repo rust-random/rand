@@ -45,8 +45,6 @@ jobs:
           toolchain: nightly
       - name: rand
         run: cargo doc --all-features --no-deps
-      - name: rand_chacha
-        run: cargo doc --all-features --package rand_chacha --no-deps
       - name: rand_pcg
         run: cargo doc --all-features --package rand_pcg --no-deps
 
@@ -112,8 +110,6 @@ jobs:
           cargo test --target ${{ matrix.target }} --features=serde,log,small_rng
       - name: Test rand_pcg
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
-      - name: Test rand_chacha
-        run: cargo test --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml --features=serde
 
   test-cross:
     runs-on: ${{ matrix.os }}
@@ -145,7 +141,6 @@ jobs:
           cross test --no-fail-fast --target ${{ matrix.target }} --features=serde,log,small_rng
           cross test --no-fail-fast --target ${{ matrix.target }} --examples
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
-          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml
 
   test-miri:
     runs-on: ubuntu-latest
@@ -161,7 +156,6 @@ jobs:
           cargo miri test --no-default-features --lib --tests
           cargo miri test --features=log,small_rng
           cargo miri test --manifest-path rand_pcg/Cargo.toml --features=serde
-          cargo miri test --manifest-path rand_chacha/Cargo.toml --no-default-features
 
   test-no-std:
     runs-on: ubuntu-latest

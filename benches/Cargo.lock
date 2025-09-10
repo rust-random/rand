@@ -33,10 +33,10 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 name = "benches"
 version = "0.1.0"
 dependencies = [
+ "chacha20",
  "criterion",
  "criterion-cycles-per-byte",
  "rand",
- "rand_chacha",
  "rand_pcg",
 ]
 
@@ -341,15 +341,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ppv-lite86"
-version = "0.2.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
-dependencies = [
- "zerocopy",
-]
-
-[[package]]
 name = "proc-macro2"
 version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -379,14 +370,6 @@ version = "0.10.0-rc.6"
 dependencies = [
  "chacha20",
  "getrandom",
- "rand_core",
-]
-
-[[package]]
-name = "rand_chacha"
-version = "0.10.0-rc.6"
-dependencies = [
- "ppv-lite86",
  "rand_core",
 ]
 

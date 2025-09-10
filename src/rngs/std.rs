@@ -22,7 +22,7 @@ use chacha20::ChaCha12Rng as Rng;
 ///
 /// - Non-[portable]: any future library version may replace the algorithm
 ///   and results may be platform-dependent.
-///   (For a portable version, use the [rand_chacha] crate directly.)
+///   (For a portable version, use the [chacha20] crate directly.)
 /// - [CSPRNG]: statistically good quality of randomness and [unpredictable]
 /// - Fast ([amortized](https://en.wikipedia.org/wiki/Amortized_analysis)):
 ///   the RNG is fast for bulk generation, but the cost of method calls is not
@@ -65,7 +65,7 @@ use chacha20::ChaCha12Rng as Rng;
 /// [unpredictable]: https://rust-random.github.io/book/guide-rngs.html#security
 /// [Random Values]: https://rust-random.github.io/book/guide-values.html
 /// [CSPRNG]: https://rust-random.github.io/book/guide-gen.html#cryptographically-secure-pseudo-random-number-generator
-/// [rand_chacha]: https://crates.io/crates/rand_chacha
+/// [chacha20]: https://crates.io/crates/chacha20
 /// [rand issue]: https://github.com/rust-random/rand/issues/932
 /// [`RngCore`]: rand_core::RngCore
 #[derive(Debug, PartialEq, Eq)]
