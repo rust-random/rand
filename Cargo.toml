@@ -34,7 +34,7 @@ serde = ["dep:serde", "rand_core/serde"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
 # enables functionality expected to be available on a standard platform.
-std = ["rand_core/std", "rand_chacha?/std", "alloc"]
+std = ["rand_core/std", "alloc"]
 
 # Option: "alloc" enables support for Vec and Box when not using "std"
 alloc = []
@@ -46,7 +46,7 @@ os_rng = ["rand_core/os_rng"]
 simd_support = []
 
 # Option (enabled by default): enable StdRng
-std_rng = ["dep:rand_chacha"]
+std_rng = ["dep:chacha20"]
 
 # Option: enable SmallRng
 small_rng = []
@@ -70,11 +70,16 @@ members = [
 ]
 exclude = ["benches", "distr_test"]
 
+# Force chacha20 to use the local rand_code to avoid compiling two different "rand_core"s.
+# This is necessary even if the specified versions are the same.
+[patch.crates-io]
+rand_core = { path = "rand_core" }
+
 [dependencies]
 rand_core = { path = "rand_core", version = "0.9.0", default-features = false }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
-rand_chacha = { path = "rand_chacha", version = "0.9.0", default-features = false, optional = true }
+chacha20 = { version = "=0.10.0-rc.2", default-features = false, features = ["rng"], optional = true }
 
 [dev-dependencies]
 rand_pcg = { path = "rand_pcg", version = "0.9.0" }
