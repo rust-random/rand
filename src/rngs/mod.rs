@@ -29,8 +29,8 @@
 //! platform-dependent.
 //!
 //! -   [`StdRng`] is a CSPRNG chosen for good performance and trust of security
-//!     (based on reviews, maturity and usage). The current algorithm is ChaCha12,
-//!     which is well established and rigorously analysed.
+//!     (based on reviews, maturity and usage). The current algorithm is
+//!     [`ChaCha12Rng`], which is well established and rigorously analysed.
 //!     [`StdRng`] is the deterministic generator used by [`ThreadRng`] but
 //!     without the periodic reseeding or thread-local management.
 //! -   [`SmallRng`] is a relatively simple, insecure generator designed to be
@@ -47,6 +47,8 @@
 //!     256 bits of state with good performance in statistical tests of quality
 //! -   [`Xoshiro128PlusPlus`] is a very fast 32-bit insecure generator using
 //!     128 bits of state with good performance in statistical tests of quality
+//! -   [`ChaCha8Rng`], [`ChaCha12Rng`] and [`ChaCha20Rng`] are generators over
+//!     the ChaCha stream cipher designed by Daniel J. Bernstein[^1].
 //!
 //! ### Additional generators
 //!
@@ -72,6 +74,8 @@
 //! Secure RNGs may additionally implement the [`CryptoRng`] trait.
 //!
 //! Use the [`rand_core`] crate when implementing your own RNGs.
+//!
+//! [^1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](https://cr.yp.to/chacha.html)
 //!
 //! [guarantees of reproducibility]: https://rust-random.github.io/book/crate-reprod.html
 //! [Types of generators]: https://rust-random.github.io/book/guide-gen.html
@@ -121,6 +125,9 @@ pub use xoshiro256plusplus::Xoshiro256PlusPlus;
 pub use self::std::StdRng;
 #[cfg(feature = "thread_rng")]
 pub use self::thread::ThreadRng;
+
+#[cfg(feature = "chacha")]
+pub use chacha20::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
 
 #[cfg(feature = "os_rng")]
 pub use rand_core::OsRng;
