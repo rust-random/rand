@@ -302,6 +302,17 @@ where
     }
 }
 
+#[cfg(feature = "hybrid-array")]
+impl<T, L: hybrid_array::ArraySize> Distribution<hybrid_array::Array<T, L>> for StandardUniform
+where
+    StandardUniform: Distribution<T>,
+{
+    #[inline]
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> hybrid_array::Array<T, L> {
+        hybrid_array::Array::from_fn(|_| rng.random())
+    }
+}
+
 impl<T> Distribution<Wrapping<T>> for StandardUniform
 where
     StandardUniform: Distribution<T>,

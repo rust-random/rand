@@ -81,6 +81,7 @@ Additionally, these features configure Rand:
 -   `simd_support` (experimental) enables sampling of SIMD values
     (uniformly random SIMD integers and floats), requiring nightly Rust
 -   `unbiased` use unbiased sampling for algorithms supporting this option: Uniform distribution.
+-   `hybrid-array` implement `Distribution` for `hybrid_array::Array`
 
     (By default, bias affecting no more than one in  2^48 samples is accepted.)
 
