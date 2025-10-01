@@ -53,7 +53,7 @@
     all(feature = "simd_support", target_feature = "avx512bw"),
     feature(stdarch_x86_avx512)
 )]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![allow(
     clippy::float_cmp,
     clippy::neg_cmp_op_on_partial_ord,

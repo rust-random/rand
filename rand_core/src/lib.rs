@@ -33,7 +33,7 @@
 #![deny(missing_debug_implementations)]
 #![deny(clippy::undocumented_unsafe_blocks)]
 #![doc(test(attr(allow(unused_variables), deny(warnings))))]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![no_std]
 
 #[cfg(feature = "std")]
