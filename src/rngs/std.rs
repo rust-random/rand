@@ -39,8 +39,8 @@ use chacha20::ChaCha12Rng as Rng;
 ///
 /// Using a fresh seed **direct from the OS** is the most secure option:
 /// ```
-/// # use rand::{SeedableRng, rngs::StdRng};
-/// let rng = StdRng::from_os_rng();
+/// # use rand::{SeedableRng, rngs::{StdRng, OsRng}};
+/// let rng = StdRng::try_from_rng(&mut OsRng).unwrap();
 /// # let _: StdRng = rng;
 /// ```
 ///

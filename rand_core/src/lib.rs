@@ -490,48 +490,6 @@ pub trait SeedableRng: Sized {
         rng.try_fill_bytes(seed.as_mut())?;
         Ok(Self::from_seed(seed))
     }
-
-    /// Creates a new instance of the RNG seeded via [`getrandom`].
-    ///
-    /// This method is the recommended way to construct non-deterministic PRNGs
-    /// since it is convenient and secure.
-    ///
-    /// Note that this method may panic on (extremely unlikely) [`getrandom`] errors.
-    /// If it's not desirable, use the [`try_from_os_rng`] method instead.
-    ///
-    /// In case the overhead of using [`getrandom`] to seed *many* PRNGs is an
-    /// issue, one may prefer to seed from a local PRNG, e.g.
-    /// `from_rng(rand::rng()).unwrap()`.
-    ///
-    /// # Panics
-    ///
-    /// If [`getrandom`] is unable to provide secure entropy this method will panic.
-    ///
-    /// [`getrandom`]: https://docs.rs/getrandom
-    /// [`try_from_os_rng`]: SeedableRng::try_from_os_rng
-    #[cfg(feature = "os_rng")]
-    fn from_os_rng() -> Self {
-        match Self::try_from_os_rng() {
-            Ok(res) => res,
-            Err(err) => panic!("from_os_rng failed: {}", err),
-        }
-    }
-
-    /// Creates a new instance of the RNG seeded via [`getrandom`] without unwrapping
-    /// potential [`getrandom`] errors.
-    ///
-    /// In case the overhead of using [`getrandom`] to seed *many* PRNGs is an
-    /// issue, one may prefer to seed from a local PRNG, e.g.
-    /// `from_rng(&mut rand::rng()).unwrap()`.
-    ///
-    /// [`getrandom`]: https://docs.rs/getrandom
-    #[cfg(feature = "os_rng")]
-    fn try_from_os_rng() -> Result<Self, getrandom::Error> {
-        let mut seed = Self::Seed::default();
-        getrandom::fill(seed.as_mut())?;
-        let res = Self::from_seed(seed);
-        Ok(res)
-    }
 }
 
 #[cfg(test)]
