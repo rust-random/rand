@@ -23,26 +23,51 @@ impl<const N: usize> Seed for [u8; N] {
     }
 }
 
-impl Seed for u32 {
-    fn try_from_fill<E>(fill: impl FnOnce(&mut [u8]) -> Result<(), E>) -> Result<Self, E> {
-        let mut buf = [0u8; 4];
-        fill(&mut buf)?;
-        Ok(u32::from_le_bytes(buf))
-    }
+macro_rules! impl_un {
+    ($($t:ty)*) => {
+        $(
+            impl Seed for $t {
+                fn try_from_fill<E>(fill: impl FnOnce(&mut [u8]) -> Result<(), E>) -> Result<Self, E> {
+                    let mut buf = [0u8; size_of::<$t>()];
+                    fill(&mut buf)?;
+                    Ok(<$t>::from_le_bytes(buf))
+                }
+            }
+        )*
+    };
 }
 
-impl Seed for u64 {
-    fn try_from_fill<E>(fill: impl FnOnce(&mut [u8]) -> Result<(), E>) -> Result<Self, E> {
-        let mut buf = [0u8; 8];
-        fill(&mut buf)?;
-        Ok(u64::from_le_bytes(buf))
-    }
+impl_un!(u8 u16 u32 u64 u128);
+
+macro_rules! impl_array_un {
+    ($($t:ty)*) => {
+        $(
+            impl<const N: usize> Seed for [$t; N] {
+                fn try_from_fill<E>(fill: impl FnOnce(&mut [u8]) -> Result<(), E>) -> Result<Self, E> {
+                    let mut buf: [$t; N] = [0; N];
+
+                    {
+                        let byte_size = size_of_val(&buf);
+                        // SAFETY: it's safe to case `&mut [uM; N]` to `&mut [u8]`
+                        // with size equal to `size_of_val`
+                        let bytes_buf: &mut [u8] = unsafe {
+                            core::slice::from_raw_parts_mut(
+                                buf.as_mut_ptr().cast(),
+                                byte_size,
+                            )
+                        };
+                        fill(bytes_buf)?;
+                    }
+
+                    for val in &mut buf {
+                        *val = val.to_le();
+                    }
+
+                    Ok(buf)
+                }
+            }
+        )*
+    };
 }
 
-impl Seed for u128 {
-    fn try_from_fill<E>(fill: impl FnOnce(&mut [u8]) -> Result<(), E>) -> Result<Self, E> {
-        let mut buf = [0u8; 16];
-        fill(&mut buf)?;
-        Ok(u128::from_le_bytes(buf))
-    }
-}
+impl_array_un!(u16 u32 u64 u128);
