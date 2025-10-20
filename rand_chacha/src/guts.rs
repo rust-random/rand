@@ -13,7 +13,7 @@ use ppv_lite86::{dispatch, dispatch_light128};
 
 pub use ppv_lite86::Machine;
 use ppv_lite86::{
-    vec128_storage, ArithOps, BitOps32, LaneWords4, MultiLane, StoreBytes, Vec4, Vec4Ext, Vector,
+    ArithOps, BitOps32, LaneWords4, MultiLane, StoreBytes, Vec4, Vec4Ext, Vector, vec128_storage,
 };
 
 pub(crate) const BLOCK: usize = 16;
