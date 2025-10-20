@@ -32,5 +32,5 @@ rand = { path = "..", version = "0.10.0-rc.0" }
 
 [features]
 default = ["std"]
-std = ["ppv-lite86/std", "rand_core/std"]
+std = ["ppv-lite86/std"]
 serde = ["dep:serde"]

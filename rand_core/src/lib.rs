@@ -36,18 +36,10 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![no_std]
 
-#[cfg(feature = "std")]
-extern crate std;
-
 use core::{fmt, ops::DerefMut};
 
 pub mod block;
 pub mod le;
-#[cfg(feature = "os_rng")]
-mod os;
-
-#[cfg(feature = "os_rng")]
-pub use os::{OsError, OsRng};
 
 /// Implementation-level interface for RNGs
 ///
@@ -168,6 +160,8 @@ where
 /// An optional property of CSPRNGs is backtracking resistance: if the CSPRNG's
 /// state is revealed, it will not be computationally-feasible to reconstruct
 /// prior output values. This property is not required by `CryptoRng`.
+///
+/// [`OsRng`]: https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html
 pub trait CryptoRng: RngCore {}
 
 impl<T: DerefMut> CryptoRng for T where T::Target: CryptoRng {}
@@ -184,6 +178,8 @@ impl<T: DerefMut> CryptoRng for T where T::Target: CryptoRng {}
 /// An implementation of this trait may be made compatible with code requiring
 /// an [`RngCore`] through [`TryRngCore::unwrap_err`]. The resulting RNG will
 /// panic in case the underlying fallible RNG yields an error.
+///
+/// [`OsRng`]: https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html
 pub trait TryRngCore {
     /// The type returned in the event of a RNG error.
     type Error: fmt::Debug + fmt::Display;
@@ -246,6 +242,8 @@ impl<R: RngCore + ?Sized> TryRngCore for R {
 /// `default()` instances are themselves secure generators: for example if the
 /// implementing type is a stateless interface over a secure external generator
 /// (like [`OsRng`]) or if the `default()` instance uses a strong, fresh seed.
+///
+/// [`OsRng`]: https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html
 pub trait TryCryptoRng: TryRngCore {}
 
 impl<R: CryptoRng + ?Sized> TryCryptoRng for R {}

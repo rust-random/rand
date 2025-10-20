@@ -13,11 +13,8 @@ use std::fmt;
 use std::rc::Rc;
 use std::thread_local;
 
+use super::{OsError, OsRng, ReseedingRng, std::Core};
 use rand_core::{CryptoRng, RngCore};
-
-use super::std::Core;
-use crate::rngs::OsRng;
-use crate::rngs::ReseedingRng;
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
 //
@@ -100,7 +97,7 @@ impl ThreadRng {
     /// Immediately reseed the generator
     ///
     /// This discards any remaining random data in the cache.
-    pub fn reseed(&mut self) -> Result<(), rand_core::OsError> {
+    pub fn reseed(&mut self) -> Result<(), OsError> {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
