@@ -42,7 +42,6 @@ extern crate std;
 use core::{fmt, ops::DerefMut};
 
 pub mod block;
-pub mod impls;
 pub mod le;
 #[cfg(feature = "os_rng")]
 mod os;

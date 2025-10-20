@@ -6,12 +6,45 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! Little-Endian utilities
+//! # Little-Endian utilities
 //!
-//! Little-Endian order has been chosen for internal usage; this makes some
-//! useful functions available.
+//! For cross-platform reproducibility, Little-Endian order (least-significant
+//! part first) has been chosen as the standard for inter-type conversion.
+//! For example, ``next_u64_via_u32`] takes `u32`
+//! values `x, y`, then outputs `(y << 32) | x`.
+//!
+//! Byte-swapping (like the std `to_le` functions) is only needed to convert
+//! to/from byte sequences, and since its purpose is reproducibility,
+//! non-reproducible sources (e.g. `OsRng`) need not bother with it.
+//!
+//! ### Implementing [`RngCore`]
+//!
+//! Usually an implementation of [`RngCore`] will implement one of the three
+//! methods over its internal source. The following helpers are provided for
+//! the remaining implementations.
+//!
+//! **`fn next_u32`:**
+//! -   `self.next_u64() as u32`
+//! -   `(self.next_u64() >> 32) as u32`
+//! -   <code>[next_u32_via_fill][](self)</code>
+//!
+//! **`fn next_u64`:**
+//! -   <code>[next_u64_via_u32][](self)</code>
+//! -   <code>[next_u64_via_fill][](self)</code>
+//!
+//! **`fn fill_bytes`:**
+//! -   <code>[fill_bytes_via_next][](self, dest)</code>
+//!
+//! ### Implementing [`SeedableRng`]
+//!
+//! In many cases, [`SeedableRng::Seed`] must be converted to `[u32]` or
+//! `[u64]`. The following helpers are provided:
+//!
+//! - [`read_u32_into`]
+//! - [`read_u64_into`]
 
 use crate::RngCore;
+#[allow(unused)] use crate::SeedableRng;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
 pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {
