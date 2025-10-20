@@ -100,63 +100,6 @@ pub(crate) fn fill_via_chunks<T: Observable>(src: &[T], dest: &mut [u8]) -> (usi
     (num_chunks, byte_len)
 }
 
-/// Implement `fill_bytes` by reading chunks from the output buffer of a block
-/// based RNG.
-///
-/// The return values are `(consumed_u32, filled_u8)`.
-///
-/// `src` is not modified; it is taken as a `&mut` reference for backward
-/// compatibility with previous versions that did change it.
-///
-/// `filled_u8` is the number of filled bytes in `dest`, which may be less than
-/// the length of `dest`.
-/// `consumed_u32` is the number of words consumed from `src`, which is the same
-/// as `filled_u8 / 4` rounded up.
-///
-/// # Example
-/// (from `IsaacRng`)
-///
-/// ```ignore
-/// fn fill_bytes(&mut self, dest: &mut [u8]) {
-///     let mut read_len = 0;
-///     while read_len < dest.len() {
-///         if self.index >= self.rsl.len() {
-///             self.isaac();
-///         }
-///
-///         let (consumed_u32, filled_u8) =
-///             impls::fill_via_u32_chunks(&mut self.rsl[self.index..],
-///                                        &mut dest[read_len..]);
-///
-///         self.index += consumed_u32;
-///         read_len += filled_u8;
-///     }
-/// }
-/// ```
-#[deprecated(since = "0.9.3", note = "use BlockRng instead")]
-pub fn fill_via_u32_chunks(src: &mut [u32], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks(src, dest)
-}
-
-/// Implement `fill_bytes` by reading chunks from the output buffer of a block
-/// based RNG.
-///
-/// The return values are `(consumed_u64, filled_u8)`.
-///
-/// `src` is not modified; it is taken as a `&mut` reference for backward
-/// compatibility with previous versions that did change it.
-///
-/// `filled_u8` is the number of filled bytes in `dest`, which may be less than
-/// the length of `dest`.
-/// `consumed_u64` is the number of words consumed from `src`, which is the same
-/// as `filled_u8 / 8` rounded up.
-///
-/// See `fill_via_u32_chunks` for an example.
-#[deprecated(since = "0.9.3", note = "use BlockRng64 instead")]
-pub fn fill_via_u64_chunks(src: &mut [u64], dest: &mut [u8]) -> (usize, usize) {
-    fill_via_chunks(src, dest)
-}
-
 /// Implement `next_u32` via `fill_bytes`, little-endian order.
 pub fn next_u32_via_fill<R: RngCore + ?Sized>(rng: &mut R) -> u32 {
     let mut buf = [0; 4];
