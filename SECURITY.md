@@ -24,8 +24,7 @@ used according to these additional constraints:
 
     -   Via `SeedableRng::from_seed` using a cryptographically secure seed value
     -   Via `SeedableRng::from_rng` or `try_from_rng` using a cryptographically
-        secure source `rng`
-    -   Via `SeedableRng::from_os_rng` or `try_from_os_rng`
+        secure source `rng` such as `OsRng` or `ThreadRng`.
 -   The state (memory) of the generator and its seed value (or source `rng`) are
     not exposed
 
