@@ -563,9 +563,9 @@ pub struct RngReadAdapter<'a, R: TryRngCore + ?Sized> {
 impl<R: TryRngCore + ?Sized> std::io::Read for RngReadAdapter<'_, R> {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
-        self.inner.try_fill_bytes(buf).map_err(|err| {
-            std::io::Error::new(std::io::ErrorKind::Other, std::format!("RNG error: {err}"))
-        })?;
+        self.inner
+            .try_fill_bytes(buf)
+            .map_err(|err| std::io::Error::other(std::format!("RNG error: {err}")))?;
         Ok(buf.len())
     }
 }
