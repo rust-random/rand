@@ -45,9 +45,11 @@ pub mod block;
 pub mod le;
 #[cfg(feature = "os_rng")]
 mod os;
+mod seed;
 
 #[cfg(feature = "os_rng")]
 pub use os::{OsError, OsRng};
+pub use seed::Seed;
 
 /// Implementation-level interface for RNGs
 ///
@@ -344,50 +346,7 @@ pub trait SeedableRng: Sized {
     /// partially overlapping periods.
     ///
     /// For cryptographic RNG's a seed of 256 bits is recommended, `[u8; 32]`.
-    ///
-    ///
-    /// # Implementing `SeedableRng` for RNGs with large seeds
-    ///
-    /// Note that [`Default`] is not implemented for large arrays `[u8; N]` with
-    /// `N` > 32. To be able to implement the traits required by `SeedableRng`
-    /// for RNGs with such large seeds, the newtype pattern can be used:
-    ///
-    /// ```
-    /// use rand_core::SeedableRng;
-    ///
-    /// const N: usize = 64;
-    /// #[derive(Clone)]
-    /// pub struct MyRngSeed(pub [u8; N]);
-    /// # #[allow(dead_code)]
-    /// pub struct MyRng(MyRngSeed);
-    ///
-    /// impl Default for MyRngSeed {
-    ///     fn default() -> MyRngSeed {
-    ///         MyRngSeed([0; N])
-    ///     }
-    /// }
-    ///
-    /// impl AsRef<[u8]> for MyRngSeed {
-    ///     fn as_ref(&self) -> &[u8] {
-    ///         &self.0
-    ///     }
-    /// }
-    ///
-    /// impl AsMut<[u8]> for MyRngSeed {
-    ///     fn as_mut(&mut self) -> &mut [u8] {
-    ///         &mut self.0
-    ///     }
-    /// }
-    ///
-    /// impl SeedableRng for MyRng {
-    ///     type Seed = MyRngSeed;
-    ///
-    ///     fn from_seed(seed: MyRngSeed) -> MyRng {
-    ///         MyRng(seed)
-    ///     }
-    /// }
-    /// ```
-    type Seed: Clone + Default + AsRef<[u8]> + AsMut<[u8]>;
+    type Seed: Seed;
 
     /// Create a new PRNG using the given seed.
     ///
@@ -448,15 +407,16 @@ pub trait SeedableRng: Sized {
             x.to_le_bytes()
         }
 
-        let mut seed = Self::Seed::default();
-        let mut iter = seed.as_mut().chunks_exact_mut(4);
-        for chunk in &mut iter {
-            chunk.copy_from_slice(&pcg32(&mut state));
-        }
-        let rem = iter.into_remainder();
-        if !rem.is_empty() {
-            rem.copy_from_slice(&pcg32(&mut state)[..rem.len()]);
-        }
+        let seed = Self::Seed::from_bytes(|buf| {
+            let mut iter = buf.chunks_exact_mut(4);
+            for chunk in &mut iter {
+                chunk.copy_from_slice(&pcg32(&mut state));
+            }
+            let rem = iter.into_remainder();
+            if !rem.is_empty() {
+                rem.copy_from_slice(&pcg32(&mut state)[..rem.len()]);
+            }
+        });
 
         Self::from_seed(seed)
     }
@@ -486,8 +446,7 @@ pub trait SeedableRng: Sized {
     ///
     /// [`rand`]: https://docs.rs/rand
     fn from_rng<R: RngCore + ?Sized>(rng: &mut R) -> Self {
-        let mut seed = Self::Seed::default();
-        rng.fill_bytes(seed.as_mut());
+        let Ok(seed) = Self::Seed::try_from_bytes(|buf| rng.try_fill_bytes(buf));
         Self::from_seed(seed)
     }
 
@@ -495,8 +454,7 @@ pub trait SeedableRng: Sized {
     ///
     /// See [`from_rng`][SeedableRng::from_rng] docs for more information.
     fn try_from_rng<R: TryRngCore + ?Sized>(rng: &mut R) -> Result<Self, R::Error> {
-        let mut seed = Self::Seed::default();
-        rng.try_fill_bytes(seed.as_mut())?;
+        let seed = Self::Seed::try_from_bytes(|buf| rng.try_fill_bytes(buf))?;
         Ok(Self::from_seed(seed))
     }
 
@@ -536,10 +494,8 @@ pub trait SeedableRng: Sized {
     /// [`getrandom`]: https://docs.rs/getrandom
     #[cfg(feature = "os_rng")]
     fn try_from_os_rng() -> Result<Self, getrandom::Error> {
-        let mut seed = Self::Seed::default();
-        getrandom::fill(seed.as_mut())?;
-        let res = Self::from_seed(seed);
-        Ok(res)
+        let seed = Self::Seed::try_from_bytes(getrandom::fill)?;
+        Ok(Self::from_seed(seed))
     }
 }
 
