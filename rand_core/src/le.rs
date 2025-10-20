@@ -44,7 +44,8 @@
 //! - [`read_u64_into`]
 
 use crate::RngCore;
-#[allow(unused)] use crate::SeedableRng;
+#[allow(unused)]
+use crate::SeedableRng;
 
 /// Implement `next_u64` via `next_u32`, little-endian order.
 pub fn next_u64_via_u32<R: RngCore + ?Sized>(rng: &mut R) -> u64 {

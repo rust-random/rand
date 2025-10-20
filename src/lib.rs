@@ -333,7 +333,7 @@ mod test {
         }
 
         fn fill_bytes(&mut self, dst: &mut [u8]) {
-            rand_core::impls::fill_bytes_via_next(self, dst)
+            rand_core::le::fill_bytes_via_next(self, dst)
         }
     }
 

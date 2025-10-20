@@ -6,9 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use rand_core::impls::{fill_bytes_via_next, next_u64_via_u32};
-use rand_core::le::read_u32_into;
-use rand_core::{RngCore, SeedableRng};
+use rand_core::{RngCore, SeedableRng, le};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -34,7 +32,7 @@ impl SeedableRng for Xoshiro128PlusPlus {
     #[inline]
     fn from_seed(seed: [u8; 16]) -> Xoshiro128PlusPlus {
         let mut state = [0; 4];
-        read_u32_into(&seed, &mut state);
+        le::read_u32_into(&seed, &mut state);
         // Check for zero on aligned integers for better code generation.
         // Furtermore, seed_from_u64(0) will expand to a constant when optimized.
         if state.iter().all(|&x| x == 0) {
@@ -90,12 +88,12 @@ impl RngCore for Xoshiro128PlusPlus {
 
     #[inline]
     fn next_u64(&mut self) -> u64 {
-        next_u64_via_u32(self)
+        le::next_u64_via_u32(self)
     }
 
     #[inline]
     fn fill_bytes(&mut self, dst: &mut [u8]) {
-        fill_bytes_via_next(self, dst)
+        le::fill_bytes_via_next(self, dst)
     }
 }
 
