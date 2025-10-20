@@ -356,7 +356,7 @@ mod test {
     use rand_core::{RngCore, SeedableRng};
 
     #[cfg(feature = "serde")]
-    use super::{ChaCha12Rng, ChaCha20Rng, ChaCha8Rng};
+    use super::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
 
     type ChaChaRng = super::ChaCha20Rng;
 

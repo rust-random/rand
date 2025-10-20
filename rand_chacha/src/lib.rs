@@ -97,7 +97,7 @@ mod chacha;
 mod guts;
 
 pub use crate::chacha::{
-    ChaCha12Core, ChaCha12Rng, ChaCha20Core, ChaCha20Rng, ChaCha8Core, ChaCha8Rng,
+    ChaCha8Core, ChaCha8Rng, ChaCha12Core, ChaCha12Rng, ChaCha20Core, ChaCha20Rng,
 };
 
 /// ChaCha with 20 rounds
