@@ -50,25 +50,6 @@ jobs:
       - name: rand_pcg
         run: cargo doc --all-features --package rand_pcg --no-deps
 
-  core-msrv:
-    name: rand_core MSRV
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: MSRV
-        run: |
-          rm Cargo.toml
-          cd rand_core
-          cp Cargo.lock.msrv Cargo.lock
-      - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.63.0
-      - name: Test rand_core
-        working-directory: ./rand_core
-        run: |
-          cargo test
-          cargo test --no-default-features
-          cargo test --no-default-features --features=os_rng
-
   test:
     runs-on: ${{ matrix.os }}
     strategy:
