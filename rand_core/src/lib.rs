@@ -543,13 +543,16 @@ pub trait SeedableRng: Sized {
 /// use std::fs::File;
 /// use rand_core::{OsRng, RngReader};
 ///
-/// io::copy(&mut RngReader(&mut OsRng).take(100), &mut File::create("/tmp/random.bytes").unwrap()).unwrap();
+/// io::copy(
+///     &mut RngReader(OsRng).take(100),
+///     &mut File::create("/tmp/random.bytes").unwrap()
+/// ).unwrap();
 /// ```
 #[cfg(feature = "std")]
-pub struct RngReader<'a, R: TryRngCore + ?Sized>(pub &'a mut R);
+pub struct RngReader<R: TryRngCore>(pub R);
 
 #[cfg(feature = "std")]
-impl<R: TryRngCore + ?Sized> std::io::Read for RngReader<'_, R> {
+impl<R: TryRngCore> std::io::Read for RngReader<R> {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         self.0
@@ -560,7 +563,7 @@ impl<R: TryRngCore + ?Sized> std::io::Read for RngReader<'_, R> {
 }
 
 #[cfg(feature = "std")]
-impl<R: TryRngCore + ?Sized> std::fmt::Debug for RngReader<'_, R> {
+impl<R: TryRngCore> std::fmt::Debug for RngReader<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("RngReader").finish()
     }
@@ -725,5 +728,36 @@ mod test {
             // Make sure rng2 is dropped.
         }
         assert_eq!(rng.next_u32(), 4);
+    }
+
+    struct StepRng(u32, u32);
+    impl RngCore for StepRng {
+        fn next_u32(&mut self) -> u32 {
+            let x = self.0;
+            self.0 += self.1;
+            x
+        }
+        fn next_u64(&mut self) -> u64 {
+            le::next_u64_via_u32(self)
+        }
+        fn fill_bytes(&mut self, dest: &mut [u8]) {
+            le::fill_bytes_via_next(self, dest);
+        }
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn rng_reader() {
+        use std::io::Read;
+
+        let mut rng = StepRng(255, 1);
+        let mut buf = [0u8; 16];
+        let expected = [255, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 2, 1, 0, 0];
+
+        RngReader(&mut rng).read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, &expected);
+
+        RngReader(StepRng(255, 1)).read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, &expected);
     }
 }
