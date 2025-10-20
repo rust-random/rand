@@ -14,7 +14,9 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Rename fns `IndexedRandom::choose_multiple` -> `sample`, `choose_multiple_array` -> `sample_array`, `choose_multiple_weighted` -> `sample_weighted`, struct `SliceChooseIter` -> `IndexedSamples` and fns `IteratorRandom::choose_multiple` -> `sample`, `choose_multiple_fill` -> `sample_fill` (#1632)
 - Use Edition 2024 and MSRV 1.85 (#1653)
 - Let `Fill` be implemented for element types, not sliceable types (#1652)
+- Fix `OsError::raw_os_error` on UEFI targets by returning `Option<usize>` (#1665)
 - Replace fn `TryRngCore::read_adapter(..) -> RngReadAdapter` with simpler struct `RngReader` (#1669)
+- Remove fns `SeedableRng::from_os_rng`, `try_from_os_rng` (#1674)
 
 ### Additions
 - Add fns `IndexedRandom::choose_iter`, `choose_weighted_iter` (#1632)
