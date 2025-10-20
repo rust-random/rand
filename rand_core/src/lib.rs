@@ -407,7 +407,7 @@ pub trait SeedableRng: Sized {
             x.to_le_bytes()
         }
 
-        let seed = Self::Seed::from_bytes(|buf| {
+        let seed = Self::Seed::from_fill(|buf| {
             let mut iter = buf.chunks_exact_mut(4);
             for chunk in &mut iter {
                 chunk.copy_from_slice(&pcg32(&mut state));
@@ -446,7 +446,7 @@ pub trait SeedableRng: Sized {
     ///
     /// [`rand`]: https://docs.rs/rand
     fn from_rng<R: RngCore + ?Sized>(rng: &mut R) -> Self {
-        let Ok(seed) = Self::Seed::try_from_bytes(|buf| rng.try_fill_bytes(buf));
+        let Ok(seed) = Self::Seed::try_from_fill(|buf| rng.try_fill_bytes(buf));
         Self::from_seed(seed)
     }
 
@@ -454,7 +454,7 @@ pub trait SeedableRng: Sized {
     ///
     /// See [`from_rng`][SeedableRng::from_rng] docs for more information.
     fn try_from_rng<R: TryRngCore + ?Sized>(rng: &mut R) -> Result<Self, R::Error> {
-        let seed = Self::Seed::try_from_bytes(|buf| rng.try_fill_bytes(buf))?;
+        let seed = Self::Seed::try_from_fill(|buf| rng.try_fill_bytes(buf))?;
         Ok(Self::from_seed(seed))
     }
 
@@ -494,7 +494,7 @@ pub trait SeedableRng: Sized {
     /// [`getrandom`]: https://docs.rs/getrandom
     #[cfg(feature = "os_rng")]
     fn try_from_os_rng() -> Result<Self, getrandom::Error> {
-        let seed = Self::Seed::try_from_bytes(getrandom::fill)?;
+        let seed = Self::Seed::try_from_fill(getrandom::fill)?;
         Ok(Self::from_seed(seed))
     }
 }
