@@ -207,15 +207,6 @@ pub trait TryRngCore {
     fn unwrap_mut(&mut self) -> UnwrapMut<'_, Self> {
         UnwrapMut(self)
     }
-
-    /// Convert an [`RngCore`] to a [`RngReadAdapter`].
-    #[cfg(feature = "std")]
-    fn read_adapter(&mut self) -> RngReadAdapter<'_, Self>
-    where
-        Self: Sized,
-    {
-        RngReadAdapter { inner: self }
-    }
 }
 
 // Note that, unfortunately, this blanket impl prevents us from implementing
@@ -543,27 +534,25 @@ pub trait SeedableRng: Sized {
     }
 }
 
-/// Adapter that enables reading through a [`io::Read`](std::io::Read) from a [`RngCore`].
+/// Adapter to support [`std::io::Read`] over a [`TryRngCore`]
 ///
 /// # Examples
 ///
 /// ```no_run
-/// # use std::{io, io::Read};
-/// # use std::fs::File;
-/// # use rand_core::{OsRng, TryRngCore};
+/// use std::{io, io::Read};
+/// use std::fs::File;
+/// use rand_core::{OsRng, RngReader};
 ///
-/// io::copy(&mut OsRng.read_adapter().take(100), &mut File::create("/tmp/random.bytes").unwrap()).unwrap();
+/// io::copy(&mut RngReader(&mut OsRng).take(100), &mut File::create("/tmp/random.bytes").unwrap()).unwrap();
 /// ```
 #[cfg(feature = "std")]
-pub struct RngReadAdapter<'a, R: TryRngCore + ?Sized> {
-    inner: &'a mut R,
-}
+pub struct RngReader<'a, R: TryRngCore + ?Sized>(pub &'a mut R);
 
 #[cfg(feature = "std")]
-impl<R: TryRngCore + ?Sized> std::io::Read for RngReadAdapter<'_, R> {
+impl<R: TryRngCore + ?Sized> std::io::Read for RngReader<'_, R> {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
-        self.inner
+        self.0
             .try_fill_bytes(buf)
             .map_err(|err| std::io::Error::other(std::format!("RNG error: {err}")))?;
         Ok(buf.len())
@@ -571,9 +560,9 @@ impl<R: TryRngCore + ?Sized> std::io::Read for RngReadAdapter<'_, R> {
 }
 
 #[cfg(feature = "std")]
-impl<R: TryRngCore + ?Sized> std::fmt::Debug for RngReadAdapter<'_, R> {
+impl<R: TryRngCore + ?Sized> std::fmt::Debug for RngReader<'_, R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ReadAdapter").finish()
+        f.debug_tuple("RngReader").finish()
     }
 }
 
