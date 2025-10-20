@@ -53,7 +53,7 @@
 //! [`BlockRngCore`]: crate::block::BlockRngCore
 //! [`fill_bytes`]: RngCore::fill_bytes
 
-use crate::impls::fill_via_chunks;
+use crate::le::fill_via_chunks;
 use crate::{CryptoRng, RngCore, SeedableRng, TryRngCore};
 use core::fmt;
 #[cfg(feature = "serde")]

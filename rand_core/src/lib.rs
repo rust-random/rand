@@ -19,8 +19,8 @@
 //! [`SeedableRng`] is an extension trait for construction from fixed seeds and
 //! other random number generators.
 //!
-//! The [`impls`] and [`le`] sub-modules include a few small functions to assist
-//! implementation of [`RngCore`].
+//! The [`le`] sub-module includes a few small functions to assist
+//! implementation of [`RngCore`] and [`SeedableRng`].
 //!
 //! [`rand`]: https://docs.rs/rand
 
@@ -77,7 +77,7 @@ pub use os::{OsError, OsRng};
 ///
 /// Typically an RNG will implement only one of the methods available
 /// in this trait directly, then use the helper functions from the
-/// [`impls`] module to implement the other methods.
+/// [`le`] module to implement the other methods.
 ///
 /// Note that implementors of [`RngCore`] also automatically implement
 /// the [`TryRngCore`] trait with the `Error` associated type being
@@ -103,7 +103,7 @@ pub use os::{OsError, OsRng};
 ///
 /// ```
 /// #![allow(dead_code)]
-/// use rand_core::{RngCore, impls};
+/// use rand_core::{RngCore, le};
 ///
 /// struct CountingRng(u64);
 ///
@@ -118,7 +118,7 @@ pub use os::{OsError, OsRng};
 ///     }
 ///
 ///     fn fill_bytes(&mut self, dst: &mut [u8]) {
-///         impls::fill_bytes_via_next(self, dst)
+///         le::fill_bytes_via_next(self, dst)
 ///     }
 /// }
 /// ```
@@ -133,21 +133,21 @@ pub trait RngCore {
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// using `self.next_u64() as u32` or via [`impls::next_u32_via_fill`].
+    /// using `self.next_u64() as u32` or via [`le::next_u32_via_fill`].
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random `u64`.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// via [`impls::next_u64_via_u32`] or via [`impls::next_u64_via_fill`].
+    /// via [`le::next_u64_via_u32`] or via [`le::next_u64_via_fill`].
     fn next_u64(&mut self) -> u64;
 
     /// Fill `dest` with random data.
     ///
     /// RNGs must implement at least one method from this trait directly. In
     /// the case this method is not implemented directly, it can be implemented
-    /// via [`impls::fill_bytes_via_next`].
+    /// via [`le::fill_bytes_via_next`].
     ///
     /// This method should guarantee that `dest` is entirely filled
     /// with new data, and may panic if this is impossible
