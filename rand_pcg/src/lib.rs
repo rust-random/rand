@@ -77,7 +77,6 @@
 //! [`SeedableRng::from_rng`]: rand_core::SeedableRng#method.from_rng
 //! [`rand::rng`]: https://docs.rs/rand/latest/rand/fn.rng.html
 //! [`rand::Rng`]: https://docs.rs/rand/latest/rand/trait.Rng.html
-//! [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
 
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk.png",

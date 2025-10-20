@@ -94,7 +94,7 @@ pub fn bench(c: &mut Criterion) {
         b.iter(|| x.iter().cloned().sample_fill(&mut rng, &mut buf))
     });
 
-    bench_rng::<rand_chacha::ChaCha20Rng>(c, "ChaCha20");
+    bench_rng::<chacha20::ChaCha20Rng>(c, "ChaCha20");
     bench_rng::<rand_pcg::Pcg32>(c, "Pcg32");
     bench_rng::<rand_pcg::Pcg64>(c, "Pcg64");
 }

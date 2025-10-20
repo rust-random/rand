@@ -18,7 +18,7 @@ rand_core = { path = "../rand_core" }
 [dev-dependencies]
 rand = { path = "..", features = ["small_rng", "nightly"] }
 rand_pcg = { path = "../rand_pcg" }
-rand_chacha = { path = "../rand_chacha" }
+chacha20 = { version = "=0.10.0-rc.2", default-features = false, features = ["rng"] }
 criterion = "0.5"
 criterion-cycles-per-byte = "0.6"
 

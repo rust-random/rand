@@ -78,7 +78,6 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// [`StdRng`]: crate::rngs::StdRng
 /// [rand_pcg]: https://crates.io/crates/rand_pcg
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
-/// [`rand_chacha::ChaCha8Rng`]: https://docs.rs/rand_chacha/latest/rand_chacha/struct.ChaCha8Rng.html
 /// [`rand_seeder`]: https://docs.rs/rand_seeder/latest/rand_seeder/
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);

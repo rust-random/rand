@@ -12,11 +12,11 @@
 //!
 //! -   sample: current method: (x12 - 1.0) * (b - a) + a
 
+use chacha20::ChaCha8Rng;
 use core::time::Duration;
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use rand::distr::uniform::{SampleUniform, Uniform, UniformSampler};
 use rand::prelude::*;
-use rand_chacha::ChaCha8Rng;
 use rand_pcg::{Pcg32, Pcg64};
 
 const WARM_UP_TIME: Duration = Duration::from_millis(1000);
