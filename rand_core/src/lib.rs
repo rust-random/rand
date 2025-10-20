@@ -19,8 +19,8 @@
 //! [`SeedableRng`] is an extension trait for construction from fixed seeds and
 //! other random number generators.
 //!
-//! The [`impls`] and [`le`] sub-modules include a few small functions to assist
-//! implementation of [`RngCore`].
+//! The [`le`] sub-module includes a few small functions to assist
+//! implementation of [`RngCore`] and [`SeedableRng`].
 //!
 //! [`rand`]: https://docs.rs/rand
 
@@ -42,7 +42,6 @@ extern crate std;
 use core::{fmt, ops::DerefMut};
 
 pub mod block;
-pub mod impls;
 pub mod le;
 #[cfg(feature = "os_rng")]
 mod os;
@@ -65,19 +64,24 @@ pub use os::{OsError, OsRng};
 /// [`next_u32`] and [`next_u64`] methods, implementations may discard some
 /// random bits for efficiency.
 ///
-/// Implementers should produce bits uniformly. Pathological RNGs (e.g. always
-/// returning the same value, or never setting certain bits) can break rejection
-/// sampling used by random distributions, and also break other RNGs when
-/// seeding them via [`SeedableRng::from_rng`].
+/// # Properties of a generator
+///
+/// Implementers should produce bits uniformly. Pathological RNGs (e.g. constant
+/// or counting generators which rarely change some bits) may cause issues in
+/// consumers of random data, for example dead-locks in rejection samplers and
+/// obviously non-random output (e.g. a counting generator may result in
+/// apparently-constant output from a uniform-ranged distribution).
 ///
 /// Algorithmic generators implementing [`SeedableRng`] should normally have
 /// *portable, reproducible* output, i.e. fix Endianness when converting values
 /// to avoid platform differences, and avoid making any changes which affect
 /// output (except by communicating that the release has breaking changes).
 ///
+/// # Implementing `RngCore`
+///
 /// Typically an RNG will implement only one of the methods available
 /// in this trait directly, then use the helper functions from the
-/// [`impls`] module to implement the other methods.
+/// [`le` module](crate::le) to implement the other methods.
 ///
 /// Note that implementors of [`RngCore`] also automatically implement
 /// the [`TryRngCore`] trait with the `Error` associated type being
@@ -97,32 +101,6 @@ pub use os::{OsError, OsRng};
 ///   External / hardware RNGs can choose to implement `Default`.
 /// - `Eq` and `PartialEq` could be implemented, but are probably not useful.
 ///
-/// # Example
-///
-/// A simple example, obviously not generating very *random* output:
-///
-/// ```
-/// #![allow(dead_code)]
-/// use rand_core::{RngCore, impls};
-///
-/// struct CountingRng(u64);
-///
-/// impl RngCore for CountingRng {
-///     fn next_u32(&mut self) -> u32 {
-///         self.next_u64() as u32
-///     }
-///
-///     fn next_u64(&mut self) -> u64 {
-///         self.0 += 1;
-///         self.0
-///     }
-///
-///     fn fill_bytes(&mut self, dst: &mut [u8]) {
-///         impls::fill_bytes_via_next(self, dst)
-///     }
-/// }
-/// ```
-///
 /// [`rand::Rng`]: https://docs.rs/rand/latest/rand/trait.Rng.html
 /// [`fill_bytes`]: RngCore::fill_bytes
 /// [`next_u32`]: RngCore::next_u32
@@ -130,24 +108,12 @@ pub use os::{OsError, OsRng};
 /// [`Infallible`]: core::convert::Infallible
 pub trait RngCore {
     /// Return the next random `u32`.
-    ///
-    /// RNGs must implement at least one method from this trait directly. In
-    /// the case this method is not implemented directly, it can be implemented
-    /// using `self.next_u64() as u32` or via [`impls::next_u32_via_fill`].
     fn next_u32(&mut self) -> u32;
 
     /// Return the next random `u64`.
-    ///
-    /// RNGs must implement at least one method from this trait directly. In
-    /// the case this method is not implemented directly, it can be implemented
-    /// via [`impls::next_u64_via_u32`] or via [`impls::next_u64_via_fill`].
     fn next_u64(&mut self) -> u64;
 
     /// Fill `dest` with random data.
-    ///
-    /// RNGs must implement at least one method from this trait directly. In
-    /// the case this method is not implemented directly, it can be implemented
-    /// via [`impls::fill_bytes_via_next`].
     ///
     /// This method should guarantee that `dest` is entirely filled
     /// with new data, and may panic if this is impossible
