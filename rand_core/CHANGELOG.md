@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### API changes
 - Relax `Sized` bound on impls of `SeedableRng` (#1641)
+- Move `rand_core::impls::*` to `rand_core::le` module (#1667)
 
 ## [0.9.3] — 2025-02-29
 ### Other
