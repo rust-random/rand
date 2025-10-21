@@ -129,6 +129,41 @@ pub use rng::{Fill, Rng};
 #[cfg(feature = "thread_rng")]
 use crate::distr::{Distribution, StandardUniform};
 
+/// Adapter to support [`std::io::Read`] over a [`TryRngCore`]
+///
+/// # Examples
+///
+/// ```no_run
+/// use std::{io, io::Read};
+/// use std::fs::File;
+/// use rand::{rngs::OsRng, RngReader};
+///
+/// io::copy(
+///     &mut RngReader(OsRng).take(100),
+///     &mut File::create("/tmp/random.bytes").unwrap()
+/// ).unwrap();
+/// ```
+#[cfg(feature = "std")]
+pub struct RngReader<R: TryRngCore>(pub R);
+
+#[cfg(feature = "std")]
+impl<R: TryRngCore> std::io::Read for RngReader<R> {
+    #[inline]
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
+        self.0
+            .try_fill_bytes(buf)
+            .map_err(|err| std::io::Error::other(std::format!("RNG error: {err}")))?;
+        Ok(buf.len())
+    }
+}
+
+#[cfg(feature = "std")]
+impl<R: TryRngCore> std::fmt::Debug for RngReader<R> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("RngReader").finish()
+    }
+}
+
 /// Generate a random value using the thread-local random number generator.
 ///
 /// This function is shorthand for <code>[rng()].[random()](Rng::random)</code>:
@@ -335,6 +370,24 @@ mod test {
         fn fill_bytes(&mut self, dst: &mut [u8]) {
             rand_core::le::fill_bytes_via_next(self, dst)
         }
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn rng_reader() {
+        use std::io::Read;
+
+        let mut rng = StepRng(255, 1);
+        let mut buf = [0u8; 24];
+        let expected = [
+            255, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,
+        ];
+
+        RngReader(&mut rng).read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, &expected);
+
+        RngReader(StepRng(255, 1)).read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, &expected);
     }
 
     #[test]
