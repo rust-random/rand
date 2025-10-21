@@ -11,6 +11,8 @@ on:
     paths-ignore:
       - "**.md"
       - "benches/**"
+  schedule:
+    - cron: '0 0 * * SUN'
 
 permissions:
   contents: read #  to fetch code (actions/checkout)
