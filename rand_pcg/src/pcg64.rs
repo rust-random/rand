@@ -11,7 +11,7 @@
 //! PCG random number generators
 
 use core::fmt;
-use rand_core::{RngCore, SeedableRng, impls, le};
+use rand_core::{RngCore, SeedableRng, le};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -154,11 +154,11 @@ impl RngCore for Lcg64Xsh32 {
 
     #[inline]
     fn next_u64(&mut self) -> u64 {
-        impls::next_u64_via_u32(self)
+        le::next_u64_via_u32(self)
     }
 
     #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        impls::fill_bytes_via_next(self, dest)
+        le::fill_bytes_via_next(self, dest)
     }
 }

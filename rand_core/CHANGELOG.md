@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### API changes
 - Relax `Sized` bound on impls of `SeedableRng` (#1641)
 - Fix `OsError::raw_os_error` on UEFI targets by returning `Option<usize>` (#1665)
+- Move `rand_core::impls::*` to `rand_core::le` module (#1667)
+- Use Edition 2024 and MSRV 1.85 (#1668)
+- Remove fn `TryRngCore::read_adapter(..) -> RngReadAdapter` (replaced with `rand::RngReader`) (#1669)
 
 ## [0.9.3] — 2025-02-29
 ### Other
