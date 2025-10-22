@@ -47,13 +47,6 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 ///     let rng = SmallRng::from_rng(&mut rand::rng());
 ///     # let _: SmallRng = rng;
 ///     ```
-///     or [`SeedableRng::from_os_rng`]:
-///     ```
-///     # use rand::SeedableRng;
-///     # use rand::rngs::SmallRng;
-///     let rng = SmallRng::from_os_rng();
-///     # let _: SmallRng = rng;
-///     ```
 /// 2.  To use a deterministic integral seed, use `seed_from_u64`. This uses a
 ///     hash function internally to yield a (typically) good seed from any
 ///     input.

@@ -35,7 +35,7 @@ use crate::{TryCryptoRng, TryRngCore};
 ///
 /// # Usage example
 /// ```
-/// use rand_core::{TryRngCore, OsRng};
+/// use rand::{TryRngCore, rngs::OsRng};
 ///
 /// let mut key = [0u8; 16];
 /// OsRng.try_fill_bytes(&mut key).unwrap();

@@ -110,6 +110,9 @@ mod std;
 #[cfg(feature = "thread_rng")]
 pub(crate) mod thread;
 
+#[cfg(feature = "os_rng")]
+mod os;
+
 #[cfg(feature = "small_rng")]
 pub use self::small::SmallRng;
 #[cfg(feature = "small_rng")]
@@ -126,4 +129,4 @@ pub use self::thread::ThreadRng;
 pub use chacha20::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
 
 #[cfg(feature = "os_rng")]
-pub use rand_core::OsRng;
+pub use os::{OsError, OsRng};

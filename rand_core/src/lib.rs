@@ -36,18 +36,10 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![no_std]
 
-#[cfg(feature = "std")]
-extern crate std;
-
 use core::{fmt, ops::DerefMut};
 
 pub mod block;
 pub mod le;
-#[cfg(feature = "os_rng")]
-mod os;
-
-#[cfg(feature = "os_rng")]
-pub use os::{OsError, OsRng};
 
 /// Implementation-level interface for RNGs
 ///
@@ -168,6 +160,8 @@ where
 /// An optional property of CSPRNGs is backtracking resistance: if the CSPRNG's
 /// state is revealed, it will not be computationally-feasible to reconstruct
 /// prior output values. This property is not required by `CryptoRng`.
+///
+/// [`OsRng`]: https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html
 pub trait CryptoRng: RngCore {}
 
 impl<T: DerefMut> CryptoRng for T where T::Target: CryptoRng {}
@@ -184,6 +178,8 @@ impl<T: DerefMut> CryptoRng for T where T::Target: CryptoRng {}
 /// An implementation of this trait may be made compatible with code requiring
 /// an [`RngCore`] through [`TryRngCore::unwrap_err`]. The resulting RNG will
 /// panic in case the underlying fallible RNG yields an error.
+///
+/// [`OsRng`]: https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html
 pub trait TryRngCore {
     /// The type returned in the event of a RNG error.
     type Error: fmt::Debug + fmt::Display;
@@ -246,6 +242,8 @@ impl<R: RngCore + ?Sized> TryRngCore for R {
 /// `default()` instances are themselves secure generators: for example if the
 /// implementing type is a stateless interface over a secure external generator
 /// (like [`OsRng`]) or if the `default()` instance uses a strong, fresh seed.
+///
+/// [`OsRng`]: https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html
 pub trait TryCryptoRng: TryRngCore {}
 
 impl<R: CryptoRng + ?Sized> TryCryptoRng for R {}
@@ -489,48 +487,6 @@ pub trait SeedableRng: Sized {
         let mut seed = Self::Seed::default();
         rng.try_fill_bytes(seed.as_mut())?;
         Ok(Self::from_seed(seed))
-    }
-
-    /// Creates a new instance of the RNG seeded via [`getrandom`].
-    ///
-    /// This method is the recommended way to construct non-deterministic PRNGs
-    /// since it is convenient and secure.
-    ///
-    /// Note that this method may panic on (extremely unlikely) [`getrandom`] errors.
-    /// If it's not desirable, use the [`try_from_os_rng`] method instead.
-    ///
-    /// In case the overhead of using [`getrandom`] to seed *many* PRNGs is an
-    /// issue, one may prefer to seed from a local PRNG, e.g.
-    /// `from_rng(rand::rng()).unwrap()`.
-    ///
-    /// # Panics
-    ///
-    /// If [`getrandom`] is unable to provide secure entropy this method will panic.
-    ///
-    /// [`getrandom`]: https://docs.rs/getrandom
-    /// [`try_from_os_rng`]: SeedableRng::try_from_os_rng
-    #[cfg(feature = "os_rng")]
-    fn from_os_rng() -> Self {
-        match Self::try_from_os_rng() {
-            Ok(res) => res,
-            Err(err) => panic!("from_os_rng failed: {}", err),
-        }
-    }
-
-    /// Creates a new instance of the RNG seeded via [`getrandom`] without unwrapping
-    /// potential [`getrandom`] errors.
-    ///
-    /// In case the overhead of using [`getrandom`] to seed *many* PRNGs is an
-    /// issue, one may prefer to seed from a local PRNG, e.g.
-    /// `from_rng(&mut rand::rng()).unwrap()`.
-    ///
-    /// [`getrandom`]: https://docs.rs/getrandom
-    #[cfg(feature = "os_rng")]
-    fn try_from_os_rng() -> Result<Self, getrandom::Error> {
-        let mut seed = Self::Seed::default();
-        getrandom::fill(seed.as_mut())?;
-        let res = Self::from_seed(seed);
-        Ok(res)
     }
 }
 

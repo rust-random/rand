@@ -91,7 +91,7 @@ compiler versions will be compatible. This is especially true of Rand's
 experimental `simd_support` feature.
 
 Rand supports limited functionality in `no_std` mode (enabled via
-`default-features = false`). In this case, `OsRng` and `from_os_rng` are
+`default-features = false`). In this case, `OsRng` is
 unavailable (unless `os_rng` is enabled), large parts of `seq` are
 unavailable (unless `alloc` is enabled), and `ThreadRng` is unavailable.
 
