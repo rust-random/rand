@@ -23,7 +23,7 @@ rustdoc-args = ["--generate-link-to-definition"]
 serde = ["dep:serde"]
 
 [dependencies]
-rand_core = { path = "../rand_core", version = "0.9.0" }
+rand_core = { path = "../rand_core", version = "0.10.0-rc.1" }
 serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
@@ -31,4 +31,3 @@ serde = { version = "1", features = ["derive"], optional = true }
 # deps yet, see: https://github.com/rust-lang/cargo/issues/1596
 # Versions prior to 1.1.4 had incorrect minimal dependencies.
 bincode = { version = "1.1.4" }
-rand_core = { path = "../rand_core", version = "0.9.0" }
