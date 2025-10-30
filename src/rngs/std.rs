@@ -66,7 +66,7 @@ use chacha20::ChaCha12Rng as Rng;
 /// [CSPRNG]: https://rust-random.github.io/book/guide-gen.html#cryptographically-secure-pseudo-random-number-generator
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
 /// [rand issue]: https://github.com/rust-random/rand/issues/932
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct StdRng(Rng);
 
 impl RngCore for StdRng {
