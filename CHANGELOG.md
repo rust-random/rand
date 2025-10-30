@@ -17,6 +17,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Fix `OsError::raw_os_error` on UEFI targets by returning `Option<usize>` (#1665)
 - Replace fn `TryRngCore::read_adapter(..) -> RngReadAdapter` with simpler struct `RngReader` (#1669)
 - Remove fns `SeedableRng::from_os_rng`, `try_from_os_rng` (#1674)
+- Remove `Clone` support for `StdRng`, `ReseedingRng` (#1677)
 
 ### Additions
 - Add fns `IndexedRandom::choose_iter`, `choose_weighted_iter` (#1632)
