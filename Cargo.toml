@@ -67,19 +67,13 @@ log = ["dep:log"]
 
 [workspace]
 members = [
-    "rand_core",
     "rand_chacha",
     "rand_pcg",
 ]
 exclude = ["benches", "distr_test"]
 
-# Force chacha20 to use the local rand_code to avoid compiling two different "rand_core"s.
-# This is necessary even if the specified versions are the same.
-[patch.crates-io]
-rand_core = { path = "rand_core" }
-
 [dependencies]
-rand_core = { path = "rand_core", version = "0.9.0", default-features = false }
+rand_core = { version = "0.9.0", default-features = false }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 chacha20 = { version = "=0.10.0-rc.2", default-features = false, features = ["rng"], optional = true }

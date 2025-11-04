@@ -8,11 +8,6 @@ publish = false
 # Option (requires nightly Rust): experimental SIMD support
 simd_support = ["rand/simd_support"]
 
-# Force chacha20 to use the local rand_code to avoid compiling two different "rand_core"s.
-# This is necessary even if the specified versions are the same.
-[patch.crates-io]
-rand_core = { path = "../rand_core" }
-
 [dependencies]
 
 [dev-dependencies]
