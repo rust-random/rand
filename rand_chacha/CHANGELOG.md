@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.10.0] - UNRELEASED
+## [Unreleased]
 ### Changed
 - Bump MSRV to 1.85 and edition to 2024 (#1671)
 - Remove feature `os_rng` (#1674)
@@ -49,3 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2018-10-17
 - Pulled out of the Rand crate
+
+[Unreleased]: https://github.com/rust-random/rand/compare/0.9.0...HEAD
+[0.9.0]: https://github.com/rust-random/rand/compare/rand_chacha-0.3.1...0.9.0
+[0.3.1]: https://github.com/rust-random/rand/compare/rand_chacha-0.3.0...rand_chacha-0.3.1
+[0.3.0]: https://github.com/rust-random/rand/compare/rand_chacha-0.2.2...rand_chacha-0.3.0
+[0.2.2]: https://github.com/rust-random/rand/compare/rand_chacha-0.2.1...rand_chacha-0.2.2
+[0.2.1]: https://github.com/rust-random/rand/compare/rand_chacha-0.2.0...rand_chacha-0.2.1
+[0.2.0]: https://github.com/rust-random/rand/compare/rand_chacha-0.1.1...rand_chacha-0.2.0
+[0.1.1]: https://github.com/rust-random/rand/compare/rand_chacha-0.1.0...rand_chacha-0.1.1
+[0.1.0]: https://github.com/rust-random/rand/compare/a55ba3feb49062ea8dec75c034d796f6e3f763ae...rand_chacha-0.1.0
