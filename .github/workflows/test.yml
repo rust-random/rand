@@ -45,8 +45,6 @@ jobs:
           toolchain: nightly
       - name: rand
         run: cargo doc --all-features --no-deps
-      - name: rand_core
-        run: cargo doc --all-features --package rand_core --no-deps
       - name: rand_chacha
         run: cargo doc --all-features --package rand_chacha --no-deps
       - name: rand_pcg
@@ -115,10 +113,6 @@ jobs:
       - name: Test rand (all stable features)
         run: |
           cargo test --target ${{ matrix.target }} --features=serde,log,small_rng
-      - name: Test rand_core
-        run: |
-          cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --no-default-features
-          cargo test --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml --features serde
       - name: Test rand_pcg
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
       - name: Test rand_chacha
@@ -153,7 +147,6 @@ jobs:
           # all stable features:
           cross test --no-fail-fast --target ${{ matrix.target }} --features=serde,log,small_rng
           cross test --no-fail-fast --target ${{ matrix.target }} --examples
-          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_core/Cargo.toml
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_chacha/Cargo.toml
 
@@ -170,9 +163,6 @@ jobs:
         run: |
           cargo miri test --no-default-features --lib --tests
           cargo miri test --features=log,small_rng
-          cargo miri test --manifest-path rand_core/Cargo.toml
-          cargo miri test --manifest-path rand_core/Cargo.toml --features=serde
-          cargo miri test --manifest-path rand_core/Cargo.toml --no-default-features
           cargo miri test --manifest-path rand_pcg/Cargo.toml --features=serde
           cargo miri test --manifest-path rand_chacha/Cargo.toml --no-default-features
 
@@ -186,18 +176,6 @@ jobs:
             target: thumbv6m-none-eabi
       - name: Build top-level only
         run: cargo build --target=thumbv6m-none-eabi --no-default-features
-
-  # Disabled due to lack of known working compiler versions (not older than our MSRV)
-  # test-avr:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Install toolchain
-  #       uses: dtolnay/rust-toolchain@nightly
-  #       with:
-  #           components: rust-src
-  #     - name: Build top-level only
-  #       run: cargo build -Z build-std=core --target=avr-unknown-gnu-atmega328 --no-default-features
 
   test-ios:
     runs-on: macos-latest
