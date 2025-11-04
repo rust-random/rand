@@ -24,7 +24,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Pub export `Xoshiro128PlusPlus`, `Xoshiro256PlusPlus` prngs (#1649)
 - Pub export `ChaCha8Rng`, `ChaCha12Rng`, `ChaCha20Rng` behind `chacha` feature (#1659)
 
-## [0.9.2] — 2025-07-20
+## [0.9.2] - 2025-07-20
 ### Deprecated
 - Deprecate `rand::rngs::mock` module and `StepRng` generator (#1634)
 
