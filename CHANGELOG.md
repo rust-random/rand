@@ -557,6 +557,19 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 - Implement `Uniform` distribution for `Duration`. (#427)
 
 
+## [0.4.6] - 2019-01-26
+### Platforms
+- Fuchsia: Replaced fuchsia-zircon with fuchsia-cprng
+
+## [0.4.5] - 2019-01-09
+### Fixed
+- Remove dependency on default features of `rand_core` (#689)
+
+## [0.4.4] - 2019-01-08
+Version yanked due to semver-breaking change (#688).
+### Added
+- SGX support
+
 ## [0.4.3] - 2018-08-16
 ### Fixed
 - Use correct syscall number for PowerPC (#589)
@@ -589,6 +602,9 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 ### Deprecated
   - `sample` function deprecated (replaced by `sample_iter`)
 
+
+## [0.3.22] - 2018-02-05
+Code replaced with a compatibility layer over rand 0.4.
 
 ## [0.3.20] - 2018-01-06
 ### Changed
