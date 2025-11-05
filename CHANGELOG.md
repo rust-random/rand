@@ -23,6 +23,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Add fns `IndexedRandom::choose_iter`, `choose_weighted_iter` (#1632)
 - Pub export `Xoshiro128PlusPlus`, `Xoshiro256PlusPlus` prngs (#1649)
 - Pub export `ChaCha8Rng`, `ChaCha12Rng`, `ChaCha20Rng` behind `chacha` feature (#1659)
+- `OsRng::seed` and `try_seed` as replacements for `SeedableRng::from_os_rng`, `try_from_os_rng`
 
 ## [0.9.2 — 2025-07-20]
 ### Deprecated
