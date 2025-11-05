@@ -8,7 +8,7 @@
 
 //! Interface to the random number generator of the operating system.
 
-use crate::{TryCryptoRng, TryRngCore};
+use crate::{SeedableRng, TryCryptoRng, TryRngCore};
 
 /// An interface over the operating-system's random data source
 ///
@@ -108,6 +108,34 @@ impl TryRngCore for OsRng {
 }
 
 impl TryCryptoRng for OsRng {}
+
+impl OsRng {
+    /// Creates a new instance of the RNG `R` seeded via [`OsRng`].
+    ///
+    /// This method is the recommended way to construct non-deterministic PRNGs
+    /// since it is convenient and secure.
+    ///
+    /// Note that this method may panic on (extremely unlikely) [`OsRng`] errors.
+    /// If it's not desirable, use the [`OsRng::try_seed`] method instead.
+    ///
+    /// # Panics
+    ///
+    /// If [`OsRng`] is unable to provide secure entropy this method will panic.
+    pub fn seed<R: SeedableRng>(&mut self) -> R {
+        match self.try_seed::<R>() {
+            Ok(res) => res,
+            Err(err) => panic!("OsRng::try_seed failed: {}", err),
+        }
+    }
+
+    /// Creates a new instance of the RNG `R` seeded via [`OsRng`], propagating any errors that may
+    /// occur.
+    pub fn try_seed<R: SeedableRng>(&mut self) -> Result<R, OsError> {
+        let mut seed = R::Seed::default();
+        self.try_fill_bytes(seed.as_mut())?;
+        Ok(R::from_seed(seed))
+    }
+}
 
 #[test]
 fn test_os_rng() {
