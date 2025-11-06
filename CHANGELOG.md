@@ -8,7 +8,7 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [0.10.0 — Unreleased]
+## [Unreleased]
 ### Changes
 - The dependency on `rand_chacha` has been replaced with a dependency on `chacha20`. This changes the implementation behind `StdRng`, but the output remains the same. There may be some API breakage when using the ChaCha-types directly as these are now the ones in `chacha20` instead of `rand_chacha` (#1642).
 - Rename fns `IndexedRandom::choose_multiple` -> `sample`, `choose_multiple_array` -> `sample_array`, `choose_multiple_weighted` -> `sample_weighted`, struct `SliceChooseIter` -> `IndexedSamples` and fns `IteratorRandom::choose_multiple` -> `sample`, `choose_multiple_fill` -> `sample_fill` (#1632)
@@ -24,7 +24,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Pub export `Xoshiro128PlusPlus`, `Xoshiro256PlusPlus` prngs (#1649)
 - Pub export `ChaCha8Rng`, `ChaCha12Rng`, `ChaCha20Rng` behind `chacha` feature (#1659)
 
-## [0.9.2 — 2025-07-20]
+## [0.9.2] - 2025-07-20
 ### Deprecated
 - Deprecate `rand::rngs::mock` module and `StepRng` generator (#1634)
 
@@ -557,6 +557,19 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 - Implement `Uniform` distribution for `Duration`. (#427)
 
 
+## [0.4.6] - 2019-01-26
+### Platforms
+- Fuchsia: Replaced fuchsia-zircon with fuchsia-cprng
+
+## [0.4.5] - 2019-01-09
+### Fixed
+- Remove dependency on default features of `rand_core` (#689)
+
+## [0.4.4] - 2019-01-08
+Version yanked due to semver-breaking change (#688).
+### Added
+- SGX support
+
 ## [0.4.3] - 2018-08-16
 ### Fixed
 - Use correct syscall number for PowerPC (#589)
@@ -589,6 +602,9 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 ### Deprecated
   - `sample` function deprecated (replaced by `sample_iter`)
 
+
+## [0.3.22] - 2018-02-05
+Code replaced with a compatibility layer over rand 0.4.
 
 ## [0.3.20] - 2018-01-06
 ### Changed
@@ -763,7 +779,7 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 - Imported tests from `std::rand`
 
 
-## [0.1.1] - 2015-02-03
+## 0.1.1 - 2015-02-03
 ### Added
 - Migrate to a cargo-compatible directory structure.
 
@@ -771,7 +787,7 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 - Do not use entropy during `gen_weighted_bool(1)`
 
 
-## [Rust 0.12.0] - 2014-10-09
+## Rust 0.12.0 - 2014-10-09
 ### Added
 - Impl Rand for tuples of arity 11 and 12
 - Include ChaCha pseudorandom generator
@@ -790,7 +806,7 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 - Removed the Deprecated `choose_option`
 
 
-## [Rust 0.11.0] - 2014-07-02
+## Rust 0.11.0 - 2014-07-02
 ### Added
 - document when to use `OSRng` in cryptographic context, and explain why we use `/dev/urandom` instead of `/dev/random`
 - `Rng::gen_iter()` which will return an infinite stream of random values
@@ -833,6 +849,67 @@ when updating from `rand 0.7.0` without also updating `rand_core`.
 - Use `fill()` instead of `read()`
 - Rewrite OsRng in Rust for windows
 
-## [0.10-pre] - 2014-03-02
+## 0.10-pre - 2014-03-02
 ### Added
 - Separate `rand` out of the standard library
+
+[Unreleased]: https://github.com/rust-random/rand/compare/0.9.2...HEAD
+[0.9.2]: https://github.com/rust-random/rand/compare/0.9.1...0.9.2
+[0.9.1]: https://github.com/rust-random/rand/compare/0.9.0...0.9.1
+[0.9.0]: https://github.com/rust-random/rand/compare/0.8.5...0.9.0
+[0.8.5]: https://github.com/rust-random/rand/compare/0.8.4...0.8.5
+[0.8.4]: https://github.com/rust-random/rand/compare/0.8.3...0.8.4
+[0.8.3]: https://github.com/rust-random/rand/compare/0.8.2...0.8.3
+[0.8.2]: https://github.com/rust-random/rand/compare/0.8.1...0.8.2
+[0.8.1]: https://github.com/rust-random/rand/compare/0.8.0...0.8.1
+[0.8.0]: https://github.com/rust-random/rand/compare/0.7.3...0.8.0
+[0.7.3]: https://github.com/rust-random/rand/compare/0.7.2...0.7.3
+[0.7.2]: https://github.com/rust-random/rand/compare/0.7.1...0.7.2
+[0.7.1]: https://github.com/rust-random/rand/compare/0.7.0...0.7.1
+[0.7.0]: https://github.com/rust-random/rand/compare/0.6.5...0.7.0
+[0.6.5]: https://github.com/rust-random/rand/compare/0.6.4...0.6.5
+[0.6.4]: https://github.com/rust-random/rand/compare/0.6.3...0.6.4
+[0.6.3]: https://github.com/rust-random/rand/compare/0.6.2...0.6.3
+[0.6.2]: https://github.com/rust-random/rand/compare/0.6.1...0.6.2
+[0.6.1]: https://github.com/rust-random/rand/compare/0.6.0...0.6.1
+[0.6.0]: https://github.com/rust-random/rand/compare/0.5.5...0.6.0
+[0.5.5]: https://github.com/rust-random/rand/compare/0.5.4...0.5.5
+[0.5.4]: https://github.com/rust-random/rand/compare/0.5.3...0.5.4
+[0.5.3]: https://github.com/rust-random/rand/compare/0.5.2...0.5.3
+[0.5.2]: https://github.com/rust-random/rand/compare/0.5.1...0.5.2
+[0.5.1]: https://github.com/rust-random/rand/compare/0.5.0...0.5.1
+[0.5.0]: https://github.com/rust-random/rand/compare/0.4.6...0.5.0
+[0.4.6]: https://github.com/rust-random/rand/compare/0.4.5...0.4.6
+[0.4.5]: https://github.com/rust-random/rand/compare/0.4.4...0.4.5
+[0.4.4]: https://github.com/rust-random/rand/compare/0.4.3...0.4.4
+[0.4.3]: https://github.com/rust-random/rand/compare/0.4.2...0.4.3
+[0.4.2]: https://github.com/rust-random/rand/compare/0.4.1...0.4.2
+[0.4.1]: https://github.com/rust-random/rand/compare/0.4.0-pre.0...0.4.1
+[0.4.0-pre.0]: https://github.com/rust-random/rand/compare/0.3.22...0.4.0-pre.0
+[0.3.22]: https://github.com/rust-random/rand/compare/0.3.20...0.3.22
+[0.3.20]: https://github.com/rust-random/rand/compare/0.3.19...0.3.20
+[0.3.19]: https://github.com/rust-random/rand/compare/0.3.18...0.3.19
+[0.3.18]: https://github.com/rust-random/rand/compare/0.3.17...0.3.18
+[0.3.17]: https://github.com/rust-random/rand/compare/0.3.16...0.3.17
+[0.3.16]: https://github.com/rust-random/rand/compare/0.3.15...0.3.16
+[0.3.15]: https://github.com/rust-random/rand/compare/0.3.14...0.3.15
+[0.3.14]: https://github.com/rust-random/rand/compare/0.3.13...0.3.14
+[0.3.13]: https://github.com/rust-random/rand/compare/0.3.12...0.3.13
+[0.3.12]: https://github.com/rust-random/rand/compare/0.3.11...0.3.12
+[0.3.11]: https://github.com/rust-random/rand/compare/0.3.10...0.3.11
+[0.3.10]: https://github.com/rust-random/rand/compare/0.3.9...0.3.10
+[0.3.9]: https://github.com/rust-random/rand/compare/0.3.8...0.3.9
+[0.3.8]: https://github.com/rust-random/rand/compare/0.3.7...0.3.8
+[0.3.7]: https://github.com/rust-random/rand/compare/0.3.6...0.3.7
+[0.3.6]: https://github.com/rust-random/rand/compare/0.3.5...0.3.6
+[0.3.5]: https://github.com/rust-random/rand/compare/0.3.4...0.3.5
+[0.3.4]: https://github.com/rust-random/rand/compare/0.3.3...0.3.4
+[0.3.3]: https://github.com/rust-random/rand/compare/0.3.2...0.3.3
+[0.3.2]: https://github.com/rust-random/rand/compare/0.3.1...0.3.2
+[0.3.1]: https://github.com/rust-random/rand/compare/0.3.0...0.3.1
+[0.3.0]: https://github.com/rust-random/rand/compare/0.2.1...0.3.0
+[0.2.1]: https://github.com/rust-random/rand/compare/0.2.0...0.2.1
+[0.2.0]: https://github.com/rust-random/rand/compare/0.1.4...0.2.0
+[0.1.3]: https://github.com/rust-random/rand/compare/0.1.3...0.1.4
+[0.1.3]: https://github.com/rust-random/rand/compare/0.1.2...0.1.3
+[0.1.2]: https://github.com/rust-random/rand/compare/0.1.1...0.1.2

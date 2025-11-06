@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.10.0 — Unreleased]
+## [Unreleased]
 ### Changes
 - Use Edition 2024 and MSRV 1.85 (#1653)
 - Remove feature `os_rng` (#1674)
@@ -51,3 +51,13 @@ Initial release, including:
 
 - `Lcg64Xsh32` aka `Pcg32`
 - `Mcg128Xsl64` aka `Pcg64Mcg`
+
+[Unreleased]: https://github.com/rust-random/rand/compare/0.9.0...HEAD
+[0.9.0]: https://github.com/rust-random/rand/compare/rand_pcg-0.3.1...0.9.0
+[0.3.1]: https://github.com/rust-random/rand/compare/rand_pcg-0.3.0...rand_pcg-0.3.1
+[0.3.0]: https://github.com/rust-random/rand/compare/rand_pcg-0.2.1...rand_pcg-0.3.0
+[0.2.1]: https://github.com/rust-random/rand/compare/rand_pcg-0.2.0...rand_pcg-0.2.1
+[0.2.0]: https://github.com/rust-random/rand/compare/rand_pcg-0.1.2...rand_pcg-0.2.0
+[0.1.2]: https://github.com/rust-random/rand/compare/6d9e7ac9c6980897d190ede70607f18501d99f3b...rand_pcg-0.1.2
+[0.1.1]: https://github.com/rust-random/small-rngs/compare/rand_pcg-0.1.0...rand_pcg-0.1.1
+[0.1.0]: https://github.com/rust-random/small-rngs/compare/8ae22ced3f1cfdb888e639f93ca24ef1ea5811c2...rand_pcg-0.1.0
