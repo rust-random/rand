@@ -1,0 +1,35 @@
+[package]
+name = "rand_os"
+version = "0.3.0"
+authors = ["The Rand Project Developers"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/rust-random/rand"
+documentation = "https://docs.rs/rand_os"
+homepage = "https://rust-random.github.io/book"
+description = """
+OsRng provider over getrandom
+"""
+keywords = ["random", "rng", "getrandom"]
+edition = "2024"
+rust-version = "1.85"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--generate-link-to-definition"]
+
+[features]
+# Implement std::error::Error for getrandom::Error and
+# use std to retrieve OS error descriptions
+std = ["getrandom/std"]
+
+# Optional backend: wasm_js
+# This flag enables the wasm_js backend and uses it by default on wasm32 where
+# the target_os is unknown. The getrandom_backend cfg may override this.
+# WARNING: It is highly recommended to enable this feature only for binary crates and tests,
+# i.e. avoid unconditionally enabling it in library crates.
+wasm_js = ["getrandom/wasm_js"]
+
+[dependencies]
+getrandom = "0.3.4"
+rand_core = "0.10.0-rc-2"

@@ -69,6 +69,7 @@ log = ["dep:log"]
 members = [
     "rand_chacha",
     "rand_pcg",
+    "rand_os",
 ]
 exclude = ["benches", "distr_test"]
 
