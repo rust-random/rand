@@ -10,8 +10,7 @@
 
 use crate::guts::ChaCha;
 use core::fmt;
-use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
-use rand_core::{CryptoRng, RngCore, SeedableRng};
+use rand_core::{CryptoRng, RngCore, SeedableRng, le};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -82,28 +81,19 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl BlockRngCore for $ChaChaXCore {
-            type Item = u32;
-            type Results = Array64<u32>;
-
+        impl $ChaChaXCore {
             #[inline]
-            fn generate(&mut self, r: &mut Self::Results) {
-                self.state.refill4($rounds, &mut r.0);
-            }
-        }
-
-        impl SeedableRng for $ChaChaXCore {
-            type Seed = [u8; 32];
-
-            #[inline]
-            fn from_seed(seed: Self::Seed) -> Self {
+            fn from_seed(seed: [u8; 32]) -> Self {
                 $ChaChaXCore {
                     state: ChaCha::new(&seed, &[0u8; 8]),
                 }
             }
-        }
 
-        impl CryptoBlockRng for $ChaChaXCore {}
+            #[inline]
+            fn next_block(&mut self, r: &mut [u32; 64]) {
+                self.state.refill4($rounds, r);
+            }
+        }
 
         /// A cryptographically secure random number generator that uses the ChaCha algorithm.
         ///
@@ -145,7 +135,24 @@ macro_rules! chacha_impl {
         ///       http://www.ecrypt.eu.org/stream/)
         #[derive(Clone, Debug)]
         pub struct $ChaChaXRng {
-            rng: BlockRng<$ChaChaXCore>,
+            core: $ChaChaXCore,
+            buffer: [u32; 64],
+        }
+
+        impl $ChaChaXRng {
+            fn buffer_index(&self) -> u32 {
+                self.buffer[0]
+            }
+
+            fn generate_and_set(&mut self, index: usize) {
+                assert!(index < self.buffer.len());
+                self.buffer[0] = if index != 0 {
+                    self.core.next_block(&mut self.buffer);
+                    index as u32
+                } else {
+                    self.buffer.len() as u32
+                }
+            }
         }
 
         impl SeedableRng for $ChaChaXRng {
@@ -153,9 +160,9 @@ macro_rules! chacha_impl {
 
             #[inline]
             fn from_seed(seed: Self::Seed) -> Self {
-                let core = $ChaChaXCore::from_seed(seed);
                 Self {
-                    rng: BlockRng::new(core),
+                    core: $ChaChaXCore::from_seed(seed),
+                    buffer: le::new_buffer(),
                 }
             }
         }
@@ -163,17 +170,20 @@ macro_rules! chacha_impl {
         impl RngCore for $ChaChaXRng {
             #[inline]
             fn next_u32(&mut self) -> u32 {
-                self.rng.next_u32()
+                let Self { core, buffer } = self;
+                le::next_word_via_gen_block(buffer, |block| core.next_block(block))
             }
 
             #[inline]
             fn next_u64(&mut self) -> u64 {
-                self.rng.next_u64()
+                let Self { core, buffer } = self;
+                le::next_u64_via_gen_block(buffer, |block| core.next_block(block))
             }
 
             #[inline]
-            fn fill_bytes(&mut self, bytes: &mut [u8]) {
-                self.rng.fill_bytes(bytes)
+            fn fill_bytes(&mut self, dst: &mut [u8]) {
+                let Self { core, buffer } = self;
+                le::fill_bytes_via_gen_block(dst, buffer, |block| core.next_block(block));
             }
         }
 
@@ -190,11 +200,11 @@ macro_rules! chacha_impl {
             #[inline]
             pub fn get_word_pos(&self) -> u128 {
                 let buf_start_block = {
-                    let buf_end_block = self.rng.core.state.get_block_pos();
+                    let buf_end_block = self.core.state.get_block_pos();
                     u64::wrapping_sub(buf_end_block, BUF_BLOCKS.into())
                 };
                 let (buf_offset_blocks, block_offset_words) = {
-                    let buf_offset_words = self.rng.index() as u64;
+                    let buf_offset_words = self.buffer_index() as u64;
                     let blocks_part = buf_offset_words / u64::from(BLOCK_WORDS);
                     let words_part = buf_offset_words % u64::from(BLOCK_WORDS);
                     (blocks_part, words_part)
@@ -212,9 +222,8 @@ macro_rules! chacha_impl {
             #[inline]
             pub fn set_word_pos(&mut self, word_offset: u128) {
                 let block = (word_offset / u128::from(BLOCK_WORDS)) as u64;
-                self.rng.core.state.set_block_pos(block);
-                self.rng
-                    .generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
+                self.core.state.set_block_pos(block);
+                self.generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
             }
 
             /// Set the stream number.
@@ -230,8 +239,8 @@ macro_rules! chacha_impl {
             /// indirectly via `set_word_pos`), but this is not directly supported.
             #[inline]
             pub fn set_stream(&mut self, stream: u64) {
-                self.rng.core.state.set_nonce(stream);
-                if self.rng.index() != 64 {
+                self.core.state.set_nonce(stream);
+                if self.buffer_index() != 64 {
                     let wp = self.get_word_pos();
                     self.set_word_pos(wp);
                 }
@@ -240,13 +249,13 @@ macro_rules! chacha_impl {
             /// Get the stream number.
             #[inline]
             pub fn get_stream(&self) -> u64 {
-                self.rng.core.state.get_nonce()
+                self.core.state.get_nonce()
             }
 
             /// Get the seed.
             #[inline]
             pub fn get_seed(&self) -> [u8; 32] {
-                self.rng.core.state.get_seed()
+                self.core.state.get_seed()
             }
         }
 
@@ -255,7 +264,8 @@ macro_rules! chacha_impl {
         impl From<$ChaChaXCore> for $ChaChaXRng {
             fn from(core: $ChaChaXCore) -> Self {
                 $ChaChaXRng {
-                    rng: BlockRng::new(core),
+                    core,
+                    buffer: le::new_buffer(),
                 }
             }
         }

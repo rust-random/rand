@@ -67,7 +67,7 @@ log = ["dep:log"]
 
 [workspace]
 members = [
-    # "rand_chacha",
+    "rand_chacha",
     "rand_pcg",
 ]
 exclude = ["benches", "distr_test"]
