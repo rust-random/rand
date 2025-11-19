@@ -10,9 +10,6 @@
 
 use rand_core::{CryptoRng, RngCore, SeedableRng};
 
-#[cfg(any(test, feature = "os_rng"))]
-pub(crate) use chacha20::ChaCha12Core as Core;
-
 use chacha20::ChaCha12Rng as Rng;
 
 /// A strong, fast (amortized), non-portable RNG

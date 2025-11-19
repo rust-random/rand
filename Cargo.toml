@@ -46,16 +46,16 @@ os_rng = ["dep:getrandom"]
 simd_support = []
 
 # Option (enabled by default): enable StdRng
-# std_rng = ["dep:chacha20"]
+std_rng = ["dep:chacha20"]
 
 # Option: enable SmallRng
 small_rng = []
 
 # Option: enable ThreadRng and rng()
-# thread_rng = ["std", "std_rng", "os_rng"]
+thread_rng = ["std", "std_rng", "os_rng"]
 
 # Option: enable rand::rngs::ChaCha*Rng
-# chacha = ["dep:chacha20"]
+chacha = ["dep:chacha20"]
 
 # Option: use unbiased sampling for algorithms supporting this option: Uniform distribution.
 # By default, bias affecting no more than one in  2^48 samples is accepted.
@@ -77,6 +77,7 @@ rand_core = { version = "0.10.0-rc-2", default-features = false }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 # chacha20 = { version = "=0.10.0-rc.5", default-features = false, features = ["rng"], optional = true }
+chacha20 = { path = "rand_chacha", optional = true, package = "rand_chacha" }
 getrandom = { version = "0.3.0", optional = true }
 
 [dev-dependencies]

@@ -50,13 +50,13 @@ use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 /// # Example
 ///
 /// ```
-/// use chacha20::ChaCha20Core; // Internal part of ChaChaRng that
+/// use chacha20::ChaCha20Rng; // Internal part of ChaChaRng that
 ///                             // implements BlockRngCore
 /// use rand::prelude::*;
 /// use rand::rngs::OsRng;
 /// use rand::rngs::ReseedingRng;
 ///
-/// let mut reseeding_rng = ReseedingRng::<ChaCha20Core, _>::new(0, OsRng).unwrap();
+/// let mut reseeding_rng = ReseedingRng::<ChaCha20Rng, _>::new(0, OsRng).unwrap();
 ///
 /// println!("{}", reseeding_rng.random::<u64>());
 /// ```
@@ -168,7 +168,7 @@ where
 #[cfg(test)]
 mod test {
     use crate::Rng;
-    use crate::rngs::std::Core;
+    use crate::rngs::std::StdRng;
     use crate::test::const_rng;
 
     use super::ReseedingRng;
@@ -177,7 +177,7 @@ mod test {
     fn test_reseeding() {
         let zero = const_rng(0);
         let thresh = 1; // reseed every time the buffer is exhausted
-        let mut reseeding = ReseedingRng::<Core, _>::new(thresh, zero).unwrap();
+        let mut reseeding = ReseedingRng::<StdRng, _>::new(thresh, zero).unwrap();
 
         // RNG buffer size is [u32; 64]
         // Debug is only implemented up to length 32 so use two arrays
