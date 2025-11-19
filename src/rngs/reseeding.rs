@@ -119,8 +119,8 @@ where
     fn reseed_check(&mut self, bytes: usize) {
         if self.bytes_until_reseed <= 0 {
             let res = self.reseed();
-            if let Err(e) = res {
-                warn!("Reseeding RNG failed: {e}");
+            if let Err(_e) = res {
+                warn!("Reseeding RNG failed: {_e}");
             }
             self.bytes_until_reseed = self.threshold;
         }
