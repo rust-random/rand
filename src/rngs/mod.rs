@@ -57,7 +57,7 @@
 //! -   The [`rand_jitter`] crate provides a user-space implementation of
 //!     entropy harvesting from CPU timer jitter, but is very slow and has
 //!     [security issues](https://github.com/rust-random/rand/issues/699).
-//! -   The [`rand_chacha`] crate provides portable implementations of
+//! -   The [`chacha20`] crate provides portable implementations of
 //!     generators derived from the [ChaCha] family of stream ciphers
 //! -   The [`rand_pcg`] crate provides portable implementations of a subset
 //!     of the [PCG] family of small, insecure generators
@@ -87,7 +87,7 @@
 //! [`SeedableRng`]: crate::SeedableRng
 //! [`rdrand`]: https://crates.io/crates/rdrand
 //! [`rand_jitter`]: https://crates.io/crates/rand_jitter
-//! [`rand_chacha`]: https://crates.io/crates/rand_chacha
+//! [`chacha20`]: https://crates.io/crates/chacha20
 //! [`rand_pcg`]: https://crates.io/crates/rand_pcg
 //! [`rand_xoshiro`]: https://crates.io/crates/rand_xoshiro
 //! [crates with the `rng` tag]: https://crates.io/keywords/rng

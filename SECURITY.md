@@ -75,8 +75,8 @@ distribution.
 ## Supported Versions
 
 We aim to provide security fixes in the form of a new patch version for the
-latest release version of `rand` and its dependencies `rand_core` and
-`rand_chacha`, as well as for prior major and minor releases which were, at some
+latest release version of `rand` and its dependencies such as `rand_core`,
+as well as for prior major and minor releases which were, at some
 time during the previous 12 months, the latest release version.
 
 ## Reporting a Vulnerability

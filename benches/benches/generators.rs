@@ -6,14 +6,14 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use chacha20::rand_core::UnwrapErr;
+use chacha20::{ChaCha8Rng, ChaCha12Rng, ChaCha20Core, ChaCha20Rng};
 use core::time::Duration;
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, Criterion, black_box, criterion_group, criterion_main};
 use rand::prelude::*;
 use rand::rngs::OsRng;
 use rand::rngs::ReseedingRng;
-use rand_chacha::rand_core::UnwrapErr;
-use rand_chacha::{ChaCha8Rng, ChaCha12Rng, ChaCha20Core, ChaCha20Rng};
 use rand_pcg::{Pcg32, Pcg64, Pcg64Dxsm, Pcg64Mcg};
 
 criterion_group!(
