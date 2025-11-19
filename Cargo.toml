@@ -28,7 +28,7 @@ features = ["small_rng", "serde"]
 
 [features]
 # Meta-features:
-# default = ["std", "std_rng", "os_rng", "small_rng", "thread_rng"]
+default = ["std", "std_rng", "os_rng", "small_rng", "thread_rng"]
 nightly = [] # some additions requiring nightly Rust
 serde = ["dep:serde"]
 
