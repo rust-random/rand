@@ -13,7 +13,7 @@
 use core::mem::size_of_val;
 use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 
-/// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
+/// A wrapper around any PRNG that implements [`RngCore`], that adds the
 /// ability to reseed it.
 ///
 /// `ReseedingRng` reseeds the underlying PRNG in the following cases:
@@ -61,7 +61,6 @@ use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 /// println!("{}", reseeding_rng.random::<u64>());
 /// ```
 ///
-/// [`BlockRngCore`]: rand_core::block::BlockRngCore
 /// [`ReseedingRng::new`]: ReseedingRng::new
 /// [`reseed()`]: ReseedingRng::reseed
 #[derive(Debug)]
