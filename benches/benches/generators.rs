@@ -13,7 +13,7 @@ use rand::prelude::*;
 use rand::rngs::OsRng;
 use rand::rngs::ReseedingRng;
 use rand_chacha::rand_core::UnwrapErr;
-use rand_chacha::{ChaCha8Rng, ChaCha12Rng, ChaCha20Core, ChaCha20Rng};
+use rand_chacha::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
 use rand_pcg::{Pcg32, Pcg64, Pcg64Dxsm, Pcg64Mcg};
 
 criterion_group!(
@@ -198,7 +198,7 @@ pub fn reseeding_bytes(c: &mut Criterion) {
     fn bench(g: &mut BenchmarkGroup<WallTime>, thresh: u64) {
         let name = format!("chacha20_{thresh}k");
         g.bench_function(name.as_str(), |b| {
-            let mut rng = ReseedingRng::<ChaCha20Core, _>::new(thresh * 1024, OsRng).unwrap();
+            let mut rng = ReseedingRng::<ChaCha20Rng, _>::new(thresh * 1024, OsRng).unwrap();
             let mut buf = [0u8; 1024 * 1024];
             b.iter(|| {
                 rng.fill_bytes(&mut buf);
