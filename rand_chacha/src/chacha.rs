@@ -20,52 +20,6 @@ const BUF_BLOCKS: u8 = 4;
 // number of 32-bit words per ChaCha block (fixed by algorithm definition)
 const BLOCK_WORDS: u8 = 16;
 
-#[repr(transparent)]
-pub struct Array64<T>([T; 64]);
-impl<T> Default for Array64<T>
-where
-    T: Default,
-{
-    #[rustfmt::skip]
-    fn default() -> Self {
-        Self([
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-        ])
-    }
-}
-impl<T> AsRef<[T]> for Array64<T> {
-    fn as_ref(&self) -> &[T] {
-        &self.0
-    }
-}
-impl<T> AsMut<[T]> for Array64<T> {
-    fn as_mut(&mut self) -> &mut [T] {
-        &mut self.0
-    }
-}
-impl<T> Clone for Array64<T>
-where
-    T: Copy + Default,
-{
-    fn clone(&self) -> Self {
-        let mut new = Self::default();
-        new.0.copy_from_slice(&self.0);
-        new
-    }
-}
-impl<T> fmt::Debug for Array64<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Array64 {{}}")
-    }
-}
-
 macro_rules! chacha_impl {
     ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr, $abst:ident,) => {
         #[doc=$doc]

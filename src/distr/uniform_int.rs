@@ -882,7 +882,7 @@ mod tests {
         use serde_json;
         let serialized_on_32bit = r#"{"low":10,"range":91,"thresh":74}"#;
         let deserialized: UniformUsize =
-            serde_json::from_str(&serialized_on_32bit).expect("deserialization");
+            serde_json::from_str(serialized_on_32bit).expect("deserialization");
         assert_eq!(
             deserialized,
             UniformUsize::new_inclusive(10, 100).expect("creation")
