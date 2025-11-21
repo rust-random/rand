@@ -13,7 +13,7 @@ use std::fmt;
 use std::rc::Rc;
 use std::thread_local;
 
-use super::{OsError, OsRng, ReseedingRng, std::Core};
+use super::{OsError, OsRng, ReseedingRng, std::StdRng};
 use rand_core::{CryptoRng, RngCore};
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
@@ -90,7 +90,7 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 #[derive(Clone)]
 pub struct ThreadRng {
     // Rc is explicitly !Send and !Sync
-    rng: Rc<UnsafeCell<ReseedingRng<Core, OsRng>>>,
+    rng: Rc<UnsafeCell<ReseedingRng<StdRng, OsRng>>>,
 }
 
 impl ThreadRng {
@@ -115,7 +115,7 @@ impl fmt::Debug for ThreadRng {
 thread_local!(
     // We require Rc<..> to avoid premature freeing when ThreadRng is used
     // within thread-local destructors. See #968.
-    static THREAD_RNG_KEY: Rc<UnsafeCell<ReseedingRng<Core, OsRng>>> = {
+    static THREAD_RNG_KEY: Rc<UnsafeCell<ReseedingRng<StdRng, OsRng>>> = {
         let rng = ReseedingRng::new(THREAD_RNG_RESEED_THRESHOLD,
                                     OsRng).unwrap_or_else(|err|
                 panic!("could not initialize ThreadRng: {}", err));
