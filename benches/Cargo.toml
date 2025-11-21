@@ -11,11 +11,10 @@ simd_support = ["rand/simd_support"]
 [dependencies]
 
 [dev-dependencies]
-rand = { path = "..", features = ["small_rng", "nightly", "thread_rng"] }
+rand = { path = "..", features = ["small_rng", "nightly"] }
 rand_pcg = { path = "../rand_pcg" }
 rand_chacha = { path = "../rand_chacha" }
 criterion = "0.5"
-criterion-cycles-per-byte = "0.6"
 
 [[bench]]
 name = "array"
