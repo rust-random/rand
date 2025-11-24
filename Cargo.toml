@@ -88,4 +88,4 @@ rayon = "1.7"
 serde_json = "1.0.140"
 
 [patch.crates-io]
-rand_core = { git = "https://github.com/rust-random/rand_core", branch = "block_buffer" }
+rand_core = { git = "https://github.com/rust-random/rand_core", branch = "push-wmrnlsxrmtrl" }
