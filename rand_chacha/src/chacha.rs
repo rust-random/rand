@@ -10,7 +10,7 @@
 
 use crate::guts::ChaCha;
 use core::fmt;
-use rand_core::{le, CryptoRng, RngCore, SeedableRng, Generator, CryptoGenerator};
+use rand_core::{CryptoGenerator, CryptoRng, Generator, RngCore, SeedableRng, le};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -185,8 +185,7 @@ macro_rules! chacha_impl {
             pub fn set_word_pos(&mut self, word_offset: u128) {
                 let block = (word_offset / u128::from(BLOCK_WORDS)) as u64;
                 self.core.state.set_block_pos(block);
-                self
-                    .generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
+                self.generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
             }
 
             /// Set the stream number.
