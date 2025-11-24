@@ -10,7 +10,7 @@
 
 use crate::guts::ChaCha;
 use core::fmt;
-use rand_core::{CryptoRng, RngCore, SeedableRng, le};
+use rand_core::{le, CryptoRng, RngCore, SeedableRng, Generator, CryptoGenerator};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -35,19 +35,27 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl $ChaChaXCore {
+        impl Generator for $ChaChaXCore {
+            type Result = [u32; 64];
+
             #[inline]
-            fn from_seed(seed: [u8; 32]) -> Self {
+            fn generate(&mut self, r: &mut Self::Result) {
+                self.state.refill4($rounds, r);
+            }
+        }
+
+        impl SeedableRng for $ChaChaXCore {
+            type Seed = [u8; 32];
+
+            #[inline]
+            fn from_seed(seed: Self::Seed) -> Self {
                 $ChaChaXCore {
                     state: ChaCha::new(&seed, &[0u8; 8]),
                 }
             }
-
-            #[inline]
-            fn next_block(&mut self, r: &mut [u32; 64]) {
-                self.state.refill4($rounds, r);
-            }
         }
+
+        impl CryptoGenerator for $ChaChaXCore {}
 
         /// A cryptographically secure random number generator that uses the ChaCha algorithm.
         ///
@@ -80,7 +88,7 @@ macro_rules! chacha_impl {
         /// ```
         ///
         /// This implementation uses an output buffer of sixteen `u32` words, and uses
-        /// them to implement the [`RngCore`] methods.
+        /// [`BlockRng`] to implement the [`RngCore`] methods.
         ///
         /// [^1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
         ///       https://cr.yp.to/chacha.html)
@@ -101,7 +109,7 @@ macro_rules! chacha_impl {
             fn generate_and_set(&mut self, index: usize) {
                 assert!(index < self.buffer.len());
                 self.buffer[0] = if index != 0 {
-                    self.core.next_block(&mut self.buffer);
+                    self.core.generate(&mut self.buffer);
                     index as u32
                 } else {
                     self.buffer.len() as u32
@@ -125,19 +133,19 @@ macro_rules! chacha_impl {
             #[inline]
             fn next_u32(&mut self) -> u32 {
                 let Self { core, buffer } = self;
-                le::next_word_via_gen_block(buffer, |block| core.next_block(block))
+                le::next_word_via_gen_block(buffer, |block| core.generate(block))
             }
 
             #[inline]
             fn next_u64(&mut self) -> u64 {
                 let Self { core, buffer } = self;
-                le::next_u64_via_gen_block(buffer, |block| core.next_block(block))
+                le::next_u64_via_gen_block(buffer, |block| core.generate(block))
             }
 
             #[inline]
             fn fill_bytes(&mut self, dst: &mut [u8]) {
                 let Self { core, buffer } = self;
-                le::fill_bytes_via_gen_block(dst, buffer, |block| core.next_block(block));
+                le::fill_bytes_via_gen_block(dst, buffer, |block| core.generate(block));
             }
         }
 
@@ -177,7 +185,8 @@ macro_rules! chacha_impl {
             pub fn set_word_pos(&mut self, word_offset: u128) {
                 let block = (word_offset / u128::from(BLOCK_WORDS)) as u64;
                 self.core.state.set_block_pos(block);
-                self.generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
+                self
+                    .generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
             }
 
             /// Set the stream number.
