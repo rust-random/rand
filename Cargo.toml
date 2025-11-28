@@ -30,7 +30,7 @@ features = ["small_rng", "serde"]
 # Meta-features:
 default = ["std", "std_rng", "os_rng", "small_rng", "thread_rng"]
 nightly = [] # some additions requiring nightly Rust
-serde = ["dep:serde", "rand_core/serde"]
+serde = ["dep:serde"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
 # enables functionality expected to be available on a standard platform.
