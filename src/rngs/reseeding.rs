@@ -169,10 +169,14 @@ where
 
     fn generate(&mut self, results: &mut Self::Result) {
         if self.bytes_until_reseed <= 0 {
-            // We get better performance by not calling only `reseed` here
-            // and continuing with the rest of the function, but by directly
-            // returning from a non-inlined function.
-            return self.reseed_and_generate(results);
+            trace!("Reseeding RNG (periodic reseed)");
+
+            if let Err(e) = self.reseed() {
+                warn!("Reseeding RNG failed: {}", e);
+                let _ = e;
+            }
+
+            self.bytes_until_reseed = self.threshold;
         }
         let num_bytes = size_of_val(results);
         self.bytes_until_reseed -= num_bytes as i64;
@@ -218,21 +222,6 @@ where
             self.bytes_until_reseed = self.threshold;
             self.inner = result
         })
-    }
-
-    #[inline(never)]
-    fn reseed_and_generate(&mut self, results: &mut <Self as Generator>::Result) {
-        trace!("Reseeding RNG (periodic reseed)");
-
-        let num_bytes = size_of_val(results);
-
-        if let Err(e) = self.reseed() {
-            warn!("Reseeding RNG failed: {}", e);
-            let _ = e;
-        }
-
-        self.bytes_until_reseed = self.threshold - num_bytes as i64;
-        self.inner.generate(results);
     }
 }
 
