@@ -10,8 +10,7 @@
 
 use crate::guts::ChaCha;
 use core::fmt;
-use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
-use rand_core::{CryptoRng, RngCore, SeedableRng};
+use rand_core::{CryptoGenerator, CryptoRng, Generator, RngCore, SeedableRng, le};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -20,52 +19,6 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 const BUF_BLOCKS: u8 = 4;
 // number of 32-bit words per ChaCha block (fixed by algorithm definition)
 const BLOCK_WORDS: u8 = 16;
-
-#[repr(transparent)]
-pub struct Array64<T>([T; 64]);
-impl<T> Default for Array64<T>
-where
-    T: Default,
-{
-    #[rustfmt::skip]
-    fn default() -> Self {
-        Self([
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-        ])
-    }
-}
-impl<T> AsRef<[T]> for Array64<T> {
-    fn as_ref(&self) -> &[T] {
-        &self.0
-    }
-}
-impl<T> AsMut<[T]> for Array64<T> {
-    fn as_mut(&mut self) -> &mut [T] {
-        &mut self.0
-    }
-}
-impl<T> Clone for Array64<T>
-where
-    T: Copy + Default,
-{
-    fn clone(&self) -> Self {
-        let mut new = Self::default();
-        new.0.copy_from_slice(&self.0);
-        new
-    }
-}
-impl<T> fmt::Debug for Array64<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Array64 {{}}")
-    }
-}
 
 macro_rules! chacha_impl {
     ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr, $abst:ident,) => {
@@ -82,13 +35,12 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl BlockRngCore for $ChaChaXCore {
-            type Item = u32;
-            type Results = Array64<u32>;
+        impl Generator for $ChaChaXCore {
+            type Result = [u32; 64];
 
             #[inline]
-            fn generate(&mut self, r: &mut Self::Results) {
-                self.state.refill4($rounds, &mut r.0);
+            fn generate(&mut self, r: &mut Self::Result) {
+                self.state.refill4($rounds, r);
             }
         }
 
@@ -103,7 +55,7 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl CryptoBlockRng for $ChaChaXCore {}
+        impl CryptoGenerator for $ChaChaXCore {}
 
         /// A cryptographically secure random number generator that uses the ChaCha algorithm.
         ///
@@ -145,7 +97,24 @@ macro_rules! chacha_impl {
         ///       http://www.ecrypt.eu.org/stream/)
         #[derive(Clone, Debug)]
         pub struct $ChaChaXRng {
-            rng: BlockRng<$ChaChaXCore>,
+            core: $ChaChaXCore,
+            buffer: [u32; 64],
+        }
+
+        impl $ChaChaXRng {
+            fn buffer_index(&self) -> u32 {
+                self.buffer[0]
+            }
+
+            fn generate_and_set(&mut self, index: usize) {
+                assert!(index < self.buffer.len());
+                self.buffer[0] = if index != 0 {
+                    self.core.generate(&mut self.buffer);
+                    index as u32
+                } else {
+                    self.buffer.len() as u32
+                }
+            }
         }
 
         impl SeedableRng for $ChaChaXRng {
@@ -153,9 +122,9 @@ macro_rules! chacha_impl {
 
             #[inline]
             fn from_seed(seed: Self::Seed) -> Self {
-                let core = $ChaChaXCore::from_seed(seed);
                 Self {
-                    rng: BlockRng::new(core),
+                    core: $ChaChaXCore::from_seed(seed),
+                    buffer: le::new_buffer(),
                 }
             }
         }
@@ -163,17 +132,20 @@ macro_rules! chacha_impl {
         impl RngCore for $ChaChaXRng {
             #[inline]
             fn next_u32(&mut self) -> u32 {
-                self.rng.next_u32()
+                let Self { core, buffer } = self;
+                le::next_word_via_gen_block(buffer, |block| core.generate(block))
             }
 
             #[inline]
             fn next_u64(&mut self) -> u64 {
-                self.rng.next_u64()
+                let Self { core, buffer } = self;
+                le::next_u64_via_gen_block(buffer, |block| core.generate(block))
             }
 
             #[inline]
-            fn fill_bytes(&mut self, bytes: &mut [u8]) {
-                self.rng.fill_bytes(bytes)
+            fn fill_bytes(&mut self, dst: &mut [u8]) {
+                let Self { core, buffer } = self;
+                le::fill_bytes_via_gen_block(dst, buffer, |block| core.generate(block));
             }
         }
 
@@ -190,11 +162,11 @@ macro_rules! chacha_impl {
             #[inline]
             pub fn get_word_pos(&self) -> u128 {
                 let buf_start_block = {
-                    let buf_end_block = self.rng.core.state.get_block_pos();
+                    let buf_end_block = self.core.state.get_block_pos();
                     u64::wrapping_sub(buf_end_block, BUF_BLOCKS.into())
                 };
                 let (buf_offset_blocks, block_offset_words) = {
-                    let buf_offset_words = self.rng.index() as u64;
+                    let buf_offset_words = self.buffer_index() as u64;
                     let blocks_part = buf_offset_words / u64::from(BLOCK_WORDS);
                     let words_part = buf_offset_words % u64::from(BLOCK_WORDS);
                     (blocks_part, words_part)
@@ -212,9 +184,8 @@ macro_rules! chacha_impl {
             #[inline]
             pub fn set_word_pos(&mut self, word_offset: u128) {
                 let block = (word_offset / u128::from(BLOCK_WORDS)) as u64;
-                self.rng.core.state.set_block_pos(block);
-                self.rng
-                    .generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
+                self.core.state.set_block_pos(block);
+                self.generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
             }
 
             /// Set the stream number.
@@ -230,8 +201,8 @@ macro_rules! chacha_impl {
             /// indirectly via `set_word_pos`), but this is not directly supported.
             #[inline]
             pub fn set_stream(&mut self, stream: u64) {
-                self.rng.core.state.set_nonce(stream);
-                if self.rng.index() != 64 {
+                self.core.state.set_nonce(stream);
+                if self.buffer_index() != 64 {
                     let wp = self.get_word_pos();
                     self.set_word_pos(wp);
                 }
@@ -240,13 +211,13 @@ macro_rules! chacha_impl {
             /// Get the stream number.
             #[inline]
             pub fn get_stream(&self) -> u64 {
-                self.rng.core.state.get_nonce()
+                self.core.state.get_nonce()
             }
 
             /// Get the seed.
             #[inline]
             pub fn get_seed(&self) -> [u8; 32] {
-                self.rng.core.state.get_seed()
+                self.core.state.get_seed()
             }
         }
 
@@ -255,7 +226,8 @@ macro_rules! chacha_impl {
         impl From<$ChaChaXCore> for $ChaChaXRng {
             fn from(core: $ChaChaXCore) -> Self {
                 $ChaChaXRng {
-                    rng: BlockRng::new(core),
+                    core,
+                    buffer: le::new_buffer(),
                 }
             }
         }

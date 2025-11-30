@@ -127,11 +127,9 @@ impl SeedableRng for Lcg64Xsh32 {
     /// We use a single 127-bit seed to initialise the state and select a stream.
     /// One `seed` bit (lowest bit of `seed[8]`) is ignored.
     fn from_seed(seed: Self::Seed) -> Self {
-        let mut seed_u64 = [0u64; 2];
-        le::read_u64_into(&seed, &mut seed_u64);
-
+        let [state, increment] = le::read_words(&seed);
         // The increment must be odd, hence we discard one bit:
-        Lcg64Xsh32::from_state_incr(seed_u64[0], seed_u64[1] | 1)
+        Lcg64Xsh32::from_state_incr(state, increment | 1)
     }
 }
 
@@ -159,6 +157,6 @@ impl RngCore for Lcg64Xsh32 {
 
     #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        le::fill_bytes_via_next(self, dest)
+        le::fill_bytes_via_next_word(dest, || self.next_u32())
     }
 }

@@ -31,8 +31,7 @@ impl SeedableRng for Xoshiro128PlusPlus {
     /// mapped to a different seed.
     #[inline]
     fn from_seed(seed: [u8; 16]) -> Xoshiro128PlusPlus {
-        let mut state = [0; 4];
-        le::read_u32_into(&seed, &mut state);
+        let state: [u32; 4] = le::read_words(&seed);
         // Check for zero on aligned integers for better code generation.
         // Furtermore, seed_from_u64(0) will expand to a constant when optimized.
         if state.iter().all(|&x| x == 0) {
@@ -93,7 +92,7 @@ impl RngCore for Xoshiro128PlusPlus {
 
     #[inline]
     fn fill_bytes(&mut self, dst: &mut [u8]) {
-        le::fill_bytes_via_next(self, dst)
+        le::fill_bytes_via_next_word(dst, || self.next_u32())
     }
 }
 
