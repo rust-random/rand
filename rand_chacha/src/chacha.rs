@@ -10,7 +10,7 @@
 
 use crate::guts::ChaCha;
 use core::fmt;
-use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
+use rand_core::block::{BlockRng, CryptoGenerator, Generator};
 use rand_core::{CryptoRng, RngCore, SeedableRng};
 
 #[cfg(feature = "serde")]
@@ -20,52 +20,6 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 const BUF_BLOCKS: u8 = 4;
 // number of 32-bit words per ChaCha block (fixed by algorithm definition)
 const BLOCK_WORDS: u8 = 16;
-
-#[repr(transparent)]
-pub struct Array64<T>([T; 64]);
-impl<T> Default for Array64<T>
-where
-    T: Default,
-{
-    #[rustfmt::skip]
-    fn default() -> Self {
-        Self([
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-            T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(), T::default(),
-        ])
-    }
-}
-impl<T> AsRef<[T]> for Array64<T> {
-    fn as_ref(&self) -> &[T] {
-        &self.0
-    }
-}
-impl<T> AsMut<[T]> for Array64<T> {
-    fn as_mut(&mut self) -> &mut [T] {
-        &mut self.0
-    }
-}
-impl<T> Clone for Array64<T>
-where
-    T: Copy + Default,
-{
-    fn clone(&self) -> Self {
-        let mut new = Self::default();
-        new.0.copy_from_slice(&self.0);
-        new
-    }
-}
-impl<T> fmt::Debug for Array64<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Array64 {{}}")
-    }
-}
 
 macro_rules! chacha_impl {
     ($ChaChaXCore:ident, $ChaChaXRng:ident, $rounds:expr, $doc:expr, $abst:ident,) => {
@@ -82,13 +36,12 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl BlockRngCore for $ChaChaXCore {
-            type Item = u32;
-            type Results = Array64<u32>;
+        impl Generator for $ChaChaXCore {
+            type Output = [u32; 64];
 
             #[inline]
-            fn generate(&mut self, r: &mut Self::Results) {
-                self.state.refill4($rounds, &mut r.0);
+            fn generate(&mut self, output: &mut Self::Output) {
+                self.state.refill4($rounds, output);
             }
         }
 
@@ -103,7 +56,7 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl CryptoBlockRng for $ChaChaXCore {}
+        impl CryptoGenerator for $ChaChaXCore {}
 
         /// A cryptographically secure random number generator that uses the ChaCha algorithm.
         ///

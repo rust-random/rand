@@ -12,10 +12,10 @@
 
 use core::mem::size_of_val;
 
-use rand_core::block::{BlockRng, BlockRngCore, CryptoBlockRng};
+use rand_core::block::{BlockRng, CryptoGenerator, Generator};
 use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 
-/// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
+/// A wrapper around any PRNG that implements [`Generator`], that adds the
 /// ability to reseed it.
 ///
 /// `ReseedingRng` reseeds the underlying PRNG in the following cases:
@@ -53,7 +53,7 @@ use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 ///
 /// ```
 /// use chacha20::ChaCha20Core; // Internal part of ChaChaRng that
-///                             // implements BlockRngCore
+///                             // implements Generator
 /// use rand::prelude::*;
 /// use rand::rngs::OsRng;
 /// use rand::rngs::ReseedingRng;
@@ -63,18 +63,18 @@ use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 /// println!("{}", reseeding_rng.random::<u64>());
 /// ```
 ///
-/// [`BlockRngCore`]: rand_core::block::BlockRngCore
+/// [`Generator`]: rand_core::block::Generator
 /// [`ReseedingRng::new`]: ReseedingRng::new
 /// [`reseed()`]: ReseedingRng::reseed
 #[derive(Debug)]
-pub struct ReseedingRng<R, Rsdr>(BlockRng<ReseedingCore<R, Rsdr>>)
+pub struct ReseedingRng<G, Rsdr>(BlockRng<ReseedingCore<G, Rsdr>>)
 where
-    R: BlockRngCore + SeedableRng,
+    G: Generator + SeedableRng,
     Rsdr: TryRngCore;
 
-impl<R, Rsdr> ReseedingRng<R, Rsdr>
+impl<const N: usize, G, Rsdr> ReseedingRng<G, Rsdr>
 where
-    R: BlockRngCore + SeedableRng,
+    G: Generator<Output = [u32; N]> + SeedableRng,
     Rsdr: TryRngCore,
 {
     /// Create a new `ReseedingRng` from an existing PRNG, combined with a RNG
@@ -100,9 +100,9 @@ where
 
 // TODO: this should be implemented for any type where the inner type
 // implements RngCore, but we can't specify that because ReseedingCore is private
-impl<R, Rsdr> RngCore for ReseedingRng<R, Rsdr>
+impl<const N: usize, G, Rsdr> RngCore for ReseedingRng<G, Rsdr>
 where
-    R: BlockRngCore<Item = u32> + SeedableRng,
+    G: Generator<Output = [u32; N]> + SeedableRng,
     Rsdr: TryRngCore,
 {
     #[inline(always)]
@@ -120,51 +120,50 @@ where
     }
 }
 
-impl<R, Rsdr> CryptoRng for ReseedingRng<R, Rsdr>
+impl<const N: usize, G, Rsdr> CryptoRng for ReseedingRng<G, Rsdr>
 where
-    R: BlockRngCore<Item = u32> + SeedableRng + CryptoBlockRng,
+    G: Generator<Output = [u32; N]> + SeedableRng + CryptoGenerator,
     Rsdr: TryCryptoRng,
 {
 }
 
 #[derive(Debug)]
-struct ReseedingCore<R, Rsdr> {
-    inner: R,
+struct ReseedingCore<G, Rsdr> {
+    inner: G,
     reseeder: Rsdr,
     threshold: i64,
     bytes_until_reseed: i64,
 }
 
-impl<R, Rsdr> BlockRngCore for ReseedingCore<R, Rsdr>
+impl<G, Rsdr> Generator for ReseedingCore<G, Rsdr>
 where
-    R: BlockRngCore + SeedableRng,
+    G: Generator + SeedableRng,
     Rsdr: TryRngCore,
 {
-    type Item = <R as BlockRngCore>::Item;
-    type Results = <R as BlockRngCore>::Results;
+    type Output = <G as Generator>::Output;
 
-    fn generate(&mut self, results: &mut Self::Results) {
+    fn generate(&mut self, results: &mut Self::Output) {
         if self.bytes_until_reseed <= 0 {
             // We get better performance by not calling only `reseed` here
             // and continuing with the rest of the function, but by directly
             // returning from a non-inlined function.
             return self.reseed_and_generate(results);
         }
-        let num_bytes = size_of_val(results.as_ref());
+        let num_bytes = size_of_val(results);
         self.bytes_until_reseed -= num_bytes as i64;
         self.inner.generate(results);
     }
 }
 
-impl<R, Rsdr> ReseedingCore<R, Rsdr>
+impl<G, Rsdr> ReseedingCore<G, Rsdr>
 where
-    R: BlockRngCore + SeedableRng,
+    G: Generator + SeedableRng,
     Rsdr: TryRngCore,
 {
     /// Create a new `ReseedingCore`.
     ///
     /// `threshold` is the maximum number of bytes produced by
-    /// [`BlockRngCore::generate`] before attempting reseeding.
+    /// [`Generator::generate`] before attempting reseeding.
     fn new(threshold: u64, mut reseeder: Rsdr) -> Result<Self, Rsdr::Error> {
         // Because generating more values than `i64::MAX` takes centuries on
         // current hardware, we just clamp to that value.
@@ -178,7 +177,7 @@ where
             i64::MAX
         };
 
-        let inner = R::try_from_rng(&mut reseeder)?;
+        let inner = G::try_from_rng(&mut reseeder)?;
 
         Ok(ReseedingCore {
             inner,
@@ -190,17 +189,17 @@ where
 
     /// Reseed the internal PRNG.
     fn reseed(&mut self) -> Result<(), Rsdr::Error> {
-        R::try_from_rng(&mut self.reseeder).map(|result| {
+        G::try_from_rng(&mut self.reseeder).map(|result| {
             self.bytes_until_reseed = self.threshold;
             self.inner = result
         })
     }
 
     #[inline(never)]
-    fn reseed_and_generate(&mut self, results: &mut <Self as BlockRngCore>::Results) {
+    fn reseed_and_generate(&mut self, results: &mut G::Output) {
         trace!("Reseeding RNG (periodic reseed)");
 
-        let num_bytes = size_of_val(results.as_ref());
+        let num_bytes = size_of_val(results);
 
         if let Err(e) = self.reseed() {
             warn!("Reseeding RNG failed: {}", e);
@@ -212,9 +211,9 @@ where
     }
 }
 
-impl<R, Rsdr> CryptoBlockRng for ReseedingCore<R, Rsdr>
+impl<G, Rsdr> CryptoGenerator for ReseedingCore<G, Rsdr>
 where
-    R: BlockRngCore<Item = u32> + SeedableRng + CryptoBlockRng,
+    G: Generator + SeedableRng + CryptoGenerator,
     Rsdr: TryCryptoRng,
 {
 }
