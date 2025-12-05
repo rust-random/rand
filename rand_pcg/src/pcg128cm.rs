@@ -131,10 +131,9 @@ impl SeedableRng for Lcg128CmDxsm64 {
     /// We use a single 255-bit seed to initialise the state and select a stream.
     /// One `seed` bit (lowest bit of `seed[8]`) is ignored.
     fn from_seed(seed: Self::Seed) -> Self {
-        let mut seed_u64 = [0u64; 4];
-        le::read_u64_into(&seed, &mut seed_u64);
-        let state = u128::from(seed_u64[0]) | (u128::from(seed_u64[1]) << 64);
-        let incr = u128::from(seed_u64[2]) | (u128::from(seed_u64[3]) << 64);
+        let seed: [u64; 4] = le::read_words(&seed);
+        let state = u128::from(seed[0]) | (u128::from(seed[1]) << 64);
+        let incr = u128::from(seed[2]) | (u128::from(seed[3]) << 64);
 
         // The increment must be odd, hence we discard one bit:
         Self::from_state_incr(state, incr | 1)
@@ -156,7 +155,7 @@ impl RngCore for Lcg128CmDxsm64 {
 
     #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        le::fill_bytes_via_next(self, dest)
+        le::fill_bytes_via_next_word(dest, || self.next_u64())
     }
 }
 

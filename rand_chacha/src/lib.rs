@@ -13,9 +13,8 @@
 //!
 //! ## Generators
 //!
-//! This crate provides 8-, 12- and 20-round variants of generators via a "core"
-//! implementation (of [`BlockRngCore`]), each with an associated "RNG" type
-//! (implementing [`RngCore`]).
+//! This crate provides 8-, 12- and 20-round variants of generators
+//! implementing [`RngCore`].
 //!
 //! These generators are all deterministic and portable (see [Reproducibility]
 //! in the book), with testing against reference vectors.
@@ -73,7 +72,6 @@
 //! [Seeding RNGs]: https://rust-random.github.io/book/guide-seeding.html
 //! [Security]: https://rust-random.github.io/book/guide-rngs.html#security
 //! [Random Values]: https://rust-random.github.io/book/guide-values.html
-//! [`BlockRngCore`]: rand_core::block::BlockRngCore
 //! [`RngCore`]: rand_core::RngCore
 //! [`SeedableRng`]: rand_core::SeedableRng
 //! [`OsRng`]: https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html
