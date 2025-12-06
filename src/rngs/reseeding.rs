@@ -107,12 +107,12 @@ where
 {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
-        self.0.next_u32()
+        self.0.next_word()
     }
 
     #[inline(always)]
     fn next_u64(&mut self) -> u64 {
-        self.0.next_u64()
+        self.0.next_u64_from_u32()
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {

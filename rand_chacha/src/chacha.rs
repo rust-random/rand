@@ -116,12 +116,12 @@ macro_rules! chacha_impl {
         impl RngCore for $ChaChaXRng {
             #[inline]
             fn next_u32(&mut self) -> u32 {
-                self.rng.next_u32()
+                self.rng.next_word()
             }
 
             #[inline]
             fn next_u64(&mut self) -> u64 {
-                self.rng.next_u64()
+                self.rng.next_u64_from_u32()
             }
 
             #[inline]
