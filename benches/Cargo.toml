@@ -56,3 +56,6 @@ harness = false
 [[bench]]
 name = "weighted"
 harness = false
+
+[patch.crates-io]
+rand_core = { git = "https://github.com/rust-random/rand_core.git", branch = "reduce-block-code" }
