@@ -3,7 +3,6 @@
 [![Test Status](https://github.com/rust-random/rand/actions/workflows/test.yml/badge.svg?event=push)](https://github.com/rust-random/rand/actions)
 [![Crate](https://img.shields.io/crates/v/rand.svg)](https://crates.io/crates/rand)
 [![Book](https://img.shields.io/badge/book-master-yellow.svg)](https://rust-random.github.io/book/)
-[![API](https://img.shields.io/badge/api-master-yellow.svg)](https://rust-random.github.io/rand/rand)
 [![API](https://docs.rs/rand/badge.svg)](https://docs.rs/rand)
 
 Rand is a set of crates supporting (pseudo-)random generators:
@@ -48,7 +47,6 @@ Rand **is not**:
 Documentation:
 
 -   [The Rust Rand Book](https://rust-random.github.io/book)
--   [API reference (master branch)](https://rust-random.github.io/rand)
 -   [API reference (docs.rs)](https://docs.rs/rand)
 
 
