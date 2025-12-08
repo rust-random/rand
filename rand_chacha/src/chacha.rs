@@ -10,7 +10,7 @@
 
 use crate::guts::ChaCha;
 use core::fmt;
-use rand_core::{CryptoRng, RngCore, SeedableRng, le};
+use rand_core::{CryptoRng, RngCore, SeedableRng, le::BlockBuffer};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -90,21 +90,20 @@ macro_rules! chacha_impl {
         #[derive(Clone, Debug)]
         pub struct $ChaChaXRng {
             core: $ChaChaXCore,
-            buffer: [u32; 64],
+            buffer: BlockBuffer<u32, 64>,
         }
 
         impl $ChaChaXRng {
             fn buffer_index(&self) -> u32 {
-                self.buffer[0]
+                self.buffer.index()
             }
 
             fn generate_and_set(&mut self, index: usize) {
-                assert!(index < self.buffer.len());
-                self.buffer[0] = if index != 0 {
-                    self.core.next_block(&mut self.buffer);
-                    index as u32
+                if index == 0 {
+                    self.buffer.reset();
                 } else {
-                    self.buffer.len() as u32
+                    self.buffer
+                        .generate_and_set(index, |block| self.core.next_block(block));
                 }
             }
         }
@@ -116,7 +115,7 @@ macro_rules! chacha_impl {
             fn from_seed(seed: Self::Seed) -> Self {
                 Self {
                     core: $ChaChaXCore::from_seed(seed),
-                    buffer: le::new_buffer(),
+                    buffer: BlockBuffer::default(),
                 }
             }
         }
@@ -124,20 +123,18 @@ macro_rules! chacha_impl {
         impl RngCore for $ChaChaXRng {
             #[inline]
             fn next_u32(&mut self) -> u32 {
-                let Self { core, buffer } = self;
-                le::next_word_via_gen_block(buffer, |block| core.next_block(block))
+                self.buffer.next_word(|block| self.core.next_block(block))
             }
 
             #[inline]
             fn next_u64(&mut self) -> u64 {
-                let Self { core, buffer } = self;
-                le::next_u64_via_gen_block(buffer, |block| core.next_block(block))
+                self.buffer.next_u64(|block| self.core.next_block(block))
             }
 
             #[inline]
             fn fill_bytes(&mut self, dst: &mut [u8]) {
-                let Self { core, buffer } = self;
-                le::fill_bytes_via_gen_block(dst, buffer, |block| core.next_block(block));
+                self.buffer
+                    .fill_bytes(dst, |block| self.core.next_block(block));
             }
         }
 
@@ -219,7 +216,7 @@ macro_rules! chacha_impl {
             fn from(core: $ChaChaXCore) -> Self {
                 $ChaChaXRng {
                     core,
-                    buffer: le::new_buffer(),
+                    buffer: BlockBuffer::default(),
                 }
             }
         }
