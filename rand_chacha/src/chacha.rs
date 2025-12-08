@@ -36,16 +36,23 @@ macro_rules! chacha_impl {
         }
 
         impl $ChaChaXCore {
+            /// Create new core state from seed.
             #[inline]
-            fn from_seed(seed: [u8; 32]) -> Self {
+            pub fn from_seed(seed: [u8; 32]) -> Self {
                 $ChaChaXCore {
                     state: ChaCha::new(&seed, &[0u8; 8]),
                 }
             }
 
+            /// Generate next block.
             #[inline]
-            fn next_block(&mut self, r: &mut [u32; 64]) {
+            pub fn next_block(&mut self, r: &mut [u32; 64]) {
                 self.state.refill4($rounds, r);
+            }
+
+            /// Get current block position.
+            pub fn block_pos(&self) -> u64 {
+                self.state.get_block_pos()
             }
         }
 

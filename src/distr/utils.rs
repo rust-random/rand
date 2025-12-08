@@ -179,6 +179,7 @@ mod simd_wmul {
                 type Output = ($ty, $ty);
 
                 #[inline(always)]
+                #[allow(clippy::undocumented_unsafe_blocks)]
                 fn wmul(self, x: $ty) -> Self::Output {
                     let hi = unsafe { $mulhi(self.into(), x.into()) }.into();
                     let lo = unsafe { $mullo(self.into(), x.into()) }.into();
