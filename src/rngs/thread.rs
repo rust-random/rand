@@ -31,43 +31,11 @@ use rand_core::{CryptoRng, RngCore, TryRngCore, le::BlockBuffer};
 // `ThreadRng` internally, which is nonsensical anyway. We should also never run
 // `ThreadRng` in destructors of its implementation, which is also nonsensical.
 
-// Number of generated ChaCha blocks (64 bytes) after which to reseed `ThreadRng`.
-// According to benchmarks, reseeding has a noticeable impact with thresholds
-// of 32 KiB and less. We choose 64 KiB to avoid significant overhead.
+/// Number of generated ChaCha blocks (64 bytes) after which we reseed `ThreadRng`.
+///
+/// According to benchmarks, reseeding has a noticeable impact with thresholds
+/// of 32 KiB and less. We choose 64 KiB (64 * 1024) to avoid significant overhead.
 const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024;
-
-pub struct ThreadRngInner {
-    core: ChaCha12Core,
-}
-
-impl ThreadRngInner {
-    #[inline]
-    fn new() -> Result<Self, OsError> {
-        let mut seed = [0u8; 32];
-        OsRng.try_fill_bytes(&mut seed)?;
-        let core = ChaCha12Core::from_seed(seed);
-        Ok(Self { core })
-    }
-
-    #[inline]
-    fn reseed(&mut self) -> Result<(), OsError> {
-        let mut seed = [0u8; 32];
-        OsRng.try_fill_bytes(&mut seed)?;
-        self.core = ChaCha12Core::from_seed(seed);
-        Ok(())
-    }
-
-    #[inline]
-    fn next_block(&mut self, block: &mut [u32; 64]) {
-        if self.core.block_pos() > THREAD_RNG_RESEED_THRESHOLD {
-            let res = self.reseed();
-            if let Err(_e) = res {
-                warn!("Reseeding RNG failed: {_e}");
-            }
-        }
-        self.core.next_block(block);
-    }
-}
 
 /// A reference to the thread-local generator
 ///
@@ -124,7 +92,7 @@ impl ThreadRngInner {
 #[derive(Clone)]
 pub struct ThreadRng {
     // Rc is explicitly !Send and !Sync
-    rng: Rc<UnsafeCell<(BlockBuffer<u32, 64>, ThreadRngInner)>>,
+    rng: Rc<UnsafeCell<(BlockBuffer<u32, 64>, ChaCha12Core)>>,
 }
 
 impl ThreadRng {
@@ -136,7 +104,7 @@ impl ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let (buffer, rng_core) = unsafe { &mut *self.rng.get() };
-        rng_core.reseed()?;
+        reseed(rng_core)?;
         buffer.reset();
         Ok(())
     }
@@ -152,9 +120,13 @@ impl fmt::Debug for ThreadRng {
 thread_local!(
     // We require Rc<..> to avoid premature freeing when ThreadRng is used
     // within thread-local destructors. See #968.
-    static THREAD_RNG_KEY: Rc<UnsafeCell<(BlockBuffer<u32, 64>, ThreadRngInner)>> = {
-        let rng_core = ThreadRngInner::new().unwrap_or_else(|err|
-                panic!("could not initialize ThreadRng: {}", err));
+    static THREAD_RNG_KEY: Rc<UnsafeCell<(BlockBuffer<u32, 64>, ChaCha12Core)>> = {
+        let mut seed = [0u8; 32];
+        let res = OsRng.try_fill_bytes(&mut seed);
+        if let Err(err) =  res {
+            panic!("could not initialize ThreadRng: {}", err)
+        }
+        let rng_core = ChaCha12Core::from_seed(seed);
         let buffer = BlockBuffer::default();
         Rc::new(UnsafeCell::new((buffer, rng_core)))
     }
@@ -202,32 +174,51 @@ impl Default for ThreadRng {
 }
 
 impl RngCore for ThreadRng {
-    #[inline(always)]
+    #[inline]
     fn next_u32(&mut self) -> u32 {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let (buffer, rng_core) = unsafe { &mut *self.rng.get() };
-        buffer.next_word(|block| rng_core.next_block(block))
+        buffer.next_word(|block| next_block(rng_core, block))
     }
 
-    #[inline(always)]
+    #[inline]
     fn next_u64(&mut self) -> u64 {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let (buffer, rng_core) = unsafe { &mut *self.rng.get() };
-        buffer.next_u64(|block| rng_core.next_block(block))
+        buffer.next_u64(|block| next_block(rng_core, block))
     }
 
-    #[inline(always)]
+    #[inline]
     fn fill_bytes(&mut self, dst: &mut [u8]) {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let (buffer, rng_core) = unsafe { &mut *self.rng.get() };
-        buffer.fill_bytes(dst, |block| rng_core.next_block(block));
+        buffer.fill_bytes(dst, |block| next_block(rng_core, block));
     }
 }
 
 impl CryptoRng for ThreadRng {}
+
+#[inline(always)]
+fn reseed(rng_core: &mut ChaCha12Core) -> Result<(), OsError> {
+    let mut seed = [0u8; 32];
+    OsRng.try_fill_bytes(&mut seed)?;
+    *rng_core = ChaCha12Core::from_seed(seed);
+    Ok(())
+}
+
+#[inline(always)]
+fn next_block(rng_core: &mut ChaCha12Core, block: &mut [u32; 64]) {
+    if rng_core.block_pos() >= THREAD_RNG_RESEED_THRESHOLD {
+        let res = reseed(rng_core);
+        if let Err(_e) = res {
+            warn!("Reseeding RNG failed: {_e}");
+        }
+    }
+    rng_core.next_block(block);
+}
 
 #[cfg(test)]
 mod test {
