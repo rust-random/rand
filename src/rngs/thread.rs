@@ -41,6 +41,7 @@ pub struct ThreadRngInner {
 }
 
 impl ThreadRngInner {
+    #[inline]
     fn new() -> Result<Self, OsError> {
         let mut seed = [0u8; 32];
         OsRng.try_fill_bytes(&mut seed)?;
@@ -49,6 +50,7 @@ impl ThreadRngInner {
         })
     }
 
+    #[inline]
     fn reseed(&mut self) -> Result<(), OsError> {
         let mut seed = [0u8; 32];
         OsRng.try_fill_bytes(&mut seed)?;
@@ -56,6 +58,7 @@ impl ThreadRngInner {
         Ok(())
     }
 
+    #[inline]
     fn next_block(&mut self, block: &mut [u32; 64]) {
         if self.core.block_pos() > THREAD_RNG_RESEED_THRESHOLD {
             let res = self.reseed();
@@ -129,6 +132,7 @@ impl ThreadRng {
     /// Immediately reseed the generator
     ///
     /// This discards any remaining random data in the cache.
+    #[inline]
     pub fn reseed(&mut self) -> Result<(), OsError> {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
@@ -184,12 +188,14 @@ thread_local!(
 /// # Security
 ///
 /// Refer to [`ThreadRng#Security`].
+#[inline]
 pub fn rng() -> ThreadRng {
     let rng = THREAD_RNG_KEY.with(|t| t.clone());
     ThreadRng { rng }
 }
 
 impl Default for ThreadRng {
+    #[inline]
     fn default() -> ThreadRng {
         rng()
     }
