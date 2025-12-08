@@ -51,6 +51,7 @@ macro_rules! chacha_impl {
             }
 
             /// Get current block position.
+            #[inline]
             pub fn block_pos(&self) -> u64 {
                 self.state.get_block_pos()
             }
@@ -101,10 +102,12 @@ macro_rules! chacha_impl {
         }
 
         impl $ChaChaXRng {
+            #[inline]
             fn buffer_index(&self) -> u32 {
                 self.buffer.index()
             }
 
+            #[inline]
             fn generate_and_set(&mut self, index: usize) {
                 if index == 0 {
                     self.buffer.reset();
