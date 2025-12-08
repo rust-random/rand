@@ -45,9 +45,8 @@ impl ThreadRngInner {
     fn new() -> Result<Self, OsError> {
         let mut seed = [0u8; 32];
         OsRng.try_fill_bytes(&mut seed)?;
-        Ok(Self {
-            core: ChaCha12Core::from_seed(seed),
-        })
+        let core = ChaCha12Core::from_seed(seed);
+        Ok(Self { core })
     }
 
     #[inline]
@@ -125,7 +124,7 @@ impl ThreadRngInner {
 #[derive(Clone)]
 pub struct ThreadRng {
     // Rc is explicitly !Send and !Sync
-    rng: Rc<UnsafeCell<(ThreadRngInner, BlockBuffer<u32, 64>)>>,
+    rng: Rc<UnsafeCell<(BlockBuffer<u32, 64>, ThreadRngInner)>>,
 }
 
 impl ThreadRng {
@@ -136,9 +135,10 @@ impl ThreadRng {
     pub fn reseed(&mut self) -> Result<(), OsError> {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
-        let (rng_core, buffer) = unsafe { &mut *self.rng.get() };
+        let (buffer, rng_core) = unsafe { &mut *self.rng.get() };
+        rng_core.reseed()?;
         buffer.reset();
-        rng_core.reseed()
+        Ok(())
     }
 }
 
@@ -152,11 +152,11 @@ impl fmt::Debug for ThreadRng {
 thread_local!(
     // We require Rc<..> to avoid premature freeing when ThreadRng is used
     // within thread-local destructors. See #968.
-    static THREAD_RNG_KEY: Rc<UnsafeCell<(ThreadRngInner, BlockBuffer<u32, 64>)>> = {
+    static THREAD_RNG_KEY: Rc<UnsafeCell<(BlockBuffer<u32, 64>, ThreadRngInner)>> = {
         let rng_core = ThreadRngInner::new().unwrap_or_else(|err|
                 panic!("could not initialize ThreadRng: {}", err));
         let buffer = BlockBuffer::default();
-        Rc::new(UnsafeCell::new((rng_core, buffer)))
+        Rc::new(UnsafeCell::new((buffer, rng_core)))
     }
 );
 
@@ -206,7 +206,7 @@ impl RngCore for ThreadRng {
     fn next_u32(&mut self) -> u32 {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
-        let (rng_core, buffer) = unsafe { &mut *self.rng.get() };
+        let (buffer, rng_core) = unsafe { &mut *self.rng.get() };
         buffer.next_word(|block| rng_core.next_block(block))
     }
 
@@ -214,7 +214,7 @@ impl RngCore for ThreadRng {
     fn next_u64(&mut self) -> u64 {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
-        let (rng_core, buffer) = unsafe { &mut *self.rng.get() };
+        let (buffer, rng_core) = unsafe { &mut *self.rng.get() };
         buffer.next_u64(|block| rng_core.next_block(block))
     }
 
@@ -222,7 +222,7 @@ impl RngCore for ThreadRng {
     fn fill_bytes(&mut self, dst: &mut [u8]) {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
-        let (rng_core, buffer) = unsafe { &mut *self.rng.get() };
+        let (buffer, rng_core) = unsafe { &mut *self.rng.get() };
         buffer.fill_bytes(dst, |block| rng_core.next_block(block));
     }
 }
