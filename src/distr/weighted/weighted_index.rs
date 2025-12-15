@@ -376,9 +376,9 @@ mod test {
     fn test_weightedindex_serde() {
         let weighted_index = WeightedIndex::new([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).unwrap();
 
-        let ser_weighted_index = bincode::serialize(&weighted_index).unwrap();
+        let ser_weighted_index = postcard::to_allocvec(&weighted_index).unwrap();
         let de_weighted_index: WeightedIndex<i32> =
-            bincode::deserialize(&ser_weighted_index).unwrap();
+            postcard::from_bytes(&ser_weighted_index).unwrap();
 
         assert_eq!(
             de_weighted_index.cumulative_weights,

@@ -173,7 +173,7 @@ mod test {
     fn test_serializing_deserializing_bernoulli() {
         let coin_flip = Bernoulli::new(0.5).unwrap();
         let de_coin_flip: Bernoulli =
-            bincode::deserialize(&bincode::serialize(&coin_flip).unwrap()).unwrap();
+            postcard::from_bytes(&postcard::to_allocvec(&coin_flip).unwrap()).unwrap();
 
         assert_eq!(coin_flip.p_int, de_coin_flip.p_int);
     }
