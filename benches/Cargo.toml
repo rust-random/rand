@@ -59,4 +59,4 @@ harness = false
 
 [patch.crates-io.rand_core]
 git = "https://github.com/rust-random/rand_core.git"
-rev = "8d1d8577"
+rev = "29b1630b"

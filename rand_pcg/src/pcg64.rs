@@ -11,7 +11,7 @@
 //! PCG random number generators
 
 use core::fmt;
-use rand_core::{RngCore, SeedableRng, le};
+use rand_core::{RngCore, SeedableRng, utils};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -127,8 +127,7 @@ impl SeedableRng for Lcg64Xsh32 {
     /// We use a single 127-bit seed to initialise the state and select a stream.
     /// One `seed` bit (lowest bit of `seed[8]`) is ignored.
     fn from_seed(seed: Self::Seed) -> Self {
-        let mut seed_u64 = [0u64; 2];
-        le::read_u64_into(&seed, &mut seed_u64);
+        let seed_u64: [u64; 2] = utils::read_words(&seed);
 
         // The increment must be odd, hence we discard one bit:
         Lcg64Xsh32::from_state_incr(seed_u64[0], seed_u64[1] | 1)
@@ -154,11 +153,11 @@ impl RngCore for Lcg64Xsh32 {
 
     #[inline]
     fn next_u64(&mut self) -> u64 {
-        le::next_u64_via_u32(self)
+        utils::next_u64_via_u32(self)
     }
 
     #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        le::fill_bytes_via_next(self, dest)
+        utils::fill_bytes_via_next_word(dest, || self.next_u32());
     }
 }
