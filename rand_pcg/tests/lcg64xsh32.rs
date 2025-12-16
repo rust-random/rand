@@ -50,19 +50,12 @@ fn test_lcg64xsh32_reference() {
 #[cfg(feature = "serde")]
 #[test]
 fn test_lcg64xsh32_serde() {
-    use bincode;
-    use std::io::{BufReader, BufWriter};
-
+    use postcard;
     let mut rng = Lcg64Xsh32::seed_from_u64(0);
 
-    let buf: Vec<u8> = Vec::new();
-    let mut buf = BufWriter::new(buf);
-    bincode::serialize_into(&mut buf, &rng).expect("Could not serialize");
+    let buf = postcard::to_allocvec(&rng).expect("Could not serialize");
 
-    let buf = buf.into_inner().unwrap();
-    let mut read = BufReader::new(&buf[..]);
-    let mut deserialized: Lcg64Xsh32 =
-        bincode::deserialize_from(&mut read).expect("Could not deserialize");
+    let mut deserialized: Lcg64Xsh32 = postcard::from_bytes(&buf).expect("Could not deserialize");
 
     for _ in 0..16 {
         assert_eq!(rng.next_u64(), deserialized.next_u64());

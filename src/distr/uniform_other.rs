@@ -252,7 +252,7 @@ mod tests {
     fn test_serialization_uniform_duration() {
         let distr = UniformDuration::new(Duration::from_secs(10), Duration::from_secs(60)).unwrap();
         let de_distr: UniformDuration =
-            bincode::deserialize(&bincode::serialize(&distr).unwrap()).unwrap();
+            postcard::from_bytes(&postcard::to_allocvec(&distr).unwrap()).unwrap();
         assert_eq!(distr, de_distr);
     }
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changes
 - Use Edition 2024 and MSRV 1.85 (#1653)
 - Remove feature `os_rng` (#1674)
+- Use `postcard` instead of `bincode` to test the serde feature (#1693)
 
 ## [0.9.0] - 2025-01-27
 ### Dependencies and features

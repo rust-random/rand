@@ -496,12 +496,12 @@ mod tests {
     fn test_uniform_serialization() {
         let unit_box: Uniform<i32> = Uniform::new(-1, 1).unwrap();
         let de_unit_box: Uniform<i32> =
-            bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
+            postcard::from_bytes(&postcard::to_allocvec(&unit_box).unwrap()).unwrap();
         assert_eq!(unit_box.0, de_unit_box.0);
 
         let unit_box: Uniform<f32> = Uniform::new(-1., 1.).unwrap();
         let de_unit_box: Uniform<f32> =
-            bincode::deserialize(&bincode::serialize(&unit_box).unwrap()).unwrap();
+            postcard::from_bytes(&postcard::to_allocvec(&unit_box).unwrap()).unwrap();
         assert_eq!(unit_box.0, de_unit_box.0);
     }
 

@@ -570,7 +570,7 @@ mod test {
     fn test_serialization_index_vec() {
         let some_index_vec = IndexVec::from(vec![254_u32, 234, 2, 1]);
         let de_some_index_vec: IndexVec =
-            bincode::deserialize(&bincode::serialize(&some_index_vec).unwrap()).unwrap();
+            postcard::from_bytes(&postcard::to_allocvec(&some_index_vec).unwrap()).unwrap();
         assert_eq!(some_index_vec, de_some_index_vec);
     }
 
