@@ -19,6 +19,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Remove fns `SeedableRng::from_os_rng`, `try_from_os_rng` (#1674)
 - Remove `Clone` support for `StdRng`, `ReseedingRng` (#1677)
 - Use `postcard` instead of `bincode` to test the serde feature (#1693)
+- Avoid excessive allocation in `IteratorRandom::sample` when `amount` is much larger than iterator size
 
 ### Additions
 - Add fns `IndexedRandom::choose_iter`, `choose_weighted_iter` (#1632)
