@@ -19,11 +19,14 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Remove fns `SeedableRng::from_os_rng`, `try_from_os_rng` (#1674)
 - Remove `Clone` support for `StdRng`, `ReseedingRng` (#1677)
 - Use `postcard` instead of `bincode` to test the serde feature (#1693)
+- Rename `os_rng` -> `sys_rng`, `OsRng` -> `SysRng`, `OsError` -> `SysError` ([#1697])
 
 ### Additions
 - Add fns `IndexedRandom::choose_iter`, `choose_weighted_iter` (#1632)
 - Pub export `Xoshiro128PlusPlus`, `Xoshiro256PlusPlus` prngs (#1649)
 - Pub export `ChaCha8Rng`, `ChaCha12Rng`, `ChaCha20Rng` behind `chacha` feature (#1659)
+
+[#1697]: https://github.com/rust-random/rand/pull/1697
 
 ## [0.9.2] - 2025-07-20
 ### Deprecated

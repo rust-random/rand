@@ -55,10 +55,10 @@ use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 /// use chacha20::ChaCha20Core; // Internal part of ChaChaRng that
 ///                             // implements BlockRngCore
 /// use rand::prelude::*;
-/// use rand::rngs::OsRng;
+/// use rand::rngs::SysRng;
 /// use rand::rngs::ReseedingRng;
 ///
-/// let mut reseeding_rng = ReseedingRng::<ChaCha20Core, _>::new(0, OsRng).unwrap();
+/// let mut reseeding_rng = ReseedingRng::<ChaCha20Core, _>::new(0, SysRng).unwrap();
 ///
 /// println!("{}", reseeding_rng.random::<u64>());
 /// ```

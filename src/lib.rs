@@ -135,10 +135,10 @@ use crate::distr::{Distribution, StandardUniform};
 /// ```no_run
 /// use std::{io, io::Read};
 /// use std::fs::File;
-/// use rand::{rngs::OsRng, RngReader};
+/// use rand::{rngs::SysRng, RngReader};
 ///
 /// io::copy(
-///     &mut RngReader(OsRng).take(100),
+///     &mut RngReader(SysRng).take(100),
 ///     &mut File::create("/tmp/random.bytes").unwrap()
 /// ).unwrap();
 /// ```

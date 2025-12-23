@@ -28,7 +28,7 @@ features = ["small_rng", "serde"]
 
 [features]
 # Meta-features:
-default = ["std", "std_rng", "os_rng", "small_rng", "thread_rng"]
+default = ["std", "std_rng", "sys_rng", "small_rng", "thread_rng"]
 nightly = [] # some additions requiring nightly Rust
 serde = ["dep:serde"]
 
@@ -39,8 +39,8 @@ std = ["alloc", "getrandom?/std"]
 # Option: "alloc" enables support for Vec and Box when not using "std"
 alloc = []
 
-# Option: enable OsRng
-os_rng = ["dep:getrandom", "getrandom/sys_rng"]
+# Option: enable SysRng
+sys_rng = ["dep:getrandom", "getrandom/sys_rng"]
 
 # Option (requires nightly Rust): experimental SIMD support
 simd_support = []
@@ -52,7 +52,7 @@ std_rng = ["dep:chacha20"]
 small_rng = []
 
 # Option: enable ThreadRng and rng()
-thread_rng = ["std", "std_rng", "os_rng"]
+thread_rng = ["std", "std_rng", "sys_rng"]
 
 # Option: enable rand::rngs::ChaCha*Rng
 chacha = ["dep:chacha20"]
