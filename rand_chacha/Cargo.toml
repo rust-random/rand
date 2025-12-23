@@ -20,7 +20,7 @@ all-features = true
 rustdoc-args = ["--generate-link-to-definition"]
 
 [dependencies]
-rand_core = { version = "0.10.0-rc-2" }
+rand_core = { version = "0.10.0-rc-3" }
 ppv-lite86 = { version = "0.2.14", default-features = false, features = ["simd"] }
 serde = { version = "1.0", features = ["derive"], optional = true }
 
