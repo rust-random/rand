@@ -13,7 +13,7 @@ use std::fmt;
 use std::rc::Rc;
 use std::thread_local;
 
-use super::{SysError, SysRng, ReseedingRng, std::Core};
+use super::{ReseedingRng, SysError, SysRng, std::Core};
 use rand_core::{CryptoRng, RngCore};
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
