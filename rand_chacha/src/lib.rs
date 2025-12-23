@@ -24,7 +24,7 @@
 //!
 //! Where secure unpredictable generators are required, it is suggested to use
 //! [`ChaCha12Rng`] or [`ChaCha20Rng`] and to seed via
-//! [`OsRng`].
+//! [`SysRng`].
 //!
 //! See also the [Security] chapter in the rand book. The crate is provided
 //! "as is", without any form of guarantee, and without a security audit.
@@ -37,8 +37,8 @@
 //!
 //! 1.  With a fresh seed, **direct from the OS** (implies a syscall):
 //!     ```
-//!     # use {rand_core::SeedableRng, rand_chacha::ChaCha12Rng, rand::rngs::OsRng};
-//!     let rng = ChaCha12Rng::try_from_rng(&mut OsRng).unwrap();
+//!     # use {rand_core::SeedableRng, rand_chacha::ChaCha12Rng, getrandom::SysRng};
+//!     let rng = ChaCha12Rng::try_from_rng(&mut SysRng).unwrap();
 //!     # let _: ChaCha12Rng = rng;
 //!     ```
 //! 2.  **From a master generator.** This could be [`rand::rng`]
@@ -76,7 +76,7 @@
 //! [`BlockRngCore`]: rand_core::block::BlockRngCore
 //! [`RngCore`]: rand_core::RngCore
 //! [`SeedableRng`]: rand_core::SeedableRng
-//! [`OsRng`]: https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html
+//! [`SysRng`]: https://docs.rs/rand/latest/rand/rngs/struct.SysRng.html
 //! [`rand::rng`]: https://docs.rs/rand/latest/rand/fn.rng.html
 //! [`rand::Rng`]: https://docs.rs/rand/latest/rand/trait.Rng.html
 

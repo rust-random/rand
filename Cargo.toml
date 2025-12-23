@@ -40,7 +40,7 @@ std = ["alloc", "getrandom?/std"]
 alloc = []
 
 # Option: enable OsRng
-os_rng = ["dep:getrandom"]
+os_rng = ["dep:getrandom", "getrandom/sys_rng"]
 
 # Option (requires nightly Rust): experimental SIMD support
 simd_support = []

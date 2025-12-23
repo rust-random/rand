@@ -27,7 +27,7 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 [dev-dependencies]
 # Only to test serde
 serde_json = "1.0.120"
-rand = { path = "..", version = "0.10.0-rc.0" }
+getrandom = { version = "0.4.0-rc.0", features = ["sys_rng"] }
 
 [features]
 default = ["std"]
