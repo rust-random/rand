@@ -1,4 +1,4 @@
-use rand_core::{RngCore, SeedableRng};
+use rand_core::{SeedableRng, TryRng};
 use rand_pcg::{Mcg128Xsl64, Pcg64Mcg};
 
 #[test]
@@ -7,7 +7,7 @@ fn test_mcg128xsl64_advancing() {
         let mut rng1 = Mcg128Xsl64::seed_from_u64(seed);
         let mut rng2 = rng1.clone();
         for _ in 0..20 {
-            rng1.next_u64();
+            rng1.try_next_u64().unwrap();
         }
         rng2.advance(20);
         assert_eq!(rng1, rng2);
@@ -19,17 +19,17 @@ fn test_mcg128xsl64_construction() {
     // Test that various construction techniques produce a working RNG.
     let seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
     let mut rng1 = Mcg128Xsl64::from_seed(seed);
-    assert_eq!(rng1.next_u64(), 7071994460355047496);
+    assert_eq!(rng1.try_next_u64(), Ok(7071994460355047496));
 
     let mut rng2 = Mcg128Xsl64::from_rng(&mut rng1);
-    assert_eq!(rng2.next_u64(), 12300796107712034932);
+    assert_eq!(rng2.try_next_u64(), Ok(12300796107712034932));
 
     let mut rng3 = Mcg128Xsl64::seed_from_u64(0);
-    assert_eq!(rng3.next_u64(), 6198063878555692194);
+    assert_eq!(rng3.try_next_u64(), Ok(6198063878555692194));
 
     // This is the same as Mcg128Xsl64, so we only have a single test:
     let mut rng4 = Pcg64Mcg::seed_from_u64(0);
-    assert_eq!(rng4.next_u64(), 6198063878555692194);
+    assert_eq!(rng4.try_next_u64(), Ok(6198063878555692194));
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn test_mcg128xsl64_reference() {
 
     let mut results = [0u64; 6];
     for i in results.iter_mut() {
-        *i = rng.next_u64();
+        *i = rng.try_next_u64().unwrap();
     }
     let expected: [u64; 6] = [
         0x63b4a3a813ce700a,
