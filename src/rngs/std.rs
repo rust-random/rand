@@ -10,7 +10,7 @@
 
 use rand_core::{CryptoRng, RngCore, SeedableRng};
 
-#[cfg(any(test, feature = "os_rng"))]
+#[cfg(any(test, feature = "sys_rng"))]
 pub(crate) use chacha20::ChaCha12Core as Core;
 
 use chacha20::ChaCha12Rng as Rng;
@@ -39,8 +39,8 @@ use chacha20::ChaCha12Rng as Rng;
 ///
 /// Using a fresh seed **direct from the OS** is the most secure option:
 /// ```
-/// # use rand::{SeedableRng, rngs::{StdRng, OsRng}};
-/// let rng = StdRng::try_from_rng(&mut OsRng).unwrap();
+/// # use rand::{SeedableRng, rngs::{StdRng, SysRng}};
+/// let rng = StdRng::try_from_rng(&mut SysRng).unwrap();
 /// # let _: StdRng = rng;
 /// ```
 ///

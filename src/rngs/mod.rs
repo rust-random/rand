@@ -15,11 +15,11 @@
 //!
 //! ##### Non-deterministic generators
 //!
-//! -   [`OsRng`] is a stateless interface over the operating system's random number
+//! -   [`SysRng`] is a stateless interface over the operating system's random number
 //!     source. This is typically secure with some form of periodic re-seeding.
 //! -   [`ThreadRng`], provided by [`crate::rng()`], is a handle to a
-//!     thread-local generator with periodic seeding from [`OsRng`]. Because this
-//!     is local, it is typically much faster than [`OsRng`]. It should be
+//!     thread-local generator with periodic seeding from [`SysRng`]. Because this
+//!     is local, it is typically much faster than [`SysRng`]. It should be
 //!     secure, but see documentation on [`ThreadRng`].
 //!
 //! ##### Standard generators
@@ -110,9 +110,6 @@ mod std;
 #[cfg(feature = "thread_rng")]
 pub(crate) mod thread;
 
-#[cfg(feature = "os_rng")]
-mod os;
-
 #[cfg(feature = "small_rng")]
 pub use self::small::SmallRng;
 #[cfg(feature = "small_rng")]
@@ -128,5 +125,5 @@ pub use self::thread::ThreadRng;
 #[cfg(feature = "chacha")]
 pub use chacha20::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
 
-#[cfg(feature = "os_rng")]
-pub use os::{OsError, OsRng};
+#[cfg(feature = "sys_rng")]
+pub use getrandom::{Error as SysError, SysRng};

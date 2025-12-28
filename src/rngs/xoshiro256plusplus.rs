@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use rand_core::{RngCore, SeedableRng, le};
+use rand_core::{RngCore, SeedableRng, utils};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -31,8 +31,7 @@ impl SeedableRng for Xoshiro256PlusPlus {
     /// mapped to a different seed.
     #[inline]
     fn from_seed(seed: [u8; 32]) -> Xoshiro256PlusPlus {
-        let mut state = [0; 4];
-        le::read_u64_into(&seed, &mut state);
+        let state = utils::read_words(&seed);
         // Check for zero on aligned integers for better code generation.
         // Furtermore, seed_from_u64(0) will expand to a constant when optimized.
         if state.iter().all(|&x| x == 0) {
@@ -95,7 +94,7 @@ impl RngCore for Xoshiro256PlusPlus {
 
     #[inline]
     fn fill_bytes(&mut self, dst: &mut [u8]) {
-        le::fill_bytes_via_next(self, dst)
+        utils::fill_bytes_via_next_word(dst, || self.next_u64());
     }
 }
 

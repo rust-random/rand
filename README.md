@@ -65,7 +65,7 @@ Rand is built with these features enabled by default:
 
 -   `std` enables functionality dependent on the `std` lib
 -   `alloc` (implied by `std`) enables functionality requiring an allocator
--   `os_rng` (implied by `std`) enables `rngs::OsRng`, using the [getrandom] crate
+-   `sys_rng` (implied by `std`) enables `rngs::SysRng`, using the [getrandom] crate
 -   `std_rng` enables inclusion of `StdRng`, `ThreadRng`
 -   `small_rng` enables inclusion of the `SmallRng` PRNG
 
@@ -89,8 +89,8 @@ compiler versions will be compatible. This is especially true of Rand's
 experimental `simd_support` feature.
 
 Rand supports limited functionality in `no_std` mode (enabled via
-`default-features = false`). In this case, `OsRng` is
-unavailable (unless `os_rng` is enabled), large parts of `seq` are
+`default-features = false`). In this case, `SysRng` is
+unavailable (unless `sys_rng` is enabled), large parts of `seq` are
 unavailable (unless `alloc` is enabled), and `ThreadRng` is unavailable.
 
 ## Portability and platform support
@@ -105,7 +105,7 @@ The [WASI](https://github.com/WebAssembly/WASI/tree/main) and Emscripten
 targets are directly supported. The `wasm32-unknown-unknown` target is not
 *automatically* supported. To enable support for this target, refer to the
 [`getrandom` documentation for WebAssembly](https://docs.rs/getrandom/latest/getrandom/#webassembly-support).
-Alternatively, the `os_rng` feature may be disabled.
+Alternatively, the `sys_rng` feature may be disabled.
 
 # License
 

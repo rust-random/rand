@@ -16,15 +16,15 @@ used according to these additional constraints:
 -   The generator may be constructed using `std::default::Default` where the
     generator supports this trait. Note that generators should *only* support
     `Default` where the `default()` instance is appropriately seeded: for
-    example `OsRng` has no state and thus has a trivial `default()` instance
+    example `SysRng` has no state and thus has a trivial `default()` instance
     while `ThreadRng::default()` returns a handle to a thread-local instance
-    seeded using `OsRng`.
+    seeded using `SysRng`.
 -   The generator may be constructed using `rand_core::SeedableRng` in any of
     the following ways where the generator supports this trait:
 
     -   Via `SeedableRng::from_seed` using a cryptographically secure seed value
     -   Via `SeedableRng::from_rng` or `try_from_rng` using a cryptographically
-        secure source `rng` such as `OsRng` or `ThreadRng`.
+        secure source `rng` such as `SysRng` or `ThreadRng`.
 -   The state (memory) of the generator and its seed value (or source `rng`) are
     not exposed
 
@@ -42,7 +42,7 @@ are expected to provide the following:
 
 ### Specific generators
 
-`OsRng` is a stateless "generator" implemented via [getrandom]. As such, it has
+`SysRng` is a stateless "generator" implemented via [getrandom]. As such, it has
 no possible state to leak and cannot be improperly seeded.
 
 `StdRng` is a `CryptoRng` and `SeedableRng` using a pseudo-random algorithm
@@ -55,7 +55,7 @@ trait and implement `SeedableRng` with a commitment to reproducibility of
 results.
 
 `ThreadRng` is a conveniently-packaged generator over `StdRng` offering
-automatic seeding from `OsRng`, periodic reseeding and thread locality.
+automatic seeding from `SysRng`, periodic reseeding and thread locality.
 This random source is intended to offer a good compromise between cryptographic
 security, fast generation with reasonably low memory and initialization cost
 overheads, and robustness against misuse.
