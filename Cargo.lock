@@ -63,8 +63,7 @@ checksum = "edd0f118536f44f5ccd48bcb8b111bdc3de888b58c74639dfb034a357d0f206d"
 [[package]]
 name = "getrandom"
 version = "0.4.0-rc.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b99f0d993a2b9b97b9a201193aa8ad21305cde06a3be9a7e1f8f4201e5cc27e"
+source = "git+https://github.com/rust-random/getrandom.git?branch=try-rng#69ee78f7ab34873e01eda838cf8a5a6b4a9c6b26"
 dependencies = [
  "cfg-if",
  "libc",
@@ -171,8 +170,7 @@ dependencies = [
 [[package]]
 name = "rand_core"
 version = "0.10.0-rc-3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f66ee92bc15280519ef199a274fe0cafff4245d31bc39aaa31c011ad56cb1f05"
+source = "git+https://github.com/rust-random/rand_core.git?branch=merge_rng_traits#85f7d9ba0a13f69e16248166abf72bff29b00de0"
 
 [[package]]
 name = "rand_pcg"

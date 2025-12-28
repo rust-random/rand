@@ -56,3 +56,7 @@ harness = false
 [[bench]]
 name = "weighted"
 harness = false
+
+[patch.crates-io]
+rand_core = { git = "https://github.com/rust-random/rand_core.git", branch = "merge_rng_traits" }
+getrandom = { git = "https://github.com/rust-random/getrandom.git", branch = "try-rng" }
