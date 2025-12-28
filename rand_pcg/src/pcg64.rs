@@ -10,8 +10,8 @@
 
 //! PCG random number generators
 
-use core::fmt;
-use rand_core::{RngCore, SeedableRng, utils};
+use core::{convert::Infallible, fmt};
+use rand_core::{SeedableRng, TryRngCore, utils};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -134,9 +134,11 @@ impl SeedableRng for Lcg64Xsh32 {
     }
 }
 
-impl RngCore for Lcg64Xsh32 {
+impl TryRngCore for Lcg64Xsh32 {
+    type Error = Infallible;
+
     #[inline]
-    fn next_u32(&mut self) -> u32 {
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
         let state = self.state;
         self.step();
 
@@ -148,16 +150,17 @@ impl RngCore for Lcg64Xsh32 {
 
         let rot = (state >> ROTATE) as u32;
         let xsh = (((state >> XSHIFT) ^ state) >> SPARE) as u32;
-        xsh.rotate_right(rot)
+        Ok(xsh.rotate_right(rot))
     }
 
     #[inline]
-    fn next_u64(&mut self) -> u64 {
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
         utils::next_u64_via_u32(self)
     }
 
     #[inline]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        utils::fill_bytes_via_next_word(dest, || self.next_u32());
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Infallible> {
+        utils::fill_bytes_via_next_word(dest, || self.try_next_u32());
+        Ok(())
     }
 }

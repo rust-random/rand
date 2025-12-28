@@ -13,8 +13,8 @@
 // This is the default multiplier used by PCG for 128-bit state.
 const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
-use core::fmt;
-use rand_core::{RngCore, SeedableRng, utils};
+use core::{convert::Infallible, fmt};
+use rand_core::{SeedableRng, TryRngCore, utils};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -135,21 +135,23 @@ impl SeedableRng for Lcg128Xsl64 {
     }
 }
 
-impl RngCore for Lcg128Xsl64 {
+impl TryRngCore for Lcg128Xsl64 {
+    type Error = Infallible;
+
     #[inline]
-    fn next_u32(&mut self) -> u32 {
-        self.next_u64() as u32
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+        self.try_next_u64().map(|result| result as u32)
     }
 
     #[inline]
-    fn next_u64(&mut self) -> u64 {
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
         self.step();
-        output_xsl_rr(self.state)
+        Ok(output_xsl_rr(self.state))
     }
 
     #[inline]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        utils::fill_bytes_via_next_word(dest, || self.next_u64());
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Infallible> {
+        utils::fill_bytes_via_next_word(dest, || self.try_next_u64())
     }
 }
 
@@ -237,21 +239,23 @@ impl SeedableRng for Mcg128Xsl64 {
     }
 }
 
-impl RngCore for Mcg128Xsl64 {
+impl TryRngCore for Mcg128Xsl64 {
+    type Error = Infallible;
+
     #[inline]
-    fn next_u32(&mut self) -> u32 {
-        self.next_u64() as u32
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+        self.try_next_u64().map(|result| result as u32)
     }
 
     #[inline]
-    fn next_u64(&mut self) -> u64 {
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
         self.state = self.state.wrapping_mul(MULTIPLIER);
-        output_xsl_rr(self.state)
+        Ok(output_xsl_rr(self.state))
     }
 
     #[inline]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        utils::fill_bytes_via_next_word(dest, || self.next_u64());
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Infallible> {
+        utils::fill_bytes_via_next_word(dest, || self.try_next_u64())
     }
 }
 
