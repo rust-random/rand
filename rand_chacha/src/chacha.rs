@@ -9,9 +9,10 @@
 //! The ChaCha random number generator.
 
 use crate::guts::ChaCha;
+use core::convert::Infallible;
 use core::fmt;
 use rand_core::block::{BlockRng, CryptoGenerator, Generator};
-use rand_core::{CryptoRng, RngCore, SeedableRng};
+use rand_core::{CryptoRng, SeedableRng, TryRng};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -89,7 +90,7 @@ macro_rules! chacha_impl {
         /// ```
         ///
         /// This implementation uses an output buffer of sixteen `u32` words, and uses
-        /// [`BlockRng`] to implement the [`RngCore`] methods.
+        /// [`BlockRng`] to implement the [`TryRng`] methods.
         ///
         /// [^1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
         ///       https://cr.yp.to/chacha.html)
@@ -113,20 +114,22 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl RngCore for $ChaChaXRng {
+        impl TryRng for $ChaChaXRng {
+            type Error = Infallible;
+
             #[inline]
-            fn next_u32(&mut self) -> u32 {
-                self.rng.next_word()
+            fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+                Ok(self.rng.next_word())
             }
 
             #[inline]
-            fn next_u64(&mut self) -> u64 {
-                self.rng.next_u64_from_u32()
+            fn try_next_u64(&mut self) -> Result<u64, Infallible> {
+                Ok(self.rng.next_u64_from_u32())
             }
 
             #[inline]
-            fn fill_bytes(&mut self, bytes: &mut [u8]) {
-                self.rng.fill_bytes(bytes)
+            fn try_fill_bytes(&mut self, bytes: &mut [u8]) -> Result<(), Infallible> {
+                Ok(self.rng.fill_bytes(bytes))
             }
         }
 
@@ -306,10 +309,10 @@ chacha_impl!(
 
 #[cfg(test)]
 mod test {
-    use rand_core::{RngCore, SeedableRng};
-
     #[cfg(feature = "serde")]
     use super::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
+    use core::convert::Infallible;
+    use rand_core::{SeedableRng, TryRng};
 
     type ChaChaRng = super::ChaCha20Rng;
 
@@ -336,9 +339,9 @@ mod test {
         assert_eq!(rng2, decoded2);
         assert_eq!(rng3, decoded3);
 
-        assert_eq!(rng1.next_u32(), decoded1.next_u32());
-        assert_eq!(rng2.next_u32(), decoded2.next_u32());
-        assert_eq!(rng3.next_u32(), decoded3.next_u32());
+        assert_eq!(rng1.try_next_u32(), decoded1.try_next_u32());
+        assert_eq!(rng2.try_next_u32(), decoded2.try_next_u32());
+        assert_eq!(rng3.try_next_u32(), decoded3.try_next_u32());
     }
 
     // This test validates that:
@@ -367,10 +370,10 @@ mod test {
             0, 0, 0,
         ];
         let mut rng1 = ChaChaRng::from_seed(seed);
-        assert_eq!(rng1.next_u32(), 137206642);
+        assert_eq!(rng1.try_next_u32(), Ok(137206642));
 
         let mut rng2 = ChaChaRng::from_rng(&mut rng1);
-        assert_eq!(rng2.next_u32(), 1325750369);
+        assert_eq!(rng2.try_next_u32(), Ok(1325750369));
     }
 
     #[test]
@@ -382,7 +385,7 @@ mod test {
 
         let mut results = [0u32; 16];
         for i in results.iter_mut() {
-            *i = rng.next_u32();
+            *i = rng.try_next_u32().unwrap();
         }
         let expected = [
             0xade0b876, 0x903df1a0, 0xe56a5d40, 0x28bd8653, 0xb819d2bd, 0x1aed8da0, 0xccef36a8,
@@ -392,7 +395,7 @@ mod test {
         assert_eq!(results, expected);
 
         for i in results.iter_mut() {
-            *i = rng.next_u32();
+            *i = rng.try_next_u32().unwrap();
         }
         let expected = [
             0xbee7079f, 0x7a385155, 0x7c97ba98, 0x0d082d73, 0xa0290fcb, 0x6965e348, 0x3e53c612,
@@ -414,12 +417,12 @@ mod test {
 
         // Skip block 0
         for _ in 0..16 {
-            rng.next_u32();
+            rng.try_next_u32().unwrap();
         }
 
         let mut results = [0u32; 16];
         for i in results.iter_mut() {
-            *i = rng.next_u32();
+            *i = rng.try_next_u32().unwrap();
         }
         let expected = [
             0x2452eb3a, 0x9249f8ec, 0x8d829d9b, 0xddd4ceb1, 0xe8252083, 0x60818b01, 0xf38422b8,
@@ -448,10 +451,10 @@ mod test {
         // Test block 2 by skipping block 0 and 1
         let mut rng1 = ChaChaRng::from_seed(seed);
         for _ in 0..32 {
-            rng1.next_u32();
+            rng1.try_next_u32().unwrap();
         }
         for i in results.iter_mut() {
-            *i = rng1.next_u32();
+            *i = rng1.try_next_u32().unwrap();
         }
         assert_eq!(results, expected);
         assert_eq!(rng1.get_word_pos(), expected_end);
@@ -460,23 +463,23 @@ mod test {
         let mut rng2 = ChaChaRng::from_seed(seed);
         rng2.set_word_pos(2 * 16);
         for i in results.iter_mut() {
-            *i = rng2.next_u32();
+            *i = rng2.try_next_u32().unwrap();
         }
         assert_eq!(results, expected);
         assert_eq!(rng2.get_word_pos(), expected_end);
 
         // Test skipping behaviour with other types
         let mut buf = [0u8; 32];
-        rng2.fill_bytes(&mut buf[..]);
+        rng2.try_fill_bytes(&mut buf[..]).unwrap();
         assert_eq!(rng2.get_word_pos(), expected_end + 8);
-        rng2.fill_bytes(&mut buf[0..25]);
+        rng2.try_fill_bytes(&mut buf[0..25]).unwrap();
         assert_eq!(rng2.get_word_pos(), expected_end + 15);
-        rng2.next_u64();
+        rng2.try_next_u64().unwrap();
         assert_eq!(rng2.get_word_pos(), expected_end + 17);
-        rng2.next_u32();
-        rng2.next_u64();
+        rng2.try_next_u32().unwrap();
+        rng2.try_next_u64().unwrap();
         assert_eq!(rng2.get_word_pos(), expected_end + 20);
-        rng2.fill_bytes(&mut buf[0..1]);
+        rng2.try_fill_bytes(&mut buf[0..1]).unwrap();
         assert_eq!(rng2.get_word_pos(), expected_end + 21);
     }
 
@@ -492,9 +495,9 @@ mod test {
         // i.e., the i-th word of the i-th 16-word block
         let mut results = [0u32; 16];
         for i in results.iter_mut() {
-            *i = rng.next_u32();
+            *i = rng.try_next_u32().unwrap();
             for _ in 0..16 {
-                rng.next_u32();
+                rng.try_next_u32().unwrap();
             }
         }
         let expected = [
@@ -510,7 +513,7 @@ mod test {
         let seed = [0u8; 32];
         let mut rng = ChaChaRng::from_seed(seed);
         let mut results = [0u8; 32];
-        rng.fill_bytes(&mut results);
+        rng.try_fill_bytes(&mut results).unwrap();
         let expected = [
             118, 184, 224, 173, 160, 241, 61, 144, 64, 93, 106, 229, 83, 134, 189, 40, 189, 210,
             25, 184, 160, 141, 237, 26, 168, 54, 239, 204, 139, 119, 13, 199,
@@ -531,7 +534,7 @@ mod test {
 
         let mut results = [0u32; 16];
         for i in results.iter_mut() {
-            *i = rng.next_u32();
+            *i = rng.try_next_u32().unwrap();
         }
         let expected = [
             0x374dc6c2, 0x3736d58c, 0xb904e24a, 0xcd3f93ef, 0x88228b1a, 0x96a4dfb3, 0x5b76ab72,
@@ -550,16 +553,16 @@ mod test {
         let mut rng = ChaChaRng::from_seed(seed);
         let mut clone = rng.clone();
         for _ in 0..16 {
-            assert_eq!(rng.next_u64(), clone.next_u64());
+            assert_eq!(rng.try_next_u64(), clone.try_next_u64());
         }
 
         rng.set_stream(51);
         for _ in 0..7 {
-            assert!(rng.next_u32() != clone.next_u32());
+            assert!(rng.try_next_u32() != clone.try_next_u32());
         }
         clone.set_stream(51); // switch part way through block
         for _ in 7..16 {
-            assert_eq!(rng.next_u32(), clone.next_u32());
+            assert_eq!(rng.try_next_u32(), clone.try_next_u32());
         }
     }
 
@@ -596,9 +599,9 @@ mod test {
         use rand_core::CryptoRng;
 
         let mut rng1 = ChaChaRng::from_seed(Default::default());
-        let rng2 = &mut rng1.clone() as &mut dyn CryptoRng;
+        let rng2 = &mut rng1.clone() as &mut dyn CryptoRng<Error = Infallible>;
         for _ in 0..1000 {
-            assert_eq!(rng1.next_u64(), rng2.next_u64());
+            assert_eq!(rng1.try_next_u64(), rng2.try_next_u64());
         }
     }
 }
