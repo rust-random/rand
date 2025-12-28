@@ -245,8 +245,7 @@ pub trait IteratorRandom: Iterator + Sized {
     where
         R: Rng + ?Sized,
     {
-        let mut reservoir = Vec::with_capacity(amount);
-        reservoir.extend(self.by_ref().take(amount));
+        let mut reservoir = Vec::from_iter(self.by_ref().take(amount));
 
         // Continue unless the iterator was exhausted
         //
@@ -259,10 +258,6 @@ pub trait IteratorRandom: Iterator + Sized {
                     *slot = elem;
                 }
             }
-        } else {
-            // Don't hang onto extra memory. There is a corner case where
-            // `amount` was much less than `self.len()`.
-            reservoir.shrink_to_fit();
         }
         reservoir
     }
