@@ -14,7 +14,7 @@
 //! ## Generators
 //!
 //! This crate provides 8-, 12- and 20-round variants of generators via a "core"
-//! implementation (of [`BlockRngCore`]), each with an associated "RNG" type
+//! implementation (of [`block::Generator`]), each with an associated "RNG" type
 //! (implementing [`RngCore`]).
 //!
 //! These generators are all deterministic and portable (see [Reproducibility]
@@ -24,7 +24,7 @@
 //!
 //! Where secure unpredictable generators are required, it is suggested to use
 //! [`ChaCha12Rng`] or [`ChaCha20Rng`] and to seed via
-//! [`OsRng`].
+//! [`SysRng`].
 //!
 //! See also the [Security] chapter in the rand book. The crate is provided
 //! "as is", without any form of guarantee, and without a security audit.
@@ -37,8 +37,8 @@
 //!
 //! 1.  With a fresh seed, **direct from the OS** (implies a syscall):
 //!     ```
-//!     # use {rand_core::SeedableRng, rand_chacha::ChaCha12Rng, rand::rngs::OsRng};
-//!     let rng = ChaCha12Rng::try_from_rng(&mut OsRng).unwrap();
+//!     # use {rand_core::SeedableRng, rand_chacha::ChaCha12Rng, getrandom::SysRng};
+//!     let rng = ChaCha12Rng::try_from_rng(&mut SysRng).unwrap();
 //!     # let _: ChaCha12Rng = rng;
 //!     ```
 //! 2.  **From a master generator.** This could be [`rand::rng`]
@@ -73,10 +73,10 @@
 //! [Seeding RNGs]: https://rust-random.github.io/book/guide-seeding.html
 //! [Security]: https://rust-random.github.io/book/guide-rngs.html#security
 //! [Random Values]: https://rust-random.github.io/book/guide-values.html
-//! [`BlockRngCore`]: rand_core::block::BlockRngCore
+//! [`block::Generator`]: rand_core::block::Generator
 //! [`RngCore`]: rand_core::RngCore
 //! [`SeedableRng`]: rand_core::SeedableRng
-//! [`OsRng`]: https://docs.rs/rand/latest/rand/rngs/struct.OsRng.html
+//! [`SysRng`]: https://docs.rs/rand/latest/rand/rngs/struct.SysRng.html
 //! [`rand::rng`]: https://docs.rs/rand/latest/rand/fn.rng.html
 //! [`rand::Rng`]: https://docs.rs/rand/latest/rand/trait.Rng.html
 
