@@ -9,9 +9,10 @@
 //! The ChaCha random number generator.
 
 use crate::guts::ChaCha;
+use core::convert::Infallible;
 use core::fmt;
 use rand_core::block::{BlockRng, CryptoGenerator, Generator};
-use rand_core::{CryptoRng, RngCore, SeedableRng};
+use rand_core::{SeedableRng, TryCryptoRng, TryRngCore};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -89,7 +90,7 @@ macro_rules! chacha_impl {
         /// ```
         ///
         /// This implementation uses an output buffer of sixteen `u32` words, and uses
-        /// [`BlockRng`] to implement the [`RngCore`] methods.
+        /// [`BlockRng`] to implement the [`TryRngCore`] methods.
         ///
         /// [^1]: D. J. Bernstein, [*ChaCha, a variant of Salsa20*](
         ///       https://cr.yp.to/chacha.html)
@@ -113,20 +114,22 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl RngCore for $ChaChaXRng {
+        impl TryRngCore for $ChaChaXRng {
+            type Error = Infallible;
+
             #[inline]
-            fn next_u32(&mut self) -> u32 {
-                self.rng.next_word()
+            fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+                Ok(self.rng.next_word())
             }
 
             #[inline]
-            fn next_u64(&mut self) -> u64 {
-                self.rng.next_u64_from_u32()
+            fn try_next_u64(&mut self) -> Result<u64, Infallible> {
+                Ok(self.rng.next_u64_from_u32())
             }
 
             #[inline]
-            fn fill_bytes(&mut self, bytes: &mut [u8]) {
-                self.rng.fill_bytes(bytes)
+            fn try_fill_bytes(&mut self, bytes: &mut [u8]) -> Result<(), Infallible> {
+                Ok(self.rng.fill_bytes(bytes))
             }
         }
 
@@ -142,19 +145,12 @@ macro_rules! chacha_impl {
             /// byte-offset.
             #[inline]
             pub fn get_word_pos(&self) -> u128 {
-                let buf_start_block = {
-                    let buf_end_block = self.rng.core.state.get_block_pos();
-                    u64::wrapping_sub(buf_end_block, BUF_BLOCKS.into())
-                };
-                let (buf_offset_blocks, block_offset_words) = {
-                    let buf_offset_words = self.rng.index() as u64;
-                    let blocks_part = buf_offset_words / u64::from(BLOCK_WORDS);
-                    let words_part = buf_offset_words % u64::from(BLOCK_WORDS);
-                    (blocks_part, words_part)
-                };
-                let pos_block = u64::wrapping_add(buf_start_block, buf_offset_blocks);
-                let pos_block_words = u128::from(pos_block) * u128::from(BLOCK_WORDS);
-                pos_block_words + u128::from(block_offset_words)
+                let mut block_counter = self.rng.core.state.get_block_pos();
+                if self.rng.word_offset() != 0 {
+                    block_counter = block_counter.wrapping_sub(BUF_BLOCKS as u64);
+                }
+                let word_pos = u128::from(block_counter) * u128::from(BLOCK_WORDS);
+                word_pos + self.rng.word_offset() as u128
             }
 
             /// Set the offset from the start of the stream, in 32-bit words.
@@ -167,7 +163,7 @@ macro_rules! chacha_impl {
                 let block = (word_offset / u128::from(BLOCK_WORDS)) as u64;
                 self.rng.core.state.set_block_pos(block);
                 self.rng
-                    .generate_and_set((word_offset % u128::from(BLOCK_WORDS)) as usize);
+                    .reset_and_skip((word_offset % u128::from(BLOCK_WORDS)) as usize);
             }
 
             /// Set the stream number.
@@ -184,7 +180,7 @@ macro_rules! chacha_impl {
             #[inline]
             pub fn set_stream(&mut self, stream: u64) {
                 self.rng.core.state.set_nonce(stream);
-                if self.rng.index() != 64 {
+                if self.rng.word_offset() != 0 {
                     let wp = self.get_word_pos();
                     self.set_word_pos(wp);
                 }
@@ -203,7 +199,7 @@ macro_rules! chacha_impl {
             }
         }
 
-        impl CryptoRng for $ChaChaXRng {}
+        impl TryCryptoRng for $ChaChaXRng {}
 
         impl From<$ChaChaXCore> for $ChaChaXRng {
             fn from(core: $ChaChaXCore) -> Self {
@@ -306,10 +302,9 @@ chacha_impl!(
 
 #[cfg(test)]
 mod test {
-    use rand_core::{RngCore, SeedableRng};
-
     #[cfg(feature = "serde")]
     use super::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
+    use rand_core::{RngCore, SeedableRng};
 
     type ChaChaRng = super::ChaCha20Rng;
 
@@ -596,7 +591,7 @@ mod test {
         use rand_core::CryptoRng;
 
         let mut rng1 = ChaChaRng::from_seed(Default::default());
-        let rng2 = &mut rng1.clone() as &mut dyn CryptoRng;
+        let mut rng2 = &mut rng1.clone() as &mut dyn CryptoRng;
         for _ in 0..1000 {
             assert_eq!(rng1.next_u64(), rng2.next_u64());
         }
