@@ -315,11 +315,11 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::RngCore;
+    use crate::InfallibleRng;
 
     #[test]
     fn test_misc() {
-        let rng: &mut dyn RngCore = &mut crate::test::rng(820);
+        let rng: &mut dyn InfallibleRng = &mut crate::test::rng(820);
 
         rng.sample::<char, _>(StandardUniform);
         rng.sample::<bool, _>(StandardUniform);

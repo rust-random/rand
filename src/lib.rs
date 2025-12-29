@@ -100,7 +100,7 @@ macro_rules! error { ($($x:tt)*) => (
 pub use rand_core;
 
 // Re-exports from rand_core
-pub use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
+pub use rand_core::{CryptoRng, InfallibleRng, SeedableRng, TryRng};
 
 // Public modules
 pub mod distr;
@@ -128,7 +128,7 @@ pub use rng::{Fill, Rng};
 #[cfg(feature = "thread_rng")]
 use crate::distr::{Distribution, StandardUniform};
 
-/// Adapter to support [`std::io::Read`] over a [`TryRngCore`]
+/// Adapter to support [`std::io::Read`] over a [`TryRng`]
 ///
 /// # Examples
 ///
@@ -143,10 +143,10 @@ use crate::distr::{Distribution, StandardUniform};
 /// ).unwrap();
 /// ```
 #[cfg(feature = "std")]
-pub struct RngReader<R: TryRngCore>(pub R);
+pub struct RngReader<R: TryRng>(pub R);
 
 #[cfg(feature = "std")]
-impl<R: TryRngCore> std::io::Read for RngReader<R> {
+impl<R: TryRng> std::io::Read for RngReader<R> {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         self.0
@@ -157,7 +157,7 @@ impl<R: TryRngCore> std::io::Read for RngReader<R> {
 }
 
 #[cfg(feature = "std")]
-impl<R: TryRngCore> std::fmt::Debug for RngReader<R> {
+impl<R: TryRng> std::fmt::Debug for RngReader<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("RngReader").finish()
     }
@@ -334,9 +334,10 @@ pub fn fill<T: Fill>(dest: &mut [T]) {
 #[cfg(test)]
 mod test {
     use super::*;
+    use core::convert::Infallible;
 
     /// Construct a deterministic RNG with the given seed
-    pub fn rng(seed: u64) -> impl RngCore {
+    pub fn rng(seed: u64) -> impl InfallibleRng {
         // For tests, we want a statistically good, fast, reproducible RNG.
         // PCG32 will do fine, and will be easy to embed if we ever need to.
         const INC: u64 = 11634580027462260723;
@@ -355,19 +356,22 @@ mod test {
 
     #[derive(Clone)]
     pub struct StepRng(u64, u64);
-    impl RngCore for StepRng {
-        fn next_u32(&mut self) -> u32 {
-            self.next_u64() as u32
+    impl TryRng for StepRng {
+        type Error = Infallible;
+
+        fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+            self.try_next_u64().map(|x| x as u32)
         }
 
-        fn next_u64(&mut self) -> u64 {
+        fn try_next_u64(&mut self) -> Result<u64, Infallible> {
             let res = self.0;
             self.0 = self.0.wrapping_add(self.1);
-            res
+            Ok(res)
         }
 
-        fn fill_bytes(&mut self, dst: &mut [u8]) {
+        fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<(), Infallible> {
             rand_core::utils::fill_bytes_via_next_word(dst, || self.next_u64());
+            Ok(())
         }
     }
 

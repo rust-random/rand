@@ -1,4 +1,4 @@
-use rand::RngCore;
+use rand::Rng;
 
 fn main() {
     let mut rng = rand::rng();

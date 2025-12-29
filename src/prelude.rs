@@ -32,4 +32,4 @@ pub use crate::rngs::ThreadRng;
 #[doc(no_inline)]
 pub use crate::seq::{IndexedMutRandom, IndexedRandom, IteratorRandom, SliceRandom};
 #[doc(no_inline)]
-pub use crate::{CryptoRng, Rng, RngCore, SeedableRng};
+pub use crate::{CryptoRng, InfallibleRng, Rng, SeedableRng, TryRng};

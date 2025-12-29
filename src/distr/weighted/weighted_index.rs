@@ -47,7 +47,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Sampling from `WeightedIndex` will result in a single call to
 /// `Uniform<X>::sample` (method of the [`Distribution`] trait), which typically
-/// will request a single value from the underlying [`RngCore`], though the
+/// will request a single value from the underlying [`Rng`], though the
 /// exact number depends on the implementation of `Uniform<X>::sample`.
 ///
 /// # Example
@@ -74,7 +74,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// [`Uniform<X>`]: crate::distr::Uniform
-/// [`RngCore`]: crate::RngCore
+/// [`Rng`]: crate::Rng
 /// [`rand_distr::weighted`]: https://docs.rs/rand_distr/latest/rand_distr/weighted/index.html
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

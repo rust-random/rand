@@ -8,7 +8,8 @@
 
 //! A small fast RNG
 
-use rand_core::{RngCore, SeedableRng};
+use core::convert::Infallible;
+use rand_core::{SeedableRng, TryRng};
 
 #[cfg(any(target_pointer_width = "32", target_pointer_width = "16"))]
 type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
@@ -61,7 +62,7 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 ///
 /// ## Generation
 ///
-/// The generators implements [`RngCore`] and thus also [`Rng`][crate::Rng].
+/// The generators implements [`InfallibleRng`] and thus also [`Rng`][crate::Rng].
 /// See also the [Random Values] chapter in the book.
 ///
 /// [portable]: https://rust-random.github.io/book/crate-reprod.html
@@ -95,19 +96,21 @@ impl SeedableRng for SmallRng {
     }
 }
 
-impl RngCore for SmallRng {
+impl TryRng for SmallRng {
+    type Error = Infallible;
+
     #[inline(always)]
-    fn next_u32(&mut self) -> u32 {
-        self.0.next_u32()
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+        self.0.try_next_u32()
     }
 
     #[inline(always)]
-    fn next_u64(&mut self) -> u64 {
-        self.0.next_u64()
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
+        self.0.try_next_u64()
     }
 
     #[inline(always)]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.0.fill_bytes(dest)
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Infallible> {
+        self.0.try_fill_bytes(dest)
     }
 }

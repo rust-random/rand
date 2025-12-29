@@ -10,10 +10,11 @@
 //! A wrapper around another PRNG that reseeds it after it
 //! generates a certain number of random bytes.
 
+use core::convert::Infallible;
 use core::mem::size_of_val;
 
 use rand_core::block::{BlockRng, CryptoGenerator, Generator};
-use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
+use rand_core::{CryptoRng, SeedableRng, TryRng};
 
 /// A wrapper around any PRNG that implements [`Generator`], that adds the
 /// ability to reseed it.
@@ -70,12 +71,12 @@ use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
 pub struct ReseedingRng<G, Rsdr>(BlockRng<ReseedingCore<G, Rsdr>>)
 where
     G: Generator + SeedableRng,
-    Rsdr: TryRngCore;
+    Rsdr: TryRng;
 
 impl<const N: usize, G, Rsdr> ReseedingRng<G, Rsdr>
 where
     G: Generator<Output = [u32; N]> + SeedableRng,
-    Rsdr: TryRngCore,
+    Rsdr: TryRng,
 {
     /// Create a new `ReseedingRng` from an existing PRNG, combined with a RNG
     /// to use as reseeder.
@@ -99,31 +100,33 @@ where
 }
 
 // TODO: this should be implemented for any type where the inner type
-// implements RngCore, but we can't specify that because ReseedingCore is private
-impl<const N: usize, G, Rsdr> RngCore for ReseedingRng<G, Rsdr>
+// implements TryRng, but we can't specify that because ReseedingCore is private
+impl<const N: usize, G, Rsdr> TryRng for ReseedingRng<G, Rsdr>
 where
     G: Generator<Output = [u32; N]> + SeedableRng,
-    Rsdr: TryRngCore,
+    Rsdr: TryRng,
 {
+    type Error = Infallible;
+
     #[inline(always)]
-    fn next_u32(&mut self) -> u32 {
-        self.0.next_word()
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+        Ok(self.0.next_word())
     }
 
     #[inline(always)]
-    fn next_u64(&mut self) -> u64 {
-        self.0.next_u64_from_u32()
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
+        Ok(self.0.next_u64_from_u32())
     }
 
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.0.fill_bytes(dest)
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Infallible> {
+        Ok(self.0.fill_bytes(dest))
     }
 }
 
 impl<const N: usize, G, Rsdr> CryptoRng for ReseedingRng<G, Rsdr>
 where
     G: Generator<Output = [u32; N]> + SeedableRng + CryptoGenerator,
-    Rsdr: TryCryptoRng,
+    Rsdr: CryptoRng,
 {
 }
 
@@ -138,7 +141,7 @@ struct ReseedingCore<G, Rsdr> {
 impl<G, Rsdr> Generator for ReseedingCore<G, Rsdr>
 where
     G: Generator + SeedableRng,
-    Rsdr: TryRngCore,
+    Rsdr: TryRng,
 {
     type Output = <G as Generator>::Output;
 
@@ -158,7 +161,7 @@ where
 impl<G, Rsdr> ReseedingCore<G, Rsdr>
 where
     G: Generator + SeedableRng,
-    Rsdr: TryRngCore,
+    Rsdr: TryRng,
 {
     /// Create a new `ReseedingCore`.
     ///
@@ -214,7 +217,7 @@ where
 impl<G, Rsdr> CryptoGenerator for ReseedingCore<G, Rsdr>
 where
     G: Generator + SeedableRng + CryptoGenerator,
-    Rsdr: TryCryptoRng,
+    Rsdr: CryptoRng,
 {
 }
 
