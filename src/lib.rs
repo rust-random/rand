@@ -334,6 +334,7 @@ pub fn fill<T: Fill>(dest: &mut [T]) {
 #[cfg(test)]
 mod test {
     use super::*;
+    use core::convert::Infallible;
 
     /// Construct a deterministic RNG with the given seed
     pub fn rng(seed: u64) -> impl RngCore {
@@ -355,19 +356,21 @@ mod test {
 
     #[derive(Clone)]
     pub struct StepRng(u64, u64);
-    impl RngCore for StepRng {
-        fn next_u32(&mut self) -> u32 {
-            self.next_u64() as u32
+    impl TryRngCore for StepRng {
+        type Error = Infallible;
+
+        fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+            self.try_next_u64().map(|x| x as u32)
         }
 
-        fn next_u64(&mut self) -> u64 {
+        fn try_next_u64(&mut self) -> Result<u64, Infallible> {
             let res = self.0;
             self.0 = self.0.wrapping_add(self.1);
-            res
+            Ok(res)
         }
 
-        fn fill_bytes(&mut self, dst: &mut [u8]) {
-            rand_core::utils::fill_bytes_via_next_word(dst, || self.next_u64());
+        fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<(), Infallible> {
+            rand_core::utils::fill_bytes_via_next_word(dst, || self.try_next_u64())
         }
     }
 

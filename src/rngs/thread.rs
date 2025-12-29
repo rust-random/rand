@@ -8,13 +8,13 @@
 
 //! Thread-local random number generator
 
-use core::cell::UnsafeCell;
+use core::{cell::UnsafeCell, convert::Infallible};
 use std::fmt;
 use std::rc::Rc;
 use std::thread_local;
 
 use super::{ReseedingRng, SysError, SysRng, std::Core};
-use rand_core::{CryptoRng, RngCore};
+use rand_core::{TryCryptoRng, TryRngCore};
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
 //
@@ -162,33 +162,35 @@ impl Default for ThreadRng {
     }
 }
 
-impl RngCore for ThreadRng {
+impl TryRngCore for ThreadRng {
+    type Error = Infallible;
+
     #[inline(always)]
-    fn next_u32(&mut self) -> u32 {
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        rng.next_u32()
+        rng.try_next_u32()
     }
 
     #[inline(always)]
-    fn next_u64(&mut self) -> u64 {
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        rng.next_u64()
+        rng.try_next_u64()
     }
 
     #[inline(always)]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Infallible> {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        rng.fill_bytes(dest)
+        rng.try_fill_bytes(dest)
     }
 }
 
-impl CryptoRng for ThreadRng {}
+impl TryCryptoRng for ThreadRng {}
 
 #[cfg(test)]
 mod test {

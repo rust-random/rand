@@ -10,10 +10,11 @@
 //! A wrapper around another PRNG that reseeds it after it
 //! generates a certain number of random bytes.
 
+use core::convert::Infallible;
 use core::mem::size_of_val;
 
 use rand_core::block::{BlockRng, CryptoGenerator, Generator};
-use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
+use rand_core::{SeedableRng, TryCryptoRng, TryRngCore};
 
 /// A wrapper around any PRNG that implements [`Generator`], that adds the
 /// ability to reseed it.
@@ -93,34 +94,37 @@ where
     ///
     /// This discards any remaining random data in the cache.
     pub fn reseed(&mut self) -> Result<(), Rsdr::Error> {
-        self.0.reset();
+        self.0.reset_and_skip(0);
         self.0.core.reseed()
     }
 }
 
 // TODO: this should be implemented for any type where the inner type
-// implements RngCore, but we can't specify that because ReseedingCore is private
-impl<const N: usize, G, Rsdr> RngCore for ReseedingRng<G, Rsdr>
+// implements TryRngCore, but we can't specify that because ReseedingCore is private
+impl<const N: usize, G, Rsdr> TryRngCore for ReseedingRng<G, Rsdr>
 where
     G: Generator<Output = [u32; N]> + SeedableRng,
     Rsdr: TryRngCore,
 {
+    type Error = Infallible;
+
     #[inline(always)]
-    fn next_u32(&mut self) -> u32 {
-        self.0.next_word()
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+        Ok(self.0.next_word())
     }
 
     #[inline(always)]
-    fn next_u64(&mut self) -> u64 {
-        self.0.next_u64_from_u32()
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
+        Ok(self.0.next_u64_from_u32())
     }
 
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.0.fill_bytes(dest)
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Infallible> {
+        self.0.fill_bytes(dest);
+        Ok(())
     }
 }
 
-impl<const N: usize, G, Rsdr> CryptoRng for ReseedingRng<G, Rsdr>
+impl<const N: usize, G, Rsdr> TryCryptoRng for ReseedingRng<G, Rsdr>
 where
     G: Generator<Output = [u32; N]> + SeedableRng + CryptoGenerator,
     Rsdr: TryCryptoRng,
