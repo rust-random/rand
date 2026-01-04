@@ -99,7 +99,7 @@ pub fn bench(c: &mut Criterion) {
     bench_rng::<rand_pcg::Pcg64>(c, "Pcg64");
 }
 
-fn bench_rng<Rng: RngCore + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
+fn bench_rng<Rng: InfallibleRng + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
     for length in [1, 2, 3, 10, 100, 1000].map(black_box) {
         let name = format!("choose_size-hinted_from_{length}_{rng_name}");
         c.bench_function(name.as_str(), |b| {

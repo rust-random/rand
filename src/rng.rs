@@ -13,13 +13,14 @@ use crate::distr::uniform::{SampleRange, SampleUniform};
 use crate::distr::{self, Distribution, StandardUniform};
 use core::num::Wrapping;
 use core::{mem, slice};
-use rand_core::RngCore;
+use rand_core::InfallibleRng;
 
 /// User-level interface for RNGs
 ///
-/// [`RngCore`] is the `dyn`-safe implementation-level interface for Random
-/// (Number) Generators. This trait, `Rng`, provides a user-level interface on
-/// RNGs. It is implemented automatically for any `R: RngCore`.
+/// [`TryRng`] (and its [`InfallibleRng`] trait-alias) is the `dyn`-safe
+/// implementation-level interface for Random (Number) Generators.
+/// This trait, `Rng`, provides a user-level interface on
+/// RNGs. It is implemented automatically for any `R: InfallibleRng`.
 ///
 /// This trait must usually be brought into scope via `use rand::Rng;` or
 /// `use rand::prelude::*;`.
@@ -29,11 +30,11 @@ use rand_core::RngCore;
 /// The basic pattern is `fn foo<R: Rng + ?Sized>(rng: &mut R)`. Some
 /// things are worth noting here:
 ///
-/// - Since `Rng: RngCore` and every `RngCore` implements `Rng`, it makes no
-///   difference whether we use `R: Rng` or `R: RngCore`.
+/// - Since `Rng: InfallibleRng` and every `InfallibleRng` implements `Rng`,
+///   it makes no difference whether we use `R: Rng` or `R: InfallibleRng`.
 /// - The `+ ?Sized` un-bounding allows functions to be called directly on
-///   type-erased references; i.e. `foo(r)` where `r: &mut dyn RngCore`. Without
-///   this it would be necessary to write `foo(&mut r)`.
+///   type-erased references; i.e. `foo(r)` where `r: &mut dyn InfallibleRng`.
+///   Without this it would be necessary to write `foo(&mut r)`.
 ///
 /// An alternative pattern is possible: `fn foo<R: Rng>(rng: R)`. This has some
 /// trade-offs. It allows the argument to be consumed directly without a `&mut`
@@ -55,7 +56,16 @@ use rand_core::RngCore;
 ///
 /// # let v = foo(&mut rand::rng());
 /// ```
-pub trait Rng: RngCore {
+pub trait Rng: InfallibleRng {
+    /// Return the next `u32` value
+    fn next_u32(&mut self) -> u32;
+
+    /// Return the next `u64` value
+    fn next_u64(&mut self) -> u64;
+
+    /// Fill `dest` with random data
+    fn fill_bytes(&mut self, dest: &mut [u8]);
+
     /// Return a random value via the [`StandardUniform`] distribution.
     ///
     /// # Example
@@ -309,7 +319,7 @@ pub trait Rng: RngCore {
     /// rand::rng().fill(&mut arr[..]);
     /// ```
     ///
-    /// [`fill_bytes`]: RngCore::fill_bytes
+    /// [`fill_bytes`]: Self::fill_bytes
     #[track_caller]
     fn fill<T: Fill>(&mut self, dest: &mut [T]) {
         Fill::fill_slice(dest, self)
@@ -354,7 +364,28 @@ pub trait Rng: RngCore {
     }
 }
 
-impl<R: RngCore + ?Sized> Rng for R {}
+impl<R: InfallibleRng + ?Sized> Rng for R {
+    #[inline]
+    fn next_u32(&mut self) -> u32 {
+        match self.try_next_u32() {
+            Ok(x) => x,
+        }
+    }
+
+    #[inline]
+    fn next_u64(&mut self) -> u64 {
+        match self.try_next_u64() {
+            Ok(x) => x,
+        }
+    }
+
+    #[inline]
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        match self.try_fill_bytes(dest) {
+            Ok(()) => (),
+        }
+    }
+}
 
 /// Support filling a slice with random data
 ///
@@ -575,7 +606,7 @@ mod test {
     fn test_rng_trait_object() {
         use crate::distr::{Distribution, StandardUniform};
         let mut rng = rng(109);
-        let mut r = &mut rng as &mut dyn RngCore;
+        let mut r = &mut rng as &mut dyn InfallibleRng;
         r.next_u32();
         r.random::<i32>();
         assert_eq!(r.random_range(0..1), 0);
@@ -587,7 +618,7 @@ mod test {
     fn test_rng_boxed_trait() {
         use crate::distr::{Distribution, StandardUniform};
         let rng = rng(110);
-        let mut r = Box::new(rng) as Box<dyn RngCore>;
+        let mut r = Box::new(rng) as Box<dyn InfallibleRng>;
         r.next_u32();
         r.random::<i32>();
         assert_eq!(r.random_range(0..1), 0);

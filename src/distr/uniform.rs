@@ -113,7 +113,7 @@ use core::fmt;
 use core::ops::{Range, RangeInclusive, RangeTo, RangeToInclusive};
 
 use crate::distr::Distribution;
-use crate::{Rng, RngCore};
+use crate::{InfallibleRng, Rng};
 
 /// Error type returned from [`Uniform::new`] and `new_inclusive`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -421,7 +421,7 @@ where
 /// for `Rng::random_range`.
 pub trait SampleRange<T> {
     /// Generate a sample from the given range.
-    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error>;
+    fn sample_single<R: InfallibleRng + ?Sized>(self, rng: &mut R) -> Result<T, Error>;
 
     /// Check whether the range is empty.
     fn is_empty(&self) -> bool;
@@ -429,7 +429,7 @@ pub trait SampleRange<T> {
 
 impl<T: SampleUniform + PartialOrd> SampleRange<T> for Range<T> {
     #[inline]
-    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
+    fn sample_single<R: InfallibleRng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
         T::Sampler::sample_single(self.start, self.end, rng)
     }
 
@@ -441,7 +441,7 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for Range<T> {
 
 impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
     #[inline]
-    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
+    fn sample_single<R: InfallibleRng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
         T::Sampler::sample_single_inclusive(self.start(), self.end(), rng)
     }
 
@@ -455,7 +455,7 @@ macro_rules! impl_sample_range_u {
     ($t:ty) => {
         impl SampleRange<$t> for RangeTo<$t> {
             #[inline]
-            fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
+            fn sample_single<R: InfallibleRng + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
                 <$t as SampleUniform>::Sampler::sample_single(0, self.end, rng)
             }
 
@@ -467,7 +467,7 @@ macro_rules! impl_sample_range_u {
 
         impl SampleRange<$t> for RangeToInclusive<$t> {
             #[inline]
-            fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
+            fn sample_single<R: InfallibleRng + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
                 <$t as SampleUniform>::Sampler::sample_single_inclusive(0, self.end, rng)
             }
 

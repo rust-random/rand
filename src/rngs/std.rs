@@ -8,7 +8,8 @@
 
 //! The standard RNG
 
-use rand_core::{CryptoRng, RngCore, SeedableRng};
+use core::convert::Infallible;
+use rand_core::{CryptoRng, SeedableRng, TryRng};
 
 #[cfg(any(test, feature = "sys_rng"))]
 pub(crate) use chacha20::ChaCha12Core as Core;
@@ -56,7 +57,7 @@ use chacha20::ChaCha12Rng as Rng;
 ///
 /// ## Generation
 ///
-/// The generators implements [`RngCore`] and thus also [`Rng`][crate::Rng].
+/// The generators implements [`InfallibleRng`] and thus also [`Rng`][crate::Rng].
 /// See also the [Random Values] chapter in the book.
 ///
 /// [portable]: https://rust-random.github.io/book/crate-reprod.html
@@ -69,20 +70,22 @@ use chacha20::ChaCha12Rng as Rng;
 #[derive(Debug, PartialEq, Eq)]
 pub struct StdRng(Rng);
 
-impl RngCore for StdRng {
+impl TryRng for StdRng {
+    type Error = Infallible;
+
     #[inline(always)]
-    fn next_u32(&mut self) -> u32 {
-        self.0.next_u32()
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+        self.0.try_next_u32()
     }
 
     #[inline(always)]
-    fn next_u64(&mut self) -> u64 {
-        self.0.next_u64()
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
+        self.0.try_next_u64()
     }
 
     #[inline(always)]
-    fn fill_bytes(&mut self, dst: &mut [u8]) {
-        self.0.fill_bytes(dst)
+    fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<(), Infallible> {
+        self.0.try_fill_bytes(dst)
     }
 }
 
@@ -101,7 +104,7 @@ impl CryptoRng for StdRng {}
 #[cfg(test)]
 mod test {
     use crate::rngs::StdRng;
-    use crate::{Rng, RngCore, SeedableRng};
+    use crate::{Rng, SeedableRng};
 
     #[test]
     fn test_stdrng_construction() {
