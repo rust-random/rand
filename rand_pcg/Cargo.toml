@@ -1,6 +1,6 @@
 [package]
 name = "rand_pcg"
-version = "0.10.0-rc.1"
+version = "0.10.0-rc.6"
 authors = ["The Rand Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
