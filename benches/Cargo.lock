@@ -59,17 +59,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
-name = "chacha20"
-version = "0.10.0-rc.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f895fb33c1ad22da4bc79d37c0bddff8aee2ba4575705345eb73b8ffbc386074"
-dependencies = [
- "cfg-if",
- "cpufeatures",
- "rand_core",
-]
-
-[[package]]
 name = "ciborium"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -120,15 +109,6 @@ name = "clap_lex"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1d728cc89cf3aee9ff92b05e62b19ee65a02b5702cff7d5a377e32c6ae29d8d"
-
-[[package]]
-name = "cpufeatures"
-version = "0.2.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
-dependencies = [
- "libc",
-]
 
 [[package]]
 name = "criterion"
@@ -216,8 +196,7 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 [[package]]
 name = "getrandom"
 version = "0.4.0-rc.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b99f0d993a2b9b97b9a201193aa8ad21305cde06a3be9a7e1f8f4201e5cc27e"
+source = "git+https://github.com/rust-random/getrandom.git?branch=try-rng#69ee78f7ab34873e01eda838cf8a5a6b4a9c6b26"
 dependencies = [
  "cfg-if",
  "libc",
@@ -377,8 +356,8 @@ checksum = "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f"
 name = "rand"
 version = "0.10.0-rc.5"
 dependencies = [
- "chacha20",
  "getrandom",
+ "rand_chacha",
  "rand_core",
 ]
 
@@ -393,8 +372,7 @@ dependencies = [
 [[package]]
 name = "rand_core"
 version = "0.10.0-rc-3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f66ee92bc15280519ef199a274fe0cafff4245d31bc39aaa31c011ad56cb1f05"
+source = "git+https://github.com/rust-random/rand_core.git?branch=merge_rng_traits#85f7d9ba0a13f69e16248166abf72bff29b00de0"
 
 [[package]]
 name = "rand_pcg"

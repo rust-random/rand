@@ -10,8 +10,8 @@
 
 //! PCG random number generators
 
-use core::fmt;
-use rand_core::{RngCore, SeedableRng, utils};
+use core::{convert::Infallible, fmt};
+use rand_core::{SeedableRng, TryRng, utils};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -112,6 +112,22 @@ impl Lcg64Xsh32 {
             .wrapping_mul(MULTIPLIER)
             .wrapping_add(self.increment);
     }
+
+    #[inline]
+    fn next_u32(&mut self) -> u32 {
+        let state = self.state;
+        self.step();
+
+        // Output function XSH RR: xorshift high (bits), followed by a random rotate
+        // Constants are for 64-bit state, 32-bit output
+        const ROTATE: u32 = 59; // 64 - 5
+        const XSHIFT: u32 = 18; // (5 + 32) / 2
+        const SPARE: u32 = 27; // 64 - 32 - 5
+
+        let rot = (state >> ROTATE) as u32;
+        let xsh = (((state >> XSHIFT) ^ state) >> SPARE) as u32;
+        xsh.rotate_right(rot)
+    }
 }
 
 // Custom Debug implementation that does not expose the internal state
@@ -134,30 +150,22 @@ impl SeedableRng for Lcg64Xsh32 {
     }
 }
 
-impl RngCore for Lcg64Xsh32 {
+impl TryRng for Lcg64Xsh32 {
+    type Error = Infallible;
+
     #[inline]
-    fn next_u32(&mut self) -> u32 {
-        let state = self.state;
-        self.step();
-
-        // Output function XSH RR: xorshift high (bits), followed by a random rotate
-        // Constants are for 64-bit state, 32-bit output
-        const ROTATE: u32 = 59; // 64 - 5
-        const XSHIFT: u32 = 18; // (5 + 32) / 2
-        const SPARE: u32 = 27; // 64 - 32 - 5
-
-        let rot = (state >> ROTATE) as u32;
-        let xsh = (((state >> XSHIFT) ^ state) >> SPARE) as u32;
-        xsh.rotate_right(rot)
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+        Ok(self.next_u32())
     }
 
     #[inline]
-    fn next_u64(&mut self) -> u64 {
-        utils::next_u64_via_u32(self)
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
+        Ok(utils::next_u64_via_u32(self))
     }
 
     #[inline]
-    fn fill_bytes(&mut self, dest: &mut [u8]) {
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Infallible> {
         utils::fill_bytes_via_next_word(dest, || self.next_u32());
+        Ok(())
     }
 }
