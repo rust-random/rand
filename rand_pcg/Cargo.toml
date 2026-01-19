@@ -23,7 +23,7 @@ rustdoc-args = ["--generate-link-to-definition"]
 serde = ["dep:serde"]
 
 [dependencies]
-rand_core = { version = "0.10.0-rc-3" }
+rand_core = { version = "0.10.0-rc-4" }
 serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
