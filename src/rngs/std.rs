@@ -8,7 +8,8 @@
 
 //! The standard RNG
 
-use rand_core::{CryptoRng, RngCore, SeedableRng};
+use core::convert::Infallible;
+use rand_core::{SeedableRng, TryCryptoRng, TryRngCore};
 
 #[cfg(any(test, feature = "sys_rng"))]
 pub(crate) use chacha20::ChaCha12Core as Core;
@@ -66,23 +67,26 @@ use chacha20::ChaCha12Rng as Rng;
 /// [CSPRNG]: https://rust-random.github.io/book/guide-gen.html#cryptographically-secure-pseudo-random-number-generator
 /// [rand_chacha]: https://crates.io/crates/rand_chacha
 /// [rand issue]: https://github.com/rust-random/rand/issues/932
+/// [`RngCore`]: rand_core::RngCore
 #[derive(Debug, PartialEq, Eq)]
 pub struct StdRng(Rng);
 
-impl RngCore for StdRng {
+impl TryRngCore for StdRng {
+    type Error = Infallible;
+
     #[inline(always)]
-    fn next_u32(&mut self) -> u32 {
-        self.0.next_u32()
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+        self.0.try_next_u32()
     }
 
     #[inline(always)]
-    fn next_u64(&mut self) -> u64 {
-        self.0.next_u64()
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
+        self.0.try_next_u64()
     }
 
     #[inline(always)]
-    fn fill_bytes(&mut self, dst: &mut [u8]) {
-        self.0.fill_bytes(dst)
+    fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<(), Infallible> {
+        self.0.try_fill_bytes(dst)
     }
 }
 
@@ -96,7 +100,7 @@ impl SeedableRng for StdRng {
     }
 }
 
-impl CryptoRng for StdRng {}
+impl TryCryptoRng for StdRng {}
 
 #[cfg(test)]
 mod test {

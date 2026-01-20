@@ -6,7 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use rand_core::{RngCore, SeedableRng, utils};
+use core::convert::Infallible;
+use rand_core::{SeedableRng, TryRngCore, utils};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -63,9 +64,11 @@ impl SeedableRng for Xoshiro128PlusPlus {
     }
 }
 
-impl RngCore for Xoshiro128PlusPlus {
+impl TryRngCore for Xoshiro128PlusPlus {
+    type Error = Infallible;
+
     #[inline]
-    fn next_u32(&mut self) -> u32 {
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
         let res = self.s[0]
             .wrapping_add(self.s[3])
             .rotate_left(7)
@@ -82,17 +85,17 @@ impl RngCore for Xoshiro128PlusPlus {
 
         self.s[3] = self.s[3].rotate_left(11);
 
-        res
+        Ok(res)
     }
 
     #[inline]
-    fn next_u64(&mut self) -> u64 {
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
         utils::next_u64_via_u32(self)
     }
 
     #[inline]
-    fn fill_bytes(&mut self, dst: &mut [u8]) {
-        utils::fill_bytes_via_next_word(dst, || self.next_u32());
+    fn try_fill_bytes(&mut self, dst: &mut [u8]) -> Result<(), Infallible> {
+        utils::fill_bytes_via_next_word(dst, || self.try_next_u32())
     }
 }
 
