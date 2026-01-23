@@ -18,19 +18,27 @@ permissions:
   contents: read #  to fetch code (actions/checkout)
 
 jobs:
-  clippy-fmt:
-    name: Check Clippy and rustfmt
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.93
+          components: clippy
+      - run: cargo clippy --workspace --lib --bins --tests -- -D warnings
+
+  fmt:
+    name: rustfmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-          components: clippy, rustfmt
-      - name: Check Clippy
-        run: cargo clippy --workspace -- -D warnings
-      - name: Check rustfmt
-        run: cargo fmt --all -- --check
+          components: rustfmt
+      - run: cargo fmt --all -- --check
 
   check-doc:
     name: Check doc
