@@ -10,6 +10,7 @@
 
 use core::num::NonZeroUsize;
 
+use crate::Rng;
 use crate::distr::Distribution;
 use crate::distr::uniform::{UniformSampler, UniformUsize};
 #[cfg(feature = "alloc")]
@@ -54,7 +55,7 @@ use alloc::string::String;
 /// ```
 ///
 /// [`IndexedRandom::choose`]: crate::seq::IndexedRandom::choose
-/// [`Rng::sample_iter`]: crate::Rng::sample_iter
+/// [`Rng::sample_iter`]: crate::RngExt::sample_iter
 #[derive(Debug, Clone, Copy)]
 pub struct Choose<'a, T> {
     slice: &'a [T],
@@ -83,7 +84,7 @@ impl<'a, T> Choose<'a, T> {
 }
 
 impl<'a, T> Distribution<&'a T> for Choose<'a, T> {
-    fn sample<R: crate::Rng + ?Sized>(&self, rng: &mut R) -> &'a T {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> &'a T {
         let idx = self.range.sample(rng);
 
         debug_assert!(
@@ -120,7 +121,7 @@ impl std::error::Error for Empty {}
 
 #[cfg(feature = "alloc")]
 impl super::SampleString for Choose<'_, char> {
-    fn append_string<R: crate::Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
+    fn append_string<R: Rng + ?Sized>(&self, rng: &mut R, string: &mut String, len: usize) {
         // Get the max char length to minimize extra space.
         // Limit this check to avoid searching for long slice.
         let max_char_len = if self.slice.len() < 200 {

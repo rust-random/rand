@@ -48,7 +48,7 @@ pub use slice::{IndexedMutRandom, IndexedRandom, SliceRandom};
 
 /// Low-level API for sampling indices
 pub mod index {
-    use crate::Rng;
+    use crate::{Rng, RngExt};
 
     #[cfg(feature = "alloc")]
     #[doc(inline)]

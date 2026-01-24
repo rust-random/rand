@@ -9,7 +9,7 @@
 //! The standard RNG
 
 use core::convert::Infallible;
-use rand_core::{SeedableRng, TryCryptoRng, TryRngCore};
+use rand_core::{SeedableRng, TryCryptoRng, TryRng};
 
 #[cfg(any(test, feature = "sys_rng"))]
 pub(crate) use chacha20::ChaCha12Core as Core;
@@ -57,7 +57,7 @@ use chacha20::ChaCha12Rng as Rng;
 ///
 /// ## Generation
 ///
-/// The generators implements [`RngCore`] and thus also [`Rng`][crate::Rng].
+/// The generators implements [`Rng`] and thus also [`Rng`][crate::Rng].
 /// See also the [Random Values] chapter in the book.
 ///
 /// [portable]: https://rust-random.github.io/book/crate-reprod.html
@@ -67,11 +67,11 @@ use chacha20::ChaCha12Rng as Rng;
 /// [CSPRNG]: https://rust-random.github.io/book/guide-gen.html#cryptographically-secure-pseudo-random-number-generator
 /// [chacha20]: https://crates.io/crates/chacha20
 /// [rand issue]: https://github.com/rust-random/rand/issues/932
-/// [`RngCore`]: rand_core::RngCore
+/// [`Rng`]: rand_core::Rng
 #[derive(Debug, PartialEq, Eq)]
 pub struct StdRng(Rng);
 
-impl TryRngCore for StdRng {
+impl TryRng for StdRng {
     type Error = Infallible;
 
     #[inline(always)]
@@ -105,7 +105,7 @@ impl TryCryptoRng for StdRng {}
 #[cfg(test)]
 mod test {
     use crate::rngs::StdRng;
-    use crate::{Rng, RngCore, SeedableRng};
+    use crate::{Rng, RngExt, SeedableRng};
 
     #[test]
     fn test_stdrng_construction() {

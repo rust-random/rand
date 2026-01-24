@@ -11,8 +11,8 @@
 //!
 //! This module is the home of the [`Distribution`] trait and several of its
 //! implementations. It is the workhorse behind some of the convenient
-//! functionality of the [`Rng`] trait, e.g. [`Rng::random`] and of course
-//! [`Rng::sample`].
+//! functionality of the [`RngExt`] trait, e.g. [`RngExt::random`] and of course
+//! [`RngExt::sample`].
 //!
 //! Abstractly, a [probability distribution] describes the probability of
 //! occurrence of each value in its sample space.
@@ -31,13 +31,13 @@
 //! # The Standard Uniform distribution
 //!
 //! The [`StandardUniform`] distribution is important to mention. This is the
-//! distribution used by [`Rng::random`] and represents the "default" way to
+//! distribution used by [`RngExt::random`] and represents the "default" way to
 //! produce a random value for many different types, including most primitive
 //! types, tuples, arrays, and a few derived types. See the documentation of
 //! [`StandardUniform`] for more details.
 //!
 //! Implementing [`Distribution<T>`] for [`StandardUniform`] for user types `T` makes it
-//! possible to generate type `T` with [`Rng::random`], and by extension also
+//! possible to generate type `T` with [`RngExt::random`], and by extension also
 //! with the [`random`] function.
 //!
 //! ## Other standard uniform distributions
@@ -62,7 +62,7 @@
 //! range on a subset of the types supported by the above distributions.
 //!
 //! Implementations support single-value-sampling via
-//! [`Rng::random_range(Range)`](Rng::random_range).
+//! [`Rng::random_range(Range)`](RngExt::random_range).
 //! Where a fixed (non-`const`) range will be sampled many times, it is likely
 //! faster to pre-construct a [`Distribution`] object using
 //! [`Uniform::new`], [`Uniform::new_inclusive`] or `From<Range>`.
@@ -70,7 +70,7 @@
 //! # Non-uniform sampling
 //!
 //! Sampling a simple true/false outcome with a given probability has a name:
-//! the [`Bernoulli`] distribution (this is used by [`Rng::random_bool`]).
+//! the [`Bernoulli`] distribution (this is used by [`RngExt::random_bool`]).
 //!
 //! For weighted sampling of discrete values see the [`weighted`] module.
 //!
@@ -112,7 +112,7 @@ pub use self::other::{Alphabetic, Alphanumeric};
 pub use self::uniform::Uniform;
 
 #[allow(unused)]
-use crate::Rng;
+use crate::RngExt;
 
 /// The Standard Uniform distribution
 ///
@@ -147,7 +147,7 @@ use crate::Rng;
 ///   between elements).
 /// * Arrays `[T; n]` where `T` is supported. Each element is sampled
 ///   sequentially and independently. Note that for small `T` this usually
-///   results in the RNG discarding random bits; see also [`Rng::fill`] which
+///   results in the RNG discarding random bits; see also [`RngExt::fill`] which
 ///   offers a more efficient approach to filling an array of integer types
 ///   with random data.
 /// * SIMD types (requires [`simd_support`] feature) like x86's [`__m128i`]
@@ -163,7 +163,7 @@ use crate::Rng;
 ///
 /// ```
 /// # #![allow(dead_code)]
-/// use rand::Rng;
+/// use rand::{Rng, RngExt};
 /// use rand::distr::{Distribution, StandardUniform};
 ///
 /// struct MyF32 {

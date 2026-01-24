@@ -10,10 +10,10 @@
 //! `UniformInt` implementation
 
 use super::{Error, SampleBorrow, SampleUniform, UniformSampler};
-use crate::Rng;
 use crate::distr::utils::WideningMultiply;
 #[cfg(feature = "simd_support")]
 use crate::distr::{Distribution, StandardUniform};
+use crate::{Rng, RngExt};
 
 #[cfg(feature = "simd_support")]
 use core::simd::prelude::*;

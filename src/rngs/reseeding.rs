@@ -14,7 +14,7 @@ use core::convert::Infallible;
 use core::mem::size_of_val;
 
 use rand_core::block::{BlockRng, CryptoGenerator, Generator};
-use rand_core::{SeedableRng, TryCryptoRng, TryRngCore};
+use rand_core::{SeedableRng, TryCryptoRng, TryRng};
 
 /// A wrapper around any PRNG that implements [`Generator`], that adds the
 /// ability to reseed it.
@@ -71,12 +71,12 @@ use rand_core::{SeedableRng, TryCryptoRng, TryRngCore};
 pub struct ReseedingRng<G, Rsdr>(BlockRng<ReseedingCore<G, Rsdr>>)
 where
     G: Generator + SeedableRng,
-    Rsdr: TryRngCore;
+    Rsdr: TryRng;
 
 impl<const N: usize, G, Rsdr> ReseedingRng<G, Rsdr>
 where
     G: Generator<Output = [u32; N]> + SeedableRng,
-    Rsdr: TryRngCore,
+    Rsdr: TryRng,
 {
     /// Create a new `ReseedingRng` from an existing PRNG, combined with a RNG
     /// to use as reseeder.
@@ -100,11 +100,11 @@ where
 }
 
 // TODO: this should be implemented for any type where the inner type
-// implements TryRngCore, but we can't specify that because ReseedingCore is private
-impl<const N: usize, G, Rsdr> TryRngCore for ReseedingRng<G, Rsdr>
+// implements TryRng, but we can't specify that because ReseedingCore is private
+impl<const N: usize, G, Rsdr> TryRng for ReseedingRng<G, Rsdr>
 where
     G: Generator<Output = [u32; N]> + SeedableRng,
-    Rsdr: TryRngCore,
+    Rsdr: TryRng,
 {
     type Error = Infallible;
 
@@ -142,7 +142,7 @@ struct ReseedingCore<G, Rsdr> {
 impl<G, Rsdr> Generator for ReseedingCore<G, Rsdr>
 where
     G: Generator + SeedableRng,
-    Rsdr: TryRngCore,
+    Rsdr: TryRng,
 {
     type Output = <G as Generator>::Output;
 
@@ -162,7 +162,7 @@ where
 impl<G, Rsdr> ReseedingCore<G, Rsdr>
 where
     G: Generator + SeedableRng,
-    Rsdr: TryRngCore,
+    Rsdr: TryRng,
 {
     /// Create a new `ReseedingCore`.
     ///
@@ -225,7 +225,7 @@ where
 #[cfg(feature = "std_rng")]
 #[cfg(test)]
 mod test {
-    use crate::Rng;
+    use crate::RngExt;
     use crate::rngs::std::Core;
     use crate::test::const_rng;
 

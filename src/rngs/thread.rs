@@ -14,7 +14,7 @@ use std::rc::Rc;
 use std::thread_local;
 
 use super::{ReseedingRng, SysError, SysRng, std::Core};
-use rand_core::{TryCryptoRng, TryRngCore};
+use rand_core::{TryCryptoRng, TryRng};
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
 //
@@ -162,7 +162,7 @@ impl Default for ThreadRng {
     }
 }
 
-impl TryRngCore for ThreadRng {
+impl TryRng for ThreadRng {
     type Error = Infallible;
 
     #[inline(always)]
@@ -196,7 +196,7 @@ impl TryCryptoRng for ThreadRng {}
 mod test {
     #[test]
     fn test_thread_rng() {
-        use crate::Rng;
+        use crate::RngExt;
         let mut r = crate::rng();
         r.random::<i32>();
         assert_eq!(r.random_range(0..1), 0);

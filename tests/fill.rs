@@ -8,7 +8,7 @@
 
 #![allow(unused)]
 
-use rand::{Fill, Rng};
+use rand::{Fill, Rng, RngExt};
 
 // Test that Fill may be implemented for externally-defined types
 struct MyInt(i32);

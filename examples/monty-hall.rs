@@ -26,7 +26,7 @@
 //!
 //! [Monty Hall Problem]: https://en.wikipedia.org/wiki/Monty_Hall_problem
 
-use rand::Rng;
+use rand::RngExt;
 use rand::distr::{Distribution, Uniform};
 
 struct SimulationResult {
@@ -35,7 +35,7 @@ struct SimulationResult {
 }
 
 // Run a single simulation of the Monty Hall problem.
-fn simulate<R: Rng>(random_door: &Uniform<u32>, rng: &mut R) -> SimulationResult {
+fn simulate<R: RngExt>(random_door: &Uniform<u32>, rng: &mut R) -> SimulationResult {
     let car = random_door.sample(rng);
 
     // This is our initial choice
@@ -58,7 +58,7 @@ fn simulate<R: Rng>(random_door: &Uniform<u32>, rng: &mut R) -> SimulationResult
 
 // Returns the door the game host opens given our choice and knowledge of
 // where the car is. The game host will never open the door with the car.
-fn game_host_open<R: Rng>(car: u32, choice: u32, rng: &mut R) -> u32 {
+fn game_host_open<R: RngExt>(car: u32, choice: u32, rng: &mut R) -> u32 {
     use rand::seq::IndexedRandom;
     *free_doors(&[car, choice]).choose(rng).unwrap()
 }

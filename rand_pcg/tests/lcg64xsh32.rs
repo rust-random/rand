@@ -1,4 +1,4 @@
-use rand_core::{RngCore, SeedableRng};
+use rand_core::{Rng, SeedableRng};
 use rand_pcg::{Lcg64Xsh32, Pcg32};
 
 #[test]

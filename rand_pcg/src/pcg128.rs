@@ -13,8 +13,8 @@
 // This is the default multiplier used by PCG for 128-bit state.
 const MULTIPLIER: u128 = 0x2360_ED05_1FC6_5DA4_4385_DF64_9FCC_F645;
 
-use core::{convert::Infallible, fmt};
-use rand_core::{SeedableRng, TryRngCore, utils};
+use core::fmt;
+use rand_core::{Infallible, SeedableRng, TryRng, utils};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -135,7 +135,7 @@ impl SeedableRng for Lcg128Xsl64 {
     }
 }
 
-impl TryRngCore for Lcg128Xsl64 {
+impl TryRng for Lcg128Xsl64 {
     type Error = Infallible;
 
     #[inline]
@@ -239,7 +239,7 @@ impl SeedableRng for Mcg128Xsl64 {
     }
 }
 
-impl TryRngCore for Mcg128Xsl64 {
+impl TryRng for Mcg128Xsl64 {
     type Error = Infallible;
 
     #[inline]

@@ -10,9 +10,9 @@
 //! `UniformFloat` implementation
 
 use super::{Error, SampleBorrow, SampleUniform, UniformSampler};
-use crate::Rng;
 use crate::distr::float::IntoFloat;
 use crate::distr::utils::{BoolAsSIMD, FloatAsSIMD, FloatSIMDUtils, IntAsSIMD};
+use crate::{Rng, RngExt};
 
 #[cfg(feature = "simd_support")]
 use core::simd::prelude::*;

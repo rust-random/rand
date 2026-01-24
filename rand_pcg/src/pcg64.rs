@@ -11,7 +11,7 @@
 //! PCG random number generators
 
 use core::{convert::Infallible, fmt};
-use rand_core::{SeedableRng, TryRngCore, utils};
+use rand_core::{SeedableRng, TryRng, utils};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -134,7 +134,7 @@ impl SeedableRng for Lcg64Xsh32 {
     }
 }
 
-impl TryRngCore for Lcg64Xsh32 {
+impl TryRng for Lcg64Xsh32 {
     type Error = Infallible;
 
     #[inline]

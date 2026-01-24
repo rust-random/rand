@@ -21,6 +21,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Use `postcard` instead of `bincode` to test the serde feature (#1693)
 - Avoid excessive allocation in `IteratorRandom::sample` when `amount` is much larger than iterator size ([#1695])
 - Rename `os_rng` -> `sys_rng`, `OsRng` -> `SysRng`, `OsError` -> `SysError` ([#1697])
+- Rename `Rng` -> `RngExt` as upstream `rand_core` has renamed `RngCore` -> `Rng` ([#1717])
 
 ### Additions
 - Add fns `IndexedRandom::choose_iter`, `choose_weighted_iter` (#1632)
@@ -29,6 +30,7 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 [#1695]: https://github.com/rust-random/rand/pull/1695
 [#1697]: https://github.com/rust-random/rand/pull/1697
+[#1717]: https://github.com/rust-random/rand/pull/1717
 
 ## [0.9.2] - 2025-07-20
 ### Deprecated

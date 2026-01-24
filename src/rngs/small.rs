@@ -9,7 +9,7 @@
 //! A small fast RNG
 
 use core::convert::Infallible;
-use rand_core::{SeedableRng, TryRngCore};
+use rand_core::{SeedableRng, TryRng};
 
 #[cfg(any(target_pointer_width = "32", target_pointer_width = "16"))]
 type Rng = super::xoshiro128plusplus::Xoshiro128PlusPlus;
@@ -62,7 +62,7 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 ///
 /// ## Generation
 ///
-/// The generators implements [`RngCore`] and thus also [`Rng`][crate::Rng].
+/// The generators implements [`Rng`] and thus also [`Rng`][crate::Rng].
 /// See also the [Random Values] chapter in the book.
 ///
 /// [portable]: https://rust-random.github.io/book/crate-reprod.html
@@ -73,7 +73,7 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// [rand_pcg]: https://crates.io/crates/rand_pcg
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
 /// [`rand_seeder`]: https://docs.rs/rand_seeder/latest/rand_seeder/
-/// [`RngCore`]: rand_core::RngCore
+/// [`Rng`]: rand_core::Rng
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
 
@@ -96,7 +96,7 @@ impl SeedableRng for SmallRng {
     }
 }
 
-impl TryRngCore for SmallRng {
+impl TryRng for SmallRng {
     type Error = Infallible;
 
     #[inline(always)]

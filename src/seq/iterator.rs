@@ -11,7 +11,7 @@
 #[allow(unused)]
 use super::IndexedRandom;
 use super::coin_flipper::CoinFlipper;
-use crate::Rng;
+use crate::{Rng, RngExt};
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
