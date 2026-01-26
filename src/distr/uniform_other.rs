@@ -246,6 +246,7 @@ impl UniformSampler for UniformDuration {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::RngExt;
 
     #[test]
     #[cfg(feature = "serde")]

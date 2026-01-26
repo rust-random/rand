@@ -8,8 +8,8 @@
 
 //! The Bernoulli distribution `Bernoulli(p)`.
 
-use crate::Rng;
 use crate::distr::Distribution;
+use crate::{Rng, RngExt};
 use core::fmt;
 
 #[cfg(feature = "serde")]
@@ -165,7 +165,7 @@ impl Distribution<bool> for Bernoulli {
 #[cfg(test)]
 mod test {
     use super::Bernoulli;
-    use crate::Rng;
+    use crate::RngExt;
     use crate::distr::Distribution;
 
     #[test]

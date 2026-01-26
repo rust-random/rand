@@ -10,11 +10,11 @@
 
 use super::increasing_uniform::IncreasingUniform;
 use super::index;
-use crate::Rng;
 #[cfg(feature = "alloc")]
 use crate::distr::uniform::{SampleBorrow, SampleUniform};
 #[cfg(feature = "alloc")]
 use crate::distr::weighted::{Error as WeightError, Weight};
+use crate::{Rng, RngExt};
 use core::ops::{Index, IndexMut};
 
 /// Extension trait on indexable lists, providing random sampling methods.

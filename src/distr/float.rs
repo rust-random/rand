@@ -8,9 +8,9 @@
 
 //! Basic floating-point number distributions
 
-use crate::Rng;
 use crate::distr::utils::{FloatAsSIMD, FloatSIMDUtils, IntAsSIMD};
 use crate::distr::{Distribution, StandardUniform};
+use crate::{Rng, RngExt};
 use core::mem;
 #[cfg(feature = "simd_support")]
 use core::simd::prelude::*;
@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Example
 /// ```
-/// use rand::Rng;
+/// use rand::RngExt;
 /// use rand::distr::OpenClosed01;
 ///
 /// let val: f32 = rand::rng().sample(OpenClosed01);
@@ -59,7 +59,7 @@ pub struct OpenClosed01;
 ///
 /// # Example
 /// ```
-/// use rand::Rng;
+/// use rand::RngExt;
 /// use rand::distr::Open01;
 ///
 /// let val: f32 = rand::rng().sample(Open01);

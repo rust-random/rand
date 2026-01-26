@@ -11,12 +11,12 @@
 //!
 //! [`Uniform`] is the standard distribution to sample uniformly from a range;
 //! e.g. `Uniform::new_inclusive(1, 6).unwrap()` can sample integers from 1 to 6, like a
-//! standard die. [`Rng::random_range`] is implemented over [`Uniform`].
+//! standard die. [`RngExt::random_range`] is implemented over [`Uniform`].
 //!
 //! # Example usage
 //!
 //! ```
-//! use rand::Rng;
+//! use rand::RngExt;
 //! use rand::distr::Uniform;
 //!
 //! let mut rng = rand::rng();
@@ -112,8 +112,11 @@ pub use other::{UniformChar, UniformDuration};
 use core::fmt;
 use core::ops::{Range, RangeInclusive, RangeTo, RangeToInclusive};
 
+use crate::Rng;
 use crate::distr::Distribution;
-use crate::{Rng, RngCore};
+
+#[cfg(doc)]
+use crate::RngExt;
 
 /// Error type returned from [`Uniform::new`] and `new_inclusive`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -196,7 +199,7 @@ use serde::{Deserialize, Serialize};
 /// For a single sample, [`Rng::random_range`] may be preferred:
 ///
 /// ```
-/// use rand::Rng;
+/// use rand::RngExt;
 ///
 /// let mut rng = rand::rng();
 /// println!("{}", rng.random_range(0..10));
@@ -204,7 +207,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// [`new`]: Uniform::new
 /// [`new_inclusive`]: Uniform::new_inclusive
-/// [`Rng::random_range`]: Rng::random_range
+/// [`Rng::random_range`]: RngExt::random_range
 /// [`__m128i`]: https://doc.rust-lang.org/core/arch/x86/struct.__m128i.html
 /// [`u32x4`]: std::simd::u32x4
 /// [`f32x4`]: std::simd::f32x4
@@ -421,7 +424,7 @@ where
 /// for `Rng::random_range`.
 pub trait SampleRange<T> {
     /// Generate a sample from the given range.
-    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error>;
+    fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error>;
 
     /// Check whether the range is empty.
     fn is_empty(&self) -> bool;
@@ -429,7 +432,7 @@ pub trait SampleRange<T> {
 
 impl<T: SampleUniform + PartialOrd> SampleRange<T> for Range<T> {
     #[inline]
-    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
+    fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
         T::Sampler::sample_single(self.start, self.end, rng)
     }
 
@@ -441,7 +444,7 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for Range<T> {
 
 impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
     #[inline]
-    fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
+    fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
         T::Sampler::sample_single_inclusive(self.start(), self.end(), rng)
     }
 
@@ -455,7 +458,7 @@ macro_rules! impl_sample_range_u {
     ($t:ty) => {
         impl SampleRange<$t> for RangeTo<$t> {
             #[inline]
-            fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
+            fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
                 <$t as SampleUniform>::Sampler::sample_single(0, self.end, rng)
             }
 
@@ -467,7 +470,7 @@ macro_rules! impl_sample_range_u {
 
         impl SampleRange<$t> for RangeToInclusive<$t> {
             #[inline]
-            fn sample_single<R: RngCore + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
+            fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
                 <$t as SampleUniform>::Sampler::sample_single_inclusive(0, self.end, rng)
             }
 
@@ -489,6 +492,7 @@ impl_sample_range_u!(usize);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::RngExt;
     use core::time::Duration;
 
     #[test]

@@ -54,10 +54,10 @@
 //!
 //! ## Generation
 //!
-//! Generators implement [`RngCore`], whose methods may be used directly to
+//! Generators implement [`Rng`], whose methods may be used directly to
 //! generate unbounded integer or byte values.
 //! ```
-//! use rand_core::{SeedableRng, RngCore};
+//! use rand_core::{SeedableRng, Rng};
 //! use rand_pcg::Pcg64Mcg;
 //!
 //! let mut rng = Pcg64Mcg::seed_from_u64(0);
@@ -72,7 +72,7 @@
 //! [Reproducibility]: https://rust-random.github.io/book/crate-reprod.html
 //! [Seeding RNGs]: https://rust-random.github.io/book/guide-seeding.html
 //! [Random Values]: https://rust-random.github.io/book/guide-values.html
-//! [`RngCore`]: rand_core::RngCore
+//! [`Rng`]: rand_core::Rng
 //! [`SeedableRng`]: rand_core::SeedableRng
 //! [`SeedableRng::from_rng`]: rand_core::SeedableRng#method.from_rng
 //! [`rand::rng`]: https://docs.rs/rand/latest/rand/fn.rng.html

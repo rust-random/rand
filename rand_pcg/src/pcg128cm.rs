@@ -14,7 +14,7 @@
 const MULTIPLIER: u64 = 15750249268501108917;
 
 use core::{convert::Infallible, fmt};
-use rand_core::{SeedableRng, TryRngCore, utils};
+use rand_core::{SeedableRng, TryRng, utils};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -140,7 +140,7 @@ impl SeedableRng for Lcg128CmDxsm64 {
     }
 }
 
-impl TryRngCore for Lcg128CmDxsm64 {
+impl TryRng for Lcg128CmDxsm64 {
     type Error = Infallible;
 
     #[inline]

@@ -100,7 +100,7 @@ macro_rules! error { ($($x:tt)*) => (
 pub use rand_core;
 
 // Re-exports from rand_core
-pub use rand_core::{CryptoRng, RngCore, SeedableRng, TryCryptoRng, TryRngCore};
+pub use rand_core::{CryptoRng, Rng, SeedableRng, TryCryptoRng, TryRng};
 
 // Public modules
 pub mod distr;
@@ -123,12 +123,12 @@ pub fn thread_rng() -> crate::rngs::ThreadRng {
     rng()
 }
 
-pub use rng::{Fill, Rng};
+pub use rng::{Fill, RngExt};
 
 #[cfg(feature = "thread_rng")]
 use crate::distr::{Distribution, StandardUniform};
 
-/// Adapter to support [`std::io::Read`] over a [`TryRngCore`]
+/// Adapter to support [`std::io::Read`] over a [`TryRng`]
 ///
 /// # Examples
 ///
@@ -143,10 +143,10 @@ use crate::distr::{Distribution, StandardUniform};
 /// ).unwrap();
 /// ```
 #[cfg(feature = "std")]
-pub struct RngReader<R: TryRngCore>(pub R);
+pub struct RngReader<R: TryRng>(pub R);
 
 #[cfg(feature = "std")]
-impl<R: TryRngCore> std::io::Read for RngReader<R> {
+impl<R: TryRng> std::io::Read for RngReader<R> {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, std::io::Error> {
         self.0
@@ -157,7 +157,7 @@ impl<R: TryRngCore> std::io::Read for RngReader<R> {
 }
 
 #[cfg(feature = "std")]
-impl<R: TryRngCore> std::fmt::Debug for RngReader<R> {
+impl<R: TryRng> std::fmt::Debug for RngReader<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("RngReader").finish()
     }
@@ -165,7 +165,7 @@ impl<R: TryRngCore> std::fmt::Debug for RngReader<R> {
 
 /// Generate a random value using the thread-local random number generator.
 ///
-/// This function is shorthand for <code>[rng()].[random()](Rng::random)</code>:
+/// This function is shorthand for <code>[rng()].[random()](RngExt::random)</code>:
 ///
 /// -   See [`ThreadRng`] for documentation of the generator and security
 /// -   See [`StandardUniform`] for documentation of supported types and distributions
@@ -188,7 +188,7 @@ impl<R: TryRngCore> std::fmt::Debug for RngReader<R> {
 /// handle to save an initialization-check on each usage:
 ///
 /// ```
-/// use rand::Rng; // provides the `random` method
+/// use rand::RngExt; // provides the `random` method
 ///
 /// let mut rng = rand::rng(); // a local handle to the generator
 ///
@@ -213,7 +213,7 @@ where
 /// Return an iterator over [`random()`] variates
 ///
 /// This function is shorthand for
-/// <code>[rng()].[random_iter](Rng::random_iter)()</code>.
+/// <code>[rng()].[random_iter](RngExt::random_iter)()</code>.
 ///
 /// # Example
 ///
@@ -233,7 +233,7 @@ where
 /// Generate a random value in the given range using the thread-local random number generator.
 ///
 /// This function is shorthand for
-/// <code>[rng()].[random_range](Rng::random_range)(<var>range</var>)</code>.
+/// <code>[rng()].[random_range](RngExt::random_range)(<var>range</var>)</code>.
 ///
 /// # Example
 ///
@@ -259,7 +259,7 @@ where
 /// Return a bool with a probability `p` of being true.
 ///
 /// This function is shorthand for
-/// <code>[rng()].[random_bool](Rng::random_bool)(<var>p</var>)</code>.
+/// <code>[rng()].[random_bool](RngExt::random_bool)(<var>p</var>)</code>.
 ///
 /// # Example
 ///
@@ -289,7 +289,7 @@ pub fn random_bool(p: f64) -> bool {
 /// sampling from the same `numerator` and `denominator` repeatedly.
 ///
 /// This function is shorthand for
-/// <code>[rng()].[random_ratio](Rng::random_ratio)(<var>numerator</var>, <var>denominator</var>)</code>.
+/// <code>[rng()].[random_ratio](RngExt::random_ratio)(<var>numerator</var>, <var>denominator</var>)</code>.
 ///
 /// # Panics
 ///
@@ -312,7 +312,7 @@ pub fn random_ratio(numerator: u32, denominator: u32) -> bool {
 /// Fill any type implementing [`Fill`] with random data
 ///
 /// This function is shorthand for
-/// <code>[rng()].[fill](Rng::fill)(<var>dest</var>)</code>.
+/// <code>[rng()].[fill](RngExt::fill)(<var>dest</var>)</code>.
 ///
 /// # Example
 ///
@@ -337,7 +337,7 @@ mod test {
     use core::convert::Infallible;
 
     /// Construct a deterministic RNG with the given seed
-    pub fn rng(seed: u64) -> impl RngCore {
+    pub fn rng(seed: u64) -> impl Rng {
         // For tests, we want a statistically good, fast, reproducible RNG.
         // PCG32 will do fine, and will be easy to embed if we ever need to.
         const INC: u64 = 11634580027462260723;
@@ -356,7 +356,7 @@ mod test {
 
     #[derive(Clone)]
     pub struct StepRng(u64, u64);
-    impl TryRngCore for StepRng {
+    impl TryRng for StepRng {
         type Error = Infallible;
 
         fn try_next_u32(&mut self) -> Result<u32, Infallible> {
