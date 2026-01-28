@@ -12,21 +12,18 @@
 
 use core::mem::size_of_val;
 
+use super::std::Core;
 use super::{SysError, SysRng};
 use rand_core::SeedableRng;
 use rand_core::block::{BlockRng, Generator};
 
+type Results = <Core as Generator>::Output;
+
 /// A wrapper around any PRNG that implements [`Generator`], that adds the
 /// ability to reseed it.
-#[derive(Debug)]
-pub struct ReseedingRng<G>(pub BlockRng<ReseedingCore<G>>)
-where
-    G: Generator + SeedableRng;
+pub struct ReseedingRng(pub BlockRng<ReseedingCore>);
 
-impl<const N: usize, G> ReseedingRng<G>
-where
-    G: Generator<Output = [u32; N]> + SeedableRng,
-{
+impl ReseedingRng {
     /// Create a new `ReseedingRng` from an existing PRNG, combined with a RNG
     /// to use as reseeder.
     ///
@@ -45,20 +42,17 @@ where
         self.0.core.reseed()
     }
 }
-#[derive(Debug)]
-pub struct ReseedingCore<G> {
-    inner: G,
+
+pub struct ReseedingCore {
+    inner: Core,
     threshold: i64,
     bytes_until_reseed: i64,
 }
 
-impl<G> Generator for ReseedingCore<G>
-where
-    G: Generator + SeedableRng,
-{
-    type Output = <G as Generator>::Output;
+impl Generator for ReseedingCore {
+    type Output = Results;
 
-    fn generate(&mut self, results: &mut Self::Output) {
+    fn generate(&mut self, results: &mut Results) {
         if self.bytes_until_reseed <= 0 {
             // We get better performance by not calling only `reseed` here
             // and continuing with the rest of the function, but by directly
@@ -71,10 +65,7 @@ where
     }
 }
 
-impl<G> ReseedingCore<G>
-where
-    G: Generator + SeedableRng,
-{
+impl ReseedingCore {
     /// Create a new `ReseedingCore`.
     ///
     /// `threshold` is the maximum number of bytes produced by
@@ -92,7 +83,7 @@ where
             i64::MAX
         };
 
-        let inner = G::try_from_rng(&mut SysRng)?;
+        let inner = Core::try_from_rng(&mut SysRng)?;
 
         Ok(ReseedingCore {
             inner,
@@ -103,14 +94,14 @@ where
 
     /// Reseed the internal PRNG.
     fn reseed(&mut self) -> Result<(), SysError> {
-        G::try_from_rng(&mut SysRng).map(|result| {
+        Core::try_from_rng(&mut SysRng).map(|result| {
             self.bytes_until_reseed = self.threshold;
             self.inner = result
         })
     }
 
     #[inline(never)]
-    fn reseed_and_generate(&mut self, results: &mut G::Output) {
+    fn reseed_and_generate(&mut self, results: &mut Results) {
         trace!("Reseeding RNG (periodic reseed)");
 
         let num_bytes = size_of_val(results);
