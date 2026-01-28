@@ -12,7 +12,7 @@ use core::convert::Infallible;
 use rand_core::{SeedableRng, TryCryptoRng, TryRng};
 
 #[cfg(any(test, feature = "sys_rng"))]
-pub(crate) use chacha20::ChaCha12Core as Core;
+pub(crate) type Core = chacha20::ChaChaCore<chacha20::R12, chacha20::variants::Legacy>;
 
 use chacha20::ChaCha12Rng as Rng;
 

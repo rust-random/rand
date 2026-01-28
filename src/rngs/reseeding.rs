@@ -53,13 +53,14 @@ use rand_core::{SeedableRng, TryCryptoRng, TryRng};
 /// # Example
 ///
 /// ```
-/// use chacha20::ChaCha20Core; // Internal part of ChaChaRng that
-///                             // implements Generator
+/// // Internal part of ChaChaRng that implements Generator
+/// type Core = chacha20::ChaChaCore<chacha20::R20, chacha20::variants::Legacy>;
+///
 /// use rand::prelude::*;
 /// use rand::rngs::SysRng;
 /// use rand::rngs::ReseedingRng;
 ///
-/// let mut reseeding_rng = ReseedingRng::<ChaCha20Core, _>::new(0, SysRng).unwrap();
+/// let mut reseeding_rng = ReseedingRng::<Core, _>::new(0, SysRng).unwrap();
 ///
 /// println!("{}", reseeding_rng.random::<u64>());
 /// ```
