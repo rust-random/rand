@@ -7,19 +7,18 @@
 // except according to those terms.
 
 use chacha20::rand_core::UnwrapErr;
-use chacha20::{ChaCha8Rng, ChaCha12Rng, ChaCha20Core, ChaCha20Rng};
+use chacha20::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
 use core::time::Duration;
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, Criterion, black_box, criterion_group, criterion_main};
 use rand::prelude::*;
-use rand::rngs::ReseedingRng;
 use rand::rngs::SysRng;
 use rand_pcg::{Pcg32, Pcg64, Pcg64Dxsm, Pcg64Mcg};
 
 criterion_group!(
     name = benches;
     config = Criterion::default();
-    targets = random_bytes, random_u32, random_u64, init_gen, init_from_u64, init_from_seed, reseeding_bytes
+    targets = random_bytes, random_u32, random_u64, init_gen, init_from_u64, init_from_seed
 );
 criterion_main!(benches);
 
@@ -186,33 +185,6 @@ pub fn init_from_seed(c: &mut Criterion) {
     bench::<ChaCha20Rng>(&mut g, "chacha20");
     bench::<StdRng>(&mut g, "std");
     bench::<SmallRng>(&mut g, "small");
-
-    g.finish()
-}
-
-pub fn reseeding_bytes(c: &mut Criterion) {
-    let mut g = c.benchmark_group("reseeding_bytes");
-    g.warm_up_time(Duration::from_millis(500));
-    g.throughput(criterion::Throughput::Bytes(1024 * 1024));
-
-    fn bench(g: &mut BenchmarkGroup<WallTime>, thresh: u64) {
-        let name = format!("chacha20_{thresh}k");
-        g.bench_function(name.as_str(), |b| {
-            let mut rng = ReseedingRng::<ChaCha20Core, _>::new(thresh * 1024, SysRng).unwrap();
-            let mut buf = [0u8; 1024 * 1024];
-            b.iter(|| {
-                rng.fill_bytes(&mut buf);
-                black_box(&buf);
-            });
-        });
-    }
-
-    bench(&mut g, 4);
-    bench(&mut g, 16);
-    bench(&mut g, 32);
-    bench(&mut g, 64);
-    bench(&mut g, 256);
-    bench(&mut g, 1024);
 
     g.finish()
 }
