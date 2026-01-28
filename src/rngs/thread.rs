@@ -41,20 +41,6 @@ const THREAD_RNG_RESEED_THRESHOLD: i64 = 1024 * 64;
 
 type Results = <Core as Generator>::Output;
 
-/// A wrapper around any PRNG that implements [`Generator`], that adds the
-/// ability to reseed it.
-struct ReseedingRng(BlockRng<ReseedingCore>);
-
-impl ReseedingRng {
-    /// Immediately reseed the generator
-    ///
-    /// This discards any remaining random data in the cache.
-    fn reseed(&mut self) -> Result<(), SysError> {
-        self.0.reset_and_skip(0);
-        self.0.core.reseed()
-    }
-}
-
 struct ReseedingCore {
     inner: Core,
     bytes_until_reseed: i64,
@@ -77,16 +63,6 @@ impl Generator for ReseedingCore {
 }
 
 impl ReseedingCore {
-    /// Create a new `ReseedingCore`.
-    fn new() -> Result<Self, SysError> {
-        let inner = Core::try_from_rng(&mut SysRng)?;
-
-        Ok(ReseedingCore {
-            inner,
-            bytes_until_reseed: THREAD_RNG_RESEED_THRESHOLD,
-        })
-    }
-
     /// Reseed the internal PRNG.
     fn reseed(&mut self) -> Result<(), SysError> {
         Core::try_from_rng(&mut SysRng).map(|result| {
@@ -164,7 +140,7 @@ impl ReseedingCore {
 #[derive(Clone)]
 pub struct ThreadRng {
     // Rc is explicitly !Send and !Sync
-    rng: Rc<UnsafeCell<ReseedingRng>>,
+    rng: Rc<UnsafeCell<BlockRng<ReseedingCore>>>,
 }
 
 impl ThreadRng {
@@ -175,7 +151,8 @@ impl ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        rng.reseed()
+        rng.reset_and_skip(0);
+        rng.core.reseed()
     }
 }
 
@@ -189,10 +166,13 @@ impl fmt::Debug for ThreadRng {
 thread_local!(
     // We require Rc<..> to avoid premature freeing when ThreadRng is used
     // within thread-local destructors. See #968.
-    static THREAD_RNG_KEY: Rc<UnsafeCell<ReseedingRng>> = {
-        let core = ReseedingCore::new().unwrap_or_else(|err|
-                panic!("could not initialize ThreadRng: {}", err));
-        Rc::new(UnsafeCell::new(ReseedingRng(BlockRng::new(core))))
+    static THREAD_RNG_KEY: Rc<UnsafeCell<BlockRng<ReseedingCore>>> = {
+        Rc::new(UnsafeCell::new(BlockRng::new(ReseedingCore {
+            inner: Core::try_from_rng(&mut SysRng).unwrap_or_else(|err| {
+                panic!("could not initialize ThreadRng: {}", err)
+            }),
+            bytes_until_reseed: THREAD_RNG_RESEED_THRESHOLD,
+        })))
     }
 );
 
@@ -243,7 +223,7 @@ impl TryRng for ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        Ok(rng.0.next_word())
+        Ok(rng.next_word())
     }
 
     #[inline(always)]
@@ -251,7 +231,7 @@ impl TryRng for ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        Ok(rng.0.next_u64_from_u32())
+        Ok(rng.next_u64_from_u32())
     }
 
     #[inline(always)]
@@ -259,7 +239,7 @@ impl TryRng for ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        rng.0.fill_bytes(dest);
+        rng.fill_bytes(dest);
         Ok(())
     }
 }
