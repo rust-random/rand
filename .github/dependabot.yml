@@ -11,6 +11,17 @@ updates:
     all-deps:
       patterns:
         - "*"
+- package-ecosystem: cargo
+  directory: "/benches"
+  versioning-strategy: lockfile-only
+  allow:
+    - dependency-type: "all"
+  schedule:
+    interval: weekly
+  groups:
+    all-deps:
+      patterns:
+        - "*"
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
