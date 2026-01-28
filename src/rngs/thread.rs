@@ -13,7 +13,7 @@ use std::fmt;
 use std::rc::Rc;
 use std::thread_local;
 
-use super::{ReseedingRng, SysError, SysRng, std::Core};
+use super::{SysError, SysRng, reseeding::ReseedingRng, std::Core};
 use rand_core::{TryCryptoRng, TryRng};
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
@@ -48,9 +48,8 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// requirements. The Rand project can provide no guarantee of fitness for
 /// purpose. The design criteria for `ThreadRng` are as follows:
 ///
-/// - Automatic seeding via [`SysRng`] and periodically thereafter (see
-///   ([`ReseedingRng`] documentation). Limitation: there is no automatic
-///   reseeding on process fork (see [below](#fork)).
+/// - Automatic seeding via [`SysRng`] and after every 64 kB of output.
+///   Limitation: there is no automatic reseeding on process fork (see [below](#fork)).
 /// - A rigorusly analyzed, unpredictable (cryptographic) pseudo-random generator
 ///   (see [the book on security](https://rust-random.github.io/book/guide-rngs.html#security)).
 ///   The currently selected algorithm is ChaCha (12-rounds).
@@ -85,7 +84,6 @@ const THREAD_RNG_RESEED_THRESHOLD: u64 = 1024 * 64;
 /// from an interrupt (e.g. a fork handler) unless it can be guaranteed that no
 /// other method on the same `ThreadRng` is currently executing.
 ///
-/// [`ReseedingRng`]: crate::rngs::ReseedingRng
 /// [`StdRng`]: crate::rngs::StdRng
 #[derive(Clone)]
 pub struct ThreadRng {

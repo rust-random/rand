@@ -95,7 +95,6 @@
 //! [xoshiro]: https://prng.di.unimi.it/
 
 mod reseeding;
-pub use reseeding::ReseedingRng;
 
 #[cfg(feature = "small_rng")]
 mod small;
