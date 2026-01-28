@@ -168,7 +168,7 @@ impl TryRng for ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        rng.try_next_u32()
+        Ok(rng.0.next_word())
     }
 
     #[inline(always)]
@@ -176,7 +176,7 @@ impl TryRng for ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        rng.try_next_u64()
+        Ok(rng.0.next_u64_from_u32())
     }
 
     #[inline(always)]
@@ -184,7 +184,8 @@ impl TryRng for ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        rng.try_fill_bytes(dest)
+        rng.0.fill_bytes(dest);
+        Ok(())
     }
 }
 

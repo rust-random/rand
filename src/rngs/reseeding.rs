@@ -10,16 +10,15 @@
 //! A wrapper around another PRNG that reseeds it after it
 //! generates a certain number of random bytes.
 
-use core::convert::Infallible;
 use core::mem::size_of_val;
 
-use rand_core::block::{BlockRng, CryptoGenerator, Generator};
-use rand_core::{SeedableRng, TryCryptoRng, TryRng};
+use rand_core::block::{BlockRng, Generator};
+use rand_core::{SeedableRng, TryRng};
 
 /// A wrapper around any PRNG that implements [`Generator`], that adds the
 /// ability to reseed it.
 #[derive(Debug)]
-pub struct ReseedingRng<G, Rsdr>(BlockRng<ReseedingCore<G, Rsdr>>)
+pub struct ReseedingRng<G, Rsdr>(pub BlockRng<ReseedingCore<G, Rsdr>>)
 where
     G: Generator + SeedableRng,
     Rsdr: TryRng;
@@ -49,41 +48,8 @@ where
         self.0.core.reseed()
     }
 }
-
-// TODO: this should be implemented for any type where the inner type
-// implements TryRng, but we can't specify that because ReseedingCore is private
-impl<const N: usize, G, Rsdr> TryRng for ReseedingRng<G, Rsdr>
-where
-    G: Generator<Output = [u32; N]> + SeedableRng,
-    Rsdr: TryRng,
-{
-    type Error = Infallible;
-
-    #[inline(always)]
-    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
-        Ok(self.0.next_word())
-    }
-
-    #[inline(always)]
-    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
-        Ok(self.0.next_u64_from_u32())
-    }
-
-    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Infallible> {
-        self.0.fill_bytes(dest);
-        Ok(())
-    }
-}
-
-impl<const N: usize, G, Rsdr> TryCryptoRng for ReseedingRng<G, Rsdr>
-where
-    G: Generator<Output = [u32; N]> + SeedableRng + CryptoGenerator,
-    Rsdr: TryCryptoRng,
-{
-}
-
 #[derive(Debug)]
-struct ReseedingCore<G, Rsdr> {
+pub struct ReseedingCore<G, Rsdr> {
     inner: G,
     reseeder: Rsdr,
     threshold: i64,
@@ -163,41 +129,5 @@ where
 
         self.bytes_until_reseed = self.threshold - num_bytes as i64;
         self.inner.generate(results);
-    }
-}
-
-impl<G, Rsdr> CryptoGenerator for ReseedingCore<G, Rsdr>
-where
-    G: Generator + SeedableRng + CryptoGenerator,
-    Rsdr: TryCryptoRng,
-{
-}
-
-#[cfg(feature = "std_rng")]
-#[cfg(test)]
-mod test {
-    use crate::RngExt;
-    use crate::rngs::std::Core;
-    use crate::test::const_rng;
-
-    use super::ReseedingRng;
-
-    #[test]
-    fn test_reseeding() {
-        let zero = const_rng(0);
-        let thresh = 1; // reseed every time the buffer is exhausted
-        let mut reseeding = ReseedingRng::<Core, _>::new(thresh, zero).unwrap();
-
-        // RNG buffer size is [u32; 64]
-        // Debug is only implemented up to length 32 so use two arrays
-        let mut buf = ([0u32; 32], [0u32; 32]);
-        reseeding.fill(&mut buf.0);
-        reseeding.fill(&mut buf.1);
-        let seq = buf;
-        for _ in 0..10 {
-            reseeding.fill(&mut buf.0);
-            reseeding.fill(&mut buf.1);
-            assert_eq!(buf, seq);
-        }
     }
 }
