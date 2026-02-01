@@ -159,10 +159,7 @@ macro_rules! simd_impl {
         ///
         /// [`simd_support`]: https://github.com/rust-random/rand#crate-features
         #[cfg(feature = "simd_support")]
-        impl<const LANES: usize> Distribution<Simd<$ty, LANES>> for StandardUniform
-        where
-            LaneCount<LANES>: SupportedLaneCount,
-        {
+        impl<const LANES: usize> Distribution<Simd<$ty, LANES>> for StandardUniform {
             #[inline]
             fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Simd<$ty, LANES> {
                 let mut vec = Simd::default();

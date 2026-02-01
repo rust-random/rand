@@ -9,9 +9,9 @@
 //! Math helper functions
 
 #[cfg(feature = "simd_support")]
-use core::simd::prelude::*;
+use core::simd::SimdElement;
 #[cfg(feature = "simd_support")]
-use core::simd::{LaneCount, SimdElement, SupportedLaneCount};
+use core::simd::prelude::*;
 
 pub(crate) trait WideningMultiply<RHS = Self> {
     type Output;
@@ -337,10 +337,7 @@ scalar_float_impl!(f64, u64);
 #[cfg(feature = "simd_support")]
 macro_rules! simd_impl {
     ($fty:ident, $uty:ident) => {
-        impl<const LANES: usize> FloatSIMDUtils for Simd<$fty, LANES>
-        where
-            LaneCount<LANES>: SupportedLaneCount,
-        {
+        impl<const LANES: usize> FloatSIMDUtils for Simd<$fty, LANES> {
             type Mask = Mask<<$fty as SimdElement>::Mask, LANES>;
             type UInt = Simd<$uty, LANES>;
 
@@ -373,7 +370,7 @@ macro_rules! simd_impl {
                 // value representable by $fty. This works even when the
                 // current value is infinity.
                 debug_assert!(mask.any(), "At least one lane must be set");
-                Self::from_bits(self.to_bits() + mask.to_int().cast())
+                Self::from_bits(self.to_bits() + mask.to_simd().cast())
             }
 
             #[inline]
@@ -383,10 +380,7 @@ macro_rules! simd_impl {
         }
 
         #[cfg(test)]
-        impl<const LANES: usize> FloatSIMDScalarUtils for Simd<$fty, LANES>
-        where
-            LaneCount<LANES>: SupportedLaneCount,
-        {
+        impl<const LANES: usize> FloatSIMDScalarUtils for Simd<$fty, LANES> {
             type Scalar = $fty;
 
             #[inline]
