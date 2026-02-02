@@ -16,9 +16,7 @@ use crate::distr::{Distribution, StandardUniform};
 use crate::{Rng, RngExt};
 
 #[cfg(feature = "simd_support")]
-use core::simd::prelude::*;
-#[cfg(feature = "simd_support")]
-use core::simd::{LaneCount, SupportedLaneCount};
+use core::simd::{Select, prelude::*};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -283,7 +281,6 @@ macro_rules! uniform_simd_int_impl {
         #[cfg(feature = "simd_support")]
         impl<const LANES: usize> SampleUniform for Simd<$ty, LANES>
         where
-            LaneCount<LANES>: SupportedLaneCount,
             Simd<$unsigned, LANES>:
                 WideningMultiply<Output = (Simd<$unsigned, LANES>, Simd<$unsigned, LANES>)>,
             StandardUniform: Distribution<Simd<$unsigned, LANES>>,
@@ -294,7 +291,6 @@ macro_rules! uniform_simd_int_impl {
         #[cfg(feature = "simd_support")]
         impl<const LANES: usize> UniformSampler for UniformInt<Simd<$ty, LANES>>
         where
-            LaneCount<LANES>: SupportedLaneCount,
             Simd<$unsigned, LANES>:
                 WideningMultiply<Output = (Simd<$unsigned, LANES>, Simd<$unsigned, LANES>)>,
             StandardUniform: Distribution<Simd<$unsigned, LANES>>,

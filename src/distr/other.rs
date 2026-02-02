@@ -20,9 +20,9 @@ use crate::distr::{Distribution, StandardUniform, Uniform};
 use crate::{Rng, RngExt};
 
 #[cfg(feature = "simd_support")]
-use core::simd::prelude::*;
+use core::simd::MaskElement;
 #[cfg(feature = "simd_support")]
-use core::simd::{LaneCount, MaskElement, SupportedLaneCount};
+use core::simd::prelude::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -234,7 +234,6 @@ impl Distribution<bool> for StandardUniform {
 impl<T, const LANES: usize> Distribution<Mask<T, LANES>> for StandardUniform
 where
     T: MaskElement + Default,
-    LaneCount<LANES>: SupportedLaneCount,
     StandardUniform: Distribution<Simd<T, LANES>>,
     Simd<T, LANES>: SimdPartialOrd<Mask = Mask<T, LANES>>,
 {
