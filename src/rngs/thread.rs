@@ -48,6 +48,7 @@ struct ReseedingCore {
 impl Generator for ReseedingCore {
     type Output = Results;
 
+    #[inline(always)]
     fn generate(&mut self, results: &mut Results) {
         if self.inner.get_block_pos() >= RESEED_BLOCK_THRESHOLD {
             // We get better performance by not calling only `reseed` here
@@ -65,6 +66,7 @@ impl ReseedingCore {
         Core::try_from_rng(&mut SysRng).map(|result| self.inner = result)
     }
 
+    #[cold]
     #[inline(never)]
     fn reseed_and_generate(&mut self, results: &mut Results) {
         trace!("Reseeding RNG (periodic reseed)");
