@@ -78,8 +78,7 @@ impl ReseedingCore {
         let num_bytes = size_of_val(results);
 
         if let Err(e) = self.reseed() {
-            warn!("Reseeding RNG failed: {}", e);
-            let _ = e;
+            warn!("Reseeding RNG failed: {e}");
         }
 
         self.bytes_until_reseed = THREAD_RNG_RESEED_THRESHOLD - num_bytes as i64;
