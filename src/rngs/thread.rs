@@ -14,7 +14,6 @@ use std::fmt;
 use std::rc::Rc;
 use std::thread_local;
 
-use super::std::Core;
 use super::{SysError, SysRng};
 use rand_core::SeedableRng;
 use rand_core::block::{BlockRng, Generator};
@@ -39,6 +38,7 @@ use rand_core::{TryCryptoRng, TryRng};
 // of 32 kB and less. We choose 64 kB to avoid significant overhead.
 const THREAD_RNG_RESEED_THRESHOLD: i64 = 1024 * 64;
 
+type Core = chacha20::ChaChaCore<chacha20::R12, chacha20::variants::Legacy>;
 type Results = <Core as Generator>::Output;
 
 struct ReseedingCore {
