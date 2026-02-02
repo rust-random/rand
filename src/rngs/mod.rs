@@ -94,9 +94,6 @@
 //! [PCG]: https://www.pcg-random.org/
 //! [xoshiro]: https://prng.di.unimi.it/
 
-mod reseeding;
-pub use reseeding::ReseedingRng;
-
 #[cfg(feature = "small_rng")]
 mod small;
 #[cfg(feature = "small_rng")]

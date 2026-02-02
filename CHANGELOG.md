@@ -28,9 +28,13 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Pub export `Xoshiro128PlusPlus`, `Xoshiro256PlusPlus` prngs (#1649)
 - Pub export `ChaCha8Rng`, `ChaCha12Rng`, `ChaCha20Rng` behind `chacha` feature (#1659)
 
+### Removals
+- Removed `ReseedingRng` ([#1722])
+
 [#1695]: https://github.com/rust-random/rand/pull/1695
 [#1697]: https://github.com/rust-random/rand/pull/1697
 [#1717]: https://github.com/rust-random/rand/pull/1717
+[#1722]: https://github.com/rust-random/rand/pull/1722
 
 ## [0.9.2] - 2025-07-20
 ### Deprecated
