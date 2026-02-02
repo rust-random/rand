@@ -51,10 +51,7 @@ impl Generator for ReseedingCore {
     #[inline(always)]
     fn generate(&mut self, results: &mut Results) {
         if self.inner.get_block_pos() >= RESEED_BLOCK_THRESHOLD {
-            // We get better performance by not calling only `reseed` here
-            // and continuing with the rest of the function, but by directly
-            // returning from a non-inlined function.
-            return self.reseed_and_generate(results);
+            self.try_to_reseed();
         }
         self.inner.generate(results);
     }
@@ -68,14 +65,12 @@ impl ReseedingCore {
 
     #[cold]
     #[inline(never)]
-    fn reseed_and_generate(&mut self, results: &mut Results) {
+    fn try_to_reseed(&mut self) {
         trace!("Reseeding RNG (periodic reseed)");
 
         if let Err(e) = self.reseed() {
             warn!("Reseeding RNG failed: {e}");
         }
-
-        self.inner.generate(results);
     }
 }
 
