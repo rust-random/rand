@@ -11,9 +11,6 @@
 use core::convert::Infallible;
 use rand_core::{SeedableRng, TryCryptoRng, TryRng};
 
-#[cfg(any(test, feature = "sys_rng"))]
-pub(crate) use chacha20::ChaCha12Core as Core;
-
 use chacha20::ChaCha12Rng as Rng;
 
 /// A strong, fast (amortized), non-portable RNG
