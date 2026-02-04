@@ -20,7 +20,6 @@
 
 #[doc(no_inline)]
 pub use crate::distr::Distribution;
-#[cfg(feature = "small_rng")]
 #[doc(no_inline)]
 pub use crate::rngs::SmallRng;
 #[cfg(feature = "std_rng")]

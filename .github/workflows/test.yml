@@ -104,18 +104,18 @@ jobs:
       - name: Maybe nightly
         if: ${{ matrix.toolchain == 'nightly' }}
         run: |
-          cargo test --target ${{ matrix.target }} --features=nightly
+          cargo test --target ${{ matrix.target }}
           cargo test --target ${{ matrix.target }} --all-features
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
       - name: Test rand
         run: |
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
-          cargo build --target ${{ matrix.target }} --no-default-features --features alloc,sys_rng,small_rng,unbiased
-          cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features=alloc,sys_rng,small_rng
+          cargo build --target ${{ matrix.target }} --no-default-features --features alloc,sys_rng,unbiased
+          cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features=alloc,sys_rng
           cargo test --target ${{ matrix.target }} --examples
       - name: Test rand (all stable features)
         run: |
-          cargo test --target ${{ matrix.target }} --features=serde,log,small_rng
+          cargo test --target ${{ matrix.target }} --features=serde,log
       - name: Test rand_pcg
         run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
 
@@ -146,7 +146,7 @@ jobs:
       - name: Test
         run: |
           # all stable features:
-          cross test --no-fail-fast --target ${{ matrix.target }} --features=serde,log,small_rng
+          cross test --no-fail-fast --target ${{ matrix.target }} --features=serde,log
           cross test --no-fail-fast --target ${{ matrix.target }} --examples
           cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
 
@@ -162,7 +162,7 @@ jobs:
       - name: Test rand
         run: |
           cargo miri test --no-default-features --lib --tests
-          cargo miri test --features=log,small_rng
+          cargo miri test --features=log
           cargo miri test --manifest-path rand_pcg/Cargo.toml --features=serde
 
   test-no-std:

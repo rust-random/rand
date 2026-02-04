@@ -85,16 +85,6 @@ pub mod seq;
 #[cfg(feature = "thread_rng")]
 pub use crate::rngs::thread::rng;
 
-/// Access the thread-local generator
-///
-/// Use [`rand::rng()`](rng()) instead.
-#[cfg(feature = "thread_rng")]
-#[deprecated(since = "0.9.0", note = "Renamed to `rng`")]
-#[inline]
-pub fn thread_rng() -> crate::rngs::ThreadRng {
-    rng()
-}
-
 pub use rng::{Fill, RngExt};
 
 #[cfg(feature = "thread_rng")]

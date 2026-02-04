@@ -94,11 +94,8 @@
 //! [PCG]: https://www.pcg-random.org/
 //! [xoshiro]: https://prng.di.unimi.it/
 
-#[cfg(feature = "small_rng")]
 mod small;
-#[cfg(feature = "small_rng")]
 mod xoshiro128plusplus;
-#[cfg(feature = "small_rng")]
 mod xoshiro256plusplus;
 
 #[cfg(feature = "std_rng")]
@@ -106,11 +103,8 @@ mod std;
 #[cfg(feature = "thread_rng")]
 pub(crate) mod thread;
 
-#[cfg(feature = "small_rng")]
 pub use self::small::SmallRng;
-#[cfg(feature = "small_rng")]
 pub use xoshiro128plusplus::Xoshiro128PlusPlus;
-#[cfg(feature = "small_rng")]
 pub use xoshiro256plusplus::Xoshiro256PlusPlus;
 
 #[cfg(feature = "std_rng")]

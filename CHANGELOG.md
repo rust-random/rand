@@ -30,11 +30,14 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ### Removals
 - Removed `ReseedingRng` ([#1722])
+- Removed unused feature "nightly" ([#1732])
+- Removed feature `small_rng` ([#1732])
 
 [#1695]: https://github.com/rust-random/rand/pull/1695
 [#1697]: https://github.com/rust-random/rand/pull/1697
 [#1717]: https://github.com/rust-random/rand/pull/1717
 [#1722]: https://github.com/rust-random/rand/pull/1722
+[#1732]: https://github.com/rust-random/rand/pull/1732
 
 ## [0.9.2] - 2025-07-20
 ### Deprecated
