@@ -90,8 +90,7 @@ impl fmt::Display for BernoulliError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for BernoulliError {}
+impl core::error::Error for BernoulliError {}
 
 impl Bernoulli {
     /// Construct a new `Bernoulli` with the given probability of success `p`.
