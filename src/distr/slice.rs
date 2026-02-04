@@ -116,8 +116,7 @@ impl core::fmt::Display for Empty {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for Empty {}
+impl core::error::Error for Empty {}
 
 #[cfg(feature = "alloc")]
 impl super::SampleString for Choose<'_, char> {

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changes
 - Use Edition 2024 and MSRV 1.85 (#1653)
+- Update to `rand_core` v0.10.0 (#1729)
 - Remove feature `os_rng` (#1674)
 - Use `postcard` instead of `bincode` to test the serde feature (#1693)
 

@@ -1,6 +1,6 @@
 [package]
 name = "rand"
-version = "0.10.0-rc.8"
+version = "0.10.0-rc.9"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -75,7 +75,7 @@ chacha20 = { version = "0.10.0-rc.10", default-features = false, features = ["rn
 getrandom = { version = "0.4.0-rc.1", optional = true }
 
 [dev-dependencies]
-rand_pcg = { path = "rand_pcg", version = "0.10.0-rc.1" }
+rand_pcg = { path = "rand_pcg", version = "0.10.0-rc.9" }
 # Only to test serde
 postcard = {version = "1.1.3", default-features = false, features = ["alloc"]}
 rayon = "1.7"
