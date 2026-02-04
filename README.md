@@ -55,7 +55,7 @@ Documentation:
 Rand is *mature* (suitable for general usage, with infrequent breaking releases
 which minimise breakage) but not yet at 1.0. Current `MAJOR.MINOR` versions are:
 
--   Version 0.9 was released in January 2025.
+-   Version 0.10 was released in February 2026.
 
 See the [CHANGELOG](https://github.com/rust-random/rand/blob/master/CHANGELOG.md) or [Upgrade Guide](https://rust-random.github.io/book/update.html) for more details.
 
