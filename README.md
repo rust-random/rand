@@ -64,13 +64,16 @@ See the [CHANGELOG](https://github.com/rust-random/rand/blob/master/CHANGELOG.md
 Rand is built with these features enabled by default:
 
 -   `std` enables functionality dependent on the `std` lib
--   `alloc` (implied by `std`) enables functionality requiring an allocator
--   `sys_rng` (implied by `std`) enables `rngs::SysRng`, using the [getrandom] crate
--   `std_rng` enables inclusion of `StdRng`, `ThreadRng`
+-   `alloc` (implied by `std`) enables functionality requiring an allocator; a
+    significant portion of sequence and distribution functionality requires this
 
 Optionally, the following dependencies can be enabled:
 
--   `log` enables logging via [log](https://crates.io/crates/log)
+-   `sys_rng` enables `rand::rngs::SysRng` (uses the [getrandom] crate)
+-   `std_rng` enables `rand::rngs::StdRng` (uses the [chacha20] crate)
+-   `chacha` enables `rand::rngs::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng}` (uses the [chacha20] crate)
+-   `thread_rng` (implies `std`, `std_rng`, `sys_rng`) enables `rand::rngs::ThreadRng` and `rand::rng()`
+-   `log` enables logging (uses the [log] crate)
 
 Additionally, these features configure Rand:
 
@@ -82,11 +85,6 @@ Additionally, these features configure Rand:
     (By default, bias affecting no more than one in  2^48 samples is accepted.)
 
     Note: enabling this option is expected to affect reproducibility of results.
-
-Rand supports limited functionality in `no_std` mode (enabled via
-`default-features = false`). In this case, `SysRng` is
-unavailable (unless `sys_rng` is enabled), large parts of `seq` are
-unavailable (unless `alloc` is enabled), and `ThreadRng` is unavailable.
 
 ## Portability
 
@@ -111,3 +109,5 @@ See [LICENSE-APACHE](https://github.com/rust-random/rand/blob/master/LICENSE-APA
 [COPYRIGHT](https://github.com/rust-random/rand/blob/master/COPYRIGHT) for details.
 
 [getrandom]: https://crates.io/crates/getrandom
+[chacha20]: https://crates.io/crates/chacha20
+[log]: https://crates.io/crates/log
