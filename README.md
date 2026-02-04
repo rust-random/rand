@@ -75,18 +75,14 @@ Optionally, the following dependencies can be enabled:
 
 Additionally, these features configure Rand:
 
--   `nightly` includes some additions requiring nightly Rust
--   `simd_support` (experimental) enables sampling of SIMD values
-    (uniformly random SIMD integers and floats), requiring nightly Rust
+-   `simd_support` (experimental) enables sampling of SIMD values (uniformly
+    random SIMD integers and floats). Since `std::simd` is not yet stable this
+    feature requires nightly Rust and may cause build failures.
 -   `unbiased` use unbiased sampling for algorithms supporting this option: Uniform distribution.
 
     (By default, bias affecting no more than one in  2^48 samples is accepted.)
 
     Note: enabling this option is expected to affect reproducibility of results.
-
-Note that nightly features are not stable and therefore not all library and
-compiler versions will be compatible. This is especially true of Rand's
-experimental `simd_support` feature.
 
 Rand supports limited functionality in `no_std` mode (enabled via
 `default-features = false`). In this case, `SysRng` is

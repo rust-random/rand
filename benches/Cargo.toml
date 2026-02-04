@@ -11,7 +11,7 @@ simd_support = ["rand/simd_support"]
 [dependencies]
 
 [dev-dependencies]
-rand = { path = "..", features = ["small_rng", "nightly"] }
+rand = { path = "..", features = ["small_rng"] }
 rand_pcg = { path = "../rand_pcg" }
 chacha20 = { version = "0.10.0-rc.10", default-features = false, features = ["rng"] }
 criterion = "0.5"
