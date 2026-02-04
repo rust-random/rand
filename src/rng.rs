@@ -34,8 +34,8 @@ use rand_core::Rng;
 /// - Only `Rng` is dyn safe, supporting `&mut dyn Rng` and `R: Rng + ?Sized`.
 ///
 /// An alternative pattern is possible: `fn foo<R: Rng>(rng: R)`. This has some
-/// trade-offs. It allows the argument to be consumed directly without a `&mut`
-/// (which is how `from_rng(rand::rng())` works); also it still works directly
+/// trade-offs. It allows the argument to be consumed directly without a `&mut`;
+/// also it still works directly
 /// on references (including type-erased references). Unfortunately within the
 /// function `foo` it is not known whether `rng` is a reference type or not,
 /// hence many uses of `rng` require an extra reference, either explicitly
