@@ -235,7 +235,7 @@ checksum = "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f"
 
 [[package]]
 name = "rand"
-version = "0.10.0-rc.8"
+version = "0.10.0-rc.9"
 dependencies = [
  "chacha20",
  "getrandom",
@@ -256,7 +256,7 @@ checksum = "0c8d0fd677905edcbeedbf2edb6494d676f0e98d54d5cf9bda0b061cb8fb8aba"
 
 [[package]]
 name = "rand_pcg"
-version = "0.10.0-rc.7"
+version = "0.10.0-rc.9"
 dependencies = [
  "postcard",
  "rand_core",
