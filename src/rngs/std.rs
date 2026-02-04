@@ -42,7 +42,7 @@ use chacha20::ChaCha12Rng as Rng;
 /// # let _: StdRng = rng;
 /// ```
 ///
-/// Seeding via [`rand::make_rng()`] or [`rand::rng()`](crate::rng()) may be
+/// Seeding via [`rand::make_rng()`] or [`rand::rng()`] may be
 /// faster:
 /// ```
 /// # use rand::rngs::StdRng;
@@ -66,6 +66,8 @@ use chacha20::ChaCha12Rng as Rng;
 /// [chacha20]: https://crates.io/crates/chacha20
 /// [rand issue]: https://github.com/rust-random/rand/issues/932
 /// [`Rng`]: rand_core::Rng
+/// [`rand::make_rng()`]: crate::make_rng
+/// [`rand::rng()`]: crate::rng
 #[derive(Debug, PartialEq, Eq)]
 pub struct StdRng(Rng);
 

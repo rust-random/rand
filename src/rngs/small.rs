@@ -41,7 +41,7 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// suitable for seeding, but note that, even with a fixed seed, output is not
 /// [portable]. Some suggestions:
 ///
-/// 1.  To automatically seed with a unique seed, use [`rand::make_rng`]:
+/// 1.  To automatically seed with a unique seed, use [`rand::make_rng()`]:
 ///     ```
 ///     use rand::rngs::SmallRng;
 ///     let mut rng: SmallRng = rand::make_rng();
@@ -73,6 +73,7 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
 /// [`rand_seeder`]: https://docs.rs/rand_seeder/latest/rand_seeder/
 /// [`Rng`]: rand_core::Rng
+/// [`rand::make_rng()`]: crate::make_rng
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
 

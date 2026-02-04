@@ -105,6 +105,10 @@ use crate::distr::{Distribution, StandardUniform};
 /// # Security
 ///
 /// Refer to [`ThreadRng#Security`].
+///
+/// [`SysRng`]: crate::rngs::SysRng
+/// [`ThreadRng`]: crate::rngs::ThreadRng
+/// [`ThreadRng#Security`]: crate::rngs::ThreadRng#security
 #[cfg(feature = "sys_rng")]
 pub fn make_rng<R: SeedableRng>() -> R {
     #[cfg(feature = "thread_rng")]
