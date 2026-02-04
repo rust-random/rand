@@ -24,11 +24,11 @@ all-features = true
 rustdoc-args = ["--generate-link-to-definition"]
 
 [package.metadata.playground]
-features = ["small_rng", "serde"]
+features = ["serde"]
 
 [features]
 # Meta-features:
-default = ["std", "std_rng", "sys_rng", "small_rng", "thread_rng"]
+default = ["std", "std_rng", "sys_rng", "thread_rng"]
 serde = ["dep:serde"]
 
 # Option (enabled by default): without "std" rand uses libcore; this option
@@ -46,9 +46,6 @@ simd_support = []
 
 # Option (enabled by default): enable StdRng
 std_rng = ["dep:chacha20"]
-
-# Option: enable SmallRng
-small_rng = []
 
 # Option: enable ThreadRng and rng()
 thread_rng = ["std", "std_rng", "sys_rng"]

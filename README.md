@@ -67,7 +67,6 @@ Rand is built with these features enabled by default:
 -   `alloc` (implied by `std`) enables functionality requiring an allocator
 -   `sys_rng` (implied by `std`) enables `rngs::SysRng`, using the [getrandom] crate
 -   `std_rng` enables inclusion of `StdRng`, `ThreadRng`
--   `small_rng` enables inclusion of the `SmallRng` PRNG
 
 Optionally, the following dependencies can be enabled:
 
