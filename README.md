@@ -88,11 +88,11 @@ Rand supports limited functionality in `no_std` mode (enabled via
 unavailable (unless `sys_rng` is enabled), large parts of `seq` are
 unavailable (unless `alloc` is enabled), and `ThreadRng` is unavailable.
 
-## Portability and platform support
+## Portability
 
-Many (but not all) algorithms are intended to have reproducible output. Read more in the book: [Portability](https://rust-random.github.io/book/portability.html).
+### Reproducibility
 
-The Rand library supports a variety of CPU architectures. Platform integration is outsourced to [getrandom].
+Achieving reproducible results requires not only deterministic algorithms with fixed inputs but also a commitment to stability of algorithms and some platform-specific considerations. A subset of `rand` does aim to support reproducibility; read more about this in the book: [Portability](https://rust-random.github.io/book/portability.html).
 
 ### WebAssembly support
 
