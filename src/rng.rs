@@ -312,44 +312,6 @@ pub trait RngExt: Rng {
     fn fill<T: Fill>(&mut self, dest: &mut [T]) {
         Fill::fill_slice(dest, self)
     }
-
-    /// Alias for [`RngExt::random`].
-    #[inline]
-    #[deprecated(
-        since = "0.9.0",
-        note = "Renamed to `random` to avoid conflict with the new `gen` keyword in Rust 2024."
-    )]
-    fn r#gen<T>(&mut self) -> T
-    where
-        StandardUniform: Distribution<T>,
-    {
-        self.random()
-    }
-
-    /// Alias for [`RngExt::random_range`].
-    #[inline]
-    #[deprecated(since = "0.9.0", note = "Renamed to `random_range`")]
-    fn gen_range<T, R>(&mut self, range: R) -> T
-    where
-        T: SampleUniform,
-        R: SampleRange<T>,
-    {
-        self.random_range(range)
-    }
-
-    /// Alias for [`RngExt::random_bool`].
-    #[inline]
-    #[deprecated(since = "0.9.0", note = "Renamed to `random_bool`")]
-    fn gen_bool(&mut self, p: f64) -> bool {
-        self.random_bool(p)
-    }
-
-    /// Alias for [`RngExt::random_ratio`].
-    #[inline]
-    #[deprecated(since = "0.9.0", note = "Renamed to `random_ratio`")]
-    fn gen_ratio(&mut self, numerator: u32, denominator: u32) -> bool {
-        self.random_ratio(numerator, denominator)
-    }
 }
 
 impl<R: Rng + ?Sized> RngExt for R {}
