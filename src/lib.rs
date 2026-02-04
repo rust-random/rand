@@ -90,6 +90,34 @@ pub use rng::{Fill, RngExt};
 #[cfg(feature = "thread_rng")]
 use crate::distr::{Distribution, StandardUniform};
 
+/// Construct and seed an RNG
+///
+/// This method yields a seeded RNG, using [`rng`] ([`ThreadRng`]) if enabled or
+/// [`SysRng`] otherwise.
+///
+/// # Examples
+///
+/// ```
+/// let mut rng: rand::rngs::SmallRng = rand::make_rng();
+/// # let _ = rand::Rng::next_u32(&mut rng);
+/// ```
+///
+/// # Security
+///
+/// Refer to [`ThreadRng#Security`].
+#[cfg(feature = "sys_rng")]
+pub fn make_rng<R: SeedableRng>() -> R {
+    #[cfg(feature = "thread_rng")]
+    {
+        R::from_rng(&mut rng())
+    }
+
+    #[cfg(not(feature = "thread_rng"))]
+    {
+        R::try_from_rng(&mut rngs::SysRng).expect("unexpected failure from SysRng")
+    }
+}
+
 /// Adapter to support [`std::io::Read`] over a [`TryRng`]
 ///
 /// # Examples
