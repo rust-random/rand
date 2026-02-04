@@ -41,12 +41,11 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// suitable for seeding, but note that, even with a fixed seed, output is not
 /// [portable]. Some suggestions:
 ///
-/// 1.  To automatically seed with a unique seed, use [`SeedableRng::from_rng`]:
+/// 1.  To automatically seed with a unique seed, use [`rand::make_rng`]:
 ///     ```
-///     use rand::SeedableRng;
 ///     use rand::rngs::SmallRng;
-///     let rng = SmallRng::from_rng(&mut rand::rng());
-///     # let _: SmallRng = rng;
+///     let mut rng: SmallRng = rand::make_rng();
+///     # let _ = rand::Rng::next_u32(&mut rng);
 ///     ```
 /// 2.  To use a deterministic integral seed, use `seed_from_u64`. This uses a
 ///     hash function internally to yield a (typically) good seed from any

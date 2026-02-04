@@ -14,7 +14,7 @@
 //!
 //! ```
 //! use rand::prelude::*;
-//! # let mut r = StdRng::from_rng(&mut rand::rng());
+//! # let mut r: StdRng = rand::make_rng();
 //! # let _: f32 = r.random();
 //! ```
 

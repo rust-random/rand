@@ -20,7 +20,7 @@ criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
     c.bench_function("seq_shuffle_100", |b| {
-        let mut rng = Pcg32::from_rng(&mut rand::rng());
+        let mut rng: Pcg32 = rand::make_rng();
         let mut buf = [0i32; 100];
         rng.fill(&mut buf);
         let x = black_box(&mut buf);

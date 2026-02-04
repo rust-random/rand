@@ -42,11 +42,12 @@ use chacha20::ChaCha12Rng as Rng;
 /// # let _: StdRng = rng;
 /// ```
 ///
-/// Seeding via [`rand::rng()`](crate::rng()) may be faster:
+/// Seeding via [`rand::make_rng()`] or [`rand::rng()`](crate::rng()) may be
+/// faster:
 /// ```
-/// # use rand::{SeedableRng, rngs::StdRng};
-/// let rng = StdRng::from_rng(&mut rand::rng());
-/// # let _: StdRng = rng;
+/// # use rand::rngs::StdRng;
+/// let mut rng: StdRng = rand::make_rng();
+/// # let _ = rand::Rng::next_u32(&mut rng);
 /// ```
 ///
 /// Any [`SeedableRng`] method may be used, but note that `seed_from_u64` is not

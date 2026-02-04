@@ -20,7 +20,7 @@ criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
     c.bench_function("seq_slice_choose_1_of_100", |b| {
-        let mut rng = Pcg32::from_rng(&mut rand::rng());
+        let mut rng: Pcg32 = rand::make_rng();
         let mut buf = [0i32; 100];
         rng.fill(&mut buf);
         let x = black_box(&mut buf);
@@ -32,7 +32,7 @@ pub fn bench(c: &mut Criterion) {
     for (amount, len) in lens {
         let name = format!("seq_slice_sample_{amount}_of_{len}");
         c.bench_function(name.as_str(), |b| {
-            let mut rng = Pcg32::from_rng(&mut rand::rng());
+            let mut rng: Pcg32 = rand::make_rng();
             let mut buf = [0i32; 1000];
             rng.fill(&mut buf);
             let x = black_box(&buf[..len]);
@@ -56,7 +56,7 @@ pub fn bench(c: &mut Criterion) {
     for (amount, len) in lens {
         let name = format!("seq_slice_sample_weighted_{amount}_of_{len}");
         c.bench_function(name.as_str(), |b| {
-            let mut rng = Pcg32::from_rng(&mut rand::rng());
+            let mut rng: Pcg32 = rand::make_rng();
             let mut buf = [0i32; 1000];
             rng.fill(&mut buf);
             let x = black_box(&buf[..len]);
@@ -78,7 +78,7 @@ pub fn bench(c: &mut Criterion) {
     }
 
     c.bench_function("seq_iter_sample_10_of_100", |b| {
-        let mut rng = Pcg32::from_rng(&mut rand::rng());
+        let mut rng: Pcg32 = rand::make_rng();
         let mut buf = [0i32; 100];
         rng.fill(&mut buf);
         let x = black_box(&buf);
@@ -86,7 +86,7 @@ pub fn bench(c: &mut Criterion) {
     });
 
     c.bench_function("seq_iter_sample_fill_10_of_100", |b| {
-        let mut rng = Pcg32::from_rng(&mut rand::rng());
+        let mut rng: Pcg32 = rand::make_rng();
         let mut buf = [0i32; 100];
         rng.fill(&mut buf);
         let x = black_box(&buf);
