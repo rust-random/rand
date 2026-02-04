@@ -263,7 +263,7 @@ pub trait IteratorRandom: Iterator + Sized {
     }
 
     /// Deprecated: use [`Self::sample_fill`] instead
-    #[deprecated(since = "0.9.2", note = "Renamed to `sample_fill`")]
+    #[deprecated(since = "0.10.0", note = "Renamed to `sample_fill`")]
     fn choose_multiple_fill<R>(self, rng: &mut R, buf: &mut [Self::Item]) -> usize
     where
         R: Rng + ?Sized,
@@ -273,7 +273,7 @@ pub trait IteratorRandom: Iterator + Sized {
 
     /// Deprecated: use [`Self::sample`] instead
     #[cfg(feature = "alloc")]
-    #[deprecated(since = "0.9.2", note = "Renamed to `sample`")]
+    #[deprecated(since = "0.10.0", note = "Renamed to `sample`")]
     fn choose_multiple<R>(self, rng: &mut R, amount: usize) -> Vec<Self::Item>
     where
         R: Rng + ?Sized,

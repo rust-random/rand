@@ -279,7 +279,7 @@ pub trait IndexedRandom: Index<usize> {
 
     /// Deprecated: use [`Self::sample`] instead
     #[cfg(feature = "alloc")]
-    #[deprecated(since = "0.9.2", note = "Renamed to `sample`")]
+    #[deprecated(since = "0.10.0", note = "Renamed to `sample`")]
     fn choose_multiple<R>(
         &self,
         rng: &mut R,
@@ -293,7 +293,7 @@ pub trait IndexedRandom: Index<usize> {
     }
 
     /// Deprecated: use [`Self::sample_array`] instead
-    #[deprecated(since = "0.9.2", note = "Renamed to `sample_array`")]
+    #[deprecated(since = "0.10.0", note = "Renamed to `sample_array`")]
     fn choose_multiple_array<R, const N: usize>(&self, rng: &mut R) -> Option<[Self::Output; N]>
     where
         Self::Output: Clone + Sized,
@@ -304,7 +304,7 @@ pub trait IndexedRandom: Index<usize> {
 
     /// Deprecated: use [`Self::sample_weighted`] instead
     #[cfg(feature = "std")]
-    #[deprecated(since = "0.9.2", note = "Renamed to `sample_weighted`")]
+    #[deprecated(since = "0.10.0", note = "Renamed to `sample_weighted`")]
     fn choose_multiple_weighted<R, F, X>(
         &self,
         rng: &mut R,
@@ -536,7 +536,7 @@ impl<'a, S: Index<usize, Output = T> + ?Sized + 'a, T: 'a> ExactSizeIterator
 
 /// Deprecated: renamed to [`IndexedSamples`]
 #[cfg(feature = "alloc")]
-#[deprecated(since = "0.9.2", note = "Renamed to `IndexedSamples`")]
+#[deprecated(since = "0.10.0", note = "Renamed to `IndexedSamples`")]
 pub type SliceChooseIter<'a, S, T> = IndexedSamples<'a, S, T>;
 
 #[cfg(test)]
