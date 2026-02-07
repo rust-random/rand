@@ -71,7 +71,7 @@ exclude = ["benches", "distr_test"]
 rand_core = { version = "0.10.0-rc-6", default-features = false }
 log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
-chacha20 = { version = "0.10.0-rc.10", default-features = false, features = ["rng"], optional = true }
+chacha20 = { version = "0.10.0-rc.11", default-features = false, features = ["rng"], optional = true }
 getrandom = { version = "0.4.0-rc.1", optional = true }
 
 [dev-dependencies]

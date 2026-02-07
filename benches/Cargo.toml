@@ -13,7 +13,7 @@ simd_support = ["rand/simd_support"]
 [dev-dependencies]
 rand = { path = ".." }
 rand_pcg = { path = "../rand_pcg" }
-chacha20 = { version = "0.10.0-rc.10", default-features = false, features = ["rng"] }
+chacha20 = { version = "0.10.0-rc.11", default-features = false, features = ["rng"] }
 criterion = "0.5"
 criterion-cycles-per-byte = "0.6"
 
