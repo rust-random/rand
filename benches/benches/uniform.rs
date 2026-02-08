@@ -59,7 +59,7 @@ macro_rules! sample {
 
     ($R:ty, $T:ty, $U:ty, $len:tt, $g:expr) => {
         $g.bench_function(BenchmarkId::new(stringify!($R), "single"), |b| {
-            let mut rng = <$R>::from_rng(&mut rand::rng());
+            let mut rng: $R = rand::make_rng();
             let range = sample!(@range $T, $U, $len, rng);
             let low = sample!(@MIN $T, $len);
             let high = sample!(@wrapping_add low, range, $len);
@@ -68,7 +68,7 @@ macro_rules! sample {
         });
 
         $g.bench_function(BenchmarkId::new(stringify!($R), "distr"), |b| {
-            let mut rng = <$R>::from_rng(&mut rand::rng());
+            let mut rng: $R = rand::make_rng();
             let range = sample!(@range $T, $U, $len, rng);
             let low = sample!(@MIN $T, $len);
             let high = sample!(@wrapping_add low, range, $len);

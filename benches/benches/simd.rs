@@ -30,47 +30,47 @@ pub fn simd(c: &mut Criterion) {
     let mut g = c.benchmark_group("random_simd");
 
     g.bench_function("u128", |b| {
-        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
+        let mut rng: Pcg64Mcg = rand::make_rng();
         b.iter(|| rng.random::<u128>());
     });
 
     g.bench_function("m128i", |b| {
-        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
+        let mut rng: Pcg64Mcg = rand::make_rng();
         b.iter(|| rng.random::<core::arch::x86_64::__m128i>());
     });
 
     g.bench_function("m256i", |b| {
-        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
+        let mut rng: Pcg64Mcg = rand::make_rng();
         b.iter(|| rng.random::<core::arch::x86_64::__m256i>());
     });
 
     g.bench_function("m512i", |b| {
-        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
+        let mut rng: Pcg64Mcg = rand::make_rng();
         b.iter(|| rng.random::<core::arch::x86_64::__m512i>());
     });
 
     g.bench_function("u64x2", |b| {
-        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
+        let mut rng: Pcg64Mcg = rand::make_rng();
         b.iter(|| rng.random::<core::simd::u64x2>());
     });
 
     g.bench_function("u32x4", |b| {
-        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
+        let mut rng: Pcg64Mcg = rand::make_rng();
         b.iter(|| rng.random::<core::simd::u64x4>());
     });
 
     g.bench_function("u32x8", |b| {
-        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
+        let mut rng: Pcg64Mcg = rand::make_rng();
         b.iter(|| rng.random::<core::simd::u8x32>());
     });
 
     g.bench_function("u16x8", |b| {
-        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
+        let mut rng: Pcg64Mcg = rand::make_rng();
         b.iter(|| rng.random::<core::simd::u8x32>());
     });
 
     g.bench_function("u8x16", |b| {
-        let mut rng = Pcg64Mcg::from_rng(&mut rand::rng());
+        let mut rng: Pcg64Mcg = rand::make_rng();
         b.iter(|| rng.random::<core::simd::u8x32>());
     });
 }

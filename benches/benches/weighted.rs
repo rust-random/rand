@@ -53,7 +53,7 @@ pub fn bench(c: &mut Criterion) {
         c.bench_function(name.as_str(), |b| {
             let length = black_box(length);
             let amount = black_box(amount);
-            let mut rng = SmallRng::from_rng(&mut rand::rng());
+            let mut rng: SmallRng = rand::make_rng();
             b.iter(|| sample_weighted(&mut rng, length, |idx| (1 + (idx % 100)) as u32, amount))
         });
     }

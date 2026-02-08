@@ -38,15 +38,15 @@ pub fn random_bytes(c: &mut Criterion) {
         });
     }
 
-    bench(&mut g, "pcg32", Pcg32::from_rng(&mut rand::rng()));
-    bench(&mut g, "pcg64", Pcg64::from_rng(&mut rand::rng()));
-    bench(&mut g, "pcg64mcg", Pcg64Mcg::from_rng(&mut rand::rng()));
-    bench(&mut g, "pcg64dxsm", Pcg64Dxsm::from_rng(&mut rand::rng()));
-    bench(&mut g, "chacha8", ChaCha8Rng::from_rng(&mut rand::rng()));
-    bench(&mut g, "chacha12", ChaCha12Rng::from_rng(&mut rand::rng()));
-    bench(&mut g, "chacha20", ChaCha20Rng::from_rng(&mut rand::rng()));
-    bench(&mut g, "std", StdRng::from_rng(&mut rand::rng()));
-    bench(&mut g, "small", SmallRng::from_rng(&mut rand::rng()));
+    bench(&mut g, "pcg32", rand::make_rng::<Pcg32>());
+    bench(&mut g, "pcg64", rand::make_rng::<Pcg64>());
+    bench(&mut g, "pcg64mcg", rand::make_rng::<Pcg64Mcg>());
+    bench(&mut g, "pcg64dxsm", rand::make_rng::<Pcg64Dxsm>());
+    bench(&mut g, "chacha8", rand::make_rng::<ChaCha8Rng>());
+    bench(&mut g, "chacha12", rand::make_rng::<ChaCha12Rng>());
+    bench(&mut g, "chacha20", rand::make_rng::<ChaCha20Rng>());
+    bench(&mut g, "std", rand::make_rng::<StdRng>());
+    bench(&mut g, "small", rand::make_rng::<SmallRng>());
     bench(&mut g, "os", UnwrapErr(SysRng));
     bench(&mut g, "thread", rand::rng());
 
@@ -66,15 +66,15 @@ pub fn random_u32(c: &mut Criterion) {
         });
     }
 
-    bench(&mut g, "pcg32", Pcg32::from_rng(&mut rand::rng()));
-    bench(&mut g, "pcg64", Pcg64::from_rng(&mut rand::rng()));
-    bench(&mut g, "pcg64mcg", Pcg64Mcg::from_rng(&mut rand::rng()));
-    bench(&mut g, "pcg64dxsm", Pcg64Dxsm::from_rng(&mut rand::rng()));
-    bench(&mut g, "chacha8", ChaCha8Rng::from_rng(&mut rand::rng()));
-    bench(&mut g, "chacha12", ChaCha12Rng::from_rng(&mut rand::rng()));
-    bench(&mut g, "chacha20", ChaCha20Rng::from_rng(&mut rand::rng()));
-    bench(&mut g, "std", StdRng::from_rng(&mut rand::rng()));
-    bench(&mut g, "small", SmallRng::from_rng(&mut rand::rng()));
+    bench(&mut g, "pcg32", rand::make_rng::<Pcg32>());
+    bench(&mut g, "pcg64", rand::make_rng::<Pcg64>());
+    bench(&mut g, "pcg64mcg", rand::make_rng::<Pcg64Mcg>());
+    bench(&mut g, "pcg64dxsm", rand::make_rng::<Pcg64Dxsm>());
+    bench(&mut g, "chacha8", rand::make_rng::<ChaCha8Rng>());
+    bench(&mut g, "chacha12", rand::make_rng::<ChaCha12Rng>());
+    bench(&mut g, "chacha20", rand::make_rng::<ChaCha20Rng>());
+    bench(&mut g, "std", rand::make_rng::<StdRng>());
+    bench(&mut g, "small", rand::make_rng::<SmallRng>());
     bench(&mut g, "os", UnwrapErr(SysRng));
     bench(&mut g, "thread", rand::rng());
 
@@ -94,15 +94,15 @@ pub fn random_u64(c: &mut Criterion) {
         });
     }
 
-    bench(&mut g, "pcg32", Pcg32::from_rng(&mut rand::rng()));
-    bench(&mut g, "pcg64", Pcg64::from_rng(&mut rand::rng()));
-    bench(&mut g, "pcg64mcg", Pcg64Mcg::from_rng(&mut rand::rng()));
-    bench(&mut g, "pcg64dxsm", Pcg64Dxsm::from_rng(&mut rand::rng()));
-    bench(&mut g, "chacha8", ChaCha8Rng::from_rng(&mut rand::rng()));
-    bench(&mut g, "chacha12", ChaCha12Rng::from_rng(&mut rand::rng()));
-    bench(&mut g, "chacha20", ChaCha20Rng::from_rng(&mut rand::rng()));
-    bench(&mut g, "std", StdRng::from_rng(&mut rand::rng()));
-    bench(&mut g, "small", SmallRng::from_rng(&mut rand::rng()));
+    bench(&mut g, "pcg32", rand::make_rng::<Pcg32>());
+    bench(&mut g, "pcg64", rand::make_rng::<Pcg64>());
+    bench(&mut g, "pcg64mcg", rand::make_rng::<Pcg64Mcg>());
+    bench(&mut g, "pcg64dxsm", rand::make_rng::<Pcg64Dxsm>());
+    bench(&mut g, "chacha8", rand::make_rng::<ChaCha8Rng>());
+    bench(&mut g, "chacha12", rand::make_rng::<ChaCha12Rng>());
+    bench(&mut g, "chacha20", rand::make_rng::<ChaCha20Rng>());
+    bench(&mut g, "std", rand::make_rng::<StdRng>());
+    bench(&mut g, "small", rand::make_rng::<SmallRng>());
     bench(&mut g, "os", UnwrapErr(SysRng));
     bench(&mut g, "thread", rand::rng());
 
@@ -116,7 +116,7 @@ pub fn init_gen(c: &mut Criterion) {
 
     fn bench<R: SeedableRng>(g: &mut BenchmarkGroup<WallTime>, name: &str) {
         g.bench_function(name, |b| {
-            let mut rng = Pcg32::from_rng(&mut rand::rng());
+            let mut rng: Pcg32 = rand::make_rng();
             b.iter(|| R::from_rng(&mut rng));
         });
     }
@@ -141,7 +141,7 @@ pub fn init_from_u64(c: &mut Criterion) {
 
     fn bench<R: SeedableRng>(g: &mut BenchmarkGroup<WallTime>, name: &str) {
         g.bench_function(name, |b| {
-            let mut rng = Pcg32::from_rng(&mut rand::rng());
+            let mut rng: Pcg32 = rand::make_rng();
             let seed = rng.random();
             b.iter(|| R::seed_from_u64(black_box(seed)));
         });
@@ -170,7 +170,7 @@ pub fn init_from_seed(c: &mut Criterion) {
         rand::distr::StandardUniform: Distribution<<R as SeedableRng>::Seed>,
     {
         g.bench_function(name, |b| {
-            let mut rng = Pcg32::from_rng(&mut rand::rng());
+            let mut rng: Pcg32 = rand::make_rng();
             let seed = rng.random();
             b.iter(|| R::from_seed(black_box(seed.clone())));
         });
