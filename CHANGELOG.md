@@ -8,7 +8,7 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [Unreleased]
+## [0.10.0] - 2026-02-08
 
 ### Changes
 - The dependency on `rand_chacha` has been replaced with a dependency on `chacha20`. This changes the implementation behind `StdRng`, but the output remains the same. There may be some API breakage when using the ChaCha-types directly as these are now the ones in `chacha20` instead of `rand_chacha` ([#1642]).
@@ -1146,7 +1146,8 @@ Code replaced with a compatibility layer over rand 0.4.
 ### Added
 - Separate `rand` out of the standard library
 
-[Unreleased]: https://github.com/rust-random/rand/compare/0.9.2...HEAD
+[Unreleased]: https://github.com/rust-random/rand/compare/0.10.0...HEAD
+[0.10.0]: https://github.com/rust-random/rand/compare/0.9.2...0.10.0
 [0.9.2]: https://github.com/rust-random/rand/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/rust-random/rand/compare/0.9.0...0.9.1
 [0.9.0]: https://github.com/rust-random/rand/compare/0.8.5...0.9.0
