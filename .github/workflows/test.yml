@@ -58,8 +58,6 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
       - name: rand
         run: cargo doc --all-features --no-deps
-      - name: rand_pcg
-        run: cargo doc --all-features --package rand_pcg --no-deps
 
   test:
     runs-on: ${{ matrix.os }}
@@ -121,8 +119,6 @@ jobs:
       - name: Test rand (all stable features)
         run: |
           cargo test --target ${{ matrix.target }} --features=serde,log
-      - name: Test rand_pcg
-        run: cargo test --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
 
   test-cross:
     runs-on: ${{ matrix.os }}
@@ -153,7 +149,6 @@ jobs:
           # all stable features:
           cross test --no-fail-fast --target ${{ matrix.target }} --features=serde,log
           cross test --no-fail-fast --target ${{ matrix.target }} --examples
-          cross test --no-fail-fast --target ${{ matrix.target }} --manifest-path rand_pcg/Cargo.toml --features=serde
 
   test-miri:
     runs-on: ubuntu-latest
@@ -168,7 +163,6 @@ jobs:
         run: |
           cargo miri test --no-default-features --lib --tests
           cargo miri test --features=log
-          cargo miri test --manifest-path rand_pcg/Cargo.toml --features=serde
 
   test-no-std:
     runs-on: ubuntu-latest
