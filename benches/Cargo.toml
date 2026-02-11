@@ -8,7 +8,7 @@ publish = false
 # Option (requires nightly Rust): experimental SIMD support
 simd_support = ["rand/simd_support"]
 
-[dependencies]
+[workspace]
 
 [dev-dependencies]
 rand = { path = ".." }
