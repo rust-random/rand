@@ -74,6 +74,57 @@ impl ReseedingCore {
     }
 }
 
+/// The [`ThreadRng`] internal
+struct ThreadRngCore {
+    inner: BlockRng<ReseedingCore>,
+}
+
+/// Debug implementation does not leak internal state
+impl fmt::Debug for ThreadRngCore {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "ThreadRngCore {{ .. }}")
+    }
+}
+
+impl ThreadRngCore {
+    /// Initialize the generator using [`SysRng`]
+    fn new() -> Result<Self, SysError> {
+        Core::try_from_rng(&mut SysRng).map(|result| Self {
+            inner: BlockRng::new(ReseedingCore { inner: result }),
+        })
+    }
+
+    /// Immediately reseed the generator
+    ///
+    /// This discards any remaining random data in the cache.
+    fn reseed(&mut self) -> Result<(), SysError> {
+        self.inner.reset_and_skip(0);
+        self.inner.core.reseed()
+    }
+}
+
+impl TryRng for ThreadRngCore {
+    type Error = Infallible;
+
+    #[inline(always)]
+    fn try_next_u32(&mut self) -> Result<u32, Infallible> {
+        Ok(self.inner.next_word())
+    }
+
+    #[inline(always)]
+    fn try_next_u64(&mut self) -> Result<u64, Infallible> {
+        Ok(self.inner.next_u64_from_u32())
+    }
+
+    #[inline(always)]
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Infallible> {
+        self.inner.fill_bytes(dest);
+        Ok(())
+    }
+}
+
+impl TryCryptoRng for ThreadRngCore {}
+
 /// A reference to the thread-local generator
 ///
 /// This type is a reference to a lazily-initialized thread-local generator.
@@ -127,7 +178,7 @@ impl ReseedingCore {
 #[derive(Clone)]
 pub struct ThreadRng {
     // Rc is explicitly !Send and !Sync
-    rng: Rc<UnsafeCell<BlockRng<ReseedingCore>>>,
+    rng: Rc<UnsafeCell<ThreadRngCore>>,
 }
 
 impl ThreadRng {
@@ -138,8 +189,7 @@ impl ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        rng.reset_and_skip(0);
-        rng.core.reseed()
+        rng.reseed()
     }
 }
 
@@ -153,12 +203,11 @@ impl fmt::Debug for ThreadRng {
 thread_local!(
     // We require Rc<..> to avoid premature freeing when ThreadRng is used
     // within thread-local destructors. See #968.
-    static THREAD_RNG_KEY: Rc<UnsafeCell<BlockRng<ReseedingCore>>> = {
-        Rc::new(UnsafeCell::new(BlockRng::new(ReseedingCore {
-            inner: Core::try_from_rng(&mut SysRng).unwrap_or_else(|err| {
+    static THREAD_RNG_KEY: Rc<UnsafeCell<ThreadRngCore>> = {
+        Rc::new(UnsafeCell::new(ThreadRngCore::new().unwrap_or_else(|err| {
                 panic!("could not initialize ThreadRng: {}", err)
             }),
-        })))
+        ))
     }
 );
 
@@ -209,7 +258,7 @@ impl TryRng for ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        Ok(rng.next_word())
+        rng.try_next_u32()
     }
 
     #[inline(always)]
@@ -217,7 +266,7 @@ impl TryRng for ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        Ok(rng.next_u64_from_u32())
+        rng.try_next_u64()
     }
 
     #[inline(always)]
@@ -225,8 +274,7 @@ impl TryRng for ThreadRng {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
-        rng.fill_bytes(dest);
-        Ok(())
+        rng.try_fill_bytes(dest)
     }
 }
 
@@ -243,9 +291,21 @@ mod test {
     }
 
     #[test]
+    fn test_thread_rng_core() {
+        use crate::RngExt;
+        let mut r = super::ThreadRngCore::new().unwrap();
+        r.random::<i32>();
+        assert_eq!(r.random_range(0..1), 0);
+    }
+
+    #[test]
     fn test_debug_output() {
         // We don't care about the exact output here, but it must not include
         // private CSPRNG state or the cache stored by BlockRng!
         assert_eq!(std::format!("{:?}", crate::rng()), "ThreadRng { .. }");
+        assert_eq!(
+            std::format!("{:?}", super::ThreadRngCore::new().unwrap()),
+            "ThreadRngCore { .. }"
+        );
     }
 }
