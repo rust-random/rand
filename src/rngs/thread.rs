@@ -75,7 +75,11 @@ impl ReseedingCore {
 }
 
 /// The [`ThreadRng`] internal
-struct ThreadRngCore {
+///
+/// This type is the actual pseudo-random number generator that powers [`ThreadRng`]. The same
+/// Security design criteria and consideration as those of [`ThreadRng`] apply, whereas it allows
+/// users to utilize the same reseeding generator where `Send` or `Sync` is required.
+pub struct ThreadRngCore {
     inner: BlockRng<ReseedingCore>,
 }
 
@@ -88,7 +92,7 @@ impl fmt::Debug for ThreadRngCore {
 
 impl ThreadRngCore {
     /// Initialize the generator using [`SysRng`]
-    fn new() -> Result<Self, SysError> {
+    pub fn new() -> Result<Self, SysError> {
         Core::try_from_rng(&mut SysRng).map(|result| Self {
             inner: BlockRng::new(ReseedingCore { inner: result }),
         })
@@ -97,7 +101,7 @@ impl ThreadRngCore {
     /// Immediately reseed the generator
     ///
     /// This discards any remaining random data in the cache.
-    fn reseed(&mut self) -> Result<(), SysError> {
+    pub fn reseed(&mut self) -> Result<(), SysError> {
         self.inner.reset_and_skip(0);
         self.inner.core.reseed()
     }
