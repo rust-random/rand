@@ -55,7 +55,7 @@ use chacha20::ChaCha12Rng as Rng;
 ///
 /// ## Generation
 ///
-/// The generators implements [`Rng`] and thus also [`Rng`][crate::Rng].
+/// The generator implements [`Rng`] and thus also [`RngExt`].
 /// See also the [Random Values] chapter in the book.
 ///
 /// [portable]: https://rust-random.github.io/book/crate-reprod.html
@@ -66,6 +66,7 @@ use chacha20::ChaCha12Rng as Rng;
 /// [chacha20]: https://crates.io/crates/chacha20
 /// [rand issue]: https://github.com/rust-random/rand/issues/932
 /// [`Rng`]: rand_core::Rng
+/// [`RngExt`]: crate::RngExt
 /// [`rand::make_rng()`]: crate::make_rng
 /// [`rand::rng()`]: crate::rng
 #[derive(Debug, PartialEq, Eq)]

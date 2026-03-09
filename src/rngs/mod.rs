@@ -67,7 +67,7 @@
 //! ## Traits and functionality
 //!
 //! All generators implement [`TryRng`]. Most implement [`Rng`] (i.e.
-//! `TryRng<Error = Infallible>`) and thus also implement [`Rng`][crate::Rng].
+//! `TryRng<Error = Infallible>`) and thus also implement [`RngExt`].
 //! See also the [Random Values] chapter in the book.
 //!
 //! Secure RNGs may additionally implement the [`CryptoRng`] trait.
@@ -80,7 +80,7 @@
 //! [Types of generators]: https://rust-random.github.io/book/guide-gen.html
 //! [Our RNGs]: https://rust-random.github.io/book/guide-rngs.html
 //! [Random Values]: https://rust-random.github.io/book/guide-values.html
-//! [`Rng`]: crate::RngExt
+//! [`RngExt`]: crate::RngExt
 //! [`TryRng`]: crate::TryRng
 //! [`Rng`]: crate::Rng
 //! [`CryptoRng`]: crate::CryptoRng

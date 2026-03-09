@@ -18,8 +18,8 @@ use rand_core::Rng;
 /// User-level interface for RNGs
 ///
 /// [`Rng`] is the `dyn`-safe implementation-level interface for Random
-/// (Number) Generators. This trait, `Rng`, provides a user-level interface on
-/// RNGs. It is implemented automatically for any `R: Rng`.
+/// (Number) Generators. This trait, `RngExt`, provides a user-level interface
+/// on RNGs. It is implemented automatically for any <code>R: [Rng][]</code>.
 ///
 /// This trait must usually be brought into scope via `use rand::RngExt;` or
 /// `use rand::prelude::*;`.
