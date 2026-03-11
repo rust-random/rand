@@ -61,7 +61,7 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 ///
 /// ## Generation
 ///
-/// The generators implements [`Rng`] and thus also [`Rng`][crate::Rng].
+/// The generator implements [`Rng`] and thus also [`RngExt`].
 /// See also the [Random Values] chapter in the book.
 ///
 /// [portable]: https://rust-random.github.io/book/crate-reprod.html
@@ -73,6 +73,7 @@ type Rng = super::xoshiro256plusplus::Xoshiro256PlusPlus;
 /// [rand_xoshiro]: https://crates.io/crates/rand_xoshiro
 /// [`rand_seeder`]: https://docs.rs/rand_seeder/latest/rand_seeder/
 /// [`Rng`]: rand_core::Rng
+/// [`RngExt`]: crate::RngExt
 /// [`rand::make_rng()`]: crate::make_rng
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmallRng(Rng);
