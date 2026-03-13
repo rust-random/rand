@@ -89,7 +89,7 @@ impl ReseedingCore {
 ///
 /// - Automatic seeding via [`SysRng`] and after every 64 kB of output.
 ///   Limitation: there is no automatic reseeding on process fork (see [below](#fork)).
-/// - A rigorusly analyzed, unpredictable (cryptographic) pseudo-random generator
+/// - A rigorously analyzed, unpredictable (cryptographic) pseudo-random generator
 ///   (see [the book on security](https://rust-random.github.io/book/guide-rngs.html#security)).
 ///   The currently selected algorithm is ChaCha (12-rounds).
 ///   See also [`StdRng`] documentation.
