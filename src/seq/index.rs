@@ -451,8 +451,9 @@ where
         let t = rng.random_range(..=j);
         if let Some(pos) = indices.iter().position(|&x| x == t) {
             indices[pos] = j;
+        } else {
+            indices.push(t);
         }
-        indices.push(t);
     }
     IndexVec::from(indices)
 }
