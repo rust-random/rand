@@ -238,7 +238,7 @@ where
 /// let words: Vec<&str> = "Mary had a little lamb".split(' ').collect();
 /// println!("{}", words[rand::random_range(..words.len())]);
 /// ```
-/// Note that the first example can also be achieved (without `collect`'ing
+/// Note that the second example can also be achieved (without `collect`'ing
 /// to a `Vec`) using [`seq::IteratorRandom::choose`].
 #[cfg(feature = "thread_rng")]
 #[inline]
