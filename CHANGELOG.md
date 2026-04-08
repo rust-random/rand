@@ -8,6 +8,9 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [Unreleased]
+- Document panic behavior of `make_rng` and add `#[track_caller]` (#1761)
+
 ## [0.10.0] - 2026-02-08
 
 ### Changes
