@@ -102,6 +102,11 @@ use crate::distr::{Distribution, StandardUniform};
 /// # let _ = rand::Rng::next_u32(&mut rng);
 /// ```
 ///
+/// # Panics
+///
+/// If [`SysRng`] fails to obtain entropy from the OS. This is unlikely
+/// outside of early boot or unusual system conditions.
+///
 /// # Security
 ///
 /// Refer to [`ThreadRng#Security`].
