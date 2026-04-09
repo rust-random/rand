@@ -8,8 +8,15 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [Unreleased]
-- Document panic behavior of `make_rng` and add `#[track_caller]` (#1761)
+## [0.10.1] — 2026-02-11
+This release includes a fix for a soundness bug; see [#1763].
+
+### Changes
+- Document panic behavior of `make_rng` and add `#[track_caller]` ([#1761])
+- Deprecate feature `log` ([#1763])
+
+[#1761]: https://github.com/rust-random/rand/pull/1761
+[#1763]: https://github.com/rust-random/rand/pull/1763
 
 ## [0.10.0] - 2026-02-08
 
@@ -1150,6 +1157,7 @@ Code replaced with a compatibility layer over rand 0.4.
 - Separate `rand` out of the standard library
 
 [Unreleased]: https://github.com/rust-random/rand/compare/0.10.0...HEAD
+[0.10.1]: https://github.com/rust-random/rand/compare/0.10.0...0.10.1
 [0.10.0]: https://github.com/rust-random/rand/compare/0.9.2...0.10.0
 [0.9.2]: https://github.com/rust-random/rand/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/rust-random/rand/compare/0.9.0...0.9.1
