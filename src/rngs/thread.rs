@@ -67,7 +67,7 @@ impl ReseedingCore {
     #[inline(never)]
     fn try_to_reseed(&mut self) {
         if let Err(e) = self.reseed() {
-            panic!("Reseeding RNG failed: {e}");
+            panic!("could not reseed ThreadRng: {e}");
         }
     }
 }
@@ -103,7 +103,7 @@ impl ReseedingCore {
 /// We leave it to the user to determine whether this generator meets their
 /// security requirements. For an alternative, see [`SysRng`].
 ///
-/// # Fork
+/// # Forks and interrupts
 ///
 /// `ThreadRng` is not automatically reseeded on fork. It is recommended to
 /// explicitly call [`ThreadRng::reseed`] immediately after a fork, for example:
@@ -121,7 +121,13 @@ impl ReseedingCore {
 /// from an interrupt (e.g. a fork handler) unless it can be guaranteed that no
 /// other method on the same `ThreadRng` is currently executing.
 ///
+/// # Panics
+///
+/// Implementations of [`TryRng`] and [`Rng`] panic in case of [`SysRng`]
+/// failure during reseeding (highly unlikely).
+///
 /// [`StdRng`]: crate::rngs::StdRng
+/// [`Rng`]: rand_core::Rng
 #[derive(Clone)]
 pub struct ThreadRng {
     // Rc is explicitly !Send and !Sync
@@ -188,6 +194,10 @@ thread_local!(
 /// # Security
 ///
 /// Refer to [`ThreadRng#Security`].
+///
+/// # Panics
+///
+/// This method panics in case of [`SysRng`] failure during initial seeding.
 pub fn rng() -> ThreadRng {
     let rng = THREAD_RNG_KEY.with(|t| t.clone());
     ThreadRng { rng }
