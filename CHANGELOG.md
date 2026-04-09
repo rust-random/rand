@@ -13,6 +13,7 @@ This release back-ports a fix from v0.10. See also [#1763].
 
 ### Changes
 - Deprecate feature `log` (#1764)
+- Replace usages of `doc_auto_cfg` (#1764)
 
 [#1763]: https://github.com/rust-random/rand/pull/1763
 
