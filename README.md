@@ -118,10 +118,6 @@ Rand is built with these features enabled by default:
 -   `std_rng` enables inclusion of `StdRng`, `thread_rng` and `random`
     (the latter two *also* require that `std` be enabled)
 
-Optionally, the following dependencies can be enabled:
-
--   `log` enables logging via the `log` crate
-
 Additionally, these features configure Rand:
 
 -   `small_rng` enables inclusion of the `SmallRng` PRNG
