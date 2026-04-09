@@ -42,7 +42,7 @@ jobs:
         with:
           toolchain: nightly
       - name: rand
-        run: cargo doc --all-features --no-deps
+        run: cargo doc --features serde,unbiased,log --no-deps
       - name: rand_core
         run: cargo doc --all-features --package rand_core --no-deps
       - name: rand_chacha
@@ -102,7 +102,7 @@ jobs:
         if: ${{ matrix.toolchain == 'nightly' }}
         run: |
           cargo test --target ${{ matrix.target }} --features=nightly
-          cargo test --target ${{ matrix.target }} --all-features
+          cargo test --target ${{ matrix.target }} --features serde,unbiased,log
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
       - name: Test rand
         run: |
