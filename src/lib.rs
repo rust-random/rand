@@ -71,9 +71,6 @@ pub use rand_core;
 // Re-exports from rand_core
 pub use rand_core::{CryptoRng, Rng, SeedableRng, TryCryptoRng, TryRng};
 
-#[macro_use]
-mod log_macros;
-
 // Public modules
 pub mod distr;
 pub mod prelude;

@@ -66,10 +66,8 @@ impl ReseedingCore {
     #[cold]
     #[inline(never)]
     fn try_to_reseed(&mut self) {
-        trace!("Reseeding RNG (periodic reseed)");
-
         if let Err(e) = self.reseed() {
-            warn!("Reseeding RNG failed: {e}");
+            panic!("Reseeding RNG failed: {e}");
         }
     }
 }

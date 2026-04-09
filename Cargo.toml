@@ -58,12 +58,11 @@ chacha = ["dep:chacha20"]
 # Note: enabling this option is expected to affect reproducibility of results.
 unbiased = []
 
-# Option: enable logging
-log = ["dep:log"]
+# Deprecated option: enable logging
+log = []
 
 [dependencies]
 rand_core = { version = "0.10.0", default-features = false }
-log = { version = "0.4.4", optional = true }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
 chacha20 = { version = "0.10.0", default-features = false, features = ["rng"], optional = true }
 getrandom = { version = "0.4.0", optional = true }

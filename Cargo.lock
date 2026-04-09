@@ -239,7 +239,6 @@ version = "0.10.0"
 dependencies = [
  "chacha20",
  "getrandom",
- "log",
  "postcard",
  "rand_core",
  "rand_pcg",

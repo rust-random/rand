@@ -73,7 +73,6 @@ Rand is built with these features enabled by default:
 Optionally, the following dependencies can be enabled:
 
 -   `chacha` enables `rand::rngs::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng}` (uses the [chacha20] crate)
--   `log` enables logging (uses the [log] crate)
 
 Additionally, these features configure Rand:
 
@@ -110,4 +109,3 @@ See [LICENSE-APACHE](https://github.com/rust-random/rand/blob/master/LICENSE-APA
 
 [getrandom]: https://crates.io/crates/getrandom
 [chacha20]: https://crates.io/crates/chacha20
-[log]: https://crates.io/crates/log
