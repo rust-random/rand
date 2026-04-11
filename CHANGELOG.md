@@ -8,6 +8,14 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.8.6] - 2026-04-14
+This release back-ports a fix from v0.10. See also [#1763].
+
+### Changes
+- Deprecate feature `log` (#1764)
+
+[#1763]: https://github.com/rust-random/rand/pull/1763
+
 ## [0.8.5] - 2021-08-20
 ### Fixes
 - Fix build on non-32/64-bit architectures (#1144)
