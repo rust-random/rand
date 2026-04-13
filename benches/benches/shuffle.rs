@@ -52,7 +52,7 @@ fn bench_rng<R: Rng + SeedableRng>(c: &mut Criterion, rng_name: &'static str) {
                 let mut rng = R::seed_from_u64(123);
                 let mut vec: Vec<usize> = (0..length).collect();
                 b.iter(|| {
-                    vec.partial_shuffle(&mut rng, length / 2);
+                    let _ = vec.partial_shuffle(&mut rng, length / 2);
                     vec[0]
                 })
             });
