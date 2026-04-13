@@ -441,7 +441,7 @@ pub trait SliceRandom: IndexedMutRandom {
     /// # Warning
     ///
     /// The position of the returned slices within the original slice is not guaranteed. 
-    /// 
+    ///
     /// # Example
     ///
     /// ```
