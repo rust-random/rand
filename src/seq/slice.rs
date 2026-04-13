@@ -481,7 +481,7 @@ impl<T> SliceRandom for [T] {
             // There is no need to shuffle an empty or single element slice
             return;
         }
-        self.partial_shuffle(rng, self.len());
+        let _ = self.partial_shuffle(rng, self.len());
     }
 
     fn partial_shuffle<R>(&mut self, rng: &mut R, amount: usize) -> (&mut [T], &mut [T])
