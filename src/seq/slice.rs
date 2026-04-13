@@ -437,6 +437,23 @@ pub trait SliceRandom: IndexedMutRandom {
     /// will perform a full shuffle.
     ///
     /// For slices, complexity is `O(m)` where `m = amount`.
+    ///
+    /// # Warning
+    ///
+    /// The position of the returned slices within the original slice is not guaranteed. 
+    /// 
+    /// # Example
+    ///
+    /// ```
+    /// use rand::seq::SliceRandom;
+    ///
+    /// let mut rng = rand::rng();
+    /// let mut y = [1, 2, 3, 4, 5];
+    /// let (shuffled, rest) = y.partial_shuffle(&mut rng, 3);
+    /// assert_eq!(shuffled.len(), 3);
+    /// assert_eq!(rest.len(), 2);
+    /// ```
+    #[must_use = "the returned subslices should be used to access the shuffled elements; their position within the original slice is an implementation detail"]
     fn partial_shuffle<R>(
         &mut self,
         rng: &mut R,
