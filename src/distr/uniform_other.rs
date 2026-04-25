@@ -33,7 +33,22 @@ impl SampleUniform for char {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UniformChar {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "deser_sampler"))]
     sampler: UniformInt<u32>,
+}
+
+#[cfg(feature = "serde")]
+fn deser_sampler<'de, D>(d: D) -> Result<UniformInt<u32>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let sampler = <UniformInt<u32> as serde::Deserialize>::deserialize(d)?;
+    if sampler.max() > char::MAX as u32 - CHAR_SURROGATE_LEN {
+        return Err(serde::de::Error::custom(
+            "bad sampler range for UniformChar",
+        ));
+    }
+    Ok(sampler)
 }
 
 /// UTF-16 surrogate range start
@@ -247,6 +262,7 @@ impl UniformSampler for UniformDuration {
 mod tests {
     use super::*;
     use crate::RngExt;
+    use std::string::ToString;
 
     #[test]
     #[cfg(feature = "serde")]
@@ -297,6 +313,18 @@ mod tests {
             .sample_string(&mut rng, 100);
             assert_eq!(string3.capacity(), 200);
         }
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn test_char_bad_deser() {
+        let json = r#"{"sampler":{"low":4294967200,"range":0,"thresh":0}}"#;
+        let result = serde_json::from_str::<Uniform<char>>(json);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "bad sampler range for UniformChar at line 1 column 51"
+        );
     }
 
     #[test]

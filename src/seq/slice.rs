@@ -823,6 +823,7 @@ mod test {
 
     #[test]
     #[cfg(feature = "std")]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_multiple_weighted_distributions() {
         use super::*;
 
