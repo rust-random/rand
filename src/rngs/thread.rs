@@ -138,12 +138,12 @@ impl ThreadRng {
     /// Immediately reseed the generator
     ///
     /// This discards any remaining random data in the cache.
-    pub fn reseed(&mut self) -> Result<(), SysError> {
+    pub fn reseed(&mut self) {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
         let rng = unsafe { &mut *self.rng.get() };
         rng.reset_and_skip(0);
-        rng.core.reseed()
+        rng.core.try_to_reseed();
     }
 }
 

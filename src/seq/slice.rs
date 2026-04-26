@@ -426,8 +426,7 @@ pub trait SliceRandom: IndexedMutRandom {
     /// `n = self.len() - amount`). The rest of the slice (`..n`) contains the
     /// remaining elements in a permuted but not fully shuffled order.
     ///
-    /// Returns a tuple of the sampled elements (`&mut self[n..]`) and the
-    /// remaining elements (`&mut self[..n]`).
+    /// Returns the sampled elements (`&mut self[n..]`).
     ///
     /// This is an efficient method to select `amount` elements at random from
     /// the slice, provided the slice may be mutated.
@@ -442,18 +441,13 @@ pub trait SliceRandom: IndexedMutRandom {
     ///
     /// let mut rng = rand::rng();
     /// let mut y = [1, 2, 3, 4, 5];
-    /// let (shuffled, rest) = y.partial_shuffle(&mut rng, 3);
+    /// let shuffled = y.partial_shuffle(&mut rng, 3);
     /// assert_eq!(shuffled.len(), 3);
-    /// assert_eq!(rest.len(), 2);
     /// let sampled = shuffled.to_vec();
     /// assert_eq!(&sampled, &y[2..5]);
     /// ```
     #[must_use]
-    fn partial_shuffle<R>(
-        &mut self,
-        rng: &mut R,
-        amount: usize,
-    ) -> (&mut [Self::Output], &mut [Self::Output])
+    fn partial_shuffle<R>(&mut self, rng: &mut R, amount: usize) -> &mut [Self::Output]
     where
         Self::Output: Sized,
         R: Rng + ?Sized;
@@ -479,7 +473,7 @@ impl<T> SliceRandom for [T] {
         let _ = self.partial_shuffle(rng, self.len());
     }
 
-    fn partial_shuffle<R>(&mut self, rng: &mut R, amount: usize) -> (&mut [T], &mut [T])
+    fn partial_shuffle<R>(&mut self, rng: &mut R, amount: usize) -> &mut [T]
     where
         R: Rng + ?Sized,
     {
@@ -507,7 +501,7 @@ impl<T> SliceRandom for [T] {
             }
         }
         let r = self.split_at_mut(n);
-        (r.1, r.0)
+        r.1
     }
 }
 
@@ -619,8 +613,8 @@ mod test {
         assert_eq!(nums, [5, 11, 0, 8, 7, 12, 6, 4, 9, 3, 1, 2, 10]);
         nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
         let res = nums.partial_shuffle(&mut r, 6);
-        assert_eq!(res.0, &mut [7, 12, 6, 8, 1, 9]);
-        assert_eq!(res.1, &mut [0, 11, 2, 3, 4, 5, 10]);
+        assert_eq!(res, &mut [7, 12, 6, 8, 1, 9]);
+        assert_eq!(&nums[..7], &[0, 11, 2, 3, 4, 5, 10]);
     }
 
     #[test]
@@ -679,14 +673,14 @@ mod test {
 
         let mut empty: [u32; 0] = [];
         let res = empty.partial_shuffle(&mut r, 10);
-        assert_eq!((res.0.len(), res.1.len()), (0, 0));
+        assert_eq!(res.len(), 0);
 
         let mut v = [1, 2, 3, 4, 5];
         let res = v.partial_shuffle(&mut r, 2);
-        assert_eq!((res.0.len(), res.1.len()), (2, 3));
-        assert!(res.0[0] != res.0[1]);
+        assert_eq!(res.len(), 2);
+        assert!(res[0] != res[1]);
         // First elements are only modified if selected, so at least one isn't modified:
-        assert!(res.1[0] == 1 || res.1[1] == 2 || res.1[2] == 3);
+        assert!(v[0] == 1 || v[1] == 2 || v[2] == 3);
     }
 
     #[test]
