@@ -87,6 +87,7 @@
 //! [`statrs`]: https://crates.io/crates/statrs
 
 mod bernoulli;
+mod cauchy;
 mod distribution;
 mod float;
 mod integer;
@@ -103,6 +104,7 @@ pub mod uniform;
 pub mod weighted;
 
 pub use self::bernoulli::{Bernoulli, BernoulliError};
+pub use self::cauchy::{Cauchy, CauchyError};
 #[cfg(feature = "alloc")]
 pub use self::distribution::SampleString;
 pub use self::distribution::{Distribution, Iter, Map};
