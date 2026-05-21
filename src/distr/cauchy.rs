@@ -108,8 +108,6 @@ impl Distribution<f64> for Cauchy {
 
 #[cfg(test)]
 mod test {
-    use std::{println, vec::Vec};
-
     use super::*;
     use crate::RngExt;
 
@@ -164,9 +162,9 @@ mod test {
         let distr = Cauchy::new(0.0, 1.0).unwrap();
 
         const N: usize = 100_000;
-        let mut values: Vec<f64> = Vec::new();
-        for _ in 0..N {
-            values.push(rng.sample(distr));
+        let mut values: [f64; 100000] = [0.0f64; N];
+        for x in values.iter_mut() {
+            *x = rng.sample(distr);
         }
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -175,7 +173,7 @@ mod test {
         let mut d0 = 0.0;
         for (i, &x) in values.iter().enumerate() {
             let p = (i as f64) / (N as f64);
-            let q = x.atan() / std::f64::consts::PI + 0.5;
+            let q = x.atan() / core::f64::consts::PI + 0.5;
             let d = (p - q).abs();
             if d > d0 {
                 d0 = d;
@@ -207,7 +205,6 @@ mod test {
         ];
         assert_eq!(buf, expected);
         for (got, exp) in buf.iter().zip(expected.iter()) {
-            println!("got = {}, exp = {}", got, exp);
             assert!((got - exp).abs() < 1e-6);
         }
     }
