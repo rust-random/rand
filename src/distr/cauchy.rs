@@ -173,9 +173,8 @@ mod test {
         // Calculate the Kolmogorov-Smirnoff divergence between the
         // empirical and expected distributions, and check it's small.
         let mut d0 = 0.0;
-        for i in 0..N {
+        for (i, &x) in values.iter().enumerate() {
             let p = (i as f64) / (N as f64);
-            let x = values[i];
             let q = x.atan() / std::f64::consts::PI + 0.5;
             let d = (p - q).abs();
             if d > d0 {
