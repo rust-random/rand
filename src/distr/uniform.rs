@@ -110,7 +110,6 @@ mod other;
 pub use other::{UniformChar, UniformDuration};
 
 use core::fmt;
-use core::ops::{Range, RangeInclusive, RangeTo, RangeToInclusive};
 
 use crate::Rng;
 use crate::distr::Distribution;
@@ -371,19 +370,37 @@ pub trait UniformSampler: Sized {
     }
 }
 
-impl<X: SampleUniform> TryFrom<Range<X>> for Uniform<X> {
+impl<X: SampleUniform> TryFrom<::core::ops::Range<X>> for Uniform<X> {
     type Error = Error;
 
-    fn try_from(r: Range<X>) -> Result<Uniform<X>, Error> {
+    fn try_from(r: ::core::ops::Range<X>) -> Result<Uniform<X>, Error> {
         Uniform::new(r.start, r.end)
     }
 }
 
-impl<X: SampleUniform> TryFrom<RangeInclusive<X>> for Uniform<X> {
+#[cfg(feature = "new_range_api")]
+impl<X: SampleUniform> TryFrom<::core::range::Range<X>> for Uniform<X> {
+    type Error = Error;
+
+    fn try_from(r: ::core::range::Range<X>) -> Result<Uniform<X>, Error> {
+        Uniform::new(r.start, r.end)
+    }
+}
+
+impl<X: SampleUniform> TryFrom<::core::ops::RangeInclusive<X>> for Uniform<X> {
     type Error = Error;
 
     fn try_from(r: ::core::ops::RangeInclusive<X>) -> Result<Uniform<X>, Error> {
         Uniform::new_inclusive(r.start(), r.end())
+    }
+}
+
+#[cfg(feature = "new_range_api")]
+impl<X: SampleUniform> TryFrom<::core::range::RangeInclusive<X>> for Uniform<X> {
+    type Error = Error;
+
+    fn try_from(r: ::core::range::RangeInclusive<X>) -> Result<Uniform<X>, Error> {
+        Uniform::new_inclusive(r.start, r.last)
     }
 }
 
@@ -429,7 +446,7 @@ pub trait SampleRange<T> {
     fn is_empty(&self) -> bool;
 }
 
-impl<T: SampleUniform + PartialOrd> SampleRange<T> for Range<T> {
+impl<T: SampleUniform + PartialOrd> SampleRange<T> for ::core::ops::Range<T> {
     #[inline]
     fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
         T::Sampler::sample_single(self.start, self.end, rng)
@@ -441,7 +458,20 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for Range<T> {
     }
 }
 
-impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
+#[cfg(feature = "new_range_api")]
+impl<T: SampleUniform + PartialOrd> SampleRange<T> for ::core::range::Range<T> {
+    #[inline]
+    fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
+        T::Sampler::sample_single(self.start, self.end, rng)
+    }
+
+    #[inline]
+    fn is_empty(&self) -> bool {
+        !(self.start < self.end)
+    }
+}
+
+impl<T: SampleUniform + PartialOrd> SampleRange<T> for ::core::ops::RangeInclusive<T> {
     #[inline]
     fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
         T::Sampler::sample_single_inclusive(self.start(), self.end(), rng)
@@ -453,9 +483,22 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for RangeInclusive<T> {
     }
 }
 
+#[cfg(feature = "new_range_api")]
+impl<T: SampleUniform + PartialOrd> SampleRange<T> for ::core::range::RangeInclusive<T> {
+    #[inline]
+    fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
+        T::Sampler::sample_single_inclusive(self.start, self.last, rng)
+    }
+
+    #[inline]
+    fn is_empty(&self) -> bool {
+        !(self.start <= self.last)
+    }
+}
+
 macro_rules! impl_sample_range_u {
     ($t:ty) => {
-        impl SampleRange<$t> for RangeTo<$t> {
+        impl SampleRange<$t> for ::core::ops::RangeTo<$t> {
             #[inline]
             fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
                 <$t as SampleUniform>::Sampler::sample_single(0, self.end, rng)
@@ -467,10 +510,28 @@ macro_rules! impl_sample_range_u {
             }
         }
 
-        impl SampleRange<$t> for RangeToInclusive<$t> {
+        impl SampleRange<$t> for ::core::ops::RangeToInclusive<$t> {
             #[inline]
             fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
                 <$t as SampleUniform>::Sampler::sample_single_inclusive(0, self.end, rng)
+            }
+
+            #[inline]
+            fn is_empty(&self) -> bool {
+                false
+            }
+        }
+
+        // `core::range::RangeTo` is set to be a re-export of `core::ops::RangeTo`:
+        // > A Rust version in the near future will also add `core::range::RangeFull` and `core::range::RangeTo`
+        // as re-exports from `core::ops` (these do not implement `Iterator` and already implement `Copy`)
+        // Source: https://blog.rust-lang.org/2026/05/28/Rust-1.96.0/#new-range-types
+
+        #[cfg(feature = "new_range_api")]
+        impl SampleRange<$t> for ::core::range::RangeToInclusive<$t> {
+            #[inline]
+            fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
+                <$t as SampleUniform>::Sampler::sample_single_inclusive(0, self.last, rng)
             }
 
             #[inline]

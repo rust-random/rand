@@ -61,6 +61,8 @@ unbiased = []
 # Deprecated option: enable logging
 log = []
 
+new_range_api = []
+
 [dependencies]
 rand_core = { version = "0.10.0", default-features = false }
 serde = { version = "1.0.103", features = ["derive"], optional = true }
