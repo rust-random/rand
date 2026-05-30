@@ -61,7 +61,8 @@ unbiased = []
 # Deprecated option: enable logging
 log = []
 
-new_range_api = []
+# Support the std::range types stabilised in Rust 1.96.0.
+rust_1_96 = []
 
 [dependencies]
 rand_core = { version = "0.10.0", default-features = false }

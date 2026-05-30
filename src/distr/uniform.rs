@@ -378,7 +378,7 @@ impl<X: SampleUniform> TryFrom<::core::ops::Range<X>> for Uniform<X> {
     }
 }
 
-#[cfg(feature = "new_range_api")]
+#[cfg(feature = "rust_1_96")]
 impl<X: SampleUniform> TryFrom<::core::range::Range<X>> for Uniform<X> {
     type Error = Error;
 
@@ -395,7 +395,7 @@ impl<X: SampleUniform> TryFrom<::core::ops::RangeInclusive<X>> for Uniform<X> {
     }
 }
 
-#[cfg(feature = "new_range_api")]
+#[cfg(feature = "rust_1_96")]
 impl<X: SampleUniform> TryFrom<::core::range::RangeInclusive<X>> for Uniform<X> {
     type Error = Error;
 
@@ -458,7 +458,7 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for ::core::ops::Range<T> {
     }
 }
 
-#[cfg(feature = "new_range_api")]
+#[cfg(feature = "rust_1_96")]
 impl<T: SampleUniform + PartialOrd> SampleRange<T> for ::core::range::Range<T> {
     #[inline]
     fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
@@ -483,7 +483,7 @@ impl<T: SampleUniform + PartialOrd> SampleRange<T> for ::core::ops::RangeInclusi
     }
 }
 
-#[cfg(feature = "new_range_api")]
+#[cfg(feature = "rust_1_96")]
 impl<T: SampleUniform + PartialOrd> SampleRange<T> for ::core::range::RangeInclusive<T> {
     #[inline]
     fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error> {
@@ -527,7 +527,7 @@ macro_rules! impl_sample_range_u {
         // as re-exports from `core::ops` (these do not implement `Iterator` and already implement `Copy`)
         // Source: https://blog.rust-lang.org/2026/05/28/Rust-1.96.0/#new-range-types
 
-        #[cfg(feature = "new_range_api")]
+        #[cfg(feature = "rust_1_96")]
         impl SampleRange<$t> for ::core::range::RangeToInclusive<$t> {
             #[inline]
             fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<$t, Error> {
