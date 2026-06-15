@@ -26,7 +26,7 @@
 //! Abstractly, a [probability distribution] describes the probability of
 //! occurrence of each value in its sample space.
 //!
-//! More concretely, a sampler `X` implementating
+//! More concretely, a sampler `X` implementing
 //! <code>[Distribution][]&lt;T&gt;</code> is an algorithm for choosing values
 //! from the sample space `T` (or a subset of `T`) using randomness from an
 //! [`Rng`].
