@@ -34,7 +34,7 @@ impl SeedableRng for Xoshiro256PlusPlus {
     fn from_seed(seed: [u8; 32]) -> Xoshiro256PlusPlus {
         let state = utils::read_words(&seed);
         // Check for zero on aligned integers for better code generation.
-        // Furtermore, seed_from_u64(0) will expand to a constant when optimized.
+        // Furthermore, seed_from_u64(0) will expand to a constant when optimized.
         if state.iter().all(|&x| x == 0) {
             return Self::seed_from_u64(0);
         }

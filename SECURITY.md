@@ -65,7 +65,7 @@ overheads, and robustness against misuse.
 ### Distributions
 
 Methods of the `Rng` trait, functionality of the `rand::seq` module and
-implementators of the `Distribution` trait are expected, while using a
+implementors of the `Distribution` trait are expected, while using a
 cryptographically secure `CryptoRng` instance meeting the above constraints,
 to not introduce significant bias to their operation beyond what would be
 expected of the operation. Note that the usage of 'significant' here permits
