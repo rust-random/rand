@@ -10,10 +10,14 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ## [Unreleased]
 
+### Fixes
+- Fix possible memory safety violation due to deserialization of `UniformChar` from bad source ([#1790])
+
 ### Changes
 - Document required output order of fn `partial_shuffle` and apply `#[must_use]` ([#1769])
 
 [#1769]: https://github.com/rust-random/rand/pull/1769
+[#1790]: https://github.com/rust-random/rand/pull/1790
 
 ## [0.10.1] — 2026-02-11
 This release includes a fix for a soundness bug; see [#1763].
