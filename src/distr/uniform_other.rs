@@ -262,7 +262,6 @@ impl UniformSampler for UniformDuration {
 mod tests {
     use super::*;
     use crate::RngExt;
-    use std::string::ToString;
 
     #[test]
     #[cfg(feature = "serde")]
@@ -321,10 +320,16 @@ mod tests {
         let json = r#"{"sampler":{"low":4294967200,"range":0,"thresh":0}}"#;
         let result = serde_json::from_str::<Uniform<char>>(json);
         assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "bad sampler range for UniformChar at line 1 column 51"
-        );
+        let err = result.unwrap_err();
+        assert_eq!(err.classify(), serde_json::error::Category::Data);
+
+        #[cfg(feature = "alloc")]
+        {
+            assert_eq!(
+                alloc::string::ToString::to_string(&err),
+                "bad sampler range for UniformChar at line 1 column 51"
+            );
+        }
     }
 
     #[test]
