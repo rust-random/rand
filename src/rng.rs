@@ -129,8 +129,10 @@ pub trait RngExt: Rng {
     /// made from the given range. See also the [`Uniform`] distribution
     /// type which may be faster if sampling from the same range repeatedly.
     ///
-    /// All types support `low..high_exclusive` and `low..=high` range syntax.
-    /// Unsigned integer types also support `..high_exclusive` and `..=high` syntax.
+    /// All supported types may be sampled with `low..high_exclusive`
+    /// ([`Range`]) and `low..=high` ([`RangeInclusive`]) syntax. Unsigned
+    /// integer types also support `..high_exclusive` ([`RangeTo`]) and
+    /// `..=high` ([`RangeToInclusive`]) syntax.
     ///
     /// # Panics
     ///
@@ -144,17 +146,19 @@ pub trait RngExt: Rng {
     /// let mut rng = rand::rng();
     ///
     /// // Exclusive range
-    /// let n: u32 = rng.random_range(..10);
-    /// println!("{}", n);
-    /// let m: f64 = rng.random_range(-40.0..1.3e5);
-    /// println!("{}", m);
+    /// println!("{}", rng.random_range::<u32, _>(..10));
+    /// println!("{}", rng.random_range(-40.0..1.3e5));
     ///
     /// // Inclusive range
-    /// let n: u32 = rng.random_range(..=10);
-    /// println!("{}", n);
+    /// println!("{}", rng.random_range(-10..=10));
+    /// println!("{}", rng.random_range('a'..='z'));
     /// ```
     ///
     /// [`Uniform`]: distr::uniform::Uniform
+    /// [`Range`]: std::ops::Range
+    /// [`RangeInclusive`]: std::ops::RangeInclusive
+    /// [`RangeTo`]: std::ops::RangeTo
+    /// [`RangeToInclusive`]: std::ops::RangeToInclusive
     #[track_caller]
     fn random_range<T, R>(&mut self, range: R) -> T
     where
