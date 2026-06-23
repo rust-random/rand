@@ -14,8 +14,12 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Document required output order of fn `partial_shuffle` and apply `#[must_use]` ([#1769])
 - Avoid usage of `unsafe` in contexts where non-local memory corruption could invalidate contract ([#1791])
 
+### Additions
+- Add `rust_1_96` feature gate, supporting sampling over `std::range` types ([#1792])
+
 [#1769]: https://github.com/rust-random/rand/pull/1769
 [#1791]: https://github.com/rust-random/rand/pull/1791
+[#1792]: https://github.com/rust-random/rand/pull/1792
 
 ## [0.10.1] — 2026-02-11
 This release includes a fix for a soundness bug; see [#1763].
