@@ -522,11 +522,6 @@ macro_rules! impl_sample_range_u {
             }
         }
 
-        // `core::range::RangeTo` is set to be a re-export of `core::ops::RangeTo`:
-        // > A Rust version in the near future will also add `core::range::RangeFull` and `core::range::RangeTo`
-        // as re-exports from `core::ops` (these do not implement `Iterator` and already implement `Copy`)
-        // Source: https://blog.rust-lang.org/2026/05/28/Rust-1.96.0/#new-range-types
-
         #[cfg(feature = "rust_1_96")]
         impl SampleRange<$t> for ::core::range::RangeToInclusive<$t> {
             #[inline]

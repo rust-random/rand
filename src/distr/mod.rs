@@ -9,38 +9,45 @@
 
 //! Generating random samples from probability distributions
 //!
-//! This module is the home of the [`Distribution`] trait and several of its
-//! implementations. It is the workhorse behind some of the convenient
-//! functionality of the [`RngExt`] trait, e.g. [`RngExt::random`] and of course
-//! [`RngExt::sample`].
+//! # Quick start
+//!
+//! ```
+//! use rand::RngExt;
+//! let mut rng = rand::rng();
+//!
+//! eprintln!("A letter: {}", rng.sample(rand::distr::Alphabetic) as char);
+//!
+//! let percent_range = rand::distr::Uniform::try_from(0..=100).unwrap();
+//! eprintln!("Percentage: {}%", rng.sample(&percent_range));
+//! ```
+//!
+//! # `Distribution` trait
 //!
 //! Abstractly, a [probability distribution] describes the probability of
 //! occurrence of each value in its sample space.
 //!
-//! More concretely, an implementation of `Distribution<T>` for type `X` is an
-//! algorithm for choosing values from the sample space (a subset of `T`)
-//! according to the distribution `X` represents, using an external source of
-//! randomness (an RNG supplied to the `sample` function).
+//! More concretely, a sampler `X` implementing
+//! <code>[Distribution][]&lt;T&gt;</code> is an algorithm for choosing values
+//! from the sample space `T` (or a subset of `T`) using randomness from an
+//! [`Rng`].
+//! Typically the sampler `X` emulates some like-named probability distribution
+//! (for example, [`Bernoulli`] emulates the
+//! [Bernoulli distribution](https://en.wikipedia.org/wiki/Bernoulli_distribution)).
 //!
-//! A type `X` may implement `Distribution<T>` for multiple types `T`.
-//! Any type implementing [`Distribution`] is stateless (i.e. immutable),
-//! but it may have internal parameters set at construction time (for example,
-//! [`Uniform`] allows specification of its sample space as a range within `T`).
+//! ## The Standard Uniform distribution
 //!
+//! The [`StandardUniform`] distribution is perhaps the most important sampler,
+//! representing the "default" probability distribution for a type.
+//! Its distribution is expected to be uniform. For `bool`, `char` and integer
+//! types the sample space equals that of the type (i.e. any valid value of that
+//! type may be yielded), but for floating-point types the sample range is
+//! arbitrarily set to `0.0..1.0`.
 //!
-//! # The Standard Uniform distribution
+//! Implementing [`Distribution<T>`] for [`StandardUniform`] for type `T`
+//! enables sampling type `T` using [`RngExt::random`] and (by extension)
+//! [`rand::random`].
 //!
-//! The [`StandardUniform`] distribution is important to mention. This is the
-//! distribution used by [`RngExt::random`] and represents the "default" way to
-//! produce a random value for many different types, including most primitive
-//! types, tuples, arrays, and a few derived types. See the documentation of
-//! [`StandardUniform`] for more details.
-//!
-//! Implementing [`Distribution<T>`] for [`StandardUniform`] for user types `T` makes it
-//! possible to generate type `T` with [`RngExt::random`], and by extension also
-//! with the [`random`] function.
-//!
-//! ## Other standard uniform distributions
+//! ### Other standard uniform distributions
 //!
 //! [`Alphanumeric`] is a simple distribution to sample random letters and
 //! numbers of the `char` type; in contrast [`StandardUniform`] may sample any valid
@@ -56,7 +63,7 @@
 //! sample a value which would have a low chance of being sampled anyway is
 //! rarely an issue in practice.
 //!
-//! # Parameterized Uniform distributions
+//! ## Parameterized Uniform distributions
 //!
 //! The [`Uniform`] distribution provides uniform sampling over a specified
 //! range on a subset of the types supported by the above distributions.
@@ -67,7 +74,7 @@
 //! faster to pre-construct a [`Distribution`] object using
 //! [`Uniform::new`], [`Uniform::new_inclusive`] or `From<Range>`.
 //!
-//! # Non-uniform sampling
+//! ## Non-uniform sampling
 //!
 //! Sampling a simple true/false outcome with a given probability has a name:
 //! the [`Bernoulli`] distribution (this is used by [`RngExt::random_bool`]).
@@ -81,10 +88,10 @@
 //! [probability distribution]: https://en.wikipedia.org/wiki/Probability_distribution
 //! [`rand_distr`]: https://crates.io/crates/rand_distr
 //! [`statrs`]: https://crates.io/crates/statrs
-
-//! [`random`]: crate::random
+//! [`rand::random`]: crate::random
 //! [`rand_distr`]: https://crates.io/crates/rand_distr
 //! [`statrs`]: https://crates.io/crates/statrs
+//! [`Rng`]: crate::Rng
 
 mod bernoulli;
 mod distribution;

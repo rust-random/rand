@@ -151,7 +151,7 @@ pub trait IndexedRandom: Index<usize> {
     /// Biased sampling for one element
     ///
     /// Returns a reference to one element of the slice, sampled according
-    /// to the provided weights. Returns `None` if and only if `self.is_empty()`.
+    /// to the provided weights.
     ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is
@@ -198,7 +198,6 @@ pub trait IndexedRandom: Index<usize> {
     ///
     /// Returns an iterator which samples elements from `self` according to the
     /// given weights with replacement (i.e. elements may be repeated).
-    /// Returns `None` if and only if `self.is_empty()`.
     ///
     /// See also doc for [`Self::choose_weighted`].
     #[cfg(feature = "alloc")]
@@ -347,7 +346,7 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
     /// Biased sampling for one element (mut)
     ///
     /// Returns a mutable reference to one element of the slice, sampled according
-    /// to the provided weights. Returns `None` only if the slice is empty.
+    /// to the provided weights.
     ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is

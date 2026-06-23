@@ -38,6 +38,9 @@ std = ["alloc", "getrandom?/std"]
 # Option: "alloc" enables support for Vec and Box when not using "std"
 alloc = []
 
+# Option: support the std::range types (requires Rust >= 1.96.0).
+rust_1_96 = []
+
 # Option: enable SysRng
 sys_rng = ["dep:getrandom", "getrandom/sys_rng"]
 
@@ -60,9 +63,6 @@ unbiased = []
 
 # Deprecated option: enable logging
 log = []
-
-# Support the std::range types stabilised in Rust 1.96.0.
-rust_1_96 = []
 
 [dependencies]
 rand_core = { version = "0.10.0", default-features = false }
