@@ -644,6 +644,20 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "rust_1_96")]
+    fn test_std_range_construction() {
+        let mut rng = crate::test::rng(0);
+
+        assert_eq!(Uniform::try_from(7..8).unwrap().sample(&mut rng), 7);
+        let r = core::range::Range::from(7..8);
+        assert_eq!(Uniform::try_from(r).unwrap().sample(&mut rng), 7);
+
+        assert_eq!(Uniform::try_from(7..=7).unwrap().sample(&mut rng), 7);
+        let r = core::range::RangeInclusive::from(7..=7);
+        assert_eq!(Uniform::try_from(r).unwrap().sample(&mut rng), 7);
+    }
+
+    #[test]
     fn value_stability() {
         fn test_samples<T: SampleUniform + Copy + fmt::Debug + PartialEq>(
             lb: T,
