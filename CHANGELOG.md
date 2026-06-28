@@ -17,6 +17,10 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 - Document required output order of fn `partial_shuffle` and apply `#[must_use]` ([#1769])
 - Avoid usage of `unsafe` in contexts where non-local memory corruption could invalidate contract ([#1791])
 
+### Additions
+- Expose `ThreadRng` internal as `ThreadRngCore` ([#1750])
+
+[#1750]: https://github.com/rust-random/rand/pull/1750
 [#1769]: https://github.com/rust-random/rand/pull/1769
 [#1790]: https://github.com/rust-random/rand/pull/1790
 [#1791]: https://github.com/rust-random/rand/pull/1791
