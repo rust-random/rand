@@ -419,8 +419,23 @@ where
 
 /// Range that supports generating a single sample efficiently.
 ///
-/// Any type implementing this trait can be used to specify the sampled range
-/// for `Rng::random_range`.
+/// See [`RngExt::random_range`] for examples; the method provides a convenient
+/// interface over this type.
+///
+/// # Examples
+///
+/// ```
+/// use rand::distr::uniform::SampleRange;
+/// let mut rng = rand::rng();
+///
+/// // Range and InclusiveRange are supported for many types:
+/// assert_eq!((9..10).sample_single(&mut rng), Ok(9));
+/// assert_eq!(('a'..='a').sample_single(&mut rng), Ok('a'));
+///
+/// // RangeTo and RangeToInclusive are supported for unsigned integers:
+/// assert_eq!((..1u8).sample_single(&mut rng), Ok(0));
+/// assert!((..=10u32).sample_single(&mut rng).unwrap() <= 10);
+/// ```
 pub trait SampleRange<T> {
     /// Generate a sample from the given range.
     fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, Error>;
