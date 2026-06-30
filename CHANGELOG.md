@@ -8,7 +8,7 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
-## [Unreleased]
+## [0.10.2] — 2026-07-02
 
 ### Fixes
 - Fix possible memory safety violation due to deserialization of `UniformChar` from bad source ([#1790])
