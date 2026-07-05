@@ -602,7 +602,7 @@ where
 D: serde::Deserializer<'de>,
 {
     let sampler = <UniformInt<u32> as serde::Deserialize>::deserialize(d)?;
-    if sampler.max() > char::MAX as u32 - CHAR_SURROGATE_LEN {
+    if sampler.max() > std::char::MAX as u32 - CHAR_SURROGATE_LEN {
         return Err(serde::de::Error::custom(
             "bad sampler range for UniformChar",
         ));
