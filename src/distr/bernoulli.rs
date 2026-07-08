@@ -117,13 +117,28 @@ impl Bernoulli {
     }
 
     /// Construct a new `Bernoulli` with the probability of success of
-    /// `numerator`-in-`denominator`. I.e. `new_ratio(2, 3)` will return
+    /// `numerator`-in-`denominator`. I.e. `from_ratio(2, 3)` will return
     /// a `Bernoulli` with a 2-in-3 chance, or about 67%, of returning `true`.
     ///
-    /// return `true`. If `numerator == 0` it will always return `false`.
-    /// For `numerator > denominator` and `denominator == 0`, this returns an
-    /// error. Otherwise, for `numerator == denominator`, samples are always
-    /// true; for `numerator == 0` samples are always false.
+    /// For `numerator == denominator`, the resulting distribution will always
+    /// return `true`; for `numerator == 0` it will always return `false`.
+    /// For `numerator > denominator` or `denominator == 0`, this returns an
+    /// error.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rand::distr::Bernoulli;
+    ///
+    /// let d = Bernoulli::from_ratio(2, 3).unwrap();
+    /// assert!((d.p() - 2.0 / 3.0).abs() < 1e-9);
+    ///
+    /// // Edge cases:
+    /// assert_eq!(Bernoulli::from_ratio(3, 3).unwrap().p(), 1.0); // always true
+    /// assert_eq!(Bernoulli::from_ratio(0, 3).unwrap().p(), 0.0); // always false
+    /// assert!(Bernoulli::from_ratio(4, 3).is_err());             // numerator > denominator
+    /// assert!(Bernoulli::from_ratio(1, 0).is_err());             // denominator == 0
+    /// ```
     #[inline]
     pub fn from_ratio(numerator: u32, denominator: u32) -> Result<Bernoulli, BernoulliError> {
         if numerator > denominator || denominator == 0 {
