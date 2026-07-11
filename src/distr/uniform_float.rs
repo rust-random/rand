@@ -126,10 +126,20 @@ macro_rules! uniform_float_impl {
                     return Err(Error::EmptyRange);
                 }
 
-                let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
-                let scale = (high - low) / max_rand;
-                if !scale.all_finite() {
+                let range = high - low;
+                if !range.all_finite() {
                     return Err(Error::NonFinite);
+                }
+
+                let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
+                let mut scale = range / max_rand;
+                if !scale.all_finite() {
+                    // The division above may overflow to infinity even though
+                    // `range` is finite (e.g. `low = 0.0`, `high = f64::MAX`).
+                    // Replace infinite lanes with the largest finite value;
+                    // `new_bounded` reduces `scale` as required to ensure that
+                    // samples can never exceed `high`.
+                    scale = scale.decrease_masked(scale.gt_mask(<$ty>::splat($f_scalar::MAX)));
                 }
 
                 Ok(Self::new_bounded(low, high, scale))
@@ -238,6 +248,8 @@ mod tests {
                     (-<$f_scalar>::from_bits(7), -0.0),
                     (0.1 * $f_scalar::MAX, $f_scalar::MAX),
                     (-$f_scalar::MAX * 0.2, $f_scalar::MAX * 0.7),
+                    (0.0, $f_scalar::MAX),
+                    (-$f_scalar::MAX, 0.0),
                 ];
                 for &(low_scalar, high_scalar) in v.iter() {
                     for lane in 0..<$ty>::LEN {
@@ -360,6 +372,10 @@ mod tests {
     #[test]
     fn test_float_overflow() {
         assert_eq!(Uniform::try_from(f64::MIN..f64::MAX), Err(Error::NonFinite));
+        assert_eq!(
+            Uniform::try_from(f64::MIN..=f64::MAX),
+            Err(Error::NonFinite)
+        );
     }
 
     #[test]

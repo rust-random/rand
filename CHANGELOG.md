@@ -8,6 +8,13 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [Unreleased]
+
+### Fixes
+- Fix spurious `Error::NonFinite` from `Uniform::new_inclusive` on large finite float ranges such as `0.0..=f64::MAX` ([#1809])
+
+[#1809]: https://github.com/rust-random/rand/pull/1809
+
 ## [0.10.2] — 2026-07-02
 
 ### Fixes
