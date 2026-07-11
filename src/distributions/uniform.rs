@@ -426,6 +426,15 @@ pub struct UniformInt<X> {
 
 macro_rules! uniform_int_impl {
     ($ty:ty, $unsigned:ident, $u_large:ident) => {
+        impl UniformInt<$ty> {
+            /// Get the maximum possible value
+            #[allow(unused)]
+            #[inline]
+            pub(crate) fn max(&self) -> $ty {
+                self.range.wrapping_sub(1).wrapping_add(self.low)
+            }
+        }
+
         impl SampleUniform for $ty {
             type Sampler = UniformInt<$ty>;
         }
@@ -583,7 +592,22 @@ impl SampleUniform for char {
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
 pub struct UniformChar {
+    #[cfg_attr(feature = "serde1", serde(deserialize_with = "deser_sampler"))]
     sampler: UniformInt<u32>,
+}
+
+#[cfg(feature = "serde1")]
+fn deser_sampler<'de, D>(d: D) -> Result<UniformInt<u32>, D::Error>
+where
+D: serde::Deserializer<'de>,
+{
+    let sampler = <UniformInt<u32> as serde::Deserialize>::deserialize(d)?;
+    if sampler.max() > std::char::MAX as u32 - CHAR_SURROGATE_LEN {
+        return Err(serde::de::Error::custom(
+            "bad sampler range for UniformChar",
+        ));
+    }
+    Ok(sampler)
 }
 
 /// UTF-16 surrogate range start
@@ -1155,6 +1179,24 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde1")]
+    fn test_char_bad_deser() {
+        let json = r#"{"sampler":{"low":4294967200,"range":0,"z":0}}"#;
+        let result = serde_json::from_str::<Uniform<char>>(json);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.classify(), serde_json::error::Category::Data);
+
+        #[cfg(feature = "alloc")]
+        {
+            assert_eq!(
+                alloc::string::ToString::to_string(&err),
+                       "bad sampler range for UniformChar at line 1 column 46"
+            );
+        }
+    }
+
+    #[test]
     #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_floats() {
         let mut rng = crate::test::rng(252);
@@ -1381,6 +1423,7 @@ mod tests {
         let r = Uniform::from(2u32..7);
         assert_eq!(r.0.low, 2);
         assert_eq!(r.0.range, 5);
+        assert_eq!(r.0.max(), 6);
         let r = Uniform::from(2.0f64..7.0);
         assert_eq!(r.0.low, 2.0);
         assert_eq!(r.0.scale, 5.0);
@@ -1391,6 +1434,7 @@ mod tests {
         let r = Uniform::from(2u32..=6);
         assert_eq!(r.0.low, 2);
         assert_eq!(r.0.range, 5);
+        assert_eq!(r.0.max(), 6);
         let r = Uniform::from(2.0f64..=7.0);
         assert_eq!(r.0.low, 2.0);
         assert!(r.0.scale > 5.0);
