@@ -88,6 +88,7 @@ pub trait IndexedRandom: Index<usize> {
     /// Chooses `amount` elements from the slice at random, without repetition,
     /// and in random order. The returned iterator is appropriate both for
     /// collection into a `Vec` and filling an existing buffer (see example).
+    /// If `amount > self.len()`, `amount` is reduced to `self.len()`.
     ///
     /// In case this API is not sufficiently flexible, use [`index::sample`].
     ///
@@ -108,6 +109,9 @@ pub trait IndexedRandom: Index<usize> {
     /// for (b, slot) in sample.sample(&mut rng, buf.len()).zip(buf.iter_mut()) {
     ///     *slot = *b;
     /// }
+    ///
+    /// // if the requested amount exceeds the length, every element is sampled:
+    /// assert_eq!(sample.sample(&mut rng, 1000).count(), sample.len());
     /// ```
     #[cfg(feature = "alloc")]
     fn sample<R>(&self, rng: &mut R, amount: usize) -> IndexedSamples<'_, Self, Self::Output>
@@ -126,7 +130,7 @@ pub trait IndexedRandom: Index<usize> {
     /// Uniformly sample a fixed-size array of distinct elements from self
     ///
     /// Chooses `N` elements from the slice at random, without repetition,
-    /// and in random order.
+    /// and in random order. Returns `None` if (and only if) `N > self.len()`.
     ///
     /// For slices, complexity is the same as [`index::sample_array`].
     ///
@@ -138,6 +142,10 @@ pub trait IndexedRandom: Index<usize> {
     /// let sample = "Hello, audience!".as_bytes();
     ///
     /// let a: [u8; 3] = sample.sample_array(&mut rng).unwrap();
+    ///
+    /// // None is returned when more elements are requested than are available:
+    /// let b: Option<[u8; 32]> = sample.sample_array(&mut rng);
+    /// assert!(b.is_none());
     /// ```
     fn sample_array<R, const N: usize>(&self, rng: &mut R) -> Option<[Self::Output; N]>
     where
@@ -161,22 +169,38 @@ pub trait IndexedRandom: Index<usize> {
     /// For more information about the underlying algorithm,
     /// see the [`WeightedIndex`] distribution.
     ///
+    /// Error cases are those of [`WeightedIndex::new`]; in particular, the
+    /// slice being empty results in [`WeightError::InvalidInput`] and all
+    /// weights being zero in [`WeightError::InsufficientNonZero`].
+    ///
     /// See also [`choose_weighted_mut`].
     ///
     /// # Example
     ///
     /// ```
     /// use rand::prelude::*;
+    /// use rand::seq::WeightError;
     ///
     /// let choices = [('a', 2), ('b', 1), ('c', 1), ('d', 0)];
     /// let mut rng = rand::rng();
     /// // 50% chance to print 'a', 25% chance to print 'b', 25% chance to print 'c',
     /// // and 'd' will never be printed
     /// println!("{:?}", choices.choose_weighted(&mut rng, |item| item.1).unwrap().0);
+    ///
+    /// // Error cases:
+    /// assert_eq!(
+    ///     choices[..0].choose_weighted(&mut rng, |item| item.1),
+    ///     Err(WeightError::InvalidInput) // empty slice
+    /// );
+    /// assert_eq!(
+    ///     choices[3..].choose_weighted(&mut rng, |item| item.1),
+    ///     Err(WeightError::InsufficientNonZero) // all weights are zero
+    /// );
     /// ```
     /// [`choose`]: IndexedRandom::choose
     /// [`choose_weighted_mut`]: IndexedMutRandom::choose_weighted_mut
     /// [`WeightedIndex`]: crate::distr::weighted::WeightedIndex
+    /// [`WeightedIndex::new`]: crate::distr::weighted::WeightedIndex::new
     #[cfg(feature = "alloc")]
     fn choose_weighted<R, F, B, X>(
         &self,
@@ -199,7 +223,11 @@ pub trait IndexedRandom: Index<usize> {
     /// Returns an iterator which samples elements from `self` according to the
     /// given weights with replacement (i.e. elements may be repeated).
     ///
+    /// Error cases are those of [`WeightedIndex::new`].
+    ///
     /// See also doc for [`Self::choose_weighted`].
+    ///
+    /// [`WeightedIndex::new`]: crate::distr::weighted::WeightedIndex::new
     #[cfg(feature = "alloc")]
     fn choose_weighted_iter<R, F, B, X>(
         &self,
@@ -224,10 +252,14 @@ pub trait IndexedRandom: Index<usize> {
     /// elements are never returned; the result may therefore contain fewer
     /// elements than `amount` even when `self.len() >= amount`. The elements
     /// are returned in an arbitrary, unspecified order.
+    /// If `amount > self.len()`, `amount` is reduced to `self.len()`.
     ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
+    ///
+    /// Error cases:
+    /// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
     ///
     /// This implementation uses `O(length + amount)` space and `O(length)` time.
     /// See [`index::sample_weighted`] for details.
@@ -356,11 +388,16 @@ pub trait IndexedMutRandom: IndexedRandom + IndexMut<usize> {
     /// For more information about the underlying algorithm,
     /// see the [`WeightedIndex`] distribution.
     ///
+    /// Error cases are those of [`WeightedIndex::new`]; in particular, the
+    /// slice being empty results in [`WeightError::InvalidInput`] and all
+    /// weights being zero in [`WeightError::InsufficientNonZero`].
+    ///
     /// See also [`choose_weighted`].
     ///
     /// [`choose_mut`]: IndexedMutRandom::choose_mut
     /// [`choose_weighted`]: IndexedRandom::choose_weighted
     /// [`WeightedIndex`]: crate::distr::weighted::WeightedIndex
+    /// [`WeightedIndex::new`]: crate::distr::weighted::WeightedIndex::new
     #[cfg(feature = "alloc")]
     fn choose_weighted_mut<R, F, B, X>(
         &mut self,
