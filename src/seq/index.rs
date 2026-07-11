@@ -290,6 +290,9 @@ where
 ///
 /// Function `weight` is called once for each index to provide weights.
 ///
+/// Items with infinite weight have priority over items with finite weight
+/// and are sampled uniformly among themselves.
+///
 /// This method is used internally by the slice sampling methods, but it can
 /// sometimes be useful to have the indices themselves so this is provided as
 /// an alternative.
@@ -335,6 +338,9 @@ where
 /// no guarantee of shuffling or ordering).
 ///
 /// Function `weight` is called once for each index to provide weights.
+///
+/// Items with infinite weight have priority over items with finite weight
+/// and are sampled uniformly among themselves.
 ///
 /// This implementation is based on the algorithm A-ExpJ as found in
 /// [Efraimidis and Spirakis, 2005](https://doi.org/10.1016/j.ipl.2005.11.003).
@@ -390,10 +396,26 @@ where
     impl<N> Eq for Element<N> {}
 
     let mut candidates = BinaryHeap::with_capacity(amount.as_usize());
+    // Items with infinite weight take priority over items with finite weight,
+    // which the A-ExpJ keys cannot represent (any key would be -0.0). They are
+    // sampled uniformly among themselves using reservoir sampling
+    // (Algorithm R), tracked separately from `candidates`.
+    let mut infinite = Vec::new();
+    let mut n_inf: usize = 0;
     let mut index = N::zero();
     while index < length && candidates.len() < amount.as_usize() {
         let weight = weight(index.as_usize()).into();
-        if weight > 0.0 {
+        if weight == f64::INFINITY {
+            n_inf += 1;
+            if infinite.len() < amount.as_usize() {
+                infinite.push(index);
+            } else {
+                let k = rng.random_range(0..n_inf);
+                if k < amount.as_usize() {
+                    infinite[k] = index;
+                }
+            }
+        } else if weight > 0.0 {
             // We use the log of the key used in A-ExpJ to improve precision
             // for small weights:
             let key = rng.random::<f64>().ln() / weight;
@@ -409,7 +431,17 @@ where
         let mut x = rng.random::<f64>().ln() / candidates.peek().unwrap().key;
         while index < length {
             let weight = weight(index.as_usize()).into();
-            if weight > 0.0 {
+            if weight == f64::INFINITY {
+                n_inf += 1;
+                if infinite.len() < amount.as_usize() {
+                    infinite.push(index);
+                } else {
+                    let k = rng.random_range(0..n_inf);
+                    if k < amount.as_usize() {
+                        infinite[k] = index;
+                    }
+                }
+            } else if weight > 0.0 {
                 x -= weight;
                 if x <= 0.0 {
                     let min_candidate = candidates.pop().unwrap();
@@ -427,9 +459,13 @@ where
         }
     }
 
-    Ok(IndexVec::from(
-        candidates.iter().map(|elt| elt.index).collect(),
-    ))
+    // Infinite-weight items fill the result first; drop the smallest keys so
+    // that the best finite-weight candidates fill the remaining slots.
+    while candidates.len() > amount.as_usize() - infinite.len() {
+        candidates.pop();
+    }
+    infinite.extend(candidates.iter().map(|elt| elt.index));
+    Ok(IndexVec::from(infinite))
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using Floyd's
@@ -654,6 +690,61 @@ mod test {
 
         let r = sample_weighted(&mut seed_rng(423), 10, |i| i as f64, 10);
         assert_eq!(r.unwrap().len(), 9);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
+    fn test_sample_weighted_infinite() {
+        let mut rng = crate::test::rng(424);
+
+        // All weights are infinite: expect a uniform sample
+        let weights = [f64::INFINITY; 4];
+        let mut counts = [0i32; 4];
+        for _ in 0..1000 {
+            let v = sample_weighted(&mut rng, weights.len(), |i| weights[i], 2).unwrap();
+            assert_eq!(v.len(), 2);
+            for i in v {
+                counts[i] += 1;
+            }
+        }
+        // Each index is expected to be sampled with probability 2/4
+        for &count in &counts {
+            assert!((count - 500).abs() < 100, "counts: {counts:?}");
+        }
+
+        // Infinite weights dominate finite weights
+        let weights = [1.0, f64::INFINITY, f64::INFINITY, f64::INFINITY];
+        let mut counts = [0i32; 4];
+        for _ in 0..1000 {
+            let v = sample_weighted(&mut rng, weights.len(), |i| weights[i], 2).unwrap();
+            assert_eq!(v.len(), 2);
+            for i in v {
+                counts[i] += 1;
+            }
+        }
+        // Each infinite-weight index is expected to be sampled with
+        // probability 2/3; the finite-weight index should never be sampled.
+        assert_eq!(counts[0], 0, "counts: {counts:?}");
+        for &count in &counts[1..] {
+            assert!((count - 667).abs() < 100, "counts: {counts:?}");
+        }
+
+        // Same, but with the infinite weights appearing after `amount`
+        // finite weights
+        let weights = [1.0, 1.0, f64::INFINITY, f64::INFINITY, f64::INFINITY];
+        let mut counts = [0i32; 5];
+        for _ in 0..1000 {
+            let v = sample_weighted(&mut rng, weights.len(), |i| weights[i], 2).unwrap();
+            assert_eq!(v.len(), 2);
+            for i in v {
+                counts[i] += 1;
+            }
+        }
+        assert_eq!(&counts[..2], &[0, 0], "counts: {counts:?}");
+        for &count in &counts[2..] {
+            assert!((count - 667).abs() < 100, "counts: {counts:?}");
+        }
     }
 
     #[test]

@@ -8,6 +8,13 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [Unreleased]
+
+### Fixes
+- Fix `seq::index::sample_weighted` never sampling items after the first `amount` items with infinite weight; infinite-weight items are now sampled uniformly among themselves ([#1812])
+
+[#1812]: https://github.com/rust-random/rand/pull/1812
+
 ## [0.10.2] — 2026-07-02
 
 ### Fixes

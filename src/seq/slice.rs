@@ -819,6 +819,31 @@ mod test {
         let choices = [('a', -0.0), ('b', 1.0), ('c', 1.0)];
         let r = choices.sample_weighted(&mut rng, 2, |item| item.1);
         assert!(r.is_ok());
+
+        // Case 9: More +infinity weights than the requested amount
+        let choices = [
+            ('a', 1.0),
+            ('b', f64::INFINITY),
+            ('c', f64::INFINITY),
+            ('d', f64::INFINITY),
+        ];
+        let mut counts = [0; 4];
+        for _ in 0..100 {
+            let result = choices
+                .sample_weighted(&mut rng, 2, |item| item.1)
+                .unwrap()
+                .collect::<Vec<_>>();
+
+            assert_eq!(result.len(), 2);
+            assert!(!result.iter().any(|val| val.0 == 'a'));
+            for val in result {
+                counts[(val.0 as u8 - b'a') as usize] += 1;
+            }
+        }
+        // Each infinite-weight item should be sampled some of the time
+        for &count in &counts[1..] {
+            assert!(count > 0);
+        }
     }
 
     #[test]
