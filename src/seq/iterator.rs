@@ -205,6 +205,10 @@ pub trait IteratorRandom: Iterator + Sized {
         R: Rng + ?Sized,
     {
         let amount = buf.len();
+        if amount == 0 {
+            return 0;
+        }
+
         let mut len = 0;
         while len < amount {
             if let Some(elem) = self.next() {
@@ -245,6 +249,10 @@ pub trait IteratorRandom: Iterator + Sized {
     where
         R: Rng + ?Sized,
     {
+        if amount == 0 {
+            return Vec::new();
+        }
+
         let mut reservoir = Vec::from_iter(self.by_ref().take(amount));
 
         // Continue unless the iterator was exhausted
@@ -569,6 +577,31 @@ mod test {
                 .iter()
                 .all(|e| { **e >= min_val && **e <= max_val })
         );
+    }
+
+    #[test]
+    fn test_sample_amount_zero() {
+        // `sample` and `sample_fill` with `amount == 0` should neither
+        // consume the iterator nor advance the RNG.
+        let mut rng = crate::test::rng(413);
+
+        let mut consumed = 0;
+        let mut buf: [u32; 0] = [];
+        let len = (0..100)
+            .inspect(|_| consumed += 1)
+            .sample_fill(&mut rng, &mut buf);
+        assert_eq!(len, 0);
+        assert_eq!(consumed, 0);
+
+        #[cfg(feature = "alloc")]
+        {
+            let mut consumed = 0;
+            let samples = (0..100).inspect(|_| consumed += 1).sample(&mut rng, 0);
+            assert!(samples.is_empty());
+            assert_eq!(consumed, 0);
+        }
+
+        assert_eq!(rng.next_u32(), crate::test::rng(413).next_u32());
     }
 
     #[test]

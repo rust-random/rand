@@ -8,6 +8,13 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [Unreleased]
+
+### Fixes
+- Fix `IteratorRandom::sample` and `sample_fill` consuming the iterator and advancing the RNG when `amount == 0` ([#1810])
+
+[#1810]: https://github.com/rust-random/rand/pull/1810
+
 ## [0.10.2] — 2026-07-02
 
 ### Fixes
