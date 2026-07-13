@@ -801,14 +801,13 @@ mod test {
 
         // Case 6: +infinity weights
         let choices = [('a', f64::INFINITY), ('b', 1.0), ('c', 1.0)];
-        for _ in 0..100 {
-            let result = choices
-                .sample_weighted(&mut rng, 2, |item| item.1)
-                .unwrap()
-                .collect::<Vec<_>>();
-            assert_eq!(result.len(), 2);
-            assert!(result.iter().any(|val| val.0 == 'a'));
-        }
+        let r = choices.sample_weighted(&mut rng, 2, |item| item.1);
+        assert_eq!(r.unwrap_err(), WeightError::InvalidWeight);
+
+        // Case 6b: +infinity weights beyond the first `amount` items
+        let choices = [('a', 1.0), ('b', 1.0), ('c', f64::INFINITY)];
+        let r = choices.sample_weighted(&mut rng, 2, |item| item.1);
+        assert_eq!(r.unwrap_err(), WeightError::InvalidWeight);
 
         // Case 7: -infinity weights
         let choices = [('a', f64::NEG_INFINITY), ('b', 1.0), ('c', 1.0)];

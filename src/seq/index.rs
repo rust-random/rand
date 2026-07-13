@@ -295,7 +295,8 @@ where
 /// an alternative.
 ///
 /// Error cases:
-/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
+/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number, negative
+///     or infinite.
 ///
 /// This implementation uses `O(length + amount)` space and `O(length)` time.
 #[cfg(feature = "std")]
@@ -341,7 +342,8 @@ where
 /// It uses `O(length + amount)` space and `O(length)` time.
 ///
 /// Error cases:
-/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
+/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number, negative
+///     or infinite.
 #[cfg(feature = "std")]
 fn sample_efraimidis_spirakis<R, F, X, N>(
     rng: &mut R,
@@ -393,13 +395,17 @@ where
     let mut index = N::zero();
     while index < length && candidates.len() < amount.as_usize() {
         let weight = weight(index.as_usize()).into();
+        // An infinite weight has no A-ExpJ key: ln(r) / inf is -0.0 for every
+        // r, so such items cannot be ordered against each other or against
+        // finite weights.
+        if !weight.is_finite() || weight < 0.0 {
+            return Err(WeightError::InvalidWeight);
+        }
         if weight > 0.0 {
             // We use the log of the key used in A-ExpJ to improve precision
             // for small weights:
             let key = rng.random::<f64>().ln() / weight;
             candidates.push(Element { index, key });
-        } else if !(weight >= 0.0) {
-            return Err(WeightError::InvalidWeight);
         }
 
         index += N::one();
@@ -409,6 +415,9 @@ where
         let mut x = rng.random::<f64>().ln() / candidates.peek().unwrap().key;
         while index < length {
             let weight = weight(index.as_usize()).into();
+            if !weight.is_finite() || weight < 0.0 {
+                return Err(WeightError::InvalidWeight);
+            }
             if weight > 0.0 {
                 x -= weight;
                 if x <= 0.0 {
@@ -419,8 +428,6 @@ where
 
                     x = rng.random::<f64>().ln() / candidates.peek().unwrap().key;
                 }
-            } else if !(weight >= 0.0) {
-                return Err(WeightError::InvalidWeight);
             }
 
             index += N::one();

@@ -8,6 +8,13 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [Unreleased]
+
+### Changes
+- `seq::index::sample_weighted` (and the `sample_weighted` / `choose_multiple_weighted` slice methods) now reject infinite weights with `WeightError::InvalidWeight`, as they already do for NaN and negative weights ([#1813])
+
+[#1813]: https://github.com/rust-random/rand/pull/1813
+
 ## [0.10.2] — 2026-07-02
 
 ### Fixes
