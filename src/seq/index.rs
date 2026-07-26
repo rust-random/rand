@@ -295,8 +295,10 @@ where
 /// an alternative.
 ///
 /// Error cases:
-/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative
-///     or more than `amount` elements are non-finite.
+/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative,
+///     or when infinite weights fill the reservoir before all elements have
+///     been processed (this always happens with more than `amount` infinite
+///     weights, and may also happen with exactly `amount`, depending on order).
 ///
 /// This implementation uses `O(length + amount)` space and `O(length)` time.
 #[cfg(feature = "std")]
@@ -342,8 +344,10 @@ where
 /// It uses `O(length + amount)` space and `O(length)` time.
 ///
 /// Error cases:
-/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative
-///     or more than `amount` elements are non-finite.
+/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative,
+///     or when infinite weights fill the reservoir before all elements have
+///     been processed (this always happens with more than `amount` infinite
+///     weights, and may also happen with exactly `amount`, depending on order).
 #[cfg(feature = "std")]
 fn sample_efraimidis_spirakis<R, F, X, N>(
     rng: &mut R,
