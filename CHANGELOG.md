@@ -8,6 +8,13 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [Unreleased]
+
+### Fixes
+- Fix `WeightedIndex` panic when the sum of float weights is infinite; return `Error::Overflow` instead ([#1808])
+
+[#1808]: https://github.com/rust-random/rand/pull/1808
+
 ## [0.10.2] — 2026-07-02
 
 ### Fixes
