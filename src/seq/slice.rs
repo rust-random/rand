@@ -88,6 +88,7 @@ pub trait IndexedRandom: Index<usize> {
     /// Chooses `amount` elements from the slice at random, without repetition,
     /// and in random order. The returned iterator is appropriate both for
     /// collection into a `Vec` and filling an existing buffer (see example).
+    /// If `amount > self.len()`, all available elements are sampled.
     ///
     /// In case this API is not sufficiently flexible, use [`index::sample`].
     ///
@@ -126,7 +127,7 @@ pub trait IndexedRandom: Index<usize> {
     /// Uniformly sample a fixed-size array of distinct elements from self
     ///
     /// Chooses `N` elements from the slice at random, without repetition,
-    /// and in random order.
+    /// and in random order. Returns `None` if (and only if) `N > self.len()`.
     ///
     /// For slices, complexity is the same as [`index::sample_array`].
     ///
