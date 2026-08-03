@@ -12,7 +12,7 @@ use core::time::Duration;
 use criterion::measurement::WallTime;
 use criterion::{BenchmarkGroup, Criterion, black_box, criterion_group, criterion_main};
 use rand::prelude::*;
-use rand::rngs::SysRng;
+use rand::rngs::{SysRng, Xoshiro128PlusPlus, Xoshiro256PlusPlus};
 use rand_pcg::{Pcg32, Pcg64, Pcg64Dxsm, Pcg64Mcg};
 
 criterion_group!(
@@ -45,8 +45,8 @@ pub fn random_bytes(c: &mut Criterion) {
     bench(&mut g, "chacha8", rand::make_rng::<ChaCha8Rng>());
     bench(&mut g, "chacha12", rand::make_rng::<ChaCha12Rng>());
     bench(&mut g, "chacha20", rand::make_rng::<ChaCha20Rng>());
-    bench(&mut g, "std", rand::make_rng::<StdRng>());
-    bench(&mut g, "small", rand::make_rng::<SmallRng>());
+    bench(&mut g, "xoshiro128++", rand::make_rng::<Xoshiro128PlusPlus>());
+    bench(&mut g, "xoshiro256++", rand::make_rng::<Xoshiro256PlusPlus>());
     bench(&mut g, "os", UnwrapErr(SysRng));
     bench(&mut g, "thread", rand::rng());
 
@@ -73,8 +73,8 @@ pub fn random_u32(c: &mut Criterion) {
     bench(&mut g, "chacha8", rand::make_rng::<ChaCha8Rng>());
     bench(&mut g, "chacha12", rand::make_rng::<ChaCha12Rng>());
     bench(&mut g, "chacha20", rand::make_rng::<ChaCha20Rng>());
-    bench(&mut g, "std", rand::make_rng::<StdRng>());
-    bench(&mut g, "small", rand::make_rng::<SmallRng>());
+    bench(&mut g, "xoshiro128++", rand::make_rng::<Xoshiro128PlusPlus>());
+    bench(&mut g, "xoshiro256++", rand::make_rng::<Xoshiro256PlusPlus>());
     bench(&mut g, "os", UnwrapErr(SysRng));
     bench(&mut g, "thread", rand::rng());
 
@@ -101,8 +101,8 @@ pub fn random_u64(c: &mut Criterion) {
     bench(&mut g, "chacha8", rand::make_rng::<ChaCha8Rng>());
     bench(&mut g, "chacha12", rand::make_rng::<ChaCha12Rng>());
     bench(&mut g, "chacha20", rand::make_rng::<ChaCha20Rng>());
-    bench(&mut g, "std", rand::make_rng::<StdRng>());
-    bench(&mut g, "small", rand::make_rng::<SmallRng>());
+    bench(&mut g, "xoshiro128++", rand::make_rng::<Xoshiro128PlusPlus>());
+    bench(&mut g, "xoshiro256++", rand::make_rng::<Xoshiro256PlusPlus>());
     bench(&mut g, "os", UnwrapErr(SysRng));
     bench(&mut g, "thread", rand::rng());
 
@@ -128,8 +128,8 @@ pub fn init_gen(c: &mut Criterion) {
     bench::<ChaCha8Rng>(&mut g, "chacha8");
     bench::<ChaCha12Rng>(&mut g, "chacha12");
     bench::<ChaCha20Rng>(&mut g, "chacha20");
-    bench::<StdRng>(&mut g, "std");
-    bench::<SmallRng>(&mut g, "small");
+    bench::<Xoshiro128PlusPlus>(&mut g, "xoshiro128++");
+    bench::<Xoshiro256PlusPlus>(&mut g, "xoshiro256++");
 
     g.finish()
 }
@@ -154,8 +154,8 @@ pub fn init_from_u64(c: &mut Criterion) {
     bench::<ChaCha8Rng>(&mut g, "chacha8");
     bench::<ChaCha12Rng>(&mut g, "chacha12");
     bench::<ChaCha20Rng>(&mut g, "chacha20");
-    bench::<StdRng>(&mut g, "std");
-    bench::<SmallRng>(&mut g, "small");
+    bench::<Xoshiro128PlusPlus>(&mut g, "xoshiro128++");
+    bench::<Xoshiro256PlusPlus>(&mut g, "xoshiro256++");
 
     g.finish()
 }
@@ -183,8 +183,8 @@ pub fn init_from_seed(c: &mut Criterion) {
     bench::<ChaCha8Rng>(&mut g, "chacha8");
     bench::<ChaCha12Rng>(&mut g, "chacha12");
     bench::<ChaCha20Rng>(&mut g, "chacha20");
-    bench::<StdRng>(&mut g, "std");
-    bench::<SmallRng>(&mut g, "small");
+    bench::<Xoshiro128PlusPlus>(&mut g, "xoshiro128++");
+    bench::<Xoshiro256PlusPlus>(&mut g, "xoshiro256++");
 
     g.finish()
 }
