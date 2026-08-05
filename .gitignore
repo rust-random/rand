@@ -1,4 +1,5 @@
 target
+Cargo.lock
 rand_wasm_bindgen_test*.[tj]s
 rand_wasm_bindgen_test*.wasm
 /benches/Cargo.lock

@@ -24,28 +24,23 @@
 //! the square at random, calculate the fraction that fall within the circle,
 //! and multiply this fraction by 4.
 //!
-//! Note on determinism:
-//! It's slightly tricky to build a parallel simulation using Rayon
-//! which is both efficient *and* reproducible.
+//! ### A note on the use of explicit batching
 //!
-//! Rayon's ParallelIterator api does not guarantee that the work will be
-//! batched into identical batches on every run, so we can't simply use
-//! map_init to construct one RNG per Rayon batch.
+//! Rayon's `ParallelIterator::map_init` does not guarantee that the work will
+//! be batched identically on every run. By using the `map` function to
+//! construct fixed-size batches, each with a dedicated PRNG, we are able to
+//! achieve a deterministic result with little extra code.
 //!
-//! Instead, we do our own batching, so that a Rayon work item becomes a
-//! batch. Then we can fix our rng stream to the batched work item.
-//! Batching amortizes the cost of constructing the Rng from a fixed seed
-//! over BATCH_SIZE trials. Manually batching also turns out to be faster
-//! for the nondeterministic version of this program as well.
+//! Due to the small work-item size (the inner loop) batching also improves
+//! performance significantly due to the reduced scheduling overhead.
 
-use chacha20::ChaCha8Rng;
 use rand::distr::{Distribution, Uniform};
+use rand::rngs::Xoshiro256PlusPlus;
 use rand_core::SeedableRng;
 use rayon::prelude::*;
 
-static SEED: u64 = 0;
-static BATCH_SIZE: u64 = 10_000;
-static BATCHES: u64 = 1000;
+const BATCH_SIZE: u64 = 10_000;
+const BATCHES: u64 = 1000;
 
 fn main() {
     let range = Uniform::new(-1.0f64, 1.0).unwrap();
@@ -53,11 +48,10 @@ fn main() {
     let in_circle = (0..BATCHES)
         .into_par_iter()
         .map(|i| {
-            let mut rng = ChaCha8Rng::seed_from_u64(SEED);
-            // We chose ChaCha because it's fast, has suitable statistical properties for simulation,
-            // and because it supports this set_stream() api, which lets us choose a different stream
-            // per work item. ChaCha supports 2^64 independent streams.
-            rng.set_stream(i);
+            // If we didn't care for determinism we could use SmallRng instead:
+            // let mut rng: SmallRng = rand::make_rng();
+            let mut rng = Xoshiro256PlusPlus::seed_from_u64(i);
+
             let mut count = 0;
             for _ in 0..BATCH_SIZE {
                 let a = range.sample(&mut rng);
@@ -71,7 +65,7 @@ fn main() {
         .sum::<usize>();
 
     // assert this is deterministic
-    assert_eq!(in_circle, 7852263);
+    assert_eq!(in_circle, 7853568);
 
     // prints something close to 3.14159...
     println!(

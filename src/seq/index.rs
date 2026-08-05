@@ -295,7 +295,10 @@ where
 /// an alternative.
 ///
 /// Error cases:
-/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
+/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative,
+///     or when infinite weights fill the reservoir before all elements have
+///     been processed (this always happens with more than `amount` infinite
+///     weights, and may also happen with exactly `amount`, depending on order).
 ///
 /// This implementation uses `O(length + amount)` space and `O(length)` time.
 #[cfg(feature = "std")]
@@ -341,7 +344,10 @@ where
 /// It uses `O(length + amount)` space and `O(length)` time.
 ///
 /// Error cases:
-/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative.
+/// -   [`WeightError::InvalidWeight`] when a weight is not-a-number or negative,
+///     or when infinite weights fill the reservoir before all elements have
+///     been processed (this always happens with more than `amount` infinite
+///     weights, and may also happen with exactly `amount`, depending on order).
 #[cfg(feature = "std")]
 fn sample_efraimidis_spirakis<R, F, X, N>(
     rng: &mut R,
@@ -408,6 +414,10 @@ where
     if index < length {
         let mut x = rng.random::<f64>().ln() / candidates.peek().unwrap().key;
         while index < length {
+            if !x.is_finite() {
+                return Err(WeightError::InvalidWeight);
+            }
+
             let weight = weight(index.as_usize()).into();
             if weight > 0.0 {
                 x -= weight;
@@ -654,6 +664,30 @@ mod test {
 
         let r = sample_weighted(&mut seed_rng(423), 10, |i| i as f64, 10);
         assert_eq!(r.unwrap().len(), 9);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_sample_weighted_infinities() {
+        let mut rng = crate::test::rng(1351);
+
+        for _ in 0..10 {
+            let result = sample_weighted(&mut rng, 5, |i| 2.0 / (2.0 - (i as f64)).abs(), 2);
+            assert!(result.is_ok());
+            // Since one input has infinite weight, it must be selected:
+            assert!(result.unwrap().iter().any(|i| i == 2));
+        }
+
+        // Sampling from amount infinities should succeed
+        let weights = [1.0, 0.0, f32::INFINITY, 2.5, f32::INFINITY];
+        let result = sample_weighted(&mut rng, weights.len(), |i| weights[i], 2);
+        assert!(result.is_ok());
+        let mut results = result.unwrap().into_vec();
+        results.sort();
+        assert_eq!(results, [2, 4]);
+
+        // Sampling from too many infinities is an error
+        assert!(sample_weighted(&mut rng, weights.len(), |i| weights[i], 1).is_err());
     }
 
     #[test]
