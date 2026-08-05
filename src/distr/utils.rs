@@ -219,11 +219,11 @@ pub(crate) trait FloatSIMDUtils {
     fn all_finite(self) -> bool;
 
     type Mask;
-    fn gt_mask(self, other: Self) -> Self::Mask;
+    fn le_mask(self, other: Self) -> Self::Mask;
 
     // Decrease all lanes where the mask is `true` to the next lower value
     // representable by the floating-point type. At least one of the lanes
-    // must be set.
+    // must be set. Inputs may be non-finite but must not be NaN.
     fn decrease_masked(self, mask: Self::Mask) -> Self;
 
     // Convert from int value. Conversion is done while retaining the numerical
@@ -262,12 +262,12 @@ impl IntAsSIMD for u32 {}
 impl IntAsSIMD for u64 {}
 
 pub(crate) trait BoolAsSIMD: Sized {
-    fn any(self) -> bool;
+    fn all(self) -> bool;
 }
 
 impl BoolAsSIMD for bool {
     #[inline(always)]
-    fn any(self) -> bool {
+    fn all(self) -> bool {
         self
     }
 }
@@ -294,8 +294,8 @@ macro_rules! scalar_float_impl {
             }
 
             #[inline(always)]
-            fn gt_mask(self, other: Self) -> Self::Mask {
-                self > other
+            fn le_mask(self, other: Self) -> Self::Mask {
+                self <= other
             }
 
             #[inline(always)]
@@ -357,8 +357,8 @@ macro_rules! simd_impl {
             }
 
             #[inline(always)]
-            fn gt_mask(self, other: Self) -> Self::Mask {
-                self.simd_gt(other)
+            fn le_mask(self, other: Self) -> Self::Mask {
+                self.simd_le(other)
             }
 
             #[inline(always)]
@@ -401,3 +401,41 @@ macro_rules! simd_impl {
 simd_impl!(f32, u32);
 #[cfg(feature = "simd_support")]
 simd_impl!(f64, u64);
+
+#[cfg(test)]
+mod test {
+    use crate::distr::utils::FloatSIMDUtils;
+    #[cfg(feature = "simd_support")]
+    use std::simd::{Mask, Simd};
+
+    #[test]
+    fn decrease_masked() {
+        assert_eq!((-1.0 - f32::EPSILON).decrease_masked(true), -1.0);
+        assert_eq!((1.0 + f64::EPSILON).decrease_masked(true), 1.0);
+
+        #[cfg(feature = "simd_support")]
+        assert_eq!(
+            Simd::<f32, 4>::splat(1.0 + f32::EPSILON).decrease_masked(Mask::splat(true)),
+            Simd::splat(1.0)
+        );
+
+        #[cfg(feature = "simd_support")]
+        assert_eq!(
+            Simd::<f64, 2>::from_array([-1.0, -1.0 - f64::EPSILON])
+                .decrease_masked(Mask::from_array([false, true])),
+            Simd::splat(-1.0)
+        );
+    }
+
+    #[test]
+    fn decrease_masked_infinity() {
+        assert_eq!(f32::INFINITY.decrease_masked(true), f32::MAX);
+        assert_eq!((-f64::INFINITY).decrease_masked(true), -f64::MAX);
+
+        #[cfg(feature = "simd_support")]
+        assert_eq!(
+            Simd::<f32, 2>::splat(-f32::INFINITY).decrease_masked(Mask::splat(true)),
+            Simd::splat(-f32::MAX)
+        );
+    }
+}
