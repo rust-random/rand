@@ -57,6 +57,9 @@ macro_rules! uniform_float_impl {
             /// Construct, reducing `scale` as required to ensure that rounding
             /// can never yield values greater than `high`.
             ///
+            /// Requirements: `low` and `high` must be finite. `scale` may be
+            /// infinite but must not be NaN.
+            ///
             /// Note: though it may be tempting to use a variant of this method
             /// to ensure that samples from `[low, high)` are always strictly
             /// less than `high`, this approach may be very slow where
@@ -66,11 +69,11 @@ macro_rules! uniform_float_impl {
                 let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
 
                 loop {
-                    let mask = (scale * max_rand + low).gt_mask(high);
-                    if !mask.any() {
+                    let mask = (scale * max_rand + low).le_mask(high);
+                    if mask.all() {
                         break;
                     }
-                    scale = scale.decrease_masked(mask);
+                    scale = scale.decrease_masked(!mask);
                 }
 
                 debug_assert!(<$ty>::splat(0.0).all_le(scale));

@@ -220,6 +220,7 @@ pub(crate) trait FloatSIMDUtils {
 
     type Mask;
     fn gt_mask(self, other: Self) -> Self::Mask;
+    fn le_mask(self, other: Self) -> Self::Mask;
 
     // Decrease all lanes where the mask is `true` to the next lower value
     // representable by the floating-point type. At least one of the lanes
@@ -262,12 +263,12 @@ impl IntAsSIMD for u32 {}
 impl IntAsSIMD for u64 {}
 
 pub(crate) trait BoolAsSIMD: Sized {
-    fn any(self) -> bool;
+    fn all(self) -> bool;
 }
 
 impl BoolAsSIMD for bool {
     #[inline(always)]
-    fn any(self) -> bool {
+    fn all(self) -> bool {
         self
     }
 }
@@ -296,6 +297,11 @@ macro_rules! scalar_float_impl {
             #[inline(always)]
             fn gt_mask(self, other: Self) -> Self::Mask {
                 self > other
+            }
+
+            #[inline(always)]
+            fn le_mask(self, other: Self) -> Self::Mask {
+                self <= other
             }
 
             #[inline(always)]
@@ -359,6 +365,11 @@ macro_rules! simd_impl {
             #[inline(always)]
             fn gt_mask(self, other: Self) -> Self::Mask {
                 self.simd_gt(other)
+            }
+
+            #[inline(always)]
+            fn le_mask(self, other: Self) -> Self::Mask {
+                self.simd_le(other)
             }
 
             #[inline(always)]
