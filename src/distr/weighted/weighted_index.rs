@@ -468,7 +468,10 @@ mod test {
                 4
             );
         }
+    }
 
+    #[test]
+    fn weighted_index_new_errors() {
         assert_eq!(
             WeightedIndex::new(&[10][0..0]).unwrap_err(),
             Error::InvalidInput
@@ -486,6 +489,10 @@ mod test {
             Error::InvalidWeight
         );
         assert_eq!(WeightedIndex::new([-10]).unwrap_err(), Error::InvalidWeight);
+        assert_eq!(
+            WeightedIndex::new([f64::INFINITY]).unwrap_err(),
+            Error::Overflow
+        );
     }
 
     #[test]
@@ -515,6 +522,15 @@ mod test {
             assert_eq!(distr.total_weight, expected_distr.total_weight);
             assert_eq!(distr.cumulative_weights, expected_distr.cumulative_weights);
         }
+    }
+
+    #[test]
+    fn weighted_index_update_errors() {
+        let mut distr = WeightedIndex::new([1.0, 10.0]).unwrap();
+        assert_eq!(
+            distr.update_weights(&[(0, &f32::INFINITY)]).unwrap_err(),
+            Error::Overflow
+        );
     }
 
     #[test]
