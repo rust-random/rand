@@ -66,7 +66,10 @@ macro_rules! uniform_float_impl {
                 let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
 
                 loop {
-                    let mask = (scale * max_rand + low).gt_mask(high);
+                    // `not_le_mask` rather than `gt_mask` so that a non-finite
+                    // product (which compares `false` under `>`) is also
+                    // reduced instead of being silently accepted.
+                    let mask = (scale * max_rand + low).not_le_mask(high);
                     if !mask.any() {
                         break;
                     }
@@ -132,15 +135,11 @@ macro_rules! uniform_float_impl {
                 }
 
                 let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
-                let mut scale = range / max_rand;
-                if !scale.all_finite() {
-                    // The division above may overflow to infinity even though
-                    // `range` is finite (e.g. `low = 0.0`, `high = f64::MAX`).
-                    // Replace infinite lanes with the largest finite value;
-                    // `new_bounded` reduces `scale` as required to ensure that
-                    // samples can never exceed `high`.
-                    scale = scale.decrease_masked(scale.gt_mask(<$ty>::splat($f_scalar::MAX)));
-                }
+                // This division may overflow to infinity even where `range` is
+                // finite (e.g. `low = 0.0`, `high = f64::MAX`). `new_bounded`
+                // reduces `scale` until samples cannot exceed `high`, which
+                // handles the infinite case in a single step.
+                let scale = range / max_rand;
 
                 Ok(Self::new_bounded(low, high, scale))
             }
