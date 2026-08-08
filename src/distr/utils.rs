@@ -219,7 +219,11 @@ pub(crate) trait FloatSIMDUtils {
     fn all_finite(self) -> bool;
 
     type Mask;
-    fn gt_mask(self, other: Self) -> Self::Mask;
+
+    // The negation of `<=`, which (unlike `>`) is also `true` for lanes which
+    // are not-a-number. This lets callers treat NaN like an out-of-bounds
+    // value rather than silently accepting it.
+    fn not_le_mask(self, other: Self) -> Self::Mask;
 
     // Decrease all lanes where the mask is `true` to the next lower value
     // representable by the floating-point type. At least one of the lanes
@@ -294,8 +298,8 @@ macro_rules! scalar_float_impl {
             }
 
             #[inline(always)]
-            fn gt_mask(self, other: Self) -> Self::Mask {
-                self > other
+            fn not_le_mask(self, other: Self) -> Self::Mask {
+                !(self <= other)
             }
 
             #[inline(always)]
@@ -357,8 +361,8 @@ macro_rules! simd_impl {
             }
 
             #[inline(always)]
-            fn gt_mask(self, other: Self) -> Self::Mask {
-                self.simd_gt(other)
+            fn not_le_mask(self, other: Self) -> Self::Mask {
+                !self.simd_le(other)
             }
 
             #[inline(always)]

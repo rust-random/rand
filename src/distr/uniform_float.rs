@@ -66,7 +66,10 @@ macro_rules! uniform_float_impl {
                 let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
 
                 loop {
-                    let mask = (scale * max_rand + low).gt_mask(high);
+                    // `not_le_mask` rather than `gt_mask` so that a non-finite
+                    // product (which compares `false` under `>`) is also
+                    // reduced instead of being silently accepted.
+                    let mask = (scale * max_rand + low).not_le_mask(high);
                     if !mask.any() {
                         break;
                     }
@@ -126,11 +129,17 @@ macro_rules! uniform_float_impl {
                     return Err(Error::EmptyRange);
                 }
 
-                let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
-                let scale = (high - low) / max_rand;
-                if !scale.all_finite() {
+                let range = high - low;
+                if !range.all_finite() {
                     return Err(Error::NonFinite);
                 }
+
+                let max_rand = <$ty>::splat(1.0 as $f_scalar - $f_scalar::EPSILON);
+                // This division may overflow to infinity even where `range` is
+                // finite (e.g. `low = 0.0`, `high = f64::MAX`). `new_bounded`
+                // reduces `scale` until samples cannot exceed `high`, which
+                // handles the infinite case in a single step.
+                let scale = range / max_rand;
 
                 Ok(Self::new_bounded(low, high, scale))
             }
@@ -238,6 +247,8 @@ mod tests {
                     (-<$f_scalar>::from_bits(7), -0.0),
                     (0.1 * $f_scalar::MAX, $f_scalar::MAX),
                     (-$f_scalar::MAX * 0.2, $f_scalar::MAX * 0.7),
+                    (0.0, $f_scalar::MAX),
+                    (-$f_scalar::MAX, 0.0),
                 ];
                 for &(low_scalar, high_scalar) in v.iter() {
                     for lane in 0..<$ty>::LEN {
@@ -360,6 +371,10 @@ mod tests {
     #[test]
     fn test_float_overflow() {
         assert_eq!(Uniform::try_from(f64::MIN..f64::MAX), Err(Error::NonFinite));
+        assert_eq!(
+            Uniform::try_from(f64::MIN..=f64::MAX),
+            Err(Error::NonFinite)
+        );
     }
 
     #[test]
