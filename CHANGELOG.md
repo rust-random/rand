@@ -8,6 +8,12 @@ A [separate changelog is kept for rand_core](rand_core/CHANGELOG.md).
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [0.8.8] - 2026-08-25
+### Fixes
+- Fix build for `--no-default-features --features serde1` ([#1825])
+
+[#1825]: https://github.com/rust-random/rand/pull/1825
+
 ## [0.8.7] - 2026-07-02
 ### Fixes
 - Fix possible memory safety violation due to deserialization of `UniformChar` from bad source ([#1804])
