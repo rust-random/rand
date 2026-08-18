@@ -77,7 +77,7 @@ jobs:
           cargo test --target ${{ matrix.target }} --all-features
           cargo test --target ${{ matrix.target }} --benches --features=nightly
           cargo test --target ${{ matrix.target }} --manifest-path rand_distr/Cargo.toml --benches
-          cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features min_const_gen
+          cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features min_const_gen,serde1
       - name: Use Cargo.lock.msrv (1.36)
         if: ${{ matrix.toolchain == '1.36.0' }}
         run: |
@@ -86,7 +86,7 @@ jobs:
         run: |
           cargo test --target ${{ matrix.target }} --lib --tests --no-default-features
           cargo build --target ${{ matrix.target }} --no-default-features --features alloc,getrandom,small_rng
-          cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features=alloc,getrandom,small_rng
+          cargo test --target ${{ matrix.target }} --lib --tests --no-default-features --features=alloc,getrandom,small_rng,serde1
           cargo test --target ${{ matrix.target }} --examples
       - name: Test rand (all stable features, non-MSRV)
         if: ${{ matrix.toolchain != '1.36.0' }}
