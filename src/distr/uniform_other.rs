@@ -43,7 +43,18 @@ where
     D: serde::Deserializer<'de>,
 {
     let sampler = <UniformInt<u32> as serde::Deserialize>::deserialize(d)?;
-    if sampler.max() > char::MAX as u32 - CHAR_SURROGATE_LEN {
+    // `range == 0` is `UniformInt`'s full-u32-range marker. That is a valid
+    // state for `Uniform<u32>`, but a char sampler is always built from a
+    // bounded range, so here it only comes from a crafted payload that would
+    // sample arbitrary u32 (non-char) values. Reject it, together with any
+    // (low, range) whose inclusive max overflows or leaves the char range:
+    // those clear a wrapping `low + range - 1` and later panic in `sample`.
+    let in_char_range = sampler
+        .range
+        .checked_sub(1)
+        .and_then(|r| r.checked_add(sampler.low))
+        .is_some_and(|max| max <= char::MAX as u32 - CHAR_SURROGATE_LEN);
+    if !in_char_range {
         return Err(serde::de::Error::custom(
             "bad sampler range for UniformChar",
         ));
@@ -328,6 +339,29 @@ mod tests {
                 alloc::string::ToString::to_string(&err),
                 "bad sampler range for UniformChar at line 1 column 51"
             );
+        }
+
+        // The `range == 0` full-range marker and payloads whose inclusive
+        // `low + range - 1` wraps also clear the old guard and then sample
+        // non-char code points, so they must be rejected too. See #1827.
+        for json in [
+            r#"{"sampler":{"low":5,"range":0,"thresh":0}}"#,
+            r#"{"sampler":{"low":4294967280,"range":32,"thresh":0}}"#,
+        ] {
+            assert!(serde_json::from_str::<Uniform<char>>(json).is_err());
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn test_char_deser_roundtrip() {
+        let mut rng = crate::test::rng(892);
+        let distr = Uniform::new_inclusive('a', 'z').unwrap();
+        let de_distr: Uniform<char> =
+            serde_json::from_str(&serde_json::to_string(&distr).unwrap()).unwrap();
+        for _ in 0..100 {
+            let c = de_distr.sample(&mut rng);
+            assert!(c.is_ascii_lowercase());
         }
     }
 
