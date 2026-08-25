@@ -57,8 +57,8 @@ macro_rules! uniform_float_impl {
             /// Construct, reducing `scale` as required to ensure that rounding
             /// can never yield values greater than `high`.
             ///
-            /// Requirements: `low` and `high` must be finite. `scale` may be
-            /// infinite but must not be NaN.
+            /// Requirements: `low` and `high` must be finite with `low <= high`.
+            /// `scale` must be non-negative, may be positive infinity but must not be NaN.
             ///
             /// Note: though it may be tempting to use a variant of this method
             /// to ensure that samples from `[low, high)` are always strictly

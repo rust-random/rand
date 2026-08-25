@@ -221,9 +221,10 @@ pub(crate) trait FloatSIMDUtils {
     type Mask;
     fn le_mask(self, other: Self) -> Self::Mask;
 
-    // Decrease all lanes where the mask is `true` to the next lower value
-    // representable by the floating-point type. At least one of the lanes
-    // must be set. Inputs may be non-finite but must not be NaN.
+    // Decrease in absolute terms (i.e. towards zero) all lanes where the mask
+    // is `true` to the next lower value representable by the floating-point
+    // type. At least one of the lanes must be set. Inputs may be non-finite but
+    // must not be zero or NaN.
     fn decrease_masked(self, mask: Self::Mask) -> Self;
 
     // Convert from int value. Conversion is done while retaining the numerical
