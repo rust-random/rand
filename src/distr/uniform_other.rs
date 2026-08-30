@@ -332,6 +332,10 @@ mod tests {
 
         do_test(r#"{"sampler":{"low":5,"range":0,"thresh":0}}"#, 42);
         do_test(r#"{"sampler":{"low":4294967200,"range":0,"thresh":0}}"#, 51);
+        do_test(
+            r#"{"sampler":{"low":4294967280,"range":32,"thresh":0}}"#,
+            52,
+        );
     }
 
     #[test]

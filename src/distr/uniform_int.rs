@@ -82,7 +82,13 @@ macro_rules! uniform_int_impl {
                 if self.range == 0 {
                     return <$ty>::MAX;
                 } else {
-                    self.range.wrapping_sub(1).wrapping_add(self.low)
+                    // The checked_add op should not overflow with a correctly
+                    // constructed sampler, but it is possible to construct a
+                    // sampler that will overflow using serde.
+                    // In this case some sample value may yield MAX.
+                    self.low
+                        .checked_add(self.range.wrapping_sub(1))
+                        .unwrap_or(<$ty>::MAX)
                 }
             }
         }
