@@ -79,7 +79,11 @@ macro_rules! uniform_int_impl {
             #[allow(unused)]
             #[inline]
             pub(crate) fn max(&self) -> $ty {
-                self.range.wrapping_sub(1).wrapping_add(self.low)
+                if self.range == 0 {
+                    return <$ty>::MAX;
+                } else {
+                    self.range.wrapping_sub(1).wrapping_add(self.low)
+                }
             }
         }
 

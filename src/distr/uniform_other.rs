@@ -330,7 +330,7 @@ mod tests {
             }
         }
 
-        do_test(r#"{"sampler":{"low":5,"range":0,"thresh":0}}"#, 0);
+        do_test(r#"{"sampler":{"low":5,"range":0,"thresh":0}}"#, 42);
         do_test(r#"{"sampler":{"low":4294967200,"range":0,"thresh":0}}"#, 51);
     }
 
