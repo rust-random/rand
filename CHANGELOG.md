@@ -13,9 +13,11 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 ### Fixes
 - Fix `WeightedIndex` panic when the sum of float weights is infinite; return `Error::Overflow` instead ([#1808])
 - Fix spurious `Error::NonFinite` from `Uniform::new_inclusive` on large finite float ranges such as `0.0..=f64::MAX` ([#1821])
+- Fix possible panic due to sampling a deserialized `Uniform<char>` ([#1831])
 
 [#1808]: https://github.com/rust-random/rand/pull/1808
 [#1821]: https://github.com/rust-random/rand/pull/1821
+[#1831]: https://github.com/rust-random/rand/pull/1831
 
 ## [0.10.2] — 2026-07-02
 
