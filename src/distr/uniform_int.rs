@@ -79,7 +79,15 @@ macro_rules! uniform_int_impl {
             #[allow(unused)]
             #[inline]
             pub(crate) fn max(&self) -> $ty {
-                self.range.wrapping_sub(1).wrapping_add(self.low)
+                if self.range == 0 {
+                    return <$ty>::MAX;
+                } else {
+                    // Wrapping through <$ty>::MIN is possible with a valid
+                    // sampler over signed types. Wrapping through <$ty>::MAX is
+                    // possible with a bad sampler (constructible using serde).
+                    let max = self.low.wrapping_add(self.range.wrapping_sub(1));
+                    if max < self.low { <$ty>::MAX } else { max }
+                }
             }
         }
 
