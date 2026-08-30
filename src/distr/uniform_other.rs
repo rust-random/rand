@@ -316,19 +316,22 @@ mod tests {
     #[test]
     #[cfg(feature = "serde")]
     fn test_char_bad_deser() {
-        let json = r#"{"sampler":{"low":4294967200,"range":0,"thresh":0}}"#;
-        let result = serde_json::from_str::<Uniform<char>>(json);
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert_eq!(err.classify(), serde_json::error::Category::Data);
+        fn do_test(json: &str, col: usize) {
+            let result = serde_json::from_str::<Uniform<char>>(json);
+            assert!(result.is_err());
+            let err = result.unwrap_err();
+            assert_eq!(err.classify(), serde_json::error::Category::Data);
 
-        #[cfg(feature = "alloc")]
-        {
-            assert_eq!(
-                alloc::string::ToString::to_string(&err),
-                "bad sampler range for UniformChar at line 1 column 51"
-            );
+            #[cfg(feature = "alloc")]
+            {
+                let msg =
+                    alloc::format!("bad sampler range for UniformChar at line 1 column {col}");
+                assert_eq!(alloc::string::ToString::to_string(&err), msg);
+            }
         }
+
+        do_test(r#"{"sampler":{"low":5,"range":0,"thresh":0}}"#, 0);
+        do_test(r#"{"sampler":{"low":4294967200,"range":0,"thresh":0}}"#, 51);
     }
 
     #[test]
