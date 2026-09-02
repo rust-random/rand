@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.1.1] - 2026-09-02
+- Fix: use `std::mem::transmute` instead of unstable intrinsic ([#1836])
+
+[#1833]: https://github.com/rust-random/rand/pull/1836
+
 ## [0.1.0] - TODO - date
 (Split out of the Rand crate, changes here are relative to rand 0.4.2)
 - `RngCore` and `SeedableRng` are now part of `rand_core`. (#288)

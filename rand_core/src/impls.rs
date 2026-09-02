@@ -20,11 +20,10 @@
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
 
 use core::convert::AsRef;
-use core::intrinsics::transmute;
 use core::ptr::copy_nonoverlapping;
 use core::{fmt, slice};
 use core::cmp::min;
-use core::mem::size_of;
+use core::mem::{size_of, transmute};
 use {RngCore, BlockRngCore, CryptoRng, SeedableRng, Error};
 
 #[cfg(feature="serde1")] use serde::{Serialize, Deserialize};
