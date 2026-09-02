@@ -17,11 +17,10 @@
 //! to/from byte sequences, and since its purpose is reproducibility,
 //! non-reproducible sources (e.g. `OsRng`) need not bother with it.
 
-use core::intrinsics::transmute;
 use core::ptr::copy_nonoverlapping;
 use core::slice;
 use core::cmp::min;
-use core::mem::size_of;
+use core::mem::{size_of, transmute};
 use RngCore;
 
 
