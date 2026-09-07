@@ -10,6 +10,9 @@ You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.
 
 ## [Unreleased]
 
+### Changes
+- Report exact remaining lengths from `WeightedIndex::weights()` and reduce overhead when reading weights
+
 ### Fixes
 - Fix `WeightedIndex` panic when the sum of float weights is infinite; return `Error::Overflow` instead ([#1808])
 
