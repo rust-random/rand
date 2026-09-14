@@ -101,8 +101,6 @@ where
                 });
             }
             let mut iter = distr.weights();
-            // Consume half the weights before timing (nth also consumes its returned item).
-            // A skip adapter would defer that work until collection.
             let _ = iter.nth(length / 2 - 1);
             group.bench_function(BenchmarkId::new("collect_remaining", length / 2), |b| {
                 b.iter(|| black_box(iter.clone()).collect::<Vec<_>>())
