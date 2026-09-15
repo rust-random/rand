@@ -21,7 +21,7 @@
 //!
 //! // Ranged sampling:
 //! use std::f32::consts::PI;
-//! println!("Angle: {} degrees", rand::random_range(-PI..PI));
+//! println!("Angle: {} radians", rand::random_range(-PI..PI));
 //! ```
 //!
 //! See also [The Book: Quick Start](https://rust-random.github.io/book/quick-start.html).
