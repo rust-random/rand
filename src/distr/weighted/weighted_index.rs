@@ -289,6 +289,16 @@ where
             }
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.weighted_index.cumulative_weights.len() + 1 - self.index;
+        (remaining, Some(remaining))
+    }
+}
+
+impl<X> ExactSizeIterator for WeightedIndexIter<'_, X> where
+    X: for<'b> core::ops::SubAssign<&'b X> + SampleUniform + PartialOrd + Clone
+{
 }
 
 impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
@@ -312,12 +322,12 @@ impl<X: SampleUniform + PartialOrd + Clone> WeightedIndex<X> {
     where
         X: for<'a> core::ops::SubAssign<&'a X>,
     {
-        use core::cmp::Ordering::*;
-
-        let mut weight = match index.cmp(&self.cumulative_weights.len()) {
-            Less => self.cumulative_weights[index].clone(),
-            Equal => self.total_weight.clone(),
-            Greater => return None,
+        let mut weight = if let Some(weight) = self.cumulative_weights.get(index) {
+            weight.clone()
+        } else if index == self.cumulative_weights.len() {
+            self.total_weight.clone()
+        } else {
+            return None;
         };
 
         if index > 0 {
@@ -584,6 +594,7 @@ mod test {
                 assert_eq!(distr.weight(i), Some(*weight));
             }
             assert_eq!(distr.weight(weights.len()), None);
+            assert_eq!(distr.weight(usize::MAX), None);
         }
     }
 
@@ -599,6 +610,20 @@ mod test {
         for weights in data.iter() {
             let distr = WeightedIndex::new(weights.to_vec()).unwrap();
             assert_eq!(distr.weights().collect::<Vec<_>>(), weights.to_vec());
+
+            let mut iter = distr.weights();
+            for (index, expected) in weights.iter().enumerate() {
+                let remaining = weights.len() - index;
+                assert_eq!(iter.size_hint(), (remaining, Some(remaining)));
+                assert_eq!(iter.len(), remaining);
+                assert_eq!(iter.clone().collect::<Vec<_>>(), weights[index..]);
+                assert_eq!(iter.next(), Some(*expected));
+            }
+            for _ in 0..2 {
+                assert_eq!(iter.size_hint(), (0, Some(0)));
+                assert_eq!(iter.len(), 0);
+                assert_eq!(iter.next(), None);
+            }
         }
     }
 

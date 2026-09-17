@@ -6,8 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use criterion::{Criterion, black_box, criterion_group, criterion_main};
-use rand::distr::weighted::WeightedIndex;
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
+use rand::distr::uniform::SampleUniform;
+use rand::distr::weighted::{Weight, WeightedIndex};
 use rand::prelude::*;
 use rand::seq::index::sample_weighted;
 
@@ -19,6 +20,9 @@ criterion_group!(
 criterion_main!(benches);
 
 pub fn bench(c: &mut Criterion) {
+    bench_weight_iteration::<u32>(c, "u32");
+    bench_weight_iteration::<f64>(c, "f64");
+
     c.bench_function("weighted_index_creation", |b| {
         let mut rng = rand::rng();
         let weights = black_box([1u32, 2, 4, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 7]);
@@ -57,4 +61,57 @@ pub fn bench(c: &mut Criterion) {
             b.iter(|| sample_weighted(&mut rng, length, |idx| (1 + (idx % 100)) as u32, amount))
         });
     }
+}
+
+fn bench_weight_iteration<X>(c: &mut Criterion, name: &str)
+where
+    X: SampleUniform + Weight + PartialOrd + From<u32> + core::iter::Sum + for<'a> core::ops::SubAssign<&'a X>,
+{
+    let mut group = c.benchmark_group(format!("weighted_iter/{name}"));
+    for length in [1usize, 4, 16, 64, 256, 1024, 16384] {
+        let distr = WeightedIndex::new((0..length).map(|i| X::from((1 + i % 10) as u32))).unwrap();
+        group.bench_function(BenchmarkId::new("collect", length), |b| {
+            b.iter(|| black_box(&distr).weights().collect::<Vec<_>>())
+        });
+
+        // Control cases: neither summing nor reusing capacity needs a size hint.
+        if [4, 1024].contains(&length) {
+            group
+                .bench_function(BenchmarkId::new("sum", length), |b| b.iter(|| black_box(&distr).weights().sum::<X>()));
+            let mut buffer = Vec::with_capacity(length);
+            group.bench_function(BenchmarkId::new("reuse", length), |b| {
+                b.iter(|| {
+                    buffer.clear();
+                    buffer.extend(black_box(&distr).weights());
+                    black_box(buffer.as_slice());
+                })
+            });
+        }
+
+        if length == 1024 {
+            for (position, index) in [
+                ("first", 0),
+                ("middle", length / 2),
+                ("last", length - 1),
+                ("past_end", length),
+                ("max_index", usize::MAX),
+            ] {
+                group.bench_function(BenchmarkId::new("weight", position), |b| {
+                    b.iter(|| black_box(&distr).weight(black_box(index)))
+                });
+            }
+            let mut iter = distr.weights();
+            let _ = iter.nth(length / 2 - 1);
+            group.bench_function(BenchmarkId::new("collect_remaining", length / 2), |b| {
+                b.iter(|| black_box(iter.clone()).collect::<Vec<_>>())
+            });
+        }
+    }
+    let distr = WeightedIndex::new([X::from(1)]).unwrap();
+    let mut exhausted = distr.weights();
+    let _ = exhausted.next();
+    group.bench_function(BenchmarkId::new("collect", 0), |b| {
+        b.iter(|| black_box(exhausted.clone()).collect::<Vec<_>>())
+    });
+    group.finish();
 }
