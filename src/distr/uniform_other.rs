@@ -129,11 +129,60 @@ impl crate::distr::SampleString for Uniform<char> {
 /// Unless you are implementing [`UniformSampler`] for your own types, this type
 /// should not be used directly, use [`Uniform`] instead.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct UniformDuration {
     mode: UniformDurationMode,
     offset: u32,
 }
+
+/// `sample` feeds the sampler state straight to `Duration::new`, which panics
+/// on overflow, so reject any state which cannot have come from `new_inclusive`
+/// in the same way `UniformChar` rejects a bad `UniformInt<u32>`.
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for UniformDuration {
+    fn deserialize<D>(d: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(rename = "UniformDuration")]
+        struct Fields {
+            mode: UniformDurationMode,
+            offset: u32,
+        }
+
+        let Fields { mode, offset } = Fields::deserialize(d)?;
+
+        let valid = offset < NANOS_PER_SEC as u32
+            && match mode {
+                UniformDurationMode::Small { secs, nanos } => {
+                    let carry = u64::from(nanos.0.max()) / NANOS_PER_SEC;
+                    secs.checked_add(carry).is_some()
+                }
+                UniformDurationMode::Medium { .. } => true,
+                UniformDurationMode::Large {
+                    max_secs,
+                    max_nanos,
+                    secs,
+                } => {
+                    let carry = (u64::from(max_nanos) + u64::from(offset)) / NANOS_PER_SEC;
+                    secs.0.max() <= max_secs && max_secs.checked_add(carry).is_some()
+                }
+            };
+
+        if !valid {
+            return Err(serde::de::Error::custom(
+                "bad sampler state for UniformDuration",
+            ));
+        }
+
+        Ok(UniformDuration { mode, offset })
+    }
+}
+
+/// Nanoseconds in one second
+#[cfg(feature = "serde")]
+const NANOS_PER_SEC: u64 = 1_000_000_000;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -335,6 +384,37 @@ mod tests {
         do_test(
             r#"{"sampler":{"low":4294967280,"range":32,"thresh":0}}"#,
             52,
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn test_duration_bad_deser() {
+        fn do_test(json: &str) {
+            let result = serde_json::from_str::<UniformDuration>(json);
+            assert!(result.is_err());
+            let err = result.unwrap_err();
+            assert_eq!(err.classify(), serde_json::error::Category::Data);
+
+            #[cfg(feature = "alloc")]
+            {
+                let msg = "bad sampler state for UniformDuration";
+                assert!(alloc::string::ToString::to_string(&err).starts_with(msg));
+            }
+        }
+
+        // Small: sampled nanos carry a second into `secs`, overflowing it
+        do_test(
+            r#"{"mode":{"Small":{"secs":18446744073709551615,"nanos":{"low":1000000000,"range":1,"thresh":0}}},"offset":0}"#,
+        );
+        // Large: the seconds sampler can exceed `max_secs`, so the rejection
+        // test in `sample` never fires and `secs + 1` overflows
+        do_test(
+            r#"{"mode":{"Large":{"max_secs":0,"max_nanos":999999999,"secs":{"low":18446744073709551615,"range":0,"thresh":0}}},"offset":999999999}"#,
+        );
+        // Large: `offset` is not a valid subsecond nanosecond count
+        do_test(
+            r#"{"mode":{"Large":{"max_secs":10,"max_nanos":999999999,"secs":{"low":0,"range":11,"thresh":0}}},"offset":4294967295}"#,
         );
     }
 
