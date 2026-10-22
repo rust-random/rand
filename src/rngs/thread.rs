@@ -86,7 +86,8 @@ impl ReseedingCore {
 /// purpose. The design criteria for `ThreadRng` are as follows:
 ///
 /// - Automatic seeding via [`SysRng`] and after every 64 kB of output.
-///   Limitation: there is no automatic reseeding on process fork (see [below](#fork)).
+///   Limitation: there is no automatic reseeding on process fork or virtual
+///   machine snapshot/restore (see [below](#special-cases)).
 /// - A rigorously analyzed, unpredictable (cryptographic) pseudo-random generator
 ///   (see [the book on security](https://rust-random.github.io/book/guide-rngs.html#security)).
 ///   The currently selected algorithm is ChaCha (12-rounds).
@@ -103,7 +104,9 @@ impl ReseedingCore {
 /// We leave it to the user to determine whether this generator meets their
 /// security requirements. For an alternative, see [`SysRng`].
 ///
-/// # Forks and interrupts
+/// # Special cases
+///
+/// ## Fork
 ///
 /// `ThreadRng` is not automatically reseeded on fork. It is recommended to
 /// explicitly call [`ThreadRng::reseed`] immediately after a fork, for example:
@@ -117,9 +120,25 @@ impl ReseedingCore {
 /// }
 /// ```
 ///
+/// (Note that this relies on the assumption that the new process only has a
+/// single thread; see also [`ThreadRng::reseed`] documentation.)
+///
+/// ## Interrupt
+///
 /// Methods on `ThreadRng` are not reentrant-safe and thus should not be called
 /// from an interrupt (e.g. a fork handler) unless it can be guaranteed that no
 /// other method on the same `ThreadRng` is currently executing.
+///
+/// ## Snapshot and restore
+///
+/// Checkpoint-and-restore of a process (e.g. via CRIU) or a virtual machine
+/// allows duplication of an process. [`ThreadRng`] state is not automatically
+/// reseeded in this case.
+///
+/// Since it is not safe to assume that a snapshotted process has only a single
+/// thread, it may be difficult to reseed all [`ThreadRng`] instances using
+/// [`ThreadRng::reseed`]. We therefore recommend usage of [`SysRng`] instead
+/// for all secret generation where VM snapshots may be used.
 ///
 /// # Panics
 ///
@@ -135,9 +154,12 @@ pub struct ThreadRng {
 }
 
 impl ThreadRng {
-    /// Immediately reseed the generator
+    /// Immediately reseed the generator on the current thread
     ///
     /// This discards any remaining random data in the cache.
+    ///
+    /// Note that [`ThreadRng`] has one instance per thread and this method only
+    /// affects the instance on the current thread.
     pub fn reseed(&mut self) -> Result<(), SysError> {
         // SAFETY: We must make sure to stop using `rng` before anyone else
         // creates another mutable reference
