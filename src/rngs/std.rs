@@ -8,25 +8,30 @@
 
 //! The standard RNG
 
+use chacha20::ChaCha12Rng;
 use core::convert::Infallible;
 use rand_core::{SeedableRng, TryCryptoRng, TryRng};
 
-use chacha20::ChaCha12Rng as Rng;
-
 /// A strong, fast (amortized), non-portable RNG
 ///
-/// This is the "standard" RNG, a generator with the following properties:
+/// This is the "standard" strong PRNG:
 ///
-/// - Non-[portable]: any future library version may replace the algorithm
-///   and results may be platform-dependent.
-///   (For a portable version, use the [chacha20] crate directly.)
-/// - [CSPRNG]: statistically good quality of randomness and [unpredictable]
-/// - Fast ([amortized](https://en.wikipedia.org/wiki/Amortized_analysis)):
-///   the RNG is fast for bulk generation, but the cost of method calls is not
-///   consistent due to usage of an output buffer.
+/// - `StdRng` is, like most seedable PRNGs, deterministic: if the generator is
+///   duplicated (for example, by reconstruction with the same seed, by a fork
+///   or by a checkpoint-and-restore of the process), then each clone will yield
+///   identical output (but see also the next point).
+/// - `StdRng` is non-[portable]: any future library version may replace the
+///   algorithm and results may be platform-dependent. (For a portable version,
+///   use a generator named after its algorithm, for example [`ChaCha12Rng`]).
+/// - `StdRng` is a [CSPRNG]: statistically good quality of randomness and
+///   (assuming a good, secret key and secret internal state) [unpredictable]
+/// - `StdRng` is fast
+///   ([amortized](https://en.wikipedia.org/wiki/Amortized_analysis)):
+///   usage of a buffer results in low average cost of each yielded word.
 ///
-/// The current algorithm used is the ChaCha block cipher with 12 rounds. Please
-/// see this relevant [rand issue] for the discussion. This may change as new
+/// The current algorithm used is the ChaCha block cipher with 12 rounds, i.e.
+/// [`ChaCha12Rng`]. Please see this relevant [rand issue] for the discussion.
+/// This may change as new
 /// evidence of cipher security and performance becomes available.
 ///
 /// ## Seeding (construction)
@@ -70,7 +75,7 @@ use chacha20::ChaCha12Rng as Rng;
 /// [`rand::make_rng()`]: crate::make_rng
 /// [`rand::rng()`]: crate::rng
 #[derive(Debug, PartialEq, Eq)]
-pub struct StdRng(Rng);
+pub struct StdRng(ChaCha12Rng);
 
 impl TryRng for StdRng {
     type Error = Infallible;
@@ -97,7 +102,7 @@ impl SeedableRng for StdRng {
 
     #[inline(always)]
     fn from_seed(seed: Self::Seed) -> Self {
-        StdRng(Rng::from_seed(seed))
+        StdRng(ChaCha12Rng::from_seed(seed))
     }
 }
 
