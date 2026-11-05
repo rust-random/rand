@@ -8,6 +8,13 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [Unreleased]
+
+### Fixes
+- Fix possible panic due to sampling a deserialized `Uniform<Duration>` ([#1841])
+
+[#1841]: https://github.com/rust-random/rand/pull/1841
+
 ## [0.10.3] — 2026-09-20
 
 ### Fixes
