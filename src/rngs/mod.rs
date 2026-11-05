@@ -52,6 +52,9 @@
 //!
 //! ### Additional generators
 //!
+//! -   [`ThreadRngCore`] is the underlying, periodically seeded PRNG of
+//!     [`ThreadRng`] that allows users to utilize the same reseeding generator
+//!     where `Send` or `Sync` is required.
 //! -   The [`rdrand`] crate provides an interface to the RDRAND and RDSEED
 //!     instructions available in modern Intel and AMD CPUs.
 //! -   The [`rand_jitter`] crate provides a user-space implementation of
@@ -110,7 +113,7 @@ pub use xoshiro256plusplus::Xoshiro256PlusPlus;
 #[cfg(feature = "std_rng")]
 pub use self::std::StdRng;
 #[cfg(feature = "thread_rng")]
-pub use self::thread::ThreadRng;
+pub use self::thread::{ThreadRng, ThreadRngCore};
 
 #[cfg(feature = "chacha")]
 pub use chacha20::{ChaCha8Rng, ChaCha12Rng, ChaCha20Rng};
