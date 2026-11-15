@@ -144,6 +144,9 @@ impl<'de> Deserialize<'de> for UniformDuration {
     where
         D: serde::Deserializer<'de>,
     {
+        /// Nanoseconds in one second
+        const NANOS_PER_SEC: u64 = 1_000_000_000;
+
         #[derive(Deserialize)]
         #[serde(rename = "UniformDuration")]
         struct Fields {
@@ -166,7 +169,13 @@ impl<'de> Deserialize<'de> for UniformDuration {
                     secs,
                 } => {
                     let carry = (u64::from(max_nanos) + u64::from(offset)) / NANOS_PER_SEC;
-                    secs.0.max() <= max_secs && max_secs.checked_add(carry).is_some()
+                    // `new_inclusive` samples `secs` over at least two values
+                    // (`low_s < high_s`), so `sample` rejects at most about
+                    // half of its draws. A single-value range with a small
+                    // `max_nanos` would make it loop for ~`NANOS_PER_SEC` iterations.
+                    secs.max() == max_secs
+                        && secs.range != 1
+                        && max_secs.checked_add(carry).is_some()
                 }
             };
 
@@ -179,10 +188,6 @@ impl<'de> Deserialize<'de> for UniformDuration {
         Ok(UniformDuration { mode, offset })
     }
 }
-
-/// Nanoseconds in one second
-#[cfg(feature = "serde")]
-const NANOS_PER_SEC: u64 = 1_000_000_000;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -197,7 +202,7 @@ enum UniformDurationMode {
     Large {
         max_secs: u64,
         max_nanos: u32,
-        secs: Uniform<u64>,
+        secs: UniformInt<u64>,
     },
 }
 
@@ -265,7 +270,7 @@ impl UniformSampler for UniformDuration {
                 UniformDurationMode::Large {
                     max_secs: high_s,
                     max_nanos,
-                    secs: Uniform::new_inclusive(low_s, high_s)?,
+                    secs: UniformInt::new_inclusive(low_s, high_s)?,
                 }
             }
         };
@@ -416,6 +421,31 @@ mod tests {
         do_test(
             r#"{"mode":{"Large":{"max_secs":10,"max_nanos":999999999,"secs":{"low":0,"range":11,"thresh":0}}},"offset":4294967295}"#,
         );
+        // Large: the seconds sampler covers all of `u64`, not `..=max_secs`
+        do_test(
+            r#"{"mode":{"Large":{"max_secs":0,"max_nanos":0,"secs":{"low":0,"range":0,"thresh":0}}},"offset":0}"#,
+        );
+        // Large: the seconds sampler's maximum is not `max_secs`
+        do_test(
+            r#"{"mode":{"Large":{"max_secs":20,"max_nanos":0,"secs":{"low":0,"range":11,"thresh":0}}},"offset":0}"#,
+        );
+        // Large: a single-value seconds sampler would reject ~every sample
+        do_test(
+            r#"{"mode":{"Large":{"max_secs":10,"max_nanos":0,"secs":{"low":10,"range":1,"thresh":0}}},"offset":0}"#,
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn test_duration_large_narrow_range_roundtrip() {
+        // Valid `Large` sampler whose seconds range holds only two values
+        let low = Duration::new(u64::MAX - 1, 0);
+        let high = Duration::new(u64::MAX, 0);
+        let distr = UniformDuration::new_inclusive(low, high).unwrap();
+        assert!(matches!(distr.mode, UniformDurationMode::Large { .. }));
+        let json = serde_json::to_string(&distr).unwrap();
+        let de_distr: UniformDuration = serde_json::from_str(&json).unwrap();
+        assert_eq!(distr, de_distr);
     }
 
     #[test]
