@@ -79,9 +79,9 @@ Additionally, these features configure Rand:
 -   `simd_support` (experimental) enables sampling of SIMD values (uniformly
     random SIMD integers and floats). Since `std::simd` is not yet stable this
     feature requires nightly Rust and may cause build failures.
--   `unbiased` use unbiased sampling for algorithms supporting this option: Uniform distribution.
+-   `unbiased` uses unbiased sampling for algorithms supporting this option: Uniform distribution.
 
-    (By default, bias affecting no more than one in  2^48 samples is accepted.)
+    (By default, bias affecting no more than one in 2^48 samples is accepted.)
 
     Note: enabling this option is expected to affect reproducibility of results.
 
