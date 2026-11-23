@@ -8,6 +8,13 @@ A [separate changelog is kept for rand_core](https://github.com/rust-random/core
 
 You may also find the [Upgrade Guide](https://rust-random.github.io/book/update.html) useful.
 
+## [Unreleased]
+
+### Fixes
+- Fix `WeightedIndex::update_weights` panic (debug) or silent wrap (release) when the sum of integer weights overflows; return `Error::Overflow` instead ([#1846])
+
+[#1846]: https://github.com/rust-random/rand/pull/1846
+
 ## [0.10.4] — 2026-11-15
 
 ### Fixes

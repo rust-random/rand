@@ -162,7 +162,8 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         X: for<'a> core::ops::AddAssign<&'a X>
             + for<'a> core::ops::SubAssign<&'a X>
             + Clone
-            + Default,
+            + Default
+            + Weight,
     {
         if new_weights.is_empty() {
             return Ok(());
@@ -171,6 +172,7 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         let zero = <X as Default>::default();
 
         let mut total_weight = self.total_weight.clone();
+        let mut deferred = zero.clone();
 
         // Check for errors first, so we don't modify `self` in case something
         // goes wrong.
@@ -198,8 +200,17 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
             }
 
             total_weight -= &old_w;
-            total_weight += w;
+            // An intermediate sum may overflow when the final sum does not.
+            let mut sum = total_weight.clone();
+            if sum.checked_add_assign(w).is_ok() {
+                total_weight = sum;
+            } else if let Err(()) = deferred.checked_add_assign(w) {
+                return Err(Error::Overflow);
+            }
             prev_i = Some(i);
+        }
+        if let Err(()) = total_weight.checked_add_assign(&deferred) {
+            return Err(Error::Overflow);
         }
         if total_weight <= zero {
             return Err(Error::InsufficientNonZero);
@@ -672,6 +683,21 @@ mod test {
     #[test]
     fn overflow() {
         assert_eq!(WeightedIndex::new([2, usize::MAX]), Err(Error::Overflow));
+    }
+
+    #[test]
+    fn update_weights_overflow() {
+        let mut distr = WeightedIndex::new([200u8, 50]).unwrap();
+        assert_eq!(distr.update_weights(&[(1, &100)]), Err(Error::Overflow));
+        assert_eq!(distr, WeightedIndex::new([200u8, 50]).unwrap());
+
+        // An intermediate sum may exceed u8::MAX when the final sum does not.
+        distr.update_weights(&[(0, &255), (1, &0)]).unwrap();
+        assert_eq!(distr, WeightedIndex::new([255u8, 0]).unwrap());
+
+        let mut distr = WeightedIndex::new([100u8, 0, 100]).unwrap();
+        let update = [(0, &200), (1, &200), (2, &0)];
+        assert_eq!(distr.update_weights(&update), Err(Error::Overflow));
     }
 
     #[test]
