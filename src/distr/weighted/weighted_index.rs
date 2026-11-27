@@ -162,7 +162,8 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         X: for<'a> core::ops::AddAssign<&'a X>
             + for<'a> core::ops::SubAssign<&'a X>
             + Clone
-            + Default,
+            + Default
+            + Weight,
     {
         if new_weights.is_empty() {
             return Ok(());
@@ -198,7 +199,9 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
             }
 
             total_weight -= &old_w;
-            total_weight += w;
+            if let Err(()) = total_weight.checked_add_assign(w) {
+                return Err(Error::Overflow);
+            }
             prev_i = Some(i);
         }
         if total_weight <= zero {
@@ -672,6 +675,20 @@ mod test {
     #[test]
     fn overflow() {
         assert_eq!(WeightedIndex::new([2, usize::MAX]), Err(Error::Overflow));
+    }
+
+    #[test]
+    fn update_weights_overflow() {
+        let mut distr = WeightedIndex::new([200u8, 50]).unwrap();
+        assert_eq!(distr.update_weights(&[(1, &100)]), Err(Error::Overflow));
+        assert_eq!(distr, WeightedIndex::new([200u8, 50]).unwrap());
+
+        // An intermediate sum that overflows is an error too.
+        assert_eq!(
+            distr.update_weights(&[(0, &255), (1, &0)]),
+            Err(Error::Overflow)
+        );
+        assert_eq!(distr, WeightedIndex::new([200u8, 50]).unwrap());
     }
 
     #[test]
