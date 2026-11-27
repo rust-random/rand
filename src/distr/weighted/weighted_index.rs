@@ -172,7 +172,6 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         let zero = <X as Default>::default();
 
         let mut total_weight = self.total_weight.clone();
-        let mut deferred = zero.clone();
 
         // Check for errors first, so we don't modify `self` in case something
         // goes wrong.
@@ -200,17 +199,10 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
             }
 
             total_weight -= &old_w;
-            // An intermediate sum may overflow when the final sum does not.
-            let mut sum = total_weight.clone();
-            if sum.checked_add_assign(w).is_ok() {
-                total_weight = sum;
-            } else if let Err(()) = deferred.checked_add_assign(w) {
+            if let Err(()) = total_weight.checked_add_assign(w) {
                 return Err(Error::Overflow);
             }
             prev_i = Some(i);
-        }
-        if let Err(()) = total_weight.checked_add_assign(&deferred) {
-            return Err(Error::Overflow);
         }
         if total_weight <= zero {
             return Err(Error::InsufficientNonZero);
@@ -691,13 +683,12 @@ mod test {
         assert_eq!(distr.update_weights(&[(1, &100)]), Err(Error::Overflow));
         assert_eq!(distr, WeightedIndex::new([200u8, 50]).unwrap());
 
-        // An intermediate sum may exceed u8::MAX when the final sum does not.
-        distr.update_weights(&[(0, &255), (1, &0)]).unwrap();
-        assert_eq!(distr, WeightedIndex::new([255u8, 0]).unwrap());
-
-        let mut distr = WeightedIndex::new([100u8, 0, 100]).unwrap();
-        let update = [(0, &200), (1, &200), (2, &0)];
-        assert_eq!(distr.update_weights(&update), Err(Error::Overflow));
+        // An intermediate sum that overflows is an error too.
+        assert_eq!(
+            distr.update_weights(&[(0, &255), (1, &0)]),
+            Err(Error::Overflow)
+        );
+        assert_eq!(distr, WeightedIndex::new([200u8, 50]).unwrap());
     }
 
     #[test]
